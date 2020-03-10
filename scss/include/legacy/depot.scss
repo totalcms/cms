@@ -1,0 +1,14 @@
+//--------------------------------
+// Depot Form
+//--------------------------------
+.depot-form {
+    .dz-preview {
+        padding:0.5rem 0;
+        .filename {
+            font-size:0.7rem;
+        }
+        &:first-child{
+            padding:0;
+        }
+    }
+}

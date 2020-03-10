@@ -1,0 +1,483 @@
+.sp-container {
+    border-radius: 3px;
+    background-color: #ececec;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    display: inline-block;
+    z-index: 9999994;
+    width: 250px;
+
+    // position: fixed!important;
+    // top: 50%!important;
+    // left: 50%!important;
+    // transform:translateY(-50%) translateX(-50%);
+
+    &:before {
+        // display: none;
+        width: 0;
+        height: 0;
+        border-left: 16px solid transparent;
+        border-right: 16px solid transparent;
+        border-bottom: 16px solid #ececec;
+        content: " ";
+        top: -16px;
+        left: 32px;
+        position: absolute;
+    }
+}
+.sp-container.sp-flat {
+    position: relative;
+}
+
+.sp-container,
+.sp-container * {
+    box-sizing: border-box;
+}
+
+.sp-top {
+    position: relative;
+    width: 100%;
+    display: inline-block;
+}
+.sp-color {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 20%;
+}
+.sp-hue {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 84%;
+    height: 100%;
+}
+
+.sp-fill {
+    padding-top: 70%;
+}
+
+.sp-sat,
+.sp-val {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.sp-alpha-enabled .sp-top {
+    margin-bottom: 40px;
+}
+.sp-alpha-enabled .sp-alpha {
+    display: block;
+}
+.sp-alpha-handle {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 8px;
+    left: 50%;
+    cursor: ew-resize;
+    background: white;
+    opacity: 0.8;
+    box-shadow: 0 0 1px 0 #000;
+}
+.sp-alpha {
+    display: none;
+    position: absolute;
+    bottom: -30px;
+    right: 0;
+    left: 0;
+    height: 18px;
+    cursor:pointer;
+}
+
+.sp-clear {
+    display: none;
+}
+
+.sp-clear.sp-clear-display {
+    background-position: center;
+}
+
+.sp-clear-enabled .sp-clear {
+    display: block;
+    position: absolute;
+    top: -48px;
+    right: 0;
+    bottom: 0;
+    left: 84%;
+    height: 24px;
+    cursor:pointer;
+    border: 1px solid #ccc;
+}
+
+/* Don't allow text selection */
+.sp-container,
+.sp-replacer,
+.sp-preview,
+.sp-dragger,
+.sp-slider,
+.sp-alpha,
+.sp-clear,
+.sp-alpha-handle,
+.sp-container.sp-dragging .sp-input,
+.sp-container button {
+    user-select: none;
+}
+
+.sp-container.sp-input-disabled .sp-input-container {
+    display: none;
+}
+.sp-container.sp-buttons-disabled .sp-button-container {
+    display: none;
+}
+.sp-container.sp-palette-buttons-disabled .sp-palette-button-container {
+    display: none;
+}
+.sp-palette-only .sp-picker-container {
+    display: none;
+}
+.sp-palette-disabled .sp-palette-container {
+    display: none;
+}
+
+.sp-initial-disabled .sp-initial {
+    display: none;
+}
+
+/* Gradients for hue, saturation and value instead of images.  Not pretty... but it works */
+.sp-sat {
+    background-image: linear-gradient(to right, #fff, rgba(204, 154, 129, 0));
+}
+.sp-val {
+    background-image: linear-gradient(to top, #000, rgba(204, 154, 129, 0));
+}
+.sp-hue {
+    background: linear-gradient(
+        to bottom,
+        #ff0000 0%,
+        #ffff00 17%,
+        #00ff00 33%,
+        #00ffff 50%,
+        #0000ff 67%,
+        #ff00ff 83%,
+        #ff0000 100%
+    );
+}
+
+.sp-hidden {
+    display: none !important;
+}
+
+/* Mobile devices, make hue slider bigger so it is easier to slide */
+@media (max-device-width: 480px) {
+    .sp-color {
+        right: 40%;
+    }
+    .sp-hue {
+        left: 63%;
+    }
+    .sp-fill {
+        padding-top: 60%;
+    }
+}
+.sp-dragger {
+    border-radius: 50%;
+    height: 15px;
+    width: 15px;
+    border: 1px solid #fff;
+    background: rgba(0, 0, 0, 0.6);
+    cursor: move;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateY(50%) translateX(50%);
+}
+.sp-slider {
+    position: absolute;
+    top: 0;
+    cursor: ns-resize;
+    height: 8px;
+    left: -3px;
+    right: -3px;
+    background: white;
+    opacity: 0.8;
+    box-shadow: 0 0 1px 0 #000;
+    transform: translateY(50%);
+}
+
+.sp-top {
+    margin-bottom: 3px;
+}
+.sp-color,
+.sp-hue,
+.sp-clear {
+    cursor:pointer;
+}
+
+/* Input */
+.sp-input-container {
+    display: inline-block;
+    width: calc(100% - 4rem);
+}
+.sp-initial-disabled .sp-input-container {
+    width: 100%;
+}
+input.sp-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    margin: 0;
+    border-radius: 3px 0 0 3px;
+    background-color: #fff;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #ccc;
+    // border-right-width:0;
+    color: #444;
+    display: block;
+    font-family: inherit;
+    font-size:0.8rem;
+    height: 2rem;
+    padding: .5rem;
+    width: 100%;
+}
+input.sp-input:focus {
+    outline: none;
+    border-color:#ccc;
+}
+input.sp-input.sp-validation-error {
+    border: 1px solid red;
+    background: #fdd;
+}
+.sp-picker-container,
+.sp-palette-container {
+    position: relative;
+    padding: 10px;
+}
+.sp-picker-container {
+    width: 100%;
+    border-top: 1px solid #e3e3e3;
+}
+.sp-palette-disabled .sp-picker-container {
+    border-top: none;
+}
+
+.sp-palette-only .sp-palette-container {
+    border: 0;
+}
+
+.sp-palette .sp-thumb-el {
+    display: inline-block;
+    position: relative;
+    width: 24px;
+    height: 15px;
+    margin: 3px;
+    cursor: pointer;
+}
+
+/* Initial */
+.sp-initial {
+    display: block;
+    width: 4rem;
+    float: right;
+}
+.sp-initial span {
+    width: 50%;
+    height: 2rem;
+    display: inline-block;
+    margin: 0;
+    &.sp-thumb-inner {
+        width: 100%;
+    }
+    &.sp-thumb-el:not(.sp-thumb-active) {
+        cursor:pointer;
+    }
+    // &.sp-thumb-el:last-child {
+    //     border-left:2px solid #ececec;
+    // }
+}
+
+.sp-initial .sp-clear-display {
+    background-position: center;
+}
+.sp-palette {
+    width: 80%;
+}
+.sp-palette .sp-thumb-el {
+    width: 18px;
+    height: 18px;
+    margin: 2px 1px;
+}
+
+.sp-preview,
+.sp-alpha,
+.sp-thumb-el,
+.sp-clear-display {
+    position: relative;
+    background-image: url('data:image/svg+xml;utf8,<svg height="12" viewBox="528 242 12 12" width="12" xmlns="http://www.w3.org/2000/svg"><g fill="none"><path d="m528 242h12v12h-12z" fill="%23fff"/><g fill="%23ccc"><path d="m528 242h6v6h-6z"/><path d="m534 248h6v6h-6z"/></g></g></svg>');
+}
+.sp-preview-inner,
+.sp-alpha-inner,
+.sp-thumb-inner {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.sp-palette .sp-thumb-inner {
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+}
+
+.sp-palette .sp-thumb-light.sp-thumb-active .sp-thumb-inner {
+    background-size: 80%;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M435.848 83.466L172.804 346.51l-96.652-96.652c-4.686-4.686-12.284-4.686-16.971 0l-28.284 28.284c-4.686 4.686-4.686 12.284 0 16.971l133.421 133.421c4.686 4.686 12.284 4.686 16.971 0l299.813-299.813c4.686-4.686 4.686-12.284 0-16.971l-28.284-28.284c-4.686-4.686-12.284-4.686-16.97 0z"/></svg>');
+}
+
+.sp-palette .sp-thumb-dark.sp-thumb-active .sp-thumb-inner {
+    background-size: 80%;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M435.848 83.466L172.804 346.51l-96.652-96.652c-4.686-4.686-12.284-4.686-16.971 0l-28.284 28.284c-4.686 4.686-4.686 12.284 0 16.971l133.421 133.421c4.686 4.686 12.284 4.686 16.971 0l299.813-299.813c4.686-4.686 4.686-12.284 0-16.971l-28.284-28.284c-4.686-4.686-12.284-4.686-16.97 0z" fill="%23fff"/></svg>');
+}
+
+.sp-clear-display:after {
+    content: " ";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M231.6 256l130.1-130.1c4.7-4.7 4.7-12.3 0-17l-22.6-22.6c-4.7-4.7-12.3-4.7-17 0L192 216.4 61.9 86.3c-4.7-4.7-12.3-4.7-17 0l-22.6 22.6c-4.7 4.7-4.7 12.3 0 17L152.4 256 22.3 386.1c-4.7 4.7-4.7 12.3 0 17l22.6 22.6c4.7 4.7 12.3 4.7 17 0L192 295.6l130.1 130.1c4.7 4.7 12.3 4.7 17 0l22.6-22.6c4.7-4.7 4.7-12.3 0-17L231.6 256z" fill="%23777"/></svg>');
+}
+.sp-replacer .sp-clear-display:after {
+    display: none;
+}
+
+.sp-replacer {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(45, 45, 45, 1);
+    margin: 10px;
+    border-radius: 8% 50% 50% 50%;
+
+    .sp-dd {
+        display: none;
+    }
+
+    &:after {
+        content: "";
+        display: block;
+        width: 10%;
+        height: 10%;
+        background-color: #fff;
+        position: absolute;
+        border-radius: 50%;
+        margin: 5%;
+    }
+
+    .sp-preview {
+        position: absolute;
+        width: 80%;
+        height: 80%;
+        background-color: #f00;
+        border-radius: 50%;
+        top: 10%;
+        left: 10%;
+
+        .sp-preview-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+
+            &:after,
+            &:before {
+                content: " ";
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.1);
+                border-radius: 50%;
+                opacity: 0;
+                transition: all 200ms ease-in;
+            }
+            &:before {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M485.487 26.509c-35.349-35.349-92.658-35.342-128 0l-66.175 66.178-24-24c-6.24-6.25-16.38-6.25-22.62 0L180.69 132.69c-6.25 6.24-6.25 16.38 0 22.62l24 24L39.03 344.97A24.01 24.01 0 0 0 32 361.94V440L0 496l16 16 56-32h78.06c6.36 0 12.47-2.53 16.97-7.03l165.66-165.66 24 24c6.218 6.237 16.37 6.269 22.62 0l64.002-64.002c6.25-6.24 6.25-16.38 0-22.62l-24-24 66.175-66.178c35.351-35.351 35.351-92.651 0-128.001zM146.75 448H64v-82.75l163.32-163.31 82.74 82.74L146.75 448zm316.107-316.121l-88.795 88.808 35.31 35.31L368 297.37 214.63 144l41.372-41.372 35.31 35.31 88.805-88.798c22.874-22.875 59.874-22.867 82.74 0 22.875 22.874 22.867 59.873 0 82.739z"/></svg>');
+                background-repeat: no-repeat;
+                background-size: 50%;
+                background-position: center;
+                transform: scale(1.5);
+            }
+            &:hover {
+                &:after {
+                    opacity: 1;
+                }
+                &:before {
+                    opacity: 0.5;
+                    transform: scale(1);
+                }
+            }
+        }
+    }
+}
+
+.color-picker {
+    > input {
+        display:none;
+    }
+    label {
+        margin:0 10px;
+        text-align:center;
+        display:inline-block;
+        width:auto;
+    }
+    &.pos-bl .sp-replacer {
+        border-radius: 50% 50% 50% 8%;
+        &:after {
+            bottom: 0;
+        }
+    }
+    &.pos-br .sp-replacer {
+        border-radius: 50% 50% 8% 50%;
+        &:after {
+            bottom: 0;
+            right: 0;
+        }
+    }
+    &.pos-tr .sp-replacer {
+        border-radius: 50% 8% 50% 50%;
+        &:after {
+            right: 0;
+        }
+    }
+}
+
+.sp-palette-toggle {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    height: 15px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><path d="M136.5 249.1l116 117.8c4.7 4.7 4.7 12.3 0 17l-7.1 7.1c-4.7 4.7-12.3 4.7-17 0L128 288.7 27.6 390.9c-4.7 4.7-12.3 4.7-17 0l-7.1-7.1c-4.7-4.7-4.7-12.3 0-17l116-117.8c4.7-4.6 12.3-4.6 17 .1zm-17-128L3.5 238.9c-4.7 4.7-4.7 12.3 0 17l7.1 7.1c4.7 4.7 12.3 4.7 17 0L128 160.7l100.4 102.2c4.7 4.7 12.3 4.7 17 0l7.1-7.1c4.7-4.7 4.7-12.3 0-17L136.5 121c-4.7-4.6-12.3-4.6-17 .1z"/></svg>');
+
+    &:hover {
+        background-color: #e3e3e3;
+    }
+}
+
+.sp-palette-only .sp-palette-toggle {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><path d="M119.5 262.9L3.5 145.1c-4.7-4.7-4.7-12.3 0-17l7.1-7.1c4.7-4.7 12.3-4.7 17 0L128 223.3l100.4-102.2c4.7-4.7 12.3-4.7 17 0l7.1 7.1c4.7 4.7 4.7 12.3 0 17L136.5 263c-4.7 4.6-12.3 4.6-17-.1zm17 128l116-117.8c4.7-4.7 4.7-12.3 0-17l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L128 351.3 27.6 249.1c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l116 117.8c4.7 4.6 12.3 4.6 17-.1z"/></svg>');
+}
+

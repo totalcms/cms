@@ -1,0 +1,39 @@
+//--------------------------------
+// Fieldset - Text Box
+//--------------------------------
+form.totalform {
+
+	fieldset.select-box {
+		> .fa {
+		    font-size:1.2rem;
+			opacity:0;
+			position:absolute;
+			right:25px;
+			top:10px;
+			transition:opacity 500ms ease-in-out;
+		}
+		select {
+			margin:0;
+		}
+	}
+	&.success fieldset.select-box {
+		.fa-check-circle {
+			opacity:1;
+		}
+	}
+	&.error fieldset.select-box {
+		.fa-times-circle {
+			opacity:1;
+		}
+	}
+	&.saving fieldset.select-box {
+		.fa-circle-o-notch {
+			opacity:1;
+		}
+	}
+	&.unsaved:not(.new) fieldset.select-box.unsaved {
+		select {
+			border-color:#f04124!important;
+		}
+	}
+}

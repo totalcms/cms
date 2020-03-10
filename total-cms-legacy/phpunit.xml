@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="tests/bootstrap.php">
+	<testsuites>
+		<testsuite name="totalcms">
+			<directory suffix="Text.php">tests/Component</directory>
+			<directory suffix="File.php">tests/Component</directory>
+			<directory suffix="Depot.php">tests/Component</directory>
+			<directory suffix="Image.php">tests/Component</directory>
+			<directory suffix="Gallery.php">tests/Component</directory>
+			<directory suffix="Video.php">tests/Component</directory>
+			<directory suffix="Feed.php">tests/Component</directory>
+			<directory suffix="Toggle.php">tests/Component</directory>
+			<directory suffix="Blog.php">tests/Component</directory>
+		</testsuite>
+	</testsuites>
+	<filter>
+		<whitelist>
+			<directory>TotalCMS</directory>
+		</whitelist>
+	</filter>
+</phpunit>

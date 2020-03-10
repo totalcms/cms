@@ -1,0 +1,116 @@
+//--------------------------------
+// Higwig
+//--------------------------------
+//! TODO: Remove this once I renew the hipwig license
+.fr-wrapper > div > a {display:none!important}
+
+.fr-video {
+    display:block;
+    width:100%;
+    padding-bottom:52.34%;
+    margin-bottom:0;
+    height:0;
+    overflow: hidden;
+    padding-top:1.5625rem;
+    position:relative;
+
+    iframe {
+        border:none;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        left: 0;
+    }
+}
+
+.fr-placeholder {
+    font-size:1rem!important;
+    line-height:1.6!important;
+}
+.fr-box {
+    box-sizing:border-box;
+    line-height:1.6;
+    font-size:1rem;
+    width:100%;
+    color:rgba(34, 34, 34, 1.00);
+    border-radius:0;
+    background-color: #fff;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #ccc;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);
+    display:block;
+    // padding:0.5rem;
+    transition:border-color .15s linear,background .15s linear;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    &.fr-basic {
+        padding-top:0;
+    }
+    &.fr-fullscreen {
+        padding:1rem;
+    }
+}
+body.fr-fullscreen {
+    // background-color: #ffffff;
+    // padding:1rem;
+    padding:0!important;
+}
+.fr-wrapper{
+    background-color:transparent!important;
+    box-shadow:none!important;
+}
+.fr-toolbar.fr-basic{
+    top:0!important;
+    left:0!important;
+    background-color:transparent!important;
+    box-shadow:none!important;
+    border-top:none!important;
+    border-bottom: 1px solid #ebebeb;
+}
+.fr-sticky,.fr-sticky-ios {
+    position:relative!important;
+    top:0px!important;
+    left:0px!important;
+}
+.fr-sticky-dummy {
+    display:none!important;
+}
+.fr-view {
+    color:#222222;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    -ms-word-break: break-all;
+    word-break: break-word;
+}
+.fr-toolbar.fr-inline {
+    z-index: 999998!important;
+}
+.fr-tooltip,.fr-popup {
+    z-index: 999999!important;
+}
+.fr-toolbar {
+    .fr-btn {
+        background-color: transparent;
+        &:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+    }
+}
+.unsaved:not(.new) {
+    .hipwig.unsaved > .fr-box {
+        border-color:#f04124!important;
+    }
+}
+.fr-btn{
+    display:inline-block!important
+}
+.fr-counter.exceeded {
+    background-color:#f04124;
+    border-color: #cf2a0e;
+    color:#fff;
+}
+.fr-video video {
+    width: 100%;
+}

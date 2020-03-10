@@ -1,0 +1,270 @@
+%%[[if !edit]]%%
+<!--
+	File Preview Template
+-->
+<script type="text/template" id="file-preview-template">
+<div class="dz-preview dz-file-preview">
+	<div class="actionbar">
+		<a class="filebar-link left"  href="javascript:void(0)" title="%id=localeCopyFilePath%"><i class="fa fa-link"></i></a>
+		<a class="filebar-trash right" href="javascript:void(0)" title="%id=localeDeleteFile%"><i class="fa fa-trash-o"></i></a>
+	</div>
+	<i class="fa file-icon fa-file-o fa-3x"></i>
+	<p class="filename"></p>
+	<div class="dz-progress">
+		<span class="dz-upload" data-dz-uploadprogress></span>
+		<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
+	</div>
+	<i class="fa fa-check-circle"></i>
+	<i class="fa fa-times-circle"></i>
+</div>
+</script>
+<!--
+	Copy File Path Reveal Template
+-->
+<script type="text/template" id="imagebar-link-template">
+<div id="imagebar-link" class="reveal-modal" data-reveal>
+	<h4>%id=localeCopyFilePath%</h4>
+	<hr/>
+	<label>%id=localeFilePath%</label>
+	<input type="text" name="file" readonly/>
+	<a class="close-reveal-modal">&#215;</a>
+</div>
+</script>
+
+<!--
+	Feed Image Template
+-->
+<script type="text/template" id="feed-preview-template">
+<div class="dz-preview dz-file-preview">
+	<div class="actionbar">
+		<a class="imagebar-tag left" href="javascript:void(0)" title="%id=localeUpdateAltTag%">
+			<i class="fa fa-tag"></i>
+		</a>
+	</div>
+	<img oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+	<div class="dz-progress">
+		<span class="dz-upload" data-dz-uploadprogress></span>
+		<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
+	</div>
+	<i class="fa fa-check-circle"></i>
+	<i class="fa fa-times-circle"></i>
+</div>
+</script>
+<!--
+	Feed Edit Template
+-->
+<script type="text/template" id="feed-edit-template">
+<div id="feed-edit" class="reveal-modal" data-reveal>
+	<h4>%id=localeEditFeed%</h4>
+	<form autocomplete="off" id="form_feed_%id%" class="totalform feed-form feed-edit-form" method="post" action="%siteAssetPath%/totalcms/totalapi.php">
+
+		<fieldset class="image-box filedrop">
+
+			<div class="total-preview">
+				<div class="dz-overlay"><i class="fa  fa-newspaper-o fa-4x"></i></div>
+				<div class="dz-preview dz-file-preview empty"></div>
+			</div>
+
+		</fieldset>
+
+
+		<fieldset class="text-box textarea">
+
+			<textarea class="format-selection" spellcheck="true" rows="5" name="feed" data-widearea="enable"></textarea>
+
+		</fieldset>
+
+		<input type="hidden" name="type" value="feed" />
+		<input type="hidden" name="timestamp"/>
+		<input type="hidden" name="alt"      />
+		<input type="hidden" name="strip"    />
+		<input type="hidden" name="set"     />
+		<input type="hidden" name="resize"   />
+		<input type="hidden" name="quality"  />
+		<input type="hidden" name="scale"    />
+		<input type="hidden" name="scale_th" />
+		<input type="hidden" name="scale_sq" />
+
+		<input type="hidden" name="feed_title"       />
+		<input type="hidden" name="feed_description" />
+		<input type="hidden" name="feed_link"        />
+		<input type="hidden" name="feed_baseurl"     />
+
+		<button class="button radius local" type="submit">%id=localeSave%</button>
+	</form>
+
+	<a class="close-reveal-modal">&#215;</a>
+</div>
+</script>
+<!--
+	Feed Edit Hipwig Template
+-->
+<script type="text/template" id="feed-edit-hipwig-template">
+<div id="feed-edit-hipwig" class="reveal-modal" data-reveal>
+	<h4>%id=localeEditFeed%</h4>
+	<form autocomplete="off" id="form_feed_hipwig_%id%" class="totalform feed-form feed-edit-form" method="post" action="%siteAssetPath%/totalcms/totalapi.php">
+
+		<fieldset class="image-box filedrop">
+
+			<div class="total-preview">
+				<div class="dz-overlay"><i class="fa  fa-newspaper-o fa-4x"></i></div>
+				<div class="dz-preview dz-file-preview empty"></div>
+			</div>
+
+		</fieldset>
+
+
+		<fieldset class="text-box textarea hipwig">
+
+			<textarea class="hipwig" data-height="200" spellcheck="true" rows="5" name="feed"></textarea>
+
+		</fieldset>
+
+		<input type="hidden" name="type" value="feed" />
+		<input type="hidden" name="timestamp"/>
+		<input type="hidden" name="alt"      />
+		<input type="hidden" name="strip"    />
+		<input type="hidden" name="set"     />
+		<input type="hidden" name="resize"   />
+		<input type="hidden" name="quality"  />
+		<input type="hidden" name="scale"    />
+		<input type="hidden" name="scale_th" />
+		<input type="hidden" name="scale_sq" />
+
+		<input type="hidden" name="feed_title"       />
+		<input type="hidden" name="feed_description" />
+		<input type="hidden" name="feed_link"        />
+		<input type="hidden" name="feed_baseurl"     />
+
+		<button class="button radius local" type="submit">%id=localeSave%</button>
+	</form>
+
+	<a class="close-reveal-modal">&#215;</a>
+</div>
+</script>
+<!--
+	Blog List Template
+-->
+<script type="text/template" id="blog-list-template">
+<li class="post">
+	<time class="post-date"></time>
+	<div class="post-action">
+		<i class="fa fa-newspaper-o"></i>
+		<i class="fa fa-video-camera"></i>
+		<i class="fa fa-quote-left"></i>
+		<i class="fa fa-link"></i>
+		<i class="fa fa-headphones"></i>
+
+		<div class="actionbar fill">
+			<a class="blogbar-draft left"    href="javascript:void(0)" title="%id=localeSetDraft%"><i class="fa fa-bookmark"></i><i class="fa fa-bookmark-o"></i></a>
+			<a class="blogbar-featured left" href="javascript:void(0)" title="%id=localeSetFeatured%"><i class="fa fa-star"></i><i class="fa fa-star-o"></i></a>
+			<a class="blogbar-links left"    href="javascript:void(0)" title="%id=localeCopyBlogLinks%"><i class="fa fa-link"></i></a>
+			<a class="blogbar-trash right"   href="javascript:void(0)" title="%id=localeDeleteBlogPost%"><i class="fa fa-trash-o"></i></a>
+		</div>
+	</div>
+	<h5 class="post-title"><a class=""href="#"></a><small class="author"></small></h5>
+	<div class="post-tags">
+		<i class="fa fa-star fa-fw"></i>
+		<i class="fa fa-bookmark fa-fw"></i>
+	</div>
+</li>
+</script>
+<!--
+	Copy Blog Links Reveal Template
+-->
+<script type="text/template" id="blog-links-template">
+<div id="blogbar-links" class="reveal-modal" data-reveal>
+	<h4>%id=localeCopyBlogLinks%</h4>
+	<hr/>
+	<label>%id=localeBlogPostLink% <a class="right permalink" href="#" target="_blank"><i class="fa fa-external-link"></i></a></label>
+	<input type="text" name="permalink" readonly/>
+	<label>%id=localeBlogRss% <a class="right rss" href="#" target="_blank"><i class="fa fa-external-link"></i></a></label>
+	<input type="text" name="rss" readonly/>
+	<label>%id=localeBlogSitemap% <a class="right sitemap" href="#" target="_blank"><i class="fa fa-external-link"></i></a></label>
+	<input type="text" name="sitemap" readonly/>
+	<a class="close-reveal-modal">&#215;</a>
+</div>
+</script>
+<!--
+	Feed List Template
+-->
+<script type="text/template" id="feed-list-template">
+<li class="post">
+	<div class="post-image">
+		<div class="actionbar fill">
+			<a class="feedbar-tag left"    href="javascript:void(0)" title="%id=localeUpdateAltTag%"><i class="fa fa-tag"></i></a>
+			<a class="feedbar-edit left"   href="javascript:void(0)" title="%id=localeEditFeed%"><i class="fa fa-pencil-square-o"></i></a>
+			<a class="feedbar-rss left"    href="javascript:void(0)" title="%id=localeCopyFeedLinks%"><i class="fa fa-rss"></i></a>
+			<a class="feedbar-trash right" href="javascript:void(0)" title="%id=localeFeedDelete%"><i class="fa fa-trash-o"></i></a>
+		</div>
+	</div>
+	<div class="post-text feedbar-edit"></div>
+	<time class="post-date"></time>
+</li>
+</script>
+<!--
+	Copy Feed RSS Reveal Template
+-->
+<script type="text/template" id="feed-rss-template">
+<div id="feed-rss" class="reveal-modal" data-reveal>
+	<h4>%id=localeCopyFeedLinks%</h4>
+	<hr/>
+	<label>%id=localeFeedRss%</label>
+	<input type="text" name="rss" readonly/>
+	<a class="close-reveal-modal">&#215;</a>
+</div>
+</script>
+<!--
+	Datastore Reveal Template
+-->
+<script type="text/template" id="datastore-template">
+<div id="datastore-bulk-edit" class="reveal-modal" data-reveal>
+	<h4>%id=localeUpdateDatastore%</h4>
+	<hr/>
+
+	<form class="totalform datastore-form" autocomplete="off" method="post" action="%siteAssetPath%/totalcms/totalapi.php" data-baseurl="%baseURL%">
+
+		<fieldset class="text-box textarea">
+			<textarea class="track-selection" name="datastore" spellcheck="true" rows="10"></textarea>
+		</fieldset>
+
+		<input type="hidden" name="_METHOD" value="PUT"/>
+		<input type="hidden" name="type"    value="datastore"/>
+		<input type="hidden" name="ext"     value="csv"/>
+		<input type="hidden" name="set"    value=""/>
+
+		<button class="button radius" type="submit" value="%id=localeSave%">%id=localeSave%</button>
+	</form>
+
+	<a class="close-reveal-modal">&#215;</a>
+</div>
+</script>
+%%[[endif]]%%
+
+%%[[if preview]]%%
+<!--
+	Registration Reveal Template
+-->
+<script type="text/template" id="reg-template">
+<div id="registration" class="reveal-modal" data-reveal>
+	<h4>Total CMS Registration</h4>
+	<hr/>
+	<form class="totalform reg-form" autocomplete="off">
+		<label>Domain</label>
+		<input type="text" name="domain"/>
+		<label>Serial Number</label>
+		<input type="text" name="passport"/>
+		<input type="hidden" name="key" value="hUeNdYDzh4mVBEb9yhRg3LDusk74cBNAabTLiwRwWjLecTMgUu"/>
+
+		<div class="panel">
+		<p><em>Please verify that the domain and serial number are correct.</em></p>
+		<p>If you have already registered Total CMS, you can turn off Registration inside the stack settings.</p>
+		</div>
+
+		<button class="button radius" type="submit" value="Register">Register</button>
+	</form>
+
+	<a class="close-reveal-modal">&#215;</a>
+</div>
+</script>
+%%[[endif]]%%

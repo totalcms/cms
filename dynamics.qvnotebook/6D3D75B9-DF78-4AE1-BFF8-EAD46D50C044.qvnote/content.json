@@ -1,0 +1,9 @@
+{
+  "title": "Macros",
+  "cells": [
+    {
+      "type": "markdown",
+      "data": "# Server Macros\n\nThese are processed via PHP on the server.\n\n```\n// Global Text \n%cmsText(cmsId)%\n%cmsText(cmsId,{options:true})% // With optional options JSON dictionary\n\n// Object Property as Text \n%cmsText(collection,property)%\n%cmsText(collection,property,{options:true})% // With optional options JSON dictionary\n\n// Object Property + ID as Text \n%cmsText(collection,id,property)%\n%cmsText(collection,id,property,{options:true})% // With optional options JSON dictionary\n```\n\n\n\n# Browser Macros\n\nThese are processed with JS asynchronously after the page has loaded\n\n```\n// Global Text\n<cms type=\"text\" id=\"header\"></cms>\n\n// Object Property as Text \n<cms type=\"text\" collection=\"products\" prop=\"name\" options=\"\"></cms>\n\n// Object Property as Image\n<cms type=\"image\" collection=\"products\" prop=\"icon\" options=\"\"></cms>\n\n```"
+    }
+  ]
+}

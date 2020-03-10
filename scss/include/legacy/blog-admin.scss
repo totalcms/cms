@@ -1,0 +1,36 @@
+form.blog-form {
+	fieldset.switch{
+		margin-top:0;
+		// margin-bottom:1rem;
+	}
+	.stacks_out,.stacks_in{
+		overflow:visible!important;
+	}
+	.blog-content,.blog-summary {
+		border:none;
+		box-shadow:none;
+	}
+	.text-box:not(.unsaved):not(.error) > .fa {
+		// Only display the icons for changed fields
+		display:none!important;
+	}
+	.text-box.permalink {
+		.fa-circle-o-notch {
+			// Hide the saving animation. Looks bad on form submit
+			display:none!important;
+		}
+	}
+	.g-recaptcha iframe.error {
+		border:1px solid #f04124;
+	}
+	&.unsaved .dz-image-preview {
+		box-shadow: 1px 0 0 #f04124,-1px 0 0 #f04124,0 1px 0 #f04124,0 -1px 0 #f04124!important;
+	}
+	// Hipwig save button does not work for blog posts with images. Force hide it for now
+	button[data-cmd=save]{display:none!important}
+}
+.cms-delete {
+	/* %%[[if !edit]]%% */
+	display:none;
+	/* %%[[endif]]%% */
+}

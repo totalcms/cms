@@ -1,0 +1,13 @@
+{
+  "title": "jSQL",
+  "cells": [
+    {
+      "type": "markdown",
+      "data": "Need queries for the following:\n\n* Featured\n* Popularity\n* Recently Released\n* Recently Updated\n* On Sale"
+    },
+    {
+      "type": "text",
+      "data": ""
+    }
+  ]
+}
