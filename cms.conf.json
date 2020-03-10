@@ -1,0 +1,8 @@
+{
+  "cms_dir": "tcms-data",
+  "settings": {
+    "logger": {
+      "level": 400
+    }
+  }
+}

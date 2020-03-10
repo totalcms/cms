@@ -1,0 +1,16 @@
+<div class="dz-preview dz-file-preview">
+    <div class="actionbar">
+        <a class="imagebar-tag left"   href="javascript:void(0)" title="{{localeUpdateAltTag}}"><i class="fa fa-tag"></i></a>
+        <a class="imagebar-image left" href="javascript:void(0)" title="{{localeCopyImagePath}}"><i class="fa fa-image"></i></a>
+        <a class="imagebar-featured left"  href="javascript:void(0)" title="{{localeStarImage}}"><i class="fa fa-star-o"></i><i class="fa fa-star"></i></a>
+        <a class="imagebar-trash right" href="javascript:void(0)" title="{{localeDeleteImage}}"><i class="fa fa-trash-o"></i></a>
+        <i class="fa fa-fw fa-bars imagebar-move"></i>
+    </div>
+    <img src="{{image}}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+    <div class="dz-progress">
+        <span class="dz-upload" data-dz-uploadprogress></span>
+        <span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
+    </div>
+    <i class="fa fa-check-circle"></i>
+    <i class="fa fa-times-circle has-tip" data-tooltip title="{{localeError}}"></i>
+</div>
