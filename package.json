@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "awesomplete": "^1.1.5",
+    "axios": "^0.19.2",
+    "codemirror": "^5.52.0",
+    "dropzone": "^5.7.0",
+    "foundation-datepicker": "^1.5.6",
+    "froala-editor": "^3.1.1",
+    "imagesloaded": "^4.1.4",
+    "jquery": "^3.4.1",
+    "js-cookie": "^2.2.1",
+    "js-storage": "^1.1.0",
+    "lazysizes": "^5.2.0",
+    "lightgallery": "^1.6.12",
+    "luxon": "^1.22.0",
+    "moment": "^2.24.0",
+    "mustache": "^4.0.0",
+    "onImpression": "jaseowns/onImpression",
+    "rangeslider.js": "^2.3.3",
+    "searchjs": "^1.0.2",
+    "slugify": "^1.4.0",
+    "sortablejs": "^1.10.2",
+    "spectrum-colorpicker": "^1.8.0"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-sass": "^4.0.2"
+  }
+}
