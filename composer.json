@@ -1,33 +1,102 @@
 {
+    "name": "joeworkman/dynamics",
+    "description": "Dynamic CMS powering Total CMS",
+    "license": "Commercial",
+    "type": "project",
+    "keywords": [
+        "total-cms",
+        "dynamics",
+        "cms"
+    ],
     "require": {
-        "slim/slim": "^4.4",
-        "monolog/monolog": "^2.0",
+        "cakephp/collection": "^4.0",
+        "cakephp/database": "^4.0",
+        "cocur/slugify": "^4.0",
+        "ellipsesynergie/api-response": "^0.16.0",
+        "embed/embed": "^4.0",
+        "glenscott/url-normalizer": "^1.4",
+        "guzzlehttp/guzzle": "^6.5",
         "imagine/imagine": "^1.2",
+        "justinrainbow/json-schema": "^5.2",
+        "ksubileau/color-thief-php": "^1.3",
+        "laminas/laminas-feed": "^2.12",
+        "league/csv": "^9.6",
+        "league/factory-muffin": "^3.2",
+        "league/factory-muffin-faker": "^2.2",
+        "league/flysystem": "^1.0",
+        "league/flysystem-cached-adapter": "^1.0",
+        "league/fractal": "^0.19.2",
+        "league/glide": "^1.3",
+        "league/uri-parser": "^1.4",
         "mibe/feedwriter": "^1.1",
         "michelf/php-markdown": "^1.7",
-        "glenscott/url-normalizer": "^1.4",
-        "embed/embed": "^3.3",
-        "slim/csrf": "^1.0",
-        "vlucas/phpdotenv": "^4.1",
-        "league/glide": "^1.3",
-        "league/flysystem-cached-adapter": "^1.0",
-        "league/csv": "^9.1",
-        "ksubileau/color-thief-php": "^1.3",
+        "monolog/monolog": "^2.0",
+        "php-di/php-di": "^6.0",
+        "phpmailer/phpmailer": "^6.1",
+        "selective/array-reader": "^0.3.0",
+        "selective/basepath": "^0.2.0",
+        "selective/config": "^0.1.1",
+        "selective/samesite-cookie": "^0.1.0",
+        "selective/validation": "^0.7.1",
+        "slim/http": "^1.0",
+        "slim/psr7": "^1.0",
+        "slim/slim": "^4.4",
+        "slim/twig-view": "^3.0",
         "ssnepenthe/color-utils": "^0.4.2",
-        "cocur/slugify": "^4.0",
-        "league/uri-parser": "^1.4",
-        "thepixeldeveloper/sitemap": "^5.1",
-        "laminas/laminas-feed": "^2.12",
-        "justinrainbow/json-schema": "^5.2",
-        "twig/twig": "^3.0",
-        "league/factory-muffin": "^3.2",
         "symfony/yaml": "^5.0",
-        "league/fractal": "^0.19.2",
-        "league/factory-muffin-faker": "^2.2"
+        "thepixeldeveloper/sitemap": "^5.1",
+        "tuupola/http-factory": "^1.1",
+        "twig/twig": "^3.0"
     },
     "require-dev": {
-        "mexitek/phpcolors": "dev-master",
         "league/color-extractor": "^0.3.2",
-        "phpunit/phpunit": "^9.0"
+        "mexitek/phpcolors": "dev-master",
+        "overtrue/phplint": "^1.2",
+        "phpstan/phpstan": "^0.12.17",
+        "phpunit/phpunit": "^9.0",
+        "squizlabs/php_codesniffer": "^3.5"
+    },
+    "scripts": {
+        "build": "artifact build --name=dynamics",
+        "start": "php -S localhost:8080 -t public",
+        "test": "phpunit --configuration phpunit.xml --do-not-cache-result --colors=always",
+        "test-coverage": "phpunit --colors=always --do-not-cache-result --configuration phpunit.xml --coverage-clover build/logs/clover.xml --coverage-html build/coverage",
+        "check-style": "phpcs --standard=phpcs.xml",
+        "fix-style": "phpcbf --standard=phpcs.xml",
+        "phpstan": "phpstan analyse src tests --level=max -c phpstan.neon --no-progress --ansi",
+        "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
+        "install-cs": "php -r \"@mkdir('build'); copy('https://cs.symfony.com/download/php-cs-fixer-v2.phar', 'build/php-cs-fixer-v2.phar');\"",
+        "fix-cs": "php build/php-cs-fixer-v2.phar fix --config=.cs.php",
+        "check-cs": "php build/php-cs-fixer-v2.phar fix --dry-run --format=txt --verbose --diff --diff-format=udiff --config=.cs.php",
+        "check-all": [
+            "@lint",
+            "@check-style",
+            "@phpstan",
+            "@test-coverage"
+        ],
+        "cli": "php bin/cli.php --ansi",
+        "compile-twig": "php bin/cli.php compile-twig --ansi",
+        "update-assets": "npm update --dev",
+        "bundle-assets": "npx webpack --mode=development",
+        "bundle-assets-prod": "npx webpack --mode=production",
+        "watch": "npx webpack --watch",
+        "generate-migration": "phinx-migrations generate --overwrite -c config/phinx.php --ansi",
+        "create-migration": "phinx create -c config/phinx.php --ansi",
+        "migrate": "phinx migrate -c config/phinx.php --ansi",
+        "update-schema-sql": "php bin/cli.php update-schema-sql"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Test\\": "tests"
+        }
+    },
+    "config": {
+        "process-timeout": 0,
+        "sort-packages": true
     }
 }

@@ -1,4 +1,8 @@
 {
+  "name": "dynamics",
+  "version": "1.0.0",
+  "license": "Commercial",
+  "private": true,
   "dependencies": {
     "awesomplete": "^1.1.5",
     "axios": "^0.19.2",
@@ -23,7 +27,15 @@
     "spectrum-colorpicker": "^1.8.0"
   },
   "devDependencies": {
-    "gulp": "^4.0.2",
-    "gulp-sass": "^4.0.2"
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^3.2.0",
+    "file-loader": "^4.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.3",
+    "terser-webpack-plugin": "latest",
+    "webpack": "^4.40.2",
+    "webpack-assets-manifest": "^3.1.1",
+    "webpack-cli": "^3.3.9",
+    "webpack-manifest-plugin": "^2.0.4"
   }
 }
