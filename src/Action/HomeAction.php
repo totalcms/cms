@@ -9,9 +9,9 @@ final class HomeAction
 {
     public function __invoke(ServerRequest $request, Response $response): Response
     {
-        return $response->withJson(['success' => true]);
+        // return $response->withJson(['success' => true]);
 
-        // $response->getBody()->write('Hello, World!');
-        // return $response;
+        $response->getBody()->write('Welcome to Dynamics!');
+        return $response;
     }
 }

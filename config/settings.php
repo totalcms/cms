@@ -4,8 +4,8 @@
 $settings = require __DIR__.'/defaults.php';
 
 // load in optional settings from dynamics root
-if (file_exists(__DIR__.'/env.php')) {
-    require __DIR__.'/env.php';
+if (file_exists(__DIR__.'/../env.php')) {
+    require __DIR__.'/../env.php';
 }
 
 // Load environment configuration

@@ -22,7 +22,7 @@ return function (App $app) {
     $app->add(CorsMiddleware::class);
 
     // Add routing middleware
-    // Register the samesite cookie middleware
+    // Register the same site cookie middleware
     $configuration = new SameSiteCookieConfiguration();
     $app->add(new SameSiteCookieMiddleware($configuration));
     $app->add(new SameSiteSessionMiddleware($configuration));
@@ -35,14 +35,12 @@ return function (App $app) {
     $app->add(BasePathMiddleware::class);
 
     $app->add(LiteLicenseMiddleware::class);
-
-    $container = $app->getContainer();
-
+    
     // Add error handler middleware
     $settings = $container->get(Configuration::class)->getArray('error_handler_middleware');
     $displayErrorDetails = (bool) $settings['display_error_details'];
     $logErrors = (bool) $settings['log_errors'];
     $logErrorDetails = (bool) $settings['log_error_details'];
-
+    
     $app->addErrorMiddleware($displayErrorDetails, $logErrors, $logErrorDetails);
 };

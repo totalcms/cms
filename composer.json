@@ -58,7 +58,7 @@
     },
     "scripts": {
         "build": "artifact build --name=dynamics",
-        "start": "php -S localhost:8080 -t public",
+        "start": "php -S localhost:8080 -t api",
         "test": "phpunit --configuration phpunit.xml --do-not-cache-result --colors=always",
         "test-coverage": "phpunit --colors=always --do-not-cache-result --configuration phpunit.xml --coverage-clover build/logs/clover.xml --coverage-html build/coverage",
         "check-style": "phpcs --standard=phpcs.xml",

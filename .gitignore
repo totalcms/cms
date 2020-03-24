@@ -11,3 +11,5 @@ cache.properties
 vendor/
 build/
 node_modules/
+
+tmp/route-cache.php
