@@ -32,9 +32,8 @@ final class LiteLicenseMiddleware implements MiddlewareInterface
         }
 
         // Set response headers before giving it to error callback
-        return (new ResponseFactory())->createResponse(401)->withHeader(
-            'Unauthorized',
-            'Invalid license for request'
-        );
+        $response = (new ResponseFactory())->createResponse(401, 'Unauthorized');
+        $response->getBody()->write('Invalid License Found');
+        return $response;
     }
 }
