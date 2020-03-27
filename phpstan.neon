@@ -1,0 +1,12 @@
+parameters:
+	inferPrivatePropertyTypeFromConstructor: true
+	level: 8
+	paths:
+		- src
+		- config
+		- tests
+	ignoreErrors:
+		- message: '#Undefined variable: \$settings#'
+		  path: config
+		- message: '#Offset .+ does not exist on array#'
+		  path: config

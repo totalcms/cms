@@ -124,9 +124,9 @@ $settings['smtp'] = [
 ];
 
 // Console commands
-$settings['commands'] = [
-    \App\Console\TwigCompilerCommand::class,
-    \App\Console\SchemaSqlCommand::class,
-];
+// $settings['commands'] = [
+//     \App\Console\TwigCompilerCommand::class,
+//     \App\Console\SchemaSqlCommand::class,
+// ];
 
 return $settings;
