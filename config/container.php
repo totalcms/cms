@@ -21,7 +21,7 @@ use Twig\Loader\FilesystemLoader;
 return [
     // Application settings
     Configuration::class => function () {
-        return new Configuration(require __DIR__.'/settings.php');
+        return new Configuration(require __DIR__ . '/settings.php');
     },
 
     App::class => function (ContainerInterface $container) {

@@ -31,14 +31,14 @@ $settings['env'] = 'production';
 
 // Path settings
 $settings['root'] = dirname(__DIR__);
-$settings['temp'] = $settings['root'].'/tmp';
-$settings['public'] = $settings['root'].'/api';
+$settings['temp'] = $settings['root'] . '/tmp';
+$settings['public'] = $settings['root'] . '/api';
 
 // Clean up trailing slashes in DOCUMENT_ROOT
 $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
 
 // Path to cms data folder
-$settings['data'] = $settings['docroot'].'/tcms-data';
+$settings['data'] = $settings['docroot'] . '/tcms-data';
 
 // Error Handling Middleware settings
 $settings['error_handler_middleware'] = [
@@ -65,7 +65,7 @@ $settings['app'] = [
 // Logger settings
 $settings['logger'] = [
     'name' => 'dyanmics',
-    'path' => $settings['data'].'/logs',
+    'path' => $settings['data'] . '/logs',
     'filename' => 'cms.log',
     'level' => \Monolog\Logger::ERROR,
     'file_permission' => 0775,
@@ -73,10 +73,10 @@ $settings['logger'] = [
 
 // View settings
 $settings['twig'] = [
-    'path' => $settings['root'].'/templates',
+    'path' => $settings['root'] . '/templates',
     // Should be set to true in production
     'cache_enabled' => true,
-    'cache_path' => $settings['temp'].'/twig-cache',
+    'cache_path' => $settings['temp'] . '/twig-cache',
 ];
 
 // Session

@@ -3,7 +3,6 @@
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
 use Slim\App;
-
 use App\Action\PreflightAction;
 
 return function (App $app) {
