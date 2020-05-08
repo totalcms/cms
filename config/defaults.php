@@ -52,11 +52,6 @@ $settings['error_handler_middleware'] = [
     'log_error_details' => true,
 ];
 
-$settings['router'] = [
-    // Should be set only in production
-    'cache_file' => '',
-];
-
 // Application settings
 $settings['app'] = [
     'secret' => '{{app_secret}}',
@@ -73,10 +68,16 @@ $settings['logger'] = [
 
 // View settings
 $settings['twig'] = [
-    'path' => $settings['root'] . '/templates',
-    // Should be set to true in production
-    'cache_enabled' => true,
-    'cache_path' => $settings['temp'] . '/twig-cache',
+    'paths' => [
+        $settings['root'] . '/templates',
+        __DIR__ . '/../templates',
+    ],
+    'options' => [
+        'debug' => false,
+        // Should be set to true in production
+        'cache_enabled' => true,
+        'cache_path' => $settings['temp'] . '/twig',
+    ],
 ];
 
 // Session
@@ -124,9 +125,9 @@ $settings['smtp'] = [
 ];
 
 // Console commands
-// $settings['commands'] = [
-//     \App\Console\TwigCompilerCommand::class,
-//     \App\Console\SchemaSqlCommand::class,
-// ];
+$settings['commands'] = [
+    \App\Console\TwigCompilerCommand::class,
+    \App\Console\SchemaDumpCommand::class,
+];
 
 return $settings;

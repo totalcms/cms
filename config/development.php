@@ -1,7 +1,7 @@
 <?php
 
 // Development Environment
-// $settings['env'] = 'development';
+$settings['env'] = 'development';
 
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
@@ -24,4 +24,7 @@ $settings['logger']['path'] = $settings['root'] . '/logs';
 $settings['logger']['level'] = \Monolog\Logger::DEBUG;
 $settings['assets']['minify'] = 0;
 $settings['locale']['cache'] = null;
-$settings['twig']['cache_enabled'] = false;
+$settings['twig']['options']['cache_enabled'] = false;
+
+// Database
+$settings['db']['database'] = 'dynamics_dev';

@@ -2,7 +2,6 @@
 
 namespace App\Factory;
 
-use Exception;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
@@ -17,17 +16,12 @@ class LoggerFactory
     /**
      * @var string
      */
-    private string $path;
+    private $path;
 
     /**
      * @var int
      */
-    private int $level;
-
-    /**
-     * @var array Handler
-     */
-    private array $handler = [];
+    private $level;
 
     /**
      * The constructor.
@@ -36,9 +30,14 @@ class LoggerFactory
      */
     public function __construct(array $settings)
     {
-        $this->path = (string) $settings['path'];
-        $this->level = (int) $settings['level'];
+        $this->path = (string)$settings['path'];
+        $this->level = (int)$settings['level'];
     }
+
+    /**
+     * @var array Handler
+     */
+    private $handler = [];
 
     /**
      * Build the logger.
@@ -64,7 +63,7 @@ class LoggerFactory
      * Add rotating file logger handler.
      *
      * @param string $filename The filename
-     * @param int    $level    The level (optional)
+     * @param int $level The level (optional)
      *
      * @return LoggerFactory The logger factory
      */
@@ -85,8 +84,6 @@ class LoggerFactory
      * Add a console logger.
      *
      * @param int $level The level (optional)
-     *
-     * @throws Exception
      *
      * @return self The instance
      */

@@ -1,6 +1,7 @@
 <?php
 
 use App\Factory\LoggerFactory;
+use App\Handler\DefaultErrorHandler;
 use Cake\Database\Connection;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -11,12 +12,19 @@ use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
+use Slim\Middleware\ErrorMiddleware;
 use Slim\Psr7\Factory\UriFactory;
 use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
 use Slim\Views\TwigMiddleware;
 use Slim\Views\TwigRuntimeLoader;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFunction;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
+use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
 
 return [
     // Application settings
@@ -26,15 +34,7 @@ return [
 
     App::class => function (ContainerInterface $container) {
         AppFactory::setContainer($container);
-        $app = AppFactory::create();
-
-        $config = $container->get(Configuration::class);
-        $routeCacheFile = $config->findString('router.cache_file');
-        if ($routeCacheFile) {
-            $app->getRouteCollector()->setCacheFile($routeCacheFile);
-        }
-
-        return $app;
+        return AppFactory::create();
     },
 
     // For the responder
@@ -90,12 +90,35 @@ return [
             $twig->addExtension(new TwigExtension());
         }
 
+        /** @var FlashBagInterface $flashbag */
+        $flashbag = $container->get(Session::class)->getFlashBag();
+        $environment = $twig->getEnvironment();
+        $environment->addGlobal('flashbag', $flashbag);
+        $environment->addFunction(new TwigFunction(
+            'flash',
+            function (string $key, $default = null) use ($flashbag) {
+                return $flashbag->get($key, $default ?? [])[0] ?? null;
+            }
+        ));
+
         return $twig;
+    },
+
+    Session::class => function (ContainerInterface $container) {
+        $settings = $container->get(Configuration::class)->getArray('session');
+
+        if (PHP_SAPI === 'cli') {
+            return new Session(new MockArraySessionStorage());
+        }
+        return new Session(new NativeSessionStorage($settings));
+    },
+
+    SessionInterface::class => function (ContainerInterface $container) {
+        return $container->get(Session::class);
     },
 
     BasePathMiddleware::class => function (ContainerInterface $container) {
         $app = $container->get(App::class);
-
         return new BasePathMiddleware($app);
     },
 
@@ -116,5 +139,22 @@ return [
         $factory = $container->get(ResponseFactoryInterface::class);
 
         return new ValidationExceptionMiddleware($factory, new JsonEncoder());
+    },
+
+    ErrorMiddleware::class => function (ContainerInterface $container) {
+        $config = $container->get(Configuration::class)->getArray('error');
+        $app = $container->get(App::class);
+
+        $errorMiddleware = new ErrorMiddleware(
+            $app->getCallableResolver(),
+            $app->getResponseFactory(),
+            (bool)$config['display_error_details'],
+            (bool)$config['log_errors'],
+            (bool)$config['log_error_details']
+        );
+
+        $errorMiddleware->setDefaultErrorHandler($container->get(DefaultErrorHandler::class));
+
+        return $errorMiddleware;
     },
 ];

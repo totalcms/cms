@@ -1,6 +1,10 @@
 <?php
 
 // Production environment
-// $settings['env'] = 'production';
+$settings['env'] = 'production';
 
-$settings['router']['cache_file'] = $settings['temp'] . '/route-cache.php';
+$settings['error']['display_error_details'] = false;
+$settings['logger']['level'] = \Monolog\Logger::INFO;
+
+// Database
+$settings['db']['database'] = 'dynamics';
