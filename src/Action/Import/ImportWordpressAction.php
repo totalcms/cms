@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Collection;
+namespace App\Action\Import;
 
 use App\Domain\User\Service\UserViewer;
 use App\Responder\Responder;
@@ -10,6 +10,6 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Action.
  */
-final class CollectionGetSchemaAction
+final class ImportWordpressAction
 {
 }

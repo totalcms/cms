@@ -10,6 +10,6 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Action.
  */
-final class ImportCollectionTumblrAction
+final class ImportTumblrAction
 {
 }

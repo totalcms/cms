@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Import;
+namespace App\Action\Collection\Object;
 
 use App\Domain\User\Service\UserViewer;
 use App\Responder\Responder;
@@ -10,6 +10,6 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Action.
  */
-final class ImportCollectionFactoryAction
+final class ObjectSaveAction
 {
 }
