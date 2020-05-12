@@ -1,14 +1,11 @@
 <?php
 
-use Slim\Http\Response;
-use Slim\Http\ServerRequest;
 use Slim\App;
-use App\Action\PreflightAction;
 use Slim\Routing\RouteCollectorProxy;
 
 return function (App $app) {
     $app->get('/', \App\Action\HomeAction::class);
-    $app->options('/', PreflightAction::class);
+    $app->options('/', \App\Action\PreflightAction::class);
 
     // Password protected area
     // $app->group('/users', function (RouteCollectorProxy $group) {
