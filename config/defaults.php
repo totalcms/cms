@@ -40,8 +40,8 @@ $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
 // Path to cms data folder
 $settings['data'] = $settings['docroot'] . '/tcms-data';
 
-// Error Handling Middleware settings
-$settings['error_handler_middleware'] = [
+// Error Handling
+$settings['error'] = [
     // Should be set to false in production
     'display_error_details' => false,
     // Parameter is passed to the default ErrorHandler

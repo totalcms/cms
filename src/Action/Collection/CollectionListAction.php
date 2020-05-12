@@ -2,14 +2,22 @@
 
 namespace App\Action\Collection;
 
-use App\Domain\User\Service\UserViewer;
 use App\Responder\Responder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * Action.
- */
 final class CollectionListAction
 {
+    /**
+     * Action
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $response->getBody()->write('CollectionListAction');
+        return $response;
+    }
 }

@@ -59,11 +59,12 @@ return [
     // Twig templates
     Twig::class => function (ContainerInterface $container) {
         $config = $container->get(Configuration::class);
-        $twigSettings = $config->getArray('twig');
+        $settings = $config->getArray('twig');
 
-        $twig = Twig::create($twigSettings['path'], [
-            'cache' => $twigSettings['cache_enabled'] ? $twigSettings['cache_path'] : false,
-        ]);
+        $options = $settings['options'];
+        $options['cache'] = $options['cache_enabled'] ? $options['cache_path'] : false;
+
+        $twig = Twig::create($settings['paths'], $options);
 
         $loader = $twig->getLoader();
         if ($loader instanceof FilesystemLoader) {
@@ -71,14 +72,14 @@ return [
         }
 
         // Add extensions
-        // $twig->addExtension(new TwigTranslationExtension());
+        // $twig->addExtension(new TranslationExtension($container->get(Translator::class)));
         // $twig->addExtension(new WebpackExtension(
-        //     $config->getString('public').'/assets/manifest.json',
+        //     $config->getString('public') . '/assets/manifest.json',
         //     'assets/',
         //     'assets/'
         // ));
 
-        // Add the Twig extension only we run the app from the command line / cron job,
+        // Add the Twig extension only if we run the application from the command line / cron job,
         // but not when phpunit tests are running.
         if ((PHP_SAPI === 'cli' || PHP_SAPI === 'cgi-fcgi') && !defined('PHPUNIT_TEST_SUITE')) {
             $app = $container->get(App::class);

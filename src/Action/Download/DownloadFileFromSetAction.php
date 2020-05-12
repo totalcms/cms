@@ -2,14 +2,22 @@
 
 namespace App\Action\Download;
 
-use App\Domain\User\Service\UserViewer;
 use App\Responder\Responder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * Action.
- */
 final class DownloadFileFromSetAction
 {
+    /**
+     * Action
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $response->getBody()->write('DownloadFileFromSetAction');
+        return $response;
+    }
 }

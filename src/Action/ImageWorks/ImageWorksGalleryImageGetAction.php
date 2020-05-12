@@ -2,14 +2,22 @@
 
 namespace App\Action\ImageWorks;
 
-use App\Domain\User\Service\UserViewer;
 use App\Responder\Responder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * Action.
- */
 final class ImageWorksGalleryImageGetAction
 {
+    /**
+     * Action
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $response->getBody()->write('ImageWorksGalleryImageGetAction');
+        return $response;
+    }
 }
