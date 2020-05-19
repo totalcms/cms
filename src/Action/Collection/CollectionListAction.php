@@ -8,6 +8,7 @@ use App\Responder\Responder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
 
 final class CollectionListAction
 {
@@ -25,7 +26,7 @@ final class CollectionListAction
     {
         $this->iterator  = $iterator;
         $this->responder = $responder;
-        $this->logger    = $loggerFactory->addFileHandler('test.log')->createInstance('CollectionListAction');
+        $this->logger    = $loggerFactory->createInstance((new ReflectionClass($this))->getShortName());
     }
 
     /**
