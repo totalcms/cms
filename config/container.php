@@ -1,8 +1,8 @@
 <?php
 
+use App\Factory\DataDirIteratorFactory;
 use App\Factory\LoggerFactory;
 use App\Handler\DefaultErrorHandler;
-use Cake\Database\Connection;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Selective\BasePath\BasePathMiddleware;
@@ -18,13 +18,13 @@ use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
 use Slim\Views\TwigMiddleware;
 use Slim\Views\TwigRuntimeLoader;
-use Twig\Loader\FilesystemLoader;
-use Twig\TwigFunction;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
+use Twig\Loader\FilesystemLoader;
+use Twig\TwigFunction;
 
 return [
     // Application settings
@@ -45,6 +45,11 @@ return [
     // The Slim RouterParser
     RouteParserInterface::class => function (ContainerInterface $container) {
         return $container->get(App::class)->getRouteCollector()->getRouteParser();
+    },
+
+    // The data dir interator factory
+    DataDirIteratorFactory::class => function (ContainerInterface $container) {
+        return new DataDirIteratorFactory($container->get(Configuration::class)->getString('datadir'));
     },
 
     // The logger factory

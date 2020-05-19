@@ -38,7 +38,7 @@ $settings['public'] = $settings['root'] . '/api';
 $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
 
 // Path to cms data folder
-$settings['data'] = $settings['docroot'] . '/tcms-data';
+$settings['datadir'] = $settings['docroot'] . '/tcms-data';
 
 // Error Handling
 $settings['error'] = [
@@ -82,7 +82,7 @@ $settings['twig'] = [
 
 // Session
 $settings['session'] = [
-    'name' => 'dynamics',
+    'name' => 'totalcms',
     'cache_expire' => 0,
 ];
 
@@ -125,9 +125,9 @@ $settings['smtp'] = [
 ];
 
 // Console commands
-$settings['commands'] = [
-    \App\Console\TwigCompilerCommand::class,
-    \App\Console\SchemaDumpCommand::class,
-];
+// $settings['commands'] = [
+//     \App\Console\TwigCompilerCommand::class,
+//     \App\Console\SchemaDumpCommand::class,
+// ];
 
 return $settings;
