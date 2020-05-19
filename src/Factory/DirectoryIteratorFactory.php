@@ -42,7 +42,7 @@ class DirectoryIteratorFactory
      *
      * @param string $subfolder (optional) subfolder to interate through
      *
-     * @return string[]
+     * @return array<string>
      */
     public function dirs(string $subfolder = '') : array
     {
@@ -69,10 +69,10 @@ class DirectoryIteratorFactory
     /**
      * Interate through folder and return directories
      *
-     * @param string   $subfolder  (optional) subfolder to interate through
-     * @param string[] $extensions (optional) array of file extensions to include
+     * @param string        $subfolder  (optional) subfolder to interate through
+     * @param array<string> $extensions (optional) array of file extensions to include
      *
-     * @return string[]
+     * @return array<string>
      */
     public function files(string $subfolder = '', array $extensions = []) : array
     {

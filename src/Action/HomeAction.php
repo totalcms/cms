@@ -7,11 +7,11 @@ use Slim\Http\ServerRequest;
 
 final class HomeAction
 {
-    public function __invoke(ServerRequest $request, Response $response): Response
+    public function __invoke(ServerRequest $request, Response $response) : Response
     {
         // return $response->withJson(['success' => true]);
 
-        $response->getBody()->write('Welcome to Dynamics!');
+        $response->getBody()->write('Welcome to Total CMS!');
         return $response;
     }
 }
