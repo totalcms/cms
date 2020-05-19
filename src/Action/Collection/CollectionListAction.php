@@ -2,7 +2,7 @@
 
 namespace App\Action\Collection;
 
-use App\Factory\DataDirIteratorFactory;
+use App\Factory\DirectoryIteratorFactory;
 use App\Factory\LoggerFactory;
 use App\Responder\Responder;
 use Psr\Http\Message\ResponseInterface;
@@ -11,17 +11,17 @@ use Psr\Log\LoggerInterface;
 
 final class CollectionListAction
 {
-    private DataDirIteratorFactory $iterator;
+    private DirectoryIteratorFactory $iterator;
     private Responder $responder;
     private LoggerInterface $logger;
 
     /**
      * The constructor
      *
-     * @param DataDirIteratorFactory $iterator  CMS data directory iterator
-     * @param Responder              $responder The app responder
+     * @param DirectoryIteratorFactory $iterator  CMS data directory iterator
+     * @param Responder                $responder The app responder
      */
-    public function __construct(DataDirIteratorFactory $iterator, Responder $responder, LoggerFactory $loggerFactory)
+    public function __construct(DirectoryIteratorFactory $iterator, Responder $responder, LoggerFactory $loggerFactory)
     {
         $this->iterator  = $iterator;
         $this->responder = $responder;

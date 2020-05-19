@@ -1,6 +1,6 @@
 <?php
 
-use App\Factory\DataDirIteratorFactory;
+use App\Factory\DirectoryIteratorFactory;
 use App\Factory\LoggerFactory;
 use App\Handler\DefaultErrorHandler;
 use Psr\Container\ContainerInterface;
@@ -47,14 +47,14 @@ return [
         return $container->get(App::class)->getRouteCollector()->getRouteParser();
     },
 
-    // The data dir interator factory
-    DataDirIteratorFactory::class => function (ContainerInterface $container) {
-        return new DataDirIteratorFactory($container->get(Configuration::class)->getString('datadir'));
-    },
-
     // The logger factory
     LoggerFactory::class => function (ContainerInterface $container) {
         return new LoggerFactory($container->get(Configuration::class)->getArray('logger'));
+    },
+
+    // The data dir interator factory
+    DirectoryIteratorFactory::class => function (ContainerInterface $container) {
+        return new DirectoryIteratorFactory($container->get(Configuration::class)->getString('datadir'));
     },
 
     TwigMiddleware::class => function (ContainerInterface $container) {

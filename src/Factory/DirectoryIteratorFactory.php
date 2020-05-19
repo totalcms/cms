@@ -7,7 +7,7 @@ use FilesystemIterator;
 /**
  * Factory.
  */
-class DataDirIteratorFactory
+class DirectoryIteratorFactory
 {
     private string $path;
 
@@ -28,7 +28,7 @@ class DataDirIteratorFactory
      *
      * @return FilesystemIterator
      */
-    private function createIterator(string $subfolder = ''): FilesystemIterator
+    private function createIterator(string $subfolder = '') : FilesystemIterator
     {
         $dir = $this->path;
         if (!empty($subfolder)) {
@@ -44,7 +44,7 @@ class DataDirIteratorFactory
      *
      * @return string[]
      */
-    public function dirs(string $subfolder = ''): array
+    public function dirs(string $subfolder = '') : array
     {
         $files = [];
         foreach ($this->createIterator($subfolder) as $fileinfo) {
@@ -74,7 +74,7 @@ class DataDirIteratorFactory
      *
      * @return string[]
      */
-    public function files(string $subfolder = '', array $extensions = []): array
+    public function files(string $subfolder = '', array $extensions = []) : array
     {
         $files = [];
         foreach ($this->createIterator($subfolder) as $fileinfo) {
