@@ -4,7 +4,6 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
 return function (App $app) {
-    $app->get('/', \App\Action\HomeAction::class);
     $app->options('/', \App\Action\PreflightAction::class);
 
     // Password protected area
