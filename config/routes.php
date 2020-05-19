@@ -22,7 +22,7 @@ return function (App $app) {
 
         // Collection Schema
         $group->get('/{collection}/schema', \App\Action\Collection\Schema\SchemaGetAction::class)->setName('schema-get');
-        $group->post('/{collection}/schema', \App\Action\Collection\Schema\SchemaSaveAction::class)->setName('schema-save');
+        $group->post('/{collection}/schema', \App\Action\Collection\Schema\SchemaSaveAction::class)->setName('schema-save'); // Pro Only License
 
         // Collection Index
         $group->get('/{collection}', \App\Action\Collection\Index\IndexGetAction::class)->setName('collection-get');

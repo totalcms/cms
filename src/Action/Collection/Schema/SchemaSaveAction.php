@@ -17,6 +17,7 @@ final class SchemaSaveAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
+        // Make sure that we cannot create schemas with reserved names (blog, text, gallery, etc)
         $response->getBody()->write('SchemaSaveAction');
         return $response;
     }

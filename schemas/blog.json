@@ -5,7 +5,12 @@
         "required": true
     },
     "gallery": {
-        "type": "gallery",
+        "type"     : "gallery",
+        "index"    : true,
+        "required" : false
+    },
+    "image": {
+        "type": "image",
         "index": true,
         "required": false
     },
@@ -54,7 +59,7 @@
         "index": true,
         "required": false
     },
-    "collection": {
+    "schema": {
         "type": "text",
         "index": false,
         "required": true

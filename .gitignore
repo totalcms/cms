@@ -12,4 +12,6 @@ vendor/
 build/
 node_modules/
 
-tmp/route-cache.php
+tmp/*
+logs/*
+tcms-data/*
