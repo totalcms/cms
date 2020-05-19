@@ -39,29 +39,29 @@ class DefaultErrorHandler
     /**
      * The constructor.
      *
-     * @param Twig $twig Twig template engine
+     * @param Twig                     $twig            Twig template engine
      * @param ResponseFactoryInterface $responseFactory The response factory
-     * @param LoggerFactory $loggerFactory The logger factory
+     * @param LoggerFactory            $loggerFactory   The logger factory
      */
     public function __construct(
         Twig $twig,
         ResponseFactoryInterface $responseFactory,
         LoggerFactory $loggerFactory
     ) {
-        $this->twig = $twig;
+        $this->twig            = $twig;
         $this->responseFactory = $responseFactory;
-        $this->logger = $loggerFactory
-            ->addFileHandler('error.log')
+        $this->logger          = $loggerFactory
+            ->addFileHandler('totalcms.log')
             ->createInstance('error');
     }
 
     /**
      * Invoke.
      *
-     * @param ServerRequestInterface $request The request
-     * @param Throwable $exception The exception
-     * @param bool $displayErrorDetails Show error details
-     * @param bool $logErrors Log errors
+     * @param ServerRequestInterface $request             The request
+     * @param Throwable              $exception           The exception
+     * @param bool                   $displayErrorDetails Show error details
+     * @param bool                   $logErrors           Log errors
      *
      * @return ResponseInterface The response
      */
@@ -70,7 +70,7 @@ class DefaultErrorHandler
         Throwable $exception,
         bool $displayErrorDetails,
         bool $logErrors
-    ): ResponseInterface {
+    ) : ResponseInterface {
         // Log error
         if ($logErrors) {
             $this->logger->error(sprintf(
@@ -104,7 +104,7 @@ class DefaultErrorHandler
      *
      * @return int The http code
      */
-    private function getHttpStatusCode(Throwable $exception): int
+    private function getHttpStatusCode(Throwable $exception) : int
     {
         // Detect status code
         $statusCode = 500;
@@ -134,13 +134,13 @@ class DefaultErrorHandler
     /**
      * Get error message.
      *
-     * @param Throwable $exception The error
-     * @param int $statusCode The http status code
-     * @param bool $displayErrorDetails Display details
+     * @param Throwable $exception           The error
+     * @param int       $statusCode          The http status code
+     * @param bool      $displayErrorDetails Display details
      *
      * @return string The message
      */
-    private function getErrorMessage(Throwable $exception, int $statusCode, bool $displayErrorDetails): string
+    private function getErrorMessage(Throwable $exception, int $statusCode, bool $displayErrorDetails) : string
     {
         $reasonPhrase = (new Response())->withStatus($statusCode)->getReasonPhrase();
         $errorMessage = sprintf('%s %s', $statusCode, $reasonPhrase);

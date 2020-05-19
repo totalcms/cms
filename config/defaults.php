@@ -30,8 +30,8 @@ $settings = [];
 $settings['env'] = 'production';
 
 // Path settings
-$settings['root'] = dirname(__DIR__);
-$settings['temp'] = $settings['root'] . '/tmp';
+$settings['root']   = dirname(__DIR__);
+$settings['temp']   = $settings['root'] . '/tmp';
 $settings['public'] = $settings['root'] . '/api';
 
 // Clean up trailing slashes in DOCUMENT_ROOT
@@ -59,10 +59,10 @@ $settings['app'] = [
 
 // Logger settings
 $settings['logger'] = [
-    'name' => 'dyanmics',
-    'path' => $settings['data'] . '/logs',
-    'filename' => 'cms.log',
-    'level' => \Monolog\Logger::ERROR,
+    'name'            => 'totalcms',
+    'path'            => $settings['data'] . '/logs',
+    'filename'        => 'totalcms.log',
+    'level'           => \Monolog\Logger::ERROR,
     'file_permission' => 0775,
 ];
 
@@ -76,21 +76,21 @@ $settings['twig'] = [
         'debug' => false,
         // Should be set to true in production
         'cache_enabled' => true,
-        'cache_path' => $settings['temp'] . '/twig',
+        'cache_path'    => $settings['temp'] . '/twig',
     ],
 ];
 
 // Session
 $settings['session'] = [
-    'name' => 'totalcms',
+    'name'         => 'totalcms',
     'cache_expire' => 0,
 ];
 
 // Database settings
 $settings['db'] = [
-    'driver' => \Cake\Database\Driver\Mysql::class,
-    'host' => 'localhost',
-    'encoding' => 'utf8mb4',
+    'driver'    => \Cake\Database\Driver\Mysql::class,
+    'host'      => 'localhost',
+    'encoding'  => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',
     // Enable identifier quoting
     'quoteIdentifiers' => true,
@@ -115,13 +115,13 @@ $settings['db'] = [
 
 // E-Mail settings
 $settings['smtp'] = [
-    'type' => 'smtp',
-    'host' => '127.0.0.1',
-    'port' => '25',
-    'secure' => '',
-    'from' => 'from@example.com',
+    'type'      => 'smtp',
+    'host'      => '127.0.0.1',
+    'port'      => '25',
+    'secure'    => '',
+    'from'      => 'from@example.com',
     'from_name' => 'My name',
-    'to' => 'to@example.com',
+    'to'        => 'to@example.com',
 ];
 
 // Console commands
