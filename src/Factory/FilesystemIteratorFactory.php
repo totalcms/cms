@@ -67,6 +67,19 @@ class FilesystemIteratorFactory
     }
 
     /**
+     * file exists
+     *
+     * @param string $subpath (optional) path of file to read
+     *
+     * @return bool
+     */
+    public function exists(string $subpath = '') : bool
+    {
+        $path = $this->buildPath($subpath);
+        return file_exists($path);
+    }
+
+    /**
      * Generate the File Interator
      *
      * @param string $subpath (optional) path of file to read

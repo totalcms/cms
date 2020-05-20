@@ -25,7 +25,7 @@ class CollectionListRepository implements RepositoryInterface
     /**
      * Load data table entries.
      *
-     * @return array<array<mixed>>
+     * @return array<object>
      */
     public function listAllCollections() : array
     {

@@ -15,6 +15,8 @@ class FilesystemRepository implements RepositoryInterface
 {
     private FilesystemIteratorFactory $filesystem;
 
+    const META_FILE = '.meta.json';
+
     /**
      * Constructor.
      *
@@ -36,12 +38,12 @@ class FilesystemRepository implements RepositoryInterface
 
         $collections = [];
         foreach ($this->filesystem->listDirs() as $name) {
-            $metaFile = $name . DIRECTORY_SEPARATOR . '.meta.json';
-            if (!file_exists($metaFile)) {
+            $metaFile = $name . DIRECTORY_SEPARATOR . $this::META_FILE;
+            if (!$this->filesystem->exists($metaFile)) {
                 continue;
             }
 
-            $contents = file_get_contents($metaFile);
+            $contents = $this->filesystem->readFile($metaFile);
             if (empty($contents)) {
                 continue;
             }

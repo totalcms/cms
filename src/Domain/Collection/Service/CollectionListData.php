@@ -25,7 +25,7 @@ final class CollectionListData implements ServiceInterface
     /**
      * List all collections
      *
-     * @return array<array<mixed>>
+     * @return array<object>
      */
     public function listAllCollections() : array
     {
