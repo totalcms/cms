@@ -45,6 +45,7 @@
         "slim/twig-view": "^3",
         "ssnepenthe/color-utils": "^0.4.2",
         "symfony/http-foundation": "^5.0",
+        "symfony/property-access": "^5.0",
         "symfony/serializer": "^5.0",
         "symfony/yaml": "^5.0",
         "thepixeldeveloper/sitemap": "^5",

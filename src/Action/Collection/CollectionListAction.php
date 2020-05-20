@@ -2,9 +2,11 @@
 
 namespace App\Action\Collection;
 
-use App\Factory\DirectoryIteratorFactory;
+use App\Domain\Collection\Service\CollectionListData;
+use App\Factory\FilesystemIteratorFactory;
 use App\Factory\LoggerFactory;
 use App\Responder\Responder;
+use App\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
@@ -12,21 +14,23 @@ use ReflectionClass;
 
 final class CollectionListAction
 {
-    private DirectoryIteratorFactory $iterator;
+    private FilesystemIteratorFactory $filesystem;
     private Responder $responder;
     private LoggerInterface $logger;
+    private CollectionListData $collectionListData;
 
     /**
      * The constructor
      *
-     * @param DirectoryIteratorFactory $iterator  CMS data directory iterator
-     * @param Responder                $responder The app responder
+     * @param FilesystemIteratorFactory $filesystem CMS data directory iterator
+     * @param Responder                 $responder  The app responder
      */
-    public function __construct(DirectoryIteratorFactory $iterator, Responder $responder, LoggerFactory $loggerFactory)
+    public function __construct(Responder $responder, LoggerFactory $loggerFactory, FilesystemIteratorFactory $filesystem, CollectionListData $collectionListData)
     {
-        $this->iterator  = $iterator;
-        $this->responder = $responder;
-        $this->logger    = $loggerFactory->createInstance((new ReflectionClass($this))->getShortName());
+        $this->filesystem         = $filesystem;
+        $this->responder          = $responder;
+        $this->logger             = $loggerFactory->createInstance((new ReflectionClass($this))->getShortName());
+        $this->collectionListData = $collectionListData;
     }
 
     /**
@@ -40,6 +44,11 @@ final class CollectionListAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
     {
         $this->logger->info('Hello from CollectionListAction');
-        return $this->responder->json($response, $this->iterator->dirs());
+        // return $this->responder->collectionJson($response, $this->filesystem->listDirs());
+        return $this->responder->json(
+            $response,
+            $this->collectionListData->listAllCollections(),
+            new CollectionMetaTransformer()
+        );
     }
 }

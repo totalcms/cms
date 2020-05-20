@@ -43,11 +43,11 @@ $settings['datadir'] = $settings['docroot'] . '/tcms-data';
 // Error Handling
 $settings['error'] = [
     // Should be set to false in production
-    'display_error_details' => false,
+    'display_error_details' => true,
     // Parameter is passed to the default ErrorHandler
     // View in rendered output by enabling the "displayErrorDetails" setting.
     // For the console and unit tests it should be disable too
-    'log_errors' => false,
+    'log_errors' => true,
     // Display error details in error log
     'log_error_details' => true,
 ];

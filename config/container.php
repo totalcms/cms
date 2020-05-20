@@ -1,6 +1,6 @@
 <?php
 
-use App\Factory\DirectoryIteratorFactory;
+use App\Factory\FilesystemIteratorFactory;
 use App\Factory\LoggerFactory;
 use App\Handler\DefaultErrorHandler;
 use Psr\Container\ContainerInterface;
@@ -53,8 +53,8 @@ return [
     },
 
     // The data dir interator factory
-    DirectoryIteratorFactory::class => function (ContainerInterface $container) {
-        return new DirectoryIteratorFactory($container->get(Configuration::class)->getString('datadir'));
+    FilesystemIteratorFactory::class => function (ContainerInterface $container) {
+        return new FilesystemIteratorFactory($container->get(Configuration::class)->getString('datadir'));
     },
 
     TwigMiddleware::class => function (ContainerInterface $container) {

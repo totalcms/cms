@@ -3,71 +3,34 @@
 namespace App\Responder;
 
 use App\Routing\UrlGenerator;
+use League\Fractal\Manager as FractalManager;
+use League\Fractal\Resource\Collection as FractalCollection;
+use League\Fractal\Resource\Item as FractalItem;
+use League\Fractal\TransformerAbstract;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Views\Twig;
-use Symfony\Component\Serializer\Encoder\JsonEncode;
-use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 
 /**
  * A generic responder.
  */
 final class Responder
 {
-    /**
-     * @var Twig
-     */
-    private $twig;
-
-    /**
-     * @var UrlGenerator
-     */
-    private $urlGenerator;
-
-    /**
-     * @var ResponseFactoryInterface
-     */
-    private $responseFactory;
+    private UrlGenerator $urlGenerator;
+    private ResponseFactoryInterface $responseFactory;
+    private FractalManager $fractal;
 
     /**
      * The constructor.
      *
-     * @param Twig $twig The twig engine
-     * @param UrlGenerator $urlGenerator The url generator
+     * @param UrlGenerator             $urlGenerator    The url generator
      * @param ResponseFactoryInterface $responseFactory The response factory
+     * @param FractalManager           $fractal         fractal response manager
      */
-    public function __construct(
-        Twig $twig,
-        UrlGenerator $urlGenerator,
-        ResponseFactoryInterface $responseFactory
-    ) {
-        $this->twig = $twig;
-        $this->urlGenerator = $urlGenerator;
+    public function __construct(UrlGenerator $urlGenerator, ResponseFactoryInterface $responseFactory, FractalManager $fractal)
+    {
+        $this->urlGenerator    = $urlGenerator;
         $this->responseFactory = $responseFactory;
-    }
-
-    /**
-     * Create a new response.
-     *
-     * @return ResponseInterface The response
-     */
-    public function createResponse(): ResponseInterface
-    {
-        return $this->responseFactory->createResponse()->withHeader('Content-Type', 'text/html; charset=utf-8');
-    }
-
-    /**
-     * Output rendered template.
-     *
-     * @param ResponseInterface $response The response
-     * @param string $template Template pathname relative to templates directory
-     * @param mixed[] $data Associative array of template variables
-     *
-     * @return ResponseInterface The response
-     */
-    public function render(ResponseInterface $response, string $template, array $data = []): ResponseInterface
-    {
-        return $this->twig->render($response, $template, $data);
+        $this->fractal         = $fractal;
     }
 
     /**
@@ -76,19 +39,15 @@ final class Responder
      * This method prepares the response object to return an HTTP Redirect
      * response to the client.
      *
-     * @param ResponseInterface $response The response
-     * @param string $destination The redirect destination (url or route name)
-     * @param array<mixed> $data Named argument replacement data
-     * @param array<mixed> $queryParams Optional query string parameters
+     * @param ResponseInterface $response    The response
+     * @param string            $destination The redirect destination (url or route name)
+     * @param array<mixed>      $data        Named argument replacement data
+     * @param array<mixed>      $queryParams Optional query string parameters
      *
      * @return ResponseInterface The response
      */
-    public function redirect(
-        ResponseInterface $response,
-        string $destination,
-        array $data = [],
-        array $queryParams = []
-    ): ResponseInterface {
+    public function redirect(ResponseInterface $response, string $destination, array $data = [], array $queryParams = []) : ResponseInterface
+    {
         if (!filter_var($destination, FILTER_VALIDATE_URL)) {
             $destination = $this->urlGenerator->fullUrlFor($destination, $data, $queryParams);
         }
@@ -102,21 +61,16 @@ final class Responder
      * This method prepares the response object to return an HTTP JSON
      * response to the client.
      *
-     * @param ResponseInterface $response The response
-     * @param mixed $data The data
-     * @param int $options Json encoding options
-     *
-     * @throws NotEncodableValueException
+     * @param ResponseInterface $response   The response
+     * @param array<mixed>      $collection The data
      *
      * @return ResponseInterface The response
      */
-    public function json(
-        ResponseInterface $response,
-        $data,
-        int $options = 0
-    ): ResponseInterface {
+    public function json(ResponseInterface $response, array $collection, TransformerAbstract $transformer) : ResponseInterface
+    {
+        $resource = new FractalCollection($collection, $transformer);
         $response = $response->withHeader('Content-Type', 'application/json');
-        $response->getBody()->write((string)(new JsonEncode([JsonEncode::OPTIONS => $options]))->encode($data, 'json'));
+        $response->getBody()->write($this->fractal->createData($resource)->toJson());
 
         return $response;
     }
