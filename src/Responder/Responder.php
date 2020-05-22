@@ -61,14 +61,36 @@ final class Responder
      * This method prepares the response object to return an HTTP JSON
      * response to the client.
      *
-     * @param ResponseInterface $response   The response
-     * @param array<mixed>      $collection The data
+     * @param ResponseInterface   $response    The response
+     * @param array<mixed>        $collection  The data
+     * @param TransformerAbstract $transformer the data transformer
      *
      * @return ResponseInterface The response
      */
-    public function json(ResponseInterface $response, array $collection, TransformerAbstract $transformer) : ResponseInterface
+    public function jsonCollection(ResponseInterface $response, array $collection, TransformerAbstract $transformer) : ResponseInterface
     {
         $resource = new FractalCollection($collection, $transformer);
+        $response = $response->withHeader('Content-Type', 'application/json');
+        $response->getBody()->write($this->fractal->createData($resource)->toJson());
+
+        return $response;
+    }
+
+    /**
+     * Write JSON to the response body.
+     *
+     * This method prepares the response object to return an HTTP JSON
+     * response to the client.
+     *
+     * @param ResponseInterface   $response    The response
+     * @param object              $item        The data
+     * @param TransformerAbstract $transformer the data transformer
+     *
+     * @return ResponseInterface The response
+     */
+    public function jsonItem(ResponseInterface $response, object $item, TransformerAbstract $transformer) : ResponseInterface
+    {
+        $resource = new FractalItem($item, $transformer);
         $response = $response->withHeader('Content-Type', 'application/json');
         $response->getBody()->write($this->fractal->createData($resource)->toJson());
 

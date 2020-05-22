@@ -14,6 +14,7 @@ use Symfony\Component\Serializer\Serializer;
 class FilesystemRepository implements RepositoryInterface
 {
     private FilesystemIteratorFactory $filesystem;
+    private Serializer $serializer;
 
     const META_FILE = '.meta.json';
 
@@ -25,6 +26,7 @@ class FilesystemRepository implements RepositoryInterface
     public function __construct(FilesystemIteratorFactory $filesystem)
     {
         $this->filesystem = $filesystem;
+        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     /**
@@ -34,8 +36,6 @@ class FilesystemRepository implements RepositoryInterface
      */
     public function listAllCollections() : array
     {
-        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-
         $collections = [];
         foreach ($this->filesystem->listDirs() as $name) {
             $metaFile = $name . DIRECTORY_SEPARATOR . $this::META_FILE;
@@ -48,7 +48,7 @@ class FilesystemRepository implements RepositoryInterface
                 continue;
             }
 
-            $collection = $serializer->deserialize($contents, CollectionData::class, 'json');
+            $collection = $this->serializer->deserialize($contents, CollectionData::class, 'json');
             if (!(is_object($collection) && is_a($collection, CollectionData::class))) {
                 continue;
             }
@@ -57,5 +57,19 @@ class FilesystemRepository implements RepositoryInterface
         }
 
         return $collections;
+    }
+
+    /**
+     * Save a Collection
+     *
+     * @param CollectionData $collection the collection to save
+     *
+     * @return bool
+     */
+    public function saveCollection(CollectionData $collection) : bool
+    {
+        $jsonContent = $this->serializer->serialize($collection, 'json');
+        $metaFile    = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
+        return $this->filesystem->saveFile($metaFile, $jsonContent);
     }
 }

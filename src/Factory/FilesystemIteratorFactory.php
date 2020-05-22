@@ -3,6 +3,8 @@
 namespace App\Factory;
 
 use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * Factory.
@@ -80,20 +82,72 @@ class FilesystemIteratorFactory
     }
 
     /**
+     * recursively make a directory
+     *
+     * @param string $dir full path to the directory to make
+     *
+     * @return bool
+     */
+    private static function makeDir(string $dir) : bool
+    {
+        if (!file_exists($dir)) {
+            return mkdir($dir, 0775, true);
+        }
+        return true;
+    }
+
+    // public function delete(string $path) : bool
+    // {
+    //     if (file_exists($path)) {
+    //         if (is_dir($path)) {
+    //             return self::recursiveDelete($path);
+    //         }
+    //         return unlink($path);
+    //     }
+    //     return true;
+    // }
+
+    // public static function recursiveDelete(string $source, bool $removeOnlyChildren = false) : bool
+    // {
+    //     if (empty($source) || file_exists($source) === false) {
+    //         return false;
+    //     }
+    //     if (is_file($source) || is_link($source)) {
+    //         return unlink($source);
+    //     }
+
+    //     $dirIt  = new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS);
+    //     $files  = new RecursiveIteratorIterator($dirIt, RecursiveIteratorIterator::CHILD_FIRST);
+
+    //     foreach ($files as $fileinfo) {
+    //         if ($fileinfo->isDir()) {
+    //             if (self::recursiveDelete($fileinfo->getRealPath()) === false) {
+    //                 return false;
+    //             }
+    //         }
+    //         if (unlink($fileinfo->getRealPath()) === false) {
+    //             return false;
+    //         }
+    //     }
+    //     if ($removeOnlyChildren === false) {
+    //         return rmdir($source);
+    //     }
+    //     return true;
+    // }
+
+    /**
      * Generate the File Interator
      *
-     * @param string $subpath (optional) path of file to read
+     * @param string $subpath path of file to write to
+     * @param string $data    data to wrtie to the file
      *
-     * @return ?string
+     * @return bool
      */
-    public function writeFile(string $subpath = '') : ?string
+    public function saveFile(string $subpath, string $data) : bool
     {
         $path = $this->buildPath($subpath);
-        if (!file_exists($path)) {
-            return null;
-        }
-        $contents = file_get_contents($path);
-        return is_string($contents) ? $contents : null;
+        $this::makeDir(dirname($path));
+        return file_put_contents($path, $data, LOCK_EX) !== false;
     }
 
     /**

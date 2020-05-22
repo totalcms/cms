@@ -18,6 +18,7 @@ return function (App $app) {
     $app->group('/collections', function (RouteCollectorProxy $group) {
         // All Collections
         $group->get('', \App\Action\Collection\CollectionListAction::class)->setName('collections-get');
+        $group->post('', \App\Action\Collection\CollectionSaveAction::class)->setName('collection-save');
 
         // Collection Schema
         $group->get('/{collection}/schema', \App\Action\Collection\Schema\SchemaGetAction::class)->setName('schema-get');

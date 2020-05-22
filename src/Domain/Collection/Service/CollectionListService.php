@@ -2,13 +2,14 @@
 
 namespace App\Domain\Collection\Service;
 
+use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Collection\Repository\CollectionListRepository;
 use App\Interfaces\ServiceInterface;
 
 /**
  * Service.
  */
-final class CollectionListData implements ServiceInterface
+final class CollectionListService implements ServiceInterface
 {
     private CollectionListRepository $repository;
 

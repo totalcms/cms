@@ -2,7 +2,7 @@
 
 namespace App\Action\Collection;
 
-use App\Domain\Collection\Service\CollectionListData;
+use App\Domain\Collection\Service\CollectionListService;
 use App\Factory\FilesystemIteratorFactory;
 use App\Factory\LoggerFactory;
 use App\Responder\Responder;
@@ -14,23 +14,20 @@ use ReflectionClass;
 
 final class CollectionListAction
 {
-    private FilesystemIteratorFactory $filesystem;
     private Responder $responder;
-    private LoggerInterface $logger;
-    private CollectionListData $collectionListData;
+    private CollectionListService $collectionListService;
 
     /**
      * The constructor
      *
-     * @param FilesystemIteratorFactory $filesystem CMS data directory iterator
-     * @param Responder                 $responder  The app responder
+     * @param CollectionListService $service   collection list service
+     * @param Responder             $responder The app responder
      */
-    public function __construct(Responder $responder, LoggerFactory $loggerFactory, FilesystemIteratorFactory $filesystem, CollectionListData $collectionListData)
+    public function __construct(Responder $responder, CollectionListService $service)
     {
-        $this->filesystem         = $filesystem;
-        $this->responder          = $responder;
-        $this->logger             = $loggerFactory->createInstance((new ReflectionClass($this))->getShortName());
-        $this->collectionListData = $collectionListData;
+        // $this->logger = $loggerFactory->createInstance((new ReflectionClass($this))->getShortName());
+        $this->responder             = $responder;
+        $this->collectionListService = $service;
     }
 
     /**
@@ -43,11 +40,10 @@ final class CollectionListAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
     {
-        $this->logger->info('Hello from CollectionListAction');
-        // return $this->responder->collectionJson($response, $this->filesystem->listDirs());
-        return $this->responder->json(
+        // $this->logger->info('Hello from CollectionListAction');
+        return $this->responder->jsonCollection(
             $response,
-            $this->collectionListData->listAllCollections(),
+            $this->collectionListService->listAllCollections(),
             new CollectionMetaTransformer()
         );
     }
