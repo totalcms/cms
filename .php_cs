@@ -12,6 +12,7 @@ return PhpCsFixer\Config::create()->setRules([
     'method_argument_space'                     => ['on_multiline' => 'ensure_fully_multiline'],
     'single_trait_insert_per_statement'         => true,
     'array_syntax'                              => ['syntax' => 'short'],
+    'function_declaration'                      => ['closure_function_spacing' => 'none'],
     'compact_nullable_typehint'                 => true,
     'combine_consecutive_unsets'                => true,
     'method_separation'                         => true,

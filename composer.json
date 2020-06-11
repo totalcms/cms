@@ -1,6 +1,6 @@
 {
-    "name": "joeworkman/dynamics",
-    "description": "Dynamic CMS powering Total CMS",
+    "name": "joeworkman/totalcms",
+    "description": "Total CMS",
     "license": "Commercial",
     "type": "project",
     "keywords": [
