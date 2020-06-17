@@ -16,7 +16,8 @@ class FilesystemRepository implements RepositoryInterface
     private FilesystemIteratorFactory $filesystem;
     private Serializer $serializer;
 
-    const META_FILE = '.meta.json';
+    const META_FILE   = '.meta.json';
+    const SCHEMA_FILE = '.schema.json';
 
     /**
      * Constructor.
@@ -67,6 +68,13 @@ class FilesystemRepository implements RepositoryInterface
      * @return bool
      */
     public function saveCollection(CollectionData $collection) : bool
+    {
+        $jsonContent = $this->serializer->serialize($collection, 'json');
+        $metaFile    = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
+        return $this->filesystem->saveFile($metaFile, $jsonContent);
+    }
+
+    public function getSchemaforCollection(string $collection) : array
     {
         $jsonContent = $this->serializer->serialize($collection, 'json');
         $metaFile    = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
