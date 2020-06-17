@@ -3,13 +3,10 @@
 namespace App\Action\Collection;
 
 use App\Domain\Collection\Service\CollectionListService;
-use App\Factory\FilesystemIteratorFactory;
-use App\Factory\LoggerFactory;
 use App\Responder\Responder;
 use App\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
 use ReflectionClass;
 
 final class CollectionListAction
