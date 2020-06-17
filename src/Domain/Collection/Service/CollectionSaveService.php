@@ -3,7 +3,7 @@
 namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Collection\Repository\CollectionSaveRepository;
+use App\Domain\Collection\Repository\CollectionRepository;
 use App\Interfaces\ServiceInterface;
 use Exception;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -15,15 +15,15 @@ use Symfony\Component\Serializer\Serializer;
  */
 final class CollectionSaveService implements ServiceInterface
 {
-    private CollectionSaveRepository $repository;
+    private CollectionRepository $repository;
     private Serializer $serializer;
 
     /**
      * Constructor.
      *
-     * @param CollectionSaveRepository $repository The repository
+     * @param CollectionRepository $repository The repository
      */
-    public function __construct(CollectionSaveRepository $repository)
+    public function __construct(CollectionRepository $repository)
     {
         $this->repository = $repository;
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);

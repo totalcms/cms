@@ -9,7 +9,7 @@ use App\Repository\RepositoryInterface;
 /**
  * Repository.
  */
-class CollectionSaveRepository implements RepositoryInterface
+class CollectionRepository implements RepositoryInterface
 {
     private FilesystemRepository $repository;
 
@@ -21,6 +21,16 @@ class CollectionSaveRepository implements RepositoryInterface
     public function __construct(FilesystemRepository $repository)
     {
         $this->repository = $repository;
+    }
+
+    /**
+     * Load data table entries.
+     *
+     * @return array<object>
+     */
+    public function listAllCollections() : array
+    {
+        return $this->repository->listAllCollections();
     }
 
     /**

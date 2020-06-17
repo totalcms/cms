@@ -2,8 +2,7 @@
 
 namespace App\Domain\Collection\Service;
 
-use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Collection\Repository\CollectionListRepository;
+use App\Domain\Collection\Repository\CollectionRepository;
 use App\Interfaces\ServiceInterface;
 
 /**
@@ -11,14 +10,14 @@ use App\Interfaces\ServiceInterface;
  */
 final class CollectionListService implements ServiceInterface
 {
-    private CollectionListRepository $repository;
+    private CollectionRepository $repository;
 
     /**
      * Constructor.
      *
-     * @param CollectionListRepository $repository The repository
+     * @param CollectionRepository $repository The repository
      */
-    public function __construct(CollectionListRepository $repository)
+    public function __construct(CollectionRepository $repository)
     {
         $this->repository = $repository;
     }
