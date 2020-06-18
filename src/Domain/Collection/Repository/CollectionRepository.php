@@ -5,6 +5,7 @@ namespace App\Domain\Collection\Repository;
 use App\Domain\Collection\Data\CollectionData;
 use App\Repository\FilesystemRepository;
 use App\Repository\RepositoryInterface;
+use Exception;
 
 /**
  * Repository.
@@ -24,9 +25,25 @@ class CollectionRepository implements RepositoryInterface
     }
 
     /**
+     * Fetch a collection
+     *
+     * @param string $collection
+     *
+     * @return CollectionData
+     */
+    public function fetchCollection(string $collection) : CollectionData
+    {
+        $collection = $this->repository->fetchCollection($collection);
+        if (null == $collection) {
+            throw new Exception('Collection does not exist', 1);
+        }
+        return $collection;
+    }
+
+    /**
      * Load data table entries.
      *
-     * @return array<object>
+     * @return array<CollectionData>
      */
     public function listAllCollections() : array
     {

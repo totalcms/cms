@@ -2,22 +2,23 @@
 
 namespace App\Domain\Schema\Data;
 
-use Selective\ArrayReader\ArrayReader;
-use UnexpectedValueException;
-
 /**
  * Data object.
  */
 final class SchemaData
 {
-    public string $name;
-    public string $schema;
-    public string $url;
+    public string $collection;
+    /** @var array<string> */
+    public array $index;
+    /** @var array<string> */
+    public array $required;
+    /** @var array<array{type:string,fieldset:string}> */
+    public array $properties;
 
     /**
      * Named constructor.
      *
-     * @param array{name:string,schema:string} $array The array with data
+     * @param mixed[] $array The schema array
      *
      * @return self
      */
@@ -25,9 +26,10 @@ final class SchemaData
     {
         $data = new ArrayReader($array);
 
-        $name   = $data->findString('name');
-        $schema = $data->findString('schema');
-        $url    = $data->findString('url');
+        $collection   = $data->findString('collection');
+        $index        = $data->findArray('index');
+        $required     = $data->findArray('required');
+        $properties   = $data->findArray('properties');
 
         if (empty($name) || empty($schema)) {
             throw new UnexpectedValueException('Failed to create collection from array');

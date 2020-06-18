@@ -2,24 +2,20 @@
 
 namespace App\Transformer;
 
-use App\Domain\Collection\Data\CollectionData as Collection;
+use App\Domain\Schema\Data\SchemaData;
 use League\Fractal;
 
 class SchemaMetaTransformer extends Fractal\TransformerAbstract
 {
     /**
-     * Fractal transform for a collection
+     * Fractal transform for a schema
      *
-     * @param Collection $collection the collection object
+     * @param SchemaData $schema the schema object
      *
-     * @return array<mixed>
+     * @return mixed[]
      */
-    public function transform(Collection $collection) : array
+    public function transform(SchemaData $schema) : array
     {
-        return [
-            'name'   => $collection->name,
-            'schema' => $collection->schema,
-            'url'    => $collection->url ?? '',
-        ];
+        return $schema->schema;
     }
 }

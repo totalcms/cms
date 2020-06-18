@@ -2,8 +2,10 @@
 
 namespace App\Domain\Schema\Repository;
 
+use App\Domain\Schema\Data\SchemaData;
 use App\Repository\FilesystemRepository;
 use App\Repository\RepositoryInterface;
+use Exception;
 
 /**
  * Repository.
@@ -23,12 +25,34 @@ class SchemaRepository implements RepositoryInterface
     }
 
     /**
-     * Load data table entries.
+     * fetch a schema for one of the default schema types
      *
-     * @return array<object>
+     * @param string $type
+     *
+     * @return SchemaData
      */
-    public function listAllCollections() : array
+    public function fetchDefaultSchemaForType(string $type) : SchemaData
     {
-        return $this->repository->listAllCollections();
+        $schema = $this->repository->fetchDefaultSchemaForType($type);
+        if (null == $schema) {
+            throw new Exception("Default schema could not be located for $type", 1);
+        }
+        return $schema;
+    }
+
+    /**
+     * fetch a schema for a custom object
+     *
+     * @param string $collection
+     *
+     * @return SchemaData
+     */
+    public function fetchObjectSchemaForCollection(string $collection) : SchemaData
+    {
+        $schema = $this->repository->fetchObjectSchemaForCollection($collection);
+        if (null == $schema) {
+            throw new Exception("Object schema could not be located $collection", 1);
+        }
+        return $schema;
     }
 }
