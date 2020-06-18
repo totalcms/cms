@@ -30,9 +30,10 @@ $settings = [];
 $settings['env'] = 'production';
 
 // Path settings
-$settings['root']   = dirname(__DIR__);
-$settings['temp']   = $settings['root'] . '/tmp';
-$settings['public'] = $settings['root'] . '/api';
+$settings['root']    = dirname(__DIR__);
+$settings['temp']    = $settings['root'] . '/tmp';
+$settings['public']  = $settings['root'] . '/api';
+$settings['schemas'] = $settings['root'] . '/schemas';
 
 // Clean up trailing slashes in DOCUMENT_ROOT
 $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
