@@ -34,7 +34,7 @@ class FilesystemRepository implements RepositoryInterface
     /**
      * fetch and deserialize a file
      *
-     * @template CLASS
+     * @template CLASS of object
      *
      * @param string              $file
      * @param class-string<CLASS> $className
@@ -139,7 +139,7 @@ class FilesystemRepository implements RepositoryInterface
         if ($this->filesystem->exists($schemaFile)) {
             $contents = $this->filesystem->readFile($schemaFile);
         }
-        $schema = json_decode($contents ?? '');
+        $schema = json_decode($contents ?? '', true);
 
         // TODO: static access to class is a no-no in phpmd
         return is_array($schema) ? SchemaData::fromArray($schema) : null;

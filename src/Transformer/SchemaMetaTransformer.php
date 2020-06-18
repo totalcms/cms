@@ -16,6 +16,14 @@ class SchemaMetaTransformer extends Fractal\TransformerAbstract
      */
     public function transform(SchemaData $schema) : array
     {
-        return $schema->schema;
+        return [
+            '$anchor'       => $schema->anchor,
+            'title'         => $schema->title,
+            'description'   => $schema->description,
+            'type'          => $schema->type,
+            'index'         => $schema->index,
+            'required'      => $schema->required,
+            'properties'    => $schema->properties,
+        ];
     }
 }

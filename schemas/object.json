@@ -1,0 +1,45 @@
+{
+    "type"        : "object",
+    "$anchor"     : "collection-name",
+    "title"       : "My Object",
+    "description" : "My cool object description",
+    "properties"  : {
+        "video": {
+            "type"      : "string",
+            "default"   : "default value",
+            "fieldset"  : "video"
+        }
+    },
+    "required" : [
+        "id",
+        "name",
+        "subtitle",
+        "version",
+        "price",
+        "developer",
+        "tags",
+        "cartloom"
+    ],
+    "index": [
+        "featured",
+        "hidden",
+        "external",
+        "free",
+        "sale",
+        "popular",
+        "new",
+        "id",
+        "name",
+        "color",
+        "subtitle",
+        "version",
+        "price",
+        "developer",
+        "tags",
+        "icon",
+        "popularity",
+        "cartloom",
+        "releaseDate",
+        "updateDate"
+    ]
+}

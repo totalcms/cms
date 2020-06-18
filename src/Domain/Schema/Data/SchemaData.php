@@ -2,17 +2,24 @@
 
 namespace App\Domain\Schema\Data;
 
+use Selective\ArrayReader\ArrayReader;
+use UnexpectedValueException;
+
 /**
  * Data object.
  */
 final class SchemaData
 {
-    public string $collection;
+    public string $anchor;
+    public string $title;
+    public string $description;
+    public string $type;
+
     /** @var array<string> */
     public array $index;
     /** @var array<string> */
     public array $required;
-    /** @var array<array{type:string,fieldset:string}> */
+    /** @var array<array> */
     public array $properties;
 
     /**
@@ -26,20 +33,27 @@ final class SchemaData
     {
         $data = new ArrayReader($array);
 
-        $collection   = $data->findString('collection');
-        $index        = $data->findArray('index');
-        $required     = $data->findArray('required');
-        $properties   = $data->findArray('properties');
+        $anchor      = $data->findString('$anchor');
+        $title       = $data->findString('title') ?? '';
+        $description = $data->findString('description') ?? '';
+        $type        = $data->findString('type') ?? 'object';
+        $index       = $data->findArray('index') ?? [];
+        $required    = $data->findArray('required') ?? [];
+        $properties  = $data->findArray('properties');
 
-        if (empty($name) || empty($schema)) {
-            throw new UnexpectedValueException('Failed to create collection from array');
+        if (empty($anchor) || empty($properties)) {
+            throw new UnexpectedValueException('Failed to create schema from array');
         }
 
-        $collection          = new self();
-        $collection->name    = $name;
-        $collection->schema  = $schema;
-        $collection->url     = $url ?? '';
+        $schema              = new self();
+        $schema->anchor      = $anchor;
+        $schema->title       = $title;
+        $schema->description = $description;
+        $schema->type        = $type;
+        $schema->index       = $index;
+        $schema->required    = $required;
+        $schema->properties  = $properties;
 
-        return $collection;
+        return $schema;
     }
 }
