@@ -16,6 +16,7 @@ class Schema {
         this.properties = this.processFieldsets();
 
         // Compare server and local schema
+        // This needs to only happen on custom objects
         this.getServerSchema().then(serverSchema => this.compareSchema(serverSchema));
     }
 
