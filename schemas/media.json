@@ -4,13 +4,13 @@
         "id": {
             "type": "string"
         },
-        "color": {
-            "type": "object"
+        "media": {
+            "type": "string"
         }
     },
     "required": [
         "id",
-        "color"
+        "media"
     ],
     "index": [
         "id"

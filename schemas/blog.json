@@ -1,72 +1,72 @@
 {
-    "id": {
-        "type": "text",
-        "index": true,
-        "required": true
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string"
+        },
+        "author": {
+            "type": "string"
+        },
+        "summary": {
+            "type": "string"
+        },
+        "content": {
+            "type": "string"
+        },
+        "extra": {
+            "type": "string"
+        },
+        "genre": {
+            "type": "string"
+        },
+        "media": {
+            "type": "string"
+        },
+        "date": {
+            "type": "string"
+        },
+        "updated": {
+            "type": "string"
+        },
+        "draft": {
+            "type": "boolean"
+        },
+        "featured": {
+            "type": "boolean"
+        },
+        "tags": {
+            "type": "array"
+        },
+        "categories": {
+            "type": "array"
+        },
+        "image": {
+            "type": "object"
+        },
+        "gallery": {
+            "type": "object"
+        }
     },
-    "gallery": {
-        "type"     : "gallery",
-        "index"    : true,
-        "required" : false
-    },
-    "image": {
-        "type": "image",
-        "index": true,
-        "required": false
-    },
-    "genre": {
-        "type": "text",
-        "index": true,
-        "required": true
-    },
-    "content": {
-        "type": "text",
-        "index": false,
-        "required": false
-    },
-    "author": {
-        "type": "text",
-        "index": true,
-        "required": false
-    },
-    "timestamp": {
-        "type": "text",
-        "index": true,
-        "required": true
-    },
-    "featured": {
-        "type": "toggle",
-        "index": true,
-        "required": false
-    },
-    "tags": {
-        "type": "list",
-        "index": true,
-        "required": false
-    },
-    "title": {
-        "type": "text",
-        "index": true,
-        "required": false
-    },
-    "summary": {
-        "type": "text",
-        "index": true,
-        "required": false
-    },
-    "categoires": {
-        "type": "list",
-        "index": true,
-        "required": false
-    },
-    "schema": {
-        "type": "text",
-        "index": false,
-        "required": true
-    },
-    "draft": {
-        "type": "toggle",
-        "index": true,
-        "required": false
-    }
+    "required": [
+        "id"
+    ],
+    "index": [
+        "id",
+        "title",
+        "author",
+        "summary",
+        "genre",
+        "media",
+        "date",
+        "updated",
+        "draft",
+        "featured",
+        "tags",
+        "categories",
+        "image",
+        "gallery"
+    ]
 }

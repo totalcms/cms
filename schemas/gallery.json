@@ -1,72 +1,18 @@
 {
-    "id": {
-        "type": "text",
-        "index": true,
-        "required": true
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "images": {
+            "type": "array"
+        }
     },
-    "gallery": {
-        "type": "gallery",
-        "index": true,
-        "required": false
-    },
-    "image": {
-        "type": "image",
-        "index": true,
-        "required": false
-    },
-    "genre": {
-        "type": "text",
-        "index": true,
-        "required": true
-    },
-    "content": {
-        "type": "text",
-        "index": false,
-        "required": false
-    },
-    "author": {
-        "type": "text",
-        "index": true,
-        "required": false
-    },
-    "timestamp": {
-        "type": "text",
-        "index": true,
-        "required": true
-    },
-    "featured": {
-        "type": "toggle",
-        "index": true,
-        "required": false
-    },
-    "tags": {
-        "type": "list",
-        "index": true,
-        "required": false
-    },
-    "title": {
-        "type": "text",
-        "index": true,
-        "required": false
-    },
-    "summary": {
-        "type": "text",
-        "index": true,
-        "required": false
-    },
-    "categoires": {
-        "type": "list",
-        "index": true,
-        "required": false
-    },
-    "collection": {
-        "type": "text",
-        "index": false,
-        "required": true
-    },
-    "draft": {
-        "type": "toggle",
-        "index": true,
-        "required": false
-    }
+    "required": [
+        "id",
+        "images"
+    ],
+    "index": [
+        "id"
+    ]
 }
