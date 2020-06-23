@@ -5,7 +5,7 @@ namespace App\Domain\Schema\Repository;
 use App\Domain\Schema\Data\SchemaData;
 use App\Repository\FilesystemRepository;
 use App\Repository\RepositoryInterface;
-use Exception;
+use RuntimeException;
 
 /**
  * Repository.
@@ -35,7 +35,7 @@ class SchemaRepository implements RepositoryInterface
     {
         $schema = $this->repository->fetchDefaultSchemaForType($type);
         if (null == $schema) {
-            throw new Exception("Default schema could not be located for $type", 1);
+            throw new RuntimeException("Default schema could not be located for $type", 1);
         }
         return $schema;
     }
@@ -51,8 +51,20 @@ class SchemaRepository implements RepositoryInterface
     {
         $schema = $this->repository->fetchObjectSchemaForCollection($collection);
         if (null == $schema) {
-            throw new Exception("Object schema could not be located $collection", 1);
+            throw new RuntimeException("Object schema could not be located $collection", 1);
         }
         return $schema;
+    }
+
+    /**
+     * save a schema
+     *
+     * @param string     $collection
+     * @param SchemaData $schema
+     *
+     */
+    public function saveSchemaforCollection(string $collection, SchemaData $schema) : bool
+    {
+        return $this->repository->saveSchemaForCollection($collection, $schema);
     }
 }

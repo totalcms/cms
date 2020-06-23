@@ -118,12 +118,11 @@ class FilesystemRepository implements RepositoryInterface
             return null;
         }
         $contents = file_get_contents($schemaFile);
-        if (empty($contents)) {
-            return null;
+        $schema   = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
+        if ($schema instanceof SchemaData) {
+            return $schema;
         }
-        $schema   = json_decode($contents);
-        // TODO: static access to class is a no-no in phpmd
-        return is_array($schema) ? SchemaData::fromArray($schema) : null;
+        return null;
     }
 
     /**
@@ -139,9 +138,25 @@ class FilesystemRepository implements RepositoryInterface
         if ($this->filesystem->exists($schemaFile)) {
             $contents = $this->filesystem->readFile($schemaFile);
         }
-        $schema = json_decode($contents ?? '', true);
+        $schema = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
+        if ($schema instanceof SchemaData) {
+            return $schema;
+        }
+        return null;
+    }
 
-        // TODO: static access to class is a no-no in phpmd
-        return is_array($schema) ? SchemaData::fromArray($schema) : null;
+    /**
+     * save a collection schema
+     *
+     * @param string     $collection
+     * @param SchemaData $schema
+     *
+     * @return boolean
+     */
+    public function saveSchemaforCollection(string $collection, SchemaData $schema) : bool
+    {
+        $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
+        $schemaJSON = $this->serializer->serialize($schema, 'json');
+        return $this->filesystem->saveFile($schemaFile, $schemaJSON);
     }
 }

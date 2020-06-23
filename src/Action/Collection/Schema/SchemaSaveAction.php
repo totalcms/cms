@@ -2,24 +2,24 @@
 
 namespace App\Action\Collection\Schema;
 
-use App\Domain\Collection\Service\CollectionSaveService;
+use App\Domain\Schema\Service\SchemaSaveService;
 use App\Responder\Responder;
-use App\Transformer\CollectionMetaTransformer;
+use App\Transformer\SchemaMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class SchemaSaveAction
 {
     private Responder $responder;
-    private CollectionSaveService $service;
+    private SchemaSaveService $service;
 
     /**
      * The constructor
      *
-     * @param Responder             $responder The app responder
-     * @param CollectionSaveService $service   Collection save service
+     * @param Responder         $responder The app responder
+     * @param SchemaSaveService $service   Schema save service
      */
-    public function __construct(Responder $responder, CollectionSaveService $service)
+    public function __construct(Responder $responder, SchemaSaveService $service)
     {
         $this->responder = $responder;
         $this->service   = $service;
@@ -30,16 +30,17 @@ final class SchemaSaveAction
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface      $response
+     * @param array<mixed>           $args     The routing arguments
      *
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args) : ResponseInterface
     {
         $body = $request->getBody();
         return $this->responder->jsonItem(
             $response,
-            $this->service->saveCollection($body),
-            new CollectionMetaTransformer()
+            $this->service->saveSchemaforCollection($args['collection'], $body),
+            new SchemaMetaTransformer()
         );
     }
 }

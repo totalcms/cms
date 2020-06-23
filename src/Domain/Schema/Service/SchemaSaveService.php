@@ -2,49 +2,62 @@
 
 namespace App\Domain\Schema\Service;
 
-use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Collection\Repository\CollectionRepository;
+use App\Domain\Collection\Service\CollectionFetchService;
+use App\Domain\Schema\Data\SchemaData;
+use App\Domain\Schema\Repository\SchemaRepository;
 use App\Interfaces\ServiceInterface;
-use Exception;
+use RuntimeException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use UnexpectedValueException;
 
 /**
  * Service.
  */
 final class SchemaSaveService implements ServiceInterface
 {
-    private CollectionRepository $repository;
+    private SchemaRepository $repository;
+    private CollectionFetchService $collectionService;
     private Serializer $serializer;
 
     /**
      * Constructor.
      *
-     * @param CollectionRepository $repository The repository
+     * @param SchemaRepository $repository The repository
      */
-    public function __construct(CollectionRepository $repository)
+    public function __construct(SchemaRepository $repository, CollectionFetchService $collectionService)
     {
-        $this->repository = $repository;
-        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $this->repository        = $repository;
+        $this->collectionService = $collectionService;
+        $this->serializer        = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     /**
-     * Save Collection data
+     * save a collection schema
      *
-     * @param string $data the collection data to save
+     * @param string $collection
+     * @param string $schemaJSON
      *
-     * @return CollectionData
+     * @return SchemaData
      */
-    public function saveCollection(string $data) : CollectionData
+    public function saveSchemaforCollection(string $collection, string $schemaJSON) : SchemaData
     {
-        $collection = (object)$this->serializer->deserialize($data, CollectionData::class, 'json');
-        if (!is_a($collection, CollectionData::class, false)) {
-            throw new Exception('Invalid Collection data provided', 1);
+        $collection = $this->collectionService->fetchCollection($collection);
+        if ('object' != $collection->schema) {
+            throw new UnexpectedValueException("Not allowed to save non-object schemas ($collection->name)", 1);
         }
-        if (!$this->repository->saveCollection($collection)) {
-            throw new Exception('Unable to save Collection', 1);
+
+        $schema = (object)$this->serializer->deserialize($schemaJSON, SchemaData::class, 'json');
+        if (!($schema instanceof SchemaData)) {
+            throw new UnexpectedValueException('Invalid schema data provided', 1);
         }
-        return $collection;
+
+        // TODO: Validate schema json against the schema.json schema to ensure proper formatting
+
+        if (!$this->repository->saveSchemaForCollection($collection->name, $schema)) {
+            throw new RuntimeException('Unable to save Schema', 1);
+        }
+        return $schema;
     }
 }
