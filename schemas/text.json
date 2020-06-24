@@ -2,10 +2,20 @@
     "type": "object",
     "properties": {
         "id": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "slug"
         },
         "content": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "text"
+        },
+        "wordcount": {
+            "type"     : "number",
+            "property" : "number"
+        },
+        "charcount": {
+            "type"     : "number",
+            "property" : "number"
         }
     },
     "required": [

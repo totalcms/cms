@@ -3,11 +3,62 @@
     "$anchor"     : "collection-name",
     "title"       : "My Object",
     "description" : "My cool object description",
-    "properties"  : {
-        "video": {
-            "type"      : "string",
-            "default"   : "default value",
-            "fieldset"  : "video"
+    "properties": {
+        "id": {
+            "type"     : "string",
+            "property" : "slug"
+        },
+        "passphrase": {
+            "type"     : "string",
+            "property" : "passphrase"
+        },
+        "text": {
+            "type"     : "string",
+            "property" : "text",
+            "default"  : "default value"
+        },
+        "number": {
+            "type"     : "number",
+            "property" : "number",
+            "default"  : 4
+        },
+        "date": {
+            "type"     : "string",
+            "property" : "date",
+            "default"  : "now"
+        },
+        "toggle": {
+            "type"     : "boolean",
+            "property" : "toggle",
+            "default"  : true
+        },
+        "media": {
+            "type"     : "object",
+            "property" : "media"
+        },
+        "list": {
+            "type"     : "array",
+            "property" : "list"
+        },
+        "image": {
+            "type"     : "object",
+            "property" : "image"
+        },
+        "gallery": {
+            "type"     : "array",
+            "property" : "gallery"
+        },
+        "file": {
+            "type"     : "object",
+            "property" : "file"
+        },
+        "depot": {
+            "type"     : "array",
+            "property" : "depot"
+        },
+        "cards": {
+            "type"     : "array",
+            "property" : "cards"
         }
     },
     "required" : [

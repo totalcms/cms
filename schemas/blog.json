@@ -2,56 +2,74 @@
     "type": "object",
     "properties": {
         "id": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "slug"
         },
         "title": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "text"
         },
         "author": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "text"
         },
         "summary": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "text"
         },
         "content": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "text"
         },
         "extra": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "text"
         },
         "genre": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "text"
         },
         "media": {
-            "type": "string"
+            "type"     : "object",
+            "property" : "embed"
         },
         "date": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "date"
         },
         "updated": {
-            "type": "string"
+            "type"     : "string",
+            "property" : "date"
         },
         "draft": {
-            "type": "boolean"
+            "type"     : "boolean",
+            "property" : "bool"
         },
         "featured": {
-            "type": "boolean"
+            "type"     : "boolean",
+            "property" : "bool"
         },
         "tags": {
-            "type": "array"
+            "type"     : "array",
+            "property" : "list"
         },
         "categories": {
-            "type": "array"
+            "type"     : "array",
+            "property" : "list"
         },
         "image": {
-            "type": "object"
+            "type"     : "object",
+            "property" : "image"
         },
         "gallery": {
-            "type": "object"
+            "type"     : "object",
+            "property" : "gallery"
         }
     },
     "required": [
-        "id"
+        "id",
+        "title",
+        "content"
     ],
     "index": [
         "id",
