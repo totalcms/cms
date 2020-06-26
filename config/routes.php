@@ -27,7 +27,7 @@ return function(App $app) {
         // Collection Object
         // $group->get('/{collection}/{id}', \App\Action\Collection\Object\ObjectFetchAction::class)->setName('object-fetch');
         // $group->get('/{collection}/{id}/exists', \App\Action\Collection\Object\ObjectExistsAction::class)->setName('object-exists');
-        // $group->post('/{collection}', \App\Action\Collection\Object\ObjectSaveAction::class)->setName('object-save');
+        $group->post('/{collection}', \App\Action\Collection\Object\ObjectSaveAction::class)->setName('object-save');
         // $group->put('/{collection}/{id}', \App\Action\Collection\Object\ObjectUpdateAction::class)->setName('object-update');
         // $group->delete('/{collection}/{id}', \App\Action\Collection\Object\ObjectDeleteAction::class)->setName('object-delete');
 

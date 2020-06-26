@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Domain\Collection\Data\CollectionData;
+use App\Domain\Object\Data\ObjectData;
 use App\Domain\Schema\Data\SchemaData;
 use App\Factory\FilesystemIteratorFactory;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -19,6 +20,7 @@ class FilesystemRepository implements RepositoryInterface
 
     const META_FILE   = '.meta.json';
     const SCHEMA_FILE = '.schema.json';
+    const OBJECT_EXT  = '.json';
 
     /**
      * Constructor.
@@ -158,5 +160,20 @@ class FilesystemRepository implements RepositoryInterface
         $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
         $schemaJSON = $this->serializer->serialize($schema, 'json');
         return $this->filesystem->saveFile($schemaFile, $schemaJSON);
+    }
+
+    /**
+     * Save an object
+     *
+     * @param string     $collection
+     * @param ObjectData $object
+     *
+     * @return boolean
+     */
+    public function saveObject(string $collection, ObjectData $object) : bool
+    {
+        $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . $this::OBJECT_EXT;
+        $objectJSON = $this->serializer->serialize($object, 'json');
+        return $this->filesystem->saveFile($objectFile, $objectJSON);
     }
 }

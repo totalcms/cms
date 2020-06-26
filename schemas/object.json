@@ -1,6 +1,5 @@
 {
     "type"        : "object",
-    "$anchor"     : "collection-name",
     "title"       : "My Object",
     "description" : "My cool object description",
     "properties": {
