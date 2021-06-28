@@ -1,0 +1,46 @@
+{
+  "$id": "https://www.totalcms.co/schemas/feed.json#",
+  "properties": {
+    "id": {
+      "$ref": "https://www.totalcms.co/schemas/properties/id.json#"
+    },
+    "featured": {
+      "type": "boolean"
+    },
+    "tags": {
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+    },
+    "title": {
+      "type": "string"
+    },
+    "date": {
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+    },
+    "image": {
+      "$ref": "https://www.totalcms.co/schemas/properties/image.json#"
+    },
+    "content": {
+      "type": "string"
+    }
+  },
+  "description": "A schema for a Total CMS Feed object",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "content",
+    "date",
+    "featured",
+    "tags",
+    "image"
+  ],
+  "index": [
+    "id",
+    "title",
+    "content",
+    "date",
+    "featured",
+    "tags",
+    "image"
+  ]
+}

@@ -1,90 +1,108 @@
 {
-    "type": "object",
-    "properties": {
-        "id": {
-            "type"     : "string",
-            "property" : "slug"
-        },
-        "title": {
-            "type"     : "string",
-            "property" : "text"
-        },
-        "author": {
-            "type"     : "string",
-            "property" : "text"
-        },
-        "summary": {
-            "type"     : "string",
-            "property" : "text"
-        },
-        "content": {
-            "type"     : "string",
-            "property" : "text"
-        },
-        "extra": {
-            "type"     : "string",
-            "property" : "text"
-        },
-        "genre": {
-            "type"     : "string",
-            "property" : "text"
-        },
-        "media": {
-            "type"     : "object",
-            "property" : "embed"
-        },
-        "date": {
-            "type"     : "string",
-            "property" : "date"
-        },
-        "updated": {
-            "type"     : "string",
-            "property" : "date"
-        },
-        "draft": {
-            "type"     : "boolean",
-            "property" : "bool"
-        },
-        "featured": {
-            "type"     : "boolean",
-            "property" : "bool"
-        },
-        "tags": {
-            "type"     : "array",
-            "property" : "list"
-        },
-        "categories": {
-            "type"     : "array",
-            "property" : "list"
-        },
-        "image": {
-            "type"     : "object",
-            "property" : "image"
-        },
-        "gallery": {
-            "type"     : "object",
-            "property" : "gallery"
-        }
+  "$id": "https://www.totalcms.co/schemas/blog.json#",
+  "properties": {
+    "content": {
+      "type": "string"
     },
-    "required": [
-        "id",
-        "title",
-        "content"
-    ],
-    "index": [
-        "id",
-        "title",
-        "author",
-        "summary",
-        "genre",
-        "media",
-        "date",
-        "updated",
-        "draft",
-        "featured",
-        "tags",
-        "categories",
-        "image",
-        "gallery"
-    ]
+    "labels": {
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+    },
+    "extra": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "tags": {
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "image": {
+      "$ref": "https://www.totalcms.co/schemas/properties/image.json#"
+    },
+    "archived": {
+      "type": "boolean"
+    },
+    "media": {
+      "$ref": "https://www.totalcms.co/schemas/properties/url.json#"
+    },
+    "updated": {
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+    },
+    "id": {
+      "$ref": "https://www.totalcms.co/schemas/properties/id.json#"
+    },
+    "date": {
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+    },
+    "extra2": {
+      "type": "string"
+    },
+    "draft": {
+      "type": "boolean"
+    },
+    "genre": {
+      "type": "string"
+    },
+    "gallery": {
+      "$ref": "https://www.totalcms.co/schemas/properties/gallery.json#"
+    },
+    "featured": {
+      "type": "boolean"
+    },
+    "wordcount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "categories": {
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+    },
+    "author": {
+      "type": "string"
+    }
+  },
+  "description": "A schema for a Total CMS Blog object",
+  "type": "object",
+  "required": [
+    "archived",
+    "author",
+    "categories",
+    "content",
+    "date",
+    "draft",
+    "extra",
+    "extra2",
+    "featured",
+    "gallery",
+    "genre",
+    "id",
+    "image",
+    "labels",
+    "media",
+    "summary",
+    "tags",
+    "title",
+    "updated",
+    "wordcount"
+  ],
+  "index": [
+    "archived",
+    "author",
+    "categories",
+    "date",
+    "draft",
+    "featured",
+    "gallery",
+    "genre",
+    "id",
+    "image",
+    "labels",
+    "summary",
+    "tags",
+    "title",
+    "updated",
+    "wordcount"
+  ]
 }
