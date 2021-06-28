@@ -1,0 +1,27 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object"
+  },
+  "description": "A set contains an array of object items",
+  "examples": [
+    [
+      {
+        "prop1": "Content",
+        "prop3": "Content",
+        "prop2": "Content"
+      },
+      {
+        "prop1": "Content",
+        "prop3": "Content",
+        "prop2": "Content"
+      },
+      {
+        "prop1": "Content",
+        "prop3": "Content",
+        "prop2": "Content"
+      }
+    ]
+  ],
+  "$id": "https://www.totalcms.co/schemas/properties/set.json#"
+}

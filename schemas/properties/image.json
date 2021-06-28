@@ -1,1 +1,242 @@
-{"image":{"uploadDate":"2018-08-02T08:59:28+00:00","color":{"primary":{"l":359.58332999999999,"s":79.12088,"a":1,"h":35.68627},"secondary":{"l":359.58332999999999,"s":79.12088,"a":1,"h":35.68627}},"featured":false,"alt":"Alt Text","exif":{"iso":"","caption":"","aperture":"","width":512,"exposureBias":"","title":"","date":"","shutterSpeed":"","height":512,"make":"","model":"","focalLength":"","copyright":""},"link":"https://example.com/page/","filename":"image.jpg","focalpoint":"25-75","tags":["tag1","tag2"],"palette":{"primary":["#1e140e","#7d3012","#8f9217","#c3bc25","#c61d1d","#e68685"],"secondary":["#19797a","#39e2e2","#3c43da","#706de8","#82cfed","#e1ebf1"]}}}
+{
+  "description": "Image object with supplemental data about the image",
+  "properties": {
+    "rating": {
+      "$comment": "The date the file was uploaded",
+      "$ref": "https://www.totalcms.co/schemas/properties/rating.json#"
+    },
+    "color": {
+      "type": "object",
+      "$comment": "User defined colors to be used in association with this image",
+      "properties": {
+        "primary": {
+          "$ref": "https://www.totalcms.co/schemas/properties/color.json#"
+        },
+        "secondary": {
+          "$ref": "https://www.totalcms.co/schemas/properties/color.json#"
+        }
+      }
+    },
+    "uploadDate": {
+      "$comment": "The date the image was uploaded",
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+    },
+    "featured": {
+      "default": false,
+      "$comment": "Set the image as featured",
+      "type": "boolean"
+    },
+    "exif": {
+      "type": "object",
+      "$comment": "The EXIF data extracted from the image",
+      "properties": {
+        "rating": {
+          "type": "number"
+        },
+        "copyright": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "aperture": {
+          "type": "string"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "exposureBias": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "date": {
+          "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+        },
+        "shutterSpeed": {
+          "type": "string"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "make": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "focalLength": {
+          "type": "string"
+        },
+        "iso": {
+          "type": "string"
+        }
+      }
+    },
+    "alt": {
+      "type": "string",
+      "$comment": "The alt text to be used for the image"
+    },
+    "link": {
+      "$comment": "A URL to be associated with this image",
+      "$ref": "https://www.totalcms.co/schemas/properties/url.json#"
+    },
+    "focalpoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "minimum": 0,
+          "default": 50,
+          "type": "integer",
+          "maximum": 100
+        },
+        "y": {
+          "minimum": 0,
+          "default": 50,
+          "type": "integer",
+          "maximum": 100
+        }
+      },
+      "$comment": "The focal point of the image. This is used while cropping the image so that the focal point is captured in the center"
+    },
+    "type": {
+      "type": "string",
+      "$comment": "The type of image: jpg, png, webp, gif",
+      "enum": [
+        "gif",
+        "jpg",
+        "png",
+        "webp"
+      ]
+    },
+    "tags": {
+      "$comment": "Tags associated with the image",
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+    },
+    "palette": {
+      "type": "object",
+      "$comment": "The color palette extracted from the image. Two palettes are stored with a max of 6 hexidecimal color strings for primary and secondary colors",
+      "properties": {
+        "primary": {
+          "items": {
+            "pattern": "^\\#[A-Za-z0-9]+$",
+            "type": "string",
+            "maxLength": 7
+          },
+          "type": "array",
+          "maxContains": 6
+        },
+        "secondary": {
+          "items": {
+            "pattern": "^\\#[A-Za-z0-9]+$",
+            "type": "string",
+            "maxLength": 7
+          },
+          "type": "array",
+          "maxContains": 6
+        }
+      }
+    }
+  },
+  "required": [
+    "alt",
+    "color",
+    "exif",
+    "featured",
+    "focalpoint",
+    "link",
+    "palette",
+    "rating",
+    "tags",
+    "type",
+    "uploadDate"
+  ],
+  "type": "object",
+  "examples": [
+    {
+      "rating": {
+        "counts": [
+          "0",
+          "0",
+          "2",
+          "5",
+          "3"
+        ],
+        "max": 5,
+        "total": 10,
+        "rating": 4.5
+      },
+      "color": {
+        "primary": {
+          "l": 359.60000000000002,
+          "s": 79,
+          "a": 1,
+          "h": 35.700000000000003
+        },
+        "secondary": {
+          "l": 359.60000000000002,
+          "s": 79,
+          "a": 1,
+          "h": 35.700000000000003
+        }
+      },
+      "uploadDate": "2018-08-02T08:59:28+00:00",
+      "featured": false,
+      "alt": "Alt Text",
+      "exif": {
+        "rating": "",
+        "iso": "",
+        "caption": "",
+        "aperture": "",
+        "longitude": 0,
+        "width": 512,
+        "latitude": 0,
+        "exposureBias": "",
+        "title": "",
+        "date": "",
+        "shutterSpeed": "",
+        "height": 512,
+        "make": "",
+        "model": "",
+        "copyright": "",
+        "focalLength": ""
+      },
+      "focalpoint": {
+        "y": 75,
+        "x": 25
+      },
+      "link": "https://example.com/page/",
+      "type": "jpg",
+      "tags": [
+        "tag1",
+        "tag2"
+      ],
+      "palette": {
+        "primary": [
+          "#1e140e",
+          "#7d3012",
+          "#8f9217",
+          "#c3bc25",
+          "#c61d1d",
+          "#e68685"
+        ],
+        "secondary": [
+          "#19797a",
+          "#39e2e2",
+          "#3c43da",
+          "#706de8",
+          "#82cfed",
+          "#e1ebf1"
+        ]
+      }
+    }
+  ],
+  "$id": "https://www.totalcms.co/schemas/properties/image.json#"
+}

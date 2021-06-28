@@ -1,0 +1,10 @@
+{
+  "format": "email",
+  "$id": "https://www.totalcms.co/schemas/properties/email.json#",
+  "examples": [
+    "support@weavers.space",
+    "user@example.com"
+  ],
+  "description": "A field for storing an email address",
+  "type": "string"
+}

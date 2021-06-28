@@ -1,0 +1,9 @@
+{
+  "pattern": "^http[s]*://\\S+$",
+  "type": "string",
+  "description": "A field for storing URLs to media and other data",
+  "examples": [
+    "https://www.youtube.com/watch?v=UCeYTysLyGI"
+  ],
+  "$id": "https://www.totalcms.co/schemas/properties/url.json#"
+}

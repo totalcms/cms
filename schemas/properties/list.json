@@ -1,0 +1,15 @@
+{
+  "uniqueItems": true,
+  "$id": "https://www.totalcms.co/schemas/properties/list.json#",
+  "examples": [
+    [
+      "tag1",
+      "tag2"
+    ]
+  ],
+  "type": "array",
+  "description": "A simple list of strings useful for things like tags and categories",
+  "items": {
+    "type": "string"
+  }
+}

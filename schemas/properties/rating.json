@@ -1,0 +1,50 @@
+{
+  "examples": [
+    {
+      "counts": [
+        "0",
+        "0",
+        "2",
+        "5",
+        "3"
+      ],
+      "max": 5,
+      "total": 10,
+      "rating": 4.5
+    }
+  ],
+  "properties": {
+    "counts": {
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "$comment": "A summary of all the ratings. How many 1 star, 2 star to to the max value",
+      "type": "array"
+    },
+    "max": {
+      "type": "integer",
+      "$comment": "The maximum value of a rating",
+      "minimum": 1
+    },
+    "total": {
+      "type": "integer",
+      "$comment": "The total number of ratings used to generate the average",
+      "minimum": 0
+    },
+    "rating": {
+      "minimum": 0,
+      "$comment": "The current averaged rating",
+      "type": "number"
+    }
+  },
+  "$id": "https://www.totalcms.co/schemas/properties/rating.json#",
+  "type": "object",
+  "description": "Object to store a rating data",
+  "required": [
+    "max",
+    "rating",
+    "total",
+    "counts"
+  ]
+}

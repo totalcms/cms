@@ -1,0 +1,9 @@
+{
+  "pattern": "^[A-Za-z0-9-]+$",
+  "$id": "https://www.totalcms.co/schemas/properties/id.json#",
+  "examples": [
+    "this-is-a-valid-id-2021"
+  ],
+  "description": "An ID field should only container numbers, letters and dashes",
+  "type": "string"
+}
