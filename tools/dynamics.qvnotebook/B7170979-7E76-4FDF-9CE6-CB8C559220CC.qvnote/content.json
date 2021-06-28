@@ -1,0 +1,9 @@
+{
+  "title": "Initial Scope for Architecture",
+  "cells": [
+    {
+      "type": "text",
+      "data": "Build out all of the schemas.&nbsp;<a href=\"https://opis.io/json-schema\">https://opis.io/json-schema</a><div>$ref to reference property schemas<br><div><br></div><div>Build out all API routes in Paw and document with Swagger</div><div><br></div><div>Sample tcms-data folder</div><div>Some docs on CMS architecture</div><div><br></div></div>"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Architecture Questions",
+  "cells": [
+    {
+      "type": "text",
+      "data": "<h3><span style=\"font-size: 17px;\">Collection Index</span></h3>Currently the index contains a aummary version of every object in the collection. However, what about creating an index for secific fields. For example, how do we get all posts that have a particular tag. Do we need to have an index for this?<div><br></div><h3>Key/Value pair Lists</h3><div>Should we make lists have key/value pairs? It would be nice to have things like tags and authors have key/value pairs for readable and URL formatted values</div><div><br></div><h3>Gallery &amp; Depot to Blog type schema?</h3><div>Gallery and Depot store all data for every file in the main JSON file instead of having a JSON from for every file/image. What if we made it work similar to blog where every file had it's own JSON file with the summary data inside of the index.&nbsp;</div><div><br></div>"
+    }
+  ]
+}
