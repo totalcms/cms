@@ -1,11 +1,13 @@
 {
+    "$id": "https://www.totalcms.co/schemas/date.json#",
+    "description": "A schema for a Total CMS Date object",
     "type": "object",
     "properties": {
         "id": {
-            "type": "string"
+            "$ref": "https://www.totalcms.co/schemas/properties/id.json#"
         },
         "date": {
-            "type": "string"
+            "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
         }
     },
     "required": [

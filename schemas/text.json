@@ -1,26 +1,28 @@
 {
+    "$id": "https://www.totalcms.co/schemas/text.json#",
+    "description": "A schema for a Total CMS Text object",
     "type": "object",
     "properties": {
         "id": {
-            "type"     : "string",
-            "property" : "slug"
+            "$ref": "https://www.totalcms.co/schemas/properties/id.json#"
         },
-        "content": {
-            "type"     : "string",
-            "property" : "text"
+        "text": {
+            "type"     : "string"
         },
         "wordcount": {
-            "type"     : "number",
-            "property" : "number"
+            "type"     : "integer",
+            "minimum"  : 0
         },
         "charcount": {
-            "type"     : "number",
-            "property" : "number"
+            "type"     : "integer",
+            "minimum"  : 0
         }
     },
     "required": [
         "id",
-        "content"
+        "wordcount",
+        "charcount",
+        "text"
     ],
     "index": [
         "id"

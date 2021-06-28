@@ -1,22 +1,15 @@
 {
+  "$id": "https://www.totalcms.co/schemas/schema.json#",
+  "description": "A schema for a Total CMS schema file",
   "properties": {
-    "properties": {
-      "type": "object",
-      "patternProperties": {
-        "^.*$": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string"
-            },
-            "fieldset": {
-              "type": "string"
-            }
-          }
-        }
-      }
+    "$id": {
+      "type": "string",
+      "format": "uri"
     },
-    "title": {
+    "properties": {
+      "type": "object"
+    },
+    "description": {
       "type": "string"
     },
     "type": {
@@ -35,13 +28,13 @@
       }
     }
   },
-  "title": "schema",
   "type": "object",
   "required": [
-    "properties",
-    "title",
-    "type",
+    "$id",
+    "description",
     "index",
-    "required"
+    "properties",
+    "required",
+    "type"
   ]
 }
