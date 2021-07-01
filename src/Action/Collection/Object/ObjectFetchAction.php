@@ -14,7 +14,7 @@ final class ObjectFetchAction
      * @param  ResponseInterface      $response
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $response->getBody()->write('ObjectFetchAction');
         return $response;

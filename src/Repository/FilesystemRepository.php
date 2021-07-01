@@ -18,9 +18,9 @@ class FilesystemRepository implements RepositoryInterface
     private FilesystemIteratorFactory $filesystem;
     private Serializer $serializer;
 
-    const META_FILE   = '.meta.json';
-    const SCHEMA_FILE = '.schema.json';
-    const OBJECT_EXT  = '.json';
+    private const META_FILE   = '.meta.json';
+    private const SCHEMA_FILE = '.schema.json';
+    private const OBJECT_EXT  = '.json';
 
     /**
      * Constructor.
@@ -43,7 +43,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return CLASS|null
      */
-    private function fetchAndDeserialize(string $file, string $className) : ?object
+    private function fetchAndDeserialize(string $file, string $className): ?object
     {
         if ($this->filesystem->exists($file)) {
             $contents = $this->filesystem->readFile($file);
@@ -65,7 +65,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return array<CollectionData>
      */
-    public function listAllCollections() : array
+    public function listAllCollections(): array
     {
         $collections = [];
         foreach ($this->filesystem->listDirs() as $name) {
@@ -85,7 +85,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return ?CollectionData
      */
-    public function fetchCollection(string $collection) : ?CollectionData
+    public function fetchCollection(string $collection): ?CollectionData
     {
         $metaFile = $collection . DIRECTORY_SEPARATOR . $this::META_FILE;
         return $this->fetchAndDeserialize($metaFile, CollectionData::class);
@@ -98,7 +98,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return bool
      */
-    public function saveCollection(CollectionData $collection) : bool
+    public function saveCollection(CollectionData $collection): bool
     {
         $jsonContent = $this->serializer->serialize($collection, 'json');
         $metaFile    = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
@@ -112,7 +112,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return ?SchemaData
      */
-    public function fetchDefaultSchemaForType(string $type) : ?SchemaData
+    public function fetchDefaultSchemaForType(string $type): ?SchemaData
     {
         // TODO: Refactor - this need to be extracted into its own default schema class or something
         $schemaFile = __DIR__ . "/../../schemas/$type.json";
@@ -134,7 +134,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return ?SchemaData
      */
-    public function fetchObjectSchemaForCollection(string $collection) : ?SchemaData
+    public function fetchObjectSchemaForCollection(string $collection): ?SchemaData
     {
         $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
         if ($this->filesystem->exists($schemaFile)) {
@@ -155,7 +155,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return boolean
      */
-    public function saveSchemaforCollection(string $collection, SchemaData $schema) : bool
+    public function saveSchemaforCollection(string $collection, SchemaData $schema): bool
     {
         $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
         $schemaJSON = $this->serializer->serialize($schema, 'json');
@@ -170,7 +170,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return boolean
      */
-    public function saveObject(string $collection, ObjectData $object) : bool
+    public function saveObject(string $collection, ObjectData $object): bool
     {
         $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . $this::OBJECT_EXT;
         $objectJSON = $this->serializer->serialize($object, 'json');

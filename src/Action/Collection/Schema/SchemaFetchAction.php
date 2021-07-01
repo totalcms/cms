@@ -34,7 +34,7 @@ final class SchemaFetchAction
      *
      * @return ResponseInterface the response
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args) : ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $schema = $this->service->fetchSchemaforCollection($args['collection']);
         return $this->responder->jsonItem($response, $schema, new SchemaMetaTransformer());

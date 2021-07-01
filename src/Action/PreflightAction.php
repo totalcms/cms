@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class PreflightAction
 {
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         // Do nothing here. Just return the response.
         return $response;

@@ -33,7 +33,7 @@ final class SchemaFetchService implements ServiceInterface
      *
      * @return SchemaData
      */
-    public function fetchSchemaforCollection(string $collection) : SchemaData
+    public function fetchSchemaforCollection(string $collection): SchemaData
     {
         $collection = $this->collectionService->fetchCollection($collection);
         if ('object' == $collection->schema) {

@@ -31,7 +31,7 @@ class SchemaRepository implements RepositoryInterface
      *
      * @return SchemaData
      */
-    public function fetchDefaultSchemaForType(string $type) : SchemaData
+    public function fetchDefaultSchemaForType(string $type): SchemaData
     {
         $schema = $this->repository->fetchDefaultSchemaForType($type);
         if (null == $schema) {
@@ -47,7 +47,7 @@ class SchemaRepository implements RepositoryInterface
      *
      * @return SchemaData
      */
-    public function fetchObjectSchemaForCollection(string $collection) : SchemaData
+    public function fetchObjectSchemaForCollection(string $collection): SchemaData
     {
         $schema = $this->repository->fetchObjectSchemaForCollection($collection);
         if (null == $schema) {
@@ -63,7 +63,7 @@ class SchemaRepository implements RepositoryInterface
      * @param SchemaData $schema
      *
      */
-    public function saveSchemaforCollection(string $collection, SchemaData $schema) : bool
+    public function saveSchemaforCollection(string $collection, SchemaData $schema): bool
     {
         return $this->repository->saveSchemaForCollection($collection, $schema);
     }

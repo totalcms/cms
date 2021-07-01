@@ -41,7 +41,7 @@ final class ObjectSaveService implements ServiceInterface
      *
      * @return ObjectData
      */
-    public function saveObject(string $collection, string $objectJSON) : ObjectData
+    public function saveObject(string $collection, string $objectJSON): ObjectData
     {
         $collection = $this->collectionService->fetchCollection($collection);
 

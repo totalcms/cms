@@ -17,7 +17,7 @@ final class ExceptionDetail
      *
      * @return string The full error message
      */
-    public static function getExceptionText(Throwable $exception, int $maxLength = 0) : string
+    public static function getExceptionText(Throwable $exception, int $maxLength = 0): string
     {
         $code    = $exception->getCode();
         $file    = $exception->getFile();

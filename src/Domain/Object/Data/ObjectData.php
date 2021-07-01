@@ -19,7 +19,7 @@ final class ObjectData
      *
      * @return mixed[]
      */
-    public function toArray() : array
+    public function toArray(): array
     {
         return $this->properties->toArray();
     }

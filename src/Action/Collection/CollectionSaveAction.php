@@ -33,7 +33,7 @@ final class CollectionSaveAction
      *
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $body = $request->getBody();
         return $this->responder->jsonItem(

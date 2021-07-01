@@ -14,7 +14,7 @@ class ObjectMetaTransformer extends Fractal\TransformerAbstract
      *
      * @return mixed[]
      */
-    public function transform(ObjectData $object) : array
+    public function transform(ObjectData $object): array
     {
         return $object->toArray();
     }

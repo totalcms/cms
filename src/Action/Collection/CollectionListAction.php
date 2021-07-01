@@ -35,7 +35,7 @@ final class CollectionListAction
      *
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         // $this->logger->info('Hello from CollectionListAction');
         return $this->responder->jsonCollection(

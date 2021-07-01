@@ -14,7 +14,7 @@ class CollectionMetaTransformer extends Fractal\TransformerAbstract
      *
      * @return array<mixed>
      */
-    public function transform(Collection $collection) : array
+    public function transform(Collection $collection): array
     {
         return [
             'name'   => $collection->name,

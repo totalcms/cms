@@ -70,7 +70,7 @@ class DefaultErrorHandler
         Throwable $exception,
         bool $displayErrorDetails,
         bool $logErrors
-    ) : ResponseInterface {
+    ): ResponseInterface {
         // Log error
         if ($logErrors) {
             $this->logger->error(sprintf(
@@ -104,7 +104,7 @@ class DefaultErrorHandler
      *
      * @return int The http code
      */
-    private function getHttpStatusCode(Throwable $exception) : int
+    private function getHttpStatusCode(Throwable $exception): int
     {
         // Detect status code
         $statusCode = 500;
@@ -140,7 +140,7 @@ class DefaultErrorHandler
      *
      * @return string The message
      */
-    private function getErrorMessage(Throwable $exception, int $statusCode, bool $displayErrorDetails) : string
+    private function getErrorMessage(Throwable $exception, int $statusCode, bool $displayErrorDetails): string
     {
         $reasonPhrase = (new Response())->withStatus($statusCode)->getReasonPhrase();
         $errorMessage = sprintf('%s %s', $statusCode, $reasonPhrase);

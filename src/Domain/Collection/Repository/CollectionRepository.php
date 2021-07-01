@@ -31,7 +31,7 @@ class CollectionRepository implements RepositoryInterface
      *
      * @return CollectionData
      */
-    public function fetchCollection(string $collection) : CollectionData
+    public function fetchCollection(string $collection): CollectionData
     {
         $collection = $this->repository->fetchCollection($collection);
         if (null == $collection) {
@@ -45,7 +45,7 @@ class CollectionRepository implements RepositoryInterface
      *
      * @return array<CollectionData>
      */
-    public function listAllCollections() : array
+    public function listAllCollections(): array
     {
         return $this->repository->listAllCollections();
     }
@@ -57,7 +57,7 @@ class CollectionRepository implements RepositoryInterface
      *
      * @return bool
      */
-    public function saveCollection(CollectionData $collection) : bool
+    public function saveCollection(CollectionData $collection): bool
     {
         return $this->repository->saveCollection($collection);
     }

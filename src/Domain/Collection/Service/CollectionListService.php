@@ -27,7 +27,7 @@ final class CollectionListService implements ServiceInterface
      *
      * @return array<object>
      */
-    public function listAllCollections() : array
+    public function listAllCollections(): array
     {
         return $this->repository->listAllCollections();
     }

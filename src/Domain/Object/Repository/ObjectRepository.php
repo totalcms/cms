@@ -29,7 +29,7 @@ class ObjectRepository implements RepositoryInterface
      * @param string     $collection
      * @param ObjectData $object
      */
-    public function saveObject(string $collection, ObjectData $object) : bool
+    public function saveObject(string $collection, ObjectData $object): bool
     {
         return $this->repository->saveObject($collection, $object);
     }

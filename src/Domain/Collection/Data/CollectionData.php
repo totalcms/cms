@@ -21,7 +21,7 @@ final class CollectionData
      *
      * @return self
      */
-    public static function fromArray(array $array) : self
+    public static function fromArray(array $array): self
     {
         $data = new ArrayReader($array);
 

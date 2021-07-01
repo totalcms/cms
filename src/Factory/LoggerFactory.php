@@ -41,7 +41,7 @@ class LoggerFactory
      *
      * @return LoggerInterface The logger
      */
-    public function createInstance(string $name) : LoggerInterface
+    public function createInstance(string $name): LoggerInterface
     {
         $this->addFileHandler();
         $logger = new Logger($name);
@@ -63,7 +63,7 @@ class LoggerFactory
      *
      * @return LoggerFactory The logger factory
      */
-    public function addFileHandler(?string $filename = null, int $level = null) : self
+    public function addFileHandler(?string $filename = null, int $level = null): self
     {
         $filename            = sprintf('%s/%s', $this->path, $filename ?? $this->filename);
         $rotatingFileHandler = new RotatingFileHandler($filename, 0, $level ?? $this->level, true, 0777);
@@ -83,7 +83,7 @@ class LoggerFactory
      *
      * @return self The instance
      */
-    public function addConsoleHandler(int $level = null) : self
+    public function addConsoleHandler(int $level = null): self
     {
         $streamHandler = new StreamHandler('php://stdout', $level ?? $this->level);
         $streamHandler->setFormatter(new LineFormatter(null, null, false, true));

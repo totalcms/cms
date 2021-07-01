@@ -30,7 +30,7 @@ class FilesystemIteratorFactory
      *
      * @return FilesystemIterator
      */
-    private function createIterator(string $subpath = '') : FilesystemIterator
+    private function createIterator(string $subpath = ''): FilesystemIterator
     {
         return new FilesystemIterator($this->buildPath($subpath), FilesystemIterator::SKIP_DOTS);
     }
@@ -42,7 +42,7 @@ class FilesystemIteratorFactory
      *
      * @return string
      */
-    public function buildPath(string $subpath = '') : string
+    public function buildPath(string $subpath = ''): string
     {
         $path = $this->root;
         if (!empty($subpath)) {
@@ -58,7 +58,7 @@ class FilesystemIteratorFactory
      *
      * @return ?string
      */
-    public function readFile(string $subpath = '') : ?string
+    public function readFile(string $subpath = ''): ?string
     {
         $path = $this->buildPath($subpath);
         if (!file_exists($path)) {
@@ -75,7 +75,7 @@ class FilesystemIteratorFactory
      *
      * @return bool
      */
-    public function exists(string $subpath = '') : bool
+    public function exists(string $subpath = ''): bool
     {
         $path = $this->buildPath($subpath);
         return file_exists($path);
@@ -88,7 +88,7 @@ class FilesystemIteratorFactory
      *
      * @return bool
      */
-    private static function makeDir(string $dir) : bool
+    private static function makeDir(string $dir): bool
     {
         if (!file_exists($dir)) {
             return mkdir($dir, 0775, true);
@@ -143,7 +143,7 @@ class FilesystemIteratorFactory
      *
      * @return bool
      */
-    public function saveFile(string $subpath, string $data) : bool
+    public function saveFile(string $subpath, string $data): bool
     {
         $path = $this->buildPath($subpath);
         $this::makeDir(dirname($path));
@@ -157,7 +157,7 @@ class FilesystemIteratorFactory
      *
      * @return ?string
      */
-    private static function filterFile($fileinfo) : ?string
+    private static function filterFile($fileinfo): ?string
     {
         // Verify that its a SplFileInfo
         if (!is_a($fileinfo, 'SplFileInfo')) {
@@ -178,7 +178,7 @@ class FilesystemIteratorFactory
      *
      * @return array<string>
      */
-    public function list(string $subfolder = '') : array
+    public function list(string $subfolder = ''): array
     {
         $files = [];
         foreach ($this->createIterator($subfolder) as $fileinfo) {
@@ -199,7 +199,7 @@ class FilesystemIteratorFactory
      *
      * @return array<string>
      */
-    public function listDirs(string $subfolder = '') : array
+    public function listDirs(string $subfolder = ''): array
     {
         $files = [];
         foreach ($this->createIterator($subfolder) as $fileinfo) {
@@ -229,7 +229,7 @@ class FilesystemIteratorFactory
      *
      * @return array<string>
      */
-    public function listFiles(string $subfolder = '', array $extensions = []) : array
+    public function listFiles(string $subfolder = '', array $extensions = []): array
     {
         $files = [];
         foreach ($this->createIterator($subfolder) as $fileinfo) {

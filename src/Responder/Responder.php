@@ -46,7 +46,7 @@ final class Responder
      *
      * @return ResponseInterface The response
      */
-    public function redirect(ResponseInterface $response, string $destination, array $data = [], array $queryParams = []) : ResponseInterface
+    public function redirect(ResponseInterface $response, string $destination, array $data = [], array $queryParams = []): ResponseInterface
     {
         if (!filter_var($destination, FILTER_VALIDATE_URL)) {
             $destination = $this->urlGenerator->fullUrlFor($destination, $data, $queryParams);
@@ -67,7 +67,7 @@ final class Responder
      *
      * @return ResponseInterface The response
      */
-    public function jsonCollection(ResponseInterface $response, array $collection, TransformerAbstract $transformer) : ResponseInterface
+    public function jsonCollection(ResponseInterface $response, array $collection, TransformerAbstract $transformer): ResponseInterface
     {
         $resource = new FractalCollection($collection, $transformer);
         $response = $response->withHeader('Content-Type', 'application/json');
@@ -88,7 +88,7 @@ final class Responder
      *
      * @return ResponseInterface The response
      */
-    public function jsonItem(ResponseInterface $response, object $item, TransformerAbstract $transformer) : ResponseInterface
+    public function jsonItem(ResponseInterface $response, object $item, TransformerAbstract $transformer): ResponseInterface
     {
         $resource = new FractalItem($item, $transformer);
         $response = $response->withHeader('Content-Type', 'application/json');

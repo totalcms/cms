@@ -36,7 +36,7 @@ final class CollectionSaveService implements ServiceInterface
      *
      * @return CollectionData
      */
-    public function saveCollection(string $data) : CollectionData
+    public function saveCollection(string $data): CollectionData
     {
         $collection = (object)$this->serializer->deserialize($data, CollectionData::class, 'json');
         if (!is_a($collection, CollectionData::class, false)) {

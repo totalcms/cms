@@ -3,7 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
-return function(App $app) {
+return function (App $app) {
     $app->options('/', \App\Action\PreflightAction::class);
 
     // Password protected area
@@ -15,7 +15,7 @@ return function(App $app) {
     //----------------------------------------------------------------------
     // Collections Route Map
     //----------------------------------------------------------------------
-    $app->group('/collections', function(RouteCollectorProxy $group) {
+    $app->group('/collections', function (RouteCollectorProxy $group) {
         // All Collections
         $group->get('', \App\Action\Collection\CollectionListAction::class)->setName('collections-list');
         $group->post('', \App\Action\Collection\CollectionSaveAction::class)->setName('collection-save');
@@ -48,7 +48,7 @@ return function(App $app) {
     //----------------------------------------------------------------------
     // Download Route Map
     //----------------------------------------------------------------------
-    $app->group('/download', function(RouteCollectorProxy $group) {
+    $app->group('/download', function (RouteCollectorProxy $group) {
         // $group->get('/{collection}/{id}/{property}', \App\Action\Download\DownloadFileAction::class)->setName('download-file');
         // $group->get('/{collection}/{id}/{property}/{file}', \App\Action\Download\DownloadFileFromSetAction::class)->setName('download-file-from-set');
     });
@@ -56,7 +56,7 @@ return function(App $app) {
     //----------------------------------------------------------------------
     // ImageWorks Route Map
     //----------------------------------------------------------------------
-    $app->group('/imageworks', function(RouteCollectorProxy $group) {
+    $app->group('/imageworks', function (RouteCollectorProxy $group) {
         // Allow indexing of images
         header_remove('X-Robots-Tag');
 
@@ -68,7 +68,7 @@ return function(App $app) {
     //----------------------------------------------------------------------
     // Froala File API Route Map - Needs to return specific format
     //----------------------------------------------------------------------
-    $app->group('/froala', function(RouteCollectorProxy $group) {
+    $app->group('/froala', function (RouteCollectorProxy $group) {
         // {collection} - Collection name
         // {id} - object ID
         // {property} - the name of the froala object property
@@ -81,7 +81,7 @@ return function(App $app) {
     //----------------------------------------------------------------------
     // Import Route Map
     //----------------------------------------------------------------------
-    $app->group('/import', function(RouteCollectorProxy $group) {
+    $app->group('/import', function (RouteCollectorProxy $group) {
         // $group->post('/{collection}[/factory]', \App\Action\Import\ImportFactoryAction::class)->setName('import-factory');
         // $group->post('/{collection}/yaml', \App\Action\Import\ImportYAMLAction::class)->setName('import-yaml');
         // $group->post('/{collection}/json', \App\Action\Import\ImportJSONAction::class)->setName('import-json');
@@ -95,7 +95,7 @@ return function(App $app) {
     //----------------------------------------------------------------------
     // Templates Route Map
     //----------------------------------------------------------------------
-    $app->group('/templates', function(RouteCollectorProxy $group) {
+    $app->group('/templates', function (RouteCollectorProxy $group) {
         // $group->get('/{type}/{template}', \App\Action\Template\TemplateFetchByTypeAction::class)->setName('template-fetch-type');
     });
 };

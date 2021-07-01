@@ -41,7 +41,7 @@ final class SchemaSaveService implements ServiceInterface
      *
      * @return SchemaData
      */
-    public function saveSchemaforCollection(string $collection, string $schemaJSON) : SchemaData
+    public function saveSchemaforCollection(string $collection, string $schemaJSON): SchemaData
     {
         $collection = $this->collectionService->fetchCollection($collection);
         if ('object' != $collection->schema) {

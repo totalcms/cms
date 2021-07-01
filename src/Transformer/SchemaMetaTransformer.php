@@ -14,7 +14,7 @@ class SchemaMetaTransformer extends Fractal\TransformerAbstract
      *
      * @return mixed[]
      */
-    public function transform(SchemaData $schema) : array
+    public function transform(SchemaData $schema): array
     {
         return [
             // '$anchor'       => $schema->anchor,

@@ -33,7 +33,7 @@ final class ObjectSaveAction
      * @param  mixed[]                $args
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args) : ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $body = $request->getBody();
         return $this->responder->jsonItem(

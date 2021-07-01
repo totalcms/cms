@@ -30,7 +30,7 @@ final class CollectionFetchService implements ServiceInterface
      *
      * @return CollectionData
      */
-    public function fetchCollection(string $collection) : CollectionData
+    public function fetchCollection(string $collection): CollectionData
     {
         return $this->repository->fetchCollection($collection);
     }
