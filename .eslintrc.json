@@ -1,3 +1,48 @@
 {
-    "extends": "eslint:recommended"
+    "env": {
+        "browser": true,
+        "es6": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 8
+    },
+    "extends": "eslint:recommended",
+    "globals": {
+    },
+    "rules": {
+        "linebreak-style": [
+            "error", "unix"
+        ],
+        "quotes": [
+            "error", "double",
+            {
+                "allowTemplateLiterals": true,
+                "avoidEscape": true
+            }
+        ],
+        "semi": [
+            "error", "always"
+        ],
+        "no-console": [
+            "error", { "allow": [ "warn", "error" ] }
+        ],
+        "no-undef": [
+            "off"
+        ],
+        "no-unused-vars": [
+            "off"
+        ],
+        "require-jsdoc": ["off", {
+            "require": {
+                "FunctionDeclaration": true,
+                "MethodDefinition": true,
+                "ClassDeclaration": true,
+                "ArrowFunctionExpression": true,
+                "FunctionExpression": true
+            }
+        }],
+        "valid-jsdoc": ["off", {
+            "requireReturn": true
+        }]
+    }
 }
