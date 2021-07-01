@@ -2,8 +2,6 @@
 
 export PATH=vendor/bin:$PATH
 
-exec 2>/dev/null
-
 parallel-lint --exclude vendor .
 phpcbf src config
 phpcs --standard=PSR12 --ignore=vendor src config
