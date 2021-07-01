@@ -7,7 +7,8 @@
 // ;
 
 return PhpCsFixer\Config::create()->setRules([
-    '@PSR2'                                     => true,
+    '@PSR12'                                    => true,
+    'single_blank_line_at_eof'                  => true,
     'array_indentation'                         => true,
     'method_argument_space'                     => ['on_multiline' => 'ensure_fully_multiline'],
     'single_trait_insert_per_statement'         => true,
