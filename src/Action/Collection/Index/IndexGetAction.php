@@ -34,6 +34,4 @@ final class IndexGetAction
 
         return $response;
     }
-
-    // return $this->responder->json($response, ['success' => true]);
 }

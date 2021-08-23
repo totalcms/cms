@@ -5,14 +5,14 @@ namespace App\Transformer;
 use App\Domain\Collection\Data\CollectionData as Collection;
 use League\Fractal;
 
-class CollectionMetaTransformer extends Fractal\TransformerAbstract
+final class CollectionMetaTransformer extends Fractal\TransformerAbstract
 {
     /**
      * Fractal transform for a collection.
      *
      * @param Collection $collection the collection object
      *
-     * @return array<mixed>
+     * @return array
      */
     public function transform(Collection $collection): array
     {

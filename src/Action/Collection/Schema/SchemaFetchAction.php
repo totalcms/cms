@@ -30,7 +30,7 @@ final class SchemaFetchAction
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param array<mixed> $args The routing arguments
+     * @param array $args The routing arguments
      *
      * @return ResponseInterface the response
      */

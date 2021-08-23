@@ -7,7 +7,6 @@ use App\Responder\Responder;
 use App\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ReflectionClass;
 
 final class CollectionListAction
 {
@@ -22,7 +21,6 @@ final class CollectionListAction
      */
     public function __construct(Responder $responder, CollectionListService $service)
     {
-        // $this->logger = $loggerFactory->createInstance((new ReflectionClass($this))->getShortName());
         $this->responder = $responder;
         $this->collectionListService = $service;
     }
@@ -37,7 +35,6 @@ final class CollectionListAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        // $this->logger->info('Hello from CollectionListAction');
         return $this->responder->jsonCollection(
             $response,
             $this->collectionListService->listAllCollections(),

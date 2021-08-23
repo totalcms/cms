@@ -30,7 +30,7 @@ final class ObjectSaveAction
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param mixed[] $args
+     * @param array $args
      *
      * @return ResponseInterface
      */

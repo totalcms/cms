@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repository;
+namespace App\Domain\Filesystem\Repository;
 
 use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Object\Data\ObjectData;
