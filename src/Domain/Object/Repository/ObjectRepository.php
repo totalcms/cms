@@ -27,9 +27,11 @@ final class ObjectRepository
      *
      * @param string $collection
      * @param ObjectData $object
+     *
+     * @return void
      */
-    public function saveObject(string $collection, ObjectData $object): bool
+    public function saveObject(string $collection, ObjectData $object): void
     {
-        return $this->repository->saveObject($collection, $object);
+        $this->repository->saveObject($collection, $object);
     }
 }

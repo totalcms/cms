@@ -55,10 +55,10 @@ final class CollectionRepository
      *
      * @param CollectionData $collection the collection to save
      *
-     * @return bool
+     * @return void
      */
-    public function saveCollection(CollectionData $collection): bool
+    public function saveCollection(CollectionData $collection): void
     {
-        return $this->repository->saveCollection($collection);
+        $this->repository->saveCollection($collection);
     }
 }

@@ -45,9 +45,7 @@ final class CollectionSaveService
             throw new UnexpectedValueException('Invalid Collection data provided', 1);
         }
 
-        if (!$this->repository->saveCollection($collection)) {
-            throw new UnexpectedValueException('Unable to save Collection', 1);
-        }
+        $this->repository->saveCollection($collection);
 
         return $collection;
     }

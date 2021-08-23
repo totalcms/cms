@@ -57,10 +57,7 @@ final class SchemaSaveService
         }
 
         // TODO: Validate schema json against the schema.json schema to ensure proper formatting
-
-        if (!$this->repository->saveSchemaForCollection($collection->name, $schema)) {
-            throw new RuntimeException('Unable to save Schema', 1);
-        }
+        $this->repository->saveSchemaForCollection($collection->name, $schema);
 
         return $schema;
     }

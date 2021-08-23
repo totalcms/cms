@@ -63,9 +63,11 @@ final class SchemaRepository
      *
      * @param string $collection
      * @param SchemaData $schema
+     *
+     * @return void
      */
-    public function saveSchemaforCollection(string $collection, SchemaData $schema): bool
+    public function saveSchemaForCollection(string $collection, SchemaData $schema): void
     {
-        return $this->repository->saveSchemaForCollection($collection, $schema);
+        $this->repository->saveSchemaForCollection($collection, $schema);
     }
 }
