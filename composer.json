@@ -1,13 +1,13 @@
 {
   "name": "joeworkman/totalcms",
-  "description": "Total CMS",
-  "license": "Commercial",
   "type": "project",
+  "description": "Total CMS",
   "keywords": [
     "total-cms",
     "dynamics",
     "cms"
   ],
+  "license": "Commercial",
   "require": {
     "php": "^8",
     "cocur/slugify": "^4.0",
@@ -58,7 +58,7 @@
     "friendsofphp/php-cs-fixer": "^3.0",
     "league/color-extractor": "^0.3.2",
     "mexitek/phpcolors": "dev-master",
-    "overtrue/phplint": "^1.2",
+    "overtrue/phplint": "^3",
     "php-parallel-lint/php-console-color": "^1.0",
     "php-parallel-lint/php-console-highlighter": "0.*",
     "php-parallel-lint/php-parallel-lint": "^1.1",
@@ -68,47 +68,39 @@
     "squizlabs/php_codesniffer": "^3.5",
     "symfony/var-dumper": "^5.1"
   },
-  "scripts": {
-    "build": "artifact build --name=dynamics",
-    "start": "php -S localhost:8080 -t public",
-    "test": "phpunit --configuration phpunit.xml --do-not-cache-result --colors=always",
-    "test-coverage": "phpunit --colors=always --do-not-cache-result --configuration phpunit.xml --coverage-clover build/logs/clover.xml --coverage-html build/coverage",
-    "check-style": "phpcs --standard=phpcs.xml",
-    "fix-style": "phpcbf --standard=phpcs.xml",
-    "phpstan": "phpstan analyse src tests --level=max -c phpstan.neon --no-progress --ansi",
-    "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
-    "install-cs": "php -r \"@mkdir('build'); copy('https://cs.symfony.com/download/php-cs-fixer-v2.phar', 'build/php-cs-fixer-v2.phar');\"",
-    "fix-cs": "php build/php-cs-fixer-v2.phar fix --config=.cs.php",
-    "check-cs": "php build/php-cs-fixer-v2.phar fix --dry-run --format=txt --verbose --diff --diff-format=udiff --config=.cs.php",
-    "check-all": [
-      "@lint",
-      "@check-style",
-      "@phpstan",
-      "@test-coverage"
-    ],
-    "cli": "php bin/cli.php --ansi",
-    "compile-twig": "php bin/cli.php compile-twig --ansi",
-    "update-assets": "npm update --dev",
-    "bundle-assets": "npx webpack --mode=development",
-    "bundle-assets-prod": "npx webpack --mode=production",
-    "watch": "npx webpack --watch",
-    "generate-migration": "phinx-migrations generate --overwrite -c config/phinx.php --ansi",
-    "create-migration": "phinx create -c config/phinx.php --ansi",
-    "migrate": "phinx migrate -c config/phinx.php --ansi",
-    "update-schema-sql": "php bin/cli.php update-schema-sql"
+  "config": {
+    "process-timeout": 0,
+    "sort-packages": true
   },
   "autoload": {
     "psr-4": {
-      "App\\": "src"
+      "App\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "App\\Test\\": "tests"
+      "App\\Test\\": "tests/"
     }
   },
-  "config": {
-    "process-timeout": 0,
-    "sort-packages": true
+  "scripts": {
+    "build": "artifact build --name=dynamics",
+    "check-all": [
+      "@lint",
+      "@cs:check",
+      "@sniffer:check",
+      "@phpstan",
+      "@test:coverage"
+    ],
+    "cs:check": "php-cs-fixer fix --dry-run --format=txt --verbose --diff --config=.cs.php",
+    "cs:fix": "php-cs-fixer fix --config=.cs.php",
+    "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
+    "migrate": "phinx migrate -c config/phinx.php --ansi",
+    "phpstan": "phpstan analyse src tests --level=max -c phpstan.neon --no-progress --ansi",
+    "sniffer:check": "phpcs --standard=phpcs.xml",
+    "sniffer:fix": "phpcbf --standard=phpcs.xml",
+    "start": "php -S localhost:8080 -t public",
+    "test": "phpunit --configuration phpunit.xml --do-not-cache-result --colors=always",
+    "test:coverage": "phpunit --colors=always --do-not-cache-result --configuration phpunit.xml --coverage-clover build/logs/clover.xml --coverage-html build/coverage",
+    "watch": "npx webpack --watch"
   }
 }
