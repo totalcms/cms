@@ -9,8 +9,9 @@ $image = 'goldengate.jpg';
 $image = 'icon.png';
 $palette = ColorThief::getPalette($image, 15);
 $palette = array_slice($palette, 0, 6);
-$palette = array_map(function($color) {
-$hex = Color::rgbToHex(["R"=>$color[0], "G"=>$color[1], "B"=>$color[2]]);
+$palette = array_map(function ($color) {
+    $hex = Color::rgbToHex(['R' => $color[0], 'G' => $color[1], 'B' => $color[2]]);
+
     return new Color($hex);
 }, $palette);
 
@@ -22,7 +23,7 @@ $border = $palette[0];
 
 <?php
 
-$swatch = '<div style="display:inline-block;width:100px;height:100px;background-color:#%s"></div>'.PHP_EOL;
+$swatch = '<div style="display:inline-block;width:100px;height:100px;background-color:#%s"></div>' . PHP_EOL;
 foreach ($palette as $color) {
     echo sprintf($swatch, $color->getHex());
 }

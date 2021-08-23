@@ -2,8 +2,8 @@
 
 namespace App\Domain\Schema\Repository;
 
-use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Filesystem\Repository\FilesystemRepository;
+use App\Domain\Schema\Data\SchemaData;
 use RuntimeException;
 
 /**

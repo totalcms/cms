@@ -1,10 +1,11 @@
 <?php
-require('vendor/autoload.php');
+
+require 'vendor/autoload.php';
 
 $parser = new Mni\FrontYAML\Parser();
 
-$dir = "/Users/joeworkman/Development/websites/docs.joeworkman.net/_content/rapidweaver/stacks";
-$assetDir = "/Users/joeworkman/Development/websites/docs.joeworkman.net/assets/rapidweaver/stacks";
+$dir = '/Users/joeworkman/Development/websites/docs.joeworkman.net/_content/rapidweaver/stacks';
+$assetDir = '/Users/joeworkman/Development/websites/docs.joeworkman.net/assets/rapidweaver/stacks';
 $collection = 'faqs';
 
 $it = new \FilesystemIterator($dir, \FilesystemIterator::SKIP_DOTS);
@@ -26,8 +27,8 @@ foreach ($it as $dirinfo) {
 
         $basename = $fileinfo->getBasename('.md');
 
-        $is_md  = (strpos('.md', $fileinfo->getExtension()??'') !== 1); // only MD files
-        $is_dot   = (strpos($basename, '.') === 0); // ignore dot files
+        $is_md = (strpos('.md', $fileinfo->getExtension() ?? '') !== 1); // only MD files
+        $is_dot = (strpos($basename, '.') === 0); // ignore dot files
 
         if ($is_md || $is_dot) {
             continue;
@@ -57,13 +58,13 @@ foreach ($it as $dirinfo) {
         $html = str_replace('{{assets}}', "/tcms-data/$imageDir", $html);
 
         $faq = [
-            'id'         => $id,
-            'hide'       => false,
+            'id' => $id,
+            'hide' => false,
             'collection' => $collection,
-            'category'   => ['General'],
-            'products'   => [$stack],
-            'content'    => $html,
-            'title'      => $yaml['title']
+            'category' => ['General'],
+            'products' => [$stack],
+            'content' => $html,
+            'title' => $yaml['title'],
         ];
 
         $jsonFile = "$collection/$id.json";
@@ -75,8 +76,8 @@ foreach ($it as $dirinfo) {
 
 // General FAQs
 
-$dir = "/Users/joeworkman/Development/websites/docs.joeworkman.net/_content/general";
-$assetDir = "/Users/joeworkman/Development/websites/docs.joeworkman.net/assets/general";
+$dir = '/Users/joeworkman/Development/websites/docs.joeworkman.net/_content/general';
+$assetDir = '/Users/joeworkman/Development/websites/docs.joeworkman.net/assets/general';
 
 $iit = new \FilesystemIterator($dir, \FilesystemIterator::SKIP_DOTS);
 foreach ($iit as $fileinfo) {
@@ -87,8 +88,8 @@ foreach ($iit as $fileinfo) {
 
     $basename = $fileinfo->getBasename('.md');
 
-    $is_md  = (strpos('.md', $fileinfo->getExtension()??'') !== 1); // only MD files
-    $is_dot   = (strpos($basename, '.') === 0); // ignore dot files
+    $is_md = (strpos('.md', $fileinfo->getExtension() ?? '') !== 1); // only MD files
+    $is_dot = (strpos($basename, '.') === 0); // ignore dot files
 
     if ($is_md || $is_dot) {
         continue;
@@ -118,13 +119,13 @@ foreach ($iit as $fileinfo) {
     $html = str_replace('{{assets}}', "/tcms-data/$imageDir", $html);
 
     $faq = [
-        'id'         => $id,
-        'hide'       => false,
+        'id' => $id,
+        'hide' => false,
         'collection' => $collection,
-        'category'   => ['General'],
-        'products'   => ['general'],
-        'content'    => $html,
-        'title'      => $yaml['title']
+        'category' => ['General'],
+        'products' => ['general'],
+        'content' => $html,
+        'title' => $yaml['title'],
     ];
 
     $jsonFile = "$collection/$id.json";

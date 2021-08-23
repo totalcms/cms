@@ -2,8 +2,8 @@
 
 require_once '../dynamics/autoload.php';
 
-use League\Glide\ServerFactory;
 use League\Glide\Responses\SlimResponseFactory;
+use League\Glide\ServerFactory;
 
 $image = 'goldengate.jpg';
 //$image = 'icon.png';

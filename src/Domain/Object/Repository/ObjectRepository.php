@@ -2,8 +2,8 @@
 
 namespace App\Domain\Object\Repository;
 
-use App\Domain\Object\Data\ObjectData;
 use App\Domain\Filesystem\Repository\FilesystemRepository;
+use App\Domain\Object\Data\ObjectData;
 
 /**
  * Repository.
