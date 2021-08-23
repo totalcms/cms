@@ -5,7 +5,7 @@ namespace App\Action\ImageWorks;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class ImageWorksGalleryImageGetAction
+final class ImageWorksImageFetchAction
 {
     /**
      * Action.
@@ -17,7 +17,7 @@ final class ImageWorksGalleryImageGetAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        $response->getBody()->write('ImageWorksGalleryImageGetAction');
+        $response->getBody()->write('ImageWorksImageFetchAction');
 
         return $response;
     }

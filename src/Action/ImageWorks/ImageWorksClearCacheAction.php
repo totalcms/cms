@@ -5,7 +5,7 @@ namespace App\Action\ImageWorks;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class ImageWorksImageGetAction
+final class ImageWorksClearCacheAction
 {
     /**
      * Action.
@@ -17,7 +17,7 @@ final class ImageWorksImageGetAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        $response->getBody()->write('ImageWorksImageGetAction');
+        $response->getBody()->write('ImageWorksGalleryFetchAction');
 
         return $response;
     }

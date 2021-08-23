@@ -11,12 +11,14 @@ return function (App $app) {
         $group->post('', Collection\CollectionSaveAction::class)->setName('collection-save');
 
         // Collection
-        $group->get('/{collection}', Collection\Index\IndexFetchAction::class)->setName('collection-fetch');
+        $group->get('/{collection}', Collection\Index\IndexGetAction::class)->setName('collection-fetch');
         $group->put('/{collection}', Collection\Index\IndexUpdateAction::class)->setName('collection-reindex');
         $group->post('/{collection}', Collection\Object\ObjectSaveAction::class)->setName('object-save');
 
         // Object
-        $group->head('/{collection}/{id}', Collection\Object\ObjectExistsAction::class)->setName('object-exists');
+        $group->map(['HEAD'], '/{collection}/{id}', Collection\Object\ObjectExistsAction::class)->setName(
+            'object-exists'
+        );
         $group->get('/{collection}/{id}', Collection\Object\ObjectFetchAction::class)->setName('object-fetch');
         $group->put('/{collection}/{id}', Collection\Object\ObjectUpdateAction::class)->setName('object-update');
         $group->delete('/{collection}/{id}', Collection\Object\ObjectDeleteAction::class)->setName('object-delete');

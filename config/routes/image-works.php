@@ -11,7 +11,7 @@ return function (App $app) {
             ->setName('image-fetch');
 
         // It's better to require the full filename for SEO since that contains an image file extension
-        $group->get('/{collection}/{id}/{property}/{file}', ImageWorks\ImageWorksGalleryImageFetchAction::class)
+        $group->get('/{collection}/{id}/{property}/{file}', ImageWorks\ImageWorksGalleryFetchAction::class)
             ->setName('gallery-fetch');
 
         $group->delete('/{collection}/{id}/{property}/{file}', ImageWorks\ImageWorksClearCacheAction::class)
