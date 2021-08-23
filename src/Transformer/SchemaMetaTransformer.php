@@ -8,7 +8,7 @@ use League\Fractal;
 class SchemaMetaTransformer extends Fractal\TransformerAbstract
 {
     /**
-     * Fractal transform for a schema
+     * Fractal transform for a schema.
      *
      * @param SchemaData $schema the schema object
      *
@@ -18,12 +18,12 @@ class SchemaMetaTransformer extends Fractal\TransformerAbstract
     {
         return [
             // '$anchor'       => $schema->anchor,
-            'title'         => $schema->title,
-            'description'   => $schema->description,
-            'type'          => $schema->type,
-            'index'         => $schema->index,
-            'required'      => $schema->required,
-            'properties'    => $schema->properties,
+            'title' => $schema->title,
+            'description' => $schema->description,
+            'type' => $schema->type,
+            'index' => $schema->index,
+            'required' => $schema->required,
+            'properties' => $schema->properties,
         ];
     }
 }

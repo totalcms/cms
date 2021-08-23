@@ -19,15 +19,16 @@ final class SchemaFetchService implements ServiceInterface
      * Constructor.
      *
      * @param SchemaRepository $repository The repository
+     * @param CollectionFetchService $collectionService
      */
     public function __construct(SchemaRepository $repository, CollectionFetchService $collectionService)
     {
-        $this->repository        = $repository;
+        $this->repository = $repository;
         $this->collectionService = $collectionService;
     }
 
     /**
-     * fetch a collection's schema
+     * fetch a collection's schema.
      *
      * @param string $collection
      *
@@ -39,6 +40,7 @@ final class SchemaFetchService implements ServiceInterface
         if ('object' == $collection->schema) {
             return $this->repository->fetchObjectSchemaForCollection($collection->name);
         }
+
         return $this->repository->fetchDefaultSchemaForType($collection->schema);
     }
 }

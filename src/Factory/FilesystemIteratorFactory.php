@@ -3,8 +3,6 @@
 namespace App\Factory;
 
 use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 
 /**
  * Factory.
@@ -24,7 +22,7 @@ class FilesystemIteratorFactory
     }
 
     /**
-     * Generate the File Interator
+     * Generate the File Interator.
      *
      * @param string $subpath (optional) subfolder to interate through
      *
@@ -36,7 +34,7 @@ class FilesystemIteratorFactory
     }
 
     /**
-     * Generate the File Interator
+     * Generate the File Interator.
      *
      * @param string $subpath (optional) subfolder to interate through
      *
@@ -48,11 +46,12 @@ class FilesystemIteratorFactory
         if (!empty($subpath)) {
             $path .= DIRECTORY_SEPARATOR . $subpath;
         }
+
         return $path;
     }
 
     /**
-     * Read file
+     * Read file.
      *
      * @param string $subpath (optional) path of file to read
      *
@@ -65,11 +64,12 @@ class FilesystemIteratorFactory
             return null;
         }
         $contents = file_get_contents($path);
+
         return is_string($contents) ? $contents : null;
     }
 
     /**
-     * file exists
+     * file exists.
      *
      * @param string $subpath (optional) path of file to read
      *
@@ -78,11 +78,12 @@ class FilesystemIteratorFactory
     public function exists(string $subpath = ''): bool
     {
         $path = $this->buildPath($subpath);
+
         return file_exists($path);
     }
 
     /**
-     * recursively make a directory
+     * recursively make a directory.
      *
      * @param string $dir full path to the directory to make
      *
@@ -93,6 +94,7 @@ class FilesystemIteratorFactory
         if (!file_exists($dir)) {
             return mkdir($dir, 0775, true);
         }
+
         return true;
     }
 
@@ -136,7 +138,7 @@ class FilesystemIteratorFactory
     // }
 
     /**
-     * Generate the File Interator
+     * Generate the File Interator.
      *
      * @param string $subpath path of file to write to
      * @param string $data    data to wrtie to the file
@@ -147,11 +149,12 @@ class FilesystemIteratorFactory
     {
         $path = $this->buildPath($subpath);
         $this::makeDir(dirname($path));
+
         return file_put_contents($path, $data, LOCK_EX) !== false;
     }
 
     /**
-     * Interate through folder and return directories
+     * Interate through folder and return directories.
      *
      * @param mixed $fileinfo fileinfo
      *
@@ -168,11 +171,12 @@ class FilesystemIteratorFactory
         if (mb_strpos($basename, '.') === 0) {
             return null;
         }
+
         return $basename;
     }
 
     /**
-     * Interate through folder and return directories
+     * Interate through folder and return directories.
      *
      * @param string $subfolder (optional) subfolder to interate through
      *
@@ -189,11 +193,12 @@ class FilesystemIteratorFactory
             }
             $files[] = $basename;
         }
+
         return $files;
     }
 
     /**
-     * Interate through folder and return directories
+     * Interate through folder and return directories.
      *
      * @param string $subfolder (optional) subfolder to interate through
      *
@@ -218,11 +223,12 @@ class FilesystemIteratorFactory
             }
             $files[] = $basename;
         }
+
         return $files;
     }
 
     /**
-     * Interate through folder and return directories
+     * Interate through folder and return directories.
      *
      * @param string        $subfolder  (optional) subfolder to interate through
      * @param array<string> $extensions (optional) array of file extensions to include
@@ -252,6 +258,7 @@ class FilesystemIteratorFactory
             }
             $files[] = $basename;
         }
+
         return $files;
     }
 }

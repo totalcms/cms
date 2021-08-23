@@ -19,12 +19,12 @@ final class ExceptionDetail
      */
     public static function getExceptionText(Throwable $exception, int $maxLength = 0): string
     {
-        $code    = $exception->getCode();
-        $file    = $exception->getFile();
-        $line    = $exception->getLine();
+        $code = $exception->getCode();
+        $file = $exception->getFile();
+        $line = $exception->getLine();
         $message = $exception->getMessage();
-        $trace   = $exception->getTraceAsString();
-        $error   = sprintf('[%s] %s in %s on line %s.', $code, $message, $file, $line);
+        $trace = $exception->getTraceAsString();
+        $error = sprintf('[%s] %s in %s on line %s.', $code, $message, $file, $line);
         $error .= sprintf("\nBacktrace:\n%s", $trace);
 
         if ($maxLength > 0) {

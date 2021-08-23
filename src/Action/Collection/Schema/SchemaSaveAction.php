@@ -14,7 +14,7 @@ final class SchemaSaveAction
     private SchemaSaveService $service;
 
     /**
-     * The constructor
+     * The constructor.
      *
      * @param Responder         $responder The app responder
      * @param SchemaSaveService $service   Schema save service
@@ -22,11 +22,11 @@ final class SchemaSaveAction
     public function __construct(Responder $responder, SchemaSaveService $service)
     {
         $this->responder = $responder;
-        $this->service   = $service;
+        $this->service = $service;
     }
 
     /**
-     * Invokable Action
+     * Invokable Action.
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface      $response
@@ -37,6 +37,7 @@ final class SchemaSaveAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $body = $request->getBody();
+
         return $this->responder->jsonItem(
             $response,
             $this->service->saveSchemaforCollection($args['collection'], $body),

@@ -34,6 +34,7 @@ return [
 
     App::class => function (ContainerInterface $container) {
         AppFactory::setContainer($container);
+
         return AppFactory::create();
     },
 
@@ -116,6 +117,7 @@ return [
         if (PHP_SAPI === 'cli') {
             return new Session(new MockArraySessionStorage());
         }
+
         return new Session(new NativeSessionStorage($settings));
     },
 
@@ -125,6 +127,7 @@ return [
 
     BasePathMiddleware::class => function (ContainerInterface $container) {
         $app = $container->get(App::class);
+
         return new BasePathMiddleware($app);
     },
 

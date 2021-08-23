@@ -15,7 +15,7 @@ final class ObjectData
     public Collection $properties;
 
     /**
-     * Output object to an array
+     * Output object to an array.
      *
      * @return mixed[]
      */

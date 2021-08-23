@@ -24,7 +24,7 @@ final class CollectionFetchService implements ServiceInterface
     }
 
     /**
-     * Fetch a collection
+     * Fetch a collection.
      *
      * @param string $collection
      *

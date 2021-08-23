@@ -28,9 +28,9 @@ final class Responder
      */
     public function __construct(UrlGenerator $urlGenerator, ResponseFactoryInterface $responseFactory, FractalManager $fractal)
     {
-        $this->urlGenerator    = $urlGenerator;
+        $this->urlGenerator = $urlGenerator;
         $this->responseFactory = $responseFactory;
-        $this->fractal         = $fractal;
+        $this->fractal = $fractal;
     }
 
     /**

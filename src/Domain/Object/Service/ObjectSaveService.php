@@ -25,16 +25,17 @@ final class ObjectSaveService implements ServiceInterface
      * Constructor.
      *
      * @param ObjectRepository $repository The repository
+     * @param CollectionFetchService $collectionService
      */
     public function __construct(ObjectRepository $repository, CollectionFetchService $collectionService)
     {
-        $this->repository        = $repository;
+        $this->repository = $repository;
         $this->collectionService = $collectionService;
-        $this->serializer        = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     /**
-     * save a collection object
+     * save a collection object.
      *
      * @param string $collection
      * @param string $objectJSON
@@ -53,6 +54,7 @@ final class ObjectSaveService implements ServiceInterface
         if (!$this->repository->saveObject($collection->name, $object)) {
             throw new RuntimeException('Unable to save object', 1);
         }
+
         return $object;
     }
 }

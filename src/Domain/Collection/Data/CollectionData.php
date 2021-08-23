@@ -25,18 +25,18 @@ final class CollectionData
     {
         $data = new ArrayReader($array);
 
-        $name   = $data->findString('name');
+        $name = $data->findString('name');
         $schema = $data->findString('schema');
-        $url    = $data->findString('url');
+        $url = $data->findString('url');
 
         if (empty($name) || empty($schema)) {
             throw new UnexpectedValueException('Failed to create collection from array');
         }
 
-        $collection          = new self();
-        $collection->name    = $name;
-        $collection->schema  = $schema;
-        $collection->url     = $url ?? '';
+        $collection = new self();
+        $collection->name = $name;
+        $collection->schema = $schema;
+        $collection->url = $url ?? '';
 
         return $collection;
     }

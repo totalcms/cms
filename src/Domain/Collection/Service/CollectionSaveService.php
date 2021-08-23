@@ -30,7 +30,7 @@ final class CollectionSaveService implements ServiceInterface
     }
 
     /**
-     * Save Collection data
+     * Save Collection data.
      *
      * @param string $data the collection data to save
      *
@@ -45,6 +45,7 @@ final class CollectionSaveService implements ServiceInterface
         if (!$this->repository->saveCollection($collection)) {
             throw new Exception('Unable to save Collection', 1);
         }
+
         return $collection;
     }
 }

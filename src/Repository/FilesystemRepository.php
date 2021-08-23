@@ -18,9 +18,9 @@ class FilesystemRepository implements RepositoryInterface
     private FilesystemIteratorFactory $filesystem;
     private Serializer $serializer;
 
-    private const META_FILE   = '.meta.json';
+    private const META_FILE = '.meta.json';
     private const SCHEMA_FILE = '.schema.json';
-    private const OBJECT_EXT  = '.json';
+    private const OBJECT_EXT = '.json';
 
     /**
      * Constructor.
@@ -34,7 +34,7 @@ class FilesystemRepository implements RepositoryInterface
     }
 
     /**
-     * fetch and deserialize a file
+     * fetch and deserialize a file.
      *
      * @template CLASS of object
      *
@@ -57,11 +57,12 @@ class FilesystemRepository implements RepositoryInterface
         if ($collection instanceof $className) {
             return $collection;
         }
+
         return null;
     }
 
     /**
-     * List all Collections
+     * List all Collections.
      *
      * @return array<CollectionData>
      */
@@ -75,11 +76,12 @@ class FilesystemRepository implements RepositoryInterface
             }
             $collections[] = $collection;
         }
+
         return $collections;
     }
 
     /**
-     * Fetch a collection
+     * Fetch a collection.
      *
      * @param string $collection
      *
@@ -88,11 +90,12 @@ class FilesystemRepository implements RepositoryInterface
     public function fetchCollection(string $collection): ?CollectionData
     {
         $metaFile = $collection . DIRECTORY_SEPARATOR . $this::META_FILE;
+
         return $this->fetchAndDeserialize($metaFile, CollectionData::class);
     }
 
     /**
-     * Save a Collection
+     * Save a Collection.
      *
      * @param CollectionData $collection the collection to save
      *
@@ -101,12 +104,13 @@ class FilesystemRepository implements RepositoryInterface
     public function saveCollection(CollectionData $collection): bool
     {
         $jsonContent = $this->serializer->serialize($collection, 'json');
-        $metaFile    = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
+        $metaFile = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
+
         return $this->filesystem->saveFile($metaFile, $jsonContent);
     }
 
     /**
-     * fetch a schema for one of the defaul schema types
+     * fetch a schema for one of the defaul schema types.
      *
      * @param string $type
      *
@@ -120,15 +124,16 @@ class FilesystemRepository implements RepositoryInterface
             return null;
         }
         $contents = file_get_contents($schemaFile);
-        $schema   = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
+        $schema = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
         if ($schema instanceof SchemaData) {
             return $schema;
         }
+
         return null;
     }
 
     /**
-     * fetch a schema for a custom object
+     * fetch a schema for a custom object.
      *
      * @param string $collection
      *
@@ -144,36 +149,39 @@ class FilesystemRepository implements RepositoryInterface
         if ($schema instanceof SchemaData) {
             return $schema;
         }
+
         return null;
     }
 
     /**
-     * save a collection schema
+     * save a collection schema.
      *
      * @param string     $collection
      * @param SchemaData $schema
      *
-     * @return boolean
+     * @return bool
      */
     public function saveSchemaforCollection(string $collection, SchemaData $schema): bool
     {
         $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
         $schemaJSON = $this->serializer->serialize($schema, 'json');
+
         return $this->filesystem->saveFile($schemaFile, $schemaJSON);
     }
 
     /**
-     * Save an object
+     * Save an object.
      *
      * @param string     $collection
      * @param ObjectData $object
      *
-     * @return boolean
+     * @return bool
      */
     public function saveObject(string $collection, ObjectData $object): bool
     {
         $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . $this::OBJECT_EXT;
         $objectJSON = $this->serializer->serialize($object, 'json');
+
         return $this->filesystem->saveFile($objectFile, $objectJSON);
     }
 }

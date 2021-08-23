@@ -25,16 +25,17 @@ final class SchemaSaveService implements ServiceInterface
      * Constructor.
      *
      * @param SchemaRepository $repository The repository
+     * @param CollectionFetchService $collectionService
      */
     public function __construct(SchemaRepository $repository, CollectionFetchService $collectionService)
     {
-        $this->repository        = $repository;
+        $this->repository = $repository;
         $this->collectionService = $collectionService;
-        $this->serializer        = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     /**
-     * save a collection schema
+     * save a collection schema.
      *
      * @param string $collection
      * @param string $schemaJSON
@@ -58,6 +59,7 @@ final class SchemaSaveService implements ServiceInterface
         if (!$this->repository->saveSchemaForCollection($collection->name, $schema)) {
             throw new RuntimeException('Unable to save Schema', 1);
         }
+
         return $schema;
     }
 }

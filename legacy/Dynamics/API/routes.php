@@ -75,7 +75,7 @@ $app->group('/collections', function () {
 
 
 // Image
-// /rw_common/plugins/stacks/dynamics/api.php/imageworks/dynamics/products/total-cms/icon/icon.png?w=128&h=128
+// /rw_common/plugins/stacks/dynamics/public.php/imageworks/dynamics/products/total-cms/icon/icon.png?w=128&h=128
 
 // Gallery
-// /rw_common/plugins/stacks/dynamics/api.php/collections/products/movingbox/screenshots/edit-mode.jpg
+// /rw_common/plugins/stacks/dynamics/public.php/collections/products/movingbox/screenshots/edit-mode.jpg

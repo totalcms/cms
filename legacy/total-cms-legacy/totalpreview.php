@@ -865,7 +865,7 @@ class totalpreview
 				'autoplay' => $options['autoplay'],
 				'color'    => $options['vcolor'],
 				'loop'     => $options['loop'],
-				'api'      => 1,
+				'public'      => 1,
 				'badge'    => 0,
 				'byline'   => 0,
 				'portrait' => 0,

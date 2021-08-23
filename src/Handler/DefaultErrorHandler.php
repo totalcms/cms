@@ -48,9 +48,9 @@ class DefaultErrorHandler
         ResponseFactoryInterface $responseFactory,
         LoggerFactory $loggerFactory
     ) {
-        $this->twig            = $twig;
+        $this->twig = $twig;
         $this->responseFactory = $responseFactory;
-        $this->logger          = $loggerFactory
+        $this->logger = $loggerFactory
             ->addFileHandler('totalcms.log')
             ->createInstance('error');
     }

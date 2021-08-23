@@ -15,7 +15,7 @@ final class CollectionListAction
     private CollectionListService $collectionListService;
 
     /**
-     * The constructor
+     * The constructor.
      *
      * @param CollectionListService $service   collection list service
      * @param Responder             $responder The app responder
@@ -23,12 +23,12 @@ final class CollectionListAction
     public function __construct(Responder $responder, CollectionListService $service)
     {
         // $this->logger = $loggerFactory->createInstance((new ReflectionClass($this))->getShortName());
-        $this->responder             = $responder;
+        $this->responder = $responder;
         $this->collectionListService = $service;
     }
 
     /**
-     * Invokable Action
+     * Invokable Action.
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface      $response

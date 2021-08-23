@@ -34,25 +34,25 @@ final class SchemaData
         $data = new ArrayReader($array);
 
         // $anchor      = $data->findString('$anchor');
-        $title       = $data->findString('title') ?? '';
+        $title = $data->findString('title') ?? '';
         $description = $data->findString('description') ?? '';
-        $type        = $data->findString('type') ?? 'object';
-        $index       = $data->findArray('index') ?? [];
-        $required    = $data->findArray('required') ?? [];
-        $properties  = $data->findArray('properties');
+        $type = $data->findString('type') ?? 'object';
+        $index = $data->findArray('index') ?? [];
+        $required = $data->findArray('required') ?? [];
+        $properties = $data->findArray('properties');
 
         if (empty($properties)) {
             throw new UnexpectedValueException('Failed to create schema from array. No properties defined.');
         }
 
-        $schema              = new self();
+        $schema = new self();
         // $schema->anchor      = $anchor;
-        $schema->title       = $title;
+        $schema->title = $title;
         $schema->description = $description;
-        $schema->type        = $type;
-        $schema->index       = $index;
-        $schema->required    = $required;
-        $schema->properties  = $properties;
+        $schema->type = $type;
+        $schema->index = $index;
+        $schema->required = $required;
+        $schema->properties = $properties;
 
         return $schema;
     }

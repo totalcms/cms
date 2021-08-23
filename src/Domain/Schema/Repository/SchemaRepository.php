@@ -25,7 +25,7 @@ class SchemaRepository implements RepositoryInterface
     }
 
     /**
-     * fetch a schema for one of the default schema types
+     * fetch a schema for one of the default schema types.
      *
      * @param string $type
      *
@@ -37,11 +37,12 @@ class SchemaRepository implements RepositoryInterface
         if (null == $schema) {
             throw new RuntimeException("Default schema could not be located for $type", 1);
         }
+
         return $schema;
     }
 
     /**
-     * fetch a schema for a custom object
+     * fetch a schema for a custom object.
      *
      * @param string $collection
      *
@@ -53,15 +54,15 @@ class SchemaRepository implements RepositoryInterface
         if (null == $schema) {
             throw new RuntimeException("Object schema could not be located $collection", 1);
         }
+
         return $schema;
     }
 
     /**
-     * save a schema
+     * save a schema.
      *
      * @param string     $collection
      * @param SchemaData $schema
-     *
      */
     public function saveSchemaforCollection(string $collection, SchemaData $schema): bool
     {

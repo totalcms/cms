@@ -8,7 +8,7 @@ use League\Fractal;
 class CollectionMetaTransformer extends Fractal\TransformerAbstract
 {
     /**
-     * Fractal transform for a collection
+     * Fractal transform for a collection.
      *
      * @param Collection $collection the collection object
      *
@@ -17,9 +17,9 @@ class CollectionMetaTransformer extends Fractal\TransformerAbstract
     public function transform(Collection $collection): array
     {
         return [
-            'name'   => $collection->name,
+            'name' => $collection->name,
             'schema' => $collection->schema,
-            'url'    => $collection->url ?? '',
+            'url' => $collection->url ?? '',
         ];
     }
 }

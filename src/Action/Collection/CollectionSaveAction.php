@@ -14,7 +14,7 @@ final class CollectionSaveAction
     private CollectionSaveService $service;
 
     /**
-     * The constructor
+     * The constructor.
      *
      * @param Responder             $responder The app responder
      * @param CollectionSaveService $service   Collection save service
@@ -22,11 +22,11 @@ final class CollectionSaveAction
     public function __construct(Responder $responder, CollectionSaveService $service)
     {
         $this->responder = $responder;
-        $this->service   = $service;
+        $this->service = $service;
     }
 
     /**
-     * Invokable Action
+     * Invokable Action.
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface      $response
@@ -36,6 +36,7 @@ final class CollectionSaveAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $body = $request->getBody();
+
         return $this->responder->jsonItem(
             $response,
             $this->service->saveCollection($body),

@@ -24,7 +24,7 @@ class ObjectRepository implements RepositoryInterface
     }
 
     /**
-     * save a object
+     * save a object.
      *
      * @param string     $collection
      * @param ObjectData $object

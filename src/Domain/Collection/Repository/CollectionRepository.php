@@ -25,7 +25,7 @@ class CollectionRepository implements RepositoryInterface
     }
 
     /**
-     * Fetch a collection
+     * Fetch a collection.
      *
      * @param string $collection
      *
@@ -37,6 +37,7 @@ class CollectionRepository implements RepositoryInterface
         if (null == $collection) {
             throw new Exception('Collection does not exist', 1);
         }
+
         return $collection;
     }
 

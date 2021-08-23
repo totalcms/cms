@@ -46,7 +46,7 @@ class TotalCMS {
             hslOffset       : 15,
             localizeStrings : {},
             config          : {},
-            uri             : "/rw_common/plugins/stacks/dynamics/api.php"
+            uri             : "/rw_common/plugins/stacks/dynamics/public.php"
         };
         // get the global options and merge with defaults/arguments
         const globals = typeof window.totalcms === "object" ? window.totalcms.options : {};
@@ -125,7 +125,7 @@ class TotalCMS {
             return new Promise((resolve, reject) => {
                 // If this query was not made for this session, make it in the background so that the data gets refreshed
                 if (!this.sessionStorage.isSet(api)) {
-                    this.log.debug("Caching fresh data for api", api);
+                    this.log.debug("Caching fresh data for public", api);
                     this.fetchAPI(api);
                 }
                 resolve(this.localStorage.get(api));

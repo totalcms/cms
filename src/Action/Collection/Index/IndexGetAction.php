@@ -21,15 +21,17 @@ final class IndexGetAction
     }
 
     /**
-     * Action
+     * Action.
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
+     *
      * @return ResponseInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $response->getBody()->write('IndexGetAction');
+
         return $response;
     }
 

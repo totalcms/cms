@@ -23,7 +23,7 @@ final class CollectionListService implements ServiceInterface
     }
 
     /**
-     * List all collections
+     * List all collections.
      *
      * @return array<object>
      */
