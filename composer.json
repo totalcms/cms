@@ -71,7 +71,7 @@
     "cs:fix": "php-cs-fixer fix --config=.cs.php",
     "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
     "migrate": "phinx migrate -c config/phinx.php --ansi",
-    "phpstan": "phpstan analyse src tests --level=max -c phpstan.neon --no-progress --ansi",
+    "phpstan": "phpstan analyse -c phpstan.neon --no-progress --ansi",
     "sniffer:check": "phpcs --standard=phpcs.xml",
     "sniffer:fix": "phpcbf --standard=phpcs.xml",
     "start": "php -S localhost:8080 -t public",
