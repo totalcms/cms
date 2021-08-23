@@ -53,9 +53,7 @@ final class ObjectSaveService
             throw new UnexpectedValueException('Invalid object data provided', 1);
         }
 
-        if (!$this->repository->saveObject($collection->name, $object)) {
-            throw new RuntimeException('Unable to save object', 1);
-        }
+        $this->repository->saveObject($collection->name, $object);
 
         return $object;
     }

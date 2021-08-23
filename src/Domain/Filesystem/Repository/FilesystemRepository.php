@@ -123,8 +123,11 @@ final class FilesystemRepository
         if (!file_exists($schemaFile)) {
             return null;
         }
+
         $contents = file_get_contents($schemaFile);
+
         $schema = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
+
         if ($schema instanceof SchemaData) {
             return $schema;
         }
