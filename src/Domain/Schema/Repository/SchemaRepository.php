@@ -41,7 +41,7 @@ final class SchemaRepository
     }
 
     /**
-     * fetch a schema for a custom object.
+     * Fetch a schema for a custom object.
      *
      * @param string $collection
      *
@@ -50,6 +50,7 @@ final class SchemaRepository
     public function fetchObjectSchemaForCollection(string $collection): SchemaData
     {
         $schema = $this->repository->fetchObjectSchemaForCollection($collection);
+
         if (null == $schema) {
             throw new RuntimeException("Object schema could not be located $collection", 1);
         }
