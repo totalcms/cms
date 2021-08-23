@@ -23,7 +23,7 @@ class FilesystemRepository implements RepositoryInterface
     private const OBJECT_EXT = '.json';
 
     /**
-     * Constructor.
+     * The constructor.
      *
      * @param FilesystemIteratorFactory $filesystem The filesystem factory
      */
@@ -110,7 +110,7 @@ class FilesystemRepository implements RepositoryInterface
     }
 
     /**
-     * fetch a schema for one of the defaul schema types.
+     * fetch a schema for one of the default schema types.
      *
      * @param string $type
      *
@@ -161,7 +161,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @return bool
      */
-    public function saveSchemaforCollection(string $collection, SchemaData $schema): bool
+    public function saveSchemaForCollection(string $collection, SchemaData $schema): bool
     {
         $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
         $schemaJSON = $this->serializer->serialize($schema, 'json');

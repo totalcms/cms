@@ -53,7 +53,7 @@ return [
         return new LoggerFactory($container->get(Configuration::class)->getArray('logger'));
     },
 
-    // The data dir interator factory
+    // The data dir iterator factory
     FilesystemIteratorFactory::class => function (ContainerInterface $container) {
         return new FilesystemIteratorFactory($container->get(Configuration::class)->getString('datadir'));
     },

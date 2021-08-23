@@ -22,29 +22,29 @@ class FilesystemIteratorFactory
     }
 
     /**
-     * Generate the File Interator.
+     * Generate the File Iterator.
      *
-     * @param string $subpath (optional) subfolder to interate through
+     * @param string $directory (optional) sub-folder to iterate through
      *
      * @return FilesystemIterator
      */
-    private function createIterator(string $subpath = ''): FilesystemIterator
+    private function createIterator(string $directory = ''): FilesystemIterator
     {
-        return new FilesystemIterator($this->buildPath($subpath), FilesystemIterator::SKIP_DOTS);
+        return new FilesystemIterator($this->buildPath($directory), FilesystemIterator::SKIP_DOTS);
     }
 
     /**
-     * Generate the File Interator.
+     * Generate the File Iterator.
      *
-     * @param string $subpath (optional) subfolder to interate through
+     * @param string $directory (optional) sub-folder to iterate through
      *
      * @return string
      */
-    public function buildPath(string $subpath = ''): string
+    public function buildPath(string $directory = ''): string
     {
         $path = $this->root;
-        if (!empty($subpath)) {
-            $path .= DIRECTORY_SEPARATOR . $subpath;
+        if (!empty($directory)) {
+            $path .= DIRECTORY_SEPARATOR . $directory;
         }
 
         return $path;
@@ -53,31 +53,33 @@ class FilesystemIteratorFactory
     /**
      * Read file.
      *
-     * @param string $subpath (optional) path of file to read
+     * @param string $filename (optional) path of file to read
      *
      * @return ?string
      */
-    public function readFile(string $subpath = ''): ?string
+    public function readFile(string $filename = ''): ?string
     {
-        $path = $this->buildPath($subpath);
+        $path = $this->buildPath($filename);
+
         if (!file_exists($path)) {
             return null;
         }
+
         $contents = file_get_contents($path);
 
         return is_string($contents) ? $contents : null;
     }
 
     /**
-     * file exists.
+     * File exists.
      *
-     * @param string $subpath (optional) path of file to read
+     * @param string $filename (optional) path of file to read
      *
      * @return bool
      */
-    public function exists(string $subpath = ''): bool
+    public function exists(string $filename = ''): bool
     {
-        $path = $this->buildPath($subpath);
+        $path = $this->buildPath($filename);
 
         return file_exists($path);
     }
@@ -85,14 +87,14 @@ class FilesystemIteratorFactory
     /**
      * recursively make a directory.
      *
-     * @param string $dir full path to the directory to make
+     * @param string $directory full path to the directory to make
      *
      * @return bool
      */
-    private static function makeDir(string $dir): bool
+    private static function makeDir(string $directory): bool
     {
-        if (!file_exists($dir)) {
-            return mkdir($dir, 0775, true);
+        if (!file_exists($directory)) {
+            return mkdir($directory, 0775, true);
         }
 
         return true;
@@ -138,35 +140,37 @@ class FilesystemIteratorFactory
     // }
 
     /**
-     * Generate the File Interator.
+     * Generate the File Iterator.
      *
-     * @param string $subpath path of file to write to
-     * @param string $data data to wrtie to the file
+     * @param string $filename path of file to write to
+     * @param string $data data to write to the file
      *
      * @return bool
      */
-    public function saveFile(string $subpath, string $data): bool
+    public function saveFile(string $filename, string $data): bool
     {
-        $path = $this->buildPath($subpath);
+        $path = $this->buildPath($filename);
         $this::makeDir(dirname($path));
 
         return file_put_contents($path, $data, LOCK_EX) !== false;
     }
 
     /**
-     * Interate through folder and return directories.
+     * Iterate through folder and return directories.
      *
-     * @param mixed $fileinfo fileinfo
+     * @param mixed $file The file
      *
      * @return ?string
      */
-    private static function filterFile($fileinfo): ?string
+    private function filterFile($file): ?string
     {
         // Verify that its a SplFileInfo
-        if (!is_a($fileinfo, 'SplFileInfo')) {
+        if (!is_a($file, 'SplFileInfo')) {
             return null;
         }
-        $basename = $fileinfo->getBasename();
+
+        $basename = $file->getBasename();
+
         // ignore any names that begin with dots
         if (mb_strpos($basename, '.') === 0) {
             return null;
@@ -176,18 +180,19 @@ class FilesystemIteratorFactory
     }
 
     /**
-     * Interate through folder and return directories.
+     * Iterate through folder and return directories.
      *
-     * @param string $subfolder (optional) subfolder to interate through
+     * @param string $directory (optional) sub-folder to iterate through
      *
      * @return array<string>
      */
-    public function list(string $subfolder = ''): array
+    public function list(string $directory = ''): array
     {
         $files = [];
-        foreach ($this->createIterator($subfolder) as $fileinfo) {
+
+        foreach ($this->createIterator($directory) as $file) {
             // Verify file
-            $basename = $this::filterFile($fileinfo);
+            $basename = $this->filterFile($file);
             if (empty($basename)) {
                 continue;
             }
@@ -200,27 +205,30 @@ class FilesystemIteratorFactory
     /**
      * Interate through folder and return directories.
      *
-     * @param string $subfolder (optional) subfolder to interate through
+     * @param string $directory (optional) subfolder to interate through
      *
      * @return array<string>
      */
-    public function listDirs(string $subfolder = ''): array
+    public function listDirs(string $directory = ''): array
     {
         $files = [];
-        foreach ($this->createIterator($subfolder) as $fileinfo) {
+        foreach ($this->createIterator($directory) as $fileinfo) {
             // Verify that its a SplFileInfo
             if (!is_a($fileinfo, 'SplFileInfo')) {
                 continue;
             }
+
             // Verify file
-            $basename = $this::filterFile($fileinfo);
+            $basename = $this->filterFile($fileinfo);
             if (empty($basename)) {
                 continue;
             }
+
             // All collections are the top level folders in tcms-data
             if ($fileinfo->isFile() === true) {
                 continue;
             }
+
             $files[] = $basename;
         }
 
@@ -228,34 +236,38 @@ class FilesystemIteratorFactory
     }
 
     /**
-     * Interate through folder and return directories.
+     * Iterate through folder and return directories.
      *
-     * @param string $subfolder (optional) subfolder to interate through
+     * @param string $directory (optional) subfolder to interate through
      * @param array<string> $extensions (optional) array of file extensions to include
      *
      * @return array<string>
      */
-    public function listFiles(string $subfolder = '', array $extensions = []): array
+    public function listFiles(string $directory = '', array $extensions = []): array
     {
         $files = [];
-        foreach ($this->createIterator($subfolder) as $fileinfo) {
+        foreach ($this->createIterator($directory) as $fileinfo) {
             // Verify that its a SplFileInfo
             if (!is_a($fileinfo, 'SplFileInfo')) {
                 continue;
             }
+
             // Verify file
-            $basename = $this::filterFile($fileinfo);
+            $basename = $this->filterFile($fileinfo);
             if (empty($basename)) {
                 continue;
             }
+
             // All collections are the top level folders in tcms-data
             if ($fileinfo->isDir() === true) {
                 continue;
             }
+
             // only include certain file extensions
             if (!empty($extensions) && !in_array($fileinfo->getExtension(), $extensions)) {
                 continue;
             }
+
             $files[] = $basename;
         }
 
