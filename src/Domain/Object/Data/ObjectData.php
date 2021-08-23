@@ -17,7 +17,7 @@ final class ObjectData
     /**
      * Output object to an array.
      *
-     * @return mixed[]
+     * @return array
      */
     public function toArray(): array
     {

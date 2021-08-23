@@ -25,7 +25,7 @@ final class SchemaData
     /**
      * Named constructor.
      *
-     * @param mixed[] $array The schema array
+     * @param array $array The schema array
      *
      * @return self
      */
@@ -33,7 +33,7 @@ final class SchemaData
     {
         $data = new ArrayReader($array);
 
-        // $anchor      = $data->findString('$anchor');
+        // $anchor = $data->findString('$anchor');
         $title = $data->findString('title') ?? '';
         $description = $data->findString('description') ?? '';
         $type = $data->findString('type') ?? 'object';
@@ -46,7 +46,7 @@ final class SchemaData
         }
 
         $schema = new self();
-        // $schema->anchor      = $anchor;
+        // $schema->anchor = $anchor;
         $schema->title = $title;
         $schema->description = $description;
         $schema->type = $type;

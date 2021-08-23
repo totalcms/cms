@@ -4,7 +4,7 @@ namespace App\Domain\Collection\Repository;
 
 use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Filesystem\Repository\FilesystemRepository;
-use Exception;
+use DomainException;
 
 /**
  * Repository.
@@ -28,13 +28,16 @@ final class CollectionRepository
      *
      * @param string $collection
      *
+     * @throws DomainException
+     *
      * @return CollectionData
      */
     public function fetchCollection(string $collection): CollectionData
     {
         $collection = $this->repository->fetchCollection($collection);
-        if (null == $collection) {
-            throw new Exception('Collection does not exist', 1);
+
+        if ($collection === null) {
+            throw new DomainException('Collection does not exist');
         }
 
         return $collection;

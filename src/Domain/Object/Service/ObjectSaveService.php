@@ -50,7 +50,7 @@ final class ObjectSaveService
 
         $object = $this->serializer->deserialize($objectJSON, ObjectData::class, 'json');
         if (!$object instanceof ObjectData) {
-            throw new UnexpectedValueException('Invalid object data provided', 1);
+            throw new UnexpectedValueException('Invalid object data provided');
         }
 
         $this->repository->saveObject($collection->name, $object);

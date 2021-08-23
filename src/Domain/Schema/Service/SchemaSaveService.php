@@ -48,12 +48,12 @@ final class SchemaSaveService
     {
         $collection = $this->collectionService->fetchCollection($collection);
         if ('object' != $collection->schema) {
-            throw new UnexpectedValueException("Not allowed to save non-object schemas ($collection->name)", 1);
+            throw new UnexpectedValueException("Not allowed to save non-object schemas ($collection->name)");
         }
 
         $schema = $this->serializer->deserialize($schemaJSON, SchemaData::class, 'json');
         if (!$schema instanceof SchemaData) {
-            throw new UnexpectedValueException('Invalid schema data provided', 1);
+            throw new UnexpectedValueException('Invalid schema data provided');
         }
 
         // TODO: Validate schema json against the schema.json schema to ensure proper formatting

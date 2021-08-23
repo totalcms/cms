@@ -42,7 +42,7 @@ final class CollectionSaveService
         $collection = (object)$this->serializer->deserialize($data, CollectionData::class, 'json');
 
         if (!is_a($collection, CollectionData::class, false)) {
-            throw new UnexpectedValueException('Invalid Collection data provided', 1);
+            throw new UnexpectedValueException('Invalid Collection data provided');
         }
 
         $this->repository->saveCollection($collection);

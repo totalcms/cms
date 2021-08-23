@@ -34,7 +34,7 @@ final class SchemaRepository
     {
         $schema = $this->repository->fetchDefaultSchemaForType($type);
         if (null == $schema) {
-            throw new RuntimeException("Default schema could not be located for $type", 1);
+            throw new RuntimeException("Default schema could not be located for $type");
         }
 
         return $schema;
@@ -52,7 +52,7 @@ final class SchemaRepository
         $schema = $this->repository->fetchObjectSchemaForCollection($collection);
 
         if (null == $schema) {
-            throw new RuntimeException("Object schema could not be located $collection", 1);
+            throw new RuntimeException("Object schema could not be located $collection");
         }
 
         return $schema;
