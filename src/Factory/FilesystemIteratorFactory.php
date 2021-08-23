@@ -3,6 +3,7 @@
 namespace App\Factory;
 
 use FilesystemIterator;
+use RuntimeException;
 
 /**
  * Factory.
@@ -145,6 +146,8 @@ final class FilesystemIteratorFactory
      * @param string $filename path of file to write to
      * @param string $data data to write to the file
      *
+     * @throws RuntimeException
+     *
      * @return bool
      */
     public function saveFile(string $filename, string $data): bool
@@ -152,7 +155,9 @@ final class FilesystemIteratorFactory
         $path = $this->buildPath($filename);
         $this::makeDir(dirname($path));
 
-        return file_put_contents($path, $data, LOCK_EX) !== false;
+        if (file_put_contents($path, $data, LOCK_EX) === false) {
+            throw new RuntimeException(sprintf('Unable to save file: %s', $filename));
+        }
     }
 
     /**
