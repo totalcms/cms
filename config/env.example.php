@@ -1,7 +1,6 @@
 <?php
 
-// Set Env
-$settings['env'] = 'development';
+require __DIR__ . '/local.dev.php';
 
 // Database
 $settings['db']['database'] = 'test';

@@ -15,3 +15,6 @@ node_modules/
 tmp/*
 logs/*
 tcms-data/*
+
+env.php
+config/env.php

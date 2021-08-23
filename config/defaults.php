@@ -2,11 +2,6 @@
 
 // Configure defaults for the whole application.
 
-// Cloudflare IP address header
-if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-    $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
-}
-
 // Error reporting
 error_reporting(0);
 ini_set('display_errors', '0');
@@ -23,11 +18,16 @@ if (!ini_get('date.timezone')) {
 // JSON fix for saving float values
 ini_set('serialize_precision', '-1');
 
+// Cloudflare IP address header
+if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+    $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
+}
+
 // Settings
 $settings = [];
 
 // Default env to production
-$settings['env'] = 'production';
+$settings['env'] = 'prod';
 
 // Path settings
 $settings['root'] = dirname(__DIR__);
@@ -44,18 +44,13 @@ $settings['datadir'] = $settings['docroot'] . '/tcms-data';
 // Error Handling
 $settings['error'] = [
     // Should be set to false in production
-    'display_error_details' => true,
+    'display_error_details' => false,
     // Parameter is passed to the default ErrorHandler
     // View in rendered output by enabling the "displayErrorDetails" setting.
-    // For the console and unit tests it should be disable too
+    // For the console and unit tests it should be disabled too
     'log_errors' => true,
     // Display error details in error log
     'log_error_details' => true,
-];
-
-// Application settings
-$settings['app'] = [
-    'secret' => '{{app_secret}}',
 ];
 
 // Logger settings

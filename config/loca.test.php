@@ -1,7 +1,7 @@
 <?php
 
 // Continuous integration environment
-// $settings['env'] = 'integration';
+$settings['env'] = 'test';
 
 // Error reporting
 error_reporting(E_ALL);
