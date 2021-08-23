@@ -27,6 +27,7 @@ final class LiteLicenseMiddleware implements MiddlewareInterface
         $isLiteLicensed = true;
 
         // If valid Lite license call next and return.
+        /** @phpstan-ignore-next-line */
         if ($isLiteLicensed) {
             return $handler->handle($request);
         }

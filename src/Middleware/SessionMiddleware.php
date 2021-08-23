@@ -7,6 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * Session Middleware.
@@ -14,16 +15,16 @@ use Symfony\Component\HttpFoundation\Session\Session;
 final class SessionMiddleware implements MiddlewareInterface
 {
     /**
-     * @var Session
+     * @var SessionInterface
      */
-    private Session $session;
+    private SessionInterface $session;
 
     /**
      * The constructor.
      *
-     * @param Session $session The session handler
+     * @param SessionInterface $session The session handler
      */
-    public function __construct(Session $session)
+    public function __construct(SessionInterface $session)
     {
         $this->session = $session;
     }

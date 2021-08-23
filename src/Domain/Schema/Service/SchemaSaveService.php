@@ -40,17 +40,20 @@ final class SchemaSaveService implements ServiceInterface
      * @param string $collection
      * @param string $schemaJSON
      *
+     * @throws RuntimeException
+     * @throws UnexpectedValueException
+     *
      * @return SchemaData
      */
-    public function saveSchemaforCollection(string $collection, string $schemaJSON): SchemaData
+    public function saveSchemaForCollection(string $collection, string $schemaJSON): SchemaData
     {
         $collection = $this->collectionService->fetchCollection($collection);
         if ('object' != $collection->schema) {
             throw new UnexpectedValueException("Not allowed to save non-object schemas ($collection->name)", 1);
         }
 
-        $schema = (object)$this->serializer->deserialize($schemaJSON, SchemaData::class, 'json');
-        if (!($schema instanceof SchemaData)) {
+        $schema = $this->serializer->deserialize($schemaJSON, SchemaData::class, 'json');
+        if (!$schema instanceof SchemaData) {
             throw new UnexpectedValueException('Invalid schema data provided', 1);
         }
 

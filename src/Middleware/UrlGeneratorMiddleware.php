@@ -16,7 +16,7 @@ final class UrlGeneratorMiddleware implements MiddlewareInterface
     /**
      * @var UrlGenerator
      */
-    private $urlGenerator;
+    private UrlGenerator $urlGenerator;
 
     /**
      * The constructor.

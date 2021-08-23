@@ -40,14 +40,17 @@ final class ObjectSaveService implements ServiceInterface
      * @param string $collection
      * @param string $objectJSON
      *
+     * @throws UnexpectedValueException
+     * @throws RuntimeException
+     *
      * @return ObjectData
      */
     public function saveObject(string $collection, string $objectJSON): ObjectData
     {
         $collection = $this->collectionService->fetchCollection($collection);
 
-        $object = (object)$this->serializer->deserialize($objectJSON, ObjectData::class, 'json');
-        if (!($object instanceof ObjectData)) {
+        $object = $this->serializer->deserialize($objectJSON, ObjectData::class, 'json');
+        if (!$object instanceof ObjectData) {
             throw new UnexpectedValueException('Invalid object data provided', 1);
         }
 

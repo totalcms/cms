@@ -51,8 +51,8 @@ class DefaultErrorHandler
         $this->twig = $twig;
         $this->responseFactory = $responseFactory;
         $this->logger = $loggerFactory
-            ->addFileHandler('totalcms.log')
-            ->createInstance('error');
+            ->addFileHandler('totalcms_error.log')
+            ->createLogger();
     }
 
     /**

@@ -1,6 +1,8 @@
 parameters:
-	inferPrivatePropertyTypeFromConstructor: true
 	level: 8
+	inferPrivatePropertyTypeFromConstructor: true
+	checkMissingIterableValueType: false
+	reportUnmatchedIgnoredErrors: false
 	paths:
 		- src
 		- config
