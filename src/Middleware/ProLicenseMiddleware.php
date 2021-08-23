@@ -16,7 +16,7 @@ final class ProLicenseMiddleware implements MiddlewareInterface
     /**
      * Invoke middleware.
      *
-     * @param ServerRequestInterface  $request The request
+     * @param ServerRequestInterface $request The request
      * @param RequestHandlerInterface $handler The handler
      *
      * @return ResponseInterface The response
@@ -27,6 +27,7 @@ final class ProLicenseMiddleware implements MiddlewareInterface
         $isProLicensed = true;
 
         // If valid Lite license call next and return.
+        /** @phpstan-ignore-next-line */
         if ($isProLicensed) {
             return $handler->handle($request);
         }

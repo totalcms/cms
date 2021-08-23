@@ -61,7 +61,7 @@ class SchemaRepository implements RepositoryInterface
     /**
      * save a schema.
      *
-     * @param string     $collection
+     * @param string $collection
      * @param SchemaData $schema
      */
     public function saveSchemaforCollection(string $collection, SchemaData $schema): bool

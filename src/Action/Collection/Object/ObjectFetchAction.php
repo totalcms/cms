@@ -10,8 +10,8 @@ final class ObjectFetchAction
     /**
      * Action.
      *
-     * @param  ServerRequestInterface $request
-     * @param  ResponseInterface      $response
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      *
      * @return ResponseInterface
      */

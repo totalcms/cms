@@ -141,7 +141,7 @@ class FilesystemIteratorFactory
      * Generate the File Interator.
      *
      * @param string $subpath path of file to write to
-     * @param string $data    data to wrtie to the file
+     * @param string $data data to wrtie to the file
      *
      * @return bool
      */
@@ -230,7 +230,7 @@ class FilesystemIteratorFactory
     /**
      * Interate through folder and return directories.
      *
-     * @param string        $subfolder  (optional) subfolder to interate through
+     * @param string $subfolder (optional) subfolder to interate through
      * @param array<string> $extensions (optional) array of file extensions to include
      *
      * @return array<string>

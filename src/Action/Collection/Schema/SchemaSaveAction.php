@@ -16,8 +16,8 @@ final class SchemaSaveAction
     /**
      * The constructor.
      *
-     * @param Responder         $responder The app responder
-     * @param SchemaSaveService $service   Schema save service
+     * @param Responder $responder The app responder
+     * @param SchemaSaveService $service Schema save service
      */
     public function __construct(Responder $responder, SchemaSaveService $service)
     {
@@ -29,13 +29,16 @@ final class SchemaSaveAction
      * Invokable Action.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface      $response
-     * @param array<mixed>           $args     The routing arguments
+     * @param ResponseInterface $response
+     * @param array<mixed> $args The routing arguments
      *
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
+    public function __invoke(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ): ResponseInterface {
         $body = $request->getBody();
 
         return $this->responder->jsonItem(

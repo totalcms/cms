@@ -16,8 +16,8 @@ final class SchemaFetchAction
     /**
      * The constructor.
      *
-     * @param SchemaFetchService $service   service
-     * @param Responder          $responder The app responder
+     * @param SchemaFetchService $service service
+     * @param Responder $responder The app responder
      */
     public function __construct(Responder $responder, SchemaFetchService $service)
     {
@@ -29,13 +29,16 @@ final class SchemaFetchAction
      * Action.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface      $response
-     * @param array<mixed>           $args     The routing arguments
+     * @param ResponseInterface $response
+     * @param array<mixed> $args The routing arguments
      *
      * @return ResponseInterface the response
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
+    public function __invoke(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ): ResponseInterface {
         $schema = $this->service->fetchSchemaforCollection($args['collection']);
 
         return $this->responder->jsonItem($response, $schema, new SchemaMetaTransformer());

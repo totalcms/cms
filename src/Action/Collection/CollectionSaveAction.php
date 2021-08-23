@@ -16,8 +16,8 @@ final class CollectionSaveAction
     /**
      * The constructor.
      *
-     * @param Responder             $responder The app responder
-     * @param CollectionSaveService $service   Collection save service
+     * @param Responder $responder The app responder
+     * @param CollectionSaveService $service Collection save service
      */
     public function __construct(Responder $responder, CollectionSaveService $service)
     {
@@ -29,7 +29,7 @@ final class CollectionSaveAction
      * Invokable Action.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface      $response
+     * @param ResponseInterface $response
      *
      * @return ResponseInterface
      */

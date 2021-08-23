@@ -24,24 +24,24 @@ class DefaultErrorHandler
     /**
      * @var Twig
      */
-    private $twig;
+    private Twig $twig;
 
     /**
      * @var ResponseFactoryInterface
      */
-    private $responseFactory;
+    private ResponseFactoryInterface $responseFactory;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * The constructor.
      *
-     * @param Twig                     $twig            Twig template engine
+     * @param Twig $twig Twig template engine
      * @param ResponseFactoryInterface $responseFactory The response factory
-     * @param LoggerFactory            $loggerFactory   The logger factory
+     * @param LoggerFactory $loggerFactory The logger factory
      */
     public function __construct(
         Twig $twig,
@@ -58,10 +58,10 @@ class DefaultErrorHandler
     /**
      * Invoke.
      *
-     * @param ServerRequestInterface $request             The request
-     * @param Throwable              $exception           The exception
-     * @param bool                   $displayErrorDetails Show error details
-     * @param bool                   $logErrors           Log errors
+     * @param ServerRequestInterface $request The request
+     * @param Throwable $exception The exception
+     * @param bool $displayErrorDetails Show error details
+     * @param bool $logErrors Log errors
      *
      * @return ResponseInterface The response
      */
@@ -73,13 +73,15 @@ class DefaultErrorHandler
     ): ResponseInterface {
         // Log error
         if ($logErrors) {
-            $this->logger->error(sprintf(
-                'Error: [%s] %s, Method: %s, Path: %s',
-                $exception->getCode(),
-                ExceptionDetail::getExceptionText($exception),
-                $request->getMethod(),
-                $request->getUri()->getPath()
-            ));
+            $this->logger->error(
+                sprintf(
+                    'Error: [%s] %s, Method: %s, Path: %s',
+                    $exception->getCode(),
+                    ExceptionDetail::getExceptionText($exception),
+                    $request->getMethod(),
+                    $request->getUri()->getPath()
+                )
+            );
         }
 
         // Detect status code
@@ -134,9 +136,9 @@ class DefaultErrorHandler
     /**
      * Get error message.
      *
-     * @param Throwable $exception           The error
-     * @param int       $statusCode          The http status code
-     * @param bool      $displayErrorDetails Display details
+     * @param Throwable $exception The error
+     * @param int $statusCode The http status code
+     * @param bool $displayErrorDetails Display details
      *
      * @return string The message
      */

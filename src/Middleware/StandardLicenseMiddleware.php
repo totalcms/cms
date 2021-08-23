@@ -6,7 +6,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Tuupola\Http\Factory\ResponseFactory;
 
 /**
  * License middleware.
@@ -16,7 +15,7 @@ final class StandardLicenseMiddleware implements MiddlewareInterface
     /**
      * Invoke middleware.
      *
-     * @param ServerRequestInterface  $request The request
+     * @param ServerRequestInterface $request The request
      * @param RequestHandlerInterface $handler The handler
      *
      * @return ResponseInterface The response
@@ -27,6 +26,7 @@ final class StandardLicenseMiddleware implements MiddlewareInterface
         $isStandardLicensed = true;
 
         // If valid Lite license call next and return.
+        /** @phpstan-ignore-next-line */
         if ($isStandardLicensed) {
             return $handler->handle($request);
         }

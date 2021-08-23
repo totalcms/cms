@@ -16,8 +16,8 @@ final class ObjectSaveAction
     /**
      * The constructor.
      *
-     * @param Responder         $responder The app responder
-     * @param ObjectSaveService $service   Object save service
+     * @param Responder $responder The app responder
+     * @param ObjectSaveService $service Object save service
      */
     public function __construct(Responder $responder, ObjectSaveService $service)
     {
@@ -28,14 +28,17 @@ final class ObjectSaveAction
     /**
      * Action.
      *
-     * @param  ServerRequestInterface $request
-     * @param  ResponseInterface      $response
-     * @param  mixed[]                $args
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param mixed[] $args
      *
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
+    public function __invoke(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ): ResponseInterface {
         $body = $request->getBody();
 
         return $this->responder->jsonItem(

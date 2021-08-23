@@ -38,7 +38,7 @@ class FilesystemRepository implements RepositoryInterface
      *
      * @template CLASS of object
      *
-     * @param string              $file
+     * @param string $file
      * @param class-string<CLASS> $className
      *
      * @return CLASS|null
@@ -156,7 +156,7 @@ class FilesystemRepository implements RepositoryInterface
     /**
      * save a collection schema.
      *
-     * @param string     $collection
+     * @param string $collection
      * @param SchemaData $schema
      *
      * @return bool
@@ -172,7 +172,7 @@ class FilesystemRepository implements RepositoryInterface
     /**
      * Save an object.
      *
-     * @param string     $collection
+     * @param string $collection
      * @param ObjectData $object
      *
      * @return bool

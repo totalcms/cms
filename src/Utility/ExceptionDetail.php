@@ -13,7 +13,7 @@ final class ExceptionDetail
      * Get exception text.
      *
      * @param Throwable $exception Error
-     * @param int       $maxLength The max length of the error message
+     * @param int $maxLength The max length of the error message
      *
      * @return string The full error message
      */

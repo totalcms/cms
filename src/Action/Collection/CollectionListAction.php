@@ -17,8 +17,8 @@ final class CollectionListAction
     /**
      * The constructor.
      *
-     * @param CollectionListService $service   collection list service
-     * @param Responder             $responder The app responder
+     * @param CollectionListService $service collection list service
+     * @param Responder $responder The app responder
      */
     public function __construct(Responder $responder, CollectionListService $service)
     {
@@ -31,7 +31,7 @@ final class CollectionListAction
      * Invokable Action.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface      $response
+     * @param ResponseInterface $response
      *
      * @return ResponseInterface
      */

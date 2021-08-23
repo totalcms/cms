@@ -16,7 +16,7 @@ final class SessionMiddleware implements MiddlewareInterface
     /**
      * @var Session
      */
-    private $session;
+    private Session $session;
 
     /**
      * The constructor.

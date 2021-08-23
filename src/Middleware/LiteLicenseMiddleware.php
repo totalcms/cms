@@ -16,7 +16,7 @@ final class LiteLicenseMiddleware implements MiddlewareInterface
     /**
      * Invoke middleware.
      *
-     * @param ServerRequestInterface  $request The request
+     * @param ServerRequestInterface $request The request
      * @param RequestHandlerInterface $handler The handler
      *
      * @return ResponseInterface The response

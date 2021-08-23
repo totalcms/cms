@@ -60,8 +60,8 @@ final class UrlGenerator
      * response to the client.
      *
      * @param string $routeName The route name
-     * @param array<mixed> $data Named argument replacement data
-     * @param array<mixed> $queryParams Optional query string parameters
+     * @param array $data Named argument replacement data
+     * @param array $queryParams Optional query string parameters
      *
      * @return string The url
      */
@@ -80,8 +80,8 @@ final class UrlGenerator
      * response to the client.
      *
      * @param string $routeName The route name
-     * @param array<mixed> $data Named argument replacement data
-     * @param array<mixed> $queryParams Optional query string parameters
+     * @param array $data Named argument replacement data
+     * @param array $queryParams Optional query string parameters
      *
      * @return string The url
      */
