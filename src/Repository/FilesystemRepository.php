@@ -13,7 +13,7 @@ use Symfony\Component\Serializer\Serializer;
 /**
  * Repository.
  */
-class FilesystemRepository implements RepositoryInterface
+final class FilesystemRepository
 {
     private FilesystemIteratorFactory $filesystem;
     private Serializer $serializer;

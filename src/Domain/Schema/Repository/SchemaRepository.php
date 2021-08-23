@@ -4,13 +4,12 @@ namespace App\Domain\Schema\Repository;
 
 use App\Domain\Schema\Data\SchemaData;
 use App\Repository\FilesystemRepository;
-use App\Repository\RepositoryInterface;
 use RuntimeException;
 
 /**
  * Repository.
  */
-class SchemaRepository implements RepositoryInterface
+final class SchemaRepository
 {
     private FilesystemRepository $repository;
 

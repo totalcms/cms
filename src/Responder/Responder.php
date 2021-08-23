@@ -44,8 +44,8 @@ final class Responder
      *
      * @param ResponseInterface $response The response
      * @param string $destination The redirect destination (url or route name)
-     * @param array<mixed> $data Named argument replacement data
-     * @param array<mixed> $queryParams Optional query string parameters
+     * @param array $data Named argument replacement data
+     * @param array $queryParams Optional query string parameters
      *
      * @return ResponseInterface The response
      */
@@ -69,7 +69,7 @@ final class Responder
      * response to the client.
      *
      * @param ResponseInterface $response The response
-     * @param array<mixed> $collection The data
+     * @param array $collection The data
      * @param TransformerAbstract $transformer the data transformer
      *
      * @return ResponseInterface The response

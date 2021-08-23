@@ -5,7 +5,6 @@ namespace App\Domain\Object\Service;
 use App\Domain\Collection\Service\CollectionFetchService;
 use App\Domain\Object\Data\ObjectData;
 use App\Domain\Object\Repository\ObjectRepository;
-use App\Interfaces\ServiceInterface;
 use RuntimeException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -15,7 +14,7 @@ use UnexpectedValueException;
 /**
  * Service.
  */
-final class ObjectSaveService implements ServiceInterface
+final class ObjectSaveService
 {
     private ObjectRepository $repository;
     private CollectionFetchService $collectionService;

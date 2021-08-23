@@ -3,12 +3,11 @@
 namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Repository\CollectionRepository;
-use App\Interfaces\ServiceInterface;
 
 /**
  * Service.
  */
-final class CollectionListService implements ServiceInterface
+final class CollectionListService
 {
     private CollectionRepository $repository;
 

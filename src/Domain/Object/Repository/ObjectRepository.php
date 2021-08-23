@@ -4,12 +4,11 @@ namespace App\Domain\Object\Repository;
 
 use App\Domain\Object\Data\ObjectData;
 use App\Repository\FilesystemRepository;
-use App\Repository\RepositoryInterface;
 
 /**
  * Repository.
  */
-class ObjectRepository implements RepositoryInterface
+final class ObjectRepository
 {
     private FilesystemRepository $repository;
 

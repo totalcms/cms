@@ -4,13 +4,12 @@ namespace App\Domain\Collection\Repository;
 
 use App\Domain\Collection\Data\CollectionData;
 use App\Repository\FilesystemRepository;
-use App\Repository\RepositoryInterface;
 use Exception;
 
 /**
  * Repository.
  */
-class CollectionRepository implements RepositoryInterface
+final class CollectionRepository
 {
     private FilesystemRepository $repository;
 

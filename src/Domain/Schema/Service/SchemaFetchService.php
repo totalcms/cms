@@ -5,12 +5,11 @@ namespace App\Domain\Schema\Service;
 use App\Domain\Collection\Service\CollectionFetchService;
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Repository\SchemaRepository;
-use App\Interfaces\ServiceInterface;
 
 /**
  * Service.
  */
-final class SchemaFetchService implements ServiceInterface
+final class SchemaFetchService
 {
     private SchemaRepository $repository;
     private CollectionFetchService $collectionService;

@@ -7,7 +7,7 @@ use FilesystemIterator;
 /**
  * Factory.
  */
-class FilesystemIteratorFactory
+final class FilesystemIteratorFactory
 {
     private string $root;
 

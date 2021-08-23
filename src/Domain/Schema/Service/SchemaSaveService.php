@@ -5,7 +5,6 @@ namespace App\Domain\Schema\Service;
 use App\Domain\Collection\Service\CollectionFetchService;
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Repository\SchemaRepository;
-use App\Interfaces\ServiceInterface;
 use RuntimeException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -15,7 +14,7 @@ use UnexpectedValueException;
 /**
  * Service.
  */
-final class SchemaSaveService implements ServiceInterface
+final class SchemaSaveService
 {
     private SchemaRepository $repository;
     private CollectionFetchService $collectionService;

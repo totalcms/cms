@@ -4,12 +4,11 @@ namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Collection\Repository\CollectionRepository;
-use App\Interfaces\ServiceInterface;
 
 /**
  * Service.
  */
-final class CollectionFetchService implements ServiceInterface
+final class CollectionFetchService
 {
     private CollectionRepository $repository;
 

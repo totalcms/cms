@@ -4,7 +4,6 @@ namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Collection\Repository\CollectionRepository;
-use App\Interfaces\ServiceInterface;
 use Exception;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -13,7 +12,7 @@ use Symfony\Component\Serializer\Serializer;
 /**
  * Service.
  */
-final class CollectionSaveService implements ServiceInterface
+final class CollectionSaveService
 {
     private CollectionRepository $repository;
     private Serializer $serializer;

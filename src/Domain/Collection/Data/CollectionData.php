@@ -17,7 +17,7 @@ final class CollectionData
     /**
      * Named constructor.
      *
-     * @param array{name:string,schema:string} $array The array with data
+     * @param array $array The array with data
      *
      * @return self
      */
