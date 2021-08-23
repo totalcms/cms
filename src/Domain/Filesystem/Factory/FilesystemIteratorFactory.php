@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Factory;
+namespace App\Domain\Filesystem\Factory;
 
 use FilesystemIterator;
 use RuntimeException;
+use function mb_strpos;
 
 /**
  * Factory.
@@ -92,7 +93,7 @@ final class FilesystemIteratorFactory
      *
      * @return bool
      */
-    private static function makeDir(string $directory): bool
+    private function makeDir(string $directory): bool
     {
         if (!file_exists($directory)) {
             return mkdir($directory, 0775, true);
@@ -112,7 +113,7 @@ final class FilesystemIteratorFactory
     //     return true;
     // }
 
-    // public static function recursiveDelete(string $source, bool $removeOnlyChildren = false) : bool
+    // public function recursiveDelete(string $source, bool $removeOnlyChildren = false) : bool
     // {
     //     if (empty($source) || file_exists($source) === false) {
     //         return false;
@@ -148,12 +149,12 @@ final class FilesystemIteratorFactory
      *
      * @throws RuntimeException
      *
-     * @return bool
+     * @return void
      */
-    public function saveFile(string $filename, string $data): bool
+    public function saveFile(string $filename, string $data): void
     {
         $path = $this->buildPath($filename);
-        $this::makeDir(dirname($path));
+        $this->makeDir(dirname($path));
 
         if (file_put_contents($path, $data, LOCK_EX) === false) {
             throw new RuntimeException(sprintf('Unable to save file: %s', $filename));

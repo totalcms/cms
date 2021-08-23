@@ -1,6 +1,6 @@
 <?php
 
-use App\Factory\FilesystemIteratorFactory;
+use App\Domain\Filesystem\Factory\FilesystemIteratorFactory;
 use App\Factory\LoggerFactory;
 use App\Handler\DefaultErrorHandler;
 use Psr\Container\ContainerInterface;

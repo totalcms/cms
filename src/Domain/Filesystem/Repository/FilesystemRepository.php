@@ -3,9 +3,9 @@
 namespace App\Domain\Filesystem\Repository;
 
 use App\Domain\Collection\Data\CollectionData;
+use App\Domain\Filesystem\Factory\FilesystemIteratorFactory;
 use App\Domain\Object\Data\ObjectData;
 use App\Domain\Schema\Data\SchemaData;
-use App\Factory\FilesystemIteratorFactory;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -99,14 +99,14 @@ final class FilesystemRepository
      *
      * @param CollectionData $collection the collection to save
      *
-     * @return bool
+     * @return void
      */
-    public function saveCollection(CollectionData $collection): bool
+    public function saveCollection(CollectionData $collection): void
     {
         $jsonContent = $this->serializer->serialize($collection, 'json');
         $metaFile = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
 
-        return $this->filesystem->saveFile($metaFile, $jsonContent);
+        $this->filesystem->saveFile($metaFile, $jsonContent);
     }
 
     /**
@@ -162,14 +162,14 @@ final class FilesystemRepository
      * @param string $collection
      * @param SchemaData $schema
      *
-     * @return bool
+     * @return void
      */
-    public function saveSchemaForCollection(string $collection, SchemaData $schema): bool
+    public function saveSchemaForCollection(string $collection, SchemaData $schema): void
     {
         $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
         $schemaJSON = $this->serializer->serialize($schema, 'json');
 
-        return $this->filesystem->saveFile($schemaFile, $schemaJSON);
+        $this->filesystem->saveFile($schemaFile, $schemaJSON);
     }
 
     /**
@@ -178,13 +178,13 @@ final class FilesystemRepository
      * @param string $collection
      * @param ObjectData $object
      *
-     * @return bool
+     * @return void
      */
-    public function saveObject(string $collection, ObjectData $object): bool
+    public function saveObject(string $collection, ObjectData $object): void
     {
         $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . $this::OBJECT_EXT;
         $objectJSON = $this->serializer->serialize($object, 'json');
 
-        return $this->filesystem->saveFile($objectFile, $objectJSON);
+        $this->filesystem->saveFile($objectFile, $objectJSON);
     }
 }
