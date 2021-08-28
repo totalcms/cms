@@ -1,0 +1,448 @@
+{
+    "description": "Agent can intelligently display or hide content from the server side. This means that the content is never downloaded at all, not just hidden from view. This results in faster page downloads! It can do some other cool stuff too...",
+    "color": {
+        "hsl": [
+            265.13514,
+            38.94737,
+            37.2549
+        ],
+        "alpha": 1,
+        "hex": "593a84",
+        "rgb": [
+            89,
+            58,
+            132
+        ]
+    },
+    "bundleId": "com.joeworkman.stacks.agent",
+    "external": true,
+    "releaseDate": "2017-03-01T00:00:00+00:00",
+    "tags": [
+        "utility",
+        "layout",
+        "responsive",
+        "php",
+        "sale"
+    ],
+    "new": false,
+    "sale": false,
+    "icon": {
+        "colors": [
+            {
+                "hsl": [
+                    0,
+                    0,
+                    4.31373
+                ],
+                "alpha": 1,
+                "hex": "0b0b0b",
+                "rgb": [
+                    11,
+                    11,
+                    11
+                ]
+            },
+            {
+                "hsl": [
+                    0,
+                    0,
+                    95.68627
+                ],
+                "alpha": 1,
+                "hex": "f4f4f4",
+                "rgb": [
+                    244,
+                    244,
+                    244
+                ]
+            }
+        ],
+        "featured": false,
+        "ext": "png",
+        "alt": "64182",
+        "exif": {
+            "iso": "",
+            "caption": "",
+            "aperture": "",
+            "width": 512,
+            "exposureBias": "",
+            "title": "",
+            "date": "",
+            "shutterSpeed": "",
+            "make": "",
+            "height": 512,
+            "model": "",
+            "focalLength": "",
+            "copyright": ""
+        },
+        "link": "64182",
+        "filename": "icon.png",
+        "original": "agent@512.png",
+        "palettes": {
+            "primary": [
+                "#8c76a2",
+                "#0b0b0b",
+                "#544464",
+                "#403648",
+                "#5c4c6c",
+                "#545454"
+            ],
+            "complementary": [
+                "#73895d",
+                "#f4f4f4",
+                "#abbb9b",
+                "#bfc9b7",
+                "#a3b393",
+                "#ababab"
+            ]
+        },
+        "name": "icon",
+        "uploadDate": "2018-08-02T08:59:29+00:00"
+    },
+    "updateDate": "2017-09-10T00:00:00+00:00",
+    "hidden": false,
+    "video": "https:\/\/www.youtube.com\/watch?v=Ke7tr2ZfLbs",
+    "social-image": {
+        "colors": [
+            {
+                "hsl": [
+                    0,
+                    0,
+                    100
+                ],
+                "alpha": 1,
+                "hex": "ffffff",
+                "rgb": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            {
+                "hsl": [
+                    0,
+                    0,
+                    0
+                ],
+                "alpha": 1,
+                "hex": "000000",
+                "rgb": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        ],
+        "featured": false,
+        "ext": "jpg",
+        "alt": "social-image",
+        "exif": [],
+        "link": "javascript:void(0)",
+        "filename": "social-image",
+        "palettes": [],
+        "name": "social-image",
+        "uploadDate": "2018-08-02T08:59:29+00:00"
+    },
+    "popular": false,
+    "name": "Agent",
+    "version": "1.3.3",
+    "id": "agent",
+    "build": "5927",
+    "subtitle": "Intelligently hide content from the server side",
+    "videoplaylist": "PLAwL8Kl4ijMrmE0wHIC0bnKm3LduN-k2F",
+    "popularity": 100,
+    "bundle": "Agent",
+    "cartloom": "135704",
+    "screenshots": [
+        {
+            "colors": [
+                {
+                    "hsl": [
+                        30,
+                        25,
+                        89.01961
+                    ],
+                    "alpha": 1,
+                    "hex": "eae3dc",
+                    "rgb": [
+                        234,
+                        227,
+                        220
+                    ]
+                },
+                {
+                    "hsl": [
+                        210,
+                        25,
+                        10.98039
+                    ],
+                    "alpha": 1,
+                    "hex": "151c23",
+                    "rgb": [
+                        21,
+                        28,
+                        35
+                    ]
+                }
+            ],
+            "featured": false,
+            "ext": "jpg",
+            "alt": "screenshots",
+            "exif": {
+                "iso": "",
+                "caption": "",
+                "aperture": "",
+                "width": 1440,
+                "exposureBias": "",
+                "title": "",
+                "date": "",
+                "shutterSpeed": "",
+                "make": "",
+                "height": 900,
+                "model": "",
+                "copyright": "",
+                "focalLength": ""
+            },
+            "link": "javascript:void(0)",
+            "filename": "agent-1.jpg",
+            "palettes": {
+                "primary": [
+                    "#222225",
+                    "#eae3dc",
+                    "#877ea3",
+                    "#97a7b5",
+                    "#8c767f",
+                    "#f0c18f"
+                ],
+                "complementary": [
+                    "#ddddda",
+                    "#151c23",
+                    "#78815c",
+                    "#68584a",
+                    "#738980",
+                    "#0f3e70"
+                ]
+            },
+            "name": "screenshots",
+            "uploadDate": "2018-08-20T15:47:35-07:00"
+        },
+        {
+            "colors": [
+                {
+                    "hsl": [
+                        244.5283,
+                        25.11848,
+                        58.62745
+                    ],
+                    "alpha": 1,
+                    "hex": "7f7bb0",
+                    "rgb": [
+                        127,
+                        123,
+                        176
+                    ]
+                },
+                {
+                    "hsl": [
+                        64.5283,
+                        25.11848,
+                        41.37255
+                    ],
+                    "alpha": 1,
+                    "hex": "80844f",
+                    "rgb": [
+                        128,
+                        132,
+                        79
+                    ]
+                }
+            ],
+            "featured": false,
+            "ext": "jpg",
+            "alt": "screenshots",
+            "exif": {
+                "iso": "",
+                "caption": "",
+                "aperture": "",
+                "width": 1440,
+                "exposureBias": "",
+                "title": "",
+                "date": "",
+                "shutterSpeed": "",
+                "make": "",
+                "height": 900,
+                "model": "",
+                "copyright": "",
+                "focalLength": ""
+            },
+            "link": "javascript:void(0)",
+            "filename": "agent-2.jpg",
+            "palettes": {
+                "primary": [
+                    "#e1dce0",
+                    "#7f7bb0",
+                    "#856271",
+                    "#92a8bb",
+                    "#262221",
+                    "#5f464c"
+                ],
+                "complementary": [
+                    "#1e231f",
+                    "#80844f",
+                    "#7a9d8e",
+                    "#6d5744",
+                    "#d9ddde",
+                    "#a0b9b3"
+                ]
+            },
+            "name": "screenshots",
+            "uploadDate": "2018-08-20T15:47:47-07:00"
+        },
+        {
+            "colors": [
+                {
+                    "hsl": [
+                        342.35294,
+                        8.13397,
+                        40.98039
+                    ],
+                    "alpha": 1,
+                    "hex": "716065",
+                    "rgb": [
+                        113,
+                        96,
+                        101
+                    ]
+                },
+                {
+                    "hsl": [
+                        162.35294,
+                        8.13397,
+                        59.01961
+                    ],
+                    "alpha": 1,
+                    "hex": "8e9f9a",
+                    "rgb": [
+                        142,
+                        159,
+                        154
+                    ]
+                }
+            ],
+            "featured": false,
+            "ext": "jpg",
+            "alt": "screenshots",
+            "exif": {
+                "iso": "",
+                "caption": "",
+                "aperture": "",
+                "width": 1440,
+                "exposureBias": "",
+                "title": "",
+                "date": "",
+                "shutterSpeed": "",
+                "make": "",
+                "height": 900,
+                "model": "",
+                "copyright": "",
+                "focalLength": ""
+            },
+            "link": "javascript:void(0)",
+            "filename": "agent-3.jpg",
+            "palettes": {
+                "primary": [
+                    "#222622",
+                    "#716065",
+                    "#7f8790",
+                    "#ebeced",
+                    "#a2a0a5",
+                    "#b1b8be"
+                ],
+                "complementary": [
+                    "#ddd9dd",
+                    "#8e9f9a",
+                    "#80786f",
+                    "#141312",
+                    "#5d5f5a",
+                    "#4e4741"
+                ]
+            },
+            "name": "screenshots",
+            "uploadDate": "2018-08-20T15:47:48-07:00"
+        }
+    ],
+    "price": 29.95,
+    "featured": false,
+    "features": [
+        {
+            "title": "Location Visibility",
+            "icon": "<!--?xml version=\"1.0\"?--><svg viewBox=\"0 0 384 512\"><path d=\"M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0zM192 272c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80z\"><\/path><\/svg>",
+            "summary": "Show and hide content based on a users IP location. \n\nExample: Show the site with a union jack background when in Great Britain."
+        },
+        {
+            "title": "Advanced Visibility",
+            "icon": "<!--?xml version=\"1.0\"?--><svg viewBox=\"0 0 576 512\"><path d=\"M272.702 359.139c-80.483-9.011-136.212-86.886-116.93-167.042l116.93 167.042zM288 392c-102.556 0-192.092-54.701-240-136 21.755-36.917 52.1-68.342 88.344-91.658l-27.541-39.343C67.001 152.234 31.921 188.741 6.646 231.631a47.999 47.999 0 0 0 0 48.739C63.004 376.006 168.14 440 288 440a332.89 332.89 0 0 0 39.648-2.367l-32.021-45.744A284.16 284.16 0 0 1 288 392zm281.354-111.631c-33.232 56.394-83.421 101.742-143.554 129.492l48.116 68.74c3.801 5.429 2.48 12.912-2.949 16.712L450.23 509.83c-5.429 3.801-12.912 2.48-16.712-2.949L102.084 33.399c-3.801-5.429-2.48-12.912 2.949-16.712L125.77 2.17c5.429-3.801 12.912-2.48 16.712 2.949l55.526 79.325C226.612 76.343 256.808 72 288 72c119.86 0 224.996 63.994 281.354 159.631a48.002 48.002 0 0 1 0 48.738zM528 256c-44.157-74.933-123.677-127.27-216.162-135.007C302.042 131.078 296 144.83 296 160c0 30.928 25.072 56 56 56s56-25.072 56-56l-.001-.042c30.632 57.277 16.739 130.26-36.928 171.719l26.695 38.135C452.626 346.551 498.308 306.386 528 256z\"><\/path><\/svg>",
+            "summary": "Show and hide content using various guidelines and preset parameters. \n\nMore advanced than any other Visibility stack available."
+        },
+        {
+            "title": "URL Passing",
+            "icon": "<!--?xml version=\"1.0\"?--><svg viewBox=\"0 0 512 512\"><path d=\"M464 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM48 92c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v24c0 6.6-5.4 12-12 12H60c-6.6 0-12-5.4-12-12V92zm416 334c0 3.3-2.7 6-6 6H54c-3.3 0-6-2.7-6-6V168h416v258zm0-310c0 6.6-5.4 12-12 12H172c-6.6 0-12-5.4-12-12V92c0-6.6 5.4-12 12-12h280c6.6 0 12 5.4 12 12v24z\"><\/path><\/svg>",
+            "summary": "Add URL Parameters to control the content shown when visiting inks or URL extensions. "
+        },
+        {
+            "title": "Device Recognition",
+            "icon": "<!--?xml version=\"1.0\"?--> <svg width=\"48\" height=\"48\" viewBox=\"0 0 48 48\">     <path d=\"M0 0h48v48H0z\" fill=\"none\"><\/path>     <path d=\"M8 12h36V8H8c-2.21 0-4 1.79-4 4v22H0v6h28v-6H8V12zm38 4H34c-1.1 0-2 .9-2 2v20c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V18c0-1.1-.9-2-2-2zm-2 18h-8V20h8v14z\"><\/path> <\/svg>",
+            "summary": "Show content to visitors tailored to the device they are viewing on. \n\nShow a large gallery on Desktop and a slideshow on Tablet or Mobile."
+        },
+        {
+            "title": "Multi Language",
+            "icon": "<!--?xml version=\"1.0\"?--><svg viewBox=\"0 0 496 512\"><path d=\"M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm193.2 152h-82.5c-9-44.4-24.1-82.2-43.2-109.1 55 18.2 100.2 57.9 125.7 109.1zM336 256c0 22.9-1.6 44.2-4.3 64H164.3c-2.7-19.8-4.3-41.1-4.3-64s1.6-44.2 4.3-64h167.4c2.7 19.8 4.3 41.1 4.3 64zM248 40c26.9 0 61.4 44.1 78.1 120H169.9C186.6 84.1 221.1 40 248 40zm-67.5 10.9c-19 26.8-34.2 64.6-43.2 109.1H54.8c25.5-51.2 70.7-90.9 125.7-109.1zM32 256c0-22.3 3.4-43.8 9.7-64h90.5c-2.6 20.5-4.2 41.8-4.2 64s1.5 43.5 4.2 64H41.7c-6.3-20.2-9.7-41.7-9.7-64zm22.8 96h82.5c9 44.4 24.1 82.2 43.2 109.1-55-18.2-100.2-57.9-125.7-109.1zM248 472c-26.9 0-61.4-44.1-78.1-120h156.2c-16.7 75.9-51.2 120-78.1 120zm67.5-10.9c19-26.8 34.2-64.6 43.2-109.1h82.5c-25.5 51.2-70.7 90.9-125.7 109.1zM363.8 320c2.6-20.5 4.2-41.8 4.2-64s-1.5-43.5-4.2-64h90.5c6.3 20.2 9.7 41.7 9.7 64s-3.4 43.8-9.7 64h-90.5z\"><\/path><\/svg>",
+            "summary": "Show content in different languages based on the site visitors IP address.\n\nAgent will process the visitors IP and show them the relevant content for their location."
+        }
+    ],
+    "developer": "joeworkman",
+    "collection": "products",
+    "free": false,
+    "updates": [
+        {
+            "version": "1.0.0",
+            "date": "2017-03-02T00:00:00+00:00",
+            "notes": "<ul><li>Initial Public Release<\/li><\/ul>"
+        },
+        {
+            "version": "1.1.0",
+            "date": "2017-04-20T00:00:00+00:00",
+            "notes": "<ul><li>New Agent Preview stack now allows you to centrally manage preview settings for all Agent and Agent Query stacks. You can add multiple preview stacks to the page if you need to control multiple Agent Query stacks. There are still local override options inside each stack as well.<\/li><\/ul>"
+        },
+        {
+            "version": "1.2.0",
+            "date": "2017-04-26T00:00:00+00:00",
+            "notes": "<ul><li>New Agent Redirect stack allows you to redirect to a URL based on the visitor\u2019s device<\/li><\/ul>"
+        },
+        {
+            "version": "1.3.0",
+            "date": "2017-09-05T00:00:00+00:00",
+            "notes": "<ul><li>New Agent Lang stack makes it super easy to localize your website. Create custom content for each language defined.<\/li><li>New Compatibility Mode for the Agent and Agent URL stack. It is possible that some stacks may break (usually because of JS errors) when Agent hides them from the page. Compatibility mode should resolve this. However, it does mean that all content will be downlaoded to the device. Agent will properly set the visibility on the content to ensure that the correct data is in fact displayed. If one of our stacks needs to be placed into compatibility mode, please let us know so that we can try to get this fixed in an update.<\/li><\/ul>"
+        },
+        {
+            "version": "1.3.1",
+            "date": "2017-09-06T00:00:00+00:00",
+            "notes": "<ul><li>Dumb dev mistake in last build. Oops.<\/li><li>Agent Preview now works on all Agent stacks at once. Not one at a time.<\/li><\/ul>"
+        },
+        {
+            "version": "1.3.2",
+            "date": "2017-09-08T00:00:00+00:00",
+            "notes": "<ul><li>Agent Land now has every language code that you could imagine inside the language options<\/li><\/ul>"
+        },
+        {
+            "version": "1.3.3",
+            "date": "2017-09-10T00:00:00+00:00",
+            "notes": "<ul><li>Added Luxembourgish (lu) to Agent Lang<\/li><\/ul>"
+        },
+        {
+            "version": "1.3.4",
+            "date": "2018-08-30T00:00:00+00:00",
+            "notes": "<ul><li>Fix for checking for multiple updates<\/li><\/ul>"
+        }
+    ]
+}

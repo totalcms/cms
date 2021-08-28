@@ -1,0 +1,479 @@
+{
+    "id": "360-degree",
+    "name": "360 Degree",
+    "description": "360 Degree allows you to show off your products with a 360\u00b0 view. You could even use it to make some still motion video! All of this is accomplished through combining multiple images into a sequence. As you hover your mouse over, 360 will smoothly transition between each image conveying its smooth animation.",
+    "subtitle": "Show off your products in style with a 360\u00b0 view.",
+    "version": "2.2.0",
+    "price": 9.95,
+    "developer": "joeworkman",
+    "icon": {
+        "alt": "98538",
+        "colors": [
+            {
+                "alpha": 1,
+                "hex": "c61d1d",
+                "rgb": [
+                    198,
+                    29,
+                    29
+                ],
+                "hsl": [
+                    0,
+                    74.44934,
+                    44.5098
+                ]
+            },
+            {
+                "alpha": 1,
+                "hex": "39e2e2",
+                "rgb": [
+                    57,
+                    226,
+                    226
+                ],
+                "hsl": [
+                    180,
+                    74.44934,
+                    55.4902
+                ]
+            }
+        ],
+        "exif": {
+            "focalLength": "",
+            "aperture": "",
+            "exposureBias": "",
+            "shutterSpeed": "",
+            "iso": "",
+            "date": "",
+            "make": "",
+            "model": "",
+            "copyright": "",
+            "caption": "",
+            "title": "",
+            "width": 512,
+            "height": 512
+        },
+        "ext": "png",
+        "featured": false,
+        "filename": "icon.png",
+        "link": "98538",
+        "name": "icon",
+        "original": "360-degree@512.png",
+        "palettes": {
+            "primary": [
+                "#c3bc25",
+                "#c61d1d",
+                "#8f9217",
+                "#7d3012",
+                "#e68685",
+                "#1e140e"
+            ],
+            "complementary": [
+                "#3c43da",
+                "#39e2e2",
+                "#706de8",
+                "#82cfed",
+                "#19797a",
+                "#e1ebf1"
+            ]
+        },
+        "uploadDate": "2018-08-02T08:59:28+00:00"
+    },
+    "social-image": {
+        "alt": "social-image",
+        "colors": [
+            {
+                "alpha": 1,
+                "hex": "ffffff",
+                "rgb": [
+                    255,
+                    255,
+                    255
+                ],
+                "hsl": [
+                    0,
+                    0,
+                    100
+                ]
+            },
+            {
+                "alpha": 1,
+                "hex": "000000",
+                "rgb": [
+                    0,
+                    0,
+                    0
+                ],
+                "hsl": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        ],
+        "exif": [],
+        "ext": "jpg",
+        "featured": false,
+        "filename": "social-image",
+        "link": "javascript:void(0)",
+        "name": "social-image",
+        "palettes": [],
+        "uploadDate": "2018-08-02T08:59:28+00:00"
+    },
+    "build": "6558",
+    "bundleId": "com.joeworkman.stacks.fancy-image.360",
+    "bundle": "Fancy-Image-360",
+    "video": "https:\/\/www.youtube.com\/watch?v=rCpis937hLM",
+    "cartloom": "8162",
+    "popularity": 4,
+    "releaseDate": "2012-07-05T00:00:00+00:00",
+    "updateDate": "2018-04-10T00:00:00+00:00",
+    "collection": "products",
+    "color": {
+        "alpha": 1,
+        "hex": "a31314",
+        "rgb": [
+            163,
+            19,
+            20
+        ],
+        "hsl": [
+            359.58333,
+            79.12088,
+            35.68627
+        ]
+    },
+    "featured": false,
+    "hidden": false,
+    "videoplaylist": "PLAwL8Kl4ijMr_lKLSTv0kamtlnwskQqM0",
+    "external": false,
+    "features": [
+        {
+            "icon": "<svg viewBox=\"0 0 576 512\"><path d=\"M480 416v16c0 26.51-21.49 48-48 48H48c-26.51 0-48-21.49-48-48V176c0-26.51 21.49-48 48-48h16v48H54a6 6 0 0 0-6 6v244a6 6 0 0 0 6 6h372a6 6 0 0 0 6-6v-10h48zm42-336H150a6 6 0 0 0-6 6v244a6 6 0 0 0 6 6h372a6 6 0 0 0 6-6V86a6 6 0 0 0-6-6zm6-48c26.51 0 48 21.49 48 48v256c0 26.51-21.49 48-48 48H144c-26.51 0-48-21.49-48-48V80c0-26.51 21.49-48 48-48h384zM264 144c0 22.091-17.909 40-40 40s-40-17.909-40-40 17.909-40 40-40 40 17.909 40 40zm-72 96l39.515-39.515c4.686-4.686 12.284-4.686 16.971 0L288 240l103.515-103.515c4.686-4.686 12.284-4.686 16.971 0L480 208v80H192v-48z\"><\/path><\/svg>",
+            "title": "Create 360 Degrees with Images",
+            "summary": "Create a cool 360 degree effect with images. Great for showing off products."
+        },
+        {
+            "icon": "<svg viewBox=\"0 0 512 512\">\n\t<path d=\"M508.485 168.48l-96.16 96.16c-7.58 7.58-20.485 2.14-20.485-8.485L391.833 184H12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h379.833l.01-72.162c.001-10.683 12.949-16.022 20.485-8.485l96.156 96.156c4.687 4.686 4.688 12.285.001 16.971zM3.515 360.491l96.156 96.156c7.536 7.536 20.484 2.198 20.485-8.485l.01-72.162H500c6.627 0 12-5.373 12-12v-24c0-6.628-5.373-12-12-12H120.167l-.007-72.154c0-10.625-12.905-16.066-20.485-8.485l-96.16 96.16c-4.687 4.685-4.686 12.284 0 16.97z\"><\/path>\n<\/svg>",
+            "title": "Smooth Transition",
+            "summary": "Creates a smooth transition between images. The more the images the smoother the transition."
+        },
+        {
+            "icon": "<svg viewBox=\"0 0 576 512\"><path d=\"M336.2 64H47.8C21.4 64 0 85.4 0 111.8v288.4C0 426.6 21.4 448 47.8 448h288.4c26.4 0 47.8-21.4 47.8-47.8V111.8c0-26.4-21.4-47.8-47.8-47.8zm189.4 37.7L416 177.3v157.4l109.6 75.5c21.2 14.6 50.4-.3 50.4-25.8V127.5c0-25.4-29.1-40.4-50.4-25.8z\"><\/path><\/svg>",
+            "title": "Stop Motion Videos",
+            "summary": "Can be used to create stop motion videos too! "
+        }
+    ],
+    "tags": [
+        "image"
+    ],
+    "screenshots": [
+        {
+            "alt": "screenshots",
+            "colors": [
+                {
+                    "alpha": 1,
+                    "hex": "686b77",
+                    "rgb": [
+                        104,
+                        107,
+                        119
+                    ],
+                    "hsl": [
+                        228,
+                        6.72646,
+                        43.72549
+                    ]
+                },
+                {
+                    "alpha": 1,
+                    "hex": "979488",
+                    "rgb": [
+                        151,
+                        148,
+                        136
+                    ],
+                    "hsl": [
+                        48,
+                        6.72646,
+                        56.27451
+                    ]
+                }
+            ],
+            "exif": {
+                "focalLength": "",
+                "aperture": "",
+                "exposureBias": "",
+                "shutterSpeed": "",
+                "iso": "",
+                "date": "",
+                "make": "",
+                "model": "",
+                "copyright": "",
+                "caption": "",
+                "title": "",
+                "width": 1192,
+                "height": 746
+            },
+            "ext": "jpg",
+            "featured": false,
+            "filename": "1295279968.jpg",
+            "link": "javascript:void(0)",
+            "name": "screenshots",
+            "palettes": {
+                "primary": [
+                    "#4a4752",
+                    "#686b77",
+                    "#2d2f37",
+                    "#8e7d8d",
+                    "#c3a991",
+                    "#eae8e9"
+                ],
+                "complementary": [
+                    "#b5b8ad",
+                    "#979488",
+                    "#d2d0c8",
+                    "#718272",
+                    "#3c566e",
+                    "#151716"
+                ]
+            },
+            "uploadDate": "2018-08-21T07:39:49-07:00"
+        },
+        {
+            "alt": "screenshots",
+            "colors": [
+                {
+                    "alpha": 1,
+                    "hex": "bdc4cc",
+                    "rgb": [
+                        189,
+                        196,
+                        204
+                    ],
+                    "hsl": [
+                        212,
+                        12.82051,
+                        77.05882
+                    ]
+                },
+                {
+                    "alpha": 1,
+                    "hex": "423b33",
+                    "rgb": [
+                        66,
+                        59,
+                        51
+                    ],
+                    "hsl": [
+                        32,
+                        12.82051,
+                        22.94118
+                    ]
+                }
+            ],
+            "exif": {
+                "focalLength": "",
+                "aperture": "",
+                "exposureBias": "",
+                "shutterSpeed": "",
+                "iso": "",
+                "date": "",
+                "make": "",
+                "model": "",
+                "copyright": "",
+                "caption": "",
+                "title": "",
+                "width": 1192,
+                "height": 746
+            },
+            "ext": "jpg",
+            "featured": false,
+            "filename": "255474718.jpg",
+            "link": "javascript:void(0)",
+            "name": "screenshots",
+            "palettes": {
+                "primary": [
+                    "#333744",
+                    "#bdc4cc",
+                    "#f4e3d3",
+                    "#8e4785",
+                    "#707586",
+                    "#9e7891"
+                ],
+                "complementary": [
+                    "#ccc8bb",
+                    "#423b33",
+                    "#0b1c2c",
+                    "#71b87a",
+                    "#8f8a79",
+                    "#61876e"
+                ]
+            },
+            "uploadDate": "2018-08-21T07:39:53-07:00"
+        },
+        {
+            "alt": "screenshots",
+            "colors": [
+                {
+                    "alpha": 1,
+                    "hex": "333643",
+                    "rgb": [
+                        51,
+                        54,
+                        67
+                    ],
+                    "hsl": [
+                        228.75,
+                        13.55932,
+                        23.13725
+                    ]
+                },
+                {
+                    "alpha": 1,
+                    "hex": "ccc9bc",
+                    "rgb": [
+                        204,
+                        201,
+                        188
+                    ],
+                    "hsl": [
+                        48.75,
+                        13.55932,
+                        76.86275
+                    ]
+                }
+            ],
+            "exif": {
+                "focalLength": "",
+                "aperture": "",
+                "exposureBias": "",
+                "shutterSpeed": "",
+                "iso": "",
+                "date": "",
+                "make": "",
+                "model": "",
+                "copyright": "",
+                "caption": "",
+                "title": "",
+                "width": 1192,
+                "height": 746
+            },
+            "ext": "jpg",
+            "featured": false,
+            "filename": "825225932.jpg",
+            "link": "javascript:void(0)",
+            "name": "screenshots",
+            "palettes": {
+                "primary": [
+                    "#868286",
+                    "#333643",
+                    "#a8398f",
+                    "#d1a98c",
+                    "#f2f0e9",
+                    "#f2d0a8"
+                ],
+                "complementary": [
+                    "#797d79",
+                    "#ccc9bc",
+                    "#57c670",
+                    "#2e5673",
+                    "#0d0f16",
+                    "#0d2f57"
+                ]
+            },
+            "uploadDate": "2018-08-21T07:39:55-07:00"
+        }
+    ],
+    "free": false,
+    "updates": [
+        {
+            "version": "2.0.1",
+            "date": "2012-12-01T00:00:00+00:00",
+            "notes": "<ol><li><strong>Update!<\/strong> Stacks 2 Update.<\/li><li><strong>Update!<\/strong> Cleaned up stack attributes, urls, etc.<\/li><li><strong>Update!<\/strong> Added to Joe Workman group in S2.<\/li><\/ol><p>This update will still allow the stack to function in Stacks v1.4<\/p>"
+        },
+        {
+            "version": "2.0.2",
+            "date": "2012-12-01T00:00:00+00:00",
+            "notes": "<ol><li><strong>Fixed!<\/strong> Removed \u201cFancy Image\u201d from stack name.<\/li><\/ol>"
+        },
+        {
+            "version": "2.0.3",
+            "date": "2012-12-01T00:00:00+00:00",
+            "notes": "<ol><li><strong>Update!<\/strong> Added titles for Stacks 2.<\/li><\/ol>"
+        },
+        {
+            "version": "2.0.4",
+            "date": "2012-12-01T00:00:00+00:00",
+            "notes": "<ol><li><strong>Fixed!<\/strong> This update fixes Stacks v2.1 compatibility. This is <strong><em>my fault<\/em><\/strong> for being overzealous with the API. Its nothing that YourHead has changed. Sorry.<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.0",
+            "date": "2012-12-01T00:00:00+00:00",
+            "notes": "<ol><li><strong>New<\/strong> Updated for and requires Stacks 2.<\/li><li><strong>New<\/strong> Auto rotation settings.<\/li><li><strong>New<\/strong> Keyboard navigation for dektop.<\/li><li><strong>New<\/strong> Swipe navigation for touch devices. The image can also be tapped to trigger rotation.<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.1",
+            "date": "2012-12-01T00:00:00+00:00",
+            "notes": "<ol><li><strong>New<\/strong> New icon.<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.10",
+            "date": "2015-08-13T00:00:00+00:00",
+            "notes": "<ul><li>Updated tags for better organization in Stacks 3 library<\/li><li>New icons for Stacks 3 library<\/li><\/ul>"
+        },
+        {
+            "version": "2.1.2",
+            "date": "2012-12-01T00:00:00+00:00",
+            "notes": "<ol><li><strong>Fix<\/strong> When using Click and Drag, and the mouseup event now triggers on both the image and the parent stack. This will stop the animation from working on mouse over.<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.3",
+            "date": "2012-12-13T00:00:00+00:00",
+            "notes": "<ol><li>All JW stacks have taken a diet. They are all leaner and meaner. This will provide you with faster page download times. Enjoy!<\/li><li>Other small fixes and enhancements may apply\u2026<\/li><li>We\u2019ve been quiet for a few months. That can mean only one thing, watch out for 2013. Big things are coming!<\/li><li>Happy Holidays from Joe, Rob and Tron<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.4",
+            "date": "2012-12-14T00:00:00+00:00",
+            "notes": "<ol><li>All JW stacks have taken a diet. They are all leaner and meaner. This will provide you with faster page download times. Enjoy!<\/li><li>Other small fixes and enhancements may apply<\/li><li>We have been quiet for a few months. That can mean only one thing, watch out for 2013. Big things are coming!<\/li><li>Happy Holidays from Joe, Rob and Tron<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.5",
+            "date": "2013-02-22T00:00:00+00:00",
+            "notes": "<ol><li>Made the setting for the number of images a number box. This will remove any confusion about using the slider to get the exact number that you want.<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.6",
+            "date": "2013-03-07T00:00:00+00:00",
+            "notes": "<ol><li>Added the \u2018threesixty\u2019 class to the 360 images. This will allow for more flexible custom styling for all you CSS geeks out there.<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.7",
+            "date": "2013-08-02T00:00:00+00:00",
+            "notes": "<ol><li>Increased the number of images allowed to 200.<\/li><\/ol>"
+        },
+        {
+            "version": "2.1.8",
+            "date": "2014-09-22T00:00:00+00:00",
+            "notes": "<ul><li>Removed all comments from code<\/li><li>New meta tags for stack version tracking<\/li><li>Getting ready for <strong>**<\/strong><strong>**<\/strong> launch<\/li><\/ul>"
+        },
+        {
+            "version": "2.1.9",
+            "date": "2015-08-02T00:00:00+00:00",
+            "notes": "<ul><li>Compatibility update to resolve conflicts with jQuery 2<\/li><\/ul>"
+        },
+        {
+            "version": "2.2.0",
+            "date": "2018-04-10T00:00:00+00:00",
+            "notes": "<ul><li>New alt tag setting<\/li><li>Updated with latest Stacks 3.5 APIs<\/li><\/ul>"
+        },
+        {
+            "version": "2.2.1",
+            "date": "2018-09-06T00:00:00+00:00",
+            "notes": "<ul><li>Fixed JS conflict.<\/li><li>Existing instances will need to be implemented again. Sorry.<\/li><\/ul>"
+        }
+    ],
+    "popular": false,
+    "new": false,
+    "sale": false
+}

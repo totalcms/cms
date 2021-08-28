@@ -1,0 +1,162 @@
+{
+    "index": [
+        "featured",
+        "hidden",
+        "external",
+        "free",
+        "sale",
+        "popular",
+        "new",
+        "id",
+        "name",
+        "color",
+        "subtitle",
+        "version",
+        "price",
+        "developer",
+        "tags",
+        "icon",
+        "popularity",
+        "cartloom",
+        "releaseDate",
+        "updateDate"
+    ],
+    "required": [
+        "id",
+        "name",
+        "subtitle",
+        "version",
+        "price",
+        "developer",
+        "tags",
+        "cartloom"
+    ],
+    "type": "object",
+    "title": "products",
+    "properties": {
+        "collection": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "featured": {
+            "type": "boolean",
+            "fieldset": "checkbox"
+        },
+        "hidden": {
+            "type": "boolean",
+            "fieldset": "checkbox"
+        },
+        "external": {
+            "type": "boolean",
+            "fieldset": "checkbox"
+        },
+        "free": {
+            "type": "boolean",
+            "fieldset": "checkbox"
+        },
+        "sale": {
+            "type": "boolean",
+            "fieldset": "checkbox"
+        },
+        "popular": {
+            "type": "boolean",
+            "fieldset": "checkbox"
+        },
+        "new": {
+            "type": "boolean",
+            "fieldset": "checkbox"
+        },
+        "id": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "name": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "description": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "color": {
+            "type": "object",
+            "fieldset": "color"
+        },
+        "subtitle": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "version": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "price": {
+            "type": "number",
+            "fieldset": "number"
+        },
+        "developer": {
+            "type": "string",
+            "fieldset": "select"
+        },
+        "tags": {
+            "type": "array",
+            "fieldset": "list"
+        },
+        "icon": {
+            "type": "object",
+            "fieldset": "image"
+        },
+        "social-image": {
+            "type": "object",
+            "fieldset": "image"
+        },
+        "popularity": {
+            "type": "number",
+            "fieldset": "number"
+        },
+        "build": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "bundleId": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "bundle": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "video": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "videoplaylist": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "cartloom": {
+            "type": "string",
+            "fieldset": "text"
+        },
+        "releaseDate": {
+            "type": "string",
+            "fieldset": "date"
+        },
+        "updateDate": {
+            "type": "string",
+            "fieldset": "date"
+        },
+        "screenshots": {
+            "type": "array",
+            "fieldset": "gallery"
+        },
+        "features": {
+            "type": "array",
+            "fieldset": "deck"
+        },
+        "updates": {
+            "type": "array",
+            "fieldset": "deck"
+        }
+    }
+}

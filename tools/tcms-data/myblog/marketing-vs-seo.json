@@ -1,0 +1,33 @@
+{
+  "categories": ["Work"],
+  "tags": ["marketing", "SEO"],
+  "gallery": [
+    {
+      "index": "1",
+      "img": "cms-data/gallery/blog/blog/marketing-vs-seo/marketing-vs-seo-1.jpg",
+      "alt": "",
+      "thumb": {
+        "th": "cms-data/gallery/blog/blog/marketing-vs-seo/marketing-vs-seo-1-th.jpg",
+        "sq": "cms-data/gallery/blog/blog/marketing-vs-seo/marketing-vs-seo-1-sq.jpg"
+      }
+    },
+    {
+      "index": "2",
+      "img": "cms-data/gallery/blog/blog/marketing-vs-seo/marketing-vs-seo-2.jpg",
+      "alt": "",
+      "thumb": {
+        "th": "cms-data/gallery/blog/blog/marketing-vs-seo/marketing-vs-seo-2-th.jpg",
+        "sq": "cms-data/gallery/blog/blog/marketing-vs-seo/marketing-vs-seo-2-sq.jpg"
+      }
+    }
+  ],
+  "genre": "default",
+  "draft": false,
+  "featured": false,
+  "author": "Robb Ziebol",
+  "title": "Marketing vs SEO: Where should we spend more time?",
+  "id": "marketing-vs-seo",
+  "timestamp": 1466447034,
+  "summary": "<p>So many of us spend countless hours on SEO. Does it really work? What if we were to flip that on its head and spend that time marketing our business and website? This would bring in more visitors to your site. Visitors will trump SEO any day of the week.</p>",
+  "content": "<p>Skateboard meggings actually cred everyday carry kinfolk. &nbsp;Photo booth authentic raw denim franzen. &nbsp;Occupy deep v pork belly fixie, bespoke man braid gluten-free mixtape pitchfork iPhone raw denim beard pinterest church-key disrupt. &nbsp;Banjo try-hard organic, bitters hashtag flannel beard typewriter lumbersexual franzen etsy chicharrones iPhone. &nbsp;Tousled meditation readymade mixtape. &nbsp;Small batch affogato fap next level cardigan meh blue bottle actually. &nbsp;Whatever hammock sriracha banh mi pop-up, squid biodiesel four loko austin.</p><p>Skateboard meggings actually cred everyday carry kinfolk. &nbsp;Photo booth authentic raw denim franzen. &nbsp;Occupy deep v pork belly fixie, bespoke man braid gluten-free mixtape pitchfork iPhone raw denim beard pinterest church-key disrupt. &nbsp;Banjo try-hard organic, bitters hashtag flannel beard typewriter lumbersexual franzen etsy chicharrones iPhone. &nbsp;Tousled meditation readymade mixtape. &nbsp;Small batch affogato fap next level cardigan meh blue bottle actually. &nbsp;Whatever hammock sriracha banh mi pop-up, squid biodiesel four loko austin.</p>"
+}

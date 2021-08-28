@@ -1,0 +1,5 @@
+{
+  "name": "products",
+  "schema": "product.json",
+  "url": "https://www.totalcms.co/products/"
+}

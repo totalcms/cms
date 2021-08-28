@@ -1,0 +1,68 @@
+[
+  {
+    "id": "360-degree",
+    "name": "360 Degree",
+    "description": "360 Degree allows you to show off your products with a 360\u00b0 view. You could even use it to make some still motion video! All of this is accomplished through combining multiple images into a sequence. As you hover your mouse over, 360 will smoothly transition between each image conveying its smooth animation.",
+    "subtitle": "Show off your products in style with a 360\u00b0 view.",
+    "version": "2.2.0",
+    "price": 9.95,
+    "developer": "joeworkman",
+    "icon": {
+      "alt": "98538",
+      "colors": [
+        {
+          "alpha": 1,
+          "hex": "c61d1d",
+          "rgb": [198, 29, 29],
+          "hsl": [0, 74.44934, 44.5098]
+        },
+        {
+          "alpha": 1,
+          "hex": "39e2e2",
+          "rgb": [57, 226, 226],
+          "hsl": [180, 74.44934, 55.4902]
+        }
+      ],
+      "exif": {
+        "focalLength": "",
+        "aperture": "",
+        "exposureBias": "",
+        "shutterSpeed": "",
+        "iso": "",
+        "date": "",
+        "make": "",
+        "model": "",
+        "copyright": "",
+        "caption": "",
+        "title": "",
+        "width": 512,
+        "height": 512
+      },
+      "ext": "png",
+      "featured": false,
+      "filename": "icon.png",
+      "link": "98538",
+      "name": "icon",
+      "original": "360-degree@512.png",
+      "palettes": {
+        "primary": [
+          "#c3bc25",
+          "#c61d1d",
+          "#8f9217",
+          "#7d3012",
+          "#e68685",
+          "#1e140e"
+        ],
+        "complementary": [
+          "#3c43da",
+          "#39e2e2",
+          "#706de8",
+          "#82cfed",
+          "#19797a",
+          "#e1ebf1"
+        ]
+      },
+      "uploadDate": "2018-08-02T08:59:28+00:00"
+    }
+  }
+]

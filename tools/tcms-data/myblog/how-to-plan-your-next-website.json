@@ -1,0 +1,24 @@
+{
+  "categories": ["Work"],
+  "tags": ["websites", "planning"],
+  "gallery": [
+    {
+      "index": "1",
+      "img": "cms-data/gallery/blog/blog/how-to-plan-your-next-website/how-to-plan-your-next-website-1.jpg",
+      "alt": "",
+      "thumb": {
+        "th": "cms-data/gallery/blog/blog/how-to-plan-your-next-website/how-to-plan-your-next-website-1-th.jpg",
+        "sq": "cms-data/gallery/blog/blog/how-to-plan-your-next-website/how-to-plan-your-next-website-1-sq.jpg"
+      }
+    }
+  ],
+  "genre": "default",
+  "draft": false,
+  "featured": false,
+  "author": "Jon Hawkins",
+  "title": "How to plan your next website",
+  "id": "how-to-plan-your-next-website",
+  "timestamp": 1466446241,
+  "summary": "<p>In this blog post, I will review how I plan out my websites. With proper planning and vision, your project will be a much bigger success! Its time to make our websites great!</p>",
+  "content": "<p>Skateboard meggings actually cred everyday carry kinfolk. &nbsp;Photo booth authentic raw denim franzen. &nbsp;Occupy deep v pork belly fixie, bespoke man braid gluten-free mixtape pitchfork iPhone raw denim beard pinterest church-key disrupt. &nbsp;Banjo try-hard organic, bitters hashtag flannel beard typewriter lumbersexual franzen etsy chicharrones iPhone. &nbsp;Tousled meditation readymade mixtape. &nbsp;Small batch affogato fap next level cardigan meh blue bottle actually. &nbsp;Whatever hammock sriracha banh mi pop-up, squid biodiesel four loko austin.</p><p>Skateboard meggings actually cred everyday carry kinfolk. &nbsp;Photo booth authentic raw denim franzen. &nbsp;Occupy deep v pork belly fixie, bespoke man braid gluten-free mixtape pitchfork iPhone raw denim beard pinterest church-key disrupt. &nbsp;Banjo try-hard organic, bitters hashtag flannel beard typewriter lumbersexual franzen etsy chicharrones iPhone. &nbsp;Tousled meditation readymade mixtape. &nbsp;Small batch affogato fap next level cardigan meh blue bottle actually. &nbsp;Whatever hammock sriracha banh mi pop-up, squid biodiesel four loko austin.</p>"
+}

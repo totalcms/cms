@@ -1,0 +1,66 @@
+{
+  "id": "banner",
+  "image": {
+    "rating": 5,
+    "color": {
+      "primary": {
+        "l": 359.58332999999999,
+        "s": 79.12088,
+        "a": 1,
+        "h": 35.68627
+      },
+      "secondary": {
+        "l": 359.58332999999999,
+        "s": 79.12088,
+        "a": 1,
+        "h": 35.68627
+      }
+    },
+    "tags": ["tag1", "tag2"],
+    "featured": false,
+    "ext": "jpg",
+    "alt": "Alt Text",
+    "exif": {
+      "rating": "",
+      "focalLength": "",
+      "caption": "",
+      "aperture": "",
+      "longitude": 0,
+      "width": 512,
+      "latitude": 0,
+      "exposureBias": "",
+      "title": "",
+      "date": "",
+      "shutterSpeed": "",
+      "height": 512,
+      "make": "",
+      "model": "",
+      "copyright": "",
+      "iso": ""
+    },
+    "link": "https://example.com/page/",
+    "focalpoint": {
+      "y": 75,
+      "x": 25
+    },
+    "palette": {
+      "primary": [
+        "#1e140e",
+        "#7d3012",
+        "#8f9217",
+        "#c3bc25",
+        "#c61d1d",
+        "#e68685"
+      ],
+      "secondary": [
+        "#19797a",
+        "#39e2e2",
+        "#3c43da",
+        "#706de8",
+        "#82cfed",
+        "#e1ebf1"
+      ]
+    },
+    "uploadDate": "2018-08-02T08:59:28+00:00"
+  }
+}

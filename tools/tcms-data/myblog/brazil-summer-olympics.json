@@ -1,0 +1,51 @@
+{
+  "categories": ["vacation", "travel", "hello"],
+  "tags": ["brazil", "olympics"],
+  "gallery": [
+    {
+      "index": "1",
+      "img": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-1.jpg",
+      "alt": "",
+      "thumb": {
+        "th": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-1-th.jpg",
+        "sq": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-1-sq.jpg"
+      }
+    },
+    {
+      "index": "2",
+      "img": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-2.jpg",
+      "alt": "",
+      "thumb": {
+        "th": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-2-th.jpg",
+        "sq": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-2-sq.jpg"
+      }
+    },
+    {
+      "index": "3",
+      "img": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-3.jpg",
+      "alt": "",
+      "thumb": {
+        "th": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-3-th.jpg",
+        "sq": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-3-sq.jpg"
+      }
+    },
+    {
+      "index": "4",
+      "img": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-4.jpg",
+      "alt": "",
+      "thumb": {
+        "th": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-4-th.jpg",
+        "sq": "cms-data/gallery/blog/blog/brazil-summer-olympics/brazil-summer-olympics-4-sq.jpg"
+      }
+    }
+  ],
+  "genre": "default",
+  "draft": false,
+  "featured": true,
+  "author": "Joe Workman",
+  "title": "Brazil Summer Olympics",
+  "id": "brazil-summer-olympics",
+  "timestamp": 1466447078,
+  "summary": "<p>This year, the Olympics will be in Brazil. I plan on spending the entire summer down in Brazil, having a blast and not caring about anything else in the world. Literally cronut kogi man bun sustainable. 8-bit neutra heirloom hella franzen.</p>",
+  "content": "<p>This year, the Olympics will be in Brazil. I plan on spending the entire summer down in Brazil, having a blast and not caring about anything else in the world. Literally cronut kogi man bun sustainable. 8-bit neutra heirloom hella franzen.</p><p>Forage marfa locavore, paleo put a bird on it literally cronut kogi man bun sustainable. 8-bit neutra heirloom hella franzen, lomo food truck keytar. Next level raw denim freegan kombucha asymmetrical kickstarter, twee austin brunch lomo forage retro swag. Flannel mixtape butcher, food truck banh mi pinterest DIY occupy truffaut semiotics lo-fi drinking vinegar you probably haven't heard of them 3 wolf moon kitsch. IPhone lo-fi keffiyeh pop-up you probably haven't heard of them tofu skateboard PBR&amp;B stumptown. Squid yr williamsburg, intelligentsia irony humblebrag gochujang cold-pressed readymade viral retro raw denim mustache pop-up freegan. Biodiesel gochujang occupy, kitsch umami meh gentrify selfies put a bird on it squid banjo food truck four dollar toast street art.<br><br>Venmo neutra ugh iPhone drinking vinegar, twee cray mumblecore jean shorts yr 8-bit. Beard taxidermy readymade trust fund knausgaard, green juice flexitarian organic four loko. Cred letterpress pickled keffiyeh freegan, 8-bit +1 synth put a bird on it irony meh selfies iPhone pinterest. Celiac trust fund cronut chia, forage tacos whatever meditation gochujang williamsburg readymade thundercats distillery flexitarian everyday carry. Franzen meh ramps, freegan retro keytar four loko meditation brunch fashion axe salvia. Disrupt helvetica organic tilde gochujang. Lo-fi williamsburg leggings brunch offal banjo.<br><br>Meditation chambray semiotics knausgaard, drinking vinegar before they sold out listicle +1 8-bit flannel. 8-bit dreamcatcher shoreditch pickled art party, umami gastropub. Bicycle rights artisan affogato squid master cleanse craft beer, brunch taxidermy polaroid art party blue bottle. Cardigan vegan gastropub, umami godard lumbersexual trust fund heirloom put a bird on it you probably haven't heard of them listicle plaid normcore tattooed freegan. Yr quinoa lumbersexual ramps, you probably haven't heard of them wayfarers mixtape mustache meh man braid meditation. Four loko organic knausgaard shabby chic, synth seitan thundercats brunch meh cronut you probably haven't heard of them poutine authentic humblebrag sustainable. Distillery stumptown swag, etsy vice viral celiac synth tilde leggings jean shorts gluten-free.<br><br>Humblebrag flannel shabby chic ennui pinterest. Readymade sartorial viral shabby chic whatever kinfolk. Bespoke godard fixie fap, food truck raw denim normcore letterpress XOXO sriracha vinyl. Narwhal chia meditation, squid yuccie vegan disrupt affogato literally hoodie church-key direct trade etsy tote bag PBR&amp;B. Artisan blog poutine cred skateboard occupy 90's, pug franzen twee stumptown craft beer viral knausgaard echo park. Cliche lumbersexual craft beer keffiyeh green juice. Swag pour-over fap fingerstache raw denim venmo, hella leggings pork belly chillwave photo booth tumblr skateboard street art 3 wolf moon.</p>"
+}
