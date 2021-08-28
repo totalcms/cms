@@ -9449,7 +9449,7 @@
                 var $this = $(this);
                 var vimeoVideoId = $this.attr("data-vimeo-id");
                 if (vimeoVideoId) {
-                    $.getJSON("//www.vimeo.com/public/v2/video/" + vimeoVideoId + ".json?callback=?", {
+                    $.getJSON("//www.vimeo.com/api/v2/video/" + vimeoVideoId + ".json?callback=?", {
                         format: "json"
                     }, function(data) {
                         $this.find("img").attr("src", data[0][_this.core.s.vimeoThumbSize]);
@@ -9736,13 +9736,13 @@
                 }
                 video = '<iframe class="lg-video-object lg-youtube ' + addClass + '" width="560" height="315" src="//www.youtube.com/embed/' + isVideo.youtube[1] + a + '" frameborder="0" allowfullscreen></iframe>';
             } else if (isVideo.vimeo) {
-                a = "?autoplay=" + autoplay + "&public=1";
+                a = "?autoplay=" + autoplay + "&api=1";
                 if (this.core.s.vimeoPlayerParams) {
                     a = a + "&" + $.param(this.core.s.vimeoPlayerParams);
                 }
                 video = '<iframe class="lg-video-object lg-vimeo ' + addClass + '" width="560" height="315"  src="//player.vimeo.com/video/' + isVideo.vimeo[1] + a + '" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
             } else if (isVideo.dailymotion) {
-                a = "?wmode=opaque&autoplay=" + autoplay + "&public=postMessage";
+                a = "?wmode=opaque&autoplay=" + autoplay + "&api=postMessage";
                 if (this.core.s.dailymotionPlayerParams) {
                     a = a + "&" + $.param(this.core.s.dailymotionPlayerParams);
                 }
@@ -10601,7 +10601,7 @@ class TotalCMS {
             hslOffset: 15,
             localizeStrings: {},
             config: {},
-            uri: "/rw_common/plugins/stacks/dynamics/public.php"
+            uri: "/rw_common/plugins/stacks/dynamics/api.php"
         };
         const globals = typeof window.totalcms === "object" ? window.totalcms.options : {};
         this.options = Object.assign({}, defaults, globals, options);
@@ -10656,7 +10656,7 @@ class TotalCMS {
             this.log.debug("Using localstorage. returning promise");
             return new Promise((resolve, reject) => {
                 if (!this.sessionStorage.isSet(api)) {
-                    this.log.debug("Caching fresh data for public", api);
+                    this.log.debug("Caching fresh data for api", api);
                     this.fetchAPI(api);
                 }
                 resolve(this.localStorage.get(api));

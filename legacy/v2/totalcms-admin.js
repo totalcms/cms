@@ -1,5 +1,69 @@
+(function (name, root, factory) {
+    if (typeof exports === 'object') {
+      module.exports = factory()
+      module.exports['default'] = factory()
+    }
+    /* istanbul ignore next */
+    else if (typeof define === 'function' && define.amd) {
+      define(factory)
+    }
+    else {
+      root[name] = factory()
+    }
+  }('slugify', this, function () {
+    var charMap = JSON.parse('{"$":"dollar","%":"percent","&":"and","<":"less",">":"greater","|":"or","¢":"cent","£":"pound","¤":"currency","¥":"yen","©":"(c)","ª":"a","®":"(r)","º":"o","À":"A","Á":"A","Â":"A","Ã":"A","Ä":"A","Å":"A","Æ":"AE","Ç":"C","È":"E","É":"E","Ê":"E","Ë":"E","Ì":"I","Í":"I","Î":"I","Ï":"I","Ð":"D","Ñ":"N","Ò":"O","Ó":"O","Ô":"O","Õ":"O","Ö":"O","Ø":"O","Ù":"U","Ú":"U","Û":"U","Ü":"U","Ý":"Y","Þ":"TH","ß":"ss","à":"a","á":"a","â":"a","ã":"a","ä":"a","å":"a","æ":"ae","ç":"c","è":"e","é":"e","ê":"e","ë":"e","ì":"i","í":"i","î":"i","ï":"i","ð":"d","ñ":"n","ò":"o","ó":"o","ô":"o","õ":"o","ö":"o","ø":"o","ù":"u","ú":"u","û":"u","ü":"u","ý":"y","þ":"th","ÿ":"y","Ā":"A","ā":"a","Ă":"A","ă":"a","Ą":"A","ą":"a","Ć":"C","ć":"c","Č":"C","č":"c","Ď":"D","ď":"d","Đ":"DJ","đ":"dj","Ē":"E","ē":"e","Ė":"E","ė":"e","Ę":"e","ę":"e","Ě":"E","ě":"e","Ğ":"G","ğ":"g","Ģ":"G","ģ":"g","Ĩ":"I","ĩ":"i","Ī":"i","ī":"i","Į":"I","į":"i","İ":"I","ı":"i","Ķ":"k","ķ":"k","Ļ":"L","ļ":"l","Ľ":"L","ľ":"l","Ł":"L","ł":"l","Ń":"N","ń":"n","Ņ":"N","ņ":"n","Ň":"N","ň":"n","Ő":"O","ő":"o","Œ":"OE","œ":"oe","Ŕ":"R","ŕ":"r","Ř":"R","ř":"r","Ś":"S","ś":"s","Ş":"S","ş":"s","Š":"S","š":"s","Ţ":"T","ţ":"t","Ť":"T","ť":"t","Ũ":"U","ũ":"u","Ū":"u","ū":"u","Ů":"U","ů":"u","Ű":"U","ű":"u","Ų":"U","ų":"u","Ŵ":"W","ŵ":"w","Ŷ":"Y","ŷ":"y","Ÿ":"Y","Ź":"Z","ź":"z","Ż":"Z","ż":"z","Ž":"Z","ž":"z","ƒ":"f","Ơ":"O","ơ":"o","Ư":"U","ư":"u","ǈ":"LJ","ǉ":"lj","ǋ":"NJ","ǌ":"nj","Ș":"S","ș":"s","Ț":"T","ț":"t","˚":"o","Ά":"A","Έ":"E","Ή":"H","Ί":"I","Ό":"O","Ύ":"Y","Ώ":"W","ΐ":"i","Α":"A","Β":"B","Γ":"G","Δ":"D","Ε":"E","Ζ":"Z","Η":"H","Θ":"8","Ι":"I","Κ":"K","Λ":"L","Μ":"M","Ν":"N","Ξ":"3","Ο":"O","Π":"P","Ρ":"R","Σ":"S","Τ":"T","Υ":"Y","Φ":"F","Χ":"X","Ψ":"PS","Ω":"W","Ϊ":"I","Ϋ":"Y","ά":"a","έ":"e","ή":"h","ί":"i","ΰ":"y","α":"a","β":"b","γ":"g","δ":"d","ε":"e","ζ":"z","η":"h","θ":"8","ι":"i","κ":"k","λ":"l","μ":"m","ν":"n","ξ":"3","ο":"o","π":"p","ρ":"r","ς":"s","σ":"s","τ":"t","υ":"y","φ":"f","χ":"x","ψ":"ps","ω":"w","ϊ":"i","ϋ":"y","ό":"o","ύ":"y","ώ":"w","Ё":"Yo","Ђ":"DJ","Є":"Ye","І":"I","Ї":"Yi","Ј":"J","Љ":"LJ","Њ":"NJ","Ћ":"C","Џ":"DZ","А":"A","Б":"B","В":"V","Г":"G","Д":"D","Е":"E","Ж":"Zh","З":"Z","И":"I","Й":"J","К":"K","Л":"L","М":"M","Н":"N","О":"O","П":"P","Р":"R","С":"S","Т":"T","У":"U","Ф":"F","Х":"H","Ц":"C","Ч":"Ch","Ш":"Sh","Щ":"Sh","Ъ":"U","Ы":"Y","Ь":"","Э":"E","Ю":"Yu","Я":"Ya","а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ж":"zh","з":"z","и":"i","й":"j","к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"h","ц":"c","ч":"ch","ш":"sh","щ":"sh","ъ":"u","ы":"y","ь":"","э":"e","ю":"yu","я":"ya","ё":"yo","ђ":"dj","є":"ye","і":"i","ї":"yi","ј":"j","љ":"lj","њ":"nj","ћ":"c","ѝ":"u","џ":"dz","Ґ":"G","ґ":"g","Ғ":"GH","ғ":"gh","Қ":"KH","қ":"kh","Ң":"NG","ң":"ng","Ү":"UE","ү":"ue","Ұ":"U","ұ":"u","Һ":"H","һ":"h","Ә":"AE","ә":"ae","Ө":"OE","ө":"oe","฿":"baht","ა":"a","ბ":"b","გ":"g","დ":"d","ე":"e","ვ":"v","ზ":"z","თ":"t","ი":"i","კ":"k","ლ":"l","მ":"m","ნ":"n","ო":"o","პ":"p","ჟ":"zh","რ":"r","ს":"s","ტ":"t","უ":"u","ფ":"f","ქ":"k","ღ":"gh","ყ":"q","შ":"sh","ჩ":"ch","ც":"ts","ძ":"dz","წ":"ts","ჭ":"ch","ხ":"kh","ჯ":"j","ჰ":"h","Ẁ":"W","ẁ":"w","Ẃ":"W","ẃ":"w","Ẅ":"W","ẅ":"w","ẞ":"SS","Ạ":"A","ạ":"a","Ả":"A","ả":"a","Ấ":"A","ấ":"a","Ầ":"A","ầ":"a","Ẩ":"A","ẩ":"a","Ẫ":"A","ẫ":"a","Ậ":"A","ậ":"a","Ắ":"A","ắ":"a","Ằ":"A","ằ":"a","Ẳ":"A","ẳ":"a","Ẵ":"A","ẵ":"a","Ặ":"A","ặ":"a","Ẹ":"E","ẹ":"e","Ẻ":"E","ẻ":"e","Ẽ":"E","ẽ":"e","Ế":"E","ế":"e","Ề":"E","ề":"e","Ể":"E","ể":"e","Ễ":"E","ễ":"e","Ệ":"E","ệ":"e","Ỉ":"I","ỉ":"i","Ị":"I","ị":"i","Ọ":"O","ọ":"o","Ỏ":"O","ỏ":"o","Ố":"O","ố":"o","Ồ":"O","ồ":"o","Ổ":"O","ổ":"o","Ỗ":"O","ỗ":"o","Ộ":"O","ộ":"o","Ớ":"O","ớ":"o","Ờ":"O","ờ":"o","Ở":"O","ở":"o","Ỡ":"O","ỡ":"o","Ợ":"O","ợ":"o","Ụ":"U","ụ":"u","Ủ":"U","ủ":"u","Ứ":"U","ứ":"u","Ừ":"U","ừ":"u","Ử":"U","ử":"u","Ữ":"U","ữ":"u","Ự":"U","ự":"u","Ỳ":"Y","ỳ":"y","Ỵ":"Y","ỵ":"y","Ỷ":"Y","ỷ":"y","Ỹ":"Y","ỹ":"y","‘":"\'","’":"\'","“":"\\\"","”":"\\\"","†":"+","•":"*","…":"...","₠":"ecu","₢":"cruzeiro","₣":"french franc","₤":"lira","₥":"mill","₦":"naira","₧":"peseta","₨":"rupee","₩":"won","₪":"new shequel","₫":"dong","€":"euro","₭":"kip","₮":"tugrik","₯":"drachma","₰":"penny","₱":"peso","₲":"guarani","₳":"austral","₴":"hryvnia","₵":"cedi","₸":"kazakhstani tenge","₹":"indian rupee","₽":"russian ruble","₿":"bitcoin","℠":"sm","™":"tm","∂":"d","∆":"delta","∑":"sum","∞":"infinity","♥":"love","元":"yuan","円":"yen","﷼":"rial"}')
+    var locales = JSON.parse('{"vi":{"Đ":"D","đ":"d"}}')
+
+    function replace (string, options) {
+      if (typeof string !== 'string') {
+        throw new Error('slugify: string argument expected')
+      }
+
+      options = (typeof options === 'string')
+        ? {replacement: options}
+        : options || {}
+
+      var locale = locales[options.locale] || {}
+
+      var replacement = options.replacement || '-'
+
+      var slug = string.split('')
+        // replace characters based on charMap
+        .reduce(function (result, ch) {
+          return result + (locale[ch] || charMap[ch] || ch)
+        }, '')
+        // remove not allowed characters
+        .replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '')
+        // trim leading/trailing spaces
+        .trim()
+        // convert spaces to replacement character
+        // also remove duplicates of the replacement character
+        .replace(new RegExp('[\\s' + replacement + ']+', 'g'), replacement)
+
+      if (options.lower) {
+        slug = slug.toLowerCase()
+      }
+
+      if (options.strict) {
+        // remove anything besides letters, numbers, and the replacement char
+        slug = slug
+          .replace(new RegExp('[^a-zA-Z0-9' + replacement + ']', 'g'), '')
+      }
+
+      return slug
+    }
+
+    replace.extend = function (customMap) {
+      for (var key in customMap) {
+        charMap[key] = customMap[key]
+      }
+    }
+
+    return replace
+}));
+
 (function(global, factory) {
-    typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = global || self, 
+    typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = global || self,
     global.CodeMirror = factory());
 })(this, function() {
     "use strict";
@@ -11136,25 +11200,25 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(w) {
     var s = function(e, t) {
         this.id = ++w.FE.ID;
         var n = {};
-        t && t.documentReady && (n.toolbarButtons = [ "fullscreen", "undo", "redo", "getPDF", "print", "|", "bold", "italic", "underline", "color", "clearFormatting", "|", "alignLeft", "alignCenter", "alignRight", "alignJustify", "|", "formatOL", "formatUL", "indent", "outdent", "-", "paragraphFormat", "|", "fontFamily", "|", "fontSize", "|", "insertLink", "insertImage", "quote" ], 
-        n.paragraphFormatSelection = !0, n.fontFamilySelection = !0, n.fontSizeSelection = !0, 
+        t && t.documentReady && (n.toolbarButtons = [ "fullscreen", "undo", "redo", "getPDF", "print", "|", "bold", "italic", "underline", "color", "clearFormatting", "|", "alignLeft", "alignCenter", "alignRight", "alignJustify", "|", "formatOL", "formatUL", "indent", "outdent", "-", "paragraphFormat", "|", "fontFamily", "|", "fontSize", "|", "insertLink", "insertImage", "quote" ],
+        n.paragraphFormatSelection = !0, n.fontFamilySelection = !0, n.fontSizeSelection = !0,
         n.placeholderText = "", n.quickInsertEnabled = !1, n.charCounterCount = !1), this.opts = w.extend(!0, {}, w.extend({}, s.DEFAULTS, n, "object" == typeof t && t));
         var r = JSON.stringify(this.opts);
-        w.FE.OPTS_MAPPING[r] = w.FE.OPTS_MAPPING[r] || this.id, this.sid = w.FE.OPTS_MAPPING[r], 
-        w.FE.SHARED[this.sid] = w.FE.SHARED[this.sid] || {}, this.shared = w.FE.SHARED[this.sid], 
-        this.shared.count = (this.shared.count || 0) + 1, this.$oel = w(e), this.$oel.data("froala.editor", this), 
+        w.FE.OPTS_MAPPING[r] = w.FE.OPTS_MAPPING[r] || this.id, this.sid = w.FE.OPTS_MAPPING[r],
+        w.FE.SHARED[this.sid] = w.FE.SHARED[this.sid] || {}, this.shared = w.FE.SHARED[this.sid],
+        this.shared.count = (this.shared.count || 0) + 1, this.$oel = w(e), this.$oel.data("froala.editor", this),
         this.o_doc = e.ownerDocument, this.o_win = "defaultView" in this.o_doc ? this.o_doc.defaultView : this.o_doc.parentWindow;
         var o = w(this.o_win).scrollTop();
         this.$oel.on("froala.doInit", w.proxy(function() {
-            this.$oel.off("froala.doInit"), this.doc = this.$el.get(0).ownerDocument, this.win = "defaultView" in this.doc ? this.doc.defaultView : this.doc.parentWindow, 
-            this.$doc = w(this.doc), this.$win = w(this.win), this.opts.pluginsEnabled || (this.opts.pluginsEnabled = Object.keys(w.FE.PLUGINS)), 
+            this.$oel.off("froala.doInit"), this.doc = this.$el.get(0).ownerDocument, this.win = "defaultView" in this.doc ? this.doc.defaultView : this.doc.parentWindow,
+            this.$doc = w(this.doc), this.$win = w(this.win), this.opts.pluginsEnabled || (this.opts.pluginsEnabled = Object.keys(w.FE.PLUGINS)),
             this.opts.initOnClick ? (this.load(w.FE.MODULES), this.$el.on("touchstart.init", function() {
                 w(this).data("touched", !0);
             }), this.$el.on("touchmove.init", function() {
@@ -11162,47 +11226,47 @@
             }), this.$el.on("mousedown.init touchend.init dragenter.init focus.init", w.proxy(function(e) {
                 if ("touchend" == e.type && !this.$el.data("touched")) return !0;
                 if (1 === e.which || !e.which) {
-                    this.$el.off("mousedown.init touchstart.init touchmove.init touchend.init dragenter.init focus.init"), 
+                    this.$el.off("mousedown.init touchstart.init touchmove.init touchend.init dragenter.init focus.init"),
                     this.load(w.FE.MODULES), this.load(w.FE.PLUGINS);
                     var t = e.originalEvent && e.originalEvent.originalTarget;
-                    t && "IMG" == t.tagName && w(t).trigger("mousedown"), "undefined" == typeof this.ul && this.destroy(), 
+                    t && "IMG" == t.tagName && w(t).trigger("mousedown"), "undefined" == typeof this.ul && this.destroy(),
                     "touchend" == e.type && this.image && e.originalEvent && e.originalEvent.target && w(e.originalEvent.target).is("img") && setTimeout(w.proxy(function() {
                         this.image.edit(w(e.originalEvent.target));
                     }, this), 100), this.ready = !0, this.events.trigger("initialized");
                 }
-            }, this)), this.events.trigger("initializationDelayed")) : (this.load(w.FE.MODULES), 
-            this.load(w.FE.PLUGINS), w(this.o_win).scrollTop(o), "undefined" == typeof this.ul && this.destroy(), 
+            }, this)), this.events.trigger("initializationDelayed")) : (this.load(w.FE.MODULES),
+            this.load(w.FE.PLUGINS), w(this.o_win).scrollTop(o), "undefined" == typeof this.ul && this.destroy(),
             this.ready = !0, this.events.trigger("initialized"));
         }, this)), this._init();
     };
     s.DEFAULTS = {
         initOnClick: !1,
         pluginsEnabled: null
-    }, s.MODULES = {}, s.PLUGINS = {}, s.VERSION = "2.9.6", s.INSTANCES = [], s.OPTS_MAPPING = {}, 
+    }, s.MODULES = {}, s.PLUGINS = {}, s.VERSION = "2.9.6", s.INSTANCES = [], s.OPTS_MAPPING = {},
     s.SHARED = {}, s.ID = 0, s.prototype._init = function() {
         var e = this.$oel.prop("tagName");
         this.$oel.closest("label").length;
         var t = w.proxy(function() {
-            "TEXTAREA" != e && (this._original_html = this._original_html || this.$oel.html()), 
-            this.$box = this.$box || this.$oel, this.opts.fullPage && (this.opts.iframe = !0), 
-            this.opts.iframe ? (this.$iframe = w('<iframe src="about:blank" frameBorder="0">'), 
-            this.$wp = w("<div></div>"), this.$box.html(this.$wp), this.$wp.append(this.$iframe), 
-            this.$iframe.get(0).contentWindow.document.open(), this.$iframe.get(0).contentWindow.document.write("<!DOCTYPE html>"), 
-            this.$iframe.get(0).contentWindow.document.write("<html><head></head><body></body></html>"), 
-            this.$iframe.get(0).contentWindow.document.close(), this.$el = this.$iframe.contents().find("body"), 
-            this.el = this.$el.get(0), this.$head = this.$iframe.contents().find("head"), this.$html = this.$iframe.contents().find("html"), 
-            this.iframe_document = this.$iframe.get(0).contentWindow.document) : (this.$el = w("<div></div>"), 
-            this.el = this.$el.get(0), this.$wp = w("<div></div>").append(this.$el), this.$box.html(this.$wp)), 
+            "TEXTAREA" != e && (this._original_html = this._original_html || this.$oel.html()),
+            this.$box = this.$box || this.$oel, this.opts.fullPage && (this.opts.iframe = !0),
+            this.opts.iframe ? (this.$iframe = w('<iframe src="about:blank" frameBorder="0">'),
+            this.$wp = w("<div></div>"), this.$box.html(this.$wp), this.$wp.append(this.$iframe),
+            this.$iframe.get(0).contentWindow.document.open(), this.$iframe.get(0).contentWindow.document.write("<!DOCTYPE html>"),
+            this.$iframe.get(0).contentWindow.document.write("<html><head></head><body></body></html>"),
+            this.$iframe.get(0).contentWindow.document.close(), this.$el = this.$iframe.contents().find("body"),
+            this.el = this.$el.get(0), this.$head = this.$iframe.contents().find("head"), this.$html = this.$iframe.contents().find("html"),
+            this.iframe_document = this.$iframe.get(0).contentWindow.document) : (this.$el = w("<div></div>"),
+            this.el = this.$el.get(0), this.$wp = w("<div></div>").append(this.$el), this.$box.html(this.$wp)),
             this.$oel.trigger("froala.doInit");
         }, this), n = w.proxy(function() {
-            this.$box = w("<div>"), this.$oel.before(this.$box).hide(), this._original_html = this.$oel.val(), 
+            this.$box = w("<div>"), this.$oel.before(this.$box).hide(), this._original_html = this.$oel.val(),
             this.$oel.parents("form").on("submit." + this.id, w.proxy(function() {
                 this.events.trigger("form.submit");
             }, this)), this.$oel.parents("form").on("reset." + this.id, w.proxy(function() {
                 this.events.trigger("form.reset");
             }, this)), t();
         }, this), r = w.proxy(function() {
-            this.$el = this.$oel, this.el = this.$el.get(0), this.$el.attr("contenteditable", !0).css("outline", "none").css("display", "inline-block"), 
+            this.$el = this.$oel, this.el = this.$el.get(0), this.$el.attr("contenteditable", !0).css("outline", "none").css("display", "inline-block"),
             this.opts.multiLine = !1, this.opts.toolbarInline = !1, this.$oel.trigger("froala.doInit");
         }, this), o = w.proxy(function() {
             this.$el = this.$oel, this.el = this.$el.get(0), this.opts.toolbarInline = !1, this.$oel.trigger("froala.doInit");
@@ -11211,7 +11275,7 @@
                 e.preventDefault();
             }), this.$oel.trigger("froala.doInit");
         }, this);
-        this.opts.editInPopup ? i() : "TEXTAREA" == e ? n() : "A" == e ? r() : "IMG" == e ? o() : "BUTTON" == e || "INPUT" == e ? (this.opts.editInPopup = !0, 
+        this.opts.editInPopup ? i() : "TEXTAREA" == e ? n() : "A" == e ? r() : "IMG" == e ? o() : "BUTTON" == e || "INPUT" == e ? (this.opts.editInPopup = !0,
         this.opts.toolbarInline = !1, i()) : t();
     }, s.prototype.load = function(e) {
         for (var t in e) if (e.hasOwnProperty(t)) {
@@ -11222,13 +11286,13 @@
     }, s.prototype.destroy = function() {
         this.destroying = !0, this.shared.count--, this.events.$off();
         var e = this.html.get();
-        if (this.opts.iframe && (this.events.disableBlur(), this.win.focus(), this.events.enableBlur()), 
-        this.events.trigger("destroy", [], !0), this.events.trigger("shared.destroy", undefined, !0), 
+        if (this.opts.iframe && (this.events.disableBlur(), this.win.focus(), this.events.enableBlur()),
+        this.events.trigger("destroy", [], !0), this.events.trigger("shared.destroy", undefined, !0),
         0 === this.shared.count) {
             for (var t in this.shared) this.shared.hasOwnProperty(t) && (this.shared[t], w.FE.SHARED[this.sid][t] = null);
             delete w.FE.SHARED[this.sid];
         }
-        this.$oel.parents("form").off("." + this.id), this.$oel.off("click.popup"), this.$oel.removeData("froala.editor"), 
+        this.$oel.parents("form").off("." + this.id), this.$oel.off("click.popup"), this.$oel.removeData("froala.editor"),
         this.$oel.off("froalaEditor"), this.core.destroy(e), w.FE.INSTANCES.splice(w.FE.INSTANCES.indexOf(this), 1);
     }, w.fn.froalaEditor = function(o) {
         for (var i = [], e = 0; e < arguments.length; e++) i.push(arguments[e]);
@@ -11238,7 +11302,7 @@
                 var e = w(this).data("froala.editor");
                 if (e) {
                     var t, n;
-                    if (0 < o.indexOf(".") && e[o.split(".")[0]] ? (e[o.split(".")[0]] && (t = e[o.split(".")[0]]), 
+                    if (0 < o.indexOf(".") && e[o.split(".")[0]] ? (e[o.split(".")[0]] && (t = e[o.split(".")[0]]),
                     n = o.split(".")[1]) : (t = e, n = o.split(".")[0]), !t[n]) return w.error("Method " + o + " does not exist in Froala Editor.");
                     var r = t[n].apply(e, i.slice(1));
                     r === undefined ? a.push(this) : 0 === a.length && a.push(r);
@@ -11250,18 +11314,18 @@
                 new s(this, o);
             }
         });
-    }, w.fn.froalaEditor.Constructor = s, w.FroalaEditor = s, w.FE = s, w.FE.XS = 0, 
+    }, w.fn.froalaEditor.Constructor = s, w.FroalaEditor = s, w.FE = s, w.FE.XS = 0,
     w.FE.SM = 1, w.FE.MD = 2, w.FE.LG = 3;
-    w.FE.LinkRegExCommon = "[a-z\\u0080-\\u009f\\u00a1-\\uffff0-9-_.]{1,}", w.FE.LinkRegExEnd = "((:[0-9]{1,5})|)(((\\/|\\?|#)[a-z\\u00a1-\\uffff0-9@?\\|!^=%&amp;/~+#-\\'*-_{}]*)|())", 
-    w.FE.LinkRegExTLD = "((" + w.FE.LinkRegExCommon + ")(\\.(com|net|org|edu|mil|gov|co|biz|info|me|dev)))", 
-    w.FE.LinkRegExHTTP = "((ftp|http|https):\\/\\/" + w.FE.LinkRegExCommon + ")", w.FE.LinkRegExAuth = "((ftp|http|https):\\/\\/[\\u0021-\\uffff]{1,}@" + w.FE.LinkRegExCommon + ")", 
-    w.FE.LinkRegExWWW = "(www\\." + w.FE.LinkRegExCommon + "\\.[a-z0-9-]{2,24})", w.FE.LinkRegEx = "(" + w.FE.LinkRegExTLD + "|" + w.FE.LinkRegExHTTP + "|" + w.FE.LinkRegExWWW + "|" + w.FE.LinkRegExAuth + ")" + w.FE.LinkRegExEnd, 
-    w.FE.LinkProtocols = [ "mailto", "tel", "sms", "notes", "data" ], w.FE.MAIL_REGEX = /.+@.+\..+/i, 
+    w.FE.LinkRegExCommon = "[a-z\\u0080-\\u009f\\u00a1-\\uffff0-9-_.]{1,}", w.FE.LinkRegExEnd = "((:[0-9]{1,5})|)(((\\/|\\?|#)[a-z\\u00a1-\\uffff0-9@?\\|!^=%&amp;/~+#-\\'*-_{}]*)|())",
+    w.FE.LinkRegExTLD = "((" + w.FE.LinkRegExCommon + ")(\\.(com|net|org|edu|mil|gov|co|biz|info|me|dev)))",
+    w.FE.LinkRegExHTTP = "((ftp|http|https):\\/\\/" + w.FE.LinkRegExCommon + ")", w.FE.LinkRegExAuth = "((ftp|http|https):\\/\\/[\\u0021-\\uffff]{1,}@" + w.FE.LinkRegExCommon + ")",
+    w.FE.LinkRegExWWW = "(www\\." + w.FE.LinkRegExCommon + "\\.[a-z0-9-]{2,24})", w.FE.LinkRegEx = "(" + w.FE.LinkRegExTLD + "|" + w.FE.LinkRegExHTTP + "|" + w.FE.LinkRegExWWW + "|" + w.FE.LinkRegExAuth + ")" + w.FE.LinkRegExEnd,
+    w.FE.LinkProtocols = [ "mailto", "tel", "sms", "notes", "data" ], w.FE.MAIL_REGEX = /.+@.+\..+/i,
     w.FE.MODULES.helpers = function(i) {
         function e() {
-            var e, t, n = {}, r = (t = -1, "Microsoft Internet Explorer" == navigator.appName ? (e = navigator.userAgent, 
-            null !== new RegExp("MSIE ([0-9]{1,}[\\.0-9]{0,})").exec(e) && (t = parseFloat(RegExp.$1))) : "Netscape" == navigator.appName && (e = navigator.userAgent, 
-            null !== new RegExp("Trident/.*rv:([0-9]{1,}[\\.0-9]{0,})").exec(e) && (t = parseFloat(RegExp.$1))), 
+            var e, t, n = {}, r = (t = -1, "Microsoft Internet Explorer" == navigator.appName ? (e = navigator.userAgent,
+            null !== new RegExp("MSIE ([0-9]{1,}[\\.0-9]{0,})").exec(e) && (t = parseFloat(RegExp.$1))) : "Netscape" == navigator.appName && (e = navigator.userAgent,
+            null !== new RegExp("Trident/.*rv:([0-9]{1,}[\\.0-9]{0,})").exec(e) && (t = parseFloat(RegExp.$1))),
             t);
             if (0 < r) n.msie = !0; else {
                 var o = navigator.userAgent.toLowerCase(), i = /(edge)[ \/]([\w.]+)/.exec(o) || /(chrome)[ \/]([\w.]+)/.exec(o) || /(webkit)[ \/]([\w.]+)/.exec(o) || /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(o) || /(msie) ([\w.]+)/.exec(o) || o.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(o) || [], a = i[1] || "";
@@ -11297,8 +11361,8 @@
                             if (e && e.match(s)) {
                                 e = e.replace(s, ""), this.parentNode || (a.appendChild(this), r = !0);
                                 var o = this.parentNode;
-                                return this.id || (this.id = "rootedQuerySelector_id_" + new Date().getTime(), n = !0), 
-                                t = i.call(o, "#" + this.id + " " + e), n && (this.id = ""), r && a.removeChild(this), 
+                                return this.id || (this.id = "rootedQuerySelector_id_" + new Date().getTime(), n = !0),
+                                t = i.call(o, "#" + this.id + " " + e), n && (this.id = ""), r && a.removeChild(this),
                                 t;
                             }
                             return i.call(this, e);
@@ -11309,10 +11373,10 @@
                         a.querySelectorAll(":scope *");
                     } catch (t) {
                         var s = /^\s*:scope/gi;
-                        e(Element.prototype, "querySelector"), e(Element.prototype, "querySelectorAll"), 
+                        e(Element.prototype, "querySelector"), e(Element.prototype, "querySelectorAll"),
                         e(HTMLElement.prototype, "querySelector"), e(HTMLElement.prototype, "querySelectorAll");
                     }
-                }(), Element.prototype.matches || (Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector), 
+                }(), Element.prototype.matches || (Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector),
                 Element.prototype.closest || (Element.prototype.closest = function(e) {
                     var t = this;
                     if (!t) return null;
@@ -11326,7 +11390,7 @@
             },
             isIOS: t,
             isMac: function() {
-                return null == l && (l = 0 <= navigator.platform.toUpperCase().indexOf("MAC")), 
+                return null == l && (l = 0 <= navigator.platform.toUpperCase().indexOf("MAC")),
                 l;
             },
             isAndroid: n,
@@ -11380,7 +11444,7 @@
                 return t ? "rgb(" + parseInt(t[1], 16) + ", " + parseInt(t[2], 16) + ", " + parseInt(t[3], 16) + ")" : "";
             },
             isURL: function(e) {
-                return !!/^(https?:|ftps?:|)\/\//i.test(e) && (e = String(e).replace(/</g, "%3C").replace(/>/g, "%3E").replace(/"/g, "%22").replace(/ /g, "%20"), 
+                return !!/^(https?:|ftps?:|)\/\//i.test(e) && (e = String(e).replace(/</g, "%3C").replace(/>/g, "%3E").replace(/"/g, "%22").replace(/ /g, "%20"),
                 new RegExp("^" + w.FE.LinkRegExHTTP + w.FE.LinkRegExEnd + "$", "gi").test(e));
             },
             getAlignment: function(e) {
@@ -11425,10 +11489,10 @@
             if (l.core.hasFocus()) return !1;
             if (!l.core.hasFocus() && e) {
                 var n = l.$win.scrollTop();
-                if (l.browser.msie && l.$box && l.$box.css("position", "fixed"), l.browser.msie && l.$wp && l.$wp.css("overflow", "visible"), 
-                l.browser.msie && l.$sc && l.$sc.css("position", "fixed"), s(), l.$el.focus(), l.events.trigger("focus"), 
-                i(), l.browser.msie && l.$sc && l.$sc.css("position", ""), l.browser.msie && l.$box && l.$box.css("position", ""), 
-                l.browser.msie && l.$wp && l.$wp.css("overflow", "auto"), n != l.$win.scrollTop() && l.$win.scrollTop(n), 
+                if (l.browser.msie && l.$box && l.$box.css("position", "fixed"), l.browser.msie && l.$wp && l.$wp.css("overflow", "visible"),
+                l.browser.msie && l.$sc && l.$sc.css("position", "fixed"), s(), l.$el.focus(), l.events.trigger("focus"),
+                i(), l.browser.msie && l.$sc && l.$sc.css("position", ""), l.browser.msie && l.$box && l.$box.css("position", ""),
+                l.browser.msie && l.$wp && l.$wp.css("overflow", "auto"), n != l.$win.scrollTop() && l.$win.scrollTop(n),
                 !l.selection.info(l.el).atStart) return !1;
             }
             if (!l.core.hasFocus() || 0 < l.$el.find(".fr-marker").length) return !1;
@@ -11457,7 +11521,7 @@
                 for (var i = 0; i < o.length; i++) d(o[i], t, n);
                 return !0;
             }
-            void 0 === n && (n = !1), r = 0 !== e.indexOf("shared.") ? a[e] = a[e] || [] : l.shared._events[e] = l.shared._events[e] || [], 
+            void 0 === n && (n = !1), r = 0 !== e.indexOf("shared.") ? a[e] = a[e] || [] : l.shared._events[e] = l.shared._events[e] || [],
             n ? r.unshift(t) : r.push(t);
         }
         var c = [];
@@ -11466,7 +11530,7 @@
             var i, a = o ? l.shared.$_events : c, s = o ? l.sid : l.id;
             i = r, r = function() {
                 if (!l.destroying) return i.apply(this, arguments);
-            }, n ? e.on(t.split(" ").join(".ed" + s + " ") + ".ed" + s, n, r) : e.on(t.split(" ").join(".ed" + s + " ") + ".ed" + s, r), 
+            }, n ? e.on(t.split(" ").join(".ed" + s + " ") + ".ed" + s, n, r) : e.on(t.split(" ").join(".ed" + s + " ") + ".ed" + s, r),
             a.push([ e, t.split(" ").join(".ed" + s + " ") + ".ed" + s ]);
         }
         function p(e) {
@@ -11491,8 +11555,8 @@
         }
         return {
             _init: function() {
-                l.shared.$_events = l.shared.$_events || [], l.shared._events = {}, l.helpers.isMobile() ? (l._mousedown = "touchstart", 
-                l._mouseup = "touchend", l._move = "touchmove", l._mousemove = "touchmove") : (l._mousedown = "mousedown", 
+                l.shared.$_events = l.shared.$_events || [], l.shared._events = {}, l.helpers.isMobile() ? (l._mousedown = "touchstart",
+                l._mouseup = "touchend", l._move = "touchmove", l._mousemove = "touchmove") : (l._mousedown = "mousedown",
                 l._mouseup = "mouseup", l._move = "", l._mousemove = "mousemove"), t(l.$el, "click mouseup mousedown touchstart touchend dragenter dragover dragleave dragend drop dragstart", function(e) {
                     u(e.type, [ e ]);
                 }), d("mousedown", function() {
@@ -11526,8 +11590,8 @@
             bindClick: function(e, t, n) {
                 f(e, l._mousedown, t, function(e) {
                     var t, n;
-                    l.edit.isDisabled() || (n = w((t = e).currentTarget), l.edit.isDisabled() || l.node.hasClass(n.get(0), "fr-disabled") ? t.preventDefault() : "mousedown" === t.type && 1 !== t.which || (l.helpers.isMobile() || t.preventDefault(), 
-                    (l.helpers.isAndroid() || l.helpers.isWindowsPhone()) && 0 === n.parents(".fr-dropdown-menu").length && (t.preventDefault(), 
+                    l.edit.isDisabled() || (n = w((t = e).currentTarget), l.edit.isDisabled() || l.node.hasClass(n.get(0), "fr-disabled") ? t.preventDefault() : "mousedown" === t.type && 1 !== t.which || (l.helpers.isMobile() || t.preventDefault(),
+                    (l.helpers.isAndroid() || l.helpers.isWindowsPhone()) && 0 === n.parents(".fr-dropdown-menu").length && (t.preventDefault(),
                     t.stopPropagation()), n.addClass("fr-selected"), l.events.trigger("commands.mousedown", [ n ])));
                 }, !0), f(e, l._mouseup + " " + l._move, t, function(e) {
                     l.edit.isDisabled() || function(e, t) {
@@ -11547,10 +11611,10 @@
                 }, !0), d("window.mouseup", function() {
                     l.edit.isDisabled() || (e.find(t).removeClass("fr-selected"), i());
                 }), f(e, "mouseenter", t, function() {
-                    w(this).hasClass("fr-options") && w(this).prev(".fr-btn").addClass("fr-btn-hover"), 
+                    w(this).hasClass("fr-options") && w(this).prev(".fr-btn").addClass("fr-btn-hover"),
                     w(this).next(".fr-btn").hasClass("fr-options") && w(this).next(".fr-btn").addClass("fr-btn-hover");
                 }), f(e, "mouseleave", t, function() {
-                    w(this).hasClass("fr-options") && w(this).prev(".fr-btn").removeClass("fr-btn-hover"), 
+                    w(this).hasClass("fr-options") && w(this).prev(".fr-btn").removeClass("fr-btn-hover"),
                     w(this).next(".fr-btn").hasClass("fr-options") && w(this).next(".fr-btn").removeClass("fr-btn-hover");
                 });
             },
@@ -11566,7 +11630,7 @@
                         r = l.shared._events[e];
                     }
                     if (r) for (var i = 0; i < r.length; i++) void 0 !== (o = r[i].apply(l, [ t ])) && (t = o);
-                    return void 0 !== (o = l.$oel.triggerHandler("froalaEditor." + e, w.merge([ l ], [ t ]))) && (t = o), 
+                    return void 0 !== (o = l.$oel.triggerHandler("froalaEditor." + e, w.merge([ l ], [ t ]))) && (t = o),
                     t;
                 }
             },
@@ -11679,22 +11743,22 @@
                 };
             }
         };
-    }, w.FE.INVISIBLE_SPACE = "&#8203;", w.FE.START_MARKER = '<span class="fr-marker" data-id="0" data-type="true" style="display: none; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>", 
-    w.FE.END_MARKER = '<span class="fr-marker" data-id="0" data-type="false" style="display: none; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>", 
+    }, w.FE.INVISIBLE_SPACE = "&#8203;", w.FE.START_MARKER = '<span class="fr-marker" data-id="0" data-type="true" style="display: none; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>",
+    w.FE.END_MARKER = '<span class="fr-marker" data-id="0" data-type="false" style="display: none; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>",
     w.FE.MARKERS = w.FE.START_MARKER + w.FE.END_MARKER, w.FE.MODULES.markers = function(d) {
         function l() {
             if (!d.$wp) return null;
             try {
                 var e = d.selection.ranges(0), t = e.commonAncestorContainer;
-                if (d.core.isEmpty() && t.textContent !== w("<span>").html(w.FE.INVISIBLE_SPACE).text()) return d.selection.setAtStart(d.el), 
-                d.$el.find(".fr-marker:first").replaceWith('<span class="fr-single-marker" style="display: none; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>"), 
+                if (d.core.isEmpty() && t.textContent !== w("<span>").html(w.FE.INVISIBLE_SPACE).text()) return d.selection.setAtStart(d.el),
+                d.$el.find(".fr-marker:first").replaceWith('<span class="fr-single-marker" style="display: none; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>"),
                 d.$el.find(".fr-marker").remove(), d.$el.find(".fr-single-marker").removeClass("fr-single-marker").addClass("fr-marker").get(0);
                 if (t != d.el && 0 === d.$el.find(t).length) return null;
                 var n = e.cloneRange(), r = e.cloneRange();
                 n.collapse(!0);
                 var o = w('<span class="fr-marker" style="display: none; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>", d.doc)[0];
                 if (n.insertNode(o), o = d.$el.find("span.fr-marker").get(0)) {
-                    for (var i = o.nextSibling; i && i.nodeType === Node.TEXT_NODE && 0 === i.textContent.length; ) w(i).remove(), 
+                    for (var i = o.nextSibling; i && i.nodeType === Node.TEXT_NODE && 0 === i.textContent.length; ) w(i).remove(),
                     i = d.$el.find("span.fr-marker").get(0).nextSibling;
                     return d.selection.clear(), d.selection.get().addRange(r), o;
                 }
@@ -11709,8 +11773,8 @@
                 var r, o, i;
                 try {
                     var a = e.cloneRange();
-                    if (a.collapse(t), a.insertNode(w('<span class="fr-marker" data-id="' + n + '" data-type="' + t + '" style="display: ' + (d.browser.safari ? "none" : "inline-block") + '; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>", d.doc)[0]), 
-                    !0 === t) for (i = (r = d.$el.find('span.fr-marker[data-type="true"][data-id="' + n + '"]').get(0)).nextSibling; i && i.nodeType === Node.TEXT_NODE && 0 === i.textContent.length; ) w(i).remove(), 
+                    if (a.collapse(t), a.insertNode(w('<span class="fr-marker" data-id="' + n + '" data-type="' + t + '" style="display: ' + (d.browser.safari ? "none" : "inline-block") + '; line-height: 0;">' + w.FE.INVISIBLE_SPACE + "</span>", d.doc)[0]),
+                    !0 === t) for (i = (r = d.$el.find('span.fr-marker[data-type="true"][data-id="' + n + '"]').get(0)).nextSibling; i && i.nodeType === Node.TEXT_NODE && 0 === i.textContent.length; ) w(i).remove(),
                     i = r.nextSibling;
                     if (!0 === t && !e.collapsed) {
                         for (;!d.node.isElement(r.parentNode) && !i; ) w(r.parentNode).after(r), i = r.nextSibling;
@@ -11738,14 +11802,14 @@
                 var e = d.$el.find(".fr-marker").get(0);
                 if (null == e && (e = l()), null == e) return null;
                 var t = d.node.deepestParent(e);
-                if (t || (t = d.node.blockParent(e)) && "LI" != t.tagName && (t = null), t) if (d.node.isBlock(t) && d.node.isEmpty(t)) "LI" != t.tagName || t.parentNode.firstElementChild != t || d.node.isEmpty(t.parentNode) ? w(t).replaceWith('<span class="fr-marker"></span>') : w(t).append('<span class="fr-marker"></span>'); else if (d.cursor.isAtStart(e, t)) w(t).before('<span class="fr-marker"></span>'), 
-                w(e).remove(); else if (d.cursor.isAtEnd(e, t)) w(t).after('<span class="fr-marker"></span>'), 
+                if (t || (t = d.node.blockParent(e)) && "LI" != t.tagName && (t = null), t) if (d.node.isBlock(t) && d.node.isEmpty(t)) "LI" != t.tagName || t.parentNode.firstElementChild != t || d.node.isEmpty(t.parentNode) ? w(t).replaceWith('<span class="fr-marker"></span>') : w(t).append('<span class="fr-marker"></span>'); else if (d.cursor.isAtStart(e, t)) w(t).before('<span class="fr-marker"></span>'),
+                w(e).remove(); else if (d.cursor.isAtEnd(e, t)) w(t).after('<span class="fr-marker"></span>'),
                 w(e).remove(); else {
-                    for (var n = e, r = "", o = ""; n = n.parentNode, r += d.node.closeTagString(n), 
+                    for (var n = e, r = "", o = ""; n = n.parentNode, r += d.node.closeTagString(n),
                     o = d.node.openTagString(n) + o, n != t; ) ;
                     w(e).replaceWith('<span id="fr-break"></span>');
                     var i = d.node.openTagString(t) + w(t).html() + d.node.closeTagString(t);
-                    i = i.replace(/<span id="fr-break"><\/span>/g, r + '<span class="fr-marker"></span>' + o), 
+                    i = i.replace(/<span id="fr-break"><\/span>/g, r + '<span class="fr-marker"></span>' + o),
                     w(t).replaceWith(i);
                 }
                 return d.$el.find(".fr-marker").get(0);
@@ -11754,9 +11818,9 @@
                 var t, n = e.clientX, r = e.clientY;
                 c();
                 var o = null;
-                if ("undefined" != typeof d.doc.caretPositionFromPoint ? (t = d.doc.caretPositionFromPoint(n, r), 
-                (o = d.doc.createRange()).setStart(t.offsetNode, t.offset), o.setEnd(t.offsetNode, t.offset)) : "undefined" != typeof d.doc.caretRangeFromPoint && (t = d.doc.caretRangeFromPoint(n, r), 
-                (o = d.doc.createRange()).setStart(t.startContainer, t.startOffset), o.setEnd(t.startContainer, t.startOffset)), 
+                if ("undefined" != typeof d.doc.caretPositionFromPoint ? (t = d.doc.caretPositionFromPoint(n, r),
+                (o = d.doc.createRange()).setStart(t.offsetNode, t.offset), o.setEnd(t.offsetNode, t.offset)) : "undefined" != typeof d.doc.caretRangeFromPoint && (t = d.doc.caretRangeFromPoint(n, r),
+                (o = d.doc.createRange()).setStart(t.startContainer, t.startOffset), o.setEnd(t.startContainer, t.startOffset)),
                 null !== o && "undefined" != typeof d.win.getSelection) {
                     var i = d.win.getSelection();
                     i.removeAllRanges(), i.addRange(o);
@@ -11774,7 +11838,7 @@
     }, w.FE.MODULES.selection = function(S) {
         function s() {
             var e = "";
-            return S.win.getSelection ? e = S.win.getSelection() : S.doc.getSelection ? e = S.doc.getSelection() : S.doc.selection && (e = S.doc.selection.createRange().text), 
+            return S.win.getSelection ? e = S.win.getSelection() : S.doc.getSelection ? e = S.doc.getSelection() : S.doc.selection && (e = S.doc.selection.createRange().text),
             e.toString();
         }
         function T() {
@@ -11796,7 +11860,7 @@
         }
         function f(e, t) {
             var n = e;
-            return n.nodeType == Node.ELEMENT_NODE && 0 < n.childNodes.length && n.childNodes[t] && (n = n.childNodes[t]), 
+            return n.nodeType == Node.ELEMENT_NODE && 0 < n.childNodes.length && n.childNodes[t] && (n = n.childNodes[t]),
             n.nodeType == Node.TEXT_NODE && (n = n.parentNode), n;
         }
         function N() {
@@ -11805,7 +11869,7 @@
                 var e, t, n = c(), r = [];
                 for (t = 0; t < n.length; t++) if (n[t].startContainer !== S.doc || S.browser.msie) {
                     var o = (e = n[t]).collapsed, i = S.markers.place(e, !0, t), a = S.markers.place(e, !1, t);
-                    if (void 0 !== i && i || !o || (w(".fr-marker").remove(), S.selection.setAtEnd(S.el)), 
+                    if (void 0 !== i && i || !o || (w(".fr-marker").remove(), S.selection.setAtEnd(S.el)),
                     S.el.normalize(), S.browser.safari && !o) try {
                         (e = S.doc.createRange()).setStartAfter(i), e.setEndBefore(a), r.push(e);
                     } catch (s) {}
@@ -11827,37 +11891,37 @@
                 if (0 < a.length) {
                     a = a[0];
                     try {
-                        for (var l, d = !1, c = o.nextSibling; c && c.nodeType == Node.TEXT_NODE && 0 === c.textContent.length; ) c = (l = c).nextSibling, 
+                        for (var l, d = !1, c = o.nextSibling; c && c.nodeType == Node.TEXT_NODE && 0 === c.textContent.length; ) c = (l = c).nextSibling,
                         w(l).remove();
-                        for (var f, p, u = a.nextSibling; u && u.nodeType == Node.TEXT_NODE && 0 === u.textContent.length; ) u = (l = u).nextSibling, 
+                        for (var f, p, u = a.nextSibling; u && u.nodeType == Node.TEXT_NODE && 0 === u.textContent.length; ) u = (l = u).nextSibling,
                         w(l).remove();
                         if (o.nextSibling == a || a.nextSibling == o) {
-                            for (var g = o.nextSibling == a ? o : a, h = g == o ? a : o, m = g.previousSibling; m && m.nodeType == Node.TEXT_NODE && 0 === m.length; ) m = (l = m).previousSibling, 
+                            for (var g = o.nextSibling == a ? o : a, h = g == o ? a : o, m = g.previousSibling; m && m.nodeType == Node.TEXT_NODE && 0 === m.length; ) m = (l = m).previousSibling,
                             w(l).remove();
-                            if (m && m.nodeType == Node.TEXT_NODE) for (;m && m.previousSibling && m.previousSibling.nodeType == Node.TEXT_NODE; ) m.previousSibling.textContent = m.previousSibling.textContent + m.textContent, 
+                            if (m && m.nodeType == Node.TEXT_NODE) for (;m && m.previousSibling && m.previousSibling.nodeType == Node.TEXT_NODE; ) m.previousSibling.textContent = m.previousSibling.textContent + m.textContent,
                             m = m.previousSibling, w(m.nextSibling).remove();
-                            for (var E = h.nextSibling; E && E.nodeType == Node.TEXT_NODE && 0 === E.length; ) E = (l = E).nextSibling, 
+                            for (var E = h.nextSibling; E && E.nodeType == Node.TEXT_NODE && 0 === E.length; ) E = (l = E).nextSibling,
                             w(l).remove();
-                            if (E && E.nodeType == Node.TEXT_NODE) for (;E && E.nextSibling && E.nextSibling.nodeType == Node.TEXT_NODE; ) E.nextSibling.textContent = E.textContent + E.nextSibling.textContent, 
+                            if (E && E.nodeType == Node.TEXT_NODE) for (;E && E.nextSibling && E.nextSibling.nodeType == Node.TEXT_NODE; ) E.nextSibling.textContent = E.textContent + E.nextSibling.textContent,
                             E = E.nextSibling, w(E.previousSibling).remove();
-                            if (m && (S.node.isVoid(m) || S.node.isBlock(m)) && (m = null), E && (S.node.isVoid(E) || S.node.isBlock(E)) && (E = null), 
+                            if (m && (S.node.isVoid(m) || S.node.isBlock(m)) && (m = null), E && (S.node.isVoid(E) || S.node.isBlock(E)) && (E = null),
                             m && E && m.nodeType == Node.TEXT_NODE && E.nodeType == Node.TEXT_NODE) {
                                 w(o).remove(), w(a).remove();
                                 var v = m.textContent.length;
-                                m.textContent = m.textContent + E.textContent, w(E).remove(), S.opts.htmlUntouched || S.spaces.normalize(m), 
+                                m.textContent = m.textContent + E.textContent, w(E).remove(), S.opts.htmlUntouched || S.spaces.normalize(m),
                                 i.setStart(m, v), i.setEnd(m, v), d = !0;
-                            } else !m && E && E.nodeType == Node.TEXT_NODE ? (w(o).remove(), w(a).remove(), 
-                            S.opts.htmlUntouched || S.spaces.normalize(E), s = w(S.doc.createTextNode("​")), 
-                            w(E).before(s), i.setStart(E, 0), i.setEnd(E, 0), d = !0) : !E && m && m.nodeType == Node.TEXT_NODE && (w(o).remove(), 
-                            w(a).remove(), S.opts.htmlUntouched || S.spaces.normalize(m), s = w(S.doc.createTextNode("​")), 
-                            w(m).after(s), i.setStart(m, m.textContent.length), i.setEnd(m, m.textContent.length), 
+                            } else !m && E && E.nodeType == Node.TEXT_NODE ? (w(o).remove(), w(a).remove(),
+                            S.opts.htmlUntouched || S.spaces.normalize(E), s = w(S.doc.createTextNode("​")),
+                            w(E).before(s), i.setStart(E, 0), i.setEnd(E, 0), d = !0) : !E && m && m.nodeType == Node.TEXT_NODE && (w(o).remove(),
+                            w(a).remove(), S.opts.htmlUntouched || S.spaces.normalize(m), s = w(S.doc.createTextNode("​")),
+                            w(m).after(s), i.setStart(m, m.textContent.length), i.setEnd(m, m.textContent.length),
                             d = !0);
                         }
-                        if (!d) (S.browser.chrome || S.browser.edge) && o.nextSibling == a ? (f = A(a, i, !0) || i.setStartAfter(a), 
-                        p = A(o, i, !1) || i.setEndBefore(o)) : (o.previousSibling == a && (a = (o = a).nextSibling), 
-                        a.nextSibling && "BR" === a.nextSibling.tagName || !a.nextSibling && S.node.isBlock(o.previousSibling) || o.previousSibling && "BR" == o.previousSibling.tagName || (o.style.display = "inline", 
-                        a.style.display = "inline", s = w(S.doc.createTextNode("​"))), f = A(o, i, !0) || w(o).before(s) && i.setStartBefore(o), 
-                        p = A(a, i, !1) || w(a).after(s) && i.setEndAfter(a)), "function" == typeof f && f(), 
+                        if (!d) (S.browser.chrome || S.browser.edge) && o.nextSibling == a ? (f = A(a, i, !0) || i.setStartAfter(a),
+                        p = A(o, i, !1) || i.setEndBefore(o)) : (o.previousSibling == a && (a = (o = a).nextSibling),
+                        a.nextSibling && "BR" === a.nextSibling.tagName || !a.nextSibling && S.node.isBlock(o.previousSibling) || o.previousSibling && "BR" == o.previousSibling.tagName || (o.style.display = "inline",
+                        a.style.display = "inline", s = w(S.doc.createTextNode("​"))), f = A(o, i, !0) || w(o).before(s) && i.setStartBefore(o),
+                        p = A(a, i, !1) || w(a).after(s) && i.setEndAfter(a)), "function" == typeof f && f(),
                         "function" == typeof p && p();
                     } catch (b) {}
                 }
@@ -11870,19 +11934,19 @@
         }
         function A(e, t, n) {
             var r, o = e.previousSibling, i = e.nextSibling;
-            return o && i && o.nodeType == Node.TEXT_NODE && i.nodeType == Node.TEXT_NODE ? (r = o.textContent.length, 
-            n ? (i.textContent = o.textContent + i.textContent, w(o).remove(), w(e).remove(), 
+            return o && i && o.nodeType == Node.TEXT_NODE && i.nodeType == Node.TEXT_NODE ? (r = o.textContent.length,
+            n ? (i.textContent = o.textContent + i.textContent, w(o).remove(), w(e).remove(),
             S.opts.htmlUntouched || S.spaces.normalize(i), function() {
                 t.setStart(i, r);
-            }) : (o.textContent = o.textContent + i.textContent, w(i).remove(), w(e).remove(), 
+            }) : (o.textContent = o.textContent + i.textContent, w(i).remove(), w(e).remove(),
             S.opts.htmlUntouched || S.spaces.normalize(o), function() {
                 t.setEnd(o, r);
-            })) : o && !i && o.nodeType == Node.TEXT_NODE ? (r = o.textContent.length, n ? (S.opts.htmlUntouched || S.spaces.normalize(o), 
+            })) : o && !i && o.nodeType == Node.TEXT_NODE ? (r = o.textContent.length, n ? (S.opts.htmlUntouched || S.spaces.normalize(o),
             function() {
                 t.setStart(o, r);
             }) : (S.opts.htmlUntouched || S.spaces.normalize(o), function() {
                 t.setEnd(o, r);
-            })) : !(!i || o || i.nodeType != Node.TEXT_NODE) && (n ? (S.opts.htmlUntouched || S.spaces.normalize(i), 
+            })) : !(!i || o || i.nodeType != Node.TEXT_NODE) && (n ? (S.opts.htmlUntouched || S.spaces.normalize(i),
             function() {
                 t.setStart(i, 0);
             }) : (S.opts.htmlUntouched || S.spaces.normalize(i), function() {
@@ -11897,11 +11961,11 @@
             var t, n, r = !1, o = !1;
             if (S.win.getSelection) {
                 var i = S.win.getSelection();
-                i.rangeCount && ((n = (t = i.getRangeAt(0)).cloneRange()).selectNodeContents(e), 
-                n.setEnd(t.startContainer, t.startOffset), r = "" === n.toString(), n.selectNodeContents(e), 
+                i.rangeCount && ((n = (t = i.getRangeAt(0)).cloneRange()).selectNodeContents(e),
+                n.setEnd(t.startContainer, t.startOffset), r = "" === n.toString(), n.selectNodeContents(e),
                 n.setStart(t.endContainer, t.endOffset), o = "" === n.toString());
-            } else S.doc.selection && "Control" != S.doc.selection.type && ((n = (t = S.doc.selection.createRange()).duplicate()).moveToElementText(e), 
-            n.setEndPoint("EndToStart", t), r = "" === n.text, n.moveToElementText(e), n.setEndPoint("StartToEnd", t), 
+            } else S.doc.selection && "Control" != S.doc.selection.type && ((n = (t = S.doc.selection.createRange()).duplicate()).moveToElementText(e),
+            n.setEndPoint("EndToStart", t), r = "" === n.text, n.moveToElementText(e), n.setEndPoint("StartToEnd", t),
             o = "" === n.text);
             return {
                 atStart: r,
@@ -11912,7 +11976,7 @@
             void 0 === t && (t = !0);
             var n = w(e).html();
             n && n.replace(/\u200b/g, "").length != n.length && w(e).html(n.replace(/\u200b/g, ""));
-            for (var r = S.node.contents(e), o = 0; o < r.length; o++) r[o].nodeType != Node.ELEMENT_NODE ? w(r[o]).remove() : ($(r[o], 0 === o), 
+            for (var r = S.node.contents(e), o = 0; o < r.length; o++) r[o].nodeType != Node.ELEMENT_NODE ? w(r[o]).remove() : ($(r[o], 0 === o),
             0 === o && (t = !1));
             e.nodeType == Node.TEXT_NODE ? w(e).replaceWith('<span data-first="true" data-text="true"></span>') : t && w(e).attr("data-first", !0);
         }
@@ -11953,18 +12017,18 @@
                     if (e.rangeCount) {
                         var t, n = c(0), r = n.startContainer;
                         if (S.node.isElement(r) && 0 === n.startOffset && r.childNodes.length) for (;r.childNodes.length && r.childNodes[0].nodeType === Node.ELEMENT_NODE; ) r = r.childNodes[0];
-                        if (r.nodeType == Node.TEXT_NODE && n.startOffset == (r.textContent || "").length && r.nextSibling && (r = r.nextSibling), 
+                        if (r.nodeType == Node.TEXT_NODE && n.startOffset == (r.textContent || "").length && r.nextSibling && (r = r.nextSibling),
                         r.nodeType == Node.ELEMENT_NODE) {
                             var o = !1;
                             if (0 < r.childNodes.length && r.childNodes[n.startOffset]) {
                                 for (t = r.childNodes[n.startOffset]; t && t.nodeType == Node.TEXT_NODE && 0 === t.textContent.length; ) t = t.nextSibling;
-                                if (t && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t, 
+                                if (t && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t,
                                 o = !0), !o && 1 < r.childNodes.length && 0 < n.startOffset && r.childNodes[n.startOffset - 1]) {
                                     for (t = r.childNodes[n.startOffset - 1]; t && t.nodeType == Node.TEXT_NODE && 0 === t.textContent.length; ) t = t.nextSibling;
-                                    t && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t, 
+                                    t && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t,
                                     o = !0);
                                 }
-                            } else !n.collapsed && r.nextSibling && r.nextSibling.nodeType == Node.ELEMENT_NODE && (t = r.nextSibling) && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t, 
+                            } else !n.collapsed && r.nextSibling && r.nextSibling.nodeType == Node.ELEMENT_NODE && (t = r.nextSibling) && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t,
                             o = !0);
                             !o && 0 < r.childNodes.length && w(r.childNodes[0]).text().replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && [ "BR", "IMG", "HR" ].indexOf(r.childNodes[0].tagName) < 0 && (r = r.childNodes[0]);
                         }
@@ -11984,9 +12048,9 @@
                         var t, n = c(0), r = n.endContainer;
                         if (r.nodeType == Node.ELEMENT_NODE) {
                             var o = !1;
-                            0 < r.childNodes.length && r.childNodes[n.endOffset] && w(r.childNodes[n.endOffset]).text() === s() ? (r = r.childNodes[n.endOffset], 
-                            o = !0) : !n.collapsed && r.previousSibling && r.previousSibling.nodeType == Node.ELEMENT_NODE ? (t = r.previousSibling) && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t, 
-                            o = !0) : !n.collapsed && 0 < r.childNodes.length && r.childNodes[n.endOffset] && (t = r.childNodes[n.endOffset].previousSibling).nodeType == Node.ELEMENT_NODE && t && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t, 
+                            0 < r.childNodes.length && r.childNodes[n.endOffset] && w(r.childNodes[n.endOffset]).text() === s() ? (r = r.childNodes[n.endOffset],
+                            o = !0) : !n.collapsed && r.previousSibling && r.previousSibling.nodeType == Node.ELEMENT_NODE ? (t = r.previousSibling) && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t,
+                            o = !0) : !n.collapsed && 0 < r.childNodes.length && r.childNodes[n.endOffset] && (t = r.childNodes[n.endOffset].previousSibling).nodeType == Node.ELEMENT_NODE && t && t.textContent.replace(/\u200B/g, "") === s().replace(/\u200B/g, "") && (r = t,
                             o = !0), !o && 0 < r.childNodes.length && w(r.childNodes[r.childNodes.length - 1]).text() === s() && [ "BR", "IMG", "HR" ].indexOf(r.childNodes[r.childNodes.length - 1].tagName) < 0 && (r = r.childNodes[r.childNodes.length - 1]);
                         }
                         for (r.nodeType == Node.TEXT_NODE && 0 === n.endOffset && r.previousSibling && r.previousSibling.nodeType == Node.ELEMENT_NODE && (r = r.previousSibling); r.nodeType != Node.ELEMENT_NODE && r.parentNode; ) r = r.parentNode;
@@ -12043,23 +12107,23 @@
                         0 <= [ "TD", "TH" ].indexOf(t.get(0).tagName) && 1 == t.find(".fr-marker").length && (S.node.hasClass(r[0], "fr-marker") || "BR" == r[0].tagName && S.node.hasClass(r[0].nextElementSibling, "fr-marker")) && t.attr("data-del-cell", !0);
                         for (var o = 0; o < r.length; o++) {
                             var i = r[o];
-                            S.node.hasClass(i, "fr-marker") ? n = (n + 1) % 2 : n ? 0 < w(i).find(".fr-marker").length ? n = e(w(i), n) : [ "TD", "TH" ].indexOf(i.tagName) < 0 && !S.node.hasClass(i, "fr-inner") ? !S.opts.keepFormatOnDelete || 0 < S.$el.find("[data-first]").length || S.node.isVoid(i) ? w(i).remove() : $(i) : S.node.hasClass(i, "fr-inner") ? 0 === w(i).find(".fr-inner").length ? w(i).html("<br>") : w(i).find(".fr-inner").filter(O).html("<br>") : (w(i).empty(), 
+                            S.node.hasClass(i, "fr-marker") ? n = (n + 1) % 2 : n ? 0 < w(i).find(".fr-marker").length ? n = e(w(i), n) : [ "TD", "TH" ].indexOf(i.tagName) < 0 && !S.node.hasClass(i, "fr-inner") ? !S.opts.keepFormatOnDelete || 0 < S.$el.find("[data-first]").length || S.node.isVoid(i) ? w(i).remove() : $(i) : S.node.hasClass(i, "fr-inner") ? 0 === w(i).find(".fr-inner").length ? w(i).html("<br>") : w(i).find(".fr-inner").filter(O).html("<br>") : (w(i).empty(),
                             w(i).attr("data-del-cell", !0)) : 0 < w(i).find(".fr-marker").length && (n = e(w(i), n));
                         }
                         return n;
                     }(S.$el, 0);
                     var l = S.$el.find('[data-first="true"]');
-                    if (l.length) S.$el.find(".fr-marker").remove(), l.append(w.FE.INVISIBLE_SPACE + w.FE.MARKERS).removeAttr("data-first"), 
+                    if (l.length) S.$el.find(".fr-marker").remove(), l.append(w.FE.INVISIBLE_SPACE + w.FE.MARKERS).removeAttr("data-first"),
                     l.attr("data-text") && l.replaceWith(l.html()); else for (S.$el.find("table").filter(function() {
                         return 0 < w(this).find("[data-del-cell]").length && w(this).find("[data-del-cell]").length == w(this).find("td, th").length;
-                    }).remove(), S.$el.find("[data-del-cell]").removeAttr("data-del-cell"), o = S.$el.find('.fr-marker[data-type="true"]'), 
+                    }).remove(), S.$el.find("[data-del-cell]").removeAttr("data-del-cell"), o = S.$el.find('.fr-marker[data-type="true"]'),
                     t = 0; t < o.length; t++) {
                         var d = o[t], c = d.nextSibling, f = S.$el.find('.fr-marker[data-type="false"][data-id="' + w(d).data("id") + '"]').get(0);
                         if (f) {
                             if (d && (!c || c != f)) {
                                 var p = S.node.blockParent(d), u = S.node.blockParent(f), g = !1, h = !1;
-                                if (p && 0 <= [ "UL", "OL" ].indexOf(p.tagName) && (g = !(p = null)), u && 0 <= [ "UL", "OL" ].indexOf(u.tagName) && (h = !(u = null)), 
-                                w(d).after(f), p != u) if (null != p || g) if (null != u || h || 0 !== w(p).parentsUntil(S.$el, "table").length) p && u && 0 === w(p).parentsUntil(S.$el, "table").length && 0 === w(u).parentsUntil(S.$el, "table").length && 0 === w(p).find(u).length && 0 === w(u).find(p).length && (w(p).append(w(u).html()), 
+                                if (p && 0 <= [ "UL", "OL" ].indexOf(p.tagName) && (g = !(p = null)), u && 0 <= [ "UL", "OL" ].indexOf(u.tagName) && (h = !(u = null)),
+                                w(d).after(f), p != u) if (null != p || g) if (null != u || h || 0 !== w(p).parentsUntil(S.$el, "table").length) p && u && 0 === w(p).parentsUntil(S.$el, "table").length && 0 === w(u).parentsUntil(S.$el, "table").length && 0 === w(p).find(u).length && 0 === w(u).find(p).length && (w(p).append(w(u).html()),
                                 w(u).remove()); else {
                                     for (c = p; !c.nextSibling && c.parentNode != S.el; ) c = c.parentNode;
                                     for (c = c.nextSibling; c && "BR" != c.tagName; ) {
@@ -12069,18 +12133,18 @@
                                     c && "BR" == c.tagName && w(c).remove();
                                 } else {
                                     var E = S.node.deepestParent(d);
-                                    E ? (w(E).after(w(u).html()), w(u).remove()) : 0 === w(u).parentsUntil(S.$el, "table").length && (w(d).next().after(w(u).html()), 
+                                    E ? (w(E).after(w(u).html()), w(u).remove()) : 0 === w(u).parentsUntil(S.$el, "table").length && (w(d).next().after(w(u).html()),
                                     w(u).remove());
                                 }
                             }
                         } else f = w(d).clone().attr("data-type", !1), w(d).after(f);
                     }
                 }
-                S.$el.find("li:empty").remove(), S.opts.keepFormatOnDelete || S.html.fillEmptyBlocks(), 
-                S.html.cleanEmptyTags(!0), S.opts.htmlUntouched || (S.clean.lists(), S.$el.find("li:empty").append("<br>"), 
+                S.$el.find("li:empty").remove(), S.opts.keepFormatOnDelete || S.html.fillEmptyBlocks(),
+                S.html.cleanEmptyTags(!0), S.opts.htmlUntouched || (S.clean.lists(), S.$el.find("li:empty").append("<br>"),
                 S.spaces.normalize());
                 var v = S.$el.find(".fr-marker:last").get(0), b = S.$el.find(".fr-marker:first").get(0);
-                void 0 !== v && void 0 !== b && !v.nextSibling && b.previousSibling && "BR" == b.previousSibling.tagName && S.node.isElement(v.parentNode) && S.node.isElement(b.parentNode) && S.$el.append("<br>"), 
+                void 0 !== v && void 0 !== b && !v.nextSibling && b.previousSibling && "BR" == b.previousSibling.tagName && S.node.isElement(v.parentNode) && S.node.isElement(b.parentNode) && S.$el.append("<br>"),
                 C();
             },
             blocks: function() {
@@ -12089,10 +12153,10 @@
                     var r = c();
                     for (e = 0; e < r.length; e++) {
                         var o, i = r[e], a = f(i.startContainer, i.startOffset), s = f(i.endContainer, i.endOffset);
-                        (S.node.isBlock(a) || S.node.hasClass(a, "fr-inner")) && t.indexOf(a) < 0 && t.push(a), 
+                        (S.node.isBlock(a) || S.node.hasClass(a, "fr-inner")) && t.indexOf(a) < 0 && t.push(a),
                         (o = S.node.blockParent(a)) && t.indexOf(o) < 0 && t.push(o);
-                        for (var l = [], d = a; d !== s && d !== S.el; ) l.indexOf(d) < 0 && d.children && d.children.length ? (l.push(d), 
-                        d = d.children[0]) : d.nextSibling ? d = d.nextSibling : d.parentNode && (d = d.parentNode, 
+                        for (var l = [], d = a; d !== s && d !== S.el; ) l.indexOf(d) < 0 && d.children && d.children.length ? (l.push(d),
+                        d = d.children[0]) : d.nextSibling ? d = d.nextSibling : d.parentNode && (d = d.parentNode,
                         l.push(d)), S.node.isBlock(d) && l.indexOf(d) < 0 && t.indexOf(d) < 0 && (d !== s || 0 < i.endOffset) && t.push(d);
                         S.node.isBlock(s) && t.indexOf(s) < 0 && 0 < i.endOffset && t.push(s), (o = S.node.blockParent(s)) && t.indexOf(o) < 0 && t.push(o);
                     }
@@ -12106,13 +12170,13 @@
             setBefore: function(e, t) {
                 void 0 === t && (t = !0);
                 for (var n = e.previousSibling; n && n.nodeType == Node.TEXT_NODE && 0 === n.textContent.length; ) n = n.previousSibling;
-                return n ? (S.node.isBlock(n) ? i(n) : "BR" == n.tagName ? w(n).before(w.FE.MARKERS) : w(n).after(w.FE.MARKERS), 
+                return n ? (S.node.isBlock(n) ? i(n) : "BR" == n.tagName ? w(n).before(w.FE.MARKERS) : w(n).after(w.FE.MARKERS),
                 !0) : !!t && (S.node.isBlock(e) ? r(e) : w(e).before(w.FE.MARKERS), !0);
             },
             setAfter: function(e, t) {
                 void 0 === t && (t = !0);
                 for (var n = e.nextSibling; n && n.nodeType == Node.TEXT_NODE && 0 === n.textContent.length; ) n = n.nextSibling;
-                return n ? (S.node.isBlock(n) ? r(n) : w(n).before(w.FE.MARKERS), !0) : !!t && (S.node.isBlock(e) ? i(e) : w(e).after(w.FE.MARKERS), 
+                return n ? (S.node.isBlock(n) ? r(n) : w(n).before(w.FE.MARKERS), !0) : !!t && (S.node.isBlock(e) ? i(e) : w(e).after(w.FE.MARKERS),
                 !0);
             },
             rangeElement: f
@@ -12135,7 +12199,7 @@
             if (e.nodeType == Node.ELEMENT_NODE && e.getAttribute("class") && 0 <= e.getAttribute("class").indexOf("fr-marker")) return !1;
             var t, n = f.node.contents(e), r = [];
             for (t = 0; t < n.length; t++) n[t].nodeType != Node.ELEMENT_NODE || f.node.isVoid(n[t]) ? n[t].nodeType == Node.TEXT_NODE && (n[t].textContent = n[t].textContent.replace(/\u200b/g, "")) : n[t].textContent.replace(/\u200b/g, "").length != n[t].textContent.length && o(n[t]);
-            if (e.nodeType == Node.ELEMENT_NODE && !f.node.isVoid(e) && (e.normalize(), n = f.node.contents(e), 
+            if (e.nodeType == Node.ELEMENT_NODE && !f.node.isVoid(e) && (e.normalize(), n = f.node.contents(e),
             r = e.querySelectorAll(".fr-marker"), n.length - r.length == 0)) {
                 for (t = 0; t < n.length; t++) if (n[t].nodeType == Node.ELEMENT_NODE && (n[t].getAttribute("class") || "").indexOf("fr-marker") < 0) return !1;
                 for (t = 0; t < r.length; t++) e.parentNode.insertBefore(r[t].cloneNode(!0), e);
@@ -12189,7 +12253,7 @@
             }).replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, function(e) {
                 return a.push(e), "[FROALA.EDITOR.NOSCRIPT " + (a.length - 1) + "]";
             }).replace(/<meta((?:[\w\W]*?)) http-equiv="/g, '<meta$1 data-fr-http-equiv="').replace(/<img((?:[\w\W]*?)) src="/g, '<img$1 data-fr-src="'), o = null;
-            f.opts.fullPage && (r = f.html.extractNode(e, "body") || (0 <= e.indexOf("<body") ? "" : e), 
+            f.opts.fullPage && (r = f.html.extractNode(e, "body") || (0 <= e.indexOf("<body") ? "" : e),
             n && (o = f.html.extractNode(e, "head") || "")), r = d(r, t), o && (o = d(o, t));
             var i = function(e, t, n) {
                 if (f.opts.fullPage) {
@@ -12213,12 +12277,12 @@
             !function(e) {
                 if ("SPAN" == e.tagName && 0 <= (e.getAttribute("class") || "").indexOf("fr-marker")) return;
                 var t, n;
-                if ("PRE" == e.tagName && 0 <= (n = (t = e).innerHTML).indexOf("\n") && (t.innerHTML = n.replace(/\n/g, "<br>")), 
-                e.nodeType == Node.ELEMENT_NODE && (e.getAttribute("data-fr-src") && 0 !== e.getAttribute("data-fr-src").indexOf("blob:") && e.setAttribute("data-fr-src", f.helpers.sanitizeURL(E(e.getAttribute("data-fr-src")))), 
-                e.getAttribute("href") && e.setAttribute("href", f.helpers.sanitizeURL(E(e.getAttribute("href")))), 
-                e.getAttribute("src") && e.setAttribute("src", f.helpers.sanitizeURL(E(e.getAttribute("src")))), 
-                e.getAttribute("data") && e.setAttribute("data", f.helpers.sanitizeURL(E(e.getAttribute("data")))), 
-                0 <= [ "TABLE", "TBODY", "TFOOT", "TR" ].indexOf(e.tagName) && (e.innerHTML = e.innerHTML.trim())), 
+                if ("PRE" == e.tagName && 0 <= (n = (t = e).innerHTML).indexOf("\n") && (t.innerHTML = n.replace(/\n/g, "<br>")),
+                e.nodeType == Node.ELEMENT_NODE && (e.getAttribute("data-fr-src") && 0 !== e.getAttribute("data-fr-src").indexOf("blob:") && e.setAttribute("data-fr-src", f.helpers.sanitizeURL(E(e.getAttribute("data-fr-src")))),
+                e.getAttribute("href") && e.setAttribute("href", f.helpers.sanitizeURL(E(e.getAttribute("href")))),
+                e.getAttribute("src") && e.setAttribute("src", f.helpers.sanitizeURL(E(e.getAttribute("src")))),
+                e.getAttribute("data") && e.setAttribute("data", f.helpers.sanitizeURL(E(e.getAttribute("data")))),
+                0 <= [ "TABLE", "TBODY", "TFOOT", "TR" ].indexOf(e.tagName) && (e.innerHTML = e.innerHTML.trim())),
                 !f.opts.pasteAllowLocalImages && e.nodeType == Node.ELEMENT_NODE && "IMG" == e.tagName && e.getAttribute("data-fr-src") && 0 === e.getAttribute("data-fr-src").indexOf("file://")) return e.parentNode.removeChild(e);
                 if (e.nodeType == Node.ELEMENT_NODE && w.FE.HTML5Map[e.tagName] && "" === f.node.attributes(e)) {
                     var r = w.FE.HTML5Map[e.tagName], o = "<" + r + ">" + e.innerHTML + "</" + r + ">";
@@ -12232,7 +12296,7 @@
                     var i = e.attributes;
                     if (i) for (var a = i.length - 1; 0 <= a; a--) {
                         var s = i[a], l = s.nodeName.match(g), d = null;
-                        "style" == s.nodeName && f.opts.htmlAllowedStyleProps.length && (d = s.value.match(h)), 
+                        "style" == s.nodeName && f.opts.htmlAllowedStyleProps.length && (d = s.value.match(h)),
                         l && d ? s.value = m(d.join(";")) : l && ("style" != s.nodeName || d) || e.removeAttribute(s.nodeName);
                     }
                 } else 0 !== e.data.indexOf("[FROALA.EDITOR") && e.parentNode.removeChild(e);
@@ -12248,9 +12312,9 @@
                 for (o = 0; o < t.length; o++) 0 <= i.indexOf(t[o]) && i.splice(i.indexOf(t[o]), 1);
                 var a = w.merge([], f.opts.htmlAllowedAttrs);
                 for (o = 0; o < n.length; o++) 0 <= a.indexOf(n[o]) && a.splice(a.indexOf(n[o]), 1);
-                return a.push("data-fr-.*"), a.push("fr-.*"), p = new RegExp("^" + i.join("$|^") + "$", "gi"), 
-                g = new RegExp("^" + a.join("$|^") + "$", "gi"), u = new RegExp("^" + f.opts.htmlRemoveTags.join("$|^") + "$", "gi"), 
-                h = f.opts.htmlAllowedStyleProps.length ? new RegExp("((^|;|\\s)" + f.opts.htmlAllowedStyleProps.join(":.+?(?=;|$))|((^|;|\\s)") + ":.+?(?=(;)|$))", "gi") : null, 
+                return a.push("data-fr-.*"), a.push("fr-.*"), p = new RegExp("^" + i.join("$|^") + "$", "gi"),
+                g = new RegExp("^" + a.join("$|^") + "$", "gi"), u = new RegExp("^" + f.opts.htmlRemoveTags.join("$|^") + "$", "gi"),
+                h = f.opts.htmlAllowedStyleProps.length ? new RegExp("((^|;|\\s)" + f.opts.htmlAllowedStyleProps.join(":.+?(?=;|$))|((^|;|\\s)") + ":.+?(?=(;)|$))", "gi") : null,
                 e = c(e, v, !0);
             },
             toHTML5: function() {
@@ -12272,7 +12336,7 @@
                         if (!1 !== r && 0 !== n.length) {
                             for (var i = e[t]; i && "TABLE" != i.tagName && "THEAD" != i.tagName; ) i = i.parentNode;
                             var a = i;
-                            "THEAD" != a.tagName && (a = f.doc.createElement("THEAD"), i.insertBefore(a, i.firstChild)), 
+                            "THEAD" != a.tagName && (a = f.doc.createElement("THEAD"), i.insertBefore(a, i.firstChild)),
                             a.appendChild(e[t]);
                         }
                     }
@@ -12302,7 +12366,7 @@
                         }
                     }
                 }(), function() {
-                    for (var e = f.el.querySelectorAll("ul, ol"), t = 0; t < e.length; t++) for (var n = f.node.contents(e[t]), r = null, o = n.length - 1; 0 <= o; o--) "LI" != n[o].tagName && "UL" != n[o].tagName && "OL" != n[o].tagName ? (r || (r = w("<li>")).insertBefore(n[o]), 
+                    for (var e = f.el.querySelectorAll("ul, ol"), t = 0; t < e.length; t++) for (var n = f.node.contents(e[t]), r = null, o = n.length - 1; 0 <= o; o--) "LI" != n[o].tagName && "UL" != n[o].tagName && "OL" != n[o].tagName ? (r || (r = w("<li>")).insertBefore(n[o]),
                     r.prepend(n[o])) : r = null;
                 }(), function() {
                     var e, t, n;
@@ -12351,15 +12415,15 @@
         function r(e, t) {
             var n = e.previousSibling, r = e.nextSibling, o = e.textContent, i = e.parentNode;
             if (!l.html.isPreformatted(i)) {
-                t && (o = o.replace(/[\f\n\r\t\v ]{2,}/g, " "), r && "BR" !== r.tagName && !l.node.isBlock(r) || !(l.node.isBlock(i) || l.node.isLink(i) && !i.nextSibling || l.node.isElement(i)) || (o = o.replace(/[\f\n\r\t\v ]{1,}$/g, "")), 
-                n && "BR" !== n.tagName && !l.node.isBlock(n) || !(l.node.isBlock(i) || l.node.isLink(i) && !i.previousSibling || l.node.isElement(i)) || (o = o.replace(/^[\f\n\r\t\v ]{1,}/g, "")), 
-                (l.node.isBlock(r) || l.node.isBlock(n)) && (o = o.replace(/^[\f\n\r\t\v ]{1,}/g, "")), 
-                " " === o && (n && l.node.isVoid(n) || r && l.node.isVoid(r)) && !(n && r && l.node.isVoid(n) || r && n && l.node.isVoid(r)) && (o = "")), 
-                (!n && l.node.isBlock(r) || !r && l.node.isBlock(n)) && l.node.isBlock(i) && i !== l.el && (o = o.replace(/^[\f\n\r\t\v ]{1,}/g, "")), 
+                t && (o = o.replace(/[\f\n\r\t\v ]{2,}/g, " "), r && "BR" !== r.tagName && !l.node.isBlock(r) || !(l.node.isBlock(i) || l.node.isLink(i) && !i.nextSibling || l.node.isElement(i)) || (o = o.replace(/[\f\n\r\t\v ]{1,}$/g, "")),
+                n && "BR" !== n.tagName && !l.node.isBlock(n) || !(l.node.isBlock(i) || l.node.isLink(i) && !i.previousSibling || l.node.isElement(i)) || (o = o.replace(/^[\f\n\r\t\v ]{1,}/g, "")),
+                (l.node.isBlock(r) || l.node.isBlock(n)) && (o = o.replace(/^[\f\n\r\t\v ]{1,}/g, "")),
+                " " === o && (n && l.node.isVoid(n) || r && l.node.isVoid(r)) && !(n && r && l.node.isVoid(n) || r && n && l.node.isVoid(r)) && (o = "")),
+                (!n && l.node.isBlock(r) || !r && l.node.isBlock(n)) && l.node.isBlock(i) && i !== l.el && (o = o.replace(/^[\f\n\r\t\v ]{1,}/g, "")),
                 t || (o = o.replace(new RegExp(w.FE.UNICODE_NBSP, "g"), " "));
                 for (var a = "", s = 0; s < o.length; s++) 32 != o.charCodeAt(s) || 0 !== s && 32 != a.charCodeAt(s - 1) || n && r && l.node.isVoid(n) || n && r && l.node.isVoid(r) ? a += o[s] : a += w.FE.UNICODE_NBSP;
-                (!r || r && l.node.isBlock(r) || r && r.nodeType == Node.ELEMENT_NODE && l.win.getComputedStyle(r) && "block" == l.win.getComputedStyle(r).display) && (l.node.isVoid(n) || (a = a.replace(/ $/, w.FE.UNICODE_NBSP))), 
-                !n || l.node.isVoid(n) || l.node.isBlock(n) || 1 !== (a = a.replace(/^\u00A0([^ $])/, " $1")).length || 160 !== a.charCodeAt(0) || !r || l.node.isVoid(r) || l.node.isBlock(r) || l.node.hasClass(n, "fr-marker") && l.node.hasClass(r, "fr-marker") || (a = " "), 
+                (!r || r && l.node.isBlock(r) || r && r.nodeType == Node.ELEMENT_NODE && l.win.getComputedStyle(r) && "block" == l.win.getComputedStyle(r).display) && (l.node.isVoid(n) || (a = a.replace(/ $/, w.FE.UNICODE_NBSP))),
+                !n || l.node.isVoid(n) || l.node.isBlock(n) || 1 !== (a = a.replace(/^\u00A0([^ $])/, " $1")).length || 160 !== a.charCodeAt(0) || !r || l.node.isVoid(r) || l.node.isBlock(r) || l.node.hasClass(n, "fr-marker") && l.node.hasClass(r, "fr-marker") || (a = " "),
                 t || (a = a.replace(/([^ \u00A0])\u00A0([^ \u00A0])/g, "$1 $2")), e.textContent != a && (e.textContent = a);
             }
         }
@@ -12384,8 +12448,8 @@
                 for (var s = 0; s < e.length; s++) d(e[s]);
             }
         };
-    }, w.FE.UNICODE_NBSP = String.fromCharCode(160), w.FE.VOID_ELEMENTS = [ "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen", "link", "menuitem", "meta", "param", "source", "track", "wbr" ], 
-    w.FE.BLOCK_TAGS = [ "address", "article", "aside", "audio", "blockquote", "canvas", "details", "dd", "div", "dl", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav", "noscript", "ol", "output", "p", "pre", "section", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul", "video" ], 
+    }, w.FE.UNICODE_NBSP = String.fromCharCode(160), w.FE.VOID_ELEMENTS = [ "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen", "link", "menuitem", "meta", "param", "source", "track", "wbr" ],
+    w.FE.BLOCK_TAGS = [ "address", "article", "aside", "audio", "blockquote", "canvas", "details", "dd", "div", "dl", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav", "noscript", "ol", "output", "p", "pre", "section", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul", "video" ],
     w.extend(w.FE.DEFAULTS, {
         htmlAllowedEmptyTags: [ "textarea", "a", "iframe", "object", "video", "style", "script", ".fa", ".fr-emoticon", ".fr-inner", "path", "line" ],
         htmlDoNotWrapTags: [ "script", "style" ],
@@ -12407,13 +12471,13 @@
                     var i = F.node.blockParent(o[t]) || o[t];
                     if (i) {
                         var a = i.nextSibling, s = i.previousSibling;
-                        i && r.indexOf(i) < 0 && F.node.isBlock(i) && r.push(i), s && F.node.isBlock(s) && r.indexOf(s) < 0 && r.push(s), 
+                        i && r.indexOf(i) < 0 && F.node.isBlock(i) && r.push(i), s && F.node.isBlock(s) && r.indexOf(s) < 0 && r.push(s),
                         a && F.node.isBlock(a) && r.indexOf(a) < 0 && r.push(a);
                     }
                 }
             } else r = F.el.querySelectorAll(p());
             var l = p();
-            for (l += "," + w.FE.VOID_ELEMENTS.join(","), l += ", .fr-inner", l += "," + F.opts.htmlAllowedEmptyTags.join(":not(.fr-marker),") + ":not(.fr-marker)", 
+            for (l += "," + w.FE.VOID_ELEMENTS.join(","), l += ", .fr-inner", l += "," + F.opts.htmlAllowedEmptyTags.join(":not(.fr-marker),") + ":not(.fr-marker)",
             t = r.length - 1; 0 <= t; t--) if (!(r[t].textContent && 0 < r[t].textContent.replace(/\u200B|\n/g, "").length || 0 < r[t].querySelectorAll(l).length)) {
                 for (var d = F.node.contents(r[t]), c = !1, f = 0; f < d.length; f++) if (d[f].nodeType != Node.COMMENT_NODE && d[f].textContent && 0 < d[f].textContent.replace(/\u200B|\n/g, "").length) {
                     c = !0;
@@ -12428,11 +12492,11 @@
         }
         function e(e) {
             var t, n, r = w.merge([], w.FE.VOID_ELEMENTS);
-            r = w.merge(r, F.opts.htmlAllowedEmptyTags), r = void 0 === e ? w.merge(r, w.FE.BLOCK_TAGS) : w.merge(r, w.FE.NO_DELETE_TAGS), 
+            r = w.merge(r, F.opts.htmlAllowedEmptyTags), r = void 0 === e ? w.merge(r, w.FE.BLOCK_TAGS) : w.merge(r, w.FE.NO_DELETE_TAGS),
             t = F.el.querySelectorAll("*:empty:not(" + r.join("):not(") + "):not(.fr-marker)");
             do {
                 n = !1;
-                for (var o = 0; o < t.length; o++) 0 !== t[o].attributes.length && void 0 === t[o].getAttribute("href") || (t[o].parentNode.removeChild(t[o]), 
+                for (var o = 0; o < t.length; o++) 0 !== t[o].attributes.length && void 0 === t[o].getAttribute("href") || (t[o].parentNode.removeChild(t[o]),
                 n = !0);
                 t = F.el.querySelectorAll("*:empty:not(" + r.join("):not(") + "):not(.fr-marker)");
             } while (t.length && n);
@@ -12442,16 +12506,16 @@
             if (t && (n = "div"), n) {
                 for (var r = F.doc.createDocumentFragment(), o = null, i = !1, a = e.firstChild, s = !1; a; ) {
                     var l = a.nextSibling;
-                    if (a.nodeType == Node.ELEMENT_NODE && (F.node.isBlock(a) || 0 <= F.opts.htmlDoNotWrapTags.indexOf(a.tagName.toLowerCase()) && !F.node.hasClass(a, "fr-marker"))) o = null, 
-                    r.appendChild(a.cloneNode(!0)); else if (a.nodeType != Node.ELEMENT_NODE && a.nodeType != Node.TEXT_NODE) o = null, 
-                    r.appendChild(a.cloneNode(!0)); else if ("BR" == a.tagName) null == o ? (o = F.doc.createElement(n), 
-                    s = !0, t && (o.setAttribute("class", "fr-temp-div"), o.setAttribute("data-empty", !0)), 
-                    o.appendChild(a.cloneNode(!0)), r.appendChild(o)) : !1 === i && (o.appendChild(F.doc.createElement("br")), 
-                    t && (o.setAttribute("class", "fr-temp-div"), o.setAttribute("data-empty", !0))), 
+                    if (a.nodeType == Node.ELEMENT_NODE && (F.node.isBlock(a) || 0 <= F.opts.htmlDoNotWrapTags.indexOf(a.tagName.toLowerCase()) && !F.node.hasClass(a, "fr-marker"))) o = null,
+                    r.appendChild(a.cloneNode(!0)); else if (a.nodeType != Node.ELEMENT_NODE && a.nodeType != Node.TEXT_NODE) o = null,
+                    r.appendChild(a.cloneNode(!0)); else if ("BR" == a.tagName) null == o ? (o = F.doc.createElement(n),
+                    s = !0, t && (o.setAttribute("class", "fr-temp-div"), o.setAttribute("data-empty", !0)),
+                    o.appendChild(a.cloneNode(!0)), r.appendChild(o)) : !1 === i && (o.appendChild(F.doc.createElement("br")),
+                    t && (o.setAttribute("class", "fr-temp-div"), o.setAttribute("data-empty", !0))),
                     o = null; else {
                         var d = a.textContent;
-                        a.nodeType !== Node.TEXT_NODE || 0 < d.replace(/\n/g, "").replace(/(^ *)|( *$)/g, "").length || d.replace(/(^ *)|( *$)/g, "").length && d.indexOf("\n") < 0 ? (null == o && (o = F.doc.createElement(n), 
-                        s = !0, t && o.setAttribute("class", "fr-temp-div"), r.appendChild(o), i = !1), 
+                        a.nodeType !== Node.TEXT_NODE || 0 < d.replace(/\n/g, "").replace(/(^ *)|( *$)/g, "").length || d.replace(/(^ *)|( *$)/g, "").length && d.indexOf("\n") < 0 ? (null == o && (o = F.doc.createElement(n),
+                        s = !0, t && o.setAttribute("class", "fr-temp-div"), r.appendChild(o), i = !1),
                         o.appendChild(a.cloneNode(!0)), i || F.node.hasClass(a, "fr-marker") || a.nodeType == Node.TEXT_NODE && 0 === d.replace(/ /g, "").length || (i = !0)) : s = !0;
                     }
                     a = l;
@@ -12464,11 +12528,11 @@
         }
         function t(e, t, n, r, o) {
             if (!F.$wp) return !1;
-            void 0 === e && (e = !1), void 0 === t && (t = !1), void 0 === n && (n = !1), void 0 === r && (r = !1), 
+            void 0 === e && (e = !1), void 0 === t && (t = !1), void 0 === n && (n = !1), void 0 === r && (r = !1),
             void 0 === o && (o = !1);
             var i = F.$wp.scrollTop();
-            a(F.el, e), r && l(F.el.querySelectorAll(".fr-inner"), e), t && l(F.el.querySelectorAll("td, th"), e), 
-            n && l(F.el.querySelectorAll("blockquote"), e), o && l(F.el.querySelectorAll("li"), e), 
+            a(F.el, e), r && l(F.el.querySelectorAll(".fr-inner"), e), t && l(F.el.querySelectorAll("td, th"), e),
+            n && l(F.el.querySelectorAll("blockquote"), e), o && l(F.el.querySelectorAll("li"), e),
             i != F.$wp.scrollTop() && F.$wp.scrollTop(i);
         }
         function n(e) {
@@ -12481,7 +12545,7 @@
                     var r = F.node.isBlock(n.parentNode) || F.node.isElement(n.parentNode), o = n.textContent.replace(/(?!^)( ){2,}(?!$)/g, " ").replace(/\n/g, " ").replace(/^[ ]{2,}/g, " ").replace(/[ ]{2,}$/g, " ");
                     if (r) {
                         var i = n.previousSibling, a = n.nextSibling;
-                        i && a && " " == o ? o = F.node.isBlock(i) && F.node.isBlock(a) ? "" : " " : (i || (o = o.replace(/^ */, "")), 
+                        i && a && " " == o ? o = F.node.isBlock(i) && F.node.isBlock(a) ? "" : " " : (i || (o = o.replace(/^ */, "")),
                         a || (o = o.replace(/ *$/, "")));
                     }
                     n.textContent = o;
@@ -12494,7 +12558,7 @@
         }
         function k(e) {
             var t = e.doctype, n = "<!DOCTYPE html>";
-            return t && (n = "<!DOCTYPE " + t.name + (t.publicId ? ' PUBLIC "' + t.publicId + '"' : "") + (!t.publicId && t.systemId ? " SYSTEM" : "") + (t.systemId ? ' "' + t.systemId + '"' : "") + ">"), 
+            return t && (n = "<!DOCTYPE " + t.name + (t.publicId ? ' PUBLIC "' + t.publicId + '"' : "") + (!t.publicId && t.systemId ? " SYSTEM" : "") + (t.systemId ? ' "' + t.systemId + '"' : "") + ">"),
             n;
         }
         function d(e) {
@@ -12506,13 +12570,13 @@
             } else !t || F.node.isBlock(t) || F.node.isElement(t) || e.previousSibling || e.nextSibling || !F.node.isDeletable(e.parentNode) || d(e.parentNode);
         }
         function u() {
-            F.opts.htmlUntouched || (e(), t(), n(), F.spaces.normalize(null, !0), F.html.fillEmptyBlocks(), 
-            F.clean.lists(), F.clean.tables(), F.clean.toHTML5(), F.html.cleanBRs()), F.selection.restore(), 
+            F.opts.htmlUntouched || (e(), t(), n(), F.spaces.normalize(null, !0), F.html.fillEmptyBlocks(),
+            F.clean.lists(), F.clean.tables(), F.clean.toHTML5(), F.html.cleanBRs()), F.selection.restore(),
             o(), F.placeholder.refresh();
         }
         function o() {
-            F.node.isEmpty(F.el) && (null != c() ? F.el.querySelector(p()) || F.el.querySelector(F.opts.htmlDoNotWrapTags.join(":not(.fr-marker),") + ":not(.fr-marker)") || (F.core.hasFocus() ? (F.$el.html("<" + c() + ">" + w.FE.MARKERS + "<br/></" + c() + ">"), 
-            F.selection.restore()) : F.$el.html("<" + c() + "><br/></" + c() + ">")) : F.el.querySelector("*:not(.fr-marker):not(br)") || (F.core.hasFocus() ? (F.$el.html(w.FE.MARKERS + "<br/>"), 
+            F.node.isEmpty(F.el) && (null != c() ? F.el.querySelector(p()) || F.el.querySelector(F.opts.htmlDoNotWrapTags.join(":not(.fr-marker),") + ":not(.fr-marker)") || (F.core.hasFocus() ? (F.$el.html("<" + c() + ">" + w.FE.MARKERS + "<br/></" + c() + ">"),
+            F.selection.restore()) : F.$el.html("<" + c() + "><br/></" + c() + ">")) : F.el.querySelector("*:not(.fr-marker):not(br)") || (F.core.hasFocus() ? (F.$el.html(w.FE.MARKERS + "<br/>"),
             F.selection.restore()) : F.$el.html("<br/>")));
         }
         function g(e, t) {
@@ -12535,8 +12599,8 @@
             return n += ((e = (e = e.replace(/[\*\s\+>~]/g, " ")).replace(/[#\.]/g, " ")).match(/([^\s\+>~\.\[:]+)/g) || []).length;
         }
         function M(e) {
-            if (F.events.trigger("html.processGet", [ e ]), e && e.getAttribute && "" === e.getAttribute("class") && e.removeAttribute("class"), 
-            e && e.getAttribute && "" === e.getAttribute("style") && e.removeAttribute("style"), 
+            if (F.events.trigger("html.processGet", [ e ]), e && e.getAttribute && "" === e.getAttribute("class") && e.removeAttribute("class"),
+            e && e.getAttribute && "" === e.getAttribute("style") && e.removeAttribute("style"),
             e && e.nodeType == Node.ELEMENT_NODE) {
                 var t, n = e.querySelectorAll('[class=""],[style=""]');
                 for (t = 0; t < n.length; t++) {
@@ -12567,7 +12631,7 @@
                     var a = n[i];
                     if (t != a) {
                         var s = a.textContent;
-                        0 === a.children.length && 1 === s.length && 8203 == s.charCodeAt(0) && "TD" !== a.tagName && (w(a).remove(), 
+                        0 === a.children.length && 1 === s.length && 8203 == s.charCodeAt(0) && "TD" !== a.tagName && (w(a).remove(),
                         r = !0);
                     }
                 }
@@ -12610,14 +12674,14 @@
                         return this.nodeType == Node.COMMENT_NODE ? "\x3c!--" + this.nodeValue + "--\x3e" : 0 <= [ "BASE", "LINK", "META", "NOSCRIPT", "SCRIPT", "STYLE", "TEMPLATE", "TITLE" ].indexOf(this.tagName) ? this.outerHTML : "";
                     }).toArray().join("");
                     var c = m(o), f = h(o, "html");
-                    E(F.$el, d + "\n" + i), F.node.clearAttributes(F.el), F.$el.attr(a), F.$el.addClass("fr-view"), 
-                    F.$el.attr("spellcheck", F.opts.spellcheck), F.$el.attr("dir", F.opts.direction), 
-                    E(F.$head, s), F.node.clearAttributes(F.$head.get(0)), F.$head.attr(l), F.node.clearAttributes(F.$html.get(0)), 
-                    F.$html.attr(f), F.iframe_document.doctype.parentNode.replaceChild((t = c, n = F.iframe_document, 
+                    E(F.$el, d + "\n" + i), F.node.clearAttributes(F.el), F.$el.attr(a), F.$el.addClass("fr-view"),
+                    F.$el.attr("spellcheck", F.opts.spellcheck), F.$el.attr("dir", F.opts.direction),
+                    E(F.$head, s), F.node.clearAttributes(F.$head.get(0)), F.$head.attr(l), F.node.clearAttributes(F.$html.get(0)),
+                    F.$html.attr(f), F.iframe_document.doctype.parentNode.replaceChild((t = c, n = F.iframe_document,
                     (r = t.match(/<!DOCTYPE ?([^ ]*) ?([^ ]*) ?"?([^"]*)"? ?"?([^"]*)"?>/i)) ? n.implementation.createDocumentType(r[1], r[3], r[4]) : n.implementation.createDocumentType("html")), F.iframe_document.doctype);
                 } else E(F.$el, o);
                 var p = F.edit.isDisabled();
-                F.edit.on(), F.core.injectStyle(F.opts.iframeDefaultStyle + F.opts.iframeStyle), 
+                F.edit.on(), F.core.injectStyle(F.opts.iframeDefaultStyle + F.opts.iframeStyle),
                 u(), F.opts.useClasses || (F.$el.find("[fr-original-class]").each(function() {
                     this.setAttribute("class", this.getAttribute("fr-original-class")), this.removeAttribute("fr-original-class");
                 }), F.$el.find("[fr-original-style]").each(function() {
@@ -12645,12 +12709,12 @@
                                 g = [];
                             }
                             for (o = 0; o < g.length; o++) {
-                                !g[o].getAttribute("fr-original-style") && g[o].getAttribute("style") ? (g[o].setAttribute("fr-original-style", g[o].getAttribute("style")), 
-                                i.push(g[o])) : g[o].getAttribute("fr-original-style") || (g[o].setAttribute("fr-original-style", ""), 
+                                !g[o].getAttribute("fr-original-style") && g[o].getAttribute("style") ? (g[o].setAttribute("fr-original-style", g[o].getAttribute("style")),
+                                i.push(g[o])) : g[o].getAttribute("fr-original-style") || (g[o].setAttribute("fr-original-style", ""),
                                 i.push(g[o])), a[g[o]] || (a[g[o]] = {});
                                 for (var m = 1e3 * f + D(c[p].selectorText), E = c[p].style.cssText.split(";"), v = 0; v < E.length; v++) {
                                     var b = E[v].trim().split(":")[0];
-                                    if (b && !b.match(d) && (a[g[o]][b] || (a[g[o]][b] = 0) <= (g[o].getAttribute("fr-original-style") || "").indexOf(b + ":") && (a[g[o]][b] = 1e4), 
+                                    if (b && !b.match(d) && (a[g[o]][b] || (a[g[o]][b] = 0) <= (g[o].getAttribute("fr-original-style") || "").indexOf(b + ":") && (a[g[o]][b] = 1e4),
                                     m >= a[g[o]][b] && (a[g[o]][b] = m, E[v].trim().length))) {
                                         var S = E[v].trim().split(":");
                                         S.splice(0, 1), s.push([ g[o], b.trim(), S.join(":").trim(), m ]);
@@ -12663,7 +12727,7 @@
                         var T = s[r];
                         T[0].style[T[1]] = T[2];
                     }
-                    for (r = 0; r < i.length; r++) if (i[r].getAttribute("class") && (i[r].setAttribute("fr-original-class", i[r].getAttribute("class")), 
+                    for (r = 0; r < i.length; r++) if (i[r].getAttribute("class") && (i[r].setAttribute("fr-original-class", i[r].getAttribute("class")),
                     i[r].removeAttribute("class")), 0 < (i[r].getAttribute("fr-original-style") || "").trim().length) {
                         var y = i[r].getAttribute("fr-original-style").split(";");
                         for (o = 0; o < y.length; o++) if (0 < y[o].indexOf(":")) {
@@ -12672,21 +12736,21 @@
                         }
                     }
                 }
-                if (F.node.isEmpty(F.el)) F.opts.fullPage && (n = k(F.iframe_document), n += "<html" + F.node.attributes(F.$html.get(0)) + ">" + F.$html.find("head").get(0).outerHTML + "<body></body></html>"); else if (void 0 === e && (e = !1), 
+                if (F.node.isEmpty(F.el)) F.opts.fullPage && (n = k(F.iframe_document), n += "<html" + F.node.attributes(F.$html.get(0)) + ">" + F.$html.find("head").get(0).outerHTML + "<body></body></html>"); else if (void 0 === e && (e = !1),
                 F.opts.fullPage) {
                     n = k(F.iframe_document), F.$el.removeClass("fr-view");
                     var A = F.opts.heightMin, x = F.opts.height, $ = F.opts.heightMax;
-                    F.opts.heightMin = null, F.opts.height = null, F.opts.heightMax = null, F.size.refresh(), 
-                    n += "<html" + F.node.attributes(F.$html.get(0)) + ">" + F.$html.html() + "</html>", 
-                    F.opts.heightMin = A, F.opts.height = x, F.opts.heightMax = $, F.size.refresh(), 
+                    F.opts.heightMin = null, F.opts.height = null, F.opts.heightMax = null, F.size.refresh(),
+                    n += "<html" + F.node.attributes(F.$html.get(0)) + ">" + F.$html.html() + "</html>",
+                    F.opts.heightMin = A, F.opts.height = x, F.opts.heightMax = $, F.size.refresh(),
                     F.$el.addClass("fr-view");
                 } else n = F.$el.html();
-                if (!F.opts.useClasses && !t) for (r = 0; r < i.length; r++) i[r].getAttribute("fr-original-class") && (i[r].setAttribute("class", i[r].getAttribute("fr-original-class")), 
-                i[r].removeAttribute("fr-original-class")), null != i[r].getAttribute("fr-original-style") && void 0 !== i[r].getAttribute("fr-original-style") ? (0 !== i[r].getAttribute("fr-original-style").length ? i[r].setAttribute("style", i[r].getAttribute("fr-original-style")) : i[r].removeAttribute("style"), 
+                if (!F.opts.useClasses && !t) for (r = 0; r < i.length; r++) i[r].getAttribute("fr-original-class") && (i[r].setAttribute("class", i[r].getAttribute("fr-original-class")),
+                i[r].removeAttribute("fr-original-class")), null != i[r].getAttribute("fr-original-style") && void 0 !== i[r].getAttribute("fr-original-style") ? (0 !== i[r].getAttribute("fr-original-style").length ? i[r].setAttribute("style", i[r].getAttribute("fr-original-style")) : i[r].removeAttribute("style"),
                 i[r].removeAttribute("fr-original-style")) : i[r].removeAttribute("style");
-                F.opts.fullPage && (n = (n = (n = (n = (n = (n = (n = (n = n.replace(/<style data-fr-style="true">(?:[\w\W]*?)<\/style>/g, "")).replace(/<link([^>]*)data-fr-style="true"([^>]*)>/g, "")).replace(/<style(?:[\w\W]*?)class="firebugResetStyles"(?:[\w\W]*?)>(?:[\w\W]*?)<\/style>/g, "")).replace(/<body((?:[\w\W]*?)) spellcheck="true"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$2>$3</body>")).replace(/<body((?:[\w\W]*?)) contenteditable="(true|false)"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$3>$4</body>")).replace(/<body((?:[\w\W]*?)) dir="([\w]*)"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$3>$4</body>")).replace(/<body((?:[\w\W]*?))class="([\w\W]*?)(fr-rtl|fr-ltr)([\w\W]*?)"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, '<body$1class="$2$4"$5>$6</body>')).replace(/<body((?:[\w\W]*?)) class=""((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$2>$3</body>")), 
-                F.opts.htmlSimpleAmpersand && (n = n.replace(/\&amp;/gi, "&")), F.events.trigger("html.afterGet"), 
-                e || (n = n.replace(/<span[^>]*? class\s*=\s*["']?fr-marker["']?[^>]+>\u200b<\/span>/gi, "")), 
+                F.opts.fullPage && (n = (n = (n = (n = (n = (n = (n = (n = n.replace(/<style data-fr-style="true">(?:[\w\W]*?)<\/style>/g, "")).replace(/<link([^>]*)data-fr-style="true"([^>]*)>/g, "")).replace(/<style(?:[\w\W]*?)class="firebugResetStyles"(?:[\w\W]*?)>(?:[\w\W]*?)<\/style>/g, "")).replace(/<body((?:[\w\W]*?)) spellcheck="true"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$2>$3</body>")).replace(/<body((?:[\w\W]*?)) contenteditable="(true|false)"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$3>$4</body>")).replace(/<body((?:[\w\W]*?)) dir="([\w]*)"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$3>$4</body>")).replace(/<body((?:[\w\W]*?))class="([\w\W]*?)(fr-rtl|fr-ltr)([\w\W]*?)"((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, '<body$1class="$2$4"$5>$6</body>')).replace(/<body((?:[\w\W]*?)) class=""((?:[\w\W]*?))>((?:[\w\W]*?))<\/body>/g, "<body$1$2>$3</body>")),
+                F.opts.htmlSimpleAmpersand && (n = n.replace(/\&amp;/gi, "&")), F.events.trigger("html.afterGet"),
+                e || (n = n.replace(/<span[^>]*? class\s*=\s*["']?fr-marker["']?[^>]+>\u200b<\/span>/gi, "")),
                 n = F.clean.invisibleSpaces(n), n = F.clean.exec(n, M);
                 var O = F.events.chainTrigger("html.get", n);
                 return "string" == typeof O && (n = O), n = (n = n.replace(/<pre(?:[\w\W]*?)>(?:[\w\W]*?)<\/pre>/g, function(e) {
@@ -12695,18 +12759,18 @@
             },
             getSelected: function() {
                 var e, t, n = function(e, t) {
-                    for (;t && (t.nodeType == Node.TEXT_NODE || !F.node.isBlock(t)) && !F.node.isElement(t) && !F.node.hasClass(t, "fr-inner"); ) t && t.nodeType != Node.TEXT_NODE && w(e).wrapInner(F.node.openTagString(t) + F.node.closeTagString(t)), 
+                    for (;t && (t.nodeType == Node.TEXT_NODE || !F.node.isBlock(t)) && !F.node.isElement(t) && !F.node.hasClass(t, "fr-inner"); ) t && t.nodeType != Node.TEXT_NODE && w(e).wrapInner(F.node.openTagString(t) + F.node.closeTagString(t)),
                     t = t.parentNode;
                     t && e.innerHTML == t.innerHTML ? e.innerHTML = t.outerHTML : -1 != t.innerText.indexOf(e.innerHTML) && (e.innerHTML = F.node.openTagString(t) + e.innerHTML + F.node.closeTagString(t));
                 }, r = "";
                 if ("undefined" != typeof F.win.getSelection) {
-                    F.browser.mozilla && (F.selection.save(), 1 < F.$el.find('.fr-marker[data-type="false"]').length && (F.$el.find('.fr-marker[data-type="false"][data-id="0"]').remove(), 
-                    F.$el.find('.fr-marker[data-type="false"]:last').attr("data-id", "0"), F.$el.find(".fr-marker").not('[data-id="0"]').remove()), 
+                    F.browser.mozilla && (F.selection.save(), 1 < F.$el.find('.fr-marker[data-type="false"]').length && (F.$el.find('.fr-marker[data-type="false"][data-id="0"]').remove(),
+                    F.$el.find('.fr-marker[data-type="false"]:last').attr("data-id", "0"), F.$el.find(".fr-marker").not('[data-id="0"]').remove()),
                     F.selection.restore());
                     for (var o = F.selection.ranges(), i = 0; i < o.length; i++) {
                         var a = document.createElement("div");
-                        a.appendChild(o[i].cloneContents()), n(a, (t = e = void 0, t = null, F.win.getSelection ? (e = F.win.getSelection()) && e.rangeCount && (t = e.getRangeAt(0).commonAncestorContainer).nodeType != Node.ELEMENT_NODE && (t = t.parentNode) : (e = F.doc.selection) && "Control" != e.type && (t = e.createRange().parentElement()), 
-                        null != t && (0 <= w.inArray(F.el, w(t).parents()) || t == F.el) ? t : null)), 0 < w(a).find(".fr-element").length && (a = F.el), 
+                        a.appendChild(o[i].cloneContents()), n(a, (t = e = void 0, t = null, F.win.getSelection ? (e = F.win.getSelection()) && e.rangeCount && (t = e.getRangeAt(0).commonAncestorContainer).nodeType != Node.ELEMENT_NODE && (t = t.parentNode) : (e = F.doc.selection) && "Control" != e.type && (t = e.createRange().parentElement()),
+                        null != t && (0 <= w.inArray(F.el, w(t).parents()) || t == F.el) ? t : null)), 0 < w(a).find(".fr-element").length && (a = F.el),
                         r += a.innerHTML;
                     }
                 } else "undefined" != typeof F.doc.selection && "Text" == F.doc.selection.type && (r = F.doc.selection.createRange().htmlText);
@@ -12714,8 +12778,8 @@
             },
             insert: function(e, t, n) {
                 var r, o, i;
-                if (F.selection.isCollapsed() || F.selection.remove(), r = t ? e : F.clean.html(e), 
-                e.indexOf('class="fr-marker"') < 0 && (o = r, (i = F.doc.createElement("div")).innerHTML = o, 
+                if (F.selection.isCollapsed() || F.selection.remove(), r = t ? e : F.clean.html(e),
+                e.indexOf('class="fr-marker"') < 0 && (o = r, (i = F.doc.createElement("div")).innerHTML = o,
                 F.selection.setAtEnd(i, !0), r = i.innerHTML), F.node.isEmpty(F.el) && !F.opts.keepFormatOnDelete && f(r)) F.el.innerHTML = r; else {
                     var a = F.markers.insert();
                     if (a) {
@@ -12728,7 +12792,7 @@
                                 t.innerHTML = e;
                                 for (var n = t.querySelectorAll(":scope > " + F.html.defaultTag()), r = n.length - 1; 0 <= r; r--) {
                                     var o = n[r];
-                                    F.node.isBlock(o.previousSibling) || (o.previousSibling && !F.node.isEmpty(o) && w("<br>").insertAfter(o.previousSibling), 
+                                    F.node.isBlock(o.previousSibling) || (o.previousSibling && !F.node.isEmpty(o) && w("<br>").insertAfter(o.previousSibling),
                                     o.outerHTML = o.innerHTML);
                                 }
                                 return t.innerHTML;
@@ -12742,7 +12806,7 @@
             wrap: t,
             unwrap: function() {
                 F.$el.find("div.fr-temp-div").each(function() {
-                    this.previousSibling && this.previousSibling.nodeType === Node.TEXT_NODE && w(this).before("<br>"), 
+                    this.previousSibling && this.previousSibling.nodeType === Node.TEXT_NODE && w(this).before("<br>"),
                     w(this).attr("data-empty") || !this.nextSibling || F.node.isBlock(this.nextSibling) && !w(this.nextSibling).hasClass("fr-temp-div") ? w(this).replaceWith(w(this).html()) : w(this).replaceWith(w(this).html() + "<br>");
                 }), F.$el.find(".fr-temp-div").removeClass("fr-temp-div").filter(function() {
                     return "" === w(this).attr("class");
@@ -12774,15 +12838,15 @@
         width: null
     }), w.FE.MODULES.size = function(e) {
         function t() {
-            n(), e.opts.height && e.$el.css("minHeight", e.opts.height - e.helpers.getPX(e.$el.css("padding-top")) - e.helpers.getPX(e.$el.css("padding-bottom"))), 
+            n(), e.opts.height && e.$el.css("minHeight", e.opts.height - e.helpers.getPX(e.$el.css("padding-top")) - e.helpers.getPX(e.$el.css("padding-bottom"))),
             e.$iframe.height(e.$el.outerHeight(!0));
         }
         function n() {
-            e.opts.heightMin ? e.$el.css("minHeight", e.opts.heightMin) : e.$el.css("minHeight", ""), 
-            e.opts.heightMax ? (e.$wp.css("maxHeight", e.opts.heightMax), e.$wp.css("overflow", "auto")) : (e.$wp.css("maxHeight", ""), 
-            e.$wp.css("overflow", "")), e.opts.height ? (e.$wp.height(e.opts.height), e.$wp.css("overflow", "auto"), 
-            e.$el.css("minHeight", e.opts.height - e.helpers.getPX(e.$el.css("padding-top")) - e.helpers.getPX(e.$el.css("padding-bottom")))) : (e.$wp.css("height", ""), 
-            e.opts.heightMin || e.$el.css("minHeight", ""), e.opts.heightMax || e.$wp.css("overflow", "")), 
+            e.opts.heightMin ? e.$el.css("minHeight", e.opts.heightMin) : e.$el.css("minHeight", ""),
+            e.opts.heightMax ? (e.$wp.css("maxHeight", e.opts.heightMax), e.$wp.css("overflow", "auto")) : (e.$wp.css("maxHeight", ""),
+            e.$wp.css("overflow", "")), e.opts.height ? (e.$wp.height(e.opts.height), e.$wp.css("overflow", "auto"),
+            e.$el.css("minHeight", e.opts.height - e.helpers.getPX(e.$el.css("padding-top")) - e.helpers.getPX(e.$el.css("padding-bottom")))) : (e.$wp.css("height", ""),
+            e.opts.heightMin || e.$el.css("minHeight", ""), e.opts.heightMax || e.$wp.css("overflow", "")),
             e.opts.width && e.$box.width(e.opts.width);
         }
         return {
@@ -12815,10 +12879,10 @@
             var e = f.opts.iframe ? f.$iframe.prev().outerHeight(!0) : f.$el.prev().outerHeight(!0), t = 0, n = 0, r = 0, o = 0, i = 0, a = 0, s = f.node.contents(f.el), l = w(f.selection.element()).css("text-align");
             if (s.length && s[0].nodeType == Node.ELEMENT_NODE) {
                 var d = w(s[0]);
-                (!f.opts.toolbarInline || 0 < f.$el.prev().length) && f.ready && (t = f.helpers.getPX(d.css("margin-top")), 
-                o = f.helpers.getPX(d.css("padding-top")), n = f.helpers.getPX(d.css("margin-left")), 
-                r = f.helpers.getPX(d.css("margin-right")), i = f.helpers.getPX(d.css("padding-left")), 
-                a = f.helpers.getPX(d.css("padding-right"))), f.$placeholder.css("font-size", d.css("font-size")), 
+                (!f.opts.toolbarInline || 0 < f.$el.prev().length) && f.ready && (t = f.helpers.getPX(d.css("margin-top")),
+                o = f.helpers.getPX(d.css("padding-top")), n = f.helpers.getPX(d.css("margin-left")),
+                r = f.helpers.getPX(d.css("margin-right")), i = f.helpers.getPX(d.css("padding-left")),
+                a = f.helpers.getPX(d.css("padding-right"))), f.$placeholder.css("font-size", d.css("font-size")),
                 f.$placeholder.css("line-height", d.css("line-height"));
             } else f.$placeholder.css("font-size", f.$el.css("font-size")), f.$placeholder.css("line-height", f.$el.css("line-height"));
             if (f.$wp.addClass("show-placeholder"), f.$placeholder.css({
@@ -12829,11 +12893,11 @@
                 paddingRight: Math.max(f.helpers.getPX(f.$el.css("padding-right")), a),
                 marginRight: Math.max(f.helpers.getPX(f.$el.css("margin-right")), r),
                 textAlign: l
-            }).text(f.language.translate(f.opts.placeholderText || f.$oel.attr("placeholder") || "")), 
-            f.$placeholder.html(f.$placeholder.text().replace(/\n/g, "<br>")), f.size.refresh(), 
+            }).text(f.language.translate(f.opts.placeholderText || f.$oel.attr("placeholder") || "")),
+            f.$placeholder.html(f.$placeholder.text().replace(/\n/g, "<br>")), f.size.refresh(),
             f.$placeholder.outerHeight() > f.$el.height()) {
                 var c = f.opts.heightMin;
-                f.opts.heightMin = f.$placeholder.outerHeight() + (f.$tb ? f.$tb.height() : 0), 
+                f.opts.heightMin = f.$placeholder.outerHeight() + (f.$tb ? f.$tb.height() : 0),
                 f.size.refresh(), f.opts.heightMin = c;
             }
         }
@@ -12878,13 +12942,13 @@
                 });
             },
             on: function() {
-                t.$wp ? (t.$el.attr("contenteditable", !0), t.$el.removeClass("fr-disabled").attr("aria-disabled", !1), 
-                t.$tb && t.$tb.removeClass("fr-disabled").removeAttr("aria-disabled"), e()) : t.$el.is("a") && t.$el.attr("contenteditable", !0), 
+                t.$wp ? (t.$el.attr("contenteditable", !0), t.$el.removeClass("fr-disabled").attr("aria-disabled", !1),
+                t.$tb && t.$tb.removeClass("fr-disabled").removeAttr("aria-disabled"), e()) : t.$el.is("a") && t.$el.attr("contenteditable", !0),
                 n = !1;
             },
             off: function() {
-                t.events.disableBlur(), t.$wp ? (t.$el.attr("contenteditable", !1), t.$el.addClass("fr-disabled").attr("aria-disabled", !0), 
-                t.$tb && t.$tb.addClass("fr-disabled").attr("aria-disabled", !0)) : t.$el.is("a") && t.$el.attr("contenteditable", !1), 
+                t.events.disableBlur(), t.$wp ? (t.$el.attr("contenteditable", !1), t.$el.addClass("fr-disabled").attr("aria-disabled", !0),
+                t.$tb && t.$tb.addClass("fr-disabled").attr("aria-disabled", !0)) : t.$el.is("a") && t.$el.attr("contenteditable", !1),
                 t.events.enableBlur(), n = !0;
             },
             disableDesign: e,
@@ -12913,8 +12977,8 @@
     }), w.FE.MODULES.core = function(d) {
         var c;
         function t() {
-            if (d.$box.addClass("fr-box" + (d.opts.editorClass ? " " + d.opts.editorClass : "")), 
-            d.$box.attr("role", "application"), d.$wp.addClass("fr-wrapper"), d.opts.documentReady && d.$box.addClass("fr-document"), 
+            if (d.$box.addClass("fr-box" + (d.opts.editorClass ? " " + d.opts.editorClass : "")),
+            d.$box.attr("role", "application"), d.$wp.addClass("fr-wrapper"), d.opts.documentReady && d.$box.addClass("fr-document"),
             d.opts.iframe || d.$el.addClass("fr-element fr-view"), d.opts.iframe) {
                 c = [], d.$iframe.addClass("fr-iframe"), d.$el.addClass("fr-view");
                 for (var e = 0; e < d.o_doc.styleSheets.length; e++) {
@@ -12931,9 +12995,9 @@
                     }));
                 }
             }
-            "auto" != d.opts.direction && d.$box.removeClass("fr-ltr fr-rtl").addClass("fr-" + d.opts.direction), 
-            d.$el.attr("dir", d.opts.direction), d.$wp.attr("dir", d.opts.direction), 1 < d.opts.zIndex && d.$box.css("z-index", d.opts.zIndex), 
-            d.opts.theme && d.$box.addClass(d.opts.theme + "-theme"), d.opts.tabIndex = d.opts.tabIndex || d.$oel.attr("tabIndex"), 
+            "auto" != d.opts.direction && d.$box.removeClass("fr-ltr fr-rtl").addClass("fr-" + d.opts.direction),
+            d.$el.attr("dir", d.opts.direction), d.$wp.attr("dir", d.opts.direction), 1 < d.opts.zIndex && d.$box.css("z-index", d.opts.zIndex),
+            d.opts.theme && d.$box.addClass(d.opts.theme + "-theme"), d.opts.tabIndex = d.opts.tabIndex || d.$oel.attr("tabIndex"),
             d.opts.tabIndex && d.$el.attr("tabIndex", d.opts.tabIndex);
         }
         return {
@@ -12943,9 +13007,9 @@
                     formdata: !!d.win.FormData,
                     progress: "upload" in new XMLHttpRequest()
                 }, d.$wp) {
-                    t(), d.html.set(d._original_html), d.$el.attr("spellcheck", d.opts.spellcheck), 
-                    d.helpers.isMobile() && (d.$el.attr("autocomplete", d.opts.spellcheck ? "on" : "off"), 
-                    d.$el.attr("autocorrect", d.opts.spellcheck ? "on" : "off"), d.$el.attr("autocapitalize", d.opts.spellcheck ? "on" : "off")), 
+                    t(), d.html.set(d._original_html), d.$el.attr("spellcheck", d.opts.spellcheck),
+                    d.helpers.isMobile() && (d.$el.attr("autocomplete", d.opts.spellcheck ? "on" : "off"),
+                    d.$el.attr("autocorrect", d.opts.spellcheck ? "on" : "off"), d.$el.attr("autocapitalize", d.opts.spellcheck ? "on" : "off")),
                     d.opts.disableRightClick && d.events.$on(d.$el, "contextmenu", function(e) {
                         if (2 == e.button) return !1;
                     });
@@ -12966,10 +13030,10 @@
                 });
             },
             destroy: function(e) {
-                "TEXTAREA" == d.$oel.get(0).tagName && d.$oel.val(e), d.$box && d.$box.removeAttr("role"), 
-                d.$wp && ("TEXTAREA" == d.$oel.get(0).tagName ? (d.$el.html(""), d.$wp.html(""), 
-                d.$box.replaceWith(d.$oel), d.$oel.show()) : (d.$wp.replaceWith(e), d.$el.html(""), 
-                d.$box.removeClass("fr-view fr-ltr fr-box " + (d.opts.editorClass || "")), d.opts.theme && d.$box.addClass(d.opts.theme + "-theme"))), 
+                "TEXTAREA" == d.$oel.get(0).tagName && d.$oel.val(e), d.$box && d.$box.removeAttr("role"),
+                d.$wp && ("TEXTAREA" == d.$oel.get(0).tagName ? (d.$el.html(""), d.$wp.html(""),
+                d.$box.replaceWith(d.$oel), d.$oel.show()) : (d.$wp.replaceWith(e), d.$el.html(""),
+                d.$box.removeClass("fr-view fr-ltr fr-box " + (d.opts.editorClass || "")), d.opts.theme && d.$box.addClass(d.opts.theme + "-theme"))),
                 this.$wp = null, this.$el = null, this.el = null, this.$box = null;
             },
             isEmpty: function() {
@@ -12977,7 +13041,7 @@
             },
             getXHR: function(e, t) {
                 var n = new XMLHttpRequest();
-                for (var r in n.open(t, e, !0), d.opts.requestWithCredentials && (n.withCredentials = !0), 
+                for (var r in n.open(t, e, !0), d.opts.requestWithCredentials && (n.withCredentials = !0),
                 d.opts.requestHeaders) d.opts.requestHeaders.hasOwnProperty(r) && n.setRequestHeader(r, d.opts.requestHeaders[r]);
                 return n;
             },
@@ -13016,7 +13080,7 @@
             _startEnter: function(e) {
                 var t, n = m(e), r = n.nextSibling, o = n.previousSibling, i = h.html.defaultTag();
                 if (h.node.isEmpty(n, !0) && r) {
-                    for (var a = "", s = "", l = e.parentNode; !h.node.isList(l) && l.parentNode && ("LI" !== l.parentNode.tagName || l.parentNode === n); ) a = h.node.openTagString(l) + a, 
+                    for (var a = "", s = "", l = e.parentNode; !h.node.isList(l) && l.parentNode && ("LI" !== l.parentNode.tagName || l.parentNode === n); ) a = h.node.openTagString(l) + a,
                     s += h.node.closeTagString(l), l = l.parentNode;
                     a = h.node.openTagString(l) + a, s += h.node.closeTagString(l);
                     var d = "";
@@ -13025,25 +13089,25 @@
                     var c = h.node.openTagString(l) + w(l).html() + h.node.closeTagString(l);
                     c = c.replace(/<span id="fr-break"><\/span>/g, d), w(l).replaceWith(c), h.$el.find("li:empty").remove();
                 } else if (o && r || !h.node.isEmpty(n, !0)) {
-                    for (var f = "<br>", p = e.parentNode; p && "LI" != p.tagName; ) f = h.node.openTagString(p) + f + h.node.closeTagString(p), 
+                    for (var f = "<br>", p = e.parentNode; p && "LI" != p.tagName; ) f = h.node.openTagString(p) + f + h.node.closeTagString(p),
                     p = p.parentNode;
                     w(n).before("<li>" + f + "</li>"), w(e).remove();
                 } else if (o) {
                     t = E(n);
-                    for (var u = w.FE.MARKERS + "<br>", g = e.parentNode; g && "LI" != g.tagName; ) u = h.node.openTagString(g) + u + h.node.closeTagString(g), 
+                    for (var u = w.FE.MARKERS + "<br>", g = e.parentNode; g && "LI" != g.tagName; ) u = h.node.openTagString(g) + u + h.node.closeTagString(g),
                     g = g.parentNode;
-                    t.parentNode && "LI" == t.parentNode.tagName ? w(t.parentNode).after("<li>" + u + "</li>") : i ? w(t).after("<" + i + ">" + u + "</" + i + ">") : w(t).after(u), 
+                    t.parentNode && "LI" == t.parentNode.tagName ? w(t.parentNode).after("<li>" + u + "</li>") : i ? w(t).after("<" + i + ">" + u + "</" + i + ">") : w(t).after(u),
                     w(n).remove();
-                } else (t = E(n)).parentNode && "LI" == t.parentNode.tagName ? r ? w(t.parentNode).before(h.node.openTagString(n) + w.FE.MARKERS + "<br></li>") : w(t.parentNode).after(h.node.openTagString(n) + w.FE.MARKERS + "<br></li>") : i ? w(t).before("<" + i + ">" + w.FE.MARKERS + "<br></" + i + ">") : w(t).before(w.FE.MARKERS + "<br>"), 
+                } else (t = E(n)).parentNode && "LI" == t.parentNode.tagName ? r ? w(t.parentNode).before(h.node.openTagString(n) + w.FE.MARKERS + "<br></li>") : w(t.parentNode).after(h.node.openTagString(n) + w.FE.MARKERS + "<br></li>") : i ? w(t).before("<" + i + ">" + w.FE.MARKERS + "<br></" + i + ">") : w(t).before(w.FE.MARKERS + "<br>"),
                 w(n).remove();
             },
             _middleEnter: function(e) {
                 for (var t = m(e), n = "", r = e, o = "", i = "", a = !1; r != t; ) {
                     var s = "A" == (r = r.parentNode).tagName && h.cursor.isAtEnd(e, r) ? "fr-to-remove" : "";
-                    a || r == t || h.node.isBlock(r) || (a = !0, o += w.FE.INVISIBLE_SPACE), o = h.node.openTagString(w(r).clone().addClass(s).get(0)) + o, 
+                    a || r == t || h.node.isBlock(r) || (a = !0, o += w.FE.INVISIBLE_SPACE), o = h.node.openTagString(w(r).clone().addClass(s).get(0)) + o,
                     i = h.node.closeTagString(r) + i;
                 }
-                n = i + n + o + w.FE.MARKERS + (h.opts.keepFormatOnDelete ? w.FE.INVISIBLE_SPACE : ""), 
+                n = i + n + o + w.FE.MARKERS + (h.opts.keepFormatOnDelete ? w.FE.INVISIBLE_SPACE : ""),
                 w(e).replaceWith('<span id="fr-break"></span>');
                 var l = h.node.openTagString(t) + w(t).html() + h.node.closeTagString(t);
                 l = l.replace(/<span id="fr-break"><\/span>/g, n), w(t).replaceWith(l);
@@ -13051,7 +13115,7 @@
             _endEnter: function(e) {
                 for (var t = m(e), n = w.FE.MARKERS, r = "", o = e, i = !1; o != t; ) {
                     var a = "A" == (o = o.parentNode).tagName && h.cursor.isAtEnd(e, o) ? "fr-to-remove" : "";
-                    i || o == t || h.node.isBlock(o) || (i = !0, r += w.FE.INVISIBLE_SPACE), r = h.node.openTagString(w(o).clone().addClass(a).get(0)) + r, 
+                    i || o == t || h.node.isBlock(o) || (i = !0, r += w.FE.INVISIBLE_SPACE), r = h.node.openTagString(w(o).clone().addClass(a).get(0)) + r,
                     n += h.node.closeTagString(o);
                 }
                 var s = r + n;
@@ -13065,10 +13129,10 @@
                     r.length && "BR" == r[r.length - 1].tagName && w(r[r.length - 1]).remove(), w(t).find(h.html.blockTagsQuery()).not("ol, ul, table").each(function() {
                         this.parentNode == t && w(this).replaceWith(w(this).html() + (h.node.isEmpty(this) ? "" : "<br>"));
                     });
-                    for (var o, i = h.node.contents(t)[0]; i && !h.node.isList(i); ) o = i.nextSibling, 
+                    for (var o, i = h.node.contents(t)[0]; i && !h.node.isList(i); ) o = i.nextSibling,
                     w(n).append(i), i = o;
                     for (n = t.previousSibling; i; ) o = i.nextSibling, w(n).append(i), i = o;
-                    1 < (r = h.node.contents(n)).length && "BR" === r[r.length - 1].tagName && w(r[r.length - 1]).remove(), 
+                    1 < (r = h.node.contents(n)).length && "BR" === r[r.length - 1].tagName && w(r[r.length - 1]).remove(),
                     w(t).remove();
                 } else {
                     var a = E(t);
@@ -13090,22 +13154,22 @@
                     (t = h.node.contents(r)).length && "BR" == t[0].tagName && w(t[0]).remove(), w(r).find(h.html.blockTagsQuery()).not("ol, ul, table").each(function() {
                         this.parentNode == r && w(this).replaceWith(w(this).html() + (h.node.isEmpty(this) ? "" : "<br>"));
                     });
-                    for (var o, i = e, a = h.node.contents(r)[0]; a && !h.node.isList(a); ) o = a.nextSibling, 
+                    for (var o, i = e, a = h.node.contents(r)[0]; a && !h.node.isList(a); ) o = a.nextSibling,
                     w(i).after(a), i = a, a = o;
                     for (;a; ) o = a.nextSibling, w(n).append(a), a = o;
                     w(e).replaceWith(w.FE.MARKERS), w(r).remove();
                 } else {
                     for (var s = n; !s.nextSibling && s != h.el; ) s = s.parentNode;
                     if (s == h.el) return !1;
-                    if (s = s.nextSibling, h.node.isBlock(s)) w.FE.NO_DELETE_TAGS.indexOf(s.tagName) < 0 && (w(e).replaceWith(w.FE.MARKERS), 
-                    (t = h.node.contents(n)).length && "BR" == t[t.length - 1].tagName && w(t[t.length - 1]).remove(), 
-                    w(n).append(w(s).html()), w(s).remove()); else for ((t = h.node.contents(n)).length && "BR" == t[t.length - 1].tagName && w(t[t.length - 1]).remove(), 
-                    w(e).replaceWith(w.FE.MARKERS); s && !h.node.isBlock(s) && "BR" != s.tagName; ) w(n).append(w(s)), 
+                    if (s = s.nextSibling, h.node.isBlock(s)) w.FE.NO_DELETE_TAGS.indexOf(s.tagName) < 0 && (w(e).replaceWith(w.FE.MARKERS),
+                    (t = h.node.contents(n)).length && "BR" == t[t.length - 1].tagName && w(t[t.length - 1]).remove(),
+                    w(n).append(w(s).html()), w(s).remove()); else for ((t = h.node.contents(n)).length && "BR" == t[t.length - 1].tagName && w(t[t.length - 1]).remove(),
+                    w(e).replaceWith(w.FE.MARKERS); s && !h.node.isBlock(s) && "BR" != s.tagName; ) w(n).append(w(s)),
                     s = s.nextSibling;
                 }
             }
         };
-    }, w.FE.NO_DELETE_TAGS = [ "TH", "TD", "TR", "TABLE", "FORM" ], w.FE.SIMPLE_ENTER_TAGS = [ "TH", "TD", "LI", "DL", "DT", "FORM" ], 
+    }, w.FE.NO_DELETE_TAGS = [ "TH", "TD", "TR", "TABLE", "FORM" ], w.FE.SIMPLE_ENTER_TAGS = [ "TH", "TD", "LI", "DL", "DT", "FORM" ],
     w.FE.MODULES.cursor = function(u) {
         function i(e) {
             return !!e && (!!u.node.isBlock(e) || (e.nextSibling && e.nextSibling.nodeType == Node.TEXT_NODE && 0 === e.nextSibling.textContent.replace(/\u200b/g, "").length ? i(e.nextSibling) : !(e.nextSibling && (!e.previousSibling || "BR" != e.nextSibling.tagName || e.nextSibling.nextSibling)) && i(e.parentNode)));
@@ -13129,11 +13193,11 @@
         function c(e) {
             for (var t, n = e; !n.previousSibling; ) if (n = n.parentNode, u.node.isElement(n)) return !1;
             if (n = n.previousSibling, !u.node.isBlock(n) && u.node.isEditable(n)) {
-                for (t = u.node.contents(n); n.nodeType != Node.TEXT_NODE && !u.node.isDeletable(n) && t.length && u.node.isEditable(n); ) n = t[t.length - 1], 
+                for (t = u.node.contents(n); n.nodeType != Node.TEXT_NODE && !u.node.isDeletable(n) && t.length && u.node.isEditable(n); ) n = t[t.length - 1],
                 t = u.node.contents(n);
                 if (n.nodeType == Node.TEXT_NODE) {
                     var r = n.textContent, o = r.length;
-                    if (r.length && "\n" === r[r.length - 1]) return n.textContent = r.substring(0, o - 2), 
+                    if (r.length && "\n" === r[r.length - 1]) return n.textContent = r.substring(0, o - 2),
                     0 === n.textContent.length && n.parentNode.removeChild(n), c(e);
                     if (u.opts.tabSpaces && r.length >= u.opts.tabSpaces) 0 === r.substr(r.length - u.opts.tabSpaces, r.length - 1).replace(/ /g, "").replace(new RegExp(w.FE.UNICODE_NBSP, "g"), "").length && (o = r.length - u.opts.tabSpaces + 1);
                     n.textContent = r.substring(0, o - d(r)), u.opts.htmlUntouched && !e.nextSibling && n.textContent.length && " " === n.textContent[n.textContent.length - 1] && (n.textContent = n.textContent.substring(0, n.textContent.length - 1) + w.FE.UNICODE_NBSP);
@@ -13143,16 +13207,16 @@
                             var a = n;
                             n = n.parentNode, a.parentNode.removeChild(a);
                         }
-                        w(n).after(w.FE.MARKERS), u.node.isElement(n.parentNode) && !e.nextSibling && n.previousSibling && "BR" == n.previousSibling.tagName && w(e).after("<br>"), 
+                        w(n).after(w.FE.MARKERS), u.node.isElement(n.parentNode) && !e.nextSibling && n.previousSibling && "BR" == n.previousSibling.tagName && w(e).after("<br>"),
                         n.parentNode.removeChild(n);
                     } else w(n.parentNode).after(w.FE.MARKERS), w(n.parentNode).remove(); else w(n).after(w.FE.MARKERS);
-                } else u.node.isDeletable(n) ? (w(n).after(w.FE.MARKERS), w(n).remove()) : e.nextSibling && "BR" == e.nextSibling.tagName && u.node.isVoid(n) && "BR" != n.tagName ? (w(e.nextSibling).remove(), 
-                w(e).replaceWith(w.FE.MARKERS)) : !1 !== u.events.trigger("node.remove", [ w(n) ]) && (w(n).after(w.FE.MARKERS), 
+                } else u.node.isDeletable(n) ? (w(n).after(w.FE.MARKERS), w(n).remove()) : e.nextSibling && "BR" == e.nextSibling.tagName && u.node.isVoid(n) && "BR" != n.tagName ? (w(e.nextSibling).remove(),
+                w(e).replaceWith(w.FE.MARKERS)) : !1 !== u.events.trigger("node.remove", [ w(n) ]) && (w(n).after(w.FE.MARKERS),
                 w(n).remove());
-            } else if (w.FE.NO_DELETE_TAGS.indexOf(n.tagName) < 0 && (u.node.isEditable(n) || u.node.isDeletable(n))) if (u.node.isDeletable(n)) w(e).replaceWith(w.FE.MARKERS), 
+            } else if (w.FE.NO_DELETE_TAGS.indexOf(n.tagName) < 0 && (u.node.isEditable(n) || u.node.isDeletable(n))) if (u.node.isDeletable(n)) w(e).replaceWith(w.FE.MARKERS),
             w(n).remove(); else if (u.node.isEmpty(n) && !u.node.isList(n)) w(n).remove(), w(e).replaceWith(w.FE.MARKERS); else {
-                for (u.node.isList(n) && (n = w(n).find("li:last").get(0)), (t = u.node.contents(n)) && "BR" == t[t.length - 1].tagName && w(t[t.length - 1]).remove(), 
-                t = u.node.contents(n); t && u.node.isBlock(t[t.length - 1]); ) n = t[t.length - 1], 
+                for (u.node.isList(n) && (n = w(n).find("li:last").get(0)), (t = u.node.contents(n)) && "BR" == t[t.length - 1].tagName && w(t[t.length - 1]).remove(),
+                t = u.node.contents(n); t && u.node.isBlock(t[t.length - 1]); ) n = t[t.length - 1],
                 t = u.node.contents(n);
                 w(n).append(w.FE.MARKERS);
                 for (var s = e; !s.previousSibling; ) s = s.parentNode;
@@ -13172,18 +13236,18 @@
             }
             if (null !== n) {
                 var o, i = n.nextSibling;
-                if (u.node.isBlock(n) && (u.node.isEditable(n) || u.node.isDeletable(n)) && i && w.FE.NO_DELETE_TAGS.indexOf(i.tagName) < 0) if (u.node.isDeletable(i)) w(i).remove(), 
-                w(e).replaceWith(w.FE.MARKERS); else if (u.node.isBlock(i) && u.node.isEditable(i)) if (u.node.isList(i)) if (u.node.isEmpty(n, !0)) w(n).remove(), 
+                if (u.node.isBlock(n) && (u.node.isEditable(n) || u.node.isDeletable(n)) && i && w.FE.NO_DELETE_TAGS.indexOf(i.tagName) < 0) if (u.node.isDeletable(i)) w(i).remove(),
+                w(e).replaceWith(w.FE.MARKERS); else if (u.node.isBlock(i) && u.node.isEditable(i)) if (u.node.isList(i)) if (u.node.isEmpty(n, !0)) w(n).remove(),
                 w(i).find("li:first").prepend(w.FE.MARKERS); else {
                     var a = w(i).find("li:first");
-                    "BLOCKQUOTE" == n.tagName && (o = u.node.contents(n)).length && u.node.isBlock(o[o.length - 1]) && (n = o[o.length - 1]), 
+                    "BLOCKQUOTE" == n.tagName && (o = u.node.contents(n)).length && u.node.isBlock(o[o.length - 1]) && (n = o[o.length - 1]),
                     0 === a.find("ul, ol").length && (w(e).replaceWith(w.FE.MARKERS), a.find(u.html.blockTagsQuery()).not("ol, ul, table").each(function() {
                         this.parentNode == a.get(0) && w(this).replaceWith(w(this).html() + (u.node.isEmpty(this) ? "" : "<br>"));
                     }), w(n).append(u.node.contents(a.get(0))), a.remove(), 0 === w(i).find("li").length && w(i).remove());
                 } else {
-                    if ((o = u.node.contents(i)).length && "BR" == o[0].tagName && w(o[0]).remove(), 
-                    "BLOCKQUOTE" != i.tagName && "BLOCKQUOTE" == n.tagName) for (o = u.node.contents(n); o.length && u.node.isBlock(o[o.length - 1]); ) n = o[o.length - 1], 
-                    o = u.node.contents(n); else if ("BLOCKQUOTE" == i.tagName && "BLOCKQUOTE" != n.tagName) for (o = u.node.contents(i); o.length && u.node.isBlock(o[0]); ) i = o[0], 
+                    if ((o = u.node.contents(i)).length && "BR" == o[0].tagName && w(o[0]).remove(),
+                    "BLOCKQUOTE" != i.tagName && "BLOCKQUOTE" == n.tagName) for (o = u.node.contents(n); o.length && u.node.isBlock(o[o.length - 1]); ) n = o[o.length - 1],
+                    o = u.node.contents(n); else if ("BLOCKQUOTE" == i.tagName && "BLOCKQUOTE" != n.tagName) for (o = u.node.contents(i); o.length && u.node.isBlock(o[0]); ) i = o[0],
                     o = u.node.contents(i);
                     w(e).replaceWith(w.FE.MARKERS), w(n).append(i.innerHTML), w(i).remove();
                 } else {
@@ -13203,19 +13267,19 @@
                     n = n.nextSibling, w(n.previousSibling).remove();
                 }
             } else if (i(n)) {
-                if (s(e)) u.cursorLists._del(e); else u.node.deepestParent(n) && ((!u.node.isEmpty(u.node.blockParent(n)) || (u.node.blockParent(n).nextSibling && w.FE.NO_DELETE_TAGS.indexOf(u.node.blockParent(n).nextSibling.tagName)) < 0) && w(n).remove(), 
+                if (s(e)) u.cursorLists._del(e); else u.node.deepestParent(n) && ((!u.node.isEmpty(u.node.blockParent(n)) || (u.node.blockParent(n).nextSibling && w.FE.NO_DELETE_TAGS.indexOf(u.node.blockParent(n).nextSibling.tagName)) < 0) && w(n).remove(),
                 l(e));
                 return;
             }
             if (!u.node.isBlock(n) && u.node.isEditable(n)) {
-                for (t = u.node.contents(n); n.nodeType != Node.TEXT_NODE && t.length && !u.node.isDeletable(n) && u.node.isEditable(n); ) n = t[0], 
+                for (t = u.node.contents(n); n.nodeType != Node.TEXT_NODE && t.length && !u.node.isDeletable(n) && u.node.isEditable(n); ) n = t[0],
                 t = u.node.contents(n);
-                n.nodeType == Node.TEXT_NODE ? (w(n).before(w.FE.MARKERS), n.textContent.length && (n.textContent = n.textContent.substring(d(n.textContent, !0), n.textContent.length))) : u.node.isDeletable(n) ? (w(n).before(w.FE.MARKERS), 
-                w(n).remove()) : !1 !== u.events.trigger("node.remove", [ w(n) ]) && (w(n).before(w.FE.MARKERS), 
+                n.nodeType == Node.TEXT_NODE ? (w(n).before(w.FE.MARKERS), n.textContent.length && (n.textContent = n.textContent.substring(d(n.textContent, !0), n.textContent.length))) : u.node.isDeletable(n) ? (w(n).before(w.FE.MARKERS),
+                w(n).remove()) : !1 !== u.events.trigger("node.remove", [ w(n) ]) && (w(n).before(w.FE.MARKERS),
                 w(n).remove()), w(e).remove();
-            } else if (w.FE.NO_DELETE_TAGS.indexOf(n.tagName) < 0 && (u.node.isEditable(n) || u.node.isDeletable(n))) if (u.node.isDeletable(n)) w(e).replaceWith(w.FE.MARKERS), 
-            w(n).remove(); else if (u.node.isList(n)) e.previousSibling ? (w(n).find("li:first").prepend(e), 
-            u.cursorLists._backspace(e)) : (w(n).find("li:first").prepend(w.FE.MARKERS), w(e).remove()); else if ((t = u.node.contents(n)) && t.length && "BR" == t[0].tagName && w(t[0]).remove(), 
+            } else if (w.FE.NO_DELETE_TAGS.indexOf(n.tagName) < 0 && (u.node.isEditable(n) || u.node.isDeletable(n))) if (u.node.isDeletable(n)) w(e).replaceWith(w.FE.MARKERS),
+            w(n).remove(); else if (u.node.isList(n)) e.previousSibling ? (w(n).find("li:first").prepend(e),
+            u.cursorLists._backspace(e)) : (w(n).find("li:first").prepend(w.FE.MARKERS), w(e).remove()); else if ((t = u.node.contents(n)) && t.length && "BR" == t[0].tagName && w(t[0]).remove(),
             t && "BLOCKQUOTE" == n.tagName) {
                 var r = t[0];
                 for (w(e).before(w.FE.MARKERS); r && "BR" != r.tagName; ) {
@@ -13230,38 +13294,38 @@
         }
         function p(e, t, n) {
             var r, o = u.node.deepestParent(e, [], !n);
-            if (o && "BLOCKQUOTE" == o.tagName) return h(e, o) ? (r = u.html.defaultTag(), t ? w(e).replaceWith("<br>" + w.FE.MARKERS) : r ? w(o).after("<" + r + ">" + w.FE.MARKERS + "<br></" + r + ">") : w(o).after(w.FE.MARKERS + "<br>"), 
+            if (o && "BLOCKQUOTE" == o.tagName) return h(e, o) ? (r = u.html.defaultTag(), t ? w(e).replaceWith("<br>" + w.FE.MARKERS) : r ? w(o).after("<" + r + ">" + w.FE.MARKERS + "<br></" + r + ">") : w(o).after(w.FE.MARKERS + "<br>"),
             w(e).remove()) : m(e, t, n), !1;
             if (null == o) (r = u.html.defaultTag()) && u.node.isElement(e.parentNode) ? w(e).replaceWith("<" + r + ">" + w.FE.MARKERS + "<br></" + r + ">") : !e.previousSibling || w(e.previousSibling).is("br") || e.nextSibling ? w(e).replaceWith("<br>" + w.FE.MARKERS) : w(e).replaceWith("<br>" + w.FE.MARKERS + "<br>"); else {
                 var i = e, a = "";
                 "PRE" != o.tagName || e.nextSibling || (t = !0), u.node.isBlock(o) && !t || (a = "<br/>");
                 var s, l = "", d = "", c = "", f = "";
-                (r = u.html.defaultTag()) && u.node.isBlock(o) && (c = "<" + r + ">", f = "</" + r + ">", 
+                (r = u.html.defaultTag()) && u.node.isBlock(o) && (c = "<" + r + ">", f = "</" + r + ">",
                 o.tagName == r.toUpperCase() && (c = u.node.openTagString(w(o).clone().removeAttr("id").get(0))));
                 do {
-                    if (i = i.parentNode, !t || i != o || t && !u.node.isBlock(o)) if (l += u.node.closeTagString(i), 
+                    if (i = i.parentNode, !t || i != o || t && !u.node.isBlock(o)) if (l += u.node.closeTagString(i),
                     i == o && u.node.isBlock(o)) d = c + d; else {
                         var p = ("A" == i.tagName || w(i).hasClass("fa")) && h(e, i) ? "fr-to-remove" : "";
                         d = u.node.openTagString(w(i).clone().addClass(p).get(0)) + d;
                     }
                 } while (i != o);
-                a = l + a + d + (e.parentNode == o && u.node.isBlock(o) ? "" : w.FE.INVISIBLE_SPACE) + w.FE.MARKERS, 
-                u.node.isBlock(o) && !w(o).find("*:last").is("br") && w(o).append("<br/>"), w(e).after('<span id="fr-break"></span>'), 
-                w(e).remove(), o.nextSibling && !u.node.isBlock(o.nextSibling) || u.node.isBlock(o) || w(o).after("<br>"), 
-                s = (s = !t && u.node.isBlock(o) ? u.node.openTagString(o) + w(o).html() + f : u.node.openTagString(o) + w(o).html() + u.node.closeTagString(o)).replace(/<span id="fr-break"><\/span>/g, a), 
+                a = l + a + d + (e.parentNode == o && u.node.isBlock(o) ? "" : w.FE.INVISIBLE_SPACE) + w.FE.MARKERS,
+                u.node.isBlock(o) && !w(o).find("*:last").is("br") && w(o).append("<br/>"), w(e).after('<span id="fr-break"></span>'),
+                w(e).remove(), o.nextSibling && !u.node.isBlock(o.nextSibling) || u.node.isBlock(o) || w(o).after("<br>"),
+                s = (s = !t && u.node.isBlock(o) ? u.node.openTagString(o) + w(o).html() + f : u.node.openTagString(o) + w(o).html() + u.node.closeTagString(o)).replace(/<span id="fr-break"><\/span>/g, a),
                 w(o).replaceWith(s);
             }
         }
         function m(e, t, n) {
             var r = u.node.deepestParent(e, [], !n);
-            if (null == r) u.html.defaultTag() && e.parentNode === u.el ? w(e).replaceWith("<" + u.html.defaultTag() + ">" + w.FE.MARKERS + "<br></" + u.html.defaultTag() + ">") : (e.nextSibling && !u.node.isBlock(e.nextSibling) || w(e).after("<br>"), 
+            if (null == r) u.html.defaultTag() && e.parentNode === u.el ? w(e).replaceWith("<" + u.html.defaultTag() + ">" + w.FE.MARKERS + "<br></" + u.html.defaultTag() + ">") : (e.nextSibling && !u.node.isBlock(e.nextSibling) || w(e).after("<br>"),
             w(e).replaceWith("<br>" + w.FE.MARKERS)); else if (e.previousSibling && "IMG" == e.previousSibling.tagName || e.nextSibling && "IMG" == e.nextSibling.tagName) w(e).replaceWith("<" + u.html.defaultTag() + ">" + w.FE.MARKERS + "<br></" + u.html.defaultTag() + ">"); else {
                 var o = e, i = "";
                 "PRE" == r.tagName && (t = !0), u.node.isBlock(r) && !t || (i = "<br>");
                 var a = "", s = "";
                 do {
                     var l = o;
-                    if (o = o.parentNode, "BLOCKQUOTE" == r.tagName && u.node.isEmpty(l) && !u.node.hasClass(l, "fr-marker") && 0 < w(l).find(e).length && w(l).after(e), 
+                    if (o = o.parentNode, "BLOCKQUOTE" == r.tagName && u.node.isEmpty(l) && !u.node.hasClass(l, "fr-marker") && 0 < w(l).find(e).length && w(l).after(e),
                     "BLOCKQUOTE" != r.tagName || !h(e, o) && !g(e, o)) if (!t || o != r || t && !u.node.isBlock(r)) {
                         a += u.node.closeTagString(o);
                         var d = "A" == o.tagName && h(e, o) || w(o).hasClass("fa") ? "fr-to-remove" : "";
@@ -13269,7 +13333,7 @@
                     } else "BLOCKQUOTE" == r.tagName && t && (s = a = "");
                 } while (o != r);
                 var c = r == e.parentNode && u.node.isBlock(r) || e.nextSibling;
-                if ("BLOCKQUOTE" == r.tagName) if (e.previousSibling && u.node.isBlock(e.previousSibling) && e.nextSibling && "BR" == e.nextSibling.tagName && (w(e.nextSibling).after(e), 
+                if ("BLOCKQUOTE" == r.tagName) if (e.previousSibling && u.node.isBlock(e.previousSibling) && e.nextSibling && "BR" == e.nextSibling.tagName && (w(e.nextSibling).after(e),
                 e.nextSibling && "BR" == e.nextSibling.tagName && w(e.nextSibling).remove()), t) i = a + i + w.FE.MARKERS + s; else {
                     var f = u.html.defaultTag();
                     i = a + i + (f ? "<" + f + ">" : "") + w.FE.MARKERS + "<br>" + (f ? "</" + f + ">" : "") + s;
@@ -13284,45 +13348,45 @@
                 var n = u.markers.insert();
                 if (!n) return !0;
                 for (var r = n.parentNode; r && !u.node.isElement(r); ) {
-                    if ("false" === r.getAttribute("contenteditable")) return w(n).replaceWith(w.FE.MARKERS), 
+                    if ("false" === r.getAttribute("contenteditable")) return w(n).replaceWith(w.FE.MARKERS),
                     u.selection.restore(), !1;
                     if ("true" === r.getAttribute("contenteditable")) break;
                     r = r.parentNode;
                 }
                 u.el.normalize();
                 var o = !1;
-                0 < w(n).parentsUntil(u.$el, "BLOCKQUOTE").length && (o = !0), w(n).parentsUntil(u.$el, "TD, TH").length && (o = !1), 
+                0 < w(n).parentsUntil(u.$el, "BLOCKQUOTE").length && (o = !0), w(n).parentsUntil(u.$el, "TD, TH").length && (o = !1),
                 i(n) ? !s(n) || t || o ? p(n, t, o) : u.cursorLists._endEnter(n) : a(n) ? !s(n) || t || o ? function e(t, n, r) {
                     var o, i = u.node.deepestParent(t, [], !r);
-                    if (i && "TABLE" == i.tagName) return w(i).find("td:first, th:first").prepend(t), 
+                    if (i && "TABLE" == i.tagName) return w(i).find("td:first, th:first").prepend(t),
                     e(t, n, r);
                     if (i && "BLOCKQUOTE" == i.tagName) if (g(t, i)) {
-                        if (!n) return (o = u.html.defaultTag()) ? w(i).before("<" + o + ">" + w.FE.MARKERS + "<br></" + o + ">") : w(i).before(w.FE.MARKERS + "<br>"), 
+                        if (!n) return (o = u.html.defaultTag()) ? w(i).before("<" + o + ">" + w.FE.MARKERS + "<br></" + o + ">") : w(i).before(w.FE.MARKERS + "<br>"),
                         w(t).remove(), !1;
                     } else h(t, i) ? p(t, n, !0) : m(t, n, !0);
                     if (null == i) (o = u.html.defaultTag()) && u.node.isElement(t.parentNode) ? w(t).replaceWith("<" + o + ">" + w.FE.MARKERS + "<br></" + o + ">") : w(t).replaceWith("<br>" + w.FE.MARKERS); else {
                         if (u.node.isBlock(i)) if ("PRE" == i.tagName && (n = !0), n) w(t).remove(), w(i).prepend("<br>" + w.FE.MARKERS); else {
                             if (u.node.isEmpty(i, !0)) return p(t, n, r);
                             if (t.nextSibling && "IMG" == t.nextSibling.tagName || t.nextSibling && t.nextSibling.nextElementSibling && "IMG" == t.nextSibling.nextElementSibling) w(t).replaceWith("<" + u.html.defaultTag() + ">" + w.FE.MARKERS + "<br></" + u.html.defaultTag() + ">"); else if (u.opts.keepFormatOnDelete) {
-                                for (var a = t, s = w.FE.INVISIBLE_SPACE; a != i && !u.node.isElement(a); ) a = a.parentNode, 
+                                for (var a = t, s = w.FE.INVISIBLE_SPACE; a != i && !u.node.isElement(a); ) a = a.parentNode,
                                 s = u.node.openTagString(a) + s + u.node.closeTagString(a);
                                 w(i).before(s);
                             } else w(i).before(u.node.openTagString(w(i).clone().removeAttr("id").get(0)) + "<br>" + u.node.closeTagString(i));
                         } else w(i).before("<br>");
                         w(t).remove();
                     }
-                }(n, t, o) : u.cursorLists._startEnter(n) : !s(n) || t || o ? m(n, t, o) : u.cursorLists._middleEnter(n), 
+                }(n, t, o) : u.cursorLists._startEnter(n) : !s(n) || t || o ? m(n, t, o) : u.cursorLists._middleEnter(n),
                 u.$el.find(".fr-to-remove").each(function() {
                     for (var e = u.node.contents(this), t = 0; t < e.length; t++) e[t].nodeType == Node.TEXT_NODE && (e[t].textContent = e[t].textContent.replace(/\u200B/g, ""));
                     w(this).replaceWith(this.innerHTML);
-                }), u.html.fillEmptyBlocks(!0), u.opts.htmlUntouched || (u.html.cleanEmptyTags(), 
+                }), u.html.fillEmptyBlocks(!0), u.opts.htmlUntouched || (u.html.cleanEmptyTags(),
                 u.clean.lists(), u.spaces.normalizeAroundCursor()), u.selection.restore();
             },
             backspace: function() {
                 var e = !1, t = u.markers.insert();
                 if (!t) return !0;
                 for (var n = t.parentNode; n && !u.node.isElement(n); ) {
-                    if ("false" === n.getAttribute("contenteditable")) return w(t).replaceWith(w.FE.MARKERS), 
+                    if ("false" === n.getAttribute("contenteditable")) return w(t).replaceWith(w.FE.MARKERS),
                     u.selection.restore(), !1;
                     if ("true" === n.getAttribute("contenteditable")) break;
                     n = n.parentNode;
@@ -13342,11 +13406,11 @@
                     if (null !== n) {
                         var i, a = n.previousSibling;
                         if (u.node.isBlock(n) && u.node.isEditable(n)) if (a && w.FE.NO_DELETE_TAGS.indexOf(a.tagName) < 0) {
-                            if (u.node.isDeletable(a)) w(a).remove(), w(e).replaceWith(w.FE.MARKERS); else if (u.node.isEditable(a)) if (u.node.isBlock(a)) if (u.node.isEmpty(a) && !u.node.isList(a)) w(a).remove(), 
+                            if (u.node.isDeletable(a)) w(a).remove(), w(e).replaceWith(w.FE.MARKERS); else if (u.node.isEditable(a)) if (u.node.isBlock(a)) if (u.node.isEmpty(a) && !u.node.isList(a)) w(a).remove(),
                             w(e).after(u.opts.keepFormatOnDelete ? w.FE.INVISIBLE_SPACE : ""); else {
-                                if (u.node.isList(a) && (a = w(a).find("li:last").get(0)), (i = u.node.contents(a)).length && "BR" == i[i.length - 1].tagName && w(i[i.length - 1]).remove(), 
-                                "BLOCKQUOTE" == a.tagName && "BLOCKQUOTE" != n.tagName) for (i = u.node.contents(a); i.length && u.node.isBlock(i[i.length - 1]); ) a = i[i.length - 1], 
-                                i = u.node.contents(a); else if ("BLOCKQUOTE" != a.tagName && "BLOCKQUOTE" == r.tagName) for (i = u.node.contents(r); i.length && u.node.isBlock(i[0]); ) r = i[0], 
+                                if (u.node.isList(a) && (a = w(a).find("li:last").get(0)), (i = u.node.contents(a)).length && "BR" == i[i.length - 1].tagName && w(i[i.length - 1]).remove(),
+                                "BLOCKQUOTE" == a.tagName && "BLOCKQUOTE" != n.tagName) for (i = u.node.contents(a); i.length && u.node.isBlock(i[i.length - 1]); ) a = i[i.length - 1],
+                                i = u.node.contents(a); else if ("BLOCKQUOTE" != a.tagName && "BLOCKQUOTE" == r.tagName) for (i = u.node.contents(r); i.length && u.node.isBlock(i[0]); ) r = i[0],
                                 i = u.node.contents(r);
                                 if (u.node.isEmpty(n)) w(e).remove(), u.selection.setAtEnd(a, !0); else {
                                     w(e).replaceWith(w.FE.MARKERS);
@@ -13354,11 +13418,11 @@
                                     u.node.isBlock(s[s.length - 1]) ? w(s[s.length - 1]).append(r.innerHTML) : w(a).append(r.innerHTML);
                                 }
                                 w(r).remove(), u.node.isEmpty(n) && w(n).remove();
-                            } else w(e).replaceWith(w.FE.MARKERS), "BLOCKQUOTE" == n.tagName && a.nodeType == Node.ELEMENT_NODE ? w(a).remove() : (w(a).after(u.node.isEmpty(n) ? "" : w(n).html()), 
+                            } else w(e).replaceWith(w.FE.MARKERS), "BLOCKQUOTE" == n.tagName && a.nodeType == Node.ELEMENT_NODE ? w(a).remove() : (w(a).after(u.node.isEmpty(n) ? "" : w(n).html()),
                             w(n).remove(), "BR" == a.tagName && w(a).remove());
                         } else a || (n && "BLOCKQUOTE" === n.tagName && 0 === w(n).text().replace(/\u200B/g, "").length ? w(n).remove() : u.node.isEmpty(n) && n.parentNode && u.node.isEditable(n.parentNode) && n.parentNode != u.el && w(n.parentNode).remove());
                     }
-                }(t) : e = c(t), w(t).remove(), f(), u.html.fillEmptyBlocks(!0), u.opts.htmlUntouched || (u.html.cleanEmptyTags(), 
+                }(t) : e = c(t), w(t).remove(), f(), u.html.fillEmptyBlocks(!0), u.opts.htmlUntouched || (u.html.cleanEmptyTags(),
                 u.clean.lists(), u.spaces.normalizeAroundCursor()), u.selection.restore(), e;
             },
             del: function() {
@@ -13368,7 +13432,7 @@
                     var t = w(e).parents("li:first").find("ul:first, ol:first").find("li:first");
                     (t = t.find(u.html.blockTagsQuery()).get(-1) || t).prepend(e), u.cursorLists._backspace(e);
                 } else l(e); else a(e), n(e);
-                w(e).remove(), f(), u.html.fillEmptyBlocks(!0), u.opts.htmlUntouched || (u.html.cleanEmptyTags(), 
+                w(e).remove(), f(), u.html.fillEmptyBlocks(!0), u.opts.htmlUntouched || (u.html.cleanEmptyTags(),
                 u.clean.lists()), u.spaces.normalizeAroundCursor(), u.selection.restore();
             },
             isAtEnd: h,
@@ -13479,14 +13543,14 @@
         function e() {
             if (l.browser.mozilla && l.selection.isCollapsed() && !c) {
                 var e = l.selection.ranges(0), t = e.startContainer, n = e.startOffset;
-                t && t.nodeType == Node.TEXT_NODE && n <= t.textContent.length && 0 < n && 32 == t.textContent.charCodeAt(n - 1) && (l.selection.save(), 
+                t && t.nodeType == Node.TEXT_NODE && n <= t.textContent.length && 0 < n && 32 == t.textContent.charCodeAt(n - 1) && (l.selection.save(),
                 l.spaces.normalize(), l.selection.restore());
             }
         }
         function t() {
             l.selection.isFull() && setTimeout(function() {
                 var e = l.html.defaultTag();
-                e ? l.$el.html("<" + e + ">" + w.FE.MARKERS + "<br/></" + e + ">") : l.$el.html(w.FE.MARKERS + "<br/>"), 
+                e ? l.$el.html("<" + e + ">" + w.FE.MARKERS + "<br/></" + e + ">") : l.$el.html(w.FE.MARKERS + "<br/>"),
                 l.selection.restore(), l.placeholder.refresh(), l.button.bulkRefresh(), l.undo.saveStep();
             }, 0);
         }
@@ -13498,7 +13562,7 @@
         }
         function f() {
             var e = l.html.defaultTag();
-            e ? l.$el.html("<" + e + ">" + w.FE.MARKERS + "<br/></" + e + ">") : l.$el.html(w.FE.MARKERS + "<br/>"), 
+            e ? l.$el.html("<" + e + ">" + w.FE.MARKERS + "<br/></" + e + ">") : l.$el.html(w.FE.MARKERS + "<br/>"),
             l.selection.restore();
         }
         function a(e) {
@@ -13511,12 +13575,12 @@
             if ((d = n) === w.FE.KEYCODE.IME) return c = !0;
             c = !1;
             var r, o, i, a = m(n) && !g(e) && !e.altKey, s = n == w.FE.KEYCODE.BACKSPACE || n == w.FE.KEYCODE.DELETE;
-            if ((!(g(e) || e.shiftKey && (33 === n || 34 === n || 35 === n || 36 === n)) && l.selection.isFull() && !l.opts.keepFormatOnDelete && !l.placeholder.isVisible() || s && l.placeholder.isVisible() && l.opts.keepFormatOnDelete) && (a || s) && (f(), 
+            if ((!(g(e) || e.shiftKey && (33 === n || 34 === n || 35 === n || 36 === n)) && l.selection.isFull() && !l.opts.keepFormatOnDelete && !l.placeholder.isVisible() || s && l.placeholder.isVisible() && l.opts.keepFormatOnDelete) && (a || s) && (f(),
             !m(n))) return e.preventDefault(), !0;
-            n == w.FE.KEYCODE.ENTER ? e.shiftKey ? ((i = e).preventDefault(), i.stopPropagation(), 
-            l.opts.multiLine && (l.selection.isCollapsed() || l.selection.remove(), l.cursor.enter(!0))) : (o = e, 
-            l.opts.multiLine ? (l.helpers.isIOS() || (o.preventDefault(), o.stopPropagation()), 
-            l.selection.isCollapsed() || l.selection.remove(), l.cursor.enter()) : (o.preventDefault(), 
+            n == w.FE.KEYCODE.ENTER ? e.shiftKey ? ((i = e).preventDefault(), i.stopPropagation(),
+            l.opts.multiLine && (l.selection.isCollapsed() || l.selection.remove(), l.cursor.enter(!0))) : (o = e,
+            l.opts.multiLine ? (l.helpers.isIOS() || (o.preventDefault(), o.stopPropagation()),
+            l.selection.isCollapsed() || l.selection.remove(), l.cursor.enter()) : (o.preventDefault(),
             o.stopPropagation())) : n === w.FE.KEYCODE.BACKSPACE && (e.metaKey || e.ctrlKey) ? setTimeout(function() {
                 l.events.disableBlur(), l.events.focus();
             }, 0) : n != w.FE.KEYCODE.BACKSPACE || g(e) || e.altKey ? n != w.FE.KEYCODE.DELETE || g(e) || e.altKey || e.shiftKey ? n == w.FE.KEYCODE.SPACE ? function(e) {
@@ -13526,8 +13590,8 @@
                     var n = l.markers.insert();
                     if (n) {
                         var r = n.previousSibling;
-                        !n.nextSibling && n.parentNode && "A" == n.parentNode.tagName ? (n.parentNode.insertAdjacentHTML("afterend", "&nbsp;" + w.FE.MARKERS), 
-                        n.parentNode.removeChild(n)) : (r && r.nodeType == Node.TEXT_NODE && 1 == r.textContent.length && 160 == r.textContent.charCodeAt(0) ? r.textContent = r.textContent + " " : n.insertAdjacentHTML("beforebegin", "&nbsp;"), 
+                        !n.nextSibling && n.parentNode && "A" == n.parentNode.tagName ? (n.parentNode.insertAdjacentHTML("afterend", "&nbsp;" + w.FE.MARKERS),
+                        n.parentNode.removeChild(n)) : (r && r.nodeType == Node.TEXT_NODE && 1 == r.textContent.length && 160 == r.textContent.charCodeAt(0) ? r.textContent = r.textContent + " " : n.insertAdjacentHTML("beforebegin", "&nbsp;"),
                         n.outerHTML = w.FE.MARKERS), l.selection.restore();
                     }
                 }
@@ -13537,15 +13601,15 @@
                     for (var t = "", n = 0; n < l.opts.tabSpaces; n++) t += "&nbsp;";
                     l.html.insert(t), l.placeholder.refresh(), l.undo.saveStep();
                 } else e.preventDefault(), e.stopPropagation(), e.shiftKey ? l.commands.outdent() : l.commands.indent();
-            }(e) : g(e) || !m(e.which) || l.selection.isCollapsed() || e.ctrlKey || e.altKey || l.selection.remove() : l.placeholder.isVisible() ? (l.opts.keepFormatOnDelete || f(), 
-            e.preventDefault(), e.stopPropagation()) : ((r = e).preventDefault(), r.stopPropagation(), 
-            "" === l.selection.text() && "IMG" != l.selection.element().tagName ? l.cursor.del() : l.selection.remove(), 
-            l.placeholder.refresh()) : l.placeholder.isVisible() ? (l.opts.keepFormatOnDelete || f(), 
+            }(e) : g(e) || !m(e.which) || l.selection.isCollapsed() || e.ctrlKey || e.altKey || l.selection.remove() : l.placeholder.isVisible() ? (l.opts.keepFormatOnDelete || f(),
+            e.preventDefault(), e.stopPropagation()) : ((r = e).preventDefault(), r.stopPropagation(),
+            "" === l.selection.text() && "IMG" != l.selection.element().tagName ? l.cursor.del() : l.selection.remove(),
+            l.placeholder.refresh()) : l.placeholder.isVisible() ? (l.opts.keepFormatOnDelete || f(),
             e.preventDefault(), e.stopPropagation()) : function(e) {
                 if (l.selection.isCollapsed()) if (l.cursor.backspace(), l.helpers.isIOS()) {
                     var t = l.selection.ranges(0);
                     t.deleteContents(), t.insertNode(document.createTextNode("​")), l.selection.get().modify("move", "forward", "character");
-                } else e.preventDefault(), e.stopPropagation(); else e.preventDefault(), e.stopPropagation(), 
+                } else e.preventDefault(), e.stopPropagation(); else e.preventDefault(), e.stopPropagation(),
                 l.selection.remove();
                 l.placeholder.refresh();
             }(e), l.events.enableBlur();
@@ -13553,11 +13617,11 @@
         function s() {
             if (!l.$wp) return !0;
             var e;
-            l.opts.height || l.opts.heightMax ? (e = l.position.getBoundingRect().top, l.opts.iframe && (e += l.$iframe.offset().top, 
-            e -= l.helpers.scrollTop()), e > l.$wp.offset().top - l.helpers.scrollTop() + l.$wp.height() - 20 && l.$wp.scrollTop(e + l.$wp.scrollTop() - (l.$wp.height() + l.$wp.offset().top) + l.helpers.scrollTop() + 20)) : (e = l.position.getBoundingRect().top, 
-            l.opts.toolbarBottom && (e += l.opts.toolbarStickyOffset), l.opts.iframe && (e += l.$iframe.offset().top, 
-            e -= l.helpers.scrollTop()), (e += l.opts.toolbarStickyOffset) > l.o_win.innerHeight - 20 && w(l.o_win).scrollTop(e + l.helpers.scrollTop() - l.o_win.innerHeight + 20), 
-            e = l.position.getBoundingRect().top, l.opts.toolbarBottom || (e -= l.opts.toolbarStickyOffset), 
+            l.opts.height || l.opts.heightMax ? (e = l.position.getBoundingRect().top, l.opts.iframe && (e += l.$iframe.offset().top,
+            e -= l.helpers.scrollTop()), e > l.$wp.offset().top - l.helpers.scrollTop() + l.$wp.height() - 20 && l.$wp.scrollTop(e + l.$wp.scrollTop() - (l.$wp.height() + l.$wp.offset().top) + l.helpers.scrollTop() + 20)) : (e = l.position.getBoundingRect().top,
+            l.opts.toolbarBottom && (e += l.opts.toolbarStickyOffset), l.opts.iframe && (e += l.$iframe.offset().top,
+            e -= l.helpers.scrollTop()), (e += l.opts.toolbarStickyOffset) > l.o_win.innerHeight - 20 && w(l.o_win).scrollTop(e + l.helpers.scrollTop() - l.o_win.innerHeight + 20),
+            e = l.position.getBoundingRect().top, l.opts.toolbarBottom || (e -= l.opts.toolbarStickyOffset),
             l.opts.iframe && (e += l.$iframe.offset().top, e -= l.helpers.scrollTop()), e < l.$tb.height() + 20 && w(l.o_win).scrollTop(e + l.helpers.scrollTop() - l.$tb.height() - 20));
         }
         function p() {
@@ -13566,7 +13630,7 @@
                 if (!e) return !1;
                 var t = e.innerHTML;
                 return !!((t = t.replace(/<span[^>]*? class\s*=\s*["']?fr-marker["']?[^>]+>\u200b<\/span>/gi, "")) && /\u200B/.test(t) && 0 < t.replace(/\u200B/gi, "").length);
-            }(t) || l.node.hasClass(t, "fr-marker") || "IFRAME" == t.tagName || (e = t, l.helpers.isIOS() && 0 !== ((e.textContent || "").match(/[\u3041-\u3096\u30A0-\u30FF\u4E00-\u9FFF\u3130-\u318F\uAC00-\uD7AF]/gi) || []).length) || (l.selection.save(), 
+            }(t) || l.node.hasClass(t, "fr-marker") || "IFRAME" == t.tagName || (e = t, l.helpers.isIOS() && 0 !== ((e.textContent || "").match(/[\u3041-\u3096\u30A0-\u30FF\u4E00-\u9FFF\u3130-\u318F\uAC00-\uD7AF]/gi) || []).length) || (l.selection.save(),
             function(e) {
                 for (var t = l.doc.createTreeWalker(e, NodeFilter.SHOW_TEXT, l.node.filter(function(e) {
                     return /\u200B/gi.test(e.textContent);
@@ -13581,7 +13645,7 @@
             if (t && 0 <= [ "INPUT", "TEXTAREA" ].indexOf(t.tagName)) return !0;
             if (e && 0 === e.which && d && (e.which = d), l.helpers.isAndroid() && l.browser.mozilla) return !0;
             if (c) return !1;
-            if (e && l.helpers.isIOS() && e.which == w.FE.KEYCODE.ENTER && l.doc.execCommand("undo"), 
+            if (e && l.helpers.isIOS() && e.which == w.FE.KEYCODE.ENTER && l.doc.execCommand("undo"),
             !l.selection.isCollapsed()) return !0;
             if (e && (e.which === w.FE.KEYCODE.META || e.which == w.FE.KEYCODE.CTRL)) return !0;
             if (e && h(e.which)) return !0;
@@ -13633,7 +13697,7 @@
         function E(e) {
             var t = e.which;
             if (g(e) || 37 <= t && t <= 40 || !m(t) && t != w.FE.KEYCODE.DELETE && t != w.FE.KEYCODE.BACKSPACE && t != w.FE.KEYCODE.ENTER && t != w.FE.KEYCODE.IME) return !0;
-            n || (r = l.snapshot.get(), l.undo.canDo() || l.undo.saveStep()), clearTimeout(n), 
+            n || (r = l.snapshot.get(), l.undo.canDo() || l.undo.saveStep()), clearTimeout(n),
             n = setTimeout(function() {
                 n = null, l.undo.saveStep();
             }, Math.max(250, l.opts.typingTimer));
@@ -13653,9 +13717,9 @@
         }
         function S(e) {
             var t = l.el.childNodes, n = l.html.defaultTag(), r = l.node.blockParent(l.selection.blocks()[0]);
-            return !l.node.isEditable(e.target) || r && "false" == w(r).attr("contenteditable") ? l.toolbar.disable() : l.toolbar.enable(), 
-            !(!e.target || e.target === l.el) || (0 === t.length || void (t[0].offsetHeight + t[0].offsetTop <= e.offsetY ? b(t[t.length - 1]) && (n ? l.$el.append("<" + n + ">" + w.FE.MARKERS + "<br></" + n + ">") : l.$el.append(w.FE.MARKERS + "<br>"), 
-            l.selection.restore(), s()) : e.offsetY <= 10 && b(t[0]) && (n ? l.$el.prepend("<" + n + ">" + w.FE.MARKERS + "<br></" + n + ">") : l.$el.prepend(w.FE.MARKERS + "<br>"), 
+            return !l.node.isEditable(e.target) || r && "false" == w(r).attr("contenteditable") ? l.toolbar.disable() : l.toolbar.enable(),
+            !(!e.target || e.target === l.el) || (0 === t.length || void (t[0].offsetHeight + t[0].offsetTop <= e.offsetY ? b(t[t.length - 1]) && (n ? l.$el.append("<" + n + ">" + w.FE.MARKERS + "<br></" + n + ">") : l.$el.append(w.FE.MARKERS + "<br>"),
+            l.selection.restore(), s()) : e.offsetY <= 10 && b(t[0]) && (n ? l.$el.prepend("<" + n + ">" + w.FE.MARKERS + "<br></" + n + ">") : l.$el.prepend(w.FE.MARKERS + "<br>"),
             l.selection.restore(), s())));
         }
         function T() {
@@ -13663,9 +13727,9 @@
         }
         return {
             _init: function() {
-                l.events.on("keydown", E), l.events.on("input", e), l.events.on("mousedown", i), 
-                l.events.on("keyup input", v), l.events.on("keypress", o), l.events.on("keydown", a), 
-                l.events.on("keyup", u), l.events.on("destroy", T), l.events.on("html.inserted", u), 
+                l.events.on("keydown", E), l.events.on("input", e), l.events.on("mousedown", i),
+                l.events.on("keyup input", v), l.events.on("keypress", o), l.events.on("keydown", a),
+                l.events.on("keyup", u), l.events.on("destroy", T), l.events.on("html.inserted", u),
                 l.events.on("cut", t), l.opts.multiLine && l.events.on("click", S);
             },
             ctrlKey: g,
@@ -13691,7 +13755,7 @@
                 e.events.blurActive() && !f.core.hasFocus() && e.events.trigger("blur"), setTimeout(function() {
                     e.events.enableBlur();
                 }, 100);
-            }, !0), t.data("blur-event-set", !0)), (t.parents(".fr-toolbar, .fr-popup").data("instance") || f).events.disableBlur(), 
+            }, !0), t.data("blur-event-set", !0)), (t.parents(".fr-toolbar, .fr-popup").data("instance") || f).events.disableBlur(),
             t.focus(), f.shared.$f_el = t);
         }
         function p(e, t) {
@@ -13699,7 +13763,7 @@
             if (r.length) return s(r), !0;
         }
         function a(e) {
-            return e.is("input, textarea, select") && t(), f.events.disableBlur(), e.focus(), 
+            return e.is("input, textarea, select") && t(), f.events.disableBlur(), e.focus(),
             !0;
         }
         function u(e, t) {
@@ -13725,7 +13789,7 @@
         }
         function d() {
             var e = null;
-            return f.shared.$f_el.is(".fr-dropdown.fr-active") ? e = f.shared.$f_el : f.shared.$f_el.closest(".fr-dropdown-menu").prev().is(".fr-dropdown.fr-active") && (e = f.shared.$f_el.closest(".fr-dropdown-menu").prev()), 
+            return f.shared.$f_el.is(".fr-dropdown.fr-active") ? e = f.shared.$f_el : f.shared.$f_el.closest(".fr-dropdown-menu").prev().is(".fr-dropdown.fr-active") && (e = f.shared.$f_el.closest(".fr-dropdown-menu").prev()),
             e;
         }
         function n(e, t, n) {
@@ -13753,9 +13817,9 @@
         function h(e) {
             if (f.shared.$f_el) {
                 var t;
-                if (f.shared.$f_el.is(".fr-dropdown.fr-active")) return s(t = e ? f.shared.$f_el.next().find(".fr-command:not(.fr-disabled)").first() : f.shared.$f_el.next().find(".fr-command:not(.fr-disabled)").last()), 
+                if (f.shared.$f_el.is(".fr-dropdown.fr-active")) return s(t = e ? f.shared.$f_el.next().find(".fr-command:not(.fr-disabled)").first() : f.shared.$f_el.next().find(".fr-command:not(.fr-disabled)").last()),
                 !1;
-                if (f.shared.$f_el.is("a.fr-command")) return (t = e ? f.shared.$f_el.closest("li").nextAll(":visible:first").find(".fr-command:not(.fr-disabled)").first() : f.shared.$f_el.closest("li").prevAll(":visible:first").find(".fr-command:not(.fr-disabled)").first()).length || (t = e ? f.shared.$f_el.closest(".fr-dropdown-menu").find(".fr-command:not(.fr-disabled)").first() : f.shared.$f_el.closest(".fr-dropdown-menu").find(".fr-command:not(.fr-disabled)").last()), 
+                if (f.shared.$f_el.is("a.fr-command")) return (t = e ? f.shared.$f_el.closest("li").nextAll(":visible:first").find(".fr-command:not(.fr-disabled)").first() : f.shared.$f_el.closest("li").prevAll(":visible:first").find(".fr-command:not(.fr-disabled)").first()).length || (t = e ? f.shared.$f_el.closest(".fr-dropdown-menu").find(".fr-command:not(.fr-disabled)").first() : f.shared.$f_el.closest(".fr-dropdown-menu").find(".fr-command:not(.fr-disabled)").last()),
                 s(t), !1;
             }
         }
@@ -13779,8 +13843,8 @@
             }
         }
         function E() {
-            f.shared.$f_el && (f.events.disableBlur(), f.shared.$f_el.blur(), f.shared.$f_el = null), 
-            !1 !== f.events.trigger("toolbar.focusEditor") && (f.events.disableBlur(), f.browser.msie || f.$el.focus(), 
+            f.shared.$f_el && (f.events.disableBlur(), f.shared.$f_el.blur(), f.shared.$f_el = null),
+            !1 !== f.events.trigger("toolbar.focusEditor") && (f.events.disableBlur(), f.browser.msie || f.$el.focus(),
             f.events.focus());
         }
         function r(r) {
@@ -13812,16 +13876,16 @@
             if (e.which == w.FE.KEYCODE.F10 && !t && !e.shiftKey && e.altKey) {
                 f.shared.with_kb = !0;
                 var n = f.popups.areVisible(f), r = !1;
-                return n && (r = u(n.children().not(".fr-buttons"))), r || l(), f.shared.with_kb = !1, 
+                return n && (r = u(n.children().not(".fr-buttons"))), r || l(), f.shared.with_kb = !1,
                 e.preventDefault(), e.stopPropagation(), !1;
             }
             return !0;
         }
         return {
             _init: function() {
-                f.$wp ? f.events.on("keydown", e, !0) : f.events.$on(f.$win, "keydown", e, !0), 
+                f.$wp ? f.events.on("keydown", e, !0) : f.events.$on(f.$win, "keydown", e, !0),
                 f.events.on("mousedown", function(e) {
-                    o(f), f.shared.$f_el && (f.accessibility.restoreSelection(), e.stopPropagation(), 
+                    o(f), f.shared.$f_el && (f.accessibility.restoreSelection(), e.stopPropagation(),
                     f.events.disableBlur(), f.shared.$f_el = null);
                 }, !0), f.events.on("blur", function() {
                     f.shared.$f_el = null, o(f);
@@ -13836,20 +13900,20 @@
                         if (w.FE.KEYCODE.TAB == n) {
                             e.preventDefault();
                             var o = c.children().not(".fr-buttons"), i = o.find("input, textarea, button, select").filter(":visible").not(".fr-no-touch input, .fr-no-touch textarea, .fr-no-touch button, .fr-no-touch select, :disabled").toArray(), a = i.indexOf(this) + (e.shiftKey ? -1 : 1);
-                            if (0 <= a && a < i.length) return t.events.disableBlur(), w(i[a]).focus(), e.stopPropagation(), 
+                            if (0 <= a && a < i.length) return t.events.disableBlur(), w(i[a]).focus(), e.stopPropagation(),
                             !1;
                             var s = c.find(".fr-buttons");
                             if (s.length && p(s, !!e.shiftKey)) return e.stopPropagation(), !1;
                             if (u(o)) return e.stopPropagation(), !1;
                         } else {
-                            if (w.FE.KEYCODE.ENTER != n || !e.target || "TEXTAREA" === e.target.tagName) return w.FE.KEYCODE.ESC == n ? (e.preventDefault(), 
-                            e.stopPropagation(), t.accessibility.restoreSelection(), t.popups.isVisible(d) && c.find(".fr-back:visible").length ? (t.opts.toolbarInline && (t.events.disableBlur(), 
-                            t.events.focus()), t.button.exec(c.find(".fr-back:visible:first")), v(c)) : t.popups.isVisible(d) && c.find(".fr-dismiss:visible").length ? t.button.exec(c.find(".fr-dismiss:visible:first")) : (t.popups.hide(d), 
-                            t.opts.toolbarInline && t.toolbar.showInline(null, !0), v(c)), !1) : w.FE.KEYCODE.SPACE == n && (r.is(".fr-submit") || r.is(".fr-dismiss")) ? (e.preventDefault(), 
-                            e.stopPropagation(), t.events.disableBlur(), t.button.exec(r), !0) : t.keys.isBrowserAction(e) ? void e.stopPropagation() : r.is("input[type=text], textarea") ? void e.stopPropagation() : w.FE.KEYCODE.SPACE == n && (r.is(".fr-link-attr") || r.is("input[type=file]")) ? void e.stopPropagation() : (e.stopPropagation(), 
+                            if (w.FE.KEYCODE.ENTER != n || !e.target || "TEXTAREA" === e.target.tagName) return w.FE.KEYCODE.ESC == n ? (e.preventDefault(),
+                            e.stopPropagation(), t.accessibility.restoreSelection(), t.popups.isVisible(d) && c.find(".fr-back:visible").length ? (t.opts.toolbarInline && (t.events.disableBlur(),
+                            t.events.focus()), t.button.exec(c.find(".fr-back:visible:first")), v(c)) : t.popups.isVisible(d) && c.find(".fr-dismiss:visible").length ? t.button.exec(c.find(".fr-dismiss:visible:first")) : (t.popups.hide(d),
+                            t.opts.toolbarInline && t.toolbar.showInline(null, !0), v(c)), !1) : w.FE.KEYCODE.SPACE == n && (r.is(".fr-submit") || r.is(".fr-dismiss")) ? (e.preventDefault(),
+                            e.stopPropagation(), t.events.disableBlur(), t.button.exec(r), !0) : t.keys.isBrowserAction(e) ? void e.stopPropagation() : r.is("input[type=text], textarea") ? void e.stopPropagation() : w.FE.KEYCODE.SPACE == n && (r.is(".fr-link-attr") || r.is("input[type=file]")) ? void e.stopPropagation() : (e.stopPropagation(),
                             e.preventDefault(), !1);
                             var l = null;
-                            0 < c.find(".fr-submit:visible").length ? l = c.find(".fr-submit:visible:first") : c.find(".fr-dismiss:visible").length && (l = c.find(".fr-dismiss:visible:first")), 
+                            0 < c.find(".fr-submit:visible").length ? l = c.find(".fr-submit:visible:first") : c.find(".fr-dismiss:visible").length && (l = c.find(".fr-dismiss:visible:first")),
                             l && (e.preventDefault(), e.stopPropagation(), t.events.disableBlur(), t.button.exec(l));
                         }
                     },
@@ -13858,8 +13922,8 @@
                         o(e);
                     }
                 });
-                r(t.find(".fr-buttons")), f.events.$on(t, "mouseenter", "tabIndex", n._tiMouseenter, !0), 
-                f.events.$on(t.children().not(".fr-buttons"), "keydown", "[tabIndex]", n._tiKeydown, !0), 
+                r(t.find(".fr-buttons")), f.events.$on(t, "mouseenter", "tabIndex", n._tiMouseenter, !0),
+                f.events.$on(t.children().not(".fr-buttons"), "keydown", "[tabIndex]", n._tiKeydown, !0),
                 f.popups.onHide(e, function() {
                     (t.data("instance") || f).accessibility.restoreSelection();
                 }), f.popups.onShow(e, function() {
@@ -13878,13 +13942,13 @@
                     var t = r.data("instance") || f;
                     if (!i) return e.stopPropagation(), void e.preventDefault();
                     var n = o.find(":focus:first");
-                    n.length && !n.is("input, button, textarea, select") && (t.events.disableBlur(), 
+                    n.length && !n.is("input, button, textarea, select") && (t.events.disableBlur(),
                     n.blur(), t.events.disableBlur(), t.events.focus());
                 }), o.data("mouseenter-event-set", !0)), !u(o) && f.shared.with_kb && p(r.find(".fr-buttons"));
             },
             focusModal: function(e) {
-                f.core.hasFocus() || (f.events.disableBlur(), f.events.focus()), f.accessibility.saveSelection(), 
-                f.events.disableBlur(), f.$el.blur(), f.selection.clear(), f.events.disableBlur(), 
+                f.core.hasFocus() || (f.events.disableBlur(), f.events.focus()), f.accessibility.saveSelection(),
+                f.events.disableBlur(), f.$el.blur(), f.selection.clear(), f.events.disableBlur(),
                 f.shared.with_kb ? e.find(".fr-command[tabIndex], [tabIndex]").first().focus() : e.find("[tabIndex]:first").focus();
             },
             focusEditor: E,
@@ -13903,20 +13967,20 @@
                 return r != w.FE.KEYCODE.TAB || n || e.shiftKey || e.altKey ? r != w.FE.KEYCODE.ARROW_RIGHT || n || e.shiftKey || e.altKey ? r != w.FE.KEYCODE.TAB || n || !e.shiftKey || e.altKey ? r != w.FE.KEYCODE.ARROW_LEFT || n || e.shiftKey || e.altKey ? r != w.FE.KEYCODE.ARROW_UP || n || e.shiftKey || e.altKey ? r != w.FE.KEYCODE.ARROW_DOWN || n || e.shiftKey || e.altKey ? r != w.FE.KEYCODE.ENTER && r != w.FE.KEYCODE.SPACE || n || e.shiftKey || e.altKey ? r != w.FE.KEYCODE.ESC || n || e.shiftKey || e.altKey ? r != w.FE.KEYCODE.F10 || n || e.shiftKey || !e.altKey || (o = l()) : o = function(e) {
                     if (f.shared.$f_el) {
                         var t = d();
-                        return t ? (f.button.click(t), s(t)) : e.parent().find(".fr-back:visible").length ? (f.shared.with_kb = !1, 
-                        f.opts.toolbarInline && (f.events.disableBlur(), f.events.focus()), f.button.exec(e.parent().find(".fr-back:visible:first")), 
-                        v(e.parent())) : f.shared.$f_el.is("button, .fr-group span") && (e.parent().is(".fr-popup") ? (f.accessibility.restoreSelection(), 
-                        f.shared.$f_el = null, !1 !== f.events.trigger("toolbar.esc") && (f.popups.hide(e.parent()), 
-                        f.opts.toolbarInline && f.toolbar.showInline(null, !0), v(e.parent()))) : E()), 
+                        return t ? (f.button.click(t), s(t)) : e.parent().find(".fr-back:visible").length ? (f.shared.with_kb = !1,
+                        f.opts.toolbarInline && (f.events.disableBlur(), f.events.focus()), f.button.exec(e.parent().find(".fr-back:visible:first")),
+                        v(e.parent())) : f.shared.$f_el.is("button, .fr-group span") && (e.parent().is(".fr-popup") ? (f.accessibility.restoreSelection(),
+                        f.shared.$f_el = null, !1 !== f.events.trigger("toolbar.esc") && (f.popups.hide(e.parent()),
+                        f.opts.toolbarInline && f.toolbar.showInline(null, !0), v(e.parent()))) : E()),
                         !1;
                     }
-                }(t) : o = m() : o = f.shared.$f_el && f.shared.$f_el.is(".fr-dropdown:not(.fr-active)") ? m() : h(!0) : o = h() : o = g(t) : o = g(t, !0) : o = c(t) : o = c(t, !0), 
-                f.shared.$f_el || o !== undefined || (o = !0), !o && f.keys.isBrowserAction(e) && (o = !0), 
+                }(t) : o = m() : o = f.shared.$f_el && f.shared.$f_el.is(".fr-dropdown:not(.fr-active)") ? m() : h(!0) : o = h() : o = g(t) : o = g(t, !0) : o = c(t) : o = c(t, !0),
+                f.shared.$f_el || o !== undefined || (o = !0), !o && f.keys.isBrowserAction(e) && (o = !0),
                 !!o || (e.preventDefault(), e.stopPropagation(), !1);
             },
             saveSelection: t,
             restoreSelection: function() {
-                f.$el.find(".fr-marker").length && (f.events.disableBlur(), f.selection.restore(), 
+                f.$el.find(".fr-marker").length && (f.events.disableBlur(), f.selection.restore(),
                 f.events.enableBlur());
             }
         };
@@ -13938,7 +14002,7 @@
             if (e) {
                 for (;e.nodeType === Node.COMMENT_NODE; ) e = e.nextSibling;
                 if (e) {
-                    if (h.node.isBlock(e) && "HR" !== e.tagName) return h.node.hasClass(e.firstChild, "fr-marker") ? m(e.firstChild.nextSibling, t, n) : m(e.firstChild, t, n), 
+                    if (h.node.isBlock(e) && "HR" !== e.tagName) return h.node.hasClass(e.firstChild, "fr-marker") ? m(e.firstChild.nextSibling, t, n) : m(e.firstChild, t, n),
                     !1;
                     for (var r = w(l(t, n)).insertBefore(e), o = e; o && !w(o).is(".fr-marker") && 0 === w(o).find(".fr-marker").length && "UL" != o.tagName && "OL" != o.tagName; ) {
                         var i = o;
@@ -13959,7 +14023,7 @@
         function n(e, t) {
             var n;
             if (void 0 === t && (t = {}), t.style && delete t.style, h.selection.isCollapsed()) {
-                h.markers.insert(), h.$el.find(".fr-marker").replaceWith(l(e, t) + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + ("</" + e + ">")), 
+                h.markers.insert(), h.$el.find(".fr-marker").replaceWith(l(e, t) + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + ("</" + e + ">")),
                 h.selection.restore();
             } else {
                 var r;
@@ -13979,20 +14043,20 @@
         function E(e, t, n, r) {
             if (!r) {
                 var o = !1;
-                if (!0 === e.data("type")) for (;h.node.isFirstSibling(e.get(0)) && !e.parent().is(h.$el) && !e.parent().is("ol") && !e.parent().is("ul"); ) e.parent().before(e), 
-                o = !0; else if (!1 === e.data("type")) for (;h.node.isLastSibling(e.get(0)) && !e.parent().is(h.$el) && !e.parent().is("ol") && !e.parent().is("ul"); ) e.parent().after(e), 
+                if (!0 === e.data("type")) for (;h.node.isFirstSibling(e.get(0)) && !e.parent().is(h.$el) && !e.parent().is("ol") && !e.parent().is("ul"); ) e.parent().before(e),
+                o = !0; else if (!1 === e.data("type")) for (;h.node.isLastSibling(e.get(0)) && !e.parent().is(h.$el) && !e.parent().is("ol") && !e.parent().is("ul"); ) e.parent().after(e),
                 o = !0;
                 if (o) return !0;
             }
             if (e.parents(t).length || void 0 === t) {
                 var i = "", a = "", s = e.parent();
                 if (s.is(h.$el) || h.node.isBlock(s.get(0))) return !1;
-                for (;!h.node.isBlock(s.parent().get(0)) && (void 0 === t || void 0 !== t && !p(s.get(0), f(t, n))); ) i += h.node.closeTagString(s.get(0)), 
+                for (;!h.node.isBlock(s.parent().get(0)) && (void 0 === t || void 0 !== t && !p(s.get(0), f(t, n))); ) i += h.node.closeTagString(s.get(0)),
                 a = h.node.openTagString(s.get(0)) + a, s = s.parent();
                 var l = e.get(0).outerHTML;
                 e.replaceWith('<span id="mark"></span>');
                 var d = s.html().replace(/<span id="mark"><\/span>/, i + h.node.closeTagString(s.get(0)) + a + l + i + h.node.openTagString(s.get(0)) + a);
-                return s.replaceWith(h.node.openTagString(s.get(0)) + d + h.node.closeTagString(s.get(0))), 
+                return s.replaceWith(h.node.openTagString(s.get(0)) + d + h.node.closeTagString(s.get(0))),
                 !0;
             }
             return !1;
@@ -14005,8 +14069,8 @@
                 o = !1;
                 for (var i = h.$el.find(".fr-marker"), a = 0; a < i.length; a++) {
                     var s = w(i[a]), l = null;
-                    if (s.attr("data-cloned") || r || (l = s.clone().removeClass("fr-marker").addClass("fr-clone"), 
-                    !0 === s.data("type") ? s.attr("data-cloned", !0).after(l) : s.attr("data-cloned", !0).before(l)), 
+                    if (s.attr("data-cloned") || r || (l = s.clone().removeClass("fr-marker").addClass("fr-clone"),
+                    !0 === s.data("type") ? s.attr("data-cloned", !0).after(l) : s.attr("data-cloned", !0).before(l)),
                     E(s, t, n, r)) {
                         o = !0;
                         break;
@@ -14025,8 +14089,8 @@
                     } else 0 < w(s).find(".fr-marker").length && (n = e(w(s), n, r, o));
                 }
                 return n;
-            }(h.$el, 0, t, n), r || (h.$el.find(".fr-marker").remove(), h.$el.find(".fr-clone").removeClass("fr-clone").addClass("fr-marker")), 
-            r && h.$el.find(".fr-marker").before(w.FE.INVISIBLE_SPACE).after(w.FE.INVISIBLE_SPACE), 
+            }(h.$el, 0, t, n), r || (h.$el.find(".fr-marker").remove(), h.$el.find(".fr-clone").removeClass("fr-clone").addClass("fr-marker")),
+            r && h.$el.find(".fr-marker").before(w.FE.INVISIBLE_SPACE).after(w.FE.INVISIBLE_SPACE),
             h.html.cleanEmptyTags(), h.el.normalize(), h.selection.restore();
         }
         function t(e, t) {
@@ -14035,15 +14099,15 @@
                 h.markers.insert();
                 var l = (r = h.$el.find(".fr-marker")).parent();
                 if (h.node.openTagString(l.get(0)) == '<span style="' + e + ": " + l.css(e) + ';">') {
-                    if (h.node.isEmpty(l.get(0))) s = w('<span style="' + e + ": " + t + ';">' + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + "</span>"), 
+                    if (h.node.isEmpty(l.get(0))) s = w('<span style="' + e + ": " + t + ';">' + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + "</span>"),
                     l.replaceWith(s); else {
                         var d = {};
-                        d["style*"] = e + ":", E(r, "span", d, !0), r = h.$el.find(".fr-marker"), t ? (s = w('<span style="' + e + ": " + t + ';">' + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + "</span>"), 
+                        d["style*"] = e + ":", E(r, "span", d, !0), r = h.$el.find(".fr-marker"), t ? (s = w('<span style="' + e + ": " + t + ';">' + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + "</span>"),
                         r.replaceWith(s)) : r.replaceWith(w.FE.INVISIBLE_SPACE + w.FE.MARKERS);
                     }
                     h.html.cleanEmptyTags();
-                } else h.node.isEmpty(l.get(0)) && l.is("span") ? (r.replaceWith(w.FE.MARKERS), 
-                l.css(e, t)) : (s = w('<span style="' + e + ": " + t + ';">' + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + "</span>"), 
+                } else h.node.isEmpty(l.get(0)) && l.is("span") ? (r.replaceWith(w.FE.MARKERS),
+                l.css(e, t)) : (s = w('<span style="' + e + ": " + t + ';">' + w.FE.INVISIBLE_SPACE + w.FE.MARKERS + "</span>"),
                 r.replaceWith(s));
                 s && v(s, e, t);
             } else {
@@ -14059,14 +14123,14 @@
                 }), h.$el.find(".fr-unprocessed + .fr-marker").each(function() {
                     w(this).prev().append(this);
                 }), (t || "").match(/\dem$/) && h.$el.find("span.fr-unprocessed").removeClass("fr-unprocessed"); 0 < h.$el.find("span.fr-unprocessed").length; ) {
-                    if ((s = h.$el.find("span.fr-unprocessed:first").removeClass("fr-unprocessed")).parent().get(0).normalize(), 
+                    if ((s = h.$el.find("span.fr-unprocessed:first").removeClass("fr-unprocessed")).parent().get(0).normalize(),
                     s.parent().is("span") && 1 == s.parent().get(0).childNodes.length) {
                         s.parent().css(e, t);
                         var u = s;
                         s = s.parent(), u.replaceWith(u.html());
                     }
                     var g = s.find("span");
-                    for (n = g.length - 1; 0 <= n; n--) o = g[n], i = e, a = void 0, (a = w(o)).css(i, ""), 
+                    for (n = g.length - 1; 0 <= n; n--) o = g[n], i = e, a = void 0, (a = w(o)).css(i, ""),
                     "" === a.attr("style") && a.replaceWith(a.html());
                     v(s, e, t);
                 }
@@ -14074,20 +14138,20 @@
             !function() {
                 var e;
                 for (;0 < h.$el.find(".fr-split:empty").length; ) h.$el.find(".fr-split:empty").remove();
-                h.$el.find(".fr-split").removeClass("fr-split"), h.$el.find('[style=""]').removeAttr("style"), 
+                h.$el.find(".fr-split").removeClass("fr-split"), h.$el.find('[style=""]').removeAttr("style"),
                 h.$el.find('[class=""]').removeAttr("class"), h.html.cleanEmptyTags(), w(h.$el.find("span").get().reverse()).each(function() {
                     this.attributes && 0 !== this.attributes.length || w(this).replaceWith(this.innerHTML);
                 }), h.el.normalize();
                 var t = h.$el.find("span[style] + span[style]");
                 for (e = 0; e < t.length; e++) {
                     var n = w(t[e]), r = w(t[e]).prev();
-                    n.get(0).previousSibling == r.get(0) && h.node.openTagString(n.get(0)) == h.node.openTagString(r.get(0)) && (n.prepend(r.html()), 
+                    n.get(0).previousSibling == r.get(0) && h.node.openTagString(n.get(0)) == h.node.openTagString(r.get(0)) && (n.prepend(r.html()),
                     r.remove());
                 }
                 h.$el.find("span[style] span[style]").each(function() {
                     if (0 <= w(this).attr("style").indexOf("font-size")) {
                         var e = w(this).parents("span[style]");
-                        0 <= e.attr("style").indexOf("background-color") && (w(this).attr("style", w(this).attr("style") + ";" + e.attr("style")), 
+                        0 <= e.attr("style").indexOf("background-color") && (w(this).attr("style", w(this).attr("style") + ";" + e.attr("style")),
                         E(w(this), "span[style]", {}, !1));
                     }
                 }), h.el.normalize(), h.selection.restore();
@@ -14097,9 +14161,9 @@
             var r, o, i, a = e.parentsUntil(h.$el, "span[style]"), s = [];
             for (r = a.length - 1; 0 <= r; r--) o = a[r], i = t, 0 === w(o).attr("style").indexOf(i + ":") || 0 <= w(o).attr("style").indexOf(";" + i + ":") || 0 <= w(o).attr("style").indexOf("; " + i + ":") || s.push(a[r]);
             if ((a = a.not(s)).length) {
-                for (var l = "", d = "", c = "", f = "", p = e.get(0); p = p.parentNode, w(p).addClass("fr-split"), 
-                l += h.node.closeTagString(p), d = h.node.openTagString(w(p).clone().addClass("fr-split").get(0)) + d, 
-                a.get(0) != p && (c += h.node.closeTagString(p), f = h.node.openTagString(w(p).clone().addClass("fr-split").get(0)) + f), 
+                for (var l = "", d = "", c = "", f = "", p = e.get(0); p = p.parentNode, w(p).addClass("fr-split"),
+                l += h.node.closeTagString(p), d = h.node.openTagString(w(p).clone().addClass("fr-split").get(0)) + d,
+                a.get(0) != p && (c += h.node.closeTagString(p), f = h.node.openTagString(w(p).clone().addClass("fr-split").get(0)) + f),
                 a.get(0) != p; ) ;
                 var u = l + h.node.openTagString(w(a.get(0)).clone().css(t, n || "").get(0)) + f + e.css(t, "").get(0).outerHTML + c + "</span>" + d;
                 e.replaceWith('<span id="fr-break"></span>');
@@ -14112,7 +14176,7 @@
         function o(e, t) {
             void 0 === t && (t = {}), t.style && delete t.style;
             var n = h.selection.ranges(0), r = n.startContainer;
-            if (r.nodeType == Node.ELEMENT_NODE && 0 < r.childNodes.length && r.childNodes[n.startOffset] && (r = r.childNodes[n.startOffset]), 
+            if (r.nodeType == Node.ELEMENT_NODE && 0 < r.childNodes.length && r.childNodes[n.startOffset] && (r = r.childNodes[n.startOffset]),
             !n.collapsed && r.nodeType == Node.TEXT_NODE && n.startOffset == (r.textContent || "").length) {
                 for (;!h.node.isBlock(r.parentNode) && !r.nextSibling; ) r = r.parentNode;
                 r.nextSibling && (r = r.nextSibling);
@@ -14218,7 +14282,7 @@
         w.FE.COMMANDS[e] = t;
     }, w.FE.MODULES.commands = function(a) {
         function o(e) {
-            return a.html.defaultTag() && (e = "<" + a.html.defaultTag() + ">" + e + "</" + a.html.defaultTag() + ">"), 
+            return a.html.defaultTag() && (e = "<" + a.html.defaultTag() + ">" + e + "</" + a.html.defaultTag() + ">"),
             e;
         }
         var i = {
@@ -14264,7 +14328,7 @@
                     var r = a.html.defaultTag();
                     r ? n.after(w("<" + r + ">").append("<br>")) : n.after("<br>");
                 }
-                n.prev().is("hr") ? t = a.selection.setAfter(n.get(0), !1) : n.next().is("hr") ? t = a.selection.setBefore(n.get(0), !1) : a.selection.setAfter(n.get(0), !1) || a.selection.setBefore(n.get(0), !1), 
+                n.prev().is("hr") ? t = a.selection.setAfter(n.get(0), !1) : n.next().is("hr") ? t = a.selection.setBefore(n.get(0), !1) : a.selection.setAfter(n.get(0), !1) || a.selection.setBefore(n.get(0), !1),
                 t || void 0 === t || (e = o(e = w.FE.MARKERS + "<br>"), n.after(e)), a.selection.restore();
             },
             clearFormatting: function() {
@@ -14277,11 +14341,11 @@
         function t(e, t) {
             if (!1 !== a.events.trigger("commands.before", w.merge([ e ], t || []))) {
                 var n = w.FE.COMMANDS[e] && w.FE.COMMANDS[e].callback || i[e], r = !0, o = !1;
-                w.FE.COMMANDS[e] && ("undefined" != typeof w.FE.COMMANDS[e].focus && (r = w.FE.COMMANDS[e].focus), 
-                "undefined" != typeof w.FE.COMMANDS[e].accessibilityFocus && (o = w.FE.COMMANDS[e].accessibilityFocus)), 
-                (!a.core.hasFocus() && r && !a.popups.areVisible() || !a.core.hasFocus() && o && a.accessibility.hasFocus()) && a.events.focus(!0), 
-                w.FE.COMMANDS[e] && !1 !== w.FE.COMMANDS[e].undo && (a.$el.find(".fr-marker").length && (a.events.disableBlur(), 
-                a.selection.restore()), a.undo.saveStep()), n && n.apply(a, w.merge([ e ], t || [])), 
+                w.FE.COMMANDS[e] && ("undefined" != typeof w.FE.COMMANDS[e].focus && (r = w.FE.COMMANDS[e].focus),
+                "undefined" != typeof w.FE.COMMANDS[e].accessibilityFocus && (o = w.FE.COMMANDS[e].accessibilityFocus)),
+                (!a.core.hasFocus() && r && !a.popups.areVisible() || !a.core.hasFocus() && o && a.accessibility.hasFocus()) && a.events.focus(!0),
+                w.FE.COMMANDS[e] && !1 !== w.FE.COMMANDS[e].undo && (a.$el.find(".fr-marker").length && (a.events.disableBlur(),
+                a.selection.restore()), a.undo.saveStep()), n && n.apply(a, w.merge([ e ], t || [])),
                 a.events.trigger("commands.after", w.merge([ e ], t || [])), w.FE.COMMANDS[e] && !1 !== w.FE.COMMANDS[e].undo && a.undo.saveStep();
             }
         }
@@ -14311,30 +14375,30 @@
             _init: function() {
                 a.events.on("keydown", function(e) {
                     var t = a.selection.element();
-                    if (t && "HR" == t.tagName && !a.keys.isArrow(e.which)) return e.preventDefault(), 
+                    if (t && "HR" == t.tagName && !a.keys.isArrow(e.which)) return e.preventDefault(),
                     !1;
                 }), a.events.on("keyup", function(e) {
                     var t = a.selection.element();
                     if (t && "HR" == t.tagName) if (e.which == w.FE.KEYCODE.ARROW_LEFT || e.which == w.FE.KEYCODE.ARROW_UP) {
-                        if (t.previousSibling) return a.node.isBlock(t.previousSibling) ? a.selection.setAtEnd(t.previousSibling) : w(t).before(w.FE.MARKERS), 
+                        if (t.previousSibling) return a.node.isBlock(t.previousSibling) ? a.selection.setAtEnd(t.previousSibling) : w(t).before(w.FE.MARKERS),
                         a.selection.restore(), !1;
-                    } else if ((e.which == w.FE.KEYCODE.ARROW_RIGHT || e.which == w.FE.KEYCODE.ARROW_DOWN) && t.nextSibling) return a.node.isBlock(t.nextSibling) ? a.selection.setAtStart(t.nextSibling) : w(t).after(w.FE.MARKERS), 
+                    } else if ((e.which == w.FE.KEYCODE.ARROW_RIGHT || e.which == w.FE.KEYCODE.ARROW_DOWN) && t.nextSibling) return a.node.isBlock(t.nextSibling) ? a.selection.setAtStart(t.nextSibling) : w(t).after(w.FE.MARKERS),
                     a.selection.restore(), !1;
                 }), a.events.on("mousedown", function(e) {
-                    if (e.target && "HR" == e.target.tagName) return e.preventDefault(), e.stopPropagation(), 
+                    if (e.target && "HR" == e.target.tagName) return e.preventDefault(), e.stopPropagation(),
                     !1;
                 }), a.events.on("mouseup", function() {
                     var e = a.selection.element();
-                    e == a.selection.endElement() && e && "HR" == e.tagName && (e.nextSibling && (a.node.isBlock(e.nextSibling) ? a.selection.setAtStart(e.nextSibling) : w(e).after(w.FE.MARKERS)), 
+                    e == a.selection.endElement() && e && "HR" == e.tagName && (e.nextSibling && (a.node.isBlock(e.nextSibling) ? a.selection.setAtStart(e.nextSibling) : w(e).after(w.FE.MARKERS)),
                     a.selection.restore());
                 });
             }
         });
     }, w.FE.MODULES.data = function(p) {
         var u = "NCKB1zwtPA9tqzajXC2c2A7B-16VD3spzJ1C9C3D5oOF2OB1NB1LD7VA5QF4TE3gytXB2A4C-8VA2AC4E1D3GB2EB2KC3KD1MF1juuSB1A8C6yfbmd1B2a1A5qdsdB2tivbC3CB1KC1CH1eLA2sTF1B4I4H-7B-21UB6b1F5bzzzyAB4JC3MG2hjdKC1JE6C1E1cj1pD-16pUE5B4prra2B5ZB3D3C3pxj1EA6A3rnJA2C-7I-7JD9D1E1wYH1F3sTB5TA2G4H4ZA22qZA5BB3mjcvcCC3JB1xillavC-21VE6PC5SI4YC5C8mb1A3WC3BD2B5aoDA2qqAE3A5D-17fOD1D5RD4WC10tE6OAZC3nF-7b1C4A4D3qCF2fgmapcromlHA2QA6a1E1D3e1A6C2bie2F4iddnIA7B2mvnwcIB5OA1DB2OLQA3PB10WC7WC5d1E3uI-7b1D5D6b1E4D2arlAA4EA1F-11srxI-7MB1D7PF1E5B4adB-21YD5vrZH3D3xAC4E1A2GF2CF2J-7yNC2JE1MI2hH-7QB1C6B5B-9bA-7XB13a1B5VievwpKB4LA3NF-10H-9I-8hhaC-16nqPG4wsleTD5zqYF3h1G2B7B4yvGE2Pi1H-7C-21OE6B1uLD1kI4WC1E7C5g1D-8fue1C8C6c1D4D3Hpi1CC4kvGC2E1legallyXB4axVA11rsA4A-9nkdtlmzBA2GD3A13A6CB1dabE1lezrUE6RD5TB4A-7f1C8c1B5d1D4D3tyfCD5C2D2==", g = function() {
-            for (var e = 0, t = document.domain, n = t.split("."), r = "_gd" + new Date().getTime(); e < n.length - 1 && -1 == document.cookie.indexOf(r + "=" + r); ) t = n.slice(-1 - ++e).join("."), 
+            for (var e = 0, t = document.domain, n = t.split("."), r = "_gd" + new Date().getTime(); e < n.length - 1 && -1 == document.cookie.indexOf(r + "=" + r); ) t = n.slice(-1 - ++e).join("."),
             document.cookie = r + "=" + r + ";domain=" + t + ";";
-            return document.cookie = r + "=;expires=Thu, 01 Jan 1970 00:00:01 GMT;domain=" + t + ";", 
+            return document.cookie = r + "=;expires=Thu, 01 Jan 1970 00:00:01 GMT;domain=" + t + ";",
             (t || "").replace(/(^\.*)|(\.*$)/g, "");
         }();
         function h(e) {
@@ -14357,8 +14421,8 @@
             return n < 0 && (e += 123), e;
         }
         function b(e) {
-            return e && "block" !== e.css("display") ? (e.remove(), !0) : e && 0 === p.helpers.getPX(e.css("height")) ? (e.remove(), 
-            !0) : !(!e || "absolute" !== e.css("position") && "fixed" !== e.css("position") || (e.remove(), 
+            return e && "block" !== e.css("display") ? (e.remove(), !0) : e && 0 === p.helpers.getPX(e.css("height")) ? (e.remove(),
+            !0) : !(!e || "absolute" !== e.css("position") && "fixed" !== e.css("position") || (e.remove(),
             0));
         }
         function S(e) {
@@ -14369,7 +14433,7 @@
             if (10 < e && (p[h(v("0ppecjvc=="))](), setTimeout(function() {
                 w.FE = null;
             }, 10)), !p.$box) return !1;
-            p.$wp.prepend(v(h(v(u)))), m = p.$wp.find("> div:first"), E = m.find("> a"), "rtl" == p.opts.direction && m.css("left", "auto").css("right", 0).attr("direction", "rtl"), 
+            p.$wp.prepend(v(h(v(u)))), m = p.$wp.find("> div:first"), E = m.find("> a"), "rtl" == p.opts.direction && m.css("left", "auto").css("right", 0).attr("direction", "rtl"),
             e++;
         }
         function y(e) {
@@ -14394,7 +14458,7 @@
                             p.ul = !1;
                             break;
                         }
-                        i = !0, u = "RCZB17botVG4A-8yzia1C4A5DG3CD2cFB4qflmCE4I2FB1SC7F6PE4WE3RD6e2A4c1D3d1E2E3ehxdGE3CE2IB2LC1HG2LE1QA3QC7B-13cC-9epmkjc1B4e1C4pgjgvkOC5E1eNE1HB2LD2B-13WD5tvabUA5a1A4f1A2G3C2A-21cihKE3FE2DB2cccJE1iC-7G-7tD-17tVD6A-9qC-7QC7a1E4B4je1E3E2G2ecmsAA1xH-8HB11C1D1lgzQA3dTB8od1D4XE3ohb1B4E4D3mbLA10NA7C-21d1genodKC11PD9PE5tA-8UI3ZC5XB5B-11qXF2F-7wtwjAG3NA1IB1OD1HC1RD4QJ4evUF2D5XG2G4XA8pqocH1F3G2J2hcpHC4D1MD4C1MB8PD5klcQD1A8A6e2A3ed1E2A24A7HC5C3qA-9tiA-61dcC3MD1LE1D4SA3A9ZZXSE4g1C3Pa2C5ufbcGI3I2B4skLF2CA1vxB-22wgUC4kdH-8cVB5iwe1A2D3H3G-7DD5JC2ED2OH2JB10D3C2xHE1KA29PB11wdC-11C4cixb2C7a1C4YYE3B2A15uB-21wpCA1MF1NuC-21dyzD6pPG4I-7pmjc1A4yte1F3B-22yvCC3VbC-7qC-22qNE2hC1vH-8zad1RF6WF3DpI-7C8A-16hpf1F3D2ylalB-13BB2lpA-63IB3uOF6D5G4gabC-21UD2A3PH4ZA20B11b2C6ED4A2H3I1A15DB4KD2laC-8LA5B8B7==", 
+                        i = !0, u = "RCZB17botVG4A-8yzia1C4A5DG3CD2cFB4qflmCE4I2FB1SC7F6PE4WE3RD6e2A4c1D3d1E2E3ehxdGE3CE2IB2LC1HG2LE1QA3QC7B-13cC-9epmkjc1B4e1C4pgjgvkOC5E1eNE1HB2LD2B-13WD5tvabUA5a1A4f1A2G3C2A-21cihKE3FE2DB2cccJE1iC-7G-7tD-17tVD6A-9qC-7QC7a1E4B4je1E3E2G2ecmsAA1xH-8HB11C1D1lgzQA3dTB8od1D4XE3ohb1B4E4D3mbLA10NA7C-21d1genodKC11PD9PE5tA-8UI3ZC5XB5B-11qXF2F-7wtwjAG3NA1IB1OD1HC1RD4QJ4evUF2D5XG2G4XA8pqocH1F3G2J2hcpHC4D1MD4C1MB8PD5klcQD1A8A6e2A3ed1E2A24A7HC5C3qA-9tiA-61dcC3MD1LE1D4SA3A9ZZXSE4g1C3Pa2C5ufbcGI3I2B4skLF2CA1vxB-22wgUC4kdH-8cVB5iwe1A2D3H3G-7DD5JC2ED2OH2JB10D3C2xHE1KA29PB11wdC-11C4cixb2C7a1C4YYE3B2A15uB-21wpCA1MF1NuC-21dyzD6pPG4I-7pmjc1A4yte1F3B-22yvCC3VbC-7qC-22qNE2hC1vH-8zad1RF6WF3DpI-7C8A-16hpf1F3D2ylalB-13BB2lpA-63IB3uOF6D5G4gabC-21UD2A3PH4ZA20B11b2C6ED4A2H3I1A15DB4KD2laC-8LA5B8B7==",
                         a = l[0] || -1;
                     }
                 }
@@ -14434,19 +14498,19 @@
         function t(e) {
             if (C.edit.isDisabled()) return !1;
             if (i) return !1;
-            if (e.originalEvent && (e = e.originalEvent), !1 === C.events.trigger("paste.before", [ e ])) return e.preventDefault(), 
+            if (e.originalEvent && (e = e.originalEvent), !1 === C.events.trigger("paste.before", [ e ])) return e.preventDefault(),
             !1;
             if (C.$win.scrollTop(), e && e.clipboardData && e.clipboardData.getData) {
                 var t = "", n = e.clipboardData.types;
                 if (C.helpers.isArray(n)) for (var r = 0; r < n.length; r++) t += n[r] + ";"; else t = n;
-                if (A = "", /text\/rtf/.test(t) && (a = e.clipboardData.getData("text/rtf")), /text\/html/.test(t) && !C.browser.safari ? A = e.clipboardData.getData("text/html") : /text\/rtf/.test(t) && C.browser.safari ? A = a : /public.rtf/.test(t) && C.browser.safari && (A = e.clipboardData.getData("text/rtf")), 
-                "" !== A) return s(), e.preventDefault && (e.stopPropagation(), e.preventDefault()), 
+                if (A = "", /text\/rtf/.test(t) && (a = e.clipboardData.getData("text/rtf")), /text\/html/.test(t) && !C.browser.safari ? A = e.clipboardData.getData("text/html") : /text\/rtf/.test(t) && C.browser.safari ? A = a : /public.rtf/.test(t) && C.browser.safari && (A = e.clipboardData.getData("text/rtf")),
+                "" !== A) return s(), e.preventDefault && (e.stopPropagation(), e.preventDefault()),
                 !1;
                 A = null;
             }
             return function() {
-                C.selection.save(), C.events.disableBlur(), A = null, o ? (o.html(""), C.browser.edge && C.opts.iframe && C.$el.append(o)) : (o = w('<div contenteditable="true" style="position: fixed; top: 0; left: -9999px; height: 100%; width: 0; word-break: break-all; overflow:hidden; z-index: 2147483647; line-height: 140%; -moz-user-select: text; -webkit-user-select: text; -ms-user-select: text; user-select: text;" tabIndex="-1"></div>'), 
-                C.browser.webkit || C.browser.mozilla ? (o.css("top", C.$sc.scrollTop()), C.$el.after(o)) : C.browser.edge && C.opts.iframe ? C.$el.append(o) : C.$box.after(o), 
+                C.selection.save(), C.events.disableBlur(), A = null, o ? (o.html(""), C.browser.edge && C.opts.iframe && C.$el.append(o)) : (o = w('<div contenteditable="true" style="position: fixed; top: 0; left: -9999px; height: 100%; width: 0; word-break: break-all; overflow:hidden; z-index: 2147483647; line-height: 140%; -moz-user-select: text; -webkit-user-select: text; -ms-user-select: text; user-select: text;" tabIndex="-1"></div>'),
+                C.browser.webkit || C.browser.mozilla ? (o.css("top", C.$sc.scrollTop()), C.$el.after(o)) : C.browser.edge && C.opts.iframe ? C.$el.append(o) : C.$box.after(o),
                 C.events.on("destroy", function() {
                     o.remove();
                 }));
@@ -14461,24 +14525,24 @@
             if (e.originalEvent && (e = e.originalEvent), e && e.dataTransfer && e.dataTransfer.getData) {
                 var t = "", n = e.dataTransfer.types;
                 if (C.helpers.isArray(n)) for (var r = 0; r < n.length; r++) t += n[r] + ";"; else t = n;
-                if (A = "", /text\/rtf/.test(t) && (a = e.dataTransfer.getData("text/rtf")), /text\/html/.test(t) ? A = e.dataTransfer.getData("text/html") : /text\/rtf/.test(t) && C.browser.safari ? A = a : /text\/plain/.test(t) && !this.browser.mozilla && (A = C.html.escapeEntities(e.dataTransfer.getData("text/plain")).replace(/\n/g, "<br>")), 
+                if (A = "", /text\/rtf/.test(t) && (a = e.dataTransfer.getData("text/rtf")), /text\/html/.test(t) ? A = e.dataTransfer.getData("text/html") : /text\/rtf/.test(t) && C.browser.safari ? A = a : /text\/plain/.test(t) && !this.browser.mozilla && (A = C.html.escapeEntities(e.dataTransfer.getData("text/plain")).replace(/\n/g, "<br>")),
                 "" !== A) {
                     C.keys.forceUndo(), x = C.snapshot.get(), C.selection.save(), C.$el.find(".fr-marker").removeClass("fr-marker").addClass("fr-marker-helper");
                     var o = C.markers.insertAtPoint(e);
-                    if (C.$el.find(".fr-marker").removeClass("fr-marker").addClass("fr-marker-placeholder"), 
-                    C.$el.find(".fr-marker-helper").addClass("fr-marker").removeClass("fr-marker-helper"), 
-                    C.selection.restore(), C.selection.remove(), C.$el.find(".fr-marker-placeholder").addClass("fr-marker").removeClass("fr-marker-placeholder"), 
+                    if (C.$el.find(".fr-marker").removeClass("fr-marker").addClass("fr-marker-placeholder"),
+                    C.$el.find(".fr-marker-helper").addClass("fr-marker").removeClass("fr-marker-helper"),
+                    C.selection.restore(), C.selection.remove(), C.$el.find(".fr-marker-placeholder").addClass("fr-marker").removeClass("fr-marker-placeholder"),
                     !1 !== o) {
                         var i = C.el.querySelector(".fr-marker");
-                        return w(i).replaceWith(w.FE.MARKERS), C.selection.restore(), s(), e.preventDefault && (e.stopPropagation(), 
+                        return w(i).replaceWith(w.FE.MARKERS), C.selection.restore(), s(), e.preventDefault && (e.stopPropagation(),
                         e.preventDefault()), !1;
                     }
                 } else A = null;
             }
         }
         function s() {
-            C.opts.iframe && C.$el.attr("contenteditable", "true"), C.browser.edge && C.opts.iframe && C.$box.after(o), 
-            x || (C.keys.forceUndo(), x = C.snapshot.get()), A || (A = o.get(0).innerHTML, C.selection.restore(), 
+            C.opts.iframe && C.$el.attr("contenteditable", "true"), C.browser.edge && C.opts.iframe && C.$box.after(o),
+            x || (C.keys.forceUndo(), x = C.snapshot.get()), A || (A = o.get(0).innerHTML, C.selection.restore(),
             C.events.enableBlur());
             var e = A.match(/(class=\"?Mso|class=\'?Mso|class="?Xl|class='?Xl|class=Xl|style=\"[^\"]*\bmso\-|style=\'[^\']*\bmso\-|w:WordDocument)/gi), t = C.events.chainTrigger("paste.beforeCleanup", A);
             t && "string" == typeof t && (A = t), (!e || e && !1 !== C.events.trigger("paste.wordPaste", [ A ])) && l(A, e);
@@ -14491,17 +14555,17 @@
             var n, o = null, i = null;
             if (0 <= r.toLowerCase().indexOf("<body")) {
                 var a = "";
-                0 <= r.indexOf("<style") && (a = r.replace(/[.\s\S\w\W<>]*(<style[^>]*>[\s]*[.\s\S\w\W<>]*[\s]*<\/style>)[.\s\S\w\W<>]*/gi, "$1")), 
+                0 <= r.indexOf("<style") && (a = r.replace(/[.\s\S\w\W<>]*(<style[^>]*>[\s]*[.\s\S\w\W<>]*[\s]*<\/style>)[.\s\S\w\W<>]*/gi, "$1")),
                 r = a + r.replace(/[.\s\S\w\W<>]*<body[^>]*>[\s]*([.\s\S\w\W<>]*)[\s]*<\/body>[.\s\S\w\W<>]*/gi, "$1");
                 var s = 0, l = "";
                 r.replace(/<pre.*?>([\s\S]*?)<\/pre>/gi, function(e, t, n) {
-                    s < n && (l += r.substring(s, n).replace(/ \n/g, " ").replace(/\n /g, " ").replace(/([^>])\n([^<])/g, "$1 $2")), 
+                    s < n && (l += r.substring(s, n).replace(/ \n/g, " ").replace(/\n /g, " ").replace(/([^>])\n([^<])/g, "$1 $2")),
                     l += e, s = n + e.length;
-                }), r.length > s + 1 && (l += r.substring(s, r.length).replace(/ \n/g, " ").replace(/\n /g, " ").replace(/([^>])\n([^<])/g, "$1 $2")), 
+                }), r.length > s + 1 && (l += r.substring(s, r.length).replace(/ \n/g, " ").replace(/\n /g, " ").replace(/([^>])\n([^<])/g, "$1 $2")),
                 r = l;
             }
             var d = !1;
-            0 <= r.indexOf('id="docs-internal-guid') && (r = r.replace(/^[\w\W\s\S]* id="docs-internal-guid[^>]*>([\w\W\s\S]*)<\/b>[\w\W\s\S]*$/g, "$1"), 
+            0 <= r.indexOf('id="docs-internal-guid') && (r = r.replace(/^[\w\W\s\S]* id="docs-internal-guid[^>]*>([\w\W\s\S]*)<\/b>[\w\W\s\S]*$/g, "$1"),
             d = !0), 0 <= r.indexOf('content="Sheets"') && (r = r.replace(/width:0px;/g, ""));
             var c = !1, f = !1;
             if (!e) if (c = function(e) {
@@ -14516,16 +14580,16 @@
                     e = C.win.localStorage.getItem("fr-dragged-content-text");
                 } catch (t) {}
                 return !(!e || w("<div>").html(A).text().replace(/\u00A0/gi, " ").replace(/\r|\n/gi, "") != e.replace(/\u00A0/gi, " ").replace(/\r|\n/gi, ""));
-            }(), c && (r = C.win.localStorage.getItem("fr-copied-html")), f && (c = !0, r = C.win.localStorage.getItem("fr-dragged-content-html")), 
+            }(), c && (r = C.win.localStorage.getItem("fr-copied-html")), f && (c = !0, r = C.win.localStorage.getItem("fr-dragged-content-html")),
             c) r = C.clean.html(r, C.opts.pasteDeniedTags, C.opts.pasteDeniedAttrs); else {
                 var p = C.opts.htmlAllowedStyleProps;
-                C.opts.htmlAllowedStyleProps = C.opts.pasteAllowedStyleProps, C.opts.htmlAllowComments = !1, 
+                C.opts.htmlAllowedStyleProps = C.opts.pasteAllowedStyleProps, C.opts.htmlAllowComments = !1,
                 r = (r = (r = r.replace(/<span class="Apple-tab-span">\s*<\/span>/g, $(C.opts.tabSpaces || 4))).replace(/<span class="Apple-tab-span" style="white-space:pre">(\t*)<\/span>/g, function(e, t) {
                     return $(t.length * (C.opts.tabSpaces || 4));
-                })).replace(/\t/g, $(C.opts.tabSpaces || 4)), r = C.clean.html(r, C.opts.pasteDeniedTags, C.opts.pasteDeniedAttrs), 
+                })).replace(/\t/g, $(C.opts.tabSpaces || 4)), r = C.clean.html(r, C.opts.pasteDeniedTags, C.opts.pasteDeniedAttrs),
                 C.opts.htmlAllowedStyleProps = p, C.opts.htmlAllowComments = !0, r = (r = (r = O(r)).replace(/\r/g, "")).replace(/^ */g, "").replace(/ *$/g, "");
             }
-            !e || C.wordPaste && t || (0 === (r = r.replace(/^\n*/g, "").replace(/^ /g, "")).indexOf("<colgroup>") && (r = "<table>" + r + "</table>"), 
+            !e || C.wordPaste && t || (0 === (r = r.replace(/^\n*/g, "").replace(/^ /g, "")).indexOf("<colgroup>") && (r = "<table>" + r + "</table>"),
             r = O(r = function(e) {
                 var t;
                 e = (e = (e = (e = (e = (e = (e = (e = (e = (e = (e = (e = (e = (e = (e = e.replace(/<p(.*?)class="?'?MsoListParagraph"?'? ([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<ul><li>$3</li></ul>")).replace(/<p(.*?)class="?'?NumberedText"?'? ([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<ol><li>$3</li></ol>")).replace(/<p(.*?)class="?'?MsoListParagraphCxSpFirst"?'?([\s\S]*?)(level\d)?([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<ul><li$3>$5</li>")).replace(/<p(.*?)class="?'?NumberedTextCxSpFirst"?'?([\s\S]*?)(level\d)?([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<ol><li$3>$5</li>")).replace(/<p(.*?)class="?'?MsoListParagraphCxSpMiddle"?'?([\s\S]*?)(level\d)?([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<li$3>$5</li>")).replace(/<p(.*?)class="?'?NumberedTextCxSpMiddle"?'?([\s\S]*?)(level\d)?([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<li$3>$5</li>")).replace(/<p(.*?)class="?'?MsoListBullet"?'?([\s\S]*?)(level\d)?([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<li$3>$5</li>")).replace(/<p(.*?)class="?'?MsoListParagraphCxSpLast"?'?([\s\S]*?)(level\d)?([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<li$3>$5</li></ul>")).replace(/<p(.*?)class="?'?NumberedTextCxSpLast"?'?([\s\S]*?)(level\d)?([\s\S]*?)>([\s\S]*?)<\/p>/gi, "<li$3>$5</li></ol>")).replace(/<span([^<]*?)style="?'?mso-list:Ignore"?'?([\s\S]*?)>([\s\S]*?)<span/gi, "<span><span")).replace(/<!--\[if \!supportLists\]-->([\s\S]*?)<!--\[endif\]-->/gi, "")).replace(/<!\[if \!supportLists\]>([\s\S]*?)<!\[endif\]>/gi, "")).replace(/(\n|\r| class=(")?Mso[a-zA-Z0-9]+(")?)/gi, " ")).replace(/<!--[\s\S]*?-->/gi, "")).replace(/<(\/)*(meta|link|span|\\?xml:|st1:|o:|font)(.*?)>/gi, "");
@@ -14535,7 +14599,7 @@
                     e = e.replace(o, "");
                 }
                 for (e = (e = (e = e.replace(/&nbsp;/gi, " ")).replace(/<td([^>]*)><\/td>/g, "<td$1><br></td>")).replace(/<th([^>]*)><\/th>/g, "<th$1><br></th>"); (e = (n = e).replace(/<[^\/>][^>]*><\/[^>]+>/gi, "")) != n; ) ;
-                e = (e = e.replace(/<lilevel([^1])([^>]*)>/gi, '<li data-indent="true"$2>')).replace(/<lilevel1([^>]*)>/gi, "<li$1>"), 
+                e = (e = e.replace(/<lilevel([^1])([^>]*)>/gi, '<li data-indent="true"$2>')).replace(/<lilevel1([^>]*)>/gi, "<li$1>"),
                 e = (e = (e = C.clean.html(e, C.opts.pasteDeniedTags, C.opts.pasteDeniedAttrs)).replace(/<a>(.[^<]+)<\/a>/gi, "$1")).replace(/<br> */g, "<br>");
                 var i = C.o_doc.createElement("div");
                 i.innerHTML = e;
@@ -14629,7 +14693,7 @@
         }
         function c(e) {
             if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.nodeType == Node.TEXT_NODE) try {
-                C.win.localStorage.setItem("fr-dragged-content-html", e.originalEvent.dataTransfer.getData("text/html")), 
+                C.win.localStorage.setItem("fr-dragged-content-html", e.originalEvent.dataTransfer.getData("text/html")),
                 C.win.localStorage.setItem("fr-dragged-content-text", e.originalEvent.dataTransfer.getData("text/plain"));
             } catch (t) {}
         }
@@ -14664,11 +14728,11 @@
             shift: o,
             option: i
         }, w.FE.DEFAULTS.shortcutsEnabled.push(t);
-    }, w.FE.RegisterShortcut(w.FE.KEYCODE.E, "show", null, "E", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.B, "bold", null, "B", !1, !1), 
-    w.FE.RegisterShortcut(w.FE.KEYCODE.I, "italic", null, "I", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.U, "underline", null, "U", !1, !1), 
-    w.FE.RegisterShortcut(w.FE.KEYCODE.S, "strikeThrough", null, "S", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.CLOSE_SQUARE_BRACKET, "indent", null, "]", !1, !1), 
-    w.FE.RegisterShortcut(w.FE.KEYCODE.OPEN_SQUARE_BRACKET, "outdent", null, "[", !1, !1), 
-    w.FE.RegisterShortcut(w.FE.KEYCODE.Z, "undo", null, "Z", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.Z, "redo", null, "Z", !0, !1), 
+    }, w.FE.RegisterShortcut(w.FE.KEYCODE.E, "show", null, "E", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.B, "bold", null, "B", !1, !1),
+    w.FE.RegisterShortcut(w.FE.KEYCODE.I, "italic", null, "I", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.U, "underline", null, "U", !1, !1),
+    w.FE.RegisterShortcut(w.FE.KEYCODE.S, "strikeThrough", null, "S", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.CLOSE_SQUARE_BRACKET, "indent", null, "]", !1, !1),
+    w.FE.RegisterShortcut(w.FE.KEYCODE.OPEN_SQUARE_BRACKET, "outdent", null, "[", !1, !1),
+    w.FE.RegisterShortcut(w.FE.KEYCODE.Z, "undo", null, "Z", !1, !1), w.FE.RegisterShortcut(w.FE.KEYCODE.Z, "redo", null, "Z", !0, !1),
     w.FE.RegisterShortcut(w.FE.KEYCODE.Y, "redo", null, "Y", !1, !1), w.FE.MODULES.shortcuts = function(l) {
         var r = null;
         var d = !1;
@@ -14682,11 +14746,11 @@
                 var i = w.FE.SHORTCUTS_MAP[r].cmd;
                 if (i && 0 <= l.opts.shortcutsEnabled.indexOf(i)) {
                     var a, s = w.FE.SHORTCUTS_MAP[r].val;
-                    if (i && !s ? a = l.$tb.find('.fr-command[data-cmd="' + i + '"]') : i && s && (a = l.$tb.find('.fr-command[data-cmd="' + i + '"][data-param1="' + s + '"]')), 
-                    a.length) return e.preventDefault(), e.stopPropagation(), a.parents(".fr-toolbar").data("instance", l), 
+                    if (i && !s ? a = l.$tb.find('.fr-command[data-cmd="' + i + '"]') : i && s && (a = l.$tb.find('.fr-command[data-cmd="' + i + '"][data-param1="' + s + '"]')),
+                    a.length) return e.preventDefault(), e.stopPropagation(), a.parents(".fr-toolbar").data("instance", l),
                     "keydown" == e.type && (l.button.exec(a), d = !0), !1;
-                    if (i && (l.commands[i] || w.FE.COMMANDS[i] && w.FE.COMMANDS[i].callback)) return e.preventDefault(), 
-                    e.stopPropagation(), "keydown" == e.type && ((l.commands[i] || w.FE.COMMANDS[i].callback)(), 
+                    if (i && (l.commands[i] || w.FE.COMMANDS[i] && w.FE.COMMANDS[i].callback)) return e.preventDefault(),
+                    e.stopPropagation(), "keydown" == e.type && ((l.commands[i] || w.FE.COMMANDS[i].callback)(),
                     d = !0), !1;
                 }
             }
@@ -14743,7 +14807,7 @@
         return {
             get: function() {
                 var e, t = {};
-                if (l.events.trigger("snapshot.before"), t.html = (l.$wp ? l.$el.html() : l.$oel.get(0).outerHTML).replace(/ style=""/g, ""), 
+                if (l.events.trigger("snapshot.before"), t.html = (l.$wp ? l.$el.html() : l.$oel.get(0).outerHTML).replace(/ style=""/g, ""),
                 t.ranges = [], l.$wp && l.selection.inEditor() && l.core.hasFocus()) for (var n = l.selection.ranges(), r = 0; r < n.length; r++) t.ranges.push({
                     scLoc: o((e = n[r]).startContainer),
                     scOffset: i(e.startContainer, e.startOffset),
@@ -14773,7 +14837,7 @@
             for (;n.undo_stack.length > n.undo_index; ) n.undo_stack.pop();
         }
         function o() {
-            t = (n.$wp ? n.$el.html() : n.$oel.get(0).outerHTML).replace(/ style=""/g, ""), 
+            t = (n.$wp ? n.$el.html() : n.$oel.get(0).outerHTML).replace(/ style=""/g, ""),
             n.undo_index = 0, n.undo_stack = [];
         }
         function i() {
@@ -14791,8 +14855,8 @@
                 if (1 < n.undo_index) {
                     n.undoing = !0;
                     var e = n.undo_stack[--n.undo_index - 1];
-                    clearTimeout(n._content_changed_timer), n.snapshot.restore(e), t = e.html, n.popups.hideAll(), 
-                    n.toolbar.enable(), n.events.trigger("contentChanged"), n.events.trigger("commands.undo"), 
+                    clearTimeout(n._content_changed_timer), n.snapshot.restore(e), t = e.html, n.popups.hideAll(),
+                    n.toolbar.enable(), n.events.trigger("contentChanged"), n.events.trigger("commands.undo"),
                     n.undoing = !1;
                 }
             },
@@ -14800,8 +14864,8 @@
                 if (n.undo_index < n.undo_stack.length) {
                     n.undoing = !0;
                     var e = n.undo_stack[n.undo_index++];
-                    clearTimeout(n._content_changed_timer), n.snapshot.restore(e), t = e.html, n.popups.hideAll(), 
-                    n.toolbar.enable(), n.events.trigger("contentChanged"), n.events.trigger("commands.redo"), 
+                    clearTimeout(n._content_changed_timer), n.snapshot.restore(e), t = e.html, n.popups.hideAll(),
+                    n.toolbar.enable(), n.events.trigger("contentChanged"), n.events.trigger("commands.redo"),
                     n.undoing = !1;
                 }
             },
@@ -14815,9 +14879,9 @@
             reset: o,
             saveStep: function(e) {
                 if (!n.undo_stack || n.undoing || n.el.querySelector(".fr-marker")) return !1;
-                void 0 === e ? (e = n.snapshot.get(), n.undo_stack[n.undo_index - 1] && n.snapshot.equal(n.undo_stack[n.undo_index - 1], e) || (r(), 
-                n.undo_stack.push(e), n.undo_index++, e.html != t && (n.events.trigger("contentChanged"), 
-                t = e.html))) : (r(), 0 < n.undo_index ? n.undo_stack[n.undo_index - 1] = e : (n.undo_stack.push(e), 
+                void 0 === e ? (e = n.snapshot.get(), n.undo_stack[n.undo_index - 1] && n.snapshot.equal(n.undo_stack[n.undo_index - 1], e) || (r(),
+                n.undo_stack.push(e), n.undo_index++, e.html != t && (n.events.trigger("contentChanged"),
+                t = e.html))) : (r(), 0 < n.undo_index ? n.undo_stack[n.undo_index - 1] = e : (n.undo_stack.push(e),
                 n.undo_index++));
             }
         };
@@ -14909,19 +14973,19 @@
         function i(e, t) {
             if (o.helpers.isMobile()) return !1;
             if (e.data("title") || e.data("title", e.attr("title")), !e.data("title")) return !1;
-            o.$tooltip || o.opts.tooltips && !o.helpers.isMobile() && (o.shared.$tooltip ? o.$tooltip = o.shared.$tooltip : (o.shared.$tooltip = w('<div class="fr-tooltip"></div>'), 
-            o.$tooltip = o.shared.$tooltip, o.opts.theme && o.$tooltip.addClass(o.opts.theme + "-theme"), 
+            o.$tooltip || o.opts.tooltips && !o.helpers.isMobile() && (o.shared.$tooltip ? o.$tooltip = o.shared.$tooltip : (o.shared.$tooltip = w('<div class="fr-tooltip"></div>'),
+            o.$tooltip = o.shared.$tooltip, o.opts.theme && o.$tooltip.addClass(o.opts.theme + "-theme"),
             w(o.o_doc).find("body:first").append(o.$tooltip)), o.events.on("shared.destroy", function() {
                 o.$tooltip.html("").removeData().remove(), o.$tooltip = null;
-            }, !0)), e.removeAttr("title"), o.$tooltip.text(o.language.translate(e.data("title"))), 
+            }, !0)), e.removeAttr("title"), o.$tooltip.text(o.language.translate(e.data("title"))),
             o.$tooltip.addClass("fr-visible");
             var n = e.offset().left + (e.outerWidth() - o.$tooltip.outerWidth()) / 2;
-            n < 0 && (n = 0), n + o.$tooltip.outerWidth() > w(o.o_win).width() && (n = w(o.o_win).width() - o.$tooltip.outerWidth()), 
+            n < 0 && (n = 0), n + o.$tooltip.outerWidth() > w(o.o_win).width() && (n = w(o.o_win).width() - o.$tooltip.outerWidth()),
             void 0 === t && (t = o.opts.toolbarBottom), e.offset().top - w(window).scrollTop() + e.outerHeight() + 10 >= w(window).height() && (t = !0);
             var r = t ? e.offset().top - o.$tooltip.height() : e.offset().top + e.outerHeight();
-            o.$tooltip.css("position", ""), o.$tooltip.css("left", n), o.$tooltip.css("top", Math.ceil(r)), 
-            "static" != w(o.o_doc).find("body:first").css("position") ? (o.$tooltip.css("margin-left", -w(o.o_doc).find("body:first").offset().left), 
-            o.$tooltip.css("margin-top", -w(o.o_doc).find("body:first").offset().top)) : (o.$tooltip.css("margin-left", ""), 
+            o.$tooltip.css("position", ""), o.$tooltip.css("left", n), o.$tooltip.css("top", Math.ceil(r)),
+            "static" != w(o.o_doc).find("body:first").css("position") ? (o.$tooltip.css("margin-left", -w(o.o_doc).find("body:first").offset().left),
+            o.$tooltip.css("margin-top", -w(o.o_doc).find("body:first").offset().top)) : (o.$tooltip.css("margin-left", ""),
             o.$tooltip.css("margin-top", ""));
         }
         return {
@@ -14937,7 +15001,7 @@
         };
     }, w.FE.MODULES.button = function(u) {
         var a = [];
-        (u.opts.toolbarInline || u.opts.toolbarContainer) && (u.shared.buttons || (u.shared.buttons = []), 
+        (u.opts.toolbarInline || u.opts.toolbarContainer) && (u.shared.buttons || (u.shared.buttons = []),
         a = u.shared.buttons);
         var s = [];
         function l(e, t, n) {
@@ -14969,36 +15033,36 @@
             }, 500);
             for (var t = e.data("cmd"), n = []; void 0 !== e.data("param" + (n.length + 1)); ) n.push(e.data("param" + (n.length + 1)));
             var r = d(".fr-dropdown.fr-active");
-            r.length && (r.removeClass("fr-active").attr("aria-expanded", !1).next().attr("aria-hidden", !0), 
-            r.prev(".fr-expanded").removeClass("fr-expanded"), r.parent(".fr-toolbar:not(.fr-inline)").css("zIndex", "")), 
+            r.length && (r.removeClass("fr-active").attr("aria-expanded", !1).next().attr("aria-hidden", !0),
+            r.prev(".fr-expanded").removeClass("fr-expanded"), r.parent(".fr-toolbar:not(.fr-inline)").css("zIndex", "")),
             e.parents(".fr-popup, .fr-toolbar").data("instance").commands.exec(t, n);
         }
         function t(e) {
             var t = e.parents(".fr-popup, .fr-toolbar").data("instance");
-            if (0 !== e.parents(".fr-popup").length || e.data("popup") || t.popups.hideAll(), 
+            if (0 !== e.parents(".fr-popup").length || e.data("popup") || t.popups.hideAll(),
             t.popups.areVisible() && !t.popups.areVisible(t)) {
                 for (var n = 0; n < w.FE.INSTANCES.length; n++) w.FE.INSTANCES[n] != t && w.FE.INSTANCES[n].popups && w.FE.INSTANCES[n].popups.areVisible() && w.FE.INSTANCES[n].$el.find(".fr-marker").remove();
                 t.popups.hideAll();
             }
             u.node.hasClass(e.get(0), "fr-dropdown") ? function(e) {
                 var t = e.next(), n = u.node.hasClass(e.get(0), "fr-active"), r = d(".fr-dropdown.fr-active").not(e), o = e.parents(".fr-toolbar, .fr-popup").data("instance") || u;
-                if (o.helpers.isIOS() && !o.el.querySelector(".fr-marker") && (o.selection.save(), 
+                if (o.helpers.isIOS() && !o.el.querySelector(".fr-marker") && (o.selection.save(),
                 o.selection.clear(), o.selection.restore()), !n) {
                     var i = e.data("cmd");
-                    t.find(".fr-command").removeClass("fr-active").attr("aria-selected", !1), w.FE.COMMANDS[i] && w.FE.COMMANDS[i].refreshOnShow && w.FE.COMMANDS[i].refreshOnShow.apply(o, [ e, t ]), 
-                    t.css("left", e.offset().left - e.parent().offset().left - ("rtl" == u.opts.direction ? t.width() - e.outerWidth() : 0)), 
+                    t.find(".fr-command").removeClass("fr-active").attr("aria-selected", !1), w.FE.COMMANDS[i] && w.FE.COMMANDS[i].refreshOnShow && w.FE.COMMANDS[i].refreshOnShow.apply(o, [ e, t ]),
+                    t.css("left", e.offset().left - e.parent().offset().left - ("rtl" == u.opts.direction ? t.width() - e.outerWidth() : 0)),
                     t.addClass("test-height");
                     var a = t.outerHeight();
                     t.removeClass("test-height"), t.css("top", "").css("bottom", ""), !u.opts.toolbarBottom && t.offset().top + e.outerHeight() + a < w(u.o_doc).height() ? t.css("top", e.position().top + e.outerHeight()) : t.css("bottom", e.parents(".fr-popup, .fr-toolbar").first().height() - e.position().top);
                 }
-                e.addClass("fr-blink").toggleClass("fr-active"), e.hasClass("fr-options") && e.prev().toggleClass("fr-expanded"), 
-                e.hasClass("fr-active") ? (t.attr("aria-hidden", !1), e.attr("aria-expanded", !0)) : (t.attr("aria-hidden", !0), 
+                e.addClass("fr-blink").toggleClass("fr-active"), e.hasClass("fr-options") && e.prev().toggleClass("fr-expanded"),
+                e.hasClass("fr-active") ? (t.attr("aria-hidden", !1), e.attr("aria-expanded", !0)) : (t.attr("aria-hidden", !0),
                 e.attr("aria-expanded", !1)), setTimeout(function() {
                     e.removeClass("fr-blink");
-                }, 300), t.css("margin-left", ""), t.offset().left + t.outerWidth() > u.$sc.offset().left + u.$sc.width() && t.css("margin-left", -(t.offset().left + t.outerWidth() - u.$sc.offset().left - u.$sc.width())), 
-                t.offset().left < u.$sc.offset().left && "rtl" == u.opts.direction && t.css("margin-left", u.$sc.offset().left), 
-                r.removeClass("fr-active").attr("aria-expanded", !1).next().attr("aria-hidden", !0), 
-                r.prev(".fr-expanded").removeClass("fr-expanded"), r.parent(".fr-toolbar:not(.fr-inline)").css("zIndex", ""), 
+                }, 300), t.css("margin-left", ""), t.offset().left + t.outerWidth() > u.$sc.offset().left + u.$sc.width() && t.css("margin-left", -(t.offset().left + t.outerWidth() - u.$sc.offset().left - u.$sc.width())),
+                t.offset().left < u.$sc.offset().left && "rtl" == u.opts.direction && t.css("margin-left", u.$sc.offset().left),
+                r.removeClass("fr-active").attr("aria-expanded", !1).next().attr("aria-hidden", !0),
+                r.prev(".fr-expanded").removeClass("fr-expanded"), r.parent(".fr-toolbar:not(.fr-inline)").css("zIndex", ""),
                 0 !== e.parents(".fr-popup").length || u.opts.toolbarInline || (u.node.hasClass(e.get(0), "fr-active") ? u.$tb.css("zIndex", (u.opts.zIndex || 1) + 4) : u.$tb.css("zIndex", ""));
                 var s = t.find("a.fr-command.fr-active:first");
                 u.helpers.isMobile() || (s.length ? u.accessibility.focusToolbarElement(s) : u.accessibility.focusToolbarElement(e));
@@ -15009,7 +15073,7 @@
         }
         function c(e) {
             var t = e.find(".fr-dropdown.fr-active");
-            t.length && (t.removeClass("fr-active").attr("aria-expanded", !1).next().attr("aria-hidden", !0), 
+            t.length && (t.removeClass("fr-active").attr("aria-expanded", !1).next().attr("aria-hidden", !0),
             t.parent(".fr-toolbar:not(.fr-inline)").css("zIndex", ""), t.prev().removeClass("fr-expanded"));
         }
         function f(e) {
@@ -15036,7 +15100,7 @@
                     var n = "";
                     if (t.html) "function" == typeof t.html ? n += t.html.call(u) : n += t.html; else {
                         var r = t.options;
-                        for (var o in "function" == typeof r && (r = r()), n += '<ul class="fr-dropdown-list" role="presentation">', 
+                        for (var o in "function" == typeof r && (r = r()), n += '<ul class="fr-dropdown-list" role="presentation">',
                         r) if (r.hasOwnProperty(o)) {
                             var i = u.shortcuts.get(e + "." + o);
                             i = i ? '<span class="fr-shortcut">' + i + "</span>" : "", n += '<li role="presentation"><a class="fr-command" tabIndex="-1" role="option" data-cmd="' + ("options" === t.type ? e.replace(/Options/g, "") : e) + '" data-param1="' + o + '" title="' + r[o] + '">' + u.language.translate(r[o]) + "</a></li>";
@@ -15046,7 +15110,7 @@
                     return n;
                 }(e, t), f += p += "</div></div></div>";
             }
-            return t.hasOptions && t.hasOptions.apply(u) && (t.type = "options", t.hasOptions = !1, 
+            return t.hasOptions && t.hasOptions.apply(u) && (t.type = "options", t.hasOptions = !1,
             f = '<div class="fr-btn-wrap">' + f + g(e + "Options", t, n) + "</div>"), f;
         }
         function e(o) {
@@ -15055,7 +15119,7 @@
             setTimeout(function() {
                 for (var e = i.selection.inEditor() && i.core.hasFocus(), t = 0; t < o.length; t++) {
                     var n = w(o[t]), r = n.data("cmd");
-                    0 === n.parents(".fr-popup").length ? e || w.FE.COMMANDS[r] && w.FE.COMMANDS[r].forcedRefresh ? i.button.refresh(n) : u.node.hasClass(n.get(0), "fr-dropdown") || (n.removeClass("fr-active"), 
+                    0 === n.parents(".fr-popup").length ? e || w.FE.COMMANDS[r] && w.FE.COMMANDS[r].forcedRefresh ? i.button.refresh(n) : u.node.hasClass(n.get(0), "fr-dropdown") || (n.removeClass("fr-active"),
                     n.attr("aria-pressed") && n.attr("aria-pressed", !1)) : n.parents(".fr-popup").is(":visible") && i.button.refresh(n);
                 }
             }, 0);
@@ -15073,8 +15137,8 @@
         }
         return {
             _init: function() {
-                u.opts.toolbarInline ? u.events.on("toolbar.show", n) : (u.events.on("mouseup", m), 
-                u.events.on("keyup", m), u.events.on("blur", m), u.events.on("focus", m), u.events.on("contentChanged", m), 
+                u.opts.toolbarInline ? u.events.on("toolbar.show", n) : (u.events.on("mouseup", m),
+                u.events.on("keyup", m), u.events.on("blur", m), u.events.on("focus", m), u.events.on("contentChanged", m),
                 u.helpers.isMobile() && u.events.$on(u.$doc, "selectionchange", n)), u.events.on("shared.destroy", o);
             },
             buildList: function(e, t) {
@@ -15085,18 +15149,18 @@
                 return n;
             },
             bindCommands: function(t, e) {
-                u.events.bindClick(t, ".fr-command:not(.fr-disabled)", i), u.events.$on(t, u._mousedown + " " + u._mouseup + " " + u._move, ".fr-dropdown-menu", f, !0), 
+                u.events.bindClick(t, ".fr-command:not(.fr-disabled)", i), u.events.$on(t, u._mousedown + " " + u._mouseup + " " + u._move, ".fr-dropdown-menu", f, !0),
                 u.events.$on(t, u._mousedown + " " + u._mouseup + " " + u._move, ".fr-dropdown-menu .fr-dropdown-wrapper", p, !0);
                 var n = t.get(0).ownerDocument, r = "defaultView" in n ? n.defaultView : n.parentWindow, o = function(e) {
                     (!e || e.type == u._mouseup && e.target != w("html").get(0) || "keydown" == e.type && (u.keys.isCharacter(e.which) && !u.keys.ctrlKey(e) || e.which == w.FE.KEYCODE.ESC)) && c(t);
                 };
-                u.events.$on(w(r), u._mouseup + " resize keydown", o, !0), u.opts.iframe && u.events.$on(u.$win, u._mouseup, o, !0), 
-                u.node.hasClass(t.get(0), "fr-popup") ? w.merge(s, t.find(".fr-btn").toArray()) : w.merge(a, t.find(".fr-btn").toArray()), 
+                u.events.$on(w(r), u._mouseup + " resize keydown", o, !0), u.opts.iframe && u.events.$on(u.$win, u._mouseup, o, !0),
+                u.node.hasClass(t.get(0), "fr-popup") ? w.merge(s, t.find(".fr-btn").toArray()) : w.merge(a, t.find(".fr-btn").toArray()),
                 u.tooltip.bind(t, ".fr-btn, .fr-title", e);
             },
             refresh: function(e) {
                 var t, n = e.parents(".fr-popup, .fr-toolbar").data("instance") || u, r = e.data("cmd");
-                u.node.hasClass(e.get(0), "fr-dropdown") ? t = e.next() : (e.removeClass("fr-active"), 
+                u.node.hasClass(e.get(0), "fr-dropdown") ? t = e.next() : (e.removeClass("fr-active"),
                 e.attr("aria-pressed") && e.attr("aria-pressed", !1)), w.FE.COMMANDS[r] && w.FE.COMMANDS[r].refresh ? w.FE.COMMANDS[r].refresh.apply(n, [ e, t ]) : u.refresh[r] && n.refresh[r](e, t);
             },
             bulkRefresh: n,
@@ -15118,7 +15182,7 @@
         function c(e, t) {
             if (d[e]) {
                 var n = d[e].$modal, r = n.data("instance") || l;
-                r.events.enableBlur(), n.hide(), s.hide(), w(r.o_doc).find("body:first").removeClass("prevent-scroll fr-mobile"), 
+                r.events.enableBlur(), n.hide(), s.hide(), w(r.o_doc).find("body:first").removeClass("prevent-scroll fr-mobile"),
                 n.removeClass("fr-active"), t || (r.accessibility.restoreSelection(), r.events.trigger("modals.hide"));
             }
         }
@@ -15138,10 +15202,10 @@
                 return d[e];
             },
             create: function(n, e, t) {
-                if (l.shared.$overlay || (l.shared.$overlay = w('<div class="fr-overlay">').appendTo("body:first")), 
+                if (l.shared.$overlay || (l.shared.$overlay = w('<div class="fr-overlay">').appendTo("body:first")),
                 s = l.shared.$overlay, l.opts.theme && s.addClass(l.opts.theme + "-theme"), !d[n]) {
-                    var r = (o = e, i = t, a = '<div tabIndex="-1" class="fr-modal' + (l.opts.theme ? " " + l.opts.theme + "-theme" : "") + '"><div class="fr-modal-wrapper">', 
-                    a += '<div class="fr-modal-head">' + o + '<span title="' + l.language.translate("Cancel") + '" class="fr-modal-close">&times;</span></div>', 
+                    var r = (o = e, i = t, a = '<div tabIndex="-1" class="fr-modal' + (l.opts.theme ? " " + l.opts.theme + "-theme" : "") + '"><div class="fr-modal-wrapper">',
+                    a += '<div class="fr-modal-head">' + o + '<span title="' + l.language.translate("Cancel") + '" class="fr-modal-close">&times;</span></div>',
                     a += '<div tabIndex="-1" class="fr-modal-body">' + i + "</div>", w(a += "</div></div>"));
                     d[n] = {
                         $modal: r,
@@ -15151,7 +15215,7 @@
                         c(n);
                     }, !0), d[n].$body.css("margin-top", d[n].$head.outerHeight()), l.events.$on(r, "keydown", function(e) {
                         var t = e.which;
-                        return t == w.FE.KEYCODE.ESC ? (c(n), l.accessibility.focusModalButton(r), !1) : !(!w(e.target).is("input[type=text], textarea") && t != w.FE.KEYCODE.ARROW_UP && t != w.FE.KEYCODE.ARROW_DOWN && !l.keys.isBrowserAction(e) && (e.preventDefault(), 
+                        return t == w.FE.KEYCODE.ESC ? (c(n), l.accessibility.focusModalButton(r), !1) : !(!w(e.target).is("input[type=text], textarea") && t != w.FE.KEYCODE.ARROW_UP && t != w.FE.KEYCODE.ARROW_DOWN && !l.keys.isBrowserAction(e) && (e.preventDefault(),
                         e.stopPropagation(), 1));
                     }, !0), c(n, !0);
                 }
@@ -15161,8 +15225,8 @@
             show: function(e) {
                 if (d[e]) {
                     var t = d[e].$modal;
-                    t.data("instance", l), t.show(), s.show(), w(l.o_doc).find("body:first").addClass("prevent-scroll"), 
-                    l.helpers.isMobile() && w(l.o_doc).find("body:first").addClass("fr-mobile"), t.addClass("fr-active"), 
+                    t.data("instance", l), t.show(), s.show(), w(l.o_doc).find("body:first").addClass("prevent-scroll"),
+                    l.helpers.isMobile() && w(l.o_doc).find("body:first").addClass("fr-mobile"), t.addClass("fr-active"),
                     l.accessibility.focusModal(t);
                 }
             },
@@ -15187,7 +15251,7 @@
         c.shared.popups || (c.shared.popups = {});
         var f = c.shared.popups;
         function p(e, t) {
-            t.is(":visible") || (t = c.$sc), t.is(f[e].data("container")) || (f[e].data("container", t), 
+            t.is(":visible") || (t = c.$sc), t.is(f[e].data("container")) || (f[e].data("container", t),
             t.append(f[e]));
         }
         function u(e) {
@@ -15199,9 +15263,9 @@
         }
         function n(e) {
             var t = null;
-            (t = "string" != typeof e ? e : f[e]) && c.node.hasClass(t, "fr-active") && (t.removeClass("fr-active fr-above"), 
-            c.events.trigger("popups.hide." + e), c.$tb && (1 < c.opts.zIndex ? c.$tb.css("zIndex", c.opts.zIndex + 1) : c.$tb.css("zIndex", "")), 
-            c.events.disableBlur(), t.find("input, textarea, button").filter(":focus").blur(), 
+            (t = "string" != typeof e ? e : f[e]) && c.node.hasClass(t, "fr-active") && (t.removeClass("fr-active fr-above"),
+            c.events.trigger("popups.hide." + e), c.$tb && (1 < c.opts.zIndex ? c.$tb.css("zIndex", c.opts.zIndex + 1) : c.$tb.css("zIndex", "")),
+            c.events.disableBlur(), t.find("input, textarea, button").filter(":focus").blur(),
             t.find("input, textarea").attr("disabled", "disabled"));
         }
         function h(e) {
@@ -15223,12 +15287,12 @@
                 for (var r in "function" == typeof n && (n = n.apply(c)), t) t.hasOwnProperty(r) && (n = n.replace("[_" + r.toUpperCase() + "_]", t[r]));
                 return n;
             }(e, t);
-            return o ? (n = w('<div class="fr-popup' + (c.helpers.isMobile() ? " fr-mobile" : " fr-desktop") + (c.opts.toolbarInline ? " fr-inline" : "") + '"><span class="fr-arrow"></span>' + o + "</div>"), 
-            c.opts.theme && n.addClass(c.opts.theme + "-theme"), 1 < c.opts.zIndex && (c.opts.editInPopup ? n.css("z-index", c.opts.zIndex + 2) : c.$tb.css("z-index", c.opts.zIndex + 2)), 
-            "auto" != c.opts.direction && n.removeClass("fr-ltr fr-rtl").addClass("fr-" + c.opts.direction), 
-            n.find("input, textarea").attr("dir", c.opts.direction).attr("disabled", "disabled"), 
-            (r = w("body:first")).append(n), n.data("container", r), f[e] = n, c.button.bindCommands(n, !1), 
-            n) : (n = w('<div class="fr-popup fr-empty"></div>'), (r = w("body:first")).append(n), 
+            return o ? (n = w('<div class="fr-popup' + (c.helpers.isMobile() ? " fr-mobile" : " fr-desktop") + (c.opts.toolbarInline ? " fr-inline" : "") + '"><span class="fr-arrow"></span>' + o + "</div>"),
+            c.opts.theme && n.addClass(c.opts.theme + "-theme"), 1 < c.opts.zIndex && (c.opts.editInPopup ? n.css("z-index", c.opts.zIndex + 2) : c.$tb.css("z-index", c.opts.zIndex + 2)),
+            "auto" != c.opts.direction && n.removeClass("fr-ltr fr-rtl").addClass("fr-" + c.opts.direction),
+            n.find("input, textarea").attr("dir", c.opts.direction).attr("disabled", "disabled"),
+            (r = w("body:first")).append(n), n.data("container", r), f[e] = n, c.button.bindCommands(n, !1),
+            n) : (n = w('<div class="fr-popup fr-empty"></div>'), (r = w("body:first")).append(n),
             n.data("container", r), f[e] = n);
         }
         function E(r) {
@@ -15236,12 +15300,12 @@
             return {
                 _windowResize: function() {
                     var e = o.data("instance") || c;
-                    !e.helpers.isMobile() && o.is(":visible") && (e.events.disableBlur(), e.popups.hide(r), 
+                    !e.helpers.isMobile() && o.is(":visible") && (e.events.disableBlur(), e.popups.hide(r),
                     e.events.enableBlur());
                 },
                 _inputFocus: function(e) {
                     var t = o.data("instance") || c, n = w(e.currentTarget);
-                    if (n.is("input:file") && n.closest(".fr-layer").addClass("fr-input-focus"), e.preventDefault(), 
+                    if (n.is("input:file") && n.closest(".fr-layer").addClass("fr-input-focus"), e.preventDefault(),
                     e.stopPropagation(), setTimeout(function() {
                         t.events.enableBlur();
                     }, c.browser.msie ? 100 : 0), t.helpers.isMobile()) {
@@ -15253,7 +15317,7 @@
                 },
                 _inputBlur: function(e) {
                     var t = o.data("instance") || c, n = w(e.currentTarget);
-                    n.is("input:file") && n.closest(".fr-layer").removeClass("fr-input-focus"), document.activeElement != this && w(this).is(":visible") && (t.events.blurActive() && t.events.trigger("blur"), 
+                    n.is("input:file") && n.closest(".fr-layer").removeClass("fr-input-focus"), document.activeElement != this && w(this).is(":visible") && (t.events.blurActive() && t.events.trigger("blur"),
                     t.events.enableBlur());
                 },
                 _editorKeydown: function(e) {
@@ -15262,10 +15326,10 @@
                 },
                 _preventFocus: function(e) {
                     var t = o.data("instance") || c, n = e.originalEvent ? e.originalEvent.target || e.originalEvent.originalTarget : null;
-                    "mouseup" == e.type || w(n).is(":focus") || t.events.disableBlur(), "mouseup" != e.type || w(n).hasClass("fr-command") || 0 < w(n).parents(".fr-command").length || w(n).hasClass("fr-dropdown-content") || c.button.hideActiveDropdowns(o), 
+                    "mouseup" == e.type || w(n).is(":focus") || t.events.disableBlur(), "mouseup" != e.type || w(n).hasClass("fr-command") || 0 < w(n).parents(".fr-command").length || w(n).hasClass("fr-dropdown-content") || c.button.hideActiveDropdowns(o),
                     (c.browser.safari || c.browser.mozilla) && "mousedown" == e.type && w(n).is("input[type=file]") && t.events.disableBlur();
                     var r = "input, textarea, button, select, label, .fr-command";
-                    if (n && !w(n).is(r) && 0 === w(n).parents(r).length) return e.stopPropagation(), 
+                    if (n && !w(n).is(r) && 0 === w(n).parents(r).length) return e.stopPropagation(),
                     !1;
                     n && w(n).is(r) && e.stopPropagation(), m();
                 },
@@ -15275,23 +15339,23 @@
                 _windowMouseup: function(e) {
                     if (!c.core.sameInstance(o)) return !0;
                     var t = o.data("instance") || c;
-                    o.is(":visible") && i() && (e.stopPropagation(), t.markers.remove(), t.popups.hide(r), 
+                    o.is(":visible") && i() && (e.stopPropagation(), t.markers.remove(), t.popups.hide(r),
                     m());
                 },
                 _windowKeydown: function(e) {
                     if (!c.core.sameInstance(o)) return !0;
                     var t = o.data("instance") || c, n = e.which;
                     if (w.FE.KEYCODE.ESC == n) {
-                        if (t.popups.isVisible(r) && t.opts.toolbarInline) return e.stopPropagation(), t.popups.isVisible(r) && (o.find(".fr-back:visible").length ? (t.button.exec(o.find(".fr-back:visible:first")), 
-                        t.accessibility.focusPopupButton(o)) : o.find(".fr-dismiss:visible").length ? t.button.exec(o.find(".fr-dismiss:visible:first")) : (t.popups.hide(r), 
+                        if (t.popups.isVisible(r) && t.opts.toolbarInline) return e.stopPropagation(), t.popups.isVisible(r) && (o.find(".fr-back:visible").length ? (t.button.exec(o.find(".fr-back:visible:first")),
+                        t.accessibility.focusPopupButton(o)) : o.find(".fr-dismiss:visible").length ? t.button.exec(o.find(".fr-dismiss:visible:first")) : (t.popups.hide(r),
                         t.toolbar.showInline(null, !0), t.accessibility.focusPopupButton(o))), !1;
-                        if (t.popups.isVisible(r)) return o.find(".fr-back:visible").length ? (t.button.exec(o.find(".fr-back:visible:first")), 
-                        t.accessibility.focusPopupButton(o)) : o.find(".fr-dismiss:visible").length ? t.button.exec(o.find(".fr-dismiss:visible:first")) : (t.popups.hide(r), 
+                        if (t.popups.isVisible(r)) return o.find(".fr-back:visible").length ? (t.button.exec(o.find(".fr-back:visible:first")),
+                        t.accessibility.focusPopupButton(o)) : o.find(".fr-dismiss:visible").length ? t.button.exec(o.find(".fr-dismiss:visible:first")) : (t.popups.hide(r),
                         t.accessibility.focusPopupButton(o)), !1;
                     }
                 },
                 _doPlaceholder: function() {
-                    0 === w(this).next().length && w(this).attr("placeholder") && w(this).after('<label for="' + w(this).attr("id") + '">' + w(this).attr("placeholder") + "</label>"), 
+                    0 === w(this).next().length && w(this).attr("placeholder") && w(this).after('<label for="' + w(this).attr("id") + '">' + w(this).attr("placeholder") + "</label>"),
                     w(this).toggleClass("fr-not-empty", "" !== w(this).val());
                 },
                 _repositionPopup: function() {
@@ -15304,11 +15368,11 @@
             };
         }
         function a(e, t) {
-            c.events.on("mouseup", e._editorMouseup, !0), c.$wp && c.events.on("keydown", e._editorKeydown), 
+            c.events.on("mouseup", e._editorMouseup, !0), c.$wp && c.events.on("keydown", e._editorKeydown),
             c.events.on("blur", function() {
                 g() && c.markers.remove(), f[t].find("iframe").length || h();
-            }), c.$wp && !c.helpers.isMobile() && c.events.$on(c.$wp, "scroll.popup" + t, e._repositionPopup), 
-            c.events.on("window.mouseup", e._windowMouseup, !0), c.events.on("window.keydown", e._windowKeydown, !0), 
+            }), c.$wp && !c.helpers.isMobile() && c.events.$on(c.$wp, "scroll.popup" + t, e._repositionPopup),
+            c.events.on("window.mouseup", e._windowMouseup, !0), c.events.on("window.keydown", e._windowKeydown, !0),
             f[t].data("inst" + c.id, !0), c.events.on("destroy", function() {
                 c.core.sameInstance(f[t]) && f[t].removeClass("fr-active").appendTo("body:first");
             }, !0);
@@ -15322,17 +15386,17 @@
         }
         return c.shared.exit_flag = !1, {
             _init: function() {
-                c.events.on("shared.destroy", e, !0), c.events.on("window.mousedown", t), c.events.on("window.touchmove", m), 
+                c.events.on("shared.destroy", e, !0), c.events.on("window.mousedown", t), c.events.on("window.touchmove", m),
                 c.events.$on(w(c.o_win), "scroll", m), c.events.on("mousedown", function(e) {
                     g() && (e.stopPropagation(), c.$el.find(".fr-marker").remove(), t(), c.events.disableBlur());
                 });
             },
             create: function(e, t) {
                 var n = o(e, t), r = E(e);
-                return a(r, e), c.events.$on(n, "mousedown mouseup touchstart touchend touch", "*", r._preventFocus, !0), 
-                c.events.$on(n, "focus", "input, textarea, button, select", r._inputFocus, !0), 
-                c.events.$on(n, "blur", "input, textarea, button, select", r._inputBlur, !0), c.accessibility.registerPopup(e), 
-                c.events.$on(n, "keydown keyup change input", "input, textarea", r._doPlaceholder, !0), 
+                return a(r, e), c.events.$on(n, "mousedown mouseup touchstart touchend touch", "*", r._preventFocus, !0),
+                c.events.$on(n, "focus", "input, textarea, button, select", r._inputFocus, !0),
+                c.events.$on(n, "blur", "input, textarea, button, select", r._inputBlur, !0), c.accessibility.registerPopup(e),
+                c.events.$on(n, "keydown keyup change input", "input, textarea", r._doPlaceholder, !0),
                 c.helpers.isIOS() && c.events.$on(n, "touchend", "label", function() {
                     w("#" + w(this).attr("for")).prop("checked", function(e, t) {
                         return !t;
@@ -15344,24 +15408,24 @@
                 return t && !t.data("inst" + c.id) && a(E(e), e), t;
             },
             show: function(e, t, n, r) {
-                if (u(e) || (g() && 0 < c.$el.find(".fr-marker").length ? (c.events.disableBlur(), 
-                c.selection.restore()) : g() || (c.events.disableBlur(), c.events.focus(), c.events.enableBlur())), 
+                if (u(e) || (g() && 0 < c.$el.find(".fr-marker").length ? (c.events.disableBlur(),
+                c.selection.restore()) : g() || (c.events.disableBlur(), c.events.focus(), c.events.enableBlur())),
                 h([ e ]), !f[e]) return !1;
                 var o = c.button.getButtons(".fr-dropdown.fr-active");
-                o.removeClass("fr-active").attr("aria-expanded", !1).parent(".fr-toolbar").css("zIndex", ""), 
+                o.removeClass("fr-active").attr("aria-expanded", !1).parent(".fr-toolbar").css("zIndex", ""),
                 o.next().attr("aria-hidden", !0), f[e].data("instance", c), c.$tb && c.$tb.data("instance", c);
                 var i = f[e].outerWidth(), a = u(e);
                 f[e].addClass("fr-active").removeClass("fr-hidden").find("input, textarea").removeAttr("disabled");
                 var s, l, d = f[e].data("container");
-                s = e, (l = d).is(":visible") || (l = c.$sc), 0 === l.find([ f[s] ]).length && l.append(f[s]), 
-                c.opts.toolbarInline && d && c.$tb && d.get(0) == c.$tb.get(0) && (p(e, c.$sc), 
-                n = c.$tb.offset().top - c.helpers.getPX(c.$tb.css("margin-top")), t = c.$tb.offset().left + c.$tb.outerWidth() / 2 + (parseFloat(c.$tb.find(".fr-arrow").css("margin-left")) || 0) + c.$tb.find(".fr-arrow").outerWidth() / 2, 
-                c.node.hasClass(c.$tb.get(0), "fr-above") && n && (n += c.$tb.outerHeight()), r = 0), 
-                d = f[e].data("container"), !c.opts.iframe || r || a || (t && (t -= c.$iframe.offset().left), 
-                n && (n -= c.$iframe.offset().top)), d.is(c.$tb) ? c.$tb.css("zIndex", (c.opts.zIndex || 1) + 4) : f[e].css("zIndex", (c.opts.zIndex || 1) + 4), 
-                t && (t -= i / 2), c.opts.toolbarBottom && d && c.$tb && d.get(0) == c.$tb.get(0) && (f[e].addClass("fr-above"), 
-                n && (n -= f[e].outerHeight())), f[e].removeClass("fr-active"), c.position.at(t, n, f[e], r || 0), 
-                f[e].addClass("fr-active"), a || c.accessibility.focusPopup(f[e]), c.opts.toolbarInline && c.toolbar.hide(), 
+                s = e, (l = d).is(":visible") || (l = c.$sc), 0 === l.find([ f[s] ]).length && l.append(f[s]),
+                c.opts.toolbarInline && d && c.$tb && d.get(0) == c.$tb.get(0) && (p(e, c.$sc),
+                n = c.$tb.offset().top - c.helpers.getPX(c.$tb.css("margin-top")), t = c.$tb.offset().left + c.$tb.outerWidth() / 2 + (parseFloat(c.$tb.find(".fr-arrow").css("margin-left")) || 0) + c.$tb.find(".fr-arrow").outerWidth() / 2,
+                c.node.hasClass(c.$tb.get(0), "fr-above") && n && (n += c.$tb.outerHeight()), r = 0),
+                d = f[e].data("container"), !c.opts.iframe || r || a || (t && (t -= c.$iframe.offset().left),
+                n && (n -= c.$iframe.offset().top)), d.is(c.$tb) ? c.$tb.css("zIndex", (c.opts.zIndex || 1) + 4) : f[e].css("zIndex", (c.opts.zIndex || 1) + 4),
+                t && (t -= i / 2), c.opts.toolbarBottom && d && c.$tb && d.get(0) == c.$tb.get(0) && (f[e].addClass("fr-above"),
+                n && (n -= f[e].outerHeight())), f[e].removeClass("fr-active"), c.position.at(t, n, f[e], r || 0),
+                f[e].addClass("fr-active"), a || c.accessibility.focusPopup(f[e]), c.opts.toolbarInline && c.toolbar.hide(),
                 c.events.trigger("popups.show." + e), E(e)._repositionPopup(), m();
             },
             hide: n,
@@ -15395,26 +15459,26 @@
                 var n = v.$el.find(".fr-marker:first");
                 n.css("display", "inline"), n.css("line-height", "");
                 var r = n.offset(), o = n.outerHeight();
-                n.css("display", "none"), n.css("line-height", 0), (e = {}).left = r && r.left, 
-                e.width = 0, e.height = o, e.top = r && r.top - (v.opts.iframe ? 0 : v.helpers.scrollTop()), 
+                n.css("display", "none"), n.css("line-height", 0), (e = {}).left = r && r.left,
+                e.width = 0, e.height = o, e.top = r && r.top - (v.opts.iframe ? 0 : v.helpers.scrollTop()),
                 e.right = 1, e.bottom = 1, e.ok = !0, t && v.selection.restore();
             }
             return e;
         }
         function i(e, t, n, r) {
             var o = n.data("container");
-            !o || "BODY" === o.get(0).tagName && "static" == o.css("position") || (e && (e -= o.offset().left), 
-            t && (t -= o.offset().top), "BODY" != o.get(0).tagName ? (e && (e += o.get(0).scrollLeft), 
-            t && (t += o.get(0).scrollTop)) : "absolute" == o.css("position") && (e && (e += o.position().left), 
-            t && (t += o.position().top))), v.opts.iframe && o && v.$tb && o.get(0) != v.$tb.get(0) && (e && (e += v.$iframe.offset().left), 
+            !o || "BODY" === o.get(0).tagName && "static" == o.css("position") || (e && (e -= o.offset().left),
+            t && (t -= o.offset().top), "BODY" != o.get(0).tagName ? (e && (e += o.get(0).scrollLeft),
+            t && (t += o.get(0).scrollTop)) : "absolute" == o.css("position") && (e && (e += o.position().left),
+            t && (t += o.position().top))), v.opts.iframe && o && v.$tb && o.get(0) != v.$tb.get(0) && (e && (e += v.$iframe.offset().left),
             t && (t += v.$iframe.offset().top));
-            var i, a, s, l, d = (a = e, s = (i = n).outerWidth(!0), l = i.parent().offset().left, 
-            i.parent().get(0) == v.$sc.get(0) && (l -= i.parent().position().left), l + a + s > v.$sc.get(0).clientWidth - 10 && (a = v.$sc.get(0).clientWidth - s - l - 10), 
+            var i, a, s, l, d = (a = e, s = (i = n).outerWidth(!0), l = i.parent().offset().left,
+            i.parent().get(0) == v.$sc.get(0) && (l -= i.parent().position().left), l + a + s > v.$sc.get(0).clientWidth - 10 && (a = v.$sc.get(0).clientWidth - s - l - 10),
             a < 0 && (a = 10), a);
             if (e) {
                 n.css("left", d);
                 var c = n.data("fr-arrow");
-                c || (c = n.find(".fr-arrow"), n.data("fr-arrow", c)), c.data("margin-left") || c.data("margin-left", v.helpers.getPX(c.css("margin-left"))), 
+                c || (c = n.find(".fr-arrow"), n.data("fr-arrow", c)), c.data("margin-left") || c.data("margin-left", v.helpers.getPX(c.css("margin-left"))),
                 c.css("margin-left", e - d + c.data("margin-left"));
             }
             t && n.css("top", function(e, t, n) {
@@ -15423,7 +15487,7 @@
                     var o = e.parent().offset().top, i = t - r - (n || 0);
                     e.parent().get(0) == v.$sc.get(0) && (o -= e.parent().position().top);
                     var a = v.$sc.get(0).clientHeight;
-                    o + t + r > v.$sc.offset().top + a && 0 < e.parent().offset().top + i && 0 < i ? i > v.$wp.scrollTop() && (t = i, 
+                    o + t + r > v.$sc.offset().top + a && 0 < e.parent().offset().top + i && 0 < i ? i > v.$wp.scrollTop() && (t = i,
                     e.addClass("fr-above")) : e.removeClass("fr-above");
                 }
                 return t;
@@ -15438,16 +15502,16 @@
             } else v.$box.find(".fr-sticky-dummy").css("height", n.outerHeight());
             if (v.core.hasFocus() || 0 < v.$tb.find("input:visible:focus").length) {
                 var a = v.helpers.scrollTop(), s = Math.min(Math.max(a - v.$tb.parent().offset().top, 0), v.$tb.parent().outerHeight() - n.outerHeight());
-                s != r && s != o && (clearTimeout(n.data("sticky-timeout")), n.data("sticky-scheduled", s), 
-                n.outerHeight() < a - v.$tb.parent().offset().top && n.addClass("fr-opacity-0"), 
+                s != r && s != o && (clearTimeout(n.data("sticky-timeout")), n.data("sticky-scheduled", s),
+                n.outerHeight() < a - v.$tb.parent().offset().top && n.addClass("fr-opacity-0"),
                 n.data("sticky-timeout", setTimeout(function() {
                     var e = v.helpers.scrollTop(), t = Math.min(Math.max(e - v.$tb.parent().offset().top, 0), v.$tb.parent().outerHeight() - n.outerHeight());
-                    0 < t && "BODY" == v.$tb.parent().get(0).tagName && (t += v.$tb.parent().position().top), 
-                    t != r && (n.css("top", Math.max(t, 0)), n.data("sticky-top", t), n.data("sticky-scheduled", t)), 
+                    0 < t && "BODY" == v.$tb.parent().get(0).tagName && (t += v.$tb.parent().position().top),
+                    t != r && (n.css("top", Math.max(t, 0)), n.data("sticky-top", t), n.data("sticky-scheduled", t)),
                     n.removeClass("fr-opacity-0");
-                }, 100))), t || (n.css("top", "0"), n.width(v.$tb.parent().width()), n.addClass("fr-sticky-on"), 
+                }, 100))), t || (n.css("top", "0"), n.width(v.$tb.parent().width()), n.addClass("fr-sticky-on"),
                 v.$box.addClass("fr-sticky-box"));
-            } else clearTimeout(w(e).css("sticky-timeout")), n.css("top", "0"), n.css("position", ""), 
+            } else clearTimeout(w(e).css("sticky-timeout")), n.css("top", "0"), n.css("position", ""),
             n.width(""), n.data("sticky-top", 0), n.removeClass("fr-sticky-on"), v.$box.removeClass("fr-sticky-box");
         }
         function t(e) {
@@ -15457,21 +15521,21 @@
                 var c = "body" == v.opts.scrollableContainer ? v.helpers.scrollTop() : l, f = r.is(".fr-sticky-on");
                 r.data("sticky-parent") || r.data("sticky-parent", r.parent());
                 var p = r.data("sticky-parent"), u = p.offset().top, g = p.outerHeight();
-                if (r.data("sticky-offset") || void 0 !== i ? v.$box.find(".fr-sticky-dummy").css("height", o + "px") : (r.data("sticky-offset", !0), 
+                if (r.data("sticky-offset") || void 0 !== i ? v.$box.find(".fr-sticky-dummy").css("height", o + "px") : (r.data("sticky-offset", !0),
                 r.after('<div class="fr-sticky-dummy" style="height: ' + o + 'px;"></div>')), !a) {
                     var h = "auto" !== r.css("top") || "auto" !== r.css("bottom");
                     h || r.css("position", "fixed"), a = {
                         top: v.node.hasClass(r.get(0), "fr-top"),
                         bottom: v.node.hasClass(r.get(0), "fr-bottom")
-                    }, h || r.css("position", ""), r.data("sticky-position", a), r.data("top", v.node.hasClass(r.get(0), "fr-top") ? r.css("top") : "auto"), 
+                    }, h || r.css("position", ""), r.data("sticky-position", a), r.data("top", v.node.hasClass(r.get(0), "fr-top") ? r.css("top") : "auto"),
                     r.data("bottom", v.node.hasClass(r.get(0), "fr-bottom") ? r.css("bottom") : "auto");
                 }
                 t = v.helpers.getPX(r.data("top")), n = v.helpers.getPX(r.data("bottom"));
                 var m = a.top && u < c + t && c + t <= u + g - o && (v.helpers.isInViewPort(v.$sc.get(0)) || "body" == v.opts.scrollableContainer), E = a.bottom && u + o < c + s - n && c + s - n < u + g;
-                m || E ? (r.css("width", p.get(0).getBoundingClientRect().width + "px"), f || (r.addClass("fr-sticky-on"), 
-                r.removeClass("fr-sticky-off"), r.css("top") && ("auto" != r.data("top") ? r.css("top", v.helpers.getPX(r.data("top")) + l) : r.data("top", "auto")), 
-                r.css("bottom") && ("auto" != r.data("bottom") ? r.css("bottom", v.helpers.getPX(r.data("bottom")) + d) : r.css("bottom", "auto")))) : v.node.hasClass(r.get(0), "fr-sticky-off") || (r.width(""), 
-                r.removeClass("fr-sticky-on"), r.addClass("fr-sticky-off"), r.css("top") && "auto" != r.data("top") && a.top && r.css("top", 0), 
+                m || E ? (r.css("width", p.get(0).getBoundingClientRect().width + "px"), f || (r.addClass("fr-sticky-on"),
+                r.removeClass("fr-sticky-off"), r.css("top") && ("auto" != r.data("top") ? r.css("top", v.helpers.getPX(r.data("top")) + l) : r.data("top", "auto")),
+                r.css("bottom") && ("auto" != r.data("bottom") ? r.css("bottom", v.helpers.getPX(r.data("bottom")) + d) : r.css("bottom", "auto")))) : v.node.hasClass(r.get(0), "fr-sticky-off") || (r.width(""),
+                r.removeClass("fr-sticky-on"), r.addClass("fr-sticky-off"), r.css("top") && "auto" != r.data("top") && a.top && r.css("top", 0),
                 r.css("bottom") && "auto" != r.data("bottom") && a.bottom && r.css("bottom", 0));
             }
         }
@@ -15488,12 +15552,12 @@
                         t(), v.events.$on(w(v.o_win), "scroll", function() {
                             if (v.core.hasFocus()) for (var e = 0; e < v._stickyElements.length; e++) {
                                 var t = w(v._stickyElements[e]), n = t.parent(), r = v.helpers.scrollTop();
-                                t.outerHeight() < r - n.offset().top && (t.addClass("fr-opacity-0"), t.data("sticky-top", -1), 
+                                t.outerHeight() < r - n.offset().top && (t.addClass("fr-opacity-0"), t.data("sticky-top", -1),
                                 t.data("sticky-scheduled", -1));
                             }
                         }, !0);
-                    } else "body" !== v.opts.scrollableContainer && v.events.$on(w(v.opts.scrollableContainer), "scroll", e, !0), 
-                    v.events.$on(w(v.o_win), "scroll", e, !0), v.events.$on(w(v.o_win), "resize", e, !0), 
+                    } else "body" !== v.opts.scrollableContainer && v.events.$on(w(v.opts.scrollableContainer), "scroll", e, !0),
+                    v.events.$on(w(v.o_win), "scroll", e, !0), v.events.$on(w(v.o_win), "resize", e, !0),
                     v.events.on("initialized", e), v.events.on("focus", e), v.events.$on(w(v.o_win), "resize", "textarea", e, !0);
                     v.events.on("destroy", function() {
                         v._stickyElements = [];
@@ -15510,7 +15574,7 @@
                 v.opts.iframe || (n += v.helpers.scrollTop()), i(r, n, e, t.height);
             },
             addSticky: function(e) {
-                e.addClass("fr-sticky"), v.helpers.isIOS() && e.addClass("fr-sticky-ios"), e.removeClass("fr-sticky"), 
+                e.addClass("fr-sticky"), v.helpers.isIOS() && e.addClass("fr-sticky-ios"), e.removeClass("fr-sticky"),
                 v._stickyElements.push(e.get(0));
             },
             refresh: e,
@@ -15553,8 +15617,8 @@
             n.events.$on(n.$el, n._mouseup, function() {
                 setTimeout(function() {
                     var e, t;
-                    t = n.popups.get("text.edit"), e = "INPUT" === n.$el.prop("tagName") ? n.$el.attr("placeholder") : n.$el.text(), 
-                    t.find("input").val(e).trigger("change"), n.popups.setContainer("text.edit", n.$sc), 
+                    t = n.popups.get("text.edit"), e = "INPUT" === n.$el.prop("tagName") ? n.$el.attr("placeholder") : n.$el.text(),
+                    t.find("input").val(e).trigger("change"), n.popups.setContainer("text.edit", n.$sc),
                     n.popups.show("text.edit", n.$el.offset().left + n.$el.outerWidth() / 2, n.$el.offset().top + n.$el.outerHeight(), n.$el.outerHeight());
                 }, 10);
             });
@@ -15568,7 +15632,7 @@
             },
             update: function() {
                 var e = n.popups.get("text.edit").find("input").val();
-                0 === e.length && (e = n.opts.placeholderText), "INPUT" === n.$el.prop("tagName") ? n.$el.attr("placeholder", e) : n.$el.text(e), 
+                0 === e.length && (e = n.opts.placeholderText), "INPUT" === n.$el.prop("tagName") ? n.$el.attr("placeholder", e) : n.$el.text(e),
                 n.events.trigger("contentChanged"), n.popups.hide("text.edit");
             }
         };
@@ -15589,9 +15653,9 @@
         toolbarSticky: !0,
         toolbarStickyOffset: 0,
         toolbarVisibleWithoutSelection: !1
-    }), w.FE.TOOLBAR_BUTTONS = [ "fullscreen", "bold", "italic", "underline", "strikeThrough", "subscript", "superscript", "|", "fontFamily", "fontSize", "color", "inlineClass", "inlineStyle", "paragraphStyle", "lineHeight", "|", "paragraphFormat", "align", "formatOL", "formatUL", "outdent", "indent", "quote", "-", "insertLink", "insertImage", "insertVideo", "embedly", "insertFile", "insertTable", "|", "emoticons", "fontAwesome", "specialCharacters", "insertHR", "selectAll", "clearFormatting", "|", "print", "getPDF", "spellChecker", "help", "html", "|", "undo", "redo" ], 
-    w.FE.TOOLBAR_BUTTONS_MD = null, w.FE.TOOLBAR_BUTTONS_SM = [ "bold", "italic", "underline", "|", "fontFamily", "fontSize", "insertLink", "insertImage", "table", "|", "undo", "redo" ], 
-    w.FE.TOOLBAR_BUTTONS_XS = [ "bold", "italic", "fontFamily", "fontSize", "|", "undo", "redo" ], 
+    }), w.FE.TOOLBAR_BUTTONS = [ "fullscreen", "bold", "italic", "underline", "strikeThrough", "subscript", "superscript", "|", "fontFamily", "fontSize", "color", "inlineClass", "inlineStyle", "paragraphStyle", "lineHeight", "|", "paragraphFormat", "align", "formatOL", "formatUL", "outdent", "indent", "quote", "-", "insertLink", "insertImage", "insertVideo", "embedly", "insertFile", "insertTable", "|", "emoticons", "fontAwesome", "specialCharacters", "insertHR", "selectAll", "clearFormatting", "|", "print", "getPDF", "spellChecker", "help", "html", "|", "undo", "redo" ],
+    w.FE.TOOLBAR_BUTTONS_MD = null, w.FE.TOOLBAR_BUTTONS_SM = [ "bold", "italic", "underline", "|", "fontFamily", "fontSize", "insertLink", "insertImage", "table", "|", "undo", "redo" ],
+    w.FE.TOOLBAR_BUTTONS_XS = [ "bold", "italic", "fontFamily", "fontSize", "|", "undo", "redo" ],
     w.FE.MODULES.toolbar = function(o) {
         var r = [];
         function i(e, t) {
@@ -15606,7 +15670,7 @@
             o.$tb.find(".fr-separator").remove(), o.$tb.find("> .fr-command, > div.fr-btn-wrap").addClass("fr-hidden");
             for (var t = 0; t < e.length; t++) if ("|" == e[t] || "-" == e[t]) o.$tb.append(o.button.buildList([ e[t] ])); else {
                 var n = o.$tb.find('> .fr-command[data-cmd="' + e[t] + '"], > div.fr-btn-wrap > .fr-command[data-cmd="' + e[t] + '"]'), r = null;
-                o.node.hasClass(n.next().get(0), "fr-dropdown-menu") && (r = n.next()), o.node.hasClass(n.next().get(0), "fr-options") && (n = n.parent()), 
+                o.node.hasClass(n.next().get(0), "fr-dropdown-menu") && (r = n.next()), o.node.hasClass(n.next().get(0), "fr-options") && (n = n.parent()),
                 n.removeClass("fr-hidden").appendTo(o.$tb), r && r.appendTo(o.$tb);
             }
         }
@@ -15621,23 +15685,23 @@
         function n(e) {
             return (!e || "blur" !== e.type || document.activeElement !== o.el) && (!(!e || "keydown" !== e.type || !o.keys.ctrlKey(e)) || (!!o.button.getButtons(".fr-dropdown.fr-active").next().find(o.o_doc.activeElement).length || void (!1 !== o.events.trigger("toolbar.hide") && o.$tb.hide())));
         }
-        r[w.FE.XS] = o.opts.toolbarButtonsXS || o.opts.toolbarButtons || w.FE.TOOLBAR_BUTTONS_XS || w.FE.TOOLBAR_BUTTONS || [], 
-        r[w.FE.SM] = o.opts.toolbarButtonsSM || o.opts.toolbarButtons || w.FE.TOOLBAR_BUTTONS_SM || w.FE.TOOLBAR_BUTTONS || [], 
-        r[w.FE.MD] = o.opts.toolbarButtonsMD || o.opts.toolbarButtons || w.FE.TOOLBAR_BUTTONS_MD || w.FE.TOOLBAR_BUTTONS || [], 
+        r[w.FE.XS] = o.opts.toolbarButtonsXS || o.opts.toolbarButtons || w.FE.TOOLBAR_BUTTONS_XS || w.FE.TOOLBAR_BUTTONS || [],
+        r[w.FE.SM] = o.opts.toolbarButtonsSM || o.opts.toolbarButtons || w.FE.TOOLBAR_BUTTONS_SM || w.FE.TOOLBAR_BUTTONS || [],
+        r[w.FE.MD] = o.opts.toolbarButtonsMD || o.opts.toolbarButtons || w.FE.TOOLBAR_BUTTONS_MD || w.FE.TOOLBAR_BUTTONS || [],
         r[w.FE.LG] = o.opts.toolbarButtons || w.FE.TOOLBAR_BUTTONS || [];
         var s = null;
         function l(e) {
             clearTimeout(s), e && e.which == w.FE.KEYCODE.ESC || (s = setTimeout(t, o.opts.typingTimer));
         }
         function d() {
-            o.events.on("window.mousedown", n), o.events.on("keydown", n), o.events.on("blur", n), 
-            o.helpers.isMobile() || o.events.on("window.mouseup", t), o.helpers.isMobile() ? o.helpers.isIOS() || (o.events.on("window.touchend", t), 
+            o.events.on("window.mousedown", n), o.events.on("keydown", n), o.events.on("blur", n),
+            o.helpers.isMobile() || o.events.on("window.mouseup", t), o.helpers.isMobile() ? o.helpers.isIOS() || (o.events.on("window.touchend", t),
             o.browser.mozilla && setInterval(t, 200)) : o.events.on("window.keyup", l), o.events.on("keydown", function(e) {
                 e && e.which == w.FE.KEYCODE.ESC && n();
             }), o.events.on("keydown", function(e) {
                 if (e.which == w.FE.KEYCODE.ALT) return e.stopPropagation(), !1;
-            }, !0), o.events.$on(o.$wp, "scroll.toolbar", t), o.events.$on(o.$sc, "scroll.toolbar", t), 
-            o.events.on("commands.after", t), o.helpers.isMobile() && (o.events.$on(o.$doc, "selectionchange", l), 
+            }, !0), o.events.$on(o.$wp, "scroll.toolbar", t), o.events.$on(o.$sc, "scroll.toolbar", t),
+            o.events.on("commands.after", t), o.helpers.isMobile() && (o.events.$on(o.$doc, "selectionchange", l),
             o.events.$on(o.$doc, "orientationchange", t));
         }
         function c() {
@@ -15647,25 +15711,25 @@
             o.$box.removeClass("fr-top fr-bottom fr-inline fr-basic"), o.$box.find(".fr-sticky-dummy").remove();
         }
         function p() {
-            o.opts.theme && o.$tb.addClass(o.opts.theme + "-theme"), 1 < o.opts.zIndex && o.$tb.css("z-index", o.opts.zIndex + 1), 
-            "auto" != o.opts.direction && o.$tb.removeClass("fr-ltr fr-rtl").addClass("fr-" + o.opts.direction), 
-            o.helpers.isMobile() ? o.$tb.addClass("fr-mobile") : o.$tb.addClass("fr-desktop"), 
-            o.opts.toolbarContainer ? (o.opts.toolbarInline && (d(), n()), o.opts.toolbarBottom ? o.$tb.addClass("fr-bottom") : o.$tb.addClass("fr-top")) : o.opts.toolbarInline ? (o.$sc.append(o.$tb), 
-            o.$tb.data("container", o.$sc), o.$tb.addClass("fr-inline"), o.$tb.prepend('<span class="fr-arrow"></span>'), 
-            d(), o.opts.toolbarBottom = !1) : (o.opts.toolbarBottom && !o.helpers.isIOS() ? (o.$box.append(o.$tb), 
-            o.$tb.addClass("fr-bottom"), o.$box.addClass("fr-bottom")) : (o.opts.toolbarBottom = !1, 
-            o.$box.prepend(o.$tb), o.$tb.addClass("fr-top"), o.$box.addClass("fr-top")), o.$tb.addClass("fr-basic"), 
-            o.opts.toolbarSticky && (o.opts.toolbarStickyOffset && (o.opts.toolbarBottom ? o.$tb.css("bottom", o.opts.toolbarStickyOffset) : o.$tb.css("top", o.opts.toolbarStickyOffset)), 
+            o.opts.theme && o.$tb.addClass(o.opts.theme + "-theme"), 1 < o.opts.zIndex && o.$tb.css("z-index", o.opts.zIndex + 1),
+            "auto" != o.opts.direction && o.$tb.removeClass("fr-ltr fr-rtl").addClass("fr-" + o.opts.direction),
+            o.helpers.isMobile() ? o.$tb.addClass("fr-mobile") : o.$tb.addClass("fr-desktop"),
+            o.opts.toolbarContainer ? (o.opts.toolbarInline && (d(), n()), o.opts.toolbarBottom ? o.$tb.addClass("fr-bottom") : o.$tb.addClass("fr-top")) : o.opts.toolbarInline ? (o.$sc.append(o.$tb),
+            o.$tb.data("container", o.$sc), o.$tb.addClass("fr-inline"), o.$tb.prepend('<span class="fr-arrow"></span>'),
+            d(), o.opts.toolbarBottom = !1) : (o.opts.toolbarBottom && !o.helpers.isIOS() ? (o.$box.append(o.$tb),
+            o.$tb.addClass("fr-bottom"), o.$box.addClass("fr-bottom")) : (o.opts.toolbarBottom = !1,
+            o.$box.prepend(o.$tb), o.$tb.addClass("fr-top"), o.$box.addClass("fr-top")), o.$tb.addClass("fr-basic"),
+            o.opts.toolbarSticky && (o.opts.toolbarStickyOffset && (o.opts.toolbarBottom ? o.$tb.css("bottom", o.opts.toolbarStickyOffset) : o.$tb.css("top", o.opts.toolbarStickyOffset)),
             o.position.addSticky(o.$tb))), function() {
                 var e = w.merge([], a());
                 i(e, r[w.FE.XS]), i(e, r[w.FE.SM]), i(e, r[w.FE.MD]), i(e, r[w.FE.LG]);
                 for (var t = e.length - 1; 0 <= t; t--) "-" != e[t] && "|" != e[t] && e.indexOf(e[t]) < t && e.splice(t, 1);
                 var n = o.button.buildList(e, a());
                 o.$tb.append(n), o.button.bindCommands(o.$tb);
-            }(), o.events.$on(w(o.o_win), "resize", e), o.events.$on(w(o.o_win), "orientationchange", e), 
+            }(), o.events.$on(w(o.o_win), "resize", e), o.events.$on(w(o.o_win), "orientationchange", e),
             o.accessibility.registerToolbar(o.$tb), o.events.$on(o.$tb, o._mousedown + " " + o._mouseup, function(e) {
                 var t = e.originalEvent ? e.originalEvent.target || e.originalEvent.originalTarget : null;
-                if (t && "INPUT" != t.tagName && !o.edit.isDisabled()) return e.stopPropagation(), 
+                if (t && "INPUT" != t.tagName && !o.edit.isDisabled()) return e.stopPropagation(),
                 e.preventDefault(), !1;
             }, !0);
         }
@@ -15673,14 +15737,14 @@
         return {
             _init: function() {
                 if (o.$sc = w(o.opts.scrollableContainer).first(), !o.$wp) return !1;
-                o.opts.toolbarContainer ? (o.shared.$tb ? (o.$tb = o.shared.$tb, o.opts.toolbarInline && d()) : (o.shared.$tb = w('<div class="fr-toolbar"></div>'), 
-                o.$tb = o.shared.$tb, w(o.opts.toolbarContainer).append(o.$tb), p(), o.$tb.data("instance", o)), 
-                o.opts.toolbarInline ? o.$box.addClass("fr-inline") : o.$box.addClass("fr-basic"), 
+                o.opts.toolbarContainer ? (o.shared.$tb ? (o.$tb = o.shared.$tb, o.opts.toolbarInline && d()) : (o.shared.$tb = w('<div class="fr-toolbar"></div>'),
+                o.$tb = o.shared.$tb, w(o.opts.toolbarContainer).append(o.$tb), p(), o.$tb.data("instance", o)),
+                o.opts.toolbarInline ? o.$box.addClass("fr-inline") : o.$box.addClass("fr-basic"),
                 o.events.on("focus", function() {
                     o.$tb.data("instance", o);
-                }, !0), o.opts.toolbarInline = !1) : o.opts.toolbarInline ? (o.$box.addClass("fr-inline"), 
-                o.shared.$tb ? (o.$tb = o.shared.$tb, d()) : (o.shared.$tb = w('<div class="fr-toolbar"></div>'), 
-                o.$tb = o.shared.$tb, p())) : (o.$box.addClass("fr-basic"), o.$tb = w('<div class="fr-toolbar"></div>'), 
+                }, !0), o.opts.toolbarInline = !1) : o.opts.toolbarInline ? (o.$box.addClass("fr-inline"),
+                o.shared.$tb ? (o.$tb = o.shared.$tb, d()) : (o.shared.$tb = w('<div class="fr-toolbar"></div>'),
+                o.$tb = o.shared.$tb, p())) : (o.$box.addClass("fr-basic"), o.$tb = w('<div class="fr-toolbar"></div>'),
                 p(), o.$tb.data("instance", o)), o.events.on("destroy", f, !0), o.events.on(o.opts.toolbarInline || o.opts.toolbarContainer ? "shared.destroy" : "destroy", c, !0);
             },
             hide: n,
@@ -15690,11 +15754,11 @@
             },
             showInline: t,
             disable: function() {
-                !u && o.$tb && (o.$tb.find("> .fr-command, .fr-btn-wrap > .fr-command").addClass("fr-disabled fr-no-refresh").attr("aria-disabled", !0), 
+                !u && o.$tb && (o.$tb.find("> .fr-command, .fr-btn-wrap > .fr-command").addClass("fr-disabled fr-no-refresh").attr("aria-disabled", !0),
                 u = !0);
             },
             enable: function() {
-                u && o.$tb && (o.$tb.find("> .fr-command, .fr-btn-wrap > .fr-command").removeClass("fr-disabled fr-no-refresh").attr("aria-disabled", !1), 
+                u && o.$tb && (o.$tb.find("> .fr-command, .fr-btn-wrap > .fr-command").removeClass("fr-disabled fr-no-refresh").attr("aria-disabled", !1),
                 u = !1), o.button.bulkRefresh();
             }
         };
@@ -15703,7 +15767,7 @@
 
 !function(t) {
     "function" == typeof define && define.amd ? define([ "jquery" ], t) : "object" == typeof module && module.exports ? module.exports = function(e, n) {
-        return n === undefined && (n = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return n === undefined && (n = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         t(n);
     } : t(window.jQuery);
 }(function(r) {
@@ -15713,7 +15777,7 @@
                 var n = a.selection.element();
                 if (r(n).parents(".fr-img-caption").length) r(n).css("text-align", e); else {
                     a.selection.save(), a.html.wrap(!0, !0, !0, !0), a.selection.restore();
-                    for (var t = a.selection.blocks(), i = 0; i < t.length; i++) r(t[i]).css("text-align", e).removeClass("fr-temp-div"), 
+                    for (var t = a.selection.blocks(), i = 0; i < t.length; i++) r(t[i]).css("text-align", e).removeClass("fr-temp-div"),
                     "" === r(t[i]).attr("class") && r(t[i]).removeAttr("class"), "" === r(t[i]).attr("style") && r(t[i]).removeAttr("style");
                     a.selection.save(), a.html.unwrap(), a.selection.restore();
                 }
@@ -15815,7 +15879,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(a) {
@@ -15831,11 +15895,11 @@
             if (n.opts.charCounterMax < 0) return !0;
             if (o() < n.opts.charCounterMax) return !0;
             var t = e.which;
-            return !(!n.keys.ctrlKey(e) && n.keys.isCharacter(t) || t === a.FE.KEYCODE.IME) || (e.preventDefault(), 
+            return !(!n.keys.ctrlKey(e) && n.keys.isCharacter(t) || t === a.FE.KEYCODE.IME) || (e.preventDefault(),
             e.stopPropagation(), n.events.trigger("charCounter.exceeded"), !1);
         }
         function t(e) {
-            return n.opts.charCounterMax < 0 ? e : a("<div>").html(e).text().length + o() <= n.opts.charCounterMax ? e : (n.events.trigger("charCounter.exceeded"), 
+            return n.opts.charCounterMax < 0 ? e : a("<div>").html(e).text().length + o() <= n.opts.charCounterMax ? e : (n.events.trigger("charCounter.exceeded"),
             "");
         }
         function u() {
@@ -15848,11 +15912,11 @@
         }
         return {
             _init: function() {
-                return !!n.$wp && !!n.opts.charCounterCount && ((r = a('<span class="fr-counter"></span>')).css("bottom", n.$wp.css("border-bottom-width")), 
-                n.$box.append(r), n.events.on("keydown", e, !0), n.events.on("paste.afterCleanup", t), 
+                return !!n.$wp && !!n.opts.charCounterCount && ((r = a('<span class="fr-counter"></span>')).css("bottom", n.$wp.css("border-bottom-width")),
+                n.$box.append(r), n.events.on("keydown", e, !0), n.events.on("paste.afterCleanup", t),
                 n.events.on("keyup contentChanged input", function() {
                     n.events.trigger("charCounter.update");
-                }), n.events.on("charCounter.update", u), n.events.trigger("charCounter.update"), 
+                }), n.events.on("charCounter.update", u), n.events.trigger("charCounter.update"),
                 void n.events.on("destroy", function() {
                     a(n.o_win).off("resize.char" + n.id), r.removeData().remove(), r = null;
                 }));
@@ -15864,7 +15928,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(e) {
@@ -15885,7 +15949,7 @@
             };
             e = e || {}, i = (i = i || "").replace(/\r\n|[\r\u2028\u2029]/g, "\n");
             var r = e.indent_size || 4, s = e.indent_char || " ", _ = e.selector_separator_newline === undefined || e.selector_separator_newline, a = e.end_with_newline !== undefined && e.end_with_newline, o = e.newline_between_rules === undefined || e.newline_between_rules, l = e.eol ? e.eol : "\n";
-            "string" == typeof r && (r = parseInt(r, 10)), e.indent_with_tabs && (s = "\t", 
+            "string" == typeof r && (r = parseInt(r, 10)), e.indent_with_tabs && (s = "\t",
             r = 1), l = l.replace(/\\r/, "\r").replace(/\\n/, "\n");
             var h, c = /^\s+$/, u = -1, p = 0;
             function d() {
@@ -15965,26 +16029,26 @@
                 if ("/" === h && "*" === f()) {
                     var j = 0 === b;
                     (P || j) && k.newLine(), y.push(x()), k.newLine(), j && k.newLine(!0);
-                } else if ("/" === h && "/" === f()) P || "{" === L || k.trim(), k.singleSpace(), 
+                } else if ("/" === h && "/" === f()) P || "{" === L || k.trim(), k.singleSpace(),
                 y.push(x()), k.newLine(); else if ("@" === h) {
                     k.preserveSingleSpace(), y.push(h);
                     var B = (void 0, S = u, A = T(": ,;{}()[]/='\""), u = S - 1, d(), A);
-                    B.match(/[ :]$/) && (d(), B = T(": ").replace(/\s$/, ""), y.push(B), k.singleSpace()), 
+                    B.match(/[ :]$/) && (d(), B = T(": ").replace(/\s$/, ""), y.push(B), k.singleSpace()),
                     (B = B.replace(/\s$/, "")) in t && (v += 1, B in n && (D = !0));
-                } else "#" === h && "{" === f() ? (k.preserveSingleSpace(), y.push(T("}"))) : "{" === h ? "}" === f(!0) ? (E(), 
-                d(), k.singleSpace(), y.push("{}"), k.newLine(), o && 0 === b && k.newLine(!0)) : (b++, 
-                m += R, k["{"](h), D ? (D = !1, O = v < b) : O = v <= b) : "}" === h ? (b--, m = m.slice(0, -r), 
-                k["}"](h), N = O = !1, v && v--, o && 0 === b && k.newLine(!0)) : ":" === h ? (E(), 
-                !O && !D || w("&") || K() ? ":" === f() ? (d(), y.push("::")) : y.push(":") : (N = !0, 
-                y.push(":"), k.singleSpace())) : '"' === h || "'" === h ? (k.preserveSingleSpace(), 
-                y.push(T(h))) : ";" === h ? (N = !1, y.push(h), k.newLine()) : "(" === h ? w("url") ? (y.push(h), 
-                E(), d() && (")" !== h && '"' !== h && "'" !== h ? y.push(T(")")) : u--)) : (p++, 
-                k.preserveSingleSpace(), y.push(h), E()) : ")" === h ? (y.push(h), p--) : "," === h ? (y.push(h), 
-                E(), _ && !N && p < 1 ? k.newLine() : k.singleSpace()) : ("]" === h || ("[" === h ? k.preserveSingleSpace() : "=" === h ? (E(), 
+                } else "#" === h && "{" === f() ? (k.preserveSingleSpace(), y.push(T("}"))) : "{" === h ? "}" === f(!0) ? (E(),
+                d(), k.singleSpace(), y.push("{}"), k.newLine(), o && 0 === b && k.newLine(!0)) : (b++,
+                m += R, k["{"](h), D ? (D = !1, O = v < b) : O = v <= b) : "}" === h ? (b--, m = m.slice(0, -r),
+                k["}"](h), N = O = !1, v && v--, o && 0 === b && k.newLine(!0)) : ":" === h ? (E(),
+                !O && !D || w("&") || K() ? ":" === f() ? (d(), y.push("::")) : y.push(":") : (N = !0,
+                y.push(":"), k.singleSpace())) : '"' === h || "'" === h ? (k.preserveSingleSpace(),
+                y.push(T(h))) : ";" === h ? (N = !1, y.push(h), k.newLine()) : "(" === h ? w("url") ? (y.push(h),
+                E(), d() && (")" !== h && '"' !== h && "'" !== h ? y.push(T(")")) : u--)) : (p++,
+                k.preserveSingleSpace(), y.push(h), E()) : ")" === h ? (y.push(h), p--) : "," === h ? (y.push(h),
+                E(), _ && !N && p < 1 ? k.newLine() : k.singleSpace()) : ("]" === h || ("[" === h ? k.preserveSingleSpace() : "=" === h ? (E(),
                 h = "=") : k.preserveSingleSpace()), y.push(h));
             }
             var M = "";
-            return m && (M += m), M += y.join("").replace(/[\r\n\t ]+$/, ""), a && (M += "\n"), 
+            return m && (M += m), M += y.join("").replace(/[\r\n\t ]+$/, ""), a && (M += "\n"),
             "\n" != l && (M = M.replace(/[\n]/g, l)), M;
         }
         function F(e, t) {
@@ -15997,9 +16061,9 @@
         function y(e, t) {
             return new r(e, t).beautify();
         }
-        e = X, t = "ªµºÀ-ÖØ-öø-ˁˆ-ˑˠ-ˤˬˮͰ-ʹͶͷͺ-ͽΆΈ-ΊΌΎ-ΡΣ-ϵϷ-ҁҊ-ԧԱ-Ֆՙա-ևא-תװ-ײؠ-يٮٯٱ-ۓەۥۦۮۯۺ-ۼۿܐܒ-ܯݍ-ޥޱߊ-ߪߴߵߺࠀ-ࠕࠚࠤࠨࡀ-ࡘࢠࢢ-ࢬऄ-हऽॐक़-ॡॱ-ॷॹ-ॿঅ-ঌএঐও-নপ-রলশ-হঽৎড়ঢ়য়-ৡৰৱਅ-ਊਏਐਓ-ਨਪ-ਰਲਲ਼ਵਸ਼ਸਹਖ਼-ੜਫ਼ੲ-ੴઅ-ઍએ-ઑઓ-નપ-રલળવ-હઽૐૠૡଅ-ଌଏଐଓ-ନପ-ରଲଳଵ-ହଽଡ଼ଢ଼ୟ-ୡୱஃஅ-ஊஎ-ஐஒ-கஙசஜஞடணதந-பம-ஹௐఅ-ఌఎ-ఐఒ-నప-ళవ-హఽౘౙౠౡಅ-ಌಎ-ಐಒ-ನಪ-ಳವ-ಹಽೞೠೡೱೲഅ-ഌഎ-ഐഒ-ഺഽൎൠൡൺ-ൿඅ-ඖක-නඳ-රලව-ෆก-ะาำเ-ๆກຂຄງຈຊຍດ-ທນ-ຟມ-ຣລວສຫອ-ະາຳຽເ-ໄໆໜ-ໟༀཀ-ཇཉ-ཬྈ-ྌက-ဪဿၐ-ၕၚ-ၝၡၥၦၮ-ၰၵ-ႁႎႠ-ჅჇჍა-ჺჼ-ቈቊ-ቍቐ-ቖቘቚ-ቝበ-ኈኊ-ኍነ-ኰኲ-ኵኸ-ኾዀዂ-ዅወ-ዖዘ-ጐጒ-ጕጘ-ፚᎀ-ᎏᎠ-Ᏼᐁ-ᙬᙯ-ᙿᚁ-ᚚᚠ-ᛪᛮ-ᛰᜀ-ᜌᜎ-ᜑᜠ-ᜱᝀ-ᝑᝠ-ᝬᝮ-ᝰក-ឳៗៜᠠ-ᡷᢀ-ᢨᢪᢰ-ᣵᤀ-ᤜᥐ-ᥭᥰ-ᥴᦀ-ᦫᧁ-ᧇᨀ-ᨖᨠ-ᩔᪧᬅ-ᬳᭅ-ᭋᮃ-ᮠᮮᮯᮺ-ᯥᰀ-ᰣᱍ-ᱏᱚ-ᱽᳩ-ᳬᳮ-ᳱᳵᳶᴀ-ᶿḀ-ἕἘ-Ἕἠ-ὅὈ-Ὅὐ-ὗὙὛὝὟ-ώᾀ-ᾴᾶ-ᾼιῂ-ῄῆ-ῌῐ-ΐῖ-Ίῠ-Ῥῲ-ῴῶ-ῼⁱⁿₐ-ₜℂℇℊ-ℓℕℙ-ℝℤΩℨK-ℭℯ-ℹℼ-ℿⅅ-ⅉⅎⅠ-ↈⰀ-Ⱞⰰ-ⱞⱠ-ⳤⳫ-ⳮⳲⳳⴀ-ⴥⴧⴭⴰ-ⵧⵯⶀ-ⶖⶠ-ⶦⶨ-ⶮⶰ-ⶶⶸ-ⶾⷀ-ⷆⷈ-ⷎⷐ-ⷖⷘ-ⷞⸯ々-〇〡-〩〱-〵〸-〼ぁ-ゖゝ-ゟァ-ヺー-ヿㄅ-ㄭㄱ-ㆎㆠ-ㆺㇰ-ㇿ㐀-䶵一-鿌ꀀ-ꒌꓐ-ꓽꔀ-ꘌꘐ-ꘟꘪꘫꙀ-ꙮꙿ-ꚗꚠ-ꛯꜗ-ꜟꜢ-ꞈꞋ-ꞎꞐ-ꞓꞠ-Ɦꟸ-ꠁꠃ-ꠅꠇ-ꠊꠌ-ꠢꡀ-ꡳꢂ-ꢳꣲ-ꣷꣻꤊ-ꤥꤰ-ꥆꥠ-ꥼꦄ-ꦲꧏꨀ-ꨨꩀ-ꩂꩄ-ꩋꩠ-ꩶꩺꪀ-ꪯꪱꪵꪶꪹ-ꪽꫀꫂꫛ-ꫝꫠ-ꫪꫲ-ꫴꬁ-ꬆꬉ-ꬎꬑ-ꬖꬠ-ꬦꬨ-ꬮꯀ-ꯢ가-힣ힰ-ퟆퟋ-ퟻ豈-舘並-龎ﬀ-ﬆﬓ-ﬗיִײַ-ﬨשׁ-זּטּ-לּמּנּסּףּפּצּ-ﮱﯓ-ﴽﵐ-ﶏﶒ-ﷇﷰ-ﷻﹰ-ﹴﹶ-ﻼＡ-Ｚａ-ｚｦ-ﾾￂ-ￇￊ-ￏￒ-ￗￚ-ￜ", 
-        n = new RegExp("[" + t + "]"), i = new RegExp("[" + t + "̀-ͯ҃-֑҇-ׇֽֿׁׂׅׄؐ-ؚؠ-ىٲ-ۓۧ-ۨۻ-ۼܰ-݊ࠀ-ࠔࠛ-ࠣࠥ-ࠧࠩ-࠭ࡀ-ࡗࣤ-ࣾऀ-ःऺ-़ा-ॏ॑-ॗॢ-ॣ०-९ঁ-ঃ়া-ৄেৈৗয়-ৠਁ-ਃ਼ਾ-ੂੇੈੋ-੍ੑ੦-ੱੵઁ-ઃ઼ા-ૅે-ૉો-્ૢ-ૣ૦-૯ଁ-ଃ଼ା-ୄେୈୋ-୍ୖୗୟ-ୠ୦-୯ஂா-ூெ-ைொ-்ௗ௦-௯ఁ-ఃె-ైొ-్ౕౖౢ-ౣ౦-౯ಂಃ಼ಾ-ೄೆ-ೈೊ-್ೕೖೢ-ೣ೦-೯ംഃെ-ൈൗൢ-ൣ൦-൯ංඃ්ා-ුූෘ-ෟෲෳิ-ฺเ-ๅ๐-๙ິ-ູ່-ໍ໐-໙༘༙༠-༩༹༵༷ཁ-ཇཱ-྄྆-྇ྍ-ྗྙ-ྼ࿆က-ဩ၀-၉ၧ-ၭၱ-ၴႂ-ႍႏ-ႝ፝-፟ᜎ-ᜐᜠ-ᜰᝀ-ᝐᝲᝳក-ឲ៝០-៩᠋-᠍᠐-᠙ᤠ-ᤫᤰ-᤻ᥑ-ᥭᦰ-ᧀᧈ-ᧉ᧐-᧙ᨀ-ᨕᨠ-ᩓ᩠-᩿᩼-᪉᪐-᪙ᭆ-ᭋ᭐-᭙᭫-᭳᮰-᮹᯦-᯳ᰀ-ᰢ᱀-᱉ᱛ-ᱽ᳐-᳒ᴀ-ᶾḁ-ἕ‌‍‿⁀⁔⃐-⃥⃜⃡-⃰ⶁ-ⶖⷠ-ⷿ〡-〨゙゚Ꙁ-ꙭꙴ-꙽ꚟ꛰-꛱ꟸ-ꠀ꠆ꠋꠣ-ꠧꢀ-ꢁꢴ-꣄꣐-꣙ꣳ-ꣷ꤀-꤉ꤦ-꤭ꤰ-ꥅꦀ-ꦃ꦳-꧀ꨀ-ꨧꩀ-ꩁꩌ-ꩍ꩐-꩙ꩻꫠ-ꫩꫲ-ꫳꯀ-ꯡ꯬꯭꯰-꯹ﬠ-ﬨ︀-️︠-︦︳︴﹍-﹏０-９＿]"), 
-        e.newline = /[\n\r\u2028\u2029]/, e.lineBreak = new RegExp("\r\n|" + e.newline.source), 
+        e = X, t = "ªµºÀ-ÖØ-öø-ˁˆ-ˑˠ-ˤˬˮͰ-ʹͶͷͺ-ͽΆΈ-ΊΌΎ-ΡΣ-ϵϷ-ҁҊ-ԧԱ-Ֆՙա-ևא-תװ-ײؠ-يٮٯٱ-ۓەۥۦۮۯۺ-ۼۿܐܒ-ܯݍ-ޥޱߊ-ߪߴߵߺࠀ-ࠕࠚࠤࠨࡀ-ࡘࢠࢢ-ࢬऄ-हऽॐक़-ॡॱ-ॷॹ-ॿঅ-ঌএঐও-নপ-রলশ-হঽৎড়ঢ়য়-ৡৰৱਅ-ਊਏਐਓ-ਨਪ-ਰਲਲ਼ਵਸ਼ਸਹਖ਼-ੜਫ਼ੲ-ੴઅ-ઍએ-ઑઓ-નપ-રલળવ-હઽૐૠૡଅ-ଌଏଐଓ-ନପ-ରଲଳଵ-ହଽଡ଼ଢ଼ୟ-ୡୱஃஅ-ஊஎ-ஐஒ-கஙசஜஞடணதந-பம-ஹௐఅ-ఌఎ-ఐఒ-నప-ళవ-హఽౘౙౠౡಅ-ಌಎ-ಐಒ-ನಪ-ಳವ-ಹಽೞೠೡೱೲഅ-ഌഎ-ഐഒ-ഺഽൎൠൡൺ-ൿඅ-ඖක-නඳ-රලව-ෆก-ะาำเ-ๆກຂຄງຈຊຍດ-ທນ-ຟມ-ຣລວສຫອ-ະາຳຽເ-ໄໆໜ-ໟༀཀ-ཇཉ-ཬྈ-ྌက-ဪဿၐ-ၕၚ-ၝၡၥၦၮ-ၰၵ-ႁႎႠ-ჅჇჍა-ჺჼ-ቈቊ-ቍቐ-ቖቘቚ-ቝበ-ኈኊ-ኍነ-ኰኲ-ኵኸ-ኾዀዂ-ዅወ-ዖዘ-ጐጒ-ጕጘ-ፚᎀ-ᎏᎠ-Ᏼᐁ-ᙬᙯ-ᙿᚁ-ᚚᚠ-ᛪᛮ-ᛰᜀ-ᜌᜎ-ᜑᜠ-ᜱᝀ-ᝑᝠ-ᝬᝮ-ᝰក-ឳៗៜᠠ-ᡷᢀ-ᢨᢪᢰ-ᣵᤀ-ᤜᥐ-ᥭᥰ-ᥴᦀ-ᦫᧁ-ᧇᨀ-ᨖᨠ-ᩔᪧᬅ-ᬳᭅ-ᭋᮃ-ᮠᮮᮯᮺ-ᯥᰀ-ᰣᱍ-ᱏᱚ-ᱽᳩ-ᳬᳮ-ᳱᳵᳶᴀ-ᶿḀ-ἕἘ-Ἕἠ-ὅὈ-Ὅὐ-ὗὙὛὝὟ-ώᾀ-ᾴᾶ-ᾼιῂ-ῄῆ-ῌῐ-ΐῖ-Ίῠ-Ῥῲ-ῴῶ-ῼⁱⁿₐ-ₜℂℇℊ-ℓℕℙ-ℝℤΩℨK-ℭℯ-ℹℼ-ℿⅅ-ⅉⅎⅠ-ↈⰀ-Ⱞⰰ-ⱞⱠ-ⳤⳫ-ⳮⳲⳳⴀ-ⴥⴧⴭⴰ-ⵧⵯⶀ-ⶖⶠ-ⶦⶨ-ⶮⶰ-ⶶⶸ-ⶾⷀ-ⷆⷈ-ⷎⷐ-ⷖⷘ-ⷞⸯ々-〇〡-〩〱-〵〸-〼ぁ-ゖゝ-ゟァ-ヺー-ヿㄅ-ㄭㄱ-ㆎㆠ-ㆺㇰ-ㇿ㐀-䶵一-鿌ꀀ-ꒌꓐ-ꓽꔀ-ꘌꘐ-ꘟꘪꘫꙀ-ꙮꙿ-ꚗꚠ-ꛯꜗ-ꜟꜢ-ꞈꞋ-ꞎꞐ-ꞓꞠ-Ɦꟸ-ꠁꠃ-ꠅꠇ-ꠊꠌ-ꠢꡀ-ꡳꢂ-ꢳꣲ-ꣷꣻꤊ-ꤥꤰ-ꥆꥠ-ꥼꦄ-ꦲꧏꨀ-ꨨꩀ-ꩂꩄ-ꩋꩠ-ꩶꩺꪀ-ꪯꪱꪵꪶꪹ-ꪽꫀꫂꫛ-ꫝꫠ-ꫪꫲ-ꫴꬁ-ꬆꬉ-ꬎꬑ-ꬖꬠ-ꬦꬨ-ꬮꯀ-ꯢ가-힣ힰ-ퟆퟋ-ퟻ豈-舘並-龎ﬀ-ﬆﬓ-ﬗיִײַ-ﬨשׁ-זּטּ-לּמּנּסּףּפּצּ-ﮱﯓ-ﴽﵐ-ﶏﶒ-ﷇﷰ-ﷻﹰ-ﹴﹶ-ﻼＡ-Ｚａ-ｚｦ-ﾾￂ-ￇￊ-ￏￒ-ￗￚ-ￜ",
+        n = new RegExp("[" + t + "]"), i = new RegExp("[" + t + "̀-ͯ҃-֑҇-ׇֽֿׁׂׅׄؐ-ؚؠ-ىٲ-ۓۧ-ۨۻ-ۼܰ-݊ࠀ-ࠔࠛ-ࠣࠥ-ࠧࠩ-࠭ࡀ-ࡗࣤ-ࣾऀ-ःऺ-़ा-ॏ॑-ॗॢ-ॣ०-९ঁ-ঃ়া-ৄেৈৗয়-ৠਁ-ਃ਼ਾ-ੂੇੈੋ-੍ੑ੦-ੱੵઁ-ઃ઼ા-ૅે-ૉો-્ૢ-ૣ૦-૯ଁ-ଃ଼ା-ୄେୈୋ-୍ୖୗୟ-ୠ୦-୯ஂா-ூெ-ைொ-்ௗ௦-௯ఁ-ఃె-ైొ-్ౕౖౢ-ౣ౦-౯ಂಃ಼ಾ-ೄೆ-ೈೊ-್ೕೖೢ-ೣ೦-೯ംഃെ-ൈൗൢ-ൣ൦-൯ංඃ්ා-ුූෘ-ෟෲෳิ-ฺเ-ๅ๐-๙ິ-ູ່-ໍ໐-໙༘༙༠-༩༹༵༷ཁ-ཇཱ-྄྆-྇ྍ-ྗྙ-ྼ࿆က-ဩ၀-၉ၧ-ၭၱ-ၴႂ-ႍႏ-ႝ፝-፟ᜎ-ᜐᜠ-ᜰᝀ-ᝐᝲᝳក-ឲ៝០-៩᠋-᠍᠐-᠙ᤠ-ᤫᤰ-᤻ᥑ-ᥭᦰ-ᧀᧈ-ᧉ᧐-᧙ᨀ-ᨕᨠ-ᩓ᩠-᩿᩼-᪉᪐-᪙ᭆ-ᭋ᭐-᭙᭫-᭳᮰-᮹᯦-᯳ᰀ-ᰢ᱀-᱉ᱛ-ᱽ᳐-᳒ᴀ-ᶾḁ-ἕ‌‍‿⁀⁔⃐-⃥⃜⃡-⃰ⶁ-ⶖⷠ-ⷿ〡-〨゙゚Ꙁ-ꙭꙴ-꙽ꚟ꛰-꛱ꟸ-ꠀ꠆ꠋꠣ-ꠧꢀ-ꢁꢴ-꣄꣐-꣙ꣳ-ꣷ꤀-꤉ꤦ-꤭ꤰ-ꥅꦀ-ꦃ꦳-꧀ꨀ-ꨧꩀ-ꩁꩌ-ꩍ꩐-꩙ꩻꫠ-ꫩꫲ-ꫳꯀ-ꯡ꯬꯭꯰-꯹ﬠ-ﬨ︀-️︠-︦︳︴﹍-﹏０-９＿]"),
+        e.newline = /[\n\r\u2028\u2029]/, e.lineBreak = new RegExp("\r\n|" + e.newline.source),
         e.allLineBreaks = new RegExp(e.lineBreak.source, "g"), e.isIdentifierStart = function(e) {
             return e < 65 ? 36 === e || 64 === e : e < 91 || (e < 97 ? 95 === e : e < 123 || 170 <= e && n.test(String.fromCharCode(e)));
         }, e.isIdentifierChar = function(e) {
@@ -16018,7 +16082,7 @@
             var _, r, s, a, o, l, h, c, u, t, n, p, d, f = [], T = "";
             function E(e, t) {
                 var n = 0;
-                return e && (n = e.indentation_level, !_.just_added_newline() && e.line_indent_level > n && (n = e.line_indent_level)), 
+                return e && (n = e.indentation_level, !_.just_added_newline() && e.line_indent_level > n && (n = e.line_indent_level)),
                 {
                     mode: t,
                     parent: e,
@@ -16045,7 +16109,7 @@
                     O();
                     var e = L.Expression;
                     if ("[" === a.text) {
-                        if ("TK_WORD" === o || ")" === c.last_text) return "TK_RESERVED" === o && F(c.last_text, s.line_starters) && (_.space_before_token = !0), 
+                        if ("TK_WORD" === o || ")" === c.last_text) return "TK_RESERVED" === o && F(c.last_text, s.line_starters) && (_.space_before_token = !0),
                         v(e), R(), b(), void (d.space_in_paren && (_.space_before_token = !0));
                         e = L.ArrayLiteral, S(c.mode) && ("[" !== c.last_text && ("," !== c.last_text || "]" !== l && "}" !== l) || d.keep_array_indentation || K());
                     } else "TK_RESERVED" === o && "for" === c.last_text ? e = L.ForInitializer : "TK_RESERVED" === o && F(c.last_text, [ "if", "while" ]) && (e = L.Conditional);
@@ -16058,10 +16122,10 @@
                 TK_END_EXPR: function() {
                     for (;c.mode === L.Statement; ) k();
                     c.multiline_frame && w("]" === a.text && S(c.mode) && !d.keep_array_indentation);
-                    d.space_in_paren && ("TK_START_EXPR" !== o || d.space_in_empty_paren ? _.space_before_token = !0 : (_.trim(), 
+                    d.space_in_paren && ("TK_START_EXPR" !== o || d.space_in_empty_paren ? _.space_before_token = !0 : (_.trim(),
                     _.space_before_token = !1));
                     "]" === a.text && d.keep_array_indentation ? (R(), k()) : (k(), R());
-                    _.remove_redundant_indentation(u), c.do_while && u.mode === L.Conditional && (u.mode = L.Expression, 
+                    _.remove_redundant_indentation(u), c.do_while && u.mode === L.Conditional && (u.mode = L.Expression,
                     c.do_block = !1, c.do_while = !1);
                 },
                 TK_START_BLOCK: function() {
@@ -16074,7 +16138,7 @@
                 TK_END_BLOCK: function() {
                     for (;c.mode === L.Statement; ) k();
                     var e = "TK_START_BLOCK" === o;
-                    "expand" === d.brace_style ? e || K() : e || (S(c.mode) && d.keep_array_indentation ? (d.keep_array_indentation = !1, 
+                    "expand" === d.brace_style ? e || K() : e || (S(c.mode) && d.keep_array_indentation ? (d.keep_array_indentation = !1,
                     K(), d.keep_array_indentation = !0) : K());
                     k(), R();
                 },
@@ -16102,24 +16166,24 @@
                     if ("::" === a.text) return void R();
                     "TK_OPERATOR" === o && w();
                     var e = !0, t = !0;
-                    F(a.text, [ "--", "++", "!", "~" ]) || F(a.text, [ "-", "+" ]) && (F(o, [ "TK_START_BLOCK", "TK_START_EXPR", "TK_EQUALS", "TK_OPERATOR" ]) || F(c.last_text, s.line_starters) || "," === c.last_text) ? (t = e = !1, 
-                    !a.wanted_newline || "--" !== a.text && "++" !== a.text || K(!1, !0), ";" === c.last_text && A(c.mode) && (e = !0), 
-                    "TK_RESERVED" === o ? e = !0 : "TK_END_EXPR" === o ? e = !("]" === c.last_text && ("--" === a.text || "++" === a.text)) : "TK_OPERATOR" === o && (e = F(a.text, [ "--", "-", "++", "+" ]) && F(c.last_text, [ "--", "-", "++", "+" ]), 
+                    F(a.text, [ "--", "++", "!", "~" ]) || F(a.text, [ "-", "+" ]) && (F(o, [ "TK_START_BLOCK", "TK_START_EXPR", "TK_EQUALS", "TK_OPERATOR" ]) || F(c.last_text, s.line_starters) || "," === c.last_text) ? (t = e = !1,
+                    !a.wanted_newline || "--" !== a.text && "++" !== a.text || K(!1, !0), ";" === c.last_text && A(c.mode) && (e = !0),
+                    "TK_RESERVED" === o ? e = !0 : "TK_END_EXPR" === o ? e = !("]" === c.last_text && ("--" === a.text || "++" === a.text)) : "TK_OPERATOR" === o && (e = F(a.text, [ "--", "-", "++", "+" ]) && F(c.last_text, [ "--", "-", "++", "+" ]),
                     F(a.text, [ "+", "-" ]) && F(c.last_text, [ "--", "++" ]) && (t = !0)), c.mode !== L.BlockStatement && c.mode !== L.Statement || "{" !== c.last_text && ";" !== c.last_text || K()) : ":" === a.text ? 0 === c.ternary_depth ? e = !1 : c.ternary_depth -= 1 : "?" === a.text ? c.ternary_depth += 1 : "*" === a.text && "TK_RESERVED" === o && "function" === c.last_text && (t = e = !1);
                     _.space_before_token = _.space_before_token || e, R(), _.space_before_token = t;
                 },
                 TK_COMMA: function() {
-                    if (c.declaration_statement) return A(c.parent.mode) && (c.declaration_assignment = !1), 
-                    R(), void (c.declaration_assignment ? K(c.declaration_assignment = !1, !0) : (_.space_before_token = !0, 
+                    if (c.declaration_statement) return A(c.parent.mode) && (c.declaration_assignment = !1),
+                    R(), void (c.declaration_assignment ? K(c.declaration_assignment = !1, !0) : (_.space_before_token = !0,
                     d.comma_first && w()));
-                    R(), c.mode === L.ObjectLiteral || c.mode === L.Statement && c.parent.mode === L.ObjectLiteral ? (c.mode === L.Statement && k(), 
+                    R(), c.mode === L.ObjectLiteral || c.mode === L.Statement && c.parent.mode === L.ObjectLiteral ? (c.mode === L.Statement && k(),
                     K()) : (_.space_before_token = !0, d.comma_first && w());
                 },
                 TK_BLOCK_COMMENT: function() {
                     if (_.raw) return _.add_raw_token(a), void (a.directives && "end" === a.directives.preserve && (d.test_output_raw || (_.raw = !1)));
-                    if (a.directives) return K(!1, !0), R(), "start" === a.directives.preserve && (_.raw = !0), 
+                    if (a.directives) return K(!1, !0), R(), "start" === a.directives.preserve && (_.raw = !0),
                     void K(!1, !0);
-                    if (!X.newline.test(a.text) && !a.wanted_newline) return _.space_before_token = !0, 
+                    if (!X.newline.test(a.text) && !a.wanted_newline) return _.space_before_token = !0,
                     R(), void (_.space_before_token = !0);
                     var e, t = function(e) {
                         e = e.replace(/\x0d/g, "");
@@ -16156,22 +16220,22 @@
                 TK_EOF: function() {
                     for (;c.mode === L.Statement; ) k();
                 }
-            }, d = {}, (e = e || {}).braces_on_own_line !== undefined && (d.brace_style = e.braces_on_own_line ? "expand" : "collapse"), 
-            d.brace_style = e.brace_style ? e.brace_style : d.brace_style ? d.brace_style : "collapse", 
-            "expand-strict" === d.brace_style && (d.brace_style = "expand"), d.indent_size = e.indent_size ? parseInt(e.indent_size, 10) : 4, 
-            d.indent_char = e.indent_char ? e.indent_char : " ", d.eol = e.eol ? e.eol : "\n", 
-            d.preserve_newlines = e.preserve_newlines === undefined || e.preserve_newlines, 
-            d.break_chained_methods = e.break_chained_methods !== undefined && e.break_chained_methods, 
-            d.max_preserve_newlines = e.max_preserve_newlines === undefined ? 0 : parseInt(e.max_preserve_newlines, 10), 
-            d.space_in_paren = e.space_in_paren !== undefined && e.space_in_paren, d.space_in_empty_paren = e.space_in_empty_paren !== undefined && e.space_in_empty_paren, 
-            d.jslint_happy = e.jslint_happy !== undefined && e.jslint_happy, d.space_after_anon_function = e.space_after_anon_function !== undefined && e.space_after_anon_function, 
-            d.keep_array_indentation = e.keep_array_indentation !== undefined && e.keep_array_indentation, 
-            d.space_before_conditional = e.space_before_conditional === undefined || e.space_before_conditional, 
-            d.unescape_strings = e.unescape_strings !== undefined && e.unescape_strings, d.wrap_line_length = e.wrap_line_length === undefined ? 0 : parseInt(e.wrap_line_length, 10), 
-            d.e4x = e.e4x !== undefined && e.e4x, d.end_with_newline = e.end_with_newline !== undefined && e.end_with_newline, 
-            d.comma_first = e.comma_first !== undefined && e.comma_first, d.test_output_raw = e.test_output_raw !== undefined && e.test_output_raw, 
-            d.jslint_happy && (d.space_after_anon_function = !0), e.indent_with_tabs && (d.indent_char = "\t", 
-            d.indent_size = 1), d.eol = d.eol.replace(/\\r/, "\r").replace(/\\n/, "\n"), h = ""; 0 < d.indent_size; ) h += d.indent_char, 
+            }, d = {}, (e = e || {}).braces_on_own_line !== undefined && (d.brace_style = e.braces_on_own_line ? "expand" : "collapse"),
+            d.brace_style = e.brace_style ? e.brace_style : d.brace_style ? d.brace_style : "collapse",
+            "expand-strict" === d.brace_style && (d.brace_style = "expand"), d.indent_size = e.indent_size ? parseInt(e.indent_size, 10) : 4,
+            d.indent_char = e.indent_char ? e.indent_char : " ", d.eol = e.eol ? e.eol : "\n",
+            d.preserve_newlines = e.preserve_newlines === undefined || e.preserve_newlines,
+            d.break_chained_methods = e.break_chained_methods !== undefined && e.break_chained_methods,
+            d.max_preserve_newlines = e.max_preserve_newlines === undefined ? 0 : parseInt(e.max_preserve_newlines, 10),
+            d.space_in_paren = e.space_in_paren !== undefined && e.space_in_paren, d.space_in_empty_paren = e.space_in_empty_paren !== undefined && e.space_in_empty_paren,
+            d.jslint_happy = e.jslint_happy !== undefined && e.jslint_happy, d.space_after_anon_function = e.space_after_anon_function !== undefined && e.space_after_anon_function,
+            d.keep_array_indentation = e.keep_array_indentation !== undefined && e.keep_array_indentation,
+            d.space_before_conditional = e.space_before_conditional === undefined || e.space_before_conditional,
+            d.unescape_strings = e.unescape_strings !== undefined && e.unescape_strings, d.wrap_line_length = e.wrap_line_length === undefined ? 0 : parseInt(e.wrap_line_length, 10),
+            d.e4x = e.e4x !== undefined && e.e4x, d.end_with_newline = e.end_with_newline !== undefined && e.end_with_newline,
+            d.comma_first = e.comma_first !== undefined && e.comma_first, d.test_output_raw = e.test_output_raw !== undefined && e.test_output_raw,
+            d.jslint_happy && (d.space_after_anon_function = !0), e.indent_with_tabs && (d.indent_char = "\t",
+            d.indent_size = 1), d.eol = d.eol.replace(/\\r/, "\r").replace(/\\n/, "\n"), h = ""; 0 < d.indent_size; ) h += d.indent_char,
             d.indent_size -= 1;
             var g = 0;
             if (i && i.length) {
@@ -16180,7 +16244,7 @@
             }
             function x(e) {
                 var t = e.newlines;
-                if (d.keep_array_indentation && S(c.mode)) for (n = 0; n < t; n += 1) K(0 < n); else if (d.max_preserve_newlines && t > d.max_preserve_newlines && (t = d.max_preserve_newlines), 
+                if (d.keep_array_indentation && S(c.mode)) for (n = 0; n < t; n += 1) K(0 < n); else if (d.max_preserve_newlines && t > d.max_preserve_newlines && (t = d.max_preserve_newlines),
                 d.preserve_newlines && 1 < e.newlines) {
                     K();
                     for (var n = 1; n < t; n += 1) K(!0);
@@ -16197,11 +16261,11 @@
                 _.add_new_line(e) && (c.multiline_frame = !0);
             }
             function m() {
-                _.just_added_newline() && (d.keep_array_indentation && S(c.mode) && a.wanted_newline ? (_.current_line.push(a.whitespace_before), 
+                _.just_added_newline() && (d.keep_array_indentation && S(c.mode) && a.wanted_newline ? (_.current_line.push(a.whitespace_before),
                 _.space_before_token = !1) : _.set_indent(c.indentation_level) && (c.line_indent_level = c.indentation_level));
             }
             function R(e) {
-                _.raw ? _.add_raw_token(a) : (d.comma_first && "TK_COMMA" === o && _.just_added_newline() && "," === _.previous_line.last() && (_.previous_line.pop(), 
+                _.raw ? _.add_raw_token(a) : (d.comma_first && "TK_COMMA" === o && _.just_added_newline() && "," === _.previous_line.last() && (_.previous_line.pop(),
                 m(), _.add_token(","), _.space_before_token = !0), e = e || a.text, m(), _.add_token(e));
             }
             function b() {
@@ -16223,9 +16287,9 @@
                 return c.parent.mode === L.ObjectLiteral && c.mode === L.Statement && (":" === c.last_text && 0 === c.ternary_depth || "TK_RESERVED" === o && F(c.last_text, [ "get", "set" ]));
             }
             function O() {
-                return !!("TK_RESERVED" === o && F(c.last_text, [ "var", "let", "const" ]) && "TK_WORD" === a.type || "TK_RESERVED" === o && "do" === c.last_text || "TK_RESERVED" === o && "return" === c.last_text && !a.wanted_newline || "TK_RESERVED" === o && "else" === c.last_text && ("TK_RESERVED" !== a.type || "if" !== a.text) || "TK_END_EXPR" === o && (u.mode === L.ForInitializer || u.mode === L.Conditional) || "TK_WORD" === o && c.mode === L.BlockStatement && !c.in_case && "--" !== a.text && "++" !== a.text && "function" !== l && "TK_WORD" !== a.type && "TK_RESERVED" !== a.type || c.mode === L.ObjectLiteral && (":" === c.last_text && 0 === c.ternary_depth || "TK_RESERVED" === o && F(c.last_text, [ "get", "set" ]))) && (v(L.Statement), 
-                b(), "TK_RESERVED" === o && F(c.last_text, [ "var", "let", "const" ]) && "TK_WORD" === a.type && (c.declaration_statement = !0), 
-                y() || w("TK_RESERVED" === a.type && F(a.text, [ "do", "for", "if", "while" ])), 
+                return !!("TK_RESERVED" === o && F(c.last_text, [ "var", "let", "const" ]) && "TK_WORD" === a.type || "TK_RESERVED" === o && "do" === c.last_text || "TK_RESERVED" === o && "return" === c.last_text && !a.wanted_newline || "TK_RESERVED" === o && "else" === c.last_text && ("TK_RESERVED" !== a.type || "if" !== a.text) || "TK_END_EXPR" === o && (u.mode === L.ForInitializer || u.mode === L.Conditional) || "TK_WORD" === o && c.mode === L.BlockStatement && !c.in_case && "--" !== a.text && "++" !== a.text && "function" !== l && "TK_WORD" !== a.type && "TK_RESERVED" !== a.type || c.mode === L.ObjectLiteral && (":" === c.last_text && 0 === c.ternary_depth || "TK_RESERVED" === o && F(c.last_text, [ "get", "set" ]))) && (v(L.Statement),
+                b(), "TK_RESERVED" === o && F(c.last_text, [ "var", "let", "const" ]) && "TK_WORD" === a.type && (c.declaration_statement = !0),
+                y() || w("TK_RESERVED" === a.type && F(a.text, [ "do", "for", "if", "while" ])),
                 !0);
             }
             function N(e) {
@@ -16236,11 +16300,11 @@
                 return t < 0 || t >= f.length ? null : f[t];
             }
             function C() {
-                ("TK_RESERVED" === a.type && c.mode !== L.ObjectLiteral && F(a.text, [ "set", "get" ]) && (a.type = "TK_WORD"), 
+                ("TK_RESERVED" === a.type && c.mode !== L.ObjectLiteral && F(a.text, [ "set", "get" ]) && (a.type = "TK_WORD"),
                 "TK_RESERVED" === a.type && c.mode === L.ObjectLiteral) && (":" == D(1).text && (a.type = "TK_WORD"));
-                if (O() || !a.wanted_newline || A(c.mode) || "TK_OPERATOR" === o && "--" !== c.last_text && "++" !== c.last_text || "TK_EQUALS" === o || !d.preserve_newlines && "TK_RESERVED" === o && F(c.last_text, [ "var", "let", "const", "set", "get" ]) || K(), 
+                if (O() || !a.wanted_newline || A(c.mode) || "TK_OPERATOR" === o && "--" !== c.last_text && "++" !== c.last_text || "TK_EQUALS" === o || !d.preserve_newlines && "TK_RESERVED" === o && F(c.last_text, [ "var", "let", "const", "set", "get" ]) || K(),
                 c.do_block && !c.do_while) {
-                    if ("TK_RESERVED" === a.type && "while" === a.text) return _.space_before_token = !0, 
+                    if ("TK_RESERVED" === a.type && "while" === a.text) return _.space_before_token = !0,
                     R(), _.space_before_token = !0, void (c.do_while = !0);
                     K(), c.do_block = !1;
                 }
@@ -16248,30 +16312,30 @@
                     for (;c.mode === L.Statement; ) k();
                     c.if_block = !1, c.else_block = !1;
                 } else c.else_block = !0;
-                if ("TK_RESERVED" === a.type && ("case" === a.text || "default" === a.text && c.in_case_statement)) return K(), 
-                (c.case_body || d.jslint_happy) && (0 < c.indentation_level && (!c.parent || c.indentation_level > c.parent.indentation_level) && (c.indentation_level -= 1), 
+                if ("TK_RESERVED" === a.type && ("case" === a.text || "default" === a.text && c.in_case_statement)) return K(),
+                (c.case_body || d.jslint_happy) && (0 < c.indentation_level && (!c.parent || c.indentation_level > c.parent.indentation_level) && (c.indentation_level -= 1),
                 c.case_body = !1), R(), c.in_case = !0, void (c.in_case_statement = !0);
-                if ("TK_RESERVED" === a.type && "function" === a.text && ((F(c.last_text, [ "}", ";" ]) || _.just_added_newline() && !F(c.last_text, [ "[", "{", ":", "=", "," ])) && (_.just_added_blankline() || a.comments_before.length || (K(), 
-                K(!0))), "TK_RESERVED" === o || "TK_WORD" === o ? "TK_RESERVED" === o && F(c.last_text, [ "get", "set", "new", "return", "export", "async" ]) ? _.space_before_token = !0 : "TK_RESERVED" === o && "default" === c.last_text && "export" === l ? _.space_before_token = !0 : K() : "TK_OPERATOR" === o || "=" === c.last_text ? _.space_before_token = !0 : (c.multiline_frame || !A(c.mode) && !S(c.mode)) && K()), 
-                "TK_COMMA" !== o && "TK_START_EXPR" !== o && "TK_EQUALS" !== o && "TK_OPERATOR" !== o || y() || w(), 
-                "TK_RESERVED" === a.type && F(a.text, [ "function", "get", "set" ])) return R(), 
+                if ("TK_RESERVED" === a.type && "function" === a.text && ((F(c.last_text, [ "}", ";" ]) || _.just_added_newline() && !F(c.last_text, [ "[", "{", ":", "=", "," ])) && (_.just_added_blankline() || a.comments_before.length || (K(),
+                K(!0))), "TK_RESERVED" === o || "TK_WORD" === o ? "TK_RESERVED" === o && F(c.last_text, [ "get", "set", "new", "return", "export", "async" ]) ? _.space_before_token = !0 : "TK_RESERVED" === o && "default" === c.last_text && "export" === l ? _.space_before_token = !0 : K() : "TK_OPERATOR" === o || "=" === c.last_text ? _.space_before_token = !0 : (c.multiline_frame || !A(c.mode) && !S(c.mode)) && K()),
+                "TK_COMMA" !== o && "TK_START_EXPR" !== o && "TK_EQUALS" !== o && "TK_OPERATOR" !== o || y() || w(),
+                "TK_RESERVED" === a.type && F(a.text, [ "function", "get", "set" ])) return R(),
                 void (c.last_word = a.text);
-                (n = "NONE", "TK_END_BLOCK" === o ? "TK_RESERVED" === a.type && F(a.text, [ "else", "catch", "finally" ]) ? "expand" === d.brace_style || "end-expand" === d.brace_style || "none" === d.brace_style && a.wanted_newline ? n = "NEWLINE" : (n = "SPACE", 
-                _.space_before_token = !0) : n = "NEWLINE" : "TK_SEMICOLON" === o && c.mode === L.BlockStatement ? n = "NEWLINE" : "TK_SEMICOLON" === o && A(c.mode) ? n = "SPACE" : "TK_STRING" === o ? n = "NEWLINE" : "TK_RESERVED" === o || "TK_WORD" === o || "*" === c.last_text && "function" === l ? n = "SPACE" : "TK_START_BLOCK" === o ? n = "NEWLINE" : "TK_END_EXPR" === o && (_.space_before_token = !0, 
-                n = "NEWLINE"), "TK_RESERVED" === a.type && F(a.text, s.line_starters) && ")" !== c.last_text && (n = "else" === c.last_text || "export" === c.last_text ? "SPACE" : "NEWLINE"), 
-                "TK_RESERVED" === a.type && F(a.text, [ "else", "catch", "finally" ])) ? "TK_END_BLOCK" !== o || "expand" === d.brace_style || "end-expand" === d.brace_style || "none" === d.brace_style && a.wanted_newline ? K() : (_.trim(!0), 
+                (n = "NONE", "TK_END_BLOCK" === o ? "TK_RESERVED" === a.type && F(a.text, [ "else", "catch", "finally" ]) ? "expand" === d.brace_style || "end-expand" === d.brace_style || "none" === d.brace_style && a.wanted_newline ? n = "NEWLINE" : (n = "SPACE",
+                _.space_before_token = !0) : n = "NEWLINE" : "TK_SEMICOLON" === o && c.mode === L.BlockStatement ? n = "NEWLINE" : "TK_SEMICOLON" === o && A(c.mode) ? n = "SPACE" : "TK_STRING" === o ? n = "NEWLINE" : "TK_RESERVED" === o || "TK_WORD" === o || "*" === c.last_text && "function" === l ? n = "SPACE" : "TK_START_BLOCK" === o ? n = "NEWLINE" : "TK_END_EXPR" === o && (_.space_before_token = !0,
+                n = "NEWLINE"), "TK_RESERVED" === a.type && F(a.text, s.line_starters) && ")" !== c.last_text && (n = "else" === c.last_text || "export" === c.last_text ? "SPACE" : "NEWLINE"),
+                "TK_RESERVED" === a.type && F(a.text, [ "else", "catch", "finally" ])) ? "TK_END_BLOCK" !== o || "expand" === d.brace_style || "end-expand" === d.brace_style || "none" === d.brace_style && a.wanted_newline ? K() : (_.trim(!0),
                 "}" !== _.current_line.last() && K(), _.space_before_token = !0) : "NEWLINE" === n ? "TK_RESERVED" === o && N(c.last_text) ? _.space_before_token = !0 : "TK_END_EXPR" !== o ? "TK_START_EXPR" === o && "TK_RESERVED" === a.type && F(a.text, [ "var", "let", "const" ]) || ":" === c.last_text || ("TK_RESERVED" === a.type && "if" === a.text && "else" === c.last_text ? _.space_before_token = !0 : K()) : "TK_RESERVED" === a.type && F(a.text, s.line_starters) && ")" !== c.last_text && K() : c.multiline_frame && S(c.mode) && "," === c.last_text && "}" === l ? K() : "SPACE" === n && (_.space_before_token = !0);
-                R(), c.last_word = a.text, "TK_RESERVED" === a.type && "do" === a.text && (c.do_block = !0), 
+                R(), c.last_word = a.text, "TK_RESERVED" === a.type && "do" === a.text && (c.do_block = !0),
                 "TK_RESERVED" === a.type && "if" === a.text && (c.if_block = !0);
             }
-            o = "TK_START_BLOCK", l = "", (_ = new I(h, T)).raw = d.test_output_raw, t = [], 
+            o = "TK_START_BLOCK", l = "", (_ = new I(h, T)).raw = d.test_output_raw, t = [],
             v(L.BlockStatement), this.beautify = function() {
                 var e, t;
                 for (s = new V(i, d, h), f = s.tokenize(), r = 0; e = D(); ) {
                     for (var n = 0; n < e.comments_before.length; n++) x(e.comments_before[n]);
                     x(e), l = c.last_text, o = e.type, c.last_text = e.text, r += 1;
                 }
-                return t = _.get_code(), d.end_with_newline && (t += "\n"), "\n" != d.eol && (t = t.replace(/[\n]/g, d.eol)), 
+                return t = _.get_code(), d.end_with_newline && (t += "\n"), "\n" != d.eol && (t = t.replace(/[\n]/g, d.eol)),
                 t;
             };
         }
@@ -16304,16 +16368,16 @@
             };
         }
         function I(t, n) {
-            n = n || "", this.indent_cache = [ n ], this.baseIndentLength = n.length, this.indent_length = t.length, 
+            n = n || "", this.indent_cache = [ n ], this.baseIndentLength = n.length, this.indent_length = t.length,
             this.raw = !1;
             var i = [];
-            this.baseIndentString = n, this.indent_string = t, this.previous_line = null, this.current_line = null, 
+            this.baseIndentString = n, this.indent_string = t, this.previous_line = null, this.current_line = null,
             this.space_before_token = !1, this.add_outputline = function() {
                 this.previous_line = this.current_line, this.current_line = new s(this), i.push(this.current_line);
             }, this.add_outputline(), this.get_line_number = function() {
                 return i.length;
             }, this.add_new_line = function(e) {
-                return (1 !== this.get_line_number() || !this.just_added_newline()) && (!(!e && this.just_added_newline()) && (this.raw || this.add_outputline(), 
+                return (1 !== this.get_line_number() || !this.just_added_newline()) && (!(!e && this.just_added_newline()) && (this.raw || this.add_outputline(),
                 !0));
             }, this.get_code = function() {
                 return i.join("\n").replace(/[\r\n\t ]+$/, "");
@@ -16329,13 +16393,13 @@
             }, this.add_token = function(e) {
                 this.add_space_before_token(), this.current_line.push(e);
             }, this.add_space_before_token = function() {
-                this.space_before_token && !this.just_added_newline() && this.current_line.push(" "), 
+                this.space_before_token && !this.just_added_newline() && this.current_line.push(" "),
                 this.space_before_token = !1;
             }, this.remove_redundant_indentation = function(e) {
-                if (!e.multiline_frame && e.mode !== L.ForInitializer && e.mode !== L.Conditional) for (var t = e.start_line_index, n = i.length; t < n; ) i[t].remove_indent(), 
+                if (!e.multiline_frame && e.mode !== L.ForInitializer && e.mode !== L.Conditional) for (var t = e.start_line_index, n = i.length; t < n; ) i[t].remove_indent(),
                 t++;
             }, this.trim = function(e) {
-                for (e = e !== undefined && e, this.current_line.trim(t, n); e && 1 < i.length && this.current_line.is_empty(); ) i.pop(), 
+                for (e = e !== undefined && e, this.current_line.trim(t, n); e && 1 < i.length && this.current_line.is_empty(); ) i.pop(),
                 this.current_line = i[i.length - 1], this.current_line.trim();
                 this.previous_line = 1 < i.length ? i[i.length - 2] : null;
             }, this.just_added_newline = function() {
@@ -16345,8 +16409,8 @@
             };
         }
         var Q = function(e, t, n, i, r, s) {
-            this.type = e, this.text = t, this.comments_before = [], this.newlines = n || 0, 
-            this.wanted_newline = 0 < n, this.whitespace_before = i || "", this.parent = null, 
+            this.type = e, this.text = t, this.comments_before = [], this.newlines = n || 0,
+            this.wanted_newline = 0 < n, this.whitespace_before = i || "", this.parent = null,
             this.directives = null;
         };
         function V(v, S, e) {
@@ -16359,16 +16423,16 @@
                 t = I.length ? I[I.length - 1] : new Q("TK_START_BLOCK", "{");
                 var i = v.charAt(V);
                 for (V += 1; F(i, A); ) {
-                    if (X.newline.test(i) ? "\n" === i && "\r" === v.charAt(V - 2) || (D += 1, n = []) : n.push(i), 
+                    if (X.newline.test(i) ? "\n" === i && "\r" === v.charAt(V - 2) || (D += 1, n = []) : n.push(i),
                     P <= V) return [ "", "TK_EOF" ];
                     i = v.charAt(V), V += 1;
                 }
                 if (n.length && (C = n.join("")), k.test(i)) {
                     var r = !0, s = !0, _ = k;
-                    for ("0" === i && V < P && /[Xxo]/.test(v.charAt(V)) ? (s = r = !1, i += v.charAt(V), 
-                    V += 1, _ = /[o]/.test(v.charAt(V)) ? y : O) : (i = "", V -= 1); V < P && _.test(v.charAt(V)); ) i += v.charAt(V), 
-                    V += 1, r && V < P && "." === v.charAt(V) && (i += v.charAt(V), V += 1, r = !1), 
-                    s && V < P && /[Ee]/.test(v.charAt(V)) && (i += v.charAt(V), (V += 1) < P && /[+-]/.test(v.charAt(V)) && (i += v.charAt(V), 
+                    for ("0" === i && V < P && /[Xxo]/.test(v.charAt(V)) ? (s = r = !1, i += v.charAt(V),
+                    V += 1, _ = /[o]/.test(v.charAt(V)) ? y : O) : (i = "", V -= 1); V < P && _.test(v.charAt(V)); ) i += v.charAt(V),
+                    V += 1, r && V < P && "." === v.charAt(V) && (i += v.charAt(V), V += 1, r = !1),
+                    s && V < P && /[Ee]/.test(v.charAt(V)) && (i += v.charAt(V), (V += 1) < P && /[+-]/.test(v.charAt(V)) && (i += v.charAt(V),
                     V += 1), r = s = !1);
                     return [ i, "TK_WORD" ];
                 }
@@ -16393,16 +16457,16 @@
                             for (var n = W.exec(e); n; ) t[n[1]] = n[2], n = W.exec(e);
                             return t;
                         }(a);
-                        return l && "start" === l.ignore && (z.lastIndex = V, a += (o = z.exec(v))[0], V += o[0].length), 
+                        return l && "start" === l.ignore && (z.lastIndex = V, a += (o = z.exec(v))[0], V += o[0].length),
                         [ a = a.replace(X.lineBreak, "\n"), "TK_BLOCK_COMMENT", l ];
                     }
-                    if ("/" === v.charAt(V)) return V += 1, M.lastIndex = V, a = "//" + (o = M.exec(v))[0], 
+                    if ("/" === v.charAt(V)) return V += 1, M.lastIndex = V, a = "//" + (o = M.exec(v))[0],
                     V += o[0].length, [ a, "TK_COMMENT" ];
                 }
                 if ("`" === i || "'" === i || '"' === i || ("/" === i || S.e4x && "<" === i && v.slice(V - 1).match(/^<([-a-zA-Z:0-9_.]+|{[^{}]*}|!\[CDATA\[[\s\S]*?\]\])(\s+[-a-zA-Z:0-9_.]+\s*=\s*('[^']*'|"[^"]*"|{.*?}))*\s*(\/?)\s*>/)) && ("TK_RESERVED" === t.type && F(t.text, [ "return", "case", "throw", "else", "do", "typeof", "yield" ]) || "TK_END_EXPR" === t.type && ")" === t.text && t.parent && "TK_RESERVED" === t.parent.type && F(t.parent.text, [ "if", "while", "for" ]) || F(t.type, [ "TK_COMMENT", "TK_START_EXPR", "TK_START_BLOCK", "TK_END_BLOCK", "TK_OPERATOR", "TK_EQUALS", "TK_EOF", "TK_SEMICOLON", "TK_COMMA" ]))) {
                     var h = i, c = !1, u = !1;
-                    if (e = i, "/" === h) for (var p = !1; V < P && (c || p || v.charAt(V) !== h) && !X.newline.test(v.charAt(V)); ) e += v.charAt(V), 
-                    c ? c = !1 : (c = "\\" === v.charAt(V), "[" === v.charAt(V) ? p = !0 : "]" === v.charAt(V) && (p = !1)), 
+                    if (e = i, "/" === h) for (var p = !1; V < P && (c || p || v.charAt(V) !== h) && !X.newline.test(v.charAt(V)); ) e += v.charAt(V),
+                    c ? c = !1 : (c = "\\" === v.charAt(V), "[" === v.charAt(V) ? p = !0 : "]" === v.charAt(V) && (p = !1)),
                     V += 1; else if (S.e4x && "<" === h) {
                         var d = /<(\/?)([-a-zA-Z:0-9_.]+|{[^{}]*}|!\[CDATA\[[\s\S]*?\]\])(\s+[-a-zA-Z:0-9_.]+\s*=\s*('[^']*'|"[^"]*"|{.*?}))*\s*(\/?)\s*>/g, f = v.slice(V - 1), T = d.exec(f);
                         if (T && 0 === T.index) {
@@ -16414,8 +16478,8 @@
                             var m = T ? T.index + T[0].length : f.length;
                             return f = f.slice(0, m), V += m - 1, [ f = f.replace(X.lineBreak, "\n"), "TK_STRING" ];
                         }
-                    } else for (;V < P && (c || v.charAt(V) !== h && ("`" === h || !X.newline.test(v.charAt(V)))); ) (c || "`" === h) && X.newline.test(v.charAt(V)) ? ("\r" === v.charAt(V) && "\n" === v.charAt(V + 1) && (V += 1), 
-                    e += "\n") : e += v.charAt(V), c ? ("x" !== v.charAt(V) && "u" !== v.charAt(V) || (u = !0), 
+                    } else for (;V < P && (c || v.charAt(V) !== h && ("`" === h || !X.newline.test(v.charAt(V)))); ) (c || "`" === h) && X.newline.test(v.charAt(V)) ? ("\r" === v.charAt(V) && "\n" === v.charAt(V + 1) && (V += 1),
+                    e += "\n") : e += v.charAt(V), c ? ("x" !== v.charAt(V) && "u" !== v.charAt(V) || (u = !0),
                     c = !1) : c = "\\" === v.charAt(V), V += 1;
                     if (u && S.unescape_strings && (e = function(e) {
                         var t, n = !1, i = "", r = 0, s = "", _ = 0;
@@ -16438,7 +16502,7 @@
                             }
                         } else "\\" === t ? n = !0 : i += t;
                         return i;
-                    }(e)), V < P && v.charAt(V) === h && (e += h, V += 1, "/" === h)) for (;V < P && X.isIdentifierStart(v.charCodeAt(V)); ) e += v.charAt(V), 
+                    }(e)), V < P && v.charAt(V) === h && (e += h, V += 1, "/" === h)) for (;V < P && X.isIdentifierStart(v.charCodeAt(V)); ) e += v.charAt(V),
                     V += 1;
                     return [ e, "TK_STRING" ];
                 }
@@ -16450,8 +16514,8 @@
                     var R = "#";
                     if (V < P && k.test(v.charAt(V))) {
                         for (;R += i = v.charAt(V), (V += 1) < P && "#" !== i && "=" !== i; ) ;
-                        return "#" === i || ("[" === v.charAt(V) && "]" === v.charAt(V + 1) ? (R += "[]", 
-                        V += 2) : "{" === v.charAt(V) && "}" === v.charAt(V + 1) && (R += "{}", V += 2)), 
+                        return "#" === i || ("[" === v.charAt(V) && "]" === v.charAt(V + 1) ? (R += "[]",
+                        V += 2) : "{" === v.charAt(V) && "}" === v.charAt(V + 1) && (R += "{}", V += 2)),
                         [ R, "TK_WORD" ];
                     }
                 }
@@ -16461,11 +16525,11 @@
                     if (b) return i = b[0], V += i.length - 1, [ i = i.replace(X.lineBreak, "\n"), "TK_STRING" ];
                 }
                 if ("<" === i && "\x3c!--" === v.substring(V - 1, V + 3)) {
-                    for (V += 3, i = "\x3c!--"; !X.newline.test(v.charAt(V)) && V < P; ) i += v.charAt(V), 
+                    for (V += 3, i = "\x3c!--"; !X.newline.test(v.charAt(V)) && V < P; ) i += v.charAt(V),
                     V++;
                     return L = !0, [ i, "TK_COMMENT" ];
                 }
-                if ("-" === i && L && "--\x3e" === v.substring(V - 1, V + 2)) return L = !1, V += 2, 
+                if ("-" === i && L && "--\x3e" === v.substring(V - 1, V + 2)) return L = !1, V += 2,
                 [ "--\x3e", "TK_COMMENT" ];
                 if ("." === i) return [ i, "TK_DOT" ];
                 if (F(i, N)) {
@@ -16478,10 +16542,10 @@
                 var e, t, n;
                 P = v.length, V = 0, L = !1, I = [];
                 for (var i = null, r = [], s = []; !t || "TK_EOF" !== t.type; ) {
-                    for (n = _(), e = new Q(n[1], n[0], D, C); "TK_COMMENT" === e.type || "TK_BLOCK_COMMENT" === e.type || "TK_UNKNOWN" === e.type; ) "TK_BLOCK_COMMENT" === e.type && (e.directives = n[2]), 
+                    for (n = _(), e = new Q(n[1], n[0], D, C); "TK_COMMENT" === e.type || "TK_BLOCK_COMMENT" === e.type || "TK_UNKNOWN" === e.type; ) "TK_BLOCK_COMMENT" === e.type && (e.directives = n[2]),
                     s.push(e), n = _(), e = new Q(n[1], n[0], D, C);
-                    s.length && (e.comments_before = s, s = []), "TK_START_BLOCK" === e.type || "TK_START_EXPR" === e.type ? (e.parent = t, 
-                    r.push(i), i = e) : ("TK_END_BLOCK" === e.type || "TK_END_EXPR" === e.type) && i && ("]" === e.text && "[" === i.text || ")" === e.text && "(" === i.text || "}" === e.text && "{" === i.text) && (e.parent = i.parent, 
+                    s.length && (e.comments_before = s, s = []), "TK_START_BLOCK" === e.type || "TK_START_EXPR" === e.type ? (e.parent = t,
+                    r.push(i), i = e) : ("TK_END_BLOCK" === e.type || "TK_END_EXPR" === e.type) && i && ("]" === e.text && "[" === i.text || ")" === e.text && "(" === i.text || "}" === e.text && "{" === i.text) && (e.parent = i.parent,
                     i = r.pop()), I.push(e), t = e;
                 }
                 return I;
@@ -16493,21 +16557,21 @@
                     return e.replace(/\s+$/g, "");
                 }
                 var n, i, r, T, s, a, E, o, l, g, x, w, h, c;
-                for ((t = t || {}).wrap_line_length !== undefined && 0 !== parseInt(t.wrap_line_length, 10) || t.max_char === undefined || 0 === parseInt(t.max_char, 10) || (t.wrap_line_length = t.max_char), 
-                i = t.indent_inner_html !== undefined && t.indent_inner_html, r = t.indent_size === undefined ? 4 : parseInt(t.indent_size, 10), 
-                T = t.indent_char === undefined ? " " : t.indent_char, a = t.brace_style === undefined ? "collapse" : t.brace_style, 
-                s = 0 === parseInt(t.wrap_line_length, 10) ? 32786 : parseInt(t.wrap_line_length || 250, 10), 
-                E = t.unformatted || [ "a", "span", "img", "bdo", "em", "strong", "dfn", "code", "samp", "kbd", "var", "cite", "abbr", "acronym", "q", "sub", "sup", "tt", "i", "b", "big", "small", "u", "s", "strike", "font", "ins", "del", "address", "pre" ], 
-                o = t.preserve_newlines === undefined || t.preserve_newlines, l = o ? isNaN(parseInt(t.max_preserve_newlines, 10)) ? 32786 : parseInt(t.max_preserve_newlines, 10) : 0, 
-                g = t.indent_handlebars !== undefined && t.indent_handlebars, x = t.wrap_attributes === undefined ? "auto" : t.wrap_attributes, 
-                w = t.wrap_attributes_indent_size === undefined ? r : parseInt(t.wrap_attributes_indent_size, 10) || r, 
-                h = t.end_with_newline !== undefined && t.end_with_newline, c = Array.isArray(t.extra_liners) ? t.extra_liners.concat() : "string" == typeof t.extra_liners ? t.extra_liners.split(",") : "head,body,/html".split(","), 
+                for ((t = t || {}).wrap_line_length !== undefined && 0 !== parseInt(t.wrap_line_length, 10) || t.max_char === undefined || 0 === parseInt(t.max_char, 10) || (t.wrap_line_length = t.max_char),
+                i = t.indent_inner_html !== undefined && t.indent_inner_html, r = t.indent_size === undefined ? 4 : parseInt(t.indent_size, 10),
+                T = t.indent_char === undefined ? " " : t.indent_char, a = t.brace_style === undefined ? "collapse" : t.brace_style,
+                s = 0 === parseInt(t.wrap_line_length, 10) ? 32786 : parseInt(t.wrap_line_length || 250, 10),
+                E = t.unformatted || [ "a", "span", "img", "bdo", "em", "strong", "dfn", "code", "samp", "kbd", "var", "cite", "abbr", "acronym", "q", "sub", "sup", "tt", "i", "b", "big", "small", "u", "s", "strike", "font", "ins", "del", "address", "pre" ],
+                o = t.preserve_newlines === undefined || t.preserve_newlines, l = o ? isNaN(parseInt(t.max_preserve_newlines, 10)) ? 32786 : parseInt(t.max_preserve_newlines, 10) : 0,
+                g = t.indent_handlebars !== undefined && t.indent_handlebars, x = t.wrap_attributes === undefined ? "auto" : t.wrap_attributes,
+                w = t.wrap_attributes_indent_size === undefined ? r : parseInt(t.wrap_attributes_indent_size, 10) || r,
+                h = t.end_with_newline !== undefined && t.end_with_newline, c = Array.isArray(t.extra_liners) ? t.extra_liners.concat() : "string" == typeof t.extra_liners ? t.extra_liners.split(",") : "head,body,/html".split(","),
                 t.indent_with_tabs && (T = "\t", r = 1), (n = new function() {
                     return this.pos = 0, this.token = "", this.current_mode = "CONTENT", this.tags = {
                         parent: "parent1",
                         parentcount: 1,
                         parent1: ""
-                    }, this.tag_type = "", this.token_text = this.last_token = this.last_text = this.token_type = "", 
+                    }, this.tag_type = "", this.token_text = this.last_token = this.last_text = this.token_type = "",
                     this.newlines = 0, this.indent_content = i, this.Utils = {
                         whitespace: "\n\r\t ".split(""),
                         single_token: "br,input,link,meta,source,!doctype,basefont,base,area,hr,wbr,param,img,isindex,embed".split(","),
@@ -16522,13 +16586,13 @@
                     }, this.traverse_whitespace = function() {
                         var e = "";
                         if (e = this.input.charAt(this.pos), this.Utils.in_array(e, this.Utils.whitespace)) {
-                            for (this.newlines = 0; this.Utils.in_array(e, this.Utils.whitespace); ) o && "\n" == e && this.newlines <= l && (this.newlines += 1), 
+                            for (this.newlines = 0; this.Utils.in_array(e, this.Utils.whitespace); ) o && "\n" == e && this.newlines <= l && (this.newlines += 1),
                             this.pos++, e = this.input.charAt(this.pos);
                             return !0;
                         }
                         return !1;
                     }, this.space_or_wrap = function(e) {
-                        this.line_char_count >= this.wrap_line_length ? (this.print_newline(!1, e), this.print_indentation(e)) : (this.line_char_count++, 
+                        this.line_char_count >= this.wrap_line_length ? (this.print_newline(!1, e), this.print_indentation(e)) : (this.line_char_count++,
                         e.push(" "));
                     }, this.get_content = function() {
                         for (var e = "", t = []; "<" != this.input.charAt(this.pos); ) {
@@ -16551,14 +16615,14 @@
                         var i = n.exec(this.input), r = i ? i.index : this.input.length;
                         return this.pos < r && (t = this.input.substring(this.pos, r), this.pos = r), t;
                     }, this.record_tag = function(e) {
-                        this.tags[e + "count"] ? this.tags[e + "count"]++ : this.tags[e + "count"] = 1, 
-                        this.tags[e + this.tags[e + "count"]] = this.indent_level, this.tags[e + this.tags[e + "count"] + "parent"] = this.tags.parent, 
+                        this.tags[e + "count"] ? this.tags[e + "count"]++ : this.tags[e + "count"] = 1,
+                        this.tags[e + this.tags[e + "count"]] = this.indent_level, this.tags[e + this.tags[e + "count"] + "parent"] = this.tags.parent,
                         this.tags.parent = e + this.tags[e + "count"];
                     }, this.retrieve_tag = function(e) {
                         if (this.tags[e + "count"]) {
                             for (var t = this.tags.parent; t && e + this.tags[e + "count"] != t; ) t = this.tags[t + "parent"];
-                            t && (this.indent_level = this.tags[e + this.tags[e + "count"]], this.tags.parent = this.tags[t + "parent"]), 
-                            delete this.tags[e + this.tags[e + "count"] + "parent"], delete this.tags[e + this.tags[e + "count"]], 
+                            t && (this.indent_level = this.tags[e + this.tags[e + "count"]], this.tags.parent = this.tags[t + "parent"]),
+                            delete this.tags[e + this.tags[e + "count"] + "parent"], delete this.tags[e + this.tags[e + "count"]],
                             1 == this.tags[e + "count"] ? delete this.tags[e + "count"] : this.tags[e + "count"]--;
                         }
                     }, this.indent_to_tag = function(e) {
@@ -16570,10 +16634,10 @@
                         var t, n, i = "", r = [], s = "", _ = !1, a = !0, o = this.pos, l = this.line_char_count;
                         e = e !== undefined && e;
                         do {
-                            if (this.pos >= this.input.length) return e && (this.pos = o, this.line_char_count = l), 
+                            if (this.pos >= this.input.length) return e && (this.pos = o, this.line_char_count = l),
                             r.length ? r.join("") : [ "", "TK_EOF" ];
                             if (i = this.input.charAt(this.pos), this.pos++, this.Utils.in_array(i, this.Utils.whitespace)) _ = !0; else {
-                                if ("'" != i && '"' != i || (i += this.get_unformatted(i), _ = !0), "=" == i && (_ = !1), 
+                                if ("'" != i && '"' != i || (i += this.get_unformatted(i), _ = !0), "=" == i && (_ = !1),
                                 r.length && "=" != r[r.length - 1] && ">" != i && _) {
                                     if (this.space_or_wrap(r), _ = !1, !a && "force" == x && "/" != i) {
                                         this.print_newline(!0, r), this.print_indentation(r);
@@ -16584,9 +16648,9 @@
                                         break;
                                     }
                                 }
-                                if (g && "<" == n && i + this.input.charAt(this.pos) == "{{" && (i += this.get_unformatted("}}"), 
-                                r.length && " " != r[r.length - 1] && "<" != r[r.length - 1] && (i = " " + i), _ = !0), 
-                                "<" != i || n || (t = this.pos - 1, n = "<"), g && !n && 2 <= r.length && "{" == r[r.length - 1] && "{" == r[r.length - 2] && (t = "#" == i || "/" == i || "!" == i ? this.pos - 3 : this.pos - 2, 
+                                if (g && "<" == n && i + this.input.charAt(this.pos) == "{{" && (i += this.get_unformatted("}}"),
+                                r.length && " " != r[r.length - 1] && "<" != r[r.length - 1] && (i = " " + i), _ = !0),
+                                "<" != i || n || (t = this.pos - 1, n = "<"), g && !n && 2 <= r.length && "{" == r[r.length - 1] && "{" == r[r.length - 2] && (t = "#" == i || "/" == i || "!" == i ? this.pos - 3 : this.pos - 2,
                                 n = "{"), this.line_char_count++, r.push(i), r[1] && ("!" == r[1] || "?" == r[1] || "%" == r[1])) {
                                     r = [ this.get_comment(t) ];
                                     break;
@@ -16599,27 +16663,27 @@
                             }
                         } while (">" != i);
                         var u, p, d = r.join("");
-                        u = -1 != d.indexOf(" ") ? d.indexOf(" ") : "{" == d[0] ? d.indexOf("}") : d.indexOf(">"), 
+                        u = -1 != d.indexOf(" ") ? d.indexOf(" ") : "{" == d[0] ? d.indexOf("}") : d.indexOf(">"),
                         p = "<" != d[0] && g ? "#" == d[2] ? 3 : 2 : 1;
                         var f = d.substring(p, u).toLowerCase();
-                        return "/" == d.charAt(d.length - 2) || this.Utils.in_array(f, this.Utils.single_token) ? e || (this.tag_type = "SINGLE") : g && "{" == d[0] && "else" == f ? e || (this.indent_to_tag("if"), 
-                        this.tag_type = "HANDLEBARS_ELSE", this.indent_content = !0, this.traverse_whitespace()) : this.is_unformatted(f, E) ? (s = this.get_unformatted("</" + f + ">", d), 
-                        r.push(s), this.pos, this.tag_type = "SINGLE") : "script" == f && (-1 == d.search("type") || -1 < d.search("type") && -1 < d.search(/\b(text|application)\/(x-)?(javascript|ecmascript|jscript|livescript)/)) ? e || (this.record_tag(f), 
-                        this.tag_type = "SCRIPT") : "style" == f && (-1 == d.search("type") || -1 < d.search("type") && -1 < d.search("text/css")) ? e || (this.record_tag(f), 
-                        this.tag_type = "STYLE") : "!" == f.charAt(0) ? e || (this.tag_type = "SINGLE", 
-                        this.traverse_whitespace()) : e || ("/" == f.charAt(0) ? (this.retrieve_tag(f.substring(1)), 
-                        this.tag_type = "END") : (this.record_tag(f), "html" != f.toLowerCase() && (this.indent_content = !0), 
-                        this.tag_type = "START"), this.traverse_whitespace() && this.space_or_wrap(r), this.Utils.in_array(f, this.Utils.extra_liners) && (this.print_newline(!1, this.output), 
-                        this.output.length && "\n" != this.output[this.output.length - 2] && this.print_newline(!0, this.output))), 
+                        return "/" == d.charAt(d.length - 2) || this.Utils.in_array(f, this.Utils.single_token) ? e || (this.tag_type = "SINGLE") : g && "{" == d[0] && "else" == f ? e || (this.indent_to_tag("if"),
+                        this.tag_type = "HANDLEBARS_ELSE", this.indent_content = !0, this.traverse_whitespace()) : this.is_unformatted(f, E) ? (s = this.get_unformatted("</" + f + ">", d),
+                        r.push(s), this.pos, this.tag_type = "SINGLE") : "script" == f && (-1 == d.search("type") || -1 < d.search("type") && -1 < d.search(/\b(text|application)\/(x-)?(javascript|ecmascript|jscript|livescript)/)) ? e || (this.record_tag(f),
+                        this.tag_type = "SCRIPT") : "style" == f && (-1 == d.search("type") || -1 < d.search("type") && -1 < d.search("text/css")) ? e || (this.record_tag(f),
+                        this.tag_type = "STYLE") : "!" == f.charAt(0) ? e || (this.tag_type = "SINGLE",
+                        this.traverse_whitespace()) : e || ("/" == f.charAt(0) ? (this.retrieve_tag(f.substring(1)),
+                        this.tag_type = "END") : (this.record_tag(f), "html" != f.toLowerCase() && (this.indent_content = !0),
+                        this.tag_type = "START"), this.traverse_whitespace() && this.space_or_wrap(r), this.Utils.in_array(f, this.Utils.extra_liners) && (this.print_newline(!1, this.output),
+                        this.output.length && "\n" != this.output[this.output.length - 2] && this.print_newline(!0, this.output))),
                         e && (this.pos = o, this.line_char_count = l), r.join("");
                     }, this.get_comment = function(e) {
                         var t = "", n = ">", i = !1;
                         this.pos = e;
                         var r = this.input.charAt(this.pos);
-                        for (this.pos++; this.pos <= this.input.length && ((t += r)[t.length - 1] != n[n.length - 1] || -1 == t.indexOf(n)); ) !i && t.length < 10 && (0 === t.indexOf("<![if") ? (n = "<![endif]>", 
-                        i = !0) : 0 === t.indexOf("<![cdata[") ? (n = "]]>", i = !0) : 0 === t.indexOf("<![") ? (n = "]>", 
-                        i = !0) : 0 === t.indexOf("\x3c!--") ? (n = "--\x3e", i = !0) : 0 === t.indexOf("{{!") ? (n = "}}", 
-                        i = !0) : 0 === t.indexOf("<?") ? (n = "?>", i = !0) : 0 === t.indexOf("<%") && (n = "%>", 
+                        for (this.pos++; this.pos <= this.input.length && ((t += r)[t.length - 1] != n[n.length - 1] || -1 == t.indexOf(n)); ) !i && t.length < 10 && (0 === t.indexOf("<![if") ? (n = "<![endif]>",
+                        i = !0) : 0 === t.indexOf("<![cdata[") ? (n = "]]>", i = !0) : 0 === t.indexOf("<![") ? (n = "]>",
+                        i = !0) : 0 === t.indexOf("\x3c!--") ? (n = "--\x3e", i = !0) : 0 === t.indexOf("{{!") ? (n = "}}",
+                        i = !0) : 0 === t.indexOf("<?") ? (n = "?>", i = !0) : 0 === t.indexOf("<%") && (n = "%>",
                         i = !0)), r = this.input.charAt(this.pos), this.pos++;
                         return t;
                     }, this.get_unformatted = function(e, t) {
@@ -16655,19 +16719,19 @@
                         var n = (this.get_tag(!0) || "").match(/^\s*<\s*\/?([a-z]*)\s*[^>]*>\s*$/);
                         return !(n && !this.Utils.in_array(n, t));
                     }, this.printer = function(e, t, n, i, r) {
-                        this.input = e || "", this.output = [], this.indent_character = t, this.indent_string = "", 
+                        this.input = e || "", this.output = [], this.indent_character = t, this.indent_string = "",
                         this.indent_size = n, this.brace_style = r, this.indent_level = 0, this.wrap_line_length = i;
                         for (var s = this.line_char_count = 0; s < this.indent_size; s++) this.indent_string += this.indent_character;
                         this.print_newline = function(e, t) {
-                            this.line_char_count = 0, t && t.length && (e || "\n" != t[t.length - 1]) && ("\n" != t[t.length - 1] && (t[t.length - 1] = _(t[t.length - 1])), 
+                            this.line_char_count = 0, t && t.length && (e || "\n" != t[t.length - 1]) && ("\n" != t[t.length - 1] && (t[t.length - 1] = _(t[t.length - 1])),
                             t.push("\n"));
                         }, this.print_indentation = function(e) {
                             for (var t = 0; t < this.indent_level; t++) e.push(this.indent_string), this.line_char_count += this.indent_string.length;
                         }, this.print_token = function(e) {
-                            this.is_whitespace(e) && !this.output.length || ((e || "" !== e) && this.output.length && "\n" == this.output[this.output.length - 1] && (this.print_indentation(this.output), 
+                            this.is_whitespace(e) && !this.output.length || ((e || "" !== e) && this.output.length && "\n" == this.output[this.output.length - 1] && (this.print_indentation(this.output),
                             e = e.replace(/^\s+/g, "")), this.print_token_raw(e));
                         }, this.print_token_raw = function(e) {
-                            0 < this.newlines && (e = _(e)), e && "" !== e && (1 < e.length && "\n" == e[e.length - 1] ? (this.output.push(e.slice(0, -1)), 
+                            0 < this.newlines && (e = _(e)), e && "" !== e && (1 < e.length && "\n" == e[e.length - 1] ? (this.output.push(e.slice(0, -1)),
                             this.print_newline(!1, this.output)) : this.output.push(e));
                             for (var t = 0; t < this.newlines; t++) this.print_newline(0 < t, this.output);
                             this.newlines = 0;
@@ -16682,7 +16746,7 @@
                     if (n.token_text = u[0], n.token_type = u[1], "TK_EOF" == n.token_type) break;
                     switch (n.token_type) {
                       case "TK_TAG_START":
-                        n.print_newline(!1, n.output), n.print_token(n.token_text), n.indent_content && (n.indent(), 
+                        n.print_newline(!1, n.output), n.print_token(n.token_text), n.indent_content && (n.indent(),
                         n.indent_content = !1), n.current_mode = "CONTENT";
                         break;
 
@@ -16694,7 +16758,7 @@
                       case "TK_TAG_END":
                         if ("TK_CONTENT" == n.last_token && "" === n.last_text) {
                             var p = n.token_text.match(/\w+/)[0], d = null;
-                            n.output.length && (d = n.output[n.output.length - 1].match(/(?:<|{{#)\/?\s*(\w+)/)), 
+                            n.output.length && (d = n.output[n.output.length - 1].match(/(?:<|{{#)\/?\s*(\w+)/)),
                             (null == d || d[1] != p && !n.Utils.in_array(d[1], E)) && n.print_newline(!1, n.output);
                         }
                         n.print_token(n.token_text), n.current_mode = "CONTENT";
@@ -16702,12 +16766,12 @@
 
                       case "TK_TAG_SINGLE":
                         var f = n.token_text.match(/^\s*<([a-z-]+)/i);
-                        f && n.Utils.in_array(f[1], E) || n.print_newline(!1, n.output), n.print_token(n.token_text), 
+                        f && n.Utils.in_array(f[1], E) || n.print_newline(!1, n.output), n.print_token(n.token_text),
                         n.current_mode = "CONTENT";
                         break;
 
                       case "TK_TAG_HANDLEBARS_ELSE":
-                        n.print_token(n.token_text), n.indent_content && (n.indent(), n.indent_content = !1), 
+                        n.print_token(n.token_text), n.indent_content && (n.indent(), n.indent_content = !1),
                         n.current_mode = "CONTENT";
                         break;
 
@@ -16746,7 +16810,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(M) {
@@ -16779,7 +16843,7 @@
             return c ? c.getValue() : d.val();
         }
         function u() {
-            f() && (c && c.setSize(null, l.opts.height ? l.opts.height : "auto"), l.opts.heightMin || l.opts.height ? (l.$box.find(".CodeMirror-scroll, .CodeMirror-gutters").css("min-height", l.opts.heightMin || l.opts.height), 
+            f() && (c && c.setSize(null, l.opts.height ? l.opts.height : "auto"), l.opts.heightMin || l.opts.height ? (l.$box.find(".CodeMirror-scroll, .CodeMirror-gutters").css("min-height", l.opts.heightMin || l.opts.height),
             d.css("height", l.opts.height)) : l.$box.find(".CodeMirror-scroll, .CodeMirror-gutters").css("min-height", ""));
         }
         var p, g = !1;
@@ -16791,38 +16855,38 @@
         }
         function s(e) {
             d || (!function() {
-                d = M('<textarea class="fr-code" tabIndex="-1">'), l.$wp.append(d), d.attr("dir", l.opts.direction), 
-                l.$box.hasClass("fr-basic") || (p = M('<a data-cmd="html" title="Code View" class="fr-command fr-btn html-switch' + (l.helpers.isMobile() ? "" : " fr-desktop") + '" role="button" tabIndex="-1"><i class="fa fa-code"></i></button>'), 
+                d = M('<textarea class="fr-code" tabIndex="-1">'), l.$wp.append(d), d.attr("dir", l.opts.direction),
+                l.$box.hasClass("fr-basic") || (p = M('<a data-cmd="html" title="Code View" class="fr-command fr-btn html-switch' + (l.helpers.isMobile() ? "" : " fr-desktop") + '" role="button" tabIndex="-1"><i class="fa fa-code"></i></button>'),
                 l.$box.append(p), l.events.bindClick(l.$box, "a.html-switch", function() {
                     l.events.trigger("commands.before", [ "html" ]), v(!1), l.events.trigger("commands.after", [ "html" ]);
                 }));
                 var e = function() {
                     return !f();
                 };
-                l.events.on("buttons.refresh", e), l.events.on("copy", e, !0), l.events.on("cut", e, !0), 
+                l.events.on("buttons.refresh", e), l.events.on("copy", e, !0), l.events.on("cut", e, !0),
                 l.events.on("paste", e, !0), l.events.on("destroy", A, !0), l.events.on("html.set", function() {
                     f() && v(!0);
                 }), l.events.on("codeView.update", u), l.events.on("form.submit", function() {
                     f() && (l.html.set(h()), l.events.trigger("contentChanged", [], !0));
                 }, !0);
-            }(), !c && l.opts.codeMirror ? ((c = l.opts.codeMirror.fromTextArea(d.get(0), l.opts.codeMirrorOptions)).on("blur", m), 
+            }(), !c && l.opts.codeMirror ? ((c = l.opts.codeMirror.fromTextArea(d.get(0), l.opts.codeMirrorOptions)).on("blur", m),
             c.on("focus", b)) : (l.events.$on(d, "keydown keyup change input", function() {
                 l.opts.height ? this.removeAttribute("rows") : (this.rows = 1, 0 === this.value.length ? this.style.height = "auto" : this.style.height = this.scrollHeight + "px");
-            }), l.events.$on(d, "blur", m), l.events.$on(d, "focus", b))), l.undo.saveStep(), 
-            l.html.cleanEmptyTags(), l.html.cleanWhiteTags(!0), l.core.hasFocus() && (l.core.isEmpty() || (l.selection.save(), 
-            l.$el.find('.fr-marker[data-type="true"]:first').replaceWith('<span class="fr-tmp fr-sm">F</span>'), 
+            }), l.events.$on(d, "blur", m), l.events.$on(d, "focus", b))), l.undo.saveStep(),
+            l.html.cleanEmptyTags(), l.html.cleanWhiteTags(!0), l.core.hasFocus() && (l.core.isEmpty() || (l.selection.save(),
+            l.$el.find('.fr-marker[data-type="true"]:first').replaceWith('<span class="fr-tmp fr-sm">F</span>'),
             l.$el.find('.fr-marker[data-type="false"]:last').replaceWith('<span class="fr-tmp fr-em">F</span>')));
             var t = l.html.get(!1, !0);
             l.$el.find("span.fr-tmp").remove(), l.$box.toggleClass("fr-code-view", !0);
             var n, r, s = !1;
-            if (l.core.hasFocus() && (s = !0, l.events.disableBlur(), l.$el.blur()), t = (t = t.replace(/<span class="fr-tmp fr-sm">F<\/span>/, "FROALA-SM")).replace(/<span class="fr-tmp fr-em">F<\/span>/, "FROALA-EM"), 
-            l.codeBeautifier && (t = l.codeBeautifier.run(t, l.opts.codeBeautifierOptions)), 
+            if (l.core.hasFocus() && (s = !0, l.events.disableBlur(), l.$el.blur()), t = (t = t.replace(/<span class="fr-tmp fr-sm">F<\/span>/, "FROALA-SM")).replace(/<span class="fr-tmp fr-em">F<\/span>/, "FROALA-EM"),
+            l.codeBeautifier && (t = l.codeBeautifier.run(t, l.opts.codeBeautifierOptions)),
             c) {
                 n = t.indexOf("FROALA-SM"), (r = t.indexOf("FROALA-EM")) < n ? n = r : r -= 9;
                 var i = (t = t.replace(/FROALA-SM/g, "").replace(/FROALA-EM/g, "")).substring(0, n).length - t.substring(0, n).replace(/\n/g, "").length, o = t.substring(0, r).length - t.substring(0, r).replace(/\n/g, "").length;
-                n = t.substring(0, n).length - t.substring(0, t.substring(0, n).lastIndexOf("\n") + 1).length, 
-                r = t.substring(0, r).length - t.substring(0, t.substring(0, r).lastIndexOf("\n") + 1).length, 
-                c.setSize(null, l.opts.height ? l.opts.height : "auto"), l.opts.heightMin && l.$box.find(".CodeMirror-scroll").css("min-height", l.opts.heightMin), 
+                n = t.substring(0, n).length - t.substring(0, t.substring(0, n).lastIndexOf("\n") + 1).length,
+                r = t.substring(0, r).length - t.substring(0, t.substring(0, r).lastIndexOf("\n") + 1).length,
+                c.setSize(null, l.opts.height ? l.opts.height : "auto"), l.opts.heightMin && l.$box.find(".CodeMirror-scroll").css("min-height", l.opts.heightMin),
                 c.setValue(t), g = !s, c.focus(), g = !0, c.setSelection({
                     line: i,
                     ch: n
@@ -16831,26 +16895,26 @@
                     ch: r
                 }), c.refresh(), c.clearHistory();
             } else {
-                n = t.indexOf("FROALA-SM"), r = t.indexOf("FROALA-EM") - 9, l.opts.heightMin && d.css("min-height", l.opts.heightMin), 
+                n = t.indexOf("FROALA-SM"), r = t.indexOf("FROALA-EM") - 9, l.opts.heightMin && d.css("min-height", l.opts.heightMin),
                 l.opts.height && d.css("height", l.opts.height), d.val(t.replace(/FROALA-SM/g, "").replace(/FROALA-EM/g, "")).trigger("change");
                 var a = M(l.o_doc).scrollTop();
                 g = !s, d.focus(), g = !0, d.get(0).setSelectionRange(n, r), M(l.o_doc).scrollTop(a);
             }
             l.$tb.find(" > .fr-command, > .fr-btn-wrap > .fr-command").not(e).filter(function() {
                 return l.opts.codeViewKeepActiveButtons.indexOf(M(this).data("cmd")) < 0;
-            }).addClass("fr-disabled").attr("aria-disabled", !0), e.addClass("fr-active").attr("aria-pressed", !0), 
+            }).addClass("fr-disabled").attr("aria-disabled", !0), e.addClass("fr-active").attr("aria-pressed", !0),
             !l.helpers.isMobile() && l.opts.toolbarInline && l.toolbar.hide();
         }
         function v(e) {
             void 0 === e && (e = !f());
             var t, n, r = l.$tb.find('.fr-command[data-cmd="html"]');
-            e ? (l.popups.hideAll(), s(r)) : (l.$box.toggleClass("fr-code-view", !1), t = r, 
-            n = h(), l.html.set(n), l.$el.blur(), l.$tb.find(" > .fr-command, > .fr-btn-wrap > .fr-command").not(t).removeClass("fr-disabled").attr("aria-disabled", !1), 
-            t.removeClass("fr-active").attr("aria-pressed", !1), l.selection.setAtStart(l.el), 
+            e ? (l.popups.hideAll(), s(r)) : (l.$box.toggleClass("fr-code-view", !1), t = r,
+            n = h(), l.html.set(n), l.$el.blur(), l.$tb.find(" > .fr-command, > .fr-btn-wrap > .fr-command").not(t).removeClass("fr-disabled").attr("aria-disabled", !1),
+            t.removeClass("fr-active").attr("aria-pressed", !1), l.selection.setAtStart(l.el),
             l.selection.restore(), l.placeholder.refresh(), l.undo.saveStep());
         }
         function A() {
-            f() && v(!1), c && c.toTextArea(), d.val("").removeData().remove(), d = null, p && (p.remove(), 
+            f() && v(!1), c && c.toTextArea(), d.val("").removeData().remove(), d = null, p && (p.remove(),
             p = null);
         }
         return {
@@ -16859,7 +16923,7 @@
                     var e;
                     l.opts.toolbarContainer && (e = l.$tb.find('.fr-command[data-cmd="html"]'), f() ? (l.$tb.find(" > .fr-command").not(e).filter(function() {
                         return l.opts.codeViewKeepActiveButtons.indexOf(M(this).data("cmd")) < 0;
-                    }).addClass("fr-disabled").attr("aria-disabled", !1), e.addClass("fr-active").attr("aria-pressed", !1)) : (l.$tb.find(" > .fr-command").not(e).removeClass("fr-disabled").attr("aria-disabled", !1), 
+                    }).addClass("fr-disabled").attr("aria-disabled", !1), e.addClass("fr-active").attr("aria-pressed", !1)) : (l.$tb.find(" > .fr-command").not(e).removeClass("fr-disabled").attr("aria-disabled", !1),
                     e.removeClass("fr-active").attr("aria-pressed", !1)));
                 }), !l.$wp) return !1;
             },
@@ -16884,7 +16948,7 @@
 
 !function(e) {
     "function" == typeof define && define.amd ? define([ "jquery" ], e) : "object" == typeof module && module.exports ? module.exports = function(o, r) {
-        return r === undefined && (r = "undefined" != typeof window ? require("jquery") : require("jquery")(o)), 
+        return r === undefined && (r = "undefined" != typeof window ? require("jquery") : require("jquery")(o)),
         e(r);
     } : e(window.jQuery);
 }(function(C) {
@@ -16904,7 +16968,7 @@
             E.popups.hide("colors.picker");
         }
         function s(o) {
-            for (var r = "text" == o ? E.opts.colorsText : E.opts.colorsBackground, e = '<div class="fr-color-set fr-' + o + "-color" + (E.opts.colorsDefaultTab == o || "text" != E.opts.colorsDefaultTab && "background" != E.opts.colorsDefaultTab && "text" == o ? " fr-selected-set" : "") + '">', t = 0; t < r.length; t++) 0 !== t && t % E.opts.colorsStep == 0 && (e += "<br>"), 
+            for (var r = "text" == o ? E.opts.colorsText : E.opts.colorsBackground, e = '<div class="fr-color-set fr-' + o + "-color" + (E.opts.colorsDefaultTab == o || "text" != E.opts.colorsDefaultTab && "background" != E.opts.colorsDefaultTab && "text" == o ? " fr-selected-set" : "") + '">', t = 0; t < r.length; t++) 0 !== t && t % E.opts.colorsStep == 0 && (e += "<br>"),
             "REMOVE" != r[t] ? e += '<span class="fr-command fr-select-color" style="background: ' + r[t] + ';" tabIndex="-1" aria-selected="false" role="button" data-cmd="' + o + 'Color" data-param1="' + r[t] + '"><span class="fr-sr-only">' + E.language.translate("Color") + " " + r[t] + "&nbsp;&nbsp;&nbsp;</span></span>" : e += '<span class="fr-command fr-select-color" data-cmd="' + o + 'Color" tabIndex="-1" role="button" data-param1="REMOVE" title="' + E.language.translate("Clear Formatting") + '">' + E.icon.create("remove") + '<span class="fr-sr-only">' + E.language.translate("Clear Formatting") + "</span></span>";
             return e + "</div>";
         }
@@ -16913,11 +16977,11 @@
             t.length && a.hasClass("fr-selected-tab") && t.val(e).trigger("change");
         }
         function t(o) {
-            "REMOVE" != o ? E.format.applyStyle("background-color", E.helpers.HEXtoRGB(o)) : E.format.removeStyle("background-color"), 
+            "REMOVE" != o ? E.format.applyStyle("background-color", E.helpers.HEXtoRGB(o)) : E.format.removeStyle("background-color"),
             r();
         }
         function a(o) {
-            "REMOVE" != o ? E.format.applyStyle("color", E.helpers.HEXtoRGB(o)) : E.format.removeStyle("color"), 
+            "REMOVE" != o ? E.format.applyStyle("color", E.helpers.HEXtoRGB(o)) : E.format.removeStyle("color"),
             r();
         }
         return {
@@ -16925,8 +16989,8 @@
                 var o = E.$tb.find('.fr-command[data-cmd="color"]'), r = E.popups.get("colors.picker");
                 if (r || (r = function() {
                     var o, r = '<div class="fr-buttons fr-colors-buttons">';
-                    E.opts.toolbarInline && 0 < E.opts.colorsButtons.length && (r += E.button.buildList(E.opts.colorsButtons)), 
-                    r += (o = '<div class="fr-colors-tabs fr-group">', o += '<span class="fr-colors-tab ' + ("background" == E.opts.colorsDefaultTab ? "" : "fr-selected-tab ") + 'fr-command" tabIndex="-1" role="button" aria-pressed="' + ("background" != E.opts.colorsDefaultTab) + '" data-param1="text" data-cmd="colorChangeSet" title="' + E.language.translate("Text") + '">' + E.language.translate("Text") + "</span>", 
+                    E.opts.toolbarInline && 0 < E.opts.colorsButtons.length && (r += E.button.buildList(E.opts.colorsButtons)),
+                    r += (o = '<div class="fr-colors-tabs fr-group">', o += '<span class="fr-colors-tab ' + ("background" == E.opts.colorsDefaultTab ? "" : "fr-selected-tab ") + 'fr-command" tabIndex="-1" role="button" aria-pressed="' + ("background" != E.opts.colorsDefaultTab) + '" data-param1="text" data-cmd="colorChangeSet" title="' + E.language.translate("Text") + '">' + E.language.translate("Text") + "</span>",
                     (o += '<span class="fr-colors-tab ' + ("background" == E.opts.colorsDefaultTab ? "fr-selected-tab " : "") + 'fr-command" tabIndex="-1" role="button" aria-pressed="' + ("background" == E.opts.colorsDefaultTab) + '" data-param1="background" data-cmd="colorChangeSet" title="' + E.language.translate("Background") + '">' + E.language.translate("Background") + "</span>") + "</div></div>");
                     var e = "";
                     E.opts.colorsHEXInput && (e = '<div class="fr-color-hex-layer fr-active fr-layer" id="fr-color-hex-layer-' + E.id + '"><div class="fr-input-line"><input maxlength="7" id="fr-color-hex-layer-text-' + E.id + '" type="text" placeholder="' + E.language.translate("HEX Color") + '" tabIndex="1" aria-required="true"></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-submit" data-cmd="customColor" tabIndex="2" role="button">' + E.language.translate("OK") + "</button></div></div>");
@@ -16953,7 +17017,7 @@
                         } else C.FE.KEYCODE.ENTER == e && (E.button.exec(r), t = !1);
                         return !1 === t && (o.preventDefault(), o.stopPropagation()), t;
                     }, !0), a;
-                }()), !r.hasClass("fr-active")) if (E.popups.setContainer("colors.picker", E.$tb), 
+                }()), !r.hasClass("fr-active")) if (E.popups.setContainer("colors.picker", E.$tb),
                 c.map(function(o) {
                     !function(o) {
                         var r, e = E.popups.get("colors.picker"), t = C(E.selection.element());
@@ -16976,9 +17040,9 @@
             },
             hideColorsPopup: r,
             changeSet: function(o, r) {
-                o.hasClass("fr-selected-tab") || (o.siblings().removeClass("fr-selected-tab").attr("aria-pressed", !1), 
-                o.addClass("fr-selected-tab").attr("aria-pressed", !0), o.parents(".fr-popup").find(".fr-color-set").removeClass("fr-selected-set"), 
-                o.parents(".fr-popup").find(".fr-color-set.fr-" + r + "-color").addClass("fr-selected-set"), 
+                o.hasClass("fr-selected-tab") || (o.siblings().removeClass("fr-selected-tab").attr("aria-pressed", !1),
+                o.addClass("fr-selected-tab").attr("aria-pressed", !0), o.parents(".fr-popup").find(".fr-color-set").removeClass("fr-selected-set"),
+                o.parents(".fr-popup").find(".fr-color-set.fr-" + r + "-color").addClass("fr-selected-set"),
                 l(r)), E.accessibility.focusPopup(o.parents(".fr-popup"));
             },
             background: t,
@@ -17003,7 +17067,7 @@
         refreshOnCallback: !1,
         popup: !0,
         callback: function() {
-            this.popups.isVisible("colors.picker") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(), 
+            this.popups.isVisible("colors.picker") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(),
             this.selection.restore()), this.popups.hide("colors.picker")) : this.colors.showColorsPopup();
         },
         plugin: "colors"
@@ -17048,7 +17112,7 @@
 
 !function(i) {
     "function" == typeof define && define.amd ? define([ "jquery" ], i) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         i(t);
     } : i(window.jQuery);
 }(function(T) {
@@ -17069,26 +17133,26 @@
         var r, p = "https://i.froala.com/upload", l = 2, d = 3, u = 4, c = 5, v = 6, i = {};
         function g() {
             var e = f.popups.get("file.insert");
-            e || (e = S()), e.find(".fr-layer.fr-active").removeClass("fr-active").addClass("fr-pactive"), 
-            e.find(".fr-file-progress-bar-layer").addClass("fr-active"), e.find(".fr-buttons").hide(), 
+            e || (e = S()), e.find(".fr-layer.fr-active").removeClass("fr-active").addClass("fr-pactive"),
+            e.find(".fr-file-progress-bar-layer").addClass("fr-active"), e.find(".fr-buttons").hide(),
             n(f.language.translate("Uploading"), 0);
         }
         function o(e) {
             var t = f.popups.get("file.insert");
-            t && (t.find(".fr-layer.fr-pactive").addClass("fr-active").removeClass("fr-pactive"), 
-            t.find(".fr-file-progress-bar-layer").removeClass("fr-active"), t.find(".fr-buttons").show(), 
+            t && (t.find(".fr-layer.fr-pactive").addClass("fr-active").removeClass("fr-pactive"),
+            t.find(".fr-file-progress-bar-layer").removeClass("fr-active"), t.find(".fr-buttons").show(),
             e && (f.events.focus(), f.popups.hide("file.insert")));
         }
         function n(e, t) {
             var i = f.popups.get("file.insert");
             if (i) {
                 var r = i.find(".fr-file-progress-bar-layer");
-                r.find("h3").text(e + (t ? " " + t + "%" : "")), r.removeClass("fr-error"), t ? (r.find("div").removeClass("fr-indeterminate"), 
+                r.find("h3").text(e + (t ? " " + t + "%" : "")), r.removeClass("fr-error"), t ? (r.find("div").removeClass("fr-indeterminate"),
                 r.find("div > span").css("width", t + "%")) : r.find("div").addClass("fr-indeterminate");
             }
         }
         function h(e, t, i) {
-            f.edit.on(), f.events.focus(!0), f.selection.restore(), f.opts.fileUseSelectedText && f.selection.text().length && (t = f.selection.text()), 
+            f.edit.on(), f.events.focus(!0), f.selection.restore(), f.opts.fileUseSelectedText && f.selection.text().length && (t = f.selection.text()),
             f.html.insert('<a href="' + e + '" target="_blank" id="fr-inserted-file" class="fr-file">' + t + "</a>");
             var r = f.$el.find("#fr-inserted-file");
             r.removeAttr("id"), f.popups.hide("file.insert"), f.undo.saveStep(), C(), f.events.trigger("file.inserted", [ r, i ]);
@@ -17100,7 +17164,7 @@
                     var n = function(e) {
                         try {
                             var t = T(e).find("Location").text(), i = T(e).find("Key").text();
-                            return !1 === f.events.trigger("file.uploadedToS3", [ t, i, e ], !0) ? (f.edit.on(), 
+                            return !1 === f.events.trigger("file.uploadedToS3", [ t, i, e ], !0) ? (f.edit.on(),
                             !1) : t;
                         } catch (r) {
                             return U(u, e), !1;
@@ -17151,7 +17215,7 @@
             if (void 0 !== e && 0 < e.length) {
                 if (!1 === f.events.trigger("file.beforeUpload", [ e ])) return !1;
                 var t, i = e[0];
-                if ((null === f.opts.fileUploadURL || f.opts.fileUploadURL == p) && !f.opts.fileUploadToS3) return s = i, 
+                if ((null === f.opts.fileUploadURL || f.opts.fileUploadURL == p) && !f.opts.fileUploadToS3) return s = i,
                 (l = new FileReader()).onload = function() {
                     for (var e = l.result, t = atob(l.result.split(",")[1]), i = [], r = 0; r < t.length; r++) i.push(t.charCodeAt(r));
                     e = window.URL.createObjectURL(new Blob([ new Uint8Array(i) ], {
@@ -17159,13 +17223,13 @@
                     })), f.file.insert(e, s.name, null);
                 }, g(), l.readAsDataURL(s), !1;
                 if (i.size > f.opts.fileMaxSize) return U(c), !1;
-                if (f.opts.fileAllowedTypes.indexOf("*") < 0 && f.opts.fileAllowedTypes.indexOf(i.type.replace(/file\//g, "")) < 0) return U(v), 
+                if (f.opts.fileAllowedTypes.indexOf("*") < 0 && f.opts.fileAllowedTypes.indexOf(i.type.replace(/file\//g, "")) < 0) return U(v),
                 !1;
-                if (f.drag_support.formdata && (t = f.drag_support.formdata ? new FormData() : null), 
+                if (f.drag_support.formdata && (t = f.drag_support.formdata ? new FormData() : null),
                 t) {
                     var r;
-                    if (!1 !== f.opts.fileUploadToS3) for (r in t.append("key", f.opts.fileUploadToS3.keyStart + new Date().getTime() + "-" + (i.name || "untitled")), 
-                    t.append("success_action_status", "201"), t.append("X-Requested-With", "xhr"), t.append("Content-Type", i.type), 
+                    if (!1 !== f.opts.fileUploadToS3) for (r in t.append("key", f.opts.fileUploadToS3.keyStart + new Date().getTime() + "-" + (i.name || "untitled")),
+                    t.append("success_action_status", "201"), t.append("X-Requested-With", "xhr"), t.append("Content-Type", i.type),
                     f.opts.fileUploadToS3.params) f.opts.fileUploadToS3.params.hasOwnProperty(r) && t.append(r, f.opts.fileUploadToS3.params[r]);
                     for (r in f.opts.fileUploadParams) f.opts.fileUploadParams.hasOwnProperty(r) && t.append(r, f.opts.fileUploadParams[r]);
                     t.append(f.opts.fileUploadParam, i);
@@ -17189,7 +17253,7 @@
         function S(e) {
             if (e) return f.popups.onHide("file.insert", s), !0;
             var t;
-            f.opts.fileUpload || f.opts.fileInsertButtons.splice(f.opts.fileInsertButtons.indexOf("fileUpload"), 1), 
+            f.opts.fileUpload || f.opts.fileInsertButtons.splice(f.opts.fileInsertButtons.indexOf("fileUpload"), 1),
             t = '<div class="fr-buttons">' + f.button.buildList(f.opts.fileInsertButtons) + "</div>";
             var i = "";
             f.opts.fileUpload && (i = '<div class="fr-file-upload-layer fr-layer fr-active" id="fr-file-upload-layer-' + f.id + '"><strong>' + f.language.translate("Drop file") + "</strong><br>(" + f.language.translate("or click") + ')<div class="fr-form"><input type="file" name="' + f.opts.fileUploadParam + '" accept="' + (0 <= f.opts.fileAllowedTypes.indexOf("*") ? "/" : "") + f.opts.fileAllowedTypes.join(", ").toLowerCase() + '" tabIndex="-1" aria-labelledby="fr-file-upload-layer-' + f.id + '" role="button"></div></div>');
@@ -17226,10 +17290,10 @@
                 if (i && "undefined" != typeof i.type) {
                     if (i.type.indexOf("image") < 0) {
                         if (!f.opts.fileUpload) return e.preventDefault(), e.stopPropagation(), !1;
-                        f.markers.remove(), f.markers.insertAtPoint(e.originalEvent), f.$el.find(".fr-marker").replaceWith(T.FE.MARKERS), 
+                        f.markers.remove(), f.markers.insertAtPoint(e.originalEvent), f.$el.find(".fr-marker").replaceWith(T.FE.MARKERS),
                         f.popups.hideAll();
                         var r = f.popups.get("file.insert");
-                        return r || (r = S()), f.popups.setContainer("file.insert", f.$sc), f.popups.show("file.insert", e.originalEvent.pageX, e.originalEvent.pageY), 
+                        return r || (r = S()), f.popups.setContainer("file.insert", f.$sc), f.popups.show("file.insert", e.originalEvent.pageX, e.originalEvent.pageY),
                         g(), a(t.files), e.preventDefault(), e.stopPropagation(), !1;
                     }
                 } else i.type.indexOf("image") < 0 && (e.preventDefault(), e.stopPropagation());
@@ -17241,9 +17305,9 @@
             if (r) for (e = 0; e < r.length; e++) i.indexOf(r[e].getAttribute("href")) < 0 && f.events.trigger("file.unlink", [ r[e] ]);
             r = t;
         }
-        return i[1] = "File cannot be loaded from the passed link.", i[l] = "No link in upload response.", 
-        i[d] = "Error during file upload.", i[u] = "Parsing response failed.", i[c] = "File is too large.", 
-        i[v] = "File file type is invalid.", i[7] = "Files can be uploaded only to same domain in IE 8 and IE 9.", 
+        return i[1] = "File cannot be loaded from the passed link.", i[l] = "No link in upload response.",
+        i[d] = "Error during file upload.", i[u] = "Parsing response failed.", i[c] = "File is too large.",
+        i[v] = "File file type is invalid.", i[7] = "Files can be uploaded only to same domain in IE 8 and IE 9.",
         {
             _init: function() {
                 f.events.on("drop", t), f.events.$on(f.$win, "keydown", function(e) {
@@ -17252,12 +17316,12 @@
                 }), f.events.on("destroy", function() {
                     var e = f.popups.get("file.insert");
                     e && e.trigger("abortUpload");
-                }), f.events.on("link.beforeRemove", e), f.$wp && (C(), f.events.on("contentChanged", C)), 
+                }), f.events.on("link.beforeRemove", e), f.$wp && (C(), f.events.on("contentChanged", C)),
                 S(!0);
             },
             showInsertPopup: function() {
                 var e = f.$tb.find('.fr-command[data-cmd="insertFile"]'), t = f.popups.get("file.insert");
-                if (t || (t = S()), o(), !t.hasClass("fr-active")) if (f.popups.refresh("file.insert"), 
+                if (t || (t = S()), o(), !t.hasClass("fr-active")) if (f.popups.refresh("file.insert"),
                 f.popups.setContainer("file.insert", f.$tb), e.is(":visible")) {
                     var i = e.offset().left + e.outerWidth() / 2, r = e.offset().top + (f.opts.toolbarBottom ? 10 : e.outerHeight() - 10);
                     f.popups.show("file.insert", i, r, e.outerHeight());
@@ -17266,7 +17330,7 @@
             upload: a,
             insert: h,
             back: function() {
-                f.events.disableBlur(), f.selection.restore(), f.events.enableBlur(), f.popups.hide("file.insert"), 
+                f.events.disableBlur(), f.selection.restore(), f.events.enableBlur(), f.popups.hide("file.insert"),
                 f.toolbar.showInline();
             },
             hideProgressBar: o
@@ -17281,7 +17345,7 @@
         refreshAfterCallback: !1,
         popup: !0,
         callback: function() {
-            this.popups.isVisible("file.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(), 
+            this.popups.isVisible("file.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(),
             this.selection.restore()), this.popups.hide("file.insert")) : this.file.showInsertPopup();
         },
         plugin: "file"
@@ -17297,7 +17361,7 @@
             this.file.back();
         },
         refresh: function(e) {
-            this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"), 
+            this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"),
             e.next(".fr-separator").addClass("fr-hidden"));
         }
     }), T.FE.RegisterCommand("fileDismissError", {
@@ -17310,7 +17374,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(f) {
@@ -17326,8 +17390,8 @@
             },
             refreshOnShow: function(e, t) {
                 var n = f(r.selection.element()).css("font-size");
-                "pt" === r.opts.fontSizeUnit && (n = Math.round(72 * parseFloat(n, 10) / 96) + "pt"), 
-                t.find(".fr-command.fr-active").removeClass("fr-active").attr("aria-selected", !1), 
+                "pt" === r.opts.fontSizeUnit && (n = Math.round(72 * parseFloat(n, 10) / 96) + "pt"),
+                t.find(".fr-command.fr-active").removeClass("fr-active").attr("aria-selected", !1),
                 t.find('.fr-command[data-param1="' + n + '"]').addClass("fr-active").attr("aria-selected", !0);
                 var o = t.find(".fr-dropdown-list"), i = t.find(".fr-active").parent();
                 i.length ? o.parent().scrollTop(i.offset().top - o.offset().top - (o.parent().outerHeight() / 2 - i.outerHeight() / 2)) : o.parent().scrollTop(0);
@@ -17335,7 +17399,7 @@
             refresh: function(e) {
                 if (r.opts.fontSizeSelection) {
                     var t = r.helpers.getPX(f(r.selection.element()).css("font-size"));
-                    "pt" === r.opts.fontSizeUnit && (t = Math.round(72 * parseFloat(t, 10) / 96) + "pt"), 
+                    "pt" === r.opts.fontSizeUnit && (t = Math.round(72 * parseFloat(t, 10) / 96) + "pt"),
                     e.find("> span").text(t);
                 }
             }
@@ -17374,7 +17438,7 @@
 
 !function(o) {
     "function" == typeof define && define.amd ? define([ "jquery" ], o) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         o(t);
     } : o(window.jQuery);
 }(function(c) {
@@ -17384,29 +17448,29 @@
             return o.$box.hasClass("fr-fullscreen");
         }
         function e() {
-            if (o.helpers.isIOS() && o.core.hasFocus()) return o.$el.blur(), setTimeout(f, 250), 
+            if (o.helpers.isIOS() && o.core.hasFocus()) return o.$el.blur(), setTimeout(f, 250),
             !1;
-            t = o.helpers.scrollTop(), o.$box.toggleClass("fr-fullscreen"), c("body:first").toggleClass("fr-fullscreen"), 
-            o.helpers.isMobile() && (o.$tb.data("parent", o.$tb.parent()), o.$tb.prependTo(o.$box), 
-            o.$tb.data("sticky-dummy") && o.$tb.after(o.$tb.data("sticky-dummy"))), r = o.opts.height, 
-            s = o.opts.heightMax, n = o.opts.zIndex, o.position.refresh(), o.opts.height = o.o_win.innerHeight - (o.opts.toolbarInline ? 0 : o.$tb.outerHeight()), 
+            t = o.helpers.scrollTop(), o.$box.toggleClass("fr-fullscreen"), c("body:first").toggleClass("fr-fullscreen"),
+            o.helpers.isMobile() && (o.$tb.data("parent", o.$tb.parent()), o.$tb.prependTo(o.$box),
+            o.$tb.data("sticky-dummy") && o.$tb.after(o.$tb.data("sticky-dummy"))), r = o.opts.height,
+            s = o.opts.heightMax, n = o.opts.zIndex, o.position.refresh(), o.opts.height = o.o_win.innerHeight - (o.opts.toolbarInline ? 0 : o.$tb.outerHeight()),
             o.opts.zIndex = 2147483641, o.opts.heightMax = null, o.size.refresh(), o.opts.toolbarInline && o.toolbar.showInline();
-            for (var e = o.$box.parent(); !e.is("body:first"); ) e.addClass("fr-fullscreen-wrapper"), 
+            for (var e = o.$box.parent(); !e.is("body:first"); ) e.addClass("fr-fullscreen-wrapper"),
             e = e.parent();
-            o.opts.toolbarContainer && o.$box.prepend(o.$tb), o.events.trigger("charCounter.update"), 
+            o.opts.toolbarContainer && o.$box.prepend(o.$tb), o.events.trigger("charCounter.update"),
             o.events.trigger("codeView.update"), o.$win.trigger("scroll");
         }
         function l() {
-            if (o.helpers.isIOS() && o.core.hasFocus()) return o.$el.blur(), setTimeout(f, 250), 
+            if (o.helpers.isIOS() && o.core.hasFocus()) return o.$el.blur(), setTimeout(f, 250),
             !1;
-            o.$box.toggleClass("fr-fullscreen"), c("body:first").toggleClass("fr-fullscreen"), 
-            o.$tb.prependTo(o.$tb.data("parent")), o.$tb.data("sticky-dummy") && o.$tb.after(o.$tb.data("sticky-dummy")), 
-            o.opts.height = r, o.opts.heightMax = s, o.opts.zIndex = n, o.size.refresh(), c(o.o_win).scrollTop(t), 
-            o.opts.toolbarInline && o.toolbar.showInline(), o.events.trigger("charCounter.update"), 
+            o.$box.toggleClass("fr-fullscreen"), c("body:first").toggleClass("fr-fullscreen"),
+            o.$tb.prependTo(o.$tb.data("parent")), o.$tb.data("sticky-dummy") && o.$tb.after(o.$tb.data("sticky-dummy")),
+            o.opts.height = r, o.opts.heightMax = s, o.opts.zIndex = n, o.size.refresh(), c(o.o_win).scrollTop(t),
+            o.opts.toolbarInline && o.toolbar.showInline(), o.events.trigger("charCounter.update"),
             o.opts.toolbarSticky && o.opts.toolbarStickyOffset && (o.opts.toolbarBottom ? o.$tb.css("bottom", o.opts.toolbarStickyOffset).data("bottom", o.opts.toolbarStickyOffset) : o.$tb.css("top", o.opts.toolbarStickyOffset).data("top", o.opts.toolbarStickyOffset));
-            for (var e = o.$box.parent(); !e.is("body:first"); ) e.removeClass("fr-fullscreen-wrapper"), 
+            for (var e = o.$box.parent(); !e.is("body:first"); ) e.removeClass("fr-fullscreen-wrapper"),
             e = e.parent();
-            o.opts.toolbarContainer && c(o.opts.toolbarContainer).append(o.$tb), c(o.o_win).trigger("scroll"), 
+            o.opts.toolbarContainer && c(o.opts.toolbarContainer).append(o.$tb), c(o.o_win).trigger("scroll"),
             o.events.trigger("codeView.update");
         }
         function f() {
@@ -17456,7 +17520,7 @@
 
 !function(a) {
     "function" == typeof define && define.amd ? define([ "jquery" ], a) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         a(t);
     } : a(window.jQuery);
 }(function(ye) {
@@ -17511,7 +17575,7 @@
             var e = g.popups.get("image.edit");
             if (e || (e = U()), e) {
                 var t = ve();
-                be() && (t = t.find(".fr-img-wrap")), g.popups.setContainer("image.edit", g.$sc), 
+                be() && (t = t.find(".fr-img-wrap")), g.popups.setContainer("image.edit", g.$sc),
                 g.popups.refresh("image.edit");
                 var a = t.offset().left + t.outerWidth() / 2, i = t.offset().top + t.outerHeight();
                 d.hasClass("fr-uploading") ? $() : g.popups.show("image.edit", a, i, t.outerHeight());
@@ -17523,23 +17587,23 @@
         function e() {
             for (var e, t, a = "IMG" == g.el.tagName ? [ g.el ] : g.el.querySelectorAll("img"), i = 0; i < a.length; i++) {
                 var r = ye(a[i]);
-                !g.opts.htmlUntouched && g.opts.useClasses ? ((g.opts.imageDefaultAlign || g.opts.imageDefaultDisplay) && (0 < (t = r).parents(".fr-img-caption").length && (t = t.parents(".fr-img-caption:first")), 
-                t.hasClass("fr-dii") || t.hasClass("fr-dib") || (t.addClass("fr-fi" + de(t)[0]), 
-                t.addClass("fr-di" + ce(t)[0]), t.css("margin", ""), t.css("float", ""), t.css("display", ""), 
-                t.css("z-index", ""), t.css("position", ""), t.css("overflow", ""), t.css("vertical-align", ""))), 
-                g.opts.imageTextNear || (0 < r.parents(".fr-img-caption").length ? r.parents(".fr-img-caption:first").removeClass("fr-dii").addClass("fr-dib") : r.removeClass("fr-dii").addClass("fr-dib"))) : g.opts.htmlUntouched || g.opts.useClasses || (g.opts.imageDefaultAlign || g.opts.imageDefaultDisplay) && (0 < (e = r).parents(".fr-img-caption").length && (e = e.parents(".fr-img-caption:first")), 
-                ge(e, e.hasClass("fr-dib") ? "block" : e.hasClass("fr-dii") ? "inline" : null, e.hasClass("fr-fil") ? "left" : e.hasClass("fr-fir") ? "right" : de(e)), 
+                !g.opts.htmlUntouched && g.opts.useClasses ? ((g.opts.imageDefaultAlign || g.opts.imageDefaultDisplay) && (0 < (t = r).parents(".fr-img-caption").length && (t = t.parents(".fr-img-caption:first")),
+                t.hasClass("fr-dii") || t.hasClass("fr-dib") || (t.addClass("fr-fi" + de(t)[0]),
+                t.addClass("fr-di" + ce(t)[0]), t.css("margin", ""), t.css("float", ""), t.css("display", ""),
+                t.css("z-index", ""), t.css("position", ""), t.css("overflow", ""), t.css("vertical-align", ""))),
+                g.opts.imageTextNear || (0 < r.parents(".fr-img-caption").length ? r.parents(".fr-img-caption:first").removeClass("fr-dii").addClass("fr-dib") : r.removeClass("fr-dii").addClass("fr-dib"))) : g.opts.htmlUntouched || g.opts.useClasses || (g.opts.imageDefaultAlign || g.opts.imageDefaultDisplay) && (0 < (e = r).parents(".fr-img-caption").length && (e = e.parents(".fr-img-caption:first")),
+                ge(e, e.hasClass("fr-dib") ? "block" : e.hasClass("fr-dii") ? "inline" : null, e.hasClass("fr-fil") ? "left" : e.hasClass("fr-fir") ? "right" : de(e)),
                 e.removeClass("fr-dib fr-dii fr-fir fr-fil")), g.opts.iframe && r.on("load", g.size.syncIframe);
             }
         }
         function E(e) {
             void 0 === e && (e = !0);
             var t, a = Array.prototype.slice.call(g.el.querySelectorAll("img")), i = [];
-            for (t = 0; t < a.length; t++) if (i.push(a[t].getAttribute("src")), ye(a[t]).toggleClass("fr-draggable", g.opts.imageMove), 
-            "" === a[t].getAttribute("class") && a[t].removeAttribute("class"), "" === a[t].getAttribute("style") && a[t].removeAttribute("style"), 
+            for (t = 0; t < a.length; t++) if (i.push(a[t].getAttribute("src")), ye(a[t]).toggleClass("fr-draggable", g.opts.imageMove),
+            "" === a[t].getAttribute("class") && a[t].removeAttribute("class"), "" === a[t].getAttribute("style") && a[t].removeAttribute("style"),
             a[t].parentNode && a[t].parentNode.parentNode && g.node.hasClass(a[t].parentNode.parentNode, "fr-img-caption")) {
                 var r = a[t].parentNode.parentNode;
-                g.browser.mozilla || r.setAttribute("contenteditable", !1), r.setAttribute("draggable", !1), 
+                g.browser.mozilla || r.setAttribute("contenteditable", !1), r.setAttribute("draggable", !1),
                 r.classList.add("fr-draggable");
                 var n = a[t].nextSibling;
                 n && !g.browser.mozilla && n.setAttribute("contenteditable", !0);
@@ -17555,14 +17619,14 @@
         function C() {
             if (l || function() {
                 var e;
-                g.shared.$image_resizer ? (l = g.shared.$image_resizer, p = g.shared.$img_overlay, 
+                g.shared.$image_resizer ? (l = g.shared.$image_resizer, p = g.shared.$img_overlay,
                 g.events.on("destroy", function() {
                     l.removeClass("fr-active").appendTo(ye("body:first"));
-                }, !0)) : (g.shared.$image_resizer = ye('<div class="fr-image-resizer"></div>'), 
+                }, !0)) : (g.shared.$image_resizer = ye('<div class="fr-image-resizer"></div>'),
                 l = g.shared.$image_resizer, g.events.$on(l, "mousedown", function(e) {
                     e.stopPropagation();
-                }, !0), g.opts.imageResize && (l.append(s("nw") + s("ne") + s("sw") + s("se")), 
-                g.shared.$img_overlay = ye('<div class="fr-image-overlay"></div>'), p = g.shared.$img_overlay, 
+                }, !0), g.opts.imageResize && (l.append(s("nw") + s("ne") + s("sw") + s("se")),
+                g.shared.$img_overlay = ye('<div class="fr-image-overlay"></div>'), p = g.shared.$img_overlay,
                 e = l.get(0).ownerDocument, ye(e).find("body:first").append(p)));
                 g.events.on("shared.destroy", function() {
                     l.html("").removeData().remove(), l = null, g.opts.imageResize && (p.remove(), p = null);
@@ -17570,13 +17634,13 @@
                     d && !d.hasClass("fr-uploading") ? oe(!0) : d && (C(), ue(), $(!1));
                 });
                 if (g.opts.imageResize) {
-                    e = l.get(0).ownerDocument, g.events.$on(l, g._mousedown, ".fr-handler", R), g.events.$on(ye(e), g._mousemove, S), 
+                    e = l.get(0).ownerDocument, g.events.$on(l, g._mousedown, ".fr-handler", R), g.events.$on(ye(e), g._mousemove, S),
                     g.events.$on(ye(e.defaultView || e.parentWindow), g._mouseup, x), g.events.$on(p, "mouseleave", x);
                     var i = 1, r = null, n = 0;
                     g.events.on("keydown", function(e) {
                         if (d) {
                             var t = -1 != navigator.userAgent.indexOf("Mac OS X") ? e.metaKey : e.ctrlKey, a = e.which;
-                            (a !== r || 200 < e.timeStamp - n) && (i = 1), (a == ye.FE.KEYCODE.EQUALS || g.browser.mozilla && a == ye.FE.KEYCODE.FF_EQUALS) && t && !e.altKey ? i = Q.call(this, e, 1, 1, i) : (a == ye.FE.KEYCODE.HYPHEN || g.browser.mozilla && a == ye.FE.KEYCODE.FF_HYPHEN) && t && !e.altKey ? i = Q.call(this, e, 2, -1, i) : g.keys.ctrlKey(e) || a != ye.FE.KEYCODE.ENTER || (d.before("<br>"), 
+                            (a !== r || 200 < e.timeStamp - n) && (i = 1), (a == ye.FE.KEYCODE.EQUALS || g.browser.mozilla && a == ye.FE.KEYCODE.FF_EQUALS) && t && !e.altKey ? i = Q.call(this, e, 1, 1, i) : (a == ye.FE.KEYCODE.HYPHEN || g.browser.mozilla && a == ye.FE.KEYCODE.FF_HYPHEN) && t && !e.altKey ? i = Q.call(this, e, 2, -1, i) : g.keys.ctrlKey(e) || a != ye.FE.KEYCODE.ENTER || (d.before("<br>"),
                             N(d)), r = a, n = e.timeStamp;
                         }
                     }, !0), g.events.on("keyup", function() {
@@ -17587,7 +17651,7 @@
             var e = g.$wp || g.$sc;
             e.append(l), l.data("instance", g);
             var t = e.scrollTop() - ("static" != e.css("position") ? e.offset().top : 0), a = e.scrollLeft() - ("static" != e.css("position") ? e.offset().left : 0);
-            a -= g.helpers.getPX(e.css("border-left-width")), t -= g.helpers.getPX(e.css("border-top-width")), 
+            a -= g.helpers.getPX(e.css("border-left-width")), t -= g.helpers.getPX(e.css("border-top-width")),
             g.$el.is("img") && g.$sc.is("body") && (a = t = 0);
             var i = ve();
             be() && (i = i.find(".fr-img-wrap")), l.css("top", (g.opts.iframe ? i.offset().top : i.offset().top + t) - 1).css("left", (g.opts.iframe ? i.offset().left : i.offset().left + a) - 1).css("width", i.get(0).getBoundingClientRect().width).css("height", i.get(0).getBoundingClientRect().height).addClass("fr-active");
@@ -17628,11 +17692,11 @@
                 var i = a - f.data("start-x"), r = f.data("start-width");
                 if ((f.hasClass("fr-hnw") || f.hasClass("fr-hsw")) && (i = 0 - i), g.opts.imageResizeWithPercent) {
                     var n = d.parentsUntil(g.$el, g.html.blockTagsQuery()).get(0) || g.el;
-                    r = ((r + i) / ye(n).outerWidth() * 100).toFixed(2), g.opts.imageRoundPercent && (r = Math.round(r)), 
-                    A(r + "%"), (t = be() ? (g.helpers.getPX(d.parents(".fr-img-caption").css("width")) / ye(n).outerWidth() * 100).toFixed(2) : (g.helpers.getPX(d.css("width")) / ye(n).outerWidth() * 100).toFixed(2)) === r || g.opts.imageRoundPercent || A(t + "%"), 
+                    r = ((r + i) / ye(n).outerWidth() * 100).toFixed(2), g.opts.imageRoundPercent && (r = Math.round(r)),
+                    A(r + "%"), (t = be() ? (g.helpers.getPX(d.parents(".fr-img-caption").css("width")) / ye(n).outerWidth() * 100).toFixed(2) : (g.helpers.getPX(d.css("width")) / ye(n).outerWidth() * 100).toFixed(2)) === r || g.opts.imageRoundPercent || A(t + "%"),
                     d.css("height", "").removeAttr("height");
-                } else r + i >= g.opts.imageMinWidth && (A(r + i), t = be() ? g.helpers.getPX(d.parents(".fr-img-caption").css("width")) : g.helpers.getPX(d.css("width"))), 
-                t !== r + i && A(t), ((d.attr("style") || "").match(/(^height:)|(; *height:)/) || d.attr("height")) && (d.css("height", f.data("start-height") * d.width() / f.data("start-width")), 
+                } else r + i >= g.opts.imageMinWidth && (A(r + i), t = be() ? g.helpers.getPX(d.parents(".fr-img-caption").css("width")) : g.helpers.getPX(d.css("width"))),
+                t !== r + i && A(t), ((d.attr("style") || "").match(/(^height:)|(; *height:)/) || d.attr("height")) && (d.css("height", f.data("start-height") * d.width() / f.data("start-width")),
                 d.removeAttr("height"));
                 C(), g.events.trigger("image.resize", [ he() ]);
             }
@@ -17645,7 +17709,7 @@
             }
         }
         function D(e, t, a) {
-            g.edit.on(), d && d.addClass("fr-error"), r[e] ? B(r[e]) : B(g.language.translate("Something went wrong. Please try again.")), 
+            g.edit.on(), d && d.addClass("fr-error"), r[e] ? B(r[e]) : B(g.language.translate("Something went wrong. Please try again.")),
             !d && a && J(a), g.events.trigger("image.error", [ {
                 code: e,
                 message: r[e]
@@ -17667,8 +17731,8 @@
         }
         function $(e) {
             var t = g.popups.get("image.insert");
-            if (t || (t = H()), t.find(".fr-layer.fr-active").removeClass("fr-active").addClass("fr-pactive"), 
-            t.find(".fr-image-progress-bar-layer").addClass("fr-active"), t.find(".fr-buttons").hide(), 
+            if (t || (t = H()), t.find(".fr-layer.fr-active").removeClass("fr-active").addClass("fr-pactive"),
+            t.find(".fr-image-progress-bar-layer").addClass("fr-active"), t.find(".fr-buttons").hide(),
             d) {
                 var a = ve();
                 g.popups.setContainer("image.insert", g.$sc);
@@ -17679,10 +17743,10 @@
         }
         function I(e) {
             var t = g.popups.get("image.insert");
-            if (t && (t.find(".fr-layer.fr-pactive").addClass("fr-active").removeClass("fr-pactive"), 
-            t.find(".fr-image-progress-bar-layer").removeClass("fr-active"), t.find(".fr-buttons").show(), 
+            if (t && (t.find(".fr-layer.fr-pactive").addClass("fr-active").removeClass("fr-pactive"),
+            t.find(".fr-image-progress-bar-layer").removeClass("fr-active"), t.find(".fr-buttons").show(),
             e || g.$el.find("img.fr-error").length)) {
-                if (g.events.focus(), g.$el.find("img.fr-error").length && (g.$el.find("img.fr-error").remove(), 
+                if (g.events.focus(), g.$el.find("img.fr-error").length && (g.$el.find("img.fr-error").remove(),
                 g.undo.saveStep(), g.undo.run(), g.undo.dropRedo()), !g.$wp && d) {
                     var a = d;
                     oe(!0), g.selection.setAfter(a.get(0)), g.selection.restore();
@@ -17694,7 +17758,7 @@
             var a = g.popups.get("image.insert");
             if (a) {
                 var i = a.find(".fr-image-progress-bar-layer");
-                i.find("h3").text(e + (t ? " " + t + "%" : "")), i.removeClass("fr-error"), t ? (i.find("div").removeClass("fr-indeterminate"), 
+                i.find("h3").text(e + (t ? " " + t + "%" : "")), i.removeClass("fr-error"), t ? (i.find("div").removeClass("fr-indeterminate"),
                 i.find("div > span").css("width", t + "%")) : i.find("div").addClass("fr-indeterminate");
             }
         }
@@ -17710,7 +17774,7 @@
         }
         function k() {
             var e = ye(this);
-            g.popups.hide("image.insert"), e.removeClass("fr-uploading"), e.next().is("br") && e.next().remove(), 
+            g.popups.hide("image.insert"), e.removeClass("fr-uploading"), e.next().is("br") && e.next().remove(),
             N(e), g.events.trigger("image.loaded", [ e ]);
         }
         function O(s, e, o, l, f) {
@@ -17721,16 +17785,16 @@
                 if (l) {
                     g.undo.canDo() || l.hasClass("fr-uploading") || g.undo.saveStep();
                     var a = l.data("fr-old-src");
-                    l.data("fr-image-pasted") && (a = null), g.$wp ? ((e = l.clone().removeData("fr-old-src").removeClass("fr-uploading").removeAttr("data-fr-image-pasted")).off("load"), 
+                    l.data("fr-image-pasted") && (a = null), g.$wp ? ((e = l.clone().removeData("fr-old-src").removeClass("fr-uploading").removeAttr("data-fr-image-pasted")).off("load"),
                     a && l.attr("src", a), l.replaceWith(e)) : e = l;
                     for (var i = e.get(0).attributes, r = 0; r < i.length; r++) {
                         var n = i[r];
                         0 === n.nodeName.indexOf("data-") && e.removeAttr(n.nodeName);
                     }
                     if (void 0 !== o) for (t in o) o.hasOwnProperty(t) && "link" != t && e.attr("data-" + t, o[t]);
-                    e.on("load", k), e.attr("src", s), g.edit.on(), E(!1), g.undo.saveStep(), g.events.disableBlur(), 
+                    e.on("load", k), e.attr("src", s), g.edit.on(), E(!1), g.undo.saveStep(), g.events.disableBlur(),
                     g.$el.blur(), g.events.trigger(a ? "image.replaced" : "image.inserted", [ e, f ]);
-                } else e = M(s, o, k), E(!1), g.undo.saveStep(), g.events.disableBlur(), g.$el.blur(), 
+                } else e = M(s, o, k), E(!1), g.undo.saveStep(), g.events.disableBlur(), g.$el.blur(),
                 g.events.trigger("image.inserted", [ e, f ]);
             }, t.onerror = function() {
                 D(i);
@@ -17744,7 +17808,7 @@
                     var n = function(e) {
                         try {
                             var t = ye(e).find("Location").text(), a = ye(e).find("Key").text();
-                            return !1 === g.events.trigger("image.uploadedToS3", [ t, a, e ], !0) ? (g.edit.on(), 
+                            return !1 === g.events.trigger("image.uploadedToS3", [ t, a, e ], !0) ? (g.edit.on(),
                             !1) : t;
                         } catch (i) {
                             return D(h, e), !1;
@@ -17782,11 +17846,11 @@
             var n = g.opts.imageDefaultWidth;
             n && "auto" != n && (n = g.opts.imageResizeWithPercent ? "100%" : n + "px");
             var s = ye('<img src="' + e + '"' + r + (n ? ' style="width: ' + n + ';"' : "") + ">");
-            ge(s, g.opts.imageDefaultDisplay, g.opts.imageDefaultAlign), s.on("load", a), s.on("error", a), 
-            g.edit.on(), g.events.focus(!0), g.selection.restore(), g.undo.saveStep(), g.opts.imageSplitHTML ? g.markers.split() : g.markers.insert(), 
+            ge(s, g.opts.imageDefaultDisplay, g.opts.imageDefaultAlign), s.on("load", a), s.on("error", a),
+            g.edit.on(), g.events.focus(!0), g.selection.restore(), g.undo.saveStep(), g.opts.imageSplitHTML ? g.markers.split() : g.markers.insert(),
             g.html.wrap();
             var o = g.$el.find(".fr-marker");
-            return o.length ? (o.parent().is("hr") && o.parent().after(o), g.node.isLastSibling(o) && o.parent().hasClass("fr-deletable") && o.insertAfter(o.parent()), 
+            return o.length ? (o.parent().is("hr") && o.parent().after(o), g.node.isLastSibling(o) && o.parent().hasClass("fr-deletable") && o.insertAfter(o.parent()),
             o.replaceWith(s)) : g.$el.append(s), g.selection.clear(), s;
         }
         function z() {
@@ -17796,7 +17860,7 @@
             if (void 0 !== e && 0 < e.length) {
                 if (!1 === g.events.trigger("image.beforeUpload", [ e, t ])) return !1;
                 var a, i = e[0];
-                if ((null === g.opts.imageUploadURL || g.opts.imageUploadURL == c) && !g.opts.imageUploadToS3) return s = i, 
+                if ((null === g.opts.imageUploadURL || g.opts.imageUploadURL == c) && !g.opts.imageUploadToS3) return s = i,
                 o = t || d, (l = new FileReader()).onload = function() {
                     var e = l.result;
                     if (l.result.indexOf("svg+xml") < 0) {
@@ -17806,28 +17870,28 @@
                         })), g.image.insert(e, !1, null, o);
                     }
                 }, $(), l.readAsDataURL(s), !1;
-                if (i.name || (i.name = new Date().getTime() + "." + (i.type || "image/jpeg").replace(/image\//g, "")), 
+                if (i.name || (i.name = new Date().getTime() + "." + (i.type || "image/jpeg").replace(/image\//g, "")),
                 i.size > g.opts.imageMaxSize) return D(v), !1;
-                if (g.opts.imageAllowedTypes.indexOf(i.type.replace(/image\//g, "")) < 0) return D(b), 
+                if (g.opts.imageAllowedTypes.indexOf(i.type.replace(/image\//g, "")) < 0) return D(b),
                 !1;
-                if (g.drag_support.formdata && (a = g.drag_support.formdata ? new FormData() : null), 
+                if (g.drag_support.formdata && (a = g.drag_support.formdata ? new FormData() : null),
                 a) {
                     var r;
-                    if (!1 !== g.opts.imageUploadToS3) for (r in a.append("key", g.opts.imageUploadToS3.keyStart + new Date().getTime() + "-" + (i.name || "untitled")), 
-                    a.append("success_action_status", "201"), a.append("X-Requested-With", "xhr"), a.append("Content-Type", i.type), 
+                    if (!1 !== g.opts.imageUploadToS3) for (r in a.append("key", g.opts.imageUploadToS3.keyStart + new Date().getTime() + "-" + (i.name || "untitled")),
+                    a.append("success_action_status", "201"), a.append("X-Requested-With", "xhr"), a.append("Content-Type", i.type),
                     g.opts.imageUploadToS3.params) g.opts.imageUploadToS3.params.hasOwnProperty(r) && a.append(r, g.opts.imageUploadToS3.params[r]);
                     for (r in g.opts.imageUploadParams) g.opts.imageUploadParams.hasOwnProperty(r) && a.append(r, g.opts.imageUploadParams[r]);
                     a.append(g.opts.imageUploadParam, i, i.name);
                     var n = g.opts.imageUploadURL;
-                    g.opts.imageUploadToS3 && (n = g.opts.imageUploadToS3.uploadURL ? g.opts.imageUploadToS3.uploadURL : "https://" + g.opts.imageUploadToS3.region + ".amazonaws.com/" + g.opts.imageUploadToS3.bucket), 
+                    g.opts.imageUploadToS3 && (n = g.opts.imageUploadToS3.uploadURL ? g.opts.imageUploadToS3.uploadURL : "https://" + g.opts.imageUploadToS3.region + ".amazonaws.com/" + g.opts.imageUploadToS3.bucket),
                     function(t, a, e, r) {
                         function n() {
                             var e = ye(this);
-                            e.off("load"), e.addClass("fr-uploading"), e.next().is("br") && e.next().remove(), 
+                            e.off("load"), e.addClass("fr-uploading"), e.next().is("br") && e.next().remove(),
                             g.placeholder.refresh(), N(e), C(), $(), g.edit.off(), t.onload = function() {
                                 P.call(t, e);
                             }, t.onerror = T, t.upload.onprogress = L, t.onabort = z, e.off("abortUpload").on("abortUpload", function() {
-                                4 != t.readyState && (t.abort(), r ? (r.attr("src", r.data("fr-old-src")), r.removeClass("fr-uploading")) : e.remove(), 
+                                4 != t.readyState && (t.abort(), r ? (r.attr("src", r.data("fr-old-src")), r.removeClass("fr-uploading")) : e.remove(),
                                 oe(!0));
                             }), t.send(a);
                         }
@@ -17840,7 +17904,7 @@
                                     type: "image/jpeg"
                                 }));
                             }
-                            r ? (r.on("load", n), r.one("error", n), g.edit.on(), g.undo.saveStep(), r.data("fr-old-src", r.attr("src")), 
+                            r ? (r.on("load", n), r.one("error", n), g.edit.on(), g.undo.saveStep(), r.data("fr-old-src", r.attr("src")),
                             r.attr("src", e)) : M(e, null, n);
                         }, s.readAsDataURL(e);
                     }(g.core.getXHR(n, g.opts.imageUploadMethod), a, i, t || d);
@@ -17857,19 +17921,19 @@
                 var a = t.files[0];
                 if (a && a.type && -1 !== a.type.indexOf("image") && 0 <= g.opts.imageAllowedTypes.indexOf(a.type.replace(/image\//g, ""))) {
                     if (!g.opts.imageUpload) return e.preventDefault(), e.stopPropagation(), !1;
-                    g.markers.remove(), g.markers.insertAtPoint(e.originalEvent), g.$el.find(".fr-marker").replaceWith(ye.FE.MARKERS), 
+                    g.markers.remove(), g.markers.insertAtPoint(e.originalEvent), g.$el.find(".fr-marker").replaceWith(ye.FE.MARKERS),
                     0 === g.$el.find(".fr-marker").length && g.selection.setAtEnd(g.el), g.popups.hideAll();
                     var i = g.popups.get("image.insert");
                     i || (i = H()), g.popups.setContainer("image.insert", g.$sc);
                     var r = e.originalEvent.pageX, n = e.originalEvent.pageY;
-                    return g.opts.iframe && (n += g.$iframe.offset().top, r += g.$iframe.offset().left), 
-                    g.popups.show("image.insert", r, n), $(), 0 <= g.opts.imageAllowedTypes.indexOf(a.type.replace(/image\//g, "")) ? (oe(!0), 
+                    return g.opts.iframe && (n += g.$iframe.offset().top, r += g.$iframe.offset().left),
+                    g.popups.show("image.insert", r, n), $(), 0 <= g.opts.imageAllowedTypes.indexOf(a.type.replace(/image\//g, "")) ? (oe(!0),
                     _(t.files)) : D(b), e.preventDefault(), e.stopPropagation(), !1;
                 }
             }
         }
         function H(e) {
-            if (e) return g.popups.onRefresh("image.insert", y), g.popups.onHide("image.insert", w), 
+            if (e) return g.popups.onRefresh("image.insert", y), g.popups.onHide("image.insert", w),
             !0;
             var t, a, i = "";
             g.opts.imageUpload || -1 === g.opts.imageInsertButtons.indexOf("imageUpload") || g.opts.imageInsertButtons.splice(g.opts.imageInsertButtons.indexOf("imageUpload"), 1);
@@ -17885,7 +17949,7 @@
                 by_url_layer: l,
                 progress_bar: '<div class="fr-image-progress-bar-layer fr-layer"><h3 tabIndex="-1" class="fr-message">Uploading</h3><div class="fr-loader"><span class="fr-progress"></span></div><div class="fr-action-buttons"><button type="button" class="fr-command fr-dismiss" data-cmd="imageDismissError" tabIndex="2" role="button">OK</button></div></div>'
             };
-            return 1 <= g.opts.imageInsertButtons.length && (a = g.popups.create("image.insert", p)), 
+            return 1 <= g.opts.imageInsertButtons.length && (a = g.popups.create("image.insert", p)),
             g.$wp && g.events.$on(g.$wp, "scroll", function() {
                 d && g.popups.isVisible("image.insert") && ue();
             }), f = a, g.events.$on(f, "dragover dragenter", ".fr-image-upload-layer", function() {
@@ -17934,9 +17998,9 @@
             var e = g.popups.get("image.size");
             if (d) if (be()) {
                 var t = d.parent();
-                t.get(0).style.width || (t = d.parent().parent()), e.find('input[name="width"]').val(t.get(0).style.width).trigger("change"), 
+                t.get(0).style.width || (t = d.parent().parent()), e.find('input[name="width"]').val(t.get(0).style.width).trigger("change"),
                 e.find('input[name="height"]').val(t.get(0).style.height).trigger("change");
-            } else e.find('input[name="width"]').val(d.get(0).style.width).trigger("change"), 
+            } else e.find('input[name="width"]').val(d.get(0).style.width).trigger("change"),
             e.find('input[name="height"]').val(d.get(0).style.height).trigger("change");
         }
         function V() {
@@ -17958,36 +18022,36 @@
             }), a;
         }
         function Q(e, t, a, i) {
-            return e.pageX = t, R.call(this, e), e.pageX = e.pageX + a * Math.floor(Math.pow(1.1, i)), 
+            return e.pageX = t, R.call(this, e), e.pageX = e.pageX + a * Math.floor(Math.pow(1.1, i)),
             S.call(this, e), x.call(this, e), ++i;
         }
         function J(e) {
-            (e = e || ve()) && !1 !== g.events.trigger("image.beforeRemove", [ e ]) && (g.popups.hideAll(), 
-            me(), oe(!0), g.undo.canDo() || g.undo.saveStep(), e.get(0) == g.el ? e.removeAttr("src") : (e.get(0).parentNode && "A" == e.get(0).parentNode.tagName ? (g.selection.setBefore(e.get(0).parentNode) || g.selection.setAfter(e.get(0).parentNode) || e.parent().after(ye.FE.MARKERS), 
-            ye(e.get(0).parentNode).remove()) : (g.selection.setBefore(e.get(0)) || g.selection.setAfter(e.get(0)) || e.after(ye.FE.MARKERS), 
+            (e = e || ve()) && !1 !== g.events.trigger("image.beforeRemove", [ e ]) && (g.popups.hideAll(),
+            me(), oe(!0), g.undo.canDo() || g.undo.saveStep(), e.get(0) == g.el ? e.removeAttr("src") : (e.get(0).parentNode && "A" == e.get(0).parentNode.tagName ? (g.selection.setBefore(e.get(0).parentNode) || g.selection.setAfter(e.get(0).parentNode) || e.parent().after(ye.FE.MARKERS),
+            ye(e.get(0).parentNode).remove()) : (g.selection.setBefore(e.get(0)) || g.selection.setAfter(e.get(0)) || e.after(ye.FE.MARKERS),
             e.remove()), g.html.fillEmptyBlocks(), g.selection.restore()), g.undo.saveStep());
         }
         function Z(e) {
             var t = e.which;
-            if (d && (t == ye.FE.KEYCODE.BACKSPACE || t == ye.FE.KEYCODE.DELETE)) return e.preventDefault(), 
+            if (d && (t == ye.FE.KEYCODE.BACKSPACE || t == ye.FE.KEYCODE.DELETE)) return e.preventDefault(),
             e.stopPropagation(), J(), !1;
             if (d && t == ye.FE.KEYCODE.ESC) {
                 var a = d;
-                return oe(!0), g.selection.setAfter(a.get(0)), g.selection.restore(), e.preventDefault(), 
+                return oe(!0), g.selection.setAfter(a.get(0)), g.selection.restore(), e.preventDefault(),
                 !1;
             }
             if (d && (t == ye.FE.KEYCODE.ARROW_LEFT || t == ye.FE.KEYCODE.ARROW_RIGHT)) {
                 var i = d.get(0);
-                return oe(!0), t == ye.FE.KEYCODE.ARROW_LEFT ? g.selection.setBefore(i) : g.selection.setAfter(i), 
+                return oe(!0), t == ye.FE.KEYCODE.ARROW_LEFT ? g.selection.setBefore(i) : g.selection.setAfter(i),
                 g.selection.restore(), e.preventDefault(), !1;
             }
-            return d && t === ye.FE.KEYCODE.TAB ? (e.preventDefault(), e.stopPropagation(), 
-            oe(!0), !1) : d && t != ye.FE.KEYCODE.F10 && !g.keys.isBrowserAction(e) ? (e.preventDefault(), 
+            return d && t === ye.FE.KEYCODE.TAB ? (e.preventDefault(), e.stopPropagation(),
+            oe(!0), !1) : d && t != ye.FE.KEYCODE.F10 && !g.keys.isBrowserAction(e) ? (e.preventDefault(),
             e.stopPropagation(), !1) : void 0;
         }
         function ee(e) {
             if (e && "IMG" == e.tagName) {
-                if (g.node.hasClass(e, "fr-uploading") || g.node.hasClass(e, "fr-error") ? e.parentNode.removeChild(e) : g.node.hasClass(e, "fr-draggable") && e.classList.remove("fr-draggable"), 
+                if (g.node.hasClass(e, "fr-uploading") || g.node.hasClass(e, "fr-error") ? e.parentNode.removeChild(e) : g.node.hasClass(e, "fr-draggable") && e.classList.remove("fr-draggable"),
                 e.parentNode && e.parentNode.parentNode && g.node.hasClass(e.parentNode.parentNode, "fr-img-caption")) {
                     var t = e.parentNode.parentNode;
                     t.removeAttribute("contenteditable"), t.removeAttribute("draggable"), t.classList.remove("fr-draggable");
@@ -18010,26 +18074,26 @@
             g.opts.imagePaste ? g.$el.find("img[data-fr-image-pasted]").each(function(e, i) {
                 if (g.opts.imagePasteProcess) {
                     var t = g.opts.imageDefaultWidth;
-                    t && "auto" != t && (t += g.opts.imageResizeWithPercent ? "%" : "px"), ye(i).css("width", t).removeClass("fr-dii fr-dib fr-fir fr-fil"), 
+                    t && "auto" != t && (t += g.opts.imageResizeWithPercent ? "%" : "px"), ye(i).css("width", t).removeClass("fr-dii fr-dib fr-fir fr-fil"),
                     ge(ye(i), g.opts.imageDefaultDisplay, g.opts.imageDefaultAlign);
                 }
                 if (0 === i.src.indexOf("data:")) te(i); else if (0 === i.src.indexOf("blob:") || 0 === i.src.indexOf("http") && g.opts.imageUploadRemoteUrls && g.opts.imageCORSProxy) {
                     var a = new Image();
                     a.crossOrigin = "Anonymous", a.onload = function() {
                         var e, t = g.o_doc.createElement("CANVAS"), a = t.getContext("2d");
-                        t.height = this.naturalHeight, t.width = this.naturalWidth, a.drawImage(this, 0, 0), 
+                        t.height = this.naturalHeight, t.width = this.naturalWidth, a.drawImage(this, 0, 0),
                         setTimeout(function() {
                             te(i);
-                        }, 0), e = 2e3 < this.naturalWidth || 1500 < this.naturalHeight ? "jpeg" : "png", 
+                        }, 0), e = 2e3 < this.naturalWidth || 1500 < this.naturalHeight ? "jpeg" : "png",
                         i.src = t.toDataURL("image/" + e);
                     }, a.src = (0 === i.src.indexOf("blob:") ? "" : g.opts.imageCORSProxy + "/") + i.src;
-                } else 0 !== i.src.indexOf("http") || 0 === i.src.indexOf("https://mail.google.com/mail") ? (g.selection.save(), 
+                } else 0 !== i.src.indexOf("http") || 0 === i.src.indexOf("https://mail.google.com/mail") ? (g.selection.save(),
                 ye(i).remove(), g.selection.restore()) : ye(i).removeAttr("data-fr-image-pasted");
             }) : g.$el.find("img[data-fr-image-pasted]").remove();
         }
         function ie(e) {
             var t = e.target.result, a = g.opts.imageDefaultWidth;
-            a && "auto" != a && (a += g.opts.imageResizeWithPercent ? "%" : "px"), g.undo.saveStep(), 
+            a && "auto" != a && (a += g.opts.imageResizeWithPercent ? "%" : "px"), g.undo.saveStep(),
             g.html.insert('<img data-fr-image-pasted="true" src="' + t + '"' + (a ? ' style="width: ' + a + ';"' : "") + ">");
             var i = g.$el.find('img[data-fr-image-pasted="true"]');
             i && ge(i, g.opts.imageDefaultDisplay, g.opts.imageDefaultAlign), g.events.trigger("paste.after");
@@ -18050,19 +18114,19 @@
             if (e && "touchend" == e.type && a) return !0;
             if (e && g.edit.isDisabled()) return e.stopPropagation(), e.preventDefault(), !1;
             for (var t = 0; t < ye.FE.INSTANCES.length; t++) ye.FE.INSTANCES[t] != g && ye.FE.INSTANCES[t].events.trigger("image.hideResizer");
-            g.toolbar.disable(), e && (e.stopPropagation(), e.preventDefault()), g.helpers.isMobile() && (g.events.disableBlur(), 
-            g.$el.blur(), g.events.enableBlur()), g.opts.iframe && g.size.syncIframe(), d = ye(this), 
-            me(), C(), n(), g.browser.msie ? (g.popups.areVisible() && g.events.disableBlur(), 
-            g.win.getSelection && (g.win.getSelection().removeAllRanges(), g.win.getSelection().addRange(g.doc.createRange()))) : g.selection.clear(), 
-            g.helpers.isIOS() && (g.events.disableBlur(), g.$el.blur()), g.button.bulkRefresh(), 
+            g.toolbar.disable(), e && (e.stopPropagation(), e.preventDefault()), g.helpers.isMobile() && (g.events.disableBlur(),
+            g.$el.blur(), g.events.enableBlur()), g.opts.iframe && g.size.syncIframe(), d = ye(this),
+            me(), C(), n(), g.browser.msie ? (g.popups.areVisible() && g.events.disableBlur(),
+            g.win.getSelection && (g.win.getSelection().removeAllRanges(), g.win.getSelection().addRange(g.doc.createRange()))) : g.selection.clear(),
+            g.helpers.isIOS() && (g.events.disableBlur(), g.$el.blur()), g.button.bulkRefresh(),
             g.events.trigger("video.hideResizer");
         }
         function oe(e) {
-            d && (le || !0 === e) && (g.toolbar.enable(), l.removeClass("fr-active"), g.popups.hide("image.edit"), 
+            d && (le || !0 === e) && (g.toolbar.enable(), l.removeClass("fr-active"), g.popups.hide("image.edit"),
             d = null, pe(), f = null, p && p.hide());
         }
-        r[i] = "Image cannot be loaded from the passed link.", r[u] = "No link in upload response.", 
-        r[m] = "Error during file upload.", r[h] = "Parsing response failed.", r[v] = "File is too large.", 
+        r[i] = "Image cannot be loaded from the passed link.", r[u] = "No link in upload response.",
+        r[m] = "Error during file upload.", r[h] = "Parsing response failed.", r[v] = "File is too large.",
         r[b] = "Image file type is invalid.", r[7] = "Files can be uploaded only to same domain in IE 8 and IE 9.";
         var le = !(r[8] = "Image file is corrupted.");
         function fe() {
@@ -18072,7 +18136,7 @@
             le = !1;
         }
         function ge(e, t, a) {
-            !g.opts.htmlUntouched && g.opts.useClasses ? (e.removeClass("fr-fil fr-fir fr-dib fr-dii"), 
+            !g.opts.htmlUntouched && g.opts.useClasses ? (e.removeClass("fr-fil fr-fir fr-dib fr-dii"),
             a && e.addClass("fr-fi" + a[0]), t && e.addClass("fr-di" + t[0])) : "inline" == t ? (e.css({
                 display: "inline-block",
                 verticalAlign: "bottom",
@@ -18126,13 +18190,13 @@
         function ce(e) {
             void 0 === e && (e = ve());
             var t = e.css("float");
-            return e.css("float", "none"), "block" == e.css("display") ? (e.css("float", ""), 
-            e.css("float") != t && e.css("float", t), "block") : (e.css("float", ""), e.css("float") != t && e.css("float", t), 
+            return e.css("float", "none"), "block" == e.css("display") ? (e.css("float", ""),
+            e.css("float") != t && e.css("float", t), "block") : (e.css("float", ""), e.css("float") != t && e.css("float", t),
             "inline");
         }
         function ue() {
             var e = g.popups.get("image.insert");
-            e || (e = H()), g.popups.isVisible("image.insert") || (I(), g.popups.refresh("image.insert"), 
+            e || (e = H()), g.popups.isVisible("image.insert") || (I(), g.popups.refresh("image.insert"),
             g.popups.setContainer("image.insert", g.$sc));
             var t = ve();
             be() && (t = t.find(".fr-img-wrap"));
@@ -18143,7 +18207,7 @@
             if (d) {
                 g.events.disableBlur(), g.selection.clear();
                 var e = g.doc.createRange();
-                e.selectNode(d.get(0)), g.browser.msie && e.collapse(!0), g.selection.get().addRange(e), 
+                e.selectNode(d.get(0)), g.browser.msie && e.collapse(!0), g.selection.get().addRange(e),
                 g.events.enableBlur();
             }
         }
@@ -18161,8 +18225,8 @@
                 var i;
                 g.events.$on(g.$el, g._mousedown, "IMG" == g.el.tagName ? null : 'img:not([contenteditable="false"])', function(e) {
                     if ("false" == ye(this).parents("[contenteditable]:not(.fr-element):not(.fr-img-caption):not(body):first").attr("contenteditable")) return !0;
-                    g.helpers.isMobile() || g.selection.clear(), t = !0, g.popups.areVisible() && g.events.disableBlur(), 
-                    g.browser.msie && (g.events.disableBlur(), g.$el.attr("contenteditable", !1)), g.draggable || "touchstart" == e.type || e.preventDefault(), 
+                    g.helpers.isMobile() || g.selection.clear(), t = !0, g.popups.areVisible() && g.events.disableBlur(),
+                    g.browser.msie && (g.events.disableBlur(), g.$el.attr("contenteditable", !1)), g.draggable || "touchstart" == e.type || e.preventDefault(),
                     e.stopPropagation();
                 }), g.events.$on(g.$el, g._mousedown, ".fr-img-caption .fr-inner", function(e) {
                     g.core.hasFocus() || g.events.focus(), e.stopPropagation();
@@ -18170,14 +18234,14 @@
                     g.toolbar.hide(), e.stopPropagation();
                 }), g.events.$on(g.$el, g._mouseup, "IMG" == g.el.tagName ? null : 'img:not([contenteditable="false"])', function(e) {
                     if ("false" == ye(this).parents("[contenteditable]:not(.fr-element):not(.fr-img-caption):not(body):first").attr("contenteditable")) return !0;
-                    t && (t = !1, e.stopPropagation(), g.browser.msie && (g.$el.attr("contenteditable", !0), 
+                    t && (t = !1, e.stopPropagation(), g.browser.msie && (g.$el.attr("contenteditable", !0),
                     g.events.enableBlur()));
                 }), g.events.on("keyup", function(e) {
                     if (e.shiftKey && "" === g.selection.text().replace(/\n/g, "") && g.keys.isArrow(e.which)) {
                         var t = g.selection.element(), a = g.selection.endElement();
                         t && "IMG" == t.tagName ? N(ye(t)) : a && "IMG" == a.tagName && N(ye(a));
                     }
-                }, !0), g.events.on("drop", K), g.events.on("element.beforeDrop", W), g.events.on("mousedown window.mousedown", fe), 
+                }, !0), g.events.on("drop", K), g.events.on("element.beforeDrop", W), g.events.on("mousedown window.mousedown", fe),
                 g.events.on("window.touchmove", pe), g.events.on("mouseup window.mouseup", function() {
                     if (d) return oe(), !1;
                     pe();
@@ -18195,7 +18259,7 @@
                     var t = e.get(0);
                     for (t.nextSibling && "BR" === t.nextSibling.tagName && (t = t.nextSibling); t && !g.node.isElement(t); ) t = g.node.isLastSibling(t) ? t.parentNode : null;
                     g.node.isElement(t) && (g.opts.enter === ye.FE.ENTER_BR ? e.after("<br>") : ye(g.node.blockParent(e.get(0))).after("<" + g.html.defaultTag() + "><br></" + g.html.defaultTag() + ">"));
-                }), "IMG" == g.el.tagName && g.$el.addClass("fr-view"), g.events.$on(g.$el, g.helpers.isMobile() && !g.helpers.isWindowsPhone() ? "touchend" : "click", "IMG" == g.el.tagName ? null : 'img:not([contenteditable="false"])', se), 
+                }), "IMG" == g.el.tagName && g.$el.addClass("fr-view"), g.events.$on(g.$el, g.helpers.isMobile() && !g.helpers.isWindowsPhone() ? "touchend" : "click", "IMG" == g.el.tagName ? null : 'img:not([contenteditable="false"])', se),
                 g.helpers.isMobile() && (g.events.$on(g.$el, "touchstart", "IMG" == g.el.tagName ? null : 'img:not([contenteditable="false"])', function() {
                     a = !1;
                 }), g.events.$on(g.$el, "touchmove", function() {
@@ -18204,9 +18268,9 @@
                     if (d && e.which == ye.FE.KEYCODE.ENTER) return !1;
                 }, !0), g.events.$on(g.$el, "keydown", function() {
                     var e = g.selection.element();
-                    (e.nodeType === Node.TEXT_NODE || "BR" == e.tagName && g.node.isLastSibling(e)) && (e = e.parentNode), 
-                    g.node.hasClass(e, "fr-inner") || (g.node.hasClass(e, "fr-img-caption") || (e = ye(e).parents(".fr-img-caption").get(0)), 
-                    g.node.hasClass(e, "fr-img-caption") && (ye(e).after(ye.FE.INVISIBLE_SPACE + ye.FE.MARKERS), 
+                    (e.nodeType === Node.TEXT_NODE || "BR" == e.tagName && g.node.isLastSibling(e)) && (e = e.parentNode),
+                    g.node.hasClass(e, "fr-inner") || (g.node.hasClass(e, "fr-img-caption") || (e = ye(e).parents(".fr-img-caption").get(0)),
+                    g.node.hasClass(e, "fr-img-caption") && (ye(e).after(ye.FE.INVISIBLE_SPACE + ye.FE.MARKERS),
                     g.selection.restore()));
                 })) : g.events.$on(g.$win, "keydown", Z), g.events.on("toolbar.esc", function() {
                     if (d) {
@@ -18221,8 +18285,8 @@
                 }, !0), g.events.on("window.cut window.copy", function(e) {
                     if (d && g.popups.isVisible("image.edit") && !g.popups.get("image.edit").find(":focus").length) {
                         var t = ve();
-                        be() ? (t.before(ye.FE.START_MARKER), t.after(ye.FE.END_MARKER), g.selection.restore(), 
-                        g.paste.saveCopiedText(t.get(0).outerHTML, t.text())) : (me(), g.paste.saveCopiedText(d.get(0).outerHTML, d.attr("alt"))), 
+                        be() ? (t.before(ye.FE.START_MARKER), t.after(ye.FE.END_MARKER), g.selection.restore(),
+                        g.paste.saveCopiedText(t.get(0).outerHTML, t.text())) : (me(), g.paste.saveCopiedText(d.get(0).outerHTML, d.attr("alt"))),
                         "copy" == e.type ? setTimeout(function() {
                             N(d);
                         }) : (oe(!0), g.undo.saveStep(), setTimeout(function() {
@@ -18241,7 +18305,7 @@
                     d && d.hasClass("fr-uploading") && t == ye.FE.KEYCODE.ESC && d.trigger("abortUpload");
                 }), g.events.on("destroy", function() {
                     d && d.hasClass("fr-uploading") && d.trigger("abortUpload");
-                }), g.events.on("paste.before", re), g.events.on("paste.beforeCleanup", ne), g.events.on("paste.after", ae), 
+                }), g.events.on("paste.before", re), g.events.on("paste.beforeCleanup", ne), g.events.on("paste.after", ae),
                 g.events.on("html.set", e), g.events.on("html.inserted", e), e(), g.events.on("destroy", function() {
                     o = [];
                 }), g.events.on("html.processGet", ee), g.opts.imageOutputSize && g.events.on("html.beforeGet", function() {
@@ -18250,7 +18314,7 @@
                         var t = i[e].style.width || ye(i[e]).width(), a = i[e].style.height || ye(i[e]).height();
                         t && i[e].setAttribute("width", ("" + t).replace(/px/, "")), a && i[e].setAttribute("height", ("" + a).replace(/px/, ""));
                     }
-                }), g.opts.iframe && g.events.on("image.loaded", g.size.syncIframe), g.$wp && (E(), 
+                }), g.opts.iframe && g.events.on("image.loaded", g.size.syncIframe), g.$wp && (E(),
                 g.events.on("contentChanged", E)), g.events.$on(ye(g.o_win), "orientationchange.image", function() {
                     setTimeout(function() {
                         d && N(d);
@@ -18261,7 +18325,7 @@
             },
             showInsertPopup: function() {
                 var e = g.$tb.find('.fr-command[data-cmd="insertImage"]'), t = g.popups.get("image.insert");
-                if (t || (t = H()), I(), !t.hasClass("fr-active")) if (g.popups.refresh("image.insert"), 
+                if (t || (t = H()), I(), !t.hasClass("fr-active")) if (g.popups.refresh("image.insert"),
                 g.popups.setContainer("image.insert", g.$tb), e.is(":visible")) {
                     var a = e.offset().left + e.outerWidth() / 2, i = e.offset().top + (g.opts.toolbarBottom ? 10 : e.outerHeight() - 10);
                     g.popups.show("image.insert", a, i, e.outerHeight());
@@ -18278,9 +18342,9 @@
                     var n = g.$tb.find('.fr-command[data-cmd="insertImage"]');
                     t = n.offset().left + n.outerWidth() / 2, a = n.offset().top + (g.opts.toolbarBottom ? 10 : n.outerHeight() - 10);
                 }
-                !d && g.opts.toolbarInline && (a = i.offset().top - g.helpers.getPX(i.css("margin-top")), 
-                i.hasClass("fr-above") && (a += i.outerHeight())), i.find(".fr-layer").removeClass("fr-active"), 
-                i.find(".fr-" + e + "-layer").addClass("fr-active"), g.popups.show("image.insert", t, a, d ? d.outerHeight() : 0), 
+                !d && g.opts.toolbarInline && (a = i.offset().top - g.helpers.getPX(i.css("margin-top")),
+                i.hasClass("fr-above") && (a += i.outerHeight())), i.find(".fr-layer").removeClass("fr-active"),
+                i.find(".fr-" + e + "-layer").addClass("fr-active"), g.popups.show("image.insert", t, a, d ? d.outerHeight() : 0),
                 g.accessibility.focusPopup(i);
             },
             refreshUploadButton: function(e) {
@@ -18303,7 +18367,7 @@
                             }) ], d) : D(i);
                         }, a.onerror = function() {
                             O(t, !0, [], d);
-                        }, a.open("GET", g.opts.imageCORSProxy + "/" + t, !0), a.responseType = "blob", 
+                        }, a.open("GET", g.opts.imageCORSProxy + "/" + t, !0), a.responseType = "blob",
                         a.send();
                     } else O(t, !0, [], d);
                     e.val(""), e.blur();
@@ -18311,7 +18375,7 @@
             },
             align: function(e) {
                 var t = ve();
-                t.removeClass("fr-fir fr-fil"), !g.opts.htmlUntouched && g.opts.useClasses ? "left" == e ? t.addClass("fr-fil") : "right" == e && t.addClass("fr-fir") : ge(t, ce(), e), 
+                t.removeClass("fr-fir fr-fil"), !g.opts.htmlUntouched && g.opts.useClasses ? "left" == e ? t.addClass("fr-fil") : "right" == e && t.addClass("fr-fir") : ge(t, ce(), e),
                 me(), C(), n(), g.selection.clear();
             },
             refreshAlign: function(e) {
@@ -18322,7 +18386,7 @@
             },
             display: function(e) {
                 var t = ve();
-                t.removeClass("fr-dii fr-dib"), !g.opts.htmlUntouched && g.opts.useClasses ? "inline" == e ? t.addClass("fr-dii") : "block" == e && t.addClass("fr-dib") : ge(t, e, de()), 
+                t.removeClass("fr-dii fr-dib"), !g.opts.htmlUntouched && g.opts.useClasses ? "inline" == e ? t.addClass("fr-dii") : "block" == e && t.addClass("fr-dib") : ge(t, e, de()),
                 me(), C(), n(), g.selection.clear();
             },
             refreshDisplayOnShow: function(e, t) {
@@ -18330,7 +18394,7 @@
             },
             replace: ue,
             back: function() {
-                d ? (g.events.disableBlur(), ye(".fr-popup input:focus").blur(), N(d)) : (g.events.disableBlur(), 
+                d ? (g.events.disableBlur(), ye(".fr-popup input:focus").blur(), N(d)) : (g.events.disableBlur(),
                 g.selection.restore(), g.events.enableBlur(), g.popups.hide("image.insert"), g.toolbar.showInline());
             },
             get: he,
@@ -18340,14 +18404,14 @@
             remove: J,
             hideProgressBar: I,
             applyStyle: function(e, t, a) {
-                if (void 0 === t && (t = g.opts.imageStyles), void 0 === a && (a = g.opts.imageMultipleStyles), 
+                if (void 0 === t && (t = g.opts.imageStyles), void 0 === a && (a = g.opts.imageMultipleStyles),
                 !d) return !1;
                 var i = ve();
                 if (!a) {
                     var r = Object.keys(t);
                     r.splice(r.indexOf(e), 1), i.removeClass(r.join(" "));
                 }
-                "object" == typeof t[e] ? (i.removeAttr("style"), i.css(t[e].style)) : i.toggleClass(e), 
+                "object" == typeof t[e] ? (i.removeAttr("style"), i.css(t[e].style)) : i.toggleClass(e),
                 N(d);
             },
             showAltPopup: X,
@@ -18363,10 +18427,10 @@
                     var a = g.popups.get("image.size");
                     e = e || a.find('input[name="width"]').val() || "", t = t || a.find('input[name="height"]').val() || "";
                     var i = /^[\d]+((px)|%)*$/g;
-                    d.removeAttr("width").removeAttr("height"), e.match(i) ? d.css("width", e) : d.css("width", ""), 
-                    t.match(i) ? d.css("height", t) : d.css("height", ""), be() && (d.parents(".fr-img-caption").removeAttr("width").removeAttr("height"), 
-                    e.match(i) ? d.parents(".fr-img-caption").css("width", e) : d.parents(".fr-img-caption").css("width", ""), 
-                    t.match(i) ? d.parents(".fr-img-caption").css("height", t) : d.parents(".fr-img-caption").css("height", "")), 
+                    d.removeAttr("width").removeAttr("height"), e.match(i) ? d.css("width", e) : d.css("width", ""),
+                    t.match(i) ? d.css("height", t) : d.css("height", ""), be() && (d.parents(".fr-img-caption").removeAttr("width").removeAttr("height"),
+                    e.match(i) ? d.parents(".fr-img-caption").css("width", e) : d.parents(".fr-img-caption").css("width", ""),
+                    t.match(i) ? d.parents(".fr-img-caption").css("height", t) : d.parents(".fr-img-caption").css("height", "")),
                     a && a.find("input:focus").blur(), N(d);
                 }
             },
@@ -18376,11 +18440,11 @@
                     var t, a;
                     (e = d).parent().is("a") && (e = d.parent()), e.attr("style") && (a = -1 < (t = e.attr("style").split(":")).indexOf("width") ? t[t.indexOf("width") + 1].replace(";", "") : "");
                     var i = g.opts.imageResizeWithPercent ? (-1 < a.indexOf("px") ? null : a) || "100%" : d.width() + "px";
-                    e.wrap("<span " + (g.browser.mozilla ? "" : 'contenteditable="false"') + 'class="fr-img-caption ' + d.attr("class") + '" style="' + (g.opts.useClasses ? "" : e.attr("style")) + '" draggable="false"></span>'), 
-                    e.wrap('<span class="fr-img-wrap"></span>'), d.after('<span class="fr-inner"' + (g.browser.mozilla ? "" : ' contenteditable="true"') + ">" + ye.FE.START_MARKER + g.language.translate("Image Caption") + ye.FE.END_MARKER + "</span>"), 
-                    d.removeAttr("class").removeAttr("style").removeAttr("width"), d.parents(".fr-img-caption").css("width", i), 
+                    e.wrap("<span " + (g.browser.mozilla ? "" : 'contenteditable="false"') + 'class="fr-img-caption ' + d.attr("class") + '" style="' + (g.opts.useClasses ? "" : e.attr("style")) + '" draggable="false"></span>'),
+                    e.wrap('<span class="fr-img-wrap"></span>'), d.after('<span class="fr-inner"' + (g.browser.mozilla ? "" : ' contenteditable="true"') + ">" + ye.FE.START_MARKER + g.language.translate("Image Caption") + ye.FE.END_MARKER + "</span>"),
+                    d.removeAttr("class").removeAttr("style").removeAttr("width"), d.parents(".fr-img-caption").css("width", i),
                     oe(!0), g.selection.restore();
-                } else e = ve(), d.insertAfter(e), d.attr("class", e.attr("class").replace("fr-img-caption", "")).attr("style", e.attr("style")), 
+                } else e = ve(), d.insertAfter(e), d.attr("class", e.attr("class").replace("fr-img-caption", "")).attr("style", e.attr("style")),
                 e.remove(), N(d);
             },
             hasCaption: be,
@@ -18396,7 +18460,7 @@
         refreshAfterCallback: !1,
         popup: !0,
         callback: function() {
-            this.popups.isVisible("image.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(), 
+            this.popups.isVisible("image.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(),
             this.selection.restore()), this.popups.hide("image.insert")) : this.image.showInsertPopup();
         },
         plugin: "image"
@@ -18516,7 +18580,7 @@
             this.image.back();
         },
         refresh: function(e) {
-            this.image.get() || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"), 
+            this.image.get() || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"),
             e.next(".fr-separator").addClass("fr-hidden"));
         }
     }), ye.FE.RegisterCommand("imageDismissError", {
@@ -18603,7 +18667,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(v) {
@@ -18615,17 +18679,17 @@
         var g, t, a;
         function s(e, t) {
             var n, r, a, o, i, s, f, l;
-            if (null == e) i = (o = t.parent()).offset().top, n = (f = t.offset().top) - Math.min((f - i) / 2, d.opts.lineBreakerOffset), 
-            a = o.outerWidth(), r = o.offset().left; else if (null == t) (s = (o = e.parent()).offset().top + o.outerHeight()) < (l = e.offset().top + e.outerHeight()) && (s = (o = v(o).parent()).offset().top + o.outerHeight()), 
-            n = l + Math.min(Math.abs(s - l) / 2, d.opts.lineBreakerOffset), a = o.outerWidth(), 
+            if (null == e) i = (o = t.parent()).offset().top, n = (f = t.offset().top) - Math.min((f - i) / 2, d.opts.lineBreakerOffset),
+            a = o.outerWidth(), r = o.offset().left; else if (null == t) (s = (o = e.parent()).offset().top + o.outerHeight()) < (l = e.offset().top + e.outerHeight()) && (s = (o = v(o).parent()).offset().top + o.outerHeight()),
+            n = l + Math.min(Math.abs(s - l) / 2, d.opts.lineBreakerOffset), a = o.outerWidth(),
             r = o.offset().left; else {
                 o = e.parent();
                 var p = e.offset().top + e.height(), u = t.offset().top;
                 if (u < p) return !1;
                 n = (p + u) / 2, a = o.outerWidth(), r = o.offset().left;
             }
-            d.opts.iframe && (r += d.$iframe.offset().left - d.helpers.scrollLeft(), n += d.$iframe.offset().top - d.helpers.scrollTop()), 
-            d.$box.append(g), g.css("top", n - d.win.pageYOffset), g.css("left", r - d.win.pageXOffset), 
+            d.opts.iframe && (r += d.$iframe.offset().left - d.helpers.scrollLeft(), n += d.$iframe.offset().top - d.helpers.scrollTop()),
+            d.$box.append(g), g.css("top", n - d.win.pageYOffset), g.css("left", r - d.win.pageXOffset),
             g.css("width", a), g.data("tag1", e), g.data("tag2", t), g.addClass("fr-visible").data("instance", d);
         }
         function f(e) {
@@ -18633,7 +18697,7 @@
                 var t = v(e);
                 if (0 === d.$el.find(t).length) return null;
                 if (e.nodeType != Node.TEXT_NODE && t.is(d.opts.lineBreakerTags.join(","))) return t;
-                if (0 < t.parents(d.opts.lineBreakerTags.join(",")).length) return e = t.parents(d.opts.lineBreakerTags.join(",")).get(0), 
+                if (0 < t.parents(d.opts.lineBreakerTags.join(",")).length) return e = t.parents(d.opts.lineBreakerTags.join(",")).get(0),
                 0 !== d.$el.find(e).length && v(e).is(d.opts.lineBreakerTags.join(",")) ? v(e) : null;
             }
             return null;
@@ -18647,20 +18711,20 @@
             }(n) ? n : null;
         }
         function i(e, t, n) {
-            for (var r = n, a = null; r <= d.opts.lineBreakerOffset && !a; ) (a = o(e, t - r)) || (a = o(e, t + r)), 
+            for (var r = n, a = null; r <= d.opts.lineBreakerOffset && !a; ) (a = o(e, t - r)) || (a = o(e, t + r)),
             r += n;
             return a;
         }
         function l(e, t, n) {
-            for (var r = null, a = 100; !r && e > d.$box.offset().left && e < d.$box.offset().left + d.$box.outerWidth() && 0 < a; ) (r = o(e, t)) || (r = i(e, t, 5)), 
-            "left" == n ? e -= d.opts.lineBreakerHorizontalOffset : e += d.opts.lineBreakerHorizontalOffset, 
+            for (var r = null, a = 100; !r && e > d.$box.offset().left && e < d.$box.offset().left + d.$box.outerWidth() && 0 < a; ) (r = o(e, t)) || (r = i(e, t, 5)),
+            "left" == n ? e -= d.opts.lineBreakerHorizontalOffset : e += d.opts.lineBreakerHorizontalOffset,
             a -= d.opts.lineBreakerHorizontalOffset;
             return r;
         }
         function n(e) {
             var t = a = null, n = null, r = d.doc.elementFromPoint(e.pageX - d.win.pageXOffset, e.pageY - d.win.pageYOffset);
-            r && ("HTML" == r.tagName || "BODY" == r.tagName || d.node.isElement(r) || 0 <= (r.getAttribute("class") || "").indexOf("fr-line-breaker")) ? ((n = i(e.pageX - d.win.pageXOffset, e.pageY - d.win.pageYOffset, 1)) || (n = l(e.pageX - d.win.pageXOffset - d.opts.lineBreakerHorizontalOffset, e.pageY - d.win.pageYOffset, "left")), 
-            n || (n = l(e.pageX - d.win.pageXOffset + d.opts.lineBreakerHorizontalOffset, e.pageY - d.win.pageYOffset, "right")), 
+            r && ("HTML" == r.tagName || "BODY" == r.tagName || d.node.isElement(r) || 0 <= (r.getAttribute("class") || "").indexOf("fr-line-breaker")) ? ((n = i(e.pageX - d.win.pageXOffset, e.pageY - d.win.pageYOffset, 1)) || (n = l(e.pageX - d.win.pageXOffset - d.opts.lineBreakerHorizontalOffset, e.pageY - d.win.pageYOffset, "left")),
+            n || (n = l(e.pageX - d.win.pageXOffset + d.opts.lineBreakerHorizontalOffset, e.pageY - d.win.pageYOffset, "right")),
             t = f(n)) : t = f(r), t ? function(e, t) {
                 var n, r, a = e.offset().top, o = e.offset().top + e.outerHeight();
                 if (Math.abs(o - t) <= d.opts.lineBreakerOffset || Math.abs(t - a) <= d.opts.lineBreakerOffset) if (Math.abs(o - t) < Math.abs(t - a)) {
@@ -18675,7 +18739,7 @@
             }(t, e.pageY) : d.core.sameInstance(g) && g.removeClass("fr-visible").removeData("instance");
         }
         function e(e) {
-            return !(g.hasClass("fr-visible") && !d.core.sameInstance(g)) && (d.popups.areVisible() || d.el.querySelector(".fr-selected-cell") ? (g.removeClass("fr-visible"), 
+            return !(g.hasClass("fr-visible") && !d.core.sameInstance(g)) && (d.popups.areVisible() || d.el.querySelector(".fr-selected-cell") ? (g.removeClass("fr-visible"),
             !0) : void (!1 !== t || d.edit.isDisabled() || (a && clearTimeout(a), a = setTimeout(n, 30, e))));
         }
         function r() {
@@ -18692,21 +18756,21 @@
             var t = g.data("instance") || d;
             g.removeClass("fr-visible").removeData("instance");
             var n = g.data("tag1"), r = g.data("tag2"), a = d.html.defaultTag();
-            null == n ? a && "TD" != r.parent().get(0).tagName && 0 === r.parents(a).length ? r.before("<" + a + ">" + v.FE.MARKERS + "<br></" + a + ">") : r.before(v.FE.MARKERS + "<br>") : a && "TD" != n.parent().get(0).tagName && 0 === n.parents(a).length ? n.after("<" + a + ">" + v.FE.MARKERS + "<br></" + a + ">") : n.after(v.FE.MARKERS + "<br>"), 
+            null == n ? a && "TD" != r.parent().get(0).tagName && 0 === r.parents(a).length ? r.before("<" + a + ">" + v.FE.MARKERS + "<br></" + a + ">") : r.before(v.FE.MARKERS + "<br>") : a && "TD" != n.parent().get(0).tagName && 0 === n.parents(a).length ? n.after("<" + a + ">" + v.FE.MARKERS + "<br></" + a + ">") : n.after(v.FE.MARKERS + "<br>"),
             t.selection.restore();
         }
         return {
             _init: function() {
                 if (!d.$wp) return !1;
-                d.shared.$line_breaker || (d.shared.$line_breaker = v('<div class="fr-line-breaker"><a class="fr-floating-btn" role="button" tabIndex="-1" title="' + d.language.translate("Break") + '"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="21" y="11" width="2" height="8"/><rect x="14" y="17" width="7" height="2"/><path d="M14.000,14.000 L14.000,22.013 L9.000,18.031 L14.000,14.000 Z"/></svg></a></div>')), 
+                d.shared.$line_breaker || (d.shared.$line_breaker = v('<div class="fr-line-breaker"><a class="fr-floating-btn" role="button" tabIndex="-1" title="' + d.language.translate("Break") + '"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="21" y="11" width="2" height="8"/><rect x="14" y="17" width="7" height="2"/><path d="M14.000,14.000 L14.000,22.013 L9.000,18.031 L14.000,14.000 Z"/></svg></a></div>')),
                 g = d.shared.$line_breaker, d.events.on("shared.destroy", function() {
                     g.html("").removeData().remove(), g = null;
                 }, !0), d.events.on("destroy", function() {
                     g.removeData("instance").removeClass("fr-visible").appendTo("body:first"), clearTimeout(a);
                 }, !0), d.events.$on(g, "mousemove", function(e) {
                     e.stopPropagation();
-                }, !0), d.events.bindClick(g, "a", c), t = !1, d.events.$on(d.$win, "mousemove", e), 
-                d.events.$on(v(d.win), "scroll", r), d.events.on("popups.show.table.edit", r), d.events.on("commands.after", r), 
+                }, !0), d.events.bindClick(g, "a", c), t = !1, d.events.$on(d.$win, "mousemove", e),
+                d.events.$on(v(d.win), "scroll", r), d.events.on("popups.show.table.edit", r), d.events.on("commands.after", r),
                 d.events.$on(v(d.win), "mousedown", p), d.events.$on(v(d.win), "mouseup", u);
             }
         };
@@ -18715,7 +18779,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(m) {
@@ -18762,7 +18826,7 @@
                 }
                 if (t && "A" === t.tagName) return t;
                 var n = d.selection.element(), i = d.selection.endElement();
-                "A" == n.tagName || d.node.isElement(n) || (n = m(n).parentsUntil(d.$el, "a:first").get(0)), 
+                "A" == n.tagName || d.node.isElement(n) || (n = m(n).parentsUntil(d.$el, "a:first").get(0)),
                 "A" == i.tagName || d.node.isElement(i) || (i = m(i).parentsUntil(d.$el, "a:first").get(0));
                 try {
                     i && (i.contains && i.contains(d.el) || !d.el.contains(i) || d.el == i) && (i = null);
@@ -18784,7 +18848,7 @@
                 var a = d.win.getSelection();
                 if (a.getRangeAt && a.rangeCount) {
                     i = d.doc.createRange();
-                    for (var s = 0; s < a.rangeCount; ++s) if ((t = (e = a.getRangeAt(s)).commonAncestorContainer) && 1 != t.nodeType && (t = t.parentNode), 
+                    for (var s = 0; s < a.rangeCount; ++s) if ((t = (e = a.getRangeAt(s)).commonAncestorContainer) && 1 != t.nodeType && (t = t.parentNode),
                     t && "a" == t.nodeName.toLowerCase()) l.push(t); else {
                         n = t.getElementsByTagName("a");
                         for (var o = 0; o < n.length; ++o) i.selectNodeContents(n[o]), i.compareBoundaryPoints(e.END_TO_START, e) < 1 && -1 < i.compareBoundaryPoints(e.START_TO_END, e) && l.push(n[o]);
@@ -18807,7 +18871,7 @@
                                 var n = d.node.contents(e);
                                 if (1 == n.length && "IMG" == n[0].tagName) {
                                     var i = d.selection.ranges(0);
-                                    return 0 === i.startOffset && 0 === i.endOffset ? m(e).before(m.FE.MARKERS) : m(e).after(m.FE.MARKERS), 
+                                    return 0 === i.startOffset && 0 === i.endOffset ? m(e).before(m.FE.MARKERS) : m(e).after(m.FE.MARKERS),
                                     d.selection.restore(), !1;
                                 }
                             }
@@ -18821,7 +18885,7 @@
             var t = d.popups.get("link.edit");
             t || (t = function() {
                 var e = "";
-                1 <= d.opts.linkEditButtons.length && ("A" == d.el.tagName && 0 <= d.opts.linkEditButtons.indexOf("linkRemove") && d.opts.linkEditButtons.splice(d.opts.linkEditButtons.indexOf("linkRemove"), 1), 
+                1 <= d.opts.linkEditButtons.length && ("A" == d.el.tagName && 0 <= d.opts.linkEditButtons.indexOf("linkRemove") && d.opts.linkEditButtons.splice(d.opts.linkEditButtons.indexOf("linkRemove"), 1),
                 e = '<div class="fr-buttons">' + d.button.buildList(d.opts.linkEditButtons) + "</div>");
                 var t = {
                     buttons: e
@@ -18847,19 +18911,19 @@
                 for (n = 0; n < l.length; n++) (i = m(l[n])).val(r.attr(i.attr("name") || ""));
                 for (a.prop("checked", !1), n = 0; n < a.length; n++) i = m(a[n]), r.attr(i.attr("name")) == i.data("checked") && i.prop("checked", !0);
                 e.find('input.fr-link-attr[type="text"][name="text"]').val(r.text());
-            } else e.find('input.fr-link-attr[type="text"]').val(""), e.find('input.fr-link-attr[type="checkbox"]').prop("checked", !1), 
+            } else e.find('input.fr-link-attr[type="text"]').val(""), e.find('input.fr-link-attr[type="checkbox"]').prop("checked", !1),
             e.find('input.fr-link-attr[type="text"][name="text"]').val(d.selection.text());
             e.find("input.fr-link-attr").trigger("change"), (d.image ? d.image.get() : null) ? e.find('.fr-link-attr[name="text"]').parent().hide() : e.find('.fr-link-attr[name="text"]').parent().show();
         }
         function s(e) {
-            if (e) return d.popups.onRefresh("link.insert", p), d.popups.onHide("link.insert", o), 
+            if (e) return d.popups.onRefresh("link.insert", p), d.popups.onHide("link.insert", o),
             !0;
             var t = "";
             1 <= d.opts.linkInsertButtons.length && (t = '<div class="fr-buttons">' + d.button.buildList(d.opts.linkInsertButtons) + "</div>");
             var n = "", i = 0;
-            for (var r in n = '<div class="fr-link-insert-layer fr-layer fr-active" id="fr-link-insert-layer-' + d.id + '">', 
-            n += '<div class="fr-input-line"><input id="fr-link-insert-layer-url-' + d.id + '" name="href" type="text" class="fr-link-attr" placeholder="' + d.language.translate("URL") + '" tabIndex="' + ++i + '"></div>', 
-            d.opts.linkText && (n += '<div class="fr-input-line"><input id="fr-link-insert-layer-text-' + d.id + '" name="text" type="text" class="fr-link-attr" placeholder="' + d.language.translate("Text") + '" tabIndex="' + ++i + '"></div>'), 
+            for (var r in n = '<div class="fr-link-insert-layer fr-layer fr-active" id="fr-link-insert-layer-' + d.id + '">',
+            n += '<div class="fr-input-line"><input id="fr-link-insert-layer-url-' + d.id + '" name="href" type="text" class="fr-link-attr" placeholder="' + d.language.translate("URL") + '" tabIndex="' + ++i + '"></div>',
+            d.opts.linkText && (n += '<div class="fr-input-line"><input id="fr-link-insert-layer-text-' + d.id + '" name="text" type="text" class="fr-link-attr" placeholder="' + d.language.translate("Text") + '" tabIndex="' + ++i + '"></div>'),
             d.opts.linkAttributes) if (d.opts.linkAttributes.hasOwnProperty(r)) {
                 var l = d.opts.linkAttributes[r];
                 n += '<div class="fr-input-line"><input name="' + r + '" type="text" class="fr-link-attr" placeholder="' + d.language.translate(l) + '" tabIndex="' + ++i + '"></div>';
@@ -18876,15 +18940,15 @@
         function f(e, t, n) {
             if (void 0 === n && (n = {}), !1 === d.events.trigger("link.beforeInsert", [ e, t, n ])) return !1;
             var i = d.image ? d.image.get() : null;
-            i || "A" == d.el.tagName ? "A" == d.el.tagName && d.$el.focus() : (d.selection.restore(), 
+            i || "A" == d.el.tagName ? "A" == d.el.tagName && d.$el.focus() : (d.selection.restore(),
             d.popups.hide("link.insert"));
             var r = e;
             d.opts.linkConvertEmailAddress && d.helpers.isEmail(e) && !/^mailto:.*/i.test(e) && (e = "mailto:" + e);
-            if ("" === d.opts.linkAutoPrefix || new RegExp("^(" + m.FE.LinkProtocols.join("|") + "):.", "i").test(e) || /^data:image.*/i.test(e) || /^(https?:|ftps?:|file:|)\/\//i.test(e) || /^([A-Za-z]:(\\){1,2}|[A-Za-z]:((\\){1,2}[^\\]+)+)(\\)?$/i.test(e) || [ "/", "{", "[", "#", "(", "." ].indexOf((e || "")[0]) < 0 && (e = d.opts.linkAutoPrefix + d.helpers.sanitizeURL(e)), 
-            e = d.helpers.sanitizeURL(e), d.opts.linkAlwaysBlank && (n.target = "_blank"), d.opts.linkAlwaysNoFollow && (n.rel = "nofollow"), 
-            d.helpers.isEmail(r) && (n.target = null, n.rel = null), "_blank" == n.target ? (d.opts.linkNoOpener && (n.rel ? n.rel += " noopener" : n.rel = "noopener"), 
-            d.opts.linkNoReferrer && (n.rel ? n.rel += " noreferrer" : n.rel = "noreferrer")) : null == n.target && (n.rel ? n.rel = n.rel.replace(/noopener/, "").replace(/noreferrer/, "") : n.rel = null), 
-            t = t || "", e === d.opts.linkAutoPrefix) return d.popups.get("link.insert").find('input[name="href"]').addClass("fr-error"), 
+            if ("" === d.opts.linkAutoPrefix || new RegExp("^(" + m.FE.LinkProtocols.join("|") + "):.", "i").test(e) || /^data:image.*/i.test(e) || /^(https?:|ftps?:|file:|)\/\//i.test(e) || /^([A-Za-z]:(\\){1,2}|[A-Za-z]:((\\){1,2}[^\\]+)+)(\\)?$/i.test(e) || [ "/", "{", "[", "#", "(", "." ].indexOf((e || "")[0]) < 0 && (e = d.opts.linkAutoPrefix + d.helpers.sanitizeURL(e)),
+            e = d.helpers.sanitizeURL(e), d.opts.linkAlwaysBlank && (n.target = "_blank"), d.opts.linkAlwaysNoFollow && (n.rel = "nofollow"),
+            d.helpers.isEmail(r) && (n.target = null, n.rel = null), "_blank" == n.target ? (d.opts.linkNoOpener && (n.rel ? n.rel += " noopener" : n.rel = "noopener"),
+            d.opts.linkNoReferrer && (n.rel ? n.rel += " noreferrer" : n.rel = "noreferrer")) : null == n.target && (n.rel ? n.rel = n.rel.replace(/noopener/, "").replace(/noreferrer/, "") : n.rel = null),
+            t = t || "", e === d.opts.linkAutoPrefix) return d.popups.get("link.insert").find('input[name="href"]').addClass("fr-error"),
             d.events.trigger("link.bad", [ r ]), !1;
             var l, a = c();
             if (a) {
@@ -18894,10 +18958,10 @@
                 }
                 i || l.prepend(m.FE.START_MARKER).append(m.FE.END_MARKER), l.attr(n), i || d.selection.restore();
             } else {
-                i ? (i.wrap('<a href="' + e + '"></a>'), d.image.hasCaption() && i.parent().append(i.parents(".fr-img-caption").find(".fr-inner"))) : (d.format.remove("a"), 
-                d.selection.isCollapsed() ? (t = 0 === t.length ? r : t, d.html.insert('<a href="' + e + '">' + m.FE.START_MARKER + t.replace(/&/g, "&amp;").replace(/</, "&lt;", ">", "&gt;") + m.FE.END_MARKER + "</a>"), 
-                d.selection.restore()) : 0 < t.length && t != d.selection.text().replace(/\n/g, "") ? (d.selection.remove(), 
-                d.html.insert('<a href="' + e + '">' + m.FE.START_MARKER + t.replace(/&/g, "&amp;") + m.FE.END_MARKER + "</a>"), 
+                i ? (i.wrap('<a href="' + e + '"></a>'), d.image.hasCaption() && i.parent().append(i.parents(".fr-img-caption").find(".fr-inner"))) : (d.format.remove("a"),
+                d.selection.isCollapsed() ? (t = 0 === t.length ? r : t, d.html.insert('<a href="' + e + '">' + m.FE.START_MARKER + t.replace(/&/g, "&amp;").replace(/</, "&lt;", ">", "&gt;") + m.FE.END_MARKER + "</a>"),
+                d.selection.restore()) : 0 < t.length && t != d.selection.text().replace(/\n/g, "") ? (d.selection.remove(),
+                d.html.insert('<a href="' + e + '">' + m.FE.START_MARKER + t.replace(/&/g, "&amp;") + m.FE.END_MARKER + "</a>"),
                 d.selection.restore()) : (!function() {
                     if (!d.selection.isCollapsed()) {
                         d.selection.save();
@@ -18906,12 +18970,12 @@
                             t.removeClass("fr-unprocessed");
                             var n = d.node.deepestParent(t.get(0));
                             if (n) {
-                                for (var i = t.get(0), r = "", l = ""; i = i.parentNode, d.node.isBlock(i) || (r += d.node.closeTagString(i), 
+                                for (var i = t.get(0), r = "", l = ""; i = i.parentNode, d.node.isBlock(i) || (r += d.node.closeTagString(i),
                                 l = d.node.openTagString(i) + l), i != n; ) ;
                                 var a = d.node.openTagString(t.get(0)) + t.html() + d.node.closeTagString(t.get(0));
                                 t.replaceWith('<span id="fr-break"></span>');
                                 var s = n.outerHTML;
-                                s = (s = s.replace(/<span id="fr-break"><\/span>/g, r + a + l)).replace(l + r, ""), 
+                                s = (s = s.replace(/<span id="fr-break"><\/span>/g, r + a + l)).replace(l + r, ""),
                                 n.outerHTML = s;
                             }
                             e = d.$el.find(".fr-marker.fr-unprocessed").toArray();
@@ -18922,7 +18986,7 @@
                     href: e
                 })));
                 for (var o = u(), p = 0; p < o.length; p++) (l = m(o[p])).attr(n), l.removeAttr("_moz_dirty");
-                1 == o.length && d.$wp && !i && (m(o[0]).prepend(m.FE.START_MARKER).append(m.FE.END_MARKER), 
+                1 == o.length && d.$wp && !i && (m(o[0]).prepend(m.FE.START_MARKER).append(m.FE.END_MARKER),
                 d.selection.restore());
             }
             if (i) {
@@ -18935,8 +18999,8 @@
             var e = c();
             if (e) {
                 var t = d.popups.get("link.insert");
-                t || (t = s()), d.popups.isVisible("link.insert") || (d.popups.refresh("link.insert"), 
-                d.selection.save(), d.helpers.isMobile() && (d.events.disableBlur(), d.$el.blur(), 
+                t || (t = s()), d.popups.isVisible("link.insert") || (d.popups.refresh("link.insert"),
+                d.selection.save(), d.helpers.isMobile() && (d.events.disableBlur(), d.$el.blur(),
                 d.events.enableBlur())), d.popups.setContainer("link.insert", d.$sc);
                 var n = (d.image ? d.image.get() : null) || m(e), i = n.offset().left + n.outerWidth() / 2, r = n.offset().top + n.outerHeight();
                 d.popups.show("link.insert", i, r, n.outerHeight());
@@ -18957,21 +19021,21 @@
                     e.which != m.FE.KEYCODE.ESC && k(e);
                 }), d.events.on("window.mouseup", k), d.events.$on(d.$el, "click", "a", function(e) {
                     d.edit.isDisabled() && e.preventDefault();
-                }), d.helpers.isMobile() && d.events.$on(d.$doc, "selectionchange", k), s(!0), "A" == d.el.tagName && d.$el.addClass("fr-view"), 
+                }), d.helpers.isMobile() && d.events.$on(d.$doc, "selectionchange", k), s(!0), "A" == d.el.tagName && d.$el.addClass("fr-view"),
                 d.events.on("toolbar.esc", function() {
-                    if (d.popups.isVisible("link.edit")) return d.events.disableBlur(), d.events.focus(), 
+                    if (d.popups.isVisible("link.edit")) return d.events.disableBlur(), d.events.focus(),
                     !1;
                 }, !0);
             },
             remove: function() {
                 var e = c(), t = d.image ? d.image.get() : null;
                 if (!1 === d.events.trigger("link.beforeRemove", [ e ])) return !1;
-                t && e ? (t.unwrap(), d.image.edit(t)) : e && (d.selection.save(), m(e).replaceWith(m(e).html()), 
+                t && e ? (t.unwrap(), d.image.edit(t)) : e && (d.selection.save(), m(e).replaceWith(m(e).html()),
                 d.selection.restore(), a());
             },
             showInsertPopup: function() {
                 var e = d.$tb.find('.fr-command[data-cmd="insertLink"]'), t = d.popups.get("link.insert");
-                if (t || (t = s()), !t.hasClass("fr-active")) if (d.popups.refresh("link.insert"), 
+                if (t || (t = s()), !t.hasClass("fr-active")) if (d.popups.refresh("link.insert"),
                 d.popups.setContainer("link.insert", d.$tb || d.$sc), e.is(":visible")) {
                     var n = e.offset().left + e.outerWidth() / 2, i = e.offset().top + (d.opts.toolbarBottom ? 10 : e.outerHeight() - 10);
                     d.popups.show("link.insert", n, i, e.outerHeight());
@@ -18996,8 +19060,8 @@
             get: c,
             allSelected: u,
             back: function() {
-                d.image && d.image.get() ? d.image.back() : (d.events.disableBlur(), d.selection.restore(), 
-                d.events.enableBlur(), c() && d.$wp ? (d.selection.restore(), a(), k()) : "A" == d.el.tagName ? (d.$el.focus(), 
+                d.image && d.image.get() ? d.image.back() : (d.events.disableBlur(), d.selection.restore(),
+                d.events.enableBlur(), c() && d.$wp ? (d.selection.restore(), a(), k()) : "A" == d.el.tagName ? (d.$el.focus(),
                 k()) : (d.popups.hide("link.insert"), d.toolbar.showInline()));
             },
             imageLink: h,
@@ -19021,7 +19085,7 @@
         refreshOnCallback: !1,
         popup: !0,
         callback: function() {
-            this.popups.isVisible("link.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(), 
+            this.popups.isVisible("link.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(),
             this.selection.restore()), this.popups.hide("link.insert")) : this.link.showInsertPopup();
         },
         plugin: "link"
@@ -19036,7 +19100,7 @@
         },
         callback: function() {
             var e = this.link.get();
-            e && (-1 !== e.href.indexOf("mailto:") ? this.o_win.open(e.href).close() : this.o_win.open(e.href, "_blank", "noopener"), 
+            e && (-1 !== e.href.indexOf("mailto:") ? this.o_win.open(e.href).close() : this.o_win.open(e.href, "_blank", "noopener"),
             this.popups.hide("link.edit"));
         },
         plugin: "link"
@@ -19078,7 +19142,7 @@
         },
         refresh: function(e) {
             var t = this.link.get() && this.doc.hasFocus();
-            (this.image ? this.image.get() : null) || t || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), 
+            (this.image ? this.image.get() : null) || t || this.opts.toolbarInline ? (e.removeClass("fr-hidden"),
             e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"), e.next(".fr-separator").addClass("fr-hidden"));
         },
         plugin: "link"
@@ -19120,8 +19184,8 @@
         },
         refresh: function(e) {
             var t;
-            this.link.get() ? ((t = e.prev()).hasClass("fr-separator") && t.removeClass("fr-hidden"), 
-            e.addClass("fr-hidden")) : ((t = e.prev()).hasClass("fr-separator") && t.addClass("fr-hidden"), 
+            this.link.get() ? ((t = e.prev()).hasClass("fr-separator") && t.removeClass("fr-hidden"),
+            e.addClass("fr-hidden")) : ((t = e.prev()).hasClass("fr-separator") && t.addClass("fr-hidden"),
             e.removeClass("fr-hidden"));
         },
         plugin: "link"
@@ -19157,7 +19221,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(u) {
@@ -19205,20 +19269,20 @@
                     var l = "";
                     o && (l += ' class="' + o + '"');
                     var s = "rtl" == d.opts.direction || "rtl" == r.css("direction") ? "margin-right" : "margin-left";
-                    d.helpers.getPX(u(i).css(s)) && 0 <= (u(i).attr("style") || "").indexOf(s + ":") && (l += ' style="' + s + ":" + d.helpers.getPX(u(i).css(s)) + 'px;"'), 
-                    d.html.defaultTag() && 0 === r.find(d.html.blockTagsQuery()).length && r.wrapInner("<" + d.html.defaultTag() + l + "></" + d.html.defaultTag() + ">"), 
-                    d.node.isEmpty(r.get(0), !0) || 0 !== r.find(d.html.blockTagsQuery()).length || r.append("<br>"), 
+                    d.helpers.getPX(u(i).css(s)) && 0 <= (u(i).attr("style") || "").indexOf(s + ":") && (l += ' style="' + s + ":" + d.helpers.getPX(u(i).css(s)) + 'px;"'),
+                    d.html.defaultTag() && 0 === r.find(d.html.blockTagsQuery()).length && r.wrapInner("<" + d.html.defaultTag() + l + "></" + d.html.defaultTag() + ">"),
+                    d.node.isEmpty(r.get(0), !0) || 0 !== r.find(d.html.blockTagsQuery()).length || r.append("<br>"),
                     r.append(g("LI")), r.prepend(c("LI"));
                 }
-                r.after(g(i.tagName)), "LI" == i.parentNode.tagName && (i = i.parentNode.parentNode), 
+                r.after(g(i.tagName)), "LI" == i.parentNode.tagName && (i = i.parentNode.parentNode),
                 a.indexOf(i) < 0 && a.push(i);
             }
             for (t = 0; t < a.length; t++) {
                 var p = u(a[t]), f = p.html();
-                f = (f = f.replace(/<span class="fr-close-([a-z]*)"><\/span>/g, "</$1>")).replace(/<span class="fr-open-([a-z]*)"><\/span>/g, "<$1>"), 
+                f = (f = f.replace(/<span class="fr-close-([a-z]*)"><\/span>/g, "</$1>")).replace(/<span class="fr-open-([a-z]*)"><\/span>/g, "<$1>"),
                 p.replaceWith(d.node.openTagString(p.get(0)) + f + d.node.closeTagString(p.get(0)));
             }
-            d.$el.find("li:empty").remove(), d.$el.find("ul:empty, ol:empty").remove(), d.clean.lists(), 
+            d.$el.find("li:empty").remove(), d.$el.find("ul:empty, ol:empty").remove(), d.clean.lists(),
             d.html.wrap();
         }
         function o(e) {
@@ -19254,7 +19318,7 @@
                     if (n[0].previousSibling && "LI" == n[0].previousSibling.tagName) return;
                     if ("LI" == n[0].parentElement.tagName) return;
                 } else if ("indent" == e && (!n[0].previousSibling || "LI" != n[0].previousSibling.tagName)) return;
-                for (var r = 0; r < n.length; r++) "LI" == n[r].tagName ? (t = !0, a.push(n[r])) : "LI" == n[r].parentNode.tagName && (t = !0, 
+                for (var r = 0; r < n.length; r++) "LI" == n[r].tagName ? (t = !0, a.push(n[r])) : "LI" == n[r].parentNode.tagName && (t = !0,
                 a.push(n[r].parentNode));
                 t && ("indent" == e ? o(a) : l(a));
             }
@@ -19264,14 +19328,14 @@
                 d.events.on("commands.after", e), d.events.on("keydown", function(e) {
                     if (e.which == u.FE.KEYCODE.TAB) {
                         for (var t = d.selection.blocks(), n = [], a = 0; a < t.length; a++) "LI" == t[a].tagName ? n.push(t[a]) : "LI" == t[a].parentNode.tagName && n.push(t[a].parentNode);
-                        if (1 < n.length || n.length && (d.selection.info(n[0]).atStart || d.node.isEmpty(n[0]))) return e.preventDefault(), 
+                        if (1 < n.length || n.length && (d.selection.info(n[0]).atStart || d.node.isEmpty(n[0]))) return e.preventDefault(),
                         e.stopPropagation(), e.shiftKey ? l(n) : o(n), !1;
                     }
                 }, !0);
             },
             format: function(e, t) {
                 var n, a;
-                for (d.selection.save(), d.html.wrap(!0, !0, !0, !0), d.selection.restore(), a = d.selection.blocks(), 
+                for (d.selection.save(), d.html.wrap(!0, !0, !0, !0), d.selection.restore(), a = d.selection.blocks(),
                 n = 0; n < a.length; n++) "LI" != a[n].tagName && "LI" == a[n].parentNode.tagName && (a[n] = a[n].parentNode);
                 if (d.selection.save(), function(e, t) {
                     for (var n = !0, a = 0; a < e.length; a++) {
@@ -19281,7 +19345,7 @@
                     return n;
                 }(a, e) ? t || i(a) : r(a, e), d.html.unwrap(), d.selection.restore(), t = t || "default") {
                     for (a = d.selection.blocks(), n = 0; n < a.length; n++) "LI" != a[n].tagName && "LI" == a[n].parentNode.tagName && (a[n] = a[n].parentNode);
-                    for (n = 0; n < a.length; n++) "LI" == a[n].tagName && (u(a[n].parentNode).css("list-style-type", "default" === t ? "" : t), 
+                    for (n = 0; n < a.length; n++) "LI" == a[n].tagName && (u(a[n].parentNode).css("list-style-type", "default" === t ? "" : t),
                     0 === (u(a[n].parentNode).attr("style") || "").length && u(a[n].parentNode).removeAttr("style"));
                 }
             },
@@ -19341,7 +19405,7 @@
 
 !function(t) {
     "function" == typeof define && define.amd ? define([ "jquery" ], t) : "object" == typeof module && module.exports ? module.exports = function(a, e) {
-        return e === undefined && (e = "undefined" != typeof window ? require("jquery") : require("jquery")(a)), 
+        return e === undefined && (e = "undefined" != typeof window ? require("jquery") : require("jquery")(a)),
         t(e);
     } : t(window.jQuery);
 }(function(g) {
@@ -19370,18 +19434,18 @@
         }
         return {
             apply: function(a) {
-                "N" == a && (a = h.html.defaultTag()), h.selection.save(), h.html.wrap(!0, !0, !h.opts.paragraphFormat.BLOCKQUOTE, !0, !0), 
+                "N" == a && (a = h.html.defaultTag()), h.selection.save(), h.html.wrap(!0, !0, !h.opts.paragraphFormat.BLOCKQUOTE, !0, !0),
                 h.selection.restore();
                 var e, t, r, n, o, i, p, l, s = h.selection.blocks();
                 h.selection.save(), h.$el.find("pre").attr("skip", !0);
                 for (var d = 0; d < s.length; d++) if (s[d].tagName != a && !h.node.isList(s[d])) {
                     var m = g(s[d]);
-                    "LI" == s[d].tagName ? f(m, a) : "LI" == s[d].parentNode.tagName && s[d] ? (i = m, 
-                    p = a, l = h.html.defaultTag(), p && p.toLowerCase() != l || (p = 'div class="fr-temp-div"'), 
-                    i.replaceWith(g("<" + p + ">").html(i.html()))) : 0 <= [ "TD", "TH" ].indexOf(s[d].parentNode.tagName) ? (r = m, 
-                    n = a, o = h.html.defaultTag(), n || (n = 'div class="fr-temp-div"' + (h.node.isEmpty(r.get(0), !0) ? ' data-empty="true"' : "")), 
-                    n.toLowerCase() == o ? (h.node.isEmpty(r.get(0), !0) || r.append("<br/>"), r.replaceWith(r.html())) : r.replaceWith(g("<" + n + ">").html(r.html()))) : (e = m, 
-                    (t = a) || (t = 'div class="fr-temp-div"' + (h.node.isEmpty(e.get(0), !0) ? ' data-empty="true"' : "")), 
+                    "LI" == s[d].tagName ? f(m, a) : "LI" == s[d].parentNode.tagName && s[d] ? (i = m,
+                    p = a, l = h.html.defaultTag(), p && p.toLowerCase() != l || (p = 'div class="fr-temp-div"'),
+                    i.replaceWith(g("<" + p + ">").html(i.html()))) : 0 <= [ "TD", "TH" ].indexOf(s[d].parentNode.tagName) ? (r = m,
+                    n = a, o = h.html.defaultTag(), n || (n = 'div class="fr-temp-div"' + (h.node.isEmpty(r.get(0), !0) ? ' data-empty="true"' : "")),
+                    n.toLowerCase() == o ? (h.node.isEmpty(r.get(0), !0) || r.append("<br/>"), r.replaceWith(r.html())) : r.replaceWith(g("<" + n + ">").html(r.html()))) : (e = m,
+                    (t = a) || (t = 'div class="fr-temp-div"' + (h.node.isEmpty(e.get(0), !0) ? ' data-empty="true"' : "")),
                     e.replaceWith(g("<" + t + " " + h.node.attributes(e.get(0)) + ">").html(e.html()).removeAttr("data-empty")));
                 }
                 h.$el.find('pre:not([skip="true"]) + pre:not([skip="true"])').each(function() {
@@ -19400,7 +19464,7 @@
                     var e = h.selection.blocks();
                     if (e.length) {
                         var t = e[0], r = "N", n = h.html.defaultTag();
-                        t.tagName.toLowerCase() != n && t != h.el && (r = t.tagName), 0 <= [ "LI", "TD", "TH" ].indexOf(r) && (r = "N"), 
+                        t.tagName.toLowerCase() != n && t != h.el && (r = t.tagName), 0 <= [ "LI", "TD", "TH" ].indexOf(r) && (r = "N"),
                         a.find("> span").text(h.language.translate(h.opts.paragraphFormat[r]));
                     } else a.find("> span").text(h.language.translate(h.opts.paragraphFormat.N));
                 }
@@ -19441,7 +19505,7 @@
 
 !function(i) {
     "function" == typeof define && define.amd ? define([ "jquery" ], i) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         i(t);
     } : i(window.jQuery);
 }(function(d) {
@@ -19463,11 +19527,11 @@
         undo: !1,
         callback: function() {
             var e = this;
-            e.shared.$qi_image_input || (e.shared.$qi_image_input = d('<input accept="image/' + e.opts.imageAllowedTypes.join(", image/").toLowerCase() + '" name="quickInsertImage' + this.id + '" style="display: none;" type="file">'), 
+            e.shared.$qi_image_input || (e.shared.$qi_image_input = d('<input accept="image/' + e.opts.imageAllowedTypes.join(", image/").toLowerCase() + '" name="quickInsertImage' + this.id + '" style="display: none;" type="file">'),
             d("body:first").append(e.shared.$qi_image_input), e.events.$on(e.shared.$qi_image_input, "change", function() {
                 var e = d(this).data("inst");
                 this.files && (e.quickInsert.hide(), e.image.upload(this.files)), d(this).val("");
-            }, !0)), e.$qi_image_input = e.shared.$qi_image_input, e.helpers.isMobile() && e.selection.save(), 
+            }, !0)), e.$qi_image_input = e.shared.$qi_image_input, e.helpers.isMobile() && e.selection.save(),
             e.events.disableBlur(), e.$qi_image_input.data("inst", e).trigger("click");
         }
     }), d.FE.RegisterQuickInsertButton("video", {
@@ -19519,29 +19583,29 @@
         var a, l;
         function t(e) {
             var t, i, n;
-            t = e.offset().top - r.$box.offset().top, i = (r.$iframe && r.$iframe.offset().left || 0) + e.offset().left < a.outerWidth() ? e.offset().left + a.outerWidth() : 0 - a.outerWidth(), 
-            r.opts.enter != d.FE.ENTER_BR ? n = (a.outerHeight() - e.outerHeight()) / 2 : (d("<span>" + d.FE.INVISIBLE_SPACE + "</span>").insertAfter(e), 
-            n = (a.outerHeight() - e.next().outerHeight()) / 2, e.next().remove()), r.opts.iframe && (t += r.$iframe.offset().top), 
-            a.hasClass("fr-on") && 0 <= t && l.css("top", t - n), 0 <= t && t - Math.abs(n) <= r.$box.outerHeight() - e.outerHeight() ? (a.hasClass("fr-hidden") && (a.hasClass("fr-on") && o(), 
-            a.removeClass("fr-hidden")), a.css("top", t - n)) : a.hasClass("fr-visible") && (a.addClass("fr-hidden"), 
+            t = e.offset().top - r.$box.offset().top, i = (r.$iframe && r.$iframe.offset().left || 0) + e.offset().left < a.outerWidth() ? e.offset().left + a.outerWidth() : 0 - a.outerWidth(),
+            r.opts.enter != d.FE.ENTER_BR ? n = (a.outerHeight() - e.outerHeight()) / 2 : (d("<span>" + d.FE.INVISIBLE_SPACE + "</span>").insertAfter(e),
+            n = (a.outerHeight() - e.next().outerHeight()) / 2, e.next().remove()), r.opts.iframe && (t += r.$iframe.offset().top),
+            a.hasClass("fr-on") && 0 <= t && l.css("top", t - n), 0 <= t && t - Math.abs(n) <= r.$box.outerHeight() - e.outerHeight() ? (a.hasClass("fr-hidden") && (a.hasClass("fr-on") && o(),
+            a.removeClass("fr-hidden")), a.css("top", t - n)) : a.hasClass("fr-visible") && (a.addClass("fr-hidden"),
             u()), a.css("left", i);
         }
         function i(e) {
             a || function() {
                 r.shared.$quick_insert || (r.shared.$quick_insert = d('<div class="fr-quick-insert"><a class="fr-floating-btn" role="button" tabIndex="-1" title="' + r.language.translate("Quick Insert") + '">' + r.icon.create("quickInsert") + "</a></div>"));
-                a = r.shared.$quick_insert, r.tooltip.bind(r.$box, ".fr-quick-insert > a.fr-floating-btn"), 
+                a = r.shared.$quick_insert, r.tooltip.bind(r.$box, ".fr-quick-insert > a.fr-floating-btn"),
                 r.events.on("destroy", function() {
-                    a.removeClass("fr-on").appendTo(d("body:first")).css("left", -9999).css("top", -9999), 
+                    a.removeClass("fr-on").appendTo(d("body:first")).css("left", -9999).css("top", -9999),
                     l && (u(), l.appendTo(d("body:first")));
                 }, !0), r.events.on("shared.destroy", function() {
-                    a.html("").removeData().remove(), a = null, l && (l.html("").removeData().remove(), 
+                    a.html("").removeData().remove(), a = null, l && (l.html("").removeData().remove(),
                     l = null);
                 }, !0), r.events.on("commands.before", s), r.events.on("commands.after", function() {
                     r.popups.areVisible() || n();
                 }), r.events.bindClick(r.$box, ".fr-quick-insert > a", o), r.events.bindClick(r.$box, ".fr-qi-helper > a.fr-btn", function(e) {
                     var t = d(e.currentTarget).data("cmd");
                     if (!1 === r.events.trigger("quickInsert.commands.before", [ t ])) return !1;
-                    d.FE.QUICK_INSERT_BUTTONS[t].callback.apply(r, [ e.currentTarget ]), d.FE.QUICK_INSERT_BUTTONS[t].undo && r.undo.saveStep(), 
+                    d.FE.QUICK_INSERT_BUTTONS[t].callback.apply(r, [ e.currentTarget ]), d.FE.QUICK_INSERT_BUTTONS[t].undo && r.undo.saveStep(),
                     r.events.trigger("quickInsert.commands.after", [ t ]), r.quickInsert.hide();
                 }), r.events.$on(r.$wp, "scroll", function() {
                     a.hasClass("fr-visible") && t(a.data("tag"));
@@ -19551,7 +19615,7 @@
         function n() {
             if (r.core.hasFocus()) {
                 var e = r.selection.element();
-                if (r.opts.enter == d.FE.ENTER_BR || r.node.isBlock(e) || (e = r.node.blockParent(e)), 
+                if (r.opts.enter == d.FE.ENTER_BR || r.node.isBlock(e) || (e = r.node.blockParent(e)),
                 r.opts.enter == d.FE.ENTER_BR && !r.node.isBlock(e)) {
                     var t = r.node.deepestParent(e);
                     t && (e = t);
@@ -19569,13 +19633,13 @@
                         var o = d.FE.QUICK_INSERT_BUTTONS[t[s]];
                         o && (!o.requiredPlugin || d.FE.PLUGINS[o.requiredPlugin] && 0 <= r.opts.pluginsEnabled.indexOf(o.requiredPlugin)) && (i += '<a class="fr-btn fr-floating-btn" role="button" title="' + r.language.translate(o.title) + '" tabIndex="-1" data-cmd="' + t[s] + '" style="transition-delay: ' + .025 * n++ + 's;">' + r.icon.create(o.icon) + "</a>");
                     }
-                    i += "</div>", r.shared.$qi_helper = d(i), r.tooltip.bind(r.shared.$qi_helper, "> a.fr-btn"), 
+                    i += "</div>", r.shared.$qi_helper = d(i), r.tooltip.bind(r.shared.$qi_helper, "> a.fr-btn"),
                     r.events.$on(r.shared.$qi_helper, "mousedown", function(e) {
                         e.preventDefault();
                     }, !0);
                 }
                 (l = r.shared.$qi_helper).appendTo(r.$box), setTimeout(function() {
-                    l.css("top", parseFloat(a.css("top"))), l.css("left", parseFloat(a.css("left")) + a.outerWidth()), 
+                    l.css("top", parseFloat(a.css("top"))), l.css("left", parseFloat(a.css("left")) + a.outerWidth()),
                     l.find("a").addClass("fr-size-1"), a.addClass("fr-on");
                 }, 10);
             }
@@ -19587,7 +19651,7 @@
         return {
             _init: function() {
                 if (!r.$wp || !r.opts.quickInsertEnabled) return !1;
-                r.popups.onShow("image.edit", s), r.events.on("mouseup", n), r.helpers.isMobile() && r.events.$on(d(r.o_doc), "selectionchange", n), 
+                r.popups.onShow("image.edit", s), r.events.on("mouseup", n), r.helpers.isMobile() && r.events.$on(d(r.o_doc), "selectionchange", n),
                 r.events.on("blur", s), r.events.on("keyup", n), r.events.on("keydown", function() {
                     setTimeout(function() {
                         n();
@@ -19601,7 +19665,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(a) {
@@ -19627,7 +19691,7 @@
                 }();
             }
         };
-    }, a.FE.RegisterShortcut(a.FE.KEYCODE.SINGLE_QUOTE, "quote", "increase", "'"), a.FE.RegisterShortcut(a.FE.KEYCODE.SINGLE_QUOTE, "quote", "decrease", "'", !0), 
+    }, a.FE.RegisterShortcut(a.FE.KEYCODE.SINGLE_QUOTE, "quote", "increase", "'"), a.FE.RegisterShortcut(a.FE.KEYCODE.SINGLE_QUOTE, "quote", "decrease", "'", !0),
     a.FE.RegisterCommand("quote", {
         title: "Quote",
         type: "dropdown",
@@ -19653,7 +19717,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(l) {
@@ -19704,7 +19768,7 @@
                 (u != e || t) && (t = !1, s(u = e));
             }, i.opts.saveInterval);
         }
-        return n[v] = "Missing saveURL option.", n[f] = "Something went wrong during save.", 
+        return n[v] = "Missing saveURL option.", n[f] = "Something went wrong during save.",
         {
             _init: function() {
                 i.opts.saveInterval && (u = i.html.get(), i.events.on("contentChanged", o), i.events.on("keydown destroy", function() {
@@ -19736,7 +19800,7 @@
 
 !function(l) {
     "function" == typeof define && define.amd ? define([ "jquery" ], l) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         l(t);
     } : l(window.jQuery);
 }(function(Z) {
@@ -19776,8 +19840,8 @@
                 if (t || (t = p()), t) {
                     w.popups.setContainer("table.edit", w.$sc);
                     var l = M(e), a = (l.left + l.right) / 2, s = l.bottom;
-                    w.popups.show("table.edit", a, s, l.bottom - l.top), w.edit.isDisabled() && (1 < J().length && w.toolbar.disable(), 
-                    w.$el.removeClass("fr-no-selection"), w.edit.on(), w.button.bulkRefresh(), w.selection.setAtEnd(w.$el.find(".fr-selected-cell:last").get(0)), 
+                    w.popups.show("table.edit", a, s, l.bottom - l.top), w.edit.isDisabled() && (1 < J().length && w.toolbar.disable(),
+                    w.$el.removeClass("fr-no-selection"), w.edit.on(), w.button.bulkRefresh(), w.selection.setAtEnd(w.$el.find(".fr-selected-cell:last").get(0)),
                     w.selection.restore());
                 }
             }
@@ -19794,7 +19858,7 @@
                     var l = {
                         buttons: e,
                         colors: function() {
-                            for (var e = '<div class="fr-table-colors">', t = 0; t < w.opts.tableColors.length; t++) 0 !== t && t % w.opts.tableColorsStep == 0 && (e += "<br>"), 
+                            for (var e = '<div class="fr-table-colors">', t = 0; t < w.opts.tableColors.length; t++) 0 !== t && t % w.opts.tableColorsStep == 0 && (e += "<br>"),
                             "REMOVE" != w.opts.tableColors[t] ? e += '<span class="fr-command" style="background: ' + w.opts.tableColors[t] + ';" tabIndex="-1" role="button" data-cmd="tableCellBackgroundColor" data-param1="' + w.opts.tableColors[t] + '"><span class="fr-sr-only">' + w.language.translate("Color") + " " + w.opts.tableColors[t] + "&nbsp;&nbsp;&nbsp;</span></span>" : e += '<span class="fr-command" data-cmd="tableCellBackgroundColor" tabIndex="-1" role="button" data-param1="REMOVE" title="' + w.language.translate("Clear Formatting") + '">' + w.icon.create("tableColorRemove") + '<span class="fr-sr-only">' + w.language.translate("Clear Formatting") + "</span></span>";
                             return e += "</div>";
                         }(),
@@ -19820,9 +19884,9 @@
                     var u;
                 }()), w.popups.setContainer("table.colors", w.$sc);
                 var r = M(s), o = (r.left + r.right) / 2, i = r.bottom;
-                e = w.popups.get("table.colors"), t = w.$el.find(".fr-selected-cell:first"), l = w.helpers.RGBToHex(t.css("background-color")), 
-                a = e.find(".fr-table-colors-hex-layer input"), e.find(".fr-selected-color").removeClass("fr-selected-color fr-active-item"), 
-                e.find('span[data-param1="' + l + '"]').addClass("fr-selected-color fr-active-item"), 
+                e = w.popups.get("table.colors"), t = w.$el.find(".fr-selected-cell:first"), l = w.helpers.RGBToHex(t.css("background-color")),
+                a = e.find(".fr-table-colors-hex-layer input"), e.find(".fr-selected-color").removeClass("fr-selected-color fr-active-item"),
+                e.find('span[data-param1="' + l + '"]').addClass("fr-selected-color fr-active-item"),
                 a.val(l).trigger("change"), w.popups.show("table.colors", o, i, r.bottom - r.top);
             }
         }
@@ -19894,7 +19958,7 @@
         function u() {
             if (0 < J().length) {
                 var e = Q();
-                w.selection.setBefore(e.get(0)) || w.selection.setAfter(e.get(0)), w.selection.restore(), 
+                w.selection.setBefore(e.get(0)) || w.selection.setAfter(e.get(0)), w.selection.restore(),
                 w.popups.hide("table.edit"), e.remove(), w.toolbar.enable();
             }
         }
@@ -19913,14 +19977,14 @@
                         }
                     } else o += '<td style="' + Z(n[a][l]).attr("style") + '" ><br></td>';
                 }
-                o += "</tr>", s = 0 < w.$el.find("th.fr-selected-cell").length && "below" == e ? Z(t.find("tbody").not(t.find("table tbody"))) : Z(t.find("tr").not(t.find("table tr")).get(a)), 
-                "below" == e ? "TBODY" == s.prop("tagName") ? s.prepend(o) : s.after(o) : "above" == e && (s.before(o), 
+                o += "</tr>", s = 0 < w.$el.find("th.fr-selected-cell").length && "below" == e ? Z(t.find("tbody").not(t.find("table tbody"))) : Z(t.find("tr").not(t.find("table tr")).get(a)),
+                "below" == e ? "TBODY" == s.prop("tagName") ? s.prepend(o) : s.after(o) : "above" == e && (s.before(o),
                 w.popups.isVisible("table.edit") && h());
             }
         }
         function g(e, t, l) {
             var a, s, n, r, o, i = 0, f = O(l);
-            if (e < (t = Math.min(t, f[0].length - 1))) for (s = e; s <= t; s++) if (!(e < s && f[0][s] == f[0][s - 1]) && 1 < (r = Math.min(parseInt(f[0][s].getAttribute("colspan"), 10) || 1, t - e + 1)) && f[0][s] == f[0][s + 1]) for (i = r - 1, 
+            if (e < (t = Math.min(t, f[0].length - 1))) for (s = e; s <= t; s++) if (!(e < s && f[0][s] == f[0][s - 1]) && 1 < (r = Math.min(parseInt(f[0][s].getAttribute("colspan"), 10) || 1, t - e + 1)) && f[0][s] == f[0][s + 1]) for (i = r - 1,
             a = 1; a < f.length; a++) if (f[a][s] != f[a - 1][s]) {
                 for (n = s; n < s + r; n++) if (1 < (o = parseInt(f[a][n].getAttribute("colspan"), 10) || 1) && f[a][n] == f[a][n + 1]) n += i = Math.min(i, o - 1); else if (!(i = Math.max(0, i - 1))) break;
                 if (!i) break;
@@ -19929,7 +19993,7 @@
         }
         function m(e, t, l) {
             var a, s, n, r, o, i = 0, f = O(l);
-            if (e < (t = Math.min(t, f.length - 1))) for (a = e; a <= t; a++) if (!(e < a && f[a][0] == f[a - 1][0]) && 1 < (r = Math.min(parseInt(f[a][0].getAttribute("rowspan"), 10) || 1, t - e + 1)) && f[a][0] == f[a + 1][0]) for (i = r - 1, 
+            if (e < (t = Math.min(t, f.length - 1))) for (a = e; a <= t; a++) if (!(e < a && f[a][0] == f[a - 1][0]) && 1 < (r = Math.min(parseInt(f[a][0].getAttribute("rowspan"), 10) || 1, t - e + 1)) && f[a][0] == f[a + 1][0]) for (i = r - 1,
             s = 1; s < f[0].length; s++) if (f[a][s] != f[a][s - 1]) {
                 for (n = a; n < a + r; n++) if (1 < (o = parseInt(f[n][s].getAttribute("rowspan"), 10) || 1) && f[n][s] == f[n + 1][s]) n += i = Math.min(i, o - 1); else if (!(i = Math.max(0, i - 1))) break;
                 if (!i) break;
@@ -19945,7 +20009,7 @@
         }
         function t(e) {
             var t = w.$el.find(".fr-selected-cell");
-            "REMOVE" != e ? t.css("background-color", w.helpers.HEXtoRGB(e)) : t.css("background-color", ""), 
+            "REMOVE" != e ? t.css("background-color", w.helpers.HEXtoRGB(e)) : t.css("background-color", ""),
             h();
         }
         function O(e) {
@@ -19953,7 +20017,7 @@
             return null == (e = e || null) && 0 < J().length && (e = Q()), e && e.find("tr:visible").not(e.find("table tr")).each(function(o, e) {
                 var t = Z(e), i = 0;
                 t.find("> th, > td").each(function(e, t) {
-                    for (var l = Z(t), a = parseInt(l.attr("colspan"), 10) || 1, s = parseInt(l.attr("rowspan"), 10) || 1, n = o; n < o + s; n++) for (var r = i; r < i + a; r++) f[n] || (f[n] = []), 
+                    for (var l = Z(t), a = parseInt(l.attr("colspan"), 10) || 1, s = parseInt(l.attr("rowspan"), 10) || 1, n = o; n < o + s; n++) for (var r = i; r < i + a; r++) f[n] || (f[n] = []),
                     f[n][r] ? i++ : f[n][r] = t;
                     i += a;
                 });
@@ -19986,7 +20050,7 @@
             };
         }
         function x() {
-            w.el.querySelector(".fr-cell-fixed") && w.el.querySelector(".fr-cell-fixed").classList.remove("fr-cell-fixed"), 
+            w.el.querySelector(".fr-cell-fixed") && w.el.querySelector(".fr-cell-fixed").classList.remove("fr-cell-fixed"),
             w.el.querySelector(".fr-cell-handler") && w.el.querySelector(".fr-cell-handler").classList.remove("fr-cell-handler");
         }
         function D() {
@@ -19997,7 +20061,7 @@
             }), x();
         }
         function y() {
-            w.events.disableBlur(), w.selection.clear(), w.$el.addClass("fr-no-selection"), 
+            w.events.disableBlur(), w.selection.clear(), w.$el.addClass("fr-no-selection"),
             w.$el.blur(), w.events.enableBlur();
         }
         function $(e) {
@@ -20031,13 +20095,13 @@
                 y(), w.edit.off();
                 var a = O(), s = A(t, a), n = A(l, a), r = function e(t, l, a, s, n) {
                     var r, o, i, f, c = t, d = l, p = a, h = s;
-                    for (r = c; r <= d; r++) (1 < (parseInt(Z(n[r][p]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[r][p]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[r][p], n)).row, i.col, n), 
-                    c = Math.min(i.row, c), d = Math.max(f.row, d), p = Math.min(i.col, p), h = Math.max(f.col, h)), 
-                    (1 < (parseInt(Z(n[r][h]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[r][h]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[r][h], n)).row, i.col, n), 
+                    for (r = c; r <= d; r++) (1 < (parseInt(Z(n[r][p]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[r][p]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[r][p], n)).row, i.col, n),
+                    c = Math.min(i.row, c), d = Math.max(f.row, d), p = Math.min(i.col, p), h = Math.max(f.col, h)),
+                    (1 < (parseInt(Z(n[r][h]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[r][h]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[r][h], n)).row, i.col, n),
                     c = Math.min(i.row, c), d = Math.max(f.row, d), p = Math.min(i.col, p), h = Math.max(f.col, h));
-                    for (o = p; o <= h; o++) (1 < (parseInt(Z(n[c][o]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[c][o]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[c][o], n)).row, i.col, n), 
-                    c = Math.min(i.row, c), d = Math.max(f.row, d), p = Math.min(i.col, p), h = Math.max(f.col, h)), 
-                    (1 < (parseInt(Z(n[d][o]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[d][o]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[d][o], n)).row, i.col, n), 
+                    for (o = p; o <= h; o++) (1 < (parseInt(Z(n[c][o]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[c][o]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[c][o], n)).row, i.col, n),
+                    c = Math.min(i.row, c), d = Math.max(f.row, d), p = Math.min(i.col, p), h = Math.max(f.col, h)),
+                    (1 < (parseInt(Z(n[d][o]).attr("rowspan"), 10) || 1) || 1 < (parseInt(Z(n[d][o]).attr("colspan"), 10) || 1)) && (f = F((i = A(n[d][o], n)).row, i.col, n),
                     c = Math.min(i.row, c), d = Math.max(f.row, d), p = Math.min(i.col, p), h = Math.max(f.col, h));
                     return c == t && d == l && p == a && h == s ? {
                         min_i: t,
@@ -20052,7 +20116,7 @@
         }
         function I(e) {
             var t = null, l = Z(e.target);
-            return "TD" == e.target.tagName || "TH" == e.target.tagName ? t = e.target : 0 < l.closest("td", l.closest("tr")[0]).length ? t = l.closest("td", l.closest("tr")[0]).get(0) : 0 < l.closest("th", l.closest("thead")[0]).length && (t = l.closest("th", l.closest("thead")[0]).get(0)), 
+            return "TD" == e.target.tagName || "TH" == e.target.tagName ? t = e.target : 0 < l.closest("td", l.closest("tr")[0]).length ? t = l.closest("td", l.closest("tr")[0]).get(0) : 0 < l.closest("th", l.closest("thead")[0]).length && (t = l.closest("th", l.closest("thead")[0]).get(0)),
             0 === w.$el.find(t).length ? null : t;
         }
         function S() {
@@ -20061,32 +20125,32 @@
         function e(e) {
             var t = I(e);
             if ("false" == Z(t).parents("[contenteditable]:not(.fr-element):not(.fr-img-caption):not(body):first").attr("contenteditable")) return !0;
-            if (0 < J().length && !t && S(), !w.edit.isDisabled() || w.popups.isVisible("table.edit")) if (1 != e.which || 1 == e.which && w.helpers.isMac() && e.ctrlKey) (3 == e.which || 1 == e.which && w.helpers.isMac() && e.ctrlKey) && t && S(); else if (n = !0, 
+            if (0 < J().length && !t && S(), !w.edit.isDisabled() || w.popups.isVisible("table.edit")) if (1 != e.which || 1 == e.which && w.helpers.isMac() && e.ctrlKey) (3 == e.which || 1 == e.which && w.helpers.isMac() && e.ctrlKey) && t && S(); else if (n = !0,
             t) {
-                0 < J().length && !e.shiftKey && S(), e.stopPropagation(), w.events.trigger("image.hideResizer"), 
+                0 < J().length && !e.shiftKey && S(), e.stopPropagation(), w.events.trigger("image.hideResizer"),
                 w.events.trigger("video.hideResizer"), s = !0;
                 var l = t.tagName.toLowerCase();
-                e.shiftKey && 0 < w.$el.find(l + ".fr-selected-cell").length ? Z(w.$el.find(l + ".fr-selected-cell").closest("table")).is(Z(t).closest("table")) ? _(a, t) : y() : ((w.keys.ctrlKey(e) || e.shiftKey) && (1 < J().length || 0 === Z(t).find(w.selection.element()).length && !Z(t).is(w.selection.element())) && y(), 
+                e.shiftKey && 0 < w.$el.find(l + ".fr-selected-cell").length ? Z(w.$el.find(l + ".fr-selected-cell").closest("table")).is(Z(t).closest("table")) ? _(a, t) : y() : ((w.keys.ctrlKey(e) || e.shiftKey) && (1 < J().length || 0 === Z(t).find(w.selection.element()).length && !Z(t).is(w.selection.element())) && y(),
                 a = t, 0 < w.opts.tableEditButtons.length && _(a, a));
             }
         }
         function l(e) {
             if (w.popups.areVisible()) return !0;
-            if (s || w.$tb.is(e.target) || w.$tb.is(Z(e.target).closest(w.$tb.get(0))) || (0 < J().length && w.toolbar.enable(), 
+            if (s || w.$tb.is(e.target) || w.$tb.is(Z(e.target).closest(w.$tb.get(0))) || (0 < J().length && w.toolbar.enable(),
             D()), !(1 != e.which || 1 == e.which && w.helpers.isMac() && e.ctrlKey)) {
-                if (n = !1, s) s = !1, I(e) || 1 != J().length ? 0 < J().length && (w.selection.isCollapsed() ? h() : (D(), 
+                if (n = !1, s) s = !1, I(e) || 1 != J().length ? 0 < J().length && (w.selection.isCollapsed() ? h() : (D(),
                 w.edit.on())) : D();
                 if (E) {
                     E = !1, C.removeClass("fr-moving"), w.$el.removeClass("fr-no-selection"), w.edit.on();
                     var t = parseFloat(C.css("left")) + w.opts.tableResizerOffset + w.$wp.offset().left;
-                    w.opts.iframe && (t -= w.$iframe.offset().left), C.data("release-position", t), 
+                    w.opts.iframe && (t -= w.$iframe.offset().left), C.data("release-position", t),
                     C.removeData("max-left"), C.removeData("max-right"), function() {
                         var e = C.data("origin"), t = C.data("release-position");
                         if (e !== t) {
                             var l = C.data("first"), a = C.data("second"), s = C.data("table"), n = s.outerWidth();
                             if (w.undo.canDo() || w.undo.saveStep(), null !== l && null !== a) {
                                 var r, o, i, f = O(s), c = [], d = [], p = [], h = [];
-                                for (r = 0; r < f.length; r++) o = Z(f[r][l]), i = Z(f[r][a]), c[r] = o.outerWidth(), 
+                                for (r = 0; r < f.length; r++) o = Z(f[r][l]), i = Z(f[r][a]), c[r] = o.outerWidth(),
                                 p[r] = i.outerWidth(), d[r] = c[r] / n * 100, h[r] = p[r] / n * 100;
                                 for (r = 0; r < f.length; r++) if (o = Z(f[r][l]), i = Z(f[r][a]), f[r][l] != f[r][a]) {
                                     var u = (d[r] * (c[r] + t - e) / c[r]).toFixed(4);
@@ -20094,14 +20158,14 @@
                                 }
                             } else {
                                 var b, g = s.parent(), m = n / g.width() * 100, v = (parseInt(s.css("margin-left"), 10) || 0) / g.width() * 100, E = (parseInt(s.css("margin-right"), 10) || 0) / g.width() * 100;
-                                "rtl" == w.opts.direction && 0 === a || "rtl" != w.opts.direction && 0 !== a ? (b = (n + t - e) / n * m, 
-                                s.css("margin-right", "calc(100% - " + Math.round(b).toFixed(4) + "% - " + Math.round(v).toFixed(4) + "%)")) : ("rtl" == w.opts.direction && 0 !== a || "rtl" != w.opts.direction && 0 === a) && (b = (n - t + e) / n * m, 
-                                s.css("margin-left", "calc(100% - " + Math.round(b).toFixed(4) + "% - " + Math.round(E).toFixed(4) + "%)")), 
+                                "rtl" == w.opts.direction && 0 === a || "rtl" != w.opts.direction && 0 !== a ? (b = (n + t - e) / n * m,
+                                s.css("margin-right", "calc(100% - " + Math.round(b).toFixed(4) + "% - " + Math.round(v).toFixed(4) + "%)")) : ("rtl" == w.opts.direction && 0 !== a || "rtl" != w.opts.direction && 0 === a) && (b = (n - t + e) / n * m,
+                                s.css("margin-left", "calc(100% - " + Math.round(b).toFixed(4) + "% - " + Math.round(E).toFixed(4) + "%)")),
                                 s.css("width", Math.round(b).toFixed(4) + "%");
                             }
                             w.selection.restore(), w.undo.saveStep(), w.events.trigger("table.resized", [ s.get(0) ]);
                         }
-                        C.removeData("origin"), C.removeData("release-position"), C.removeData("first"), 
+                        C.removeData("origin"), C.removeData("release-position"), C.removeData("first"),
                         C.removeData("second"), C.removeData("table");
                     }(), W();
                 }
@@ -20117,7 +20181,7 @@
             }
         }
         function N(e, t, l, a) {
-            for (var s, n = t; n != w.el && "TD" != n.tagName && "TH" != n.tagName && ("up" == a ? s = n.previousElementSibling : "down" == a && (s = n.nextElementSibling), 
+            for (var s, n = t; n != w.el && "TD" != n.tagName && "TH" != n.tagName && ("up" == a ? s = n.previousElementSibling : "down" == a && (s = n.nextElementSibling),
             !s); ) n = n.parentNode;
             "TD" == n.tagName || "TH" == n.tagName ? function(e, t) {
                 for (var l = e; l && "TABLE" != l.tagName && l.parentNode != w.el; ) l = l.parentNode;
@@ -20135,7 +20199,7 @@
             e.row < l.length - a ? w.selection.setAtStart(l[e.row + a][e.col]) : N(0, t, 0, "down");
         }
         function W() {
-            C && (C.find("div").css("opacity", 0), C.css("top", 0), C.css("left", 0), C.css("height", 0), 
+            C && (C.find("div").css("opacity", 0), C.css("top", 0), C.css("left", 0), C.css("height", 0),
             C.find("div").css("height", 0), C.hide());
         }
         function k() {
@@ -20143,28 +20207,28 @@
         }
         function K(e, t) {
             var l = Z(t), a = l.closest("table"), s = a.parent();
-            if (t && "TD" != t.tagName && "TH" != t.tagName && (0 < l.closest("td").length ? t = l.closest("td") : 0 < l.closest("th").length && (t = l.closest("th"))), 
+            if (t && "TD" != t.tagName && "TH" != t.tagName && (0 < l.closest("td").length ? t = l.closest("td") : 0 < l.closest("th").length && (t = l.closest("th"))),
             !t || "TD" != t.tagName && "TH" != t.tagName) C && l.get(0) != C.get(0) && l.parent().get(0) != C.get(0) && w.core.sameInstance(C) && W(); else {
                 if (l = Z(t), 0 === w.$el.find(l).length) return !1;
                 var n = l.offset().left - 1, r = n + l.outerWidth();
                 if (Math.abs(e.pageX - n) <= w.opts.tableResizerOffset || Math.abs(r - e.pageX) <= w.opts.tableResizerOffset) {
                     var o, i, f, c, d, p = O(a), h = A(t, p), u = F(h.row, h.col, p), b = a.offset().top, g = a.outerHeight() - 1;
-                    "rtl" != w.opts.direction ? e.pageX - n <= w.opts.tableResizerOffset ? (f = n, 0 < h.col ? (c = n - j(h.col - 1, p) + w.opts.tableResizingLimit, 
-                    d = n + j(h.col, p) - w.opts.tableResizingLimit, o = h.col - 1, i = h.col) : (o = null, 
-                    i = 0, c = a.offset().left - 1 - parseInt(a.css("margin-left"), 10), d = a.offset().left - 1 + a.width() - p[0].length * w.opts.tableResizingLimit)) : r - e.pageX <= w.opts.tableResizerOffset && (f = r, 
-                    u.col < p[u.row].length && p[u.row][u.col + 1] ? (c = r - j(u.col, p) + w.opts.tableResizingLimit, 
-                    d = r + j(u.col + 1, p) - w.opts.tableResizingLimit, o = u.col, i = u.col + 1) : (o = u.col, 
-                    i = null, c = a.offset().left - 1 + p[0].length * w.opts.tableResizingLimit, d = s.offset().left - 1 + s.width() + parseFloat(s.css("padding-left")))) : r - e.pageX <= w.opts.tableResizerOffset ? (f = r, 
-                    0 < h.col ? (c = r - j(h.col, p) + w.opts.tableResizingLimit, d = r + j(h.col - 1, p) - w.opts.tableResizingLimit, 
-                    o = h.col, i = h.col - 1) : (o = null, i = 0, c = a.offset().left + p[0].length * w.opts.tableResizingLimit, 
-                    d = s.offset().left - 1 + s.width() + parseFloat(s.css("padding-left")))) : e.pageX - n <= w.opts.tableResizerOffset && (f = n, 
-                    u.col < p[u.row].length && p[u.row][u.col + 1] ? (c = n - j(u.col + 1, p) + w.opts.tableResizingLimit, 
-                    d = n + j(u.col, p) - w.opts.tableResizingLimit, o = u.col + 1, i = u.col) : (o = u.col, 
-                    i = null, c = s.offset().left + parseFloat(s.css("padding-left")), d = a.offset().left - 1 + a.width() - p[0].length * w.opts.tableResizingLimit)), 
-                    C || (w.shared.$table_resizer || (w.shared.$table_resizer = Z('<div class="fr-table-resizer"><div></div></div>')), 
+                    "rtl" != w.opts.direction ? e.pageX - n <= w.opts.tableResizerOffset ? (f = n, 0 < h.col ? (c = n - j(h.col - 1, p) + w.opts.tableResizingLimit,
+                    d = n + j(h.col, p) - w.opts.tableResizingLimit, o = h.col - 1, i = h.col) : (o = null,
+                    i = 0, c = a.offset().left - 1 - parseInt(a.css("margin-left"), 10), d = a.offset().left - 1 + a.width() - p[0].length * w.opts.tableResizingLimit)) : r - e.pageX <= w.opts.tableResizerOffset && (f = r,
+                    u.col < p[u.row].length && p[u.row][u.col + 1] ? (c = r - j(u.col, p) + w.opts.tableResizingLimit,
+                    d = r + j(u.col + 1, p) - w.opts.tableResizingLimit, o = u.col, i = u.col + 1) : (o = u.col,
+                    i = null, c = a.offset().left - 1 + p[0].length * w.opts.tableResizingLimit, d = s.offset().left - 1 + s.width() + parseFloat(s.css("padding-left")))) : r - e.pageX <= w.opts.tableResizerOffset ? (f = r,
+                    0 < h.col ? (c = r - j(h.col, p) + w.opts.tableResizingLimit, d = r + j(h.col - 1, p) - w.opts.tableResizingLimit,
+                    o = h.col, i = h.col - 1) : (o = null, i = 0, c = a.offset().left + p[0].length * w.opts.tableResizingLimit,
+                    d = s.offset().left - 1 + s.width() + parseFloat(s.css("padding-left")))) : e.pageX - n <= w.opts.tableResizerOffset && (f = n,
+                    u.col < p[u.row].length && p[u.row][u.col + 1] ? (c = n - j(u.col + 1, p) + w.opts.tableResizingLimit,
+                    d = n + j(u.col, p) - w.opts.tableResizingLimit, o = u.col + 1, i = u.col) : (o = u.col,
+                    i = null, c = s.offset().left + parseFloat(s.css("padding-left")), d = a.offset().left - 1 + a.width() - p[0].length * w.opts.tableResizingLimit)),
+                    C || (w.shared.$table_resizer || (w.shared.$table_resizer = Z('<div class="fr-table-resizer"><div></div></div>')),
                     C = w.shared.$table_resizer, w.events.$on(C, "mousedown", function(e) {
-                        return !w.core.sameInstance(C) || (0 < J().length && S(), 1 == e.which ? (w.selection.save(), 
-                        E = !0, C.addClass("fr-moving"), y(), w.edit.off(), C.find("div").css("opacity", 1), 
+                        return !w.core.sameInstance(C) || (0 < J().length && S(), 1 == e.which ? (w.selection.save(),
+                        E = !0, C.addClass("fr-moving"), y(), w.edit.off(), C.find("div").css("opacity", 1),
                         !1) : void 0);
                     }), w.events.$on(C, "mousemove", function(e) {
                         if (!w.core.sameInstance(C)) return !0;
@@ -20173,13 +20237,13 @@
                         C.html("").removeData().remove(), C = null;
                     }, !0), w.events.on("destroy", function() {
                         w.$el.find(".fr-selected-cell").removeClass("fr-selected-cell"), C.hide().appendTo(Z("body:first"));
-                    }, !0)), C.data("table", a), C.data("first", o), C.data("second", i), C.data("instance", w), 
+                    }, !0)), C.data("table", a), C.data("first", o), C.data("second", i), C.data("instance", w),
                     w.$wp.append(C);
                     var m = f - w.win.pageXOffset - w.opts.tableResizerOffset - w.$wp.offset().left, v = b - w.$wp.offset().top + w.$wp.scrollTop();
-                    w.opts.iframe && (m += w.$iframe.offset().left, v += w.$iframe.offset().top, c += w.$iframe.offset().left, 
-                    d += w.$iframe.offset().left), C.data("max-left", c), C.data("max-right", d), C.data("origin", f - w.win.pageXOffset), 
-                    C.css("top", v), C.css("left", m), C.css("height", g), C.find("div").css("height", g), 
-                    C.css("padding-left", w.opts.tableResizerOffset), C.css("padding-right", w.opts.tableResizerOffset), 
+                    w.opts.iframe && (m += w.$iframe.offset().left, v += w.$iframe.offset().top, c += w.$iframe.offset().left,
+                    d += w.$iframe.offset().left), C.data("max-left", c), C.data("max-right", d), C.data("origin", f - w.win.pageXOffset),
+                    C.css("top", v), C.css("left", m), C.css("height", g), C.find("div").css("height", g),
+                    C.css("padding-left", w.opts.tableResizerOffset), C.css("padding-right", w.opts.tableResizerOffset),
                     C.show();
                 } else w.core.sameInstance(C) && W();
             }
@@ -20188,15 +20252,15 @@
             if (w.$box.find(".fr-line-breaker").is(":visible")) return !1;
             o || q(), w.$box.append(o), o.data("instance", w);
             var l, a = Z(t).find("tr:first"), s = e.pageX, n = 0, r = 0;
-            w.opts.iframe && (n += w.$iframe.offset().left - w.helpers.scrollLeft(), r += w.$iframe.offset().top - w.helpers.scrollTop()), 
+            w.opts.iframe && (n += w.$iframe.offset().left - w.helpers.scrollLeft(), r += w.$iframe.offset().top - w.helpers.scrollTop()),
             a.find("th, td").each(function() {
                 var e = Z(this);
-                return e.offset().left <= s && s < e.offset().left + e.outerWidth() / 2 ? (l = parseInt(o.find("a").css("width"), 10), 
-                o.css("top", r + e.offset().top - w.$box.offset().top - l - 5), o.css("left", n + e.offset().left - w.$box.offset().left - l / 2), 
-                o.data("selected-cell", e), o.data("position", "before"), o.addClass("fr-visible"), 
-                !1) : e.offset().left + e.outerWidth() / 2 <= s && s < e.offset().left + e.outerWidth() ? (l = parseInt(o.find("a").css("width"), 10), 
-                o.css("top", r + e.offset().top - w.$box.offset().top - l - 5), o.css("left", n + e.offset().left - w.$box.offset().left + e.outerWidth() - l / 2), 
-                o.data("selected-cell", e), o.data("position", "after"), o.addClass("fr-visible"), 
+                return e.offset().left <= s && s < e.offset().left + e.outerWidth() / 2 ? (l = parseInt(o.find("a").css("width"), 10),
+                o.css("top", r + e.offset().top - w.$box.offset().top - l - 5), o.css("left", n + e.offset().left - w.$box.offset().left - l / 2),
+                o.data("selected-cell", e), o.data("position", "before"), o.addClass("fr-visible"),
+                !1) : e.offset().left + e.outerWidth() / 2 <= s && s < e.offset().left + e.outerWidth() ? (l = parseInt(o.find("a").css("width"), 10),
+                o.css("top", r + e.offset().top - w.$box.offset().top - l - 5), o.css("left", n + e.offset().left - w.$box.offset().left + e.outerWidth() - l / 2),
+                o.data("selected-cell", e), o.data("position", "after"), o.addClass("fr-visible"),
                 !1) : void 0;
             });
         }
@@ -20204,30 +20268,30 @@
             if (w.$box.find(".fr-line-breaker").is(":visible")) return !1;
             o || q(), w.$box.append(o), o.data("instance", w);
             var l, a = Z(t), s = e.pageY, n = 0, r = 0;
-            w.opts.iframe && (n += w.$iframe.offset().left - w.helpers.scrollLeft(), r += w.$iframe.offset().top - w.helpers.scrollTop()), 
+            w.opts.iframe && (n += w.$iframe.offset().left - w.helpers.scrollLeft(), r += w.$iframe.offset().top - w.helpers.scrollTop()),
             a.find("tr").each(function() {
                 var e = Z(this);
-                return e.offset().top <= s && s < e.offset().top + e.outerHeight() / 2 ? (l = parseInt(o.find("a").css("width"), 10), 
-                o.css("top", r + e.offset().top - w.$box.offset().top - l / 2), o.css("left", n + e.offset().left - w.$box.offset().left - l - 5), 
-                o.data("selected-cell", e.find("td:first")), o.data("position", "above"), o.addClass("fr-visible"), 
-                !1) : e.offset().top + e.outerHeight() / 2 <= s && s < e.offset().top + e.outerHeight() ? (l = parseInt(o.find("a").css("width"), 10), 
-                o.css("top", r + e.offset().top - w.$box.offset().top + e.outerHeight() - l / 2), 
-                o.css("left", n + e.offset().left - w.$box.offset().left - l - 5), o.data("selected-cell", e.find("td:first")), 
+                return e.offset().top <= s && s < e.offset().top + e.outerHeight() / 2 ? (l = parseInt(o.find("a").css("width"), 10),
+                o.css("top", r + e.offset().top - w.$box.offset().top - l / 2), o.css("left", n + e.offset().left - w.$box.offset().left - l - 5),
+                o.data("selected-cell", e.find("td:first")), o.data("position", "above"), o.addClass("fr-visible"),
+                !1) : e.offset().top + e.outerHeight() / 2 <= s && s < e.offset().top + e.outerHeight() ? (l = parseInt(o.find("a").css("width"), 10),
+                o.css("top", r + e.offset().top - w.$box.offset().top + e.outerHeight() - l / 2),
+                o.css("left", n + e.offset().left - w.$box.offset().left - l - 5), o.data("selected-cell", e.find("td:first")),
                 o.data("position", "below"), o.addClass("fr-visible"), !1) : void 0;
             });
         }
         function Y(e) {
             r = null;
             var t = w.doc.elementFromPoint(e.pageX - w.win.pageXOffset, e.pageY - w.win.pageYOffset);
-            w.opts.tableResizer && (!w.popups.areVisible() || w.popups.areVisible() && w.popups.isVisible("table.edit")) && K(e, t), 
+            w.opts.tableResizer && (!w.popups.areVisible() || w.popups.areVisible() && w.popups.isVisible("table.edit")) && K(e, t),
             !w.opts.tableInsertHelper || w.popups.areVisible() || w.$tb.hasClass("fr-inline") && w.$tb.is(":visible") || function(e, t) {
                 if (0 === J().length) {
                     var l, a, s;
                     if (t && ("HTML" == t.tagName || "BODY" == t.tagName || w.node.isElement(t))) for (l = 1; l <= w.opts.tableInsertHelperOffset; l++) {
-                        if (a = w.doc.elementFromPoint(e.pageX - w.win.pageXOffset, e.pageY - w.win.pageYOffset + l), 
+                        if (a = w.doc.elementFromPoint(e.pageX - w.win.pageXOffset, e.pageY - w.win.pageYOffset + l),
                         Z(a).hasClass("fr-tooltip")) return;
                         if (a && ("TH" == a.tagName || "TD" == a.tagName || "TABLE" == a.tagName) && (Z(a).parents(".fr-wrapper").length || w.opts.iframe) && "false" != Z(a).closest("table").attr("contenteditable")) return L(e, Z(a).closest("table"));
-                        if (s = w.doc.elementFromPoint(e.pageX - w.win.pageXOffset + l, e.pageY - w.win.pageYOffset), 
+                        if (s = w.doc.elementFromPoint(e.pageX - w.win.pageXOffset + l, e.pageY - w.win.pageYOffset),
                         Z(s).hasClass("fr-tooltip")) return;
                         if (s && ("TH" == s.tagName || "TD" == s.tagName || "TABLE" == s.tagName) && (Z(s).parents(".fr-wrapper").length || w.opts.iframe) && "false" != Z(s).closest("table").attr("contenteditable")) return H(e, Z(s).closest("table"));
                     }
@@ -20252,7 +20316,7 @@
             return s;
         }
         function X(e) {
-            if (1 < J().length && n && y(), !1 === n && !1 === s && !1 === E) r && clearTimeout(r), 
+            if (1 < J().length && n && y(), !1 === n && !1 === s && !1 === E) r && clearTimeout(r),
             w.edit.isDisabled() && !w.popups.isVisible("table.edit") || (r = setTimeout(Y, 30, e)); else if (E) {
                 var t = e.pageX - w.win.pageXOffset;
                 w.opts.iframe && (t += w.$iframe.offset().left);
@@ -20264,15 +20328,15 @@
             w.node.isEmpty(e.get(0)) ? e.prepend(Z.FE.MARKERS) : e.prepend(Z.FE.START_MARKER).append(Z.FE.END_MARKER);
         }
         function q() {
-            w.shared.$ti_helper || (w.shared.$ti_helper = Z('<div class="fr-insert-helper"><a class="fr-floating-btn" role="button" tabIndex="-1" title="' + w.language.translate("Insert") + '"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M22,16.75 L16.75,16.75 L16.75,22 L15.25,22.000 L15.25,16.75 L10,16.75 L10,15.25 L15.25,15.25 L15.25,10 L16.75,10 L16.75,15.25 L22,15.25 L22,16.75 Z"/></svg></a></div>'), 
+            w.shared.$ti_helper || (w.shared.$ti_helper = Z('<div class="fr-insert-helper"><a class="fr-floating-btn" role="button" tabIndex="-1" title="' + w.language.translate("Insert") + '"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M22,16.75 L16.75,16.75 L16.75,22 L15.25,22.000 L15.25,16.75 L10,16.75 L10,15.25 L15.25,15.25 L15.25,10 L16.75,10 L16.75,15.25 L22,15.25 L22,16.75 Z"/></svg></a></div>'),
             w.events.bindClick(w.shared.$ti_helper, "a", function() {
                 var e = o.data("selected-cell"), t = o.data("position"), l = o.data("instance") || w;
-                "before" == t ? (w.undo.saveStep(), e.addClass("fr-selected-cell"), l.table.insertColumn(t), 
-                e.removeClass("fr-selected-cell"), w.undo.saveStep()) : "after" == t ? (w.undo.saveStep(), 
-                e.addClass("fr-selected-cell"), l.table.insertColumn(t), e.removeClass("fr-selected-cell"), 
-                w.undo.saveStep()) : "above" == t ? (w.undo.saveStep(), e.addClass("fr-selected-cell"), 
-                l.table.insertRow(t), e.removeClass("fr-selected-cell"), w.undo.saveStep()) : "below" == t && (w.undo.saveStep(), 
-                e.addClass("fr-selected-cell"), l.table.insertRow(t), e.removeClass("fr-selected-cell"), 
+                "before" == t ? (w.undo.saveStep(), e.addClass("fr-selected-cell"), l.table.insertColumn(t),
+                e.removeClass("fr-selected-cell"), w.undo.saveStep()) : "after" == t ? (w.undo.saveStep(),
+                e.addClass("fr-selected-cell"), l.table.insertColumn(t), e.removeClass("fr-selected-cell"),
+                w.undo.saveStep()) : "above" == t ? (w.undo.saveStep(), e.addClass("fr-selected-cell"),
+                l.table.insertRow(t), e.removeClass("fr-selected-cell"), w.undo.saveStep()) : "below" == t && (w.undo.saveStep(),
+                e.addClass("fr-selected-cell"), l.table.insertRow(t), e.removeClass("fr-selected-cell"),
                 w.undo.saveStep()), k();
             }), w.events.on("shared.destroy", function() {
                 w.shared.$ti_helper.html("").removeData().remove(), w.shared.$ti_helper = null;
@@ -20310,8 +20374,8 @@
                         D(), s = n = !1;
                     }), w.events.on("commands.mousedown", function(e) {
                         0 < e.parents(".fr-toolbar").length && D();
-                    }), w.events.$on(w.$el, "mouseenter", "th, td", T), w.events.$on(w.$win, "mouseup", l), 
-                    w.opts.iframe && w.events.$on(Z(w.o_win), "mouseup", l), w.events.$on(w.$win, "mousemove", X), 
+                    }), w.events.$on(w.$el, "mouseenter", "th, td", T), w.events.$on(w.$win, "mouseup", l),
+                    w.opts.iframe && w.events.$on(Z(w.o_win), "mouseup", l), w.events.$on(w.$win, "mousemove", X),
                     w.events.$on(Z(w.o_win), "scroll", P), w.events.on("contentChanged", function() {
                         0 < J().length && (h(), w.$el.find("img").on("load.selected-cells", function() {
                             Z(this).off("load.selected-cells"), 0 < J().length && h();
@@ -20321,7 +20385,7 @@
                     }), w.events.on("toolbar.esc", function() {
                         if (0 < J().length) return w.events.disableBlur(), w.events.focus(), !1;
                     }, !0), w.events.$on(Z(w.o_win), "keydown", function() {
-                        n && s && (s = n = !1, w.$el.removeClass("fr-no-selection"), w.edit.on(), w.selection.setAtEnd(w.$el.find(".fr-selected-cell:last").get(0)), 
+                        n && s && (s = n = !1, w.$el.removeClass("fr-no-selection"), w.edit.on(), w.selection.setAtEnd(w.$el.find(".fr-selected-cell:last").get(0)),
                         w.selection.restore(), D());
                     }), w.events.$on(w.$el, "keydown", function(e) {
                         e.shiftKey ? !1 === function(e) {
@@ -20336,7 +20400,7 @@
                                     if (r.row < s.length - 1) return _(l, s[r.row + 1][r.col]), !1;
                                 } else if (Z.FE.KEYCODE.ARROW_LEFT == n) {
                                     if (0 < r.col) return _(l, s[r.row][r.col - 1]), !1;
-                                } else if (Z.FE.KEYCODE.ARROW_UP == n && 0 < r.row) return _(l, s[r.row - 1][r.col]), 
+                                } else if (Z.FE.KEYCODE.ARROW_UP == n && 0 < r.row) return _(l, s[r.row - 1][r.col]),
                                 !1;
                             }
                         }(e) && setTimeout(function() {
@@ -20345,13 +20409,13 @@
                             var t = e.which, l = w.selection.blocks();
                             if (l.length && ("TD" == (l = l[0]).tagName || "TH" == l.tagName)) {
                                 for (var a = l; a && "TABLE" != a.tagName && a.parentNode != w.el; ) a = a.parentNode;
-                                if (a && "TABLE" == a.tagName && (Z.FE.KEYCODE.ARROW_LEFT == t || Z.FE.KEYCODE.ARROW_UP == t || Z.FE.KEYCODE.ARROW_RIGHT == t || Z.FE.KEYCODE.ARROW_DOWN == t) && (0 < J().length && S(), 
+                                if (a && "TABLE" == a.tagName && (Z.FE.KEYCODE.ARROW_LEFT == t || Z.FE.KEYCODE.ARROW_UP == t || Z.FE.KEYCODE.ARROW_RIGHT == t || Z.FE.KEYCODE.ARROW_DOWN == t) && (0 < J().length && S(),
                                 w.browser.webkit && (Z.FE.KEYCODE.ARROW_UP == t || Z.FE.KEYCODE.ARROW_DOWN == t))) {
                                     var s = w.selection.ranges(0).startContainer;
                                     if (s.nodeType == Node.TEXT_NODE && (Z.FE.KEYCODE.ARROW_UP == t && (s.previousSibling && "BR" !== s.previousSibling.tagName || s.previousSibling && "BR" === s.previousSibling.tagName && s.previousSibling.previousSibling) || Z.FE.KEYCODE.ARROW_DOWN == t && (s.nextSibling && "BR" !== s.nextSibling.tagName || s.nextSibling && "BR" === s.nextSibling.tagName && s.nextSibling.nextSibling))) return;
                                     e.preventDefault(), e.stopPropagation();
                                     var n = O(Z(a)), r = A(l, n);
-                                    Z.FE.KEYCODE.ARROW_UP == t ? B(r, a, n) : Z.FE.KEYCODE.ARROW_DOWN == t && z(r, a, n), 
+                                    Z.FE.KEYCODE.ARROW_UP == t ? B(r, a, n) : Z.FE.KEYCODE.ARROW_DOWN == t && z(r, a, n),
                                     w.selection.restore();
                                 }
                             }
@@ -20364,30 +20428,30 @@
                                     var l = w.selection.element();
                                     "TD" == l.tagName || "TH" == l.tagName ? t = Z(l) : l != w.el && (0 < Z(l).parentsUntil(w.$el, "td").length ? t = Z(l).parents("td:first") : 0 < Z(l).parentsUntil(w.$el, "th").length && (t = Z(l).parents("th:first")));
                                 }
-                                if (t) return e.preventDefault(), !!(0 === w.selection.get().focusOffset && 0 < Z(w.selection.element()).parentsUntil(w.$el, "ol, ul").length && (0 < Z(w.selection.element()).closest("li").prev().length || Z(w.selection.element()).is("li") && 0 < Z(w.selection.element()).prev().length)) || (S(), 
-                                e.shiftKey ? 0 < t.prev().length ? U(t.prev()) : 0 < t.closest("tr").length && 0 < t.closest("tr").prev().length ? U(t.closest("tr").prev().find("td:last")) : 0 < t.closest("tbody").length && 0 < t.closest("table").find("thead tr").length && U(t.closest("table").find("thead tr th:last")) : 0 < t.next().length ? U(t.next()) : 0 < t.closest("tr").length && 0 < t.closest("tr").next().length ? U(t.closest("tr").next().find("td:first")) : 0 < t.closest("thead").length && 0 < t.closest("table").find("tbody tr").length ? U(t.closest("table").find("tbody tr td:first")) : (t.addClass("fr-selected-cell"), 
-                                b("below"), D(), U(t.closest("tr").next().find("td:first"))), w.selection.restore(), 
+                                if (t) return e.preventDefault(), !!(0 === w.selection.get().focusOffset && 0 < Z(w.selection.element()).parentsUntil(w.$el, "ol, ul").length && (0 < Z(w.selection.element()).closest("li").prev().length || Z(w.selection.element()).is("li") && 0 < Z(w.selection.element()).prev().length)) || (S(),
+                                e.shiftKey ? 0 < t.prev().length ? U(t.prev()) : 0 < t.closest("tr").length && 0 < t.closest("tr").prev().length ? U(t.closest("tr").prev().find("td:last")) : 0 < t.closest("tbody").length && 0 < t.closest("table").find("thead tr").length && U(t.closest("table").find("thead tr th:last")) : 0 < t.next().length ? U(t.next()) : 0 < t.closest("tr").length && 0 < t.closest("tr").next().length ? U(t.closest("tr").next().find("td:first")) : 0 < t.closest("thead").length && 0 < t.closest("table").find("tbody tr").length ? U(t.closest("table").find("tbody tr td:first")) : (t.addClass("fr-selected-cell"),
+                                b("below"), D(), U(t.closest("tr").next().find("td:first"))), w.selection.restore(),
                                 !1);
                             }
                         }(e)) return !1;
                         var t = J();
                         if (0 < t.length) {
-                            if (0 < t.length && w.keys.ctrlKey(e) && e.which == Z.FE.KEYCODE.A) return D(), 
+                            if (0 < t.length && w.keys.ctrlKey(e) && e.which == Z.FE.KEYCODE.A) return D(),
                             w.popups.isVisible("table.edit") && w.popups.hide("table.edit"), t = [], !0;
-                            if (e.which == Z.FE.KEYCODE.ESC && w.popups.isVisible("table.edit")) return D(), 
-                            w.popups.hide("table.edit"), e.preventDefault(), e.stopPropagation(), e.stopImmediatePropagation(), 
+                            if (e.which == Z.FE.KEYCODE.ESC && w.popups.isVisible("table.edit")) return D(),
+                            w.popups.hide("table.edit"), e.preventDefault(), e.stopPropagation(), e.stopImmediatePropagation(),
                             !(t = []);
                             if (1 < t.length && (e.which == Z.FE.KEYCODE.BACKSPACE || e.which == Z.FE.KEYCODE.DELETE)) {
                                 w.undo.saveStep();
                                 for (var l = 0; l < t.length; l++) Z(t[l]).html("<br>"), l == t.length - 1 && Z(t[l]).prepend(Z.FE.MARKERS);
                                 return w.selection.restore(), w.undo.saveStep(), !(t = []);
                             }
-                            if (1 < t.length && e.which != Z.FE.KEYCODE.F10 && !w.keys.isBrowserAction(e)) return e.preventDefault(), 
+                            if (1 < t.length && e.which != Z.FE.KEYCODE.F10 && !w.keys.isBrowserAction(e)) return e.preventDefault(),
                             !(t = []);
                         } else if (!(t = []) === function(e) {
                             if (e.altKey && e.which == Z.FE.KEYCODE.SPACE) {
                                 var t, l = w.selection.element();
-                                if ("TD" == l.tagName || "TH" == l.tagName ? t = l : 0 < Z(l).closest("td").length ? t = Z(l).closest("td").get(0) : 0 < Z(l).closest("th").length && (t = Z(l).closest("th").get(0)), 
+                                if ("TD" == l.tagName || "TH" == l.tagName ? t = l : 0 < Z(l).closest("td").length ? t = Z(l).closest("td").get(0) : 0 < Z(l).closest("th").length && (t = Z(l).closest("th").get(0)),
                                 t) return e.preventDefault(), _(t, t), h(), !1;
                             }
                         }(e)) return !1;
@@ -20406,7 +20470,7 @@
             insert: function(e, t) {
                 var l, a, s = "<table " + (w.opts.tableDefaultWidth ? 'style="width: ' + w.opts.tableDefaultWidth + ';" ' : "") + 'class="fr-inserted-table"><tbody>', n = 100 / t;
                 for (l = 0; l < e; l++) {
-                    for (s += "<tr>", a = 0; a < t; a++) s += "<td" + (w.opts.tableDefaultWidth ? ' style="width: ' + n.toFixed(4) + '%;"' : "") + ">", 
+                    for (s += "<tr>", a = 0; a < t; a++) s += "<td" + (w.opts.tableDefaultWidth ? ' style="width: ' + n.toFixed(4) + '%;"' : "") + ">",
                     0 === l && 0 === a && (s += Z.FE.MARKERS), s += "<br></td>";
                     s += "</tr>";
                 }
@@ -20436,7 +20500,7 @@
                             var c = a.parent();
                             a.remove(), 0 === c.find("tr").length && c.remove(), s = O(e);
                         }
-                        R(0, s.length - 1, 0, s[0].length - 1, e), 0 < n.min_i ? w.selection.setAtEnd(s[n.min_i - 1][0]) : w.selection.setAtEnd(s[0][0]), 
+                        R(0, s.length - 1, 0, s[0].length - 1, e), 0 < n.min_i ? w.selection.setAtEnd(s[n.min_i - 1][0]) : w.selection.setAtEnd(s[0][0]),
                         w.selection.restore(), w.popups.hide("table.edit");
                     }
                 }
@@ -20455,20 +20519,20 @@
                                 t = null;
                                 break;
                             }
-                            t == c[e][a] ? (a += parseInt(Z(t).attr("colspan"), 10) || 1, s++) : (a += parseInt(Z(c[e][a]).attr("colspan"), 10) || 1, 
+                            t == c[e][a] ? (a += parseInt(Z(t).attr("colspan"), 10) || 1, s++) : (a += parseInt(Z(c[e][a]).attr("colspan"), 10) || 1,
                             "after" == i && (t = 0 === s ? -1 : l.find("> th, > td").get(s - 1)));
                         }
                         var n, r = Z(t);
                         if ("after" == i && f < a - 1 || "before" == i && 0 < f && c[e][f] == c[e][f - 1]) {
                             if (0 === e || 0 < e && c[e][f] != c[e - 1][f]) {
                                 var o = parseInt(r.attr("colspan"), 10) + 1;
-                                r.attr("colspan", o), r.css("width", (r.data("old-width") * p / d + p).toFixed(4) + "%"), 
+                                r.attr("colspan", o), r.css("width", (r.data("old-width") * p / d + p).toFixed(4) + "%"),
                                 r.removeData("old-width");
                             }
-                        } else n = 0 < l.find("th").length ? '<th style="width: ' + p.toFixed(4) + '%;"><br></th>' : '<td style="width: ' + p.toFixed(4) + '%;"><br></td>', 
+                        } else n = 0 < l.find("th").length ? '<th style="width: ' + p.toFixed(4) + '%;"><br></th>' : '<td style="width: ' + p.toFixed(4) + '%;"><br></td>',
                         -1 == t ? l.prepend(n) : null == t ? l.append(n) : "before" == i ? r.before(n) : "after" == i && r.after(n);
                     }), e.find("th, td").each(function() {
-                        (l = Z(this)).data("old-width") && (l.css("width", (l.data("old-width") * p / d).toFixed(4) + "%"), 
+                        (l = Z(this)).data("old-width") && (l.css("width", (l.data("old-width") * p / d).toFixed(4) + "%"),
                         l.removeData("old-width"));
                     }), w.popups.isVisible("table.edit") && h();
                 }
@@ -20479,20 +20543,20 @@
                     var t, l, a, s = O(), n = $(s);
                     if (0 === n.min_j && n.max_j == s[0].length - 1) u(); else {
                         var r = 0;
-                        for (t = 0; t < s.length; t++) for (l = 0; l < s[0].length; l++) (a = Z(s[t][l])).hasClass("fr-selected-cell") || (a.data("old-width", a.outerWidth() / e.outerWidth() * 100), 
+                        for (t = 0; t < s.length; t++) for (l = 0; l < s[0].length; l++) (a = Z(s[t][l])).hasClass("fr-selected-cell") || (a.data("old-width", a.outerWidth() / e.outerWidth() * 100),
                         (l < n.min_j || l > n.max_j) && (r += a.outerWidth() / e.outerWidth() * 100));
-                        for (r /= s.length, l = n.max_j; l >= n.min_j; l--) for (t = 0; t < s.length; t++) if (0 === t || s[t][l] != s[t - 1][l]) if (a = Z(s[t][l]), 
+                        for (r /= s.length, l = n.max_j; l >= n.min_j; l--) for (t = 0; t < s.length; t++) if (0 === t || s[t][l] != s[t - 1][l]) if (a = Z(s[t][l]),
                         1 < (parseInt(a.attr("colspan"), 10) || 1)) {
                             var o = parseInt(a.attr("colspan"), 10) - 1;
-                            1 == o ? a.removeAttr("colspan") : a.attr("colspan", o), a.css("width", (100 * (a.data("old-width") - j(l, s)) / r).toFixed(4) + "%"), 
+                            1 == o ? a.removeAttr("colspan") : a.attr("colspan", o), a.css("width", (100 * (a.data("old-width") - j(l, s)) / r).toFixed(4) + "%"),
                             a.removeData("old-width");
                         } else {
                             var i = Z(a.parent().get(0));
                             a.remove(), 0 === i.find("> th, > td").length && (0 === i.prev().length || 0 === i.next().length || i.prev().find("> th[rowspan], > td[rowspan]").length < i.prev().find("> th, > td").length) && i.remove();
                         }
-                        R(0, s.length - 1, 0, s[0].length - 1, e), 0 < n.min_j ? w.selection.setAtEnd(s[n.min_i][n.min_j - 1]) : w.selection.setAtEnd(s[n.min_i][0]), 
+                        R(0, s.length - 1, 0, s[0].length - 1, e), 0 < n.min_j ? w.selection.setAtEnd(s[n.min_i][n.min_j - 1]) : w.selection.setAtEnd(s[n.min_i][0]),
                         w.selection.restore(), w.popups.hide("table.edit"), e.find("th, td").each(function() {
-                            (a = Z(this)).data("old-width") && (a.css("width", (100 * a.data("old-width") / r).toFixed(4) + "%"), 
+                            (a = Z(this)).data("old-width") && (a.css("width", (100 * a.data("old-width") / r).toFixed(4) + "%"),
                             a.removeData("old-width"));
                         });
                     }
@@ -20503,10 +20567,10 @@
                     x();
                     var e, t, l = $(O()), a = w.$el.find(".fr-selected-cell"), s = Z(a[0]), n = s.parent().find(".fr-selected-cell"), r = s.closest("table"), o = s.html(), i = 0;
                     for (e = 0; e < n.length; e++) i += Z(n[e]).outerWidth();
-                    for (s.css("width", Math.min(100, i / r.outerWidth() * 100).toFixed(4) + "%"), l.min_j < l.max_j && s.attr("colspan", l.max_j - l.min_j + 1), 
-                    l.min_i < l.max_i && s.attr("rowspan", l.max_i - l.min_i + 1), e = 1; e < a.length; e++) "<br>" != (t = Z(a[e])).html() && "" !== t.html() && (o += "<br>" + t.html()), 
+                    for (s.css("width", Math.min(100, i / r.outerWidth() * 100).toFixed(4) + "%"), l.min_j < l.max_j && s.attr("colspan", l.max_j - l.min_j + 1),
+                    l.min_i < l.max_i && s.attr("rowspan", l.max_i - l.min_i + 1), e = 1; e < a.length; e++) "<br>" != (t = Z(a[e])).html() && "" !== t.html() && (o += "<br>" + t.html()),
                     t.remove();
-                    s.html(o), w.selection.setAtEnd(s.get(0)), w.selection.restore(), w.toolbar.enable(), 
+                    s.html(o), w.selection.setAtEnd(s.get(0)), w.selection.restore(), w.toolbar.enable(),
                     m(l.min_i, l.max_i, r);
                     var f = r.find("tr:empty");
                     for (e = f.length - 1; 0 <= e; e--) Z(f[e]).remove();
@@ -20520,7 +20584,7 @@
                         var o = Math.ceil(t / 2);
                         a = V(r.col, r.col + o - 1, n) / l * 100;
                         var i = V(r.col + o, r.col + t - 1, n) / l * 100;
-                        1 < o ? e.attr("colspan", o) : e.removeAttr("colspan"), 1 < t - o ? s.attr("colspan", t - o) : s.removeAttr("colspan"), 
+                        1 < o ? e.attr("colspan", o) : e.removeAttr("colspan"), 1 < t - o ? s.attr("colspan", t - o) : s.removeAttr("colspan"),
                         e.css("width", a.toFixed(4) + "%"), s.css("width", i.toFixed(4) + "%");
                     } else {
                         var f;
@@ -20568,7 +20632,7 @@
             },
             removeHeader: function() {
                 var e = Q(), t = e.find("thead");
-                if (0 < t.length) if (0 === e.find("tbody tr").length) u(); else if (t.remove(), 
+                if (0 < t.length) if (0 === e.find("tbody tr").length) u(); else if (t.remove(),
                 0 < J().length) h(); else {
                     w.popups.hide("table.edit");
                     var l = e.find("tbody tr:first td:first").get(0);
@@ -20621,7 +20685,7 @@
         refreshOnCallback: !1,
         popup: !0,
         callback: function() {
-            this.popups.isVisible("table.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(), 
+            this.popups.isVisible("table.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(),
             this.selection.restore()), this.popups.hide("table.insert")) : this.table.showInsertPopup();
         },
         plugin: "table"
@@ -20702,10 +20766,10 @@
             "merge" == t ? this.table.mergeCells() : "vertical-split" == t ? this.table.splitCellVertically() : this.table.splitCellHorizontally();
         },
         refreshOnShow: function(e, t) {
-            1 < this.$el.find(".fr-selected-cell").length ? (t.find('a[data-param1="vertical-split"]').addClass("fr-disabled").attr("aria-disabled", !0), 
-            t.find('a[data-param1="horizontal-split"]').addClass("fr-disabled").attr("aria-disabled", !0), 
-            t.find('a[data-param1="merge"]').removeClass("fr-disabled").attr("aria-disabled", !1)) : (t.find('a[data-param1="merge"]').addClass("fr-disabled").attr("aria-disabled", !0), 
-            t.find('a[data-param1="vertical-split"]').removeClass("fr-disabled").attr("aria-disabled", !1), 
+            1 < this.$el.find(".fr-selected-cell").length ? (t.find('a[data-param1="vertical-split"]').addClass("fr-disabled").attr("aria-disabled", !0),
+            t.find('a[data-param1="horizontal-split"]').addClass("fr-disabled").attr("aria-disabled", !0),
+            t.find('a[data-param1="merge"]').removeClass("fr-disabled").attr("aria-disabled", !1)) : (t.find('a[data-param1="merge"]').addClass("fr-disabled").attr("aria-disabled", !0),
+            t.find('a[data-param1="vertical-split"]').removeClass("fr-disabled").attr("aria-disabled", !1),
             t.find('a[data-param1="horizontal-split"]').removeClass("fr-disabled").attr("aria-disabled", !1));
         }
     }), Z.FE.DefineIcon("tableRemove", {
@@ -20763,7 +20827,7 @@
             this.table.back();
         },
         refresh: function(e) {
-            0 !== this.table.selectedCells().length || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), 
+            0 !== this.table.selectedCells().length || this.opts.toolbarInline ? (e.removeClass("fr-hidden"),
             e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"), e.next(".fr-separator").addClass("fr-hidden"));
         }
     }), Z.FE.DefineIcon("tableCellVerticalAlign", {
@@ -20858,25 +20922,25 @@
 
 !function(t) {
     "function" == typeof define && define.amd ? define([ "jquery" ], t) : "object" == typeof module && module.exports ? module.exports = function(e, n) {
-        return n === undefined && (n = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return n === undefined && (n = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         t(n);
     } : t(window.jQuery);
 }(function(f) {
-    f.FE.URLRegEx = "(^| |\\u00A0)(" + f.FE.LinkRegEx + "|([a-z0-9+-_.]{1,}@[a-z0-9+-_.]{1,}\\.[a-z0-9+-_]{1,}))$", 
+    f.FE.URLRegEx = "(^| |\\u00A0)(" + f.FE.LinkRegEx + "|([a-z0-9+-_.]{1,}@[a-z0-9+-_.]{1,}\\.[a-z0-9+-_]{1,}))$",
     f.FE.PLUGINS.url = function(i) {
         var l = null;
         function n(e, n, t) {
             for (var r = ""; t.length && "." == t[t.length - 1]; ) r += ".", t = t.substring(0, t.length - 1);
             var o = t;
             if (i.opts.linkConvertEmailAddress) i.helpers.isEmail(o) && !/^mailto:.*/i.test(o) && (o = "mailto:" + o); else if (i.helpers.isEmail(o)) return n + t;
-            return /^((http|https|ftp|ftps|mailto|tel|sms|notes|data)\:)/i.test(o) || (o = "//" + o), 
+            return /^((http|https|ftp|ftps|mailto|tel|sms|notes|data)\:)/i.test(o) || (o = "//" + o),
             (n || "") + "<a" + (i.opts.linkAlwaysBlank ? ' target="_blank"' : "") + (l ? ' rel="' + l + '"' : "") + ' data-fr-linked="true" href="' + o + '">' + t.replace(/&amp;/g, "&").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</a>" + r;
         }
         function a() {
             return new RegExp(f.FE.URLRegEx, "gi");
         }
         function s(e) {
-            return i.opts.linkAlwaysNoFollow && (l = "nofollow"), i.opts.linkAlwaysBlank && (i.opts.linkNoOpener && (l ? l += " noopener" : l = "noopener"), 
+            return i.opts.linkAlwaysNoFollow && (l = "nofollow"), i.opts.linkAlwaysBlank && (i.opts.linkNoOpener && (l ? l += " noopener" : l = "noopener"),
             i.opts.linkNoReferrer && (l ? l += " noreferrer" : l = "noreferrer")), e.replace(a(), n);
         }
         function p(e) {
@@ -20908,7 +20972,7 @@
                 }, !0), i.events.on("paste.beforeCleanup", function(e) {
                     if (i.helpers.isURL(e)) {
                         var n = null;
-                        return i.opts.linkAlwaysBlank && (i.opts.linkNoOpener && (n ? n += " noopener" : n = "noopener"), 
+                        return i.opts.linkAlwaysBlank && (i.opts.linkNoOpener && (n ? n += " noopener" : n = "noopener"),
                         i.opts.linkNoReferrer && (n ? n += " noreferrer" : n = "noreferrer")), "<a" + (i.opts.linkAlwaysBlank ? ' target="_blank"' : "") + (n ? ' rel="' + n + '"' : "") + ' href="' + e + '" >' + e + "</a>";
                     }
                 });
@@ -20919,7 +20983,7 @@
 
 !function(i) {
     "function" == typeof define && define.amd ? define([ "jquery" ], i) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         i(t);
     } : i(window.jQuery);
 }(function(Q) {
@@ -20984,7 +21048,7 @@
         url_text: "https://play.vidyard.com/$1",
         html: '<iframe width="640" height="360" src="{url}" frameborder="0" allowfullscreen></iframe>',
         provider: "vidyard"
-    } ], Q.FE.VIDEO_EMBED_REGEX = /^\W*((<iframe(.|\n)*>(\s|\n)*<\/iframe>)|(<embed(.|\n)*>))\W*$/i, 
+    } ], Q.FE.VIDEO_EMBED_REGEX = /^\W*((<iframe(.|\n)*>(\s|\n)*<\/iframe>)|(<embed(.|\n)*>))\W*$/i,
     Q.FE.PLUGINS.video = function(p) {
         var a, f, v, u, o, i, d = "https://i.froala.com/upload", l = 2, c = 3, h = 4, g = 5, m = 6, r = {};
         function b() {
@@ -20998,9 +21062,9 @@
             if (e || (e = function() {
                 var e = "";
                 if (0 < p.opts.videoEditButtons.length) {
-                    p.opts.videoResponsive && (-1 < p.opts.videoEditButtons.indexOf("videoSize") && p.opts.videoEditButtons.splice(p.opts.videoEditButtons.indexOf("videoSize"), 1), 
-                    -1 < p.opts.videoEditButtons.indexOf("videoDisplay") && p.opts.videoEditButtons.splice(p.opts.videoEditButtons.indexOf("videoDisplay"), 1), 
-                    -1 < p.opts.videoEditButtons.indexOf("videoAlign") && p.opts.videoEditButtons.splice(p.opts.videoEditButtons.indexOf("videoAlign"), 1)), 
+                    p.opts.videoResponsive && (-1 < p.opts.videoEditButtons.indexOf("videoSize") && p.opts.videoEditButtons.splice(p.opts.videoEditButtons.indexOf("videoSize"), 1),
+                    -1 < p.opts.videoEditButtons.indexOf("videoDisplay") && p.opts.videoEditButtons.splice(p.opts.videoEditButtons.indexOf("videoDisplay"), 1),
+                    -1 < p.opts.videoEditButtons.indexOf("videoAlign") && p.opts.videoEditButtons.splice(p.opts.videoEditButtons.indexOf("videoAlign"), 1)),
                     e += '<div class="fr-buttons">', e += p.button.buildList(p.opts.videoEditButtons);
                     var t = {
                         buttons: e += "</div>"
@@ -21017,7 +21081,7 @@
             }
         }
         function n(e) {
-            if (e) return p.popups.onRefresh("video.insert", b), p.popups.onHide("image.insert", W), 
+            if (e) return p.popups.onRefresh("video.insert", b), p.popups.onHide("image.insert", W),
             !0;
             var t = "";
             p.opts.videoUpload || -1 === p.opts.videoInsertButtons.indexOf("videoUpload") || p.opts.videoInsertButtons.splice(p.opts.videoInsertButtons.indexOf("videoUpload"), 1);
@@ -21063,15 +21127,15 @@
         function y(e) {
             p.events.focus(!0), p.selection.restore();
             var t = !1;
-            u && (j(), t = !0), p.html.insert('<span contenteditable="false" draggable="true" class="fr-jiv fr-video fr-deletable">' + e + "</span>", !1, p.opts.videoSplitHTML), 
+            u && (j(), t = !0), p.html.insert('<span contenteditable="false" draggable="true" class="fr-jiv fr-video fr-deletable">' + e + "</span>", !1, p.opts.videoSplitHTML),
             p.popups.hide("video.insert");
             var i = p.$el.find(".fr-jiv");
-            i.removeClass("fr-jiv"), i.toggleClass("fr-rv", p.opts.videoResponsive), q(i, p.opts.videoDefaultDisplay, p.opts.videoDefaultAlign), 
+            i.removeClass("fr-jiv"), i.toggleClass("fr-rv", p.opts.videoResponsive), q(i, p.opts.videoDefaultDisplay, p.opts.videoDefaultAlign),
             i.toggleClass("fr-draggable", p.opts.videoMove), p.events.trigger(t ? "video.replaced" : "video.inserted", [ i ]);
         }
         function w() {
             var e = Q(this);
-            p.popups.hide("video.insert"), e.removeClass("fr-uploading"), e.parent().next().is("br") && e.parent().next().remove(), 
+            p.popups.hide("video.insert"), e.removeClass("fr-uploading"), e.parent().next().is("br") && e.parent().next().remove(),
             R(e.parent()), p.events.trigger("video.loaded", [ e.parent() ]);
         }
         function E(a, e, d, l, f) {
@@ -21081,14 +21145,14 @@
                 if (l) {
                     p.undo.canDo() || l.find("video").hasClass("fr-uploading") || p.undo.saveStep();
                     var i = l.find("video").data("fr-old-src"), o = l.data("fr-replaced");
-                    l.data("fr-replaced", !1), p.$wp ? ((e = l.clone()).find("video").removeData("fr-old-src").removeClass("fr-uploading"), 
+                    l.data("fr-replaced", !1), p.$wp ? ((e = l.clone()).find("video").removeData("fr-old-src").removeClass("fr-uploading"),
                     e.find("video").off("canplay"), i && l.find("video").attr("src", i), l.replaceWith(e)) : e = l;
                     for (var r = e.find("video").get(0).attributes, s = 0; s < r.length; s++) {
                         var n = r[s];
                         0 === n.nodeName.indexOf("data-") && e.find("video").removeAttr(n.nodeName);
                     }
                     if (void 0 !== d) for (t in d) d.hasOwnProperty(t) && "link" != t && e.find("video").attr("data-" + t, d[t]);
-                    e.find("video").on("canplay", w), e.find("video").attr("src", a), p.edit.on(), O(), 
+                    e.find("video").on("canplay", w), e.find("video").attr("src", a), p.edit.on(), O(),
                     p.undo.saveStep(), p.$el.blur(), p.events.trigger(o ? "video.replaced" : "video.inserted", [ e, f ]);
                 } else e = function(e, t, i) {
                     var o, r = "";
@@ -21096,20 +21160,20 @@
                     var s = p.opts.videoDefaultWidth;
                     s && "auto" != s && (s += "px");
                     var n = Q('<span contenteditable="false" draggable="true" class="fr-video fr-dv' + p.opts.videoDefaultDisplay[0] + ("center" != p.opts.videoDefaultAlign ? " fr-fv" + p.opts.videoDefaultAlign[0] : "") + '"><video src="' + e + '" ' + r + (s ? ' style="width: ' + s + ';" ' : "") + " controls>" + p.language.translate("Your browser does not support HTML5 video.") + "</video></span>");
-                    n.toggleClass("fr-draggable", p.opts.videoMove), p.edit.on(), p.events.focus(!0), 
-                    p.selection.restore(), p.undo.saveStep(), p.opts.videoSplitHTML ? p.markers.split() : p.markers.insert(), 
+                    n.toggleClass("fr-draggable", p.opts.videoMove), p.edit.on(), p.events.focus(!0),
+                    p.selection.restore(), p.undo.saveStep(), p.opts.videoSplitHTML ? p.markers.split() : p.markers.insert(),
                     p.html.wrap();
                     var a = p.$el.find(".fr-marker");
-                    return p.node.isLastSibling(a) && a.parent().hasClass("fr-deletable") && a.insertAfter(a.parent()), 
-                    a.replaceWith(n), p.selection.clear(), n.find("video").get(0).readyState > n.find("video").get(0).HAVE_FUTURE_DATA || p.helpers.isIOS() ? i.call(n.find("video").get(0)) : n.find("video").on("canplaythrough load", i), 
+                    return p.node.isLastSibling(a) && a.parent().hasClass("fr-deletable") && a.insertAfter(a.parent()),
+                    a.replaceWith(n), p.selection.clear(), n.find("video").get(0).readyState > n.find("video").get(0).HAVE_FUTURE_DATA || p.helpers.isIOS() ? i.call(n.find("video").get(0)) : n.find("video").on("canplaythrough load", i),
                     n;
                 }(a, d, w), O(), p.undo.saveStep(), p.events.trigger("video.inserted", [ e, f ]);
             }();
         }
         function C(e) {
             var t = p.popups.get("video.insert");
-            if (t || (t = n()), t.find(".fr-layer.fr-active").removeClass("fr-active").addClass("fr-pactive"), 
-            t.find(".fr-video-progress-bar-layer").addClass("fr-active"), t.find(".fr-buttons").hide(), 
+            if (t || (t = n()), t.find(".fr-layer.fr-active").removeClass("fr-active").addClass("fr-pactive"),
+            t.find(".fr-video-progress-bar-layer").addClass("fr-active"), t.find(".fr-buttons").hide(),
             u) {
                 var i = u.find("video");
                 p.popups.setContainer("video.insert", p.$sc);
@@ -21120,10 +21184,10 @@
         }
         function A(e) {
             var t = p.popups.get("video.insert");
-            if (t && (t.find(".fr-layer.fr-pactive").addClass("fr-active").removeClass("fr-pactive"), 
-            t.find(".fr-video-progress-bar-layer").removeClass("fr-active"), t.find(".fr-buttons").show(), 
+            if (t && (t.find(".fr-layer.fr-pactive").addClass("fr-active").removeClass("fr-pactive"),
+            t.find(".fr-video-progress-bar-layer").removeClass("fr-active"), t.find(".fr-buttons").show(),
             e || p.$el.find("video.fr-error").length)) {
-                if (p.events.focus(), p.$el.find("video.fr-error").length && (p.$el.find("video.fr-error").parent().remove(), 
+                if (p.events.focus(), p.$el.find("video.fr-error").length && (p.$el.find("video.fr-error").parent().remove(),
                 p.undo.saveStep(), p.undo.run(), p.undo.dropRedo()), !p.$wp && u) {
                     var i = u;
                     P(!0), p.selection.setAfter(i.find("video").get(0)), p.selection.restore();
@@ -21135,7 +21199,7 @@
             var i = p.popups.get("video.insert");
             if (i) {
                 var o = i.find(".fr-video-progress-bar-layer");
-                o.find("h3").text(e + (t ? " " + t + "%" : "")), o.removeClass("fr-error"), t ? (o.find("div").removeClass("fr-indeterminate"), 
+                o.find("h3").text(e + (t ? " " + t + "%" : "")), o.removeClass("fr-error"), t ? (o.find("div").removeClass("fr-indeterminate"),
                 o.find("div > span").css("width", t + "%")) : o.find("div").addClass("fr-indeterminate");
             }
         }
@@ -21157,7 +21221,7 @@
                     var s = function(e) {
                         try {
                             var t = Q(e).find("Location").text(), i = Q(e).find("Key").text();
-                            return !1 === p.events.trigger("video.uploadedToS3", [ t, i, e ], !0) ? (p.edit.on(), 
+                            return !1 === p.events.trigger("video.uploadedToS3", [ t, i, e ], !0) ? (p.edit.on(),
                             !1) : t;
                         } catch (o) {
                             return V(h, e), !1;
@@ -21202,10 +21266,10 @@
                 try {
                     s = r.location != r.parent.location && !(r.$ && r.$.FE);
                 } catch (n) {}
-                s && r.frameElement && (t += p.helpers.getPX(Q(r.frameElement).offset().left) + r.frameElement.clientLeft, 
+                s && r.frameElement && (t += p.helpers.getPX(Q(r.frameElement).offset().left) + r.frameElement.clientLeft,
                 i = e.clientY + p.helpers.getPX(Q(r.frameElement).offset().top) + r.frameElement.clientTop);
             }
-            p.undo.canDo() || p.undo.saveStep(), (f = Q(this)).data("start-x", t), f.data("start-y", i), 
+            p.undo.canDo() || p.undo.saveStep(), (f = Q(this)).data("start-x", t), f.data("start-y", i),
             a.show(), p.popups.hideAll(), T();
         }
         function $(e) {
@@ -21217,8 +21281,8 @@
                 var o = f.data("start-x"), r = f.data("start-y");
                 f.data("start-x", t), f.data("start-y", i);
                 var s = t - o, n = i - r, a = u.find("iframe, embed, video"), d = a.width(), l = a.height();
-                (f.hasClass("fr-hnw") || f.hasClass("fr-hsw")) && (s = 0 - s), (f.hasClass("fr-hnw") || f.hasClass("fr-hne")) && (n = 0 - n), 
-                a.css("width", d + s), a.css("height", l + n), a.removeAttr("width"), a.removeAttr("height"), 
+                (f.hasClass("fr-hnw") || f.hasClass("fr-hsw")) && (s = 0 - s), (f.hasClass("fr-hnw") || f.hasClass("fr-hne")) && (n = 0 - n),
+                a.css("width", d + s), a.css("height", l + n), a.removeAttr("width"), a.removeAttr("height"),
                 L();
             }
         }
@@ -21230,13 +21294,13 @@
             return '<div class="fr-handler fr-h' + e + '"></div>';
         }
         function F(e, t, i, o) {
-            return e.pageX = t, e.pageY = t, I.call(this, e), e.pageX = e.pageX + i * Math.floor(Math.pow(1.1, o)), 
-            e.pageY = e.pageY + i * Math.floor(Math.pow(1.1, o)), $.call(this, e), k.call(this, e), 
+            return e.pageX = t, e.pageY = t, I.call(this, e), e.pageX = e.pageX + i * Math.floor(Math.pow(1.1, o)),
+            e.pageY = e.pageY + i * Math.floor(Math.pow(1.1, o)), $.call(this, e), k.call(this, e),
             ++o;
         }
         function O() {
             var e, t = Array.prototype.slice.call(p.el.querySelectorAll("video, .fr-video > *")), i = [];
-            for (e = 0; e < t.length; e++) i.push(t[e].getAttribute("src")), Q(t[e]).toggleClass("fr-draggable", p.opts.videoMove), 
+            for (e = 0; e < t.length; e++) i.push(t[e].getAttribute("src")), Q(t[e]).toggleClass("fr-draggable", p.opts.videoMove),
             "" === t[e].getAttribute("class") && t[e].removeAttribute("class"), "" === t[e].getAttribute("style") && t[e].removeAttribute("style");
             if (o) for (e = 0; e < o.length; e++) i.indexOf(o[e].getAttribute("src")) < 0 && p.events.trigger("video.removed", [ Q(o[e]) ]);
             o = t;
@@ -21244,26 +21308,26 @@
         function L() {
             v || function() {
                 var e;
-                if (p.shared.$video_resizer ? (v = p.shared.$video_resizer, a = p.shared.$vid_overlay, 
+                if (p.shared.$video_resizer ? (v = p.shared.$video_resizer, a = p.shared.$vid_overlay,
                 p.events.on("destroy", function() {
                     v.removeClass("fr-active").appendTo(Q("body:first"));
-                }, !0)) : (p.shared.$video_resizer = Q('<div class="fr-video-resizer"></div>'), 
+                }, !0)) : (p.shared.$video_resizer = Q('<div class="fr-video-resizer"></div>'),
                 v = p.shared.$video_resizer, p.events.$on(v, "mousedown", function(e) {
                     e.stopPropagation();
-                }, !0), p.opts.videoResize && (v.append(t("nw") + t("ne") + t("sw") + t("se")), 
-                p.shared.$vid_overlay = Q('<div class="fr-video-overlay"></div>'), a = p.shared.$vid_overlay, 
+                }, !0), p.opts.videoResize && (v.append(t("nw") + t("ne") + t("sw") + t("se")),
+                p.shared.$vid_overlay = Q('<div class="fr-video-overlay"></div>'), a = p.shared.$vid_overlay,
                 e = v.get(0).ownerDocument, Q(e).find("body:first").append(a))), p.events.on("shared.destroy", function() {
                     v.html("").removeData().remove(), v = null, p.opts.videoResize && (a.remove(), a = null);
                 }, !0), p.helpers.isMobile() || p.events.$on(Q(p.o_win), "resize.video", function() {
                     P(!0);
                 }), p.opts.videoResize) {
-                    e = v.get(0).ownerDocument, p.events.$on(v, p._mousedown, ".fr-handler", I), p.events.$on(Q(e), p._mousemove, $), 
+                    e = v.get(0).ownerDocument, p.events.$on(v, p._mousedown, ".fr-handler", I), p.events.$on(Q(e), p._mousemove, $),
                     p.events.$on(Q(e.defaultView || e.parentWindow), p._mouseup, k), p.events.$on(a, "mouseleave", k);
                     var o = 1, r = null, s = 0;
                     p.events.on("keydown", function(e) {
                         if (u) {
                             var t = -1 != navigator.userAgent.indexOf("Mac OS X") ? e.metaKey : e.ctrlKey, i = e.which;
-                            (i !== r || 200 < e.timeStamp - s) && (o = 1), (i == Q.FE.KEYCODE.EQUALS || p.browser.mozilla && i == Q.FE.KEYCODE.FF_EQUALS) && t && !e.altKey ? o = F.call(this, e, 1, 1, o) : (i == Q.FE.KEYCODE.HYPHEN || p.browser.mozilla && i == Q.FE.KEYCODE.FF_HYPHEN) && t && !e.altKey && (o = F.call(this, e, 2, -1, o)), 
+                            (i !== r || 200 < e.timeStamp - s) && (o = 1), (i == Q.FE.KEYCODE.EQUALS || p.browser.mozilla && i == Q.FE.KEYCODE.FF_EQUALS) && t && !e.altKey ? o = F.call(this, e, 1, 1, o) : (i == Q.FE.KEYCODE.HYPHEN || p.browser.mozilla && i == Q.FE.KEYCODE.FF_HYPHEN) && t && !e.altKey && (o = F.call(this, e, 2, -1, o)),
                             r = i, s = e.timeStamp;
                         }
                     }), p.events.on("keyup", function() {
@@ -21279,13 +21343,13 @@
             if (e && p.edit.isDisabled()) return e.stopPropagation(), e.preventDefault(), !1;
             if (p.edit.isDisabled()) return !1;
             for (var t = 0; t < Q.FE.INSTANCES.length; t++) Q.FE.INSTANCES[t] != p && Q.FE.INSTANCES[t].events.trigger("video.hideResizer");
-            p.toolbar.disable(), p.helpers.isMobile() && (p.events.disableBlur(), p.$el.blur(), 
-            p.events.enableBlur()), p.$el.find(".fr-video.fr-active").removeClass("fr-active"), 
-            (u = Q(this)).addClass("fr-active"), p.opts.iframe && p.size.syncIframe(), Z(), 
+            p.toolbar.disable(), p.helpers.isMobile() && (p.events.disableBlur(), p.$el.blur(),
+            p.events.enableBlur()), p.$el.find(".fr-video.fr-active").removeClass("fr-active"),
+            (u = Q(this)).addClass("fr-active"), p.opts.iframe && p.size.syncIframe(), Z(),
             L(), s(), p.selection.clear(), p.button.bulkRefresh(), p.events.trigger("image.hideResizer");
         }
         function P(e) {
-            u && (p.shared.vid_exit_flag || !0 === e) && (v.removeClass("fr-active"), p.toolbar.enable(), 
+            u && (p.shared.vid_exit_flag || !0 === e) && (v.removeClass("fr-active"), p.toolbar.enable(),
             u.removeClass("fr-active"), u = null, T());
         }
         function e() {
@@ -21300,11 +21364,11 @@
                 var i = t.files[0];
                 if (i && i.type && -1 !== i.type.indexOf("video")) {
                     if (!p.opts.videoUpload) return e.preventDefault(), e.stopPropagation(), !1;
-                    p.markers.remove(), p.markers.insertAtPoint(e.originalEvent), p.$el.find(".fr-marker").replaceWith(Q.FE.MARKERS), 
+                    p.markers.remove(), p.markers.insertAtPoint(e.originalEvent), p.$el.find(".fr-marker").replaceWith(Q.FE.MARKERS),
                     p.popups.hideAll();
                     var o = p.popups.get("video.insert");
-                    return o || (o = n()), p.popups.setContainer("video.insert", p.$sc), p.popups.show("video.insert", e.originalEvent.pageX, e.originalEvent.pageY), 
-                    C(), 0 <= p.opts.videoAllowedTypes.indexOf(i.type.replace(/video\//g, "")) ? N(t.files) : V(m), 
+                    return o || (o = n()), p.popups.setContainer("video.insert", p.$sc), p.popups.show("video.insert", e.originalEvent.pageX, e.originalEvent.pageY),
+                    C(), 0 <= p.opts.videoAllowedTypes.indexOf(i.type.replace(/video\//g, "")) ? N(t.files) : V(m),
                     e.preventDefault(), e.stopPropagation(), !1;
                 }
             }
@@ -21325,13 +21389,13 @@
                     }, C(), r.readAsDataURL(o);
                 }(i), !1;
                 if (i.size > p.opts.videoMaxSize) return V(g), !1;
-                if (p.opts.videoAllowedTypes.indexOf(i.type.replace(/video\//g, "")) < 0) return V(m), 
+                if (p.opts.videoAllowedTypes.indexOf(i.type.replace(/video\//g, "")) < 0) return V(m),
                 !1;
-                if (p.drag_support.formdata && (t = p.drag_support.formdata ? new FormData() : null), 
+                if (p.drag_support.formdata && (t = p.drag_support.formdata ? new FormData() : null),
                 t) {
                     var o;
-                    if (!1 !== p.opts.videoUploadToS3) for (o in t.append("key", p.opts.videoUploadToS3.keyStart + new Date().getTime() + "-" + (i.name || "untitled")), 
-                    t.append("success_action_status", "201"), t.append("X-Requested-With", "xhr"), t.append("Content-Type", i.type), 
+                    if (!1 !== p.opts.videoUploadToS3) for (o in t.append("key", p.opts.videoUploadToS3.keyStart + new Date().getTime() + "-" + (i.name || "untitled")),
+                    t.append("success_action_status", "201"), t.append("X-Requested-With", "xhr"), t.append("Content-Type", i.type),
                     p.opts.videoUploadToS3.params) p.opts.videoUploadToS3.params.hasOwnProperty(o) && t.append(o, p.opts.videoUploadToS3.params[o]);
                     for (o in p.opts.videoUploadParams) p.opts.videoUploadParams.hasOwnProperty(o) && t.append(o, p.opts.videoUploadParams[o]);
                     t.append(p.opts.videoUploadParam, i);
@@ -21340,7 +21404,7 @@
                     var s = p.core.getXHR(r, p.opts.videoUploadMethod);
                     s.onload = function() {
                         S.call(s, u);
-                    }, s.onerror = D, s.upload.onprogress = U, s.onabort = B, C(), p.events.disableBlur(), 
+                    }, s.onerror = D, s.upload.onprogress = U, s.onabort = B, C(), p.events.disableBlur(),
                     p.edit.off(), p.events.enableBlur();
                     var n = p.popups.get("video.insert");
                     n && n.off("abortUpload").on("abortUpload", function() {
@@ -21350,7 +21414,7 @@
             }
         }
         function V(e, t) {
-            p.edit.on(), u && u.find("video").addClass("fr-error"), _(p.language.translate("Something went wrong. Please try again.")), 
+            p.edit.on(), u && u.find("video").addClass("fr-error"), _(p.language.translate("Something went wrong. Please try again.")),
             p.events.trigger("video.error", [ {
                 code: e,
                 message: r[e]
@@ -21359,7 +21423,7 @@
         function Y() {
             if (u) {
                 var e = p.popups.get("video.size"), t = u.find("iframe, embed, video");
-                e.find('input[name="width"]').val(t.get(0).style.width || t.attr("width")).trigger("change"), 
+                e.find('input[name="width"]').val(t.get(0).style.width || t.attr("width")).trigger("change"),
                 e.find('input[name="height"]').val(t.get(0).style.height || t.attr("height")).trigger("change");
             }
         }
@@ -21391,14 +21455,14 @@
         function K(e) {
             void 0 === e && (e = u);
             var t = e.css("float");
-            return e.css("float", "none"), "block" == e.css("display") ? (e.css("float", ""), 
-            e.css("float") != t && e.css("float", t), "block") : (e.css("float", ""), e.css("float") != t && e.css("float", t), 
+            return e.css("float", "none"), "block" == e.css("display") ? (e.css("float", ""),
+            e.css("float") != t && e.css("float", t), "block") : (e.css("float", ""), e.css("float") != t && e.css("float", t),
             "inline");
         }
         function j() {
             if (u && !1 !== p.events.trigger("video.beforeRemove", [ u ])) {
                 var e = u;
-                p.popups.hideAll(), P(!0), p.selection.setBefore(e.get(0)) || p.selection.setAfter(e.get(0)), 
+                p.popups.hideAll(), P(!0), p.selection.setBefore(e.get(0)) || p.selection.setAfter(e.get(0)),
                 e.remove(), p.selection.restore(), p.html.fillEmptyBlocks();
             }
         }
@@ -21406,7 +21470,7 @@
             A();
         }
         function q(e, t, i) {
-            !p.opts.htmlUntouched && p.opts.useClasses ? (e.removeClass("fr-fvl fr-fvr fr-dvb fr-dvi"), 
+            !p.opts.htmlUntouched && p.opts.useClasses ? (e.removeClass("fr-fvl fr-fvr fr-dvb fr-dvi"),
             e.addClass("fr-fv" + i[0] + " fr-dv" + t[0])) : "inline" == t ? (e.css({
                 display: "inline-block"
             }), "center" == i ? e.css({
@@ -21429,9 +21493,9 @@
         function G() {
             p.$el.find("video").filter(function() {
                 return 0 === Q(this).parents("span.fr-video").length;
-            }).wrap('<span class="fr-video fr-deletable" contenteditable="false"></span>'), 
+            }).wrap('<span class="fr-video fr-deletable" contenteditable="false"></span>'),
             p.$el.find("embed, iframe").filter(function() {
-                if (p.browser.safari && this.getAttribute("src") && this.setAttribute("src", this.src), 
+                if (p.browser.safari && this.getAttribute("src") && this.setAttribute("src", this.src),
                 0 < Q(this).parents("span.fr-video").length) return !1;
                 for (var e = Q(this).attr("src"), t = 0; t < Q.FE.VIDEO_PROVIDERS.length; t++) {
                     var i = Q.FE.VIDEO_PROVIDERS[t];
@@ -21443,8 +21507,8 @@
             }).wrap('<span class="fr-video" contenteditable="false"></span>');
             for (var e, t, i = p.$el.find("span.fr-video, video"), o = 0; o < i.length; o++) {
                 var r = Q(i[o]);
-                !p.opts.htmlUntouched && p.opts.useClasses ? ((t = r).hasClass("fr-dvi") || t.hasClass("fr-dvb") || (t.addClass("fr-fv" + X(t)[0]), 
-                t.addClass("fr-dv" + K(t)[0])), p.opts.videoTextNear || r.removeClass("fr-dvi").addClass("fr-dvb")) : p.opts.htmlUntouched || p.opts.useClasses || (q(e = r, e.hasClass("fr-dvb") ? "block" : e.hasClass("fr-dvi") ? "inline" : null, e.hasClass("fr-fvl") ? "left" : e.hasClass("fr-fvr") ? "right" : X(e)), 
+                !p.opts.htmlUntouched && p.opts.useClasses ? ((t = r).hasClass("fr-dvi") || t.hasClass("fr-dvb") || (t.addClass("fr-fv" + X(t)[0]),
+                t.addClass("fr-dv" + K(t)[0])), p.opts.videoTextNear || r.removeClass("fr-dvi").addClass("fr-dvb")) : p.opts.htmlUntouched || p.opts.useClasses || (q(e = r, e.hasClass("fr-dvb") ? "block" : e.hasClass("fr-dvi") ? "inline" : null, e.hasClass("fr-fvl") ? "left" : e.hasClass("fr-fvr") ? "right" : X(e)),
                 e.removeClass("fr-dvb fr-dvi fr-fvr fr-fvl"));
             }
             i.toggleClass("fr-draggable", p.opts.videoMove);
@@ -21456,13 +21520,13 @@
                 e.selectNode(u.get(0)), p.selection.get().addRange(e);
             }
         }
-        return r[1] = "Video cannot be loaded from the passed link.", r[l] = "No link in upload response.", 
-        r[c] = "Error during file upload.", r[h] = "Parsing response failed.", r[g] = "File is too large.", 
-        r[m] = "Video file type is invalid.", r[7] = "Files can be uploaded only to same domain in IE 8 and IE 9.", 
+        return r[1] = "Video cannot be loaded from the passed link.", r[l] = "No link in upload response.",
+        r[c] = "Error during file upload.", r[h] = "Parsing response failed.", r[g] = "File is too large.",
+        r[m] = "Video file type is invalid.", r[7] = "Files can be uploaded only to same domain in IE 8 and IE 9.",
         p.shared.vid_exit_flag = !1, {
             _init: function() {
-                p.opts.videoResponsive && (p.opts.videoResize = !1), p.events.on("drop", M, !0), 
-                p.events.on("mousedown window.mousedown", e), p.events.on("window.touchmove", T), 
+                p.opts.videoResponsive && (p.opts.videoResize = !1), p.events.on("drop", M, !0),
+                p.events.on("mousedown window.mousedown", e), p.events.on("window.touchmove", T),
                 p.events.on("mouseup window.mouseup", P), p.events.on("commands.mousedown", function(e) {
                     0 < e.parents(".fr-toolbar").length && P();
                 }), p.events.on("video.hideResizer commands.undo commands.redo element.dropped", function() {
@@ -21472,15 +21536,15 @@
                 }), p.events.$on(p.$el, "touchmove", function() {
                     i = !0;
                 })), p.events.on("html.set", G), G(), p.events.$on(p.$el, "mousedown", "span.fr-video", function(e) {
-                    e.stopPropagation(), (p.browser.msie || p.browser.edge) && (e.target.dragDrop(), 
+                    e.stopPropagation(), (p.browser.msie || p.browser.edge) && (e.target.dragDrop(),
                     z.call(this, e));
                 }), p.events.$on(p.$el, "click touchend", "span.fr-video", function(e) {
                     if ("false" == Q(this).parents("[contenteditable]:not(.fr-element):not(.fr-img-caption):not(body):first").attr("contenteditable")) return !0;
                     z.call(this, e);
                 }), p.events.on("keydown", function(e) {
                     var t = e.which;
-                    return !u || t != Q.FE.KEYCODE.BACKSPACE && t != Q.FE.KEYCODE.DELETE ? u && t == Q.FE.KEYCODE.ESC ? (P(!0), 
-                    e.preventDefault(), !1) : u && t != Q.FE.KEYCODE.F10 && !p.keys.isBrowserAction(e) ? (e.preventDefault(), 
+                    return !u || t != Q.FE.KEYCODE.BACKSPACE && t != Q.FE.KEYCODE.DELETE ? u && t == Q.FE.KEYCODE.ESC ? (P(!0),
+                    e.preventDefault(), !1) : u && t != Q.FE.KEYCODE.F10 && !p.keys.isBrowserAction(e) ? (e.preventDefault(),
                     !1) : void 0 : (e.preventDefault(), j(), p.undo.saveStep(), !1);
                 }, !0), p.events.on("toolbar.esc", function() {
                     if (u) return p.events.disableBlur(), p.events.focus(), !1;
@@ -21492,7 +21556,7 @@
             },
             showInsertPopup: function() {
                 var e = p.$tb.find('.fr-command[data-cmd="insertVideo"]'), t = p.popups.get("video.insert");
-                if (t || (t = n()), A(), !t.hasClass("fr-active")) if (p.popups.refresh("video.insert"), 
+                if (t || (t = n()), A(), !t.hasClass("fr-active")) if (p.popups.refresh("video.insert"),
                 p.popups.setContainer("video.insert", p.$tb), e.is(":visible")) {
                     var i = e.offset().left + e.outerWidth() / 2, o = e.offset().top + (p.opts.toolbarBottom ? 10 : e.outerHeight() - 10);
                     p.popups.show("video.insert", i, o, e.outerHeight());
@@ -21504,9 +21568,9 @@
                     var r = p.$tb.find('.fr-command[data-cmd="insertVideo"]');
                     t = r.offset().left + r.outerWidth() / 2, i = r.offset().top + (p.opts.toolbarBottom ? 10 : r.outerHeight() - 10);
                 }
-                p.opts.toolbarInline && (i = o.offset().top - p.helpers.getPX(o.css("margin-top")), 
-                o.hasClass("fr-above") && (i += o.outerHeight())), o.find(".fr-layer").removeClass("fr-active"), 
-                o.find(".fr-" + e + "-layer").addClass("fr-active"), p.popups.show("video.insert", t, i, 0), 
+                p.opts.toolbarInline && (i = o.offset().top - p.helpers.getPX(o.css("margin-top")),
+                o.hasClass("fr-above") && (i += o.outerHeight())), o.find(".fr-layer").removeClass("fr-active"),
+                o.find(".fr-" + e + "-layer").addClass("fr-active"), p.popups.show("video.insert", t, i, 0),
                 p.accessibility.focusPopup(o);
             },
             refreshByURLButton: function(e) {
@@ -21529,17 +21593,17 @@
                         break;
                     }
                 }
-                t ? y(t) : (_(p.language.translate("Something went wrong. Please try again.")), 
+                t ? y(t) : (_(p.language.translate("Something went wrong. Please try again.")),
                 p.events.trigger("video.linkError", [ e ]));
             },
             insertEmbed: function(e) {
-                void 0 === e && (e = p.popups.get("video.insert").find(".fr-video-embed-layer textarea").val() || ""), 
-                0 !== e.length && Q.FE.VIDEO_EMBED_REGEX.test(e) ? y(e) : (_(p.language.translate("Something went wrong. Please try again.")), 
+                void 0 === e && (e = p.popups.get("video.insert").find(".fr-video-embed-layer textarea").val() || ""),
+                0 !== e.length && Q.FE.VIDEO_EMBED_REGEX.test(e) ? y(e) : (_(p.language.translate("Something went wrong. Please try again.")),
                 p.events.trigger("video.codeError", [ e ]));
             },
             insert: y,
             align: function(e) {
-                u.removeClass("fr-fvr fr-fvl"), !p.opts.htmlUntouched && p.opts.useClasses ? "left" == e ? u.addClass("fr-fvl") : "right" == e && u.addClass("fr-fvr") : q(u, K(), e), 
+                u.removeClass("fr-fvr fr-fvl"), !p.opts.htmlUntouched && p.opts.useClasses ? "left" == e ? u.addClass("fr-fvl") : "right" == e && u.addClass("fr-fvr") : q(u, K(), e),
                 Z(), L(), s(), p.selection.clear();
             },
             refreshAlign: function(e) {
@@ -21550,7 +21614,7 @@
                 u && t.find('.fr-command[data-param1="' + X() + '"]').addClass("fr-active").attr("aria-selected", !0);
             },
             display: function(e) {
-                u.removeClass("fr-dvi fr-dvb"), !p.opts.htmlUntouched && p.opts.useClasses ? "inline" == e ? u.addClass("fr-dvi") : "block" == e && u.addClass("fr-dvb") : q(u, e, X()), 
+                u.removeClass("fr-dvi fr-dvb"), !p.opts.htmlUntouched && p.opts.useClasses ? "inline" == e ? u.addClass("fr-dvi") : "block" == e && u.addClass("fr-dvb") : q(u, e, X()),
                 Z(), L(), s(), p.selection.clear();
             },
             refreshDisplayOnShow: function(e, t) {
@@ -21566,20 +21630,20 @@
             },
             replace: function() {
                 var e = p.popups.get("video.insert");
-                e || (e = n()), p.popups.isVisible("video.insert") || (A(), p.popups.refresh("video.insert"), 
+                e || (e = n()), p.popups.isVisible("video.insert") || (A(), p.popups.refresh("video.insert"),
                 p.popups.setContainer("video.insert", p.$sc));
                 var t = u.offset().left + u.width() / 2, i = u.offset().top + u.height();
                 p.popups.show("video.insert", t, i, u.outerHeight());
             },
             back: function() {
-                u ? (p.events.disableBlur(), u.trigger("click")) : (p.events.disableBlur(), p.selection.restore(), 
+                u ? (p.events.disableBlur(), u.trigger("click")) : (p.events.disableBlur(), p.selection.restore(),
                 p.events.enableBlur(), p.popups.hide("video.insert"), p.toolbar.showInline());
             },
             setSize: function(e, t) {
                 if (u) {
                     var i = p.popups.get("video.size"), o = u.find("iframe, embed, video");
-                    o.css("width", e || i.find('input[name="width"]').val()), o.css("height", t || i.find('input[name="height"]').val()), 
-                    o.get(0).style.width && o.removeAttr("width"), o.get(0).style.height && o.removeAttr("height"), 
+                    o.css("width", e || i.find('input[name="width"]').val()), o.css("height", t || i.find('input[name="height"]').val()),
+                    o.get(0).style.width && o.removeAttr("width"), o.get(0).style.height && o.removeAttr("height"),
                     i.find("input:focus").blur(), setTimeout(function() {
                         u.trigger("click");
                     }, p.helpers.isAndroid() ? 50 : 0);
@@ -21597,7 +21661,7 @@
         refreshAfterCallback: !1,
         popup: !0,
         callback: function() {
-            this.popups.isVisible("video.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(), 
+            this.popups.isVisible("video.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(),
             this.selection.restore()), this.popups.hide("video.insert")) : this.video.showInsertPopup();
         },
         plugin: "video"
@@ -21745,7 +21809,7 @@
             this.video.back();
         },
         refresh: function(e) {
-            this.video.get() || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"), 
+            this.video.get() || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"),
             e.next(".fr-separator").addClass("fr-hidden"));
         }
     }), Q.FE.RegisterCommand("videoDismissError", {
@@ -21767,7 +21831,7 @@
 
 !function(n) {
     "function" == typeof define && define.amd ? define([ "jquery" ], n) : "object" == typeof module && module.exports ? module.exports = function(e, t) {
-        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)), 
+        return t === undefined && (t = "undefined" != typeof window ? require("jquery") : require("jquery")(e)),
         n(t);
     } : n(window.jQuery);
 }(function(c) {
@@ -21781,8 +21845,8 @@
         embedlyScriptPath: "https://cdn.embedly.com/widgets/platform.js"
     }), c.FE.PLUGINS.embedly = function(r) {
         function t() {
-            r.events.on("html.processGet", i), r.events.$on(r.$el, "click touchend", "div.fr-embedly", d), 
-            r.events.on("mousedown window.mousedown", m), r.events.on("window.touchmove", b), 
+            r.events.on("html.processGet", i), r.events.$on(r.$el, "click touchend", "div.fr-embedly", d),
+            r.events.on("mousedown window.mousedown", m), r.events.on("window.touchmove", b),
             r.events.on("mouseup window.mouseup", u), r.events.on("commands.mousedown", function(e) {
                 0 < e.parents(".fr-toolbar").length && u();
             }), r.events.on("blur video.hideResizer commands.undo commands.redo element.dropped", function() {
@@ -21791,8 +21855,8 @@
                 if (e.hasClass("fr-embedly")) return e.html(e.attr("data-original-embed")), e;
             }), r.events.on("keydown", function(e) {
                 var t = e.which;
-                return !s || t != c.FE.KEYCODE.BACKSPACE && t != c.FE.KEYCODE.DELETE ? s && t == c.FE.KEYCODE.ESC ? (u(!0), 
-                e.preventDefault(), !1) : s && t != c.FE.KEYCODE.F10 && !r.keys.isBrowserAction(e) ? (e.preventDefault(), 
+                return !s || t != c.FE.KEYCODE.BACKSPACE && t != c.FE.KEYCODE.DELETE ? s && t == c.FE.KEYCODE.ESC ? (u(!0),
+                e.preventDefault(), !1) : s && t != c.FE.KEYCODE.F10 && !r.keys.isBrowserAction(e) ? (e.preventDefault(),
                 !1) : void 0 : (e.preventDefault(), f(), !1);
             }, !0), r.events.on("toolbar.esc", function() {
                 if (s) return r.events.disableBlur(), r.events.focus(), !1;
@@ -21809,17 +21873,17 @@
         }
         function n(e) {
             var t = c(e);
-            t.parents(".fr-embedly").attr("contenteditable", !1).attr("draggable", !0).addClass("fr-draggable").css("height", t.height()).addClass("fr-draggable"), 
+            t.parents(".fr-embedly").attr("contenteditable", !1).attr("draggable", !0).addClass("fr-draggable").css("height", t.height()).addClass("fr-draggable"),
             r.opts.iframe && r.size.syncIframe();
         }
         var s, o;
         function d(e) {
             s = c(this), function() {
                 o || function() {
-                    r.shared.$embedly_resizer ? (o = r.shared.$embedly_resizer, r.shared.$embedly_overlay, 
+                    r.shared.$embedly_resizer ? (o = r.shared.$embedly_resizer, r.shared.$embedly_overlay,
                     r.events.on("destroy", function() {
                         o.appendTo(c("body:first"));
-                    }, !0)) : (r.shared.$embedly_resizer = c('<div class="fr-embedly-resizer"></div>'), 
+                    }, !0)) : (r.shared.$embedly_resizer = c('<div class="fr-embedly-resizer"></div>'),
                     o = r.shared.$embedly_resizer, r.events.$on(o, "mousedown", function(e) {
                         e.stopPropagation();
                     }, !0));
@@ -21851,13 +21915,13 @@
             }();
         }
         function i(e) {
-            if (e && r.node.hasClass(e, "fr-embedly")) e.innerHTML = e.getAttribute("data-original-embed"), 
+            if (e && r.node.hasClass(e, "fr-embedly")) e.innerHTML = e.getAttribute("data-original-embed"),
             e.removeAttribute("draggable"), e.removeAttribute("contenteditable"), e.setAttribute("class", (e.getAttribute("class") || "").replace("fr-draggable", "")); else if (e && e.nodeType == Node.ELEMENT_NODE) for (var t = e.querySelectorAll(".fr-embedly"), n = 0; n < t.length; n++) i(t[n]);
         }
         function l(e) {
             if (e) return r.popups.onRefresh("embedly.insert", a), !0;
             var t = "";
-            0 < r.opts.embedlyInsertButtons.length && (t += '<div class="fr-buttons">', t += r.button.buildList(r.opts.embedlyInsertButtons), 
+            0 < r.opts.embedlyInsertButtons.length && (t += '<div class="fr-buttons">', t += r.button.buildList(r.opts.embedlyInsertButtons),
             t += "</div>");
             var n = {
                 buttons: t,
@@ -21871,20 +21935,20 @@
         function e(e) {
             if (e.length) {
                 var t = "<a href='" + e + "' data-card-branding='0' class='embedly-card'" + (r.opts.embedlyKey ? " data-card-key='" + r.opts.embedlyKey + "'" : "") + "></a>";
-                r.html.insert('<div class="fr-embedly fr-draggable" draggable="true" contenteditable="false" data-original-embed="' + t + '">' + t + "</div>"), 
+                r.html.insert('<div class="fr-embedly fr-draggable" draggable="true" contenteditable="false" data-original-embed="' + t + '">' + t + "</div>"),
                 r.popups.hideAll();
             }
         }
         function f() {
             if (s && !1 !== r.events.trigger("embedly.beforeRemove", [ s ])) {
                 var e = s;
-                r.popups.hideAll(), u(!0), r.selection.setBefore(e.get(0)) || r.selection.setAfter(e.get(0)), 
-                e.remove(), r.selection.restore(), r.html.fillEmptyBlocks(), r.undo.saveStep(), 
+                r.popups.hideAll(), u(!0), r.selection.setBefore(e.get(0)) || r.selection.setAfter(e.get(0)),
+                e.remove(), r.selection.restore(), r.html.fillEmptyBlocks(), r.undo.saveStep(),
                 r.events.trigger("video.removed", [ e ]);
             }
         }
         function u(e) {
-            s && (r.shared.embedly_exit_flag || !0 === e) && (o.removeClass("fr-active"), r.toolbar.enable(), 
+            s && (r.shared.embedly_exit_flag || !0 === e) && (o.removeClass("fr-active"), r.toolbar.enable(),
             s.removeClass("fr-active"), s = null, b());
         }
         function m() {
@@ -21899,7 +21963,7 @@
                 if ("undefined" != typeof embedly) t(); else if (r.shared.embedlyLoaded) r.shared.embedlyCallbacks.push(t); else {
                     r.shared.embedlyLoaded = !0, r.shared.embedlyCallbacks = [], r.shared.embedlyCallbacks.push(t);
                     var e = r.doc.createElement("script");
-                    e.type = "text/javascript", e.src = r.opts.embedlyScriptPath, e.innerText = "", 
+                    e.type = "text/javascript", e.src = r.opts.embedlyScriptPath, e.innerText = "",
                     e.onload = function() {
                         if (r.shared.embedlyCallbacks) for (var e = 0; e < r.shared.embedlyCallbacks.length; e++) r.shared.embedlyCallbacks[e]();
                     }, r.doc.getElementsByTagName("head")[0].appendChild(e);
@@ -21907,7 +21971,7 @@
             },
             showInsertPopup: function() {
                 var e = r.$tb.find('.fr-command[data-cmd="embedly"]'), t = r.popups.get("embedly.insert");
-                if (t || (t = l()), !t.hasClass("fr-active")) if (r.popups.refresh("embedly.insert"), 
+                if (t || (t = l()), !t.hasClass("fr-active")) if (r.popups.refresh("embedly.insert"),
                 r.popups.setContainer("embedly.insert", r.$tb), e.is(":visible")) {
                     var n = e.offset().left + e.outerWidth() / 2, s = e.offset().top + (r.opts.toolbarBottom ? 10 : e.outerHeight() - 10);
                     r.popups.show("embedly.insert", n, s, e.outerHeight());
@@ -21922,7 +21986,7 @@
             },
             add: e,
             back: function() {
-                s ? (r.events.disableBlur(), s.trigger("click")) : (r.events.disableBlur(), r.selection.restore(), 
+                s ? (r.events.disableBlur(), s.trigger("click")) : (r.events.disableBlur(), r.selection.restore(),
                 r.events.enableBlur(), r.popups.hide("embedly.insert"), r.toolbar.showInline());
             }
         };
@@ -21934,7 +21998,7 @@
         title: "Embed URL",
         popup: !0,
         callback: function() {
-            this.popups.isVisible("embedly.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(), 
+            this.popups.isVisible("embedly.insert") ? (this.$el.find(".fr-marker").length && (this.events.disableBlur(),
             this.selection.restore()), this.popups.hide("embedly.insert")) : this.embedly.showInsertPopup();
         },
         plugin: "embedly"
@@ -21963,7 +22027,7 @@
             this.embedly.back();
         },
         refresh: function(e) {
-            this.embedly.get() || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"), 
+            this.embedly.get() || this.opts.toolbarInline ? (e.removeClass("fr-hidden"), e.next(".fr-separator").removeClass("fr-hidden")) : (e.addClass("fr-hidden"),
             e.next(".fr-separator").addClass("fr-hidden"));
         }
     });
@@ -28335,7 +28399,7 @@ function __guardMethod__(obj, methodName, transform) {
                 return new tinycolor(color, opts);
             }
             var rgb = inputToRGB(color);
-            this._originalInput = color, this._r = rgb.r, this._g = rgb.g, this._b = rgb.b, 
+            this._originalInput = color, this._r = rgb.r, this._g = rgb.g, this._b = rgb.b,
             this._a = rgb.a, this._roundA = mathRound(100 * this._a) / 100, this._format = opts.format || rgb.format;
             this._gradientType = opts.gradientType;
             if (this._r < 1) {
@@ -29244,7 +29308,7 @@ function __guardMethod__(obj, methodName, transform) {
 });
 
 (function(global, factory) {
-    typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = global || self, 
+    typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = global || self,
     global.Sortable = factory());
 })(this, function() {
     "use strict";
@@ -31883,7 +31947,7 @@ class Fieldset {
     }
 }
 
-$.FroalaEditor.DEFAULTS.key = "AODOd2HLEBFZOTGHW==";
+$.FroalaEditor.DEFAULTS.key = 'zA4B4H3D3B9A5eF5C4C3E3E2C2B3D6D4F2xJCJWECHICe1JOZWJ==';
 
 $.FroalaEditor.SHORTCUTS_MAP = {
     69: {

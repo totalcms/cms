@@ -1,0 +1,47 @@
+{
+  "properties": {
+    "properties": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "fieldset": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "index": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "title": "schema",
+  "type": "object",
+  "required": [
+    "properties",
+    "title",
+    "type",
+    "index",
+    "required"
+  ]
+}
