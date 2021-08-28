@@ -1,4 +1,12 @@
 <?php
+$locale = setlocale(LC_ALL, 0);
+if (strpos($locale, 'UTF-8') === false) {
+	setlocale(LC_ALL, 'C.UTF-8');
+	if ($locale !== 'C.UTF-8') {
+		// A2 Hosting does not support C.UTF-8 trying to fallback
+		setlocale(LC_ALL, "en_US.UTF-8");
+	}
+}
 
 if (!ini_get('date.timezone')) date_default_timezone_set('Europe/London');
 error_reporting(E_ALL);

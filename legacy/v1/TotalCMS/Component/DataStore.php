@@ -27,7 +27,7 @@ class DataStore extends Component
 
     public function bulk_update($content)
     {
-    	return file_put_contents($this->target_path(), $content);
+    	return file_put_contents($this->target_path(), $content, LOCK_EX);
     }
 
 }

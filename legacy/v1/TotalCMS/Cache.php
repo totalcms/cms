@@ -57,7 +57,7 @@ class Cache
 
 	public function save()
 	{
-		if (file_put_contents($this->db_path,json_encode($this->data)) === false) {
+		if (file_put_contents($this->db_path,json_encode($this->data), LOCK_EX) === false) {
 			$this->totalcms->return_error("Could not write to cmscache file! ".$this->db_path);
 		}
 		// $this->backup();

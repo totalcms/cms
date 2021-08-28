@@ -83,7 +83,7 @@ class Ratings extends Component
             "score"   => $score ? $score : $this->calculate_score($this->round),
             "ratings" => $this->ratings
         ));
-        file_put_contents($this->target_path(),$json_data);
+        file_put_contents($this->target_path(),$json_data, LOCK_EX);
         return $json_data;
     }
 

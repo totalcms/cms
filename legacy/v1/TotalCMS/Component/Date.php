@@ -21,6 +21,6 @@ class Date extends Component
     public function save_content_to_cms($timestamp=false,$options=array())
     {
     	if (!$timestamp) $timestamp = $this->timestamp;
-    	return file_put_contents($this->target_path(),$timestamp);
+    	return file_put_contents($this->target_path(),$timestamp, LOCK_EX);
     }
 }

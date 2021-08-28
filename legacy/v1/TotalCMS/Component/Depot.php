@@ -21,7 +21,7 @@ class Depot extends File
 		if ($options['filename'] !== false) {
 			$info = pathinfo($options['filename']);
 			$name = $info['filename'];
-			$ext  = strtolower(pathinfo($options['filename'],\PATHINFO_EXTENSION));
+			$ext  = mb_strtolower(pathinfo($options['filename'],\PATHINFO_EXTENSION));
 			$this->target_file = preg_replace('/\W+/','-',$name).".".$ext;
 		}
 	}
@@ -63,6 +63,9 @@ class Depot extends File
 						$btime = filemtime("$this->target_dir/$b");
 						return $atime - $btime;
 					});
+			        break;
+				case 'zyx':
+    				rsort($files, SORT_NATURAL | SORT_FLAG_CASE);
 			        break;
 			    default:
     				sort($files, SORT_NATURAL | SORT_FLAG_CASE);

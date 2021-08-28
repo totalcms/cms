@@ -64,7 +64,7 @@ class Video extends Component
     		return false;
 		}
 		$this->contents = $contents;
-    	return file_put_contents($this->target_path(),$this->contents);
+    	return file_put_contents($this->target_path(),$this->contents, LOCK_EX);
     }
 
 	private static function wistia_embed($url,$options=array())
@@ -90,7 +90,7 @@ class Video extends Component
 				'autoplay' => $options['autoplay'],
 				'color'    => $options['vcolor'],
 				'loop'     => $options['loop'],
-				'public'      => 1,
+				'api'      => 1,
 				'badge'    => 0,
 				'byline'   => 0,
 				'portrait' => 0,
