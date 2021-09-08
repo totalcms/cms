@@ -2,7 +2,7 @@
 
 namespace App\Action\Collection\Schema;
 
-use App\Domain\Schema\Service\SchemaSaveService;
+use App\Domain\Schema\Service\SchemaSaver;
 use App\Responder\Responder;
 use App\Transformer\SchemaMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
@@ -11,15 +11,15 @@ use Psr\Http\Message\ServerRequestInterface;
 final class SchemaSaveAction
 {
     private Responder $responder;
-    private SchemaSaveService $service;
+    private SchemaSaver $service;
 
     /**
      * The constructor.
      *
      * @param Responder $responder The app responder
-     * @param SchemaSaveService $service Schema save service
+     * @param SchemaSaver $service Schema save service
      */
-    public function __construct(Responder $responder, SchemaSaveService $service)
+    public function __construct(Responder $responder, SchemaSaver $service)
     {
         $this->responder = $responder;
         $this->service = $service;
@@ -39,7 +39,7 @@ final class SchemaSaveAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $body = $request->getBody();
+        $body = (string)$request->getBody();
 
         return $this->responder->jsonItem(
             $response,

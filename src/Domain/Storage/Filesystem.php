@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Filesystem\Factory;
+namespace App\Domain\Storage;
 
 use FilesystemIterator;
 use RuntimeException;
@@ -9,7 +9,7 @@ use function mb_strpos;
 /**
  * Factory.
  */
-final class FilesystemIteratorFactory
+final class Filesystem
 {
     private string $root;
 
@@ -91,55 +91,14 @@ final class FilesystemIteratorFactory
      *
      * @param string $directory full path to the directory to make
      *
-     * @return bool
+     * @return void
      */
-    private function makeDir(string $directory): bool
+    private function makeDir(string $directory): void
     {
         if (!file_exists($directory)) {
-            return mkdir($directory, 0775, true);
+            mkdir($directory, 0775, true);
         }
-
-        return true;
     }
-
-    // public function delete(string $path) : bool
-    // {
-    //     if (file_exists($path)) {
-    //         if (is_dir($path)) {
-    //             return self::recursiveDelete($path);
-    //         }
-    //         return unlink($path);
-    //     }
-    //     return true;
-    // }
-
-    // public function recursiveDelete(string $source, bool $removeOnlyChildren = false) : bool
-    // {
-    //     if (empty($source) || file_exists($source) === false) {
-    //         return false;
-    //     }
-    //     if (is_file($source) || is_link($source)) {
-    //         return unlink($source);
-    //     }
-
-    //     $dirIt  = new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS);
-    //     $files  = new RecursiveIteratorIterator($dirIt, RecursiveIteratorIterator::CHILD_FIRST);
-
-    //     foreach ($files as $fileinfo) {
-    //         if ($fileinfo->isDir()) {
-    //             if (self::recursiveDelete($fileinfo->getRealPath()) === false) {
-    //                 return false;
-    //             }
-    //         }
-    //         if (unlink($fileinfo->getRealPath()) === false) {
-    //             return false;
-    //         }
-    //     }
-    //     if ($removeOnlyChildren === false) {
-    //         return rmdir($source);
-    //     }
-    //     return true;
-    // }
 
     /**
      * Generate the File Iterator.
@@ -156,7 +115,9 @@ final class FilesystemIteratorFactory
         $path = $this->buildPath($filename);
         $this->makeDir(dirname($path));
 
-        if (file_put_contents($path, $data, LOCK_EX) === false) {
+        $flags = strpos($path, 'vfs://') === false ? LOCK_EX : 0;
+
+        if (file_put_contents($path, $data, $flags) === false) {
             throw new RuntimeException(sprintf('Unable to save file: %s', $filename));
         }
     }

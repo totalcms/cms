@@ -2,7 +2,7 @@
 
 namespace App\Domain\Schema\Service;
 
-use App\Domain\Collection\Service\CollectionFetchService;
+use App\Domain\Collection\Service\CollectionReader;
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Repository\SchemaRepository;
 
@@ -12,15 +12,15 @@ use App\Domain\Schema\Repository\SchemaRepository;
 final class SchemaFetchService
 {
     private SchemaRepository $repository;
-    private CollectionFetchService $collectionService;
+    private CollectionReader $collectionService;
 
     /**
      * Constructor.
      *
      * @param SchemaRepository $repository The repository
-     * @param CollectionFetchService $collectionService
+     * @param CollectionReader $collectionService
      */
-    public function __construct(SchemaRepository $repository, CollectionFetchService $collectionService)
+    public function __construct(SchemaRepository $repository, CollectionReader $collectionService)
     {
         $this->repository = $repository;
         $this->collectionService = $collectionService;
@@ -33,10 +33,10 @@ final class SchemaFetchService
      *
      * @return SchemaData
      */
-    public function fetchSchemaforCollection(string $collection): SchemaData
+    public function fetchSchemaForCollection(string $collection): SchemaData
     {
         $collection = $this->collectionService->fetchCollection($collection);
-        if ('object' == $collection->schema) {
+        if ($collection->schema === 'object') {
             return $this->repository->fetchObjectSchemaForCollection($collection->name);
         }
 

@@ -2,9 +2,10 @@
 
 namespace App\Domain\Schema\Service;
 
-use App\Domain\Collection\Service\CollectionFetchService;
+use App\Domain\Collection\Service\CollectionReader;
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Repository\SchemaRepository;
+use App\Domain\Storage\CollectionStorage;
 use RuntimeException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -14,20 +15,29 @@ use UnexpectedValueException;
 /**
  * Service.
  */
-final class SchemaSaveService
+final class SchemaSaver
 {
+    private CollectionStorage $storage;
+
     private SchemaRepository $repository;
-    private CollectionFetchService $collectionService;
+
+    private CollectionReader $collectionService;
+
     private Serializer $serializer;
 
     /**
      * Constructor.
      *
+     * @param CollectionStorage $storage
      * @param SchemaRepository $repository The repository
-     * @param CollectionFetchService $collectionService
+     * @param CollectionReader $collectionService
      */
-    public function __construct(SchemaRepository $repository, CollectionFetchService $collectionService)
-    {
+    public function __construct(
+        CollectionStorage $storage,
+        SchemaRepository $repository,
+        CollectionReader $collectionService
+    ) {
+        $this->storage = $storage;
         $this->repository = $repository;
         $this->collectionService = $collectionService;
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -46,18 +56,20 @@ final class SchemaSaveService
      */
     public function saveSchemaForCollection(string $collection, string $schemaJSON): SchemaData
     {
-        $collection = $this->collectionService->fetchCollection($collection);
-        if ('object' != $collection->schema) {
-            throw new UnexpectedValueException("Not allowed to save non-object schemas ($collection->name)");
-        }
+        // @todo What is this check good for?
+        //$collection = $this->storage->fetchCollection($collection);
+
+        //if ($collection->schema !== 'object') {
+        //    throw new UnexpectedValueException("Not allowed to save non-object schemas ($collection->name)");
+        //}
 
         $schema = $this->serializer->deserialize($schemaJSON, SchemaData::class, 'json');
         if (!$schema instanceof SchemaData) {
-            throw new UnexpectedValueException('Invalid schema data provided');
+            throw new UnexpectedValueException('Invalid schema data provided', 1);
         }
 
         // TODO: Validate schema json against the schema.json schema to ensure proper formatting
-        $this->repository->saveSchemaForCollection($collection->name, $schema);
+        $this->repository->saveSchemaForCollection($collection, $schema);
 
         return $schema;
     }

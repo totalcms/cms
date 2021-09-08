@@ -2,24 +2,24 @@
 
 namespace App\Domain\Object\Repository;
 
-use App\Domain\Filesystem\Repository\FilesystemRepository;
 use App\Domain\Object\Data\ObjectData;
+use App\Domain\Storage\CollectionStorage;
 
 /**
  * Repository.
  */
 final class ObjectRepository
 {
-    private FilesystemRepository $repository;
+    private CollectionStorage $storage;
 
     /**
      * Constructor.
      *
-     * @param FilesystemRepository $repository The filesystem factory
+     * @param CollectionStorage $storage The filesystem factory
      */
-    public function __construct(FilesystemRepository $repository)
+    public function __construct(CollectionStorage $storage)
     {
-        $this->repository = $repository;
+        $this->storage = $storage;
     }
 
     /**
@@ -32,6 +32,6 @@ final class ObjectRepository
      */
     public function saveObject(string $collection, ObjectData $object): void
     {
-        $this->repository->saveObject($collection, $object);
+        $this->storage->saveObject($collection, $object);
     }
 }

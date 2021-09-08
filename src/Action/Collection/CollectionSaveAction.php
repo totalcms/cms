@@ -2,7 +2,7 @@
 
 namespace App\Action\Collection;
 
-use App\Domain\Collection\Service\CollectionSaveService;
+use App\Domain\Collection\Service\CollectionCreator;
 use App\Responder\Responder;
 use App\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
@@ -11,15 +11,15 @@ use Psr\Http\Message\ServerRequestInterface;
 final class CollectionSaveAction
 {
     private Responder $responder;
-    private CollectionSaveService $service;
+    private CollectionCreator $service;
 
     /**
      * The constructor.
      *
      * @param Responder $responder The app responder
-     * @param CollectionSaveService $service Collection save service
+     * @param CollectionCreator $service Collection save service
      */
-    public function __construct(Responder $responder, CollectionSaveService $service)
+    public function __construct(Responder $responder, CollectionCreator $service)
     {
         $this->responder = $responder;
         $this->service = $service;

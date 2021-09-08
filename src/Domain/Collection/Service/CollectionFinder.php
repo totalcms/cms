@@ -7,7 +7,7 @@ use App\Domain\Collection\Repository\CollectionRepository;
 /**
  * Service.
  */
-final class CollectionListService
+final class CollectionFinder
 {
     private CollectionRepository $repository;
 

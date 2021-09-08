@@ -8,7 +8,7 @@ use App\Domain\Collection\Repository\CollectionRepository;
 /**
  * Service.
  */
-final class CollectionFetchService
+final class CollectionReader
 {
     private CollectionRepository $repository;
 
@@ -31,6 +31,6 @@ final class CollectionFetchService
      */
     public function fetchCollection(string $collection): CollectionData
     {
-        return $this->repository->fetchCollection($collection);
+        return $this->repository->getCollection($collection);
     }
 }

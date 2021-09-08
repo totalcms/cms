@@ -39,7 +39,7 @@ final class SchemaFetchAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $schema = $this->service->fetchSchemaforCollection($args['collection']);
+        $schema = $this->service->fetchSchemaForCollection($args['collection']);
 
         return $this->responder->jsonItem($response, $schema, new SchemaMetaTransformer());
     }

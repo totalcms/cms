@@ -2,7 +2,7 @@
 
 namespace App\Domain\Object\Service;
 
-use App\Domain\Collection\Service\CollectionFetchService;
+use App\Domain\Collection\Service\CollectionReader;
 use App\Domain\Object\Data\ObjectData;
 use App\Domain\Object\Repository\ObjectRepository;
 use RuntimeException;
@@ -17,16 +17,16 @@ use UnexpectedValueException;
 final class ObjectSaveService
 {
     private ObjectRepository $repository;
-    private CollectionFetchService $collectionService;
+    private CollectionReader $collectionService;
     private Serializer $serializer;
 
     /**
      * Constructor.
      *
      * @param ObjectRepository $repository The repository
-     * @param CollectionFetchService $collectionService
+     * @param CollectionReader $collectionService
      */
-    public function __construct(ObjectRepository $repository, CollectionFetchService $collectionService)
+    public function __construct(ObjectRepository $repository, CollectionReader $collectionService)
     {
         $this->repository = $repository;
         $this->collectionService = $collectionService;

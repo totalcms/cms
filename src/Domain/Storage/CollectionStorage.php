@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Domain\Filesystem\Repository;
+namespace App\Domain\Storage;
 
 use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Filesystem\Factory\FilesystemIteratorFactory;
 use App\Domain\Object\Data\ObjectData;
 use App\Domain\Schema\Data\SchemaData;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -13,9 +12,9 @@ use Symfony\Component\Serializer\Serializer;
 /**
  * Repository.
  */
-final class FilesystemRepository
+final class CollectionStorage
 {
-    private FilesystemIteratorFactory $filesystem;
+    private Filesystem $filesystem;
     private Serializer $serializer;
 
     private const META_FILE = '.meta.json';
@@ -25,9 +24,9 @@ final class FilesystemRepository
     /**
      * The constructor.
      *
-     * @param FilesystemIteratorFactory $filesystem The filesystem factory
+     * @param Filesystem $filesystem The filesystem factory
      */
-    public function __construct(FilesystemIteratorFactory $filesystem)
+    public function __construct(Filesystem $filesystem)
     {
         $this->filesystem = $filesystem;
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -45,6 +44,8 @@ final class FilesystemRepository
      */
     private function fetchAndDeserialize(string $file, string $className): ?object
     {
+        $contents = null;
+
         if ($this->filesystem->exists($file)) {
             $contents = $this->filesystem->readFile($file);
         }
@@ -89,7 +90,7 @@ final class FilesystemRepository
      */
     public function fetchCollection(string $collection): ?CollectionData
     {
-        $metaFile = $collection . DIRECTORY_SEPARATOR . $this::META_FILE;
+        $metaFile = $collection . DIRECTORY_SEPARATOR . self::META_FILE;
 
         return $this->fetchAndDeserialize($metaFile, CollectionData::class);
     }
@@ -104,7 +105,7 @@ final class FilesystemRepository
     public function saveCollection(CollectionData $collection): void
     {
         $jsonContent = $this->serializer->serialize($collection, 'json');
-        $metaFile = $collection->name . DIRECTORY_SEPARATOR . $this::META_FILE;
+        $metaFile = $collection->name . DIRECTORY_SEPARATOR . self::META_FILE;
 
         $this->filesystem->saveFile($metaFile, $jsonContent);
     }
@@ -119,7 +120,7 @@ final class FilesystemRepository
     public function fetchDefaultSchemaForType(string $type): ?SchemaData
     {
         // TODO: Refactor - this need to be extracted into its own default schema class or something
-        $schemaFile = __DIR__ . "/../../schemas/$type.json";
+        $schemaFile = __DIR__ . "/../../../schemas/$type.json";
         if (!file_exists($schemaFile)) {
             return null;
         }
@@ -144,7 +145,7 @@ final class FilesystemRepository
      */
     public function fetchObjectSchemaForCollection(string $collection): ?SchemaData
     {
-        $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
+        $schemaFile = $collection . DIRECTORY_SEPARATOR . self::SCHEMA_FILE;
         if ($this->filesystem->exists($schemaFile)) {
             $contents = $this->filesystem->readFile($schemaFile);
         }
@@ -166,7 +167,7 @@ final class FilesystemRepository
      */
     public function saveSchemaForCollection(string $collection, SchemaData $schema): void
     {
-        $schemaFile = $collection . DIRECTORY_SEPARATOR . $this::SCHEMA_FILE;
+        $schemaFile = $collection . DIRECTORY_SEPARATOR . self::SCHEMA_FILE;
         $schemaJSON = $this->serializer->serialize($schema, 'json');
 
         $this->filesystem->saveFile($schemaFile, $schemaJSON);
@@ -182,7 +183,7 @@ final class FilesystemRepository
      */
     public function saveObject(string $collection, ObjectData $object): void
     {
-        $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . $this::OBJECT_EXT;
+        $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . self::OBJECT_EXT;
         $objectJSON = $this->serializer->serialize($object, 'json');
 
         $this->filesystem->saveFile($objectFile, $objectJSON);

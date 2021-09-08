@@ -9,7 +9,7 @@ use RuntimeException;
 /**
  * Repository.
  */
-final class SchemaRepository
+final class SchemaSaverRepository
 {
     private CollectionStorage $storage;
 

@@ -3,7 +3,7 @@
 namespace App\Domain\Collection\Repository;
 
 use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Filesystem\Repository\FilesystemRepository;
+use App\Domain\Storage\CollectionStorage;
 use DomainException;
 
 /**
@@ -11,16 +11,16 @@ use DomainException;
  */
 final class CollectionRepository
 {
-    private FilesystemRepository $repository;
+    private CollectionStorage $storage;
 
     /**
      * Constructor.
      *
-     * @param FilesystemRepository $repository The filesystem factory
+     * @param CollectionStorage $storage The filesystem factory
      */
-    public function __construct(FilesystemRepository $repository)
+    public function __construct(CollectionStorage $storage)
     {
-        $this->repository = $repository;
+        $this->storage = $storage;
     }
 
     /**
@@ -32,9 +32,9 @@ final class CollectionRepository
      *
      * @return CollectionData
      */
-    public function fetchCollection(string $collection): CollectionData
+    public function getCollection(string $collection): CollectionData
     {
-        $collection = $this->repository->fetchCollection($collection);
+        $collection = $this->storage->fetchCollection($collection);
 
         if ($collection === null) {
             throw new DomainException('Collection does not exist');
@@ -50,7 +50,7 @@ final class CollectionRepository
      */
     public function listAllCollections(): array
     {
-        return $this->repository->listAllCollections();
+        return $this->storage->listAllCollections();
     }
 
     /**
@@ -62,6 +62,6 @@ final class CollectionRepository
      */
     public function saveCollection(CollectionData $collection): void
     {
-        $this->repository->saveCollection($collection);
+        $this->storage->saveCollection($collection);
     }
 }

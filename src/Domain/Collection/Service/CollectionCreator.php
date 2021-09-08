@@ -12,13 +12,13 @@ use UnexpectedValueException;
 /**
  * Service.
  */
-final class CollectionSaveService
+final class CollectionCreator
 {
     private CollectionRepository $repository;
     private Serializer $serializer;
 
     /**
-     * Constructor.
+     * The constructor.
      *
      * @param CollectionRepository $repository The repository
      */
