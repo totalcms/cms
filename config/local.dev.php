@@ -3,9 +3,6 @@
 // Development Environment
 $settings['env'] = 'dev';
 
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-
 $settings['docroot'] = $settings['root'];
 $settings['data'] = $settings['root'] . '/tcms-data';
 
