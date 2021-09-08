@@ -1,10 +1,15 @@
 <?php
 
-use App\Domain\Filesystem\Factory\FilesystemIteratorFactory;
+use App\Domain\Storage\Filesystem;
 use App\Factory\LoggerFactory;
 use App\Handler\DefaultErrorHandler;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UploadedFileFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Selective\BasePath\BasePathMiddleware;
 use Selective\Config\Configuration;
 use Selective\Validation\Encoder\JsonEncoder;
@@ -27,12 +32,26 @@ return [
         return AppFactory::create();
     },
 
-    // For the responder
     ResponseFactoryInterface::class => function (ContainerInterface $container) {
         return $container->get(App::class)->getResponseFactory();
     },
 
-    // The Slim RouterParser
+    ServerRequestFactoryInterface::class => function (ContainerInterface $container) {
+        return $container->get(Psr17Factory::class);
+    },
+
+    StreamFactoryInterface::class => function (ContainerInterface $container) {
+        return $container->get(Psr17Factory::class);
+    },
+
+    UploadedFileFactoryInterface::class => function (ContainerInterface $container) {
+        return $container->get(Psr17Factory::class);
+    },
+
+    UriFactoryInterface::class => function (ContainerInterface $container) {
+        return $container->get(Psr17Factory::class);
+    },
+
     RouteParserInterface::class => function (ContainerInterface $container) {
         return $container->get(App::class)->getRouteCollector()->getRouteParser();
     },
@@ -43,8 +62,8 @@ return [
     },
 
     // The data dir iterator factory
-    FilesystemIteratorFactory::class => function (ContainerInterface $container) {
-        return new FilesystemIteratorFactory($container->get(Configuration::class)->getString('datadir'));
+    Filesystem::class => function (ContainerInterface $container) {
+        return new Filesystem($container->get(Configuration::class)->getString('datadir'));
     },
 
     BasePathMiddleware::class => function (ContainerInterface $container) {
@@ -60,15 +79,20 @@ return [
     },
 
     ErrorMiddleware::class => function (ContainerInterface $container) {
-        $config = $container->get(Configuration::class)->getArray('error');
+        $config = (array)$container->get(Configuration::class)->getArray('error');
         $app = $container->get(App::class);
+
+        $logger = $container->get(LoggerFactory::class)
+            ->addFileHandler('error.log')
+            ->createLogger();
 
         $errorMiddleware = new ErrorMiddleware(
             $app->getCallableResolver(),
             $app->getResponseFactory(),
             (bool)$config['display_error_details'],
             (bool)$config['log_errors'],
-            (bool)$config['log_error_details']
+            (bool)$config['log_error_details'],
+            $logger
         );
 
         $errorMiddleware->setDefaultErrorHandler($container->get(DefaultErrorHandler::class));
