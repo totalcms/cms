@@ -8,35 +8,35 @@ return function (App $app) {
     //----------------------------------------------------------------------
     // Schemas Route Map
     //----------------------------------------------------------------------
-    require(__DIR__ . '/routes/schemas.php')($app);
+    (require __DIR__ . '/routes/schemas.php')($app);
 
     //----------------------------------------------------------------------
     // Collections Route Map
     //----------------------------------------------------------------------
-    require(__DIR__ . '/routes/collections.php')($app);
+    (require __DIR__ . '/routes/collections.php')($app);
 
     //----------------------------------------------------------------------
     // Download Route Map
     //----------------------------------------------------------------------
-    require(__DIR__ . '/routes/download.php')($app);
+    (require __DIR__ . '/routes/download.php')($app);
 
     //----------------------------------------------------------------------
     // ImageWorks Route Map
     //----------------------------------------------------------------------
-    require(__DIR__ . '/routes/image-works.php')($app);
+    (require __DIR__ . '/routes/image-works.php')($app);
 
     //----------------------------------------------------------------------
     // Froala File API Route Map - Needs to return specific format
     //----------------------------------------------------------------------
-    require(__DIR__ . '/routes/froala.php')($app);
+    (require __DIR__ . '/routes/froala.php')($app);
 
     //----------------------------------------------------------------------
     // Import Route Map
     //----------------------------------------------------------------------
-    require(__DIR__ . '/routes/import.php')($app);
+    (require __DIR__ . '/routes/import.php')($app);
 
     //----------------------------------------------------------------------
     // Templates Route Map
     //----------------------------------------------------------------------
-    //require (__DIR__ . '/routes/filename.php')($app);
+    //(require __DIR__ . '/routes/filename.php')($app);
 };
