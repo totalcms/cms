@@ -28,7 +28,7 @@ final class LoggerFactory
     /**
      * The constructor.
      *
-     * @param array<mixed> $settings The settings
+     * @param array $settings The settings
      */
     public function __construct(array $settings = [])
     {
