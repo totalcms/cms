@@ -29,7 +29,6 @@
     "php-di/php-di": "^6.0",
     "selective/basepath": "^2",
     "selective/config": "^1.1",
-    "selective/test-traits": "^1.1",
     "selective/validation": "^2.0",
     "slim/slim": "^4",
     "ssnepenthe/color-utils": "^0.4.2",
@@ -44,6 +43,7 @@
     "overtrue/phplint": "^3",
     "phpstan/phpstan": "0.*",
     "phpunit/phpunit": "^9.0",
+    "selective/test-traits": "^2.0",
     "squizlabs/php_codesniffer": "^3.5",
     "symfony/var-dumper": "^5.1"
   },
