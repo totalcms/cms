@@ -41,11 +41,7 @@ trait AppTestTrait
 
         // Mock filesystem
         $this->path = vfsStream::setup()->url();
-
-        if (method_exists($this->container, 'set')) {
-            $this->container->set(Filesystem::class, new Filesystem($this->path));
-        }
-
+        $this->setContainerValue(Filesystem::class, new Filesystem($this->path));
         $this->filesystem = $this->container->get(Filesystem::class);
     }
 }
