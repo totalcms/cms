@@ -56,24 +56,10 @@ $settings['error'] = [
 // Logger settings
 $settings['logger'] = [
     'name' => 'totalcms',
-    'path' => $settings['data'] . '/logs',
+    'path' => __DIR__ . '/../logs',
     'filename' => 'totalcms.log',
     'level' => \Monolog\Logger::ERROR,
     'file_permission' => 0775,
-];
-
-// View settings
-$settings['twig'] = [
-    'paths' => [
-        $settings['root'] . '/templates',
-        __DIR__ . '/../templates',
-    ],
-    'options' => [
-        'debug' => false,
-        // Should be set to true in production
-        'cache_enabled' => true,
-        'cache_path' => $settings['temp'] . '/twig',
-    ],
 ];
 
 // Session
@@ -122,7 +108,6 @@ $settings['smtp'] = [
 
 // Console commands
 // $settings['commands'] = [
-//     \App\Console\TwigCompilerCommand::class,
 //     \App\Console\SchemaDumpCommand::class,
 // ];
 

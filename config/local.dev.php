@@ -21,7 +21,6 @@ $settings['logger']['path'] = $settings['root'] . '/logs';
 $settings['logger']['level'] = \Monolog\Logger::DEBUG;
 $settings['assets']['minify'] = 0;
 $settings['locale']['cache'] = null;
-$settings['twig']['options']['cache_enabled'] = false;
 
 // Database
 $settings['db']['database'] = 'dynamics_dev';
