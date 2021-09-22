@@ -14,7 +14,7 @@ use Symfony\Component\Serializer\Serializer;
  */
 final class CollectionStorage
 {
-    private Filesystem $filesystem;
+    private StorageAdapterInterface $filesystem;
     private Serializer $serializer;
 
     private const META_FILE = '.meta.json';
@@ -24,9 +24,9 @@ final class CollectionStorage
     /**
      * The constructor.
      *
-     * @param Filesystem $filesystem The filesystem factory
+     * @param StorageFilesystemAdapter $filesystem The filesystem factory
      */
-    public function __construct(Filesystem $filesystem)
+    public function __construct(StorageAdapterInterface $filesystem)
     {
         $this->filesystem = $filesystem;
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -46,8 +46,8 @@ final class CollectionStorage
     {
         $contents = null;
 
-        if ($this->filesystem->exists($file)) {
-            $contents = $this->filesystem->readFile($file);
+        if ($this->filesystem->fileExists($file)) {
+            $contents = $this->filesystem->read($file);
         }
 
         if (empty($contents)) {
@@ -70,7 +70,7 @@ final class CollectionStorage
     public function listAllCollections(): array
     {
         $collections = [];
-        foreach ($this->filesystem->listDirs() as $name) {
+        foreach ($this->filesystem->listDirectories('') as $name) {
             $collection = $this->fetchCollection($name);
             if ($collection == null) {
                 continue;
@@ -107,7 +107,7 @@ final class CollectionStorage
         $jsonContent = $this->serializer->serialize($collection, 'json');
         $metaFile = $collection->name . DIRECTORY_SEPARATOR . self::META_FILE;
 
-        $this->filesystem->saveFile($metaFile, $jsonContent);
+        $this->filesystem->write($metaFile, $jsonContent);
     }
 
     /**
@@ -146,8 +146,8 @@ final class CollectionStorage
     public function fetchObjectSchemaForCollection(string $collection): ?SchemaData
     {
         $schemaFile = $collection . DIRECTORY_SEPARATOR . self::SCHEMA_FILE;
-        if ($this->filesystem->exists($schemaFile)) {
-            $contents = $this->filesystem->readFile($schemaFile);
+        if ($this->filesystem->fileExists($schemaFile)) {
+            $contents = $this->filesystem->read($schemaFile);
         }
         $schema = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
         if ($schema instanceof SchemaData) {
@@ -170,7 +170,7 @@ final class CollectionStorage
         $schemaFile = $collection . DIRECTORY_SEPARATOR . self::SCHEMA_FILE;
         $schemaJSON = $this->serializer->serialize($schema, 'json');
 
-        $this->filesystem->saveFile($schemaFile, $schemaJSON);
+        $this->filesystem->write($schemaFile, $schemaJSON);
     }
 
     /**
@@ -186,6 +186,6 @@ final class CollectionStorage
         $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . self::OBJECT_EXT;
         $objectJSON = $this->serializer->serialize($object, 'json');
 
-        $this->filesystem->saveFile($objectFile, $objectJSON);
+        $this->filesystem->write($objectFile, $objectJSON);
     }
 }

@@ -27,7 +27,7 @@ final class SchemaFetchActionTest extends TestCase
                 'schema' => 'url',
             ]
         );
-        $this->filesystem->saveFile('test/.meta.json', (string)$content);
+        $this->filesystem->write('test/.meta.json', (string)$content);
 
         $url = $this->urlFor('schema-fetch', ['collection' => 'test']);
         $request = $this->createRequest('GET', $url);
@@ -35,25 +35,25 @@ final class SchemaFetchActionTest extends TestCase
 
         $expected = [
             'data' => [
-                    'title' => '',
-                    'description' => 'A schema for a Total CMS URL object',
-                    'type' => 'object',
-                    'index' => [
-                            0 => 'id',
-                        ],
-                    'required' => [
-                            0 => 'id',
-                            1 => 'url',
-                        ],
-                    'properties' => [
-                            'id' => [
-                                    '$ref' => 'https://www.totalcms.co/schemas/properties/id.json#',
-                                ],
-                            'url' => [
-                                    '$ref' => 'https://www.totalcms.co/schemas/properties/url.json#',
-                                ],
-                        ],
+                'title' => '',
+                'description' => 'A schema for a Total CMS URL object',
+                'type' => 'object',
+                'index' => [
+                    0 => 'id',
                 ],
+                'required' => [
+                    0 => 'id',
+                    1 => 'url',
+                ],
+                'properties' => [
+                    'id' => [
+                        '$ref' => 'https://www.totalcms.co/schemas/properties/id.json#',
+                    ],
+                    'url' => [
+                        '$ref' => 'https://www.totalcms.co/schemas/properties/url.json#',
+                    ],
+                ],
+            ],
         ];
 
         $this->assertJsonData($expected, $response);

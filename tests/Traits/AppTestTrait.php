@@ -2,7 +2,9 @@
 
 namespace App\Test\Traits;
 
-use App\Domain\Storage\Filesystem;
+use App\Domain\Storage\StorageFilesystemAdapter;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use org\bovigo\vfs\vfsStream;
 use Selective\TestTrait\Traits\ArrayTestTrait;
 use Selective\TestTrait\Traits\ContainerTestTrait;
@@ -27,7 +29,7 @@ trait AppTestTrait
 
     protected string $path;
 
-    protected Filesystem $filesystem;
+    protected StorageFilesystemAdapter $filesystem;
 
     /**
      * Before each test.
@@ -41,7 +43,10 @@ trait AppTestTrait
 
         // Mock filesystem
         $this->path = vfsStream::setup()->url();
-        $this->setContainerValue(Filesystem::class, new Filesystem($this->path));
-        $this->filesystem = $this->container->get(Filesystem::class);
+
+        // Disable LOCK_EX
+        $filesystem = new Filesystem(new LocalFilesystemAdapter($this->path, null, 0));
+        $this->setContainerValue(StorageFilesystemAdapter::class, new StorageFilesystemAdapter($filesystem));
+        $this->filesystem = $this->container->get(StorageFilesystemAdapter::class);
     }
 }

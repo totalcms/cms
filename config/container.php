@@ -1,8 +1,11 @@
 <?php
 
-use App\Domain\Storage\Filesystem;
+use App\Domain\Storage\StorageAdapterInterface;
+use App\Domain\Storage\StorageFilesystemAdapter;
 use App\Factory\LoggerFactory;
 use App\Handler\DefaultErrorHandler;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -62,8 +65,15 @@ return [
     },
 
     // The data dir iterator factory
-    Filesystem::class => function (ContainerInterface $container) {
-        return new Filesystem($container->get(Configuration::class)->getString('datadir'));
+    StorageFilesystemAdapter::class => function (ContainerInterface $container) {
+        $rootPath = $container->get(Configuration::class)->getString('datadir');
+        $filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
+
+        return new StorageFilesystemAdapter($filesystem);
+    },
+
+    StorageAdapterInterface::class => function (ContainerInterface $container) {
+        return $container->get(StorageFilesystemAdapter::class);
     },
 
     BasePathMiddleware::class => function (ContainerInterface $container) {
