@@ -16,8 +16,8 @@ final class ImportCsvAction
 
     public function __construct(CsvImporter $csvImporter, Responder $responder)
     {
-        $this->responder = $responder;
         $this->csvImporter = $csvImporter;
+        $this->responder = $responder;
     }
 
     /**
