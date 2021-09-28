@@ -1,4 +1,5 @@
 <?php
+
 namespace Dynamics\Controllers;
 
 use Dynamics\Settings;
@@ -20,11 +21,11 @@ class CollectionsController extends Controller
     //-------------------
     // All Collections
     //-------------------
-    public function getCollections() : array
+    public function getCollections(): array
     {
         $files = [];
-        $dir   = $this->settings->cms_dir;
-        $it    = new \FilesystemIterator($dir, \FilesystemIterator::SKIP_DOTS);
+        $dir = $this->settings->cms_dir;
+        $it = new \FilesystemIterator($dir, \FilesystemIterator::SKIP_DOTS);
         foreach ($it as $fileinfo) {
             // All collections are the top level folders in tcms-data
             if (!$fileinfo->isDir()) {
@@ -39,7 +40,7 @@ class CollectionsController extends Controller
         return $files;
     }
 
-    public function setCollection(string $collection) : void
+    public function setCollection(string $collection): void
     {
         $this->collection = $collection;
 
@@ -53,7 +54,7 @@ class CollectionsController extends Controller
         $this->settings->set('dir', $this->dir);
 
         // Index data file
-        $this->index = $this->dir.DIRECTORY_SEPARATOR."_$collection".Dynamics::CMS_EXT;
+        $this->index = $this->dir . DIRECTORY_SEPARATOR . "_$collection" . Dynamics::CMS_EXT;
         $this->settings->set('index', $this->index);
 
         // This is done here and not in the constructor since we need the dir setting
@@ -66,11 +67,12 @@ class CollectionsController extends Controller
     //-------------------
     // Schema
     //-------------------
-    public function getSchema() : array
+    public function getSchema(): array
     {
         return $this->schema->get($this->collection);
     }
-    public function saveSchema(array $schema) : array
+
+    public function saveSchema(array $schema): array
     {
         return $this->schema->save($schema);
     }
@@ -78,7 +80,7 @@ class CollectionsController extends Controller
     //-------------------
     // Index
     //-------------------
-    public function getIndex() : array
+    public function getIndex(): array
     {
         if (!file_exists($this->index)) {
             $this->rebuildIndex();
@@ -86,9 +88,9 @@ class CollectionsController extends Controller
         return Dynamics::read($this->index);
     }
 
-    public function rebuildIndex() : array
+    public function rebuildIndex(): array
     {
-        $this->logger->info('Rebuilding Dynamics Index: '.$this->collection);
+        $this->logger->info('Rebuilding Dynamics Index: ' . $this->collection);
         $index = [];
         $it = new \FilesystemIterator($this->dir, \FilesystemIterator::SKIP_DOTS);
         foreach ($it as $fileinfo) {
@@ -97,9 +99,9 @@ class CollectionsController extends Controller
                 continue;
             }
             $basename = $fileinfo->getBasename(Dynamics::CMS_EXT);
-            $is_json  = (strpos(Dynamics::CMS_EXT, $fileinfo->getExtension()??'') !== 1); // only JSON files
-            $is_dot   = (strpos($basename, '.') === 0); // ignore dot files
-            $is_data  = (strpos($basename, '_') === 0); // ignore cms data files that start with underscore
+            $is_json = (strpos(Dynamics::CMS_EXT, $fileinfo->getExtension() ?? '') !== 1); // only JSON files
+            $is_dot = (strpos($basename, '.') === 0); // ignore dot files
+            $is_data = (strpos($basename, '_') === 0); // ignore cms data files that start with underscore
 
             if ($is_json || $is_dot || $is_data) {
                 continue;
@@ -114,23 +116,26 @@ class CollectionsController extends Controller
     //-------------------
     // Single Object
     //-------------------
-    public function dynObject(string $id) : DynamicObject
+    public function dynObject(string $id): DynamicObject
     {
         return new DynamicObject($id, $this->schema, $this->settings, $this->logger);
     }
-    public function exists(string $id) : bool
+
+    public function exists(string $id): bool
     {
         $obj = $this->dynObject($id);
         return $obj->exists();
     }
-    public function getObject(string $id) : array
+
+    public function getObject(string $id): array
     {
         $obj = $this->dynObject($id);
         return $obj->get();
     }
-    public function updateObject(string $id, array $updateData) : array
+
+    public function updateObject(string $id, array $updateData): array
     {
-        $this->logger->info('Updating Object '.$this->collection.'/'.$id);
+        $this->logger->info('Updating Object ' . $this->collection . '/' . $id);
         $this->logger->debug('Object Updates', $updateData);
 
         $dyn = $this->dynObject($id);
@@ -142,9 +147,10 @@ class CollectionsController extends Controller
         }
         return $save;
     }
-    public function saveObject(array $object, bool $rebuild = true) : array
+
+    public function saveObject(array $object, bool $rebuild = true): array
     {
-        $this->logger->info('Saving Dynamics Object to '.$this->collection);
+        $this->logger->info('Saving Dynamics Object to ' . $this->collection);
         $this->logger->debug('Dynamics Object', $object);
 
         $dyn = $this->dynObject($object['id']);
@@ -155,15 +161,17 @@ class CollectionsController extends Controller
         }
         return $save;
     }
-    public function deleteObject(string $id) : bool
+
+    public function deleteObject(string $id): bool
     {
-        $this->logger->info('Deleting Dynamics Object: '.$id);
+        $this->logger->info('Deleting Dynamics Object: ' . $id);
         $obj = $this->dynObject($id);
         $del = $obj->delete();
         $this->rebuildIndex();
         return $del;
     }
-    public function clearFieldCache(string $id, string $field) : bool
+
+    public function clearFieldCache(string $id, string $field): bool
     {
         $this->logger->info("Clearing Field Cache: $id/$field");
         $dyn = $this->dynObject($id);
@@ -173,7 +181,7 @@ class CollectionsController extends Controller
     //-------------------
     // Single Object Field
     //-------------------
-    public function saveField(string $id, string $field, array $data, bool $append = true) : array
+    public function saveField(string $id, string $field, array $data, bool $append = true): array
     {
         $dyn = $this->dynObject($id);
         $dyn->setProperty($field, $data, $append);
@@ -185,7 +193,7 @@ class CollectionsController extends Controller
         return $update;
     }
 
-    public function updateField(string $id, string $field, array $data) : array
+    public function updateField(string $id, string $field, array $data): array
     {
         return $this->saveField($id, $field, $data, false);
     }
@@ -193,7 +201,7 @@ class CollectionsController extends Controller
     //-------------------
     // Single Object File
     //-------------------
-    public function saveFile(string $id, string $field, UploadedFile $file, array $data) : array
+    public function saveFile(string $id, string $field, UploadedFile $file, array $data): array
     {
         $this->logger->debug('Dynamics File', [$file, $data]);
 
@@ -211,7 +219,7 @@ class CollectionsController extends Controller
         return [];
     }
 
-    public function updateFile(string $id, string $field, string $file, array $data) : array
+    public function updateFile(string $id, string $field, string $file, array $data): array
     {
         $dyn = $this->dynObject($id);
         $newFile = $dyn->updateFile($field, $file, $data);
@@ -221,7 +229,8 @@ class CollectionsController extends Controller
 
         return $newFile;
     }
-    public function deleteFile(string $id, string $field, string $file) : array
+
+    public function deleteFile(string $id, string $field, string $file): array
     {
         $dyn = $this->dynObject($id);
         $del = $dyn->deleteFile($field, $file);

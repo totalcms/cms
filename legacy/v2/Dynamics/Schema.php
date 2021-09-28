@@ -1,9 +1,8 @@
 <?php
+
 namespace Dynamics;
 
-use Dynamics\Settings;
-use \Monolog\Logger;
-use Dynamics\Dynamics;
+use Monolog\Logger;
 
 //---------------------------------------------------------------------------------
 // Base Schema
@@ -18,19 +17,19 @@ class Schema
 
     public function __construct(string $collection, Settings $settings, Logger $logger)
     {
-        $this->settings    = $settings;
-        $this->logger      = $logger;
-        $this->collection  = $collection;
-        $this->schema_file = $this->settings->get("dir").DIRECTORY_SEPARATOR.'_schema'.Dynamics::CMS_EXT;
-        $this->schema      = $this->get();
-        $this->schema_def  = __DIR__."/Schemas/schema.json";
+        $this->settings = $settings;
+        $this->logger = $logger;
+        $this->collection = $collection;
+        $this->schema_file = $this->settings->get("dir") . DIRECTORY_SEPARATOR . '_schema' . Dynamics::CMS_EXT;
+        $this->schema = $this->get();
+        $this->schema_def = __DIR__ . "/Schemas/schema.json";
         $this->logger->debug("Schema for $collection", $this->schema);
     }
 
     //-------------------
     // Schema
     //-------------------
-    public function get() : array
+    public function get(): array
     {
         if (!isset($this->schema)) {
             $this->schema = Dynamics::read($this->schema_file);
@@ -38,7 +37,7 @@ class Schema
         return $this->schema;
     }
 
-    public function getType(string $key) : string
+    public function getType(string $key): string
     {
         return $this->schema["properties"][$key]["fieldset"];
     }
@@ -70,24 +69,24 @@ class Schema
         return null;
     }
 
-    public function indexFields() : array
+    public function indexFields(): array
     {
         return $this->schema["index"];
     }
 
-    public function requireFields() : array
+    public function requireFields(): array
     {
         return $this->schema["required"];
     }
 
-    public function properties() : array
+    public function properties(): array
     {
         return $this->schema["properties"];
     }
 
-    public function forceSchemaConstraints(array $schema) : array
+    public function forceSchemaConstraints(array $schema): array
     {
-        $schema['type']  = 'object';
+        $schema['type'] = 'object';
         $schema['title'] = $this->collection;
 
         if (isset($schema['properties'])) {
@@ -116,9 +115,9 @@ class Schema
         return $schema;
     }
 
-    public function save(array $schema) : array
+    public function save(array $schema): array
     {
-        $this->logger->info('Saving Dynamics Schema: '.$this->collection);
+        $this->logger->info('Saving Dynamics Schema: ' . $this->collection);
 
         $schema = $this->forceSchemaConstraints($schema);
         $this->validateSchema($schema);
@@ -126,13 +125,13 @@ class Schema
         return Dynamics::save($this->schema_file, $schema);
     }
 
-    private function validate(\stdClass $data, \stdClass $schema) : bool
+    private function validate(\stdClass $data, \stdClass $schema): bool
     {
         $validator = new \League\JsonGuard\Validator($data, $schema);
 
         if ($validator->fails()) {
             $errors = array_map(function ($error) {
-                return $error->data_path.' : '.$error->message;
+                return $error->data_path . ' : ' . $error->message;
             }, Dynamics::reEncode($validator->errors()));
             $this->logger->critical("Schema Validation Failed", $errors);
             // There has to be a better way than this... :-(
@@ -143,15 +142,15 @@ class Schema
     }
 
     // This method validates schema files for an object
-    private function validateSchema(array $schema) : bool
+    private function validateSchema(array $schema): bool
     {
-        $schema     = Dynamics::reEncode($schema);
+        $schema = Dynamics::reEncode($schema);
         $schema_def = Dynamics::read($this->schema_def, false);
         return $this->validate($schema, $schema_def);
     }
 
     // validate an object against its schema
-    public function validateObject(array $object) : bool
+    public function validateObject(array $object): bool
     {
         $object = Dynamics::reEncode($object);
         $schema = Dynamics::read($this->schema_file, false);

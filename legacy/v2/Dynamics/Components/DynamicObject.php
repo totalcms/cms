@@ -1,4 +1,5 @@
 <?php
+
 namespace Dynamics\Components;
 
 use Dynamics\Dynamics;
@@ -32,44 +33,43 @@ class DynamicObject
     public function __construct(string $id, Schema $schema, Settings $settings, Logger $logger)
     {
         $this->settings = $settings;
-        $this->logger   = $logger;
-        $this->schema   = $schema;
-        $this->id       = $this->cleanString($id);
+        $this->logger = $logger;
+        $this->schema = $schema;
+        $this->id = $this->cleanString($id);
 
         $this->path = implode(DIRECTORY_SEPARATOR, [
             $this->settings->get('dir'),
-            $this->id.Dynamics::CMS_EXT
+            $this->id . Dynamics::CMS_EXT
         ]);
 
         $this->properties = $this->get();
         $this->assetDir = implode(DIRECTORY_SEPARATOR, [$this->settings->get('dir'), $this->id]);
-
         // $this->logger->debug("Created Object:".$this->id);
     }
 
-    public function cleanString(string $string) : string
+    public function cleanString(string $string): string
     {
-        $parts   = parse_url($string);
+        $parts = parse_url($string);
         $slugify = new Slugify();
         return $slugify->slugify($parts["path"]);
     }
 
-    public function exists() : bool
+    public function exists(): bool
     {
         return file_exists($this->path);
     }
 
-    public function get() : array
+    public function get(): array
     {
         return Dynamics::read($this->path);
     }
 
-    public function delete() : bool
+    public function delete(): bool
     {
-        $this->logger->debug('Deleting Object Assets:'.$this->assetDir);
+        $this->logger->debug('Deleting Object Assets:' . $this->assetDir);
         Dynamics::delete($this->assetDir);
 
-        $this->logger->debug('Deleting Object:'.$this->id);
+        $this->logger->debug('Deleting Object:' . $this->id);
         return Dynamics::delete($this->path);
     }
 
@@ -78,7 +78,7 @@ class DynamicObject
         return isset($this->properties[$field]) ? $this->properties[$field] : null;
     }
 
-    public function setProperty(string $field, $value, bool $append = false) : void // PHP 7.1 void return
+    public function setProperty(string $field, $value, bool $append = false): void // PHP 7.1 void return
     {
         if ($append === true) {
             $this->logger->debug("Append to Property $field");
@@ -99,14 +99,14 @@ class DynamicObject
         }
     }
 
-    public function boolVal(string $value) : bool
+    public function boolVal(string $value): bool
     {
         $value = trim($value);
         // false string possibilities
         return !($value === "false" || $value === "0" || $value === "");
     }
 
-    public function listVal($value) : array
+    public function listVal($value): array
     {
         $type = gettype($value);
         if ($type === "string") {
@@ -119,13 +119,13 @@ class DynamicObject
         return array($value);
     }
 
-    public function dateVal($time) : string
+    public function dateVal($time): string
     {
         return date("c", strtotime($time));
         // return gettype($time) === "string" ? strtotime($time) : $time;
     }
 
-    public function updateProperties(array $new, bool $append = false) : void // PHP 7.1 void return
+    public function updateProperties(array $new, bool $append = false): void
     {
         // Loop through the schema so that we only process fields that are supposed to be there
         foreach ($this->schema->properties() as $field => $schema) {
@@ -146,7 +146,7 @@ class DynamicObject
                 case 'select':
                 case 'svg':
                 case 'styledtext':
-                        $this->setProperty($field, $newvalue);
+                    $this->setProperty($field, $newvalue);
                     break;
 
                 case 'deck':
@@ -207,14 +207,14 @@ class DynamicObject
         }
     }
 
-    public function save() : array
+    public function save(): array
     {
-        $this->logger->info('Saving Object: '.$this->id);
+        $this->logger->info('Saving Object: ' . $this->id);
         $this->schema->validateObject($this->properties);
         return Dynamics::save($this->path, $this->properties);
     }
 
-    public function index() : array
+    public function index(): array
     {
         $object = $this->get();
         $indexFields = $this->schema->indexFields();
@@ -233,18 +233,18 @@ class DynamicObject
     //--------------------------------
     // Save/Update Files
     //--------------------------------
-    public function fieldAssetDir(string $field) : string
+    public function fieldAssetDir(string $field): string
     {
         return implode(DIRECTORY_SEPARATOR, [$this->assetDir, $field]);
     }
 
-    public function downloadFile(string $field, string $fileUrl) : array
+    public function downloadFile(string $field, string $fileUrl): array
     {
         // TODO : This method has not been tested at all
 
         $options = [
             'directory' => $this->fieldAssetDir($field),
-            'ext'       => pathinfo($fileUrl, PATHINFO_EXTENSION)
+            'ext' => pathinfo($fileUrl, PATHINFO_EXTENSION)
         ];
         Dynamics::makeDir($options['directory']);
 
@@ -271,7 +271,7 @@ class DynamicObject
         return $data;
     }
 
-    public function saveFile(string $field, array $options, UploadedFile $file) : array
+    public function saveFile(string $field, array $options, UploadedFile $file): array
     {
         $options['directory'] = $this->fieldAssetDir($field);
         Dynamics::makeDir($options['directory']);
@@ -288,7 +288,7 @@ class DynamicObject
 
             case 'gallery':
                 $gallery = new Gallery($field, $options, $this->logger);
-                $data    = $gallery->saveImage($file, $options);
+                $data = $gallery->saveImage($file, $options);
                 break;
 
             case 'file':
@@ -304,7 +304,7 @@ class DynamicObject
 
             case 'styledtext':
                 $asset = new StyledAsset($field, $options, $this->logger);
-                $data  = $asset->saveFile($file);
+                $data = $asset->saveFile($file);
                 break;
 
             default:
@@ -324,7 +324,7 @@ class DynamicObject
     }
 
 
-    public function updateFile(string $field, string $file, array $data) : array
+    public function updateFile(string $field, string $file, array $data): array
     {
         $data['directory'] = $this->fieldAssetDir($field);
 
@@ -359,7 +359,7 @@ class DynamicObject
         return $data;
     }
 
-    public function deleteFile(string $field, string $file) : array
+    public function deleteFile(string $field, string $file): array
     {
         $options = [];
         $options['directory'] = $this->fieldAssetDir($field);
@@ -394,14 +394,14 @@ class DynamicObject
     //--------------------------------
     // ImageWorks Render Image
     //--------------------------------
-    public function getDataForFile(string $field, string $file) : array
+    public function getDataForFile(string $field, string $file): array
     {
-        $dir  = $this->fieldAssetDir($field);
-        $path = implode(DIRECTORY_SEPARATOR, [$dir, $file.Dynamics::CMS_EXT]);
+        $dir = $this->fieldAssetDir($field);
+        $path = implode(DIRECTORY_SEPARATOR, [$dir, $file . Dynamics::CMS_EXT]);
         return Dynamics::read($path);
     }
 
-    public function getImageByField(string $field, array $params) : Response
+    public function getImageByField(string $field, array $params): Response
     {
         $this->logger->debug("Created getImageByField for $field.");
         $image = $this->getProperty($field);
@@ -409,17 +409,17 @@ class DynamicObject
         return $this->getImage($field, $file, $params);
     }
 
-    public function getImage(string $field, string $file, array $params) : Response
+    public function getImage(string $field, string $file, array $params): Response
     {
         $this->logger->debug("getImage for $field/$file");
 
         $server = ServerFactory::create([
-            'source' => $this->fieldAssetDir($field),
-            'cache' => $this->fieldAssetCacheDir($field),
-            'response' => new SlimResponseFactory(),
-            'group_cache_in_folders' => true,
-            'max_image_size' => 2000*2000
-        ]);
+                                            'source' => $this->fieldAssetDir($field),
+                                            'cache' => $this->fieldAssetCacheDir($field),
+                                            'response' => new SlimResponseFactory(),
+                                            'group_cache_in_folders' => true,
+                                            'max_image_size' => 2000 * 2000
+                                        ]);
         // 'watermarks' =>              // Watermarks filesystem
         // 'watermarks_path_prefix' =>  // Watermarks filesystem path prefix
         // 'defaults' =>  []            // Default image manipulations
@@ -437,8 +437,8 @@ class DynamicObject
             case 'gallery':
                 $options = ['directory' => $this->fieldAssetDir($field)];
                 $gallery = new Gallery($field, $options, $this->logger);
-                $image   = $gallery->findFile($file);
-                $file    = $image["filename"];
+                $image = $gallery->findFile($file);
+                $file = $image["filename"];
                 if (empty(pathinfo($file, PATHINFO_EXTENSION))) {
                     $file = sprintf('%s.%s', $file, $image["ext"]);
                 }
@@ -461,19 +461,19 @@ class DynamicObject
     //--------------------------------
     // ImageWorks Cache
     //--------------------------------
-    public function fieldAssetCacheDir(string $field) : string
+    public function fieldAssetCacheDir(string $field): string
     {
         return implode(DIRECTORY_SEPARATOR, [$this->assetDir, $field, 'cache']);
     }
 
-    public function clearFieldCache(string $field) : bool
+    public function clearFieldCache(string $field): bool
     {
-        $this->logger->debug('Deleting Object Assets:'.$this->assetDir);
+        $this->logger->debug('Deleting Object Assets:' . $this->assetDir);
         return Dynamics::delete($this->fieldAssetCacheDir($field));
     }
 
-    public function clearFileCache(string $field, string $file) : bool
+    public function clearFileCache(string $field, string $file): bool
     {
-        return Dynamics::delete($this->fieldAssetCacheDir($field).'/'.$file);
+        return Dynamics::delete($this->fieldAssetCacheDir($field) . '/' . $file);
     }
 }
