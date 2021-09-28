@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpInternalServerErrorException;
 
-final class ImportWordpressAction
+final class ImportYamlAction
 {
     /**
      * Action.

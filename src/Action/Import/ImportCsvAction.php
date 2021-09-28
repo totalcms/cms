@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Action\Import;
+
+use App\Domain\Import\CsvImporter;
+use App\Responder\Responder;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use Slim\Exception\HttpBadRequestException;
+
+final class ImportCsvAction
+{
+    private CsvImporter $csvImporter;
+    private Responder $responder;
+
+    public function __construct(CsvImporter $csvImporter, Responder $responder)
+    {
+        $this->responder = $responder;
+        $this->csvImporter = $csvImporter;
+    }
+
+    /**
+     * Action.
+     *
+     * @param ServerRequestInterface $request The request
+     * @param ResponseInterface $response The response
+     *
+     * @throws HttpBadRequestException
+     *
+     * @return ResponseInterface The response
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $collection = $request->getAttribute('collection');
+
+        /** @var UploadedFileInterface[] $files */
+        $files = $request->getUploadedFiles();
+
+        if (!isset($files['csv']) || $files['csv']->getError() !== UPLOAD_ERR_OK) {
+            throw new HttpBadRequestException($request, 'Upload failed');
+        }
+
+        $importCount = $this->csvImporter->import($collection, $files['csv']);
+
+        return $this->responder->withJson(
+            $response,
+            [
+                'import_count' => $importCount,
+            ]
+        );
+    }
+}

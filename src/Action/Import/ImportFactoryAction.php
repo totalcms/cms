@@ -4,21 +4,22 @@ namespace App\Action\Import;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpInternalServerErrorException;
 
 final class ImportFactoryAction
 {
     /**
      * Action.
      *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
+     * @param ServerRequestInterface $request The request
+     * @param ResponseInterface $response The response
      *
-     * @return ResponseInterface
+     * @throws HttpInternalServerErrorException
+     *
+     * @return ResponseInterface The response
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        $response->getBody()->write('ImportFactoryAction');
-
-        return $response;
+        throw new HttpInternalServerErrorException($request, 'Not implemented');
     }
 }

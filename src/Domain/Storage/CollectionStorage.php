@@ -5,6 +5,7 @@ namespace App\Domain\Storage;
 use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Object\Data\ObjectData;
 use App\Domain\Schema\Data\SchemaData;
+use Cocur\Slugify\Slugify;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -187,5 +188,17 @@ final class CollectionStorage
         $objectJSON = $this->serializer->serialize($object, 'json');
 
         $this->filesystem->write($objectFile, $objectJSON);
+    }
+
+    public function existsCollectionId(string $collection, string $id): bool
+    {
+        $objectFile = $collection . DIRECTORY_SEPARATOR . $this->cleanString($id) . self::OBJECT_EXT;
+
+        return $this->filesystem->fileExists($objectFile);
+    }
+
+    private function cleanString(string $string): string
+    {
+        return (new Slugify())->slugify($string);
     }
 }
