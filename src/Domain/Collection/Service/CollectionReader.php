@@ -3,23 +3,18 @@
 namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Collection\Repository\CollectionRepository;
+use App\Domain\Storage\CollectionStorage;
 
 /**
  * Service.
  */
 final class CollectionReader
 {
-    private CollectionRepository $repository;
+    private CollectionStorage $storage;
 
-    /**
-     * Constructor.
-     *
-     * @param CollectionRepository $repository The repository
-     */
-    public function __construct(CollectionRepository $repository)
+    public function __construct(CollectionStorage $storage)
     {
-        $this->repository = $repository;
+        $this->storage = $storage;
     }
 
     /**
@@ -31,6 +26,6 @@ final class CollectionReader
      */
     public function fetchCollection(string $collection): CollectionData
     {
-        return $this->repository->getCollection($collection);
+        return $this->storage->getCollection($collection);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Action\Collection\Object;
 
-use App\Domain\Object\Service\ObjectSaveService;
+use App\Domain\Object\Service\ObjectSaver;
 use App\Responder\Responder;
 use App\Transformer\ObjectMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
@@ -11,15 +11,15 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ObjectSaveAction
 {
     private Responder $responder;
-    private ObjectSaveService $service;
+    private ObjectSaver $service;
 
     /**
      * The constructor.
      *
      * @param Responder $responder The app responder
-     * @param ObjectSaveService $service Object save service
+     * @param ObjectSaver $service Object save service
      */
-    public function __construct(Responder $responder, ObjectSaveService $service)
+    public function __construct(Responder $responder, ObjectSaver $service)
     {
         $this->responder = $responder;
         $this->service = $service;
@@ -39,7 +39,7 @@ final class ObjectSaveAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $body = $request->getBody();
+        $body = (string)$request->getBody();
 
         return $this->responder->jsonItem(
             $response,

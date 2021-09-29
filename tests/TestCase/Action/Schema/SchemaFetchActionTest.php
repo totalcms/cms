@@ -28,6 +28,7 @@ final class SchemaFetchActionTest extends TestCase
             ]
         );
         $this->filesystem->write('test/.meta.json', (string)$content);
+        //$this->filesystem->write('url/.schema.json', '{}');
 
         $url = $this->urlFor('schema-fetch', ['collection' => 'test']);
         $request = $this->createRequest('GET', $url);

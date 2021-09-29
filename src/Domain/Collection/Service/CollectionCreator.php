@@ -3,7 +3,7 @@
 namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Collection\Repository\CollectionRepository;
+use App\Domain\Storage\CollectionStorage;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -14,24 +14,19 @@ use UnexpectedValueException;
  */
 final class CollectionCreator
 {
-    private CollectionRepository $repository;
+    private CollectionStorage $storage;
     private Serializer $serializer;
 
-    /**
-     * The constructor.
-     *
-     * @param CollectionRepository $repository The repository
-     */
-    public function __construct(CollectionRepository $repository)
+    public function __construct(CollectionStorage $storage)
     {
-        $this->repository = $repository;
+        $this->storage = $storage;
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     /**
      * Save Collection data.
      *
-     * @param string $data the collection data to save
+     * @param string $data The collection data to save
      *
      * @throws UnexpectedValueException
      *
@@ -39,13 +34,13 @@ final class CollectionCreator
      */
     public function saveCollection(string $data): CollectionData
     {
-        $collection = (object)$this->serializer->deserialize($data, CollectionData::class, 'json');
+        $collection = $this->serializer->deserialize($data, CollectionData::class, 'json');
 
-        if (!is_a($collection, CollectionData::class, false)) {
+        if (!$collection instanceof CollectionData) {
             throw new UnexpectedValueException('Invalid Collection data provided');
         }
 
-        $this->repository->saveCollection($collection);
+        $this->storage->saveCollection($collection);
 
         return $collection;
     }

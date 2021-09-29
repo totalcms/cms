@@ -2,9 +2,8 @@
 
 namespace App\Domain\Object\Service;
 
-use App\Domain\Collection\Service\CollectionReader;
-use App\Domain\Object\Data\ObjectData;
-use App\Domain\Object\Repository\ObjectRepository;
+use App\Domain\Storage\CollectionStorage;
+use App\Domain\Storage\ObjectData;
 use RuntimeException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -14,22 +13,14 @@ use UnexpectedValueException;
 /**
  * Service.
  */
-final class ObjectSaveService
+final class ObjectSaver
 {
-    private ObjectRepository $repository;
-    private CollectionReader $collectionService;
+    private CollectionStorage $storage;
     private Serializer $serializer;
 
-    /**
-     * Constructor.
-     *
-     * @param ObjectRepository $repository The repository
-     * @param CollectionReader $collectionService
-     */
-    public function __construct(ObjectRepository $repository, CollectionReader $collectionService)
+    public function __construct(CollectionStorage $storage)
     {
-        $this->repository = $repository;
-        $this->collectionService = $collectionService;
+        $this->storage = $storage;
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
@@ -46,14 +37,12 @@ final class ObjectSaveService
      */
     public function saveObject(string $collection, string $objectJSON): ObjectData
     {
-        $collection = $this->collectionService->fetchCollection($collection);
-
         $object = $this->serializer->deserialize($objectJSON, ObjectData::class, 'json');
         if (!$object instanceof ObjectData) {
             throw new UnexpectedValueException('Invalid object data provided');
         }
 
-        $this->repository->saveObject($collection->name, $object);
+        $this->storage->saveObject($collection, $object);
 
         return $object;
     }

@@ -2,8 +2,8 @@
 
 namespace App\Domain\Import;
 
-use App\Domain\Object\Data\ObjectData;
 use App\Domain\Storage\CollectionStorage;
+use App\Domain\Storage\ObjectData;
 use App\Factory\LoggerFactory;
 use Exception;
 use League\Csv\Reader;

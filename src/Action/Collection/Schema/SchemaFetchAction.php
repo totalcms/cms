@@ -13,12 +13,6 @@ final class SchemaFetchAction
     private Responder $responder;
     private SchemaFetchService $service;
 
-    /**
-     * The constructor.
-     *
-     * @param SchemaFetchService $service service
-     * @param Responder $responder The app responder
-     */
     public function __construct(Responder $responder, SchemaFetchService $service)
     {
         $this->responder = $responder;

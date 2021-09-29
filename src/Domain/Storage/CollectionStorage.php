@@ -3,9 +3,9 @@
 namespace App\Domain\Storage;
 
 use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Object\Data\ObjectData;
 use App\Domain\Schema\Data\SchemaData;
 use Cocur\Slugify\Slugify;
+use DomainException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -97,6 +97,26 @@ final class CollectionStorage
     }
 
     /**
+     * Fetch a collection.
+     *
+     * @param string $collection
+     *
+     * @throws DomainException
+     *
+     * @return CollectionData
+     */
+    public function getCollection(string $collection): CollectionData
+    {
+        $collection = $this->fetchCollection($collection);
+
+        if ($collection === null) {
+            throw new DomainException(sprintf('Collection does not exist: %s', $collection));
+        }
+
+        return $collection;
+    }
+
+    /**
      * Save a Collection.
      *
      * @param CollectionData $collection the collection to save
@@ -126,15 +146,32 @@ final class CollectionStorage
             return null;
         }
 
-        $contents = file_get_contents($schemaFile);
-
-        $schema = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
+        $contents = (string)file_get_contents($schemaFile);
+        $schema = $this->serializer->deserialize($contents, SchemaData::class, 'json');
 
         if ($schema instanceof SchemaData) {
             return $schema;
         }
 
         return null;
+    }
+
+    /**
+     * fetch a schema for one of the default schema types.
+     *
+     * @param string $type
+     *
+     * @return SchemaData
+     */
+    public function getDefaultSchemaForType(string $type): SchemaData
+    {
+        $schema = $this->fetchDefaultSchemaForType($type);
+
+        if ($schema === null) {
+            throw new DomainException(sprintf('Type does not exist: %s', $type));
+        }
+
+        return $schema;
     }
 
     /**
@@ -147,15 +184,37 @@ final class CollectionStorage
     public function fetchObjectSchemaForCollection(string $collection): ?SchemaData
     {
         $schemaFile = $collection . DIRECTORY_SEPARATOR . self::SCHEMA_FILE;
-        if ($this->filesystem->fileExists($schemaFile)) {
-            $contents = $this->filesystem->read($schemaFile);
+
+        if (!$this->filesystem->fileExists($schemaFile)) {
+            return null;
         }
-        $schema = $this->serializer->deserialize($contents ?? '', SchemaData::class, 'json');
+
+        $contents = $this->filesystem->read($schemaFile);
+        $schema = $this->serializer->deserialize($contents, SchemaData::class, 'json');
+
         if ($schema instanceof SchemaData) {
             return $schema;
         }
 
         return null;
+    }
+
+    /**
+     * Get a schema for a custom object.
+     *
+     * @param string $collection
+     *
+     * @return SchemaData
+     */
+    public function getObjectSchemaForCollection(string $collection): SchemaData
+    {
+        $schema = $this->fetchObjectSchemaForCollection($collection);
+
+        if ($schema === null) {
+            throw new DomainException(sprintf('Collection does not exist: %s', $collection));
+        }
+
+        return $schema;
     }
 
     /**
