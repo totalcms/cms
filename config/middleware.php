@@ -2,7 +2,6 @@
 
 use App\Middleware\CorsMiddleware;
 use App\Middleware\LiteLicenseMiddleware;
-use App\Middleware\UrlGeneratorMiddleware;
 use Selective\BasePath\BasePathMiddleware;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
@@ -13,7 +12,6 @@ return function (App $app) {
     $app->add(CorsMiddleware::class);
     $app->add(LiteLicenseMiddleware::class);
     $app->add(ValidationExceptionMiddleware::class);
-    $app->add(UrlGeneratorMiddleware::class);
     $app->addRoutingMiddleware();
     $app->add(BasePathMiddleware::class);
     $app->add(ErrorMiddleware::class);

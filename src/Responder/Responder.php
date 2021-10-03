@@ -2,7 +2,6 @@
 
 namespace App\Responder;
 
-use App\Routing\UrlGenerator;
 use League\Fractal\Manager as FractalManager;
 use League\Fractal\Resource\Collection as FractalCollection;
 use League\Fractal\Resource\Item as FractalItem;
@@ -16,7 +15,6 @@ use Slim\Interfaces\RouteParserInterface;
  */
 final class Responder
 {
-    private UrlGenerator $urlGenerator;
     private RouteParserInterface $routeParser;
     private ResponseFactoryInterface $responseFactory;
     private FractalManager $fractal;
@@ -24,18 +22,15 @@ final class Responder
     /**
      * The constructor.
      *
-     * @param UrlGenerator $urlGenerator The url generator
      * @param ResponseFactoryInterface $responseFactory The response factory
      * @param FractalManager $fractal fractal response manager
      * @param RouteParserInterface $routeParser
      */
     public function __construct(
-        UrlGenerator $urlGenerator,
         RouteParserInterface $routeParser,
         ResponseFactoryInterface $responseFactory,
         FractalManager $fractal
     ) {
-        $this->urlGenerator = $urlGenerator;
         $this->routeParser = $routeParser;
         $this->responseFactory = $responseFactory;
         $this->fractal = $fractal;
