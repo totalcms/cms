@@ -9,7 +9,7 @@ use App\Domain\Storage\CollectionStorage;
 /**
  * Service.
  */
-final class SchemaFetchService
+final class SchemaFetcher
 {
     private CollectionReader $collectionService;
     private CollectionStorage $storage;
