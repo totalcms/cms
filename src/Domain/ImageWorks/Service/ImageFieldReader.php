@@ -30,6 +30,9 @@ final class ImageFieldReader
         ]);
 
         // @todo Implement logic here
+        //$object = $this->storage->getObject($collection, $id);
+        //$image = $object->properties->get($field);
+        //$file = sprintf('%s.%s', $image['filename'], $image['ext']);
         // ...
 
         // If found, return image object

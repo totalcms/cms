@@ -40,7 +40,7 @@ final class CsvImporter
             try {
                 if (
                     !isset($record['id']) ||
-                    $this->storage->existsCollectionId($collection, (string)$record['id'])
+                    $this->storage->existsObjectId($collection, (string)$record['id'])
                 ) {
                     $this->logger->info(sprintf('Skipping import of record at row %s', $offset));
 

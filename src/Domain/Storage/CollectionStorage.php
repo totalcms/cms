@@ -243,21 +243,41 @@ final class CollectionStorage
      */
     public function saveObject(string $collection, ObjectData $object): void
     {
-        $objectFile = $collection . DIRECTORY_SEPARATOR . $object->id . self::OBJECT_EXT;
+        $objectFile = $this->buildObjectPath($collection, $object->id);
         $objectJSON = $this->serializer->serialize($object, 'json');
 
         $this->filesystem->write($objectFile, $objectJSON);
     }
 
-    public function existsCollectionId(string $collection, string $id): bool
+    public function existsObjectId(string $collection, string $id): bool
     {
-        $objectFile = $collection . DIRECTORY_SEPARATOR . $this->cleanString($id) . self::OBJECT_EXT;
+        $objectFile = $this->buildObjectPath($collection, $id);
 
         return $this->filesystem->fileExists($objectFile);
+    }
+
+    public function getObject(string $collection, string $id): ObjectData
+    {
+        $objectFile = $this->buildObjectPath($collection, $id);
+
+        $contents = $this->filesystem->read($objectFile);
+        $schema = $this->serializer->deserialize($contents, ObjectData::class, 'json');
+        if ($schema instanceof SchemaData) {
+            return $schema;
+        }
+
+        $items = (array)json_decode($this->filesystem->read($objectFile), true);
+
+        return new ObjectData($items);
     }
 
     private function cleanString(string $string): string
     {
         return (new Slugify())->slugify($string);
+    }
+
+    private function buildObjectPath(string $collection, string $id): string
+    {
+        return sprintf('%s/%s%s', $collection, $this->cleanString($id), self::OBJECT_EXT);
     }
 }

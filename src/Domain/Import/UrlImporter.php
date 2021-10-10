@@ -45,7 +45,7 @@ final class UrlImporter
             $id = $slugify->slugify($info->title ?? $link);
             $domain = $urlParser->parse($link)['host'];
 
-            if ($this->storage->existsCollectionId($collection, $id)) {
+            if ($this->storage->existsObjectId($collection, $id)) {
                 // Deal with duplicate IDs
                 $id = uniqid($id . '-');
             }
