@@ -262,13 +262,12 @@ final class CollectionStorage
 
         $contents = $this->filesystem->read($objectFile);
         $schema = $this->serializer->deserialize($contents, ObjectData::class, 'json');
-        if ($schema instanceof SchemaData) {
+
+        if ($schema instanceof ObjectData) {
             return $schema;
         }
 
-        $items = (array)json_decode($this->filesystem->read($objectFile), true);
-
-        return new ObjectData($items);
+        return new ObjectData($schema);
     }
 
     private function cleanString(string $string): string
