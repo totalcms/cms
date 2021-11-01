@@ -31,9 +31,6 @@ jobs:
       - name: Check PHP extensions
         run: php -m
 
-      - name: Check MySQL version
-        run: mysql -V
-
       - name: Validate composer.json and composer.lock
         run: composer validate
 
