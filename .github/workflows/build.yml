@@ -1,0 +1,46 @@
+name: build
+
+on: [ push, pull_request ]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ ubuntu-latest ]
+        php-versions: [ '8.0' ]
+    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring, intl, zip
+          coverage: none
+
+      - name: Check PHP version
+        run: php -v
+
+      - name: Check Composer version
+        run: composer -V
+
+      - name: Check PHP extensions
+        run: php -m
+
+      - name: Check MySQL version
+        run: mysql -V
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-progress --ignore-platform-req=php
+
+      - name: Run test suite
+        run: composer test:all
+        env:
+          PHP_CS_FIXER_IGNORE_ENV: 1
