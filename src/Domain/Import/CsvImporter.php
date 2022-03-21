@@ -61,7 +61,7 @@ final class CsvImporter
         }
 
         // @todo Implement rebuildIndex
-        //$this->storage->rebuildIndex();
+        // $this->storage->rebuildIndex();
 
         return $importCount;
     }
