@@ -6,7 +6,7 @@ use League\Glide\Responses\SlimResponseFactory;
 use League\Glide\ServerFactory;
 
 $image = 'goldengate.jpg';
-//$image = 'icon.png';
+// $image = 'icon.png';
 
 // Setup Glide server
 $server = ServerFactory::create([

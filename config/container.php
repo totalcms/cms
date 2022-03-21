@@ -4,6 +4,7 @@ use App\Domain\Storage\StorageAdapterInterface;
 use App\Domain\Storage\StorageFilesystemAdapter;
 use App\Factory\LoggerFactory;
 use App\Handler\DefaultErrorHandler;
+use App\Support\Config;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -14,7 +15,6 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 use Selective\BasePath\BasePathMiddleware;
-use Selective\Config\Configuration;
 use Selective\Validation\Encoder\JsonEncoder;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Selective\Validation\Transformer\ErrorDetailsResultTransformer;
@@ -22,11 +22,12 @@ use Slim\App;
 use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
+use Slim\Views\PhpRenderer;
 
 return [
     // Application settings
-    Configuration::class => function () {
-        return new Configuration(require __DIR__ . '/settings.php');
+    Config::class => function () {
+        return new Config(require __DIR__ . '/settings.php');
     },
 
     App::class => function (ContainerInterface $container) {
@@ -61,12 +62,12 @@ return [
 
     // The logger factory
     LoggerFactory::class => function (ContainerInterface $container) {
-        return new LoggerFactory($container->get(Configuration::class)->getArray('logger'));
+        return new LoggerFactory($container->get(Config::class)->logger);
     },
 
     // The data dir iterator factory
     StorageFilesystemAdapter::class => function (ContainerInterface $container) {
-        $rootPath = $container->get(Configuration::class)->getString('datadir');
+        $rootPath = $container->get(Config::class)->dataDir;
         $filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
 
         return new StorageFilesystemAdapter($filesystem);
@@ -89,7 +90,7 @@ return [
     },
 
     ErrorMiddleware::class => function (ContainerInterface $container) {
-        $config = (array)$container->get(Configuration::class)->getArray('error');
+        $config = (array)$container->get(Config::class)->error;
         $app = $container->get(App::class);
 
         $logger = $container->get(LoggerFactory::class)
@@ -108,5 +109,9 @@ return [
         $errorMiddleware->setDefaultErrorHandler($container->get(DefaultErrorHandler::class));
 
         return $errorMiddleware;
+    },
+
+    PhpRenderer::class => function (ContainerInterface $container) {
+        return new PhpRenderer($container->get(Config::class)->template);
     },
 ];

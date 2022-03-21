@@ -1,6 +1,10 @@
 <?php
 
 // Development Environment
+
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
 $settings['env'] = 'dev';
 
 $settings['docroot'] = $settings['root'];
