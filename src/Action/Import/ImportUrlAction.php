@@ -3,19 +3,19 @@
 namespace App\Action\Import;
 
 use App\Domain\Import\UrlImporter;
-use App\Responder\Responder;
+use App\Renderer\JsonRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class ImportUrlAction
 {
     private UrlImporter $urlImporter;
-    private Responder $responder;
+    private JsonRenderer $renderer;
 
-    public function __construct(UrlImporter $urlImporter, Responder $responder)
+    public function __construct(UrlImporter $urlImporter, JsonRenderer $renderer)
     {
         $this->urlImporter = $urlImporter;
-        $this->responder = $responder;
+        $this->renderer = $renderer;
     }
 
     /**
@@ -36,7 +36,7 @@ final class ImportUrlAction
 
         $this->urlImporter->import($collection, $link, $properties);
 
-        return $this->responder->withJson($response, [
+        return $this->renderer->json($response, [
             'success' => true,
         ]);
     }

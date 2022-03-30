@@ -3,25 +3,25 @@
 namespace App\Action\Collection;
 
 use App\Domain\Collection\Service\CollectionCreator;
-use App\Responder\Responder;
+use App\Renderer\JsonRenderer;
 use App\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class CollectionSaveAction
 {
-    private Responder $responder;
+    private JsonRenderer $renderer;
     private CollectionCreator $service;
 
     /**
      * The constructor.
      *
-     * @param Responder $responder The app responder
+     * @param JsonRenderer $renderer The renderer
      * @param CollectionCreator $service Collection save service
      */
-    public function __construct(Responder $responder, CollectionCreator $service)
+    public function __construct(JsonRenderer $renderer, CollectionCreator $service)
     {
-        $this->responder = $responder;
+        $this->renderer = $renderer;
         $this->service = $service;
     }
 
@@ -37,7 +37,7 @@ final class CollectionSaveAction
     {
         $body = $request->getBody();
 
-        return $this->responder->jsonItem(
+        return $this->renderer->jsonItem(
             $response,
             $this->service->saveCollection($body),
             new CollectionMetaTransformer()

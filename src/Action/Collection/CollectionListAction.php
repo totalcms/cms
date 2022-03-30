@@ -3,25 +3,25 @@
 namespace App\Action\Collection;
 
 use App\Domain\Collection\Service\CollectionFinder;
-use App\Responder\Responder;
+use App\Renderer\JsonRenderer;
 use App\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class CollectionListAction
 {
-    private Responder $responder;
+    private JsonRenderer $renderer;
     private CollectionFinder $collectionListService;
 
     /**
      * The constructor.
      *
-     * @param Responder $responder The responder
+     * @param JsonRenderer $renderer The renderer
      * @param CollectionFinder $service The service
      */
-    public function __construct(Responder $responder, CollectionFinder $service)
+    public function __construct(JsonRenderer $renderer, CollectionFinder $service)
     {
-        $this->responder = $responder;
+        $this->renderer = $renderer;
         $this->collectionListService = $service;
     }
 
@@ -35,7 +35,7 @@ final class CollectionListAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->responder->jsonCollection(
+        return $this->renderer->jsonCollection(
             $response,
             $this->collectionListService->listAllCollections(),
             new CollectionMetaTransformer()

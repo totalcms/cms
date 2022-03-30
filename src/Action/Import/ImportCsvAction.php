@@ -3,7 +3,7 @@
 namespace App\Action\Import;
 
 use App\Domain\Import\CsvImporter;
-use App\Responder\Responder;
+use App\Renderer\JsonRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
@@ -12,12 +12,12 @@ use Slim\Exception\HttpBadRequestException;
 final class ImportCsvAction
 {
     private CsvImporter $csvImporter;
-    private Responder $responder;
+    private JsonRenderer $renderer;
 
-    public function __construct(CsvImporter $csvImporter, Responder $responder)
+    public function __construct(CsvImporter $csvImporter, JsonRenderer $renderer)
     {
         $this->csvImporter = $csvImporter;
-        $this->responder = $responder;
+        $this->renderer = $renderer;
     }
 
     /**
@@ -43,7 +43,7 @@ final class ImportCsvAction
 
         $importCount = $this->csvImporter->import($collection, $files['csv']);
 
-        return $this->responder->withJson(
+        return $this->renderer->json(
             $response,
             [
                 'import_count' => $importCount,

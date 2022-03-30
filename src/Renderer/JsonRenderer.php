@@ -2,6 +2,10 @@
 
 namespace App\Renderer;
 
+use League\Fractal\Manager as FractalManager;
+use League\Fractal\Resource\Collection as FractalCollection;
+use League\Fractal\Resource\Item as FractalItem;
+use League\Fractal\TransformerAbstract;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -30,5 +34,49 @@ final class JsonRenderer
         $response->getBody()->write((string)json_encode($data, $options));
 
         return $response;
+    }
+
+    /**
+     * Write JSON to the response body.
+     *
+     * This method prepares the response object to return an HTTP JSON
+     * response to the client.
+     *
+     * @param ResponseInterface $response The response
+     * @param array $collection The data
+     * @param TransformerAbstract $transformer the data transformer
+     *
+     * @return ResponseInterface The response
+     */
+    public function jsonCollection(
+        ResponseInterface $response,
+        array $collection,
+        TransformerAbstract $transformer
+    ): ResponseInterface {
+        $resource = new FractalCollection($collection, $transformer);
+
+        return $this->json($response, (new FractalManager())->createData($resource)->toArray());
+    }
+
+    /**
+     * Write JSON to the response body.
+     *
+     * This method prepares the response object to return an HTTP JSON
+     * response to the client.
+     *
+     * @param ResponseInterface $response The response
+     * @param object $item The data
+     * @param TransformerAbstract $transformer the data transformer
+     *
+     * @return ResponseInterface The response
+     */
+    public function jsonItem(
+        ResponseInterface $response,
+        object $item,
+        TransformerAbstract $transformer
+    ): ResponseInterface {
+        $resource = new FractalItem($item, $transformer);
+
+        return $this->json($response, (new FractalManager())->createData($resource)->toArray());
     }
 }

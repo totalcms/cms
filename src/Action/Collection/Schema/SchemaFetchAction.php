@@ -3,19 +3,19 @@
 namespace App\Action\Collection\Schema;
 
 use App\Domain\Schema\Service\SchemaFetcher;
-use App\Responder\Responder;
+use App\Renderer\JsonRenderer;
 use App\Transformer\SchemaMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class SchemaFetchAction
 {
-    private Responder $responder;
+    private JsonRenderer $renderer;
     private SchemaFetcher $schemaFetcher;
 
-    public function __construct(Responder $responder, SchemaFetcher $service)
+    public function __construct(JsonRenderer $renderer, SchemaFetcher $service)
     {
-        $this->responder = $responder;
+        $this->renderer = $renderer;
         $this->schemaFetcher = $service;
     }
 
@@ -35,6 +35,6 @@ final class SchemaFetchAction
     ): ResponseInterface {
         $schema = $this->schemaFetcher->fetchSchemaForCollection($args['collection']);
 
-        return $this->responder->jsonItem($response, $schema, new SchemaMetaTransformer());
+        return $this->renderer->jsonItem($response, $schema, new SchemaMetaTransformer());
     }
 }

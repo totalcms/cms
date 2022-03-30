@@ -2,24 +2,11 @@
 
 namespace App\Action\Collection\Index;
 
-use App\Responder\Responder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class IndexGetAction
 {
-    private Responder $responder;
-
-    /**
-     * The constructor.
-     *
-     * @param Responder $responder The responder
-     */
-    public function __construct(Responder $responder)
-    {
-        $this->responder = $responder;
-    }
-
     /**
      * Action.
      *
