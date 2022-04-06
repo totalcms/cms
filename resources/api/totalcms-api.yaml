@@ -481,22 +481,22 @@ paths:
           schema:
             type: string
           name: collection
-  /schemas/{collection}:
+  /schemas/{schema}:
     get:
       parameters:
         - schema:
             type: string
           in: path
-          name: collection
+          name: schema
           required: true
-          description: The ID of the collection
+          description: The ID of the schema
       tags:
         - schemas
       responses:
         '200':
           description: The schema for a collection
       description: |
-        This gets the schema for a collection. This could return a predefined schema from within the CMS or a custom schema that is stored in the .schema.json file inside of the collection.
+        This gets a schema. This could return a predefined schema from within the CMS or a custom schema that is stored in the .schema.json file inside of the collection.
       security: []
       summary: Get Schema
     post:
@@ -577,16 +577,16 @@ paths:
         '200':
           description: ''
       description: |
-        Save a new schema to a collection. You cannot save a schema for any built-in collection.
+        Save a new schema. You cannot save a schema for any built-in collection.
       tags:
         - schemas
       parameters:
         - schema:
             type: string
           in: path
-          name: collection
+          name: schema
           required: true
-          description: The ID of the collection
+          description: The ID of the schema
   /froala/depot/{id}/:
     post:
       tags:
