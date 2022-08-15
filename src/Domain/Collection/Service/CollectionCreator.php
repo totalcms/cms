@@ -3,7 +3,7 @@
 namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Storage\CollectionStorage;
+use App\Domain\Collection\Repository\CollectionRepository;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -14,10 +14,10 @@ use UnexpectedValueException;
  */
 final class CollectionCreator
 {
-    private CollectionStorage $storage;
+    private CollectionRepository $storage;
     private Serializer $serializer;
 
-    public function __construct(CollectionStorage $storage)
+    public function __construct(CollectionRepository $storage)
     {
         $this->storage = $storage;
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -26,7 +26,7 @@ final class CollectionCreator
     /**
      * Save Collection data.
      *
-     * @param string $data The collection data to save
+     * @param string $data The collection data to save. This should be json encoded.
      *
      * @throws UnexpectedValueException
      *

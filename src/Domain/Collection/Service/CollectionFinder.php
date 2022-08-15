@@ -2,16 +2,16 @@
 
 namespace App\Domain\Collection\Service;
 
-use App\Domain\Storage\CollectionStorage;
+use App\Domain\Collection\Repository\CollectionRepository;
 
 /**
  * Service.
  */
 final class CollectionFinder
 {
-    private CollectionStorage $storage;
+    private CollectionRepository $storage;
 
-    public function __construct(CollectionStorage $storage)
+    public function __construct(CollectionRepository $storage)
     {
         $this->storage = $storage;
     }

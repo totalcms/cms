@@ -17,13 +17,11 @@ return function (App $app) {
         // Reindex collection
         $group->put('/{collection}', Collection\Index\IndexUpdateAction::class)->setName('collection-reindex');
 
-        // Create a new collection
+        // Create a new obejct in a collection
         $group->post('/{collection}', Collection\Object\ObjectSaveAction::class)->setName('object-save');
 
-        // Object
-        $group->map(['HEAD'], '/{collection}/{id}', Collection\Object\ObjectExistsAction::class)->setName(
-            'object-exists'
-        );
+        // Object Exists in a collection
+        $group->map(['HEAD'], '/{collection}/{id}', Collection\Object\ObjectExistsAction::class)->setName('object-exists');
 
         // Get collection object by id
         $group->get('/{collection}/{id}', Collection\Object\ObjectFetchAction::class)->setName('object-fetch');
