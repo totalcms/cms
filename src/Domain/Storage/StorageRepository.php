@@ -34,7 +34,7 @@ abstract class StorageRepository
      * @template CLASS of object
      *
      * @param string $file
-     * @param string<CLASS> $className
+     * @param class-string<CLASS> $className
      *
      * @return CLASS|null
      */
