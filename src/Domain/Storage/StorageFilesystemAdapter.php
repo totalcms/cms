@@ -69,6 +69,21 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     public function listDirectories(string $path): array
     {
         return $this->filesystem->listContents($path)
+            ->filter(fn (StorageAttributes $attributes) => !$attributes->isFile())
+            ->map(fn (StorageAttributes $attributes) => $attributes->path())
+            ->toArray();
+    }
+
+    /**
+     * List files.
+     *
+     * @param string $path The path to iterate through
+     *
+     * @return array<string>
+     */
+    public function listFiles(string $path): array
+    {
+        return $this->filesystem->listContents($path)
             ->filter(fn (StorageAttributes $attributes) => $attributes->isFile())
             ->map(fn (StorageAttributes $attributes) => $attributes->path())
             ->toArray();
