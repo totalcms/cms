@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Collection\Schema;
+namespace App\Action\Schema;
 
 use App\Domain\Schema\Service\SchemaSaver;
 use App\Renderer\JsonRenderer;
