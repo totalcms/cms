@@ -31,7 +31,7 @@ final class CollectionListActionTest extends TestCase
             [
                 'name'   => 'test2',
                 'schema' => 'test2',
-                'url'    => 'test2-url',
+                'url'    => '',
             ],
         ];
 
