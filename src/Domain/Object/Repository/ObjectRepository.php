@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Domain\Object\Repository;
+
+use App\Domain\Storage\StorageRepository;
+use App\Domain\Object\Data\ObjectData;
+use DomainException;
+
+/**
+ * Repository.
+ */
+final class ObjectRepository extends StorageRepository
+{
+    /**
+     * Save an object.
+     *
+     * @param string $collection
+     * @param ObjectData $object
+     *
+     * @return void
+     */
+    public function saveObject(string $collection, ObjectData $object): void
+    {
+        $objectFile = $this->buildObjectPath($collection, $object->id);
+        $objectJSON = $this->serializer->serialize($object, 'json');
+
+        $this->filesystem->write($objectFile, $objectJSON);
+    }
+
+    public function existsObjectId(string $collection, string $id): bool
+    {
+        $objectFile = $this->buildObjectPath($collection, $id);
+
+        return $this->filesystem->fileExists($objectFile);
+    }
+
+    public function getObject(string $collection, string $id): ObjectData
+    {
+        $objectFile = $this->buildObjectPath($collection, $id);
+
+        $contents = $this->filesystem->read($objectFile);
+        $schema = $this->serializer->deserialize($contents, ObjectData::class, 'json');
+
+        if ($schema instanceof ObjectData) {
+            return $schema;
+        }
+
+        return new ObjectData($schema);
+    }
+
+    private function buildObjectPath(string $collection, string $id): string
+    {
+        return sprintf('%s/%s%s', $collection, $this->cleanString($id), self::FILE_EXT);
+    }
+}

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Storage;
+namespace App\Domain\Object\Data;
 
 use Tightenco\Collect\Support\Collection;
 

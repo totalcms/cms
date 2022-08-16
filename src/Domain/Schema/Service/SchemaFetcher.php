@@ -36,6 +36,6 @@ final class SchemaFetcher
             return $this->storage->getObjectSchemaForCollection($collection->name);
         }
 
-        return $this->storage->getDefaultSchemaForType($collection->schema);
+        return $this->storage->getSchemaForType($collection->schema);
     }
 }
