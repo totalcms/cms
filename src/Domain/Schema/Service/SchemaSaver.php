@@ -18,8 +18,6 @@ final class SchemaSaver
     private SchemaRepository $storage;
     private SchemaFetcher $fetcher;
 
-    protected const ID_EXT = '.json#';
-
     public function __construct(
         SchemaRepository $storage,
         SchemaFetcher $fetcher,

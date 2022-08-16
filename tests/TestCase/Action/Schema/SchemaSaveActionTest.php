@@ -28,6 +28,7 @@ final class SchemaSaveActionTest extends TestCase
     {
         $this->testReservedSchemas();
         $this->testInvalidSchema();
+        $this->testMalformedSchema();
         $this->testSaveNewSchema();
     }
 
@@ -67,6 +68,29 @@ final class SchemaSaveActionTest extends TestCase
         $expected = [
             'error' => [
                 'message' => '500 Internal Server Error - Invalid schema data provided'
+            ]
+        ];
+
+        $this->assertJsonData($expected, $response);
+        $this->assertSame(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+    }
+
+    private function testMalformedSchema(): void
+    {
+        $path = self::SCHEMAS_DIR . 'blog.json';
+        /* @phpstan-ignore-next-line */
+        $blogSchema = json_decode(file_get_contents($path), true);
+
+        // Invalidate the Schema (removed # in URI)
+        $blogSchema['$id'] = "https://www.totalcms.co/schemas/custom/newblog.json";
+
+        $url = $this->urlFor('schema-save');
+        $request = $this->createJsonRequest('POST', $url, $blogSchema);
+        $response = $this->app->handle($request);
+
+        $expected = [
+            'error' => [
+                'message' => '500 Internal Server Error - Malformed schema data provided'
             ]
         ];
 
