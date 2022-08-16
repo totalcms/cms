@@ -40,6 +40,10 @@ final class CollectionCreator
             throw new UnexpectedValueException('Invalid Collection data provided');
         }
 
+        if (in_array($collection->name, CollectionData::RESERVED_COLLECTIONS) && $collection->name !== $collection->schema) {
+            throw new UnexpectedValueException('Cannot assign custom schema to a reserved collection');
+        }
+
         $this->storage->saveCollection($collection);
 
         return $collection;
