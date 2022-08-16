@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Colors are stored in hsla(). If the alpha channel is not supplied, it will default to 1",
   "properties": {
     "s": {

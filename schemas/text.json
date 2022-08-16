@@ -1,4 +1,5 @@
 {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://www.totalcms.co/schemas/text.json#",
     "description": "A schema for a Total CMS Text object",
     "type": "object",
