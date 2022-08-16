@@ -33,6 +33,7 @@
       }
     }
   },
+  "index": [],
   "type": "object",
   "required": [
     "$id",
