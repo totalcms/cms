@@ -49,7 +49,7 @@ final class SchemaSaver
     }
 
     /**
-     * Save a collection schema.
+     * Save a schema.
      *
      * @param string $schemaJSON
      *
@@ -59,13 +59,15 @@ final class SchemaSaver
      */
     public function saveSchema(string $schemaJSON): SchemaData
     {
-        // TODO: check if default schema exists
-
         if ($this->validateSchema($schemaJSON) === false) {
             throw new UnexpectedValueException('Invalid schema data provided', 1);
         }
 
         $schema = SchemaFactory::generateSchema($schemaJSON);
+
+        if (in_array($schema->type, SchemaFactory::RESERVED_SCHEMAS)) {
+            throw new UnexpectedValueException('Schema type is reserved', 1);
+        }
 
         $this->storage->saveSchema($schema);
         return $schema;

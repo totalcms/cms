@@ -2,9 +2,7 @@
 
 namespace App\Domain\Schema\Service;
 
-use App\Domain\Collection\Service\CollectionReader;
 use App\Domain\Schema\Data\SchemaData;
-use App\Domain\Schema\Repository\SchemaRepository;
 
 /**
  * Service.
@@ -12,6 +10,22 @@ use App\Domain\Schema\Repository\SchemaRepository;
 final class SchemaFactory
 {
     private const SCHEMA_ID_EXT  = '.json#';
+    public const RESERVED_SCHEMAS = [
+        "blog",
+        "color",
+        "date",
+        "depot",
+        "feed",
+        "file",
+        "gallery",
+        "image",
+        "number",
+        "schema",
+        "svg",
+        "text",
+        "toggle",
+        "url",
+    ];
 
     /**
      * create a schema object
