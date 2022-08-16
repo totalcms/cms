@@ -1,15 +1,15 @@
 servers:
   - url: https://virtserver.swaggerhub.com/joeworkman/TotalCMS/3.0.0
     description: SwaggerHub API Auto Mocking
-  - url: http://localhost:3000/
+  - url: http://localhost:8000/
     description: ''
 tags:
+  - name: schemas
   - name: collections
   - name: objects
-  - name: schemas
+  - name: imageworks
   - name: download
   - name: froala
-  - name: imageworks
   - name: import
 openapi: 3.0.3
 info:
@@ -20,7 +20,140 @@ info:
   description: REST API for Total CMS
   version: 3.0.0
 paths:
-  /import/csv/{collection}/:
+  /schemas/{schema}:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: schema
+          required: true
+          description: The ID of the schema
+      tags:
+        - schemas
+      responses:
+        '200':
+          description: The schema for a collection
+      description: |
+        This gets a schema. This could return a predefined schema from within the CMS or a custom schema that is stored in the .schema.json file inside of the collection.
+      security: []
+      summary: Get Schema
+  /schemas:
+    post:
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                index:
+                  type: string
+                  items:
+                    type: string
+                  example:
+                    - featured
+                    - hidden
+                    - external
+                    - free
+                    - sale
+                    - popular
+                    - new
+                    - id
+                    - name
+                    - color
+                    - subtitle
+                    - version
+                    - price
+                    - developer
+                    - tags
+                    - icon
+                    - popularity
+                    - cartloom
+                    - releaseDate
+                    - updateDate
+                properties:
+                  type: object
+                  properties:
+                    video:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: string
+                        default:
+                          type: string
+                          example: default value
+                        fieldset:
+                          type: string
+                          example: video
+                title:
+                  type: string
+                  example: My Object
+                type:
+                  type: string
+                  example: object
+                description:
+                  type: string
+                  example: My cool object description
+                required:
+                  type: string
+                  items:
+                    type: string
+                  example:
+                    - id
+                    - name
+                    - subtitle
+                    - version
+                    - price
+                    - developer
+                    - tags
+                    - cartloom
+        required: true
+        description: |
+          Save a new schema to a collection. You cannot save a schema for any built-in collection.
+      summary: Save Schema
+      responses:
+        '200':
+          description: ''
+      description: |
+        Save a new schema. You cannot save a schema for any built-in collection.
+      tags:
+        - schemas
+  /collections:
+    get:
+      parameters: []
+      tags:
+        - collections
+      responses:
+        '200':
+          description: A list of collections
+      description: |-
+        This request lists out all of the possible collections in the CMS.
+
+        A collection must have a .meta.json file in order to be considered to be a collection.
+        The .meta.json file contains ciritcal data about a collection such as its schema type.
+      summary: Get Collections
+    post:
+      tags:
+        - collections
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/collection'
+        required: true
+        description: |
+          This creates a new collection. This will create the .meta.json file that contains the schema for a collection as well as the name and associated URL.
+      summary: New Collection
+      responses:
+        '200':
+          description: ''
+      description: |
+        This creates a new collection. This will create the .meta.json file that contains the schema for a collection as well as the name and associated URL.
+      security: []
+      parameters: []
+  /import/csv/{collection}:
     post:
       tags:
         - import
@@ -54,7 +187,7 @@ paths:
           name: collection
           required: true
           description: The ID of the collection
-  /collections/{collection}/{id}/:
+  /collections/{collection}/{id}:
     delete:
       tags:
         - objects
@@ -160,7 +293,25 @@ paths:
           name: id
           required: true
           description: The ID of the object
-  /collections/{collection}/:
+  /collections/{collection}/schema:
+    get:
+      tags:
+        - collections
+        - schemas
+      summary: Get Collection Schema
+      responses:
+        '200':
+          description: ''
+      description: Get the collections schema
+      security: []
+      parameters:
+        - required: true
+          in: path
+          description: The ID of the collection
+          schema:
+            type: string
+          name: collection
+  /collections/{collection}:
     get:
       tags:
         - collections
@@ -218,7 +369,7 @@ paths:
           schema:
             type: string
           name: collection
-  /imageworks/{collection}/{id}/{property}/{file}/:
+  /imageworks/{collection}/{id}/{property}/{file}:
     get:
       tags:
         - imageworks
@@ -287,7 +438,7 @@ paths:
           description: ''
       description: Clear the image cache related to an image. This will cause all new imageworks API calls for this image to generate new versions on the next request.
       summary: Clear Image Cache
-  /import/url/{collection}/:
+  /import/url/{collection}:
     post:
       tags:
         - import
@@ -321,7 +472,7 @@ paths:
           schema:
             type: string
           name: collection
-  /download/{collection}/{id}/{property}/{file}/:
+  /download/{collection}/{id}/{property}/{file}:
     get:
       tags:
         - download
@@ -356,7 +507,7 @@ paths:
           schema:
             type: string
           name: file
-  /collections/{collection}/{id}/{property}/:
+  /collections/{collection}/{id}/{property}:
     put:
       tags:
         - objects
@@ -447,7 +598,7 @@ paths:
           name: property
           required: true
           description: The property name of the object
-  /import/rss/{collection}/:
+  /import/rss/{collection}:
     post:
       tags:
         - import
@@ -481,113 +632,7 @@ paths:
           schema:
             type: string
           name: collection
-  /schemas/{schema}:
-    get:
-      parameters:
-        - schema:
-            type: string
-          in: path
-          name: schema
-          required: true
-          description: The ID of the schema
-      tags:
-        - schemas
-      responses:
-        '200':
-          description: The schema for a collection
-      description: |
-        This gets a schema. This could return a predefined schema from within the CMS or a custom schema that is stored in the .schema.json file inside of the collection.
-      security: []
-      summary: Get Schema
-    post:
-      security: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                index:
-                  type: string
-                  items:
-                    type: string
-                  example:
-                    - featured
-                    - hidden
-                    - external
-                    - free
-                    - sale
-                    - popular
-                    - new
-                    - id
-                    - name
-                    - color
-                    - subtitle
-                    - version
-                    - price
-                    - developer
-                    - tags
-                    - icon
-                    - popularity
-                    - cartloom
-                    - releaseDate
-                    - updateDate
-                properties:
-                  type: object
-                  properties:
-                    video:
-                      type: object
-                      properties:
-                        type:
-                          type: string
-                          example: string
-                        default:
-                          type: string
-                          example: default value
-                        fieldset:
-                          type: string
-                          example: video
-                title:
-                  type: string
-                  example: My Object
-                type:
-                  type: string
-                  example: object
-                description:
-                  type: string
-                  example: My cool object description
-                required:
-                  type: string
-                  items:
-                    type: string
-                  example:
-                    - id
-                    - name
-                    - subtitle
-                    - version
-                    - price
-                    - developer
-                    - tags
-                    - cartloom
-        required: true
-        description: |
-          Save a new schema to a collection. You cannot save a schema for any built-in collection.
-      summary: Save Schema
-      responses:
-        '200':
-          description: ''
-      description: |
-        Save a new schema. You cannot save a schema for any built-in collection.
-      tags:
-        - schemas
-      parameters:
-        - schema:
-            type: string
-          in: path
-          name: schema
-          required: true
-          description: The ID of the schema
-  /froala/depot/{id}/:
+  /froala/depot/{id}:
     post:
       tags:
         - froala
@@ -621,40 +666,7 @@ paths:
           schema:
             type: string
           name: id
-  /collections/:
-    get:
-      parameters: []
-      tags:
-        - collections
-      responses:
-        '200':
-          description: A list of collections
-      description: |-
-        This request lists out all of the possible collections in the CMS.
-
-        A collection must have a .meta.json file in order to be considered to be a collection.
-        The .meta.json file contains ciritcal data about a collection such as its schema type.
-      summary: Get Collections
-    post:
-      tags:
-        - collections
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/collection'
-        required: true
-        description: |
-          This creates a new collection. This will create the .meta.json file that contains the schema for a collection as well as the name and associated URL.
-      summary: New Collection
-      responses:
-        '200':
-          description: ''
-      description: |
-        This creates a new collection. This will create the .meta.json file that contains the schema for a collection as well as the name and associated URL.
-      security: []
-      parameters: []
-  /froala/gallery/{id}/:
+  /froala/gallery/{id}:
     post:
       tags:
         - froala
@@ -720,7 +732,7 @@ paths:
           name: id
           required: true
           description: The ID of the object
-  /collections/{collection}/{id}/{property}/{file}/:
+  /collections/{collection}/{id}/{property}/{file}:
     delete:
       parameters:
         - required: true
@@ -806,7 +818,7 @@ paths:
           schema:
             type: string
           name: file
-  /import/wordpress/{collection}/:
+  /import/wordpress/{collection}:
     post:
       tags:
         - import
@@ -840,7 +852,7 @@ paths:
           schema:
             type: string
           name: collection
-  /import/yaml/{collection}/:
+  /import/yaml/{collection}:
     post:
       tags:
         - import
@@ -874,7 +886,7 @@ paths:
           schema:
             type: string
           name: collection
-  /import/json/{collection}/:
+  /import/json/{collection}:
     post:
       tags:
         - import
@@ -908,7 +920,7 @@ paths:
           schema:
             type: string
           name: collection
-  /import/factory/{collection}/:
+  /import/factory/{collection}:
     post:
       tags:
         - import
@@ -953,18 +965,15 @@ components:
         content:
           type: string
           example: This is my content
-        wordcount:
-          type: string
-          example: '4'
     collection:
       type: object
       properties:
         name:
           type: string
-          example: text
+          example: myblog
         schema:
           type: string
-          example: text
+          example: blog
         url:
           type: string
-          example: ''
+          example: 'https://example.com/blog/'
