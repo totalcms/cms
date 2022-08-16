@@ -11,8 +11,8 @@ use DomainException;
  */
 final class SchemaRepository extends StorageRepository
 {
-    private const DEFAULT_SCHEMA_DIR = __DIR__ . "/../../../schemas/";
-    private const CUSTOM_SCHEMA_DIR  = '.schemas';
+    private const DEFAULT_SCHEMA_DIR = __DIR__ . "/../../../../schemas/";
+    private const CUSTOM_SCHEMA_DIR  = '.schemas/';
 
     /**
      * fetch a schema for one of the default schema types.
@@ -24,7 +24,20 @@ final class SchemaRepository extends StorageRepository
     public function fetchDefaultSchemaForType(string $type): ?SchemaData
     {
         $schemaFile = self::DEFAULT_SCHEMA_DIR . $type . self::FILE_EXT;
-        return $this->fetchAndDeserialize($schemaFile, SchemaData::class);
+        $contents   = null;
+
+        if (file_exists($schemaFile)) {
+            $contents = file_get_contents($schemaFile);
+        }
+
+        if (empty($contents)) {
+            return null;
+        }
+
+        $schema = new SchemaData();
+        $schema->schema = json_decode($contents, true);
+        $schema->type = $type;
+        return $schema;
     }
 
     /**
@@ -37,7 +50,20 @@ final class SchemaRepository extends StorageRepository
     public function fetchCustomSchemaForType(string $type): ?SchemaData
     {
         $schemaFile = self::CUSTOM_SCHEMA_DIR . $type . self::FILE_EXT;
-        return $this->fetchAndDeserialize($schemaFile, SchemaData::class);
+        $contents = null;
+
+        if ($this->filesystem->fileExists($schemaFile)) {
+            $contents = $this->filesystem->read($schemaFile);
+        }
+
+        if (empty($contents)) {
+            return null;
+        }
+
+        $schema = new SchemaData();
+        $schema->schema = json_decode($contents, true);
+        $schema->type = $type;
+        return $schema;
     }
 
     /**
@@ -65,15 +91,18 @@ final class SchemaRepository extends StorageRepository
     /**
      * save a collection schema.
      *
-     * @param string $type
      * @param SchemaData $schema
      *
      * @return void
      */
-    public function saveSchemaForType(string $type, SchemaData $schema): void
+    public function saveSchema(SchemaData $schema): void
     {
-        $schemaFile = self::CUSTOM_SCHEMA_DIR . $type . self::FILE_EXT;
-        $schemaJSON = $this->serializer->serialize($schema, 'json');
+        $schemaFile = self::CUSTOM_SCHEMA_DIR . $schema->type . self::FILE_EXT;
+        $schemaJSON = json_encode($schema->schema);
+
+        if (empty($schemaJSON)) {
+            throw new DomainException(sprintf('Failed to encode schema for type: %s', $schema->type));
+        }
 
         $this->filesystem->write($schemaFile, $schemaJSON);
     }

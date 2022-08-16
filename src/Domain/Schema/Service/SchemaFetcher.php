@@ -4,7 +4,7 @@ namespace App\Domain\Schema\Service;
 
 use App\Domain\Collection\Service\CollectionReader;
 use App\Domain\Schema\Data\SchemaData;
-use App\Domain\Storage\CollectionStorage;
+use App\Domain\Schema\Repository\SchemaRepository;
 
 /**
  * Service.
@@ -12,14 +12,26 @@ use App\Domain\Storage\CollectionStorage;
 final class SchemaFetcher
 {
     private CollectionReader $collectionService;
-    private CollectionStorage $storage;
+    private SchemaRepository $storage;
 
     public function __construct(
-        CollectionStorage $storage,
+        SchemaRepository $storage,
         CollectionReader $collectionService
     ) {
         $this->storage = $storage;
         $this->collectionService = $collectionService;
+    }
+
+    /**
+     * fetch a schema.
+     *
+     * @param string $type
+     *
+     * @return SchemaData
+     */
+    public function fetchSchema(string $type): SchemaData
+    {
+        return $this->storage->getSchemaForType($type);
     }
 
     /**
@@ -31,11 +43,7 @@ final class SchemaFetcher
      */
     public function fetchSchemaForCollection(string $collection): SchemaData
     {
-        $collection = $this->storage->getCollection($collection);
-        if ($collection->schema === 'object') {
-            return $this->storage->getObjectSchemaForCollection($collection->name);
-        }
-
-        return $this->storage->getSchemaForType($collection->schema);
+        $collection = $this->collectionService->fetchCollection($collection);
+        return $this->fetchSchema($collection->schema);
     }
 }

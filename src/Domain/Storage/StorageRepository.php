@@ -50,9 +50,9 @@ abstract class StorageRepository
             return null;
         }
 
-        $collection = $this->serializer->deserialize($contents, $className, 'json');
-        if ($collection instanceof $className) {
-            return $collection;
+        $object = $this->serializer->deserialize($contents, $className, 'json');
+        if ($object instanceof $className) {
+            return $object;
         }
 
         return null;

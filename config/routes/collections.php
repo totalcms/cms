@@ -1,6 +1,7 @@
 <?php
 
 use App\Action\Collection;
+use App\Action\Schema;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
@@ -13,6 +14,9 @@ return function (App $app) {
         // Collection
         // Get name of the collection
         $group->get('/{collection}', Collection\Index\IndexGetAction::class)->setName('collection-fetch');
+
+        // Get schema of a collection
+        $group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
 
         // Reindex collection
         $group->put('/{collection}', Collection\Index\IndexUpdateAction::class)->setName('collection-reindex');

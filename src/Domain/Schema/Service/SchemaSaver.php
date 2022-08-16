@@ -2,13 +2,9 @@
 
 namespace App\Domain\Schema\Service;
 
-use App\Domain\Collection\Service\CollectionReader;
 use App\Domain\Schema\Data\SchemaData;
-use App\Domain\Storage\CollectionStorage;
+use App\Domain\Schema\Repository\SchemaRepository;
 use RuntimeException;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use UnexpectedValueException;
 
 /**
@@ -16,25 +12,18 @@ use UnexpectedValueException;
  */
 final class SchemaSaver
 {
-    private CollectionStorage $storage;
+    private SchemaRepository $storage;
 
-    private CollectionReader $collectionService;
+    protected const ID_EXT = '.json#';
 
-    private Serializer $serializer;
-
-    public function __construct(
-        CollectionStorage $storage,
-        CollectionReader $collectionService
-    ) {
+    public function __construct(SchemaRepository $storage)
+    {
         $this->storage = $storage;
-        $this->collectionService = $collectionService;
-        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     /**
      * Save a collection schema.
      *
-     * @param string $collection
      * @param string $schemaJSON
      *
      * @throws RuntimeException
@@ -42,16 +31,26 @@ final class SchemaSaver
      *
      * @return SchemaData
      */
-    public function saveSchemaForCollection(string $collection, string $schemaJSON): SchemaData
+    public function saveSchema(string $schemaJSON): SchemaData
     {
-        $schema = $this->serializer->deserialize($schemaJSON, SchemaData::class, 'json');
+        $data = json_decode($schemaJSON, true);
+
+        // if name is provided, use the to create the ID
+        // if (isset($data['type'])) {
+        //     $data['$id'] = ".schemas/". $data['type'] . self::ID_EXT;
+        // }
+
+        $schema = new SchemaData();
+        $schema->schema = $data;
+        $schema->type = basename($schema->schema['$id'], self::ID_EXT);
+
+        // TODO: Validate schema json against the schema.json schema to ensure proper formatting
+
         if (!$schema instanceof SchemaData) {
             throw new UnexpectedValueException('Invalid schema data provided', 1);
         }
 
-        // TODO: Validate schema json against the schema.json schema to ensure proper formatting
-        $this->storage->saveSchemaForCollection($collection, $schema);
-
+        $this->storage->saveSchema($schema);
         return $schema;
     }
 }

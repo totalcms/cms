@@ -43,7 +43,7 @@ final class SchemaSaveAction
 
         return $this->renderer->jsonItem(
             $response,
-            $this->service->saveSchemaForCollection($args['collection'], $body),
+            $this->service->saveSchema($body),
             new SchemaMetaTransformer()
         );
     }

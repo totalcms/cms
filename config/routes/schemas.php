@@ -7,9 +7,9 @@ use Slim\Routing\RouteCollectorProxy;
 return function (App $app) {
     $app->group('/schemas', function (RouteCollectorProxy $group) {
         // Collection Schema
-        $group->get('/{collection}', Schema\SchemaFetchAction::class)->setName('schema-fetch');
+        $group->get('/{type}', Schema\SchemaFetchAction::class)->setName('schema-fetch');
 
         // Pro Only License
-        $group->post('/{collection}', Schema\SchemaSaveAction::class)->setName('schema-save');
+        $group->post('/', Schema\SchemaSaveAction::class)->setName('schema-save');
     });
 };
