@@ -4,12 +4,11 @@ namespace App\Domain\Schema\Service;
 
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Service\SchemaFetcher;
+use App\Domain\Schema\Service\SchemaFactory;
 use App\Domain\Schema\Repository\SchemaRepository;
-use RuntimeException;
-use UnexpectedValueException;
 use Opis\JsonSchema\Validator;
-use Opis\JsonSchema\Schema;
 use Opis\JsonSchema\Helper;
+use UnexpectedValueException;
 
 /**
  * Service.
@@ -32,19 +31,19 @@ final class SchemaSaver
     /**
      * Validate a schema
      *
-     * @param array $data
+     * @param string $schemaToValidate
      *
      * @return bool
      */
-    public function validateSchema(array $data): bool
+    public function validateSchema(string $schemaToValidate): bool
     {
         $schema = $this->fetcher->fetchSchema('schema');
+        $schemaJSON = Helper::toJSON($schema->schema);
 
-        $schema = Helper::toJSON($schema->schema);
-        $data   = Helper::toJSON($data);
+        $schemaToValidate = json_decode($schemaToValidate);
 
         $validator = new Validator();
-        $result = $validator->validate($data, $schema);
+        $result = $validator->validate($schemaToValidate, $schemaJSON);
 
         return $result->isValid();
     }
@@ -54,31 +53,19 @@ final class SchemaSaver
      *
      * @param string $schemaJSON
      *
-     * @throws RuntimeException
      * @throws UnexpectedValueException
      *
      * @return SchemaData
      */
     public function saveSchema(string $schemaJSON): SchemaData
     {
-        $data = json_decode($schemaJSON, true);
+        // TODO: check if default schema exists
 
-        // if name is provided, use the to create the ID
-        // if (isset($data['type'])) {
-        //     $data['$id'] = ".schemas/". $data['type'] . self::ID_EXT;
-        // }
-
-        if ($this->validateSchema($data) === false) {
+        if ($this->validateSchema($schemaJSON) === false) {
             throw new UnexpectedValueException('Invalid schema data provided', 1);
         }
 
-        $schema = new SchemaData();
-        $schema->schema = $data;
-        $schema->type = basename($schema->schema['$id'], self::ID_EXT);
-
-        if (!$schema instanceof SchemaData) {
-            throw new UnexpectedValueException('Invalid schema data provided', 1);
-        }
+        $schema = SchemaFactory::generateSchema($schemaJSON);
 
         $this->storage->saveSchema($schema);
         return $schema;

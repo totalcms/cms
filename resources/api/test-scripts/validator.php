@@ -4,8 +4,8 @@ require_once '../../../vendor/autoload.php';
 
 use Opis\JsonSchema\Validator;
 
-$data = json_decode(file_get_contents('../../../schemas/blog.json'));
-$schema = json_decode(file_get_contents('../../../schemas/schema.json'));
+$data = file_get_contents('../../../schemas/blog.json');
+$schema = file_get_contents('../../../schemas/schema.json');
 
 
 // $data = json_decode('{"name": "opis"}');

@@ -4,6 +4,7 @@ namespace App\Domain\Schema\Repository;
 
 use App\Domain\Storage\StorageRepository;
 use App\Domain\Schema\Data\SchemaData;
+use App\Domain\Schema\Service\SchemaFactory;
 use DomainException;
 
 /**
@@ -34,10 +35,7 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        $schema = new SchemaData();
-        $schema->schema = json_decode($contents, true);
-        $schema->type = $type;
-        return $schema;
+        return SchemaFactory::generateSchema($contents);
     }
 
     /**
@@ -60,11 +58,7 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        $schema = new SchemaData();
-        // Forcing an array so that fields like $id are easier to access
-        $schema->schema = json_decode($contents, true);
-        $schema->type = $type;
-        return $schema;
+        return SchemaFactory::generateSchema($contents);
     }
 
     /**
