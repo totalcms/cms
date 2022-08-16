@@ -40,8 +40,8 @@ final class DefaultErrorHandler
         $this->renderer = $renderer;
         $this->responseFactory = $responseFactory;
         $this->logger = $loggerFactory
-            ->addFileHandler('error.log')
-            ->createLogger();
+            ->addFileHandler('totalcms.log')
+            ->createLogger('totalcms');
     }
 
     /**
@@ -64,11 +64,10 @@ final class DefaultErrorHandler
         if ($logErrors) {
             $this->logger->error(
                 sprintf(
-                    'Error: [%s] %s, Method: %s, Path: %s',
-                    $exception->getCode(),
-                    $this->getExceptionText($exception),
+                    'Error: Method: %s, Path: %s, %s',
                     $request->getMethod(),
-                    $request->getUri()->getPath()
+                    $request->getUri()->getPath(),
+                    $this->getExceptionText($exception),
                 )
             );
         }
@@ -77,7 +76,7 @@ final class DefaultErrorHandler
         $statusCode = $this->getHttpStatusCode($exception);
 
         // Error message
-        $errorMessage = $this->getErrorMessage($exception, $statusCode, $displayErrorDetails);
+        $errorMessage = $this->getErrorMessage($exception, $statusCode, true);
 
         // Render response
         $response = $this->responseFactory->createResponse();
@@ -135,7 +134,7 @@ final class DefaultErrorHandler
 
         if ($displayErrorDetails === true) {
             $errorMessage = sprintf(
-                '%s - Error details: %s',
+                '%s - %s',
                 $errorMessage,
                 $this->getExceptionText($exception)
             );
@@ -152,15 +151,19 @@ final class DefaultErrorHandler
      *
      * @return string The full error message
      */
-    private function getExceptionText(Throwable $exception, int $maxLength = 0): string
+    private function getExceptionText(Throwable $exception, int $maxLength = 0, bool $backtrace = false): string
     {
         $code = $exception->getCode();
         $file = $exception->getFile();
         $line = $exception->getLine();
         $message = $exception->getMessage();
         $trace = $exception->getTraceAsString();
-        $error = sprintf('[%s] %s in %s on line %s.', $code, $message, $file, $line);
-        $error .= sprintf("\nBacktrace:\n%s", $trace);
+        $error = $message;
+
+        if ($backtrace) {
+            $error = sprintf('[%s] %s in %s on line %s.', $code, $message, $file, $line);
+            $error .= sprintf("\nBacktrace:\n%s", $trace);
+        }
 
         if ($maxLength > 0) {
             $error = substr($error, 0, $maxLength);

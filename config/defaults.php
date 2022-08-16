@@ -56,11 +56,12 @@ $settings['error'] = [
 
 // Logger settings
 $settings['logger'] = [
-    'name' => 'totalcms',
-    'path' => __DIR__ . '/../logs',
-    'filename' => 'totalcms.log',
-    'level' => \Monolog\Logger::ERROR,
-    'file_permission' => 0775,
+    'name'        => 'totalcms',
+    'path'        => __DIR__ . '/../logs',
+    'filename'    => 'totalcms.log',
+    'level'       => \Monolog\Logger::WARNING,
+    'maxFiles'    => 30,
+    'permissions' => 0775,
 ];
 
 // Session

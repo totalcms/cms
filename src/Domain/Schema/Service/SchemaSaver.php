@@ -66,7 +66,7 @@ final class SchemaSaver
         $schema = SchemaFactory::generateSchema($schemaJSON);
 
         if (in_array($schema->type, SchemaFactory::RESERVED_SCHEMAS)) {
-            throw new UnexpectedValueException('Schema type is reserved', 1);
+            throw new UnexpectedValueException("Schema type ({$schema->type}) is reserved", 1);
         }
 
         $this->storage->saveSchema($schema);

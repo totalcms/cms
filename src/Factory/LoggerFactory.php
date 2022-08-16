@@ -83,15 +83,21 @@ final class LoggerFactory
      * Add rotating file logger handler.
      *
      * @param string $filename The filename
-     * @param int|null $level The level (optional)
+     * @param int $maxFiles (optional)
+     * @param int $permissions (optional)
+     * @param ?int $level The level (optional)
      *
      * @return self The logger factory
      */
-    public function addFileHandler(string $filename, int $level = null): self
-    {
+    public function addFileHandler(
+        string $filename,
+        int $maxFiles    = 0,
+        int $permissions = 0777,
+        int $level       = null
+    ): self {
         $filename = sprintf('%s/%s', $this->path, $filename);
         /** @phpstan-ignore-next-line */
-        $rotatingFileHandler = new RotatingFileHandler($filename, 0, $level ?? $this->level, true, 0777);
+        $rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level ?? $this->level, true, $permissions);
 
         // The last "true" here tells monolog to remove empty []'s
         $rotatingFileHandler->setFormatter(new LineFormatter(null, null, false, true));
