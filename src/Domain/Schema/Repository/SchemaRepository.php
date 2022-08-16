@@ -61,6 +61,7 @@ final class SchemaRepository extends StorageRepository
         }
 
         $schema = new SchemaData();
+        // Forcing an array so that fields like $id are easier to access
         $schema->schema = json_decode($contents, true);
         $schema->type = $type;
         return $schema;

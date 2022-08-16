@@ -1,7 +1,33 @@
 <?php
 
-require_once 'dynamics.php';
+require_once '../../../vendor/autoload.php';
 
-$data = json_decode(file_get_contents('products.json'));
-$schema = json_decode(file_get_contents('schema.json'));
-$validator = new \League\JsonGuard\Validator($data, $schema);
+use Opis\JsonSchema\Validator;
+
+$data = json_decode(file_get_contents('../../../schemas/blog.json'));
+$schema = json_decode(file_get_contents('../../../schemas/schema.json'));
+
+
+// $data = json_decode('{"name": "opis"}');
+// $schema = (object) [
+//     '$id' => 'http://example.com/schema.json',
+//     'type' => 'object',
+//     'properties' => (object)[
+//         'name' => (object)[
+//             'type' => 'string',
+//             'minLength' => 1,
+//             'maxLength' => 100,
+//         ]
+//     ],
+//     'required' => ['name']
+// ];
+
+// Create a new validator
+$validator = new Validator();
+$result = $validator->validate($data, $schema);
+
+if ($result->isValid()) {
+    echo 'The data is valid';
+} else {
+    echo 'The data is invalid';
+}
