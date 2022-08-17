@@ -27,18 +27,6 @@ This file is used to store some meta data about the collection.
 * An optional URL that is the root URL for the object on the web.
 * This can be used to generate RSS feeds for blogs/podcasts or Sitemap files.
 
-### .digest.json
-
-This file will contain a digest (summary) of every
-object that is within the collection.
-This is useful for performance so that it is quicker
-to retrieve an entire collection.
-
-Not every property is added to the digest for each object.
-This is to keep performance as streamlined as possible.
-The schema for a collection defines what properties
-are to be added to the digest.
-
 ### .index.json
 
 Just like in a database, Total CMS will allow you to
@@ -46,14 +34,15 @@ define specific properties that can be index for
 every object in a collection.
 You can define the properties to be indexed inside of the collection's schema.
 
-Indexes are most useful when used with something
-like tags or categories.
+This file will contain a summary of every
+object that is within the collection.
+This is useful for performance so that it is quicker
+to retrieve an entire collection.
 
-The index will store quick access to all objects
-that are associated with each object.
-
-For example, this will allow you to quickly access
-all blog posts that have a particular author or tag.
+Not every property is added to the summary for each object.
+This is to keep performance as streamlined as possible.
+The schema for a collection defines what properties
+are to be added to the summary.
 
 ### Object json
 

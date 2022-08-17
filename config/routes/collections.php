@@ -17,7 +17,7 @@ return function (App $app) {
         // Get schema of a collection
         $group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
 
-        // Get name of the collection
+        // Get index data of the collection
         //!$group->get('/{collection}', Collection\Index\IndexGetAction::class)->setName('collection-fetch');
 
         // Reindex collection
