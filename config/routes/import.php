@@ -6,12 +6,12 @@ use Slim\Routing\RouteCollectorProxy;
 
 return function (App $app) {
     $app->group('/import', function (RouteCollectorProxy $group) {
-        $group->post('/{collection}[/factory]', Import\ImportFactoryAction::class)->setName('import-factory');
-        $group->post('/{collection}/yaml', Import\ImportYamlAction::class)->setName('import-yaml');
-        $group->post('/{collection}/json', Import\ImportJsonAction::class)->setName('import-json');
-        $group->post('/{collection}/csv', Import\ImportCsvAction::class)->setName('import-csv');
-        $group->post('/{collection}/rss', Import\ImportRssAction::class)->setName('import-rss');
-        $group->post('/{collection}/url', Import\ImportUrlAction::class)->setName('import-url');
-        $group->post('/{collection}/wordpress', Import\ImportWordpressAction::class)->setName('import-wordpress');
+        //!$group->post('/{collection}[/factory]', Import\ImportFactoryAction::class)->setName('import-factory');
+        //!$group->post('/{collection}/yaml', Import\ImportYamlAction::class)->setName('import-yaml');
+        //!$group->post('/{collection}/json', Import\ImportJsonAction::class)->setName('import-json');
+        //!$group->post('/{collection}/csv', Import\ImportCsvAction::class)->setName('import-csv');
+        //!$group->post('/{collection}/rss', Import\ImportRssAction::class)->setName('import-rss');
+        //!$group->post('/{collection}/url', Import\ImportUrlAction::class)->setName('import-url');
+        //!$group->post('/{collection}/wordpress', Import\ImportWordpressAction::class)->setName('import-wordpress');
     });
 };
