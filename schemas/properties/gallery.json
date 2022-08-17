@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Gallery is an array of image objects",
   "items": {
-    "$ref": "https://www.totalcms.co/schemas/properties/image.json#"
+    "$ref": "https://www.totalcms.co/schemas/properties/image.json"
   },
   "type": "array",
   "examples": [
@@ -141,5 +141,5 @@
       }
     ]
   ],
-  "$id": "https://www.totalcms.co/schemas/properties/gallery.json#"
+  "$id": "https://www.totalcms.co/schemas/properties/gallery.json"
 }

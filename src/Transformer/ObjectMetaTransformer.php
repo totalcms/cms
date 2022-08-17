@@ -2,7 +2,7 @@
 
 namespace App\Transformer;
 
-use App\Domain\Storage\ObjectData;
+use App\Domain\Object\Data\ObjectData;
 use League\Fractal;
 
 final class ObjectMetaTransformer extends Fractal\TransformerAbstract

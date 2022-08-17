@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Collection\Object;
+namespace App\Action\Object;
 
 use App\Domain\Object\Service\ObjectSaver;
 use App\Renderer\JsonRenderer;

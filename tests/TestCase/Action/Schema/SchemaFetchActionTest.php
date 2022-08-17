@@ -41,7 +41,7 @@ final class SchemaFetchActionTest extends TestCase
         $blogSchema = json_decode(file_get_contents($path), true);
 
         $type = 'newblog';
-        $blogSchema['$id'] = "https://www.totalcms.co/schemas/custom/$type.json#";
+        $blogSchema['$id'] = "https://www.totalcms.co/schemas/custom/$type.json";
 
         $url = $this->urlFor('schema-save');
         $request = $this->createJsonRequest('POST', $url, $blogSchema);

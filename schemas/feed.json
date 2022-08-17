@@ -1,24 +1,24 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://www.totalcms.co/schemas/feed.json#",
+  "$id": "https://www.totalcms.co/schemas/feed.json",
   "properties": {
     "id": {
-      "$ref": "https://www.totalcms.co/schemas/properties/id.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/id.json"
     },
     "featured": {
       "type": "boolean"
     },
     "tags": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
     "title": {
       "type": "string"
     },
     "date": {
-      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json"
     },
     "image": {
-      "$ref": "https://www.totalcms.co/schemas/properties/image.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/image.json"
     },
     "content": {
       "type": "string"

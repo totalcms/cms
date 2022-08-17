@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://www.totalcms.co/schemas/blog.json#",
+  "$id": "https://www.totalcms.co/schemas/blog.json",
   "properties": {
     "content": {
       "type": "string"
     },
     "labels": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
     "extra": {
       "type": "string"
@@ -15,28 +15,28 @@
       "type": "string"
     },
     "tags": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
     "summary": {
       "type": "string"
     },
     "image": {
-      "$ref": "https://www.totalcms.co/schemas/properties/image.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/image.json"
     },
     "archived": {
       "type": "boolean"
     },
     "media": {
-      "$ref": "https://www.totalcms.co/schemas/properties/url.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/url.json"
     },
     "updated": {
-      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json"
     },
     "id": {
-      "$ref": "https://www.totalcms.co/schemas/properties/id.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/id.json"
     },
     "date": {
-      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json"
     },
     "extra2": {
       "type": "string"
@@ -48,7 +48,7 @@
       "type": "string"
     },
     "gallery": {
-      "$ref": "https://www.totalcms.co/schemas/properties/gallery.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/gallery.json"
     },
     "featured": {
       "type": "boolean"
@@ -58,7 +58,7 @@
       "minimum": 0
     },
     "categories": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
     "author": {
       "type": "string"

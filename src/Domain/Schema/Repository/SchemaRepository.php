@@ -12,7 +12,7 @@ use DomainException;
  */
 final class SchemaRepository extends StorageRepository
 {
-    private const DEFAULT_SCHEMA_DIR = __DIR__ . "/../../../../schemas/";
+    public const DEFAULT_SCHEMA_DIR = __DIR__ . "/../../../../schemas/";
     private const CUSTOM_SCHEMA_DIR  = '.schemas/';
 
     /**

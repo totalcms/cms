@@ -10,7 +10,7 @@ use UnexpectedValueException;
  */
 final class SchemaFactory
 {
-    private const SCHEMA_ID_EXT  = '.json#';
+    private const SCHEMA_ID_EXT = '.json';
 
     /**
      * create a schema object

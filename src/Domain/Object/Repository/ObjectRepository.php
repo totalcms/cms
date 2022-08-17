@@ -4,7 +4,6 @@ namespace App\Domain\Object\Repository;
 
 use App\Domain\Storage\StorageRepository;
 use App\Domain\Object\Data\ObjectData;
-use DomainException;
 
 /**
  * Repository.

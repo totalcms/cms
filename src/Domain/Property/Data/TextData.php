@@ -12,9 +12,12 @@ final class ObjectData
     public string $id;
     public Collection $properties;
 
-    public function __construct()
+    /**
+     * @param mixed $items The items
+     */
+    public function __construct($items)
     {
-        $this->properties = new Collection();
+        $this->properties = new Collection($items);
     }
 
     public function toArray(): array

@@ -1,5 +1,5 @@
 {
   "url": "https://www.totalcms.co/demo/total-cms/blog/post/?id=",
-  "schema": "https://www.totalcms.co/schemas/blog.json#",
+  "schema": "https://www.totalcms.co/schemas/blog.json",
   "name": "myblog"
 }

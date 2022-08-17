@@ -8,6 +8,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use UnexpectedValueException;
+use DomainException;
 
 /**
  * Service.
@@ -43,6 +44,30 @@ final class CollectionCreator
         if (in_array($collection->name, CollectionData::RESERVED_COLLECTIONS) && $collection->name !== $collection->schema) {
             throw new UnexpectedValueException('Cannot assign custom schema to a reserved collection');
         }
+
+        $this->storage->saveCollection($collection);
+
+        return $collection;
+    }
+
+    /**
+     * Save Collection data.
+     *
+     * @param string $collectionName The collection name.
+     *
+     * @throws DomainException
+     *
+     * @return CollectionData
+     */
+    public function saveReservedCollection(string $collectionName): CollectionData
+    {
+        if (!in_array($collectionName, CollectionData::RESERVED_COLLECTIONS)) {
+            throw new DomainException("Collection is not a reserved collection: $collectionName");
+        }
+
+        $collection = new CollectionData;
+        $collection->name = $collectionName;
+        $collection->schema = $collectionName;
 
         $this->storage->saveCollection($collection);
 

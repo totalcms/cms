@@ -38,7 +38,7 @@ final class SchemaSaveActionTest extends TestCase
         /* @phpstan-ignore-next-line */
         $blogSchema = json_decode(file_get_contents($path), true);
 
-        $blogSchema['$id'] = 'https://www.totalcms.co/schemas/custom/newblog.json#';
+        $blogSchema['$id'] = 'https://www.totalcms.co/schemas/custom/newblog.json';
 
         $url = $this->urlFor('schema-save');
         $request = $this->createJsonRequest('POST', $url, $blogSchema);

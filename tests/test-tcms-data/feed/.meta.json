@@ -1,5 +1,5 @@
 {
   "name": "feed",
-  "schema": "https://www.totalcms.co/schemas/feed.json#",
+  "schema": "https://www.totalcms.co/schemas/feed.json",
   "url": ""
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "format": "email",
-  "$id": "https://www.totalcms.co/schemas/properties/email.json#",
+  "$id": "https://www.totalcms.co/schemas/properties/email.json",
   "examples": [
     "support@weavers.space",
     "user@example.com"

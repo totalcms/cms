@@ -39,7 +39,7 @@
       "type": "number"
     }
   },
-  "$id": "https://www.totalcms.co/schemas/properties/rating.json#",
+  "$id": "https://www.totalcms.co/schemas/properties/rating.json",
   "type": "object",
   "description": "Object to store a rating data",
   "required": [

@@ -4,6 +4,7 @@ namespace App\Domain\Collection\Service;
 
 use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Collection\Repository\CollectionRepository;
+use DomainException;
 
 /**
  * Service.
@@ -26,6 +27,19 @@ final class CollectionReader
      */
     public function fetchCollection(string $collection): CollectionData
     {
-        return $this->storage->getCollection($collection);
+        try {
+            $collection = $this->storage->getCollection($collection);
+        } catch (DomainException $de) {
+            // Auto-generate reserved collections
+            if (in_array($collection, CollectionData::RESERVED_COLLECTIONS)) {
+                $reserved = new CollectionData;
+                $reserved->name = $collection;
+                $reserved->schema = $collection;
+                $this->storage->saveCollection($reserved);
+                return $reserved;
+            }
+            throw $de;
+        }
+        return $collection;
     }
 }

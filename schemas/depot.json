@@ -1,14 +1,14 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/depot.json#",
+    "$id": "https://www.totalcms.co/schemas/depot.json",
     "description": "A schema for a Total CMS Depot object",
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/id.json#"
+            "$ref": "https://www.totalcms.co/schemas/properties/id.json"
         },
         "depot": {
-            "$ref": "https://www.totalcms.co/schemas/properties/depot.json#"
+            "$ref": "https://www.totalcms.co/schemas/properties/depot.json"
         }
     },
     "required": [

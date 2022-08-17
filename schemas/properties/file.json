@@ -4,7 +4,7 @@
   "properties": {
     "tags": {
       "$comment": "Tags associated with the file",
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
     "passphrase": {
       "type": "string",
@@ -35,7 +35,7 @@
     },
     "uploadDate": {
       "$comment": "The date the file was uploaded",
-      "$ref": "https://www.totalcms.co/schemas/properties/date.json#"
+      "$ref": "https://www.totalcms.co/schemas/properties/date.json"
     }
   },
   "type": "object",
@@ -64,5 +64,5 @@
       "name": "file.zip"
     }
   ],
-  "$id": "https://www.totalcms.co/schemas/properties/file.json#"
+  "$id": "https://www.totalcms.co/schemas/properties/file.json"
 }

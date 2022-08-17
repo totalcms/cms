@@ -6,6 +6,9 @@ use App\Domain\Schema\Service\SchemaFetcher;
 use App\Domain\Schema\Repository\SchemaRepository;
 use Opis\JsonSchema\Validator;
 use Opis\JsonSchema\Helper;
+use Opis\JsonSchema\Resolvers\SchemaResolver;
+use Opis\JsonSchema\Errors\ErrorFormatter;
+use DomainException;
 
 /**
  * Service.
@@ -25,6 +28,8 @@ final class SchemaValidator
      * @param string $schemaToValidate
      * @param string $schemaType
      *
+     * @throws DomainException
+     *
      * @return bool
      */
     public function validateSchema(string $schemaToValidate, string $schemaType = 'schema'): bool
@@ -35,8 +40,23 @@ final class SchemaValidator
         $schemaToValidate = json_decode($schemaToValidate);
 
         $validator = new Validator();
-        $result = $validator->validate($schemaToValidate, $schemaJSON);
+        $resolver = $validator->resolver();
 
-        return $result->isValid();
+        if ($resolver instanceof SchemaResolver) {
+            $resolver->registerPrefix('https://www.totalcms.co/schemas/', SchemaRepository::DEFAULT_SCHEMA_DIR);
+        }
+
+        $result = $validator->validate($schemaToValidate, $schemaJSON);
+        $valid = $result->isValid();
+
+        if ($valid === false) {
+            // Create an error formatter
+            $formatter = new ErrorFormatter();
+            $error = $formatter->format($result->error(), false);
+            $msg = implode(';', array_map(fn ($k, $v) => "($k) $v", array_keys($error), $error));
+            throw new DomainException("Schema Validation Failed. $msg");
+        }
+
+        return $valid;
     }
 }
