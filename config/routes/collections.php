@@ -2,6 +2,7 @@
 
 use App\Action\Collection;
 use App\Action\Schema;
+use App\Action\Object as ObjectAction;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
@@ -24,27 +25,27 @@ return function (App $app) {
         //!$group->put('/{collection}', Collection\Index\IndexUpdateAction::class)->setName('collection-reindex');
 
         // Create a new obejct in a collection
-        //!$group->post('/{collection}', Collection\Object\ObjectSaveAction::class)->setName('object-save');
+        $group->post('/{collection}', ObjectAction\ObjectSaveAction::class)->setName('object-save');
 
         // Object Exists in a collection
-        //!$group->map(['HEAD'], '/{collection}/{id}', Collection\Object\ObjectExistsAction::class)->setName('object-exists');
+        //!$group->map(['HEAD'], '/{collection}/{id}', ObjectAction\ObjectExistsAction::class)->setName('object-exists');
 
         // Get collection object by id
-        //!$group->get('/{collection}/{id}', Collection\Object\ObjectFetchAction::class)->setName('object-fetch');
-        //!$group->put('/{collection}/{id}', Collection\Object\ObjectUpdateAction::class)->setName('object-update');
-        //!$group->delete('/{collection}/{id}', Collection\Object\ObjectDeleteAction::class)->setName('object-delete');
+        //!$group->get('/{collection}/{id}', ObjectAction\ObjectFetchAction::class)->setName('object-fetch');
+        //!$group->put('/{collection}/{id}', ObjectAction\ObjectUpdateAction::class)->setName('object-update');
+        //!$group->delete('/{collection}/{id}', ObjectAction\ObjectDeleteAction::class)->setName('object-delete');
 
         // Object Property
-        //!$group->put('/{collection}/{id}/{property}', Collection\Object\Property\PropertyUpdateAction::class)
+        //!$group->put('/{collection}/{id}/{property}', ObjectAction\Property\PropertyUpdateAction::class)
         //!->setName('property-update');
-        //!$group->post('/{collection}/{id}/{property}', Collection\Object\Property\File\FileSaveAction::class)
+        //!$group->post('/{collection}/{id}/{property}', ObjectAction\Property\File\FileSaveAction::class)
         //!->setName('property-file-save');
 
         // Property File
-        //!$group->put('/{collection}/{id}/{property}/{file}', Collection\Object\Property\File\FileUpdateAction::class)
+        //!$group->put('/{collection}/{id}/{property}/{file}', ObjectAction\Property\File\FileUpdateAction::class)
         //!->setName('property-file-update-meta');
 
-        //!$group->delete('/{collection}/{id}/{property}/{file}', Collection\Object\Property\File\FileDeleteAction::class)
+        //!$group->delete('/{collection}/{id}/{property}/{file}', ObjectAction\Property\File\FileDeleteAction::class)
         //!->setName('property-file-delete');
     });
 };
