@@ -28,4 +28,10 @@ final class SchemaData
     // $id and $schemas properties.
     public array $schema;
     public string $type;
+
+    public function toJson(): string
+    {
+        $json = json_encode($this->schema);
+        return $json === false ? '' : $json;
+    }
 }

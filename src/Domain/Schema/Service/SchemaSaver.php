@@ -3,11 +3,9 @@
 namespace App\Domain\Schema\Service;
 
 use App\Domain\Schema\Data\SchemaData;
-use App\Domain\Schema\Service\SchemaFetcher;
 use App\Domain\Schema\Service\SchemaFactory;
+use App\Domain\Schema\Service\SchemaValidator;
 use App\Domain\Schema\Repository\SchemaRepository;
-use Opis\JsonSchema\Validator;
-use Opis\JsonSchema\Helper;
 use UnexpectedValueException;
 
 /**
@@ -16,34 +14,12 @@ use UnexpectedValueException;
 final class SchemaSaver
 {
     private SchemaRepository $storage;
-    private SchemaFetcher $fetcher;
+    private SchemaValidator $validator;
 
-    public function __construct(
-        SchemaRepository $storage,
-        SchemaFetcher $fetcher,
-    ) {
-        $this->storage = $storage;
-        $this->fetcher = $fetcher;
-    }
-
-    /**
-     * Validate a schema
-     *
-     * @param string $schemaToValidate
-     *
-     * @return bool
-     */
-    public function validateSchema(string $schemaToValidate): bool
+    public function __construct(SchemaRepository $storage, SchemaValidator $validator)
     {
-        $schema = $this->fetcher->fetchSchema('schema');
-        $schemaJSON = Helper::toJSON($schema->schema);
-
-        $schemaToValidate = json_decode($schemaToValidate);
-
-        $validator = new Validator();
-        $result = $validator->validate($schemaToValidate, $schemaJSON);
-
-        return $result->isValid();
+        $this->storage = $storage;
+        $this->validator = $validator;
     }
 
     /**
@@ -57,7 +33,7 @@ final class SchemaSaver
      */
     public function saveSchema(string $schemaJSON): SchemaData
     {
-        if ($this->validateSchema($schemaJSON) === false) {
+        if ($this->validator->validateSchema($schemaJSON) === false) {
             throw new UnexpectedValueException('Invalid schema data provided', 1);
         }
 
