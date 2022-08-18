@@ -41,7 +41,7 @@ final class CollectionRepository extends StorageRepository
      */
     public function fetchCollection(string $collection): ?CollectionData
     {
-        $metaFile = $collection . DIRECTORY_SEPARATOR . self::META_FILE;
+        $metaFile = $this->buildMetaPath($collection);
         return $this->fetchAndDeserialize($metaFile, CollectionData::class);
     }
 
@@ -75,8 +75,13 @@ final class CollectionRepository extends StorageRepository
     public function saveCollection(CollectionData $collection): void
     {
         $jsonContent = $this->serializer->serialize($collection, 'json');
-        $metaFile = $collection->name . DIRECTORY_SEPARATOR . self::META_FILE;
+        $metaFile = $this->buildMetaPath($collection->name);
 
         $this->filesystem->write($metaFile, $jsonContent);
+    }
+
+    private function buildMetaPath(string $collection): string
+    {
+        return $this->cleanString($collection) . DIRECTORY_SEPARATOR . self::META_FILE;
     }
 }

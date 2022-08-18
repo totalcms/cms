@@ -3,12 +3,13 @@
 namespace App\Domain\Object\Service;
 
 use App\Domain\Object\Data\ObjectData;
+use App\Domain\Object\Data\TextData;
+
 use App\Domain\Schema\Service\SchemaFetcher;
 use App\Domain\Schema\Service\SchemaValidator;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+
 use UnexpectedValueException;
+use DomainException;
 
 /**
  * Service.
@@ -17,7 +18,6 @@ final class ObjectFactory
 {
     private SchemaFetcher $schemaFetcher;
     private SchemaValidator $validator;
-    private Serializer $serializer;
 
     public function __construct(
         SchemaFetcher $schemaFetcher,
@@ -25,7 +25,6 @@ final class ObjectFactory
     ) {
         $this->schemaFetcher = $schemaFetcher;
         $this->validator     = $validator;
-        $this->serializer    = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     /**
@@ -46,45 +45,45 @@ final class ObjectFactory
             throw new UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
         }
 
-        $object = $this->serializer->deserialize($objectJson, ObjectData::class, 'json');
-
-        if (!$object instanceof ObjectData) {
-            throw new UnexpectedValueException('Invalid object data provided. Serialization failed.', 1);
-        }
-
         $data = json_decode($objectJson, true);
+        $properties = [];
 
+        // Loop through the schema properties and add them to the object properties.
         foreach ($schema->schema["properties"] as $property => $propertySchema) {
             if ($property === 'id') {
-                // No use storing the ID a second time in the properties.
+                // No use storing the ID a second time in the object properties.
                 continue;
             }
-            // TODO: need to look for type or $ref. Type is simple. $ref is a property object.
-            // switch ($propertySchema["type"]??"") {
-            //     case 'string':
-            //         $value = (string) $data[$property];
-            //         break;
-            //     case 'integer':
-            //         $value = intval($data[$property]);
-            //         break;
-            //     case 'boolean':
-            //         $value = boolval($data[$property]);
-            //         break;
-            //     default:
-            //         $value = $data[$property];
-            //         break;
-            // }
-            // Don't need to do a type check on the data since the schema validator did that.
-            $object->properties->put($property, $data[$property]);
+
+            $value = null;
+
+            if (isset($data[$property])) {
+                // Set the value from the JSON
+                $value = $data[$property];
+            } elseif (isset($propertySchema["default"])) {
+                // Set the value from the schema default
+                $value = $propertySchema["default"];
+            } elseif (isset($propertySchema['$ref'])) {
+                // TODO: $ref is a property object.
+                $value = $data[$property]??[];
+            }
+
+            if ($value !== null) {
+                $properties[$property] = $value;
+            }
         }
+
+        // Dynamically load object data based on the schema type
+        $className = 'App\\Domain\\Object\\Data\\'.ucfirst($schema->type).'Data';
+        if (!class_exists($className)) {
+            $className = ObjectData::class;
+        }
+        $object = new $className($data['id'], $properties);
+
+        if (!$object instanceof ObjectData) {
+            throw new DomainException("Unknown error creating object.");
+        }
+
         return $object;
     }
 }
-
-
-/*
-Read in the schema for an object. For each property,
-create a new property object and add it to the collection.
-Needs to create property classes for each type of property.
-Except for string, number, bool, etc.
-*/

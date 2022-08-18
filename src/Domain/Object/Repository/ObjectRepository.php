@@ -49,6 +49,6 @@ final class ObjectRepository extends StorageRepository
 
     private function buildObjectPath(string $collection, string $id): string
     {
-        return sprintf('%s/%s%s', $collection, $this->cleanString($id), self::FILE_EXT);
+        return sprintf('%s/%s%s', $this->cleanString($collection), $this->cleanString($id), self::FILE_EXT);
     }
 }

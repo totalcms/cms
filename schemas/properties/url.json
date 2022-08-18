@@ -4,7 +4,9 @@
   "type": "string",
   "description": "A field for storing URLs to media and other data",
   "examples": [
-    "https://www.youtube.com/watch?v=UCeYTysLyGI"
+    "https://www.youtube.com/watch?v=UCeYTysLyGI",
+    "https://www.totalcms.co/",
+    "https://www.weavers.space/"
   ],
   "$id": "https://www.totalcms.co/schemas/properties/url.json"
 }

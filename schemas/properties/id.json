@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "pattern": "^[A-Za-z0-9-]+$",
+  "pattern": "^\\S+$",
   "$id": "https://www.totalcms.co/schemas/properties/id.json",
   "examples": [
     "this-is-a-valid-id-2021"
