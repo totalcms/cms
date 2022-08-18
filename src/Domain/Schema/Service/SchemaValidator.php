@@ -2,13 +2,12 @@
 
 namespace App\Domain\Schema\Service;
 
-use App\Domain\Schema\Service\SchemaFetcher;
 use App\Domain\Schema\Repository\SchemaRepository;
-use Opis\JsonSchema\Validator;
+use DomainException;
+use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Helper;
 use Opis\JsonSchema\Resolvers\SchemaResolver;
-use Opis\JsonSchema\Errors\ErrorFormatter;
-use DomainException;
+use Opis\JsonSchema\Validator;
 
 /**
  * Service.
@@ -23,7 +22,7 @@ final class SchemaValidator
     }
 
     /**
-     * Validate a schema
+     * Validate a schema.
      *
      * @param string $schemaToValidate
      * @param string $schemaType
@@ -34,27 +33,27 @@ final class SchemaValidator
      */
     public function validateSchema(string $schemaToValidate, string $schemaType = 'schema'): bool
     {
-        $schema = $this->fetcher->fetchSchema($schemaType);
+        $schema     = $this->fetcher->fetchSchema($schemaType);
         $schemaJSON = Helper::toJSON($schema->schema);
 
         $schemaToValidate = json_decode($schemaToValidate);
 
         $validator = new Validator();
-        $resolver = $validator->resolver();
+        $resolver  = $validator->resolver();
 
         if ($resolver instanceof SchemaResolver) {
             $resolver->registerPrefix('https://www.totalcms.co/schemas/', SchemaRepository::DEFAULT_SCHEMA_DIR);
         }
 
         $result = $validator->validate($schemaToValidate, $schemaJSON);
-        $valid = $result->isValid();
+        $valid  = $result->isValid();
 
         if ($valid === false) {
             // Create an error formatter
             $formatter = new ErrorFormatter();
             /* @phpstan-ignore-next-line */
             $error = $formatter->format($result->error(), false);
-            $msg = implode(';', array_map(fn ($k, $v) => "($k) $v", array_keys($error), $error));
+            $msg   = implode(';', array_map(fn ($k, $v) => "($k) $v", array_keys($error), $error));
             throw new DomainException("Schema Validation Failed. $msg");
         }
 

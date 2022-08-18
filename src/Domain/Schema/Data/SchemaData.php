@@ -8,20 +8,20 @@ namespace App\Domain\Schema\Data;
 final class SchemaData
 {
     public const RESERVED_SCHEMAS = [
-        "blog",
-        "color",
-        "date",
-        "depot",
-        "feed",
-        "file",
-        "gallery",
-        "image",
-        "number",
-        "schema",
-        "svg",
-        "text",
-        "toggle",
-        "url",
+        'blog',
+        'color',
+        'date',
+        'depot',
+        'feed',
+        'file',
+        'gallery',
+        'image',
+        'number',
+        'schema',
+        'svg',
+        'text',
+        'toggle',
+        'url',
     ];
 
     // Storing the JSON as array to avoid having to deal with
@@ -32,6 +32,7 @@ final class SchemaData
     public function toJson(): string
     {
         $json = json_encode($this->schema);
+
         return $json === false ? '' : $json;
     }
 }

@@ -15,7 +15,7 @@ final class ImageFieldReader
     public function __construct(CollectionStorage $storage, LoggerFactory $loggerFactory)
     {
         $this->storage = $storage;
-        $this->logger = $loggerFactory
+        $this->logger  = $loggerFactory
             ->addFileHandler('image_works_reader.log')
             ->createLogger();
     }
@@ -24,9 +24,9 @@ final class ImageFieldReader
     {
         $this->logger->debug('Read image by field', [
             'collection' => $collection,
-            'id' => $id,
-            'field' => $field,
-            'params' => $params,
+            'id'         => $id,
+            'field'      => $field,
+            'params'     => $params,
         ]);
 
         // @todo Implement logic here
@@ -36,9 +36,9 @@ final class ImageFieldReader
         // ...
 
         // If found, return image object
-        $image = new ImageFile();
+        $image           = new ImageFile();
         $image->filename = 'example.jpg';
-        $image->content = 'binary data';
+        $image->content  = 'binary data';
 
         return $image;
     }

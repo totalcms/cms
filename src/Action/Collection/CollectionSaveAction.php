@@ -22,7 +22,7 @@ final class CollectionSaveAction
     public function __construct(JsonRenderer $renderer, CollectionCreator $service)
     {
         $this->renderer = $renderer;
-        $this->service = $service;
+        $this->service  = $service;
     }
 
     /**

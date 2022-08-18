@@ -5,8 +5,8 @@ require_once 'vendor/autoload.php';
 use ColorThief\ColorThief;
 use Mexitek\PHPColors\Color;
 
-$image = 'goldengate.jpg';
-$image = 'icon.png';
+$image   = 'goldengate.jpg';
+$image   = 'icon.png';
 $palette = ColorThief::getPalette($image, 15);
 $palette = array_slice($palette, 0, 6);
 $palette = array_map(function ($color) {

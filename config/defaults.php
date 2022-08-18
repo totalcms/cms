@@ -30,11 +30,11 @@ $settings = [];
 $settings['env'] = 'prod';
 
 // Path settings
-$settings['root'] = dirname(__DIR__);
-$settings['temp'] = $settings['root'] . '/tmp';
-$settings['public'] = $settings['root'] . '/public';
+$settings['root']     = dirname(__DIR__);
+$settings['temp']     = $settings['root'] . '/tmp';
+$settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/templates';
-$settings['schemas'] = $settings['root'] . '/schemas';
+$settings['schemas']  = $settings['root'] . '/schemas';
 
 // Clean up trailing slashes in DOCUMENT_ROOT
 $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
@@ -66,7 +66,7 @@ $settings['logger'] = [
 
 // Session
 $settings['session'] = [
-    'name' => 'totalcms',
+    'name'         => 'totalcms',
     'cache_expire' => 0,
 ];
 
@@ -99,13 +99,13 @@ $settings['session'] = [
 
 // E-Mail settings
 $settings['smtp'] = [
-    'type' => 'smtp',
-    'host' => '127.0.0.1',
-    'port' => '25',
-    'secure' => '',
-    'from' => 'from@example.com',
+    'type'      => 'smtp',
+    'host'      => '127.0.0.1',
+    'port'      => '25',
+    'secure'    => '',
+    'from'      => 'from@example.com',
     'from_name' => 'My name',
-    'to' => 'to@example.com',
+    'to'        => 'to@example.com',
 ];
 
 // Console commands

@@ -16,13 +16,14 @@ class ObjectData
 
     public function __construct(string $id, array $properties)
     {
-        $this->id = (new Slugify())->slugify($id);
+        $this->id         = (new Slugify())->slugify($id);
         $this->properties = new Collection($properties);
     }
 
     public function toArray(): array
     {
-        $base = ["id" => $this->id];
+        $base = ['id' => $this->id];
+
         return array_merge($base, $this->properties->toArray());
     }
 }

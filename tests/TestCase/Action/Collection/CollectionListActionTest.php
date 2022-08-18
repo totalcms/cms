@@ -36,8 +36,8 @@ final class CollectionListActionTest extends TestCase
         ];
 
         foreach ($collections as $collection) {
-            $url = $this->urlFor('collection-save');
-            $request = $this->createJsonRequest('POST', $url, $collection);
+            $url      = $this->urlFor('collection-save');
+            $request  = $this->createJsonRequest('POST', $url, $collection);
             $response = $this->app->handle($request);
 
             $expected = [
@@ -48,8 +48,8 @@ final class CollectionListActionTest extends TestCase
             $this->assertSame(StatusCodeInterface::STATUS_OK, $response->getStatusCode());
         }
 
-        $url = $this->urlFor('collections-list');
-        $request = $this->createRequest('GET', $url);
+        $url      = $this->urlFor('collections-list');
+        $request  = $this->createRequest('GET', $url);
         $response = $this->app->handle($request);
 
         $expected = [

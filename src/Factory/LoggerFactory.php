@@ -32,7 +32,7 @@ final class LoggerFactory
      */
     public function __construct(array $settings = [])
     {
-        $this->path = (string)($settings['path'] ?? '');
+        $this->path  = (string)($settings['path'] ?? '');
         $this->level = (int)($settings['level'] ?? Logger::DEBUG);
 
         // This can be used for testing to make the Factory testable
@@ -91,9 +91,9 @@ final class LoggerFactory
      */
     public function addFileHandler(
         string $filename,
-        int $maxFiles    = 0,
+        int $maxFiles = 0,
         int $permissions = 0777,
-        int $level       = null
+        int $level = null
     ): self {
         $filename = sprintf('%s/%s', $this->path, $filename);
         /** @phpstan-ignore-next-line */

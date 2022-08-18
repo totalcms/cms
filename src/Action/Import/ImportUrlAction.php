@@ -15,7 +15,7 @@ final class ImportUrlAction
     public function __construct(UrlImporter $urlImporter, JsonRenderer $renderer)
     {
         $this->urlImporter = $urlImporter;
-        $this->renderer = $renderer;
+        $this->renderer    = $renderer;
     }
 
     /**
@@ -29,10 +29,10 @@ final class ImportUrlAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $collection = (string)$request->getAttribute('collection');
-        $body = (array)$request->getParsedBody();
+        $body       = (array)$request->getParsedBody();
 
         $properties = $body['properties'] ?? [];
-        $link = $body['link'] ?? '';
+        $link       = $body['link'] ?? '';
 
         $this->urlImporter->import($collection, $link, $properties);
 

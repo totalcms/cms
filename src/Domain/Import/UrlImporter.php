@@ -25,9 +25,9 @@ final class UrlImporter
         CakeValidationFactory $validationFactory,
         LoggerFactory $loggerFactory
     ) {
-        $this->storage = $storage;
+        $this->storage           = $storage;
         $this->validationFactory = $validationFactory;
-        $this->logger = $loggerFactory
+        $this->logger            = $loggerFactory
             ->addFileHandler('url_importer.log')
             ->createLogger();
     }
@@ -38,11 +38,11 @@ final class UrlImporter
 
         try {
             $urlParser = new Parser();
-            $slugify = new Slugify();
+            $slugify   = new Slugify();
 
-            $embed = new Embed();
-            $info = $embed->get($link);
-            $id = $slugify->slugify($info->title ?? $link);
+            $embed  = new Embed();
+            $info   = $embed->get($link);
+            $id     = $slugify->slugify($info->title ?? $link);
             $domain = $urlParser->parse($link)['host'];
 
             if ($this->storage->existsObjectId($collection, $id)) {
@@ -50,14 +50,14 @@ final class UrlImporter
                 $id = uniqid($id . '-');
             }
 
-            $record = $properties;
-            $record['id'] = $id;
-            $record['url'] = $info->url;
-            $record['title'] = $info->title;
+            $record                = $properties;
+            $record['id']          = $id;
+            $record['url']         = $info->url;
+            $record['title']       = $info->title;
             $record['description'] = $info->description;
-            $record['domain'] = $domain;
-            $record['hidden'] = true;
-            $record['date'] = Chronos::now()->format('c');
+            $record['domain']      = $domain;
+            $record['hidden']      = true;
+            $record['date']        = Chronos::now()->format('c');
 
             $this->storage->saveObject($collection, new ObjectData($record));
             // @todo Add logic that will download the image and save it to the post

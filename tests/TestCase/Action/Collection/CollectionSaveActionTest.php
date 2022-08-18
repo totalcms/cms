@@ -2,10 +2,10 @@
 
 namespace App\Test\TestCase\Action\Collection;
 
+use App\Domain\Collection\Data\CollectionData;
 use App\Test\Traits\AppTestTrait;
 use Fig\Http\Message\StatusCodeInterface;
 use PHPUnit\Framework\TestCase;
-use App\Domain\Collection\Data\CollectionData;
 
 /**
  * Test.
@@ -40,10 +40,10 @@ final class CollectionSaveActionTest extends TestCase
                 'url'    => '',
             ];
 
-            $request = $this->createJsonRequest('POST', $url, $data);
+            $request  = $this->createJsonRequest('POST', $url, $data);
             $response = $this->app->handle($request);
 
-            $expected = [ 'data' => $data ];
+            $expected = ['data' => $data];
 
             $this->assertJsonData($expected, $response);
             $this->assertSame(StatusCodeInterface::STATUS_OK, $response->getStatusCode());
@@ -58,11 +58,11 @@ final class CollectionSaveActionTest extends TestCase
             'url'    => 'test-url',
         ];
 
-        $url = $this->urlFor('collection-save');
-        $request = $this->createJsonRequest('POST', $url, $data);
+        $url      = $this->urlFor('collection-save');
+        $request  = $this->createJsonRequest('POST', $url, $data);
         $response = $this->app->handle($request);
 
-        $expected = [ 'data' => $data ];
+        $expected = ['data' => $data];
 
         $this->assertJsonData($expected, $response);
         $this->assertSame(StatusCodeInterface::STATUS_OK, $response->getStatusCode());
@@ -77,12 +77,12 @@ final class CollectionSaveActionTest extends TestCase
             'url'    => 'https://blog-url.com',
         ];
 
-        $url = $this->urlFor('collection-save');
-        $request = $this->createJsonRequest('POST', $url, $data);
+        $url      = $this->urlFor('collection-save');
+        $request  = $this->createJsonRequest('POST', $url, $data);
         $response = $this->app->handle($request);
 
         $expected = ['error' => [
-            'message' => "500 Internal Server Error - Cannot assign custom schema to a reserved collection"
+            'message' => '500 Internal Server Error - Cannot assign custom schema to a reserved collection',
         ]];
 
         $this->assertJsonData($expected, $response);
@@ -98,11 +98,11 @@ final class CollectionSaveActionTest extends TestCase
             'url'    => 'https://blog-url.com',
         ];
 
-        $url = $this->urlFor('collection-save');
-        $request = $this->createJsonRequest('POST', $url, $data);
+        $url      = $this->urlFor('collection-save');
+        $request  = $this->createJsonRequest('POST', $url, $data);
         $response = $this->app->handle($request);
 
-        $expected = [ 'data' => $data ];
+        $expected = ['data' => $data];
 
         $this->assertJsonData($expected, $response);
         $this->assertSame(StatusCodeInterface::STATUS_OK, $response->getStatusCode());

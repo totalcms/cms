@@ -10,8 +10,8 @@ $image = 'goldengate.jpg';
 
 // Setup Glide server
 $server = ServerFactory::create([
-    'source' => '.',
-    'cache' => 'cache',
+    'source'   => '.',
+    'cache'    => 'cache',
     'response' => new SlimResponseFactory(),
 ]);
 

@@ -22,7 +22,7 @@ final class ObjectSaveAction
     public function __construct(JsonRenderer $renderer, ObjectSaver $service)
     {
         $this->renderer = $renderer;
-        $this->service = $service;
+        $this->service  = $service;
     }
 
     /**

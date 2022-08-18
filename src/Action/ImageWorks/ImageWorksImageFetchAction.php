@@ -33,9 +33,9 @@ final class ImageWorksImageFetchAction
         array $args
     ): ResponseInterface {
         // Get image by field
-        $collection = (string)$args['collection'];
-        $id = (string)$args['id'];
-        $property = (string)$args['property'];
+        $collection  = (string)$args['collection'];
+        $id          = (string)$args['id'];
+        $property    = (string)$args['property'];
         $queryParams = $request->getQueryParams();
 
         $image = $this->imageFieldReader->readImageByField($collection, $id, $property, $queryParams);

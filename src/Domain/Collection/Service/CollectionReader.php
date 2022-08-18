@@ -32,14 +32,16 @@ final class CollectionReader
         } catch (DomainException $de) {
             // Auto-generate reserved collections
             if (in_array($collection, CollectionData::RESERVED_COLLECTIONS)) {
-                $reserved = new CollectionData;
-                $reserved->name = $collection;
+                $reserved         = new CollectionData();
+                $reserved->name   = $collection;
                 $reserved->schema = $collection;
                 $this->storage->saveCollection($reserved);
+
                 return $reserved;
             }
             throw $de;
         }
+
         return $collection;
     }
 }

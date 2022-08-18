@@ -2,8 +2,8 @@
 
 namespace App\Domain\Collection\Repository;
 
-use App\Domain\Storage\StorageRepository;
 use App\Domain\Collection\Data\CollectionData;
+use App\Domain\Storage\StorageRepository;
 use DomainException;
 
 /**
@@ -42,6 +42,7 @@ final class CollectionRepository extends StorageRepository
     public function fetchCollection(string $collection): ?CollectionData
     {
         $metaFile = $this->buildMetaPath($collection);
+
         return $this->fetchAndDeserialize($metaFile, CollectionData::class);
     }
 
@@ -75,7 +76,7 @@ final class CollectionRepository extends StorageRepository
     public function saveCollection(CollectionData $collection): void
     {
         $jsonContent = $this->serializer->serialize($collection, 'json');
-        $metaFile = $this->buildMetaPath($collection->name);
+        $metaFile    = $this->buildMetaPath($collection->name);
 
         $this->filesystem->write($metaFile, $jsonContent);
     }

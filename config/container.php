@@ -32,6 +32,7 @@ return [
 
     App::class => function (ContainerInterface $container) {
         AppFactory::setContainer($container);
+
         return AppFactory::create();
     },
 
@@ -66,8 +67,9 @@ return [
 
     // The data dir iterator factory
     StorageFilesystemAdapter::class => function (ContainerInterface $container) {
-        $rootPath = $container->get(Config::class)->dataDir;
+        $rootPath   = $container->get(Config::class)->dataDir;
         $filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
+
         return new StorageFilesystemAdapter($filesystem);
     },
 
@@ -77,11 +79,13 @@ return [
 
     BasePathMiddleware::class => function (ContainerInterface $container) {
         $app = $container->get(App::class);
+
         return new BasePathMiddleware($app);
     },
 
     ValidationExceptionMiddleware::class => function (ContainerInterface $container) {
         $factory = $container->get(ResponseFactoryInterface::class);
+
         return new ValidationExceptionMiddleware($factory, new ErrorDetailsResultTransformer(), new JsonEncoder());
     },
 
@@ -96,7 +100,7 @@ return [
             level       : $config['level'],
         )->createLogger($config['name']);
 
-        $config = (array)$container->get(Config::class)->error;
+        $config          = (array)$container->get(Config::class)->error;
         $errorMiddleware = new ErrorMiddleware(
             $app->getCallableResolver(),
             $app->getResponseFactory(),

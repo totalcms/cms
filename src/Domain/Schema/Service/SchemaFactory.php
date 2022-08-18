@@ -13,7 +13,7 @@ final class SchemaFactory
     private const SCHEMA_ID_EXT = '.json';
 
     /**
-     * create a schema object
+     * create a schema object.
      *
      * @param string $schemaJson
      * @param string $type
@@ -34,7 +34,7 @@ final class SchemaFactory
             $type = basename($schema['$id'], self::SCHEMA_ID_EXT);
         }
 
-        $schemaData = new SchemaData();
+        $schemaData         = new SchemaData();
         $schemaData->schema = $schema;
         $schemaData->type   = $type;
 

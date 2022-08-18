@@ -18,7 +18,7 @@ final class SchemaFetcher
         SchemaRepository $storage,
         CollectionReader $collectionService
     ) {
-        $this->storage = $storage;
+        $this->storage           = $storage;
         $this->collectionService = $collectionService;
     }
 
@@ -44,6 +44,7 @@ final class SchemaFetcher
     public function fetchSchemaForCollection(string $collection): SchemaData
     {
         $collection = $this->collectionService->fetchCollection($collection);
+
         return $this->fetchSchema($collection->schema);
     }
 }

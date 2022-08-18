@@ -2,9 +2,9 @@
 
 namespace App\Domain\Schema\Repository;
 
-use App\Domain\Storage\StorageRepository;
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Service\SchemaFactory;
+use App\Domain\Storage\StorageRepository;
 use DomainException;
 
 /**
@@ -12,8 +12,8 @@ use DomainException;
  */
 final class SchemaRepository extends StorageRepository
 {
-    public const DEFAULT_SCHEMA_DIR = __DIR__ . "/../../../../schemas/";
-    private const CUSTOM_SCHEMA_DIR  = '.schemas/';
+    public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../schemas/';
+    private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
     /**
      * fetch a schema for one of the default schema types.
@@ -39,7 +39,7 @@ final class SchemaRepository extends StorageRepository
     }
 
     /**
-     * fetch a schema for a custom schema type
+     * fetch a schema for a custom schema type.
      *
      * @param string $type
      *
@@ -48,7 +48,7 @@ final class SchemaRepository extends StorageRepository
     public function fetchCustomSchemaForType(string $type): ?SchemaData
     {
         $schemaFile = self::CUSTOM_SCHEMA_DIR . $type . self::FILE_EXT;
-        $contents = null;
+        $contents   = null;
 
         if ($this->filesystem->fileExists($schemaFile)) {
             $contents = $this->filesystem->read($schemaFile);

@@ -4,8 +4,8 @@ namespace App\Test\TestCase\Action\Schema;
 
 use App\Test\Traits\AppTestTrait;
 use Fig\Http\Message\StatusCodeInterface;
-use PHPUnit\Framework\TestCase;
 use FilesystemIterator;
+use PHPUnit\Framework\TestCase;
 use SplFileInfo;
 
 /**
@@ -13,7 +13,6 @@ use SplFileInfo;
  *
  * @coversDefaultClass \App\Action\Schema\SchemaFetcher
  */
-
 final class SchemaFetchActionTest extends TestCase
 {
     use AppTestTrait;
@@ -40,15 +39,15 @@ final class SchemaFetchActionTest extends TestCase
         /* @phpstan-ignore-next-line */
         $blogSchema = json_decode(file_get_contents($path), true);
 
-        $type = 'newblog';
+        $type              = 'newblog';
         $blogSchema['$id'] = "https://www.totalcms.co/schemas/custom/$type.json";
 
-        $url = $this->urlFor('schema-save');
-        $request = $this->createJsonRequest('POST', $url, $blogSchema);
+        $url      = $this->urlFor('schema-save');
+        $request  = $this->createJsonRequest('POST', $url, $blogSchema);
         $response = $this->app->handle($request);
 
         $expected = [
-            'data' => $blogSchema
+            'data' => $blogSchema,
         ];
 
         $this->assertJsonData($expected, $response);
@@ -56,8 +55,8 @@ final class SchemaFetchActionTest extends TestCase
 
         // Fetch the custom schema
 
-        $url = $this->urlFor('schema-fetch', ['type' => $type]);
-        $request = $this->createRequest('GET', $url);
+        $url      = $this->urlFor('schema-fetch', ['type' => $type]);
+        $request  = $this->createRequest('GET', $url);
         $response = $this->app->handle($request);
 
         $this->assertJsonData($expected, $response);
@@ -75,14 +74,14 @@ final class SchemaFetchActionTest extends TestCase
             }
             /* @phpstan-ignore-next-line */
             $schema = json_decode(file_get_contents($fileInfo->getRealPath()), true);
-            $type = $fileInfo->getBasename('.json');
+            $type   = $fileInfo->getBasename('.json');
 
-            $url = $this->urlFor('schema-fetch', ['type' => $type]);
-            $request = $this->createRequest('GET', $url);
+            $url      = $this->urlFor('schema-fetch', ['type' => $type]);
+            $request  = $this->createRequest('GET', $url);
             $response = $this->app->handle($request);
 
             $expected = [
-                'data' => $schema
+                'data' => $schema,
             ];
 
             $this->assertJsonData($expected, $response);

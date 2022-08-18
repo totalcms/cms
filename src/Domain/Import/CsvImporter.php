@@ -18,7 +18,7 @@ final class CsvImporter
     public function __construct(CollectionStorage $storage, LoggerFactory $loggerFactory)
     {
         $this->storage = $storage;
-        $this->logger = $loggerFactory
+        $this->logger  = $loggerFactory
             ->addFileHandler('csv_importer.log')
             ->createLogger();
     }

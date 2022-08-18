@@ -15,7 +15,7 @@ final class SchemaFetchForCollectionAction
 
     public function __construct(JsonRenderer $renderer, SchemaFetcher $service)
     {
-        $this->renderer = $renderer;
+        $this->renderer      = $renderer;
         $this->schemaFetcher = $service;
     }
 

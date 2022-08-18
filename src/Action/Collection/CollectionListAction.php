@@ -21,7 +21,7 @@ final class CollectionListAction
      */
     public function __construct(JsonRenderer $renderer, CollectionFinder $service)
     {
-        $this->renderer = $renderer;
+        $this->renderer              = $renderer;
         $this->collectionListService = $service;
     }
 

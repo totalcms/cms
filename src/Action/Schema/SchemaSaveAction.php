@@ -22,7 +22,7 @@ final class SchemaSaveAction
     public function __construct(JsonRenderer $renderer, SchemaSaver $service)
     {
         $this->renderer = $renderer;
-        $this->service = $service;
+        $this->service  = $service;
     }
 
     /**

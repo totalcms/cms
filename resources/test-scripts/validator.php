@@ -4,9 +4,8 @@ require_once '../../vendor/autoload.php';
 
 use Opis\JsonSchema\Validator;
 
-$data = file_get_contents('../../schemas/blog.json');
+$data   = file_get_contents('../../schemas/blog.json');
 $schema = file_get_contents('../../schemas/schema.json');
-
 
 // $data = json_decode('{"name": "opis"}');
 // $schema = (object) [
@@ -24,7 +23,7 @@ $schema = file_get_contents('../../schemas/schema.json');
 
 // Create a new validator
 $validator = new Validator();
-$result = $validator->validate($data, $schema);
+$result    = $validator->validate($data, $schema);
 
 if ($result->isValid()) {
     echo 'The data is valid';

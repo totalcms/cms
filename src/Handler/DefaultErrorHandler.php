@@ -37,9 +37,9 @@ final class DefaultErrorHandler
         ResponseFactoryInterface $responseFactory,
         LoggerFactory $loggerFactory
     ) {
-        $this->renderer = $renderer;
+        $this->renderer        = $renderer;
         $this->responseFactory = $responseFactory;
-        $this->logger = $loggerFactory
+        $this->logger          = $loggerFactory
             ->addFileHandler('totalcms.log')
             ->createLogger('totalcms');
     }
@@ -148,17 +148,18 @@ final class DefaultErrorHandler
      *
      * @param Throwable $exception Error
      * @param int $maxLength The max length of the error message
+     * @param bool $backtrace
      *
      * @return string The full error message
      */
     private function getExceptionText(Throwable $exception, int $maxLength = 0, bool $backtrace = false): string
     {
-        $code = $exception->getCode();
-        $file = $exception->getFile();
-        $line = $exception->getLine();
+        $code    = $exception->getCode();
+        $file    = $exception->getFile();
+        $line    = $exception->getLine();
         $message = $exception->getMessage();
-        $trace = $exception->getTraceAsString();
-        $error = $message;
+        $trace   = $exception->getTraceAsString();
+        $error   = $message;
 
         if ($backtrace) {
             $error = sprintf('[%s] %s in %s on line %s.', $code, $message, $file, $line);

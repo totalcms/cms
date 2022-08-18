@@ -17,7 +17,7 @@ final class ImportCsvAction
     public function __construct(CsvImporter $csvImporter, JsonRenderer $renderer)
     {
         $this->csvImporter = $csvImporter;
-        $this->renderer = $renderer;
+        $this->renderer    = $renderer;
     }
 
     /**

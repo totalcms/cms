@@ -2,11 +2,10 @@
 
 namespace App\Domain\Object\Service;
 
-use App\Domain\Object\Repository\ObjectRepository;
 use App\Domain\Object\Data\ObjectData;
-use App\Domain\Object\Service\ObjectFactory;
-use UnexpectedValueException;
+use App\Domain\Object\Repository\ObjectRepository;
 use RuntimeException;
+use UnexpectedValueException;
 
 /**
  * Service.

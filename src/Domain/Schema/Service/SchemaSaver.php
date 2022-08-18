@@ -3,8 +3,6 @@
 namespace App\Domain\Schema\Service;
 
 use App\Domain\Schema\Data\SchemaData;
-use App\Domain\Schema\Service\SchemaFactory;
-use App\Domain\Schema\Service\SchemaValidator;
 use App\Domain\Schema\Repository\SchemaRepository;
 use UnexpectedValueException;
 
@@ -18,7 +16,7 @@ final class SchemaSaver
 
     public function __construct(SchemaRepository $storage, SchemaValidator $validator)
     {
-        $this->storage = $storage;
+        $this->storage   = $storage;
         $this->validator = $validator;
     }
 
@@ -44,6 +42,7 @@ final class SchemaSaver
         }
 
         $this->storage->saveSchema($schema);
+
         return $schema;
     }
 }

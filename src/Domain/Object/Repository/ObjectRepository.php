@@ -2,8 +2,8 @@
 
 namespace App\Domain\Object\Repository;
 
-use App\Domain\Storage\StorageRepository;
 use App\Domain\Object\Data\ObjectData;
+use App\Domain\Storage\StorageRepository;
 
 /**
  * Repository.
@@ -38,7 +38,7 @@ final class ObjectRepository extends StorageRepository
         $objectFile = $this->buildObjectPath($collection, $id);
 
         $contents = $this->filesystem->read($objectFile);
-        $schema = $this->serializer->deserialize($contents, ObjectData::class, 'json');
+        $schema   = $this->serializer->deserialize($contents, ObjectData::class, 'json');
 
         if ($schema instanceof ObjectData) {
             return $schema;

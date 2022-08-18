@@ -4,8 +4,8 @@ namespace App\Test\TestCase\Action\Schema;
 
 use App\Test\Traits\AppTestTrait;
 use Fig\Http\Message\StatusCodeInterface;
-use PHPUnit\Framework\TestCase;
 use FilesystemIterator;
+use PHPUnit\Framework\TestCase;
 use SplFileInfo;
 
 /**
@@ -40,12 +40,12 @@ final class SchemaSaveActionTest extends TestCase
 
         $blogSchema['$id'] = 'https://www.totalcms.co/schemas/custom/newblog.json';
 
-        $url = $this->urlFor('schema-save');
-        $request = $this->createJsonRequest('POST', $url, $blogSchema);
+        $url      = $this->urlFor('schema-save');
+        $request  = $this->createJsonRequest('POST', $url, $blogSchema);
         $response = $this->app->handle($request);
 
         $expected = [
-            'data' => $blogSchema
+            'data' => $blogSchema,
         ];
 
         $this->assertJsonData($expected, $response);
@@ -61,14 +61,14 @@ final class SchemaSaveActionTest extends TestCase
         // Invalidate the Schema
         unset($blogSchema['$id']);
 
-        $url = $this->urlFor('schema-save');
-        $request = $this->createJsonRequest('POST', $url, $blogSchema);
+        $url      = $this->urlFor('schema-save');
+        $request  = $this->createJsonRequest('POST', $url, $blogSchema);
         $response = $this->app->handle($request);
 
         $expected = [
             'error' => [
-                'message' => '400 Bad Request - Schema Validation Failed. (/) The required properties ($id) are missing'
-            ]
+                'message' => '400 Bad Request - Schema Validation Failed. (/) The required properties ($id) are missing',
+            ],
         ];
 
         $this->assertJsonData($expected, $response);
@@ -82,16 +82,16 @@ final class SchemaSaveActionTest extends TestCase
         $blogSchema = json_decode(file_get_contents($path), true);
 
         // Invalidate the Schema (removed # in URI)
-        $blogSchema['$id'] = "https://www.totalcms.co/schemas/custom/newblog";
+        $blogSchema['$id'] = 'https://www.totalcms.co/schemas/custom/newblog';
 
-        $url = $this->urlFor('schema-save');
-        $request = $this->createJsonRequest('POST', $url, $blogSchema);
+        $url      = $this->urlFor('schema-save');
+        $request  = $this->createJsonRequest('POST', $url, $blogSchema);
         $response = $this->app->handle($request);
 
         $expected = [
             'error' => [
-                'message' => '500 Internal Server Error - Malformed schema data provided'
-            ]
+                'message' => '500 Internal Server Error - Malformed schema data provided',
+            ],
         ];
 
         $this->assertJsonData($expected, $response);
@@ -111,15 +111,15 @@ final class SchemaSaveActionTest extends TestCase
             }
             /* @phpstan-ignore-next-line */
             $schema = json_decode(file_get_contents($fileInfo->getRealPath()), true);
-            $type = $fileInfo->getBasename('.json');
+            $type   = $fileInfo->getBasename('.json');
 
-            $request = $this->createJsonRequest('POST', $url, $schema);
+            $request  = $this->createJsonRequest('POST', $url, $schema);
             $response = $this->app->handle($request);
 
             $expected = [
                 'error' => [
-                    'message' => "500 Internal Server Error - Schema type ($type) is reserved"
-                ]
+                    'message' => "500 Internal Server Error - Schema type ($type) is reserved",
+                ],
             ];
 
             $this->assertJsonData($expected, $response);
