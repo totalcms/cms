@@ -90,6 +90,11 @@
       "@md",
       "@test"
     ],
+    "test:build": [
+      "@sniffer:check",
+      "@stan",
+      "@test"
+    ],
     "test:coverage": "php -d xdebug.mode=coverage -r \"require 'vendor/bin/phpunit';\" -- --configuration phpunit.xml --do-not-cache-result --colors=always --coverage-clover build/logs/clover.xml --coverage-html build/coverage"
   }
 }
