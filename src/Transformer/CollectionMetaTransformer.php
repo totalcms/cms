@@ -10,7 +10,7 @@ final class CollectionMetaTransformer extends Fractal\TransformerAbstract
     /**
      * Fractal transform for a collection.
      *
-     * @param Collection $collection the collection object
+     * @param Collection $collection The collection object
      *
      * @return array
      */

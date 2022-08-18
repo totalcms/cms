@@ -16,7 +16,8 @@ return function (App $app) {
         // Single Collection
 
         // Get schema of a collection
-        $group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
+        $group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)
+            ->setName('collection-fetch-schema');
 
         // Get index data of the collection
         // !$group->get('/{collection}', Collection\Index\IndexGetAction::class)->setName('collection-fetch');
@@ -28,7 +29,8 @@ return function (App $app) {
         $group->post('/{collection}', ObjectAction\ObjectSaveAction::class)->setName('object-save');
 
         // Object Exists in a collection
-        // !$group->map(['HEAD'], '/{collection}/{id}', ObjectAction\ObjectExistsAction::class)->setName('object-exists');
+        // !$group->map(['HEAD'], '/{collection}/{id}', ObjectAction\ObjectExistsAction::class)
+        // !->setName('object-exists');
 
         // Get collection object by id
         // !$group->get('/{collection}/{id}', ObjectAction\ObjectFetchAction::class)->setName('object-fetch');

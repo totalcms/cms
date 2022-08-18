@@ -10,7 +10,7 @@ final class SchemaMetaTransformer extends Fractal\TransformerAbstract
     /**
      * Fractal transform for a schema.
      *
-     * @param SchemaData $schema the schema object
+     * @param SchemaData $schema The schema object
      *
      * @return array
      */

@@ -65,11 +65,8 @@ final class SchemaSaveActionTest extends TestCase
         $request  = $this->createJsonRequest('POST', $url, $blogSchema);
         $response = $this->app->handle($request);
 
-        $expected = [
-            'error' => [
-                'message' => '400 Bad Request - Schema Validation Failed. (/) The required properties ($id) are missing',
-            ],
-        ];
+        $msg      = '400 Bad Request - Schema Validation Failed. (/) The required properties ($id) are missing';
+        $expected = ['error' => ['message' => $msg]];
 
         $this->assertJsonData($expected, $response);
         $this->assertSame(StatusCodeInterface::STATUS_BAD_REQUEST, $response->getStatusCode());

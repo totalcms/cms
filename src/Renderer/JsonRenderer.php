@@ -44,7 +44,7 @@ final class JsonRenderer
      *
      * @param ResponseInterface $response The response
      * @param array $collection The data
-     * @param TransformerAbstract $transformer the data transformer
+     * @param TransformerAbstract $transformer The data transformer
      *
      * @return ResponseInterface The response
      */
@@ -66,7 +66,7 @@ final class JsonRenderer
      *
      * @param ResponseInterface $response The response
      * @param object $item The data
-     * @param TransformerAbstract $transformer the data transformer
+     * @param TransformerAbstract $transformer The data transformer
      *
      * @return ResponseInterface The response
      */

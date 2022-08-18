@@ -69,7 +69,7 @@ final class CollectionRepository extends StorageRepository
     /**
      * Save a Collection.
      *
-     * @param CollectionData $collection the collection to save
+     * @param CollectionData $collection The collection to save
      *
      * @return void
      */
