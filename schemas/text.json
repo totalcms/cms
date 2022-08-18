@@ -9,16 +9,6 @@
         },
         "text": {
             "type"     : "string"
-        },
-        "wordcount": {
-            "type"     : "integer",
-            "minimum"  : 0,
-            "default"  : 0
-        },
-        "charcount": {
-            "type"     : "integer",
-            "minimum"  : 0,
-            "default"  : 0
         }
     },
     "required": [
