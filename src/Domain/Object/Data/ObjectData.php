@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
 class ObjectData
 {
     public string $id;
+    /** @var Collection<string, mixed> */
     public Collection $properties;
 
     public function __construct(string $id, array $properties)
