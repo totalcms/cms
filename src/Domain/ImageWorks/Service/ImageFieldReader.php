@@ -3,19 +3,16 @@
 namespace App\Domain\ImageWorks\Service;
 
 use App\Domain\ImageWorks\Data\ImageFile;
-use App\Domain\Storage\CollectionStorage;
 use App\Factory\LoggerFactory;
 use Psr\Log\LoggerInterface;
 
 final class ImageFieldReader
 {
-    private CollectionStorage $storage;
     private LoggerInterface $logger;
 
-    public function __construct(CollectionStorage $storage, LoggerFactory $loggerFactory)
+    public function __construct(LoggerFactory $loggerFactory)
     {
-        $this->storage = $storage;
-        $this->logger  = $loggerFactory
+        $this->logger = $loggerFactory
             ->addFileHandler('image_works_reader.log')
             ->createLogger();
     }

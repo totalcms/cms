@@ -2,8 +2,8 @@
 
 namespace App\Domain\Import;
 
-use App\Domain\Storage\CollectionStorage;
-use App\Domain\Storage\ObjectData;
+use App\Domain\Object\Data\ObjectData;
+use App\Domain\Object\Repository\ObjectRepository;
 use App\Factory\LoggerFactory;
 use Cake\Chronos\Chronos;
 use Cocur\Slugify\Slugify;
@@ -16,12 +16,12 @@ use Selective\Validation\Factory\CakeValidationFactory;
 
 final class UrlImporter
 {
-    private CollectionStorage $storage;
+    private ObjectRepository $storage;
     private LoggerInterface $logger;
     private CakeValidationFactory $validationFactory;
 
     public function __construct(
-        CollectionStorage $storage,
+        ObjectRepository $storage,
         CakeValidationFactory $validationFactory,
         LoggerFactory $loggerFactory
     ) {
@@ -59,7 +59,7 @@ final class UrlImporter
             $record['hidden']      = true;
             $record['date']        = Chronos::now()->format('c');
 
-            $this->storage->saveObject($collection, new ObjectData($record));
+            $this->storage->saveObject($collection, new ObjectData($record['id'], $record));
             // @todo Add logic that will download the image and save it to the post
         } catch (Exception $exception) {
             $this->logger->error(

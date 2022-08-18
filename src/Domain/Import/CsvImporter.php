@@ -2,8 +2,8 @@
 
 namespace App\Domain\Import;
 
-use App\Domain\Storage\CollectionStorage;
-use App\Domain\Storage\ObjectData;
+use App\Domain\Object\Data\ObjectData;
+use App\Domain\Object\Repository\ObjectRepository;
 use App\Factory\LoggerFactory;
 use Exception;
 use League\Csv\Reader;
@@ -12,10 +12,10 @@ use Psr\Log\LoggerInterface;
 
 final class CsvImporter
 {
-    private CollectionStorage $storage;
+    private ObjectRepository $storage;
     private LoggerInterface $logger;
 
-    public function __construct(CollectionStorage $storage, LoggerFactory $loggerFactory)
+    public function __construct(ObjectRepository $storage, LoggerFactory $loggerFactory)
     {
         $this->storage = $storage;
         $this->logger  = $loggerFactory
@@ -48,7 +48,7 @@ final class CsvImporter
                 }
 
                 // Save the object but do not rebuild the index, we do that at the end
-                $this->storage->saveObject($collection, new ObjectData($record));
+                $this->storage->saveObject($collection, new ObjectData($record['id'], $record));
                 $this->logger->info(sprintf('Imported record: %s', $record['id']));
                 $this->logger->debug('Imported record', $record);
 
