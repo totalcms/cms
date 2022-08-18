@@ -55,25 +55,27 @@ final class ObjectFactory
         $data = json_decode($objectJson, true);
 
         foreach ($schema->schema["properties"] as $property => $propertySchema) {
+            if ($property === 'id') {
+                // No use storing the ID a second time in the properties.
+                continue;
+            }
             // TODO: need to look for type or $ref. Type is simple. $ref is a property object.
-            if ($property == 'id') {
-                $value = $object->id;
-            }
-            switch ($propertySchema["type"]??"") {
-                case 'string':
-                    $value = (string) $data[$property];
-                    break;
-                case 'integer':
-                    $value = intval($data[$property]);
-                    break;
-                case 'boolean':
-                    $value = boolval($data[$property]);
-                    break;
-                default:
-                    $value = $data[$property];
-                    break;
-            }
-            $object->properties->put($property, $value);
+            // switch ($propertySchema["type"]??"") {
+            //     case 'string':
+            //         $value = (string) $data[$property];
+            //         break;
+            //     case 'integer':
+            //         $value = intval($data[$property]);
+            //         break;
+            //     case 'boolean':
+            //         $value = boolval($data[$property]);
+            //         break;
+            //     default:
+            //         $value = $data[$property];
+            //         break;
+            // }
+            // Don't need to do a type check on the data since the schema validator did that.
+            $object->properties->put($property, $data[$property]);
         }
         return $object;
     }

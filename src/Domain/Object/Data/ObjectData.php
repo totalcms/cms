@@ -19,6 +19,7 @@ final class ObjectData
 
     public function toArray(): array
     {
-        return $this->properties->toArray();
+        $base = ["id" => $this->id];
+        return array_merge($base, $this->properties->toArray());
     }
 }
