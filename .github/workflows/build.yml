@@ -38,6 +38,7 @@ jobs:
         run: composer update --prefer-dist --no-progress --ignore-platform-req=php
 
       - name: Run test suite
-        run: composer test:build
+        run: composer test:all
         env:
           PHP_CS_FIXER_IGNORE_ENV: 1
+          APP_ENV: build
