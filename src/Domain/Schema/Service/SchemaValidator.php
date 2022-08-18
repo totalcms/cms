@@ -52,6 +52,7 @@ final class SchemaValidator
         if ($valid === false) {
             // Create an error formatter
             $formatter = new ErrorFormatter();
+            /* @phpstan-ignore-next-line */
             $error = $formatter->format($result->error(), false);
             $msg = implode(';', array_map(fn ($k, $v) => "($k) $v", array_keys($error), $error));
             throw new DomainException("Schema Validation Failed. $msg");
