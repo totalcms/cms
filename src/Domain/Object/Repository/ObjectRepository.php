@@ -44,7 +44,7 @@ final class ObjectRepository extends StorageRepository
             return $schema;
         }
 
-        return new ObjectData();
+        return new ObjectData($id, []);
     }
 
     private function buildObjectPath(string $collection, string $id): string

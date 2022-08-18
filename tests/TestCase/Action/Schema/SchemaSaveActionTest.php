@@ -67,12 +67,12 @@ final class SchemaSaveActionTest extends TestCase
 
         $expected = [
             'error' => [
-                'message' => '500 Internal Server Error - Invalid schema data provided'
+                'message' => '400 Bad Request - Schema Validation Failed. (/) The required properties ($id) are missing'
             ]
         ];
 
         $this->assertJsonData($expected, $response);
-        $this->assertSame(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        $this->assertSame(StatusCodeInterface::STATUS_BAD_REQUEST, $response->getStatusCode());
     }
 
     private function testMalformedSchema(): void
@@ -82,7 +82,7 @@ final class SchemaSaveActionTest extends TestCase
         $blogSchema = json_decode(file_get_contents($path), true);
 
         // Invalidate the Schema (removed # in URI)
-        $blogSchema['$id'] = "https://www.totalcms.co/schemas/custom/newblog.json";
+        $blogSchema['$id'] = "https://www.totalcms.co/schemas/custom/newblog";
 
         $url = $this->urlFor('schema-save');
         $request = $this->createJsonRequest('POST', $url, $blogSchema);
