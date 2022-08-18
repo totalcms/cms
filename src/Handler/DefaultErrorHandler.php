@@ -150,6 +150,8 @@ final class DefaultErrorHandler
      * @param int $maxLength The max length of the error message
      * @param bool $backtrace
      *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
      * @return string The full error message
      */
     private function getExceptionText(Throwable $exception, int $maxLength = 0, bool $backtrace = false): string

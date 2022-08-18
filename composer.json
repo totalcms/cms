@@ -43,6 +43,7 @@
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "overtrue/phplint": "^5.3",
+    "phpmd/phpmd": "^2.12",
     "phpstan/phpstan": "^1.8",
     "phpunit/phpunit": "^9.0",
     "selective/test-traits": "^2.0",
@@ -68,17 +69,25 @@
     "cs:check": "php-cs-fixer fix --dry-run --format=txt --verbose --diff --config=.php-cs-fixer.php",
     "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
     "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
-    "phoenix": "phoenix",
     "stan": "phpstan analyse -c phpstan.neon --no-progress --ansi",
+    "md:src": "phpmd src ansi phpmd.xml",
+    "md:config": "phpmd config ansi phpmd.xml",
+    "md:tests": "phpmd tests ansi phpmd.xml",
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcs.xml",
     "sniffer:fix": "phpcbf --standard=phpcs.xml",
-    "test": "phpunit --configuration phpunit.xml --do-not-cache-result --colors=always",
+    "test": "phpunit --configuration phpunit.xml --do-not-cache-result --colors=always --verbose",
+    "md": [
+      "@md:src",
+      "@md:config",
+      "@md:tests"
+    ],
     "test:all": [
       "@lint",
       "@cs:check",
       "@sniffer:check",
       "@stan",
+      "@md",
       "@test"
     ],
     "test:coverage": "php -d xdebug.mode=coverage -r \"require 'vendor/bin/phpunit';\" -- --configuration phpunit.xml --do-not-cache-result --colors=always --coverage-clover build/logs/clover.xml --coverage-html build/coverage"

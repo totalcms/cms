@@ -3,6 +3,7 @@
 namespace App\Domain\Object\Service;
 
 use App\Domain\Object\Data\ObjectData;
+use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Service\SchemaFetcher;
 use App\Domain\Schema\Service\SchemaValidator;
 use DomainException;
@@ -32,6 +33,8 @@ final class ObjectFactory
      *
      * @throws UnexpectedValueException
      *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     *
      * @return ObjectData
      */
     public function generateObject(string $collection, string $objectJson): ObjectData
@@ -42,7 +45,25 @@ final class ObjectFactory
             throw new UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
         }
 
-        $data       = json_decode($objectJson, true);
+        $objectData = json_decode($objectJson, true);
+        $properties = $this->generateProperties($objectData, $schema);
+
+        // Dynamically load object data based on the schema type
+        $className = 'App\\Domain\\Object\\Data\\' . ucfirst($schema->type) . 'Data';
+        if (!class_exists($className)) {
+            $className = ObjectData::class;
+        }
+        $object = new $className($objectData['id'], $properties);
+
+        if (!$object instanceof ObjectData) {
+            throw new DomainException('Unknown error creating object.');
+        }
+
+        return $object;
+    }
+
+    private function generateProperties(array $objectData, SchemaData $schema): array
+    {
         $properties = [];
 
         // Loop through the schema properties and add them to the object properties.
@@ -54,15 +75,15 @@ final class ObjectFactory
 
             $value = null;
 
-            if (isset($data[$property])) {
+            if (isset($objectData[$property])) {
                 // Set the value from the JSON
-                $value = $data[$property];
+                $value = $objectData[$property];
             } elseif (isset($propertySchema['default'])) {
                 // Set the value from the schema default
                 $value = $propertySchema['default'];
             } elseif (isset($propertySchema['$ref'])) {
                 // TODO: $ref is a property object.
-                $value = $data[$property] ?? [];
+                $value = $objectData[$property] ?? [];
             }
 
             if ($value !== null) {
@@ -70,17 +91,6 @@ final class ObjectFactory
             }
         }
 
-        // Dynamically load object data based on the schema type
-        $className = 'App\\Domain\\Object\\Data\\' . ucfirst($schema->type) . 'Data';
-        if (!class_exists($className)) {
-            $className = ObjectData::class;
-        }
-        $object = new $className($data['id'], $properties);
-
-        if (!$object instanceof ObjectData) {
-            throw new DomainException('Unknown error creating object.');
-        }
-
-        return $object;
+        return $properties;
     }
 }
