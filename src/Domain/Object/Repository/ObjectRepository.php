@@ -33,7 +33,7 @@ final class ObjectRepository extends StorageRepository
         return $this->filesystem->fileExists($objectFile);
     }
 
-    public function getObject(string $collection, string $id): ObjectData
+    public function fetchObject(string $collection, string $id): ObjectData
     {
         $objectFile = $this->buildObjectPath($collection, $id);
 

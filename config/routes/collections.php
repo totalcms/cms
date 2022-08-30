@@ -29,13 +29,12 @@ return function (App $app) {
         $group->post('/{collection}', ObjectAction\ObjectSaveAction::class)->setName('object-save');
 
         // Object Exists in a collection
-        // !$group->map(['HEAD'], '/{collection}/{id}', ObjectAction\ObjectExistsAction::class)
-        // !->setName('object-exists');
+        $group->map(['HEAD'], '/{collection}/{id}', ObjectAction\ObjectExistsAction::class)->setName('object-exists');
 
         // Get collection object by id
-        // !$group->get('/{collection}/{id}', ObjectAction\ObjectFetchAction::class)->setName('object-fetch');
-        // !$group->put('/{collection}/{id}', ObjectAction\ObjectUpdateAction::class)->setName('object-update');
-        // !$group->delete('/{collection}/{id}', ObjectAction\ObjectDeleteAction::class)->setName('object-delete');
+        $group->get('/{collection}/{id}', ObjectAction\ObjectFetchAction::class)->setName('object-fetch');
+        $group->delete('/{collection}/{id}', ObjectAction\ObjectDeleteAction::class)->setName('object-delete');
+        $group->put('/{collection}/{id}', ObjectAction\ObjectUpdateAction::class)->setName('object-update');
 
         // Object Property
         // !$group->put('/{collection}/{id}/{property}', ObjectAction\Property\PropertyUpdateAction::class)
