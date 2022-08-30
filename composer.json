@@ -43,6 +43,7 @@
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "overtrue/phplint": "^5.3",
+    "pestphp/pest": "^1.22",
     "phpmd/phpmd": "^2.12",
     "phpstan/phpstan": "^1.8",
     "phpunit/phpunit": "^9.0",
@@ -52,7 +53,10 @@
   },
   "config": {
     "process-timeout": 0,
-    "sort-packages": true
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
   },
   "autoload": {
     "psr-4": {
