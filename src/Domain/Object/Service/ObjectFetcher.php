@@ -29,4 +29,17 @@ final class ObjectFetcher
     {
         return $this->storage->fetchObject($collection, $id);
     }
+
+    /**
+     * get a collection object.
+     *
+     * @param string $collection
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function existsObject(string $collection, string $id): bool
+    {
+        return $this->storage->existsObject($collection, $id);
+    }
 }

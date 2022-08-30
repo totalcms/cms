@@ -26,7 +26,7 @@ final class ObjectRepository extends StorageRepository
         $this->filesystem->write($objectFile, $objectJSON);
     }
 
-    public function existsObjectId(string $collection, string $id): bool
+    public function existsObject(string $collection, string $id): bool
     {
         $objectFile = $this->buildObjectPath($collection, $id);
 
