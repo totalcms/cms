@@ -33,6 +33,15 @@ interface StorageAdapterInterface
     public function write(string $location, string $contents): void;
 
     /**
+     * Delete file.
+     *
+     * @param string $location The path of file to write to
+     *
+     * @return bool
+     */
+    public function delete(string $location): bool;
+
+    /**
      * List directories.
      *
      * @param string $directory The path to iterate through

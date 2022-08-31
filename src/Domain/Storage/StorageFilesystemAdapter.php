@@ -35,6 +35,20 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     }
 
     /**
+     * Delete file.
+     *
+     * @param string $location The path of file to read
+     *
+     * @return bool
+     */
+    public function delete(string $location): bool
+    {
+        $this->filesystem->delete($location);
+
+        return !$this->fileExists($location);
+    }
+
+    /**
      * File exists.
      *
      * @param string $location The path of file
