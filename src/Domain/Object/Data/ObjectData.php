@@ -26,4 +26,10 @@ class ObjectData
 
         return array_merge($base, $this->properties->toArray());
     }
+
+    public function toJson(): string
+    {
+        /* @phpstan-ignore-next-line */
+        return json_encode($this->toArray());
+    }
 }
