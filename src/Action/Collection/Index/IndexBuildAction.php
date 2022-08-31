@@ -2,24 +2,24 @@
 
 namespace App\Action\Collection\Index;
 
-use App\Domain\Index\Service\IndexReader;
+use App\Domain\Index\Service\IndexBuilder;
 use App\Renderer\JsonRenderer;
 use App\Transformer\IndexTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class IndexGetAction
+final class IndexBuildAction
 {
     private JsonRenderer $renderer;
-    private IndexReader $service;
+    private IndexBuilder $service;
 
     /**
      * The constructor.
      *
      * @param JsonRenderer $renderer The renderer
-     * @param IndexReader $service The service
+     * @param IndexBuilder $service Collection save service
      */
-    public function __construct(JsonRenderer $renderer, IndexReader $service)
+    public function __construct(JsonRenderer $renderer, IndexBuilder $service)
     {
         $this->renderer = $renderer;
         $this->service  = $service;
@@ -28,20 +28,20 @@ final class IndexGetAction
     /**
      * Action.
      *
-     * @param ServerRequestInterface $request The request
-     * @param ResponseInterface $response The response
-     * @param array $args The routing arguments
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param array $args
      *
-     * @return ResponseInterface The response
+     * @return ResponseInterface
      */
     public function __invoke(
         ServerRequestInterface $request,
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        return $this->renderer->jsonCollection(
+        return $this->renderer->jsonItem(
             $response,
-            $this->service->fetchIndex($args['collection']),
+            $this->service->buildIndex($args['collection']),
             new IndexTransformer()
         );
     }

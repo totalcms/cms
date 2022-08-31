@@ -99,6 +99,7 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     {
         return $this->filesystem->listContents($path)
             ->filter(fn (StorageAttributes $attributes) => $attributes->isFile())
+            ->filter(fn (StorageAttributes $attributes) => !str_starts_with(basename($attributes->path()), '.'))
             ->map(fn (StorageAttributes $attributes) => $attributes->path())
             ->toArray();
     }

@@ -49,4 +49,13 @@ interface StorageAdapterInterface
      * @return array<string>
      */
     public function listDirectories(string $directory): array;
+
+    /**
+     * List files.
+     *
+     * @param string $directory The path to iterate through
+     *
+     * @return array<string>
+     */
+    public function listFiles(string $directory): array;
 }

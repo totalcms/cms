@@ -15,7 +15,7 @@ abstract class StorageRepository
     protected StorageAdapterInterface $filesystem;
     protected Serializer $serializer;
 
-    protected const FILE_EXT = '.json';
+    public const FILE_EXT = '.json';
 
     /**
      * The constructor.
