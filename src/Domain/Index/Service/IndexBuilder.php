@@ -6,9 +6,6 @@ use App\Domain\Index\Data\IndexData;
 use App\Domain\Index\Repository\IndexRepository;
 use App\Domain\Object\Service\ObjectFetcher;
 use App\Domain\Schema\Service\SchemaFetcher;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 
 /**
  * Service.
@@ -16,14 +13,12 @@ use Symfony\Component\Serializer\Serializer;
 final class IndexBuilder
 {
     private IndexRepository $storage;
-    private Serializer $serializer;
     private ObjectFetcher $objectFetcher;
     private SchemaFetcher $schemaFetcher;
 
     public function __construct(IndexRepository $storage, ObjectFetcher $objectFetcher, SchemaFetcher $schemaFetcher)
     {
         $this->storage       = $storage;
-        $this->serializer    = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
         $this->objectFetcher = $objectFetcher;
         $this->schemaFetcher = $schemaFetcher;
     }
