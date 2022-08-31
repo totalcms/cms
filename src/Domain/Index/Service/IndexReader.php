@@ -23,9 +23,9 @@ final class IndexReader
      *
      * @param string $collection
      *
-     * @return array
+     * @return IndexData
      */
-    public function fetchIndex(string $collection): array
+    public function fetchIndex(string $collection): IndexData
     {
         $index = $this->storage->fetchIndex($collection);
 
@@ -33,6 +33,6 @@ final class IndexReader
             throw new DomainException('Unknown error fetching index.');
         }
 
-        return $index->toArray();
+        return $index;
     }
 }
