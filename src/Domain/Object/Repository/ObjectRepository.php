@@ -33,18 +33,20 @@ final class ObjectRepository extends StorageRepository
         return $this->filesystem->fileExists($objectFile);
     }
 
-    public function fetchObject(string $collection, string $id): ObjectData
+    public function fetchObject(string $collection, string $id): ?ObjectData
     {
         $objectFile = $this->buildObjectPath($collection, $id);
 
-        $contents = $this->filesystem->read($objectFile);
-        $schema   = $this->serializer->deserialize($contents, ObjectData::class, 'json');
+        if ($this->filesystem->fileExists($objectFile)) {
+            $contents = $this->filesystem->read($objectFile);
+            $schema   = $this->serializer->deserialize($contents, ObjectData::class, 'json');
 
-        if ($schema instanceof ObjectData) {
-            return $schema;
+            if ($schema instanceof ObjectData) {
+                return $schema;
+            }
         }
 
-        return new ObjectData($id, []);
+        return null;
     }
 
     public function deleteObject(string $collection, string $id): bool

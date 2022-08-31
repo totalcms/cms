@@ -23,9 +23,9 @@ final class ObjectFetcher
      * @param string $collection
      * @param string $id
      *
-     * @return ObjectData
+     * @return ?ObjectData
      */
-    public function fetchObject(string $collection, string $id): ObjectData
+    public function fetchObject(string $collection, string $id): ?ObjectData
     {
         return $this->storage->fetchObject($collection, $id);
     }

@@ -7,6 +7,7 @@ use App\Renderer\JsonRenderer;
 use App\Transformer\ObjectMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 
 final class ObjectFetchAction
 {
@@ -26,6 +27,8 @@ final class ObjectFetchAction
      * @param ResponseInterface $response
      * @param array $args The routing arguments
      *
+     * @throws HttpNotFoundException
+     *
      * @return ResponseInterface the response
      */
     public function __invoke(
@@ -34,6 +37,10 @@ final class ObjectFetchAction
         array $args
     ): ResponseInterface {
         $object = $this->objectFetcher->fetchObject($args['collection'], $args['id']);
+
+        if ($object === null) {
+            throw new HttpNotFoundException($request);
+        }
 
         return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
     }
