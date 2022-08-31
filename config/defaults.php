@@ -59,7 +59,7 @@ $settings['logger'] = [
     'name'        => 'totalcms',
     'path'        => __DIR__ . '/../logs',
     'filename'    => 'totalcms.log',
-    'level'       => \Monolog\Logger::WARNING,
+    'level'       => \Monolog\Logger::INFO,
     'maxFiles'    => 30,
     'permissions' => 0775,
 ];
@@ -69,33 +69,6 @@ $settings['session'] = [
     'name'         => 'totalcms',
     'cache_expire' => 0,
 ];
-
-// Database settings
-// $settings['db'] = [
-//     'driver'    => \Cake\Database\Driver\Mysql::class,
-//     'host'      => 'localhost',
-//     'encoding'  => 'utf8mb4',
-//     'collation' => 'utf8mb4_unicode_ci',
-//     // Enable identifier quoting
-//     'quoteIdentifiers' => true,
-//     // Set to null to use MySQL servers timezone
-//     'timezone' => null,
-//     // Disable meta data cache
-//     'cacheMetadata' => false,
-//     // Disable query logging
-//     'log' => false,
-//     // PDO options
-//     'flags' => [
-//         // Turn off persistent connections
-//         PDO::ATTR_PERSISTENT => false,
-//         // Enable exceptions
-//         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-//         // Emulate prepared statements
-//         PDO::ATTR_EMULATE_PREPARES => true,
-//         // Set default fetch mode to array
-//         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-//     ],
-// ];
 
 // E-Mail settings
 $settings['smtp'] = [

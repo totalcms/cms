@@ -20,10 +20,10 @@ return function (App $app) {
             ->setName('collection-fetch-schema');
 
         // Get index data of the collection
-        // !$group->get('/{collection}', Collection\Index\IndexGetAction::class)->setName('collection-fetch');
+        $group->get('/{collection}', Collection\Index\IndexGetAction::class)->setName('collection-fetch');
 
         // Reindex collection
-        // !$group->put('/{collection}', Collection\Index\IndexUpdateAction::class)->setName('collection-reindex');
+        $group->put('/{collection}', Collection\Index\IndexBuildAction::class)->setName('collection-reindex');
 
         // Create a new obejct in a collection
         $group->post('/{collection}', ObjectAction\ObjectSaveAction::class)->setName('object-save');
