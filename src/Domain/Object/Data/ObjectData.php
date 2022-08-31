@@ -4,6 +4,9 @@ namespace App\Domain\Object\Data;
 
 use Cocur\Slugify\Slugify;
 use Illuminate\Support\Collection;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 
 /**
  * Data collection object.
@@ -13,11 +16,13 @@ class ObjectData
     public string $id;
     /** @var Collection<string, mixed> */
     public Collection $properties;
+    protected Serializer $serializer;
 
     public function __construct(string $id, array $properties)
     {
         $this->id         = (new Slugify())->slugify($id);
         $this->properties = new Collection($properties);
+        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
     public function toArray(): array
@@ -29,7 +34,6 @@ class ObjectData
 
     public function toJson(): string
     {
-        /* @phpstan-ignore-next-line */
-        return json_encode($this->toArray());
+        return $this->serializer->serialize($this->toArray(), 'json');
     }
 }
