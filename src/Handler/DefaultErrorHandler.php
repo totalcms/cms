@@ -154,7 +154,7 @@ final class DefaultErrorHandler
      *
      * @return string The full error message
      */
-    private function getExceptionText(Throwable $exception, int $maxLength = 0, bool $backtrace = false): string
+    private function getExceptionText(Throwable $exception, int $maxLength = 0, bool $backtrace = true): string
     {
         $code    = $exception->getCode();
         $file    = $exception->getFile();
