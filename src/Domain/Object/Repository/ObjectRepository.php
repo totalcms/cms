@@ -3,6 +3,9 @@
 namespace App\Domain\Object\Repository;
 
 use App\Domain\Object\Data\ObjectData;
+use App\Domain\Object\Service\ObjectFactory;
+use App\Domain\Storage\StorageAdapterInterface;
+use App\Domain\Storage\StorageFilesystemAdapter;
 use App\Domain\Storage\StorageRepository;
 
 /**
@@ -10,6 +13,21 @@ use App\Domain\Storage\StorageRepository;
  */
 final class ObjectRepository extends StorageRepository
 {
+    private ObjectFactory $factory;
+
+    /**
+     * The constructor.
+     *
+     * @param StorageFilesystemAdapter $filesystem The filesystem factory
+     * @param ObjectFactory $objectFactory
+     */
+    public function __construct(StorageAdapterInterface $filesystem, ObjectFactory $objectFactory)
+    {
+        parent::__construct($filesystem);
+
+        $this->factory = $objectFactory;
+    }
+
     /**
      * Save an object.
      *
@@ -39,10 +57,10 @@ final class ObjectRepository extends StorageRepository
 
         if ($this->filesystem->fileExists($objectFile)) {
             $contents = $this->filesystem->read($objectFile);
-            $schema   = $this->serializer->deserialize($contents, ObjectData::class, 'json');
+            $object   = $this->factory->generateObject($collection, $contents);
 
-            if ($schema instanceof ObjectData) {
-                return $schema;
+            if ($object instanceof ObjectData) {
+                return $object;
             }
         }
 
