@@ -3,6 +3,7 @@
 namespace App\Domain\Object\Service;
 
 use App\Domain\Object\Data\ObjectData;
+use App\Domain\Property\Service\PropertyFactory;
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Service\SchemaFetcher;
 use App\Domain\Schema\Service\SchemaValidator;
@@ -16,13 +17,16 @@ final class ObjectFactory
 {
     private SchemaFetcher $schemaFetcher;
     private SchemaValidator $validator;
+    private PropertyFactory $propertyFactory;
 
     public function __construct(
         SchemaFetcher $schemaFetcher,
         SchemaValidator $validator,
+        PropertyFactory $propertyFactory,
     ) {
-        $this->schemaFetcher = $schemaFetcher;
-        $this->validator     = $validator;
+        $this->schemaFetcher   = $schemaFetcher;
+        $this->validator       = $validator;
+        $this->propertyFactory = $propertyFactory;
     }
 
     /**
@@ -32,8 +36,6 @@ final class ObjectFactory
      * @param string $objectJson
      *
      * @throws UnexpectedValueException
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      *
      * @return ObjectData
      */
@@ -49,6 +51,7 @@ final class ObjectFactory
         $properties = $this->generateProperties($objectData, $schema);
 
         // Dynamically load object data based on the schema type
+        // Not sure if this is really needed but it's a good idea to have it.
         $className = 'App\\Domain\\Object\\Data\\' . ucfirst($schema->type) . 'Data';
         if (!class_exists($className)) {
             $className = ObjectData::class;
@@ -73,22 +76,8 @@ final class ObjectFactory
                 continue;
             }
 
-            $value = null;
-
-            if (isset($objectData[$property])) {
-                // Set the value from the JSON
-                $value = $objectData[$property];
-            } elseif (isset($propertySchema['default'])) {
-                // Set the value from the schema default
-                $value = $propertySchema['default'];
-            } elseif (isset($propertySchema['$ref'])) {
-                // TODO: $ref is a property object.
-                $value = $objectData[$property] ?? [];
-            }
-
-            if ($value !== null) {
-                $properties[$property] = $value;
-            }
+            $properties[$property] =
+                $this->propertyFactory->generateProperty($property, $propertySchema, $objectData[$property]);
         }
 
         return $properties;

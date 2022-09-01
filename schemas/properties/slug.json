@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "pattern": "^\\S+$",
-  "$id": "https://www.totalcms.co/schemas/properties/id.json",
+  "$id": "https://www.totalcms.co/schemas/properties/slug.json",
   "examples": [
     "this-is-a-valid-id-2021"
   ],
-  "description": "An ID field should only container numbers, letters and dashes",
+  "description": "An ID field should only container URL friendly characters.",
   "type": "string"
 }

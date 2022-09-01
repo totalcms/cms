@@ -5,7 +5,7 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/id.json"
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
         },
         "status": {
             "type": "boolean"

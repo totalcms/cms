@@ -21,7 +21,7 @@ final class ObjectRepository extends StorageRepository
     public function saveObject(string $collection, ObjectData $object): void
     {
         $objectFile = $this->buildObjectPath($collection, $object->id);
-        $objectJSON = $this->serializer->serialize($object, 'json');
+        $objectJSON = $object->toJson();
 
         $this->filesystem->write($objectFile, $objectJSON);
     }

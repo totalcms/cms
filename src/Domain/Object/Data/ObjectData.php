@@ -2,6 +2,7 @@
 
 namespace App\Domain\Object\Data;
 
+use App\Domain\Property\Data\PropertyData;
 use Cocur\Slugify\Slugify;
 use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -14,7 +15,7 @@ use Symfony\Component\Serializer\Serializer;
 class ObjectData
 {
     public string $id;
-    /** @var Collection<string, mixed> */
+    /** @var Collection<string, PropertyData> */
     public Collection $properties;
     protected Serializer $serializer;
 
@@ -29,7 +30,12 @@ class ObjectData
     {
         $base = ['id' => $this->id];
 
-        return array_merge($base, $this->properties->toArray());
+        // Transform properties
+        $properties = $this->properties->map(function ($property) {
+            return $property->transform();
+        });
+
+        return array_merge($base, $properties->toArray());
     }
 
     public function toJson(): string

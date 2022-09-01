@@ -3,7 +3,7 @@
   "$id": "https://www.totalcms.co/schemas/feed.json",
   "properties": {
     "id": {
-      "$ref": "https://www.totalcms.co/schemas/properties/id.json"
+      "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
     },
     "featured": {
       "type": "boolean"
