@@ -53,10 +53,6 @@
     "featured": {
       "type": "boolean"
     },
-    "wordcount": {
-      "type": "integer",
-      "minimum": 0
-    },
     "categories": {
       "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
@@ -85,8 +81,7 @@
     "summary",
     "tags",
     "title",
-    "updated",
-    "wordcount"
+    "updated"
   ],
   "index": [
     "archived",
@@ -103,7 +98,6 @@
     "summary",
     "tags",
     "title",
-    "updated",
-    "wordcount"
+    "updated"
   ]
 }
