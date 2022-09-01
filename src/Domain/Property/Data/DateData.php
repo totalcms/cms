@@ -2,9 +2,37 @@
 
 namespace App\Domain\Property\Data;
 
+use DateTime;
+
 /**
- * String type property data.
+ * Date property data.
  */
 class DateData extends PropertyData
 {
+    public string $date;
+
+    public function __construct(string $id, string $date)
+    {
+        $this->id   = $id;
+        $this->date = self::cleanDate($date);
+    }
+
+    private static function cleanDate(string $date): string
+    {
+        // TODO: add timezone configuration support
+
+        $date = new DateTime($date);
+
+        return $date->format('c');
+    }
+
+    public function transform(): string
+    {
+        return (string)$this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->date;
+    }
 }

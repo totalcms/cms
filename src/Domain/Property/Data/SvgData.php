@@ -2,9 +2,40 @@
 
 namespace App\Domain\Property\Data;
 
+use DOMDocument;
+use InvalidArgumentException;
+
 /**
- * String type property data.
+ * SVG type property data.
  */
 class SvgData extends PropertyData
 {
+    public string $svg;
+
+    public function __construct(string $id, string $svg)
+    {
+        if (!self::verifySvg($svg)) {
+            throw new InvalidArgumentException('Invalid SVG');
+        }
+        $this->id  = $id;
+        $this->svg = $svg;
+    }
+
+    private static function verifySvg(string $svg): bool
+    {
+        $doc = new DOMDocument();
+        $doc->loadXML($svg);
+
+        return $doc->getElementsByTagName('svg')->length > 0;
+    }
+
+    public function transform(): string
+    {
+        return (string)$this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->svg;
+    }
 }

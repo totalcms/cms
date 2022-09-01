@@ -11,6 +11,7 @@ final class CollectionData
         'blog',
         'color',
         'date',
+        'email',
         'depot',
         'feed',
         'file',

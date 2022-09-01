@@ -1,0 +1,21 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://www.totalcms.co/schemas/email.json",
+    "description": "A schema for a Total CMS Email object",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+        },
+        "email": {
+            "$ref": "https://www.totalcms.co/schemas/properties/email.json"
+        }
+    },
+    "required": [
+        "id",
+        "email"
+    ],
+    "index": [
+        "id"
+    ]
+}

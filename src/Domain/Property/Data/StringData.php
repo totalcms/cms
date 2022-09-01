@@ -7,7 +7,6 @@ namespace App\Domain\Property\Data;
  */
 class StringData extends PropertyData
 {
-    public string $id;
     public string $text;
 
     public function __construct(string $id, string $text)
@@ -17,6 +16,11 @@ class StringData extends PropertyData
     }
 
     public function transform(): string
+    {
+        return (string)$this;
+    }
+
+    public function __toString(): string
     {
         return $this->text;
     }
