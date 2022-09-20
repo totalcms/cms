@@ -4,6 +4,7 @@ namespace App\Domain\Object\Service;
 
 use App\Domain\Object\Data\ObjectData;
 use App\Domain\Object\Repository\ObjectRepository;
+use UnexpectedValueException;
 
 /**
  * Service.
@@ -23,11 +24,17 @@ final class ObjectFetcher
      * @param string $collection
      * @param string $id
      *
-     * @return ?ObjectData
+     * @return ObjectData
      */
-    public function fetchObject(string $collection, string $id): ?ObjectData
+    public function fetchObject(string $collection, string $id): ObjectData
     {
-        return $this->storage->fetchObject($collection, $id);
+        $object = $this->storage->fetchObject($collection, $id);
+
+        if (!$object instanceof ObjectData) {
+            throw new UnexpectedValueException("Unable to fetch object $collection/$id");
+        }
+
+        return $object;
     }
 
     /**

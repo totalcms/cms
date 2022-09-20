@@ -7,12 +7,27 @@ namespace App\Domain\Property\Data;
  */
 class PasswordData extends PropertyData
 {
-    public string $hash;
+    public string $hash = '';
 
     public function __construct(string $id, string $password)
     {
         $this->id   = $id;
-        $this->hash = password_hash($password, PASSWORD_DEFAULT);
+        if (!empty($password)) {
+            // Only set the hash if a password is defined
+            $this->hash = self::isPasswordHash($password) ? $password : self::hashPassword($password);
+        }
+    }
+
+    private static function hashPassword(string $password): string
+    {
+        return password_hash($password, PASSWORD_DEFAULT);
+    }
+
+    private static function isPasswordHash(string $password): bool
+    {
+        $info = password_get_info($password);
+        // Verify that this is a known hash
+        return is_string($info['algo']);
     }
 
     public function transform(): string

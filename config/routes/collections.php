@@ -2,6 +2,7 @@
 
 use App\Action\Collection;
 use App\Action\Object as ObjectAction;
+use App\Action\Property;
 use App\Action\Schema;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
@@ -37,16 +38,15 @@ return function (App $app) {
         $group->put('/{collection}/{id}', ObjectAction\ObjectUpdateAction::class)->setName('object-update');
 
         // Object Property
-        // !$group->put('/{collection}/{id}/{property}', ObjectAction\Property\PropertyUpdateAction::class)
-        // !->setName('property-update');
-        // !$group->post('/{collection}/{id}/{property}', ObjectAction\Property\File\FileSaveAction::class)
-        // !->setName('property-file-save');
+        // $group->put('/{collection}/{id}/{property}', Property\PropertyUpdateAction::class)
+        //     ->setName('property-update');
 
         // Property File
-        // !$group->put('/{collection}/{id}/{property}/{file}', ObjectAction\Property\File\FileUpdateAction::class)
-        // !->setName('property-file-update-meta');
-
-        // !$group->delete('/{collection}/{id}/{property}/{file}', ObjectAction\Property\File\FileDeleteAction::class)
-        // !->setName('property-file-delete');
+        $group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)
+            ->setName('property-file-save');
+        $group->put('/{collection}/{id}/{property}/{file}', Property\File\FileUpdateAction::class)
+            ->setName('property-file-update-meta');
+        $group->delete('/{collection}/{id}/{property}/{file}', Property\File\FileDeleteAction::class)
+            ->setName('property-file-delete');
     });
 };

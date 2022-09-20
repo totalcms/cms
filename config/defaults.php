@@ -31,7 +31,7 @@ $settings['env'] = 'prod';
 
 // Path settings
 $settings['root']     = dirname(__DIR__);
-$settings['temp']     = $settings['root'] . '/tmp';
+$settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/templates';
 $settings['schemas']  = $settings['root'] . '/schemas';

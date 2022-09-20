@@ -6,19 +6,18 @@
       "$comment": "Tags associated with the file",
       "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
-    "passphrase": {
-      "type": "string",
-      "contentEncoding": "base64",
-      "$comment": "If the file is set to be protected, what is the passphrase in order to access it"
+    "password": {
+      "$comment": "If the file is set to be protected, what is the passphrase in order to access it",
+      "$ref": "https://www.totalcms.co/schemas/properties/password.json"
     },
     "protected": {
       "default": false,
       "$comment": "Flag to enable password protection on the file",
       "type": "boolean"
     },
-    "ext": {
+    "mime": {
       "type": "string",
-      "$comment": "The file extension"
+      "$comment": "The file mime type"
     },
     "size": {
       "minimum": 0,
@@ -40,22 +39,20 @@
   },
   "type": "object",
   "required": [
-    "ext",
+    "mime",
     "name",
     "label",
-    "passphrase",
     "protected",
     "size",
-    "tags",
-    "uploadDate"
+    "tags"
   ],
   "examples": [
     {
       "uploadDate": "2018-08-02T08:59:28+00:00",
-      "passphrase": "password",
+      "password": "password",
       "protected": false,
-      "ext": "zip",
-      "size": "1234556",
+      "mime": "zip",
+      "size": 1234556,
       "label": "My File",
       "tags": [
         "tag1",

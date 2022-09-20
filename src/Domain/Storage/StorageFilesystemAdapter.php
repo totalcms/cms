@@ -37,13 +37,27 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     /**
      * Delete file.
      *
-     * @param string $location The path of file to read
+     * @param string $location The path of file to delete
      *
      * @return bool
      */
     public function delete(string $location): bool
     {
         $this->filesystem->delete($location);
+
+        return !$this->fileExists($location);
+    }
+
+    /**
+     * Delete directory.
+     *
+     * @param string $location The path of directory to delete
+     *
+     * @return bool
+     */
+    public function deleteDirectory(string $location): bool
+    {
+        $this->filesystem->deleteDirectory($location);
 
         return !$this->fileExists($location);
     }
@@ -61,16 +75,73 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     }
 
     /**
+     * File mime type.
+     *
+     * @param string $location The path of file
+     *
+     * @return string the mime type
+     */
+    public function mimeType(string $location): string
+    {
+        return $this->filesystem->mimeType($location);
+    }
+
+    /**
+     * File size.
+     *
+     * @param string $location The path of file
+     *
+     * @return int file size
+     */
+    public function fileSize(string $location): int
+    {
+        return $this->filesystem->fileSize($location);
+    }
+
+    /**
      * Write file contents.
      *
      * @param string $location The path of file to write to
      * @param string $contents The data to write to the file
      *
-     * @return void
+     * @return bool
      */
-    public function write(string $location, string $contents): void
+    public function write(string $location, string $contents): bool
     {
         $this->filesystem->write($location, $contents);
+
+        return $this->filesystem->fileExists($location);
+    }
+
+    /**
+     * Import a file into the filesystem.
+     *
+     * @param string $import path to the file to import
+     * @param string $dest path to put the file
+     *
+     * @return bool
+     */
+    public function import(string $import, string $dest): bool
+    {
+        $stream = fopen($import, 'r+');
+        $this->filesystem->writeStream($dest, $stream);
+
+        return $this->filesystem->fileExists($dest);
+    }
+
+    /**
+     * Move a file.
+     *
+     * @param string $old existing path
+     * @param string $new new location
+     *
+     * @return bool
+     */
+    public function move(string $old, string $new): bool
+    {
+        $this->filesystem->move($old, $new);
+
+        return $this->filesystem->fileExists($new);
     }
 
     /**

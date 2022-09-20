@@ -9,6 +9,7 @@ final class Config
 {
     public string $template = '';
     public string $dataDir  = '';
+    public string $tmpDir   = '';
     public array $logger    = [];
     public array $error     = [];
 
@@ -16,6 +17,7 @@ final class Config
     {
         $this->template = $settings['template'];
         $this->dataDir  = $settings['datadir'];
+        $this->tmpDir   = $settings['tmpdir'];
         $this->logger   = $settings['logger'];
         $this->error    = $settings['error'];
     }
