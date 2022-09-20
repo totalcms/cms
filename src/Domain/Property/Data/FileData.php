@@ -16,6 +16,7 @@ class FileData extends PropertyData
     public string       $mime;
     public string       $label;
     public string       $name;
+    public string       $comments;
     public int          $size;
 
     public function __construct(string $id, array $file = [])
@@ -25,6 +26,7 @@ class FileData extends PropertyData
         $this->label     = $file['label'] ?? '';
         $this->mime      = $file['mime'] ?? '';
         $this->name      = $file['name'] ?? '';
+        $this->comments  = $file['comments'] ?? '';
         $this->size      = $file['size'] ?? 0;
         $this->tags      = new ListData('tags', $file['tags'] ?? []);
         $this->password  = new PasswordData('password', $file['password'] ?? '');
@@ -47,6 +49,7 @@ class FileData extends PropertyData
             'mime'       => $this->mime,
             'label'      => $this->label,
             'name'       => $this->name,
+            'comments'   => $this->comments,
             'size'       => $this->size,
         ];
     }

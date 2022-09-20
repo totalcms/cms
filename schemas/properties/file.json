@@ -19,6 +19,10 @@
       "type": "string",
       "$comment": "The file mime type"
     },
+    "comments": {
+      "type": "string",
+      "$comment": "Comments for this file"
+    },
     "size": {
       "minimum": 0,
       "$comment": "The filesize of the file in bytes",
