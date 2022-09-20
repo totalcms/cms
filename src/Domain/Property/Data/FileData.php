@@ -18,14 +18,14 @@ class FileData extends PropertyData
     public string       $name;
     public int          $size;
 
-    public function __construct(string $id, array $file)
+    public function __construct(string $id, array $file = [])
     {
         $this->id        = $id;
-        $this->protected = $file['protected'];
-        $this->label     = $file['label'];
-        $this->mime      = $file['mime'];
-        $this->name      = $file['name'];
-        $this->size      = $file['size'];
+        $this->protected = $file['protected'] ?? false;
+        $this->label     = $file['label'] ?? '';
+        $this->mime      = $file['mime'] ?? '';
+        $this->name      = $file['name'] ?? '';
+        $this->size      = $file['size'] ?? 0;
         $this->tags      = new ListData('tags', $file['tags'] ?? []);
         $this->password  = new PasswordData('password', $file['password'] ?? '');
 

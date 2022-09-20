@@ -37,7 +37,7 @@ final class PropertyFactory
         if (!class_exists($className)) {
             throw new UnexpectedValueException('Unknown property type for object.');
         }
-        $property = new $className($propertyName, $value);
+        $property = null === $value ? new $className($propertyName) : new $className($propertyName, $value);
 
         if (!$property instanceof PropertyData) {
             throw new DomainException('Error creating property for object.');

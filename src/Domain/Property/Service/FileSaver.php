@@ -5,6 +5,7 @@ namespace App\Domain\Property\Service;
 use App\Domain\Object\Data\ObjectData;
 use App\Domain\Object\Service\ObjectFetcher;
 use App\Domain\Object\Service\ObjectUpdater;
+use App\Domain\Property\Data\FileData;
 use App\Domain\Property\Data\PropertyData;
 use App\Domain\Property\Repository\PropertyRepository;
 use App\Domain\Schema\Service\SchemaFetcher;
@@ -99,7 +100,7 @@ final class FileSaver
     }
 
     /**
-     * save a file to collection object property.
+     * save a file to a file property.
      *
      * @param string $collection
      * @param string $objectID
@@ -123,5 +124,28 @@ final class FileSaver
         $newData      = array_merge($fileProperty->transform(), $fileInfo);
 
         return $this->updateObject($collection, $objectID, $property, $newData);
+    }
+
+    /**
+     * save a file to depot property.
+     *
+     * @param string $collection
+     * @param string $objectID
+     * @param string $property
+     * @param string $filePath
+     *
+     * @return ObjectData
+     */
+    public function saveFileForDepot(string $collection, string $objectID, string $property, string $filePath): ObjectData
+    {
+        if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+            throw new UnexpectedValueException('Object does not exist');
+        }
+
+        $files    = $this->fetchProperty($collection, $objectID, $property)->transform();
+        $fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+        $files[]  = (new FileData($property, $fileinfo))->transform();
+
+        return $this->updateObject($collection, $objectID, $property, $files);
     }
 }

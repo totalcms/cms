@@ -49,12 +49,18 @@ final class PropertyRepository extends StorageRepository
         $filename = basename($filePath);
         $newpath  = $this->buildPath($collection, $objectID, $property, $filename);
 
+        // File already exists, rename it
+        if ($this->filesystem->fileExists($newpath)) {
+            $newname  = self::getUniqueFilename($filename);
+            $newpath  = $this->buildPath($collection, $objectID, $property, $newname);
+        }
+
         if (!$this->filesystem->import($filePath, $newpath)) {
             throw new RuntimeException('File not saved');
         }
 
         return [
-            'name'       => $filename,
+            'name'       => basename($newpath),
             'size'       => $this->filesystem->fileSize($newpath),
             'mime'       => $this->filesystem->mimeType($newpath),
             'uploadDate' => date('c'),
@@ -84,11 +90,19 @@ final class PropertyRepository extends StorageRepository
 
         // Update to be Image data
         return [
-            'name'       => $filename,
+            'name'       => basename($newpath),
             'size'       => $this->filesystem->fileSize($newpath),
             'mime'       => $this->filesystem->mimeType($newpath),
             'uploadDate' => date('c'),
         ];
+    }
+
+    private static function getUniqueFilename(string $filename): string
+    {
+        $parts = pathinfo($filename);
+        $ext   = isset($parts['extension']) ? '.' . $parts['extension'] : '';
+
+        return sprintf('%s-%s%s', $parts['filename'], uniqid(), $ext);
     }
 
     private function buildPath(string $collection, string $objectID, string $property, ?string $filename = null): string
@@ -99,7 +113,7 @@ final class PropertyRepository extends StorageRepository
                 $this->cleanString($collection),
                 $this->cleanString($objectID),
                 $this->cleanString($property),
-                $this->cleanString($filename)
+                $filename
             );
         }
 

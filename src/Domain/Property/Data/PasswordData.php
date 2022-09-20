@@ -32,6 +32,7 @@ class PasswordData extends PropertyData
 
     public function transform(): string
     {
+        // TODO: How can we always store the password in the CMS but not expose it in the API?
         return (string)$this;
     }
 

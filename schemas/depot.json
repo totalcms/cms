@@ -7,13 +7,12 @@
         "id": {
             "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
         },
-        "depot": {
+        "files": {
             "$ref": "https://www.totalcms.co/schemas/properties/depot.json"
         }
     },
     "required": [
-        "id",
-        "depot"
+        "id"
     ],
     "index": [
         "id"
