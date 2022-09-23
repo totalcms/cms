@@ -24,6 +24,7 @@
     "league/flysystem": "^3.2",
     "league/fractal": "^0.20.1",
     "league/uri-parser": "^1.4",
+    "lychee-org/php-exif": "^0.7.11",
     "michelf/php-markdown": "^1.7",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.4",
