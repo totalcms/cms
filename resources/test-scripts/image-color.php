@@ -1,14 +1,20 @@
 <?php
 
-require_once 'vendor/autoload.php';
+chdir(__DIR__);
+
+require_once '../../vendor/autoload.php';
 
 use ColorThief\ColorThief;
 use Mexitek\PHPColors\Color;
 
-$image   = 'goldengate.jpg';
-$image   = 'icon.png';
+$image   = 'images/5D.jpg';
 $palette = ColorThief::getPalette($image, 15);
-$palette = array_slice($palette, 0, 6);
+// getting the top 15 colors from the image
+// reducing to top 5 colors
+$palette = array_slice($palette, 0, 5);
+
+print_r($palette);
+
 $palette = array_map(function ($color) {
     $hex = Color::rgbToHex(['R' => $color[0], 'G' => $color[1], 'B' => $color[2]]);
 
