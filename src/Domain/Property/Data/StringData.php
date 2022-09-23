@@ -9,9 +9,8 @@ class StringData extends PropertyData
 {
     public string $text;
 
-    public function __construct(string $id, string $text)
+    public function __construct(string $text)
     {
-        $this->id   = $id;
         $this->text = $text;
     }
 

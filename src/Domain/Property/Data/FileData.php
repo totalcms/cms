@@ -19,20 +19,19 @@ class FileData extends PropertyData
     public string       $comments;
     public int          $size;
 
-    public function __construct(string $id, array $file = [])
+    public function __construct(array $file = [])
     {
-        $this->id        = $id;
         $this->protected = $file['protected'] ?? false;
         $this->label     = $file['label'] ?? '';
         $this->mime      = $file['mime'] ?? '';
         $this->name      = $file['name'] ?? '';
         $this->comments  = $file['comments'] ?? '';
         $this->size      = $file['size'] ?? 0;
-        $this->tags      = new ListData('tags', $file['tags'] ?? []);
-        $this->password  = new PasswordData('password', $file['password'] ?? '');
+        $this->tags      = new ListData($file['tags'] ?? []);
+        $this->password  = new PasswordData($file['password'] ?? '');
 
         $uploadDate       = empty($file['uploadDate']) ? date('c') : $file['uploadDate'];
-        $this->uploadDate = new DateData('uploadDate', $uploadDate);
+        $this->uploadDate = new DateData($uploadDate);
 
         if ($this->protected && empty($this->password->hash)) {
             throw new UnexpectedValueException('Password is required for protected file');

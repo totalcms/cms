@@ -8,6 +8,7 @@ use App\Transformer\ObjectMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
+use UnexpectedValueException;
 
 final class ObjectFetchAction
 {
@@ -36,10 +37,10 @@ final class ObjectFetchAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $object = $this->objectFetcher->fetchObject($args['collection'], $args['id']);
-
-        if ($object === null) {
-            throw new HttpNotFoundException($request);
+        try {
+            $object = $this->objectFetcher->fetchObject($args['collection'], $args['id']);
+        } catch (UnexpectedValueException $e) {
+            throw new HttpNotFoundException($request, $e->getMessage());
         }
 
         return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

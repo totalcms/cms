@@ -44,9 +44,9 @@ return function (App $app) {
         // Property File
         $group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)
             ->setName('property-file-save');
-        $group->put('/{collection}/{id}/{property}/{file}', Property\File\FileUpdateAction::class)
-            ->setName('property-file-update-meta');
-        $group->delete('/{collection}/{id}/{property}/{file}', Property\File\FileDeleteAction::class)
-            ->setName('property-file-delete');
+        // $group->put('/{collection}/{id}/{property}/{file}', Property\File\FileUpdateAction::class)
+        //     ->setName('property-file-update-meta');
+        // $group->delete('/{collection}/{id}/{property}/{file}', Property\File\FileDeleteAction::class)
+        //     ->setName('property-file-delete');
     });
 };

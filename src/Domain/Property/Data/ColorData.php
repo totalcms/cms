@@ -7,18 +7,17 @@ namespace App\Domain\Property\Data;
  */
 class ColorData extends PropertyData
 {
-    public string $h;
-    public string $s;
-    public string $l;
-    public string $a;
+    public float $h;
+    public float $s;
+    public float $l;
+    public float $a;
 
-    public function __construct(string $id, array $color)
+    public function __construct(array $color)
     {
-        $this->id = $id;
-        $this->h  = $color['h'];
-        $this->s  = $color['s'];
-        $this->l  = $color['l'];
-        $this->a  = $color['a'];
+        $this->h  = floatval($color['h']);
+        $this->s  = floatval($color['s']);
+        $this->l  = floatval($color['l']);
+        $this->a  = $color['a'] ? floatval($color['a']) : 1;
     }
 
     public function transform(): array
@@ -33,6 +32,6 @@ class ColorData extends PropertyData
 
     public function __toString(): string
     {
-        return sprintf('hsla(%g,%g%%,%g%%,%g)', $this->h, $this->s, $this->l, $this->a);
+        return sprintf('hsla(%f,%f%%,%f%%,%f)', $this->h, $this->s, $this->l, $this->a);
     }
 }

@@ -15,7 +15,6 @@ final class PropertyFactory
     /**
      * create a property object.
      *
-     * @param string $propertyName
      * @param array  $propertySchema
      * @param mixed  $value
      *
@@ -24,7 +23,7 @@ final class PropertyFactory
      *
      * @return PropertyData
      */
-    public function generateProperty(string $propertyName, array $propertySchema, mixed $value): PropertyData
+    public function generateProperty(array $propertySchema, mixed $value): PropertyData
     {
         if ($value === null && isset($propertySchema['default'])) {
             // Set the value from the schema default
@@ -37,7 +36,7 @@ final class PropertyFactory
         if (!class_exists($className)) {
             throw new UnexpectedValueException('Unknown property type for object.');
         }
-        $property = null === $value ? new $className($propertyName) : new $className($propertyName, $value);
+        $property = null === $value ? new $className() : new $className($value);
 
         if (!$property instanceof PropertyData) {
             throw new DomainException('Error creating property for object.');

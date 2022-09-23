@@ -9,9 +9,8 @@ class DepotData extends PropertyData
 {
     public array $files = [];
 
-    public function __construct(string $id, array $files = [])
+    public function __construct(array $files = [])
     {
-        $this->id    = $id;
         $this->files = $files;
     }
 

@@ -9,9 +9,8 @@ class BooleanData extends PropertyData
 {
     public bool $status;
 
-    public function __construct(string $id, bool $status)
+    public function __construct(bool $status)
     {
-        $this->id     = $id;
         $this->status = $status;
     }
 

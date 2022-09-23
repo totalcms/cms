@@ -11,9 +11,8 @@ class EmailData extends PropertyData
 {
     public string $email;
 
-    public function __construct(string $id, string $email)
+    public function __construct(string $email)
     {
-        $this->id    = $id;
         $this->email = self::cleanEmail($email);
     }
 

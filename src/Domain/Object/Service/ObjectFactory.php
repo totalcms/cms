@@ -78,7 +78,7 @@ final class ObjectFactory
 
             $value = $objectData[$property] ?? null;
 
-            $properties[$property] = $this->propertyFactory->generateProperty($property, $propertySchema, $value);
+            $properties[$property] = $this->propertyFactory->generateProperty($propertySchema, $value);
         }
 
         return $properties;

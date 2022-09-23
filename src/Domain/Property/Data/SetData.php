@@ -11,12 +11,11 @@ class SetData extends PropertyData
 {
     public array $set;
 
-    public function __construct(string $id, array $set)
+    public function __construct(array $set)
     {
         if (!self::verifySet($set)) {
             throw new InvalidArgumentException('Set must be a set of simple objects');
         }
-        $this->id  = $id;
         $this->set = $set;
     }
 

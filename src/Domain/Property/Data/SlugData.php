@@ -11,9 +11,8 @@ class SlugData extends PropertyData
 {
     public string $slug;
 
-    public function __construct(string $id, string $slug)
+    public function __construct(string $slug)
     {
-        $this->id   = $id;
         $this->slug = (new Slugify())->slugify($slug);
     }
 

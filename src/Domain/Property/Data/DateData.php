@@ -11,9 +11,8 @@ class DateData extends PropertyData
 {
     public string $date;
 
-    public function __construct(string $id, string $date)
+    public function __construct(string $date)
     {
-        $this->id   = $id;
         $this->date = self::cleanDate($date);
     }
 

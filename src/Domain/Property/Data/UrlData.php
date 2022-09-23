@@ -11,10 +11,9 @@ class UrlData extends PropertyData
 {
     public string $url;
 
-    public function __construct(string $id, string $url)
+    public function __construct(string $url)
     {
-        $this->id    = $id;
-        $this->url   = self::cleanUrl($url);
+        $this->url = self::cleanUrl($url);
     }
 
     private static function cleanUrl(string $url): string

@@ -11,12 +11,11 @@ class ListData extends PropertyData
 {
     public array $list;
 
-    public function __construct(string $id, array $list)
+    public function __construct(array $list)
     {
         if (!self::verifyList($list)) {
             throw new InvalidArgumentException('List must be a list');
         }
-        $this->id   = $id;
         $this->list = $list;
     }
 
