@@ -3,17 +3,17 @@
   "description": "Image object with supplemental data about the image",
   "properties": {
     "rating": {
-      "$comment": "The date the file was uploaded",
+      "$comment": "The rating of the image",
       "$ref": "https://www.totalcms.co/schemas/properties/rating.json"
     },
     "color": {
       "type": "object",
       "$comment": "User defined colors to be used in association with this image",
       "properties": {
-        "primary": {
+        "main": {
           "$ref": "https://www.totalcms.co/schemas/properties/color.json"
         },
-        "secondary": {
+        "complimentary": {
           "$ref": "https://www.totalcms.co/schemas/properties/color.json"
         }
       }
@@ -31,29 +31,30 @@
       "type": "object",
       "$comment": "The EXIF data extracted from the image",
       "properties": {
-        "rating": {
-          "type": "number"
+        "author": {
+          "type": "string"
         },
         "copyright": {
           "type": "string"
         },
-        "caption": {
+        "description": {
           "type": "string"
+        },
+        "keywords": {
+          "$comment": "Tags associated with the image",
+          "$ref": "https://www.totalcms.co/schemas/properties/list.json"
         },
         "aperture": {
           "type": "string"
         },
+        "altitude": {
+          "type": "number"
+        },
         "longitude": {
           "type": "number"
         },
-        "width": {
-          "type": "integer"
-        },
         "latitude": {
           "type": "number"
-        },
-        "exposureBias": {
-          "type": "string"
         },
         "title": {
           "type": "string"
@@ -64,13 +65,13 @@
         "shutterSpeed": {
           "type": "string"
         },
-        "height": {
-          "type": "integer"
-        },
         "make": {
           "type": "string"
         },
-        "model": {
+        "camera": {
+          "type": "string"
+        },
+        "lens": {
           "type": "string"
         },
         "focalLength": {
@@ -84,6 +85,12 @@
     "alt": {
       "type": "string",
       "$comment": "The alt text to be used for the image"
+    },
+    "width": {
+      "type": "integer"
+    },
+    "height": {
+      "type": "integer"
     },
     "link": {
       "$comment": "A URL to be associated with this image",
@@ -107,15 +114,22 @@
       },
       "$comment": "The focal point of the image. This is used while cropping the image so that the focal point is captured in the center"
     },
-    "type": {
+    "mime": {
       "type": "string",
       "$comment": "The type of image: jpg, png, webp, gif",
       "enum": [
-        "gif",
-        "jpg",
-        "png",
-        "webp"
+        "image/gif",
+        "image/jpeg",
+        "image/pjpeg",
+        "image/png",
+        "image/webp",
+        "image/avif"
       ]
+    },
+    "size": {
+      "minimum": 0,
+      "$comment": "The filesize of the file in bytes",
+      "type": "integer"
     },
     "tags": {
       "$comment": "Tags associated with the image",
@@ -125,23 +139,19 @@
       "type": "object",
       "$comment": "The color palette extracted from the image. Two palettes are stored with a max of 6 hexidecimal color strings for primary and secondary colors",
       "properties": {
-        "primary": {
+        "main": {
           "items": {
-            "pattern": "^\\[A-Za-z0-9]+$",
-            "type": "string",
-            "maxLength": 7
+            "$ref": "https://www.totalcms.co/schemas/properties/color.json"
           },
           "type": "array",
-          "maxContains": 6
+          "maxContains": 5
         },
-        "secondary": {
+        "complimentary": {
           "items": {
-            "pattern": "^\\[A-Za-z0-9]+$",
-            "type": "string",
-            "maxLength": 7
+            "$ref": "https://www.totalcms.co/schemas/properties/color.json"
           },
           "type": "array",
-          "maxContains": 6
+          "maxContains": 5
         }
       }
     }
@@ -154,10 +164,11 @@
     "focalpoint",
     "link",
     "palette",
-    "rating",
     "tags",
-    "type",
-    "uploadDate"
+    "mime",
+    "uploadDate",
+    "width",
+    "height"
   ],
   "type": "object",
   "examples": [
