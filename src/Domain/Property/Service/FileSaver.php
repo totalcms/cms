@@ -10,6 +10,10 @@ use App\Domain\Property\Data\PropertyData;
 use App\Domain\Property\Repository\PropertyRepository;
 use App\Domain\Schema\Service\SchemaFetcher;
 use App\Domain\Storage\StorageRepository;
+use App\Utils\ColorUtils;
+use ColorThief\ColorThief;
+use PHPExif\Exif;
+use PHPExif\Reader\Reader as ExifReader;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -21,6 +25,7 @@ use UnexpectedValueException;
 final class FileSaver
 {
     private Serializer $serializer;
+    private ExifReader $exifReader;
 
     public function __construct(
         private PropertyRepository $storage,
@@ -35,6 +40,11 @@ final class FileSaver
         $this->schemaFetcher = $schemaFetcher;
         $this->objectFetcher = $objectFetcher;
         $this->serializer    = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+
+        $this->exifReader = ExifReader::factory(ExifReader::TYPE_NATIVE);
+        // $reader = ExifReader::factory(ExifReader::TYPE_EXIFTOOL);
+        // $reader = ExifReader::factory(ExifReader::TYPE_FFPROBE);
+        // $reader = ExifReader::factory(ExifReader::TYPE_IMAGICK);
     }
 
     /**
@@ -144,8 +154,126 @@ final class FileSaver
 
         $files    = $this->fetchProperty($collection, $objectID, $property)->transform();
         $fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath);
-        $files[]  = (new FileData($property, $fileinfo))->transform();
+        $files[]  = (new FileData($fileinfo))->transform();
 
         return $this->updateObject($collection, $objectID, $property, $files);
+    }
+
+    /**
+     * save a image to a file property.
+     *
+     * @param string $collection
+     * @param string $objectID
+     * @param string $property
+     * @param string $filePath
+     *
+     * @return ObjectData
+     */
+    public function saveFileForImage(string $collection, string $objectID, string $property, string $filePath): ObjectData
+    {
+        if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+            throw new UnexpectedValueException('Object does not exist');
+        }
+
+        // Clean up existing files in the path. Only one file should exist
+        $this->storage->deleteDirectory($collection, $objectID, $property);
+
+        // Update the object with the new file data
+        $imageProp = $this->fetchProperty($collection, $objectID, $property);
+
+        $existingData = $imageProp->transform();
+        $fileData     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+        $exifData     = self::gatherExifData($filePath);
+        $colorData    = self::gatherColorData($filePath);
+
+        $newData = array_merge($existingData, $fileData, $exifData, $colorData);
+
+        return $this->updateObject($collection, $objectID, $property, $newData);
+    }
+
+    /**
+     * get image color data.
+     *
+     * @param string $imagepath
+     *
+     * @return array
+     */
+    private function gatherColorData(string $imagepath): array
+    {
+        // Getting the top 15 colors from the image then reduce to top 5
+        // This produces the best results after a lot of testing
+        $palette = ColorThief::getPalette($imagepath, 15, 10, null, 'hex');
+        if (!is_array($palette) || count($palette) === 0) {
+            return [];
+        }
+        $palette       = array_slice($palette, 0, 5);
+        $palette       = array_map(fn ($hex) => ColorUtils::colorFromHex((string)$hex), $palette);
+        $complimentary = array_map(fn ($color) => ColorUtils::complementary($color), $palette);
+
+        return [
+            'palette' => [
+                'main'          => array_map(fn ($c) => $c->transform(), $palette),
+                'complimentary' => array_map(fn ($c) => $c->transform(), $complimentary),
+            ],
+            'color' => [
+                'main'          => $palette[0]->transform(),
+                'complimentary' => $complimentary[0]->transform(),
+            ],
+        ];
+    }
+
+    /**
+     * get image exif data.
+     *
+     * @param string $imagepath
+     *
+     * @return array
+     */
+    private function gatherExifData(string $imagepath): array
+    {
+        $exif = $this->exifReader->read($imagepath);
+
+        if (!$exif instanceof Exif) {
+            return [];
+        }
+
+        $date = $exif->getCreationDate();
+        if ($date instanceof \DateTime) {
+            $date = $date->format('c');
+        }
+
+        $data = [
+            // Exposure Data
+            'aperture'     => $exif->getAperture(),
+            'iso'          => $exif->getIso(),
+            'shutterSpeed' => $exif->getExposure(),
+            // Camera Data
+            'make'        => $exif->getMake(),
+            'camera'      => $exif->getCamera(),
+            'lens'        => $exif->getLens(),
+            'focalLength' => $exif->getFocalLength(),
+            // Meta Data
+            'author'      => $exif->getAuthor(),
+            'description' => $exif->getDescription(),
+            'keywords'    => $exif->getKeywords(),
+            'copyright'   => $exif->getCopyright(),
+            'title'       => $exif->getTitle(),
+            'date'        => $date,
+            // GPS Data
+            'longitude'   => $exif->getLongitude(),
+            'latitude'    => $exif->getLatitude(),
+            'altitude'    => $exif->getAltitude(),
+        ];
+        // fitler out any null values
+        $data = array_filter($data);
+
+        return [
+            'exif'   => $data,
+            'tags'   => $data['keywords'] ?? [],
+            'alt'    => $data['description'] ?? '',
+            'mime'   => $exif->getMimeType(),
+            'width'  => $exif->getWidth(),
+            'height' => $exif->getHeight(),
+        ];
     }
 }
