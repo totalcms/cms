@@ -86,6 +86,10 @@
       "type": "string",
       "$comment": "The alt text to be used for the image"
     },
+    "name": {
+      "type": "string",
+      "$comment": "The name of the image"
+    },
     "width": {
       "type": "integer"
     },
@@ -123,7 +127,8 @@
         "image/pjpeg",
         "image/png",
         "image/webp",
-        "image/avif"
+        "image/avif",
+        ""
       ]
     },
     "size": {
@@ -158,17 +163,11 @@
   },
   "required": [
     "alt",
-    "color",
     "exif",
     "featured",
     "focalpoint",
     "link",
-    "palette",
-    "tags",
-    "mime",
-    "uploadDate",
-    "width",
-    "height"
+    "tags"
   ],
   "type": "object",
   "examples": [

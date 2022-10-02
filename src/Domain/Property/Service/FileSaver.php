@@ -122,6 +122,7 @@ final class FileSaver
     public function saveFileForFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
     {
         if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+            // TODO: create object if it does not exist
             throw new UnexpectedValueException('Object does not exist');
         }
 
@@ -149,6 +150,7 @@ final class FileSaver
     public function saveFileForDepot(string $collection, string $objectID, string $property, string $filePath): ObjectData
     {
         if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+            // TODO: create object if it does not exist
             throw new UnexpectedValueException('Object does not exist');
         }
 
@@ -172,6 +174,7 @@ final class FileSaver
     public function saveFileForImage(string $collection, string $objectID, string $property, string $filePath): ObjectData
     {
         if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+            // TODO: create object if it does not exist
             throw new UnexpectedValueException('Object does not exist');
         }
 
@@ -267,13 +270,13 @@ final class FileSaver
         // fitler out any null values
         $data = array_filter($data);
 
-        return [
+        return array_filter([
             'exif'   => $data,
             'tags'   => $data['keywords'] ?? [],
             'alt'    => $data['description'] ?? '',
             'mime'   => $exif->getMimeType(),
-            'width'  => $exif->getWidth(),
-            'height' => $exif->getHeight(),
-        ];
+            'width'  => intval($exif->getWidth()),
+            'height' => intval($exif->getHeight()),
+        ]);
     }
 }

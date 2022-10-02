@@ -256,9 +256,9 @@ class ColorUtils
         }
 
         $hsl = [
-            'h' => $h * 360,
-            's' => $s,
-            'l' => $l,
+            'h' => intval(round($h * 360)),
+            's' => intval(round($s * 100)),
+            'l' => intval(round($l * 100)),
             'a' => $alpha,
         ];
 

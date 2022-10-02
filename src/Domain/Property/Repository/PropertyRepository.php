@@ -91,7 +91,7 @@ final class PropertyRepository extends StorageRepository
         // Update to be Image data
         return [
             'name'       => basename($newpath),
-            'size'       => $this->filesystem->fileSize($newpath),
+            'size'       => intval($this->filesystem->fileSize($newpath)),
             'mime'       => $this->filesystem->mimeType($newpath),
             'uploadDate' => date('c'),
         ];
