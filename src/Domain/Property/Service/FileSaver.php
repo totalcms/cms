@@ -6,6 +6,7 @@ use App\Domain\Object\Data\ObjectData;
 use App\Domain\Object\Service\ObjectFetcher;
 use App\Domain\Object\Service\ObjectUpdater;
 use App\Domain\Property\Data\FileData;
+use App\Domain\Property\Data\ImageData;
 use App\Domain\Property\Data\PropertyData;
 use App\Domain\Property\Repository\PropertyRepository;
 use App\Domain\Schema\Service\SchemaFetcher;
@@ -189,9 +190,37 @@ final class FileSaver
         $exifData     = self::gatherExifData($filePath);
         $colorData    = self::gatherColorData($filePath);
 
-        $newData = array_merge($existingData, $fileData, $exifData, $colorData);
+        $newImage = array_merge($existingData, $fileData, $exifData, $colorData);
 
-        return $this->updateObject($collection, $objectID, $property, $newData);
+        return $this->updateObject($collection, $objectID, $property, $newImage);
+    }
+
+    /**
+     * save a file to depot property.
+     *
+     * @param string $collection
+     * @param string $objectID
+     * @param string $property
+     * @param string $filePath
+     *
+     * @return ObjectData
+     */
+    public function saveFileForGallery(string $collection, string $objectID, string $property, string $filePath): ObjectData
+    {
+        if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+            // TODO: create object if it does not exist
+            throw new UnexpectedValueException('Object does not exist');
+        }
+
+        $images    = $this->fetchProperty($collection, $objectID, $property)->transform();
+        $fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+        $exifData  = self::gatherExifData($filePath);
+        $colorData = self::gatherColorData($filePath);
+        $newImage  = array_merge($fileData, $exifData, $colorData);
+
+        $images[]  = (new ImageData($newImage))->transform();
+
+        return $this->updateObject($collection, $objectID, $property, $images);
     }
 
     /**

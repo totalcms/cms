@@ -7,4 +7,15 @@ namespace App\Domain\Property\Data;
  */
 class GalleryData extends PropertyData
 {
+    public array $images = [];
+
+    public function __construct(array $images = [])
+    {
+        $this->images = $images;
+    }
+
+    public function transform(): array
+    {
+        return $this->images;
+    }
 }

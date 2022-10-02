@@ -26,6 +26,10 @@ class ImageData extends PropertyData
         'main'          => [],
         'complimentary' => [],
     ];
+    public const DEFAULT_FOCALPOINT = [
+        'x' => 50,
+        'y' => 50,
+    ];
 
     public function __construct(array $file = [])
     {
@@ -33,7 +37,7 @@ class ImageData extends PropertyData
         $this->color      = $file['color'] ?? self::DEFAULT_PALETTE;
         $this->exif       = $file['exif'] ?? [];
         $this->featured   = $file['featured'] ?? false;
-        $this->focalpoint = $file['focalpoint'] ?? [];
+        $this->focalpoint = $file['focalpoint'] ?? self::DEFAULT_FOCALPOINT;
         $this->height     = intval($file['height'] ?? 0);
         $this->link       = $file['link'] ?? '';
         $this->mime       = $file['mime'] ?? '';
