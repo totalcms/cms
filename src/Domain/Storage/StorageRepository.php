@@ -2,7 +2,6 @@
 
 namespace App\Domain\Storage;
 
-use Cocur\Slugify\Slugify;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -50,16 +49,11 @@ abstract class StorageRepository
             return null;
         }
 
-        $object = $this->serializer->deserialize($contents, $className, 'json');
+        $object = $this->serializer->deserialize($contents, (string)$className, 'json');
         if ($object instanceof $className) {
             return $object;
         }
 
         return null;
-    }
-
-    protected function cleanString(string $string): string
-    {
-        return (new Slugify())->slugify($string);
     }
 }

@@ -23,6 +23,16 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     }
 
     /**
+     * Access the flysystem filesystem.
+     *
+     * @return FilesystemOperator
+     */
+    public function flysystem(): FilesystemOperator
+    {
+        return $this->filesystem;
+    }
+
+    /**
      * Read file.
      *
      * @param string $location The path of file to read

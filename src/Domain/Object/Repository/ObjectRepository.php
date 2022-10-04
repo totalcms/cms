@@ -7,6 +7,7 @@ use App\Domain\Object\Service\ObjectFactory;
 use App\Domain\Storage\StorageAdapterInterface;
 use App\Domain\Storage\StorageFilesystemAdapter;
 use App\Domain\Storage\StorageRepository;
+use App\Utils\PathUtils;
 
 /**
  * Repository.
@@ -76,6 +77,6 @@ final class ObjectRepository extends StorageRepository
 
     private function buildObjectPath(string $collection, string $id): string
     {
-        return sprintf('%s/%s%s', $this->cleanString($collection), $this->cleanString($id), self::FILE_EXT);
+        return PathUtils::buildPath(collection: $collection, filename: $id . self::FILE_EXT);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Domain\Property\Repository;
 
 use App\Domain\Storage\StorageRepository;
+use App\Utils\PathUtils;
 use RuntimeException;
 
 /**
@@ -23,7 +24,7 @@ final class PropertyRepository extends StorageRepository
      */
     public function deleteDirectory(string $collection, string $objectID, string $property): void
     {
-        $path = $this->buildPath($collection, $objectID, $property);
+        $path = PathUtils::buildPath($collection, $objectID, $property);
 
         try {
             $this->filesystem->deleteDirectory($path);
@@ -47,12 +48,12 @@ final class PropertyRepository extends StorageRepository
     public function saveFile(string $collection, string $objectID, string $property, string $filePath): array
     {
         $filename = basename($filePath);
-        $newpath  = $this->buildPath($collection, $objectID, $property, $filename);
+        $newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
 
         // File already exists, rename it
         if ($this->filesystem->fileExists($newpath)) {
             $newname  = self::getUniqueFilename($filename);
-            $newpath  = $this->buildPath($collection, $objectID, $property, $newname);
+            $newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname);
         }
 
         if (!$this->filesystem->import($filePath, $newpath)) {
@@ -82,7 +83,7 @@ final class PropertyRepository extends StorageRepository
     public function saveImage(string $collection, string $objectID, string $property, string $filePath): array
     {
         $filename = basename($filePath);
-        $newpath  = $this->buildPath($collection, $objectID, $property, $filename);
+        $newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
 
         if (!$this->filesystem->import($filePath, $newpath)) {
             throw new RuntimeException('File not saved');
@@ -103,25 +104,5 @@ final class PropertyRepository extends StorageRepository
         $ext   = isset($parts['extension']) ? '.' . $parts['extension'] : '';
 
         return sprintf('%s-%s%s', $parts['filename'], uniqid(), $ext);
-    }
-
-    private function buildPath(string $collection, string $objectID, string $property, ?string $filename = null): string
-    {
-        if (isset($filename)) {
-            return sprintf(
-                '%s/%s/%s/%s',
-                $this->cleanString($collection),
-                $this->cleanString($objectID),
-                $this->cleanString($property),
-                $filename
-            );
-        }
-
-        return sprintf(
-            '%s/%s/%s',
-            $this->cleanString($collection),
-            $this->cleanString($objectID),
-            $this->cleanString($property),
-        );
     }
 }

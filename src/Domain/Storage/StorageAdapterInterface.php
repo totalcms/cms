@@ -2,8 +2,17 @@
 
 namespace App\Domain\Storage;
 
+use League\Flysystem\FilesystemOperator;
+
 interface StorageAdapterInterface
 {
+    /**
+     * Access the flysystem filesystem.
+     *
+     * @return FilesystemOperator
+     */
+    public function flysystem(): FilesystemOperator;
+
     /**
      * Read file.
      *

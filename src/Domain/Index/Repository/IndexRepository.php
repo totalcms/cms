@@ -4,6 +4,7 @@ namespace App\Domain\Index\Repository;
 
 use App\Domain\Index\Data\IndexData;
 use App\Domain\Storage\StorageRepository;
+use App\Utils\PathUtils;
 
 /**
  * Repository.
@@ -58,6 +59,6 @@ final class IndexRepository extends StorageRepository
 
     private function buildIndexPath(string $collection): string
     {
-        return $this->cleanString($collection) . DIRECTORY_SEPARATOR . self::INDEX_FILE;
+        return PathUtils::buildPath(collection: $collection, filename: self::INDEX_FILE);
     }
 }
