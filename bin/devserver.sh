@@ -2,5 +2,4 @@
 
 export APP_ENV="dev"
 echo $APP_ENV
-cd public
-php -S localhost:8000
+php -S localhost:8000 -t public public/index.php
