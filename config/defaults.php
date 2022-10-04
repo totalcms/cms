@@ -81,6 +81,26 @@ $settings['smtp'] = [
     'to'        => 'to@example.com',
 ];
 
+$settings['imageworks'] = [
+    'watermarksGallery' => 'watermarks',
+    'defaults'          => [
+        'fm' => 'jpg',
+        'q'  => 92,
+    ],
+    'presets' => [
+        'small' => [
+            'w'   => 200,
+            'h'   => 200,
+            'fit' => 'crop',
+        ],
+        'medium' => [
+            'w'   => 600,
+            'h'   => 400,
+            'fit' => 'crop',
+        ],
+    ],
+];
+
 // Console commands
 // $settings['commands'] = [
 //     \App\Console\SchemaDumpCommand::class,

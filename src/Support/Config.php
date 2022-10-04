@@ -7,18 +7,20 @@ namespace App\Support;
  */
 final class Config
 {
-    public string $template = '';
-    public string $dataDir  = '';
-    public string $tmpDir   = '';
-    public array $logger    = [];
-    public array $error     = [];
+    public string $template  = '';
+    public string $dataDir   = '';
+    public string $tmpDir    = '';
+    public array $logger     = [];
+    public array $error      = [];
+    public array $imageworks = [];
 
     public function __construct(array $settings)
     {
-        $this->template = $settings['template'];
-        $this->dataDir  = $settings['datadir'];
-        $this->tmpDir   = $settings['tmpdir'];
-        $this->logger   = $settings['logger'];
-        $this->error    = $settings['error'];
+        $this->template   = $settings['template'];
+        $this->dataDir    = $settings['datadir'];
+        $this->tmpDir     = $settings['tmpdir'];
+        $this->logger     = $settings['logger'];
+        $this->error      = $settings['error'];
+        $this->imageworks = $settings['imageworks'];
     }
 }

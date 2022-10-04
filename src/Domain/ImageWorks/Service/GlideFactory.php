@@ -3,6 +3,7 @@
 namespace App\Domain\ImageWorks\Service;
 
 use App\Domain\Storage\StorageAdapterInterface;
+use App\Support\Config;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
@@ -12,13 +13,14 @@ use Slim\Psr7\Stream;
 final class GlideFactory
 {
     private StorageAdapterInterface $filesystem;
+    private Config $config;
 
-    public const CACHEDIR      = '.cache';
-    public const WATERMARKSDIR = 'gallery/watermarks/gallery';
+    public const CACHEDIR = '.cache';
 
-    public function __construct(StorageAdapterInterface $filesystem)
+    public function __construct(StorageAdapterInterface $filesystem, Config $config)
     {
         $this->filesystem = $filesystem;
+        $this->config     = $config;
     }
 
     /**
@@ -37,16 +39,26 @@ final class GlideFactory
             'cache'                  => $this->filesystem->flysystem(),
             'watermarks'             => $this->filesystem->flysystem(),
             'source_path_prefix'     => $source,
-            'cache_path_prefix'      => $cache ?? self::CACHEDIR,
-            'watermarks_path_prefix' => $watermark ?? self::WATERMARKSDIR,
+            'cache_path_prefix'      => sprintf('%s/%s', $source, $cache ?? self::CACHEDIR),
+            'watermarks_path_prefix' => $this->watermarkPath($watermark),
             'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
-            'defaults'               => [], // defaults set in config?
-            'presets'                => [], // presets set in config?
+            'defaults'               => $this->config->imageworks['defaults'],
+            'presets'                => $this->config->imageworks['presets'],
             'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
         ]);
 
-        // TODO: add support for default and presets in config
-
         return $glide;
+    }
+
+    /**
+     * @param ?string $watermark
+     *
+     * @return string
+     */
+    public function watermarkPath(?string $watermark): string
+    {
+        $objectID = $watermark ?? $this->config->imageworks['watermarksGallery'];
+
+        return sprintf('gallery/%s/gallery', $objectID);
     }
 }

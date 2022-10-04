@@ -2,8 +2,10 @@
 
 namespace App\Domain\ImageWorks\Service;
 
+use App\Domain\Property\Data\ColorData;
 use App\Domain\Property\Data\ImageData;
 use App\Domain\Property\Service\PropertyFetcher;
+use App\Utils\ColorUtils;
 use App\Utils\PathUtils;
 use Psr\Http\Message\ResponseInterface;
 use UnexpectedValueException;
@@ -42,6 +44,38 @@ final class ImageGenerator
         $glide = $this->glideFactory->create(
             source: PathUtils::buildPath($collection, $id, $property),
         );
+
+        // Integrate Image data into params
+
+        if (isset($params['fit'])) {
+            $crop = sprintf('crop-%g-%g', $imageData->focalpoint['x'], $imageData->focalpoint['y']);
+
+            $params['fit'] = str_replace('focalpoint', $crop, $params['fit']);
+        }
+
+        $colors = ['main', 'complimentary'];
+
+        // TODO: colorToHex is currently broken
+
+        if (isset($params['bg'])) {
+            foreach ($colors as $color) {
+                if ($params['bg'] === $color) {
+                    $params['bg'] = ColorUtils::colorToHex(new ColorData($imageData->color[$color]));
+                    break;
+                }
+            }
+        }
+
+        if (isset($params['border'])) {
+            foreach ($colors as $color) {
+                if (str_contains($params['border'], $color)) {
+                    $hex              = ColorUtils::colorToHex(new ColorData($imageData->color[$color]));
+                    var_dump($hex);
+                    $params['border'] = str_replace($color, $hex, $params['border']);
+                    break;
+                }
+            }
+        }
 
         $response = $glide->getImageResponse($imageData->name, $params);
 
