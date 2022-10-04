@@ -45,8 +45,6 @@ final class ImageWorksImageFetchAction
             throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
         }
 
-        // TODO: Create response with image here
-
         return $image;
     }
 }

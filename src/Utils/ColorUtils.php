@@ -368,17 +368,29 @@ class ColorUtils
      */
     public static function colorToRgb(ColorData $color): array
     {
-        [$h, $s, $l, $a] = [$color->h / 360, $color->s, $color->l, $color->a];
+        [$h, $s, $l, $a] = [$color->h / 360, $color->s / 100, $color->l / 100, $color->a];
 
+        // If there's no saturation, the color is a greyscale,
+        // so all three RGB values can be set to the lightness.
+        // (Hue doesn't matter, because it's grey, not color)
         $r = $g = $b = $l * 255;
 
-        if ($s !== 0) {
-            $var2 = $l < 0.5 ? $l * (1 + $s) : ($l + $s) - ($s * $l);
-            $var1 = 2 * $l - $var2;
+        if ($s != 0) {
+            // calculate some temperary variables to make the calculation eaisier.
+            $temp2 = ($l + $s) - ($s * $l);
+            if ($l < 0.5) {
+                $temp2 = $l * (1 + $s);
+            }
+            $temp1 = 2 * $l - $temp2;
 
-            $r = self::hueToRgb($var1, $var2, $h + (1 / 3));
-            $g = self::hueToRgb($var1, $var2, $h);
-            $b = self::hueToRgb($var1, $var2, $h - (1 / 3));
+            // run the calculated vars through hueToRgb to
+            // calculate the RGB value.  Note that for the Red
+            // value, we add a third (120 degrees), to adjust
+            // the hue to the correct section of the circle for
+            // red.  Simalarly, for blue, we subtract 1/3.
+            $r = 255 * self::hueToRgb($temp1, $temp2, $h + (1 / 3));
+            $g = 255 * self::hueToRgb($temp1, $temp2, $h);
+            $b = 255 * self::hueToRgb($temp1, $temp2, $h - (1 / 3));
         }
 
         return [
@@ -392,35 +404,30 @@ class ColorUtils
     /**
      * Given a Hue, returns corresponding RGB value.
      *
-     * @param float $v1
-     * @param float $v2
-     * @param float $vH
+     * @param float $temp1
+     * @param float $temp2
+     * @param float $hue
      *
      * @return float
      */
-    private static function hueToRgb(float $v1, float $v2, float $vH): float
+    private static function hueToRgb(float $temp1, float $temp2, float $hue): float
     {
-        if ($vH < 0) {
-            $vH++;
+        if ($hue < 0) {
+            $hue++;
+        }
+        if ($hue > 1) {
+            $hue--;
         }
 
-        if ($vH > 1) {
-            $vH--;
+        if ((6 * $hue) < 1) {
+            return $temp1 + ($temp2 - $temp1) * 6 * $hue;
+        } elseif ((2 * $hue) < 1) {
+            return $temp2;
+        } elseif ((3 * $hue) < 2) {
+            return $temp1 + ($temp2 - $temp1) * ((2 / 3) - $hue) * 6;
         }
 
-        if ((6 * $vH) < 1) {
-            return $v1 + ($v2 - $v1) * 6 * $vH;
-        }
-
-        if ((2 * $vH) < 1) {
-            return $v2;
-        }
-
-        if ((3 * $vH) < 2) {
-            return $v1 + ($v2 - $v1) * ((2 / 3) - $vH) * 6;
-        }
-
-        return $v1 * 255;
+        return $temp1;
     }
 
     /**

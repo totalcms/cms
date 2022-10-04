@@ -55,8 +55,6 @@ final class ImageGenerator
 
         $colors = ['main', 'complimentary'];
 
-        // TODO: colorToHex is currently broken
-
         if (isset($params['bg'])) {
             foreach ($colors as $color) {
                 if ($params['bg'] === $color) {
@@ -70,7 +68,6 @@ final class ImageGenerator
             foreach ($colors as $color) {
                 if (str_contains($params['border'], $color)) {
                     $hex              = ColorUtils::colorToHex(new ColorData($imageData->color[$color]));
-                    var_dump($hex);
                     $params['border'] = str_replace($color, $hex, $params['border']);
                     break;
                 }
