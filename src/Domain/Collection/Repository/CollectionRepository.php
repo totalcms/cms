@@ -4,6 +4,7 @@ namespace App\Domain\Collection\Repository;
 
 use App\Domain\Collection\Data\CollectionData;
 use App\Domain\Storage\StorageRepository;
+use App\Utils\PathUtils;
 use DomainException;
 
 /**
@@ -37,7 +38,7 @@ final class CollectionRepository extends StorageRepository
      *
      * @param string $collection
      *
-     * @return ?CollectionData
+     * @return CollectionData|null
      */
     public function fetchCollection(string $collection): ?CollectionData
     {
@@ -83,6 +84,6 @@ final class CollectionRepository extends StorageRepository
 
     private function buildMetaPath(string $collection): string
     {
-        return $this->cleanString($collection) . DIRECTORY_SEPARATOR . self::META_FILE;
+        return PathUtils::buildPath(collection: $collection, filename: self::META_FILE);
     }
 }

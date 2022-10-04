@@ -2,22 +2,22 @@
 
 namespace App\Action\ImageWorks;
 
-use App\Domain\ImageWorks\Service\ImageFieldReader;
+use App\Domain\ImageWorks\Service\ImageGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 
 final class ImageWorksImageFetchAction
 {
-    private ImageFieldReader $imageFieldReader;
+    private ImageGenerator $imageGenerator;
 
-    public function __construct(ImageFieldReader $imageFieldReader)
+    public function __construct(ImageGenerator $imageGenerator)
     {
-        $this->imageFieldReader = $imageFieldReader;
+        $this->imageGenerator = $imageGenerator;
     }
 
     /**
-     * Action.
+     * Get image by property.
      *
      * @param ServerRequestInterface $request The request
      * @param ResponseInterface $response The response
@@ -32,21 +32,21 @@ final class ImageWorksImageFetchAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        // Get image by field
-        $collection  = (string)$args['collection'];
-        $id          = (string)$args['id'];
-        $property    = (string)$args['property'];
+        $collection  = $args['collection'];
+        $id          = $args['id'];
+        $property    = $args['property'];
         $queryParams = $request->getQueryParams();
 
-        $image = $this->imageFieldReader->readImageByField($collection, $id, $property, $queryParams);
+        $queryParams['fm'] = $args['format'];
 
-        if ($image === null) {
-            throw new HttpNotFoundException($request, 'Image not found');
+        try {
+            $image = $this->imageGenerator->generate($collection, $id, $property, $queryParams);
+        } catch (\Exception $e) {
+            throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
         }
 
-        // @todo Create response with image here
-        // ...
+        // TODO: Create response with image here
 
-        return $response;
+        return $image;
     }
 }
