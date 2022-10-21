@@ -23,6 +23,11 @@
       "type": "string",
       "$comment": "Comments for this file"
     },
+    "count": {
+      "minimum": 0,
+      "$comment": "The number of times a file has been downloaded",
+      "type": "integer"
+    },
     "size": {
       "minimum": 0,
       "$comment": "The filesize of the file in bytes",

@@ -32,9 +32,9 @@ final class ImageWorksImageFetchAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $collection  = $args['collection'];
+        $collection  = $args['collection'] ?? 'image';
         $id          = $args['id'];
-        $property    = $args['property'];
+        $property    = $args['property'] ?? 'image';
         $queryParams = $request->getQueryParams();
 
         $queryParams['fm'] = $args['format'];

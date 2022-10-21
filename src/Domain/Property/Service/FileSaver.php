@@ -187,7 +187,7 @@ final class FileSaver
 
         $existingData = $imageProp->transform();
         $fileData     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
-        $exifData     = self::gatherExifData($filePath);
+        $exifData     = $this->gatherExifData($filePath);
         $colorData    = self::gatherColorData($filePath);
 
         $newImage = array_merge($existingData, $fileData, $exifData, $colorData);
@@ -214,7 +214,7 @@ final class FileSaver
 
         $images    = $this->fetchProperty($collection, $objectID, $property)->transform();
         $fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
-        $exifData  = self::gatherExifData($filePath);
+        $exifData  = $this->gatherExifData($filePath);
         $colorData = self::gatherColorData($filePath);
         $newImage  = array_merge($fileData, $exifData, $colorData);
 
@@ -230,7 +230,7 @@ final class FileSaver
      *
      * @return array
      */
-    private function gatherColorData(string $imagepath): array
+    private static function gatherColorData(string $imagepath): array
     {
         // Getting the top 15 colors from the image then reduce to top 5
         // This produces the best results after a lot of testing
@@ -255,6 +255,27 @@ final class FileSaver
     }
 
     /**
+     * get image basic data.
+     *
+     * @param string $imagepath
+     *
+     * @return array
+     */
+    private static function gatherBasicImageData(string $imagepath): array
+    {
+        $imageData = getimagesize($imagepath);
+        if (!is_array($imageData)) {
+            return [];
+        }
+
+        return [
+            'mime'   => $imageData['mime'],
+            'width'  => $imageData[0],
+            'height' => $imageData[1],
+        ];
+    }
+
+    /**
      * get image exif data.
      *
      * @param string $imagepath
@@ -266,7 +287,7 @@ final class FileSaver
         $exif = $this->exifReader->read($imagepath);
 
         if (!$exif instanceof Exif) {
-            return [];
+            return self::gatherBasicImageData($imagepath);
         }
 
         $date = $exif->getCreationDate();

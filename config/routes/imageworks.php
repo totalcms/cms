@@ -7,12 +7,17 @@ use Slim\Routing\RouteCollectorProxy;
 
 return function (App $app) {
     $app->group('/imageworks', function (RouteCollectorProxy $group) {
+        $group->get('/{id}.{format}', ImageWorks\ImageWorksImageFetchAction::class)
+        ->setName('image-fetch-short');
+
         $group->get('/{collection}/{id}/{property}.{format}', ImageWorks\ImageWorksImageFetchAction::class)
         ->setName('image-fetch');
 
-        // It's better to require the full filename for SEO since that contains an image file extension
-        // !$group->get('/{collection}/{id}/{property}/{file}', ImageWorks\ImageWorksGalleryFetchAction::class)
-        // !->setName('gallery-fetch');
+        $group->get('/{id}/{filename}', ImageWorks\ImageWorksGalleryFetchAction::class)
+        ->setName('gallery-image-fetch-short');
+
+        $group->get('/{collection}/{id}/{property}/{filename}', ImageWorks\ImageWorksGalleryFetchAction::class)
+        ->setName('gallery-image-fetch');
 
         // !$group->delete('/{collection}/{id}/{property}/{file}', ImageWorks\ImageWorksClearCacheAction::class)
         // !->setName('clear-cache');

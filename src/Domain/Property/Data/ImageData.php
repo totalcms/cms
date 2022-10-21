@@ -35,7 +35,7 @@ class ImageData extends PropertyData
     {
         $this->alt        = $file['alt'] ?? '';
         $this->color      = $file['color'] ?? self::DEFAULT_PALETTE;
-        $this->exif       = $file['exif'] ?? [];
+        $this->exif       = $file['exif'] ?? ['nodata' => ''];
         $this->featured   = $file['featured'] ?? false;
         $this->focalpoint = $file['focalpoint'] ?? self::DEFAULT_FOCALPOINT;
         $this->height     = intval($file['height'] ?? 0);

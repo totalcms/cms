@@ -2,13 +2,14 @@
 
 namespace App\Domain\ImageWorks\Service;
 
+use App\Domain\Property\Data\GalleryData;
 use App\Domain\Property\Data\ImageData;
 use App\Domain\Property\Service\PropertyFetcher;
 use App\Utils\PathUtils;
 use Psr\Http\Message\ResponseInterface;
 use UnexpectedValueException;
 
-final class ImageGenerator
+final class GalleryImageGenerator
 {
     private PropertyFetcher $propertyFetcher;
     private GlideFactory $glideFactory;
@@ -25,18 +26,26 @@ final class ImageGenerator
      * @param string $collection
      * @param string $id
      * @param string $property
+     * @param string $filename
      * @param array  $params
      *
      * @throws UnexpectedValueException
      *
      * @return ResponseInterface
      */
-    public function generate(string $collection, string $id, string $property, array $params): ResponseInterface
+    public function generate(string $collection, string $id, string $property, string $filename, array $params): ResponseInterface
     {
-        $imageData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
+        $galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
+
+        if (!$galleryData instanceof GalleryData) {
+            throw new UnexpectedValueException('Invalid gallery property found');
+        }
+
+        $imageData = array_filter($galleryData->images, fn ($image) => $image['name'] === $filename)[0];
+        $imageData = new ImageData($imageData);
 
         if (!$imageData instanceof ImageData) {
-            throw new UnexpectedValueException('Invalid image property found');
+            throw new UnexpectedValueException('Invalid image property found in gallery');
         }
 
         $glide = $this->glideFactory->create(

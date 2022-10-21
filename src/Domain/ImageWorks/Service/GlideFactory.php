@@ -2,8 +2,10 @@
 
 namespace App\Domain\ImageWorks\Service;
 
+use App\Domain\Property\Data\ColorData;
 use App\Domain\Storage\StorageAdapterInterface;
 use App\Support\Config;
+use App\Utils\ColorUtils;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
@@ -15,7 +17,8 @@ final class GlideFactory
     private StorageAdapterInterface $filesystem;
     private Config $config;
 
-    public const CACHEDIR = '.cache';
+    public const CACHEDIR    = '.cache';
+    public const COLOR_NAMES = ['main', 'complimentary'];
 
     public function __construct(StorageAdapterInterface $filesystem, Config $config)
     {
@@ -60,5 +63,54 @@ final class GlideFactory
         $objectID = $watermark ?? $this->config->imageworks['watermarksGallery'];
 
         return sprintf('gallery/%s/gallery', $objectID);
+    }
+
+    /**
+     * @param string $crop
+     * @param array $focalpoint
+     *
+     * @return string
+     */
+    public static function cropFocalpoint(string $crop, array $focalpoint): string
+    {
+        $newcrop = sprintf('crop-%g-%g', $focalpoint['x'], $focalpoint['y']);
+
+        return str_replace('focalpoint', $newcrop, $crop);
+    }
+
+    /**
+     * @param string $background
+     * @param array $imageColors
+     *
+     * @return string
+     */
+    public static function updateBackgroundColor(string $background, array $imageColors): string
+    {
+        foreach (self::COLOR_NAMES as $color) {
+            if ($background === $color) {
+                return ColorUtils::colorToHex(new ColorData($imageColors[$color]));
+            }
+        }
+
+        return $background;
+    }
+
+    /**
+     * @param string $border
+     * @param array $imageColors
+     *
+     * @return string
+     */
+    public static function updateBorderColor(string $border, array $imageColors): string
+    {
+        foreach (self::COLOR_NAMES as $color) {
+            if (str_contains($border, $color)) {
+                $hex = ColorUtils::colorToHex(new ColorData($imageColors[$color]));
+
+                return str_replace($color, $hex, $border);
+            }
+        }
+
+        return $border;
     }
 }
