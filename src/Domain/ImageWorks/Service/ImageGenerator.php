@@ -57,7 +57,7 @@ final class ImageGenerator
             $params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->color);
         }
 
-        $response = $glide->getImageResponse($imageData->name, $params);
+        $response = $glide->getImageResponse($imageData->name, array_filter($params));
 
         return $response;
     }
