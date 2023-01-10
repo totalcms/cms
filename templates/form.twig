@@ -1,0 +1,14 @@
+{% import "macros/forms.twig" as form %}
+
+<form class="totalform" action="{{totalcms.api}}/collection/blog">
+
+    {{ form.slug('id') }}
+    {{ form.input('title') }}
+    {{ form.textarea('summary') }}
+    {{ form.styledtext('content') }}
+    {{ form.image('image') }}
+    {{ form.gallery('gallery') }}
+    {{ form.list('tags') }}
+    {{ form.select('author') }}
+
+</form>
