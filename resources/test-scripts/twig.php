@@ -1,8 +1,17 @@
 <?php
 
-require_once '../../vendor/autoload.php';
+$passcode = <<<PASSWORDS
+1234
+PASSWORDS;
 
-$loader = new \Twig\Loader\FilesystemLoader('../../templates/');
-$twig   = new \Twig\Environment($loader);
+$request   = "MTIzNHA4ZzNzOGYzczhsdA==";
+$passwords = preg_split('/\s+/', $passcode, -1, PREG_SPLIT_NO_EMPTY);
+$master    = array();
 
-echo $twig->render('form.twig', ["collection" => "myobjects"]);
+foreach ($passwords as $password) {
+	$master[] = base64_encode($password.'p8g3s8f3s8lt');
+}
+
+if (in_array($request, $master)) {
+	echo "found";
+}

@@ -11,6 +11,7 @@ cache.properties
 vendor/
 build/
 node_modules/
+dist/
 
 tmp/*
 logs/*

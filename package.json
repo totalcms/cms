@@ -1,44 +1,16 @@
 {
-  "name": "dynamics",
-  "version": "1.0.0",
-  "license": "Commercial",
-  "private": true,
-  "dependencies": {
-    "awesomplete": "^1.1.5",
-    "axios": "^0.19.2",
-    "codemirror": "^5.52.0",
-    "dropzone": "^5.7.0",
-    "foundation-datepicker": "^1.5.6",
-    "froala-editor": "^3.1.1",
-    "imagesloaded": "^4.1.4",
-    "jquery": "^3.4.1",
-    "js-cookie": "^2.2.1",
-    "js-storage": "^1.1.0",
-    "lazysizes": "^5.2.0",
-    "lightgallery": "^1.6.12",
-    "luxon": "^1.22.0",
-    "moment": "^2.24.0",
-    "mustache": "^4.0.0",
-    "onImpression": "jaseowns/onImpression",
-    "rangeslider.js": "^2.3.3",
-    "searchjs": "^1.0.2",
-    "slugify": "^1.4.0",
-    "sortablejs": "^1.10.2",
-    "spectrum-colorpicker": "^1.8.0"
+  "scripts": {
+    "build" : "node esbuild.config.js"
   },
   "devDependencies": {
-    "clean-webpack-plugin": "^3.0.0",
-    "css-loader": "^3.2.0",
-    "eslint": "^7.2.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.21.2",
-    "file-loader": "^4.2.0",
-    "mini-css-extract-plugin": "^0.8.0",
-    "optimize-css-assets-webpack-plugin": "^5.0.3",
-    "terser-webpack-plugin": "latest",
-    "webpack": "^4.40.2",
-    "webpack-assets-manifest": "^3.1.1",
-    "webpack-cli": "^3.3.9",
-    "webpack-manifest-plugin": "^2.0.4"
+    "esbuild"                : "^0.16.17",
+    "esbuild-plugin-clean"   : "^1.0.1",
+    "esbuild-plugin-copy"    : "^2.0.1",
+    "esbuild-plugin-glob"    : "^2.2.1",
+    "esbuild-sass-plugin"    : "^2.4.5",
+    "sass-extended-importer" : "^0.4.2"
+  },
+  "dependencies": {
+    "awesomplete" : "^1.1.5"
   }
 }

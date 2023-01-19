@@ -1,0 +1,233 @@
+:root {
+    --icon-help : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%0A %3Cg fill='%23999999'%3E%0A %3Cpath d='M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z'%3E%3C%2Fpath%3E%0A %3C%2Fg%3E%0A%3C%2Fsvg%3E");
+    --icon-text : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg stroke-linecap='round' stroke-linejoin='round' stroke-width='2' fill='none' stroke='currentColor'%3E%3Cpolyline points='3,5 3,1 29,1 29,5 '%3E%3C/polyline%3E %3Cline x1='16' y1='1' x2='16' y2='31'%3E%3C/line%3E %3Cline x1='11' y1='31' x2='21' y2='31'%3E%3C/line%3E%3C/g%3E%3C/svg%3E");
+
+    --help-animation-timing : 0.25s;
+}
+
+//------------------------------
+// Form Defaults
+//------------------------------
+input, textarea {
+    display          : block;
+    box-sizing       : border-box;
+    width            : 100%;
+    height           : 2.4375rem;
+    padding          : .5rem;
+    border           : 1px solid hsl(0, 0%, 79%);
+    border-radius    : 0;
+    background-color : hsl(0, 0%, 100%);
+    box-shadow       : inset 0 1px 2px hsla(0, 0%, 4%, 0.1);
+    font-family      : inherit;
+    font-size        : 1rem;
+    font-weight      : 400;
+    line-height      : 1.5;
+    color            : hsl(0, 0%, 4%);
+    transition       : box-shadow .5s, border-color .25s ease-in-out;
+    appearance       : none;
+}
+
+:focus, :focus~.input-group-label {
+    outline      : 0;
+    border-color : hsl(0, 0%, 69%);
+    box-shadow   : 0 1px 2px hsla(0, 0%, 4%, 0.1);
+    transition   : box-shadow .5s, border-color .25s ease-in-out;
+}
+
+textarea {
+    max-width : 100%;
+
+    &[rows] {
+        height : auto
+    }
+}
+
+:disabled, [readonly] {
+    background-color : hsl(0, 0%, 90%);
+    cursor           : not-allowed
+}
+
+::placeholder {
+    color : hsl(0, 0%, 79%)
+}
+
+label {
+    display     : block;
+    margin      : 0;
+    font-size   : .875rem;
+    font-weight : 400;
+    line-height : 1.8;
+    color       : hsl(0, 0%, 4%);
+    transition  : opacity 0.5s;
+    width       : max-content;
+}
+
+.form-field {
+    position: relative;
+
+    *, *:after, *:before {
+        box-sizing : border-box;
+    }
+}
+
+//------------------------------
+// Form Groups
+//------------------------------
+.form-group {
+    display       : flex;
+    width         : 100%;
+    margin-bottom : 1rem;
+    align-items   : stretch;
+
+    &>* {
+        margin : 0;
+    }
+}
+
+.form-group-label {
+    padding             : 0 1.5rem;
+    width               : 1rem;
+    border              : 1px solid hsl(0, 0%, 79%);
+    border-left         : 0;
+    color               : hsl(0, 0%, 60%);
+    text-align          : center;
+    white-space         : nowrap;
+    display             : flex;
+    flex                : 0 0 auto;
+    box-shadow          : 0 0 0 hsla(0, 0%, 4%, 0.1);
+    align-items         : center;
+    background-color    : hsl(0, 0%, 90%);
+    background-image    : var(--icon-text);
+    background-repeat   : no-repeat;
+    background-size     : 1rem;
+    background-position : center;
+    transition          : box-shadow .5s, border-color .25s ease-in-out;
+}
+
+//------------------------------
+// Default Help Text
+//------------------------------
+.help {
+    width               : max-content;
+    max-width           : 100%;
+    padding             : 0 1.1rem;
+    margin-top          : -0.5rem;
+    font-size           : 0.875rem;
+    font-style          : italic;
+    pointer-events      : none;
+    background-repeat   : no-repeat;
+    background-size     : 1rem;
+    background-position : 0 1px;
+    background-image    : var(--icon-help);
+}
+
+//------------------------------
+// Help Box - Bottom Right Tooltip
+//------------------------------
+.help-box .help {
+    max-width           : clamp(100px, 50ch, 100%);
+    position            : absolute;
+    bottom              : 0;
+    right               : 0;
+    z-index             : 10;
+    margin              : 0;
+    border              : 1px solid hsl(0, 0%, 72%);
+    padding             : 0.625rem 1.625rem;
+    border-radius       : 2px;
+    transform           : translateY(calc(100% - 1px));
+    background-color    : hsl(0, 0%, 90%);
+    background-position : 0.5rem 0.6875rem;
+}
+
+//------------------------------
+// Help Label Overlay
+//------------------------------
+.help-label {
+    .help {
+        line-height         : 1.8;
+        margin              : 0;
+        position            : absolute;
+        top                 : 0;
+        left                : 0;
+        right               : 0;
+        z-index             : 10;
+        overflow            : hidden;
+        white-space         : nowrap;
+        text-overflow       : ellipsis;
+        background-position : left;
+        opacity             : 0;
+    }
+}
+
+//------------------------------
+// Help Tooltip
+//------------------------------
+.help-tooltip {
+    label::after {
+        content : " ";
+        display             : inline-block;
+        width               : 1.5rem;
+        height              : 1.5rem;
+        color               : hsl(0, 0%, 60%);
+        background-color    : transparent;
+        background-repeat   : no-repeat;
+        background-size     : 1rem;
+        background-position : center;
+        background-image    : var(--icon-help);
+        appearance          : none;
+        border              : none;
+        vertical-align: bottom;
+    }
+
+    .help {
+        position         : absolute;
+        max-width        : clamp(200px, 50ch, 85vw);
+        margin           : 0;
+        background-color : black;
+        color            : #fff;
+        padding          : 10px;
+        border-radius    : 6px;
+        top              : 0;
+        left             : 0;
+        background-image : none;
+        transform        : translateX(0) translateY(calc(-100% + 0rem));
+
+        &:after {
+            content      : " ";
+            position     : absolute;
+            top          : 100%;
+            left         : 5%;
+            margin-left  : 0px;
+            border-width : 5px;
+            border-style : solid;
+            border-color : black transparent transparent transparent;
+        }
+    }
+}
+
+//------------------------------
+// Help Animations
+//------------------------------
+.help-on-focus, .help-on-hover {
+    .help {
+        opacity : 0;
+        transition : opacity var(--help-animation-timing);
+    }
+}
+.help-label label {
+    transition : opacity var(--help-animation-timing);
+}
+
+.help-on-focus:has(input:focus) .help,
+.help-on-hover:hover .help {
+    opacity : 1;
+}
+
+.help-on-hover:hover .help,
+.help-on-focus:has(input:focus) .help {
+    opacity : 1;
+}
+.help-on-focus.help-label:has(input:focus) label,
+.help-on-hover.help-label:hover label {
+    opacity : 0;
+}
