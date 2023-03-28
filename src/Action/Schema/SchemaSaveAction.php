@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Action\Schema;
+namespace TotalCMS\Action\Schema;
 
-use App\Domain\Schema\Service\SchemaSaver;
-use App\Renderer\JsonRenderer;
-use App\Transformer\SchemaMetaTransformer;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\SchemaMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

@@ -1,8 +1,8 @@
 <?php
 
-use App\Action\Schema;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Schema;
 
 return function (App $app) {
     $app->group('/schemas', function (RouteCollectorProxy $group) {

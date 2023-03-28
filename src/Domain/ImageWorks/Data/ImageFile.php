@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\ImageWorks\Data;
+namespace TotalCMS\Domain\ImageWorks\Data;
 
 final class ImageFile
 {

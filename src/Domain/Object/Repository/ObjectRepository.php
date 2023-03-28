@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Domain\Object\Repository;
+namespace TotalCMS\Domain\Object\Repository;
 
-use App\Domain\Object\Data\ObjectData;
-use App\Domain\Object\Service\ObjectFactory;
-use App\Domain\Storage\StorageAdapterInterface;
-use App\Domain\Storage\StorageFilesystemAdapter;
-use App\Domain\Storage\StorageRepository;
-use App\Utils\PathUtils;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Utils\PathUtils;
 
 /**
  * Repository.

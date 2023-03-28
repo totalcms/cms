@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Download;
+namespace TotalCMS\Action\Download;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

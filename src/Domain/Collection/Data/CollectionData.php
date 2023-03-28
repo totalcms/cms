@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Collection\Data;
+namespace TotalCMS\Domain\Collection\Data;
 
 /**
  * Data object.

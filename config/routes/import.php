@@ -1,8 +1,8 @@
 <?php
 
-use App\Action\Import;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Import;
 
 return function (App $app) {
     $app->group('/import', function (RouteCollectorProxy $group) {

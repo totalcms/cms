@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Template\Repository;
+namespace TotalCMS\Domain\Template\Repository;
 
-use App\Domain\Storage\StorageRepository;
-use App\Domain\Template\Data\TemplateData;
-use App\Domain\Template\Service\TemplateFactory;
+use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Domain\Template\Data\TemplateData;
+use TotalCMS\Domain\Template\Service\TemplateFactory;
 
 /**
  * Repository.

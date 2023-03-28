@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Import;
+namespace TotalCMS\Action\Import;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

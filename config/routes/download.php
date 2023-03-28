@@ -1,8 +1,8 @@
 <?php
 
-use App\Action\Download;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Download;
 
 return function (App $app) {
     $app->group('/download', function (RouteCollectorProxy $group) {

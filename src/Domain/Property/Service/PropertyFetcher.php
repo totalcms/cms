@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Domain\Property\Service;
+namespace TotalCMS\Domain\Property\Service;
 
-use App\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
 /**
  * Service.

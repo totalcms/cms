@@ -1,9 +1,9 @@
 <?php
 
-use App\Action\ImageWorks;
-use App\Middleware\RobotsTagMiddleware;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\ImageWorks;
+use TotalCMS\Middleware\RobotsTagMiddleware;
 
 return function (App $app) {
     $app->group('/imageworks', function (RouteCollectorProxy $group) {

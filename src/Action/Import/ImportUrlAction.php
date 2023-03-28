@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Action\Import;
+namespace TotalCMS\Action\Import;
 
-use App\Domain\Import\UrlImporter;
-use App\Renderer\JsonRenderer;
+use TotalCMS\Domain\Import\UrlImporter;
+use TotalCMS\Renderer\JsonRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

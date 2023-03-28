@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Action\OpenApi;
+namespace TotalCMS\Action\OpenApi;
 
-use App\Renderer\TemplateRenderer;
+use TotalCMS\Renderer\TemplateRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\Yaml\Yaml;

@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Action\Property\File;
+namespace TotalCMS\Action\Property\File;
 
-use App\Domain\Object\Data\ObjectData;
-use App\Domain\Property\Service\FileSaver;
-use App\Renderer\JsonRenderer;
-use App\Support\Config;
-use App\Transformer\ObjectMetaTransformer;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Service\FileSaver;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\Config;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Index\Data;
+namespace TotalCMS\Domain\Index\Data;
 
 use Illuminate\Support\Collection;
 

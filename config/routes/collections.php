@@ -1,11 +1,11 @@
 <?php
 
-use App\Action as Action;
-use App\Action\Collection;
-use App\Action\Property;
-use App\Action\Schema;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action;
+use TotalCMS\Action\Collection;
+use TotalCMS\Action\Property;
+use TotalCMS\Action\Schema;
 
 return function (App $app) {
     $app->group('/collections', function (RouteCollectorProxy $group) {

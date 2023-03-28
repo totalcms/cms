@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Domain\Property\Service;
+namespace TotalCMS\Domain\Property\Service;
 
-use App\Domain\Property\Data\PropertyData;
-use App\Domain\Storage\StorageRepository;
-use DomainException;
-use UnexpectedValueException;
+use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Storage\StorageRepository;
 
 /**
  * Service.
@@ -18,8 +16,8 @@ final class PropertyFactory
      * @param array  $propertySchema
      * @param mixed  $value
      *
-     * @throws DomainException
-     * @throws UnexpectedValueException
+     * @throws \DomainException
+     * @throws \UnexpectedValueException
      *
      * @return PropertyData
      */
@@ -32,14 +30,14 @@ final class PropertyFactory
 
         $type = $propertySchema['type'] ?? basename($propertySchema['$ref'], StorageRepository::FILE_EXT);
 
-        $className = 'App\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
+        $className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
         if (!class_exists($className)) {
-            throw new UnexpectedValueException('Unknown property type for object.');
+            throw new \UnexpectedValueException('Unknown property type for object.');
         }
         $property = null === $value ? new $className() : new $className($value);
 
         if (!$property instanceof PropertyData) {
-            throw new DomainException('Error creating property for object.');
+            throw new \DomainException('Error creating property for object.');
         }
 
         return $property;

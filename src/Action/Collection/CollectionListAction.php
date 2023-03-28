@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Action\Collection;
+namespace TotalCMS\Action\Collection;
 
-use App\Domain\Collection\Service\CollectionFinder;
-use App\Renderer\JsonRenderer;
-use App\Transformer\CollectionMetaTransformer;
+use TotalCMS\Domain\Collection\Service\CollectionFinder;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

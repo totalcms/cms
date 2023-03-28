@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Domain\Index\Service;
+namespace TotalCMS\Domain\Index\Service;
 
-use App\Domain\Index\Data\IndexData;
-use App\Domain\Index\Repository\IndexRepository;
-use App\Domain\Object\Service\ObjectFetcher;
-use App\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
  * Service.

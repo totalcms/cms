@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Domain\Schema\Service;
+namespace TotalCMS\Domain\Schema\Service;
 
-use App\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use DomainException;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Helper;

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Import;
+namespace TotalCMS\Domain\Import;
 
-use App\Domain\Object\Data\ObjectData;
-use App\Domain\Object\Repository\ObjectRepository;
-use App\Factory\LoggerFactory;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Factory\LoggerFactory;
 use Cake\Chronos\Chronos;
 use Cocur\Slugify\Slugify;
 use Embed\Embed;

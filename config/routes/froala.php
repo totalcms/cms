@@ -1,8 +1,8 @@
 <?php
 
-use App\Action\Froala;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Froala;
 
 return function (App $app) {
     $app->group('/froala', function (RouteCollectorProxy $group) {

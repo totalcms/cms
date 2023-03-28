@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Schema\Service;
+namespace TotalCMS\Domain\Schema\Service;
 
-use App\Domain\Collection\Service\CollectionReader;
-use App\Domain\Schema\Data\SchemaData;
-use App\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Collection\Service\CollectionReader;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**
  * Service.

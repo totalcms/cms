@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Storage;
+namespace TotalCMS\Domain\Storage;
 
 use League\Flysystem\FilesystemOperator;
 

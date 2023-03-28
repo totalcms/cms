@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Domain\Property\Service;
+namespace TotalCMS\Domain\Property\Service;
 
-use App\Domain\Object\Data\ObjectData;
-use App\Domain\Object\Service\ObjectFetcher;
-use App\Domain\Object\Service\ObjectUpdater;
-use App\Domain\Property\Data\FileData;
-use App\Domain\Property\Data\ImageData;
-use App\Domain\Property\Data\PropertyData;
-use App\Domain\Property\Repository\PropertyRepository;
-use App\Domain\Schema\Service\SchemaFetcher;
-use App\Domain\Storage\StorageRepository;
-use App\Utils\ColorUtils;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Utils\ColorUtils;
 use ColorThief\ColorThief;
 use PHPExif\Exif;
 use PHPExif\Reader\Reader as ExifReader;

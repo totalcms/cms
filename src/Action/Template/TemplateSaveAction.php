@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Action\Template;
+namespace TotalCMS\Action\Template;
 
-use App\Domain\Template\Service\TemplateSaver;
-use App\Renderer\RawRenderer;
+use TotalCMS\Domain\Template\Service\TemplateSaver;
+use TotalCMS\Renderer\RawRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

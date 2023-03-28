@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Transformer;
+namespace TotalCMS\Transformer;
 
-use App\Domain\Collection\Data\CollectionData as Collection;
+use TotalCMS\Domain\Collection\Data\CollectionData as Collection;
 use League\Fractal;
 
 final class CollectionMetaTransformer extends Fractal\TransformerAbstract

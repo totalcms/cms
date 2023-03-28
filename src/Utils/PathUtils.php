@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Utils;
+namespace TotalCMS\Utils;
 
 use Cocur\Slugify\Slugify;
 

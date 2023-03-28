@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Action\ImageWorks;
+namespace TotalCMS\Action\ImageWorks;
 
-use App\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Action\Object;
+namespace TotalCMS\Action\Object;
 
-use App\Domain\Object\Service\ObjectRemover;
+use TotalCMS\Domain\Object\Service\ObjectRemover;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

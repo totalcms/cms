@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action;
+namespace TotalCMS\Action;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

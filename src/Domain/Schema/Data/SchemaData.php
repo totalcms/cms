@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Schema\Data;
+namespace TotalCMS\Domain\Schema\Data;
 
 /**
  * Schema Data object.

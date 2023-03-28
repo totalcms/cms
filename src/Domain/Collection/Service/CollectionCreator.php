@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domain\Collection\Service;
+namespace TotalCMS\Domain\Collection\Service;
 
-use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use DomainException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;

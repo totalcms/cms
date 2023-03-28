@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Froala;
+namespace TotalCMS\Action\Froala;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

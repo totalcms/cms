@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Storage;
+namespace TotalCMS\Domain\Storage;
 
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;

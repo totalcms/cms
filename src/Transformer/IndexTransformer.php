@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Transformer;
+namespace TotalCMS\Transformer;
 
-use App\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Index\Data\IndexData;
 use League\Fractal;
 
 final class IndexTransformer extends Fractal\TransformerAbstract

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Domain\ImageWorks\Service;
+namespace TotalCMS\Domain\ImageWorks\Service;
 
-use App\Domain\Property\Data\ColorData;
-use App\Domain\Storage\StorageAdapterInterface;
-use App\Support\Config;
-use App\Utils\ColorUtils;
+use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Support\Config;
+use TotalCMS\Utils\ColorUtils;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;

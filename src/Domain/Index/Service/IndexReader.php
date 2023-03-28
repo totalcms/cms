@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domain\Index\Service;
+namespace TotalCMS\Domain\Index\Service;
 
-use App\Domain\Index\Data\IndexData;
-use App\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
 use DomainException;
 
 /**

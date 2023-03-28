@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Domain\Schema\Service;
+namespace TotalCMS\Domain\Schema\Service;
 
-use App\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use UnexpectedValueException;
 
 /**

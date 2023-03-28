@@ -1,7 +1,7 @@
 <?php
 
-use App\Action\PreflightAction;
 use Slim\App;
+use TotalCMS\Action\PreflightAction;
 
 return function (App $app) {
     $app->options('/', PreflightAction::class);

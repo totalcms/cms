@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domain\Object\Service;
+namespace TotalCMS\Domain\Object\Service;
 
-use App\Domain\Object\Data\ObjectData;
-use App\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use RuntimeException;
 use UnexpectedValueException;
 

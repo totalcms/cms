@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Collection\Repository;
+namespace TotalCMS\Domain\Collection\Repository;
 
-use App\Domain\Collection\Data\CollectionData;
-use App\Domain\Storage\StorageRepository;
-use App\Utils\PathUtils;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Utils\PathUtils;
 use DomainException;
 
 /**

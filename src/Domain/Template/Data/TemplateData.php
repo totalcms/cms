@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Template\Data;
+namespace TotalCMS\Domain\Template\Data;
 
 /**
  * Template Data object.

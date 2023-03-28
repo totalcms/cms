@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\ImageWorks\Service;
+namespace TotalCMS\Domain\ImageWorks\Service;
 
-use App\Domain\Property\Data\ImageData;
-use App\Domain\Property\Service\PropertyFetcher;
-use App\Utils\PathUtils;
+use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Utils\PathUtils;
 use Psr\Http\Message\ResponseInterface;
 use UnexpectedValueException;
 

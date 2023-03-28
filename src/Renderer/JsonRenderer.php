@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Renderer;
+namespace TotalCMS\Renderer;
 
 use League\Fractal\Manager as FractalManager;
 use League\Fractal\Resource\Collection as FractalCollection;

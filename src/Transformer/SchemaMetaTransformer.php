@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Transformer;
+namespace TotalCMS\Transformer;
 
-use App\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use League\Fractal;
 
 final class SchemaMetaTransformer extends Fractal\TransformerAbstract

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Action\OpenApi;
+namespace TotalCMS\Action\OpenApi;
 
-use App\Renderer\RedirectRenderer;
+use TotalCMS\Renderer\RedirectRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

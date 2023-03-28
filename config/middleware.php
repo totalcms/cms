@@ -1,11 +1,11 @@
 <?php
 
-use App\Middleware\CorsMiddleware;
-use App\Middleware\LiteLicenseMiddleware;
 use Selective\BasePath\BasePathMiddleware;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
+use TotalCMS\Middleware\CorsMiddleware;
+use TotalCMS\Middleware\LiteLicenseMiddleware;
 
 return function (App $app) {
     $app->addBodyParsingMiddleware();

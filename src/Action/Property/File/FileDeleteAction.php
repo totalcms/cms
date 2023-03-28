@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Action\Collection\Object\Property\File;
+namespace TotalCMS\Action\Collection\Object\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

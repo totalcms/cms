@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Factory;
+namespace TotalCMS\Factory;
 
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\HandlerInterface;

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domain\Template\Service;
+namespace TotalCMS\Domain\Template\Service;
 
-use App\Domain\Template\Data\TemplateData;
-use App\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Data\TemplateData;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 
 /**
  * Service.

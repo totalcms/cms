@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Utils;
+namespace TotalCMS\Utils;
 
-use App\Domain\Property\Data\ColorData;
+use TotalCMS\Domain\Property\Data\ColorData;
 use UnexpectedValueException;
 
 /**

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Utils;
+namespace TotalCMS\Utils;
 
-use App\Domain\Property\Data\PasswordData;
+use TotalCMS\Domain\Property\Data\PasswordData;
 
 /**
  * Password Utilities.

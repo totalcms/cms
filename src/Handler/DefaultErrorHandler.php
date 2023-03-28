@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Handler;
+namespace TotalCMS\Handler;
 
-use App\Factory\LoggerFactory;
-use App\Renderer\JsonRenderer;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Renderer\JsonRenderer;
 use DomainException;
 use Fig\Http\Message\StatusCodeInterface;
 use InvalidArgumentException;

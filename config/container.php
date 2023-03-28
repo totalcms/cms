@@ -1,10 +1,5 @@
 <?php
 
-use App\Domain\Storage\StorageAdapterInterface;
-use App\Domain\Storage\StorageFilesystemAdapter;
-use App\Factory\LoggerFactory;
-use App\Handler\DefaultErrorHandler;
-use App\Support\Config;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -23,6 +18,11 @@ use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Handler\DefaultErrorHandler;
+use TotalCMS\Support\Config;
 
 return [
     // Application settings

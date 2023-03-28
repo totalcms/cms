@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Action\Object;
+namespace TotalCMS\Action\Object;
 
-use App\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;

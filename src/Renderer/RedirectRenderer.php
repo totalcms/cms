@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Renderer;
+namespace TotalCMS\Renderer;
 
 use Psr\Http\Message\ResponseInterface;
 use Slim\Interfaces\RouteParserInterface;

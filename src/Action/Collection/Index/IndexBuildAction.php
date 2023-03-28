@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Action\Collection\Index;
+namespace TotalCMS\Action\Collection\Index;
 
-use App\Domain\Index\Service\IndexBuilder;
-use App\Renderer\JsonRenderer;
-use App\Transformer\IndexTransformer;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\IndexTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

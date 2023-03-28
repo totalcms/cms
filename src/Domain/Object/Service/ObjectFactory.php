@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Domain\Object\Service;
+namespace TotalCMS\Domain\Object\Service;
 
-use App\Domain\Object\Data\ObjectData;
-use App\Domain\Property\Service\PropertyFactory;
-use App\Domain\Schema\Data\SchemaData;
-use App\Domain\Schema\Service\SchemaFetcher;
-use App\Domain\Schema\Service\SchemaValidator;
-use DomainException;
-use UnexpectedValueException;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Service\PropertyFactory;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
 /**
  * Service.
@@ -35,7 +33,7 @@ final class ObjectFactory
      * @param string $collection
      * @param string $objectJson
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return ObjectData
      */
@@ -44,7 +42,7 @@ final class ObjectFactory
         $schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
         if ($this->validator->validateSchema($objectJson, $schema->type) === false) {
-            throw new UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
+            throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
         }
 
         $objectData = json_decode($objectJson, true);
@@ -52,14 +50,14 @@ final class ObjectFactory
 
         // Dynamically load object data based on the schema type
         // Not sure if this is really needed but it's a good idea to have it.
-        $className = 'App\\Domain\\Object\\Data\\' . ucfirst($schema->type) . 'Data';
+        $className = 'TotalCMS\\Domain\\Object\\Data\\' . ucfirst($schema->type) . 'Data';
         if (!class_exists($className)) {
             $className = ObjectData::class;
         }
         $object = new $className($objectData['id'], $properties);
 
         if (!$object instanceof ObjectData) {
-            throw new DomainException('Unknown error creating object.');
+            throw new \DomainException('Unknown error creating object.');
         }
 
         return $object;

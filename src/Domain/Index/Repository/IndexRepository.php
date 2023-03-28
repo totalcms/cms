@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Index\Repository;
+namespace TotalCMS\Domain\Index\Repository;
 
-use App\Domain\Index\Data\IndexData;
-use App\Domain\Storage\StorageRepository;
-use App\Utils\PathUtils;
+use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Utils\PathUtils;
 
 /**
  * Repository.

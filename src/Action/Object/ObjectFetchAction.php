@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Action\Object;
+namespace TotalCMS\Action\Object;
 
-use App\Domain\Object\Service\ObjectFetcher;
-use App\Renderer\JsonRenderer;
-use App\Transformer\ObjectMetaTransformer;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Property\Data;
+namespace TotalCMS\Domain\Property\Data;
 
 /**
  * Number type property data.

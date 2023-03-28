@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domain\Property\Repository;
+namespace TotalCMS\Domain\Property\Repository;
 
-use App\Domain\Storage\StorageRepository;
-use App\Utils\PathUtils;
+use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Utils\PathUtils;
 use RuntimeException;
 
 /**

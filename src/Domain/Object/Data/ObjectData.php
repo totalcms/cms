@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Domain\Object\Data;
+namespace TotalCMS\Domain\Object\Data;
 
-use App\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Data\PropertyData;
 use Cocur\Slugify\Slugify;
 use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
