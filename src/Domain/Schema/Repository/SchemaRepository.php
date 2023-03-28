@@ -5,7 +5,6 @@ namespace App\Domain\Schema\Repository;
 use App\Domain\Schema\Data\SchemaData;
 use App\Domain\Schema\Service\SchemaFactory;
 use App\Domain\Storage\StorageRepository;
-use DomainException;
 
 /**
  * Repository.
@@ -77,7 +76,7 @@ final class SchemaRepository extends StorageRepository
         }
 
         if ($schema === null) {
-            throw new DomainException(sprintf('Type does not exist: %s', $type));
+            throw new \DomainException(sprintf('Type does not exist: %s', $type));
         }
 
         return $schema;
@@ -96,7 +95,7 @@ final class SchemaRepository extends StorageRepository
         $schemaJSON = json_encode($schema->schema);
 
         if (empty($schemaJSON)) {
-            throw new DomainException(sprintf('Failed to encode schema for type: %s', $schema->type));
+            throw new \DomainException(sprintf('Failed to encode schema for type: %s', $schema->type));
         }
 
         $this->filesystem->write($schemaFile, $schemaJSON);

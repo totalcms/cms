@@ -19,6 +19,7 @@ final class SchemaData
         'number',
         'schema',
         'svg',
+        'templates', // This is a special case, it's not a schema but a reserved folder
         'text',
         'toggle',
         'url',
