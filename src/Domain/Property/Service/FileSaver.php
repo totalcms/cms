@@ -2,6 +2,13 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use ColorThief\ColorThief;
+use PHPExif\Enum\ReaderType as ExifReaderType;
+use PHPExif\Exif;
+use PHPExif\Reader\Reader as ExifReader;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -12,13 +19,6 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\ColorUtils;
-use ColorThief\ColorThief;
-use PHPExif\Exif;
-use PHPExif\Reader\Reader as ExifReader;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
-use UnexpectedValueException;
 
 /**
  * Service.
@@ -42,10 +42,10 @@ final class FileSaver
         $this->objectFetcher = $objectFetcher;
         $this->serializer    = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 
-        $this->exifReader = ExifReader::factory(ExifReader::TYPE_NATIVE);
-        // $reader = ExifReader::factory(ExifReader::TYPE_EXIFTOOL);
-        // $reader = ExifReader::factory(ExifReader::TYPE_FFPROBE);
-        // $reader = ExifReader::factory(ExifReader::TYPE_IMAGICK);
+        $this->exifReader = ExifReader::factory(ExifReaderType::NATIVE);
+        // $this->exifReader = ExifReader::factory(ExifReaderType::EXIFTOOL);
+        // $this->exifReader = ExifReader::factory(ExifReaderType::FFPROBE);
+        // $this->exifReader = ExifReader::factory(ExifReaderType::IMAGICK);
     }
 
     /**
@@ -66,7 +66,7 @@ final class FileSaver
         $method = 'saveFileFor' . ucfirst($type);
 
         if (!method_exists($this, $method)) {
-            throw new UnexpectedValueException('Invalid file type found');
+            throw new \UnexpectedValueException('Invalid file type found');
         }
 
         return $this->$method($collection, $objectID, $property, $filePath);
@@ -87,7 +87,7 @@ final class FileSaver
         $fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
 
         if (!$fileProperty instanceof PropertyData) {
-            throw new UnexpectedValueException('Invalid file property found');
+            throw new \UnexpectedValueException('Invalid file property found');
         }
 
         return $fileProperty;
@@ -124,7 +124,7 @@ final class FileSaver
     {
         if (!$this->objectFetcher->existsObject($collection, $objectID)) {
             // TODO: create object if it does not exist
-            throw new UnexpectedValueException('Object does not exist');
+            throw new \UnexpectedValueException('Object does not exist');
         }
 
         // Clean up existing files in the path. Only one file should exist
@@ -152,7 +152,7 @@ final class FileSaver
     {
         if (!$this->objectFetcher->existsObject($collection, $objectID)) {
             // TODO: create object if it does not exist
-            throw new UnexpectedValueException('Object does not exist');
+            throw new \UnexpectedValueException('Object does not exist');
         }
 
         $files    = $this->fetchProperty($collection, $objectID, $property)->transform();
@@ -176,7 +176,7 @@ final class FileSaver
     {
         if (!$this->objectFetcher->existsObject($collection, $objectID)) {
             // TODO: create object if it does not exist
-            throw new UnexpectedValueException('Object does not exist');
+            throw new \UnexpectedValueException('Object does not exist');
         }
 
         // Clean up existing files in the path. Only one file should exist
@@ -209,7 +209,7 @@ final class FileSaver
     {
         if (!$this->objectFetcher->existsObject($collection, $objectID)) {
             // TODO: create object if it does not exist
-            throw new UnexpectedValueException('Object does not exist');
+            throw new \UnexpectedValueException('Object does not exist');
         }
 
         $images    = $this->fetchProperty($collection, $objectID, $property)->transform();
