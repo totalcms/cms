@@ -2,6 +2,7 @@
 
 namespace TotalCMS;
 
+use DI\Container;
 use TotalCMS\Domain\Buffer\BufferController;
 
 // ---------------------------------------------------------------------------------
@@ -9,11 +10,16 @@ use TotalCMS\Domain\Buffer\BufferController;
 // ---------------------------------------------------------------------------------
 class TotalCMS
 {
-    private $buffer;
+    private BufferController $buffer;
+    private Container $container;
 
     public function __construct()
     {
-        $this->buffer         = new BufferController();
+        // Build PHP-DI Container instance
+        $this->container = new Container(require __DIR__ . '../config/container.php');
+
+        $this->buffer = $this->container->get(BufferController::class);
+
         $this->templateEngine = new TemplateEngine();
     }
 

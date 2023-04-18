@@ -1,6 +1,6 @@
 <?php
 
-use DI\ContainerBuilder;
+use DI\Container;
 use Slim\App;
 
 /* Workaround for routes with a dot in local php server */
@@ -17,13 +17,11 @@ if (php_sapi_name() == 'cli-server') {
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$containerBuilder = new ContainerBuilder();
+// $containerBuilder = new ContainerBuilder();
+// $containerBuilder->addDefinitions(__DIR__ . '/container.php');
+// $container = $containerBuilder->build();
 
-// Set up settings
-$containerBuilder->addDefinitions(__DIR__ . '/container.php');
-
-// Build PHP-DI Container instance
-$container = $containerBuilder->build();
+$container = new Container(require __DIR__ . '/container.php');
 
 // Create App instance
 $app = $container->get(App::class);
