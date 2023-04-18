@@ -69,6 +69,10 @@ echo $totalcms->processBufferMacros();
 
 
 <!--
+    The below code should live in a class that gets called via the $totalcms->processBufferMacros() above
+
+    A custom Twig extension should be created to handle the TotalCMS API in twig
+
     Twig Templates Notes
     --------------------
 
