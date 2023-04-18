@@ -6,6 +6,7 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
+use Monolog\Level;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
@@ -16,7 +17,7 @@ final class LoggerFactory
 {
     private string $path;
 
-    private int $level;
+    private Level $level;
 
     /**
      * @var array<HandlerInterface>
@@ -33,7 +34,7 @@ final class LoggerFactory
     public function __construct(array $settings = [])
     {
         $this->path  = (string)($settings['path'] ?? '');
-        $this->level = (int)($settings['level'] ?? Logger::DEBUG);
+        $this->level = is_a($settings['level'], Level::class) ? $settings['level'] : Level::Debug;
 
         // This can be used for testing to make the Factory testable
         if (isset($settings['test'])) {
@@ -85,7 +86,7 @@ final class LoggerFactory
      * @param string $filename The filename
      * @param int $maxFiles Max files before rotated (optional)
      * @param int $permissions File permissions on file (optional)
-     * @param ?int $level The level (optional)
+     * @param ?Level $level The level (optional)
      *
      * @return self The logger factory
      */
@@ -93,7 +94,7 @@ final class LoggerFactory
         string $filename,
         int $maxFiles = 0,
         int $permissions = 0777,
-        int $level = null
+        Level $level = null
     ): self {
         $filename = sprintf('%s/%s', $this->path, $filename);
         $level    = $level ?? $this->level;
@@ -111,11 +112,11 @@ final class LoggerFactory
     /**
      * Add a console logger.
      *
-     * @param int|null $level The level (optional)
+     * @param Level|null $level The level (optional)
      *
      * @return self The logger factory
      */
-    public function addConsoleHandler(int $level = null): self
+    public function addConsoleHandler(Level $level = null): self
     {
         /** @phpstan-ignore-next-line */
         $streamHandler = new StreamHandler('php://output', $level ?? $this->level);
