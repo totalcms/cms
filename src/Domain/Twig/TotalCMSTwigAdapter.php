@@ -63,8 +63,6 @@ final class TotalCMSTwigAdapter
     // Get an text property from an object
     public function text(string $id, string $collection = 'text', string $property = 'text'): string
     {
-        $object = $this->object($collection, $id);
-
-        return strval($object[$property]);
+        return strval($this->data($collection, $id, $property));
     }
 }
