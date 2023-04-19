@@ -13,7 +13,7 @@ final class TemplateRepository extends StorageRepository
 {
     public const DEFAULT_TEMPLATE_DIR    = __DIR__ . '/../../../../templates/';
     public const FILE_EXT                = '.twig';
-    private const CUSTOM_TEMPLATE_DIR    = 'templates/';
+    public const CUSTOM_TEMPLATE_DIR     = 'templates/';
 
     /**
      * fetch a template.

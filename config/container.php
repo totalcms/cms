@@ -18,8 +18,10 @@ use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
+use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Support\Config;
@@ -117,5 +119,13 @@ return [
 
     PhpRenderer::class => function (ContainerInterface $container) {
         return new PhpRenderer($container->get(Config::class)->template);
+    },
+
+    BufferController::class => function () {
+        return new BufferController();
+    },
+
+    TwigEngine::class => function (ContainerInterface $container) {
+        return new TwigEngine($container->get(Config::class));
     },
 ];

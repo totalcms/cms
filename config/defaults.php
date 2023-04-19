@@ -35,6 +35,7 @@ $settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/templates';
 $settings['schemas']  = $settings['root'] . '/schemas';
+$settings['cachedir'] = $settings['root'] . '/cache';
 
 // Clean up trailing slashes in DOCUMENT_ROOT
 $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
