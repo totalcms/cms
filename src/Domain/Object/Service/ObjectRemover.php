@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 
 /**
@@ -10,10 +11,12 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 final class ObjectRemover
 {
     private ObjectRepository $storage;
+    private IndexBuilder $indexBuilder;
 
-    public function __construct(ObjectRepository $storage)
+    public function __construct(ObjectRepository $storage, IndexBuilder $indexBuilder)
     {
-        $this->storage = $storage;
+        $this->storage      = $storage;
+        $this->indexBuilder = $indexBuilder;
     }
 
     /**
@@ -27,6 +30,12 @@ final class ObjectRemover
     public function deleteObject(string $collection, string $id): bool
     {
         // TODO: Need to rebuild the Collection Index
-        return $this->storage->deleteObject($collection, $id);
+        $status = $this->storage->deleteObject($collection, $id);
+
+        if ($status) {
+            $this->indexBuilder->buildIndex($collection);
+        }
+
+        return $status;
     }
 }
