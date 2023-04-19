@@ -50,7 +50,7 @@
 {% endmacro %}
 
 {% macro slug(name = "id", value="", label="ID", placeholder = "Object ID", help = "This is the ID of your object") %}
-    {{ input(name, value, "slug", "text", label, placeholder, help) }}
+    {{ _self.input(name, value, "slug", "text", label, placeholder, help) }}
 {% endmacro %}
 
 {% macro email(name, value) %}
@@ -124,6 +124,8 @@
 {% macro blog() %}
 {% endmacro %}
 
+{#--
+
 https://choices-js.github.io/Choices/
 https://flatpickr.js.org/examples/
 https://floating-ui.com/docs/tutorial
@@ -139,3 +141,5 @@ https://hslpicker.com/
 
 https://felixg.io/products/datedropper-javascript
 https://github.com/wbotelhos/raty
+
+--#}

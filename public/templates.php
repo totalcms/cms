@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../vendor/autoload.php';
 $totalcms = new TotalCMS\TotalCMS();
 $totalcms->startBuffer(); // Start output buffering
 
@@ -22,23 +23,28 @@ echo $totalcms->processBufferMacros();
 $totalcms->startBuffer(); // Start output buffering again
 
 ?>
-
-    <!-- Twig Template Ideas -->
+    <!-- Twig Template Testing -->
 
     <!-- Get Collection -->
-    {% set posts = totalcms.collection("blog") %}
-    <!-- Get index of a property from a collection. Ex: list of all categories -->
-    {% set tags = totalcms.property("blog","tags") %}
-    <!-- Get Object -->
-    {% set post = totalcms.object("blog", "permalink") %}
+    {% set posts = totalcms.collection("text") %}
 
     {% for post in posts %}
-        <h1>{{ post.title }}</h1>
+        <h1>{{ post.id }}</h1>
     {% endfor %}
 
-    {% for tag in tags %}
-        <span class="label">{{ tag|capitalize }}</span>
+    <!-- Get index of a property from a collection. Ex: list of all categories -->
+    {% for tag in totalcms.property("text", "id") %}
+        <span class="label">{{ tag|upper }}</span>
     {% endfor %}
+
+    <!-- Get Object -->
+    {% set post = totalcms.object("text", "mytext") %}
+    <h1>{{ post.id }}</h1>
+    <p>{{ post.text }}</p>
+
+    <!-- Get Text -->
+    <h3>{{ totalcms.text("mytext") }}</h3>
+    <h3>{{ totalcms.data("text", "mytext", "id") }}</h3>
 
     <!-- Macros for forms -->
     {% import "macros/forms.twig" as form %}
@@ -66,8 +72,6 @@ echo $totalcms->processBufferMacros();
 
 ?>
 
-
-
 <!--
     The below code should live in a class that gets called via the $totalcms->processBufferMacros() above
 
@@ -82,18 +86,3 @@ echo $totalcms->processBufferMacros();
     - There will be a global variable called totalcms that contains the TotalCMS object
     - Function for loading in data from the CMS via global totalcms variable. ex: {{ totalcms.load('collection/blog') }}
  -->
-
-
-<?php
-
-$loader = new \Twig\Loader\FilesystemLoader(
-    '/templates',
-    '/tcms-data/templates',
-);
-$twig = new \Twig\Environment($loader, [
-    'cache' => '/cache',
-]);
-$twig->addGlobal('totalcms', new TotalCMSTwigIntegration());
-
-$filter = new \Twig\TwigFilter('wordcount', 'TotalCMSTwigIntegration::wordcount');
-$twig->addFilter($filter);

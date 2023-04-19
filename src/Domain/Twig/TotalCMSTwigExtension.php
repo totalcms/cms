@@ -10,10 +10,17 @@ use Twig\Extension\GlobalsInterface;
  */
 final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterface
 {
+    private TotalCMSTwigAdapter $adapter;
+
+    public function __construct(TotalCMSTwigAdapter $adapter)
+    {
+        $this->adapter = $adapter;
+    }
+
     public function getGlobals(): array
     {
         return [
-            'totalcms' => new TotalCMSTwigAdapter(),
+            'totalcms' => $this->adapter,
         ];
     }
 

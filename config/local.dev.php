@@ -9,8 +9,9 @@ ini_set('display_errors', '1');
 
 $settings['env'] = 'dev';
 
-$settings['docroot'] = $settings['root'];
-$settings['datadir'] = $settings['root'] . '/tcms-data';
+$settings['docroot']  = $settings['root'];
+$settings['datadir']  = $settings['root'] . '/tcms-data';
+$settings['cachedir'] = 'false';
 
 $settings['error']['display_error_details'] = true;
 $settings['error']['log_errors']            = true;

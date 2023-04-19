@@ -11,6 +11,8 @@ final class Config
     public string $dataDir   = '';
     public string $cacheDir  = '';
     public string $tmpDir    = '';
+    public string $domain    = '';
+    public string $api       = '';
     public array $logger     = [];
     public array $error      = [];
     public array $imageworks = [];
@@ -24,5 +26,7 @@ final class Config
         $this->logger     = $settings['logger'];
         $this->error      = $settings['error'];
         $this->imageworks = $settings['imageworks'];
+        $this->domain     = $settings['domain'];
+        $this->api        = $settings['api'];
     }
 }

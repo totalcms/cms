@@ -34,15 +34,25 @@ class TotalCMS
         $this->buffer->end();
     }
 
-    public function processBufferMacros(): string
+    public function processBufferMacros(array $data = []): string
     {
         $content = $this->buffer->end();
 
-        return $this->twigEngine->renderString($content);
+        try {
+            return $this->twigEngine->renderString($content, $data);
+        } catch (\Throwable $th) {
+            return $th->getMessage() . ':' . $th->getTraceAsString();
+        }
     }
 
-    public function processMacros(string $content): string
+    public function processMacros(string $templateName, array $data = []): string
     {
-        return $this->twigEngine->render($content);
+        try {
+            return $this->twigEngine->render($templateName, $data);
+        } catch (\Throwable $th) {
+            // TODO: Handle exception
+            // return $th->getMessage() . ':' . $th->getTraceAsString();
+            return '';
+        }
     }
 }

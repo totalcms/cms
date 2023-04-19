@@ -29,6 +29,10 @@ $settings = [];
 // Default env to production
 $settings['env'] = 'prod';
 
+$settings['domain'] = 'example.com';
+$settings['url']    = 'https://' . $settings['domain'];
+$settings['api']    = $settings['url'] . '/api';
+
 // Path settings
 $settings['root']     = dirname(__DIR__);
 $settings['tmpdir']   = $settings['root'] . '/tmp';

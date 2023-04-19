@@ -19,8 +19,14 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -121,11 +127,31 @@ return [
         return new PhpRenderer($container->get(Config::class)->template);
     },
 
-    BufferController::class => function () {
+    BufferController::class => function (ContainerInterface $container) {
         return new BufferController();
     },
 
+    IndexReader::class => function (ContainerInterface $container) {
+        return new IndexReader($container->get(IndexRepository::class));
+    },
+
+    ObjectFetcher::class => function (ContainerInterface $container) {
+        return new ObjectFetcher($container->get(ObjectRepository::class));
+    },
+
+    TotalCMSTwigAdapter::class => function (ContainerInterface $container) {
+        return new TotalCMSTwigAdapter(
+            $container->get(Config::class),
+            $container->get(IndexReader::class),
+            $container->get(ObjectFetcher::class),
+        );
+    },
+
+    TotalCMSTwigExtension::class => function (ContainerInterface $container) {
+        return new TotalCMSTwigExtension($container->get(TotalCMSTwigAdapter::class));
+    },
+
     TwigEngine::class => function (ContainerInterface $container) {
-        return new TwigEngine($container->get(Config::class));
+        return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
     },
 ];

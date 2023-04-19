@@ -19,3 +19,4 @@ tcms-data/*
 
 env.php
 config/env.php
+/cache

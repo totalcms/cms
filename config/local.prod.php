@@ -1,5 +1,7 @@
 <?php
 
+// echo "PROD Environment\n";
+
 // Production environment
 $settings['env'] = 'prod';
 

@@ -1,5 +1,7 @@
 <?php
 
+// echo "TEST Environment\n";
+
 // Continuous integration environment
 $settings['env'] = 'test';
 

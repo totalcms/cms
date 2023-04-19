@@ -14,14 +14,15 @@ final class TwigEngine
 {
     private TwigEnvironment $twig;
 
-    public function __construct(Config $config)
+    public function __construct(Config $config, TotalCMSTwigExtension $extension)
     {
         $internalTemplates = TemplateRepository::DEFAULT_TEMPLATE_DIR;
         $customTemplates   = $config->dataDir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
+        $cacheDir          = $config->cacheDir === 'false' ? false : $config->cacheDir;
 
         $loader     = new TwigFilesystemLoader($internalTemplates, $customTemplates);
-        $this->twig = new TwigEnvironment($loader, ['cache' => $config->cacheDir]);
-        $this->twig->addExtension(new TotalCMSTwigExtension());
+        $this->twig = new TwigEnvironment($loader, ['cache' => $cacheDir]);
+        $this->twig->addExtension($extension);
     }
 
     public function render(string $templateName, array $data = []): string
