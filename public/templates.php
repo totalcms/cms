@@ -46,6 +46,15 @@ $totalcms->startBuffer(); // Start output buffering again
     <h3>{{ totalcms.text("mytext") }}</h3>
     <h3>{{ totalcms.data("text", "mytext", "id") }}</h3>
 
+    <!-- Depot -->
+    {% for file in totalcms.depot("mydepot") %}
+        <h1>{{ file.name }}</h1>
+        <p>{{ file.uploadDate | date('c') }}</p>
+    {% endfor %}
+
+    <!-- Image -->
+    <img src="{{ totalcms.image('myimage', 'w=200&h=400&fit=focalpoint', 'webp') }}" alt="{{ totalcms.alt('myimage') }}">
+
     <!-- Macros for forms -->
     {% import "macros/forms.twig" as form %}
 

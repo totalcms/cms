@@ -65,4 +65,33 @@ final class TotalCMSTwigAdapter
     {
         return strval($this->data($collection, $id, $property));
     }
+
+    // Get an text property from an object
+    public function depot(string $id, string $collection = 'depot', string $property = 'files'): array
+    {
+        $files = $this->data($collection, $id, $property);
+
+        return is_array($files) ? $files : [];
+    }
+
+    // Get an text property from an object
+    public function image(string $id, array $options = [], string $type = 'jpg', string $collection = 'image', string $property = 'image'): string
+    {
+        $api   = $this->api . "/imageworks/$collection/$id/$property.$type";
+        $query = http_build_query($options);
+
+        if (!empty($query)) {
+            $api .= "?$query";
+        }
+
+        return $api;
+    }
+
+    // Get an alt tag for an image
+    public function alt(string $id, string $collection = 'image', string $property = 'image'): string
+    {
+        $image = $this->data($collection, $id, $property);
+
+        return $image['alt'];
+    }
 }
