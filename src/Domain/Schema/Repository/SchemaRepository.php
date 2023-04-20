@@ -26,6 +26,8 @@ final class SchemaRepository extends StorageRepository
         $schemaFile = self::DEFAULT_SCHEMA_DIR . $type . self::FILE_EXT;
         $contents   = null;
 
+        // Cannot use flysystem here because
+        // the file resides outside of the datadir
         if (file_exists($schemaFile)) {
             $contents = file_get_contents($schemaFile);
         }
@@ -92,7 +94,7 @@ final class SchemaRepository extends StorageRepository
     public function saveSchema(SchemaData $schema): void
     {
         $schemaFile = self::CUSTOM_SCHEMA_DIR . $schema->type . self::FILE_EXT;
-        $schemaJSON = json_encode($schema->schema);
+        $schemaJSON = json_encode($schema->schema, JSON_PRETTY_PRINT);
 
         if (empty($schemaJSON)) {
             throw new \DomainException(sprintf('Failed to encode schema for type: %s', $schema->type));

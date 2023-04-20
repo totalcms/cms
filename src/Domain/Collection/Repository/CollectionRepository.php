@@ -5,7 +5,6 @@ namespace TotalCMS\Domain\Collection\Repository;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\PathUtils;
-use DomainException;
 
 /**
  * Repository.
@@ -52,7 +51,7 @@ final class CollectionRepository extends StorageRepository
      *
      * @param string $collection
      *
-     * @throws DomainException
+     * @throws \DomainException
      *
      * @return CollectionData
      */
@@ -61,7 +60,7 @@ final class CollectionRepository extends StorageRepository
         $collection = $this->fetchCollection($collection);
 
         if ($collection === null) {
-            throw new DomainException(sprintf('Collection does not exist: %s', $collection));
+            throw new \DomainException(sprintf('Collection does not exist: %s', $collection));
         }
 
         return $collection;
@@ -76,7 +75,7 @@ final class CollectionRepository extends StorageRepository
      */
     public function saveCollection(CollectionData $collection): void
     {
-        $jsonContent = $this->serializer->serialize($collection, 'json');
+        $jsonContent = $this->serializer->serialize($collection, 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
         $metaFile    = $this->buildMetaPath($collection->name);
 
         $this->filesystem->write($metaFile, $jsonContent);

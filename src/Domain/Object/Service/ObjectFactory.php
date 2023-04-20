@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use JsonMachine\Items;
+use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -46,6 +48,7 @@ final class ObjectFactory
         }
 
         $objectData = json_decode($objectJson, true);
+        // $objectData = Items::fromString($objectJson, ['decoder' => new ExtJsonDecoder(true)]);
         $properties = $this->generateProperties($objectData, $schema);
 
         // Dynamically load object data based on the schema type

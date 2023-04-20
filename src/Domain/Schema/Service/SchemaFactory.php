@@ -2,8 +2,9 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use JsonMachine\Items;
+use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use UnexpectedValueException;
 
 /**
  * Service.
@@ -18,16 +19,17 @@ final class SchemaFactory
      * @param string $schemaJson
      * @param string $type
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return SchemaData
      */
     public static function generateSchema(string $schemaJson, string $type = ''): SchemaData
     {
         $schema = json_decode($schemaJson, true);
+        // $schema = Items::fromString($schemaJson, ['decoder' => new ExtJsonDecoder(true)]);
 
         if (strpos($schema['$id'], self::SCHEMA_ID_EXT) === false) {
-            throw new UnexpectedValueException('Malformed schema data provided', 1);
+            throw new \UnexpectedValueException('Malformed schema data provided', 1);
         }
 
         if (empty($type)) {

@@ -2,12 +2,12 @@
 
 namespace TotalCMS\Domain\Object\Data;
 
-use TotalCMS\Domain\Property\Data\PropertyData;
 use Cocur\Slugify\Slugify;
 use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use TotalCMS\Domain\Property\Data\PropertyData;
 
 /**
  * Data collection object.
@@ -40,6 +40,6 @@ class ObjectData
 
     public function toJson(): string
     {
-        return $this->serializer->serialize($this->toArray(), 'json');
+        return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
     }
 }

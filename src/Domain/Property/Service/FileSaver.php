@@ -105,7 +105,7 @@ final class FileSaver
      */
     private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
     {
-        $propertyJson = $this->serializer->serialize([$property => $data], 'json');
+        $propertyJson = $this->serializer->serialize([$property => $data], 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
 
         return $this->objectUpdater->updateObject($collection, $objectID, $propertyJson);
     }

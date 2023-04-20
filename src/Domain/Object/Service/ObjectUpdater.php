@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use JsonMachine\Items;
+use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -49,6 +51,7 @@ final class ObjectUpdater
         }
 
         $updatedProps = json_decode($newData, true);
+        // $updatedProps = Items::fromString($newData, ['decoder' => new ExtJsonDecoder(true)]);
 
         if (!is_array($updatedProps)) {
             throw new \UnexpectedValueException('Unable to decode updated properties');
@@ -57,7 +60,7 @@ final class ObjectUpdater
         // Convert to array to merge updated properties.
         $objectArray = $object->toArray();
         $objectArray = array_merge($objectArray, $updatedProps);
-        $objectJson  = $this->serializer->serialize($objectArray, 'json');
+        $objectJson  = $this->serializer->serialize($objectArray, 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
 
         // Use the factory to revalidate the new object against the schema
         $object = $this->factory->generateObject($collection, $objectJson);

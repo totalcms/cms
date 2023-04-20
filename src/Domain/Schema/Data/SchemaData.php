@@ -32,7 +32,7 @@ final class SchemaData
 
     public function toJson(): string
     {
-        $json = json_encode($this->schema);
+        $json = json_encode($this->schema, JSON_PRETTY_PRINT);
 
         return $json === false ? '' : $json;
     }

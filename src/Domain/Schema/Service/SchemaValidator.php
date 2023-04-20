@@ -2,12 +2,12 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use DomainException;
+use JsonMachine\Items;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Helper;
 use Opis\JsonSchema\Resolvers\SchemaResolver;
 use Opis\JsonSchema\Validator;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**
  * Service.
@@ -27,7 +27,7 @@ final class SchemaValidator
      * @param string $schemaToValidate
      * @param string $schemaType
      *
-     * @throws DomainException
+     * @throws \DomainException
      *
      * @return bool
      */
@@ -37,6 +37,7 @@ final class SchemaValidator
         $schemaJSON = Helper::toJSON($schema->schema);
 
         $schemaToValidate = json_decode($schemaToValidate);
+        // $schemaToValidate = Items::fromString($schemaToValidate);
 
         $validator = new Validator();
         $resolver  = $validator->resolver();
@@ -54,7 +55,7 @@ final class SchemaValidator
             /* @phpstan-ignore-next-line */
             $error = $formatter->format($result->error(), false);
             $msg   = implode(';', array_map(fn ($k, $v) => "($k) $v", array_keys($error), $error));
-            throw new DomainException("Schema Validation Failed. $msg");
+            throw new \DomainException("Schema Validation Failed. $msg");
         }
 
         return $valid;
