@@ -36,9 +36,11 @@ input, textarea {
 
 textarea {
     max-width : 100%;
+    resize    : vertical;
 
     &[rows] {
-        height : auto
+        height     : auto;
+        min-height : 100px;
     }
 }
 
@@ -69,6 +71,10 @@ label {
         box-sizing : border-box;
     }
 }
+
+//------------------------------
+// Form Groups
+//------------------------------
 
 //------------------------------
 // Form Groups
