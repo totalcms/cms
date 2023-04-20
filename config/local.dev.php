@@ -12,6 +12,7 @@ $settings['env'] = 'dev';
 $settings['docroot']  = $settings['root'];
 $settings['datadir']  = $settings['root'] . '/tcms-data';
 $settings['cachedir'] = 'false';
+$settings['api']      = 'http://localhost:8000';
 
 $settings['error']['display_error_details'] = true;
 $settings['error']['log_errors']            = true;
