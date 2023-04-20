@@ -20,6 +20,7 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -132,7 +133,10 @@ return [
     },
 
     IndexReader::class => function (ContainerInterface $container) {
-        return new IndexReader($container->get(IndexRepository::class));
+        return new IndexReader(
+            $container->get(IndexRepository::class),
+            $container->get(IndexBuilder::class),
+        );
     },
 
     ObjectFetcher::class => function (ContainerInterface $container) {

@@ -52,7 +52,7 @@ final class IndexRepository extends StorageRepository
     public function saveIndex(string $collection, IndexData $index): void
     {
         $indexFile  = $this->buildIndexPath($collection);
-        $indexJSON  = $this->serializer->serialize($index, 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+        $indexJSON  = $this->serializer->serialize($index, 'json'); // no pretty print on purpose
 
         $this->filesystem->write($indexFile, $indexJSON);
     }

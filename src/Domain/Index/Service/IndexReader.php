@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Index\Service;
 
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
-use DomainException;
 
 /**
  * Service.
@@ -12,10 +11,12 @@ use DomainException;
 final class IndexReader
 {
     private IndexRepository $storage;
+    private IndexBuilder $builder;
 
-    public function __construct(IndexRepository $storage)
+    public function __construct(IndexRepository $storage, IndexBuilder $builder)
     {
         $this->storage = $storage;
+        $this->builder = $builder;
     }
 
     /**
@@ -30,7 +31,8 @@ final class IndexReader
         $index = $this->storage->fetchIndex($collection);
 
         if (!$index instanceof IndexData) {
-            throw new DomainException('Unknown error fetching index.');
+            // Build the index if it does not exist
+            return $this->builder->buildIndex($collection);
         }
 
         return $index;
