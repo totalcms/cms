@@ -1,16 +1,21 @@
 {
   "scripts": {
-    "build" : "node esbuild.config.js"
+    "build": "node esbuild.config.js"
   },
   "devDependencies": {
-    "esbuild"                : "^0.16.17",
-    "esbuild-plugin-clean"   : "^1.0.1",
-    "esbuild-plugin-copy"    : "^2.0.1",
-    "esbuild-plugin-glob"    : "^2.2.1",
-    "esbuild-sass-plugin"    : "^2.4.5",
-    "sass-extended-importer" : "^0.4.2"
+    "esbuild": "^0.16.17",
+    "esbuild-plugin-clean": "^1.0.1",
+    "esbuild-plugin-copy": "^2.0.1",
+    "esbuild-plugin-glob": "^2.2.1",
+    "esbuild-sass-plugin": "^2.4.5",
+    "sass-extended-importer": "^0.4.2"
   },
   "dependencies": {
-    "awesomplete" : "^1.1.5"
+    "awesomplete": "^1.1.5",
+    "choices.js": "https://github.com/joeworkman-forks/Choices.git#addchoices",
+    "codemirror": "^5.65.0",
+    "dompurify": "^3.0.2",
+    "dropzone": "^6.0.0-beta.2",
+    "froala-editor": "^4.0.18"
   }
 }

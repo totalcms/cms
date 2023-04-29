@@ -7,7 +7,7 @@ const { createImporter } = require("sass-extended-importer");
 
 esbuild.build({
     entryPoints : [
-        "javascript/totalcms-admin.ts",
+        "javascript/admin.ts",
     ],
     format    : "esm",
     platform  : "browser",
@@ -21,19 +21,35 @@ esbuild.build({
     // watch       : true,
     // incremental : true,
     outdir      : 'dist',
-    external    : ["awesomplete"],
+    external    : [
+        "choices.js",
+    ],
     plugins     : [
+        globPlugin(),
         clean({
             patterns: ['dist'],
         }),
-        globPlugin(),
         // Copy in the static external libraries
         copy.default({assets: {
-            from: [
-                "node_modules/awesomplete/awesomplete.min.js*",
-            ],
-            to: [ "" ]
-        }})
+            from : "node_modules/choices.js/public/assets/scripts/choices.js" ,
+            to   : "choices"
+        }}),
+        copy.default({assets: {
+            from : "node_modules/froala-editor/js/**" ,
+            to   : "froala"
+        }}),
+        copy.default({assets: {
+            from : "node_modules/froala-editor/css/**",
+            to   : "froala"
+        }}),
+        copy.default({assets: {
+            from : "node_modules/codemirror/lib/**",
+            to   : "codemirror"
+        }}),
+        copy.default({assets: {
+            from : "node_modules/codemirror/mode/xml/**",
+            to   : "codemirror"
+        }}),
     ],
 }).catch(() => process.exit(1));
 
@@ -46,14 +62,16 @@ esbuild.build({
     metafile  : true,
     sourcemap : true,
     outdir      : 'dist',
-    external    : ["awesomplete"],
+    external    : [
+    ],
     plugins     : [
         globPlugin(),
         // Sass includes
         sassPlugin({
             loadPaths: [
-                // "node_modules/foundation-sites/scss/",
-                // "node_modules/motion-ui/src/",
+                "node_modules/choices.js/src/styles/",
+                // "node_modules/froala-editor/css/",
+                "node_modules/codemirror/lib/",
             ],
             importer: createImporter(),
         }),

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cffd1b2838f663399a8e927420a5fe8c",
+    "content-hash": "7d08f3849599e39c423ebf875bb52ce2",
     "packages": [
         {
             "name": "cakephp/chronos",
@@ -578,6 +578,65 @@
                 "source": "https://github.com/php-fig/http-message-util/tree/1.1.5"
             },
             "time": "2020-11-24T22:02:12+00:00"
+        },
+        {
+            "name": "froala/wysiwyg-editor-php-sdk",
+            "version": "4.0.18",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/froala/wysiwyg-editor-php-sdk.git",
+                "reference": "fccb14dd46f22b3776d3f47c0d10badad036d2ad"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/froala/wysiwyg-editor-php-sdk/zipball/fccb14dd46f22b3776d3f47c0d10badad036d2ad",
+                "reference": "fccb14dd46f22b3776d3f47c0d10badad036d2ad",
+                "shasum": ""
+            },
+            "type": "php-plugin",
+            "extra": {
+                "installer-name": "FroalaEditor"
+            },
+            "autoload": {
+                "psr-0": {
+                    "FroalaEditor": "lib/"
+                },
+                "psr-4": {
+                    "FroalaEditor\\": "lib/FroalaEditor"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Froala Labs",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "PHP SDK for Froala WYSIWYG Editor",
+            "homepage": "https://www.froala.com/wysiwyg-editor",
+            "keywords": [
+                "editor",
+                "froala",
+                "html",
+                "php",
+                "php rich text editor",
+                "php rte",
+                "php wysiwyg",
+                "rich editor",
+                "rich text editor",
+                "rte",
+                "sdk",
+                "text",
+                "wysiwyg"
+            ],
+            "support": {
+                "issues": "https://github.com/froala/froala-editor-php-sdk/issues",
+                "source": "https://www.froala.com/wysiwyg-editor"
+            },
+            "time": "2023-03-23T11:34:06+00:00"
         },
         {
             "name": "fylax/forceutf8",
