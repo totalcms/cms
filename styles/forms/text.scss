@@ -37,10 +37,38 @@
         }
     }
 
-    :disabled,
     [readonly] {
         background-color: hsl(0, 0%, 90%);
         cursor: not-allowed
+    }
+
+    :disabled,
+
+    select {
+        + .form-group-label {
+            background-image: var(--icon-select);
+        }
+
+        &.empty  {
+            color: hsl(0, 0%, 79%);
+        }
+
+        &:not([multiple]) {
+            background-image    : url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZlcnNpb249JzEuMScgd2lkdGg9JzMyJyBoZWlnaHQ9JzI0JyB2aWV3Qm94PScwIDAgMzIgMjQnPjxwb2x5Z29uIHBvaW50cz0nMCwwIDMyLDAgMTYsMjQnIHN0eWxlPSdmaWxsOiM4YThhOGEnPjwvcG9seWdvbj48L3N2Zz4=);
+            background-origin   : content-box;
+            background-position : right -1rem center;
+            background-repeat   : no-repeat;
+            background-size     : 9px 6px;
+            padding-right       : 1.5rem;
+        }
+        &[multiple] {
+            height           : auto;
+            background-image : none;
+
+            // + .form-group-label {
+            //     background-image: var(--icon-select-multi);
+            // }
+        }
     }
 }
 

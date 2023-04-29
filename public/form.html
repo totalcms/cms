@@ -58,7 +58,7 @@
         <p class="help" id="help-name10">This is some help for this Total CMS form field. This is some help for this Total CMS form field.</p>
     </div>
 
-    <h2>Help Text - Show on Focus</h2>
+    <h2>Help Text - Show on Focus or Hover</h2>
 
     <div class="form-field help-on-focus">
         <label for="input-name1">Text Field</label>
@@ -149,6 +149,52 @@
         <p class="help" id="help-name6">This is some help for this Total CMS form field</p>
     </div>
 
+    <h2>Select</h2>
+
+    <div class="form-field help-label select-field">
+        <label for="input-name9">Select</label>
+        <div class="form-group">
+            <select id="input-name9" name="input" placeholder="Add your title here" aria-describedby="help-name9">
+                <option selected value="">Select Something</option>
+                <option value="dog">Dog</option>
+                <option value="cat">Cat</option>
+                <option value="hamster">Hamster</option>
+                <option value="parrot">Parrot</option>
+                <option value="spider">Spider</option>
+                <option value="goldfish">Goldfish</option>
+            </select>
+            <div class="form-group-label"></div>
+        </div>
+        <p class="help" id="help-name9">This is some help for this Total CMS form field. This is some help for this Total CMS form field.</p>
+    </div>
+
+    <div class="form-field help-label select-field">
+        <label for="input-name9">Select Multiple</label>
+        <div class="form-group">
+            <select multiple size="6" id="input-name9" name="input" value="" placeholder="Add your title here" aria-describedby="help-name9">
+                <option disabled>Please choose an option</option>
+                <option value="dog">Dog</option>
+                <option value="cat">Cat</option>
+                <option value="hamster">Hamster</option>
+                <option value="parrot">Parrot</option>
+                <option value="spider">Spider</option>
+                <option value="goldfish">Goldfish</option>
+            </select>
+            <div class="form-group-label"></div>
+        </div>
+        <p class="help" id="help-name9">This is some help for this Total CMS form field. This is some help for this Total CMS form field.</p>
+    </div>
+
+    <script>
+    const selects = Array.from(document.querySelectorAll('.select-field select:not([multiple])'));
+    const emptySelect = select => {
+        select.value ? select.classList.remove('empty') : select.classList.add('empty');
+    };
+    selects.forEach(select => {
+        emptySelect(select);
+        select.addEventListener('change', e => emptySelect(e.target) );
+    });
+    </script>
 
     <h2>Date</h2>
 
@@ -492,7 +538,7 @@
         const editorInstance = new FroalaEditor('#svg-editor', {
             key                  : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
             attribution          : false,
-            heightMax            : 500,
+            heightMax            : 300,
             toolbarButtons       : [ 'html' ],
             htmlAllowedTags      : svgTags,
             htmlAllowedEmptyTags : svgTags,
@@ -504,11 +550,10 @@
     })()
     </script>
 
-
-    <h2>Depot</h2>
+    <h2>Image</h2>
     <h2>File</h2>
     <h2>Gallery</h2>
-    <h2>Image</h2>
+    <h2>Depot</h2>
 
     <h2>Set</h2>
 

@@ -19,7 +19,9 @@
     border-bottom-left-radius:5px!important;
     border-bottom-right-radius:0!important;
 }
-
+.fr-second-toolbar:empty {
+    min-height: 5px !important; // size of radius
+}
 //------------------------------
 // SVG Field
 //------------------------------
