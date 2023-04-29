@@ -498,7 +498,9 @@
             htmlAllowedEmptyTags : svgTags,
             htmlAllowedAttrs     : svgAttrs,
             htmlUntouched        : true,
-        })
+        }, function() {
+            editorInstance.codeView.toggle()
+        });
     })()
     </script>
 
