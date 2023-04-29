@@ -1,0 +1,28 @@
+//------------------------------
+// Styled Text Field
+//------------------------------
+
+.CodeMirror-scroll {
+    height:auto;
+}
+.styled-text-field .form-group-label {
+    background-image: var(--icon-styled-text);
+}
+.fr-box {
+    width: 100%;
+}
+.fr-toolbar {
+    border-top-left-radius:5px!important;
+    border-top-right-radius:0!important;
+}
+.fr-second-toolbar {
+    border-bottom-left-radius:5px!important;
+    border-bottom-right-radius:0!important;
+}
+
+//------------------------------
+// SVG Field
+//------------------------------
+.styled-text-field .form-group-label {
+    background-image: var(--icon-styled-text);
+}
