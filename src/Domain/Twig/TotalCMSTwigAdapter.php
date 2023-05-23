@@ -19,7 +19,7 @@ final class TotalCMSTwigAdapter
     public function __construct(
         Config $config,
         IndexReader $collectionReader,
-        ObjectFetcher $objectFetcher,
+        ObjectFetcher $objectFetcher
     ) {
         $this->config           = $config;
         $this->collectionReader = $collectionReader;

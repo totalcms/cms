@@ -3,7 +3,6 @@
 namespace TotalCMS\Utils;
 
 use TotalCMS\Domain\Property\Data\ColorData;
-use UnexpectedValueException;
 
 /**
  * Color Utilities.
@@ -172,7 +171,7 @@ class ColorUtils
      *
      * @param string $name
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return ColorData
      */
@@ -180,7 +179,7 @@ class ColorUtils
     {
         $name = strtolower($name);
         if (isset(self::COLORNAMESTOHEX[$name])) {
-            throw new UnexpectedValueException("Invalid color name provided ($name)");
+            throw new \UnexpectedValueException("Invalid color name provided ($name)");
         }
 
         return self::colorFromHex(self::COLORNAMESTOHEX[$name]);
@@ -191,14 +190,14 @@ class ColorUtils
      *
      * @param array $rgb
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return void
      */
     private static function validateRgb(array $rgb): void
     {
         if (empty($rgb) || !isset($rgb['r'], $rgb['g'], $rgb['b'])) {
-            throw new UnexpectedValueException('Param was not an RGB array');
+            throw new \UnexpectedValueException('Param was not an RGB array');
         }
     }
 
@@ -207,7 +206,7 @@ class ColorUtils
      *
      * @param array $rgb
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return ColorData
      */
@@ -304,7 +303,7 @@ class ColorUtils
      *
      * @param array $rgb
      *
-     * @throws UnexpectedValueException "Bad RGB Array"
+     * @throws \UnexpectedValueException "Bad RGB Array"
      *
      * @return string Hex string
      */
@@ -325,7 +324,7 @@ class ColorUtils
      *
      * @param array $rgb
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return string rgb(r,g,b) string
      */
@@ -435,7 +434,7 @@ class ColorUtils
      *
      * @param string $hex
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return string
      */
@@ -446,14 +445,14 @@ class ColorUtils
 
         // Validate hex string
         if (!preg_match('/^[a-fA-F0-9]+$/', $color)) {
-            throw new UnexpectedValueException('HEX color does not match format');
+            throw new \UnexpectedValueException('HEX color does not match format');
         }
 
         // Make sure it's 6 digits
         if (strlen($color) === 3) {
             $color = $color[0] . $color[0] . $color[1] . $color[1] . $color[2] . $color[2];
         } elseif (strlen($color) !== 6) {
-            throw new UnexpectedValueException('HEX color needs to be 6 or 3 digits long');
+            throw new \UnexpectedValueException('HEX color needs to be 6 or 3 digits long');
         }
 
         return $color;
@@ -615,3 +614,98 @@ class ColorUtils
         return $css;
     }
 }
+
+// function rgb_to_lch($r, $g, $b) {
+//     // Convert RGB to XYZ
+//     $x = 0.412453 * $r + 0.357580 * $g + 0.180423 * $b;
+//     $y = 0.212671 * $r + 0.715160 * $g + 0.072169 * $b;
+//     $z = 0.019334 * $r + 0.119193 * $g + 0.950227 * $b;
+
+//     // Convert XYZ to LAB
+//     $xn = 0.95047;
+//     $yn = 1.00000;
+//     $zn = 1.08883;
+
+//     $x = $x / $xn;
+//     $y = $y / $yn;
+//     $z = $z / $zn;
+
+//     if ($x > 0.008856) {
+//         $fx = pow($x, 1/3);
+//     } else {
+//         $fx = 7.787 * $x + 16/116;
+//     }
+
+//     if ($y > 0.008856) {
+//         $fy = pow($y, 1/3);
+//     } else {
+//         $fy = 7.787 * $y + 16/116;
+//     }
+
+//     if ($z > 0.008856) {
+//         $fz = pow($z, 1/3);
+//     } else {
+//         $fz = 7.787 * $z + 16/116;
+//     }
+
+//     $l = 116 * $fy - 16;
+//     $a = 500 * ($fx - $fy);
+//     $b = 200 * ($fy - $fz);
+
+//     // Convert LAB to LCH
+//     $c = sqrt(pow($a, 2) + pow($b, 2));
+//     $h = atan2($b, $a) * 180 / pi();
+
+//     return array($l, $c, $h);
+// }
+
+// function hex_to_lch($hex) {
+//     // Convert hex to RGB
+//     list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
+
+//     // Convert RGB to LCH
+//     return rgb_to_lch($r, $g, $b);
+// }
+
+// function lch_to_rgb($l, $c, $h) {
+//     // Convert LCH to LAB
+//     $a = $c * cos($h * pi() / 180);
+//     $b = $c * sin($h * pi() / 180);
+
+//     $fy = ($l + 16) / 116;
+//     $fx = $a / 500 + $fy;
+//     $fz = $fy - $b / 200;
+
+//     $xn = 0.95047;
+//     $yn = 1.00000;
+//     $zn = 1.08883;
+
+//     if (pow($fy, 3) > 0.008856) {
+//         $y = pow($fy, 3) * $yn;
+//     } else {
+//         $y = ($fy - 16/116) * 3 * pow(6/29, 2) * $yn;
+//     }
+
+//     if (pow($fx, 3) > 0.008856) {
+//         $x = pow($fx, 3) * $xn;
+//     } else {
+//         $x = ($fx - 16/116) * 3 * pow(6/29, 2) * $xn;
+//     }
+
+//     if (pow($fz, 3) > 0.008856) {
+//         $z = pow($fz, 3) * $zn;
+//     } else {
+//         $z = ($fz - 16/116) * 3 * pow(6/29, 2) * $zn;
+//     }
+
+//     // Convert LAB to RGB
+//     $r = 3.240479 * $x - 1.537150 * $y - 0.498535 * $z;
+//     $g = -0.969256 * $x + 1.875992 * $y + 0.041556 * $z;
+//     $b = 0.055648 * $x - 0.204043 * $y + 1.057311 * $z;
+
+//     $r = max(0, min(255, round($r * 255)));
+//     $g = max(0, min(255, round($g * 255)));
+//     $b = max(0, min(255, round($b * 255)));
+
+//     return array($r, $g, $b);
+// }

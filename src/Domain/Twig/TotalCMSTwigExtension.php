@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Twig;
 
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
+use Twig\TwigFunction;
 
 /**
  * Twig Integration with Total CMS.
@@ -24,5 +25,12 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
         ];
     }
 
-    // ...
+    public function getFunctions(): array
+    {
+        return [
+            new TwigFunction('uniqid', function () {
+                return uniqid();
+            }),
+        ];
+    }
 }
