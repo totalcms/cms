@@ -11,8 +11,46 @@ $totalcms->startBuffer(); // Start output buffering
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Total CMS Template Demo</title>
+    <style>
+    html {
+        box-sizing : border-box;
+        font-size  : 100%
+    }
+
+    *,
+    ::after,
+    ::before {
+        box-sizing : inherit
+    }
+
+    body {
+        font-family            : ui-sans-serif, system-ui, -system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        -webkit-font-smoothing : antialiased;
+    }
+
+    h2 {
+        font-weight : 200;
+        margin      : 3rem 0 1rem 0;
+        opacity     : 0.5;
+    }
+    small {
+        font-size : 0.7em;
+    }
+    .container {
+        max-width : 1000px;
+        margin    : 0 auto;
+    }
+    </style>
+    <link href="dist/forms.css" rel="stylesheet"></link>
+    <link rel="stylesheet" href="dist/froala/froala_editor.min.css">
+    <link rel="stylesheet" href="dist/froala/froala_style.min.css">
+    <link rel="stylesheet" href="dist/froala/plugins/code_view.min.css">
+    <link rel="stylesheet" href="dist/froala/plugins/image_manager.min.css">
+    <link rel="stylesheet" href="dist/froala/plugins/image.min.css">
+    <link rel="stylesheet" href="dist/froala/plugins/table.min.css">
+    <link rel="stylesheet" href="dist/froala/plugins/video.min.css">
 </head>
 <body>
 
@@ -25,12 +63,26 @@ $totalcms->startBuffer(); // Start output buffering again
 ?>
     <!-- Twig Template Testing -->
 
+    <!-- Macros for forms -->
+    {% import "form-macros.twig" as form %}
+
+    <form class="total-form" action="{{ totalcms.api }}/collection/blog">
+
+        {{ form.input('title', "text", "text", "help-on-hover", "", "My Text", "Enter some text", "This is my super help text.") }}
+
+    </form>
+
     <!-- Get Collection -->
     {% set posts = totalcms.collection("text") %}
 
+    {{ dump(posts) }}
     {% for post in posts %}
-        <h1>{{ post.id }}</h1>
+    <h1>{{ post.id }}</h1>
     {% endfor %}
+
+    <p>End</p>
+
+{#--
 
     <!-- Get index of a property from a collection. Ex: list of all categories -->
     {% for tag in totalcms.property("text", "id") %}
@@ -54,22 +106,7 @@ $totalcms->startBuffer(); // Start output buffering again
 
     <!-- Image -->
     <img src="{{ totalcms.image('myimage', 'w=200&h=400&fit=focalpoint', 'webp') }}" alt="{{ totalcms.alt('myimage') }}">
-
-    <!-- Macros for forms -->
-    {% import "macros/forms.twig" as form %}
-
-    <form class="totalform" action="{{ totalcms.api }}/collection/blog">
-
-        {{ form.slug('id') }}
-        {{ form.input('title') }}
-        {{ form.textarea('summary') }}
-        {{ form.styledtext('content') }}
-        {{ form.image('image') }}
-        {{ form.gallery('gallery') }}
-        {{ form.list('tags') }}
-        {{ form.select('author') }}
-
-    </form>
+--#}
 
 </body>
 </html>
