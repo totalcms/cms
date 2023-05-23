@@ -5,7 +5,7 @@
 .CodeMirror-scroll {
     height:auto;
 }
-.styled-text-field .form-group-label {
+.styled-text-field .form-group-icon {
     background-image: var(--icon-styled-text);
 }
 .fr-box {
@@ -25,6 +25,6 @@
 //------------------------------
 // SVG Field
 //------------------------------
-.svg-field .form-group-label {
+.svg-field .form-group-icon {
     background-image: var(--icon-svg);
 }

@@ -31,7 +31,7 @@
 //------------------------------
 .total-form {
     :focus,
-    :focus + .form-group-label {
+    :focus + .form-group-icon {
         outline      : 0;
         border-color : hsl(0, 0%, 69%);
         box-shadow: inset 0 0 0 hsla(0, 0%, 4%, 0.1);
@@ -84,7 +84,7 @@
     }
 }
 
-.form-group-label {
+.form-group-icon {
     padding: 0 1.5rem;
     width: 1rem;
     border: 1px solid hsl(0, 0%, 79%);
@@ -109,7 +109,7 @@
 @import "forms/actionbar";
 @import "forms/checkbox";
 @import "forms/color";
-@import "forms/dropzone";
+@import "forms/droplet";
 @import "forms/froala";
 @import "forms/list";
 @import "forms/radio";

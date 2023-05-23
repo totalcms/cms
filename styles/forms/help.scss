@@ -22,7 +22,7 @@
 
     &.help-on-focus {
         :focus,
-        :focus + .form-group-label {
+        :focus + .form-group-icon {
             border-bottom-right-radius: 0;
         }
         &:has(:focus) .help {
@@ -32,7 +32,7 @@
     }
     &.help-on-hover:hover {
         input,
-        .form-group-label {
+        .form-group-icon {
             border-bottom-right-radius: 0;
         }
     }

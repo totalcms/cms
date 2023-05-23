@@ -21,9 +21,7 @@ esbuild.build({
     // watch       : true,
     // incremental : true,
     outdir      : 'dist',
-    external    : [
-        "choices.js",
-    ],
+    external    : [],
     plugins     : [
         globPlugin(),
         clean({
@@ -50,6 +48,14 @@ esbuild.build({
             from : "node_modules/codemirror/mode/xml/**",
             to   : "codemirror"
         }}),
+        copy.default({assets: {
+            from : "node_modules/dompurify/dist/purify.min.js",
+            to   : "dompurify"
+        }}),
+        copy.default({assets: {
+            from : "node_modules/dropzone/dist/dropzone-min.js",
+            to   : "dropzone"
+        }}),
     ],
 }).catch(() => process.exit(1));
 
@@ -72,6 +78,7 @@ esbuild.build({
                 "node_modules/choices.js/src/styles/",
                 // "node_modules/froala-editor/css/",
                 "node_modules/codemirror/lib/",
+                "node_modules/dropzone/src/"
             ],
             importer: createImporter(),
         }),

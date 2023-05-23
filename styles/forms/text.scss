@@ -45,7 +45,7 @@
     :disabled,
 
     select {
-        + .form-group-label {
+        + .form-group-icon {
             background-image: var(--icon-select);
         }
 
@@ -65,7 +65,7 @@
             height           : auto;
             background-image : none;
 
-            // + .form-group-label {
+            // + .form-group-icon {
             //     background-image: var(--icon-select-multi);
             // }
         }
@@ -75,22 +75,22 @@
 //------------------------------
 // Date Field
 //------------------------------
-[type="date"] + .form-group-label,
-[type="datetime-local"] + .form-group-label {
+[type="date"] + .form-group-icon,
+[type="datetime-local"] + .form-group-icon {
     background-image: var(--icon-date);
 }
 
 //------------------------------
 // Email Field
 //------------------------------
-[type="email"] + .form-group-label {
+[type="email"] + .form-group-icon {
     background-image: var(--icon-email);
 }
 
 //------------------------------
 // Password Field
 //------------------------------
-[type="password"] + .form-group-label {
+[type="password"] + .form-group-icon {
     background-image: var(--icon-lock);
 }
 
@@ -98,7 +98,7 @@
 // ID Field
 //------------------------------
 .id-field {
-    .form-group-label {
+    .form-group-icon {
         background-image: var(--icon-id);
         border-width: 0;
     }
@@ -113,20 +113,20 @@
 //------------------------------
 // URL Field
 //------------------------------
-[type="url"] + .form-group-label {
+[type="url"] + .form-group-icon {
     background-image: var(--icon-url);
 }
 
 //------------------------------
 // Telephone Field
 //------------------------------
-[type="tel"] + .form-group-label {
+[type="tel"] + .form-group-icon {
     background-image: var(--icon-tel);
 }
 
 //------------------------------
 // Number Field
 //------------------------------
-[type="number"] + .form-group-label {
+[type="number"] + .form-group-icon {
     background-image: var(--icon-number);
 }
