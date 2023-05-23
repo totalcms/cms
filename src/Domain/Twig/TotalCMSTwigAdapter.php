@@ -61,8 +61,6 @@ final class TotalCMSTwigAdapter
             return $object[$property];
         }
 
-        return $object[$property];
-
         return '';
     }
 

@@ -28,9 +28,8 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('uniqid', function () {
-                return uniqid();
-            }),
+            new TwigFunction('uniqid', fn () => uniqid()),
+            // new TwigFunction('uniqid', [TotalCMSTwigFunctions::class, 'uniqid']),
         ];
     }
 }
