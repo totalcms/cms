@@ -1,0 +1,165 @@
+{#--------------------------------#}
+{# Template Macros               #}
+{#--------------------------------#}
+
+{#
+    Input Field Macro
+    name        = name of the field
+    type        = type of the field data from Total CMS: text, number, date, etc
+    input       = type of the input
+    class       = classes added to the field
+    value       = value of the field
+    label       = label of the field
+    placeholder = placeholder of the field
+    help        = help text of the field
+#}
+{% macro input(name, type = "text", input = "text", class="", value = "", label = "", placeholder = "", help = "", icon = true) %}
+
+    {% set uuid = uniqid() %}
+
+    {# Help Trigger classes: help-on-focus, help-on-hover #}
+    {# Help Style classes: help-box, help-label, help-tooltip #}
+    <div class="form-field {{ type }}-field {{ class }}">
+
+        {% if label %}
+        <label for="input-{{uuid}}">{{ label }}</label>
+        {% endif %}
+
+        <div class="form-group">
+            <input
+                id="input-{{uuid}}"
+                type="{{ input }}"
+                name="{{ name }}"
+                {% if value %}value="{{ value }}"{% endif %}
+                {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+                {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
+            >
+            {% if icon %}<div class="form-group-icon"></div>{% endif %}
+        </div>
+        {% if help %}
+        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% endif %}
+    </div>
+
+{% endmacro %}
+
+{# Textarea Field #}
+{% macro textarea(name, value, rows = 10, cols = 40) %}
+    <textarea name="{{ name }}" rows="{{ rows }}" cols="{{ cols }}">{{ value|e }}</textarea>
+{% endmacro %}
+
+{# Hidden Field #}
+{% macro hidden(name, value) %}
+
+    <div class="form-field">
+        <input type="hidden" name="{{ name }}" value="{{ value }}">
+    </div>
+
+{% endmacro %}
+
+{#--------------------------------#}
+{# Input Macros                  #}
+{#--------------------------------#}
+
+{% macro datetime(name, value) %}
+{% endmacro %}
+
+{% macro time(name, value) %}
+{% endmacro %}
+
+{% macro number(name, value) %}
+{% endmacro %}
+
+{% macro slug(name = "id", value="", label="ID", placeholder = "Object ID", help = "This is the ID of your object") %}
+    {{ _self.input(name, value, "slug", "text", label, placeholder, help) }}
+{% endmacro %}
+
+{% macro email(name, value) %}
+{% endmacro %}
+
+{% macro url(name, value) %}
+{% endmacro %}
+
+{% macro password(name, value) %}
+{% endmacro %}
+
+{% macro list(name, value) %}
+{% endmacro %}
+
+{% macro currency(name, value) %}
+{% endmacro %}
+
+
+{#--------------------------------#}
+{# Select Macros                 #}
+{#--------------------------------#}
+
+{% macro select(name, value) %}
+{% endmacro %}
+
+{% macro multiselect(name, value) %}
+{% endmacro %}
+
+{#--------------------------------#}
+{# Dropzone Macros               #}
+{#--------------------------------#}
+{% macro depot(name, value) %}
+{% endmacro %}
+
+{% macro file(name, value) %}
+{% endmacro %}
+
+{% macro image(name, value) %}
+{% endmacro %}
+
+{% macro gallery(name, value) %}
+{% endmacro %}
+
+
+
+{% macro styledtext(name, value) %}
+{% endmacro %}
+
+{% macro markdown(name, value) %}
+{% endmacro %}
+
+{% macro color(name, value) %}
+{% endmacro %}
+
+{% macro rangeslider(name, value) %}
+{% endmacro %}
+
+{% macro radio(name, value) %}
+{% endmacro %}
+
+{% macro toggle(name, value) %}
+{% endmacro %}
+
+{% macro checkbox(name, value) %}
+{% endmacro %}
+
+
+{% macro deck(name, value) %}
+{% endmacro %}
+
+{% macro blog() %}
+{% endmacro %}
+
+{#--
+
+https://choices-js.github.io/Choices/
+
+http://stryzhevskyi.github.io/rangeSlider/
+https://sortablejs.github.io/Sortable/
+
+https://www.w3schools.com/howto/howto_css_switch.asp
+https://codepen.io/coldsoul/pen/pbdvPa
+https://codepen.io/triss90/pen/XNEdRe
+https://codepen.io/mblode/pen/VwGxaO
+
+https://hslpicker.com/
+
+https://felixg.io/products/datedropper-javascript
+https://github.com/wbotelhos/raty
+
+--#}
