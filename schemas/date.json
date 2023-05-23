@@ -5,7 +5,10 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+            "label" : "Date ID",
+            "help"  : "A unique ID for this date. No spaces or special characters.",
+            "field" : "slug"
         },
         "date": {
             "$ref": "https://www.totalcms.co/schemas/properties/date.json"

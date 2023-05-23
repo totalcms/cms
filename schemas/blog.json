@@ -33,7 +33,10 @@
       "$ref": "https://www.totalcms.co/schemas/properties/date.json"
     },
     "id": {
-      "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+      "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+      "label" : "Post ID",
+      "help"  : "A unique ID for this blog post. No spaces or special characters.",
+      "field" : "slug"
     },
     "date": {
       "$ref": "https://www.totalcms.co/schemas/properties/date.json"

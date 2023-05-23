@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/text.json",
-    "description": "A schema for a Total CMS Text object",
+    "$id": "https://www.totalcms.co/schemas/styledtext.json",
+    "description": "A schema for a Total CMS Styled Text object",
     "type": "object",
     "properties": {
         "id": {
@@ -12,9 +12,9 @@
         },
         "text": {
             "type"  : "string",
-            "label" : "Text",
+            "label" : "Styled Text",
             "help"  : "Edit the text here.",
-            "field" : "textarea"
+            "field" : "styledtext"
         }
     },
     "required": [

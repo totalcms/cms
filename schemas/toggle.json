@@ -5,7 +5,11 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+            "label" : "Toggle ID",
+            "help"  : "A unique ID for this toggle. No spaces or special characters.",
+            "field" : "slug"
+
         },
         "status": {
             "type": "boolean"

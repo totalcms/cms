@@ -5,7 +5,10 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+            "label" : "SVG ID",
+            "help"  : "A unique ID for this svg. No spaces or special characters.",
+            "field" : "slug"
         },
         "svg": {
             "$ref": "https://www.totalcms.co/schemas/properties/svg.json"

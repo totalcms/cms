@@ -5,7 +5,10 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+            "label" : "Gallery ID",
+            "help"  : "A unique ID for this gallery. No spaces or special characters.",
+            "field" : "slug"
         },
         "gallery": {
             "$ref": "https://www.totalcms.co/schemas/properties/gallery.json"

@@ -3,7 +3,10 @@
   "$id": "https://www.totalcms.co/schemas/feed.json",
   "properties": {
     "id": {
-      "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+      "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+      "label" : "Feed ID",
+      "help"  : "A unique ID for this feed item. No spaces or special characters.",
+      "field" : "slug"
     },
     "featured": {
       "type": "boolean"

@@ -5,7 +5,10 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+            "label" : "File ID",
+            "help"  : "A unique ID for this file. No spaces or special characters.",
+            "field" : "slug"
         },
         "file": {
             "$ref": "https://www.totalcms.co/schemas/properties/file.json"
