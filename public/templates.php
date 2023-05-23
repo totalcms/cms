@@ -73,26 +73,21 @@ $totalcms->startBuffer(); // Start output buffering again
     </form>
 
     <!-- Get Collection -->
-    {% set posts = totalcms.collection("text") %}
+    {% set objects = totalcms.collection("text") %}
 
-    {{ dump(posts) }}
-    {% for post in posts %}
-    <h1>{{ post.id }}</h1>
+    {% for object in objects %}
+    <h1>{{ object.id }}</h1>
     {% endfor %}
 
-    <p>End</p>
-
-{#--
-
     <!-- Get index of a property from a collection. Ex: list of all categories -->
-    {% for tag in totalcms.property("text", "id") %}
-        <span class="label">{{ tag|upper }}</span>
+    {% for id in totalcms.property("text", "id") %}
+        <span class="label">{{ id|upper }}</span>
     {% endfor %}
 
     <!-- Get Object -->
-    {% set post = totalcms.object("text", "mytext") %}
-    <h1>{{ post.id }}</h1>
-    <p>{{ post.text }}</p>
+    {% set object = totalcms.object("text", "mytext") %}
+    <h1>{{ object.id }}</h1>
+    <p>{{ object.text }}</p>
 
     <!-- Get Text -->
     <h3>{{ totalcms.text("mytext") }}</h3>
@@ -105,8 +100,9 @@ $totalcms->startBuffer(); // Start output buffering again
     {% endfor %}
 
     <!-- Image -->
-    <img src="{{ totalcms.image('myimage', 'w=200&h=400&fit=focalpoint', 'webp') }}" alt="{{ totalcms.alt('myimage') }}">
---#}
+    <img src="{{ totalcms.image('myimage', 'w=200&h=400&fit=focalpoint', 'jpg') }}" alt="{{ totalcms.alt('myimage') }}">
+
+    <p>End</p>
 
 </body>
 </html>

@@ -57,7 +57,13 @@ final class TotalCMSTwigAdapter
     {
         $object = $this->object($collection, $id);
 
+        if (key_exists($property, $object)) {
+            return $object[$property];
+        }
+
         return $object[$property];
+
+        return '';
     }
 
     // Get an text property from an object
@@ -75,13 +81,17 @@ final class TotalCMSTwigAdapter
     }
 
     // Get an text property from an object
-    public function image(string $id, array $options = [], string $type = 'jpg', string $collection = 'image', string $property = 'image'): string
+    public function image(string $id, string $options = '', string $type = 'jpg', string $collection = 'image', string $property = 'image'): string
     {
-        $api   = $this->api . "/imageworks/$collection/$id/$property.$type";
-        $query = http_build_query($options);
+        $api = $this->api . "/imageworks/$collection/$id/$property.$type";
 
-        if (!empty($query)) {
-            $api .= "?$query";
+        // cache busting links
+        $image = $this->data($collection, $id, 'image');
+        $cache = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+        $api .= "?cache=$cache";
+
+        if (!empty($options)) {
+            $api .= "&$options";
         }
 
         return $api;
