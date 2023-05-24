@@ -229,8 +229,8 @@
 {#--------------------------------
   Range Macro
 --------------------------------#}
-{% macro rangeslider(name, class="", value="0", label="", placeholder="", help="", required=false, min, max, step) %}
-    {{ _self.input(name, "range", "range", class, value, label, placeholder, help, false, required, min, max, step) }}
+{% macro rangeslider(name, class="", value="0", label="", help="", required=false, min, max, step) %}
+    {{ _self.input(name, "range", "range", class, value, label, "", help, false, required, min, max, step) }}
 {% endmacro %}
 
 {#--------------------------------
@@ -247,27 +247,103 @@
     {{ _self.select(name, "list", class, value, label, placeholder, help, icon, required, options, multiple ) }}
 {% endmacro %}
 
+{#--------------------------------
+  Checkbox Macro
+--------------------------------#}
+{% macro checkbox(name, class = "", label = "", help = "", required = false) %}
 
+    {% set uuid = uniqid() %}
+    {% set type = "check" %}
+    {% set input = "checkbox" %}
 
+    <div class="form-field {{ type }}-field {{ class }}">
+        <input
+            id="field-{{ uuid }}"
+            name="{{ name }}"
+            type="{{ input }}"
+            {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
+            {% if required %}required{% endif %}
+        >
+        <label for="field-{{ uuid }}">{{ label }}</label>
+        {% if help %}
+        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% endif %}
+    </div>
 
-{% macro currency(name, value) %}
 {% endmacro %}
+
+{#--------------------------------
+  Toggle Macro
+--------------------------------#}
+{% macro toggle(name, class = "", label = "", help = "", required = false) %}
+
+    {% set uuid = uniqid() %}
+    {% set type = "toggle" %}
+
+    <div class="form-field {{ type }}-field {{ class }}">
+        {% if label %}
+        <label for="field-{{ uuid }}">{{ label }}</label>
+        {% endif %}
+        <div class="switch">
+            <input
+                id="field-{{ uuid }}"
+                name="{{ name }}"
+                type="checkbox"
+                {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
+                {% if required %}required{% endif %}
+            >
+            <label for="field-{{ uuid }}" aria-hidden="true"></label>
+        </div>
+        {% if help %}
+        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% endif %}
+    </div>
+
+{% endmacro %}
+
+{#--------------------------------
+  Radio Macro
+--------------------------------#}
+{% macro radio(name, class = "", label = "", help = "", required = false, options) %}
+
+    {% set uuid = uniqid() %}
+
+    <div class="form-field radio-field {{ class }}">
+
+        {% if label %}
+        <label>{{ label }}</label>
+        {% endif %}
+
+        {% for option in options %}
+        <div class="radio">
+            <input
+                id="field-{{ uuid }}-{{ loop.index }}"
+                name="{{ name }}"
+                type="radio"
+                value="{{ option.value }}"
+                {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
+                {% if required %}required{% endif %}
+                {% if option.selected %}checked{% endif %}
+            >
+            <label for="field-{{ uuid }}-{{ loop.index }}" class="radio-label">{{ option.label }}</label>
+        </div>
+        {% endfor %}
+
+        {% if help %}
+        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% endif %}
+    </div>
+
+{% endmacro %}
+
+
+
 
 {% macro styledtext(name, value) %}
 {% endmacro %}
 
 {% macro markdown(name, value) %}
 {% endmacro %}
-
-{% macro radio(name, value) %}
-{% endmacro %}
-
-{% macro toggle(name, value) %}
-{% endmacro %}
-
-{% macro checkbox(name, value) %}
-{% endmacro %}
-
 
 {#--------------------------------#}
 {# Dropzone Macros               #}
@@ -285,6 +361,9 @@
 {% endmacro %}
 
 {% macro deck(name, value) %}
+{% endmacro %}
+
+{% macro currency(name, value) %}
 {% endmacro %}
 
 {% macro blog() %}

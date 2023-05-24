@@ -38,7 +38,7 @@ $totalcms->startBuffer(); // Start output buffering
     small {
         font-size : 0.7em;
     }
-    .container {
+    .total-form {
         max-width : 1000px;
         margin    : 0 auto;
     }
@@ -75,9 +75,9 @@ $totalcms->startBuffer(); // Start output buffering again
         {{ form.textarea("mytext2", "text", "help-on-hover", "", "Textarea", "Enter some text", "This is my super help text.", true, 10 ) }}
 
         {% set options = [
-            {"value":"option1","label":"Option 1","selected":false},
+            {"value":"option1","label":"Option 1","selected":true},
             {"value":"option2","label":"Option 2","selected":false},
-            {"value":"option3","label":"Option 3","selected":false},
+            {"value":"option3","label":"Option 3","selected":true},
         ] %}
 
         <!-- form.select(name, type, class, value, label, placeholder, help, icon, required, options, mulitple, rows ) -->
@@ -109,7 +109,7 @@ $totalcms->startBuffer(); // Start output buffering again
         {{ form.number("mynum", "help-on-hover", "", "Number", "Enter a number", "This is my super help text.", true, false, 0, 10, 0.5) }}
 
         <!-- form.rangeslider(name, class, value, label, placeholder, help, required, min, max, step ) -->
-        {{ form.rangeslider("mynum", "help-on-hover", "", "Number", "Enter a number", "This is my super help text.", true, false, 0, 10, 0.5) }}
+        {{ form.rangeslider("mynum", "help-on-hover", "", "Range Slider", "This is my super help text.", true, false, 0, 10, 0.5) }}
 
         <!-- form.color(name, class, value, label, placeholder, help ) -->
         {{ form.color("mycolor", "help-on-hover", "", "Color", "Pick a color", "This is my super help text.", true, false) }}
@@ -118,13 +118,22 @@ $totalcms->startBuffer(); // Start output buffering again
             {"value":"dog","label":"Dog","selected":true},
             {"value":"cat","label":"Cat","selected":true},
             {"value":"hampster","label":"Hampster","selected":true},
-            {"value":"parrot","label":"Parrot","selected":false},
-            {"value":"spider","label":"Spider","selected":false},
-            {"value":"goldfish","label":"Goldfish","selected":false},
+            {"value":"parrot","label":"Parrot"},
+            {"value":"spider","label":"Spider"},
+            {"value":"goldfish","label":"Goldfish"},
         ] %}
 
         <!-- form.list(name, class, value, label, placeholder, help, icon, required, options, mulitple) -->
         {{ form.list("mylist", "help-on-hover", "", "List", "", "This is my super help text.", true, false, options, true) }}
+
+        <!-- form.checkbox(name, class, label, help, required) -->
+        {{ form.checkbox("mycheck", "help-on-hover", "Checkbox", "This is my super help text.") }}
+
+        <!-- form.toggle(name, class, label, help, required) -->
+        {{ form.toggle("mytoggle", "help-on-hover", "Toggle", "This is my super help text.") }}
+
+        <!-- form.radio(name, class, label, help, required, options) -->
+        {{ form.radio("myradio", "help-on-hover", "Radio", "This is my super help text.", false, options) }}
 
     </form>
 
