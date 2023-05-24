@@ -2,6 +2,32 @@
 {# Template Macros               #}
 {#--------------------------------#}
 
+{#---------------------------------------------#}
+{# Help Classes                               #}
+{#                                            #}
+{# Triggers: help-on-focus, help-on-hover     #}
+{# Styles: help-box, help-label, help-tooltip #}
+{#---------------------------------------------#}
+
+{% macro fieldstart(type, class, label, uuid) %}
+    <div class="form-field {{ type }}-field {{ class }}">
+
+        {% if label %}
+        <label for="field-{{ uuid }}">{{ label }}</label>
+        {% endif %}
+
+        <div class="form-group">
+{% endmacro %}
+
+{% macro fieldend(help, icon, uuid) %}
+            {% if icon %}<div class="form-group-icon"></div>{% endif %}
+        </div>
+        {% if help %}
+        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% endif %}
+    </div>
+{% endmacro %}
+
 {#
     Input Field Macro
     name        = name of the field
@@ -12,40 +38,112 @@
     label       = label of the field
     placeholder = placeholder of the field
     help        = help text of the field
+    icon        = show icon
+    required    = required field
+    min         = minimum value
+    max         = maximum value
+    step        = step value
 #}
-{% macro input(name, type = "text", input = "text", class="", value = "", label = "", placeholder = "", help = "", icon = true) %}
+{% macro input(name, type = "text", input = "text", class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, min, max, step) %}
 
     {% set uuid = uniqid() %}
 
-    {# Help Trigger classes: help-on-focus, help-on-hover #}
-    {# Help Style classes: help-box, help-label, help-tooltip #}
-    <div class="form-field {{ type }}-field {{ class }}">
-
-        {% if label %}
-        <label for="input-{{uuid}}">{{ label }}</label>
-        {% endif %}
-
-        <div class="form-group">
-            <input
-                id="input-{{uuid}}"
-                type="{{ input }}"
-                name="{{ name }}"
-                {% if value %}value="{{ value }}"{% endif %}
-                {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
-                {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
-            >
-            {% if icon %}<div class="form-group-icon"></div>{% endif %}
-        </div>
-        {% if help %}
-        <p class="help" id="help-{{uuid}}">{{ help }}</p>
-        {% endif %}
-    </div>
+    {{ _self.fieldstart(type, class, label, uuid) }}
+    <input
+        id="field-{{ uuid }}"
+        type="{{ input }}"
+        name="{{ name }}"
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if step %}step="{{ step }}"{% endif %}
+        {% if value %}value="{{ value }}"{% endif %}
+        {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+        {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if required %}required{% endif %}
+    >
+    {% if input == "range" %}
+    <div id="value-{{ uuid }}" class="range-value">{{ value }}</div>
+    {% endif %}
+    {{ _self.fieldend(help, icon, uuid) }}
 
 {% endmacro %}
 
-{# Textarea Field #}
-{% macro textarea(name, value, rows = 10, cols = 40) %}
-    <textarea name="{{ name }}" rows="{{ rows }}" cols="{{ cols }}">{{ value|e }}</textarea>
+{#
+    Textarea Field Macro
+    name        = name of the field
+    type        = type of the field data from Total CMS: text, number, date, etc
+    class       = classes added to the field
+    value       = value of the field
+    label       = label of the field
+    placeholder = placeholder of the field
+    help        = help text of the field
+    icon        = show icon
+    required    = required field
+    rows        = number of rows
+#}
+{% macro textarea(name, type = "text", class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, rows = 10) %}
+
+    {% set uuid = uniqid() %}
+
+    {{ _self.fieldstart(type, class, label, uuid) }}
+    <textarea
+        id="field-{{ uuid }}"
+        name="{{ name }}"
+        rows="{{ rows }}"
+        {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+        {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if required %}required{% endif %}
+    >{{ value|e }}</textarea>
+    {{ _self.fieldend(help, icon, uuid) }}
+
+{% endmacro %}
+
+{#
+    Select Field Macro
+    name        = name of the field
+    type        = type of the field data from Total CMS: text, number, date, etc
+    class       = classes added to the field
+    value       = value of the field
+    label       = label of the field
+    placeholder = placeholder of the field
+    help        = help text of the field
+    icon        = show icon
+    required    = required field
+    options     = array of options
+    multiple    = enable multiple select
+    rows        = number of rows
+#}
+{% macro select(name, type = "select", class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, options = [], multiple = false, rows = 10 ) %}
+
+    {% set uuid = uniqid() %}
+
+    {{ _self.fieldstart(type, class, label, uuid) }}
+    <select
+        id="field-{{ uuid }}"
+        name="{{ name }}"
+        {% if value %}value="{{ value }}"{% endif %}
+        {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if multiple %}multiple size="{{ rows }}"{% endif %}
+        {% if required %}required{% endif %}
+    >
+        {# select and select-mulitple have different ways of supporting placeholders #}
+        {% if multiple %}
+            {% if placeholder %}
+            <option disabled>{{ placeholder }}</option>
+            {% endif %}
+        {% else %}
+            {% if placeholder %}
+            {# <option {% if not value %}selected{% endif %} value="">{{ placeholder }}</option> #}
+            <option value="">{{ placeholder }}</option>
+            {% endif %}
+        {% endif %}
+
+        {% for option in options %}
+        <option value="{{ option.value }}" {%if option.selected %}selected{% endif %}>{{ option.label }}</option>
+        {% endfor %}
+    </select>
+    {{ _self.fieldend(help, icon, uuid) }}
+
 {% endmacro %}
 
 {# Hidden Field #}
@@ -57,48 +155,119 @@
 
 {% endmacro %}
 
-{#--------------------------------#}
-{# Input Macros                  #}
-{#--------------------------------#}
 
-{% macro datetime(name, value) %}
+{#--------------------------------
+  Date Macro
+--------------------------------#}
+{% macro date(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "date", "date", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro time(name, value) %}
+{#--------------------------------
+  Datetime Macros
+--------------------------------#}
+{% macro datetime(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "date", "datetime-local", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro number(name, value) %}
+{#--------------------------------
+  Time Macro
+--------------------------------#}
+{% macro time(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "date", "time", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro slug(name = "id", value="", label="ID", placeholder = "Object ID", help = "This is the ID of your object") %}
-    {{ _self.input(name, value, "slug", "text", label, placeholder, help) }}
+{#--------------------------------
+  Email Macro
+--------------------------------#}
+{% macro email(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "email", "email", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro email(name, value) %}
+{#--------------------------------
+  Password Macro
+--------------------------------#}
+{% macro password(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "password", "password", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro url(name, value) %}
+{#--------------------------------
+  ID Macro
+--------------------------------#}
+{% macro id(name="id", class="", value = "", label = "ID", placeholder = "Object ID", help = "This is the ID of your object", icon = true, required = false) %}
+    {{ _self.input(name, "id", "text", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro password(name, value) %}
+{#--------------------------------
+  URL Macro
+--------------------------------#}
+{% macro url(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "url", "url", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro list(name, value) %}
+{#--------------------------------
+  Telephone Macro
+--------------------------------#}
+{% macro tel(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "tel", "tel", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
+
+{#--------------------------------
+  Text Macro
+--------------------------------#}
+{% macro text(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.input(name, "text", "text", class, value, label, placeholder, help, icon, required) }}
+{% endmacro %}
+
+{#--------------------------------
+  Number Macro
+--------------------------------#}
+{% macro number(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, min, max, step) %}
+    {{ _self.input(name, "number", "number", class, value, label, placeholder, help, icon, required, min, max, step) }}
+{% endmacro %}
+
+{#--------------------------------
+  Range Macro
+--------------------------------#}
+{% macro rangeslider(name, class="", value="0", label="", placeholder="", help="", required=false, min, max, step) %}
+    {{ _self.input(name, "range", "range", class, value, label, placeholder, help, false, required, min, max, step) }}
+{% endmacro %}
+
+{#--------------------------------
+  Color Macro
+--------------------------------#}
+{% macro color(name, class="", value="#000000", label="Color", placeholder="Select a Color", help="") %}
+    {{ _self.input(name, "color", "color", class, value, label, placeholder, help, false) }}
+{% endmacro %}
+
+{#--------------------------------
+  List Macro
+--------------------------------#}
+{% macro list(name, class="", value="", label="List", placeholder="Pick from list", help="", icon = true, required = false, options = [], multiple = true ) %}
+    {{ _self.select(name, "list", class, value, label, placeholder, help, icon, required, options, multiple ) }}
+{% endmacro %}
+
+
+
 
 {% macro currency(name, value) %}
 {% endmacro %}
 
-
-{#--------------------------------#}
-{# Select Macros                 #}
-{#--------------------------------#}
-
-{% macro select(name, value) %}
+{% macro styledtext(name, value) %}
 {% endmacro %}
 
-{% macro multiselect(name, value) %}
+{% macro markdown(name, value) %}
 {% endmacro %}
+
+{% macro radio(name, value) %}
+{% endmacro %}
+
+{% macro toggle(name, value) %}
+{% endmacro %}
+
+{% macro checkbox(name, value) %}
+{% endmacro %}
+
 
 {#--------------------------------#}
 {# Dropzone Macros               #}
@@ -114,30 +283,6 @@
 
 {% macro gallery(name, value) %}
 {% endmacro %}
-
-
-
-{% macro styledtext(name, value) %}
-{% endmacro %}
-
-{% macro markdown(name, value) %}
-{% endmacro %}
-
-{% macro color(name, value) %}
-{% endmacro %}
-
-{% macro rangeslider(name, value) %}
-{% endmacro %}
-
-{% macro radio(name, value) %}
-{% endmacro %}
-
-{% macro toggle(name, value) %}
-{% endmacro %}
-
-{% macro checkbox(name, value) %}
-{% endmacro %}
-
 
 {% macro deck(name, value) %}
 {% endmacro %}
