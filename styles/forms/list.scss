@@ -1,7 +1,7 @@
 //------------------------------
 // List Field
 //------------------------------
-.list-field .form-group-label {
+.list-field .form-group-icon {
     background-image: var(--icon-list);
 }
 
@@ -51,7 +51,7 @@ $choices-z-index: 10;
             box-shadow: inset 0 0 0 hsla(0, 0%, 4%, 0.1);
             border-radius: 5px 0 0 0;
         }
-        + .form-group-label {
+        + .form-group-icon {
             border-color: hsl(0, 0%, 69%);
         }
     }

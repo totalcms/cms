@@ -43,14 +43,6 @@ $totalcms->startBuffer(); // Start output buffering
         margin    : 0 auto;
     }
     </style>
-    <link href="dist/forms.css" rel="stylesheet"></link>
-    <link rel="stylesheet" href="dist/froala/froala_editor.min.css">
-    <link rel="stylesheet" href="dist/froala/froala_style.min.css">
-    <link rel="stylesheet" href="dist/froala/plugins/code_view.min.css">
-    <link rel="stylesheet" href="dist/froala/plugins/image_manager.min.css">
-    <link rel="stylesheet" href="dist/froala/plugins/image.min.css">
-    <link rel="stylesheet" href="dist/froala/plugins/table.min.css">
-    <link rel="stylesheet" href="dist/froala/plugins/video.min.css">
 </head>
 <body>
 
@@ -62,80 +54,6 @@ $totalcms->startBuffer(); // Start output buffering again
 
 ?>
     <!-- Twig Template Testing -->
-
-    <!-- Macros for forms -->
-    {% import "form-macros.twig" as form %}
-
-    <form class="total-form" action="{{ totalcms.api }}/collection/blog">
-
-        <!-- form.input(name, type, input, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.input("mytext", "text", "text", "help-on-hover", "", "Text Input", "Text Placeholder", "This is my super help text.", true ) }}
-
-        <!-- form.textarea(name, type, class, value, label, placeholder, help, icon, required, rows ) -->
-        {{ form.textarea("mytext2", "text", "help-on-hover", "", "Textarea", "Enter some text", "This is my super help text.", true, 10 ) }}
-
-        {% set options = [
-            {"value":"option1","label":"Option 1","selected":true},
-            {"value":"option2","label":"Option 2","selected":false},
-            {"value":"option3","label":"Option 3","selected":true},
-        ] %}
-
-        <!-- form.select(name, type, class, value, label, placeholder, help, icon, required, options, mulitple, rows ) -->
-        {{ form.select("myselect", "select", "help-on-hover", "", "Select", "Placeholder Option", "This is my super help text.", true, false, options, false, 10 ) }}
-        {{ form.select("myselect", "select", "help-on-hover", "", "Select Multiple", "Placeholder Option", "This is my super help text.", true, false, options, true, 5 ) }}
-
-        <!-- form.date(name, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.date("mydate", "help-on-hover", "", "Date", "Text Placeholder", "This is my super help text.", true ) }}
-
-        <!-- form.datetime(name, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.datetime("mydate", "help-on-hover", "", "Date & Time", "Text Placeholder", "This is my super help text.", true) }}
-
-        <!-- form.time(name, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.time("mydate", "help-on-hover", "", "Time", "Text Placeholder", "This is my super help text.", true) }}
-
-        <!-- form.id(name, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.id("id", "help-on-hover") }}
-
-        <!-- form.url(name, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.url("myurl", "help-on-hover", "", "URL", "Text Placeholder", "This is my super help text.", true) }}
-
-        <!-- form.tel(name, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.tel("mytel", "help-on-hover", "", "Telephone", "Text Placeholder", "This is my super help text.", true) }}
-
-        <!-- form.text(name, class, value, label, placeholder, help, icon, required ) -->
-        {{ form.text("mytext", "help-on-hover", "", "Text", "Placeholder", "This is my super help text.", true) }}
-
-        <!-- form.number(name, class, value, label, placeholder, help, icon, required, min, max, step ) -->
-        {{ form.number("mynum", "help-on-hover", "", "Number", "Enter a number", "This is my super help text.", true, false, 0, 10, 0.5) }}
-
-        <!-- form.rangeslider(name, class, value, label, placeholder, help, required, min, max, step ) -->
-        {{ form.rangeslider("mynum", "help-on-hover", "", "Range Slider", "This is my super help text.", true, false, 0, 10, 0.5) }}
-
-        <!-- form.color(name, class, value, label, placeholder, help ) -->
-        {{ form.color("mycolor", "help-on-hover", "", "Color", "Pick a color", "This is my super help text.", true, false) }}
-
-        {% set options = [
-            {"value":"dog","label":"Dog","selected":true},
-            {"value":"cat","label":"Cat","selected":true},
-            {"value":"hampster","label":"Hampster","selected":true},
-            {"value":"parrot","label":"Parrot"},
-            {"value":"spider","label":"Spider"},
-            {"value":"goldfish","label":"Goldfish"},
-        ] %}
-
-        <!-- form.list(name, class, value, label, placeholder, help, icon, required, options, mulitple) -->
-        {{ form.list("mylist", "help-on-hover", "", "List", "", "This is my super help text.", true, false, options, true) }}
-
-        <!-- form.checkbox(name, class, label, help, required) -->
-        {{ form.checkbox("mycheck", "help-on-hover", "Checkbox", "This is my super help text.") }}
-
-        <!-- form.toggle(name, class, label, help, required) -->
-        {{ form.toggle("mytoggle", "help-on-hover", "Toggle", "This is my super help text.") }}
-
-        <!-- form.radio(name, class, label, help, required, options) -->
-        {{ form.radio("myradio", "help-on-hover", "Radio", "This is my super help text.", false, options) }}
-
-    </form>
 
     <!-- Get Collection -->
     {% set objects = totalcms.collection("text") %}
@@ -168,31 +86,6 @@ $totalcms->startBuffer(); // Start output buffering again
     <img src="{{ totalcms.image('myimage', 'w=200&h=400&fit=focalpoint', 'jpg') }}" alt="{{ totalcms.alt('myimage') }}">
 
     <p>End</p>
-
-    <script>
-    const selects = Array.from(document.querySelectorAll('.select-field select:not([multiple])'));
-    const emptySelect = select => {
-        select.value ? select.classList.remove('empty') : select.classList.add('empty');
-    };
-    selects.forEach(select => {
-        emptySelect(select);
-        select.addEventListener('change', e => emptySelect(e.target) );
-    });
-    </script>
-
-    <script src="dist/choices/choices.js"></script>
-    <script>
-    const elements = Array.from(document.querySelectorAll('.list-field select'));
-    elements.forEach(element => {
-        element.choices = new Choices(element, {
-            allowHTML             : true,
-            removeItemButton      : true,
-            duplicateItemsAllowed : false,
-            addChoices            : true,
-        });
-    });
-    </script>
-
 
 </body>
 </html>

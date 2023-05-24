@@ -130,3 +130,10 @@
 [type="number"] + .form-group-icon {
     background-image: var(--icon-number);
 }
+
+//------------------------------
+// Markdown Field
+//------------------------------
+.markdown-field .form-group-icon {
+    background-image: var(--icon-markdown);
+}

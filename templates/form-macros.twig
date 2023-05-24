@@ -149,7 +149,7 @@
 {# Hidden Field #}
 {% macro hidden(name, value) %}
 
-    <div class="form-field">
+    <div class="form-field hidden-field">
         <input type="hidden" name="{{ name }}" value="{{ value }}">
     </div>
 
@@ -336,14 +336,28 @@
 
 {% endmacro %}
 
-
-
-
-{% macro styledtext(name, value) %}
+{#--------------------------------
+  Styled Text Macro
+--------------------------------#}
+{% macro styledtext(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.textarea(name, "styledtext", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
-{% macro markdown(name, value) %}
+{#--------------------------------
+  SVG Macro
+--------------------------------#}
+{% macro svg(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {{ _self.textarea(name, "svg", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
+
+{#--------------------------------
+  Markdown Macro
+--------------------------------#}
+{% macro markdown(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+    {# TODO: create JS lib that adds toolbar + preview #}
+    {{ _self.textarea(name, "markdown", class, value, label, placeholder, help, icon, required) }}
+{% endmacro %}
+
 
 {#--------------------------------#}
 {# Dropzone Macros               #}
@@ -363,27 +377,15 @@
 {% macro deck(name, value) %}
 {% endmacro %}
 
-{% macro currency(name, value) %}
-{% endmacro %}
-
 {% macro blog() %}
 {% endmacro %}
 
 {#--
-
-https://choices-js.github.io/Choices/
-
-http://stryzhevskyi.github.io/rangeSlider/
 https://sortablejs.github.io/Sortable/
-
-https://www.w3schools.com/howto/howto_css_switch.asp
-https://codepen.io/coldsoul/pen/pbdvPa
-https://codepen.io/triss90/pen/XNEdRe
 https://codepen.io/mblode/pen/VwGxaO
 
 https://hslpicker.com/
 
 https://felixg.io/products/datedropper-javascript
 https://github.com/wbotelhos/raty
-
 --#}
