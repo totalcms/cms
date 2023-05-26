@@ -1,9 +1,0 @@
-{
-  "title": "Bento Grid",
-  "cells": [
-    {
-      "type": "markdown",
-      "data": "* Layout Template for the Admin buttons (delete, links, etc). This way you can turn any grid into admin grid.\n* Query stack that helps users create pre-defined jsql queries that can be referenced inside Bento Grid."
-    }
-  ]
-}

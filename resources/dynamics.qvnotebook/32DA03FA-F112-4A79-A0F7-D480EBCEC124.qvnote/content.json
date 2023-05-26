@@ -1,9 +1,0 @@
-{
-  "title": "Dynamics Config",
-  "cells": [
-    {
-      "type": "text",
-      "data": "Config files load order....&nbsp;<div><br></div><div>1. config/defaults.php</div><div>2. env.php</div><div>3. config/ {{env}}.php -&gt; production.php, development.php, etc.</div><div>4. DOCUMENT_ROOT/env.php<br><div><br></div></div>"
-    }
-  ]
-}

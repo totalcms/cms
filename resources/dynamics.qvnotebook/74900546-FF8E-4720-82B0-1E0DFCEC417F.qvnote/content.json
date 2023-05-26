@@ -1,9 +1,0 @@
-{
-  "title": "Infinity Grid",
-  "cells": [
-    {
-      "type": "markdown",
-      "data": "* Grid variant stack... by tag or toggle\n* Loop through Cards data inside grid? Grid within Grid 🤔"
-    }
-  ]
-}
