@@ -2,17 +2,16 @@
 
 namespace TotalCMS\Domain\Import;
 
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
-use TotalCMS\Factory\LoggerFactory;
 use Cake\Chronos\Chronos;
 use Cocur\Slugify\Slugify;
 use Embed\Embed;
-use Exception;
-use League\Uri\Parser;
+use League\Uri\Uri;
 use Psr\Log\LoggerInterface;
 use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Factory\LoggerFactory;
 
 final class UrlImporter
 {
@@ -37,13 +36,14 @@ final class UrlImporter
         $this->validate($link);
 
         try {
-            $urlParser = new Parser();
-            $slugify   = new Slugify();
+            $embed = new Embed();
+            $info  = $embed->get($link);
 
-            $embed  = new Embed();
-            $info   = $embed->get($link);
-            $id     = $slugify->slugify($info->title ?? $link);
-            $domain = $urlParser->parse($link)['host'];
+            $slugify = new Slugify();
+            $id      = $slugify->slugify($info->title ?? $link);
+
+            $uri    = Uri::createFromString($link);
+            $domain = $uri->getHost();
 
             if ($this->storage->existsObjectId($collection, $id)) {
                 // Deal with duplicate IDs
@@ -61,7 +61,7 @@ final class UrlImporter
 
             $this->storage->saveObject($collection, new ObjectData($record['id'], $record));
             // @todo Add logic that will download the image and save it to the post
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             $this->logger->error(
                 sprintf('Error importing URL: %s', $exception->getMessage())
             );
