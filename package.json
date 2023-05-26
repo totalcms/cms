@@ -17,6 +17,7 @@
     "dompurify": "^3.0.2",
     "dropzone": "^6.0.0-beta.2",
     "froala-editor": "^4.0.18",
+    "swagger-ui": "^4.19.0",
     "tippy.js": "^6.3.7"
   }
 }
