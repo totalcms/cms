@@ -20,12 +20,12 @@ esbuild.build({
     target    : "esnext",
     // watch       : true,
     // incremental : true,
-    outdir      : 'public/cms-assets',
+    outdir      : 'public/tcms-assets',
     external    : [],
     plugins     : [
         globPlugin(),
         clean({
-            patterns: ['public/cms-assets'],
+            patterns: ['public/tcms-assets'],
         }),
         // Copy in the static external libraries
         copy.default({assets: {
@@ -78,7 +78,7 @@ esbuild.build({
     minify    : true,
     metafile  : true,
     sourcemap : true,
-    outdir      : 'public/cms-assets',
+    outdir      : 'public/tcms-assets',
     external    : [
     ],
     plugins     : [
