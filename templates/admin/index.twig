@@ -1,0 +1,7 @@
+<h1>Total CMS Admin</h1>
+
+{% set objects = totalcms.collection("text") %}
+
+{% for object in objects %}
+<h1>{{ object.id }}</h1>
+{% endfor %}

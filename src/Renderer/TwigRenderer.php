@@ -3,23 +3,23 @@
 namespace TotalCMS\Renderer;
 
 use Psr\Http\Message\ResponseInterface;
-use Slim\Views\PhpRenderer;
+use TotalCMS\Domain\Twig\TwigEngine;
 
 /**
  * A HTML template renderer.
  */
-final class TemplateRenderer
+final class TwigRenderer
 {
-    private PhpRenderer $phpRenderer;
+    private TwigEngine $twigEngine;
 
     /**
      * The constructor.
      *
-     * @param PhpRenderer $phpRenderer The template engine
+     * @param TwigEngine $twigEngine
      */
-    public function __construct(PhpRenderer $phpRenderer)
+    public function __construct(TwigEngine $twigEngine)
     {
-        $this->phpRenderer = $phpRenderer;
+        $this->twigEngine = $twigEngine;
     }
 
     /**
@@ -33,6 +33,10 @@ final class TemplateRenderer
      */
     public function template(ResponseInterface $response, string $template, array $data = []): ResponseInterface
     {
-        return $this->phpRenderer->render($response, $template, $data);
+        $body = $this->twigEngine->render($template, $data);
+
+        $response->getBody()->write($body);
+
+        return $response;
     }
 }

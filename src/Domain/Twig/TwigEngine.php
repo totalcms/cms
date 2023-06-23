@@ -38,8 +38,8 @@ final class TwigEngine
         try {
             $string = $this->twig->render($templateName, $data);
         } catch (\Exception $e) {
-            // Handle exception
-            $string = '<!--' . $e->getMessage() . '-->';
+            // throw new \DomainException("Error rendering template: $templateName - " . $e->getMessage());
+            $string = "<!-- Error rendering template: $templateName - " . $e->getMessage() . '-->';
         }
 
         return $string;

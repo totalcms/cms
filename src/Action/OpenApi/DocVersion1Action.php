@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Action\OpenApi;
 
-use TotalCMS\Renderer\TemplateRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\Yaml\Yaml;
+use TotalCMS\Renderer\TemplateRenderer;
 
 /**
  * Action.

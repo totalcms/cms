@@ -6,6 +6,7 @@ use TotalCMS\Action\PreflightAction;
 return function (App $app) {
     $app->options('/', PreflightAction::class);
 
+    (require __DIR__ . '/routes/admin.php')($app);
     (require __DIR__ . '/routes/collections.php')($app);
     (require __DIR__ . '/routes/docs.php')($app);
     (require __DIR__ . '/routes/download.php')($app);
