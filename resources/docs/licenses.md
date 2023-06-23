@@ -38,6 +38,7 @@ Everything in Standard including:
 * podcast
 * menu
 * custom collection schemas
+* site search
 
 ## Free Trial
 

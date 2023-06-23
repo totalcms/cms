@@ -20,12 +20,12 @@ esbuild.build({
     target    : "esnext",
     // watch       : true,
     // incremental : true,
-    outdir      : 'dist',
+    outdir      : 'public/cms-assets',
     external    : [],
     plugins     : [
         globPlugin(),
         clean({
-            patterns: ['dist'],
+            patterns: ['public/cms-assets'],
         }),
         // Copy in the static external libraries
         copy.default({assets: {
@@ -56,6 +56,17 @@ esbuild.build({
             from : "node_modules/dropzone/dist/dropzone-min.js",
             to   : "dropzone"
         }}),
+        copy.default({assets: {
+            from : [
+                "node_modules/swagger-ui-dist/swagger-ui-bundle.js",
+                "node_modules/swagger-ui-dist/swagger-ui-standalone-preset.js",
+                "node_modules/swagger-ui-dist/swagger-ui.css",
+                "node_modules/swagger-ui-dist/swagger-ui-bundle.js.map",
+                "node_modules/swagger-ui-dist/swagger-ui-standalone-preset.js.map",
+                "node_modules/swagger-ui-dist/swagger-ui.css.map",
+            ],
+            to   : "swagger-ui"
+        }}),
     ],
 }).catch(() => process.exit(1));
 
@@ -67,7 +78,7 @@ esbuild.build({
     minify    : true,
     metafile  : true,
     sourcemap : true,
-    outdir      : 'dist',
+    outdir      : 'public/cms-assets',
     external    : [
     ],
     plugins     : [

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../javascript/admin.ts"],
+  "sourcesContent": ["var test = \"hello world\"\nconsole.log(test)\n"],
+  "mappings": ";AAAA,IAAI,OAAO;AACX,QAAQ,IAAI,IAAI;",
+  "names": []
+}
