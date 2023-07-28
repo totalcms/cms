@@ -1,7 +1,6 @@
-<h1>Total CMS Admin</h1>
+{% extends "admin-layout.twig" %}
 
-{% set objects = totalcms.collection("text") %}
-
-{% for object in objects %}
-<h1>{{ object.id }}</h1>
-{% endfor %}
+{% block content %}
+    <h1>Index</h1>
+    <p class="important">Welcome to my awesome homepage.</p>
+{% endblock %}
