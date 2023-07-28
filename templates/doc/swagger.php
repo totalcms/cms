@@ -12,7 +12,7 @@
 <script>
     window.onload = function () {
         const ui = SwaggerUIBundle({
-            spec: <?php echo $spec; ?>,
+            spec: <?php echo $spec; // @phpstan-ignore-line?>,
             dom_id: '#swagger-ui',
             deepLinking: true,
             supportedSubmitMethods: [],
