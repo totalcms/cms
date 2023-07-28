@@ -9,41 +9,14 @@ use Faker\Provider\Lorem;
 /**
  * Provider for the Faker generator.
  */
-class FakerImage extends Base
+class FakerImageGD extends Base
 {
-    public static $dir;
-
     private static function hex2rgb(string $hex): array
     {
         $rgb = str_split(ltrim($hex, '#'), 2);
         $rgb = array_map('intval', array_map('hexdec', $rgb));
 
         return $rgb;
-    }
-
-    public static function imageUrl($width = 640, $height = 480): string
-    {
-        return FakerPicsum::picsumUrl(self::$dir, $width, $height, false, false);
-    }
-
-    public static function image($width = 640, $height = 480): string
-    {
-        return FakerPicsum::picsum(self::$dir, $width, $height, false, false);
-    }
-
-    public static function imageBlur($width = 640, $height = 480): string
-    {
-        return FakerPicsum::picsum(self::$dir, $width, $height, false, true);
-    }
-
-    public static function imageBW($width = 640, $height = 480): string
-    {
-        return FakerPicsum::picsum(self::$dir, $width, $height, true, false);
-    }
-
-    public static function imageBWBlur($width = 640, $height = 480): string
-    {
-        return FakerPicsum::picsum(self::$dir, $width, $height, false, false);
     }
 
     /**
@@ -60,10 +33,10 @@ class FakerImage extends Base
      *
      * @example '/path/to/dir/13b73edae8443990be1aa8f1a483bc27.jpg'
      */
-    public static function imageText($width = 640, $height = 480, $text = null, $textSize = 100, $textColor = null, $bgColor = 'f8f8f8'): string
+    public static function imageGD($dir = null, $width = 640, $height = 480, $text = null, $textSize = 100, $textColor = null, $bgColor = 'f8f8f8'): string
     {
         // Default to system temp dir
-        $dir = self::$dir ?? sys_get_temp_dir();
+        $dir = $dir ?? sys_get_temp_dir();
 
         // Validate directory path
         if (!is_dir($dir) || !is_writable($dir)) {
@@ -97,7 +70,7 @@ class FakerImage extends Base
             throw new \RuntimeException('Failed to allocate text color.');
         }
 
-        $fontFile = __DIR__ . '/Roboto-Regular.ttf';
+        $fontFile = __DIR__ . '/FakerImageGD.ttf'; // Roboto Regular
         $textBox  = imagettfbbox($textSize, 0, $fontFile, $text);
 
         if (!is_array($textBox)) {

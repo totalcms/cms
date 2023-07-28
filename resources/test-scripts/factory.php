@@ -2,12 +2,12 @@
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use TotalCMS\Utils\FakerImage;
+use TotalCMS\Utils\FakerExtension;
 
 $faker = Faker\Factory::create();
-$faker->addProvider(new FakerImage($faker));
+$faker->addProvider(new FakerExtension($faker));
 
-FakerImage::$dir = __DIR__ . '/faker-images';
+FakerExtension::$dir = __DIR__ . '/faker-images';
 
 $objects  = [];
 $quantity = 3;
@@ -16,11 +16,11 @@ $def = [
     'id'      => 'slug',
     'title'   => 'words|5,1',
     'summary' => 'paragraph',
-    'content' => 'paragraphs|2,1',
-    'tags'    => 'words',
+    // 'content' => 'paragraphs|2,1',
+    'tags'    => 'tags',
     'color'   => 'hexColor',
     'date'    => 'iso8601',
-    'image'   => 'imageText|1280,720,,200,,000000',
+    // 'image'   => 'imageText|1280,720,,200,,000000',
 ];
 
 function parseFakerRule(string $rule): array
