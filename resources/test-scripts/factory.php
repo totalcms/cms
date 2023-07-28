@@ -7,6 +7,8 @@ use TotalCMS\Utils\FakerImage;
 $faker = Faker\Factory::create();
 $faker->addProvider(new FakerImage($faker));
 
+FakerImage::$dir = __DIR__ . '/faker-images';
+
 $objects  = [];
 $quantity = 3;
 
@@ -18,30 +20,8 @@ $def = [
     'tags'    => 'words',
     'color'   => 'hexColor',
     'date'    => 'iso8601',
-    'image'   => 'image|1280,720',
+    'image'   => 'imageText|1280,720,,200,,000000',
 ];
-
-function imageGDRule(array $args): array
-{
-    global $faker;
-
-    return [
-        $args[0],
-        intval($args[1] ?? $faker->numberBetween(600, 800)),
-        intval($args[2] ?? $faker->numberBetween(400, 600)),
-        empty($args[3]) ? strtoupper(substr($faker->word(), 0, rand(1, 6))) : $args[2],
-        intval($args[4] ?? 100),
-        $args[5] ?? $faker->hexColor,
-        $args[6] ?? '#f8f8f8',
-    ];
-}
-
-function imageRule(array $args): array
-{
-    array_unshift($args, __DIR__ . '/faker-images');
-
-    return $args;
-}
 
 function parseFakerRule(string $rule): array
 {
@@ -52,12 +32,6 @@ function parseFakerRule(string $rule): array
         $args = preg_split('/\s*,\s*/', $parts[1]);
         if ($args === false) {
             $args = [];
-        }
-        if (str_starts_with($method, 'image')) {
-            $args = imageRule($args);
-        }
-        if ($method === 'imageText') {
-            $args = imageGDRule($args);
         }
     }
 

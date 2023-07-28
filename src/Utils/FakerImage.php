@@ -3,12 +3,16 @@
 namespace TotalCMS\Utils;
 
 use Faker\Provider\Base;
+use Faker\Provider\Color;
+use Faker\Provider\Lorem;
 
 /**
  * Provider for the Faker generator.
  */
 class FakerImage extends Base
 {
+    public static $dir;
+
     private static function hex2rgb(string $hex): array
     {
         $rgb = str_split(ltrim($hex, '#'), 2);
@@ -17,44 +21,57 @@ class FakerImage extends Base
         return $rgb;
     }
 
-    public static function image(): string
+    public static function imageUrl($width = 640, $height = 480): string
     {
-        $args = func_get_args();
-        // Pass all arguments to the picsum as default image provider
-        return FakerPicsum::picsum(...$args);
+        return FakerPicsum::picsumUrl(self::$dir, $width, $height, false, false);
+    }
+
+    public static function image($width = 640, $height = 480): string
+    {
+        return FakerPicsum::picsum(self::$dir, $width, $height, false, false);
+    }
+
+    public static function imageBlur($width = 640, $height = 480): string
+    {
+        return FakerPicsum::picsum(self::$dir, $width, $height, false, true);
+    }
+
+    public static function imageBW($width = 640, $height = 480): string
+    {
+        return FakerPicsum::picsum(self::$dir, $width, $height, true, false);
+    }
+
+    public static function imageBWBlur($width = 640, $height = 480): string
+    {
+        return FakerPicsum::picsum(self::$dir, $width, $height, false, false);
     }
 
     /**
      * Generate a new image to disk and return its location
      * Requires gd (default in most PHP setup).
      *
+     * @param string $dir Path of the generated file, if null will use the system temp dir
      * @param int $width Width of the picture in pixels
      * @param int $height Height of the picture in pixels
      * @param string $text text to generate on the picture, default no text, if true given will output width and height
      * @param int $textSize
      * @param string $textColor Text color in hexadecimal format, default to white
      * @param string $bgColor Background color in hexadecimal format (eg. #7f7f7f), default to black
-     * @param string $dir Path of the generated file, if null will use the system temp dir
-     * @param string $format
      *
      * @example '/path/to/dir/13b73edae8443990be1aa8f1a483bc27.jpg'
      */
-    public static function imageText(
-        string $dir = null,
-        int $width = 640,
-        int $height = 480,
-        string $text = null,
-        int $textSize = 100,
-        string $textColor = 'ffffff',
-        string $bgColor = '000000',
-    ): string|false {
+    public static function imageText($width = 640, $height = 480, $text = null, $textSize = 100, $textColor = null, $bgColor = 'f8f8f8'): string
+    {
         // Default to system temp dir
-        $dir = is_null($dir) ? sys_get_temp_dir() : $dir;
+        $dir = self::$dir ?? sys_get_temp_dir();
 
         // Validate directory path
         if (!is_dir($dir) || !is_writable($dir)) {
             throw new \InvalidArgumentException(sprintf('Cannot write to directory "%s"', $dir));
         }
+
+        $text      = empty($text) ? strtoupper(substr(Lorem::word(), 0, rand(1, 6))) : $text;
+        $textColor = empty($textColor) ? Color::hexColor() : $textColor;
 
         // Generate a random filename.
         $filename = uniqid('imageText-', true) . '.png';
@@ -72,10 +89,6 @@ class FakerImage extends Base
 
         $bgColor = self::hex2rgb($bgColor);
         imagecolorallocate($image, ...$bgColor);
-
-        if ($text === null) {
-            $text = $width . 'x' . $height;
-        }
 
         $textColor = self::hex2rgb($textColor);
         $textColor = imagecolorallocate($image, ...$textColor);

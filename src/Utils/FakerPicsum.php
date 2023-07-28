@@ -11,24 +11,13 @@ class FakerPicsum extends Base
 
     private static array $IMAGEEXTENSIONS = [self::JPG_IMAGE, self::WEBP_IMAGE];
 
-    public static function picsumUrl($width = 640, $height = 480, $id = null, $randomize = true, $gray = false, $blur = null, $imageExtension = null)
+    public static function picsumUrl($width = 640, $height = 480, $gray = false, $blur = false)
     {
         $url = '';
-        if ($id) {
-            $url = 'id/' . $id . '/';
-        }
         $url .= "{$width}/{$height}";
-        $queryString = self::buildQueryString($gray, $blur, $randomize);
+        $queryString = self::buildQueryString($gray, $blur, true);
 
-        return self::buildPicsumUrl($url, $queryString, $imageExtension);
-    }
-
-    public static function picsumStaticRandomUrl($width = 640, $height = 480, $gray = false, $blur = null, $imageExtension = null)
-    {
-        $url         = 'seed/' . uniqid() . '/' . "{$width}/{$height}";
-        $queryString = self::buildQueryString($gray, $blur, null);
-
-        return self::buildPicsumUrl($url, $queryString, $imageExtension);
+        return self::buildPicsumUrl($url, $queryString, 'jpg');
     }
 
     /**
@@ -50,7 +39,7 @@ class FakerPicsum extends Base
      */
     public static function picsum($dir = null, $width = 640, $height = 480, $gray = false, $blur = false): string
     {
-        $url = static::picsumUrl($width, $height, null, true, $gray, $blur, 'jpg');
+        $url = static::picsumUrl($width, $height, $gray, $blur);
 
         return self::fetchImage($url, $dir, true);
     }
