@@ -68,9 +68,9 @@ $totalcms->startBuffer(); // Start output buffering again
     {% endfor %}
 
     <!-- Get Object -->
-    {% set object = totalcms.object("text", "mytext") %}
-    <h1>{{ object.id }}</h1>
-    <p>{{ object.text }}</p>
+    {% set page = totalcms.object("page", "about") %}
+    <h1>{{ page.title }}</h1>
+    <p>{{ page.desc }}</p>
 
     <!-- Get Text -->
     <h3>{{ totalcms.text("mytext") }}</h3>
