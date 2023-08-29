@@ -22,10 +22,59 @@ used to store the data for a collection
 
 This file is used to store some meta data about the collection.
 
-* The name of the collection
-* The schema that this collection conforms
-* An optional URL that is the root URL for the object on the web.
-* This can be used to generate RSS feeds for blogs/podcasts or Sitemap files.
+* **name**: The name of the collection
+* **schema**: The schema that this collection conforms
+* **url**: An optional URL that is the root URL for the object on the web.
+  * This can be used to generate RSS feeds for blogs/podcasts or Sitemap files.
+* **forms:defaults**: These are the default form labels, help text and field type
+* **forms:custom**: This allows you to override the default form values for a specific object ID.
+
+For built-in schemas the defaults are imported from the schema file
+
+```json
+{
+    "name"   : "text",
+    "schema" : "text",
+    "url"    : "",
+    "form"  : {
+        "defaults": {
+            "id" : {
+                "label" : "Text ID",
+                "help"  : "A unique ID for this text. No spaces or special characters.",
+                "type"  : "permalink"
+            },
+            "text" : {
+                "label" : "Text",
+                "help"  : "Edit the text here.",
+                "type"  : "text"
+            }
+        },
+        "custom" : {
+            "myoptions" : {
+                "text" : {
+                    "label"   : "Selectable Text Options",
+                    "help"    : "Select one of the options.",
+                    "type"    : "select",
+                    "settings" : {
+                        "options" : [
+                            "Option 1",
+                            "Option 2",
+                            "Option 3",
+                        ]
+                    }
+                }
+            },
+            "aboutme" : {
+                "text" : {
+                    "label" : "About Me",
+                    "help"  : "Write a little bit about yourself.",
+                    "type"  : "styledtext"
+                }
+            }
+        }
+    }
+}
+```
 
 ### .index.json
 

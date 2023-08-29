@@ -23,5 +23,18 @@
     ],
     "index": [
         "id"
-    ]
+    ],
+    "form": {
+        "id": {
+            "label" : "Text ID",
+            "help"  : "A unique ID for this text. No spaces or special characters.",
+            "type"  : "slug"
+        },
+        "text": {
+            "label"   : "Text",
+            "help"    : "Edit the text here.",
+            "type"    : "textarea",
+            "default" : "This is the default text."
+        }
+    }
 }

@@ -1,0 +1,75 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://www.totalcms.co/schemas/meta.json",
+    "description": "A schema for a Total CMS Collection meta data file.",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type"  : "string",
+            "description": "The name of the collection."
+        },
+        "schema": {
+            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+            "description": "The name of the schema that the collection objects conform to"
+        },
+        "url": {
+            "$ref": "https://www.totalcms.co/schemas/properties/url.json"
+        },
+        "form": {
+            "description": "Form fields data for the collection",
+            "type": "object",
+            "properties": {
+                "defaults": {
+                    "$ref": "#/$defs/formFields"
+                },
+                "custom": {
+                    "type": "object",
+                    "description": "Custom values for the form fields for specific objects.",
+                    "patternProperties": {
+                        "^\\S+$": {
+                            "$ref": "#/$defs/formFields"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "$defs" : {
+        "formFields" : {
+            "type": "object",
+            "description": "Values for the form fields.",
+            "patternProperties": {
+                "$comment": "This patterns matches the object property names.",
+                "^\\S+$": {
+                    "type": "object",
+                    "properties": {
+                        "label": {
+                            "type" : "string",
+                            "description": "The label for the field."
+                        },
+                        "help": {
+                            "type" : "string",
+                            "description": "The help text for the field."
+                        },
+                        "type": {
+                            "type" : "string",
+                            "description": "The type of the field."
+                        },
+                        "default": {
+                            "type" : "string",
+                            "description": "The default value for the field."
+                        },
+                        "settings": {
+                            "type" : "object",
+                            "description": "The settings for generating the field."
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "name",
+        "schema"
+    ]
+}

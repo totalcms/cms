@@ -24,9 +24,9 @@ final class CollectionData
         'url',
     ];
 
-    public string $name;       // collection name
-    public string $schema;     // schema name
-    public string $url;        // collection url to object page minus the slug
-    public array  $defaults;   // default form values
-    public array  $overrides;  // override form values for specific objects
+    public string $name;    // collection name
+    public string $schema;  // schema name
+    public string $url;     // collection url to object page minus the slug
+    public array $form;    // Rules for form labels, help text and field types
+    public array $factory;  // Rules for factory object generation
 }
