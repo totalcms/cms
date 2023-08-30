@@ -72,6 +72,10 @@ For built-in schemas the defaults are imported from the schema file
                 }
             }
         }
+    },
+    "factory" : {
+        "id"   : "slug",
+        "text" : "paragraph"
     }
 }
 ```

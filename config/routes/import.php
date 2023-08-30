@@ -6,7 +6,7 @@ use TotalCMS\Action\Import;
 
 return function (App $app) {
     $app->group('/import', function (RouteCollectorProxy $group) {
-        // !$group->post('/{collection}[/factory]', Import\ImportFactoryAction::class)->setName('import-factory');
+        $group->post('/{collection}/factory', Import\ImportFactoryAction::class)->setName('import-factory');
         // !$group->post('/{collection}/yaml', Import\ImportYamlAction::class)->setName('import-yaml');
         // !$group->post('/{collection}/json', Import\ImportJsonAction::class)->setName('import-json');
         // !$group->post('/{collection}/csv', Import\ImportCsvAction::class)->setName('import-csv');

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Utils;
 
+use Faker\Generator as FakerGenerator;
 use Faker\Provider\Base;
 use Faker\Provider\Lorem;
 
@@ -10,7 +11,13 @@ use Faker\Provider\Lorem;
  */
 class FakerExtension extends Base
 {
-    public static $dir;
+    public static string $dir;
+
+    public function __construct(FakerGenerator $faker)
+    {
+        parent::__construct($faker);
+        self::$dir = sys_get_temp_dir() . '/faker-images';
+    }
 
     public static function imageUrl($width = 640, $height = 480): string
     {

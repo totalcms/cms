@@ -31,7 +31,10 @@
                         }
                     }
                 }
-            }
+            },
+            "required": [
+                "defaults"
+            ]
         }
     },
     "$defs" : {
@@ -70,6 +73,7 @@
     },
     "required": [
         "name",
-        "schema"
+        "schema",
+		"form"
     ]
 }

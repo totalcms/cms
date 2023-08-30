@@ -2,13 +2,12 @@
 
 namespace TotalCMS\Action\Object;
 
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Transformer\ObjectMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
-use UnexpectedValueException;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectFetchAction
 {
@@ -32,14 +31,11 @@ final class ObjectFetchAction
      *
      * @return ResponseInterface the response
      */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
         try {
             $object = $this->objectFetcher->fetchObject($args['collection'], $args['id']);
-        } catch (UnexpectedValueException $e) {
+        } catch (\UnexpectedValueException $e) {
             throw new HttpNotFoundException($request, $e->getMessage());
         }
 
