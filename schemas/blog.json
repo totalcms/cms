@@ -34,9 +34,6 @@
     },
     "id": {
       "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-      "label" : "Post ID",
-      "help"  : "A unique ID for this blog post. No spaces or special characters.",
-      "field" : "slug"
     },
     "date": {
       "$ref": "https://www.totalcms.co/schemas/properties/date.json"
@@ -102,5 +99,120 @@
     "tags",
     "title",
     "updated"
-  ]
+  ],
+  "form" : {
+	"id": {
+		"label" : "Blog Post ID",
+		"help"  : "A unique ID for this post. No spaces or special characters.",
+		"type"  : "slug"
+	},
+	"content": {
+		"label" : "Content",
+		"help"  : "Main blog post content",
+		"type"  : "textarea"
+	},
+	"labels": {
+		"label" : "Labels",
+		"help"  : "",
+		"type"  : "list"
+	},
+	"extra": {
+		"label" : "Extra Content",
+		"help"  : "",
+		"type"  : "textarea"
+	},
+	"title": {
+		"label" : "Title",
+		"help"  : "",
+		"type"  : "text"
+	},
+	"tags": {
+		"label" : "Tags",
+		"help"  : "",
+		"type"  : "list"
+	},
+	"summary": {
+		"label" : "Summary",
+		"help"  : "",
+		"type"  : "textarea"
+	},
+	"image": {
+		"label" : "Image",
+		"help"  : "",
+		"type"  : "image"
+	},
+	"archived": {
+		"label" : "Archived",
+		"help"  : "",
+		"type"  : "checkbox"
+	},
+	"media": {
+		"label" : "Media",
+		"help"  : "",
+		"type"  : "text"
+	},
+	"created": {
+		"label" : "Creation Date",
+		"help"  : "",
+		"type"  : "hidden"
+	},
+	"updated": {
+		"label" : "Updated Date",
+		"help"  : "",
+		"type"  : "hidden"
+	},
+	"date": {
+		"label" : "Date",
+		"help"  : "",
+		"type"  : "date"
+	},
+	"extra2": {
+		"label" : "Extra Content 2",
+		"help"  : "",
+		"type"  : "textarea"
+	},
+	"draft": {
+		"label" : "Draft",
+		"help"  : "",
+		"type"  : "checkbox"
+	},
+	"genre": {
+		"label" : "Genre",
+		"help"  : "",
+		"type"  : "text"
+	},
+	"gallery": {
+		"label" : "Gallery",
+		"help"  : "",
+		"type"  : "gallery"
+	},
+	"featured": {
+		"label" : "Featured",
+		"help"  : "",
+		"type"  : "checkbox"
+	},
+	"categories": {
+		"label" : "Categories",
+		"help"  : "",
+		"type"  : "list"
+	},
+	"author": {
+		"label" : "Author",
+		"help"  : "",
+		"type"  : "text"
+	}
+  },
+  "factory" : {
+	"id"         : "slug",
+	"content"    : "",
+	"title"      : "",
+	"tags"       : "",
+	"summary"    : "",
+	"image"      : "",
+	"created"    : "",
+	"updated"    : "",
+	"date"       : "",
+	"featured"   : "",
+	"author"     : ""
+  }
 }
