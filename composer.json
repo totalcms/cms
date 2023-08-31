@@ -10,7 +10,7 @@
   "license": "Commercial",
   "require": {
     "php": "^8",
-    "cakephp/chronos": "^2.2",
+    "cakephp/chronos": "^3.0",
     "cakephp/validation": "^4.2",
     "cocur/slugify": "^4.0",
     "embed/embed": "^4.3",
@@ -53,12 +53,15 @@
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "overtrue/phplint": "^9.0",
-    "pestphp/pest": "^2.5",
+    "pestphp/pest": "^2.16",
+    "pestphp/pest-plugin-arch": "^2.3",
     "pestphp/pest-plugin-faker": "^2.0",
+    "pestphp/pest-plugin-type-coverage": "^2.2",
     "phpmd/phpmd": "^2.12",
     "phpstan/phpstan": "^1.8",
     "phpunit/phpunit": "^10.0",
     "selective/test-traits": "^3.0",
+    "spatie/pest-plugin-snapshots": "^2.0",
     "squizlabs/php_codesniffer": "^3.5",
     "symfony/var-dumper": "^6.1"
   },
@@ -92,7 +95,9 @@
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcs.xml",
     "sniffer:fix": "phpcbf --standard=phpcs.xml",
-    "test": "phpunit --configuration phpunit.xml --do-not-cache-result --colors=always --verbose",
+    "test": "vendor/bin/pest",
+    "test:coverage": "vendor/bin/pest --type-coverage",
+    "test:updatesnaps": "vendor/bin/pest --update-snapshots",
     "md": [
       "@md:src",
       "@md:config",
@@ -104,13 +109,13 @@
       "@sniffer:check",
       "@stan",
       "@md",
-      "@test"
+      "@test",
+      "@test:coverage"
     ],
     "test:build": [
       "@sniffer:check",
       "@stan",
       "@test"
-    ],
-    "test:coverage": "php -d xdebug.mode=coverage -r \"require 'vendor/bin/phpunit';\" -- --configuration phpunit.xml --do-not-cache-result --colors=always --coverage-clover build/logs/clover.xml --coverage-html build/coverage"
+    ]
   }
 }
