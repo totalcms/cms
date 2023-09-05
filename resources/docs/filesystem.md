@@ -22,12 +22,14 @@ used to store the data for a collection
 
 This file is used to store some meta data about the collection.
 
+* **id**: The id of the collection
 * **name**: The name of the collection
+* **description**: The description of the collection
 * **schema**: The schema that this collection conforms
 * **url**: An optional URL that is the root URL for the object on the web.
   * This can be used to generate RSS feeds for blogs/podcasts or Sitemap files.
-* **forms:defaults**: These are the default form labels, help text and field type
-* **forms:custom**: This allows you to override the default form values for a specific object ID.
+* **properties**: These are the default form labels, help text and field type
+* **customProperties**: This allows you to override the default form values for a specific object ID.
 
 For built-in schemas the defaults are imported from the schema file
 
@@ -42,13 +44,13 @@ For built-in schemas the defaults are imported from the schema file
         "id" : {
             "label"   : "Text ID",
             "help"    : "A unique ID for this text. No spaces or special characters.",
-            "type"    : "permalink",
+            "field"   : "slug",
             "factory" : "slug"
         },
         "text" : {
             "label"   : "Text",
             "help"    : "Edit the text here.",
-            "type"    : "text",
+            "field"   : "textarea",
             "factory" : "paragraph"
         }
     },
@@ -57,7 +59,7 @@ For built-in schemas the defaults are imported from the schema file
             "text" : {
                 "label"   : "Selectable Text Options",
                 "help"    : "Select one of the options.",
-                "type"    : "select",
+                "field"    : "select",
                 "settings" : {
                     "options" : [
                         "Option 1",
@@ -71,7 +73,7 @@ For built-in schemas the defaults are imported from the schema file
             "text" : {
                 "label" : "About Me",
                 "help"  : "Write a little bit about yourself.",
-                "type"  : "styledtext"
+                "field"  : "styledtext"
             }
         }
     }
