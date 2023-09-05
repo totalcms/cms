@@ -1,50 +1,78 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://www.totalcms.co/schemas/feed.json",
-  "properties": {
-    "id": {
-      "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-      "label" : "Feed ID",
-      "help"  : "A unique ID for this feed item. No spaces or special characters.",
-      "field" : "slug"
-    },
-    "featured": {
-      "type": "boolean"
-    },
-    "tags": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
-    },
-    "title": {
-      "type": "string"
-    },
-    "date": {
-      "$ref": "https://www.totalcms.co/schemas/properties/date.json"
-    },
-    "image": {
-      "$ref": "https://www.totalcms.co/schemas/properties/image.json"
-    },
-    "content": {
-      "type": "string"
-    }
-  },
-  "description": "A schema for a Total CMS Feed object",
-  "type": "object",
-  "required": [
-    "id",
-    "title",
-    "content",
-    "date",
-    "featured",
-    "tags",
-    "image"
-  ],
-  "index": [
-    "id",
-    "title",
-    "content",
-    "date",
-    "featured",
-    "tags",
-    "image"
-  ]
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/feed.json",
+	"type"        : "object",
+	"description" : "A schema for a Total CMS Feed object",
+	"properties"  : {
+		"id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Feed ID",
+			"help"    : "A unique ID for this feed item. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "uuid"
+		},
+		"featured": {
+			"type"    : "boolean",
+			"label"   : "Featured",
+			"help"    : "Mark this post as featured",
+			"field"   : "checkbox",
+			"default" : false
+		},
+		"tags": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"   : "Tags",
+			"help"    : "A list of tags for this post",
+			"field"   : "list",
+			"factory" : "words",
+			"default" : []
+		},
+		"title": {
+			"type"    : "string",
+			"label"   : "Title",
+			"help"    : "Blog Post title",
+			"field"   : "input",
+			"factory" : "sentence",
+			"default" : ""
+		},
+		"date": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Date",
+			"help"    : "Blog Post date",
+			"field"   : "date",
+			"factory" : "iso8601"
+		},
+		"image": {
+			"$ref"  : "https://www.totalcms.co/schemas/properties/image.json",
+			"label" : "Image",
+			"help"  : "Image for this post",
+			"field" : "image",
+			"factory" : "imageText|1920,1080"
+		},
+		"content": {
+			"type"    : "string",
+			"label"   : "Content",
+			"help"    : "Post content",
+			"field"   : "textarea",
+			"factory" : "paragraphs",
+			"default" : ""
+		}
+	},
+	"required": [
+		"id",
+		"title",
+		"content",
+		"date",
+		"featured",
+		"tags",
+		"image"
+	],
+	"index": [
+		"id",
+		"title",
+		"content",
+		"date",
+		"featured",
+		"tags",
+		"image"
+	]
 }

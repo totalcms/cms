@@ -5,16 +5,18 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref"  : "https://www.totalcms.co/schemas/properties/slug.json",
-            "label" : "Text ID",
-            "help"  : "A unique ID for this text. No spaces or special characters.",
-            "field" : "slug"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Text ID",
+			"help"    : "A unique ID for this text. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
         },
         "text": {
-            "type"  : "string",
-            "label" : "Styled Text",
-            "help"  : "Edit the text here.",
-            "field" : "styledtext"
+			"type"    : "string",
+			"label"   : "Styled Text",
+			"help"    : "Edit the text here.",
+			"field"   : "styledtext",
+			"factory" : "paragraphs"
         }
     },
     "required": [

@@ -46,3 +46,6 @@ proper translation between the editor and the CMS.
 
 You can include the Total CMS PHP classes and directly access the data.
 
+## Faker
+
+* <https://fakerphp.github.io/formatters/>

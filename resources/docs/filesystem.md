@@ -33,49 +33,47 @@ For built-in schemas the defaults are imported from the schema file
 
 ```json
 {
-    "name"   : "text",
-    "schema" : "text",
-    "url"    : "",
-    "form"  : {
-        "defaults": {
-            "id" : {
-                "label" : "Text ID",
-                "help"  : "A unique ID for this text. No spaces or special characters.",
-                "type"  : "permalink"
-            },
-            "text" : {
-                "label" : "Text",
-                "help"  : "Edit the text here.",
-                "type"  : "text"
-            }
+    "id"          : "text",
+    "name"        : "Text",
+    "description" : "Collection to contain bits of text used throughout the site.",
+    "schema"      : "text",
+    "url"         : "",
+    "properties"  : {
+        "id" : {
+            "label"   : "Text ID",
+            "help"    : "A unique ID for this text. No spaces or special characters.",
+            "type"    : "permalink",
+            "factory" : "slug"
         },
-        "custom" : {
-            "myoptions" : {
-                "text" : {
-                    "label"   : "Selectable Text Options",
-                    "help"    : "Select one of the options.",
-                    "type"    : "select",
-                    "settings" : {
-                        "options" : [
-                            "Option 1",
-                            "Option 2",
-                            "Option 3",
-                        ]
-                    }
-                }
-            },
-            "aboutme" : {
-                "text" : {
-                    "label" : "About Me",
-                    "help"  : "Write a little bit about yourself.",
-                    "type"  : "styledtext"
-                }
-            }
+        "text" : {
+            "label"   : "Text",
+            "help"    : "Edit the text here.",
+            "type"    : "text",
+            "factory" : "paragraph"
         }
     },
-    "factory" : {
-        "id"   : "slug",
-        "text" : "paragraph"
+    "customProperties" : {
+        "myoptions" : {
+            "text" : {
+                "label"   : "Selectable Text Options",
+                "help"    : "Select one of the options.",
+                "type"    : "select",
+                "settings" : {
+                    "options" : [
+                        "Option 1",
+                        "Option 2",
+                        "Option 3",
+                    ]
+                }
+            }
+        },
+        "aboutme" : {
+            "text" : {
+                "label" : "About Me",
+                "help"  : "Write a little bit about yourself.",
+                "type"  : "styledtext"
+            }
+        }
     }
 }
 ```

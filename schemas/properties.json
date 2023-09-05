@@ -1,0 +1,43 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://www.totalcms.co/schemas/properties.json",
+    "description": "A schema for a properties used in schemas and collection meta data files.",
+    "type": "object",
+	"patternProperties": {
+		"$comment": "This patterns matches the object property id.",
+		"^\\S+$": {
+			"type": "object",
+			"properties": {
+				"label": {
+					"type" : "string",
+					"description": "The label for the field."
+				},
+				"help": {
+					"type" : "string",
+					"description": "The help text for the field."
+				},
+				"field": {
+					"type" : "string",
+					"description": "The type of the field."
+				},
+				"factory": {
+					"type" : "string",
+					"description": "The factory rule for generating this property."
+				},
+				"default": {
+					"type" : "string",
+					"description": "The default value for the field."
+				},
+				"settings": {
+					"type" : "object",
+					"description": "The settings for generating the field."
+				}
+			},
+			"required": [
+				"field",
+				"label",
+				"help"
+			]
+		}
+	}
+}

@@ -5,13 +5,17 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-            "label" : "SVG ID",
-            "help"  : "A unique ID for this svg. No spaces or special characters.",
-            "field" : "slug"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "SVG ID",
+			"help"    : "A unique ID for this svg. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
         },
         "svg": {
-            "$ref": "https://www.totalcms.co/schemas/properties/svg.json"
+			"$ref"  : "https://www.totalcms.co/schemas/properties/svg.json",
+			"label" : "SVG",
+			"help"  : "Add in your SVG code here.",
+			"field" : "svg"
         }
     },
     "required": [

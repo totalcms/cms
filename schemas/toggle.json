@@ -5,14 +5,18 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-            "label" : "Toggle ID",
-            "help"  : "A unique ID for this toggle. No spaces or special characters.",
-            "field" : "slug"
-
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Toggle ID",
+			"help"    : "A unique ID for this toggle. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
         },
         "status": {
-            "type": "boolean"
+			"type"    : "boolean",
+			"label"   : "Toggle",
+			"help"    : "Click to toggle the status.",
+			"field"   : "toggle",
+			"default" : false
         }
     },
     "required": [

@@ -1,17 +1,22 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/image.json",
-    "description": "A schema for a Total CMS Image object",
-    "type": "object",
-    "properties": {
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/image.json",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Image object",
+    "properties"  : {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-            "label" : "Image ID",
-            "help"  : "A unique ID for this image. No spaces or special characters.",
-            "field" : "slug"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Image ID",
+			"help"    : "A unique ID for this image. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
         },
         "image": {
-            "$ref": "https://www.totalcms.co/schemas/properties/image.json"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Image",
+			"help"    : "Drag and drop an image here, or click to select.",
+			"field"   : "image",
+			"factory" : "imageText|1920,1080"
         }
     },
     "required": [

@@ -1,218 +1,195 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://www.totalcms.co/schemas/blog.json",
-  "properties": {
-    "content": {
-      "type": "string"
-    },
-    "labels": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
-    },
-    "extra": {
-      "type": "string"
-    },
-    "title": {
-      "type": "string"
-    },
-    "tags": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
-    },
-    "summary": {
-      "type": "string"
-    },
-    "image": {
-      "$ref": "https://www.totalcms.co/schemas/properties/image.json"
-    },
-    "archived": {
-      "type": "boolean"
-    },
-    "media": {
-      "$ref": "https://www.totalcms.co/schemas/properties/url.json"
-    },
-    "updated": {
-      "$ref": "https://www.totalcms.co/schemas/properties/date.json"
-    },
-    "id": {
-      "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-    },
-    "date": {
-      "$ref": "https://www.totalcms.co/schemas/properties/date.json"
-    },
-    "extra2": {
-      "type": "string"
-    },
-    "draft": {
-      "type": "boolean"
-    },
-    "genre": {
-      "type": "string"
-    },
-    "gallery": {
-      "$ref": "https://www.totalcms.co/schemas/properties/gallery.json"
-    },
-    "featured": {
-      "type": "boolean"
-    },
-    "categories": {
-      "$ref": "https://www.totalcms.co/schemas/properties/list.json"
-    },
-    "author": {
-      "type": "string"
-    }
-  },
-  "description": "A schema for a Total CMS Blog object",
-  "type": "object",
-  "required": [
-    "archived",
-    "author",
-    "categories",
-    "content",
-    "date",
-    "draft",
-    "extra",
-    "extra2",
-    "featured",
-    "gallery",
-    "genre",
-    "id",
-    "image",
-    "labels",
-    "media",
-    "summary",
-    "tags",
-    "title",
-    "updated"
-  ],
-  "index": [
-    "archived",
-    "author",
-    "categories",
-    "date",
-    "draft",
-    "featured",
-    "gallery",
-    "genre",
-    "id",
-    "image",
-    "labels",
-    "summary",
-    "tags",
-    "title",
-    "updated"
-  ],
-  "form" : {
-	"id": {
-		"label" : "Blog Post ID",
-		"help"  : "A unique ID for this post. No spaces or special characters.",
-		"type"  : "slug"
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/blog.json",
+	"type"        : "object",
+	"description" : "A schema for a Total CMS Blog object",
+	"properties"  : {
+		"content": {
+			"type"    : "string",
+			"label"   : "Content",
+			"help"    : "Main blog post content",
+			"field"   : "textarea",
+			"factory" : "paragraphs",
+			"default" : ""
+		},
+		"labels": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"   : "Labels",
+			"help"    : "A list of labels for this post",
+			"field"   : "list",
+			"default" : []
+		},
+		"extra": {
+			"type"    : "string",
+			"label"   : "Extra Content",
+			"help"    : "Extra content area for this post",
+			"field"   : "textarea",
+			"default" : ""
+		},
+		"title": {
+			"type"    : "string",
+			"label"   : "Title",
+			"help"    : "Blog Post title",
+			"field"   : "input",
+			"factory" : "sentence"
+		},
+		"tags": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"   : "Tags",
+			"help"    : "A list of tags for this post",
+			"field"   : "list",
+			"factory" : "words",
+			"default" : []
+		},
+		"summary": {
+			"type"    : "string",
+			"label"   : "Summary",
+			"help"    : "Blog Post summary",
+			"field"   : "textarea",
+			"factory" : "paragraph",
+			"default" : ""
+		},
+		"image": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Image",
+			"help"    : "Main image for this post",
+			"field"   : "image",
+			"factory" : "imageText|1920,1080",
+			"default" : {}
+		},
+		"archived": {
+			"type"    : "boolean",
+			"label"   : "Archived",
+			"help"    : "Mark this post as archived",
+			"field"   : "checkbox",
+			"default" : false
+		},
+		"media": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
+			"label"   : "Media",
+			"help"    : "Media URL for this post",
+			"field"   : "text",
+			"default" : ""
+		},
+		"updated": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Updated Date",
+			"help"    : "Blog Post updated date",
+			"field"   : "hidden",
+			"factory" : "iso8601"
+		},
+		"id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Blog Post ID",
+			"help"    : "A unique ID for this post. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
+		},
+		"date": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Date",
+			"help"    : "Blog Post date",
+			"field"   : "date",
+			"factory" : "iso8601"
+		},
+		"created": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Creation Date",
+			"help"    : "Blog Post creation date",
+			"field"   : "hidden",
+			"factory" : "iso8601"
+		},
+		"extra2": {
+			"type"    : "string",
+			"label"   : "Extra Content 2",
+			"help"    : "Extra content area for this post",
+			"field"   : "textarea",
+			"default" : ""
+		},
+		"draft": {
+			"type"    : "boolean",
+			"label"   : "Draft",
+			"help"    : "Mark this post as a draft",
+			"field"   : "checkbox",
+			"default" : false
+		},
+		"genre": {
+			"type"    : "string",
+			"label"   : "Genre",
+			"help"    : "Genre for this post",
+			"field"   : "text",
+			"default" : ""
+		},
+		"gallery": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/gallery.json",
+			"label"   : "Gallery",
+			"help"    : "Gallery of images for this post",
+			"field"   : "gallery",
+			"default" : []
+		},
+		"featured": {
+			"type"    : "boolean",
+			"label"   : "Featured",
+			"help"    : "Mark this post as featured",
+			"field"   : "checkbox",
+			"factory" : "numberBetween|0,1",
+			"default" : false
+		},
+		"categories": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"   : "Categories",
+			"help"    : "A list of categories for this post",
+			"field"   : "list",
+			"factory" : "words",
+			"default" : []
+		},
+		"author": {
+			"type"    : "string",
+			"label"   : "Author",
+			"help"    : "Author for this post",
+			"field"   : "text",
+			"factory" : "name",
+			"default" : ""
+		}
 	},
-	"content": {
-		"label" : "Content",
-		"help"  : "Main blog post content",
-		"type"  : "textarea"
-	},
-	"labels": {
-		"label" : "Labels",
-		"help"  : "",
-		"type"  : "list"
-	},
-	"extra": {
-		"label" : "Extra Content",
-		"help"  : "",
-		"type"  : "textarea"
-	},
-	"title": {
-		"label" : "Title",
-		"help"  : "",
-		"type"  : "text"
-	},
-	"tags": {
-		"label" : "Tags",
-		"help"  : "",
-		"type"  : "list"
-	},
-	"summary": {
-		"label" : "Summary",
-		"help"  : "",
-		"type"  : "textarea"
-	},
-	"image": {
-		"label" : "Image",
-		"help"  : "",
-		"type"  : "image"
-	},
-	"archived": {
-		"label" : "Archived",
-		"help"  : "",
-		"type"  : "checkbox"
-	},
-	"media": {
-		"label" : "Media",
-		"help"  : "",
-		"type"  : "text"
-	},
-	"created": {
-		"label" : "Creation Date",
-		"help"  : "",
-		"type"  : "hidden"
-	},
-	"updated": {
-		"label" : "Updated Date",
-		"help"  : "",
-		"type"  : "hidden"
-	},
-	"date": {
-		"label" : "Date",
-		"help"  : "",
-		"type"  : "date"
-	},
-	"extra2": {
-		"label" : "Extra Content 2",
-		"help"  : "",
-		"type"  : "textarea"
-	},
-	"draft": {
-		"label" : "Draft",
-		"help"  : "",
-		"type"  : "checkbox"
-	},
-	"genre": {
-		"label" : "Genre",
-		"help"  : "",
-		"type"  : "text"
-	},
-	"gallery": {
-		"label" : "Gallery",
-		"help"  : "",
-		"type"  : "gallery"
-	},
-	"featured": {
-		"label" : "Featured",
-		"help"  : "",
-		"type"  : "checkbox"
-	},
-	"categories": {
-		"label" : "Categories",
-		"help"  : "",
-		"type"  : "list"
-	},
-	"author": {
-		"label" : "Author",
-		"help"  : "",
-		"type"  : "text"
-	}
-  },
-  "factory" : {
-	"id"         : "slug",
-	"content"    : "",
-	"title"      : "",
-	"tags"       : "",
-	"summary"    : "",
-	"image"      : "",
-	"created"    : "",
-	"updated"    : "",
-	"date"       : "",
-	"featured"   : "",
-	"author"     : ""
-  }
+	"required": [
+		"archived",
+		"author",
+		"categories",
+		"content",
+		"date",
+		"draft",
+		"extra",
+		"extra2",
+		"featured",
+		"gallery",
+		"genre",
+		"id",
+		"image",
+		"labels",
+		"media",
+		"summary",
+		"tags",
+		"title",
+		"updated",
+		"created"
+	],
+	"index": [
+		"archived",
+		"author",
+		"categories",
+		"date",
+		"draft",
+		"featured",
+		"gallery",
+		"genre",
+		"id",
+		"image",
+		"labels",
+		"summary",
+		"tags",
+		"title",
+		"updated",
+		"created"
+	]
 }

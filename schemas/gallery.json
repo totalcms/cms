@@ -1,17 +1,21 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/gallery.json",
-    "description": "A schema for a Total CMS Gallery object",
-    "type": "object",
-    "properties": {
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/gallery.json",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Gallery object",
+    "properties"  : {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-            "label" : "Gallery ID",
-            "help"  : "A unique ID for this gallery. No spaces or special characters.",
-            "field" : "slug"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Gallery ID",
+			"help"    : "A unique ID for this gallery. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
         },
         "gallery": {
-            "$ref": "https://www.totalcms.co/schemas/properties/gallery.json"
+			"$ref"  : "https://www.totalcms.co/schemas/properties/gallery.json",
+			"label" : "Gallery",
+			"help"  : "Drag and drop images here to add them to the gallery.",
+			"field" : "gallery"
         }
     },
     "required": [

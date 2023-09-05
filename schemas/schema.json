@@ -12,7 +12,7 @@
       "format": "uri"
     },
     "properties": {
-      "type": "object"
+		"$ref": "https://www.totalcms.co/schemas/properties.json"
     },
     "description": {
       "type": "string"
@@ -33,7 +33,6 @@
       }
     }
   },
-  "index": [],
   "type": "object",
   "required": [
     "$id",

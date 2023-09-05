@@ -1,17 +1,28 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/color.json",
-    "description": "A schema for a Total CMS Color object",
-    "type": "object",
-    "properties": {
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/color.json",
+    "description" : "A schema for a Total CMS Color object",
+    "type"        : "object",
+    "properties"  : {
         "id": {
-            "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
-            "label" : "Color ID",
-            "help"  : "A unique ID for this color. No spaces or special characters.",
-            "field" : "slug"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Color ID",
+			"help"    : "A unique ID for this color. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
         },
         "color": {
-            "$ref": "https://www.totalcms.co/schemas/properties/color.json"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/color.json",
+			"label"   : "Color",
+			"help"    : "The color to use.",
+			"field"   : "color",
+			"factory" : "hslColor",
+			"default" : {
+				"h" : 0,
+				"s" : 0,
+				"l" : 0,
+				"a" : 1
+			}
         }
     },
     "required": [
