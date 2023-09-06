@@ -1,8 +1,9 @@
 {
     "$schema"     : "https://json-schema.org/draft/2020-12/schema",
     "$id"         : "https://www.totalcms.co/schemas/number.json",
-    "description" : "A schema for a Total CMS Number object",
+    "id"          : "number",
     "type"        : "object",
+    "description" : "A schema for a Total CMS Number object",
     "properties"  : {
         "id": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",

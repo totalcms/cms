@@ -1,6 +1,7 @@
 {
     "$schema"     : "https://json-schema.org/draft/2020-12/schema",
     "$id"         : "https://www.totalcms.co/schemas/gallery.json",
+    "id"          : "gallery",
     "type"        : "object",
     "description" : "A schema for a Total CMS Gallery object",
     "properties"  : {

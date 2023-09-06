@@ -43,7 +43,7 @@ final class ObjectFactory
     {
         $schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-        if ($this->validator->validateSchema($objectJson, $schema->type) === false) {
+        if ($this->validator->validateSchema($objectJson, $schema->id) === false) {
             throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
         }
 
@@ -53,7 +53,7 @@ final class ObjectFactory
 
         // Dynamically load object data based on the schema type
         // Not sure if this is really needed but it's a good idea to have it.
-        $className = 'TotalCMS\\Domain\\Object\\Data\\' . ucfirst($schema->type) . 'Data';
+        $className = 'TotalCMS\\Domain\\Object\\Data\\' . ucfirst($schema->id) . 'Data';
         if (!class_exists($className)) {
             $className = ObjectData::class;
         }
@@ -71,7 +71,7 @@ final class ObjectFactory
         $properties = [];
 
         // Loop through the schema properties and add them to the object properties.
-        foreach ($schema->schema['properties'] as $property => $propertySchema) {
+        foreach ($schema->properties as $property => $propertySchema) {
             if ($property === 'id') {
                 // No use storing the ID a second time in the object properties.
                 continue;

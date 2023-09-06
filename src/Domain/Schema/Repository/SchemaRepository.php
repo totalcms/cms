@@ -4,6 +4,8 @@ namespace TotalCMS\Domain\Schema\Repository;
 
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
 
 /**
@@ -14,16 +16,30 @@ final class SchemaRepository extends StorageRepository
     public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../schemas/';
     private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
+    private SchemaFactory $factory;
+
+    /**
+     * The constructor.
+     *
+     * @param StorageFilesystemAdapter $filesystem The filesystem factory
+     * @param SchemaFactory $factory
+     */
+    public function __construct(StorageAdapterInterface $filesystem, SchemaFactory $factory)
+    {
+        parent::__construct($filesystem);
+        $this->factory = $factory;
+    }
+
     /**
      * fetch a schema for one of the default schema types.
      *
-     * @param string $type
+     * @param string $id
      *
      * @return ?SchemaData
      */
-    public function fetchDefaultSchemaForType(string $type): ?SchemaData
+    public function fetchDefaultSchema(string $id): ?SchemaData
     {
-        $schemaFile = self::DEFAULT_SCHEMA_DIR . $type . self::FILE_EXT;
+        $schemaFile = self::DEFAULT_SCHEMA_DIR . $id . self::FILE_EXT;
         $contents   = null;
 
         // Cannot use flysystem here because
@@ -36,19 +52,19 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        return SchemaFactory::generateSchema($contents);
+        return $this->factory->generateSchema($contents);
     }
 
     /**
      * fetch a schema for a custom schema type.
      *
-     * @param string $type
+     * @param string $id
      *
      * @return ?SchemaData
      */
-    public function fetchCustomSchemaForType(string $type): ?SchemaData
+    public function fetchCustomSchema(string $id): ?SchemaData
     {
-        $schemaFile = self::CUSTOM_SCHEMA_DIR . $type . self::FILE_EXT;
+        $schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
         $contents   = null;
 
         if ($this->filesystem->fileExists($schemaFile)) {
@@ -59,26 +75,26 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        return SchemaFactory::generateSchema($contents);
+        return $this->factory->generateSchema($contents);
     }
 
     /**
      * fetch a schema for one of the default schema types.
      *
-     * @param string $type
+     * @param string $id
      *
      * @return SchemaData
      */
-    public function getSchemaForType(string $type): SchemaData
+    public function getSchema(string $id): SchemaData
     {
-        $schema = $this->fetchDefaultSchemaForType($type);
+        $schema = $this->fetchDefaultSchema($id);
 
         if ($schema === null) {
-            $schema = $this->fetchCustomSchemaForType($type);
+            $schema = $this->fetchCustomSchema($id);
         }
 
         if ($schema === null) {
-            throw new \DomainException(sprintf('Type does not exist: %s', $type));
+            throw new \DomainException(sprintf('Type does not exist: %s', $id));
         }
 
         return $schema;
@@ -93,11 +109,11 @@ final class SchemaRepository extends StorageRepository
      */
     public function saveSchema(SchemaData $schema): void
     {
-        $schemaFile = self::CUSTOM_SCHEMA_DIR . $schema->type . self::FILE_EXT;
-        $schemaJSON = json_encode($schema->schema, JSON_PRETTY_PRINT);
+        $schemaFile = self::CUSTOM_SCHEMA_DIR . $schema->id . self::FILE_EXT;
+        $schemaJSON = $schema->toJson();
 
         if (empty($schemaJSON)) {
-            throw new \DomainException(sprintf('Failed to encode schema for type: %s', $schema->type));
+            throw new \DomainException(sprintf('Failed to encode schema for type: %s', $schema->id));
         }
 
         $this->filesystem->write($schemaFile, $schemaJSON);

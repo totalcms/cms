@@ -1,6 +1,7 @@
 {
     "$schema"     : "https://json-schema.org/draft/2020-12/schema",
     "$id"         : "https://www.totalcms.co/schemas/color.json",
+    "id"          : "color",
     "description" : "A schema for a Total CMS Color object",
     "type"        : "object",
     "properties"  : {

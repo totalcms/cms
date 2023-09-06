@@ -4,19 +4,20 @@ namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use UnexpectedValueException;
 
 /**
  * Service.
  */
 final class SchemaSaver
 {
-    private SchemaRepository $storage;
     private SchemaValidator $validator;
+    private SchemaRepository $storage;
+    private SchemaFactory $factory;
 
-    public function __construct(SchemaRepository $storage, SchemaValidator $validator)
+    public function __construct(SchemaRepository $storage, SchemaFactory $factory, SchemaValidator $validator)
     {
         $this->storage   = $storage;
+        $this->factory   = $factory;
         $this->validator = $validator;
     }
 
@@ -25,20 +26,20 @@ final class SchemaSaver
      *
      * @param string $schemaJSON
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return SchemaData
      */
     public function saveSchema(string $schemaJSON): SchemaData
     {
-        if ($this->validator->validateSchema($schemaJSON) === false) {
-            throw new UnexpectedValueException('Invalid schema data provided', 1);
+        $schema = $this->factory->generateSchema($schemaJSON);
+
+        if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS)) {
+            throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
         }
 
-        $schema = SchemaFactory::generateSchema($schemaJSON);
-
-        if (in_array($schema->type, SchemaData::RESERVED_SCHEMAS)) {
-            throw new UnexpectedValueException("Schema type ({$schema->type}) is reserved", 1);
+        if ($this->validator->validateSchema($schema->toJson()) === false) {
+            throw new \UnexpectedValueException('Invalid Schema data provided');
         }
 
         $this->storage->saveSchema($schema);

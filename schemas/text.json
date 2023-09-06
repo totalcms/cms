@@ -1,9 +1,10 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/text.json",
-    "description": "A schema for a Total CMS Text object",
-    "type": "object",
-    "properties": {
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/text.json",
+    "id"          : "text",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Text object",
+    "properties"  : {
         "id": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"   : "Text ID",

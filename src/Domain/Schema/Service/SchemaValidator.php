@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use JsonMachine\Items;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Helper;
 use Opis\JsonSchema\Resolvers\SchemaResolver;
 use Opis\JsonSchema\Validator;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**
@@ -26,27 +26,28 @@ final class SchemaValidator
      *
      * @param string $schemaToValidate
      * @param string $schemaType
+     * @param string $json
      *
      * @throws \DomainException
      *
      * @return bool
      */
-    public function validateSchema(string $schemaToValidate, string $schemaType = 'schema'): bool
+    public function validateSchema(string $json, string $schemaType = 'schema'): bool
     {
         $schema     = $this->fetcher->fetchSchema($schemaType);
-        $schemaJSON = Helper::toJSON($schema->schema);
-
-        $schemaToValidate = json_decode($schemaToValidate);
-        // $schemaToValidate = Items::fromString($schemaToValidate);
+        // $schemaJSON = Helper::toJSON($schema->toArray());
+        $schemaJSON = Helper::toJSON($schema->toArray());
 
         $validator = new Validator();
         $resolver  = $validator->resolver();
 
         if ($resolver instanceof SchemaResolver) {
-            $resolver->registerPrefix('https://www.totalcms.co/schemas/', SchemaRepository::DEFAULT_SCHEMA_DIR);
+            $resolver->registerPrefix(SchemaData::SCHEMA_PREFIX, SchemaRepository::DEFAULT_SCHEMA_DIR);
         }
 
-        $result = $validator->validate($schemaToValidate, $schemaJSON);
+        $objectToValidate = json_decode($json);
+
+        $result = $validator->validate($objectToValidate, $schemaJSON);
         $valid  = $result->isValid();
 
         if ($valid === false) {

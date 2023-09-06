@@ -1,6 +1,7 @@
 {
 	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
 	"$id"         : "https://www.totalcms.co/schemas/file.json",
+	"id"          : "file",
 	"type"        : "object",
 	"description" : "A schema for a Total CMS File object",
 	"properties"  : {

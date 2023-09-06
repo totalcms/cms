@@ -1,9 +1,10 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/meta.json",
-    "description": "A schema for a Total CMS Collection meta data file.",
-    "type": "object",
-    "properties": {
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/meta.json",
+    "id"          : "meta",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Collection meta data file.",
+    "properties"  : {
         "id": {
             "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
             "description": "The id of the collection."

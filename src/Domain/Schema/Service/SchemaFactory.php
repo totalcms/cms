@@ -2,8 +2,9 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use JsonMachine\Items;
-use JsonMachine\JsonDecoder\ExtJsonDecoder;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
 /**
@@ -11,35 +12,31 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  */
 final class SchemaFactory
 {
-    private const SCHEMA_ID_EXT = '.json';
+    private Serializer $serializer;
+
+    public function __construct()
+    {
+        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+    }
 
     /**
      * create a schema object.
      *
      * @param string $schemaJson
-     * @param string $type
+     * @param string $id
      *
      * @throws \UnexpectedValueException
      *
      * @return SchemaData
      */
-    public static function generateSchema(string $schemaJson, string $type = ''): SchemaData
+    public function generateSchema(string $schemaJson): SchemaData
     {
-        $schema = json_decode($schemaJson, true);
-        // $schema = Items::fromString($schemaJson, ['decoder' => new ExtJsonDecoder(true)]);
+        $schema = $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
 
-        if (strpos($schema['$id'], self::SCHEMA_ID_EXT) === false) {
-            throw new \UnexpectedValueException('Malformed schema data provided', 1);
+        if (!$schema instanceof SchemaData) {
+            throw new \UnexpectedValueException('Invalid Schema data provided');
         }
 
-        if (empty($type)) {
-            $type = basename($schema['$id'], self::SCHEMA_ID_EXT);
-        }
-
-        $schemaData         = new SchemaData();
-        $schemaData->schema = $schema;
-        $schemaData->type   = $type;
-
-        return $schemaData;
+        return $schema;
     }
 }

@@ -1,9 +1,10 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://www.totalcms.co/schemas/svg.json",
-    "description": "A schema for a Total CMS SVG object",
-    "type": "object",
-    "properties": {
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/svg.json",
+    "id"          : "svg",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS SVG object",
+    "properties"  : {
         "id": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"   : "SVG ID",

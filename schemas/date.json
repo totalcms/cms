@@ -1,6 +1,7 @@
 {
     "$schema"     : "https://json-schema.org/draft/2020-12/schema",
     "$id"         : "https://www.totalcms.co/schemas/date.json",
+    "id"          : "date",
     "description" : "A schema for a Total CMS Date object",
     "type"        : "object",
     "properties"  : {

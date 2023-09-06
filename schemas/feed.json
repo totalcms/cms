@@ -1,6 +1,7 @@
 {
 	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
 	"$id"         : "https://www.totalcms.co/schemas/feed.json",
+	"id"          : "feed",
 	"type"        : "object",
 	"description" : "A schema for a Total CMS Feed object",
 	"properties"  : {

@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Transformer;
 
-use TotalCMS\Domain\Schema\Data\SchemaData;
 use League\Fractal;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 final class SchemaMetaTransformer extends Fractal\TransformerAbstract
 {
@@ -16,6 +16,6 @@ final class SchemaMetaTransformer extends Fractal\TransformerAbstract
      */
     public function transform(SchemaData $schema): array
     {
-        return $schema->schema;
+        return $schema->toArray();
     }
 }

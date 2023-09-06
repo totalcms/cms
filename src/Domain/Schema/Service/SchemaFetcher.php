@@ -25,13 +25,13 @@ final class SchemaFetcher
     /**
      * fetch a schema.
      *
-     * @param string $type
+     * @param string $id
      *
      * @return SchemaData
      */
-    public function fetchSchema(string $type): SchemaData
+    public function fetchSchema(string $id): SchemaData
     {
-        return $this->storage->getSchemaForType($type);
+        return $this->storage->getSchema($id);
     }
 
     /**
