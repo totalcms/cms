@@ -14,7 +14,7 @@
 			"format" : "uri"
 		},
 		"properties": {
-			"$ref" : "https://www.totalcms.co/schemas/properties.json"
+			"$ref" : "https://www.totalcms.co/schemas/properties/properties.json"
 		},
 		"description": {
 			"type" : "string"

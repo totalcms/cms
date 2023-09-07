@@ -96,9 +96,9 @@
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcs.xml",
     "sniffer:fix": "phpcbf --standard=phpcs.xml",
-    "test": "vendor/bin/pest",
-    "test:coverage": "vendor/bin/pest --type-coverage",
-    "test:updatesnaps": "vendor/bin/pest --update-snapshots",
+    "test": "pest",
+    "test:coverage": "pest --type-coverage",
+    "test:updatesnaps": "pest --update-snapshots",
     "md": [
       "@md:src",
       "@md:config",

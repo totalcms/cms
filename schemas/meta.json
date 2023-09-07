@@ -25,14 +25,14 @@
             "$ref": "https://www.totalcms.co/schemas/properties/url.json"
         },
 		"properties": {
-			"$ref": "https://www.totalcms.co/schemas/properties.json"
+			"$ref": "https://www.totalcms.co/schemas/properties/properties.json"
 		},
 		"customProperties": {
 			"type": "object",
 			"description": "Custom values for the form fields for specific objects.",
 			"patternProperties": {
 				"^\\S+$": {
-					"$ref": "https://www.totalcms.co/schemas/properties.json"
+					"$ref": "https://www.totalcms.co/schemas/properties/properties.json"
 				}
 			}
 		}

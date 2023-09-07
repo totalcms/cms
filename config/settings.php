@@ -16,4 +16,6 @@ if ($environment) {
     require __DIR__ . '/local.' . strtolower($environment) . '.php';
 }
 
+// var_dump($settings);
+
 return $settings;

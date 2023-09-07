@@ -1,6 +1,6 @@
 {
 	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
-	"$id"         : "https://www.totalcms.co/schemas/properties.json",
+	"$id"         : "https://www.totalcms.co/schemas/properties/properties.json",
 	"id"          : "properties",
 	"type"        : "object",
 	"description" : "A schema for a properties used in schemas and collection meta data files.",
