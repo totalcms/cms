@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Action\Schema;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\SchemaMetaTransformer;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 final class SchemaFetchAction
 {
@@ -33,7 +33,7 @@ final class SchemaFetchAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $schema = $this->schemaFetcher->fetchSchema($args['type']);
+        $schema = $this->schemaFetcher->fetchSchema($args['id']);
 
         return $this->renderer->jsonItem($response, $schema, new SchemaMetaTransformer());
     }

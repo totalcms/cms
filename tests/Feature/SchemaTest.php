@@ -22,10 +22,14 @@ it('saves a new schema', function (): void {
 });
 
 it('cannot save a reserved schema', function (): void {
-    $schema = ['id' => 'blog'];
-    postJson('/schemas/', $schema)
-        ->assertStatus(500)
-        ->assertSee('is reserved');
+    $schemas = glob(__DIR__ . '/../../schemas/*.json');
+    expect($schemas)->toBeArray()->not->toBeEmpty();
+    foreach ($schemas as $schema) {
+        $id = basename($schema, '.json');
+        postJson('/schemas/', ['id' => $id])
+            ->assertStatus(500)
+            ->assertSee('is reserved');
+    }
 });
 
 it('fetches a schema', function (): void {
