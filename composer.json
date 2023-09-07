@@ -52,6 +52,7 @@
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
+    "nekofar/pest-plugin-slim": "^3.1",
     "overtrue/phplint": "^9.0",
     "pestphp/pest": "^2.16",
     "pestphp/pest-plugin-arch": "^2.3",
