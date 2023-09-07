@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Transformer;
 
-use TotalCMS\Domain\Collection\Data\CollectionData as Collection;
 use League\Fractal;
+use TotalCMS\Domain\Collection\Data\CollectionData as Collection;
 
 final class CollectionMetaTransformer extends Fractal\TransformerAbstract
 {
@@ -16,10 +16,6 @@ final class CollectionMetaTransformer extends Fractal\TransformerAbstract
      */
     public function transform(Collection $collection): array
     {
-        return [
-            'name'   => $collection->name,
-            'schema' => $collection->schema,
-            'url'    => $collection->url ?? '',
-        ];
+        return $collection->toArray();
     }
 }

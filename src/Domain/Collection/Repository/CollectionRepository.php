@@ -21,8 +21,8 @@ final class CollectionRepository extends StorageRepository
     public function listAllCollections(): array
     {
         $collections = [];
-        foreach ($this->filesystem->listDirectories('') as $name) {
-            $collection = $this->fetchCollection($name);
+        foreach ($this->filesystem->listDirectories('') as $id) {
+            $collection = $this->fetchCollection($id);
             if ($collection == null) {
                 continue;
             }
@@ -75,8 +75,8 @@ final class CollectionRepository extends StorageRepository
      */
     public function saveCollection(CollectionData $collection): void
     {
-        $jsonContent = $this->serializer->serialize($collection, 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
-        $metaFile    = $this->buildMetaPath($collection->name);
+        $jsonContent = $collection->toJson();
+        $metaFile    = $this->buildMetaPath($collection->id);
 
         $this->filesystem->write($metaFile, $jsonContent);
     }

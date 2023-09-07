@@ -8,6 +8,8 @@ use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
 /**
  * Service.
@@ -17,12 +19,46 @@ final class CollectionCreator
     private CollectionRepository $storage;
     private Serializer $serializer;
     private IndexBuilder $indexBuilder;
+    private SchemaFetcher $schemaFetcher;
+    private SchemaValidator $validator;
 
-    public function __construct(CollectionRepository $storage, IndexBuilder $indexBuilder)
+    public function __construct(
+        SchemaFetcher $schemaFetcher,
+        SchemaValidator $validator,
+        CollectionRepository $storage,
+        IndexBuilder $indexBuilder
+    ) {
+        $this->schemaFetcher   = $schemaFetcher;
+        $this->storage         = $storage;
+        $this->indexBuilder    = $indexBuilder;
+        $this->serializer      = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+    }
+
+    /**
+     * Generate Collection object.
+     *
+     * @param string $data The collection data to save. This should be json encoded.
+     *
+     * @throws \UnexpectedValueException
+     *
+     * @return CollectionData
+     */
+    public function generateCollection(string $data): CollectionData
     {
-        $this->storage      = $storage;
-        $this->indexBuilder = $indexBuilder;
-        $this->serializer   = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $collection = $this->serializer->deserialize($data, CollectionData::class, 'json');
+
+        if (!$collection instanceof CollectionData || !$collection->isValid()) {
+            throw new \UnexpectedValueException('Invalid Collection data provided');
+        }
+
+        if (
+            in_array($collection->id, CollectionData::RESERVED_COLLECTIONS)
+            && $collection->id !== $collection->schema
+        ) {
+            throw new \UnexpectedValueException('Cannot assign custom schema to a reserved collection');
+        }
+
+        return $collection;
     }
 
     /**
@@ -36,22 +72,17 @@ final class CollectionCreator
      */
     public function saveCollection(string $data): CollectionData
     {
-        $collection = $this->serializer->deserialize($data, CollectionData::class, 'json');
+        $collection = $this->generateCollection($data);
 
-        if (!$collection instanceof CollectionData) {
-            throw new \UnexpectedValueException('Invalid Collection data provided');
-        }
+        $schema = $this->schemaFetcher->fetchSchemaForCollection($collection->schema);
 
-        if (
-            in_array($collection->name, CollectionData::RESERVED_COLLECTIONS)
-            && $collection->name !== $collection->schema
-        ) {
-            throw new \UnexpectedValueException('Cannot assign custom schema to a reserved collection');
+        if ($this->validator->validateSchema($collection->toJson(), $collection->schema) === false) {
+            throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
         }
 
         $this->storage->saveCollection($collection);
 
-        $this->indexBuilder->buildIndex($collection->name);
+        $this->indexBuilder->buildIndex($collection->id);
 
         return $collection;
     }
@@ -72,12 +103,12 @@ final class CollectionCreator
         }
 
         $collection         = new CollectionData();
-        $collection->name   = $collectionName;
+        $collection->id     = $collectionName;
         $collection->schema = $collectionName;
 
         $this->storage->saveCollection($collection);
 
-        $this->indexBuilder->buildIndex($collection->name);
+        $this->indexBuilder->buildIndex($collection->id);
 
         return $collection;
     }
