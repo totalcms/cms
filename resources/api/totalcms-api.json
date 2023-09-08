@@ -1161,8 +1161,36 @@
             "required": true
           }
         ]
-      }
-    },
+      },
+            "delete": {
+                "summary": "Delete a Schema",
+                "tags": [
+                    "schemas"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The schema for a collection"
+                    },
+                    "500": {
+                        "description": "Unable to delete schema"
+                    }
+                },
+                "description": "Delete a custom schema. You will not be able to delete any of the builtin schema",
+                "security": [
+                ],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path",
+                        "name": "schema",
+                        "description": "The ID of the schema",
+                        "required": true
+                    }
+                ]
+            }
+        },
         "/collections/{collection}/schema": {
       "get": {
         "summary": "Get Collection Schema",
