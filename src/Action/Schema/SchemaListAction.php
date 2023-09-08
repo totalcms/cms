@@ -33,7 +33,18 @@ final class SchemaListAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $schemas = $this->schemaLister->listAllSchemas();
+        $params = $request->getQueryParams();
+
+        switch ($params['filter']) {
+            case 'reserved':
+                $schemas = $this->schemaLister->listReservedSchemas();
+                break;
+            case 'custom':
+                $schemas = $this->schemaLister->listCustomSchemas();
+                break;
+            default:
+                $schemas = $this->schemaLister->listAllSchemas();
+        }
 
         return $this->renderer->jsonCollection($response, $schemas, new SchemaMetaTransformer());
     }
