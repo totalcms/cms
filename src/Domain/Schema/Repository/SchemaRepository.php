@@ -40,7 +40,7 @@ final class SchemaRepository extends StorageRepository
         $files = $this->filesystem->listFiles(self::CUSTOM_SCHEMA_DIR);
 
         $schemas = array_map(function (string $file) {
-            $id = basename($file, '.json');
+            $id = basename($file, self::FILE_EXT);
 
             return $this->fetchCustomSchema($id);
         }, $files);
@@ -69,10 +69,10 @@ final class SchemaRepository extends StorageRepository
      */
     public function reservedSchemasIds(): array
     {
-        $files = glob(self::DEFAULT_SCHEMA_DIR . '*.json');
+        $files = glob(self::DEFAULT_SCHEMA_DIR . '*' . self::FILE_EXT);
 
         return array_map(function (string $file) {
-            return basename($file, '.json');
+            return basename($file, self::FILE_EXT);
         }, $files);
     }
 
@@ -163,5 +163,12 @@ final class SchemaRepository extends StorageRepository
         }
 
         $this->filesystem->write($schemaFile, $schemaJSON);
+    }
+
+    public function deleteSchema(string $id): bool
+    {
+        $schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
+
+        return $this->filesystem->delete($schemaFile);
     }
 }
