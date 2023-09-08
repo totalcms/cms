@@ -31,6 +31,52 @@ final class SchemaRepository extends StorageRepository
     }
 
     /**
+     * List custom Schemas.
+     *
+     * @return array<object>
+     */
+    public function listCustomSchemas(): array
+    {
+        $files = $this->filesystem->listFiles(self::CUSTOM_SCHEMA_DIR);
+
+        $schemas = array_map(function (string $file) {
+            $id = basename($file, '.json');
+
+            return $this->fetchCustomSchema($id);
+        }, $files);
+
+        return $schemas;
+    }
+
+    /**
+     * List reserved Schemas.
+     *
+     * @return array<object>
+     */
+    public function listReservedSchemas(): array
+    {
+        $ids = $this->reservedSchemasIds();
+
+        return array_map(function (string $id) {
+            return $this->fetchDefaultSchema($id);
+        }, $ids);
+    }
+
+    /**
+     * List reserved Schema IDs.
+     *
+     * @return array<object>
+     */
+    public function reservedSchemasIds(): array
+    {
+        $files = glob(self::DEFAULT_SCHEMA_DIR . '*.json');
+
+        return array_map(function (string $file) {
+            return basename($file, '.json');
+        }, $files);
+    }
+
+    /**
      * fetch a schema for one of the default schema types.
      *
      * @param string $id

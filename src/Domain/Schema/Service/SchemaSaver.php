@@ -34,7 +34,7 @@ final class SchemaSaver
     {
         $schema = $this->factory->generateSchema($schemaJSON);
 
-        if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS)) {
+        if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, $this->storage->reservedSchemasIds())) {
             throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
         }
 

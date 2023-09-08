@@ -3,14 +3,20 @@
 use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\postJson;
 
+function schemaTestData(): array
+{
+    $json = file_get_contents(__DIR__ . '/../test-data/new-schema.json');
+
+    return json_decode($json, true);
+}
+
 beforeEach(function (): void {
     $app = require __DIR__ . '/../../config/bootstrap.php';
     $this->setUpApp($app);
 });
 
 it('saves a new schema', function (): void {
-    $json   = file_get_contents(__DIR__ . '/../test-data/new-schema.json');
-    $schema = json_decode($json, true);
+    $schema = schemaTestData();
     $id     = $schema['id'];
     postJson('/schemas/', $schema)
         ->assertOk()
@@ -22,9 +28,9 @@ it('saves a new schema', function (): void {
 });
 
 it('cannot save a reserved schema', function (): void {
-    $schemas = glob(__DIR__ . '/../../schemas/*.json');
-    expect($schemas)->toBeArray()->not->toBeEmpty();
-    foreach ($schemas as $schema) {
+    $reservedSchemas = glob(__DIR__ . '/../../schemas/*.json');
+    expect($reservedSchemas)->toBeArray()->not->toBeEmpty();
+    foreach ($reservedSchemas as $schema) {
         $id = basename($schema, '.json');
         postJson('/schemas/', ['id' => $id])
             ->assertStatus(500)
@@ -33,8 +39,9 @@ it('cannot save a reserved schema', function (): void {
 });
 
 it('fetches a schema', function (): void {
-    $id = 'newblog';
-    get('/schemas/newblog')
+    $schema = schemaTestData();
+    $id     = $schema['id'];
+    get("/schemas/$id")
         ->assertOk()
         ->assertJsonFragment([
             'id'      => $id,
