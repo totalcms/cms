@@ -4,7 +4,6 @@ namespace TotalCMS\Action\OpenApi;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\Yaml\Yaml;
 use TotalCMS\Renderer\TemplateRenderer;
 
 /**
@@ -19,15 +18,13 @@ final class DocVersion1Action
         $this->templateRenderer = $templateRenderer;
     }
 
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ): ResponseInterface {
-        // Path to the yaml file
-        $yamlFile = __DIR__ . '/../../../resources/api/totalcms-api.yaml';
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        // Path to the OpenAPI json file
+        $jsonFile = __DIR__ . '/../../../resources/api/totalcms-api.json';
 
         $viewData = [
-            'spec' => json_encode(Yaml::parseFile($yamlFile)),
+            'spec' => file_get_contents($jsonFile),
         ];
 
         return $this->templateRenderer->template($response, 'doc/swagger.php', $viewData);
