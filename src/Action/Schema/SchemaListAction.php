@@ -34,8 +34,9 @@ final class SchemaListAction
         array $args
     ): ResponseInterface {
         $params = $request->getQueryParams();
+        $filter = $params['filter'] ?? 'all';
 
-        switch ($params['filter']) {
+        switch ($filter) {
             case 'reserved':
                 $schemas = $this->schemaLister->listReservedSchemas();
                 break;
