@@ -31,6 +31,7 @@
     "league/glide": "^2.2",
     "league/uri": "^6.8",
     "lychee-org/php-exif": "^1.0",
+    "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.4",
     "nyholm/psr7-server": "^1.0",

@@ -2,6 +2,7 @@
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Middlewares\TrailingSlash;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -126,6 +127,10 @@ return [
 
     PhpRenderer::class => function (ContainerInterface $container) {
         return new PhpRenderer($container->get(Config::class)->template);
+    },
+
+    TrailingSlash::class => function (ContainerInterface $container) {
+        return new TrailingSlash();
     },
 
     BufferController::class => function (ContainerInterface $container) {
