@@ -1,6 +1,7 @@
 <?php
 
 use function Nekofar\Slim\Pest\postJson;
+use function Nekofar\Slim\Pest\putJson;
 
 function collectionTestData(): array
 {
@@ -25,4 +26,31 @@ it('saves a new collection', function (): void {
         ]);
 
     $this->assertFileExists(__DIR__ . "/../tcms-data/{$id}/.meta.json");
+});
+
+it('does not save an existing collection', function (): void {
+    $collection = collectionTestData();
+    postJson('/collections', $collection)
+        ->assertStatus(400)
+        ->assertSee('already exists');
+});
+
+it('updates a collection', function (): void {
+    $collection                = collectionTestData();
+    $id                        = $collection['id'];
+    $update                    = 'Updated description';
+    $collection['description'] = $update;
+    putJson('/collections/' . $id, $collection)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id'          => $id,
+            'description' => $update,
+        ]);
+});
+
+afterAll(function (): void {
+    $collection = collectionTestData();
+    $id         = $collection['id'];
+    unlink(__DIR__ . "/../tcms-data/{$id}/.meta.json");
 });

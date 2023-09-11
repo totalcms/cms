@@ -65,6 +65,18 @@ final class CollectionRepository extends StorageRepository
     }
 
     /**
+     * Verify that a collection exists.
+     *
+     * @param string $collection
+     */
+    public function collectionExists(string $collection): bool
+    {
+        $metaFile = $this->buildMetaPath($collection);
+
+        return $this->filesystem->fileExists($metaFile);
+    }
+
+    /**
      * Fetch a collection.
      *
      * @param string $collection

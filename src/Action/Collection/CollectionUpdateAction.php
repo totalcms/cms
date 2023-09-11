@@ -39,7 +39,7 @@ final class CollectionUpdateAction
 
         return $this->renderer->jsonItem(
             $response,
-            $this->service->saveCollection($body),
+            $this->service->updateCollection($body),
             new CollectionMetaTransformer()
         );
     }

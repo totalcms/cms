@@ -29,16 +29,19 @@ final class CollectionSaver
      * Save Collection data.
      *
      * @param string $json The collection data to save. This should be json encoded.
+     * @param bool $update
      *
      * @throws \UnexpectedValueException
      *
      * @return CollectionData
      */
-    public function saveCollection(string $json): CollectionData
+    public function saveCollection(string $json, bool $update = false): CollectionData
     {
         $collection = $this->factory->generateCollection($json);
 
-        // Verify Schema Exists and is Valid
+        if ($update !== true && $this->storage->collectionExists($collection->id)) {
+            throw new \DomainException(sprintf('Collection with id %s already exists', $collection->id));
+        }
 
         if ($this->validator->validateSchema($collection->toJson(), 'meta') === false) {
             throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
@@ -49,5 +52,19 @@ final class CollectionSaver
         $this->indexBuilder->buildIndex($collection->id);
 
         return $collection;
+    }
+
+    /**
+     * update Collection data.
+     *
+     * @param string $json The collection data to save. This should be json encoded.
+     *
+     * @throws \UnexpectedValueException
+     *
+     * @return CollectionData
+     */
+    public function updateCollection(string $json): CollectionData
+    {
+        return $this->saveCollection($json, true);
     }
 }
