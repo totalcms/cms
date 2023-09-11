@@ -68,11 +68,24 @@ it('updates a collection fragment', function (): void {
 it('can fetch a collection', function (): void {
     $collection = collectionTestData();
     $id         = $collection['id'];
-    get('/collections/' . $id)
+    get("/collections/$id")
         ->assertOk()
         ->assertJson()
         ->assertJsonFragment([
             'id' => $id,
+        ]);
+});
+
+it('can fetch a schema for a collection', function (): void {
+    $collection = collectionTestData();
+    $id         = $collection['id'];
+    get("/collections/$id/schema")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id'      => $id,
+            '$id'     => "https://www.totalcms.co/schemas/{$id}.json",
+            '$schema' => 'https://json-schema.org/draft/2020-12/schema',
         ]);
 });
 
