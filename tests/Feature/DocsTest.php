@@ -10,11 +10,11 @@ beforeEach(function (): void {
 it('redirects to current version', function (): void {
     get('/docs')
         ->assertStatus(302)
-        ->assertHeader('Location', '/docs/v1');
+        ->assertHeader('Location', '/docs/v3');
 });
 
 it('can see api docs homepage', function (): void {
-    get('/docs/v1')
+    get('/docs/v3')
         ->assertOk()
         ->assertSee('swagger-ui');
 });

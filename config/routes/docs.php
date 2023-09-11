@@ -9,5 +9,5 @@ return function (App $app) {
     $app->get('/docs', DocIndexAction::class);
 
     // Swagger API documentation
-    $app->get('/docs/v1', DocVersion1Action::class)->setName('docs');
+    $app->get('/docs/v3', DocVersion1Action::class)->setName('docs');
 };
