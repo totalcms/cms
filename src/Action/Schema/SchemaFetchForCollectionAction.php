@@ -2,18 +2,18 @@
 
 namespace TotalCMS\Action\Schema;
 
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Transformer\SchemaMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\SchemaMetaTransformer;
 
 final class SchemaFetchForCollectionAction
 {
     private JsonRenderer $renderer;
-    private SchemaFetcher $schemaFetcher;
+    private CollectionSchemaFetcher $schemaFetcher;
 
-    public function __construct(JsonRenderer $renderer, SchemaFetcher $service)
+    public function __construct(JsonRenderer $renderer, CollectionSchemaFetcher $service)
     {
         $this->renderer      = $renderer;
         $this->schemaFetcher = $service;

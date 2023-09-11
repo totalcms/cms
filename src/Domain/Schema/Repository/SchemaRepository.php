@@ -140,7 +140,7 @@ final class SchemaRepository extends StorageRepository
         }
 
         if ($schema === null) {
-            throw new \DomainException(sprintf('Type does not exist: %s', $id));
+            throw new \DomainException(sprintf('Schema type does not exist: %s', $id));
         }
 
         return $schema;

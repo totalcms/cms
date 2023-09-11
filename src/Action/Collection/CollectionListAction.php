@@ -2,24 +2,24 @@
 
 namespace TotalCMS\Action\Collection;
 
-use TotalCMS\Domain\Collection\Service\CollectionFinder;
-use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Transformer\CollectionMetaTransformer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\CollectionMetaTransformer;
 
 final class CollectionListAction
 {
     private JsonRenderer $renderer;
-    private CollectionFinder $collectionListService;
+    private CollectionLister $collectionListService;
 
     /**
      * The constructor.
      *
      * @param JsonRenderer $renderer The renderer
-     * @param CollectionFinder $service The service
+     * @param CollectionLister $service The service
      */
-    public function __construct(JsonRenderer $renderer, CollectionFinder $service)
+    public function __construct(JsonRenderer $renderer, CollectionLister $service)
     {
         $this->renderer              = $renderer;
         $this->collectionListService = $service;

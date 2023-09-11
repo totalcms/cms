@@ -16,7 +16,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\ColorUtils;
 
@@ -32,7 +32,7 @@ final class FileSaver
         private PropertyRepository $storage,
         private PropertyFetcher $propFetcher,
         private ObjectUpdater $objectUpdater,
-        private SchemaFetcher $schemaFetcher,
+        private CollectionSchemaFetcher $schemaFetcher,
         private ObjectFetcher $objectFetcher,
     ) {
         $this->storage       = $storage;
@@ -61,7 +61,7 @@ final class FileSaver
     public function saveFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
     {
         $schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-        $type   = basename($schema->schema['properties'][$property]['$ref'], StorageRepository::FILE_EXT);
+        $type   = basename($schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
 
         $method = 'saveFileFor' . ucfirst($type);
 

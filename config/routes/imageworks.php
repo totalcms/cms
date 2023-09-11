@@ -12,6 +12,6 @@ return function (App $app) {
         $group->get('/{id}/{filename}', ImageWorks\ImageWorksGalleryFetchAction::class)->setName('gallery-image-fetch-short');
         $group->get('/{collection}/{id}/{property}/{filename}', ImageWorks\ImageWorksGalleryFetchAction::class)->setName('gallery-image-fetch');
 
-        // $group->delete('/{collection}/{id}/{property}/{file}', ImageWorks\ImageWorksClearCacheAction::class)->setName('clear-cache');
+        // TODO: $group->delete('/{collection}/{id}/{property}/{file}', ImageWorks\ImageWorksClearCacheAction::class)->setName('clear-cache');
     })->add(RobotsTagMiddleware::class);
 };

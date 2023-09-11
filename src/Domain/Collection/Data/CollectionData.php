@@ -11,23 +11,15 @@ use Symfony\Component\Serializer\Serializer;
  */
 final class CollectionData
 {
-    public const RESERVED_COLLECTIONS = [
-        'blog',
-        'color',
-        'date',
-        'depot',
-        'email',
-        'feed',
-        'file',
-        'gallery',
-        'image',
-        'number',
-        'styledtext',
-        'svg',
-        'text',
-        'toggle',
-        'url',
+    // Reserved names that cannot be used for collections
+    public const RESERVED_NAMES = [
+        'templates',
+        'logs',
+        '.schemas',
+        'schemas',
     ];
+
+    private Serializer $serializer;
 
     public string $id;               // collection id
     public string $name;             // collection name
@@ -36,7 +28,6 @@ final class CollectionData
     public string $url;              // collection url to object page minus the slug
     public array $properties;        // Rules for form labels, help text and field types
     public array $customProperties;  // Rules for factory object generation
-    protected Serializer $serializer;
 
     public function __construct()
     {
@@ -45,15 +36,20 @@ final class CollectionData
 
     public function toArray(): array
     {
-        return [
-            'id'               => $this->id,
-            'schema'           => $this->schema,
-            'name'             => $this->name ?? $this->id,
-            'description'      => $this->description ?? '',
-            'url'              => $this->url ?? '',
-            'properties'       => $this->properties ?? [],
-            'customProperties' => $this->customProperties ?? [],
+        $collection = [
+            'id'          => $this->id,
+            'schema'      => $this->schema,
+            'name'        => $this->name ?? ucfirst($this->id),
+            'description' => $this->description ?? "A collection of {$this->id} objects that conform to the {$this->schema} schema.",
+            'url'         => $this->url ?? '',
+            'properties'  => $this->properties ?? new \stdClass(),
         ];
+
+        if (!empty($this->customProperties)) {
+            $collection['customProperties'] = $this->customProperties;
+        }
+
+        return $collection;
     }
 
     public function isValid(): bool

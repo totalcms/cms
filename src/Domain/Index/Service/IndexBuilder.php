@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Index\Service;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 
 /**
  * Service.
@@ -14,9 +14,9 @@ final class IndexBuilder
 {
     private IndexRepository $storage;
     private ObjectFetcher $objectFetcher;
-    private SchemaFetcher $schemaFetcher;
+    private CollectionSchemaFetcher $schemaFetcher;
 
-    public function __construct(IndexRepository $storage, ObjectFetcher $objectFetcher, SchemaFetcher $schemaFetcher)
+    public function __construct(IndexRepository $storage, ObjectFetcher $objectFetcher, CollectionSchemaFetcher $schemaFetcher)
     {
         $this->storage       = $storage;
         $this->objectFetcher = $objectFetcher;

@@ -7,7 +7,7 @@ use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
 /**
@@ -15,12 +15,12 @@ use TotalCMS\Domain\Schema\Service\SchemaValidator;
  */
 final class ObjectFactory
 {
-    private SchemaFetcher $schemaFetcher;
+    private CollectionSchemaFetcher $schemaFetcher;
     private SchemaValidator $validator;
     private PropertyFactory $propertyFactory;
 
     public function __construct(
-        SchemaFetcher $schemaFetcher,
+        CollectionSchemaFetcher $schemaFetcher,
         SchemaValidator $validator,
         PropertyFactory $propertyFactory,
     ) {

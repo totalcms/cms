@@ -7,7 +7,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 /**
  * Service.
  */
-final class CollectionFinder
+final class CollectionLister
 {
     private CollectionRepository $storage;
 

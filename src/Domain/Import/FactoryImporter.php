@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Import;
 use Faker\Factory as FakerFactory;
 use Faker\Generator as FakerGenerator;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Collection\Service\CollectionReader;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -19,15 +19,15 @@ final class FactoryImporter
     private LoggerInterface $logger;
     private FakerGenerator $faker;
     private IndexBuilder $indexBuilder;
-    private CollectionReader $collectionReader;
+    private CollectionFetcher $collectionFetcher;
     private string $cacheDir;
 
-    public function __construct(ObjectRepository $storage, LoggerFactory $loggerFactory, IndexBuilder $indexBuilder, Config $config, CollectionReader $collectionReader)
+    public function __construct(ObjectRepository $storage, LoggerFactory $loggerFactory, IndexBuilder $indexBuilder, Config $config, CollectionFetcher $collectionFetcher)
     {
-        $this->indexBuilder     = $indexBuilder;
-        $this->storage          = $storage;
-        $this->collectionReader = $collectionReader;
-        $this->logger           = $loggerFactory->addFileHandler('importer-factory.log')->createLogger();
+        $this->indexBuilder      = $indexBuilder;
+        $this->storage           = $storage;
+        $this->collectionFetcher = $collectionFetcher;
+        $this->logger            = $loggerFactory->addFileHandler('importer-factory.log')->createLogger();
 
         $this->faker = FakerFactory::create();
         $this->faker->addProvider(new FakerExtension($this->faker));
@@ -67,7 +67,7 @@ final class FactoryImporter
 
         // Get definitions from collection if not provided
         if (empty($defs)) {
-            $defs = $this->collectionReader->fetchCollection($collection)->factory;
+            $defs = $this->collectionFetcher->fetchCollection($collection)->factory;
         }
 
         for ($i = 0; $i < $quantity; $i++) {

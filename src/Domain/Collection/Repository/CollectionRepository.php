@@ -3,6 +3,9 @@
 namespace TotalCMS\Domain\Collection\Repository;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFactory;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\PathUtils;
 
@@ -12,6 +15,21 @@ use TotalCMS\Utils\PathUtils;
 final class CollectionRepository extends StorageRepository
 {
     private const META_FILE = '.meta.json';
+    private CollectionFactory $factory;
+
+    /**
+     * The constructor.
+     *
+     * @param StorageFilesystemAdapter $filesystem The filesystem factory
+     * @param CollectionFactory $CollectionFactory
+     * @param CollectionFactory $factory
+     */
+    public function __construct(StorageAdapterInterface $filesystem, CollectionFactory $factory)
+    {
+        parent::__construct($filesystem);
+
+        $this->factory = $factory;
+    }
 
     /**
      * List all Collections.
@@ -75,10 +93,30 @@ final class CollectionRepository extends StorageRepository
      */
     public function saveCollection(CollectionData $collection): void
     {
+        if (in_array($collection->id, CollectionData::RESERVED_NAMES)) {
+            throw new \UnexpectedValueException('Cannot save collection with a reserved name');
+        }
+
         $jsonContent = $collection->toJson();
         $metaFile    = $this->buildMetaPath($collection->id);
 
         $this->filesystem->write($metaFile, $jsonContent);
+    }
+
+    /**
+     * Create a collection for a reserved collection.
+     *
+     * @param string $collectionId The collection id
+     *
+     * @throws \DomainException
+     *
+     * @return CollectionData
+     */
+    public function saveReservedCollection(string $collectionId): void
+    {
+        $collection = $this->factory->generateReservedCollection($collectionId);
+
+        $this->saveCollection($collection);
     }
 
     private function buildMetaPath(string $collection): string
