@@ -24,5 +24,5 @@ it('saves a new collection', function (): void {
             'id' => $id,
         ]);
 
-    $this->assertFileExists(__DIR__ . "/../tcms-data/.schemas/{$id}.json");
+    $this->assertFileExists(__DIR__ . "/../tcms-data/{$id}/.meta.json");
 });

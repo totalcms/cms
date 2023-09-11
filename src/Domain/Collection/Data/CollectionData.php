@@ -61,4 +61,19 @@ final class CollectionData
     {
         return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
     }
+
+    // This method converts schema property
+    public static function schemaToMetaProps(array $schema): array
+    {
+        $metaProps = ['label', 'help', 'field', 'factory'];
+
+        foreach ($schema as $key => $prop) {
+            // Only keep the meta properties that we need from the schema
+            $schema[$key] = array_filter($prop, function ($key) use ($metaProps) {
+                return in_array($key, $metaProps);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        return $schema;
+    }
 }

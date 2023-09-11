@@ -40,7 +40,7 @@ final class CollectionFactory
         $schema = $this->schemaFetcher->fetchSchema($collection->schema);
 
         if (empty($collection->properties)) {
-            $collection->properties = $schema->properties;
+            $collection->properties = CollectionData::schemaToMetaProps($schema->properties);
         }
 
         if (!$collection instanceof CollectionData || !$collection->isValid()) {

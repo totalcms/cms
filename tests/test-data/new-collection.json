@@ -1,5 +1,5 @@
 {
-	"id": "text",
-	"schemas": "text",
-	"description": "My Custom Text"
+	"id"          : "text",
+	"schema"      : "text",
+	"description" : "My Custom Text"
 }
