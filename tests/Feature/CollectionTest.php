@@ -1,5 +1,7 @@
 <?php
 
+use function Nekofar\Slim\Pest\delete;
+use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\patchJson;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\putJson;
@@ -61,6 +63,23 @@ it('updates a collection fragment', function (): void {
             'id'          => $id,
             'description' => $patch['description'],
         ]);
+});
+
+it('can fetch a collection', function (): void {
+    $collection = collectionTestData();
+    $id         = $collection['id'];
+    get('/collections/' . $id)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $id,
+        ]);
+});
+
+it('cannot delete a collection by design', function (): void {
+    $collection = collectionTestData();
+    $id         = $collection['id'];
+    delete('/collections/' . $id)->assertStatus(405);
 });
 
 afterAll(function (): void {
