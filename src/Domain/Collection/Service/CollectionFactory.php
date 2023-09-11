@@ -37,14 +37,14 @@ final class CollectionFactory
     {
         $collection = $this->serializer->deserialize($json, CollectionData::class, 'json');
 
+        if (!$collection instanceof CollectionData || !$collection->isValid()) {
+            throw new \UnexpectedValueException('Invalid Collection data provided');
+        }
+
         $schema = $this->schemaFetcher->fetchSchema($collection->schema);
 
         if (empty($collection->properties)) {
             $collection->properties = CollectionData::schemaToMetaProps($schema->properties);
-        }
-
-        if (!$collection instanceof CollectionData || !$collection->isValid()) {
-            throw new \UnexpectedValueException('Invalid Collection data provided');
         }
 
         return $collection;

@@ -8,7 +8,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final class CollectionUpdateAction
+final class CollectionPatchAction
 {
     private JsonRenderer $renderer;
     private CollectionSaver $service;
@@ -40,7 +40,7 @@ final class CollectionUpdateAction
 
         return $this->renderer->jsonItem(
             $response,
-            $this->service->updateCollection($args['collection'], $body),
+            $this->service->patchCollection($args['collection'], $body),
             new CollectionMetaTransformer()
         );
     }

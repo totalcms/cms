@@ -1,5 +1,6 @@
 <?php
 
+use function Nekofar\Slim\Pest\patchJson;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\putJson;
 
@@ -46,6 +47,19 @@ it('updates a collection', function (): void {
         ->assertJsonFragment([
             'id'          => $id,
             'description' => $update,
+        ]);
+});
+
+it('updates a collection fragment', function (): void {
+    $collection = collectionTestData();
+    $id         = $collection['id'];
+    $patch      = ['description' => 'Patched description'];
+    patchJson('/collections/' . $id, $patch)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id'          => $id,
+            'description' => $patch['description'],
         ]);
 });
 

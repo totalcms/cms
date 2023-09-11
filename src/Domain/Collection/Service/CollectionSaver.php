@@ -31,6 +31,7 @@ final class CollectionSaver
      * @param string $json The collection data to save. This should be json encoded.
      * @param bool $update
      *
+     * @throws \DomainException
      * @throws \UnexpectedValueException
      *
      * @return CollectionData
@@ -57,14 +58,43 @@ final class CollectionSaver
     /**
      * update Collection data.
      *
+     * @param string $collectionId
      * @param string $json The collection data to save. This should be json encoded.
      *
      * @throws \UnexpectedValueException
      *
      * @return CollectionData
      */
-    public function updateCollection(string $json): CollectionData
+    public function updateCollection(string $collectionId, string $json): CollectionData
     {
-        return $this->saveCollection($json, true);
+        $collection = $this->factory->generateCollection($json);
+
+        if ($collection->id !== $collectionId) {
+            throw new \UnexpectedValueException('Invalid Collection data provided. Does not match collection ID.', 1);
+        }
+
+        $this->storage->saveCollection($collection);
+
+        return $collection;
+    }
+
+    /**
+     * update Collection data.
+     *
+     * @param string $collectionId
+     * @param string $json The collection data to save. This should be json encoded.
+     *
+     * @throws \UnexpectedValueException
+     *
+     * @return CollectionData
+     */
+    public function patchCollection(string $collectionId, string $json): CollectionData
+    {
+        $patch      = json_decode($json, true);
+        $collection = $this->storage->fetchCollection($collectionId);
+
+        $mergedCollection = array_merge($collection->toArray(), $patch);
+
+        return $this->updateCollection($collectionId, json_encode($mergedCollection));
     }
 }
