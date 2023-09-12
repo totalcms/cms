@@ -4,17 +4,21 @@ use function Nekofar\Slim\Pest\delete;
 use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\postJson;
 
-function schemaTestData(): array
-{
-    $json = file_get_contents(__DIR__ . '/../test-data/new-schema.json');
-
-    return json_decode($json, true);
-}
+beforeAll(function (): void {
+    recursiveDelete(cmsDataDir());
+});
 
 beforeEach(function (): void {
     $app = require __DIR__ . '/../../config/bootstrap.php';
     $this->setUpApp($app);
 });
+
+function schemaTestData(): array
+{
+    $json = file_get_contents(testData('new-schema.json'));
+
+    return json_decode($json, true);
+}
 
 it('saves a new schema', function (): void {
     $schema = schemaTestData();

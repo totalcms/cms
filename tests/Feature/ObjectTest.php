@@ -8,37 +8,21 @@ use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\put;
 use function Nekofar\Slim\Pest\putJson;
 
-function blogTestData(): array
-{
-    $json = file_get_contents(__DIR__ . '/../test-data/new-blogpost.json');
-
-    return json_decode($json, true);
-}
-
-function metaPath(string $collection): string
-{
-    return __DIR__ . "/../tcms-data/$collection/.meta.json";
-}
-
-function indexPath(string $collection): string
-{
-    return __DIR__ . "/../tcms-data/$collection/.index.json";
-}
-
-function objectPath(string $collection, string $id): string
-{
-    return __DIR__ . "/../tcms-data/$collection/$id.json";
-}
-
-function objectFilesPath(string $collection, string $id): string
-{
-    return __DIR__ . "/../tcms-data/$collection/$id";
-}
+beforeAll(function (): void {
+    recursiveDelete(cmsDataDir());
+});
 
 beforeEach(function (): void {
     $app = require __DIR__ . '/../../config/bootstrap.php';
     $this->setUpApp($app);
 });
+
+function blogTestData(): array
+{
+    $json = file_get_contents(testData('new-blogpost.json'));
+
+    return json_decode($json, true);
+}
 
 it('saves a new object', function (): void {
     $collection = 'blog';
@@ -226,13 +210,24 @@ it('can clone an object', function (): void {
     $post       = blogTestData();
     $id         = $post['id'];
 
-    postJson("/collections/{$collection}", $post);
+    // Save test object
+    postJson("/collections/{$collection}", $post)->assertOk();
 
+    // Create archive collection
+    $archive = [
+        'id'     => 'archive',
+        'schema' => 'blog',
+    ];
+    postJson('/collections', $archive)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment($archive);
+
+    // Clone object to archive collection
     $to = [
         'id'         => 'cloned-blogpost',
         'collection' => 'archive',
     ];
-
     $verify = [
         'id'      => $to['id'],
         'content' => $post['content'],
@@ -243,25 +238,15 @@ it('can clone an object', function (): void {
         ->assertJson()
         ->assertJsonFragment($verify);
 
-    get("/collections/{$to['collection']}/{$to['id']}")->assertOk();
-})->skip('Need to implement clone');
+    get("/collections/{$to['collection']}/{$to['id']}")
+        ->assertOk();
 
-afterAll(function (): void {
-    $collection = 'blog';
-    $object     = blogTestData();
-    $id         = $object['id'];
-
-    $cleanup = [
-        objectPath($collection, $id),
-        metaPath($collection),
-        indexPath($collection),
-    ];
-
-    foreach ($cleanup as $file) {
-        if (file_exists($file)) {
-            unlink($file);
-        }
-    }
+    get("/collections/{$to['collection']}/index")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $to['id'],
+        ]);
 });
 
 // TODO: Test image and file uploads

@@ -33,6 +33,6 @@ final class CollectionSchemaFetcher
     {
         $collection = $this->collectionService->fetchCollection($collection);
 
-        return $this->storage->getSchema($collection->id);
+        return $this->storage->getSchema($collection->schema);
     }
 }

@@ -6,9 +6,13 @@ use function Nekofar\Slim\Pest\patchJson;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\putJson;
 
+beforeAll(function (): void {
+    recursiveDelete(cmsDataDir());
+});
+
 function collectionTestData(): array
 {
-    $json = file_get_contents(__DIR__ . '/../test-data/new-collection.json');
+    $json = file_get_contents(testData('new-collection.json'));
 
     return json_decode($json, true);
 }
@@ -91,10 +95,4 @@ it('cannot delete a collection by design', function (): void {
     $collection = collectionTestData();
     $id         = $collection['id'];
     delete("/collections/$id")->assertMethodNotAllowed();
-});
-
-afterAll(function (): void {
-    $collection = collectionTestData();
-    $id         = $collection['id'];
-    unlink(__DIR__ . "/../tcms-data/$id/.meta.json");
 });
