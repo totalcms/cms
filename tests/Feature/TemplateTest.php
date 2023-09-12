@@ -56,10 +56,15 @@ it('fetches a built-in template', function (): void {
     }
 });
 
+it('checks if a template exists', function (): void {
+    head('/templates')
+        ->assertOk();
+});
+
 it('fetches a list of all templates', function (): void {
     get('/templates')
         ->assertOk();
-})->todo();
+});
 
 it('can delete a template', function (): void {
     $id = 'new-template';
@@ -69,4 +74,4 @@ it('can delete a template', function (): void {
     delete("/templates/{$id}")->assertOk();
 
     $this->assertFileDoesNotExist(templatePath($id));
-})->todo();
+});

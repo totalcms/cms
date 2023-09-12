@@ -161,4 +161,18 @@ final class TemplateRepository extends StorageRepository
 
         $this->filesystem->write($templateFile, $template->contents);
     }
+
+    /**
+     * delete a template.
+     *
+     * @param string $template
+     *
+     * @return bool
+     */
+    public function deleteTemplate(string $template): bool
+    {
+        $templateFile = $this->customPath($template);
+
+        return $this->filesystem->delete($templateFile);
+    }
 }
