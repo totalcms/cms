@@ -231,14 +231,15 @@ it('can clone an object to a new collection', function (): void {
         'id'      => $to['id'],
         'content' => $post['content'],
     ];
-
     postJson("/collections/{$collection}/{$id}/clone", $to)
         ->assertOk()
         ->assertJson()
         ->assertJsonFragment($verify);
 
     get("/collections/{$to['collection']}/{$to['id']}")
-        ->assertOk();
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment($verify);
 
     get("/collections/{$to['collection']}/index")
         ->assertOk()
@@ -258,19 +259,24 @@ it('can clone an object to the same collection', function (): void {
         'id' => 'cloned-blogpost',
     ];
     $verify = [
-        'id'      => $to['id'],
-        'content' => $post['content'],
+        'id'    => $to['id'],
+        'title' => $post['title'],
     ];
 
+    // Clone object to same collection
     postJson("/collections/{$collection}/{$id}/clone", $to)
         ->assertOk()
         ->assertJson()
         ->assertJsonFragment($verify);
 
-    get("/collections/{$to['collection']}/{$to['id']}")
-        ->assertOk();
+    // Verify object exists
+    get("/collections/{$collection}/{$to['id']}")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment($verify);
 
-    get("/collections/{$to['collection']}/index")
+    // Verify object is in index
+    get("/collections/{$collection}/index")
         ->assertOk()
         ->assertJson()
         ->assertJsonFragment([
