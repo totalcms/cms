@@ -44,7 +44,7 @@ final class SchemaValidator
             $resolver->registerPrefix(SchemaData::SCHEMA_PREFIX, SchemaRepository::DEFAULT_SCHEMA_DIR);
         }
 
-        // $object = json_decode(json_encode($object));
+        $object = json_decode(json_encode($object));
 
         $result = $validator->validate($object, $schemaJSON);
         $valid  = $result->isValid();

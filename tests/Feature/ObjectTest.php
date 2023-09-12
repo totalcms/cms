@@ -61,7 +61,7 @@ it('saves a new object', function (): void {
         ->assertJsonFragment($post);
 
     $this->assertFileExists(objectPath($collection, $id));
-})->only();
+});
 
 it('can get an object', function (): void {
     $collection = 'blog';

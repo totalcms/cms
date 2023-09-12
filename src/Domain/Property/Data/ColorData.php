@@ -17,7 +17,7 @@ class ColorData extends PropertyData
         $this->h  = floatval($color['h']);
         $this->s  = floatval($color['s']);
         $this->l  = floatval($color['l']);
-        $this->a  = $color['a'] ? floatval($color['a']) : 1;
+        $this->a  = isset($color['a']) ? floatval($color['a']) : 1;
     }
 
     public function transform(): array

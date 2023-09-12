@@ -53,13 +53,13 @@ final class ObjectRepository extends StorageRepository
 
         $collectionInfo = $this->collectionFetcher->fetchCollection($collection);
 
-        if ($this->validator->validateSchema($object, $collectionInfo->schema) === false) {
+        if ($this->validator->validateSchema($object->toArray(), $collectionInfo->schema) === false) {
             throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
         }
 
         $objectFile = $this->buildObjectPath($collection, $object->id);
 
-        $this->filesystem->write($objectFile, $objectJSON);
+        $this->filesystem->write($objectFile, $object->toJson());
     }
 
     public function existsObject(string $collection, string $id): bool
