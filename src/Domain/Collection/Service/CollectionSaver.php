@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
 /**
  * Service.
@@ -12,14 +11,12 @@ use TotalCMS\Domain\Schema\Service\SchemaValidator;
 final class CollectionSaver
 {
     private CollectionRepository $storage;
-    private SchemaValidator $validator;
     private CollectionFactory $factory;
 
-    public function __construct(CollectionRepository $storage, CollectionFactory $factory, SchemaValidator $validator)
+    public function __construct(CollectionRepository $storage, CollectionFactory $factory)
     {
         $this->storage   = $storage;
         $this->factory   = $factory;
-        $this->validator = $validator;
     }
 
     /**
@@ -39,10 +36,6 @@ final class CollectionSaver
 
         if ($this->storage->collectionExists($collection->id)) {
             throw new \DomainException(sprintf('Collection with id %s already exists', $collection->id));
-        }
-
-        if ($this->validator->validateSchema($collection->toArray(), 'meta') === false) {
-            throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
         }
 
         $this->storage->saveCollection($collection);
@@ -66,10 +59,6 @@ final class CollectionSaver
 
         if ($collection->id !== $collectionId) {
             throw new \UnexpectedValueException('Invalid Collection data provided. Does not match collection ID.', 1);
-        }
-
-        if ($this->validator->validateSchema($collection->toArray(), 'meta') === false) {
-            throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
         }
 
         $this->storage->saveCollection($collection);

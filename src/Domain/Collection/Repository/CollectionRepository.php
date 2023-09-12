@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Collection\Repository;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -16,6 +17,7 @@ final class CollectionRepository extends StorageRepository
 {
     private const META_FILE = '.meta.json';
     private CollectionFactory $factory;
+    private SchemaValidator $validator;
 
     /**
      * The constructor.
@@ -23,12 +25,14 @@ final class CollectionRepository extends StorageRepository
      * @param StorageFilesystemAdapter $filesystem The filesystem factory
      * @param CollectionFactory $CollectionFactory
      * @param CollectionFactory $factory
+     * @param SchemaValidator $validator
      */
-    public function __construct(StorageAdapterInterface $filesystem, CollectionFactory $factory)
+    public function __construct(StorageAdapterInterface $filesystem, CollectionFactory $factory, SchemaValidator $validator)
     {
         parent::__construct($filesystem);
 
-        $this->factory = $factory;
+        $this->factory   = $factory;
+        $this->validator = $validator;
     }
 
     /**
@@ -107,6 +111,10 @@ final class CollectionRepository extends StorageRepository
     {
         if (in_array($collection->id, CollectionData::RESERVED_NAMES)) {
             throw new \UnexpectedValueException('Cannot save collection with a reserved name');
+        }
+
+        if ($this->validator->validateSchema($collection->toArray(), 'meta') === false) {
+            throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
         }
 
         $jsonContent = $collection->toJson();

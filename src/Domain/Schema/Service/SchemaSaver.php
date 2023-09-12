@@ -38,6 +38,7 @@ final class SchemaSaver
             throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
         }
 
+        // This is not in Repository in order to prevent circular dependency
         if ($this->validator->validateSchema($schema->toArray()) === false) {
             throw new \UnexpectedValueException('Invalid Schema data provided');
         }
