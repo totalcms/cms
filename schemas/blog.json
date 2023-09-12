@@ -77,7 +77,8 @@
 			"label"   : "Updated Date",
 			"help"    : "Blog Post updated date",
 			"field"   : "hidden",
-			"factory" : "iso8601"
+			"factory" : "iso8601",
+			"default" : "now"
 		},
 		"id": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -91,14 +92,16 @@
 			"label"   : "Date",
 			"help"    : "Blog Post date",
 			"field"   : "date",
-			"factory" : "iso8601"
+			"factory" : "iso8601",
+			"default" : "now"
 		},
 		"created": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"   : "Creation Date",
 			"help"    : "Blog Post creation date",
 			"field"   : "hidden",
-			"factory" : "iso8601"
+			"factory" : "iso8601",
+			"default" : "now"
 		},
 		"extra2": {
 			"type"    : "string",
