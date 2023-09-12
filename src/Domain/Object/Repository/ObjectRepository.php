@@ -74,9 +74,17 @@ final class ObjectRepository extends StorageRepository
 
     public function deleteObject(string $collection, string $id): bool
     {
+        $filesPath  = $this->buildObjectFilesPath($collection, $id);
         $objectFile = $this->buildObjectPath($collection, $id);
 
+        $this->filesystem->deleteDirectory($filesPath);
+
         return $this->filesystem->delete($objectFile);
+    }
+
+    private function buildObjectFilesPath(string $collection, string $id): string
+    {
+        return PathUtils::buildPath(collection: $collection, filename: $id);
     }
 
     private function buildObjectPath(string $collection, string $id): string

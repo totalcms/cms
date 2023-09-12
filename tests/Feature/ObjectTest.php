@@ -1,5 +1,6 @@
 <?php
 
+use function Nekofar\Slim\Pest\delete;
 use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\head;
 use function Nekofar\Slim\Pest\patchJson;
@@ -27,6 +28,11 @@ function indexPath(string $collection): string
 function objectPath(string $collection, string $id): string
 {
     return __DIR__ . "/../tcms-data/$collection/$id.json";
+}
+
+function objectFilesPath(string $collection, string $id): string
+{
+    return __DIR__ . "/../tcms-data/$collection/$id";
 }
 
 beforeEach(function (): void {
@@ -199,6 +205,20 @@ it('can patch an object with partial data', function (): void {
             'id'      => $id,
             'content' => $patch['content'],
         ]);
+});
+
+it('can delete an object', function (): void {
+    $collection = 'blog';
+    $post       = blogTestData();
+    $id         = $post['id'];
+
+    delete("/collections/{$collection}/{$id}")->assertOk();
+    get("/collections/{$collection}/{$id}")->assertNotFound();
+
+    // Verify object json is gone
+    $this->assertFileDoesNotExist(objectPath($collection, $id));
+    // Verify object files are gone
+    $this->assertFileDoesNotExist(objectFilesPath($collection, $id));
 });
 
 afterAll(function (): void {

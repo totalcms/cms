@@ -29,7 +29,6 @@ final class ObjectRemover
      */
     public function deleteObject(string $collection, string $id): bool
     {
-        // TODO: Need to rebuild the Collection Index
         $status = $this->storage->deleteObject($collection, $id);
 
         if ($status) {
