@@ -41,6 +41,13 @@ expect()->extend('toBeOne', function () {
 |
 */
 
+function bootstrap()
+{
+    $app = require __DIR__ . '/../config/bootstrap.php';
+
+    return $app;
+}
+
 function testDataDir(): string
 {
     return __DIR__ . '/test-data/';
@@ -64,6 +71,11 @@ function collectionPath(string $collection): string
 function metaPath(string $collection): string
 {
     return cmsDataDir() . "$collection/.meta.json";
+}
+
+function schemaPath(string $id): string
+{
+    return cmsDataDir() . ".schemas/$id.json";
 }
 
 function indexPath(string $collection): string

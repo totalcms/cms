@@ -6,10 +6,6 @@ use function Nekofar\Slim\Pest\patchJson;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\putJson;
 
-beforeAll(function (): void {
-    recursiveDelete(cmsDataDir());
-});
-
 function collectionTestData(): array
 {
     $json = file_get_contents(testData('new-collection.json'));
@@ -18,8 +14,7 @@ function collectionTestData(): array
 }
 
 beforeEach(function (): void {
-    $app = require __DIR__ . '/../../config/bootstrap.php';
-    $this->setUpApp($app);
+    $this->setUpApp(bootstrap());
 });
 
 it('saves a new collection', function (): void {

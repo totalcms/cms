@@ -13,8 +13,7 @@ beforeAll(function (): void {
 });
 
 beforeEach(function (): void {
-    $app = require __DIR__ . '/../../config/bootstrap.php';
-    $this->setUpApp($app);
+    $this->setUpApp(bootstrap());
 });
 
 function blogTestData(): array
@@ -205,7 +204,7 @@ it('can delete an object', function (): void {
     $this->assertFileDoesNotExist(objectFilesPath($collection, $id));
 });
 
-it('can clone an object', function (): void {
+it('can clone an object to a new collection', function (): void {
     $collection = 'blog';
     $post       = blogTestData();
     $id         = $post['id'];
@@ -227,6 +226,36 @@ it('can clone an object', function (): void {
     $to = [
         'id'         => 'cloned-blogpost',
         'collection' => 'archive',
+    ];
+    $verify = [
+        'id'      => $to['id'],
+        'content' => $post['content'],
+    ];
+
+    postJson("/collections/{$collection}/{$id}/clone", $to)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment($verify);
+
+    get("/collections/{$to['collection']}/{$to['id']}")
+        ->assertOk();
+
+    get("/collections/{$to['collection']}/index")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $to['id'],
+        ]);
+});
+
+it('can clone an object to the same collection', function (): void {
+    $collection = 'blog';
+    $post       = blogTestData();
+    $id         = $post['id'];
+
+    // Clone object to archive collection
+    $to = [
+        'id' => 'cloned-blogpost',
     ];
     $verify = [
         'id'      => $to['id'],

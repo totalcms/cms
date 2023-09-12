@@ -4,13 +4,8 @@ use function Nekofar\Slim\Pest\delete;
 use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\postJson;
 
-beforeAll(function (): void {
-    recursiveDelete(cmsDataDir());
-});
-
 beforeEach(function (): void {
-    $app = require __DIR__ . '/../../config/bootstrap.php';
-    $this->setUpApp($app);
+    $this->setUpApp(bootstrap());
 });
 
 function schemaTestData(): array
@@ -32,7 +27,7 @@ it('saves a new schema', function (): void {
             '$schema' => 'https://json-schema.org/draft/2020-12/schema',
         ]);
 
-    $this->assertFileExists(__DIR__ . "/../tcms-data/.schemas/{$id}.json");
+    $this->assertFileExists(schemaPath($id));
 });
 
 it('cannot save a reserved schema', function (): void {
@@ -41,7 +36,7 @@ it('cannot save a reserved schema', function (): void {
     foreach ($reservedSchemas as $schema) {
         $id = basename($schema, '.json');
         postJson('/schemas', ['id' => $id])
-            ->assertStatus(500)
+            ->assertInternalServerError()
             ->assertSee('is reserved');
     }
 });
@@ -84,5 +79,5 @@ it('can delete custom schemas', function (): void {
     delete("/schemas/$id")
         ->assertOk();
 
-    $this->assertFileDoesNotExist(__DIR__ . "/../tcms-data/.schemas/{$id}.json");
+    $this->assertFileDoesNotExist(schemaPath($id));
 });
