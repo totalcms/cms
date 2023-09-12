@@ -9,18 +9,18 @@ class ImageData extends PropertyData
 {
     public ListData $tags;
     public DateData $uploadDate;
-    public array    $color;
-    public array    $exif;
-    public array    $focalpoint;
-    public array    $palette;
-    public string   $alt;
-    public string   $mime;
-    public string   $link;
-    public string   $name;
-    public int      $size;
-    public int      $width;
-    public int      $height;
-    public bool     $featured;
+    public array $color;
+    public array $exif;
+    public array $focalpoint;
+    public array $palette;
+    public string $alt;
+    public string $mime;
+    public string $link;
+    public string $name;
+    public int $size;
+    public int $width;
+    public int $height;
+    public bool $featured;
 
     public const DEFAULT_PALETTE = [
         'main'          => [],
@@ -34,7 +34,7 @@ class ImageData extends PropertyData
     public function __construct(array $file = [])
     {
         $this->alt        = $file['alt'] ?? '';
-        $this->color      = $file['color'] ?? self::DEFAULT_PALETTE;
+        $this->color      = $file['color'] ?? self::defaultColors();
         $this->exif       = $file['exif'] ?? ['nodata' => ''];
         $this->featured   = $file['featured'] ?? false;
         $this->focalpoint = $file['focalpoint'] ?? self::DEFAULT_FOCALPOINT;
@@ -49,6 +49,16 @@ class ImageData extends PropertyData
 
         $uploadDate       = empty($file['uploadDate']) ? date('c') : $file['uploadDate'];
         $this->uploadDate = new DateData($uploadDate);
+    }
+
+    public static function defaultColors(): array
+    {
+        $color = ['h' => 0, 's' => 0, 'l' => 100];
+
+        return [
+            'main'          => new ColorData($color),
+            'complimentary' => new ColorData($color),
+        ];
     }
 
     public function transform(): array

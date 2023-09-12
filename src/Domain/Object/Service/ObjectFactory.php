@@ -41,10 +41,6 @@ final class ObjectFactory
     {
         $schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-        // if ($this->validator->validateSchema($objectData, $schema->id) === false) {
-        //     throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
-        // }
-
         $properties = $this->generateProperties($objectData, $schema);
 
         // Dynamically load object data based on the schema type

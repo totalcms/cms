@@ -2,8 +2,10 @@
 
 namespace TotalCMS\Domain\Object\Repository;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -15,18 +17,24 @@ use TotalCMS\Utils\PathUtils;
 final class ObjectRepository extends StorageRepository
 {
     private ObjectFactory $factory;
+    private SchemaValidator $validator;
+    private CollectionFetcher $collectionFetcher;
 
     /**
      * The constructor.
      *
      * @param StorageFilesystemAdapter $filesystem The filesystem factory
-     * @param ObjectFactory $objectFactory
+     * @param ObjectFactory $factory
+     * @param SchemaValidator $validator
+     * @param CollectionFetcher $collectionFetcher
      */
-    public function __construct(StorageAdapterInterface $filesystem, ObjectFactory $objectFactory)
+    public function __construct(StorageAdapterInterface $filesystem, ObjectFactory $factory, SchemaValidator $validator, CollectionFetcher $collectionFetcher)
     {
         parent::__construct($filesystem);
 
-        $this->factory = $objectFactory;
+        $this->factory           = $factory;
+        $this->validator         = $validator;
+        $this->collectionFetcher = $collectionFetcher;
     }
 
     /**
@@ -43,8 +51,13 @@ final class ObjectRepository extends StorageRepository
             throw new \UnexpectedValueException('Cannot save object with a reserved name');
         }
 
+        $collectionInfo = $this->collectionFetcher->fetchCollection($collection);
+
+        if ($this->validator->validateSchema($object, $collectionInfo->schema) === false) {
+            throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
+        }
+
         $objectFile = $this->buildObjectPath($collection, $object->id);
-        $objectJSON = $object->toJson();
 
         $this->filesystem->write($objectFile, $objectJSON);
     }
