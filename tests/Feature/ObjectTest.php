@@ -2,12 +2,28 @@
 
 use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\postJson;
+use function Nekofar\Slim\Pest\put;
 
 function blogTestData(): array
 {
     $json = file_get_contents(__DIR__ . '/../test-data/new-blogpost.json');
 
     return json_decode($json, true);
+}
+
+function metaPath(string $collection): string
+{
+    return __DIR__ . "/../tcms-data/$collection/.meta.json";
+}
+
+function indexPath(string $collection): string
+{
+    return __DIR__ . "/../tcms-data/$collection/.index.json";
+}
+
+function objectPath(string $collection, string $id): string
+{
+    return __DIR__ . "/../tcms-data/$collection/$id.json";
 }
 
 beforeEach(function (): void {
@@ -25,7 +41,7 @@ it('saves a new object', function (): void {
             'id' => $collection,
         ]);
 
-    $this->assertFileExists(__DIR__ . '/../tcms-data/blog/.meta.json');
+    $this->assertFileExists(metaPath($collection));
 
     $post = blogTestData();
     $id   = $post['id'];
@@ -35,7 +51,7 @@ it('saves a new object', function (): void {
         ->assertJson()
         ->assertJsonFragment($post);
 
-    $this->assertFileExists(__DIR__ . "/../tcms-data/blog/{$id}.json");
+    $this->assertFileExists(objectPath($collection, $id));
 });
 
 it('can get an object', function (): void {
@@ -64,5 +80,42 @@ it('add an object to the collection index', function (): void {
         ]);
 });
 
-// TODO: Don't forget to test Collection Index here
+it('the collection index gets rebuilt automatically', function (): void {
+    $collection = 'blog';
+
+    $index = indexPath($collection);
+    unlink($index);
+
+    $post = blogTestData();
+    $id   = $post['id'];
+
+    get("/collections/{$collection}/index")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $id,
+        ]);
+
+    $this->assertFileExists($index);
+});
+
+it('the collection index gets rebuilt from api', function (): void {
+    $collection = 'blog';
+
+    $index = indexPath($collection);
+    unlink($index);
+
+    $post = blogTestData();
+    $id   = $post['id'];
+
+    put("/collections/{$collection}/index")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $id,
+        ]);
+
+    $this->assertFileExists($index);
+});
+
 // TODO: Test image and file uploads
