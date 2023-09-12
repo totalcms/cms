@@ -38,7 +38,7 @@ final class SchemaSaver
             throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
         }
 
-        if ($this->validator->validateSchema($schema->toJson()) === false) {
+        if ($this->validator->validateSchema($schema->toArray()) === false) {
             throw new \UnexpectedValueException('Invalid Schema data provided');
         }
 
