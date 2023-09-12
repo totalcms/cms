@@ -28,4 +28,16 @@ final class TemplateFetcher
     {
         return $this->storage->fetchTemplate($template);
     }
+
+    /**
+     * check if a template exists.
+     *
+     * @param string $template Template name
+     *
+     * @return bool
+     */
+    public function templateExists(string $template): bool
+    {
+        return $this->storage->templateExists($template);
+    }
 }

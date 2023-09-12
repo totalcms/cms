@@ -2,6 +2,7 @@
 
 use function Nekofar\Slim\Pest\delete;
 use function Nekofar\Slim\Pest\get;
+use function Nekofar\Slim\Pest\head;
 use function Nekofar\Slim\Pest\postJson;
 
 beforeEach(function (): void {
@@ -57,8 +58,8 @@ it('fetches a built-in template', function (): void {
 });
 
 it('checks if a template exists', function (): void {
-    head('/templates')
-        ->assertOk();
+    head('/templates/new-template')->assertOk();
+    head('/templates/does-not-exist')->assertNotFound();
 });
 
 it('fetches a list of all templates', function (): void {
