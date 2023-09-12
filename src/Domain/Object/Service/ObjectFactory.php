@@ -6,24 +6,17 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
 /**
  * Service.
  */
 final class ObjectFactory
 {
-    private CollectionSchemaFetcher $schemaFetcher;
-    private SchemaValidator $validator;
-    private PropertyFactory $propertyFactory;
-
     public function __construct(
-        CollectionSchemaFetcher $schemaFetcher,
-        SchemaValidator $validator,
-        PropertyFactory $propertyFactory,
+        private CollectionSchemaFetcher $schemaFetcher,
+        private PropertyFactory $propertyFactory,
     ) {
         $this->schemaFetcher   = $schemaFetcher;
-        $this->validator       = $validator;
         $this->propertyFactory = $propertyFactory;
     }
 
