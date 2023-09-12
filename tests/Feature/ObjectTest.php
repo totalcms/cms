@@ -2,6 +2,7 @@
 
 use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\head;
+use function Nekofar\Slim\Pest\patchJson;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\put;
 use function Nekofar\Slim\Pest\putJson;
@@ -174,6 +175,30 @@ it('can update an object with new data', function (): void {
     putJson("/collections/{$collection}/{$id}", $post)
         ->assertInternalServerError()
         ->assertSee('Does not match object ID');
+});
+
+it('can patch an object with partial data', function (): void {
+    $collection = 'blog';
+
+    $post  = blogTestData();
+    $id    = $post['id'];
+    $patch = ['content' => 'Patched Content'];
+
+    patchJson("/collections/{$collection}/{$id}", $patch)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id'      => $id,
+            'content' => $patch['content'],
+        ]);
+
+    get("/collections/{$collection}/{$id}")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id'      => $id,
+            'content' => $patch['content'],
+        ]);
 });
 
 afterAll(function (): void {
