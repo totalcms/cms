@@ -4,6 +4,7 @@ use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\head;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\put;
+use function Nekofar\Slim\Pest\putJson;
 
 function blogTestData(): array
 {
@@ -81,7 +82,7 @@ it('add an object to the collection index', function (): void {
         ]);
 });
 
-it('the collection index gets rebuilt automatically', function (): void {
+it('can automativally rebuild the collection index', function (): void {
     $collection = 'blog';
 
     $index = indexPath($collection);
@@ -100,7 +101,7 @@ it('the collection index gets rebuilt automatically', function (): void {
     $this->assertFileExists($index);
 });
 
-it('the collection index gets rebuilt from api', function (): void {
+it('can rebuild the collection index from api', function (): void {
     $collection = 'blog';
 
     $index = indexPath($collection);
@@ -150,6 +151,30 @@ it('test if an object does not exists', function (): void {
     // !PR: https://github.com/nekofar/slim-test/pull/84
     head("/collections/{$collection}/does-not-exist")->assertNotFound();
 })->skip('awaiting PRs');
+
+it('can update an object with new data', function (): void {
+    $collection = 'blog';
+
+    $post    = blogTestData();
+    $id      = $post['id'];
+    $content = 'Updated content';
+
+    $post['content'] = $content;
+
+    putJson("/collections/{$collection}/{$id}", $post)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id'      => $id,
+            'content' => $content,
+        ]);
+
+    $post['id'] = 'broken-id';
+
+    putJson("/collections/{$collection}/{$id}", $post)
+        ->assertInternalServerError()
+        ->assertSee('Does not match object ID');
+});
 
 afterAll(function (): void {
     $collection = 'blog';

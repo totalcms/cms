@@ -6,12 +6,9 @@ use ColorThief\ColorThief;
 use PHPExif\Enum\ReaderType as ExifReaderType;
 use PHPExif\Exif;
 use PHPExif\Reader\Reader as ExifReader;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\PropertyData;
@@ -25,13 +22,12 @@ use TotalCMS\Utils\ColorUtils;
  */
 final class FileSaver
 {
-    private Serializer $serializer;
     private ExifReader $exifReader;
 
     public function __construct(
         private PropertyRepository $storage,
         private PropertyFetcher $propFetcher,
-        private ObjectUpdater $objectUpdater,
+        private ObjectSaver $objectUpdater,
         private CollectionSchemaFetcher $schemaFetcher,
         private ObjectFetcher $objectFetcher,
     ) {
@@ -40,7 +36,6 @@ final class FileSaver
         $this->objectUpdater = $objectUpdater;
         $this->schemaFetcher = $schemaFetcher;
         $this->objectFetcher = $objectFetcher;
-        $this->serializer    = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 
         $this->exifReader = ExifReader::factory(ExifReaderType::NATIVE);
         // $this->exifReader = ExifReader::factory(ExifReaderType::EXIFTOOL);
@@ -105,9 +100,9 @@ final class FileSaver
      */
     private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
     {
-        $propertyJson = $this->serializer->serialize([$property => $data], 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+        $propertyData = [$property => $data];
 
-        return $this->objectUpdater->updateObject($collection, $objectID, $propertyJson);
+        return $this->objectUpdater->patchObject($collection, $objectID, $propertyData);
     }
 
     /**
