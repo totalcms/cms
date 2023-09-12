@@ -30,16 +30,12 @@ it('saves a new object', function (): void {
     $post = blogTestData();
     $id   = $post['id'];
 
-    // dd($post);
-
     postJson("/collections/{$collection}", $post)
         ->assertOk()
         ->assertJson()
-        ->assertJsonFragment([
-            'id' => $id,
-        ]);
+        ->assertJsonFragment($post);
 
     $this->assertFileExists(__DIR__ . "/../tcms-data/blog/{$id}.json");
-})->only();
+});
 
 // TODO: Don't forget to test Collection Index here

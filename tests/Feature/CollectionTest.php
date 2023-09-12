@@ -24,9 +24,7 @@ it('saves a new collection', function (): void {
     postJson('/collections', $collection)
         ->assertOk()
         ->assertJson()
-        ->assertJsonFragment([
-            'id' => $id,
-        ]);
+        ->assertJsonFragment($collection);
 
     $this->assertFileExists(__DIR__ . "/../tcms-data/{$id}/.meta.json");
 });
