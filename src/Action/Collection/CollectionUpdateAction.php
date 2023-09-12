@@ -36,11 +36,11 @@ final class CollectionUpdateAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        $body = $request->getBody();
+        $data = json_decode($request->getBody(), true);
 
         return $this->renderer->jsonItem(
             $response,
-            $this->service->updateCollection($args['collection'], $body),
+            $this->service->updateCollection($args['collection'], $data),
             new CollectionMetaTransformer()
         );
     }

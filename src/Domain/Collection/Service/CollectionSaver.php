@@ -28,7 +28,7 @@ final class CollectionSaver
     /**
      * Save Collection data.
      *
-     * @param string $json The collection data to save. This should be json encoded.
+     * @param array $data
      * @param bool $update
      *
      * @throws \DomainException
@@ -36,9 +36,9 @@ final class CollectionSaver
      *
      * @return CollectionData
      */
-    public function saveCollection(string $json, bool $update = false): CollectionData
+    public function saveCollection(array $data, bool $update = false): CollectionData
     {
-        $collection = $this->factory->generateCollection($json);
+        $collection = $this->factory->generateCollection($data);
 
         if ($update !== true && $this->storage->collectionExists($collection->id)) {
             throw new \DomainException(sprintf('Collection with id %s already exists', $collection->id));
@@ -59,15 +59,15 @@ final class CollectionSaver
      * update Collection data.
      *
      * @param string $collectionId
-     * @param string $json The collection data to save. This should be json encoded.
+     * @param array $data The collection data to save
      *
      * @throws \UnexpectedValueException
      *
      * @return CollectionData
      */
-    public function updateCollection(string $collectionId, string $json): CollectionData
+    public function updateCollection(string $collectionId, array $data): CollectionData
     {
-        $collection = $this->factory->generateCollection($json);
+        $collection = $this->factory->generateCollection($data);
 
         if ($collection->id !== $collectionId) {
             throw new \UnexpectedValueException('Invalid Collection data provided. Does not match collection ID.', 1);
@@ -82,19 +82,18 @@ final class CollectionSaver
      * update Collection data.
      *
      * @param string $collectionId
-     * @param string $json The collection data to save. This should be json encoded.
+     * @param array $patch The collection data to patch
      *
      * @throws \UnexpectedValueException
      *
      * @return CollectionData
      */
-    public function patchCollection(string $collectionId, string $json): CollectionData
+    public function patchCollection(string $collectionId, array $patch): CollectionData
     {
-        $patch      = json_decode($json, true);
         $collection = $this->storage->fetchCollection($collectionId);
 
         $mergedCollection = array_merge($collection->toArray(), $patch);
 
-        return $this->updateCollection($collectionId, json_encode($mergedCollection));
+        return $this->updateCollection($collectionId, $mergedCollection);
     }
 }

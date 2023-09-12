@@ -27,13 +27,39 @@ final class CollectionFactory
     /**
      * Generate Collection object.
      *
+     * @param array $data The collection data to save
+     *
+     * @throws \UnexpectedValueException
+     *
+     * @return CollectionData
+     */
+    public function generateCollection(array $data): CollectionData
+    {
+        $collection = $this->serializer->denormalize($data, CollectionData::class);
+
+        if (!$collection instanceof CollectionData || !$collection->isValid()) {
+            throw new \UnexpectedValueException('Invalid Collection data provided');
+        }
+
+        $schema = $this->schemaFetcher->fetchSchema($collection->schema);
+
+        if (empty($collection->properties)) {
+            $collection->properties = CollectionData::schemaToMetaProps($schema->properties);
+        }
+
+        return $collection;
+    }
+
+    /**
+     * Generate Collection object.
+     *
      * @param string $json The collection data to save. This should be json encoded.
      *
      * @throws \UnexpectedValueException
      *
      * @return CollectionData
      */
-    public function generateCollection(string $json): CollectionData
+    public function generateCollectionFromJson(string $json): CollectionData
     {
         $collection = $this->serializer->deserialize($json, CollectionData::class, 'json');
 
