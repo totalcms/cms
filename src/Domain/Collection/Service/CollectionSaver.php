@@ -50,8 +50,6 @@ final class CollectionSaver
 
         $this->storage->saveCollection($collection);
 
-        $this->indexBuilder->buildIndex($collection->id);
-
         return $collection;
     }
 

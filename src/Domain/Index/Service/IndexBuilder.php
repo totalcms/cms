@@ -34,7 +34,7 @@ final class IndexBuilder
     {
         $objectIds  = $this->storage->fetchObjectIds($collection);
         $schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-        $indexProps = $schema->schema['index'];
+        $indexProps = $schema->index;
         $index      = new IndexData();
 
         foreach ($objectIds as $id) {
