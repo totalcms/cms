@@ -38,4 +38,31 @@ it('saves a new object', function (): void {
     $this->assertFileExists(__DIR__ . "/../tcms-data/blog/{$id}.json");
 });
 
+it('can get an object', function (): void {
+    $collection = 'blog';
+
+    $post = blogTestData();
+    $id   = $post['id'];
+
+    get("/collections/{$collection}/{$id}")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment($post);
+});
+
+it('add an object to the collection index', function (): void {
+    $collection = 'blog';
+
+    $post = blogTestData();
+    $id   = $post['id'];
+
+    get("/collections/{$collection}/index")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $id,
+        ]);
+});
+
 // TODO: Don't forget to test Collection Index here
+// TODO: Test image and file uploads

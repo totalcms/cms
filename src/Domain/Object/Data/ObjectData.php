@@ -14,6 +14,12 @@ use TotalCMS\Domain\Property\Data\PropertyData;
  */
 class ObjectData
 {
+    // Reserved names that cannot be used for objects
+    public const RESERVED_NAMES = [
+        'index',
+        'id',
+    ];
+
     public string $id;
     /** @var Collection<string, PropertyData> */
     public Collection $properties;
