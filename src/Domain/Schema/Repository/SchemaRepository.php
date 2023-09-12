@@ -98,7 +98,7 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        return $this->factory->generateSchema($contents);
+        return $this->factory->generateSchemaFromJson($contents);
     }
 
     /**
@@ -121,7 +121,7 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        return $this->factory->generateSchema($contents);
+        return $this->factory->generateSchemaFromJson($contents);
     }
 
     /**
