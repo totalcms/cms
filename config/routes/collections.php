@@ -17,8 +17,6 @@ return function (App $app) {
         $group->get('/{collection}', Collection\CollectionFetchAction::class)->setName('collection-fetch');
         $group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
         $group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
-        // !!! Delete collection could be dangerous, maybe we should not implement it.
-        // $group->delete('/{collection}', Collection\CollectionDeleteAction::class)->setName('collection-delete');
 
         // Collection Schema
         $group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');

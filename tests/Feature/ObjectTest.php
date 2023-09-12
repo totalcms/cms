@@ -1,6 +1,7 @@
 <?php
 
 use function Nekofar\Slim\Pest\get;
+use function Nekofar\Slim\Pest\head;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\put;
 
@@ -131,13 +132,41 @@ it('does not create an object if one exists', function (): void {
         ->assertSee('already exists');
 });
 
+it('knows if an object exists', function (): void {
+    $collection = 'blog';
+
+    $post = blogTestData();
+    $id   = $post['id'];
+
+    // !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
+    // !PR: https://github.com/nekofar/slim-test/pull/84
+    head("/collections/{$collection}/$id")->assertOk();
+});
+
+it('test if an object does not exists', function (): void {
+    $collection = 'blog';
+
+    // !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
+    // !PR: https://github.com/nekofar/slim-test/pull/84
+    head("/collections/{$collection}/does-not-exist")->assertNotFound();
+});
+
 afterAll(function (): void {
     $collection = 'blog';
     $object     = blogTestData();
     $id         = $object['id'];
-    unlink(objectPath($collection, $id));
-    unlink(metaPath($collection));
-    unlink(indexPath($collection));
+
+    $cleanup = [
+        objectPath($collection, $id),
+        metaPath($collection),
+        indexPath($collection),
+    ];
+
+    foreach ($cleanup as $file) {
+        if (file_exists($file)) {
+            unlink($file);
+        }
+    }
 });
 
 // TODO: Test image and file uploads
