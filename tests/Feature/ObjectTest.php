@@ -141,7 +141,7 @@ it('knows if an object exists', function (): void {
     // !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
     // !PR: https://github.com/nekofar/slim-test/pull/84
     head("/collections/{$collection}/$id")->assertOk();
-});
+})->skip('awaiting PRs');
 
 it('test if an object does not exists', function (): void {
     $collection = 'blog';
@@ -149,7 +149,7 @@ it('test if an object does not exists', function (): void {
     // !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
     // !PR: https://github.com/nekofar/slim-test/pull/84
     head("/collections/{$collection}/does-not-exist")->assertNotFound();
-});
+})->skip('awaiting PRs');
 
 afterAll(function (): void {
     $collection = 'blog';
