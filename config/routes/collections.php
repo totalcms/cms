@@ -26,13 +26,12 @@ return function (App $app) {
         $group->put('/{collection}/index', Collection\Index\IndexBuildAction::class)->setName('collection-reindex');
 
         // Objects
-        // TODO: Add a clone query parameter to the object-save action to allow cloning an object.
-        // TODO: Also add ability to clone into a different collection.
         $group->post('/{collection}', Action\Object\ObjectSaveAction::class)->setName('object-save');
         $group->get('/{collection}/{id}', Action\Object\ObjectFetchAction::class)->setName('object-fetch');
         $group->delete('/{collection}/{id}', Action\Object\ObjectDeleteAction::class)->setName('object-delete');
         $group->put('/{collection}/{id}', Action\Object\ObjectUpdateAction::class)->setName('object-update');
         $group->patch('/{collection}/{id}', Action\Object\ObjectPatchAction::class)->setName('object-patch');
+        $group->post('/{collection}/{id}/clone', Action\Object\ObjectCloneAction::class)->setName('object-clone');
         $group->map(['HEAD'], '/{collection}/{id}', Action\Object\ObjectExistsAction::class)->setName('object-exists');
 
         // Object Property

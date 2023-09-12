@@ -221,6 +221,31 @@ it('can delete an object', function (): void {
     $this->assertFileDoesNotExist(objectFilesPath($collection, $id));
 });
 
+it('can clone an object', function (): void {
+    $collection = 'blog';
+    $post       = blogTestData();
+    $id         = $post['id'];
+
+    postJson("/collections/{$collection}", $post);
+
+    $to = [
+        'id'         => 'cloned-blogpost',
+        'collection' => 'archive',
+    ];
+
+    $verify = [
+        'id'      => $to['id'],
+        'content' => $post['content'],
+    ];
+
+    postJson("/collections/{$collection}/{$id}/clone", $to)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment($verify);
+
+    get("/collections/{$to['collection']}/{$to['id']}")->assertOk();
+})->skip('Need to implement clone');
+
 afterAll(function (): void {
     $collection = 'blog';
     $object     = blogTestData();

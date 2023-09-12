@@ -1,0 +1,55 @@
+<?php
+
+namespace TotalCMS\Domain\Object\Service;
+
+use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
+
+/**
+ * Service.
+ */
+final class ObjectCloner
+{
+    private ObjectRepository $storage;
+    private ObjectFactory $factory;
+    private IndexBuilder $indexBuilder;
+
+    public function __construct(ObjectRepository $storage, ObjectFactory $factory, IndexBuilder $indexBuilder)
+    {
+        $this->storage      = $storage;
+        $this->factory      = $factory;
+        $this->indexBuilder = $indexBuilder;
+    }
+
+    /**
+     * save a collection object.
+     *
+     * @param array $from
+     * @param array $to
+     *
+     * @throws \UnexpectedValueException
+     * @throws \RuntimeException
+     *
+     * @return ObjectData
+     */
+    public function cloneObject(array $from, array $to): ObjectData
+    {
+        $object = $this->storage->fetchObject($from['collection'], $from['id']);
+
+        if (!$object instanceof ObjectData) {
+            throw new \UnexpectedValueException('Unable to find object to clone');
+        }
+        $object->id = $to['id'];
+
+        if ($this->storage->existsObject($to['collection'], $to['id'])) {
+            throw new \DomainException(sprintf('Object with id %s already exists in %s', $to['id'], $to['collection']));
+        }
+
+        $this->storage->saveObject($to['collection'], $object);
+
+        $this->indexBuilder->buildIndex($to['collection']);
+
+        return $object;
+    }
+}
