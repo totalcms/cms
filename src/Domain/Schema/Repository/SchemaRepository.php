@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Schema\Repository;
 
+use Dynamics\Schema;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -98,7 +99,7 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        return $this->factory->generateSchemaFromJson($contents);
+        return $this->factory->generateSchemaFromJson($contents, SchemaData::class);
     }
 
     /**
@@ -113,15 +114,7 @@ final class SchemaRepository extends StorageRepository
         $schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
         $contents   = null;
 
-        if ($this->filesystem->fileExists($schemaFile)) {
-            $contents = $this->filesystem->read($schemaFile);
-        }
-
-        if (empty($contents)) {
-            return null;
-        }
-
-        return $this->factory->generateSchemaFromJson($contents);
+        return $this->fetchAndDeserialize($schemaFile, SchemaData::class);
     }
 
     /**
