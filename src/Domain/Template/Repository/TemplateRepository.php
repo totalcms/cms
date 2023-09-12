@@ -16,6 +16,72 @@ final class TemplateRepository extends StorageRepository
     public const CUSTOM_TEMPLATE_DIR     = 'templates/';
 
     /**
+     * generate a custom template path.
+     *
+     * @param string $template
+     *
+     * @return string
+     */
+    public function customPath(string $template): string
+    {
+        return self::CUSTOM_TEMPLATE_DIR . $template . self::FILE_EXT;
+    }
+
+    /**
+     * generate a default template path.
+     *
+     * @param string $template
+     *
+     * @return string
+     */
+    public function defaultPath(string $template): string
+    {
+        return self::DEFAULT_TEMPLATE_DIR . $template . self::FILE_EXT;
+    }
+
+    /**
+     * test if a template exists.
+     *
+     * @param string $template
+     *
+     * @throws \DomainException
+     *
+     * @return TemplateData
+     */
+    public function templateExists(string $template): bool
+    {
+        return $this->defaultTemplateExists($template) || $this->customTemplateExists($template);
+    }
+
+    /**
+     * test if a custom template exists.
+     *
+     * @param string $template
+     *
+     * @throws \DomainException
+     *
+     * @return TemplateData
+     */
+    public function customTemplateExists(string $template): bool
+    {
+        return $this->filesystem->fileExists($this->customPath($template));
+    }
+
+    /**
+     * test if a default template exists.
+     *
+     * @param string $template
+     *
+     * @throws \DomainException
+     *
+     * @return TemplateData
+     */
+    public function defaultTemplateExists(string $template): bool
+    {
+        return file_exists($this->defaultPath($template));
+    }
+
+    /**
      * fetch a template.
      *
      * @param string $template
@@ -45,7 +111,7 @@ final class TemplateRepository extends StorageRepository
      */
     public function fetchDefaultTemplate(string $template): ?TemplateData
     {
-        $templateFile = self::DEFAULT_TEMPLATE_DIR . $template . self::FILE_EXT;
+        $templateFile = $this->defaultPath($template);
         $contents     = null;
 
         if (file_exists($templateFile)) {
@@ -68,7 +134,7 @@ final class TemplateRepository extends StorageRepository
      */
     public function fetchCustomTemplate(string $template): ?TemplateData
     {
-        $templateFile = self::CUSTOM_TEMPLATE_DIR . $template . self::FILE_EXT;
+        $templateFile = $this->customPath($template);
         $contents     = null;
 
         if ($this->filesystem->fileExists($templateFile)) {
@@ -91,7 +157,7 @@ final class TemplateRepository extends StorageRepository
      */
     public function saveTemplate(TemplateData $template): void
     {
-        $templateFile = self::CUSTOM_TEMPLATE_DIR . $template->name . self::FILE_EXT;
+        $templateFile = $this->customPath($template->name);
 
         $this->filesystem->write($templateFile, $template->contents);
     }

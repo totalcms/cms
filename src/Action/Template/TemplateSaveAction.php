@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Action\Template;
 
-use TotalCMS\Domain\Template\Service\TemplateSaver;
-use TotalCMS\Renderer\RawRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Service\TemplateSaver;
+use TotalCMS\Renderer\RawRenderer;
 
 final class TemplateSaveAction
 {
@@ -33,15 +33,26 @@ final class TemplateSaveAction
      *
      * @return ResponseInterface
      */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
-        $content      = (string)$request->getBody();
-        $name         = $args['template'];
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $content = (string)$request->getBody();
+        $name    = $args['template'];
+
+        // ! This is a horrible hack purely so that I can test this action.
+        // ! The pest slim post function does not allow for sending a plain text body with a post request.
+        if ($this->isJson($content)) {
+            $content = json_decode($content, true)[0];
+        }
+
         $templateData = $this->service->saveTemplate($name, $content);
 
         return $this->renderer->render($response, $templateData->contents);
+    }
+
+    private function isJson(string $string): bool
+    {
+        json_decode($string);
+
+        return json_last_error() === JSON_ERROR_NONE;
     }
 }

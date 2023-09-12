@@ -63,6 +63,11 @@ function cmsDataDir(): string
     return __DIR__ . '/tcms-data/';
 }
 
+function templatePath(string $id): string
+{
+    return cmsDataDir() . "templates/$id.twig";
+}
+
 function collectionPath(string $collection): string
 {
     return cmsDataDir() . "$collection/";
