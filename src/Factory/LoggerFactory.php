@@ -23,6 +23,7 @@ final class LoggerFactory
      * @var array<HandlerInterface>
      */
     private array $handler = [];
+    private string $format = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
 
     private ?LoggerInterface $testLogger;
 
@@ -90,19 +91,15 @@ final class LoggerFactory
      *
      * @return self The logger factory
      */
-    public function addFileHandler(
-        string $filename,
-        int $maxFiles = 0,
-        int $permissions = 0777,
-        Level $level = null
-    ): self {
+    public function addFileHandler(string $filename, int $maxFiles = 0, int $permissions = 0777, Level $level = null): self
+    {
         $filename = sprintf('%s/%s', $this->path, $filename);
         $level    = $level ?? $this->level;
         /** @phpstan-ignore-next-line */
         $rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level, true, $permissions);
 
         // The last "true" here tells monolog to remove empty []'s
-        $rotatingFileHandler->setFormatter(new LineFormatter(null, null, false, true));
+        $rotatingFileHandler->setFormatter(new LineFormatter($this->format, null, true, true));
 
         $this->addHandler($rotatingFileHandler);
 
@@ -120,7 +117,7 @@ final class LoggerFactory
     {
         /** @phpstan-ignore-next-line */
         $streamHandler = new StreamHandler('php://output', $level ?? $this->level);
-        $streamHandler->setFormatter(new LineFormatter(null, null, false, true));
+        $streamHandler->setFormatter(new LineFormatter($this->format, null, true, true));
 
         $this->addHandler($streamHandler);
 
