@@ -118,4 +118,27 @@ it('the collection index gets rebuilt from api', function (): void {
     $this->assertFileExists($index);
 });
 
+it('does not create an object if one exists', function (): void {
+    $collection = 'blog';
+
+    $post = blogTestData();
+    $id   = $post['id'];
+
+    $this->assertFileExists(objectPath($collection, $id));
+
+    postJson("/collections/{$collection}", $post)
+        ->assertBadRequest()
+        ->assertSee('already exists');
+});
+
+afterAll(function (): void {
+    $collection = 'blog';
+    $object     = blogTestData();
+    $id         = $object['id'];
+    unlink(objectPath($collection, $id));
+    unlink(metaPath($collection));
+    unlink(indexPath($collection));
+});
+
 // TODO: Test image and file uploads
+// TODO: Need to test every single possible property type

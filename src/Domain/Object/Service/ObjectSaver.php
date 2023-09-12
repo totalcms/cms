@@ -41,6 +41,10 @@ final class ObjectSaver
             throw new \UnexpectedValueException('Invalid object data provided');
         }
 
+        if ($this->storage->existsObject($collection, $object->id)) {
+            throw new \DomainException(sprintf('Object with id %s already exists in %s', $object->id, $collection));
+        }
+
         $this->storage->saveObject($collection, $object);
 
         $this->indexBuilder->buildIndex($collection);

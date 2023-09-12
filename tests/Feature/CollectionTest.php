@@ -32,7 +32,7 @@ it('saves a new collection', function (): void {
 it('does not save an existing collection', function (): void {
     $collection = collectionTestData();
     postJson('/collections', $collection)
-        ->assertStatus(400)
+        ->assertBadRequest()
         ->assertSee('already exists');
 });
 
@@ -90,11 +90,11 @@ it('can fetch a schema for a collection', function (): void {
 it('cannot delete a collection by design', function (): void {
     $collection = collectionTestData();
     $id         = $collection['id'];
-    delete('/collections/' . $id)->assertStatus(405);
+    delete("/collections/$id")->assertMethodNotAllowed();
 });
 
 afterAll(function (): void {
     $collection = collectionTestData();
     $id         = $collection['id'];
-    unlink(__DIR__ . "/../tcms-data/{$id}/.meta.json");
+    unlink(__DIR__ . "/../tcms-data/$id/.meta.json");
 });

@@ -36,11 +36,11 @@ final class CollectionSaver
      *
      * @return CollectionData
      */
-    public function saveCollection(array $data, bool $update = false): CollectionData
+    public function saveCollection(array $data): CollectionData
     {
         $collection = $this->factory->generateCollection($data);
 
-        if ($update !== true && $this->storage->collectionExists($collection->id)) {
+        if ($this->storage->collectionExists($collection->id)) {
             throw new \DomainException(sprintf('Collection with id %s already exists', $collection->id));
         }
 

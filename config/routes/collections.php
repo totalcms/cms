@@ -34,8 +34,7 @@ return function (App $app) {
         $group->get('/{collection}/{id}', Action\Object\ObjectFetchAction::class)->setName('object-fetch');
         $group->delete('/{collection}/{id}', Action\Object\ObjectDeleteAction::class)->setName('object-delete');
         $group->put('/{collection}/{id}', Action\Object\ObjectUpdateAction::class)->setName('object-update');
-        // TODO: Add a patch action to allow partial updates.
-        // $group->patch('/{collection}/{id}', Action\Object\ObjectUpdateAction::class)->setName('object-update');
+        $group->patch('/{collection}/{id}', Action\Object\ObjectPatchAction::class)->setName('object-patch');
         $group->map(['HEAD'], '/{collection}/{id}', Action\Object\ObjectExistsAction::class)->setName('object-exists');
 
         // Object Property
