@@ -26,16 +26,16 @@ final class ObjectSaver
      * save a collection object.
      *
      * @param string $collection
-     * @param string $objectJSON
+     * @param array $objectData
      *
      * @throws \UnexpectedValueException
      * @throws \RuntimeException
      *
      * @return ObjectData
      */
-    public function saveObject(string $collection, string $objectJSON): ObjectData
+    public function saveObject(string $collection, array $objectData): ObjectData
     {
-        $object = $this->factory->generateObject($collection, $objectJSON);
+        $object = $this->factory->generateObject($collection, $objectData);
 
         if (!$object instanceof ObjectData) {
             throw new \UnexpectedValueException('Invalid object data provided');

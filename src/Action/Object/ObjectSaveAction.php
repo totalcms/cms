@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Action\Object;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 final class ObjectSaveAction
 {
@@ -39,12 +39,9 @@ final class ObjectSaveAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        $body = (string)$request->getBody();
+        $data   = json_decode($request->getBody(), true);
+        $object = $this->service->saveObject($args['collection'], $data);
 
-        return $this->renderer->jsonItem(
-            $response,
-            $this->service->saveObject($args['collection'], $body),
-            new ObjectMetaTransformer()
-        );
+        return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
     }
 }

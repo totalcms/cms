@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use InvalidArgumentException;
-
 /**
  * String type property data.
  */
@@ -18,10 +16,14 @@ class UrlData extends PropertyData
 
     private static function cleanUrl(string $url): string
     {
+        if (empty($url)) {
+            return $url;
+        }
+
         $url = filter_var($url, FILTER_SANITIZE_URL);
 
         if ($url === false || !filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException('Invalid URL');
+            throw new \InvalidArgumentException('Invalid URL');
         }
 
         return $url;

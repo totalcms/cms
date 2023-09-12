@@ -57,7 +57,7 @@ final class ObjectRepository extends StorageRepository
         $objectFile = $this->buildObjectPath($collection, $id);
 
         if ($this->filesystem->fileExists($objectFile)) {
-            $contents = $this->filesystem->read($objectFile);
+            $contents = json_decode($this->filesystem->read($objectFile), true);
             $object   = $this->factory->generateObject($collection, $contents);
 
             if ($object instanceof ObjectData) {

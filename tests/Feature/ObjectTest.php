@@ -1,10 +1,11 @@
 <?php
 
+use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\postJson;
 
-function objectTestData(): array
+function blogTestData(): array
 {
-    $json = file_get_contents(__DIR__ . '/../test-data/new-object.json');
+    $json = file_get_contents(__DIR__ . '/../test-data/new-blogpost.json');
 
     return json_decode($json, true);
 }
@@ -15,16 +16,30 @@ beforeEach(function (): void {
 });
 
 it('saves a new object', function (): void {
-    // $object = objectTestData();
-    // $id     = $object['id'];
-    // postJson('/collections', $object)
-    //     ->assertOk()
-    //     ->assertJson()
-    //     ->assertJsonFragment([
-    //         'id' => $id,
-    //     ]);
+    $collection = 'blog';
 
-    // $this->assertFileExists(__DIR__ . "/../tcms-data/{$id}/.meta.json");
-});
+    get("/collections/{$collection}")
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $collection,
+        ]);
+
+    $this->assertFileExists(__DIR__ . '/../tcms-data/blog/.meta.json');
+
+    $post = blogTestData();
+    $id   = $post['id'];
+
+    // dd($post);
+
+    postJson("/collections/{$collection}", $post)
+        ->assertOk()
+        ->assertJson()
+        ->assertJsonFragment([
+            'id' => $id,
+        ]);
+
+    $this->assertFileExists(__DIR__ . "/../tcms-data/blog/{$id}.json");
+})->only();
 
 // TODO: Don't forget to test Collection Index here

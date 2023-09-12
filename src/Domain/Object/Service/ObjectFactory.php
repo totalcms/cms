@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use JsonMachine\Items;
-use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -33,22 +31,20 @@ final class ObjectFactory
      * create a schema object.
      *
      * @param string $collection
-     * @param string $objectJson
+     * @param array $objectData
      *
      * @throws \UnexpectedValueException
      *
      * @return ObjectData
      */
-    public function generateObject(string $collection, string $objectJson): ObjectData
+    public function generateObject(string $collection, array $objectData): ObjectData
     {
         $schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-        if ($this->validator->validateSchema($objectJson, $schema->id) === false) {
-            throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
-        }
+        // if ($this->validator->validateSchema($objectData, $schema->id) === false) {
+        //     throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
+        // }
 
-        $objectData = json_decode($objectJson, true);
-        // $objectData = Items::fromString($objectJson, ['decoder' => new ExtJsonDecoder(true)]);
         $properties = $this->generateProperties($objectData, $schema);
 
         // Dynamically load object data based on the schema type
