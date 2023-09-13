@@ -27,7 +27,7 @@ final class TemplateRemover
      */
     public function deleteTemplate(string $id): bool
     {
-        if ($this->storage->defaultTemplateExists($id)) {
+        if ($this->storage->reservedTemplateExists($id)) {
             throw new \DomainException('Cannot delete a built-in template.');
         }
 

@@ -31,7 +31,7 @@ final class TemplateSaver
     {
         $template = TemplateFactory::generateTemplate($id, $contents);
 
-        if ($this->storage->defaultTemplateExists($id)) {
+        if ($this->storage->reservedTemplateExists($id)) {
             throw new \DomainException("Cannot override a built-in template with the name $id.");
         }
 

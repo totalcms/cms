@@ -11,9 +11,9 @@ use TotalCMS\Domain\Template\Service\TemplateFactory;
  */
 final class TemplateRepository extends StorageRepository
 {
-    public const DEFAULT_TEMPLATE_DIR    = __DIR__ . '/../../../../templates/';
-    public const FILE_EXT                = '.twig';
-    public const CUSTOM_TEMPLATE_DIR     = 'templates/';
+    public const RESERVED_TEMPLATE_DIR    = __DIR__ . '/../../../../templates/';
+    public const FILE_EXT                 = '.twig';
+    public const CUSTOM_TEMPLATE_DIR      = 'templates/';
 
     /**
      * generate a custom template path.
@@ -28,15 +28,15 @@ final class TemplateRepository extends StorageRepository
     }
 
     /**
-     * generate a default template path.
+     * generate a reserved template path.
      *
      * @param string $template
      *
      * @return string
      */
-    public function defaultPath(string $template): string
+    public function reservedPath(string $template): string
     {
-        return self::DEFAULT_TEMPLATE_DIR . $template . self::FILE_EXT;
+        return self::RESERVED_TEMPLATE_DIR . $template . self::FILE_EXT;
     }
 
     /**
@@ -50,7 +50,7 @@ final class TemplateRepository extends StorageRepository
      */
     public function templateExists(string $template): bool
     {
-        return $this->defaultTemplateExists($template) || $this->customTemplateExists($template);
+        return $this->reservedTemplateExists($template) || $this->customTemplateExists($template);
     }
 
     /**
@@ -68,7 +68,7 @@ final class TemplateRepository extends StorageRepository
     }
 
     /**
-     * test if a default template exists.
+     * test if a reserved template exists.
      *
      * @param string $template
      *
@@ -76,9 +76,9 @@ final class TemplateRepository extends StorageRepository
      *
      * @return bool
      */
-    public function defaultTemplateExists(string $template): bool
+    public function reservedTemplateExists(string $template): bool
     {
-        return file_exists($this->defaultPath($template));
+        return file_exists($this->reservedPath($template));
     }
 
     /**
@@ -93,7 +93,7 @@ final class TemplateRepository extends StorageRepository
     public function fetchTemplate(string $template): TemplateData
     {
         // Custom template takes precedence
-        $templateData = $this->fetchCustomTemplate($template) ?? $this->fetchDefaultTemplate($template);
+        $templateData = $this->fetchCustomTemplate($template) ?? $this->fetchReservedTemplate($template);
 
         if ($templateData === null) {
             throw new \DomainException(sprintf('Template "%s" not found', $template));
@@ -103,15 +103,15 @@ final class TemplateRepository extends StorageRepository
     }
 
     /**
-     * fetch a default template.
+     * fetch a reserved template.
      *
      * @param string $template
      *
      * @return ?TemplateData
      */
-    public function fetchDefaultTemplate(string $template): ?TemplateData
+    public function fetchReservedTemplate(string $template): ?TemplateData
     {
-        $templateFile = $this->defaultPath($template);
+        $templateFile = $this->reservedPath($template);
         $contents     = null;
 
         if (file_exists($templateFile)) {
@@ -174,5 +174,33 @@ final class TemplateRepository extends StorageRepository
         $templateFile = $this->customPath($template);
 
         return $this->filesystem->delete($templateFile);
+    }
+
+    /**
+     * List custom templates.
+     *
+     * @return array
+     */
+    public function listCustomTemplates(): array
+    {
+        $files = $this->filesystem->listFiles(self::CUSTOM_TEMPLATE_DIR);
+
+        return array_map(function (string $file) {
+            return basename($file, self::FILE_EXT);
+        }, $files);
+    }
+
+    /**
+     * List reserved templates.
+     *
+     * @return array
+     */
+    public function listReservedTemplates(): array
+    {
+        $files = glob(self::RESERVED_TEMPLATE_DIR . '*' . self::FILE_EXT);
+
+        return array_map(function (string $file) {
+            return basename($file, self::FILE_EXT);
+        }, $files);
     }
 }

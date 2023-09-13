@@ -5,14 +5,14 @@ namespace TotalCMS\Action\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\RawRenderer;
 
 final class TemplateListAction
 {
-    private JsonRenderer $renderer;
+    private RawRenderer $renderer;
     private TemplateLister $templateLister;
 
-    public function __construct(JsonRenderer $renderer, TemplateLister $service)
+    public function __construct(RawRenderer $renderer, TemplateLister $service)
     {
         $this->renderer       = $renderer;
         $this->templateLister = $service;
@@ -43,6 +43,6 @@ final class TemplateListAction
                 $templates = $this->templateLister->listAllTemplates();
         }
 
-        return $this->renderer->jsonCollection($response, $templates, new TemplateMetaTransformer());
+        return $this->renderer->render($response, json_encode($templates));
     }
 }
