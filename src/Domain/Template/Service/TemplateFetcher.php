@@ -20,24 +20,24 @@ final class TemplateFetcher
     /**
      * fetch a template.
      *
-     * @param string $template
+     * @param string $id
      *
      * @return TemplateData
      */
-    public function fetchTemplate(string $template): TemplateData
+    public function fetchTemplate(string $id): TemplateData
     {
-        return $this->storage->fetchTemplate($template);
+        return $this->storage->fetchTemplate($id);
     }
 
     /**
      * check if a template exists.
      *
-     * @param string $template Template name
+     * @param string $id Template ID
      *
      * @return bool
      */
-    public function templateExists(string $template): bool
+    public function templateExists(string $id): bool
     {
-        return $this->storage->templateExists($template);
+        return $this->storage->templateExists($id);
     }
 }

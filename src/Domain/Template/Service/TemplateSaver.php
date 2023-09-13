@@ -20,19 +20,19 @@ final class TemplateSaver
     /**
      * Save a Template.
      *
-     * @param string $name
+     * @param string $id
      * @param string $contents
      *
      * @throws \DomainException
      *
      * @return TemplateData
      */
-    public function saveTemplate(string $name, string $contents): TemplateData
+    public function saveTemplate(string $id, string $contents): TemplateData
     {
-        $template = TemplateFactory::generateTemplate($name, $contents);
+        $template = TemplateFactory::generateTemplate($id, $contents);
 
-        if ($this->storage->defaultTemplateExists($name)) {
-            throw new \DomainException("Cannot override a built-in template with the name $name.");
+        if ($this->storage->defaultTemplateExists($id)) {
+            throw new \DomainException("Cannot override a built-in template with the name $id.");
         }
 
         $this->storage->saveTemplate($template);

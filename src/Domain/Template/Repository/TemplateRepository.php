@@ -46,7 +46,7 @@ final class TemplateRepository extends StorageRepository
      *
      * @throws \DomainException
      *
-     * @return TemplateData
+     * @return bool
      */
     public function templateExists(string $template): bool
     {
@@ -60,7 +60,7 @@ final class TemplateRepository extends StorageRepository
      *
      * @throws \DomainException
      *
-     * @return TemplateData
+     * @return bool
      */
     public function customTemplateExists(string $template): bool
     {
@@ -74,7 +74,7 @@ final class TemplateRepository extends StorageRepository
      *
      * @throws \DomainException
      *
-     * @return TemplateData
+     * @return bool
      */
     public function defaultTemplateExists(string $template): bool
     {
@@ -157,7 +157,7 @@ final class TemplateRepository extends StorageRepository
      */
     public function saveTemplate(TemplateData $template): void
     {
-        $templateFile = $this->customPath($template->name);
+        $templateFile = $this->customPath($template->id);
 
         $this->filesystem->write($templateFile, $template->contents);
     }

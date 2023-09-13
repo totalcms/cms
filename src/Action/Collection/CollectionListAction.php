@@ -35,10 +35,8 @@ final class CollectionListAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->renderer->jsonCollection(
-            $response,
-            $this->collectionListService->listAllCollections(),
-            new CollectionMetaTransformer()
-        );
+        $list = $this->collectionListService->listAllCollections();
+
+        return $this->renderer->jsonCollection($response, $list, new CollectionMetaTransformer());
     }
 }

@@ -8,5 +8,5 @@ namespace TotalCMS\Domain\Template\Data;
 final class TemplateData
 {
     public string $contents;
-    public string $name;
+    public string $id;
 }

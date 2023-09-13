@@ -1,22 +1,21 @@
 <?php
 
-namespace TotalCMS\Action\Schema;
+namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Transformer\SchemaMetaTransformer;
 
-final class SchemaListAction
+final class TemplateListAction
 {
     private JsonRenderer $renderer;
-    private SchemaLister $schemaLister;
+    private TemplateLister $templateLister;
 
-    public function __construct(JsonRenderer $renderer, SchemaLister $service)
+    public function __construct(JsonRenderer $renderer, TemplateLister $service)
     {
-        $this->renderer     = $renderer;
-        $this->schemaLister = $service;
+        $this->renderer       = $renderer;
+        $this->templateLister = $service;
     }
 
     /**
@@ -35,15 +34,15 @@ final class SchemaListAction
 
         switch ($filter) {
             case 'reserved':
-                $schemas = $this->schemaLister->listReservedSchemas();
+                $templates = $this->templateLister->listReservedTemplates();
                 break;
             case 'custom':
-                $schemas = $this->schemaLister->listCustomSchemas();
+                $templates = $this->templateLister->listCustomTemplates();
                 break;
             default:
-                $schemas = $this->schemaLister->listAllSchemas();
+                $templates = $this->templateLister->listAllTemplates();
         }
 
-        return $this->renderer->jsonCollection($response, $schemas, new SchemaMetaTransformer());
+        return $this->renderer->jsonCollection($response, $templates, new TemplateMetaTransformer());
     }
 }
