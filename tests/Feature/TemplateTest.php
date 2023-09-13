@@ -74,6 +74,30 @@ it('fetches a list of all templates', function (): void {
     }
 });
 
+it('fetches a list of reserved templates', function (): void {
+    $test = get('/templates?filter=reserved')
+        ->assertOk()
+        ->assertJson()
+        ->assertDontSee('new-template');
+
+    $files = glob(__DIR__ . '/../../templates/*.twig');
+    foreach ($files as $file) {
+        $test->assertSee(basename($file, '.twig'));
+    }
+});
+
+it('fetches a list of custom templates', function (): void {
+    $test = get('/templates?filter=custom')
+        ->assertOk()
+        ->assertJson()
+        ->assertSee('new-template');
+
+    $files = glob(__DIR__ . '/../../templates/*.twig');
+    foreach ($files as $file) {
+        $test->assertDontSee(basename($file, '.twig'));
+    }
+});
+
 it('can delete a template', function (): void {
     $id = 'new-template';
 
