@@ -284,5 +284,7 @@ it('can clone an object to the same collection', function (): void {
         ]);
 });
 
-// TODO: Test image and file uploads
-// TODO: Need to test every single possible property type
+it('can save an objects for every property type', function (): void {
+    // Need to test every single possible property type
+    // loop through all the property types and save an object with each one
+})->todo();
