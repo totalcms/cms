@@ -2,14 +2,13 @@
 
 namespace TotalCMS\Action\Property\File;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Transformer\ObjectMetaTransformer;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use RuntimeException;
 use UploadManager\Exceptions\Upload as UploadException;
 use UploadManager\Upload as UploadManager;
 
@@ -34,11 +33,10 @@ final class FileSaveAction
      *
      * @return ResponseInterface
      */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        var_dump($_FILES);
+        var_dump($args);
         try {
             $object        = null;
             $uploadManager = new UploadManager($args['property']);
@@ -68,11 +66,11 @@ final class FileSaveAction
                 }
             }
             $message = $exception->getMessage() . implode(',', $chunkErrors);
-            throw new RuntimeException("Upload failed $message");
+            throw new \RuntimeException("Upload failed $message");
         }
 
         if (!$object instanceof ObjectData) {
-            throw new RuntimeException('Unable to collect object data from saved file');
+            throw new \RuntimeException('Unable to collect object data from saved file');
         }
 
         return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
