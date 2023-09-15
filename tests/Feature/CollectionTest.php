@@ -6,6 +6,10 @@ use function Nekofar\Slim\Pest\patchJson;
 use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\putJson;
 
+beforeAll(function (): void {
+    recursiveDelete(cmsDataDir());
+});
+
 function collectionTestData(): array
 {
     $json = file_get_contents(testData('new-collection.json'));

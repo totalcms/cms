@@ -35,8 +35,8 @@ final class FileSaveAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        var_dump($_FILES);
-        var_dump($args);
+        // var_dump($_FILES);
+        // var_dump($args);
         try {
             $object        = null;
             $uploadManager = new UploadManager($args['property']);

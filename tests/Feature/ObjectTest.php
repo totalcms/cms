@@ -8,10 +8,6 @@ use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\put;
 use function Nekofar\Slim\Pest\putJson;
 
-beforeAll(function (): void {
-    recursiveDelete(cmsDataDir());
-});
-
 beforeEach(function (): void {
     $this->setUpApp(bootstrap());
 });
