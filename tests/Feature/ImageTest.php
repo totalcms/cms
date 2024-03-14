@@ -4,7 +4,6 @@ use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\postUpload;
 
 beforeAll(function (): void {
-    // TODO: Remove this once the file upload PR is merged
     $image = testDataDir() . 'test-image.jpg';
     $json  = testDataDir() . 'myimage.json';
     $dir   = cmsDataDir() . 'image/myimage/image';
@@ -26,8 +25,11 @@ it('can upload an image', function (): void {
 
     postUpload($uri, $image, 'image/jpeg', 'image')
         ->assertOk();
-    // ! https://discourse.slimframework.com/t/testing-file-uploads/5693
-})->skip('awaiting implementation of PR');
+
+    // ! PRs for this to work
+    // ! https://github.com/nekofar/pest-plugin-slim/pull/110
+    // ! https://github.com/nekofar/slim-test/pull/105
+})->only('awaiting implementation of PR');
 
 it('can update info for an image', function (): void {
 })->todo();
