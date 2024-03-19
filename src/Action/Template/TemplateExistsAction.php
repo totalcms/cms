@@ -6,16 +6,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
-use TotalCMS\Renderer\RawRenderer;
 
 final class TemplateExistsAction
 {
-    private RawRenderer $renderer;
     private TemplateFetcher $templateFetcher;
 
-    public function __construct(RawRenderer $renderer, TemplateFetcher $service)
+    public function __construct(TemplateFetcher $service)
     {
-        $this->renderer        = $renderer;
         $this->templateFetcher = $service;
     }
 

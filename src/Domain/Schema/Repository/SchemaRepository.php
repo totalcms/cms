@@ -34,17 +34,21 @@ final class SchemaRepository extends StorageRepository
     /**
      * List custom Schemas.
      *
-     * @return array<object>
+     * @return array<SchemaData>
      */
     public function listCustomSchemas(): array
     {
         $files = $this->filesystem->listFiles(self::CUSTOM_SCHEMA_DIR);
 
-        $schemas = array_map(function (string $file) {
-            $id = basename($file, self::FILE_EXT);
+        $schemas = [];
 
-            return $this->fetchCustomSchema($id);
-        }, $files);
+        foreach ($files as $file) {
+            $id     = basename($file, self::FILE_EXT);
+            $schema = $this->fetchCustomSchema($id);
+            if ($schema !== null) {
+                $schemas[] = $schema;
+            }
+        }
 
         return $schemas;
     }
@@ -52,25 +56,35 @@ final class SchemaRepository extends StorageRepository
     /**
      * List reserved Schemas.
      *
-     * @return array<object>
+     * @return array<SchemaData>
      */
     public function listReservedSchemas(): array
     {
-        $ids = $this->reservedSchemasIds();
+        $ids     = $this->reservedSchemasIds();
+        $schemas = [];
 
-        return array_map(function (string $id) {
-            return $this->fetchDefaultSchema($id);
-        }, $ids);
+        foreach ($ids as $id) {
+            $schema = $this->fetchDefaultSchema($id);
+            if ($schema !== null) {
+                $schemas[] = $schema;
+            }
+        }
+
+        return $schemas;
     }
 
     /**
      * List reserved Schema IDs.
      *
-     * @return array<object>
+     * @return array<string>
      */
     public function reservedSchemasIds(): array
     {
         $files = glob(self::DEFAULT_SCHEMA_DIR . '*' . self::FILE_EXT);
+
+        if ($files === false) {
+            throw new \RuntimeException('Failed to list reserved schemas');
+        }
 
         return array_map(function (string $file) {
             return basename($file, self::FILE_EXT);
@@ -99,7 +113,7 @@ final class SchemaRepository extends StorageRepository
             return null;
         }
 
-        return $this->factory->generateSchemaFromJson($contents, SchemaData::class);
+        return $this->factory->generateSchemaFromJson($contents);
     }
 
     /**
@@ -112,7 +126,6 @@ final class SchemaRepository extends StorageRepository
     public function fetchCustomSchema(string $id): ?SchemaData
     {
         $schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
-        $contents   = null;
 
         return $this->fetchAndDeserialize($schemaFile, SchemaData::class);
     }

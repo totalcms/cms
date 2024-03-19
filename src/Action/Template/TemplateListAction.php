@@ -43,6 +43,11 @@ final class TemplateListAction
                 $templates = $this->templateLister->listAllTemplates();
         }
 
-        return $this->renderer->render($response, json_encode($templates));
+        $json = json_encode($templates);
+        if ($json === false) {
+            throw new \RuntimeException('json_encode error: ' . json_last_error_msg());
+        }
+
+        return $this->renderer->render($response, $json);
     }
 }

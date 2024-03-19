@@ -12,13 +12,11 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 final class ObjectCloner
 {
     private ObjectRepository $storage;
-    private ObjectFactory $factory;
     private IndexBuilder $indexBuilder;
 
-    public function __construct(ObjectRepository $storage, ObjectFactory $factory, IndexBuilder $indexBuilder)
+    public function __construct(ObjectRepository $storage, IndexBuilder $indexBuilder)
     {
         $this->storage      = $storage;
-        $this->factory      = $factory;
         $this->indexBuilder = $indexBuilder;
     }
 

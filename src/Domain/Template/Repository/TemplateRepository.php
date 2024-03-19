@@ -199,6 +199,10 @@ final class TemplateRepository extends StorageRepository
     {
         $files = glob(self::RESERVED_TEMPLATE_DIR . '*' . self::FILE_EXT);
 
+        if ($files === false) {
+            throw new \RuntimeException('Failed to list reserved templates');
+        }
+
         return array_map(function (string $file) {
             return basename($file, self::FILE_EXT);
         }, $files);

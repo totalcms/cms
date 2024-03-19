@@ -23,7 +23,6 @@ final class CollectionSaver
      * Save Collection data.
      *
      * @param array $data
-     * @param bool $update
      *
      * @throws \DomainException
      * @throws \UnexpectedValueException
@@ -79,6 +78,10 @@ final class CollectionSaver
     public function patchCollection(string $collectionId, array $patch): CollectionData
     {
         $collection = $this->storage->fetchCollection($collectionId);
+
+        if ($collection === null) {
+            throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+        }
 
         $mergedCollection = array_merge($collection->toArray(), $patch);
 

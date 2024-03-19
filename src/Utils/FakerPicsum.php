@@ -9,15 +9,23 @@ class FakerPicsum extends Base
     public const JPG_IMAGE  = 'jpg';
     public const WEBP_IMAGE = 'webp';
 
-    private static array $IMAGEEXTENSIONS = [self::JPG_IMAGE, self::WEBP_IMAGE];
+    private static array $extensions = [self::JPG_IMAGE, self::WEBP_IMAGE];
 
-    public static function picsumUrl($width = 640, $height = 480, $gray = false, $blur = false)
+    /**
+     * @param int $width
+     * @param int $height
+     * @param bool $gray
+     * @param int $blur
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     */
+    public static function picsumUrl(int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
     {
-        $url = '';
+        $url  = '';
         $url .= "{$width}/{$height}";
         $queryString = self::buildQueryString($gray, $blur, true);
 
-        return self::buildPicsumUrl($url, $queryString, 'jpg');
+        return self::buildpicsumUrl($url, $queryString, 'jpg');
     }
 
     /**
@@ -27,44 +35,42 @@ class FakerPicsum extends Base
      *
      * @example '/path/to/dir/13b73edae8443990be1aa8f1a483bc27.jpg'
      *
-     * @param mixed|null $dir
-     * @param mixed $width
-     * @param mixed $height
-     * @param mixed $fullPath
-     * @param mixed|null $id
-     * @param mixed $randomize
-     * @param mixed $gray
-     * @param mixed|null $blur
-     * @param mixed|null $imageExtension
+     * @param string $dir
+     * @param int $width
+     * @param int $height
+     * @param bool $gray
+     * @param int $blur
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
-    public static function picsum($dir = null, $width = 640, $height = 480, $gray = false, $blur = false): string
+    public static function picsum(?string $dir = null, int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
     {
         $url = static::picsumUrl($width, $height, $gray, $blur);
 
-        return self::fetchImage($url, $dir, true);
+        return self::fetchImage($url, $dir);
     }
 
     /**
-     * @param bool|null $gray
-     * @param int|null $blur
-     * @param bool|null $randomize
+     * @param bool $gray
+     * @param int $blur
+     * @param bool $randomize
      *
-     * @return string
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
-    private static function buildQueryString($gray, $blur, $randomize)
+    private static function buildQueryString(bool $gray = false, int $blur = 0, bool $randomize = false): string
     {
         $queryParams = [];
         $queryString = '';
 
-        if ($gray) {
+        if ($gray === true) {
             $queryParams['grayscale'] = '';
         }
 
-        if ($blur) {
+        if ($blur > 0) {
             $queryParams['blur'] = '';
         }
 
-        if ($randomize) {
+        if ($randomize === true) {
             $queryParams['random'] = static::randomNumber(5, true);
         }
 
@@ -75,12 +81,17 @@ class FakerPicsum extends Base
         return $queryString;
     }
 
-    private static function buildPicsumUrl($path, $queryString, $imageExtension = null)
+    /**
+     * @param string $path
+     * @param string $queryString
+     * @param ?string $imageExtension
+     */
+    private static function buildPicsumUrl(string $path, string $queryString, ?string $imageExtension = null): string
     {
         $baseUrl = 'https://picsum.photos/';
 
-        if ($imageExtension) {
-            if (!in_array($imageExtension, self::$IMAGEEXTENSIONS, true)) {
+        if ($imageExtension !== null) {
+            if (!in_array($imageExtension, self::$extensions, true)) {
                 throw new \InvalidArgumentException(sprintf('Invalid image extension "%s"', $imageExtension));
             }
             $path .= '.' . $imageExtension;
@@ -96,14 +107,11 @@ class FakerPicsum extends Base
      *
      * @param string $url Image url to fetch
      * @param string|null $dir Directory where downloaded image will be stored
-     * @param bool $fullPath Return full path to file or only filename
-     *
-     * @return bool|\RuntimeException|string
      */
-    private static function fetchImage($url, $dir = null, $fullPath = true)
+    private static function fetchImage(string $url, ?string $dir = null): string
     {
         // Default to system temp dir
-        $dir = is_null($dir) ? sys_get_temp_dir() : $dir;
+        $dir = empty($dir) ? sys_get_temp_dir() : $dir;
 
         // Validate directory path
         if (!is_dir($dir) || !is_writable($dir)) {
@@ -122,7 +130,13 @@ class FakerPicsum extends Base
 
         // use cURL
         $fp = fopen($filepath, 'w');
+        if ($fp === false) {
+            throw new \RuntimeException('The image formatter was unable to write to the file ' . $filepath);
+        }
         $ch = curl_init($url);
+        if ($ch === false) {
+            throw new \RuntimeException('The image formatter was unable to download the remote image ' . $url);
+        }
         curl_setopt($ch, CURLOPT_FILE, $fp);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_USERAGENT, 'TotalCMS/3.0');
@@ -135,6 +149,6 @@ class FakerPicsum extends Base
             throw new \RuntimeException('The image formatter was unable to download the remote image ' . $url);
         }
 
-        return $fullPath ? $filepath : $filename;
+        return $filepath;
     }
 }

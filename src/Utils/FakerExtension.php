@@ -19,38 +19,38 @@ class FakerExtension extends Base
         self::$dir = sys_get_temp_dir() . '/faker-images';
     }
 
-    public static function imageUrl($width = 640, $height = 480): string
+    public static function imageUrl(int $width = 640, int $height = 480): string
     {
-        return FakerPicsum::picsumUrl(self::$dir, $width, $height, false, false);
+        return FakerPicsum::picsumUrl($width, $height);
     }
 
-    public static function image($width = 640, $height = 480): string
+    public static function image(int $width = 640, int $height = 480): string
     {
-        return FakerPicsum::picsum(self::$dir, $width, $height, false, false);
+        return FakerPicsum::picsum(self::$dir, $width, $height, false, 0);
     }
 
-    public static function imageBlur($width = 640, $height = 480): string
+    public static function imageBlur(int $width = 640, int $height = 480, int $blur = 10): string
     {
-        return FakerPicsum::picsum(self::$dir, $width, $height, false, true);
+        return FakerPicsum::picsum(self::$dir, $width, $height, false, $blur);
     }
 
-    public static function imageBW($width = 640, $height = 480): string
+    public static function imageBW(int $width = 640, int $height = 480): string
     {
-        return FakerPicsum::picsum(self::$dir, $width, $height, true, false);
+        return FakerPicsum::picsum(self::$dir, $width, $height, true, 0);
     }
 
-    public static function imageBWBlur($width = 640, $height = 480): string
+    public static function imageBWBlur(int $width = 640, int $height = 480, int $blur = 10): string
     {
-        return FakerPicsum::picsum(self::$dir, $width, $height, false, false);
+        return FakerPicsum::picsum(self::$dir, $width, $height, true, $blur);
     }
 
-    public static function imageText($width = 640, $height = 480, $text = null, $textSize = 100, $textColor = null, $bgColor = 'f8f8f8'): string
+    public static function imageText(int $width = 640, int $height = 480, ?string $text = null, int $textSize = 100, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
     {
         return FakerImageGD::imageGD(self::$dir, $width, $height, $text, $textSize, $textColor, $bgColor);
     }
 
-    public static function tags($min = 0, $max = 5): array
+    public static function tags(int $min = 0, int $max = 5): array
     {
-        return Lorem::words(self::numberBetween($min, $max), false);
+        return (array)Lorem::words(self::numberBetween($min, $max), false);
     }
 }

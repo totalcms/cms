@@ -5,22 +5,18 @@ namespace TotalCMS\Action\Template;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
-use TotalCMS\Renderer\RawRenderer;
 
 final class TemplateDeleteAction
 {
-    private RawRenderer $renderer;
     private TemplateRemover $service;
 
     /**
      * The constructor.
      *
-     * @param RawRenderer $renderer The renderer
      * @param TemplateRemover $service Template save service
      */
-    public function __construct(RawRenderer $renderer, TemplateRemover $service)
+    public function __construct(TemplateRemover $service)
     {
-        $this->renderer = $renderer;
         $this->service  = $service;
     }
 

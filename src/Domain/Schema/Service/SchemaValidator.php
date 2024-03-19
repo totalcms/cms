@@ -23,10 +23,8 @@ final class SchemaValidator
     /**
      * Validate a schema.
      *
-     * @param string $schemaToValidate
-     * @param string $schemaType
-     * @param string $json
      * @param array $object
+     * @param string $schemaType
      *
      * @throws \DomainException
      *
@@ -44,7 +42,11 @@ final class SchemaValidator
             $resolver->registerPrefix(SchemaData::SCHEMA_PREFIX, SchemaRepository::DEFAULT_SCHEMA_DIR);
         }
 
-        $object = json_decode(json_encode($object));
+        $json = json_encode($object);
+        if ($json === false) {
+            throw new \DomainException('Failed to re-encode object: ' . json_last_error_msg());
+        }
+        $object = json_decode($json);
 
         $result = $validator->validate($object, $schemaJSON);
         $valid  = $result->isValid();
