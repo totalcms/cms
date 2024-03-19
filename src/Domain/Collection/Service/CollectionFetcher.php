@@ -11,12 +11,10 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 final class CollectionFetcher
 {
     private CollectionRepository $storage;
-    // private CollectionSaver $saver;
 
     public function __construct(CollectionRepository $storage)
     {
         $this->storage = $storage;
-        // $this->saver   = $saver;
     }
 
     /**
@@ -31,7 +29,7 @@ final class CollectionFetcher
         try {
             $collection = $this->storage->getCollection($collectionId);
         } catch (\DomainException $de) {
-            // If the collection is not found, try to create it
+            // If the collection is not found or invalid, try to create it
             $this->storage->saveReservedCollection($collectionId);
             $collection = $this->storage->getCollection($collectionId);
         }

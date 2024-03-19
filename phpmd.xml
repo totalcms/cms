@@ -11,6 +11,12 @@
     <!-- Import the entire unused code rule set -->
     <rule ref="rulesets/cleancode.xml">
         <exclude name="StaticAccess" />
+        <exclude name="MissingImport" />
+    </rule>
+	<rule ref="rulesets/cleancode.xml/MissingImport">
+        <properties>
+            <property name="ignore-global" value="true" />
+        </properties>
     </rule>
     <rule ref="rulesets/codesize.xml" />
     <rule ref="rulesets/controversial.xml" />

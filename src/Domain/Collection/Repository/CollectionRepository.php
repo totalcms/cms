@@ -82,18 +82,21 @@ final class CollectionRepository extends StorageRepository
     /**
      * Fetch a collection.
      *
-     * @param string $collection
+     * @param string $collectionName
      *
      * @throws \DomainException
      *
      * @return CollectionData
      */
-    public function getCollection(string $collection): CollectionData
+    public function getCollection(string $collectionName): CollectionData
     {
-        $collection = $this->fetchCollection($collection);
+        $collection = $this->fetchCollection($collectionName);
 
         if ($collection === null) {
-            throw new \DomainException(sprintf('Collection does not exist: %s', $collection));
+            throw new \DomainException(sprintf('Collection does not exist: %s', $collectionName));
+        }
+        if ($collection->isValid() === false) {
+            throw new \DomainException(sprintf('Collection is invalid: %s', $collectionName));
         }
 
         return $collection;
@@ -126,10 +129,6 @@ final class CollectionRepository extends StorageRepository
      * Create a collection for a reserved collection.
      *
      * @param string $collectionId The collection id
-     *
-     * @throws \DomainException
-     *
-     * @return CollectionData
      */
     public function saveReservedCollection(string $collectionId): void
     {
