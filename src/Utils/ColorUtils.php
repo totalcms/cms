@@ -6,6 +6,8 @@ use TotalCMS\Domain\Property\Data\ColorData;
 
 /**
  * Color Utilities.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class ColorUtils
 {

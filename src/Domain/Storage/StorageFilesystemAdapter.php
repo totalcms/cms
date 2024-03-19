@@ -7,6 +7,8 @@ use League\Flysystem\StorageAttributes;
 
 /**
  * Filesystem.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 final class StorageFilesystemAdapter implements StorageAdapterInterface
 {

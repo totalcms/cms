@@ -32,6 +32,9 @@ class FakerImageGD extends Base
      * @param string $bgColor Background color in hexadecimal format (eg. #7f7f7f), default to black
      *
      * @example '/path/to/dir/13b73edae8443990be1aa8f1a483bc27.jpg'
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public static function imageGD($dir = null, $width = 640, $height = 480, $text = null, $textSize = 100, $textColor = null, $bgColor = 'f8f8f8'): string
     {

@@ -19,6 +19,8 @@ use TotalCMS\Utils\ColorUtils;
 
 /**
  * Service.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 final class FileSaver
 {

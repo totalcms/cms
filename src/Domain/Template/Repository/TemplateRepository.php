@@ -8,6 +8,8 @@ use TotalCMS\Domain\Template\Service\TemplateFactory;
 
 /**
  * Repository.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 final class TemplateRepository extends StorageRepository
 {
