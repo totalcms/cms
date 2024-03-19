@@ -12,11 +12,11 @@ $settings['env'] = 'dev';
 $settings['docroot']  = $settings['root'];
 $settings['datadir']  = $settings['root'] . '/tcms-data';
 $settings['cachedir'] = 'false';
-$settings['api']      = 'http://localhost:8000';
+$settings['api']      = 'https://totalcms.test';
 
 $settings['error']['display_error_details'] = true;
 $settings['error']['log_errors']            = true;
 
-$settings['logger']['level']  = \Monolog\Level::Debug;
+$settings['logger']['level']  = Monolog\Level::Debug;
 $settings['assets']['minify'] = 0;
 $settings['locale']['cache']  = null;
