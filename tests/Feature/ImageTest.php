@@ -26,10 +26,10 @@ it('can upload an image', function (): void {
     postUpload($uri, $image, 'image/jpeg', 'image')
         ->assertOk();
 
-    // ! PRs for this to work
+    // ! PRs for this to work - Using my own fork for now
     // ! https://github.com/nekofar/pest-plugin-slim/pull/110
     // ! https://github.com/nekofar/slim-test/pull/105
-})->only('awaiting implementation of PR');
+});
 
 it('can update info for an image', function (): void {
 })->todo();

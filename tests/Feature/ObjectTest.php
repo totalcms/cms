@@ -125,18 +125,20 @@ it('knows if an object exists', function (): void {
     $post = blogTestData();
     $id   = $post['id'];
 
+    // !PR: Using my own fork for now
     // !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
     // !PR: https://github.com/nekofar/slim-test/pull/84
     head("/collections/{$collection}/$id")->assertOk();
-})->skip('awaiting PRs');
+});
 
 it('test if an object does not exists', function (): void {
     $collection = 'blog';
 
+    // !PR: Using my own fork for now
     // !PR: https://github.com/nekofar/pest-plugin-slim/pull/85
     // !PR: https://github.com/nekofar/slim-test/pull/84
     head("/collections/{$collection}/does-not-exist")->assertNotFound();
-})->skip('awaiting PRs');
+});
 
 it('can update an object with new data', function (): void {
     $collection = 'blog';

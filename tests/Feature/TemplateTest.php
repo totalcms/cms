@@ -60,7 +60,7 @@ it('fetches a built-in template', function (): void {
 it('checks if a template exists', function (): void {
     head('/templates/new-template')->assertOk();
     head('/templates/does-not-exist')->assertNotFound();
-})->skip('awaiting PRs');
+});
 
 it('fetches a list of all templates', function (): void {
     $test = get('/templates')
