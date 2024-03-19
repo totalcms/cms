@@ -36,6 +36,9 @@ final class CollectionData
 
     public function toArray(): array
     {
+        if (!$this->isValid()) {
+            throw new \RuntimeException('CollectionData is not valid.');
+        }
         $collection = [
             'id'          => $this->id,
             'schema'      => $this->schema,
