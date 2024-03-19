@@ -5,8 +5,6 @@ namespace TotalCMS\Renderer;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Interfaces\RouteParserInterface;
 
-use function http_build_query;
-
 /**
  * A redirect response renderer.
  */
@@ -42,7 +40,7 @@ final class RedirectRenderer
         array $queryParams = []
     ): ResponseInterface {
         if ($queryParams) {
-            $destination = sprintf('%s?%s', $destination, http_build_query($queryParams));
+            $destination = sprintf('%s?%s', $destination, \http_build_query($queryParams));
         }
 
         return $response->withStatus(302)->withHeader('Location', $destination);

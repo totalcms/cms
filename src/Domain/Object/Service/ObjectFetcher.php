@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
-use UnexpectedValueException;
 
 /**
  * Service.
@@ -31,7 +30,7 @@ final class ObjectFetcher
         $object = $this->storage->fetchObject($collection, $id);
 
         if (!$object instanceof ObjectData) {
-            throw new UnexpectedValueException("Unable to fetch object $collection/$id");
+            throw new \UnexpectedValueException("Unable to fetch object $collection/$id");
         }
 
         return $object;

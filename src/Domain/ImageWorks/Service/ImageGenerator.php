@@ -2,11 +2,10 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use Psr\Http\Message\ResponseInterface;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Utils\PathUtils;
-use Psr\Http\Message\ResponseInterface;
-use UnexpectedValueException;
 
 final class ImageGenerator
 {
@@ -27,7 +26,7 @@ final class ImageGenerator
      * @param string $property
      * @param array  $params
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return ResponseInterface
      */
@@ -36,7 +35,7 @@ final class ImageGenerator
         $imageData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
         if (!$imageData instanceof ImageData) {
-            throw new UnexpectedValueException('Invalid image property found');
+            throw new \UnexpectedValueException('Invalid image property found');
         }
 
         $glide = $this->glideFactory->create(

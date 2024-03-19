@@ -16,4 +16,4 @@ $settings['cachedir'] = 'false';
 $settings['error']['display_error_details'] = true;
 $settings['error']['log_errors']            = true;
 
-$settings['logger']['level']  = \Monolog\Level::Debug;
+$settings['logger']['level']  = Monolog\Level::Debug;

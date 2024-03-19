@@ -351,6 +351,7 @@ class ColorUtils
         $rgb = array_map(function ($c) {
             // Convert to hex
             $hex = dechex($c);
+
             // Make sure we get 2 digits for decimals
             return (strlen('' . $hex) === 1) ? '0' . $hex : $hex;
         }, self::colorToRgb($color));

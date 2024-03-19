@@ -25,6 +25,7 @@ class PasswordData extends PropertyData
     private static function isPasswordHash(string $password): bool
     {
         $info = password_get_info($password);
+
         // Verify that this is a known hash
         return is_string($info['algo']);
     }

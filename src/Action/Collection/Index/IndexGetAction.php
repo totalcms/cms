@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Action\Collection\Index;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\IndexTransformer;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 final class IndexGetAction
 {

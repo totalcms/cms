@@ -2,12 +2,12 @@
 
 namespace TotalCMS\Action\Import;
 
-use TotalCMS\Domain\Import\CsvImporter;
-use TotalCMS\Renderer\JsonRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Exception\HttpBadRequestException;
+use TotalCMS\Domain\Import\CsvImporter;
+use TotalCMS\Renderer\JsonRenderer;
 
 final class ImportCsvAction
 {

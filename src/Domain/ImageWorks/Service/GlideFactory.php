@@ -2,15 +2,15 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
-use TotalCMS\Domain\Property\Data\ColorData;
-use TotalCMS\Domain\Storage\StorageAdapterInterface;
-use TotalCMS\Support\Config;
-use TotalCMS\Utils\ColorUtils;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
+use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Support\Config;
+use TotalCMS\Utils\ColorUtils;
 
 final class GlideFactory
 {

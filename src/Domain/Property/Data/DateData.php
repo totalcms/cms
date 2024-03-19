@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use DateTime;
-
 /**
  * Date property data.
  */
@@ -20,7 +18,7 @@ class DateData extends PropertyData
     {
         // TODO: add timezone configuration support
 
-        $date = new DateTime($date);
+        $date = new \DateTime($date);
 
         return $date->format('c');
     }

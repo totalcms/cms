@@ -2,17 +2,14 @@
 
 namespace TotalCMS\Handler;
 
-use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Renderer\JsonRenderer;
-use DomainException;
 use Fig\Http\Message\StatusCodeInterface;
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpException;
-use Throwable;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Renderer\JsonRenderer;
 
 /**
  * Default Error Renderer.
@@ -48,7 +45,7 @@ final class DefaultErrorHandler
      * Invoke.
      *
      * @param ServerRequestInterface $request The request
-     * @param Throwable $exception The exception
+     * @param \Throwable $exception The exception
      * @param bool $displayErrorDetails Show error details
      * @param bool $logErrors Log errors
      *
@@ -56,7 +53,7 @@ final class DefaultErrorHandler
      */
     public function __invoke(
         ServerRequestInterface $request,
-        Throwable $exception,
+        \Throwable $exception,
         bool $displayErrorDetails,
         bool $logErrors
     ): ResponseInterface {
@@ -92,11 +89,11 @@ final class DefaultErrorHandler
     /**
      * Get http status code.
      *
-     * @param Throwable $exception The exception
+     * @param \Throwable $exception The exception
      *
      * @return int The http code
      */
-    private function getHttpStatusCode(Throwable $exception): int
+    private function getHttpStatusCode(\Throwable $exception): int
     {
         // Detect status code
         $statusCode = StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR;
@@ -105,7 +102,7 @@ final class DefaultErrorHandler
             $statusCode = (int)$exception->getCode();
         }
 
-        if ($exception instanceof DomainException || $exception instanceof InvalidArgumentException) {
+        if ($exception instanceof \DomainException || $exception instanceof \InvalidArgumentException) {
             // Bad request
             $statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
         }
@@ -121,13 +118,13 @@ final class DefaultErrorHandler
     /**
      * Get error message.
      *
-     * @param Throwable $exception The error
+     * @param \Throwable $exception The error
      * @param int $statusCode The http status code
      * @param bool $displayErrorDetails Display details
      *
      * @return string The message
      */
-    private function getErrorMessage(Throwable $exception, int $statusCode, bool $displayErrorDetails): string
+    private function getErrorMessage(\Throwable $exception, int $statusCode, bool $displayErrorDetails): string
     {
         $reasonPhrase = $this->responseFactory->createResponse()->withStatus($statusCode)->getReasonPhrase();
         $errorMessage = sprintf('%s %s', $statusCode, $reasonPhrase);
@@ -146,7 +143,7 @@ final class DefaultErrorHandler
     /**
      * Get exception text.
      *
-     * @param Throwable $exception Error
+     * @param \Throwable $exception Error
      * @param int $maxLength The max length of the error message
      * @param bool $backtrace
      *
@@ -154,7 +151,7 @@ final class DefaultErrorHandler
      *
      * @return string The full error message
      */
-    private function getExceptionText(Throwable $exception, int $maxLength = 0, bool $backtrace = false): string
+    private function getExceptionText(\Throwable $exception, int $maxLength = 0, bool $backtrace = false): string
     {
         $code    = $exception->getCode();
         $file    = $exception->getFile();

@@ -2,9 +2,9 @@
 
 namespace TotalCMS\Action\Object;
 
-use TotalCMS\Domain\Object\Service\ObjectRemover;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Object\Service\ObjectRemover;
 
 final class ObjectDeleteAction
 {

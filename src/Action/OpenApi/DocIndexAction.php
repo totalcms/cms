@@ -2,9 +2,9 @@
 
 namespace TotalCMS\Action\OpenApi;
 
-use TotalCMS\Renderer\RedirectRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Renderer\RedirectRenderer;
 
 /**
  * Action.
