@@ -26,7 +26,7 @@ class FakerImageGD extends Base
      * @param string $dir Path of the generated file, if null will use the system temp dir
      * @param int $width Width of the picture in pixels
      * @param int $height Height of the picture in pixels
-     * @param string $text text to generate on the picture, default no text, if true given will output width and height
+     * @param string $text Text to generate on the picture, default no text, if true given will output width and height
      * @param int $textSize
      * @param string $textColor Text color in hexadecimal format, default to white
      * @param string $bgColor Background color in hexadecimal format (eg. #7f7f7f), default to black

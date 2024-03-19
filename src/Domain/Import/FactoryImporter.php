@@ -39,6 +39,9 @@ final class FactoryImporter
     private function cleanCache(): void
     {
         $files = glob($this->cacheDir . '/*');
+        if ($files === false) {
+            return;
+        }
         foreach ($files as $file) {
             if (is_file($file)) {
                 unlink($file);
@@ -67,13 +70,13 @@ final class FactoryImporter
 
         // Get definitions from collection if not provided
         if (empty($defs)) {
-            $defs = $this->collectionFetcher->fetchCollection($collection)->factory;
+            $defs = $this->collectionFetcher->fetchCollection($collection)->properties;
         }
 
         for ($i = 0; $i < $quantity; $i++) {
             $object = [];
             foreach ($defs as $key => $value) {
-                [$method, $args] = self::parseFakerRule($value);
+                [$method, $args] = self::parseFakerRule($value['factory'] ?? 'word');
                 if ($key === 'id') {
                     // Make sure ID is unique
                     $object[$key] = $this->faker->unique()->$method(...$args);

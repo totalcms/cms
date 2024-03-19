@@ -2,13 +2,12 @@
 
 namespace TotalCMS\Domain\Import;
 
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
-use TotalCMS\Factory\LoggerFactory;
-use Exception;
 use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Factory\LoggerFactory;
 
 final class CsvImporter
 {
@@ -39,8 +38,8 @@ final class CsvImporter
         foreach ($csv->getRecords() as $offset => $record) {
             try {
                 if (
-                    !isset($record['id']) ||
-                    $this->storage->existsObjectId($collection, (string)$record['id'])
+                    !isset($record['id'])
+                    || $this->storage->existsObject($collection, (string)$record['id'])
                 ) {
                     $this->logger->info(sprintf('Skipping import of record at row %s', $offset));
 
@@ -53,7 +52,7 @@ final class CsvImporter
                 $this->logger->debug('Imported record', $record);
 
                 $importCount++;
-            } catch (Exception $exception) {
+            } catch (\Exception $exception) {
                 $this->logger->error(
                     sprintf('Error importing record at row %s: %s', $offset, $exception->getMessage())
                 );

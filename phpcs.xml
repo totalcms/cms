@@ -41,6 +41,11 @@
         <type>warning</type>
     </rule>
     -->
+
+	<rule ref="Generic.Files.LineLength.TooLong">
+        <severity>0</severity>
+    </rule>
+
     <rule ref="Squiz.Commenting.FunctionComment.ParamCommentNotCapital">
         <type>warning</type>
     </rule>

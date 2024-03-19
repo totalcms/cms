@@ -31,6 +31,7 @@ class ImageData extends PropertyData
         'y' => 50,
     ];
 
+    // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function __construct(array $file = [])
     {
         $this->alt        = $file['alt'] ?? '';

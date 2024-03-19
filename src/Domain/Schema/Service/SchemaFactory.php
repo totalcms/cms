@@ -43,7 +43,6 @@ final class SchemaFactory
      * create a schema object.
      *
      * @param string $schemaJson
-     * @param string $id
      *
      * @throws \UnexpectedValueException
      *
