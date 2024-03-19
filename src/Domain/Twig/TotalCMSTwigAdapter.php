@@ -47,7 +47,12 @@ final class TotalCMSTwigAdapter
     // Get an objects from a collection
     public function object(string $collection, string $id): array
     {
-        $object = $this->objectFetcher->fetchObject($collection, $id);
+        // if there is an exception, return an empty array for the template
+        try {
+            $object = $this->objectFetcher->fetchObject($collection, $id);
+        } catch (\Exception $e) {
+            return [];
+        }
 
         return $object->toArray();
     }

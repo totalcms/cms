@@ -17,7 +17,7 @@ final class TwigEngine
 
     public function __construct(Config $config, TotalCMSTwigExtension $extension)
     {
-        $internalTemplates = TemplateRepository::DEFAULT_TEMPLATE_DIR;
+        $internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
         $customTemplates   = $config->dataDir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
         $cacheDir          = $config->cacheDir === 'false' ? false : $config->cacheDir;
         $debug             = $cacheDir === false ? true : false;                        // enable debug is no cache dir
