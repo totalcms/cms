@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 $totalcms = new TotalCMS\TotalCMS();
 $totalcms->startBuffer(); // Start output buffering
 
