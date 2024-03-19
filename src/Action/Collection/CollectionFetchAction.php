@@ -18,7 +18,7 @@ final class CollectionFetchAction
      * The constructor.
      *
      * @param JsonRenderer $renderer The renderer
-     * @param CollectionSaver $service Collection service
+     * @param CollectionFetcher $service Collection service
      */
     public function __construct(JsonRenderer $renderer, CollectionFetcher $service)
     {

@@ -23,7 +23,6 @@ final class CollectionRepository extends StorageRepository
      * The constructor.
      *
      * @param StorageFilesystemAdapter $filesystem The filesystem factory
-     * @param CollectionFactory $CollectionFactory
      * @param CollectionFactory $factory
      * @param SchemaValidator $validator
      */
