@@ -8,16 +8,16 @@ use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\put;
 use function Nekofar\Slim\Pest\putJson;
 
-beforeEach(function (): void {
-    $this->setUpApp(bootstrap());
-});
-
 function blogTestData(): array
 {
     $json = file_get_contents(testData('new-blogpost.json'));
 
     return json_decode($json, true);
 }
+
+beforeEach(function (): void {
+    $this->setUpApp(bootstrap());
+});
 
 it('saves a new object', function (): void {
     $collection = 'blog';
