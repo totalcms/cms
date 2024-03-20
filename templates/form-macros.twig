@@ -194,7 +194,7 @@
 {#--------------------------------
   ID Macro
 --------------------------------#}
-{% macro id(name="id", class="", value = "", label = "ID", placeholder = "Object ID", help = "This is the ID of your object", icon = true, required = false) %}
+{% macro id(name="id", class="", value = "", label = "ID", placeholder = "Object ID", help = "This is the ID of your object", icon = true, required = true) %}
     {{ _self.input(name, "id", "text", class, value, label, placeholder, help, icon, required) }}
 {% endmacro %}
 
