@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Action\Collection\Object\Property;
+namespace TotalCMS\Action\Property;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
