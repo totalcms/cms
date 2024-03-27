@@ -7,7 +7,7 @@ const { createImporter } = require("sass-extended-importer");
 
 esbuild.build({
     entryPoints : [
-        "javascript/admin.ts",
+        "javascript/admin.js",
     ],
     format    : "esm",
     platform  : "browser",

@@ -1,17 +1,16 @@
 //-----------------------------------------------
 // Total CMS Form constructor
 //-----------------------------------------------
-class TotalForm {
+export default class TotalForm {
 
     // Constructors
-    constructor(formRef, options) {
+    constructor(formRef, options = {}) {
         if (!formRef){ return false; }
 
         this.form = this.setForm(formRef);
 
         // Define option defaults
         const defaults = {
-            loglevel   : 1,
             newAction  : "none",
             newLink    : "none",
             editAction : window.location.href,
@@ -21,9 +20,7 @@ class TotalForm {
         const local = this.form.dataset.options ? JSON.parse(this.form.dataset.options) : {};
         this.options = Object.assign({}, defaults, options, local);
 
-        this.log = new Logger({loglevel:this.options.loglevel, group:"totalform"});
-        this.api = new TotalCMS({loglevel:this.options.loglevel});
-        this.log.debug(this.constructor.name+" Options",this.options);
+        this.api = new TotalCMS();
 
         this.collection      = this.find("input[name=collection]").value;
         this.baseapi         = `/collections/${this.collection}`;
@@ -190,7 +187,7 @@ class TotalForm {
                 return new ListComplete(field, options);
 
             default:
-                this.log.warn("Unknown fieldset",fieldset);
+                console.warn("Unknown fieldset",fieldset);
                 return null;
         }
     }
@@ -225,30 +222,21 @@ class TotalForm {
     }
 
     populateForm(object) {
-        this.log.group("populateForm",true);
-        this.log.debug("Form Object",object);
 
         this.id = object.id;
-        this.log.info(`Set Form ID to ${this.id}`);
 
         for (const property in object) {
             // fetch the object for this field
             const field = this.fieldObjects[property];
 
-            this.log.group(property);
-
             if (!field) {
                 console.warn(`Unable to find form field for object property: ${property}`);
-                this.log.groupEnd();
                 continue;
             }
 
             // Set the value for the field
             field.setValue(object[property]);
-
-            this.log.groupEnd();
         }
-        this.log.groupEnd();
 
         // Add the edit-form class to the form since its will be editing an existing element
         // This is a utility class used to add differnt styling and features to forms
@@ -307,7 +295,6 @@ class TotalForm {
     }
 
     updatePermalink() {
-        this.log.debug("update permalink");
         this.id = this.permalink.id;
     }
 
@@ -320,10 +307,8 @@ class TotalForm {
 
     afterSave(response) {
         if (!response) return;
-        this.log.debug("afterSave",response);
 
         if (this.droplets.length > 0) {
-            this.log.debug("Waiting for droplets to save to perform action");
             this.saveDroplets(() => this.afterSaveAction(response));
         }
         else {
@@ -437,7 +422,6 @@ class TotalForm {
     delayProcessing(callback) {
         const processingTime = Date.now() - this.processingStart;
         const delay = this.processingLimit - processingTime;
-        this.log.debug(`Delay Processing for ${delay}`);
 
         window.setTimeout(() => {
             if (typeof callback === "function") callback();
@@ -487,7 +471,6 @@ class TotalForm {
     // The droplet URL requires the ID but that can change
     // This ensures that the URL is updated when it changes
     updateDropletUri() {
-        this.log.debug("updateDropletUri");
         for (const name in this.fieldObjects) {
             const field = this.fieldObjects[name];
             if (field.dropzone) field.updateUri();
@@ -497,7 +480,6 @@ class TotalForm {
     // We only want to process the droplet queue after the inital
     // post request to create the object has been saved
     saveDroplets(callback) {
-        this.log.debug("saveDroplets");
 
         let dropletCount = 0;
         for (const name in this.fieldObjects) {
@@ -509,7 +491,6 @@ class TotalForm {
             // is only processed once for the entire form submission.
             // Example: if there are 3 droplets, run after the 3rd time this has been triggered
             dropletCount--;
-            this.log.count("queuecomplete");
             if (dropletCount === 0) {
                 if (typeof callback === "function") callback();
             }
@@ -543,7 +524,6 @@ class TotalForm {
             // ingore null objects
             if (value !== null) data[name] = value;
         }
-        this.log.debug("generateData",data);
         return data;
     }
 }

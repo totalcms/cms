@@ -1,7 +1,7 @@
 /*!
- * froala_editor v4.0.19 (https://www.froala.com/wysiwyg-editor)
+ * froala_editor v4.2.0 (https://www.froala.com/wysiwyg-editor)
  * License https://froala.com/wysiwyg-editor/terms/
- * Copyright 2014-2023 Froala Labs
+ * Copyright 2014-2024 Froala Labs
  */
 
 .fr-clearfix::after {
@@ -733,11 +733,15 @@ ol.decimal_type {
   counter-reset: item; }
 
 ol.decimal_type > li {
-  display: block; }
+  display: block;
+  position: relative; }
 
 ol.decimal_type > li:before {
   content: counters(item,".") ". ";
-  counter-increment: item; }
+  counter-increment: item;
+  position: absolute;
+  margin-right: 100%;
+  right: 10px; }
 
 .fr-popup {
   position: absolute;
@@ -1255,7 +1259,6 @@ ol.decimal_type > li:before {
   float: none; }
 
 .fr-toolbar.fr-inline .fr-separator.fr-vs {
-  float: none;
   display: inline-block; }
 
 .fr-second-toolbar {
@@ -1347,13 +1350,16 @@ ol.decimal_type > li:before {
   position: relative; }
 
 .fr-sticky-on {
-  position: sticky;
+  position: fixed;
   z-index: 10; }
   .fr-sticky-on.fr-sticky-ios {
-    position: absolute;
+    position: -webkit-sticky;
     left: 0;
     right: 0;
     width: auto !important; }
+
+.modal .fr-sticky-on {
+  position: sticky; }
 
 .fr-sticky-dummy {
   display: none; }
@@ -4621,15 +4627,18 @@ div.fr-modal-body {
       vertical-align: bottom;
       margin-left: 5px;
       margin-right: 5px;
-      max-width: calc(100% - (2 * 5px)); }
+      max-width: calc(100% - (2 * 5px));
+      min-width: 10px; }
       .fr-view img.fr-dii.fr-fil {
         float: left;
         margin: 5px 5px 5px 0;
-        max-width: calc(100% - 5px); }
+        max-width: calc(100% - 5px);
+        min-width: 5px; }
       .fr-view img.fr-dii.fr-fir {
         float: right;
         margin: 5px 0 5px 5px;
-        max-width: calc(100% - 5px); }
+        max-width: calc(100% - 5px);
+        min-width: 5px; }
   .fr-view span.fr-img-caption {
     position: relative;
     max-width: 100%; }
@@ -4650,15 +4659,18 @@ div.fr-modal-body {
       vertical-align: bottom;
       margin-left: 5px;
       margin-right: 5px;
-      max-width: calc(100% - (2 * 5px)); }
+      max-width: calc(100% - (2 * 5px));
+      min-width: 10px; }
       .fr-view span.fr-img-caption.fr-dii.fr-fil {
         float: left;
         margin: 5px 5px 5px 0;
-        max-width: calc(100% - 5px); }
+        max-width: calc(100% - 5px);
+        min-width: 5px; }
       .fr-view span.fr-img-caption.fr-dii.fr-fir {
         float: right;
         margin: 5px 0 5px 5px;
-        max-width: calc(100% - 5px); }
+        max-width: calc(100% - 5px);
+        min-width: 5px; }
   .fr-view .fr-video {
     text-align: center;
     position: relative; }
@@ -4769,15 +4781,18 @@ img.fr-view {
     vertical-align: bottom;
     margin-left: 5px;
     margin-right: 5px;
-    max-width: calc(100% - (2 * 5px)); }
+    max-width: calc(100% - (2 * 5px));
+    min-width: 10px; }
     img.fr-view.fr-dii.fr-fil {
       float: left;
       margin: 5px 5px 5px 0;
-      max-width: calc(100% - 5px); }
+      max-width: calc(100% - 5px);
+      min-width: 5px; }
     img.fr-view.fr-dii.fr-fir {
       float: right;
       margin: 5px 0 5px 5px;
-      max-width: calc(100% - 5px); }
+      max-width: calc(100% - 5px);
+      min-width: 5px; }
 
 span.fr-img-caption.fr-view {
   position: relative;
@@ -4799,12 +4814,15 @@ span.fr-img-caption.fr-view {
     vertical-align: bottom;
     margin-left: 5px;
     margin-right: 5px;
-    max-width: calc(100% - (2 * 5px)); }
+    max-width: calc(100% - (2 * 5px));
+    min-width: 10px; }
     span.fr-img-caption.fr-view.fr-dii.fr-fil {
       float: left;
       margin: 5px 5px 5px 0;
-      max-width: calc(100% - 5px); }
+      max-width: calc(100% - 5px);
+      min-width: 5px; }
     span.fr-img-caption.fr-view.fr-dii.fr-fir {
       float: right;
       margin: 5px 0 5px 5px;
-      max-width: calc(100% - 5px); }
+      max-width: calc(100% - 5px);
+      min-width: 5px; }
