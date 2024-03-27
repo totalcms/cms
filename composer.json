@@ -13,7 +13,7 @@
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
   ],
   "require": {
-    "php": "^8",
+    "php": ">=8.2",
     "cakephp/chronos": "^3.0",
     "cakephp/validation": "^4.2",
     "cocur/slugify": "^4.0",
