@@ -1,3 +1,5 @@
+import TotalField from 'totalfield';
+
 //-----------------------------------------------
 // Total CMS Form constructor
 //-----------------------------------------------

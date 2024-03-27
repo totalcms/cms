@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Generic Field
 //-----------------------------------------------
-class Fieldset {
+export default class TotalField {
 
     constructor(container, options) {
         this.container = container;
