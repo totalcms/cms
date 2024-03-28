@@ -84,8 +84,14 @@ final class TotalCMSTwigAdapter
     }
 
     // Get an text property from an object
-    public function image(string $id, string $options = '', string $type = 'jpg', string $collection = 'image', string $property = 'image'): string
+    public function image(string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
     {
+        $type = 'jpg';
+        if (isset($options['type'])) {
+            $type = $options['type'];
+            unset($options['type']);
+        }
+
         $api = $this->api . "/imageworks/$collection/$id/$property.$type";
 
         // cache busting links
@@ -94,6 +100,7 @@ final class TotalCMSTwigAdapter
         $api .= "?cache=$cache";
 
         if (!empty($options)) {
+            $options = http_build_query($options);
             $api .= "&$options";
         }
 

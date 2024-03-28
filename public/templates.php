@@ -83,7 +83,7 @@ $totalcms->startBuffer(); // Start output buffering again
     {% endfor %}
 
     <!-- Image -->
-    <img src="{{ totalcms.image('myimage', 'w=200&h=400&fit=focalpoint', 'jpg') }}" alt="{{ totalcms.alt('myimage') }}">
+    <img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" alt="{{ totalcms.alt('myimage') }}">
 
 	{% import "form-macros.twig" as form %}
 
