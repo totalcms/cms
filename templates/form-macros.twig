@@ -113,9 +113,6 @@
         	{% if args.value %}value="{{ args.value|e }}"{% endif %}
 		{% endif %}
     >
-    {% if args.input == "range" %}
-	<div id="value-{{ uuid }}" class="range-value">{{ args.value }}</div>
-    {% endif %}
     {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
 {% endmacro %}
 
@@ -187,8 +184,6 @@
 		help        : false,
 		icon        : true,
 		required    : false,
-		multiple    : false,
-		rows        : 10,
 	} | merge(args) %}
 
     {% set uuid = uniqid() %}
@@ -206,25 +201,65 @@
         {% if args.multiple %}multiple size="{{ args.rows }}"{% endif %}
         {% if args.required %}required{% endif %}
     >
-        {# select and select-mulitple have different ways of supporting placeholders #}
-        {% if args.multiple %}
-            {% if args.placeholder %}
-            <option disabled>{{ args.placeholder|e }}</option>
-            {% endif %}
-        {% else %}
-            {% if args.placeholder %}
-            {# <option {% if not args.value %}selected{% endif %} value="">{{ args.placeholder }}</option> #}
-            <option value="">{{ args.placeholder }}</option>
-            {% endif %}
-        {% endif %}
+		{% if args.placeholder %}
+		<option value="">{{ args.placeholder }}</option>
+		{% endif %}
 
-        {% for option in options %}
-        <option value="{{ option.value|e }}" {%if option.value == args.value %}selected{% endif %}>{{ option.label|e }}</option>
-        {% endfor %}
+		{# Get the default selected value #}
+		{% set value = args.value %}
+		{% if args.object %}
+			{% set value = attribute(args.object, name) %}
+		{% endif %}
+
+		{% for option in options %}
+		<option value="{{ option.value|e }}" {%if option.value == value %}selected{% endif %}>{{ option.label|e }}</option>
+		{% endfor %}
     </select>
     {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
 
 {% endmacro %}
+
+{% macro selectmultiple(name, options = [], args = {}) %}
+	{% set args = {
+		type        : "select",
+		class       : "",
+		label       : "",
+		placeholder : "",
+		value 		: [],
+		object      : false,
+		help        : false,
+		icon        : true,
+		required    : false,
+		rows        : 10,
+	} | merge(args) %}
+
+    {% set uuid = uniqid() %}
+
+    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
+    <select multiple
+        id="field-{{ uuid }}"
+        name="{{ name }}"
+        size="{{ args.rows }}"
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.required %}required{% endif %}
+    >
+		{% if args.placeholder %}
+		<option disabled>{{ args.placeholder|e }}</option>
+		{% endif %}
+
+		{# Get the default selected value #}
+		{% set values = args.value %}
+		{% if args.object %}
+			{% set values = attribute(args.object, name) %}
+		{% endif %}
+
+        {% for option in options %}
+        <option value="{{ option.value|e }}" {% if option.value in values %}selected{% endif %}>{{ option.label|e }}</option>
+        {% endfor %}
+    </select>
+    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
+{% endmacro %}
+
 
 {# Hidden Field #}
 {% macro hidden(name, args = {}) %}
@@ -372,12 +407,44 @@
   Range Macro
 --------------------------------#}
 {% macro rangeslider(name, args = {}) %}
-	{# Override args with static values #}
-	{% set args =  args | merge({
-		type  : "range",
-		input : "range",
-	}) %}
-    {{ _self.input(name, args) }}
+	{% set args = {
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		object      : false,
+		help        : false,
+		required    : false,
+		min         : false,
+		max         : false,
+		step        : false,
+	} | merge(args) %}
+
+    {% set uuid  = uniqid() %}
+	{% set callback  = "document.getElementById('value-"~uuid~"').innerHTML = this.value" %}
+
+    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
+    <input
+        id="field-{{ uuid }}"
+        type="range"
+        name="{{ name }}"
+        {% if args.min %}min="{{ args.min }}"{% endif %}
+        {% if args.max %}max="{{ args.max }}"{% endif %}
+        {% if args.step %}step="{{ args.step }}"{% endif %}
+        {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.required %}required{% endif %}
+		{% if args.object %}
+			value="{{ attribute(args.object, name)|e }}"
+		{% else %}
+        	{% if args.value %}value="{{ args.value|e }}"{% endif %}
+		{% endif %}
+		onchange="{{ callback }}"
+		ondrag="{{ callback }}"
+		onmousemove="{{ callback }}"
+    >
+	<div id="value-{{ uuid }}" class="range-value">{{ args.value }}</div>
+    {{ _self.fieldend({ help:args.help, icon:false, uuid:uuid }) }}
 {% endmacro %}
 
 {#--------------------------------
@@ -395,12 +462,13 @@
 {#--------------------------------
   List Macro
 --------------------------------#}
-{% macro list(name, args = {}) %}
+{% macro list(name, options, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type  : "list",
+		type : "list",
+		rows : 6,
 	}) %}
-    {{ _self.select(name, args) }}
+    {{ _self.selectmultiple(name, options, args) }}
 {% endmacro %}
 
 {#--------------------------------

@@ -4,6 +4,7 @@
 .check-field {
 	display   : flex;
 	flex-wrap : wrap;
+	gap       : 0 5px;
 
     [type="checkbox"] {
         appearance  : auto;

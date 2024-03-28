@@ -38,7 +38,7 @@ $totalcms->startBuffer(); // Start output buffering
     small {
         font-size : 0.7em;
     }
-    .total-form {
+    .container {
         max-width : 1000px;
         margin    : 0 auto;
     }
@@ -59,7 +59,10 @@ $totalcms->startBuffer(); // Start output buffering
 echo $totalcms->processBufferMacros();
 $totalcms->startBuffer(); // Start output buffering again
 ?>
-	{% include 'forms.twig' %}
+
+	<div class="container">
+		{% include 'forms-demo.twig' %}
+	</div>
 
 	<script>
     const selects = Array.from(document.querySelectorAll('.select-field select:not([multiple])'));
@@ -74,13 +77,15 @@ $totalcms->startBuffer(); // Start output buffering again
 
 	<script src="tcms-assets/choices/choices.js"></script>
     <script>
-    const element = document.getElementById('input-choices');
-    const choices = new Choices(element, {
-        allowHTML             : true,
-        removeItemButton      : true,
-        duplicateItemsAllowed : false,
-        addChoices            : true,
-    });
+    const elements = Array.from(document.querySelectorAll('.list-field select'));
+	elements.forEach(element => {
+		const choices = new Choices(element, {
+			allowHTML             : true,
+			removeItemButton      : true,
+			duplicateItemsAllowed : false,
+			addChoices            : true,
+		});
+	});
     </script>
 
 	<script type="text/javascript" src="tcms-assets/codemirror/codemirror.js"></script>
@@ -103,10 +108,13 @@ $totalcms->startBuffer(); // Start output buffering again
     <script type="text/javascript" src="tcms-assets/froala/plugins/entities.min.js"></script>
     <script>
     (function () {
-        const editorInstance = new FroalaEditor('#styled-text', {
-            key: "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
-            attribution: false,
-            heightMax: 500,
+		const styledfields = Array.from(document.querySelectorAll('.styledtext-field textarea'));
+		styledfields.forEach(field => {
+			const editorInstance = new FroalaEditor('.styledtext-field textarea', {
+				key: "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
+				attribution: false,
+				heightMax: 500,
+	        })
         })
     })()
     </script>
@@ -162,18 +170,21 @@ $totalcms->startBuffer(); // Start output buffering again
             'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'xmlns', 'y', 'y1',
             'y2', 'yChannelSelector', 'z', 'zoomAndPan',
         ];
-        const editor = new FroalaEditor('#svg-editor', {
-            key                  : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
-            attribution          : false,
-            heightMax            : 300,
-            toolbarButtons       : [ 'html' ],
-            htmlAllowedTags      : svgTags,
-            htmlAllowedEmptyTags : svgTags,
-            htmlAllowedAttrs     : svgAttrs,
-            htmlUntouched        : true,
-        }, function() {
-            // editor.codeView.toggle()
-        });
+		const svgFields = Array.from(document.querySelectorAll('.svg-field textarea'));
+		svgFields.forEach(field => {
+			const editor = new FroalaEditor(field, {
+				key                  : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
+				attribution          : false,
+				heightMax            : 300,
+				toolbarButtons       : [ 'html' ],
+				htmlAllowedTags      : svgTags,
+				htmlAllowedEmptyTags : svgTags,
+				htmlAllowedAttrs     : svgAttrs,
+				htmlUntouched        : true,
+			}, function() {
+				// editor.codeView.toggle()
+			});
+		});
     })()
     </script>
 
