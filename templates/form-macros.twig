@@ -12,14 +12,15 @@
 {% macro start(collection, args = {}) %}
 	{% set args = {
 		method : 'post',
+		class  : '',
 		id     : '',
 	} | merge(args) %}
 
 	{% if args.id %}
-		<form class="totalform" data-method="{{args.method}}"
+		<form class="totalform {{args.class}}" data-method="{{args.method}}"
 			data-api="{{totalcms.api}}/collection/{{collection}}/{{args.id}}">
 	{% else %}
-		<form class="totalform" data-method="{{args.method}}"
+		<form class="totalform {{args.class}}" data-method="{{args.method}}"
 			data-api="{{totalcms.api}}/collection/{{collection}}">
 	{% endif %}
 {% endmacro %}
@@ -580,11 +581,11 @@ https://github.com/wbotelhos/raty
 {#--------------------------------#}
 {% macro textForm(collection, id, args = {}) %}
 	{% set object = totalcms.object(collection, id) %}
-	{% set args   = args | merge({object : object}) %}
+	{% set args   = {object : object} | merge(args) %}
 
-	{{ _self.start(collection, { method: 'post', id: id }) }}
+	{{ _self.start(collection, { method:'post', id:id }) }}
 
-		{{ _self.hidden('id', id) }}
+		{{ _self.hidden('id', args) }}
 		{% if args.input == 'textarea' %}
 			{{ _self.textarea('text', args) }}
 		{% else %}
@@ -592,4 +593,8 @@ https://github.com/wbotelhos/raty
 		{% endif %}
 
 	{{ _self.end() }}
+{% endmacro %}
+
+{% macro textareaForm(collection, id, args = {}) %}
+	{{ _self.textForm(collection, id, {input:'textarea'}) }}
 {% endmacro %}

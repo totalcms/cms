@@ -2,28 +2,29 @@
 // Color Field
 //------------------------------
 [type="color"] {
-    appearance: none;
-    border: none;
-    width: 64px;
-    height: 64px;
-    padding: 0;
-    box-shadow: none;
+	appearance       : none;
+	border           : none;
+	width            : 64px;
+	height           : 64px;
+	padding          : 0;
+	box-shadow       : none;
+	background-color : transparent;
 
     &::-webkit-color-swatch-wrapper {
-        padding: 0;
+        padding : 0;
     }
 
     &::-webkit-color-swatch {
-        border: none;
-        border-radius: 50%;
+        border        : none;
+        border-radius : 50%;
     }
 
     + .form-group-icon {
-        display: none;
+        display : none;
     }
 }
 .color-field {
     .form-group {
-        box-shadow: none;
+        box-shadow : none;
     }
 }

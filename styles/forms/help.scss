@@ -15,6 +15,10 @@
     background-image: var(--icon-help);
 }
 
+.check-field .help {
+	flex-basis: 100%;
+}
+
 //------------------------------
 // Help Box - Bottom Right Tooltip
 //------------------------------
@@ -26,9 +30,9 @@
             border-bottom-right-radius: 0;
         }
         &:has(:focus) .help {
-        box-shadow : 0 1px 2px hsla(0, 0%, 4%, 0.1);
-        border-color : hsl(0, 0%, 69%);
-    }
+			box-shadow : 0 1px 2px hsla(0, 0%, 4%, 0.1);
+			border-color : hsl(0, 0%, 69%);
+    	}
     }
     &.help-on-hover:hover {
         input,
@@ -57,7 +61,7 @@
 // Help Label Overlay
 //------------------------------
 .help-label {
-    .help {
+    .form-field:not(.check-field):not(.radio-field) .help {
         line-height: 1.8;
         margin: 0;
         position: absolute;
@@ -130,21 +134,21 @@
     }
 }
 
-.help-label label {
+.help-label .form-field:not(.check-field):not(.radio-field) > label {
     transition: opacity var(--help-animation-timing);
 }
 
-.help-on-focus:has(input:focus) .help,
-.help-on-hover:hover .help {
+.help-on-focus .form-field:has(input:focus) .help,
+.help-on-hover .form-field:hover .help {
     opacity: 1;
 }
 
-.help-on-hover:hover .help,
-.help-on-focus:has(input:focus) .help {
-    opacity: 1;
+.help-on-hover .form-field:hover .help,
+.help-on-focus .form-field:has(input:focus) .help {
+    opacity: 1!important;
 }
 
-.help-on-focus.help-label:has(input:focus) label,
-.help-on-hover.help-label:hover label {
+.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):has(input:focus) > label,
+.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):hover > label {
     opacity: 0;
 }

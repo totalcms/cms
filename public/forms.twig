@@ -1,43 +1,7 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<style>
-    html {
-        box-sizing : border-box;
-        font-size  : 100%
-    }
+<!-- Macros for forms -->
+{% import "form-macros.twig" as form %}
 
-    *,
-    ::after,
-    ::before {
-        box-sizing : inherit
-    }
-
-    body {
-        font-family            : ui-sans-serif, system-ui, -system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        -webkit-font-smoothing : antialiased;
-    }
-
-    h2 {
-        font-weight : 200;
-        margin      : 3rem 0 1rem 0;
-        opacity     : 0.5;
-    }
-    small {
-        font-size : 0.7em;
-    }
-    .container {
-        max-width : 1000px;
-        margin    : 0 auto;
-    }
-</style>
-<link href="../dist/forms.css" rel="stylesheet"></link>
-<link rel="stylesheet" href="../dist/froala/froala_editor.min.css">
-<link rel="stylesheet" href="../dist/froala/froala_style.min.css">
-<link rel="stylesheet" href="../dist/froala/plugins/code_view.min.css">
-<link rel="stylesheet" href="../dist/froala/plugins/image_manager.min.css">
-<link rel="stylesheet" href="../dist/froala/plugins/image.min.css">
-<link rel="stylesheet" href="../dist/froala/plugins/table.min.css">
-<link rel="stylesheet" href="../dist/froala/plugins/video.min.css">
-
+{{ form.start('customCollection', { method: 'post' }) }}
 
 <div class="container total-form">
     <h2>Help Text - Default Style</h2>
@@ -336,7 +300,7 @@
         <p class="help" id="help-choices">This is some help for this Total CMS form field. This is some help for this Total CMS form field.</p>
     </div>
 
-    <script src="../dist/choices/choices.js"></script>
+    <script src="tcms-assets/choices/choices.js"></script>
     <script>
     const element = document.getElementById('input-choices');
     const choices = new Choices(element, {
@@ -391,24 +355,24 @@
         </div> -->
       </div>
 
-    <script type="text/javascript" src="../dist/codemirror/codemirror.js"></script>
-    <script type="text/javascript" src="../dist/codemirror/xml.js"></script>
-    <script type="text/javascript" src="../dist/dompurify/purify.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/froala_editor.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/align.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/code_beautifier.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/code_view.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/draggable.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/image.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/image_manager.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/link.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/lists.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/paragraph_format.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/paragraph_style.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/table.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/video.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/url.min.js"></script>
-    <script type="text/javascript" src="../dist/froala/plugins/entities.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/codemirror/codemirror.js"></script>
+    <script type="text/javascript" src="tcms-assets/codemirror/xml.js"></script>
+    <script type="text/javascript" src="tcms-assets/dompurify/purify.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/froala_editor.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/align.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/code_beautifier.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/code_view.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/draggable.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/image.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/image_manager.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/link.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/lists.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/paragraph_format.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/paragraph_style.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/table.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/video.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/url.min.js"></script>
+    <script type="text/javascript" src="tcms-assets/froala/plugins/entities.min.js"></script>
 
     <h2>Styled Text</h2>
 
@@ -557,18 +521,3 @@
     <h2>Gallery</h2>
     <h2>Depot</h2>
 </div>
-
-
-
-<!--
-https://sortablejs.github.io/Sortable/
-
-https://fusejs.io Search
-https://codepen.io/mblode/pen/VwGxaO Cool Radio Buttons
-https://felixg.io/products/datedropper-javascript
-https://github.com/wbotelhos/raty
-
-https://hslpicker.com/
-https://css.land/lch/
-https://mdn.github.io/css-examples/tools/color-picker/ - Take this and make it look like Chrome Picker
--->

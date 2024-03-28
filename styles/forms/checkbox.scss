@@ -2,6 +2,9 @@
 // Checkbox Field
 //------------------------------
 .check-field {
+	display   : flex;
+	flex-wrap : wrap;
+
     [type="checkbox"] {
         appearance  : auto;
         width       : 1.2rem;

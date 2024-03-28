@@ -43,6 +43,7 @@ $totalcms->startBuffer(); // Start output buffering
         margin    : 0 auto;
     }
     </style>
+	<link rel="stylesheet" href="tcms-assets/forms.css">
 </head>
 <body>
 
@@ -84,30 +85,6 @@ $totalcms->startBuffer(); // Start output buffering again
 
     <!-- Image -->
     <img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" alt="{{ totalcms.alt('myimage') }}">
-
-	{% import "form-macros.twig" as form %}
-
-	{{ form.textForm('text', 'mytext') }}
-
-	<!-- {% set object = {} %}
-	{% if getParams.id %}
-		{% set object = totalcms.object(collection, getParams.id) %}
-	{% endif %}
-
-	{{ form.start('blog', { method: 'post', object: object }) }}
-
-		{{ form.input('id', { object : object }) }}
-		{{ form.textarea('summary', { object : object }) }}
-		{{ form.select('options', [
-			{ label: "One",   value: "1" },
-			{ label: "Two",   value: "2" },
-			{ label: "Three", value: "3" },
-		], {
-			object : object
-		}) }}
-		{{ form.date('mydate', { object : object }) }}
-
-	{{ form.end() }} -->
 
 	<p>End</p>
 
