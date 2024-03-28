@@ -5,8 +5,18 @@ echo "Building the application..."
 echo "Building frontend assets..."
 yarn build
 
+if [ $? -ne 0 ]; then
+    echo "Failed to build frontend assets. Exiting..."
+    exit 1
+fi
+
 echo "Building the application..."
 composer install --no-dev --optimize-autoloader --quiet
+
+if [ $? -ne 0 ]; then
+    echo "Failed to build Total CMS application. Exiting..."
+    exit 1
+fi
 
 # remove imagine libs that are not required and take up too much space
 find vendor -not -name '*php' -not -name '*pem' -type f -delete
