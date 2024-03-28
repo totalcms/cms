@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS SVG Field
 //-----------------------------------------------
-class SVGField extends Fieldset {
+class SVGField extends TotalField {
 
     constructor(container, options) {
         super(container, options);

@@ -13,7 +13,7 @@ $.FroalaEditor.SHORTCUTS_MAP = {
 //-----------------------------------------------
 // Total CMS Styled Text Field
 //-----------------------------------------------
-class StyledTextField extends Fieldset {
+class StyledTextField extends TotalField {
 
     constructor(container, options) {
         super(container, options);

@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Select Field
 //-----------------------------------------------
-class SelectField extends Fieldset {
+class SelectField extends TotalField {
 
     constructor(container, options) {
         super(...arguments);

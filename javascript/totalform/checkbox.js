@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Checkbox Field
 //-----------------------------------------------
-class Checkbox extends Fieldset {
+class Checkbox extends TotalField {
 
     setValue(value) {
         this.input.checked = (value === true||value === "true"||value === 1);

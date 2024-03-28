@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Checkbox Field
 //-----------------------------------------------
-class NumberField extends Fieldset {
+class NumberField extends TotalField {
 
     getValue() {
         return parseFloat(this.input.value);

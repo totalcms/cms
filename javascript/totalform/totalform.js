@@ -11,30 +11,23 @@ export default class TotalForm {
 
         this.form = this.setForm(formRef);
 
-        // Define option defaults
-        const defaults = {
-            newAction  : "none",
-            newLink    : "none",
-            editAction : window.location.href,
-            editLink   : window.location.href
-        };
-        // merge those with defaults and arguments passed
-        const local = this.form.dataset.options ? JSON.parse(this.form.dataset.options) : {};
-        this.options = Object.assign({}, defaults, options, local);
+		if (!this.form) {
+			console.error("form not found");
+			return false;
+		}
 
         this.api = new TotalCMS();
 
         this.collection      = this.find("input[name=collection]").value;
-        this.baseapi         = `/collections/${this.collection}`;
-        this.id              = this.api.getUrlParameter("id")||this.api.getUrlParameter("permalink");
-        this.indicator       = null;
+        this.baseapi         = this.form.action;
+        this.id              = this.api.getUrlParameter("id");
         this.processingStart = Date.now();
         this.processingLimit = 1500;
         this.states          = ["success","error","processing","clear"];
 
-        this.fieldsets    = this.findAll("fieldset").filter(field => !this.insideDeck(field));
-        this.droplets     = this.fieldsets.filter(field => field.classList.contains("droplet"));
-        this.fieldObjects = this.processFieldsets();
+        this.fields       = this.findAll("fieldset").filter(field => !this.insideDeck(field));
+        this.droplets     = this.fields.filter(field => field.classList.contains("droplet"));
+        this.fieldObjects = this.processFields();
 
         this.schema = new Schema(this);
 
@@ -62,7 +55,7 @@ export default class TotalForm {
 
     // Find the first instance of a selector within the form
     find(selector) {
-        return this.findAll(selector).shift();
+        return this.form.querySelector(selector);
     }
     // Find the all instance of a selector within the form
     findAll(selector) {
@@ -93,9 +86,9 @@ export default class TotalForm {
     //-------------------------
     // Init Form
     //-------------------------
-    processFieldsets() {
+    processFields() {
         const data = {};
-        this.fieldsets.forEach(field => {
+        this.fields.forEach(field => {
             const object = this.generateFieldObject(field);
             if (object === null) return; // if the object is not set, skip it
             data[field.dataset.name] = object;
@@ -138,7 +131,7 @@ export default class TotalForm {
         switch (field.dataset.type) {
             case "text":
             case "video":
-                return new Fieldset(field, options);
+                return new TotalField(field, options);
 
             case "styledtext":
                 return new StyledTextField(field, options);
@@ -449,7 +442,7 @@ export default class TotalForm {
         this.delayProcessing(() => {
             this.changeState("success");
             this.form.classList.remove("unsaved");
-            for(const field of this.fieldsets) {
+            for(const field of this.fields) {
                 field.classList.remove("unsaved");
             }
             window.setTimeout(() => {

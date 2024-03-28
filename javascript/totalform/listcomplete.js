@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS List Field
 //-----------------------------------------------
-class ListComplete extends Fieldset {
+class ListComplete extends TotalField {
 
     constructor(container, options) {
         super(container, options);

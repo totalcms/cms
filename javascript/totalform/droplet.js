@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Droplet
 //-----------------------------------------------
-class Droplet extends Fieldset {
+class Droplet extends TotalField {
 
     constructor(container, options) {
         super(container, options);

@@ -4,7 +4,7 @@ $.fn.spectrum.load = false;
 //-----------------------------------------------
 // Total CMS Color Field
 //-----------------------------------------------
-class ColorPicker extends Fieldset {
+class ColorPicker extends TotalField {
 
     constructor(container, options) {
         super(container, options);

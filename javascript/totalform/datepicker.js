@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Date Picker Field
 //-----------------------------------------------
-class DatePicker extends Fieldset {
+class DatePicker extends TotalField {
 
     constructor(container, options) {
         super(container, options);

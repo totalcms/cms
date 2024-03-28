@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Deck Field
 //-----------------------------------------------
-class Deck extends Fieldset {
+class Deck extends TotalField {
 
     constructor(container, options) {
         super(container, options);
