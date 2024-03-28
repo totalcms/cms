@@ -1,8 +1,15 @@
-{% import "macros/forms.twig" as form %}
+{% import "form-macros.twig" as form %}
 
-<form class="totalform" action="{{totalcms.api}}/collection/blog">
+{% set object = {} %}
+{% if getParams.id %}
+	{% set object = totalcms.object(collection, getParams.id) %}
+{% endif %}
 
-    {{ form.slug('id') }}
+{{ form.start('blog', { method: 'post', object: object }) }}
+
+    {{ form.id('id', {
+		object : object
+	}) }}
     {{ form.input('title') }}
     {{ form.textarea('summary') }}
     {{ form.styledtext('content') }}
@@ -11,4 +18,25 @@
     {{ form.list('tags') }}
     {{ form.select('author') }}
 
-</form>
+{{ form.end() }}
+
+{# TODO
+
+	Need to add the ability to get the collection schema so that we can obtain the field labels and help text defined in there
+	What if I created a new macro that built a form the an array of fields.
+
+	form.batchForm('blog', {
+		method: 'post',
+		object: object,
+	}, [
+		{ type: 'id' },
+		{ type: 'input', name: 'title' },
+		{ type: 'textarea', name: 'summary' },
+		{ type: 'styledtext', name: 'content' },
+		{ type: 'image', name: 'image' },
+		{ type: 'gallery', name: 'gallery' },
+		{ type: 'list', name: 'tags' },
+		{ type: 'select', name: 'author' },
+	])
+
+ TODO #}

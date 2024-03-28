@@ -21,7 +21,9 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
     public function getGlobals(): array
     {
         return [
-            'totalcms' => $this->adapter,
+            'totalcms'   => $this->adapter,
+            'getParams'  => $_GET,
+            'postParams' => $_POST,
         ];
     }
 

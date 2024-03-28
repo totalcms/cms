@@ -9,21 +9,53 @@
 {# Styles: help-box, help-label, help-tooltip #}
 {#---------------------------------------------#}
 
-{% macro fieldstart(type, class, label, uuid) %}
-    <div class="form-field {{ type }}-field {{ class }}">
+{% macro start(collection, args = {}) %}
+	{% set args = {
+		method : 'post',
+		object : false,
+	} | merge(args) %}
 
-        {% if label %}
-        <label for="field-{{ uuid }}">{{ label }}</label>
+	{% if args.object %}
+		<form class="totalform" data-method="{{args.method}}"
+			data-api="{{totalcms.api}}/collection/{{collection}}/{{args.object.id}}">
+	{% else %}
+		<form class="totalform" data-method="{{args.method}}"
+			data-api="{{totalcms.api}}/collection/{{collection}}">
+	{% endif %}
+{% endmacro %}
+
+{% macro end() %}
+	</form>
+{% endmacro %}
+
+
+{% macro fieldstart(type, args = {}) %}
+	{% set args = {
+		class : '',
+		label : false,
+		uuid  : '',
+	} | merge(args) %}
+
+    <div class="form-field {{ type }}-field {{ args.class }}">
+
+        {% if args.label %}
+        <label for="field-{{ args.uuid }}">{{ args.label }}</label>
         {% endif %}
 
         <div class="form-group">
 {% endmacro %}
 
-{% macro fieldend(help, icon, uuid) %}
-            {% if icon %}<div class="form-group-icon"></div>{% endif %}
+{% macro fieldend(args = {}) %}
+	{% set args = {
+		icon : false,
+		help : false,
+		uuid : '',
+	} | merge(args) %}
+
+            {% if args.icon %}<div class="form-group-icon"></div>{% endif %}
         </div>
-        {% if help %}
-        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% if args.help %}
+        <p class="help" id="help-{{args.uuid}}">{{ args.help }}</p>
         {% endif %}
     </div>
 {% endmacro %}
@@ -44,28 +76,46 @@
     max         = maximum value
     step        = step value
 #}
-{% macro input(name, type = "text", input = "text", class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, min, max, step) %}
+{% macro input(name, args = {}) %}
+	{% set args = {
+		type        : "text",
+		input       : "text",
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		object      : false,
+		help        : false,
+		icon        : true,
+		required    : false,
+		min         : false,
+		max         : false,
+		step        : false,
+	} | merge(args) %}
 
     {% set uuid = uniqid() %}
 
-    {{ _self.fieldstart(type, class, label, uuid) }}
+    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
     <input
         id="field-{{ uuid }}"
-        type="{{ input }}"
+        type="{{ args.input }}"
         name="{{ name }}"
-        {% if min %}min="{{ min }}"{% endif %}
-        {% if max %}max="{{ max }}"{% endif %}
-        {% if step %}step="{{ step }}"{% endif %}
-        {% if value %}value="{{ value }}"{% endif %}
-        {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
-        {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
-        {% if required %}required{% endif %}
+        {% if args.min %}min="{{ args.min }}"{% endif %}
+        {% if args.max %}max="{{ args.max }}"{% endif %}
+        {% if args.step %}step="{{ args.step }}"{% endif %}
+        {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.required %}required{% endif %}
+		{% if args.object %}
+			value="{{ attribute(args.object, name)|e }}"
+		{% else %}
+        	{% if args.value %}value="{{ args.value|e }}"{% endif %}
+		{% endif %}
     >
-    {% if input == "range" %}
-    <div id="value-{{ uuid }}" class="range-value">{{ value }}</div>
+    {% if args.input == "range" %}
+	<div id="value-{{ uuid }}" class="range-value">{{ args.value }}</div>
     {% endif %}
-    {{ _self.fieldend(help, icon, uuid) }}
-
+    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
 {% endmacro %}
 
 {#
@@ -81,20 +131,32 @@
     required    = required field
     rows        = number of rows
 #}
-{% macro textarea(name, type = "text", class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, rows = 10) %}
+{% macro textarea(name, args = {}) %}
+	{% set args = {
+		type        : "text",
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		object      : false,
+		help        : false,
+		icon        : true,
+		required    : false,
+		rows        : 10,
+	} | merge(args) %}
 
     {% set uuid = uniqid() %}
 
-    {{ _self.fieldstart(type, class, label, uuid) }}
+    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
     <textarea
         id="field-{{ uuid }}"
         name="{{ name }}"
-        rows="{{ rows }}"
-        {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
-        {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
-        {% if required %}required{% endif %}
-    >{{ value|e }}</textarea>
-    {{ _self.fieldend(help, icon, uuid) }}
+        rows="{{ args.rows }}"
+        {% if args.placeholder %}placeholder="{{ args.placeholder }}"{% endif %}
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.required %}required{% endif %}
+    >{% if args.object %}{{ attribute(args.object, name) }}{% else %}{{ args.value }}{% endif %}</textarea>
+    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
 
 {% endmacro %}
 
@@ -111,46 +173,73 @@
     required    = required field
     options     = array of options
     multiple    = enable multiple select
-    rows        = number of rows
+    rows        = number of rows for multi-select
 #}
-{% macro select(name, type = "select", class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, options = [], multiple = false, rows = 10 ) %}
+{% macro select(name, options = [], args = {}) %}
+	{% set args = {
+		type        : "select",
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		object      : false,
+		help        : false,
+		icon        : true,
+		required    : false,
+		multiple    : false,
+		rows        : 10,
+	} | merge(args) %}
 
     {% set uuid = uniqid() %}
 
-    {{ _self.fieldstart(type, class, label, uuid) }}
+    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
     <select
         id="field-{{ uuid }}"
         name="{{ name }}"
-        {% if value %}value="{{ value }}"{% endif %}
-        {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
-        {% if multiple %}multiple size="{{ rows }}"{% endif %}
-        {% if required %}required{% endif %}
+		{% if args.object %}
+			value="{{ attribute(args.object, name)|e }}"
+		{% else %}
+        	{% if args.value %}value="{{ args.value|e }}"{% endif %}
+		{% endif %}
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.multiple %}multiple size="{{ args.rows }}"{% endif %}
+        {% if args.required %}required{% endif %}
     >
         {# select and select-mulitple have different ways of supporting placeholders #}
-        {% if multiple %}
-            {% if placeholder %}
-            <option disabled>{{ placeholder }}</option>
+        {% if args.multiple %}
+            {% if args.placeholder %}
+            <option disabled>{{ args.placeholder|e }}</option>
             {% endif %}
         {% else %}
-            {% if placeholder %}
-            {# <option {% if not value %}selected{% endif %} value="">{{ placeholder }}</option> #}
-            <option value="">{{ placeholder }}</option>
+            {% if args.placeholder %}
+            {# <option {% if not args.value %}selected{% endif %} value="">{{ args.placeholder }}</option> #}
+            <option value="">{{ args.placeholder }}</option>
             {% endif %}
         {% endif %}
 
         {% for option in options %}
-        <option value="{{ option.value }}" {%if option.selected %}selected{% endif %}>{{ option.label }}</option>
+        <option value="{{ option.value|e }}" {%if option.value == args.value %}selected{% endif %}>{{ option.label|e }}</option>
         {% endfor %}
     </select>
-    {{ _self.fieldend(help, icon, uuid) }}
+    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
 
 {% endmacro %}
 
 {# Hidden Field #}
-{% macro hidden(name, value) %}
+{% macro hidden(name, args = {}) %}
+	{% set args = {
+		value  : "",
+		object : false,
+	} | merge(args) %}
 
     <div class="form-field hidden-field">
-        <input type="hidden" name="{{ name }}" value="{{ value }}">
+        <input type="hidden" name="{{ name }}"
+			{% if args.object %}
+				value="{{ attribute(args.object, name)|e }}"
+			{% else %}
+        		{% if args.value %}value="{{ args.value|e }}"{% endif %}
+			{% endif %}
+		>
     </div>
 
 {% endmacro %}
@@ -159,114 +248,186 @@
 {#--------------------------------
   Date Macro
 --------------------------------#}
-{% macro date(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "date", "date", class, value, label, placeholder, help, icon, required) }}
+{% macro date(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "date",
+		input : "date",
+	}) %}
+
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Datetime Macros
 --------------------------------#}
-{% macro datetime(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "date", "datetime-local", class, value, label, placeholder, help, icon, required) }}
+{% macro datetime(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "date",
+		input : "datetime-local",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Time Macro
 --------------------------------#}
-{% macro time(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "date", "time", class, value, label, placeholder, help, icon, required) }}
+{% macro time(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "date",
+		input : "time",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Email Macro
 --------------------------------#}
-{% macro email(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "email", "email", class, value, label, placeholder, help, icon, required) }}
+{% macro email(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "email",
+		input : "email",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Password Macro
 --------------------------------#}
-{% macro password(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "password", "password", class, value, label, placeholder, help, icon, required) }}
+{% macro password(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "password",
+		input : "password",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   ID Macro
 --------------------------------#}
-{% macro id(name="id", class="", value = "", label = "ID", placeholder = "Object ID", help = "This is the ID of your object", icon = true, required = true) %}
-    {{ _self.input(name, "id", "text", class, value, label, placeholder, help, icon, required) }}
+{% macro id(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type     : "id",
+		input    : "text",
+		required : true,
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   URL Macro
 --------------------------------#}
-{% macro url(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "url", "url", class, value, label, placeholder, help, icon, required) }}
+{% macro url(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "url",
+		input : "url",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Telephone Macro
 --------------------------------#}
-{% macro tel(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "tel", "tel", class, value, label, placeholder, help, icon, required) }}
+{% macro tel(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "tel",
+		input : "tel",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Text Macro
 --------------------------------#}
-{% macro text(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.input(name, "text", "text", class, value, label, placeholder, help, icon, required) }}
+{% macro text(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "text",
+		input : "text",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Number Macro
 --------------------------------#}
-{% macro number(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false, min, max, step) %}
-    {{ _self.input(name, "number", "number", class, value, label, placeholder, help, icon, required, min, max, step) }}
+{% macro number(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "number",
+		input : "number",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Range Macro
 --------------------------------#}
-{% macro rangeslider(name, class="", value="0", label="", help="", required=false, min, max, step) %}
-    {{ _self.input(name, "range", "range", class, value, label, "", help, false, required, min, max, step) }}
+{% macro rangeslider(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "range",
+		input : "range",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Color Macro
 --------------------------------#}
-{% macro color(name, class="", value="#000000", label="Color", placeholder="Select a Color", help="") %}
-    {{ _self.input(name, "color", "color", class, value, label, placeholder, help, false) }}
+{% macro color(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "color",
+		input : "color",
+	}) %}
+    {{ _self.input(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   List Macro
 --------------------------------#}
-{% macro list(name, class="", value="", label="List", placeholder="Pick from list", help="", icon = true, required = false, options = [], multiple = true ) %}
-    {{ _self.select(name, "list", class, value, label, placeholder, help, icon, required, options, multiple ) }}
+{% macro list(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "list",
+	}) %}
+    {{ _self.select(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Checkbox Macro
 --------------------------------#}
-{% macro checkbox(name, class = "", label = "", help = "", required = false) %}
+{% macro checkbox(name, args = {}) %}
+	{% set args = {
+		class       : "",
+		label       : "",
+		help        : false,
+		required    : false,
+	} | merge(args) %}
 
     {% set uuid = uniqid() %}
     {% set type = "check" %}
     {% set input = "checkbox" %}
 
-    <div class="form-field {{ type }}-field {{ class }}">
+    <div class="form-field {{ type }}-field {{ args.class }}">
         <input
             id="field-{{ uuid }}"
             name="{{ name }}"
             type="{{ input }}"
-            {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
-            {% if required %}required{% endif %}
+            {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+            {% if args.required %}required{% endif %}
         >
-        <label for="field-{{ uuid }}">{{ label }}</label>
-        {% if help %}
-        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        <label for="field-{{ uuid }}">{{ args.label }}</label>
+        {% if args.help %}
+        <p class="help" id="help-{{uuid}}">{{ args.help }}</p>
         {% endif %}
     </div>
 
@@ -275,27 +436,34 @@
 {#--------------------------------
   Toggle Macro
 --------------------------------#}
-{% macro toggle(name, class = "", label = "", help = "", required = false) %}
+{% macro toggle(name, args = {}) %}
+	{% set args = {
+		class       : "",
+		label       : "",
+		help        : false,
+		required    : false,
+	} | merge(args) %}
 
     {% set uuid = uniqid() %}
     {% set type = "toggle" %}
+    {% set input = "checkbox" %}
 
-    <div class="form-field {{ type }}-field {{ class }}">
-        {% if label %}
-        <label for="field-{{ uuid }}">{{ label }}</label>
+    <div class="form-field {{ type }}-field {{ args.class }}">
+        {% if args.label %}
+        <label for="field-{{ uuid }}">{{ args.label }}</label>
         {% endif %}
         <div class="switch">
             <input
                 id="field-{{ uuid }}"
                 name="{{ name }}"
-                type="checkbox"
-                {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
-                {% if required %}required{% endif %}
+                type="{{ input }}"
+                {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+                {% if args.required %}required{% endif %}
             >
             <label for="field-{{ uuid }}" aria-hidden="true"></label>
         </div>
-        {% if help %}
-        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% if args.help %}
+        <p class="help" id="help-{{uuid}}">{{ args.help }}</p>
         {% endif %}
     </div>
 
@@ -304,14 +472,20 @@
 {#--------------------------------
   Radio Macro
 --------------------------------#}
-{% macro radio(name, class = "", label = "", help = "", required = false, options) %}
+{% macro radio(name, options = [], args = {}) %}
+	{% set args = {
+		class       : "",
+		label       : "",
+		help        : false,
+		required    : false,
+	} | merge(args) %}
 
     {% set uuid = uniqid() %}
 
     <div class="form-field radio-field {{ class }}">
 
-        {% if label %}
-        <label>{{ label }}</label>
+        {% if args.label %}
+        <label>{{ args.label }}</label>
         {% endif %}
 
         {% for option in options %}
@@ -321,16 +495,16 @@
                 name="{{ name }}"
                 type="radio"
                 value="{{ option.value }}"
-                {% if help %}aria-describedby="help-{{ uuid }}"{% endif %}
-                {% if required %}required{% endif %}
+                {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+                {% if args.required %}required{% endif %}
                 {% if option.selected %}checked{% endif %}
             >
             <label for="field-{{ uuid }}-{{ loop.index }}" class="radio-label">{{ option.label }}</label>
         </div>
         {% endfor %}
 
-        {% if help %}
-        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+        {% if args.help %}
+        <p class="help" id="help-{{uuid}}">{{ args.help }}</p>
         {% endif %}
     </div>
 
@@ -339,25 +513,36 @@
 {#--------------------------------
   Styled Text Macro
 --------------------------------#}
-{% macro styledtext(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.textarea(name, "styledtext", class, value, label, placeholder, help, icon, required) }}
+{% macro styledtext(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "styledtext",
+	}) %}
+    {{ _self.textarea(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   SVG Macro
 --------------------------------#}
-{% macro svg(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
-    {{ _self.textarea(name, "svg", class, value, label, placeholder, help, icon, required) }}
+{% macro svg(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "svg",
+	}) %}
+    {{ _self.textarea(name, args) }}
 {% endmacro %}
 
 {#--------------------------------
   Markdown Macro
 --------------------------------#}
-{% macro markdown(name, class="", value = "", label = "", placeholder = "", help = "", icon = true, required = false) %}
+{% macro markdown(name, args = {}) %}
     {# TODO: create JS lib that adds toolbar + preview #}
-    {{ _self.textarea(name, "markdown", class, value, label, placeholder, help, icon, required) }}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		type  : "markdown",
+	}) %}
+    {{ _self.textarea(name, args) }}
 {% endmacro %}
-
 
 {#--------------------------------#}
 {# Dropzone Macros               #}
