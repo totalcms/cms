@@ -13,7 +13,10 @@ if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/env.php')) {
 // Unit-test and integration environment (Travis CI)
 $environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
 if ($environment) {
-    require __DIR__ . '/local.' . strtolower($environment) . '.php';
+    $envSettings = __DIR__ . '/local.' . strtolower($environment) . '.php';
+    if (file_exists($envSettings)) {
+        require $envSettings;
+    }
 }
 
 // print_r($settings);
