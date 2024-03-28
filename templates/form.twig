@@ -2,15 +2,15 @@
 
 {% set object = {} %}
 {% if getParams.id %}
-	{% set object = totalcms.object(collection, getParams.id) %}
+	{% set object = totalcms.object('text', 'mytext') %}
 {% endif %}
 
-{{ form.start('blog', { method: 'post', object: object }) }}
 
-    {{ form.id('id', {
-		object : object
-	}) }}
-    {{ form.input('title') }}
+
+{{ form.start('text', { method: 'post', object: object }) }}
+
+    {{ form.id('id', { object : object }) }}
+	{{ form.input('title') }}
     {{ form.textarea('summary') }}
     {{ form.styledtext('content') }}
     {{ form.image('image') }}
@@ -25,7 +25,7 @@
 	Need to add the ability to get the collection schema so that we can obtain the field labels and help text defined in there
 	What if I created a new macro that built a form the an array of fields.
 
-	form.batchForm('blog', {
+	form.customForm('blog', {
 		method: 'post',
 		object: object,
 	}, [

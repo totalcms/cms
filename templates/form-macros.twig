@@ -12,12 +12,12 @@
 {% macro start(collection, args = {}) %}
 	{% set args = {
 		method : 'post',
-		object : false,
+		id     : '',
 	} | merge(args) %}
 
-	{% if args.object %}
+	{% if args.id %}
 		<form class="totalform" data-method="{{args.method}}"
-			data-api="{{totalcms.api}}/collection/{{collection}}/{{args.object.id}}">
+			data-api="{{totalcms.api}}/collection/{{collection}}/{{args.id}}">
 	{% else %}
 		<form class="totalform" data-method="{{args.method}}"
 			data-api="{{totalcms.api}}/collection/{{collection}}">
@@ -574,3 +574,22 @@ https://hslpicker.com/
 https://felixg.io/products/datedropper-javascript
 https://github.com/wbotelhos/raty
 --#}
+
+{#--------------------------------#}
+{# Text Form                     #}
+{#--------------------------------#}
+{% macro textForm(collection, id, args = {}) %}
+	{% set object = totalcms.object(collection, id) %}
+	{% set args   = args | merge({object : object}) %}
+
+	{{ _self.start(collection, { method: 'post', id: id }) }}
+
+		{{ _self.hidden('id', id) }}
+		{% if args.input == 'textarea' %}
+			{{ _self.textarea('text', args) }}
+		{% else %}
+			{{ _self.text('text', args) }}
+		{% endif %}
+
+	{{ _self.end() }}
+{% endmacro %}

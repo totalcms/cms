@@ -87,7 +87,9 @@ $totalcms->startBuffer(); // Start output buffering again
 
 	{% import "form-macros.twig" as form %}
 
-	{% set object = {} %}
+	{{ form.textForm('text', 'mytext') }}
+
+	<!-- {% set object = {} %}
 	{% if getParams.id %}
 		{% set object = totalcms.object(collection, getParams.id) %}
 	{% endif %}
@@ -105,7 +107,7 @@ $totalcms->startBuffer(); // Start output buffering again
 		}) }}
 		{{ form.date('mydate', { object : object }) }}
 
-	{{ form.end() }}
+	{{ form.end() }} -->
 
 	<p>End</p>
 
