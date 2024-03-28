@@ -18,6 +18,9 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
         $this->adapter = $adapter;
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
     public function getGlobals(): array
     {
         return [
