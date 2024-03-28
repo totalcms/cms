@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Permalink Field Automation
 //-----------------------------------------------
-class Permalink extends TotalField {
+class Identifier extends TotalField {
 
     constructor(container, options) {
         super(container, options);

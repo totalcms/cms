@@ -1,4 +1,21 @@
-import TotalField from 'totalfield';
+import TotalField from './totalfield';
+import Checkbox from './checkbox';
+import MarkdownField from './markdown';
+import SVGField from './svg';
+import SelectField from './select';
+import MultiSelectField from './multiselect';
+import NumberField from './number';
+import Identifier from './identifier';
+import RangeSlider from './rangeslider';
+import ColorPicker from './colorpicker';
+import DatePicker from './datepicker';
+import Droplet from './droplet';
+import ArrayDroplet from './droplet-array';
+import ListComplete from './listcomplete';
+import Deck from './deck';
+import StyledTextField from './styledtext';
+import Schema from './schema';
+
 
 //-----------------------------------------------
 // Total CMS Form constructor
@@ -16,27 +33,25 @@ export default class TotalForm {
 			return false;
 		}
 
-        this.api = new TotalCMS();
+		this.baseapi         = this.form.action;
+		this.method          = this.form.dataset.method||"POST";
+		this.id              = this.api.getUrlParameter("id");
+		this.processingStart = Date.now();
+		this.processingLimit = 1500;
+		this.states          = ["success","error","processing","clear"];
 
-        this.collection      = this.find("input[name=collection]").value;
-        this.baseapi         = this.form.action;
-        this.id              = this.api.getUrlParameter("id");
-        this.processingStart = Date.now();
-        this.processingLimit = 1500;
-        this.states          = ["success","error","processing","clear"];
-
-        this.fields       = this.findAll("fieldset").filter(field => !this.insideDeck(field));
+        this.fields       = this.findAll(".form-field").filter(field => !this.insideDeck(field));
         this.droplets     = this.fields.filter(field => field.classList.contains("droplet"));
         this.fieldObjects = this.processFields();
 
-        this.schema = new Schema(this);
+        // this.schema = new Schema(this);
 
         this.addTemplates();
         this.saveListener();
         this.registerButtons();
 
         // Get the data from the server
-        if (this.id) this.getServerObject();
+        // if (this.id) this.getServerObject();
 
         // window.onbeforeunload = (e) => {
         //     if (this.isUnsaved()) {
@@ -155,8 +170,8 @@ export default class TotalForm {
             case "toggle":
                 return new Checkbox(field, options);
 
-            case "permalink":
-                return this.initPermalink(field, options);
+            case "id":
+                return this.initIdentifier(field, options);
 
             case "range":
                 return new RangeSlider(field, options);
@@ -187,10 +202,10 @@ export default class TotalForm {
         }
     }
 
-    initPermalink(field, options) {
-        this.permalink = new Permalink(field, options);
-        field.addEventListener("change", event => this.updatePermalink());
-        return this.permalink;
+    initIdentifier(field, options) {
+        this.id = new Identifier(field, options);
+        field.addEventListener("change", event => this.updateIdentifier());
+        return this.id;
     }
 
     initArrayDroplet(field, options) {
@@ -260,7 +275,7 @@ export default class TotalForm {
     }
 
     save() {
-        this.updatePermalink();
+        this.updateIdentifier();
         this.processing();
         this.api.postAPI(this.baseapi, this.generateData())
             .then(response => this.afterSave(response))
@@ -272,7 +287,7 @@ export default class TotalForm {
         if (!this.isEditMode()) return;
 
         if (window.confirm("Are you sure that you want to delete this? This cannot be undone.")) {
-            this.updatePermalink();
+            this.updateIdentifier();
             this.processing();
 
             // After delete, redirect to current page without any URL parameters
@@ -289,8 +304,8 @@ export default class TotalForm {
         this.save();
     }
 
-    updatePermalink() {
-        this.id = this.permalink.id;
+    updateIdentifier() {
+        this.id = this.id.id;
     }
 
     // onSubmit(callback) {
@@ -345,11 +360,11 @@ export default class TotalForm {
     }
 
     runNewAction() {
-        this.runAction(this.options.newAction, this.options.newLink);
+        // this.runAction(this.options.newAction, this.options.newLink);
     }
 
     runEditAction() {
-        this.runAction(this.options.editAction, this.options.editLink);
+        // this.runAction(this.options.editAction, this.options.editLink);
     }
 
     //-------------------------

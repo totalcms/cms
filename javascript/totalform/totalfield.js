@@ -29,9 +29,9 @@ export default class TotalField {
 
     setValue(value) {
         this.input.value = value;
-        this.input.setAttribute("placeholder", "");
+        // this.input.setAttribute("placeholder", "");
         // Hipwig
-        if (this.input.classList.contains("hipwig")) {
+        if (this.input.classList.contains("styledtext")) {
             this.input.froalaEditor("html.set", value);
         }
         this.changed();
@@ -43,8 +43,8 @@ export default class TotalField {
 
     schema() {
         return {
-            "type": "string",
-            "fieldset": "text"
+            "type"     : "text",
+            "fieldset" : "text"
         };
     }
 }
