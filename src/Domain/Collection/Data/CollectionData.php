@@ -26,8 +26,8 @@ final class CollectionData
     public string $description;      // collection description
     public string $schema;           // schema name
     public string $url;              // collection url to object page minus the slug
-    public array $properties;        // Rules for form labels, help text and field types
-    public array $customProperties;  // Rules for factory object generation
+    public array $properties;        // Rules for fields defined in schemaToMetaProps
+    public array $customProperties;  // Custom properties for specific objects
 
     public function __construct()
     {
