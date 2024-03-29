@@ -1,47 +1,58 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Colors are stored in hsla(). If the alpha channel is not supplied, it will default to 1",
+  "description": "Colors are stored in oklck and hex formats",
   "properties": {
-    "h": {
-      "$comment": "The hue channel. Float value 0-360",
-      "minimum": 0,
-      "type": "number",
-      "maximum": 360
-    },
-    "s": {
-      "$comment": "The saturation channel. Float value 0-100",
-      "minimum": 0,
-      "type": "number",
-      "maximum": 100
-    },
-    "l": {
-      "$comment": "The lightness channel. Float value 0-100",
-      "minimum": 0,
-      "type": "number",
-      "maximum": 100
-    },
-    "a": {
-      "$comment": "The alpha channel. Float value 0-1",
-      "minimum": 0,
-      "default": 1,
-      "type": "number",
-      "maximum": 1
-    }
+    "hex": {
+		"$comment": "The hex value of the color",
+		"type": "string"
+	},
+    "alpha": {
+		"$comment": "The alpha channel. 0-100",
+		"minimum": 0,
+		"default": 100,
+		"type": "number",
+		"maximum": 100
+	},
+	"oklch": {
+		"type": "object",
+		"$comment": "The OKLCH color coordinates",
+		"properties": {
+			"l": {
+				"$comment": "The lightness channel. Float value 0-100",
+				"minimum": 0,
+				"type": "number",
+				"maximum": 100
+			},
+			"c": {
+				"$comment": "The chroma channel, from gray to the most saturated color",
+				"minimum": 0,
+				"type": "number"
+			},
+			"h": {
+				"$comment": "The hue angle (0-360)",
+				"minimum": 0,
+				"type": "number",
+				"maximum": 360
+			}
+		}
+	}
   },
   "type": "object",
   "required": [
-    "h",
-    "s",
-    "l",
-    "a"
+    "alpha",
+    "hex",
+    "oklch"
   ],
   "examples": [
     {
-      "l": 360,
-      "s": 79,
-      "a": 1,
-      "h": 36
-    }
+		"alpha": 100,
+		"oklch": {
+			"l": 100,
+			"c": 0,
+			"h": 0
+		},
+		"hex": "ffffff"
+	}
   ],
   "$id": "https://www.totalcms.co/schemas/properties/color.json"
 }

@@ -7,31 +7,28 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class ColorData extends PropertyData
 {
-    public float $h;
-    public float $s;
-    public float $l;
-    public float $a;
+    public string $hex;
+    public int $alpha;
+    public array $oklch;
 
     public function __construct(array $color)
     {
-        $this->h  = floatval($color['h']);
-        $this->s  = floatval($color['s']);
-        $this->l  = floatval($color['l']);
-        $this->a  = isset($color['a']) ? floatval($color['a']) : 1;
+        $this->hex   = $color['hex'];
+        $this->alpha = intval($color['alpha']);
+        $this->oklch = $color['oklch'];
     }
 
     public function transform(): array
     {
         return [
-            'h' => $this->h,
-            's' => $this->s,
-            'l' => $this->l,
-            'a' => $this->a,
+            'hex'   => $this->hex,
+            'alpha' => $this->alpha,
+            'oklch' => $this->oklch,
         ];
     }
 
     public function __toString(): string
     {
-        return sprintf('hsla(%f,%f%%,%f%%,%f)', $this->h, $this->s, $this->l, $this->a);
+        return sprintf('oklch(%f% %f% %f% / %f%)', $this->oklch['l'], $this->oklch['c'], $this->oklch['h'], $this->alpha);
     }
 }
