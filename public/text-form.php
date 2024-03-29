@@ -64,7 +64,8 @@ $totalcms->startBuffer(); // Start output buffering again
 
 	{% import "form-macros.twig" as form %}
 
-	{{ form.textareaForm('mytext') }}
+	{{ form.textForm('mytext') }}
+	{{ form.urlForm('totalcms') }}
 
 	</div>
 

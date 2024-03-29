@@ -655,14 +655,15 @@ https://github.com/wbotelhos/raty
 --#}
 
 {#--------------------------------#}
-{# Text Form                     #}
+{# Text Forms                     #}
 {#--------------------------------#}
 {% macro textForm(id, args = {}, collection = "text") %}
 
 	{{ _self.start(collection, { method:'post', id:id }) }}
 
-		{{ _self.hidden('id', args) }}
-		{% if args.input == 'textarea' %}
+		{{ _self.hidden('id', { value:id }) }}
+
+		{% if args.field == 'textarea' %}
 			{{ _self.textarea('text', args) }}
 		{% else %}
 			{{ _self.text('text', args) }}
@@ -672,5 +673,68 @@ https://github.com/wbotelhos/raty
 {% endmacro %}
 
 {% macro textareaForm(id, args = {}, collection = "text",) %}
-	{{ _self.textForm(id, {input:'textarea'}, collection) }}
+	{{ _self.textForm(id, {field:'textarea'}, collection) }}
+{% endmacro %}
+
+{% macro emailForm(id, args = {}, collection = "email") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.email('email', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro dateForm(id, args = {}, collection = "date") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.date('date', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro datetimeForm(id, args = {}, collection = "date") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.datetime('datetime', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro colorForm(id, args = {}, collection = "color") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.color('color', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro numberForm(id, args = {}, collection = "number") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.number('number', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro styledtextForm(id, args = {}, collection = "styledtext") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.styledtext('styledtext', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro svgForm(id, args = {}, collection = "svg") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.svg('svg', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro toggleForm(id, args = {}, collection = "toggle") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.toggle('toggle', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro urlForm(id, args = {}, collection = "url") %}
+	{{ _self.start(collection, { method:'post', id:id }) }}
+		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.url('url', args) }}
+	{{ _self.end() }}
 {% endmacro %}
