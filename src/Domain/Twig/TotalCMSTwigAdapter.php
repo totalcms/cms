@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
@@ -12,24 +13,71 @@ use TotalCMS\Support\Config;
 final class TotalCMSTwigAdapter
 {
     public string $api;
+    private array $storage;
     private Config $config;
     private IndexReader $collectionReader;
     private ObjectFetcher $objectFetcher;
+    private CollectionFetcher $collectionFetcher;
 
     public function __construct(
         Config $config,
         IndexReader $collectionReader,
-        ObjectFetcher $objectFetcher
+        ObjectFetcher $objectFetcher,
+        CollectionFetcher $collectionFetcher
     ) {
-        $this->config           = $config;
-        $this->collectionReader = $collectionReader;
-        $this->objectFetcher    = $objectFetcher;
+        $this->config            = $config;
+        $this->collectionReader  = $collectionReader;
+        $this->objectFetcher     = $objectFetcher;
+        $this->collectionFetcher = $collectionFetcher;
 
-        $this->api    = $this->config->api;
+        $this->api     = $this->config->api;
+        $this->storage = [];
+    }
+
+    // Get collection meta data
+    public function formProps(string $property, string $collection, ?string $id): array
+    {
+        $collection = $this->collectionFetcher->fetchCollection($collection);
+        $properties = [];
+
+        if (isset($collection->properties[$property])) {
+            $properties = $collection->properties[$property];
+        }
+        if (!empty($id) && isset($collection->customProperties[$id][$property])) {
+            $properties = array_merge($properties, $collection->customProperties[$id][$property]);
+        }
+
+        return $properties;
+    }
+
+    // store data in the adapter
+    public function getData(string $key): mixed
+    {
+        return isset($this->storage[$key]) ? $this->storage[$key] : null;
+    }
+
+    // store data in the adapter
+    public function storeData(string $key, mixed $value): void
+    {
+        $this->storage[$key] = $value;
+    }
+
+    // Reset stored collection name
+    public function clearStorage(): void
+    {
+        $this->storage = [];
+    }
+
+    // Get collection meta data
+    public function collection(string $collection): array
+    {
+        $collection = $this->collectionFetcher->fetchCollection($collection);
+
+        return $collection->toArray();
     }
 
     // Get all objects from a collection
-    public function collection(string $collection): array
+    public function objects(string $collection): array
     {
         $collection = $this->collectionReader->fetchIndex($collection);
 

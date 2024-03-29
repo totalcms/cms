@@ -3,16 +3,16 @@
 
 <h2>Help Text - Default Style</h2>
 
-{{ form.start('totalcms') }}
-	{{ form.text('input', {
+{{ form.start('text') }}
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Add your title here",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
 {{ form.end() }}
 
-{{ form.start('totalcms') }}
-	{{ form.text('input', {
+{{ form.start('text') }}
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Add your title here",
 		help        : "This is some help for this Total CMS form field. This is some help for this Total CMS form field.",
@@ -22,16 +22,16 @@
 
 <h2>Help Text - Show on Focus or Hover</h2>
 
-{{ form.start('totalcms', { class:"help-on-focus" }) }}
-	{{ form.text('input', {
+{{ form.start('text', { class:"help-on-focus" }) }}
+	{{ form.text('text', {
 		label       : "Help on Focus",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
 {{ form.end() }}
 
-{{ form.start('totalcms', { class:"help-on-hover" }) }}
-	{{ form.text('input', {
+{{ form.start('text', { class:"help-on-hover" }) }}
+	{{ form.text('text', {
 		label       : "Help on Hover",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
@@ -42,13 +42,13 @@
 
 <h2>Help Text - Lower Tooltip <small>(hover + focus)</small></h2>
 
-{{ form.start('totalcms', { class:"help-box help-on-focus help-on-hover" }) }}
-	{{ form.text('input', {
+{{ form.start('text', { class:"help-box help-on-focus help-on-hover" }) }}
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
-	{{ form.text('input', {
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
@@ -58,13 +58,13 @@
 
 <h2>Help Text - Inline Label <small>(hover + focus)</small></h2>
 
-{{ form.start('totalcms', { class:"help-label help-on-focus help-on-hover" }) }}
-	{{ form.text('input', {
+{{ form.start('text', { class:"help-label help-on-focus help-on-hover" }) }}
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
-	{{ form.text('input', {
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
@@ -75,13 +75,13 @@
 
 <h2>Help Text - Tooltip on Label <small>(hover + focus)</small></h2>
 
-{{ form.start('totalcms', { class:"help-tooltip help-on-focus help-on-hover" }) }}
-	{{ form.text('input', {
+{{ form.start('text', { class:"help-tooltip help-on-focus help-on-hover" }) }}
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
-	{{ form.text('input', {
+	{{ form.text('text', {
 		label       : "Text Field",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
@@ -90,10 +90,10 @@
 
 
 
-{{ form.start('totalcms', { class:"help-label help-on-focus help-on-hover" }) }}
+{{ form.start('text', { class:"help-label help-on-focus help-on-hover" }) }}
 
 	<h2>Textarea</h2>
-	{{ form.textarea('input', {
+	{{ form.textarea('text', {
 		label       : "Plain Text Field",
 		placeholder : "Type Something Here",
 		help        : "This is some help for this Total CMS form field.",
@@ -102,38 +102,38 @@
 
 	<h2>Select</h2>
 	{% set options = [
-		{value:"dog",label:"Dog"},
-		{value:"cat",label:"Cat"},
-		{value:"hamster",label:"Hamster"},
-		{value:"parrot",label:"Parrot"},
-		{value:"spider",label:"Spider"},
+		{value:"dog",     label:"Dog"},
+		{value:"cat",     label:"Cat"},
+		{value:"hamster", label:"Hamster"},
+		{value:"parrot",  label:"Parrot"},
+		{value:"spider",  label:"Spider"},
 		{value:"goldfish",label:"Goldfish"},
 	] %}
-	{{ form.select('input', options, {
+	{{ form.select('text', options, {
 		label       : "Select",
 		placeholder : "Select Something",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
-	{{ form.selectmultiple('input', options, {
+	{{ form.selectmultiple('text', options, {
 		label       : "Select Multiple",
-		placeholder : "Select Something",
+		placeholder : "Select As Many As You Like",
 		help        : "This is some help for this Total CMS form field.",
 		rows        : 6,
 	}) }}
 
 
 	<h2>Date and Time</h2>
-	{{ form.date('input', {
+	{{ form.date('text', {
 		label       : "Date Field",
 		placeholder : "Select a Date",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
-	{{ form.datetime('input', {
+	{{ form.datetime('text', {
 		label       : "Date Time Field",
 		placeholder : "Select a Date",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
-	{{ form.time('input', {
+	{{ form.time('text', {
 		label       : "Time Field",
 		placeholder : "Select a Time",
 		help        : "This is some help for this Total CMS form field.",
@@ -141,7 +141,7 @@
 
 
 	<h2>Email</h2>
-	{{ form.email('input', {
+	{{ form.email('text', {
 		label       : "Email Field",
 		placeholder : "Type your email",
 		help        : "This is some help for this Total CMS form field.",
@@ -149,7 +149,7 @@
 
 
 	<h2>Password</h2>
-	{{ form.password('input', {
+	{{ form.password('text', {
 		label       : "Password Field",
 		placeholder : "Type your password",
 		help        : "This is some help for this Total CMS form field.",
@@ -157,7 +157,7 @@
 
 
 	<h2>Object ID</h2>
-	{{ form.id('input', {
+	{{ form.id('id', {
 		label       : "ID Field",
 		placeholder : "Type your Object ID",
 		help        : "This is some help for this Total CMS form field.",
@@ -165,7 +165,7 @@
 
 
 	<h2>URL</h2>
-	{{ form.url('input', {
+	{{ form.url('text', {
 		label       : "URL Field",
 		placeholder : "Type your URL",
 		help        : "This is some help for this Total CMS form field.",
@@ -173,7 +173,7 @@
 
 
 	<h2>Telephone</h2>
-	{{ form.tel('input', {
+	{{ form.tel('text', {
 		label       : "Telephone Field",
 		placeholder : "Type your telephone",
 		help        : "This is some help for this Total CMS form field.",
@@ -181,7 +181,7 @@
 
 
 	<h2>Number</h2>
-	{{ form.number('input', {
+	{{ form.number('text', {
 		label       : "Number Field",
 		placeholder : "Type your number",
 		help        : "This is some help for this Total CMS form field.",
@@ -189,7 +189,7 @@
 
 
 	<h2>Color</h2>
-	{{ form.color('input', {
+	{{ form.color('text', {
 		label       : "Color Field",
 		placeholder : "Type your color",
 		help        : "This is some help for this Total CMS form field.",
@@ -197,7 +197,7 @@
 
 
 	<h2>Slider</h2>
-	{{ form.rangeslider('input', {
+	{{ form.rangeslider('text', {
 		label       : "Slider Field",
 		placeholder : "Type your slider",
 		help        : "This is some help for this Total CMS form field.",
@@ -208,7 +208,7 @@
 
 
 	<h2>List</h2>
-	{{ form.list('input', options, {
+	{{ form.list('text', options, {
 		label       : "List Field",
 		placeholder : "Add your tags here",
 		help        : "This is some help for this Total CMS form field.",

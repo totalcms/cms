@@ -61,7 +61,11 @@ $totalcms->startBuffer(); // Start output buffering again
 ?>
 
 	<div class="container">
-		{% include 'forms-demo.twig' %}
+
+	{% import "form-macros.twig" as form %}
+
+	{{ form.textareaForm('mytext') }}
+
 	</div>
 
 	<script>

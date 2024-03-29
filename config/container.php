@@ -20,6 +20,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -153,6 +154,7 @@ return [
             $container->get(Config::class),
             $container->get(IndexReader::class),
             $container->get(ObjectFetcher::class),
+            $container->get(CollectionFetcher::class),
         );
     },
 

@@ -16,9 +16,15 @@
 		id     : '',
 	} | merge(args) %}
 
-	{% if args.id %}
+	{# Store the collection for this form so that other macros and get it #}
+	{{ totalcms.storeData("collection", collection) }}
+
+	{%set id = args.id|default(getParams.id) %}
+
+	{% if id %}
+		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
 		<form class="totalform {{args.class}}" data-method="{{args.method}}"
-			data-api="{{totalcms.api}}/collection/{{collection}}/{{args.id}}">
+			data-api="{{totalcms.api}}/collection/{{collection}}/{{id}}">
 	{% else %}
 		<form class="totalform {{args.class}}" data-method="{{args.method}}"
 			data-api="{{totalcms.api}}/collection/{{collection}}">
@@ -26,37 +32,36 @@
 {% endmacro %}
 
 {% macro end() %}
+	{{ totalcms.clearStorage() }}
 	</form>
 {% endmacro %}
 
 
-{% macro fieldstart(type, args = {}) %}
+{% macro fieldstart(field, uuid, args = {}) %}
 	{% set args = {
 		class : '',
 		label : false,
-		uuid  : '',
 	} | merge(args) %}
 
-    <div class="form-field {{ type }}-field {{ args.class }}">
+    <div class="form-field {{ field }}-field {{ args.class }}">
 
         {% if args.label %}
-        <label for="field-{{ args.uuid }}">{{ args.label }}</label>
+        <label for="field-{{ uuid }}">{{ args.label }}</label>
         {% endif %}
 
         <div class="form-group">
 {% endmacro %}
 
-{% macro fieldend(args = {}) %}
+{% macro fieldend(uuid, args = {}) %}
 	{% set args = {
 		icon : false,
 		help : false,
-		uuid : '',
 	} | merge(args) %}
 
             {% if args.icon %}<div class="form-group-icon"></div>{% endif %}
         </div>
         {% if args.help %}
-        <p class="help" id="help-{{args.uuid}}">{{ args.help }}</p>
+        <p class="help" id="help-{{uuid}}">{{ args.help }}</p>
         {% endif %}
     </div>
 {% endmacro %}
@@ -64,8 +69,8 @@
 {#
     Input Field Macro
     name        = name of the field
-    type        = type of the field data from Total CMS: text, number, date, etc
-    input       = type of the input
+    field        = type of the field data from Total CMS: text, number, date, etc
+    type       = type of the input
     class       = classes added to the field
     value       = value of the field
     label       = label of the field
@@ -78,28 +83,31 @@
     step        = step value
 #}
 {% macro input(name, args = {}) %}
-	{% set args = {
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{% set args  = {
+		field       : "text",
 		type        : "text",
-		input       : "text",
 		class       : "",
 		value       : "",
 		label       : "",
 		placeholder : "",
-		object      : false,
 		help        : false,
 		icon        : true,
 		required    : false,
 		min         : false,
 		max         : false,
 		step        : false,
-	} | merge(args) %}
+	} | merge(props) | merge(args) %}
 
-    {% set uuid = uniqid() %}
-
-    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
+    {{ _self.fieldstart(args.field, uuid, args) }}
     <input
         id="field-{{ uuid }}"
-        type="{{ args.input }}"
+        type="{{ args.type }}"
         name="{{ name }}"
         {% if args.min %}min="{{ args.min }}"{% endif %}
         {% if args.max %}max="{{ args.max }}"{% endif %}
@@ -107,13 +115,9 @@
         {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
-		{% if args.object %}
-			value="{{ attribute(args.object, name)|e }}"
-		{% else %}
-        	{% if args.value %}value="{{ args.value|e }}"{% endif %}
-		{% endif %}
+		value="{{ object ? attribute(object, name) : args.value|e }}"
     >
-    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
+    {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
 
 {#
@@ -130,22 +134,25 @@
     rows        = number of rows
 #}
 {% macro textarea(name, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
-		type        : "text",
+		field       : "text",
 		class       : "",
 		value       : "",
 		label       : "",
 		placeholder : "",
-		object      : false,
 		help        : false,
 		icon        : true,
 		required    : false,
 		rows        : 10,
-	} | merge(args) %}
+	} | merge(props) | merge(args) %}
 
-    {% set uuid = uniqid() %}
-
-    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
+    {{ _self.fieldstart(args.field, uuid, args) }}
     <textarea
         id="field-{{ uuid }}"
         name="{{ name }}"
@@ -153,8 +160,8 @@
         {% if args.placeholder %}placeholder="{{ args.placeholder }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
-    >{% if args.object %}{{ attribute(args.object, name) }}{% else %}{{ args.value }}{% endif %}</textarea>
-    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
+    >{{ object ? attribute(object, name) : args.value }}</textarea>
+    {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 
@@ -174,26 +181,29 @@
     rows        = number of rows for multi-select
 #}
 {% macro select(name, options = [], args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
-		type        : "select",
+		field       : "select",
 		class       : "",
 		value       : "",
 		label       : "",
 		placeholder : "",
-		object      : false,
 		help        : false,
 		icon        : true,
 		required    : false,
-	} | merge(args) %}
+	} | merge(props) | merge(args) %}
 
-    {% set uuid = uniqid() %}
-
-    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
+    {{ _self.fieldstart(args.field, uuid, args) }}
     <select
         id="field-{{ uuid }}"
         name="{{ name }}"
-		{% if args.object %}
-			value="{{ attribute(args.object, name)|e }}"
+		{% if object %}
+			value="{{ attribute(object, name)|e }}"
 		{% else %}
         	{% if args.value %}value="{{ args.value|e }}"{% endif %}
 		{% endif %}
@@ -205,37 +215,36 @@
 		<option value="">{{ args.placeholder }}</option>
 		{% endif %}
 
-		{# Get the default selected value #}
-		{% set value = args.value %}
-		{% if args.object %}
-			{% set value = attribute(args.object, name) %}
-		{% endif %}
+		{% set value = object ? attribute(object, name) : args.value %}
 
 		{% for option in options %}
 		<option value="{{ option.value|e }}" {%if option.value == value %}selected{% endif %}>{{ option.label|e }}</option>
 		{% endfor %}
     </select>
-    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
+    {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 
 {% macro selectmultiple(name, options = [], args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
-		type        : "select",
+		field       : "select",
 		class       : "",
 		label       : "",
 		placeholder : "",
-		value 		: [],
-		object      : false,
+		value       : [],
 		help        : false,
 		icon        : true,
 		required    : false,
 		rows        : 10,
-	} | merge(args) %}
+	} | merge(props) | merge(args) %}
 
-    {% set uuid = uniqid() %}
-
-    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
+    {{ _self.fieldstart(args.field, uuid, args) }}
     <select multiple
         id="field-{{ uuid }}"
         name="{{ name }}"
@@ -248,34 +257,26 @@
 		{% endif %}
 
 		{# Get the default selected value #}
-		{% set values = args.value %}
-		{% if args.object %}
-			{% set values = attribute(args.object, name) %}
-		{% endif %}
+		{% set value = object ? attribute(object, name) : args.value %}
 
         {% for option in options %}
         <option value="{{ option.value|e }}" {% if option.value in values %}selected{% endif %}>{{ option.label|e }}</option>
         {% endfor %}
     </select>
-    {{ _self.fieldend({ help:args.help, icon:args.icon, uuid:uuid }) }}
+    {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
 
 
 {# Hidden Field #}
 {% macro hidden(name, args = {}) %}
+    {% set object = args.object|default(totalcms.getData("object")) %}
+
 	{% set args = {
 		value  : "",
-		object : false,
 	} | merge(args) %}
 
     <div class="form-field hidden-field">
-        <input type="hidden" name="{{ name }}"
-			{% if args.object %}
-				value="{{ attribute(args.object, name)|e }}"
-			{% else %}
-        		{% if args.value %}value="{{ args.value|e }}"{% endif %}
-			{% endif %}
-		>
+        <input type="hidden" name="{{ name }}" value="{{ object ? attribute(object, name) : args.value|e }}">
     </div>
 
 {% endmacro %}
@@ -287,8 +288,8 @@
 {% macro date(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "date",
 		type  : "date",
-		input : "date",
 	}) %}
 
     {{ _self.input(name, args) }}
@@ -300,8 +301,8 @@
 {% macro datetime(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type  : "date",
-		input : "datetime-local",
+		field : "date",
+		type  : "datetime-local",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -312,8 +313,8 @@
 {% macro time(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type  : "date",
-		input : "time",
+		field : "date",
+		type  : "time",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -324,8 +325,8 @@
 {% macro email(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "email",
 		type  : "email",
-		input : "email",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -336,8 +337,8 @@
 {% macro password(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "password",
 		type  : "password",
-		input : "password",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -348,8 +349,8 @@
 {% macro id(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type     : "id",
-		input    : "text",
+		field    : "id",
+		type     : "text",
 		required : true,
 	}) %}
     {{ _self.input(name, args) }}
@@ -361,8 +362,8 @@
 {% macro url(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "url",
 		type  : "url",
-		input : "url",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -373,8 +374,8 @@
 {% macro tel(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "tel",
 		type  : "tel",
-		input : "tel",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -385,8 +386,8 @@
 {% macro text(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "text",
 		type  : "text",
-		input : "text",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -397,8 +398,8 @@
 {% macro number(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "number",
 		type  : "number",
-		input : "number",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -407,44 +408,45 @@
   Range Macro
 --------------------------------#}
 {% macro rangeslider(name, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
 		class       : "",
 		value       : "",
 		label       : "",
 		placeholder : "",
-		object      : false,
 		help        : false,
 		required    : false,
 		min         : false,
 		max         : false,
 		step        : false,
-	} | merge(args) %}
+		icon		: false,
+	} | merge(props) | merge(args) %}
 
-    {% set uuid  = uniqid() %}
 	{% set callback  = "document.getElementById('value-"~uuid~"').innerHTML = this.value" %}
 
-    {{ _self.fieldstart(args.type, {class: args.class, label: args.label, uuid: uuid}) }}
+    {{ _self.fieldstart("range", uuid, args) }}
     <input
         id="field-{{ uuid }}"
         type="range"
         name="{{ name }}"
+		value="{{ object ? attribute(object, name) : args.value|e }}"
+		onchange="{{ callback }}"
+		ondrag="{{ callback }}"
+		onmousemove="{{ callback }}"
         {% if args.min %}min="{{ args.min }}"{% endif %}
         {% if args.max %}max="{{ args.max }}"{% endif %}
         {% if args.step %}step="{{ args.step }}"{% endif %}
         {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
-		{% if args.object %}
-			value="{{ attribute(args.object, name)|e }}"
-		{% else %}
-        	{% if args.value %}value="{{ args.value|e }}"{% endif %}
-		{% endif %}
-		onchange="{{ callback }}"
-		ondrag="{{ callback }}"
-		onmousemove="{{ callback }}"
     >
 	<div id="value-{{ uuid }}" class="range-value">{{ args.value }}</div>
-    {{ _self.fieldend({ help:args.help, icon:false, uuid:uuid }) }}
+    {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
 
 {#--------------------------------
@@ -453,8 +455,8 @@
 {% macro color(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
+		field : "color",
 		type  : "color",
-		input : "color",
 	}) %}
     {{ _self.input(name, args) }}
 {% endmacro %}
@@ -465,7 +467,7 @@
 {% macro list(name, options, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type : "list",
+		field : "list",
 		rows : 6,
 	}) %}
     {{ _self.selectmultiple(name, options, args) }}
@@ -475,6 +477,12 @@
   Checkbox Macro
 --------------------------------#}
 {% macro checkbox(name, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
 		class       : "",
 		label       : "",
@@ -482,15 +490,11 @@
 		required    : false,
 	} | merge(args) %}
 
-    {% set uuid = uniqid() %}
-    {% set type = "check" %}
-    {% set input = "checkbox" %}
-
-    <div class="form-field {{ type }}-field {{ args.class }}">
+    <div class="form-field check-field {{ args.class }}">
         <input
             id="field-{{ uuid }}"
             name="{{ name }}"
-            type="{{ input }}"
+            type="checkbox"
             {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
             {% if args.required %}required{% endif %}
         >
@@ -506,6 +510,12 @@
   Toggle Macro
 --------------------------------#}
 {% macro toggle(name, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
 		class       : "",
 		label       : "",
@@ -513,11 +523,7 @@
 		required    : false,
 	} | merge(args) %}
 
-    {% set uuid = uniqid() %}
-    {% set type = "toggle" %}
-    {% set input = "checkbox" %}
-
-    <div class="form-field {{ type }}-field {{ args.class }}">
+    <div class="form-field toggle-field {{ args.class }}">
         {% if args.label %}
         <label for="field-{{ uuid }}">{{ args.label }}</label>
         {% endif %}
@@ -525,7 +531,7 @@
             <input
                 id="field-{{ uuid }}"
                 name="{{ name }}"
-                type="{{ input }}"
+                type="checkbox"
                 {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
                 {% if args.required %}required{% endif %}
             >
@@ -542,14 +548,18 @@
   Radio Macro
 --------------------------------#}
 {% macro radio(name, options = [], args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
 		class       : "",
 		label       : "",
 		help        : false,
 		required    : false,
 	} | merge(args) %}
-
-    {% set uuid = uniqid() %}
 
     <div class="form-field radio-field {{ class }}">
 
@@ -585,7 +595,7 @@
 {% macro styledtext(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type  : "styledtext",
+		field  : "styledtext",
 	}) %}
     {{ _self.textarea(name, args) }}
 {% endmacro %}
@@ -596,7 +606,7 @@
 {% macro svg(name, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type  : "svg",
+		field  : "svg",
 	}) %}
     {{ _self.textarea(name, args) }}
 {% endmacro %}
@@ -608,7 +618,7 @@
     {# TODO: create JS lib that adds toolbar + preview #}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		type  : "markdown",
+		field  : "markdown",
 	}) %}
     {{ _self.textarea(name, args) }}
 {% endmacro %}
@@ -647,9 +657,7 @@ https://github.com/wbotelhos/raty
 {#--------------------------------#}
 {# Text Form                     #}
 {#--------------------------------#}
-{% macro textForm(collection, id, args = {}) %}
-	{% set object = totalcms.object(collection, id) %}
-	{% set args   = {object : object} | merge(args) %}
+{% macro textForm(id, args = {}, collection = "text") %}
 
 	{{ _self.start(collection, { method:'post', id:id }) }}
 
@@ -663,6 +671,6 @@ https://github.com/wbotelhos/raty
 	{{ _self.end() }}
 {% endmacro %}
 
-{% macro textareaForm(collection, id, args = {}) %}
-	{{ _self.textForm(collection, id, {input:'textarea'}) }}
+{% macro textareaForm(id, args = {}, collection = "text",) %}
+	{{ _self.textForm(id, {input:'textarea'}, collection) }}
 {% endmacro %}
