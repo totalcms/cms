@@ -2,6 +2,16 @@
 {# Template Macros               #}
 {#--------------------------------#}
 
+{#-- IDEAS
+https://sortablejs.github.io/Sortable/
+https://codepen.io/mblode/pen/VwGxaO
+
+https://hslpicker.com/
+
+https://felixg.io/products/datedropper-javascript
+https://github.com/wbotelhos/raty
+--#}
+
 {#---------------------------------------------#}
 {# Help Classes                               #}
 {#                                            #}
@@ -33,9 +43,17 @@
 
 {% macro end() %}
 	{{ totalcms.clearStorage() }}
+	{{ _self.saveButton() }}
 	</form>
 {% endmacro %}
 
+{% macro saveButton(label = "Save") %}
+	<button class="cms-save" type="submit">{{ label }}</button>
+{% endmacro %}
+
+{% macro deleteButton(label = "Delete") %}
+	<button class="cms-delete">{{ label }}</button>
+{% endmacro %}
 
 {% macro fieldstart(field, uuid, args = {}) %}
 	{% set args = {
@@ -644,15 +662,6 @@
 {% macro blog() %}
 {% endmacro %}
 
-{#--
-https://sortablejs.github.io/Sortable/
-https://codepen.io/mblode/pen/VwGxaO
-
-https://hslpicker.com/
-
-https://felixg.io/products/datedropper-javascript
-https://github.com/wbotelhos/raty
---#}
 
 {#--------------------------------#}
 {# Text Forms                     #}
