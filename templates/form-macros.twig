@@ -33,7 +33,7 @@ https://github.com/wbotelhos/raty
 
 	{% if id %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
-		<form class="totalform {{args.class}}" data-method="{{args.method}}"
+		<form class="totalform {{args.class}}" data-id="{{id}}" data-method="{{args.method}}"
 			data-api="{{totalcms.api}}/collection/{{collection}}/{{id}}">
 	{% else %}
 		<form class="totalform {{args.class}}" data-method="{{args.method}}"
@@ -61,7 +61,7 @@ https://github.com/wbotelhos/raty
 		label : false,
 	} | merge(args) %}
 
-    <div class="form-field {{ field }}-field {{ args.class }}">
+    <div class="form-field {{ field }}-field {{ args.class }}" data-type="{{ field }}">
 
         {% if args.label %}
         <label for="field-{{ uuid }}">{{ args.label }}</label>
@@ -117,6 +117,7 @@ https://github.com/wbotelhos/raty
 		help        : false,
 		icon        : true,
 		required    : false,
+		disabled    : false,
 		min         : false,
 		max         : false,
 		step        : false,
@@ -133,6 +134,7 @@ https://github.com/wbotelhos/raty
         {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
+        {% if args.disabled %}disabled{% endif %}
 		value="{{ object ? attribute(object, name) : args.value|e }}"
     >
     {{ _self.fieldend(uuid, args) }}
@@ -293,7 +295,7 @@ https://github.com/wbotelhos/raty
 		value  : "",
 	} | merge(args) %}
 
-    <div class="form-field hidden-field">
+    <div class="form-field hidden-field" data-type="hidden">
         <input type="hidden" name="{{ name }}" value="{{ object ? attribute(object, name) : args.value|e }}">
     </div>
 
@@ -668,9 +670,9 @@ https://github.com/wbotelhos/raty
 {#--------------------------------#}
 {% macro textForm(id, args = {}, collection = "text") %}
 
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 
-		{{ _self.hidden('id', { value:id }) }}
+		{{ _self.id('id', { value:id, disabled:true, class:"hide" }) }}
 
 		{% if args.field == 'textarea' %}
 			{{ _self.textarea('text', args) }}
@@ -686,64 +688,72 @@ https://github.com/wbotelhos/raty
 {% endmacro %}
 
 {% macro emailForm(id, args = {}, collection = "email") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.email('email', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro dateForm(id, args = {}, collection = "date") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.date('date', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro datetimeForm(id, args = {}, collection = "date") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.datetime('datetime', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro colorForm(id, args = {}, collection = "color") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.color('color', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro numberForm(id, args = {}, collection = "number") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.number('number', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro styledtextForm(id, args = {}, collection = "styledtext") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.styledtext('styledtext', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro svgForm(id, args = {}, collection = "svg") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.svg('svg', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro toggleForm(id, args = {}, collection = "toggle") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.toggle('toggle', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro urlForm(id, args = {}, collection = "url") %}
-	{{ _self.start(collection, { method:'post', id:id }) }}
+	{{ _self.start(collection, { id:id }) }}
 		{{ _self.hidden('id', { value:id }) }}
 		{{ _self.url('url', args) }}
 	{{ _self.end() }}
 {% endmacro %}
+
+{#
+<div id="form-save-indicator">
+    <i class="fa fa-refresh fa-spin" aria-hidden="true"></i>
+    <i class="fa fa-check" aria-hidden="true"></i>
+    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+</div>
+#}

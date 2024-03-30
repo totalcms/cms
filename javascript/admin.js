@@ -1,6 +1,6 @@
 import TotalForm from './totalform/totalform';
 
-const forms = Array.from(document.querySelectorAll("form.dynamics-form"));
+const forms = Array.from(document.querySelectorAll("form.totalform"));
 for (const form of forms) {
 	const totalform = new TotalForm(form);
 }

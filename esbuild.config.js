@@ -7,12 +7,13 @@ const { createImporter } = require("sass-extended-importer");
 
 esbuild.build({
     entryPoints : [
-        "javascript/admin.js",
-    ],
-    format    : "esm",
-    platform  : "browser",
-    bundle    : true,
-    // minify    : true,
+		"javascript/admin.js",
+		"javascript/totalcms.js",
+	],
+	format   : "esm",
+	platform : "browser",
+	bundle   : true,
+	// minify    : true,
     metafile  : true,
     splitting : true,
     sourcemap : true,
@@ -24,7 +25,7 @@ esbuild.build({
     external    : [],
     plugins     : [
         globPlugin(),
-        clean({
+		clean({
             patterns: ['public/tcms-assets'],
         }),
         // Copy in the static external libraries

@@ -42,7 +42,6 @@
         cursor: not-allowed
     }
 
-    :disabled,
     select {
         + .form-group-icon {
             background-image: var(--icon-select);

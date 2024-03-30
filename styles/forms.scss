@@ -59,6 +59,10 @@
     *:before {
         box-sizing: border-box;
     }
+
+	&.hide {
+		display : none;
+	}
 }
 
 //------------------------------

@@ -13,13 +13,10 @@ class Identifier extends TotalField {
         this.options = Object.assign({}, this.options, defaults, options);
 
         this.titleNode = this.form.find(`[name=${this.options.autogen}]`);
-
-        if (this.input && this.titleNode) {
-            this.onChangeEvents();
+        if (!this.titleNode) {
+			console.warn("Unable to find autogen field");
         }
-        else {
-            console.error("Unable to find permalink and title fields");
-        }
+		this.onChangeEvents();
 
         this.id = this.permalinkValue();
     }
@@ -58,7 +55,6 @@ class Identifier extends TotalField {
 
     urlifyTitle(title){
         return slugify(title).toLowerCase();
-        // return title.trim().replace(/\s+/g,"-").replace(/[^a-zA-Z0-9\u00C0-\u017F-]/ig,"").toLowerCase();
     }
 
     permalinkExists() {

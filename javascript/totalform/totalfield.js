@@ -4,8 +4,13 @@
 export default class TotalField {
 
     constructor(container, options) {
-        this.container = container;
-        this.input = this.container.querySelector("input,textarea,select");
+		this.container = container;
+		this.input     = this.container.querySelector("input,textarea,select");
+
+		container.totalfield = this;
+
+		this.type = container.dataset.type;
+		this.name = this.input.name;
 
         // Define option defaults
         const defaults = {
@@ -18,10 +23,26 @@ export default class TotalField {
         delete this.options.form;
 
         if (this.form) {
-            this.log = this.form.log;
             this.api = this.form.api;
         }
+
+		this.changeListener();
     }
+
+	changeListener() {
+		this.input.addEventListener("change", () => this.changed(), {once: true});
+		this.input.addEventListener("input", () => this.changed(), {once: true});
+	}
+
+	isDroplet() {
+		const droplets = ['image', 'file', 'gallery', 'depot'];
+		return droplets.includes(this.type);
+	}
+
+	isFroala() {
+		const froalaTypes = ['styledtext', 'svg'];
+		return froalaTypes.includes(this.type);
+	}
 
     getValue() {
         return this.input.value;
@@ -29,22 +50,27 @@ export default class TotalField {
 
     setValue(value) {
         this.input.value = value;
-        // this.input.setAttribute("placeholder", "");
-        // Hipwig
-        if (this.input.classList.contains("styledtext")) {
+
+		if (this.isFroala()) {
             this.input.froalaEditor("html.set", value);
         }
-        this.changed();
+		this.changed();
     }
 
     changed() {
+		this.container.classList.add("unsaved");
         this.container.dispatchEvent(new Event("change"));
     }
 
+	saved() {
+		this.container.classList.remove("unsaved");
+		this.changeListener();
+	}
+
     schema() {
         return {
-            "type"     : "text",
-            "fieldset" : "text"
+            "type"  : this.type,
+            "field" : "text"
         };
     }
 }
