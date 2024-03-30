@@ -35,6 +35,7 @@
     "league/glide": "^2.2",
     "league/uri": "^6.8",
     "lychee-org/php-exif": "^1.0",
+    "matthieumastadenis/couleur": "^0.1.2",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.4",

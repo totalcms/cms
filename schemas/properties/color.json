@@ -1,58 +1,50 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Colors are stored in oklck and hex formats",
-  "properties": {
+  "$id"         : "https://www.totalcms.co/schemas/properties/color.json",
+  "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+  "type"        : "object",
+  "description" : "Colors are stored in oklck and hex formats",
+  "properties"  : {
     "hex": {
-		"$comment": "The hex value of the color",
-		"type": "string"
-	},
-    "alpha": {
-		"$comment": "The alpha channel. 0-100",
-		"minimum": 0,
-		"default": 100,
-		"type": "number",
-		"maximum": 100
+		"$comment" : "The hex value of the color",
+		"type"     : "string",
+		"pattern"  : "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
 	},
 	"oklch": {
-		"type": "object",
-		"$comment": "The OKLCH color coordinates",
-		"properties": {
+		"type"       : "object",
+		"$comment"   : "The OKLCH color coordinates",
+		"properties" : {
 			"l": {
-				"$comment": "The lightness channel. Float value 0-100",
-				"minimum": 0,
-				"type": "number",
-				"maximum": 100
+				"$comment" : "The lightness channel. Float value 0-100",
+				"minimum"  : 0,
+				"type"     : "number",
+				"maximum"  : 100
 			},
 			"c": {
-				"$comment": "The chroma channel, from gray to the most saturated color",
-				"minimum": 0,
-				"type": "number"
+				"$comment" : "The chroma channel, from gray to the most saturated color",
+				"minimum"  : 0,
+				"type"     : "number"
 			},
 			"h": {
-				"$comment": "The hue angle (0-360)",
-				"minimum": 0,
-				"type": "number",
-				"maximum": 360
+				"$comment" : "The hue angle (0-360)",
+				"minimum"  : 0,
+				"type"     : "number",
+				"maximum"  : 360
 			}
 		}
 	}
   },
-  "type": "object",
   "required": [
-    "alpha",
     "hex",
     "oklch"
   ],
   "examples": [
     {
-		"alpha": 100,
-		"oklch": {
-			"l": 100,
-			"c": 0,
-			"h": 0
-		},
-		"hex": "ffffff"
+		"hex"   : "#ffffff",
+		"oklch" : {
+			"l" : 100,
+			"c" : 0,
+			"h" : 0
+		}
 	}
-  ],
-  "$id": "https://www.totalcms.co/schemas/properties/color.json"
+  ]
 }

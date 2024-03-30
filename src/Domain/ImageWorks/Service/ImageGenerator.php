@@ -49,11 +49,11 @@ final class ImageGenerator
         }
 
         if (isset($params['bg'])) {
-            $params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->color);
+            $params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->palette);
         }
 
         if (isset($params['border'])) {
-            $params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->color);
+            $params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->palette);
         }
 
         $response = $glide->getImageResponse($imageData->name, array_filter($params));

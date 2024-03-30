@@ -15,7 +15,6 @@ use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
-use TotalCMS\Utils\ColorUtils;
 
 /**
  * Service.
@@ -236,20 +235,9 @@ final class FileSaver
         if (!is_array($palette) || count($palette) === 0) {
             return [];
         }
-        $palette       = array_slice($palette, 0, 5);
-        $palette       = array_map(fn ($hex) => ColorUtils::colorFromHex((string)$hex), $palette);
-        $complimentary = array_map(fn ($color) => ColorUtils::complementary($color), $palette);
+        $palette = array_slice($palette, 0, 5);
 
-        return [
-            'palette' => [
-                'main'          => array_map(fn ($c) => $c->transform(), $palette),
-                'complimentary' => array_map(fn ($c) => $c->transform(), $complimentary),
-            ],
-            'color' => [
-                'main'          => $palette[0]->transform(),
-                'complimentary' => $complimentary[0]->transform(),
-            ],
-        ];
+        return ['palette' => $palette];
     }
 
     /**

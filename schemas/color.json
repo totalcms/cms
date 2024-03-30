@@ -17,7 +17,7 @@
 			"label"   : "Color",
 			"help"    : "The color to use.",
 			"field"   : "color",
-			"factory" : "hslColor",
+			"factory" : "hexColor",
 			"default" : {
 				"alpha": 100,
 				"oklch": {

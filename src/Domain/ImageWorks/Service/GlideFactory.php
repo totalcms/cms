@@ -7,18 +7,16 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
-use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\ColorUtils;
 
 final class GlideFactory
 {
     private StorageAdapterInterface $filesystem;
     private Config $config;
 
-    public const CACHEDIR    = '.cache';
-    public const COLOR_NAMES = ['main', 'complimentary'];
+    public const CACHEDIR = '.cache';
+    public const PALETTE  = 'palette';
 
     public function __construct(StorageAdapterInterface $filesystem, Config $config)
     {
@@ -86,10 +84,8 @@ final class GlideFactory
      */
     public static function updateBackgroundColor(string $background, array $imageColors): string
     {
-        foreach (self::COLOR_NAMES as $color) {
-            if ($background === $color) {
-                return ColorUtils::colorToHex(new ColorData($imageColors[$color]));
-            }
+        if ($background === self::PALETTE) {
+            return array_shift($imageColors);
         }
 
         return $background;
@@ -103,12 +99,8 @@ final class GlideFactory
      */
     public static function updateBorderColor(string $border, array $imageColors): string
     {
-        foreach (self::COLOR_NAMES as $color) {
-            if (str_contains($border, $color)) {
-                $hex = ColorUtils::colorToHex(new ColorData($imageColors[$color]));
-
-                return str_replace($color, $hex, $border);
-            }
+        if ($border === self::PALETTE) {
+            return array_shift($imageColors);
         }
 
         return $border;
