@@ -21,7 +21,7 @@ https://github.com/wbotelhos/raty
 
 {% macro start(collection, args = {}) %}
 	{% set args = {
-		method : 'post',
+		method : 'put',
 		class  : '',
 		id     : '',
 	} | merge(args) %}
