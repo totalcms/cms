@@ -57,7 +57,7 @@ $totalcms->startBuffer(); // Start output buffering again
     <!-- Twig Template Testing -->
 
     <!-- Get Collection -->
-    {% set objects = totalcms.collection("text") %}
+    {% set objects = totalcms.objects("text") %}
 
     {% for object in objects %}
     <h1>{{ object.id }}</h1>
