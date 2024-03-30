@@ -294,7 +294,7 @@ final class FileSaver
             // Meta Data
             'author'      => $exif->getAuthor(),
             'description' => $exif->getDescription(),
-            'keywords'    => $exif->getKeywords(),
+            // 'keywords'    => $exif->getKeywords(),
             'copyright'   => $exif->getCopyright(),
             'title'       => $exif->getTitle(),
             'date'        => $date,
@@ -304,11 +304,12 @@ final class FileSaver
             'altitude'    => $exif->getAltitude(),
         ];
         // fitler out any null values
-        $data = array_filter($data);
+        $data     = array_filter($data);
+        $keywords = $exif->getKeywords();
 
         return array_filter([
             'exif'   => $data,
-            'tags'   => $data['keywords'] ?? [],
+            'tags'   => is_array($keywords) ? $keywords : [],
             'alt'    => $data['description'] ?? '',
             'mime'   => $exif->getMimeType(),
             'width'  => intval($exif->getWidth()),
