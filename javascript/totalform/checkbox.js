@@ -1,7 +1,9 @@
+import TotalField from './totalfield';
+
 //-----------------------------------------------
 // Total CMS Checkbox Field
 //-----------------------------------------------
-class Checkbox extends TotalField {
+export default class Checkbox extends TotalField {
 
     setValue(value) {
         this.input.checked = (value === true||value === "true"||value === 1);
@@ -18,5 +20,4 @@ class Checkbox extends TotalField {
             "fieldset":"checkbox"
         };
     }
-
 }

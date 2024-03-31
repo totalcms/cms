@@ -35,7 +35,7 @@ class StyledTextField extends TotalField {
 
     setValue(value) {
         this.input.value = value;
-        $(this.input).froalaEditor("html.set", value);
+		this.input.froalaEditor("html.set", value);
     }
 
     getValue() {

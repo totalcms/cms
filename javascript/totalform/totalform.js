@@ -1,8 +1,9 @@
 import TotalCMS from '../totalcms';
 import TotalField from './totalfield';
 import Identifier from './identifier';
+import Checkbox from './checkbox';
+import Textarea from './textarea';
 
-// import Checkbox from './checkbox';
 // import MarkdownField from './markdown';
 // import SVGField from './svg';
 // import SelectField from './select';
@@ -136,6 +137,13 @@ export default class TotalForm {
 			case "email":
 				return new TotalField(field, options);
 
+			case "textarea":
+				return new Textarea(field, options);
+
+            case "checkbox":
+            case "toggle":
+                return new Checkbox(field, options);
+
             // case "styledtext":
             //     return new StyledTextField(field, options);
 
@@ -153,10 +161,6 @@ export default class TotalForm {
 
             // case "number":
             //     return new NumberField(field, options);
-
-            // case "checkbox":
-            // case "toggle":
-            //     return new Checkbox(field, options);
 
             // case "range":
             //     return new RangeSlider(field, options);

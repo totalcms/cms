@@ -80,9 +80,9 @@ https://github.com/wbotelhos/raty
 		data-type="{{ field }}"
 		{% if args.options %}data-options="{{ args.options|json_encode }}"{% endif %}
 	>
-        {% if args.label %}
+        {% if field != "checkbox" %} {% if args.label %}
         <label for="field-{{ uuid }}">{{ args.label }}</label>
-        {% endif %}
+        {% endif %} {% endif %}
 
         <div class="form-group">
 {% endmacro %}
@@ -548,7 +548,7 @@ https://github.com/wbotelhos/raty
 		required    : false,
 	} | merge(props) | merge(args) %}
 
-    <div class="form-field check-field {{ args.class }}">
+    {{ _self.fieldstart("checkbox", uuid, args) }}
         <input
             id="field-{{ uuid }}"
             name="{{ name }}"
@@ -557,10 +557,7 @@ https://github.com/wbotelhos/raty
             {% if args.required %}required{% endif %}
         >
         <label for="field-{{ uuid }}">{{ args.label }}</label>
-        {% if args.help %}
-        <p class="help" id="help-{{uuid}}">{{ args.help }}</p>
-        {% endif %}
-    </div>
+    {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 
@@ -581,7 +578,7 @@ https://github.com/wbotelhos/raty
 		required    : false,
 	} | merge(args) %}
 
-    <div class="form-field toggle-field {{ args.class }}">
+    {{ _self.fieldstart("toggle", uuid, args) }}
         {% if args.label %}
         <label for="field-{{ uuid }}">{{ args.label }}</label>
         {% endif %}
@@ -595,10 +592,7 @@ https://github.com/wbotelhos/raty
             >
             <label for="field-{{ uuid }}" aria-hidden="true"></label>
         </div>
-        {% if args.help %}
-        <p class="help" id="help-{{uuid}}">{{ args.help }}</p>
-        {% endif %}
-    </div>
+	{{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 

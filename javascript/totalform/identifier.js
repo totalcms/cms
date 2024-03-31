@@ -30,10 +30,15 @@ export default class Identifier extends TotalField {
 	// Override TotalField.changeListener
 	changeListener() {
 		if (this.options.autogen) {
-			this.form.form.addEventListener("form-change", event => {
-				if (this.isLocked()) return;
-				this.setValue(this.autogenId());
-				this.validateIdExists();
+			// autogen example: ${title}-${timestamp}
+			const autogenNames = this.options.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
+			autogenNames.forEach(name => {
+				// Only listen to the fields that are used in the autogen string
+				this.form.form.querySelector(`[name=${name}]`).addEventListener("change", e => {
+					if (this.isLocked()) return;
+					this.setValue(this.autogenId());
+					this.validateIdExists();
+				});
 			});
 		}
         // Check ID changes directly
@@ -90,8 +95,10 @@ export default class Identifier extends TotalField {
     }
 
     validateIdExists() {
+		const id = this.getValue();
+		if (!id) return;
         // Check that the id exists on the server or not
-		const api = `/collections/${this.form.collection}/${this.getValue()}`;
+		const api = `/collections/${this.form.collection}/${id}`;
         this.api.existsAPI(api).then(response => {
 			response.ok ? this.idExists() : this.idAvailable();
 		});

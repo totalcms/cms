@@ -52,10 +52,6 @@ export default class TotalField {
 
     setValue(value) {
         this.input.value = value;
-
-		if (this.isFroala()) {
-            this.input.froalaEditor("html.set", value);
-        }
 		this.changed();
     }
 
