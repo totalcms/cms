@@ -5,6 +5,7 @@ use Selective\BasePath\BasePathMiddleware;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
+use Slim\Middleware\MethodOverrideMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
 use TotalCMS\Middleware\LiteLicenseMiddleware;
 
@@ -17,4 +18,5 @@ return function (App $app) {
     $app->add(BasePathMiddleware::class);
     $app->add(ErrorMiddleware::class);
     $app->add(TrailingSlash::class);
+    $app->add(MethodOverrideMiddleware::class);
 };

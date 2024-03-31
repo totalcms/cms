@@ -34,10 +34,10 @@ https://github.com/wbotelhos/raty
 	{% if id %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
 		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{args.method}}"
-			data-api="{{totalcms.api}}/collection/{{collection}}/{{id}}">
+			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
 	{% else %}
 		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{args.method}}"
-			data-api="{{totalcms.api}}/collection/{{collection}}">
+			data-api="{{totalcms.api}}/collections/{{collection}}">
 	{% endif %}
 {% endmacro %}
 

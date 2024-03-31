@@ -29,7 +29,7 @@ export default class TotalCMS {
             locale          : "en",
             localizeStrings : {},
             config          : {},
-            uri             : "/rw_common/plugins/stacks/dynamics/public.php"
+            uri             : ""
         };
         // get the global options and merge with defaults/arguments
         const globals = typeof window.totalcms === "object" ? window.totalcms.options : {};
@@ -67,13 +67,15 @@ export default class TotalCMS {
         // If the POST API sets new data, we should delete form storage it if it exists
         sessionStorage.removeItem(api);
 
+		let headers = { "Content-Type":"application/json" };
+		if (method !== "POST") headers["X-Http-Method-Override"] = method.toUpperCase();
+
+		console.log(method, headers);
+
         return fetch(this.options.uri+api, {
             method  : "POST",
             mode    : this.options.cors ? "cors" : "same-origin",
-            headers : new Headers({
-				"X-Http-Method-Override" : method,
-                "Content-Type":"application/json"
-            }),
+            headers : new Headers(headers),
             body: JSON.stringify(data)
         }).then(response => {
             if (!response.ok) {
@@ -97,12 +99,13 @@ export default class TotalCMS {
     }
     // GET from the Total CMS API
     fetchAPI(api, method = "GET") {
+		let headers = {};
+		if (method !== "GET") headers["X-Http-Method-Override"] = method.toUpperCase();
+
 		return fetch(this.options.uri+api, {
             method  : "GET",
             mode    : this.options.cors ? "cors" : "same-origin",
-            headers : new Headers({
-				"X-Http-Method-Override" : method,
-			})
+            headers : new Headers(headers)
 		}).then(response => {
             if (!response.ok) {
                 response.json().then(json => console.error("fetchAPI Error",json));

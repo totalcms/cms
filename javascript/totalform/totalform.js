@@ -221,7 +221,7 @@ export default class TotalForm {
 
     save() {
         this.processing();
-        this.api.postAPI(this.baseapi, this.generateData())
+        this.api.postAPI(this.baseapi, this.generateData(), this.method)
             .then(response => this.afterSave(response))
             .catch(error => this.error(error));
     }
@@ -338,11 +338,8 @@ export default class TotalForm {
     changeState(newState) {
         const remove = this.states.filter(e => e !== newState); // filer the newState and remove all others
 
-        const elements = [this.indicator, this.form];
-        for (const element of elements) {
-            if (newState) element.classList.add(newState);
-            element.classList.remove(...remove);
-        }
+		if (newState) this.form.classList.add(newState);
+		this.form.classList.remove(...remove);
     }
 
     delayProcessing(callback) {
