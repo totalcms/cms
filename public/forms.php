@@ -66,7 +66,7 @@ $totalcms->startBuffer(); // Start output buffering again
 
 		{{ form.start("custom", { method:"post" }) }}
 
-			{{ form.id('id', { autogen:"${text}" }) }}
+			{{ form.id('id', { autogen:"${text}-${textarea}-${timestamp}-${now}-${uuid}" }) }}
 			{{ form.text('text') }}
 			{{ form.textarea('textarea') }}
 			{{ form.checkbox('checkbox') }}

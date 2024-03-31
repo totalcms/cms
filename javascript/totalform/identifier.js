@@ -32,7 +32,10 @@ export default class Identifier extends TotalField {
 		if (this.options.autogen) {
 			// autogen example: ${title}-${timestamp}
 			const autogenNames = this.options.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
+			const reservedNames = ["now", "timestamp", "uuid", "id"];
 			autogenNames.forEach(name => {
+				// Skip reserved names
+				if (reservedNames.includes(name)) return;
 				// Only listen to the fields that are used in the autogen string
 				this.form.form.querySelector(`[name=${name}]`).addEventListener("change", e => {
 					if (this.isLocked()) return;
