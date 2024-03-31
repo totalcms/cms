@@ -21,3 +21,4 @@ env.php
 config/env.php
 /cache
 /tests/tcms-data
+public/tcms-assets
