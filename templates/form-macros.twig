@@ -33,10 +33,10 @@ https://github.com/wbotelhos/raty
 
 	{% if id %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
-		<form class="totalform {{args.class}}" data-id="{{id}}" data-method="{{args.method}}"
+		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{args.method}}"
 			data-api="{{totalcms.api}}/collection/{{collection}}/{{id}}">
 	{% else %}
-		<form class="totalform {{args.class}}" data-method="{{args.method}}"
+		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{args.method}}"
 			data-api="{{totalcms.api}}/collection/{{collection}}">
 	{% endif %}
 {% endmacro %}
@@ -57,12 +57,15 @@ https://github.com/wbotelhos/raty
 
 {% macro fieldstart(field, uuid, args = {}) %}
 	{% set args = {
-		class : '',
-		label : false,
+		class   : '',
+		label   : false,
+		options : [],
 	} | merge(args) %}
 
-    <div class="form-field {{ field }}-field {{ args.class }}" data-type="{{ field }}">
-
+    <div class="form-field {{ field }}-field {{ args.class }}"
+		data-type="{{ field }}"
+		{% if args.options %}data-options="{{ args.options|json_encode }}"{% endif %}
+	>
         {% if args.label %}
         <label for="field-{{ uuid }}">{{ args.label }}</label>
         {% endif %}
@@ -83,6 +86,7 @@ https://github.com/wbotelhos/raty
         {% endif %}
     </div>
 {% endmacro %}
+
 
 {#
     Input Field Macro
@@ -114,6 +118,7 @@ https://github.com/wbotelhos/raty
 		value       : "",
 		label       : "",
 		placeholder : "",
+		options     : false,
 		help        : false,
 		icon        : true,
 		required    : false,
@@ -303,6 +308,21 @@ https://github.com/wbotelhos/raty
 
 
 {#--------------------------------
+  ID Macro
+--------------------------------#}
+{% macro id(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field    : "id",
+		type     : "text",
+		required : true,
+	}) %}
+	{# options  : [autogen : "${name}-${suffix}" ], #}
+    {{ _self.input(name, args) }}
+{% endmacro %}
+
+
+{#--------------------------------
   Date Macro
 --------------------------------#}
 {% macro date(name, args = {}) %}
@@ -363,18 +383,6 @@ https://github.com/wbotelhos/raty
     {{ _self.input(name, args) }}
 {% endmacro %}
 
-{#--------------------------------
-  ID Macro
---------------------------------#}
-{% macro id(name, args = {}) %}
-	{# Override args with static values #}
-	{% set args =  args | merge({
-		field    : "id",
-		type     : "text",
-		required : true,
-	}) %}
-    {{ _self.input(name, args) }}
-{% endmacro %}
 
 {#--------------------------------
   URL Macro
@@ -672,7 +680,7 @@ https://github.com/wbotelhos/raty
 
 	{{ _self.start(collection, { id:id }) }}
 
-		{{ _self.id('id', { value:id, disabled:true, class:"hide" }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
 
 		{% if args.field == 'textarea' %}
 			{{ _self.textarea('text', args) }}

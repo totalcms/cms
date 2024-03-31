@@ -1,5 +1,6 @@
 import TotalCMS from '../totalcms';
 import TotalField from './totalfield';
+import Identifier from './identifier';
 
 // import Checkbox from './checkbox';
 // import MarkdownField from './markdown';
@@ -7,7 +8,6 @@ import TotalField from './totalfield';
 // import SelectField from './select';
 // import MultiSelectField from './multiselect';
 // import NumberField from './number';
-// import Identifier from './identifier';
 // import RangeSlider from './rangeslider';
 // import ColorPicker from './colorpicker';
 // import DatePicker from './datepicker';
@@ -37,17 +37,23 @@ export default class TotalForm {
 		this.baseapi         = this.form.dataset.api;
 		this.method          = this.form.dataset.method||"PUT";
 		this.id              = this.form.dataset.id;
+		this.collection      = this.form.dataset.collection;
 		this.processingStart = Date.now();
 		this.processingLimit = 1500;
 		this.states          = ["success","error","processing","clear"];
 
-        this.fields   = this.processFields();
+		// If an ID is set, we are in edit mode
+		if (this.id) {
+			this.editMode();
+		}
+
+		this.fields   = this.processFields();
         this.droplets = this.fields.filter(field => field.isDroplet());
 
         this.saveListener();
         this.registerButtons();
 
-        window.onbeforeunload = (e) => {
+        window.onbeforeunload = e => {
             if (this.isUnsaved()) {
 				e.preventDefault();
                 const dialogText = "There are unsaved changes";
@@ -63,7 +69,7 @@ export default class TotalForm {
 
     // Filter for determining if inside of a Deck field
     insideDeck(node) {
-        return node.parentNode.closest("fieldset.deck-box") ? true : false;
+        return node.parentNode.closest(".deck-box") ? true : false;
     }
     // Check to see if the object is a HTML node.
     isDomNode(node){
@@ -122,7 +128,7 @@ export default class TotalForm {
 
         switch (field.dataset.type) {
 			case "id":
-                return this.initIdentifier(field, options);
+                return new Identifier(field, options);
 
             case "text":
             case "url":
@@ -181,12 +187,6 @@ export default class TotalForm {
         }
     }
 
-    initIdentifier(field, options) {
-        this.id = new Identifier(field, options);
-        field.addEventListener("change", event => this.updateIdentifier());
-        return this.id;
-    }
-
     initArrayDroplet(field, options) {
         options.type = field.dataset.type;
         const droplet = new ArrayDroplet(field, options);
@@ -220,7 +220,6 @@ export default class TotalForm {
     }
 
     save() {
-        this.updateIdentifier();
         this.processing();
         this.api.postAPI(this.baseapi, this.generateData())
             .then(response => this.afterSave(response))
@@ -232,7 +231,6 @@ export default class TotalForm {
         if (!this.isEditMode()) return;
 
         if (window.confirm("Are you sure that you want to delete this? This cannot be undone.")) {
-            this.updateIdentifier();
             this.processing();
 
             // After delete, redirect to current page without any URL parameters
@@ -247,10 +245,6 @@ export default class TotalForm {
 
     submit() {
         this.save();
-    }
-
-    updateIdentifier() {
-        this.id = this.id.id;
     }
 
     // onSubmit(callback) {
@@ -322,6 +316,7 @@ export default class TotalForm {
     }
 
     unsaved() {
+		this.form.dispatchEvent(new Event("change"));
         return this.form.classList.add("unsaved");
     }
 
@@ -331,7 +326,8 @@ export default class TotalForm {
 
     editMode() {
         this.form.classList.add("edit-form");
-		this.droplets.forEach(droplet => droplet.autoProcessQueue());
+		// TODO: add the below to the droplet field classes
+		// this.droplets.forEach(droplet => droplet.autoProcessQueue());
     }
 
     saving() {

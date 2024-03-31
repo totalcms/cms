@@ -86,31 +86,32 @@ export default class TotalCMS {
         });
     }
 
-    // AJAX GET from the Total CMS API
-    fetchAPI(api) {
+	// Cached API fetch
+	fetchCachedAPI(api) {
         if (this.cache && sessionStorage.getItem(api)) {
             return new Promise((resolve, reject) => {
                 resolve(sessionStorage.getItem(api));
             });
         }
-
-		return fetch(this.options.uri+api).then(response => {
+		return this.fetchAPI(api);
+    }
+    // GET from the Total CMS API
+    fetchAPI(api, method = "GET") {
+		return fetch(this.options.uri+api, {
+            method  : "GET",
+            mode    : this.options.cors ? "cors" : "same-origin",
+            headers : new Headers({
+				"X-Http-Method-Override" : method,
+			})
+		}).then(response => {
             if (!response.ok) {
                 response.json().then(json => console.error("fetchAPI Error",json));
                 throw Error(response.statusText);
             }
             return response.json();
         }).then(json => {
-            // Massage the API data with helpers for templating
-            if (Array.isArray(json)) {
-                json = json.map(object => this.addObjectHelpers(object));
-            } else {
-                json = this.addObjectHelpers(json);
-            }
-
             // Cache response in storage
             sessionStorage.setItem(api, json);
-
         }).catch(error => {
             console.error("API Request Failed", error);
         });

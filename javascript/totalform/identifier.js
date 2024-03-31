@@ -1,113 +1,93 @@
+import TotalField from './totalfield';
+
 //-----------------------------------------------
-// Total CMS Permalink Field Automation
+// Total CMS ID Field Automation
 //-----------------------------------------------
-class Identifier extends TotalField {
+export default class Identifier extends TotalField {
 
     constructor(container, options) {
-        super(container, options);
-
         // Define option defaults
         const defaults = {
-            autogen: "title",
+            autogen : false,
         };
-        this.options = Object.assign({}, this.options, defaults, options);
+        options = Object.assign({}, defaults, options);
 
-        this.titleNode = this.form.find(`[name=${this.options.autogen}]`);
-        if (!this.titleNode) {
-			console.warn("Unable to find autogen field");
-        }
-		this.onChangeEvents();
+		super(container, options);
 
-        this.id = this.permalinkValue();
+		if (this.form.isEditMode()) {
+			// The ID cannot be changed in edit mode
+			this.disable();
+		}
     }
 
-    onFieldChange(field, callback) {
-        field.addEventListener("change", event => {
-            if (!this.input.classList.contains("locked")) {
-                this.input.value = callback();
-                this.checkPermalink();
-            }
-        });
+	// Override TotalField.changeListener
+	changeListener() {
+		if (this.options.autogen) {
+			this.form.addEventListener("change", event => {
+				if (this.isLocked()) return;
+				this.setValue(this.autogenId());
+				this.validateIdExists();
+			});
+		}
+        // Check ID changes directly
+        this.input.addEventListener("input",  e => this.lock(), {once: true});
+        this.input.addEventListener("change", e => this.validateIdExists());
+	}
+
+	autogenId() {
+		// Get the field data from the form
+		let data = this.form.generateData();
+		// Filter out non-string values from data
+		data = Object.entries(data).reduce((acc, [key, value]) => {
+			if (typeof value === 'string') {
+				acc[key] = value;
+			}
+			return acc;
+		}, {});
+
+		// Add some default data
+		data.now       = Date.now();
+		data.timestamp = new Date().toISOString().slice(0, -5).replace(/-|:/g, '');
+		data.uuid      = Math.random().toString(36).substring(2,9);
+
+		// Magic happens here
+		const autogen = this.options.autogen.replace(/\${(.*?)}/g, (match, key) => data[key]);
+		return this.slugify(autogen);
+	}
+
+	disable() {
+		return this.input.setAttribute("disabled", true);
+	}
+
+	lock() {
+		return this.input.classList.add("locked");
+	}
+
+	isLocked() {
+		return this.input.classList.contains("locked") || this.input.hasAttribute("disabled");
+	}
+
+    slugify(id){
+        return slugify(id).toLowerCase();
     }
 
-    onChangeEvents() {
-        if (this.input.classList.contains("mustache")) {
-            // process mustache tempalte for ID
-            const fields = this.form.findAll("input,textarea,select");
-            fields.forEach(field => this.onFieldChange(field, () => this.templateTitle()));
-        }
-        else {
-            // Populate Permalink based on title
-            this.onFieldChange(this.titleNode, () => this.urlifyTitle(this.titleNode.value));
-        }
-
-        // Check Permalink changes directly
-        this.input.addEventListener("change", event => {
-            this.input.classList.add("locked");
-            this.checkPermalink();
-        });
-    }
-
-    templateTitle(){
-        const title = Mustache.render(this.input.dataset.template, this.form.generateData());
-        return this.urlifyTitle(title);
-    }
-
-    urlifyTitle(title){
-        return slugify(title).toLowerCase();
-    }
-
-    permalinkExists() {
-        this.log.info("Permalink Exists");
+    idExists() {
         this.input.classList.remove("saving", "success");
         this.input.classList.add("error");
     }
 
-    permalinkAvailable() {
-        this.log.info("Permalink Available");
+    idAvailable() {
         this.input.classList.remove("saving", "error");
         this.input.classList.add("success");
     }
 
-    processCheck(response) {
-        this.log.debug("Permalink Check", response);
-        if (response === true) {
-            this.permalinkExists();
-        }
-        else {
-            this.permalinkAvailable();
-        }
-        const event = new Event("permalinkChange");
-        this.input.dispatchEvent(event);
-    }
-
-    permalinkValue(){
-        let permalinkValue = this.input.value;
-
-        // No blank permalinks
-        if (permalinkValue.length === 0) {
-            console.warn("Permalink cannot be empty");
-            return false;
-        }
-
-        // Add Suffix to the permalink if configured to
-        if (this.input.dataset.suffix) {
-            permalinkValue = `${permalinkValue}-${this.input.dataset.suffix}`;
-        }
-
-        // if the value has changed, then update it and trigger an event
-        if (this.input.value !== permalinkValue) {
-            this.input.value = permalinkValue;
-        }
-
-        this.id = permalinkValue;
-        return this.id;
-    }
-
-    checkPermalink(){
-        this.permalinkValue();
-        // Check that the permalink exists on the server or not
-        this.api.fetchAPI(`/collections/${this.form.collection}/${this.id}/exists`)
-            .then(response => this.processCheck(response));
+    validateIdExists() {
+        // Check that the id exists on the server or not
+		const api = `/collections/${this.form.collection}/${this.getValue()}`;
+        this.api.fetchAPI(api, "HEAD").then(response => {
+			response === true ? this.idExists() : this.idAvailable();
+			this.changed();
+		});
     }
 }
+
