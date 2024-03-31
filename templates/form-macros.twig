@@ -542,11 +542,14 @@ https://github.com/wbotelhos/raty
 	{# args priority: args, formProps, defaults #}
 	{% set props = totalcms.formProps(name, collection, object.id) %}
 	{% set args = {
-		class       : "",
-		label       : "",
-		help        : false,
-		required    : false,
+		class    : "",
+		label    : "",
+		help     : false,
+		required : false,
+		value    : false,
 	} | merge(props) | merge(args) %}
+
+	{% set checked = object ? attribute(object, name) : args.value %}
 
     {{ _self.fieldstart("checkbox", uuid, args) }}
         <input
@@ -555,6 +558,7 @@ https://github.com/wbotelhos/raty
             type="checkbox"
             {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
             {% if args.required %}required{% endif %}
+            {% if checked %}checked{% endif %}
         >
         <label for="field-{{ uuid }}">{{ args.label }}</label>
     {{ _self.fieldend(uuid, args) }}
