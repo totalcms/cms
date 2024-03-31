@@ -14,7 +14,7 @@ export default class TotalField {
 
         // Define option defaults
         const defaults = {
-            form: null
+            form : null
         };
         this.options = Object.assign({}, defaults, options);
         this.form = this.options.form;
@@ -61,7 +61,7 @@ export default class TotalField {
 
     changed() {
 		this.container.classList.add("unsaved");
-        this.container.dispatchEvent(new Event("change"));
+        this.container.dispatchEvent(new Event("field-change"));
     }
 
 	saved() {

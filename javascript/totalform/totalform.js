@@ -101,7 +101,7 @@ export default class TotalForm {
             fieldObjects.push(object);
 
 			// Mark as dirty
-            field.addEventListener("change", e => this.unsaved());
+            field.addEventListener("field-change", e => this.unsaved());
         });
         return fieldObjects;
     }
@@ -316,7 +316,7 @@ export default class TotalForm {
     }
 
     unsaved() {
-		this.form.dispatchEvent(new Event("change"));
+		this.form.dispatchEvent(new Event("form-change"));
         return this.form.classList.add("unsaved");
     }
 

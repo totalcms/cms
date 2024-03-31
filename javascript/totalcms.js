@@ -111,16 +111,30 @@ export default class TotalCMS {
                 response.json().then(json => console.error("fetchAPI Error",json));
                 throw Error(response.statusText);
             }
-            return response.json();
-        }).then(json => {
             // Cache response in storage
+            const json = response.json();
             sessionStorage.setItem(api, json);
+
+			return json;
         }).catch(error => {
             console.error("API Request Failed", error);
         });
     }
 
-    // Utility mathod to figure out if we are on a touch device
+	// HEAD from the Total CMS API
+	existsAPI(api) {
+		return fetch(this.options.uri+api, {
+			method  : "GET",
+			mode    : this.options.cors ? "cors" : "same-origin",
+			headers : new Headers({
+				"X-Http-Method-Override" : "HEAD"
+			})
+		}).catch(error => {
+			console.error("Exists API Request Failed", error);
+		});
+	}
+
+	// Utility mathod to figure out if we are on a touch device
     isTouch() {
         return "ontouchstart" in window || window.DocumentTouch && document instanceof DocumentTouch || false;
     }

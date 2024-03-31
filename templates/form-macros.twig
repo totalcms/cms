@@ -19,6 +19,9 @@ https://github.com/wbotelhos/raty
 {# Styles: help-box, help-label, help-tooltip #}
 {#---------------------------------------------#}
 
+{#--------------------------------
+  Form Macros
+--------------------------------#}
 {% macro start(collection, args = {}) %}
 	{% set args = {
 		method : 'put',
@@ -30,13 +33,18 @@ https://github.com/wbotelhos/raty
 	{{ totalcms.storeData("collection", collection) }}
 
 	{%set id = args.id|default(getParams.id) %}
+	{%set method = args.method %}
 
 	{% if id %}
+		{# force method to be PUT you cannot use POST on an existing object #}
+		{% if method == 'post' %}
+			{%set method = 'put' %}
+		{% endif %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
-		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{args.method}}"
+		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
 	{% else %}
-		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{args.method}}"
+		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}">
 	{% endif %}
 {% endmacro %}
@@ -47,6 +55,9 @@ https://github.com/wbotelhos/raty
 	</form>
 {% endmacro %}
 
+{#--------------------------------
+  Button Macros
+--------------------------------#}
 {% macro saveButton(label = "Save") %}
 	<button class="cms-save" type="submit">{{ label }}</button>
 {% endmacro %}
@@ -55,11 +66,14 @@ https://github.com/wbotelhos/raty
 	<button class="cms-delete">{{ label }}</button>
 {% endmacro %}
 
+{#--------------------------------
+  Field Macros
+--------------------------------#}
 {% macro fieldstart(field, uuid, args = {}) %}
 	{% set args = {
 		class   : '',
 		label   : false,
-		options : [],
+		options : {},
 	} | merge(args) %}
 
     <div class="form-field {{ field }}-field {{ args.class }}"
@@ -88,6 +102,9 @@ https://github.com/wbotelhos/raty
 {% endmacro %}
 
 
+{#--------------------------------
+  Input Macros
+--------------------------------#}
 {#
     Input Field Macro
     name        = name of the field
@@ -311,13 +328,26 @@ https://github.com/wbotelhos/raty
   ID Macro
 --------------------------------#}
 {% macro id(name, args = {}) %}
+	{# Defaults #}
+	{% set args = {
+		options  : {},
+		autogen  : false,
+	} | merge(args) %}
+
 	{# Override args with static values #}
 	{% set args =  args | merge({
 		field    : "id",
 		type     : "text",
 		required : true,
 	}) %}
-	{# options  : [autogen : "${name}-${suffix}" ], #}
+
+	{# Merge autogen into the options to make the interface more user friendly #}
+	{% if args.autogen %}
+		{% set options = args.options|merge({'autogen': args.autogen}) %}
+		{% set args = args|merge({'options': options}) %}
+	{% endif %}
+
+
     {{ _self.input(name, args) }}
 {% endmacro %}
 
@@ -510,13 +540,13 @@ https://github.com/wbotelhos/raty
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
 	{# args priority: args, formProps, defaults #}
-	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{% set props = totalcms.formProps(name, collection, object.id) %}
 	{% set args = {
 		class       : "",
 		label       : "",
 		help        : false,
 		required    : false,
-	} | merge(args) %}
+	} | merge(props) | merge(args) %}
 
     <div class="form-field check-field {{ args.class }}">
         <input

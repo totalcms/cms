@@ -1,4 +1,5 @@
 import TotalField from './totalfield';
+const slugify = require('slugify')
 
 //-----------------------------------------------
 // Total CMS ID Field Automation
@@ -20,10 +21,16 @@ export default class Identifier extends TotalField {
 		}
     }
 
+	changed() {
+		// don't trigger change events for ID field
+		// turning this on will cause infinite event loops
+		return;
+	}
+
 	// Override TotalField.changeListener
 	changeListener() {
 		if (this.options.autogen) {
-			this.form.addEventListener("change", event => {
+			this.form.form.addEventListener("form-change", event => {
 				if (this.isLocked()) return;
 				this.setValue(this.autogenId());
 				this.validateIdExists();
@@ -72,6 +79,7 @@ export default class Identifier extends TotalField {
     }
 
     idExists() {
+		console.warn("ID already exists", this.getValue());
         this.input.classList.remove("saving", "success");
         this.input.classList.add("error");
     }
@@ -84,9 +92,8 @@ export default class Identifier extends TotalField {
     validateIdExists() {
         // Check that the id exists on the server or not
 		const api = `/collections/${this.form.collection}/${this.getValue()}`;
-        this.api.fetchAPI(api, "HEAD").then(response => {
-			response === true ? this.idExists() : this.idAvailable();
-			this.changed();
+        this.api.existsAPI(api).then(response => {
+			response.ok ? this.idExists() : this.idAvailable();
 		});
     }
 }
