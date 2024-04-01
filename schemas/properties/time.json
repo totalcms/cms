@@ -1,0 +1,12 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+	"$id": "https://www.totalcms.co/schemas/properties/time.json",
+	"examples": [
+	  "23:59",
+	  "00:00",
+	  "12:34"
+	],
+	"description": "A time field should be in 24-hour format.",
+	"type": "string"
+}

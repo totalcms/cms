@@ -79,6 +79,13 @@
 }
 
 //------------------------------
+// Time Field
+//------------------------------
+[type="time"] + .form-group-icon {
+    background-image: var(--icon-time);
+}
+
+//------------------------------
 // Email Field
 //------------------------------
 [type="email"] + .form-group-icon {

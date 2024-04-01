@@ -71,7 +71,7 @@ esbuild.build({
 
 esbuild.build({
     entryPoints : [
-        "styles/*.scss",
+        "css/*.scss",
     ],
     bundle    : true,
     minify    : true,

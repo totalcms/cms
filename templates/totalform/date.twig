@@ -2,13 +2,45 @@
   Date Macro
 --------------------------------#}
 {% macro date(name, args = {}) %}
-	{# Override args with static values #}
-	{% set args =  args | merge({
-		field : "date",
-		type  : "date",
-	}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
 
-    {{ _self.input(name, args) }}
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{% set args  = {
+		field       : "date",
+		type        : "date",
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		help        : false,
+		icon        : true,
+		required    : false,
+		disabled    : false,
+	} | merge(props) | merge(args) %}
+
+	{% set value = args.value %}
+	{% if object %}
+		{% set value = attribute(object, name)|date("Y-m-d") %}
+		{% if args.type == "datetime-local" %}
+			{% set value = attribute(object, name)|date("Y-m-d\\TH:i") %}
+		{% endif %}
+	{% endif %}
+
+    {{ _self.fieldstart(args.field, uuid, args) }}
+    <input
+        id="field-{{ uuid }}"
+        type="{{ args.type }}"
+        name="{{ name }}"
+        {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.required %}required{% endif %}
+        {% if args.disabled %}disabled{% endif %}
+		{% if value %}value="{{ value|e }}"{% endif %}
+    >
+    {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
 
 {#--------------------------------
@@ -20,21 +52,8 @@
 		field : "date",
 		type  : "datetime-local",
 	}) %}
-    {{ _self.input(name, args) }}
+    {{ _self.date(name, args) }}
 {% endmacro %}
-
-{#--------------------------------
-  Time Macro
---------------------------------#}
-{% macro time(name, args = {}) %}
-	{# Override args with static values #}
-	{% set args =  args | merge({
-		field : "date",
-		type  : "time",
-	}) %}
-    {{ _self.input(name, args) }}
-{% endmacro %}
-
 
 {% macro dateForm(id, args = {}, collection = "date") %}
 	{{ _self.start(collection, { id:id }) }}

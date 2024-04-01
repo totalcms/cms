@@ -132,6 +132,7 @@ export default class TotalForm {
                 return new Identifier(field, options);
 
             case "text":
+			case "time":
             case "url":
 			case "hidden":
 			case "email":
