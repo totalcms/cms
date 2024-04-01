@@ -147,14 +147,11 @@ export default class TotalForm {
             case "number":
                 return new NumberField(field, options);
 
-            // case "styledtext":
-            //     return new StyledTextField(field, options);
+            // case "color":
+            //     return new ColorPicker(field, options);
 
-            // case "markdown":
-            //     return new MarkdownField(field, options);
-
-            // case "svg":
-            //     return new SVGField(field, options);
+            // case "date":
+            //     return new DatePicker(field, options);
 
             // case "select":
             //     return new SelectField(field, options);
@@ -162,14 +159,17 @@ export default class TotalForm {
             // case "multiselect":
             //     return new MultiSelectField(field, options);
 
+            // case "list":
+            //     return new ListComplete(field, options);
+
+            // case "styledtext":
+            //     return new StyledTextField(field, options);
+
+            // case "svg":
+            //     return new SVGField(field, options);
+
             // case "range":
             //     return new RangeSlider(field, options);
-
-            // case "color":
-            //     return new ColorPicker(field, options);
-
-            // case "date":
-            //     return new DatePicker(field, options);
 
             // case "deck":
             //     return new Deck(field, options);
@@ -182,8 +182,8 @@ export default class TotalForm {
             // case "depot":
             //     return this.initArrayDroplet(field,options);
 
-            // case "list":
-            //     return new ListComplete(field, options);
+			// case "markdown":
+            //     return new MarkdownField(field, options);
 
             default:
                 console.warn("Unknown field",field);

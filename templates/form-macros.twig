@@ -580,12 +580,9 @@ https://github.com/wbotelhos/raty
 		label       : "",
 		help        : false,
 		required    : false,
-	} | merge(args) %}
+	} | merge(props) | merge(args) %}
 
     {{ _self.fieldstart("toggle", uuid, args) }}
-        {% if args.label %}
-        <label for="field-{{ uuid }}">{{ args.label }}</label>
-        {% endif %}
         <div class="switch">
             <input
                 id="field-{{ uuid }}"
@@ -615,7 +612,7 @@ https://github.com/wbotelhos/raty
 		label       : "",
 		help        : false,
 		required    : false,
-	} | merge(args) %}
+	} | merge(props) | merge(args) %}
 
     <div class="form-field radio-field {{ class }}">
 
