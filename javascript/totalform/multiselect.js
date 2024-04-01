@@ -1,7 +1,9 @@
+import SelectField from './select';
+
 //-----------------------------------------------
 // Total CMS MultiSelect Field
 //-----------------------------------------------
-class MultiSelectField extends SelectField {
+export default class MultiSelectField extends SelectField {
 
     constructor(container, options) {
         super(...arguments);

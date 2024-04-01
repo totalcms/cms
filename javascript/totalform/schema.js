@@ -1,7 +1,7 @@
 //-----------------------------------------------
 // Total CMS Form Schema
 //-----------------------------------------------
-class Schema {
+export default class Schema {
 
     constructor(form) {
         // Create global element references

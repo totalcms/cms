@@ -1,7 +1,9 @@
+import TotalField from './totalfield';
+
 //-----------------------------------------------
 // Total CMS Select Field
 //-----------------------------------------------
-class SelectField extends TotalField {
+export default class SelectField extends TotalField {
 
     constructor(container, options) {
         super(...arguments);
@@ -60,7 +62,7 @@ class SelectField extends TotalField {
     schema() {
         return {
             "type":"string",
-            "fieldset":"select"
+            "field":"select"
         };
     }
 }

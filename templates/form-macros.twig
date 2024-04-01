@@ -145,6 +145,8 @@ https://github.com/wbotelhos/raty
 		step        : false,
 	} | merge(props) | merge(args) %}
 
+	{% set value = object ? attribute(object, name) : args.value %}
+
     {{ _self.fieldstart(args.field, uuid, args) }}
     <input
         id="field-{{ uuid }}"
@@ -157,7 +159,7 @@ https://github.com/wbotelhos/raty
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
         {% if args.disabled %}disabled{% endif %}
-		value="{{ object ? attribute(object, name) : args.value|e }}"
+		{% if value %}value="{{ value|e }}"{% endif %}
     >
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
@@ -510,14 +512,42 @@ https://github.com/wbotelhos/raty
 {#--------------------------------
   Color Macro
 --------------------------------#}
+{#--------------------------------
+  Color Macro
+--------------------------------#}
 {% macro color(name, args = {}) %}
-	{# Override args with static values #}
-	{% set args =  args | merge({
-		field : "color",
-		type  : "color",
-	}) %}
-    {{ _self.input(name, args) }}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{% set args  = {
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		help        : false,
+		icon        : true,
+	} | merge(props) | merge(args) %}
+
+	{% set value = args.value %}
+	{% if object %}
+		{% set color = attribute(object, name) %}
+		{% set value = color.hex %}
+	{% endif %}
+
+    {{ _self.fieldstart("color", uuid, args) }}
+    <input
+        type="color"
+        id="field-{{ uuid }}"
+        name="{{ name }}"
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+		{% if value %}value="{{ value|e }}"{% endif %}
+    >
+    {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
+
 
 {#--------------------------------
   List Macro

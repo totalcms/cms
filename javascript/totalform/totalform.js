@@ -4,14 +4,14 @@ import Identifier from './identifier';
 import Checkbox from './checkbox';
 import Textarea from './textarea';
 import NumberField from './number';
+import ColorField from './color';
+import DateField from './date';
+import SelectField from './select';
+import MultiSelectField from './multiselect';
 
+// import RangeSlider from './rangeslider';
 // import MarkdownField from './markdown';
 // import SVGField from './svg';
-// import SelectField from './select';
-// import MultiSelectField from './multiselect';
-// import RangeSlider from './rangeslider';
-// import ColorPicker from './colorpicker';
-// import DatePicker from './datepicker';
 // import Droplet from './droplet';
 // import ArrayDroplet from './droplet-array';
 // import ListComplete from './listcomplete';
@@ -147,17 +147,17 @@ export default class TotalForm {
             case "number":
                 return new NumberField(field, options);
 
-            // case "color":
-            //     return new ColorPicker(field, options);
+            case "color":
+                return new ColorField(field, options);
 
-            // case "date":
-            //     return new DatePicker(field, options);
+            case "date":
+                return new DateField(field, options);
 
-            // case "select":
-            //     return new SelectField(field, options);
+            case "select":
+                return new SelectField(field, options);
 
-            // case "multiselect":
-            //     return new MultiSelectField(field, options);
+            case "multiselect":
+                return new MultiSelectField(field, options);
 
             // case "list":
             //     return new ListComplete(field, options);
