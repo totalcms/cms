@@ -1,6 +1,9 @@
 //-----------------------------------------------
 // Total CMS Deck Field
 //-----------------------------------------------
+
+// https://sortablejs.github.io/Sortable/
+
 class Deck extends TotalField {
 
     constructor(container, options) {

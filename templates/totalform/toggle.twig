@@ -1,0 +1,38 @@
+{#--------------------------------
+  Toggle Macro
+--------------------------------#}
+{% macro toggle(name, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{% set args = {
+		class       : "",
+		label       : "",
+		help        : false,
+		required    : false,
+	} | merge(props) | merge(args) %}
+
+    {{ _self.fieldstart("toggle", uuid, args) }}
+        <div class="switch">
+            <input
+                id="field-{{ uuid }}"
+                name="{{ name }}"
+                type="checkbox"
+                {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+                {% if args.required %}required{% endif %}
+            >
+            <label for="field-{{ uuid }}" aria-hidden="true"></label>
+        </div>
+	{{ _self.fieldend(uuid, args) }}
+
+{% endmacro %}
+
+{% macro toggleForm(id, args = {}, collection = "toggle") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.toggle('toggle', args) }}
+	{{ _self.end() }}
+{% endmacro %}

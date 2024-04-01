@@ -1,0 +1,18 @@
+{#--------------------------------
+  Number Macro
+--------------------------------#}
+{% macro number(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "number",
+		type  : "number",
+	}) %}
+    {{ _self.input(name, args) }}
+{% endmacro %}
+
+{% macro numberForm(id, args = {}, collection = "number") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.number('number', args) }}
+	{{ _self.end() }}
+{% endmacro %}

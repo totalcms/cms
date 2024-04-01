@@ -33,3 +33,10 @@
     >
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
+
+{% macro colorForm(id, args = {}, collection = "color") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.color('color', args) }}
+	{{ _self.end() }}
+{% endmacro %}

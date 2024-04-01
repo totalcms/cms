@@ -1,0 +1,19 @@
+{#--------------------------------
+  URL Macro
+--------------------------------#}
+{% macro url(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "url",
+		type  : "url",
+	}) %}
+    {{ _self.input(name, args) }}
+{% endmacro %}
+
+{% macro urlForm(id, args = {}, collection = "url") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.url('url', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+

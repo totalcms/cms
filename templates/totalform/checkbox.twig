@@ -1,0 +1,33 @@
+{#--------------------------------
+  Checkbox Macro
+--------------------------------#}
+{% macro checkbox(name, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id) %}
+	{% set args = {
+		class    : "",
+		label    : "",
+		help     : false,
+		required : false,
+		value    : false,
+	} | merge(props) | merge(args) %}
+
+	{% set checked = object ? attribute(object, name) : args.value %}
+
+    {{ _self.fieldstart("checkbox", uuid, args) }}
+        <input
+            id="field-{{ uuid }}"
+            name="{{ name }}"
+            type="checkbox"
+            {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+            {% if args.required %}required{% endif %}
+            {% if checked %}checked{% endif %}
+        >
+        <label for="field-{{ uuid }}">{{ args.label }}</label>
+    {{ _self.fieldend(uuid, args) }}
+
+{% endmacro %}

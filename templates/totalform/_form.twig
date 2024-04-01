@@ -1,0 +1,50 @@
+{#---------------------------------------------#}
+{# Help Classes                               #}
+{#                                            #}
+{# Triggers: help-on-focus, help-on-hover     #}
+{# Styles: help-box, help-label, help-tooltip #}
+{#---------------------------------------------#}
+
+{#--------------------------------
+  Form Macros
+--------------------------------#}
+{% macro start(collection, args = {}) %}
+	{% set args = {
+		method : 'put',
+		class  : '',
+		id     : '',
+	} | merge(args) %}
+
+	{# Store the collection for this form so that other macros and get it #}
+	{{ totalcms.storeData("collection", collection) }}
+
+	{%set id = args.id|default(getParams.id) %}
+	{%set method = args.method %}
+
+	{% if id %}
+		{# force method to be PUT you cannot use POST on an existing object #}
+		{% if method == 'post' %}
+			{%set method = 'put' %}
+		{% endif %}
+		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
+		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
+			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
+	{% else %}
+		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{method}}"
+			data-api="{{totalcms.api}}/collections/{{collection}}">
+	{% endif %}
+{% endmacro %}
+
+{% macro end() %}
+	{{ totalcms.clearStorage() }}
+	{{ _self.saveButton() }}
+	</form>
+{% endmacro %}
+
+{#
+<div id="form-save-indicator">
+    <i class="fa fa-refresh fa-spin" aria-hidden="true"></i>
+    <i class="fa fa-check" aria-hidden="true"></i>
+    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+</div>
+#}

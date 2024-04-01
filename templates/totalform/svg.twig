@@ -1,0 +1,17 @@
+{#--------------------------------
+  SVG Macro
+--------------------------------#}
+{% macro svg(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field  : "svg",
+	}) %}
+    {{ _self.textarea(name, args) }}
+{% endmacro %}
+
+{% macro svgForm(id, args = {}, collection = "svg") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.svg('svg', args) }}
+	{{ _self.end() }}
+{% endmacro %}

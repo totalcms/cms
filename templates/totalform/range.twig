@@ -1,61 +1,44 @@
 {#--------------------------------
-  Input Macros
+  Range Macro
 --------------------------------#}
-{#
-    Input Field Macro
-    name        = name of the field
-    field        = type of the field data from Total CMS: text, number, date, etc
-    type       = type of the input
-    class       = classes added to the field
-    value       = value of the field
-    label       = label of the field
-    placeholder = placeholder of the field
-    help        = help text of the field
-    icon        = show icon
-    required    = required field
-    min         = minimum value
-    max         = maximum value
-    step        = step value
-#}
-{% macro input(name, args = {}) %}
+{% macro rangeslider(name, args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
 	{# args priority: args, formProps, defaults #}
 	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
-	{% set args  = {
-		field       : "text",
-		type        : "text",
+	{% set args = {
 		class       : "",
 		value       : "",
 		label       : "",
 		placeholder : "",
-		options     : false,
 		help        : false,
-		icon        : true,
 		required    : false,
-		disabled    : false,
 		min         : false,
 		max         : false,
 		step        : false,
+		icon		: false,
 	} | merge(props) | merge(args) %}
 
-	{% set value = object ? attribute(object, name) : args.value %}
+	{% set callback  = "document.getElementById('value-"~uuid~"').innerHTML = this.value" %}
 
-    {{ _self.fieldstart(args.field, uuid, args) }}
+    {{ _self.fieldstart("range", uuid, args) }}
     <input
         id="field-{{ uuid }}"
-        type="{{ args.type }}"
+        type="range"
         name="{{ name }}"
+		value="{{ object ? attribute(object, name) : args.value|e }}"
+		onchange="{{ callback }}"
+		ondrag="{{ callback }}"
+		onmousemove="{{ callback }}"
         {% if args.min %}min="{{ args.min }}"{% endif %}
         {% if args.max %}max="{{ args.max }}"{% endif %}
         {% if args.step %}step="{{ args.step }}"{% endif %}
         {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
-        {% if args.disabled %}disabled{% endif %}
-		{% if value %}value="{{ value|e }}"{% endif %}
     >
+	<div id="value-{{ uuid }}" class="range-value">{{ args.value }}</div>
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}

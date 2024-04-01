@@ -1,0 +1,13 @@
+{# Hidden Field #}
+{% macro hidden(name, args = {}) %}
+    {% set object = args.object|default(totalcms.getData("object")) %}
+
+	{% set args = {
+		value  : "",
+	} | merge(args) %}
+
+    <div class="form-field hidden-field" data-type="hidden">
+        <input type="hidden" name="{{ name }}" value="{{ object ? attribute(object, name) : args.value|e }}">
+    </div>
+
+{% endmacro %}

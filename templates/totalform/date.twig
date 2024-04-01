@@ -1,0 +1,51 @@
+{#--------------------------------
+  Date Macro
+--------------------------------#}
+{% macro date(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "date",
+		type  : "date",
+	}) %}
+
+    {{ _self.input(name, args) }}
+{% endmacro %}
+
+{#--------------------------------
+  Datetime Macros
+--------------------------------#}
+{% macro datetime(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "date",
+		type  : "datetime-local",
+	}) %}
+    {{ _self.input(name, args) }}
+{% endmacro %}
+
+{#--------------------------------
+  Time Macro
+--------------------------------#}
+{% macro time(name, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "date",
+		type  : "time",
+	}) %}
+    {{ _self.input(name, args) }}
+{% endmacro %}
+
+
+{% macro dateForm(id, args = {}, collection = "date") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.date('date', args) }}
+	{{ _self.end() }}
+{% endmacro %}
+
+{% macro datetimeForm(id, args = {}, collection = "date") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.datetime('datetime', args) }}
+	{{ _self.end() }}
+{% endmacro %}

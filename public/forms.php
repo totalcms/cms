@@ -62,7 +62,7 @@ $totalcms->startBuffer(); // Start output buffering again
 
 	<div class="container">
 
-		{% import "form-macros.twig" as form %}
+		{% import "totalform.twig" as form %}
 
 		{{ form.start("custom", { method:"post" }) }}
 
