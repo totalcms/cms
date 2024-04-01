@@ -19,9 +19,10 @@
         cursor      : pointer;
 
         + label {
-            display: inline-block;
-            font-size: 1.1rem;
-            line-height: 1.2rem;
+			display     : inline-block;
+			font-size   : 1.1rem;
+			line-height : 1.2rem;
+			cursor      : pointer;
         }
 
         &:before {

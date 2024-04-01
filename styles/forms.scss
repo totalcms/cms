@@ -81,7 +81,9 @@
     &:has(:focus) {
         box-shadow: 0 1px 2px hsla(0, 0%, 4%, 0.1);
 
-		&:has([type=range]) {
+		&:has([type=range]),
+		&:has([type=checkbox]),
+		&:has([type=radio]) {
 			box-shadow: none;
 		}
     }
