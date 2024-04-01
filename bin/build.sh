@@ -34,3 +34,5 @@ cp -r config public resources schemas src templates vendor autoload.php dist
 # install all required composer packages for dev environment
 echo "Installing all required composer packages back for dev environment..."
 composer install --quiet
+
+bin/build-templates.sh

@@ -1,0 +1,35 @@
+{#--------------------------------
+  Color Macro
+--------------------------------#}
+{% macro color(name, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formProps, defaults #}
+	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{% set args  = {
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		help        : false,
+		icon        : true,
+	} | merge(props) | merge(args) %}
+
+	{% set value = args.value %}
+	{% if object %}
+		{% set color = attribute(object, name) %}
+		{% set value = color.hex %}
+	{% endif %}
+
+    {{ _self.fieldstart("color", uuid, args) }}
+    <input
+        type="color"
+        id="field-{{ uuid }}"
+        name="{{ name }}"
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+		{% if value %}value="{{ value|e }}"{% endif %}
+    >
+    {{ _self.fieldend(uuid, args) }}
+{% endmacro %}
