@@ -2,8 +2,8 @@
 
 echo "Building the application..."
 
-echo "Building frontend assets..."
-yarn build
+# Build frontend assets
+bin/build-assets.sh
 
 if [ $? -ne 0 ]; then
     echo "Failed to build frontend assets. Exiting..."
@@ -25,8 +25,6 @@ find vendor -empty -type d -delete
 find vendor -name bin -type d | xargs rm -rf
 find vendor -name test -type d | xargs rm -rf
 
-# Build twig templates
-bin/build-templates.sh
 
 # move required files to dist
 echo "Moving required files to dist..."
