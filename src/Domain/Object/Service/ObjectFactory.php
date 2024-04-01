@@ -61,8 +61,14 @@ final class ObjectFactory
                 // No use storing the ID a second time in the object properties.
                 continue;
             }
+            if (!isset($objectData[$property])) {
+                // do not inclue the property if it does not exist
+                // this can happen when a new property has been added to a schema,
+                // but existing objects do not have the property set
+                continue;
+            }
 
-            $value = $objectData[$property] ?? null;
+            $value = $objectData[$property];
 
             $properties[$property] = $this->propertyFactory->generateProperty($propertySchema, $value);
         }
