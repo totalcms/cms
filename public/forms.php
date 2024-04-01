@@ -70,6 +70,7 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.text('text') }}
 			{{ form.textarea('textarea') }}
 			{{ form.checkbox('checkbox') }}
+			{{ form.number('number') }}
 
 		{{ form.end() }}
 

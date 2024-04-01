@@ -3,12 +3,12 @@ import TotalField from './totalfield';
 import Identifier from './identifier';
 import Checkbox from './checkbox';
 import Textarea from './textarea';
+import NumberField from './number';
 
 // import MarkdownField from './markdown';
 // import SVGField from './svg';
 // import SelectField from './select';
 // import MultiSelectField from './multiselect';
-// import NumberField from './number';
 // import RangeSlider from './rangeslider';
 // import ColorPicker from './colorpicker';
 // import DatePicker from './datepicker';
@@ -144,6 +144,9 @@ export default class TotalForm {
             case "toggle":
                 return new Checkbox(field, options);
 
+            case "number":
+                return new NumberField(field, options);
+
             // case "styledtext":
             //     return new StyledTextField(field, options);
 
@@ -158,9 +161,6 @@ export default class TotalForm {
 
             // case "multiselect":
             //     return new MultiSelectField(field, options);
-
-            // case "number":
-            //     return new NumberField(field, options);
 
             // case "range":
             //     return new RangeSlider(field, options);
