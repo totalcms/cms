@@ -28,10 +28,6 @@ esbuild.build({
         }),
         // Copy in the static external libraries
         copy.default({assets: {
-            from : "node_modules/choices.js/public/assets/scripts/choices.js" ,
-            to   : "choices"
-        }}),
-        copy.default({assets: {
             from : "node_modules/froala-editor/js/**" ,
             to   : "froala"
         }}),

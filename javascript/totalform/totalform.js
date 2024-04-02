@@ -8,13 +8,13 @@ import ColorField from './color';
 import DateField from './date';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
+import ListField from './list';
 
 // import RangeSlider from './rangeslider';
 // import MarkdownField from './markdown';
 // import SVGField from './svg';
 // import Droplet from './droplet';
 // import ArrayDroplet from './droplet-array';
-// import ListComplete from './listcomplete';
 // import Deck from './deck';
 // import StyledTextField from './styledtext';
 // import Schema from './schema';
@@ -162,8 +162,8 @@ export default class TotalForm {
             case "multiselect":
                 return new MultiSelectField(field, options);
 
-            // case "list":
-            //     return new ListComplete(field, options);
+            case "list":
+                return new ListField(field, options);
 
             // case "range":
             //     return new RangeSlider(field, options);

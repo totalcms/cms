@@ -8,9 +8,8 @@ export default class SelectField extends TotalField {
     constructor(container, options) {
         super(...arguments);
 
-        this.select = container.querySelector("select");
-		this.select.addEventListener("change", e => {
-			this.select.querySelector("[disabled]")?.removeAttribute("selected");
+		this.input.addEventListener("change", e => {
+			this.input.querySelector("[disabled]")?.removeAttribute("selected");
 		}, {once: true});
     }
 

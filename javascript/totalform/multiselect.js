@@ -7,7 +7,6 @@ export default class MultiSelectField extends TotalField {
 
     constructor(container, options) {
         super(...arguments);
-		this.select = container.querySelector("select");
     }
 
     getValue() {
@@ -23,7 +22,7 @@ export default class MultiSelectField extends TotalField {
 
     setValue(value) {
         if (typeof value !== "object") {
-            console.error(`Unable to set value for multiselect: ${this.input.id}`);
+            console.error(`Unable to set value for multiselect: ${this.form.id}`);
         }
         // Select Options
         const options = Array.from(this.input.getElementsByTagName("option"));

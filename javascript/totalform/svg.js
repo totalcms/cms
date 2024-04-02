@@ -15,6 +15,7 @@ class SVGField extends TotalField {
         if ($(this.input).froalaEditor("codeView.isActive")) {
             $(this.input).froalaEditor("codeView.toggle");
         }
+		this.changed();
     }
 
     getValue(value) {

@@ -17,7 +17,8 @@ export default class DateField extends TotalField {
 		if (this.type === 'date') {
 			value = value.split('T')[0];
 		}
-		return this.input.value = value;
+		this.input.value = value;
+		this.changed();
 	}
 
     schema() {

@@ -6,7 +6,7 @@
 	{# args priority: args, formProps, defaults #}
 	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
 	{% set args = {
-		field       : "select",
+		field       : "multiselect",
 		class       : "",
 		label       : "",
 		placeholder : "",
