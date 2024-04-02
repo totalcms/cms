@@ -81,6 +81,17 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.url('url') }}
 			{{ form.password('password') }}
 
+			{% set options = [
+				{value:"dog",     label:"Dog"},
+				{value:"cat",     label:"Cat"},
+				{value:"hamster", label:"Hamster"},
+				{value:"parrot",  label:"Parrot"},
+				{value:"spider",  label:"Spider"},
+				{value:"goldfish",label:"Goldfish"},
+			] %}
+
+			{{ form.select('select', options) }}
+
 		{{ form.end() }}
 
 	</div>

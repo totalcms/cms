@@ -22,3 +22,5 @@ $settings['error']['log_errors']            = true;
 $settings['logger']['level']  = Monolog\Level::Debug;
 $settings['assets']['minify'] = 0;
 $settings['locale']['cache']  = null;
+
+date_default_timezone_set('America/Los_Angeles');
