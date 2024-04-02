@@ -47,11 +47,12 @@
             background-image: var(--icon-select);
         }
 
-        &.empty  {
+        &:not([multiple]):has([selected][disabled])  {
+			// There is JS that will remove the selected attribute from the first option on change
             color: hsl(0, 0%, 79%);
         }
 
-        &:not([multiple]):not(option) {
+        &:not([multiple]) {
             background-image    : url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZlcnNpb249JzEuMScgd2lkdGg9JzMyJyBoZWlnaHQ9JzI0JyB2aWV3Qm94PScwIDAgMzIgMjQnPjxwb2x5Z29uIHBvaW50cz0nMCwwIDMyLDAgMTYsMjQnIHN0eWxlPSdmaWxsOiM4YThhOGEnPjwvcG9seWdvbj48L3N2Zz4=);
             background-origin   : content-box;
             background-position : right -1rem center;

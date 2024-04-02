@@ -8,42 +8,10 @@ export default class SelectField extends TotalField {
     constructor(container, options) {
         super(...arguments);
 
-        this.select    = container.querySelector("select");
-        this.templates = Array.from(this.select.querySelectorAll("template"));
-
-        if (this.templates) this.processTemplates();
-    }
-
-    sort() {
-        const tmpAry = new Array();
-        for (let i=0;i<this.select.options.length;i++) {
-            tmpAry[i] = new Array();
-            tmpAry[i][0] = this.select.options[i].text;
-            tmpAry[i][1] = this.select.options[i].value;
-        }
-        tmpAry.sort();
-        while (this.select.options.length > 0) {
-            this.select.options[0] = null;
-        }
-        for (let i=0;i<tmpAry.length;i++) {
-            const op = new Option(tmpAry[i][0], tmpAry[i][1]);
-            this.select.options[i] = op;
-        }
-        return;
-    }
-
-    processTemplates() {
-        this.templates.forEach(template => {
-            const collection = template.dataset.collection;
-            if (!collection) {
-                console.warn("No collection defined for select template");
-                return;
-            }
-            this.api.fetchAPI(`/collections/${collection}`).then(data => {
-                data.map(object => this.api.processTemplate(object, template.innerHTML, this.select));
-                this.sort();
-            });
-        });
+        this.select = container.querySelector("select");
+		this.select.addEventListener("change", e => {
+			this.select.querySelector("[disabled]")?.removeAttribute("selected");
+		}, {once: true});
     }
 
     setValue(value) {
