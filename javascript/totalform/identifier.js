@@ -95,6 +95,7 @@ export default class Identifier extends TotalField {
     idAvailable() {
         this.input.classList.remove("saving", "error");
         this.input.classList.add("success");
+		this.form.id = this.getValue();
     }
 
     validateIdExists() {

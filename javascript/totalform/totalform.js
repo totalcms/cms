@@ -342,7 +342,25 @@ export default class TotalForm {
     }
 
     editMode() {
-        this.form.classList.add("edit-form");
+		if (this.isEditMode()) return;
+		if ("POST" !== this.method.toUpperCase()) return;
+
+		// Set the method to PUT for editing existing objects
+		this.method = "PUT";
+		this.form.dataset.method = this.method;
+
+		// The ID cannot be changed in edit mode
+		const idField = this.fields.filter(field => field.input.name === "id").shift();
+		idField.disable();
+		idField.lock();
+
+		// Update the API to the edit endpoint
+		this.baseapi = `${this.baseapi}/${this.id}`;
+		this.form.dataset.api = this.baseapi;
+
+		// Set the form to edit mode
+		this.form.classList.add("edit-form");
+
 		// TODO: add the below to the droplet field classes
 		// this.droplets.forEach(droplet => droplet.autoProcessQueue());
     }
@@ -384,6 +402,7 @@ export default class TotalForm {
     }
 
     success() {
+		this.editMode();
         this.delayProcessing(() => {
             this.changeState("success");
             this.form.classList.remove("unsaved");
