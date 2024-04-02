@@ -91,6 +91,7 @@ $totalcms->startBuffer(); // Start output buffering again
 			] %}
 
 			{{ form.select('select', options) }}
+			{{ form.multiselect('multiselect', options) }}
 
 		{{ form.end() }}
 
