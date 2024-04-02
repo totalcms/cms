@@ -9,14 +9,14 @@ import DateField from './date';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
 import ListField from './list';
+import RangeSlider from './range';
 
-// import RangeSlider from './rangeslider';
-// import MarkdownField from './markdown';
+// import StyledTextField from './styledtext';
 // import SVGField from './svg';
 // import Droplet from './droplet';
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
-// import StyledTextField from './styledtext';
+// import MarkdownField from './markdown';
 // import Schema from './schema';
 
 
@@ -165,8 +165,8 @@ export default class TotalForm {
             case "list":
                 return new ListField(field, options);
 
-            // case "range":
-            //     return new RangeSlider(field, options);
+            case "range":
+                return new RangeSlider(field, options);
 
 			// case "styledtext":
             //     return new StyledTextField(field, options);

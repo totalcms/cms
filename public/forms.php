@@ -93,6 +93,7 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.select('select', options) }}
 			{{ form.multiselect('multiselect', options) }}
 			{{ form.list('list', options) }}
+			{{ form.rangeslider('range', {min:0, max:10, value: 5}) }}
 
 		{{ form.end() }}
 

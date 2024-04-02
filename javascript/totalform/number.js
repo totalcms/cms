@@ -11,8 +11,8 @@ export default class NumberField extends TotalField {
 
     schema() {
         return {
-            "type"     : "number",
-            "fieldset" : "number"
+            "type"  : "number",
+            "field" : "number"
         };
     }
 }

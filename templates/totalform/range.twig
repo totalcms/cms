@@ -21,17 +21,12 @@
 		icon		: false,
 	} | merge(props) | merge(args) %}
 
-	{% set callback  = "document.getElementById('value-"~uuid~"').innerHTML = this.value" %}
-
     {{ _self.fieldstart("range", uuid, args) }}
     <input
         id="field-{{ uuid }}"
         type="range"
         name="{{ name }}"
 		value="{{ object ? attribute(object, name) : args.value|e }}"
-		onchange="{{ callback }}"
-		ondrag="{{ callback }}"
-		onmousemove="{{ callback }}"
         {% if args.min %}min="{{ args.min }}"{% endif %}
         {% if args.max %}max="{{ args.max }}"{% endif %}
         {% if args.step %}step="{{ args.step }}"{% endif %}
