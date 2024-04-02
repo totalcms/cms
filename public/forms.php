@@ -44,6 +44,7 @@ $totalcms->startBuffer(); // Start output buffering
     }
     </style>
     <link rel="stylesheet" href="tcms-assets/forms.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="tcms-assets/codemirror/codemirror.css"/>
     <link rel="stylesheet" media="print" onload="this.media='all'" href="tcms-assets/froala/froala_editor.min.css"/>
     <link rel="stylesheet" media="print" onload="this.media='all'" href="tcms-assets/froala/froala_style.min.css"/>
     <link rel="stylesheet" media="print" onload="this.media='all'" href="tcms-assets/froala/plugins/code_view.min.css"/>
@@ -68,6 +69,10 @@ $totalcms->startBuffer(); // Start output buffering again
 
 			{{ form.id('id', { autogen:"${text}" }) }}
 			{{ form.text('text') }}
+
+			{{ form.styledtext('styledtext') }}
+			{{ form.svg('svg') }}
+
 			{{ form.textarea('textarea') }}
 			{{ form.checkbox('checkbox') }}
 			{{ form.number('number') }}
@@ -93,11 +98,31 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.select('select', options) }}
 			{{ form.multiselect('multiselect', options) }}
 			{{ form.list('list', options) }}
-			{{ form.rangeslider('range', {min:0, max:10, value: 5}) }}
+			{{ form.rangeslider('range') }}
+
 
 		{{ form.end() }}
 
 	</div>
+
+	<script type="text/javascript" src="tcms-assets/codemirror/codemirror.js"></script>
+	<script type="text/javascript" src="tcms-assets/codemirror/xml.js"></script>
+	<script type="text/javascript" src="tcms-assets/dompurify/purify.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/froala_editor.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/align.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/code_beautifier.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/code_view.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/draggable.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/image.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/image_manager.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/link.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/lists.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/paragraph_format.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/paragraph_style.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/table.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/video.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/url.min.js"></script>
+	<script type="text/javascript" src="tcms-assets/froala/plugins/entities.min.js"></script>
 
 	<script type="module" src="tcms-assets/admin.js"></script>
 </body>

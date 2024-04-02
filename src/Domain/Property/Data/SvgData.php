@@ -11,7 +11,7 @@ class SvgData extends PropertyData
 
     public function __construct(string $svg)
     {
-        if (!self::verifySvg($svg)) {
+        if (!empty($svg) & !self::verifySvg($svg)) {
             throw new \InvalidArgumentException('Invalid SVG');
         }
         $this->svg = $svg;

@@ -10,9 +10,9 @@ import SelectField from './select';
 import MultiSelectField from './multiselect';
 import ListField from './list';
 import RangeSlider from './range';
+import StyledTextField from './styledtext';
+import SVGField from './svg';
 
-// import StyledTextField from './styledtext';
-// import SVGField from './svg';
 // import Droplet from './droplet';
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
@@ -168,11 +168,11 @@ export default class TotalForm {
             case "range":
                 return new RangeSlider(field, options);
 
-			// case "styledtext":
-            //     return new StyledTextField(field, options);
+			case "styledtext":
+                return new StyledTextField(field, options);
 
-            // case "svg":
-            //     return new SVGField(field, options);
+            case "svg":
+                return new SVGField(field, options);
 
             // case "image":
             // case "file":
