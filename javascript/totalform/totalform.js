@@ -174,9 +174,12 @@ export default class TotalForm {
             case "svg":
                 return new SVGField(field, options);
 
-            // case "image":
-            // case "file":
-            //     return this.initDroplet(field,options);
+			// case "radio":
+			// 	return new RadioField(field, options);
+
+            case "image":
+            case "file":
+                return this.initDroplet(field,options);
 
             // case "gallery":
             // case "depot":

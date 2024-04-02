@@ -70,9 +70,6 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.id('id', { autogen:"${text}" }) }}
 			{{ form.text('text') }}
 
-			{{ form.styledtext('styledtext') }}
-			{{ form.svg('svg') }}
-
 			{{ form.textarea('textarea') }}
 			{{ form.checkbox('checkbox') }}
 			{{ form.number('number') }}
@@ -100,6 +97,8 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.list('list', options) }}
 			{{ form.rangeslider('range') }}
 
+			{{ form.styledtext('styledtext') }}
+			{{ form.svg('svg') }}
 
 		{{ form.end() }}
 

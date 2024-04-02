@@ -1,7 +1,9 @@
+import TotalField from "./totalfield";
+
 //-----------------------------------------------
 // Total CMS Droplet
 //-----------------------------------------------
-class Droplet extends TotalField {
+export default class Droplet extends TotalField {
 
     constructor(container, options) {
         super(container, options);
