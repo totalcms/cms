@@ -136,6 +136,8 @@ export default class TotalForm {
             case "url":
 			case "hidden":
 			case "email":
+			case "phone":
+			case "password":
 				return new TotalField(field, options);
 
 			case "textarea":
@@ -163,17 +165,14 @@ export default class TotalForm {
             // case "list":
             //     return new ListComplete(field, options);
 
-            // case "styledtext":
+            // case "range":
+            //     return new RangeSlider(field, options);
+
+			// case "styledtext":
             //     return new StyledTextField(field, options);
 
             // case "svg":
             //     return new SVGField(field, options);
-
-            // case "range":
-            //     return new RangeSlider(field, options);
-
-            // case "deck":
-            //     return new Deck(field, options);
 
             // case "image":
             // case "file":
@@ -182,6 +181,9 @@ export default class TotalForm {
             // case "gallery":
             // case "depot":
             //     return this.initArrayDroplet(field,options);
+
+			// case "deck":
+            //     return new Deck(field, options);
 
 			// case "markdown":
             //     return new MarkdownField(field, options);
@@ -224,7 +226,17 @@ export default class TotalForm {
         });
     }
 
-    save() {
+	validate() {
+		if (this.form.checkValidity()) {
+			return true;
+		}
+		// If the form is invalid, display the custom validation error messages
+		this.form.reportValidity();
+		return false;
+	}
+
+	save() {
+		if (!this.validate()) return;
         this.processing();
         this.api.postAPI(this.baseapi, this.generateData(), this.method)
             .then(response => this.afterSave(response))

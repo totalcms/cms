@@ -66,7 +66,7 @@ $totalcms->startBuffer(); // Start output buffering again
 
 		{{ form.start("custom", { method:"post" }) }}
 
-			{{ form.id('id', { autogen:"${text}-${textarea}-${timestamp}-${now}-${uuid}" }) }}
+			{{ form.id('id', { autogen:"${text}" }) }}
 			{{ form.text('text') }}
 			{{ form.textarea('textarea') }}
 			{{ form.checkbox('checkbox') }}
@@ -76,6 +76,10 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.date('date') }}
 			{{ form.datetime('datetime') }}
 			{{ form.time('time') }}
+			{{ form.email('email') }}
+			{{ form.phone('phone') }}
+			{{ form.url('url') }}
+			{{ form.password('password') }}
 
 		{{ form.end() }}
 

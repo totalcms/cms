@@ -6,7 +6,10 @@ import TotalField from './totalfield';
 export default class DateField extends TotalField {
 
 	getValue() {
-		return new Date(this.input.value).toISOString();
+		if (this.input.value) {
+			return new Date(this.input.value).toISOString();
+		}
+		return "";
 	}
 
 	setValue() {

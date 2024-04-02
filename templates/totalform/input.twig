@@ -37,6 +37,7 @@
 		required    : false,
 		disabled    : false,
 		min         : false,
+		minlength   : false,
 		max         : false,
 		step        : false,
 	} | merge(props) | merge(args) %}
@@ -48,6 +49,7 @@
         id="field-{{ uuid }}"
         type="{{ args.type }}"
         name="{{ name }}"
+        {% if args.minlength %}minlength="{{ args.minlength }}"{% endif %}
         {% if args.min %}min="{{ args.min }}"{% endif %}
         {% if args.max %}max="{{ args.max }}"{% endif %}
         {% if args.step %}step="{{ args.step }}"{% endif %}

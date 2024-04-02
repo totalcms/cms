@@ -22,11 +22,18 @@
 	} | merge(props) | merge(args) %}
 
 	{% set value = args.value %}
+
+	{# get the date value from the object #}
 	{% if object %}
 		{% set value = attribute(object, name)|date("Y-m-d") %}
 		{% if args.type == "datetime-local" %}
 			{% set value = attribute(object, name)|date("Y-m-d\\TH:i") %}
 		{% endif %}
+	{% endif %}
+
+	{# if required and value not set, set to now #}
+	{% if args.required and not value %}
+		{% set value = args.type == "datetime-local" ? "now"|date("Y-m-d\\TH:i") : "now"|date("Y-m-d") %}
 	{% endif %}
 
     {{ _self.fieldstart(args.field, uuid, args) }}
@@ -36,8 +43,8 @@
         name="{{ name }}"
         {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
-        {% if args.required %}required{% endif %}
         {% if args.disabled %}disabled{% endif %}
+        {% if args.required %}required{% endif %}
 		{% if value %}value="{{ value|e }}"{% endif %}
     >
     {{ _self.fieldend(uuid, args) }}

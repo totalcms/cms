@@ -1,11 +1,18 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "format": "email",
-  "$id": "https://www.totalcms.co/schemas/properties/email.json",
-  "examples": [
-    "support@weavers.space",
-    "user@example.com"
-  ],
-  "description": "A field for storing an email address",
-  "type": "string"
+	"$schema" : "https://json-schema.org/draft/2020-12/schema",
+	"$id"     : "https://www.totalcms.co/schemas/properties/email.json",
+	"anyOf"   : [
+		{
+			"format"      : "email",
+			"description" : "A field for storing an email address",
+			"type"        : "string",
+			"examples"    : [
+				"support@weavers.space",
+				"user@example.com"
+			]
+		},
+		{
+			"$ref" : "https://www.totalcms.co/schemas/properties/empty.json"
+		}
+	]
 }
