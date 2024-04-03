@@ -1,4 +1,5 @@
 import TotalField from "./totalfield";
+import Dropzone from "dropzone";
 
 //-----------------------------------------------
 // Total CMS Droplet
