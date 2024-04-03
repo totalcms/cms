@@ -19,21 +19,12 @@ export default class Droplet extends TotalField {
             paramName         : this.name,
             requestHeaders    : {},
             type              : "file",
-            form              : null,
             gallery           : false,
         };
-        const globals  = typeof window.totalcms === "object" ? window.totalcms.options : {};
+        const globals = typeof window.totalcms === "object" ? window.totalcms.options : {};
         this.options = Object.assign({}, globals, defaults, options);
 
         this.options.gallery = (this.options.type === "gallery"||this.options.type === "depot");
-
-        // Delete the request content type. Let Dropzone set it.
-        // this.options.requestHeaders["Content-Type"] = "multipart/form-data;";
-        if (this.options.requestHeaders["Content-Type"]) {
-            delete this.options.requestHeaders["Content-Type"];
-        }
-
-        this.log.debug(this.constructor.name+" Options",this.options);
 
         // Get the rule set for uploading the file
         if (this.container.dataset.rules) {
@@ -41,17 +32,7 @@ export default class Droplet extends TotalField {
             this.testSet = new DropletTestSet(rules);
         }
 
-        this.form = this.options.form;
-        if (!this.form) console.error("Droplet: No form defined");
-
         this.setupDropzone();
-    }
-
-    schema() {
-        return {
-            type     : "object",
-            fieldset : this.options.type
-        };
     }
 
     getValue() {
@@ -80,8 +61,6 @@ export default class Droplet extends TotalField {
         const imageQuery = imageWorks.buildQuery(rules);
         const preview    = this.container.querySelectorAll(".total-preview").item(0);
 
-        this.log.debug("image query",imageQuery);
-
         this.api.fetchCachedAPI("/templates/admin/image").then(json => {
             this.api.processTemplate({"image":imageQuery}, json.template, preview);
         });
@@ -90,27 +69,24 @@ export default class Droplet extends TotalField {
 
     apiUrl() {
         const components = [this.options.uri, "collections", this.form.collection, this.form.id, this.name];
-        this.log.debug("Droplet API Components:",components);
         return components.join("/");
     }
 
     autoProcessQueue() {
         if (this.dropzone) {
-            this.log.info("Enabled autoProcessQueue");
             this.dropzone.options.autoProcessQueue = true;
         }
         else {
-            this.log.warn("Unable to enable autoProcessQueue");
+            console.warn("Unable to enable autoProcessQueue");
         }
     }
 
     updateUri() {
         if (this.dropzone) {
-            this.log.info("Updated dropzone URI");
             this.dropzone.options.url = this.apiUrl();
         }
         else {
-            this.log.warn("Unable to update dropzone URI");
+            console.warn("Unable to update dropzone URI");
         }
 
     }
@@ -177,7 +153,6 @@ export default class Droplet extends TotalField {
 
     pendingFiles() {
         const files = this.dropzone.getQueuedFiles().concat(this.dropzone.getUploadingFiles());
-        this.log.debug("Pending Files",files);
         return files;
     }
 
@@ -317,7 +292,6 @@ export default class Droplet extends TotalField {
 
     // The user dragged a file onto the Dropzone
     event_dragenter(event) {
-        this.log.debug("event_dragenter",event);
         const classesToRemove = ["dz-processing", "dz-success", "dz-complete"];
         const preview = this.container.getElementsByClassName("dz-preview").item(0);
         if (preview) {
@@ -328,13 +302,18 @@ export default class Droplet extends TotalField {
 
     // The user dragged a file out of the Dropzone
     event_dragleave(event) {
-        this.log.debug("event_dragleave",event);
         return this.container.classList.remove("dz-drag-hover");
     }
 
     // The user dropped something onto the dropzone
     event_drop(event) {
-        this.log.debug("event_drop",event);
         return this.container.classList.remove("dz-drag-hover");
+    }
+
+	schema() {
+        return {
+            type     : "object",
+            fieldset : this.options.type
+        };
     }
 }
