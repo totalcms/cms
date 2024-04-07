@@ -41,6 +41,9 @@ final class FileSaveAction
         // move the uploaded file to the tmp directory
         // this is because saveFile expects a file path
         $filepath = $this->config->tmpDir . '/' . $file->getClientFilename();
+        if (!file_exists($this->config->tmpDir)) {
+            mkdir($this->config->tmpDir, 0777, true);
+        }
         $file->moveTo($filepath);
 
         $object = $this->service->saveFile(
