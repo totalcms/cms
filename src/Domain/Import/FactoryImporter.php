@@ -10,6 +10,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\FakerExtension;
@@ -22,23 +23,36 @@ final class FactoryImporter
     private FakerGenerator $faker;
     private IndexBuilder $indexBuilder;
     private CollectionFetcher $collectionFetcher;
+    private PropertyRepository $propertyRepository;
     private string $cacheDir;
 
     private const DEFAULT_FACTORY = 'word';
 
-    public function __construct(ObjectFactory $factory, ObjectRepository $storage, LoggerFactory $loggerFactory, IndexBuilder $indexBuilder, Config $config, CollectionFetcher $collectionFetcher)
-    {
-        $this->indexBuilder      = $indexBuilder;
-        $this->storage           = $storage;
-        $this->factory           = $factory;
-        $this->collectionFetcher = $collectionFetcher;
-        $this->logger            = $loggerFactory->addFileHandler('importer-factory.log')->createLogger();
+    public function __construct(
+        ObjectFactory $factory,
+        ObjectRepository $storage,
+        LoggerFactory $loggerFactory,
+        IndexBuilder $indexBuilder,
+        Config $config,
+        CollectionFetcher $collectionFetcher,
+        PropertyRepository $propertyRepository
+    ) {
+        $this->indexBuilder       = $indexBuilder;
+        $this->storage            = $storage;
+        $this->factory            = $factory;
+        $this->collectionFetcher  = $collectionFetcher;
+        $this->propertyRepository = $propertyRepository;
+        $this->logger             = $loggerFactory->addFileHandler('importer-factory.log')->createLogger();
 
         $this->faker = FakerFactory::create();
         $this->faker->addProvider(new FakerExtension($this->faker));
 
-        $this->cacheDir      = $config->cacheDir . '/faker-images';
+        $this->cacheDir      = $config->tmpDir . '/faker-images';
         FakerExtension::$dir = $this->cacheDir;
+
+        if (!is_dir($this->cacheDir)) {
+            mkdir($this->cacheDir, 0777, true);
+        }
     }
 
     private function cleanCache(): void
@@ -93,12 +107,23 @@ final class FactoryImporter
                 if ($key === 'id') {
                     // Make sure ID is unique
                     $objectData[$key] = $this->faker->unique()->$method(...$args);
+                    continue;
+                }
+                if (str_starts_with($method, 'image') && isset($objectData['id'])) {
+                    // Save image to file and store path in object data
+                    $path             = $this->faker->$method(...$args);
+                    $objectData[$key] = $this->propertyRepository->saveFile($collection, $objectData['id'], $key, $path);
+                    continue;
                 }
                 $objectData[$key] = $this->faker->$method(...$args);
             }
 
             if ($this->storage->existsObject($collection, $objectData['id'])) {
                 $this->logger->info(sprintf('Skipping existing object: %s', $objectData['id']));
+                continue;
+            }
+            if (in_array($objectData['id'], ObjectData::RESERVED_NAMES)) {
+                $this->logger->info(sprintf('Skipping object with reserved name: %s', $objectData['id']));
                 continue;
             }
 

@@ -13,8 +13,14 @@ class ColorData extends PropertyData
     public string $hex;
     public array $oklch;
 
-    public function __construct(array $color)
+    public function __construct(string|array $color)
     {
+        if (is_string($color)) {
+            $this->hex   = $color;
+            $this->oklch = self::hexToOklch($this->hex);
+
+            return;
+        }
         $this->hex   = $color['hex'] ?? '#000000';
         $this->oklch = $color['oklch'] ?? self::hexToOklch($this->hex);
     }

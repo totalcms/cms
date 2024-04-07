@@ -22,10 +22,13 @@ final class TwigEngine
         $cacheDir          = $config->cacheDir === 'false' ? false : $config->cacheDir;
         $debug             = $cacheDir === false ? true : false;                        // enable debug is no cache dir
 
-        $paths = [
-            $internalTemplates,
-            $customTemplates,
-        ];
+        if (!file_exists($internalTemplates)) {
+            throw new \DomainException("Internal templates directory not found: $internalTemplates");
+        }
+        $paths = [$internalTemplates];
+        if (file_exists($customTemplates)) {
+            $paths[] = $customTemplates;
+        }
 
         $loader     = new TwigFilesystemLoader($paths);
         $this->twig = new TwigEnvironment($loader, [

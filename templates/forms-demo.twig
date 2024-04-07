@@ -1,5 +1,5 @@
 <!-- Macros for forms -->
-{% import "form-macros.twig" as form %}
+{% import "totalform.twig" as form %}
 
 <h2>Help Text - Default Style</h2>
 
@@ -114,7 +114,7 @@
 		placeholder : "Select Something",
 		help        : "This is some help for this Total CMS form field.",
 	}) }}
-	{{ form.selectmultiple('text', options, {
+	{{ form.multiselect('text', options, {
 		label       : "Select Multiple",
 		placeholder : "Select As Many As You Like",
 		help        : "This is some help for this Total CMS form field.",
@@ -173,7 +173,7 @@
 
 
 	<h2>Telephone</h2>
-	{{ form.tel('text', {
+	{{ form.phone('text', {
 		label       : "Telephone Field",
 		placeholder : "Type your telephone",
 		help        : "This is some help for this Total CMS form field.",

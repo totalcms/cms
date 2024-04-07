@@ -16,7 +16,7 @@ class FakerExtension extends Base
     public function __construct(FakerGenerator $faker)
     {
         parent::__construct($faker);
-        self::$dir = sys_get_temp_dir() . '/faker-images';
+        self::$dir   = sys_get_temp_dir() . '/faker-images';
     }
 
     public static function imageUrl(int $width = 640, int $height = 480): string
@@ -44,13 +44,13 @@ class FakerExtension extends Base
         return FakerPicsum::picsum(self::$dir, $width, $height, true, $blur);
     }
 
-    public static function imageText(int $width = 640, int $height = 480, ?string $text = null, int $textSize = 100, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
+    public static function imageText(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 100, ?string $textColor = null, ?string $text = null): string
     {
         return FakerImageGD::imageGD(self::$dir, $width, $height, $text, $textSize, $textColor, $bgColor);
     }
 
     public static function tags(int $min = 0, int $max = 5): array
     {
-        return (array)Lorem::words(self::numberBetween($min, $max), false);
+        return array_values(array_unique((array)Lorem::words(self::numberBetween($min, $max), false)));
     }
 }
