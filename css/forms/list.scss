@@ -56,6 +56,9 @@ $choices-z-index: 10;
         }
     }
 }
+.choices__input:focus {
+	border: none;
+}
 .choices__inner {
     border-radius: 5px 0 0 5px;
     border-color: hsl(0, 0%, 79%);

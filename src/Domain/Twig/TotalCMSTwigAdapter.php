@@ -123,6 +123,12 @@ final class TotalCMSTwigAdapter
         return strval($this->data($collection, $id, $property));
     }
 
+    // Get an styledtext property from an object
+    public function styledtext(string $id, string $collection = 'styledtext', string $property = 'styledtext'): string
+    {
+        return strval($this->data($collection, $id, $property));
+    }
+
     // Get an text property from an object
     public function depot(string $id, string $collection = 'depot', string $property = 'files'): array
     {
