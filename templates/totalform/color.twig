@@ -1,13 +1,13 @@
 {#--------------------------------
   Color Macro
 --------------------------------#}
-{% macro color(name, args = {}) %}
+{% macro color(property, args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
-	{# args priority: args, formProps, defaults #}
-	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
 	{% set args  = {
 		class       : "",
 		value       : "",
@@ -15,11 +15,11 @@
 		placeholder : "",
 		help        : false,
 		icon        : true,
-	} | merge(props) | merge(args) %}
+	} | merge(defs) | merge(args) %}
 
 	{% set value = args.value %}
 	{% if object %}
-		{% set color = attribute(object, name) %}
+		{% set color = attribute(object, property) %}
 		{% set value = color.hex %}
 	{% endif %}
 
@@ -27,7 +27,7 @@
     <input
         type="color"
         id="field-{{ uuid }}"
-        name="{{ name }}"
+        name="{{ property }}"
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
 		{% if value %}value="{{ value|e }}"{% endif %}
     >

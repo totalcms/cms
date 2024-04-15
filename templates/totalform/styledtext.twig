@@ -1,12 +1,12 @@
 {#--------------------------------
   Styled Text Macro
 --------------------------------#}
-{% macro styledtext(name, args = {}) %}
+{% macro styledtext(property, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
 		field  : "styledtext",
 	}) %}
-    {{ _self.textarea(name, args) }}
+    {{ _self.textarea(property, args) }}
 {% endmacro %}
 
 {% macro styledtextForm(id, args = {}, collection = "styledtext") %}

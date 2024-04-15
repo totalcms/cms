@@ -1,6 +1,6 @@
 {#
     Select Field Macro
-    name        = name of the field
+    property        = property of the field
     type        = type of the field data from Total CMS: text, number, date, etc
     class       = classes added to the field
     value       = value of the field
@@ -13,13 +13,13 @@
     multiple    = enable multiple select
     rows        = number of rows for multi-select
 #}
-{% macro select(name, options = [], args = {}) %}
+{% macro select(property, options = [], args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
-	{# args priority: args, formProps, defaults #}
-	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
 	{% set args = {
 		field       : "select",
 		class       : "",
@@ -29,18 +29,18 @@
 		help        : false,
 		icon        : true,
 		required    : false,
-	} | merge(props) | merge(args) %}
+	} | merge(defs) | merge(args) %}
 
-	{% if options is empty and props.options is not empty %}
-		{% set options = props.options %}
+	{% if options is empty and defs.options is not empty %}
+		{% set options = defs.options %}
 	{% endif %}
 
     {{ _self.fieldstart(args.field, uuid, args) }}
     <select
         id="field-{{ uuid }}"
-        name="{{ name }}"
+        name="{{ property }}"
 		{% if object %}
-			value="{{ attribute(object, name)|e }}"
+			value="{{ attribute(object, property)|e }}"
 		{% else %}
         	{% if args.value %}value="{{ args.value|e }}"{% endif %}
 		{% endif %}
@@ -48,7 +48,7 @@
         {% if args.multiple %}multiple size="{{ args.rows }}"{% endif %}
         {% if args.required %}required{% endif %}
     >
-		{% set value = object ? attribute(object, name) : args.value %}
+		{% set value = object ? attribute(object, property) : args.value %}
 
 		{% if args.placeholder %}
 		<option value="" disabled {% if value is empty %}selected{% endif %}>{{ args.placeholder }}</option>

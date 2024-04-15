@@ -1,10 +1,10 @@
-{% macro multiselect(name, options = [], args = {}) %}
+{% macro multiselect(property, options = [], args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
-	{# args priority: args, formProps, defaults #}
-	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
 	{% set args = {
 		field       : "multiselect",
 		class       : "",
@@ -15,22 +15,23 @@
 		icon        : true,
 		required    : false,
 		rows        : 10,
-	} | merge(props) | merge(args) %}
+	} | merge(defs) | merge(args) %}
 
-	{% if options is empty and props.options is not empty %}
+	{# Get the options form the form definitions if none are provided #}
+	{% if options is empty and defs.options is not empty %}
 		{% set options = props.options %}
 	{% endif %}
 
     {{ _self.fieldstart(args.field, uuid, args) }}
     <select multiple
         id="field-{{ uuid }}"
-        name="{{ name }}"
+        name="{{ property }}"
         size="{{ args.rows }}"
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
     >
 		{# Get the default selected value #}
-		{% set value = object ? attribute(object, name) : args.value %}
+		{% set value = object ? attribute(object, property) : args.value %}
 
 		{% if args.placeholder %}
 		<option value="" disabled>{{ args.placeholder }}</option>

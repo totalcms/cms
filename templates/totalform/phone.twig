@@ -1,11 +1,11 @@
 {#--------------------------------
   Telephone Macro
 --------------------------------#}
-{% macro phone(name, args = {}) %}
+{% macro phone(property, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
 		field : "phone",
 		type  : "tel",
 	}) %}
-    {{ _self.input(name, args) }}
+    {{ _self.input(property, args) }}
 {% endmacro %}

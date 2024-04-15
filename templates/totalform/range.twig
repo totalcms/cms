@@ -1,13 +1,13 @@
 {#--------------------------------
   Range Macro
 --------------------------------#}
-{% macro rangeslider(name, args = {}) %}
+{% macro rangeslider(property, args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
-	{# args priority: args, formProps, defaults #}
-	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
 	{% set args = {
 		class       : "",
 		value       : "",
@@ -19,14 +19,14 @@
 		max         : false,
 		step        : false,
 		icon		: false,
-	} | merge(props) | merge(args) %}
+	} | merge(defs) | merge(args) %}
 
     {{ _self.fieldstart("range", uuid, args) }}
     <input
         id="field-{{ uuid }}"
         type="range"
-        name="{{ name }}"
-		value="{{ object ? attribute(object, name) : args.value|e }}"
+        name="{{ property }}"
+		value="{{ object ? attribute(object, property) : args.value|e }}"
         {% if args.min %}min="{{ args.min }}"{% endif %}
         {% if args.max %}max="{{ args.max }}"{% endif %}
         {% if args.step %}step="{{ args.step }}"{% endif %}

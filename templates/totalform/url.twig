@@ -1,13 +1,13 @@
 {#--------------------------------
   URL Macro
 --------------------------------#}
-{% macro url(name, args = {}) %}
+{% macro url(property, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
 		field : "url",
 		type  : "url",
 	}) %}
-    {{ _self.input(name, args) }}
+    {{ _self.input(property, args) }}
 {% endmacro %}
 
 {% macro urlForm(id, args = {}, collection = "url") %}

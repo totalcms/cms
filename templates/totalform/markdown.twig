@@ -1,11 +1,11 @@
 {#--------------------------------
   Markdown Macro
 --------------------------------#}
-{% macro markdown(name, args = {}) %}
+{% macro markdown(property, args = {}) %}
     {# TODO: create JS lib that adds toolbar + preview #}
 	{# Override args with static values #}
 	{% set args =  args | merge({
 		field  : "markdown",
 	}) %}
-    {{ _self.textarea(name, args) }}
+    {{ _self.textarea(property, args) }}
 {% endmacro %}

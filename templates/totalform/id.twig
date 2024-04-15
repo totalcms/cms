@@ -1,7 +1,7 @@
 {#--------------------------------
   ID Macro
 --------------------------------#}
-{% macro id(name, args = {}) %}
+{% macro id(property = "id", args = {}) %}
 	{# Defaults #}
 	{% set args = {
 		options  : {},
@@ -22,5 +22,5 @@
 	{% endif %}
 
 
-    {{ _self.input(name, args) }}
+    {{ _self.input(property, args) }}
 {% endmacro %}

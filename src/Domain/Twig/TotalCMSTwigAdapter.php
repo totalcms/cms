@@ -35,7 +35,7 @@ final class TotalCMSTwigAdapter
     }
 
     // Get collection meta data
-    public function formProps(string $property, string $collection, ?string $id): array
+    public function formDefinitions(string $property, string $collection, ?string $id): array
     {
         $collection = $this->collectionFetcher->fetchCollection($collection);
         $properties = [];

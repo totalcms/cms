@@ -1,6 +1,6 @@
 {#
     Textarea Field Macro
-    name        = name of the field
+    property        = property of the field
     type        = type of the field data from Total CMS: text, number, date, etc
     class       = classes added to the field
     value       = value of the field
@@ -11,13 +11,13 @@
     required    = required field
     rows        = number of rows
 #}
-{% macro textarea(name, args = {}) %}
+{% macro textarea(property, args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
-	{# args priority: args, formProps, defaults #}
-	{% set props = totalcms.formProps(name, collection, object.id|default("")) %}
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
 	{% set args = {
 		field       : "text",
 		class       : "",
@@ -28,17 +28,18 @@
 		icon        : true,
 		required    : false,
 		rows        : 10,
-	} | merge(props) | merge(args) %}
+	} | merge(defs) | merge(args) %}
+
 
     {{ _self.fieldstart(args.field, uuid, args) }}
     <textarea
         id="field-{{ uuid }}"
-        name="{{ name }}"
+        name="{{ property }}"
         rows="{{ args.rows }}"
         {% if args.placeholder %}placeholder="{{ args.placeholder }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
-    >{{ object ? attribute(object, name) : args.value }}</textarea>
+    >{{ object ? attribute(object, property) : args.value }}</textarea>
     {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
