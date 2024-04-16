@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Twig;
 
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
@@ -33,8 +34,14 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('uniqid', fn () => uniqid()),
-            // new TwigFunction('uniqid', [TotalCMSTwigFunctions::class, 'uniqid']),
+            new TwigFunction('uniqid', [TotalCMSTwigFunctions::class, 'uniqid']),
+        ];
+    }
+
+    public function getFilters()
+    {
+        return [
+            new TwigFilter('wordify', [TotalCMSTwigFilters::class, 'wordify']),
         ];
     }
 }
