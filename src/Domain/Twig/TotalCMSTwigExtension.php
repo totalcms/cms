@@ -70,6 +70,14 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
             new TwigFilter('float', [TotalCMSTwigFilters::class, 'float']),
             new TwigFilter('bool', [TotalCMSTwigFilters::class, 'bool']),
             new TwigFilter('array', [TotalCMSTwigFilters::class, 'array']),
+            new TwigFilter('hex', [TotalCMSTwigFilters::class, 'hex']),
+            new TwigFilter('rgb', [TotalCMSTwigFilters::class, 'rgb']),
+            new TwigFilter('hsl', [TotalCMSTwigFilters::class, 'hsl']),
+            new TwigFilter('oklch', [TotalCMSTwigFilters::class, 'oklch']),
+            new TwigFilter('lightness', [TotalCMSTwigFilters::class, 'lightness']),
+            new TwigFilter('chroma', [TotalCMSTwigFilters::class, 'chroma']),
+            new TwigFilter('hue', [TotalCMSTwigFilters::class, 'hue']),
+            new TwigFilter('adjustColor', [TotalCMSTwigFilters::class, 'adjustColor']),
         ];
     }
 }

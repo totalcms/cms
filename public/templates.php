@@ -57,10 +57,20 @@ $totalcms->startBuffer(); // Start output buffering again
     <!-- Twig Template Testing -->
 
     <!-- Get Collection -->
-    {% set objects = totalcms.objects("text") %}
+    {% set objects = totalcms.objects("custom") %}
 
     {% for object in objects %}
     <h1>{{ object.id | humanize }}</h1>
+	{{ print_r(object) | raw }}
+	<h3>Hex: {{ object.color | hex }}</h3>
+    <h3>RGB: {{ object.color | rgb }}</h3>
+    <h3>HSL: {{ object.color | hsl }}</h3>
+    <h3>OKLCH: {{ object.color | oklch }}</h3>
+    <h3>Lighten: {{ object.color | lightness("+10") | oklch }}</h3>
+    <h3>Chroma: {{ object.color | chroma("*2") | oklch }}</h3>
+    <h3>Hue: {{ object.color | hue("/2") | oklch }}</h3>
+    <h3>Adjust: {{ object.color | adjustColor("*0.5", "10%", "-0.5") | hex }}</h3>
+
     {% endfor %}
 
     <!-- Get index of a property from a collection. Ex: list of all categories -->

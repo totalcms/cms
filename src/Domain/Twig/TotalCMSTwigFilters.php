@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use TotalCMS\Domain\Property\Data\ColorData;
+
 /**
  * Twig Functions for Total CMS.
  */
@@ -48,11 +50,68 @@ final class TotalCMSTwigFilters
         return $color['hex'] ?? '#000000';
     }
 
+    public static function rgb(array $color, int $alpha = 100): string
+    {
+        $hex = self::hex($color);
+        $rgb = ColorData::hexToRgb($hex);
+
+        if ($alpha === 100) {
+            return sprintf('rgb(%d %d %d)', $rgb['r'], $rgb['g'], $rgb['b']);
+        }
+
+        return sprintf('rgb(%d %d %d / %.2f)', $rgb['r'], $rgb['g'], $rgb['b'], $alpha / 100);
+    }
+
+    public static function hsl(array $color, int $alpha = 100): string
+    {
+        $hex = self::hex($color);
+        $hsl = ColorData::hexToHsl($hex);
+
+        if ($alpha === 100) {
+            return sprintf('hsl(%d %d%% %d%%)', $hsl['h'], $hsl['s'], $hsl['l']);
+        }
+
+        return sprintf('hsl(%d %d%% %d%% / %.2f)', $hsl['h'], $hsl['s'], $hsl['l'], $alpha / 100);
+    }
+
     public static function oklch(array $color, int $alpha = 100): string
     {
         $oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
 
-        return sprintf('oklch(%d%% %f %f / %f)', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
+        if ($alpha === 100) {
+            return sprintf('oklch(%.3f%% %.3f %.3f)', $oklch['l'], $oklch['c'], $oklch['h']);
+        }
+
+        return sprintf('oklch(%.3f%% %.3f %.3f / %.2f)', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
+    }
+
+    public static function lightness(array $color, string $lightness): array
+    {
+        return self::adjustColor($color, $lightness);
+    }
+
+    public static function chroma(array $color, string $chroma): array
+    {
+        return self::adjustColor($color, null, $chroma);
+    }
+
+    public static function hue(array $color, string $hue): array
+    {
+        return self::adjustColor($color, null, null, $hue);
+    }
+
+    public static function adjustColor(array $color, ?string $lightness = null, ?string $chroma = null, ?string $hue = null): array
+    {
+        $oklch = ColorData::oklchChange($color['oklch'], [
+            'l' => $lightness,
+            'c' => $chroma,
+            'h' => $hue,
+        ]);
+
+        return [
+            'oklch' => $oklch,
+            'hex'   => ColorData::oklchToHex($oklch),
+        ];
     }
 
     /**
