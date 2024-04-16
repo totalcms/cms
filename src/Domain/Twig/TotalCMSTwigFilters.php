@@ -40,6 +40,21 @@ final class TotalCMSTwigFilters
         return ltrim($string);
     }
 
+    // -------------------------
+    // Total CMS Color Manipulation
+    // -------------------------
+    public static function hex(array $color): string
+    {
+        return $color['hex'] ?? '#000000';
+    }
+
+    public static function oklch(array $color, int $alpha = 100): string
+    {
+        $oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
+
+        return sprintf('oklch(%d%% %f %f / %f)', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
+    }
+
     /**
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      * @SuppressWarnings(PHPMD.ElseExpression)
