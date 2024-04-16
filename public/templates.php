@@ -60,7 +60,7 @@ $totalcms->startBuffer(); // Start output buffering again
     {% set objects = totalcms.objects("text") %}
 
     {% for object in objects %}
-    <h1>{{ object.id | wordify }}</h1>
+    <h1>{{ object.id | humanize }}</h1>
     {% endfor %}
 
     <!-- Get index of a property from a collection. Ex: list of all categories -->
