@@ -28,10 +28,6 @@
         "description": {
           "type": "string"
         },
-        "keywords": {
-          "$comment": "Tags associated with the image",
-          "$ref": "https://www.totalcms.co/schemas/properties/list.json"
-        },
         "aperture": {
           "type": "string"
         },

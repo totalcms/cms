@@ -1,2 +1,68 @@
-{% macro image(property, value) %}
+{% macro image(property, args = {}) %}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+	{% set imageData  = attribute(object, property) %}
+
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = {
+		class       : "",
+		label       : "",
+		help        : false,
+		required    : false,
+	} | merge(defs) | merge(args) %}
+
+    {# Migrate these to use args.options to be added to fieldstart
+		{
+			"orientation":"stake_orientation",
+			"size":{"min":0,"max":stake_maxsize},
+			"height":{"min":stake_height_0,"max":stake_height_1},
+			"width":{"min":stake_width_0,"max":stake_width_1},
+			"image":true
+		}
+	#}
+
+	{{ print_r(imageData) | raw }}
+
+    {{ _self.fieldstart("image", uuid, args) }}
+
+		<input type="hidden"
+			id="field-{{ uuid }}"
+			name="{{ property }}"
+			value="JSON String"
+			data-template="template-{{ uuid }}"
+			{% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+			{% if args.required %}required{% endif %} />
+
+		<div class="total-preview">
+			<div class="dz-overlay dz-clickable">
+				<i class="fa fa-cloud-upload fa-4x"></i>
+			</div>
+			{{ _self.imagePreview("") }}
+		</div>
+
+		<template id="template-{{ uuid }}">{{ _self.imagePreview("") }}</template>
+
+    {{ _self.fieldend(uuid, args) }}
+
+{% endmacro %}
+
+{% macro imagePreview(image) %}
+	<div class="dz-preview dz-file-preview">
+		<div class="actionbar">
+			<button class="imagebar-tag left"      title="Edit Image Info"><i class="fa fa-tag"></i></button>
+			<button class="imagebar-image left"    title="Image URL"><i class="fa fa-image"></i></button>
+			<button class="imagebar-featured left" title="Featured"><i class="fa fa-star-o"></i><i class="fa fa-star"></i></button>
+			<button class="imagebar-trash right"   title="Delete Image"><i class="fa fa-trash-o"></i></button>
+			<i class="fa fa-fw fa-bars imagebar-move"></i>
+		</div>
+		<img src="{{ image }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<div class="dz-progress">
+			<span class="dz-upload" data-dz-uploadprogress></span>
+			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
+		</div>
+		<i class="fa fa-check-circle"></i>
+		<i class="fa fa-times-circle has-tip" data-tooltip></i>
+	</div>
 {% endmacro %}
