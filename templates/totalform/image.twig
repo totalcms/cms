@@ -51,13 +51,13 @@
 {% macro imagePreview(image) %}
 	<div class="dz-preview dz-file-preview">
 		<div class="actionbar">
-			<button class="imagebar-tag left"      title="Edit Image Info"><i class="fa fa-tag"></i></button>
-			<button class="imagebar-image left"    title="Image URL"><i class="fa fa-image"></i></button>
-			<button class="imagebar-featured left" title="Featured"><i class="fa fa-star-o"></i><i class="fa fa-star"></i></button>
-			<button class="imagebar-trash right"   title="Delete Image"><i class="fa fa-trash-o"></i></button>
-			<i class="fa fa-fw fa-bars imagebar-move"></i>
+			<button class="edit left"     title="Edit Image Info"></button>
+			<button class="links left"    title="Image URL"></button>
+			<button class="featured left" title="Featured"></button>
+			<button class="trash right"   title="Delete Image"></button>
+			<button class="move" 		  title="Reorder Image"></button>
 		</div>
-		<img src="{{ image }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>

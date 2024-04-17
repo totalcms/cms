@@ -10,7 +10,7 @@ form.totalform {
         cursor:pointer;
     }
 
-    fieldset.droplet {
+    .image-field {
         box-sizing:border-box;
 
         * {
@@ -110,7 +110,7 @@ form.totalform {
 
 form.totalform {
 
-    fieldset.image-box {
+    .image-field {
 
         .placeholder {
             margin-bottom:0;

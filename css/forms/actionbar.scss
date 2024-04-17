@@ -27,10 +27,6 @@
         }
     }
 
-    .fa {
-        font-size:1.5em;
-    }
-
     &.fill {
         position:absolute;
         top:0;
@@ -46,12 +42,10 @@
             height:40px;
             line-height:40px;
             float:left;
-            .fa {
-                font-size:1.3rem;
-            }
+			font-size:1.3rem;
         }
     }
-    .imagebar-move {
+    .move {
         position: absolute;
         bottom:0;
         left:50%;
@@ -70,7 +64,7 @@
 }
 
 .image-box {
-    .imagebar-featured,.imagebar-move{
+    .move {
         display: none;
     }
 }
