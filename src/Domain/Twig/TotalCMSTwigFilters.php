@@ -45,6 +45,14 @@ final class TotalCMSTwigFilters
     // -------------------------
     // Total CMS Color Manipulation
     // -------------------------
+    public static function hexToColor(string $hex): array
+    {
+        return [
+            'hex'   => $hex,
+            'oklch' => ColorData::hexToOklch($hex),
+        ];
+    }
+
     public static function hex(array $color): string
     {
         return $color['hex'] ?? '#000000';

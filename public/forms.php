@@ -69,7 +69,7 @@ $totalcms->startBuffer(); // Start output buffering again
 
 			{{ form.image('image') }}
 
-			{{ form.id('id', { autogen:"${text}" }) }}
+			<!-- {{ form.id('id', { autogen:"${text}" }) }}
 			{{ form.text('text') }}
 
 			{{ form.textarea('textarea') }}
@@ -100,7 +100,7 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.rangeslider('range') }}
 
 			{{ form.styledtext('styledtext') }}
-			{{ form.svg('svg') }}
+			{{ form.svg('svg') }} -->
 
 		{{ form.end() }}
 

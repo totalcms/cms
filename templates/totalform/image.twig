@@ -42,6 +42,8 @@
 			{{ _self.imagePreview("") }}
 		</div>
 
+		{{ _self.imageDialog(imageData) }}
+
 		<template id="template-{{ uuid }}">{{ _self.imagePreview("") }}</template>
 
     {{ _self.fieldend(uuid, args) }}
@@ -51,11 +53,11 @@
 {% macro imagePreview(image) %}
 	<div class="dz-preview dz-file-preview">
 		<div class="actionbar">
-			<button class="edit left"     title="Edit Image Info"></button>
-			<button class="links left"    title="Image URL"></button>
-			<button class="featured left" title="Featured"></button>
-			<button class="trash right"   title="Delete Image"></button>
-			<button class="move" 		  title="Reorder Image"></button>
+			<button class="edit"     title="Edit Image Info"></button>
+			<button class="links"    title="Image URL"></button>
+			<button class="featured" title="Featured"></button>
+			<button class="move"     title="Reorder Image"></button>
+			<button class="trash"    title="Delete Image"></button>
 		</div>
 		<img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
@@ -65,4 +67,53 @@
 		<i class="fa fa-check-circle"></i>
 		<i class="fa fa-times-circle has-tip" data-tooltip></i>
 	</div>
+{% endmacro %}
+
+{% macro imageDialog(image) %}
+	<dialog class="image-edit-dialog">
+
+		alt
+		exif-aperture
+		exif-iso
+		exif-shutterSpeed
+		exif-make
+		exif-camera
+		exif-focalLength
+		exif-description
+		exif-copyright
+		exif-title
+		exif-date
+		featured
+		focalpoint-x
+		focalpoint-y
+		"height
+		"link"
+		"mime"
+		"name"
+		"palette"
+			"#1e140e",
+			"#7d3012",
+			"#8f9217",
+			"#c3bc25",
+			"#c61d1d"
+		],
+		"size"
+		"tags"
+			"golden gate bridge",
+			"san francisco"
+		],
+		"uploadDate"
+		"width"
+
+		<button class="close">Close</button>
+	</dialog>
+
+	<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const dialog = document.querySelector('.image-edit-dialog');
+		const button = dialog.querySelector('dialog button.close');
+		button.addEventListener('click', () => dialog.close());
+		dialog.showModal();
+	});
+	</script>
 {% endmacro %}

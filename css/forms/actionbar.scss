@@ -2,93 +2,119 @@
 // Action Bar
 //--------------------------------
 .actionbar {
-    background-color:rgba(255,255,255,0.9);
-    display:block;
-    position:absolute;
-    text-align:center;
-    top:0;
-    left:0;
-    right:0;
-    width:100%;
-    margin:0;
-    padding:10px 5px;
-    opacity:0;
-    transition:opacity 500ms ease-in-out;
-    z-index:1;
+	--actionbar-color: oklch(100 0 0 / 0.8);
+	--actionbar-icon-color: #222222;
+	--actionbar-icon-size: 24px;
 
-    a {
-        margin:0 5px;
-        opacity:0.8;
-        color:#222;
+	background-color : var(--actionbar-color);
+	position         : absolute;
+	top              : 0;
+	left             : 0;
+	right            : 0;
+	width            : 100%;
+	margin           : 0;
+	padding          : calc(var(--actionbar-icon-size) / 2);
+	opacity          : 0;
+	transition       : opacity 500ms ease-in-out;
+	z-index          : 1;
 
-        &:hover{
-            color:#222;
-            opacity:1;
+	display : flex;
+	gap     : calc(var(--actionbar-icon-size) / 2);
+
+    button {
+		appearance       : none;
+		border           : none;
+		cursor           : pointer;
+
+		opacity          : 0.8;
+		background-color : var(--actionbar-icon-color);
+		width            : var(--actionbar-icon-size);
+		height           : var(--actionbar-icon-size);
+
+		&:hover {
+            opacity : 1;
         }
+
+		&.edit {
+			-webkit-mask : var(--icon-edit);
+			mask         : var(--icon-edit);
+		}
+		&.featured {
+			-webkit-mask : var(--icon-featured);
+			mask         : var(--icon-featured);
+		}
+		&.not-featured {
+			-webkit-mask : var(--icon-not-featured);
+			mask         : var(--icon-not-featured);
+		}
+		&.trash {
+			-webkit-mask : var(--icon-trash);
+			mask         : var(--icon-trash);
+			margin-left  : auto;
+		}
+		&.links {
+			-webkit-mask : var(--icon-link);
+			mask         : var(--icon-link);
+		}
+		&.move {
+			cursor       : grab;
+			-webkit-mask : var(--icon-bars);
+			mask         : var(--icon-bars);
+			margin       : 0 auto;
+
+			&:active {
+				cursor : grabbing;
+			}
+		}
     }
 
     &.fill {
-        position:absolute;
-        top:0;
-        bottom:0;
-        left:0;
-        right:0;
-        height:100%;
-        padding:0;
+        position : absolute;
+        top      : 0;
+        bottom   : 0;
+        left     : 0;
+        right    : 0;
+        height   : 100%;
+        padding  : 0;
 
-        a {
-            margin:0;
-            width:50%;
-            height:40px;
-            line-height:40px;
-            float:left;
-			font-size:1.3rem;
-        }
-    }
-    .move {
-        position: absolute;
-        bottom:0;
-        left:50%;
-        opacity:0.6;
-        font-size:0.9rem;
-        cursor:-webkit-grab;
-        cursor:-moz-grab;
-        cursor:grab;
-        transform:translateX(-50%);
-        &:active{
-            cursor:-webkit-grabbing;
-            cursor:-moz-grabbing;
-            cursor:grabbing;
+        button {
+			margin      : 0;
+			width       : 50%;
+			height      : 40px;
+			line-height : 40px;
+			float       : left;
+			font-size   : 1.3rem;
         }
     }
 }
 
-.image-box {
+
+.image-field {
     .move {
-        display: none;
+        display : none;
     }
 }
 
 div:not(.empty):hover {
     > .actionbar {
-        opacity:1;
+        opacity : 1;
     }
 }
 .dz-error,.dz-processing {
     .actionbar {
-        display:none!important;
+        display : none!important;
     }
 }
 #imagebar-image {
     img {
-        display: block;
-        max-height: calc(100vh - 450px);
-        margin: 0 auto;
+        display    : block;
+        max-height : calc(100vh - 450px);
+        margin     : 0 auto;
     }
 }
 
 .alt-form img{
-    max-width:25%;
-    float:right;
-    margin-left:1rem;
+    max-width   : 25%;
+    float       : right;
+    margin-left : 1rem;
 }
