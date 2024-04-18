@@ -72,40 +72,89 @@
 {% macro imageDialog(image) %}
 	<dialog class="image-edit-dialog">
 
-		alt
-		exif-aperture
-		exif-iso
-		exif-shutterSpeed
-		exif-make
-		exif-camera
-		exif-focalLength
-		exif-description
-		exif-copyright
-		exif-title
-		exif-date
-		featured
-		focalpoint-x
-		focalpoint-y
-		"height
-		"link"
-		"mime"
-		"name"
-		"palette"
-			"#1e140e",
-			"#7d3012",
-			"#8f9217",
-			"#c3bc25",
-			"#c61d1d"
-		],
-		"size"
-		"tags"
-			"golden gate bridge",
-			"san francisco"
-		],
-		"uploadDate"
-		"width"
+		<section>
+			<img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		</section>
+
+		<section>
+			<details open>
+				<summary>Info</summary>
+				{{ _self.checkbox("featured", {
+					label       : "Featured",
+					help        : "Mark this image as featured.",
+				}) }}
+				{{ _self.input("alt", {
+					label       : "Alt Text",
+					help        : "Alt text is used by screen readers and search engines to describe the image.",
+					placeholder : "Enter Alt Text",
+				}) }}
+				{{ _self.url("link", {
+					label       : "Link",
+					help        : "Enter a URL to link the image to.",
+					placeholder : "https://example.com",
+				}) }}
+				{{ _self.list("tags", [], {
+					label       : "Tags",
+					help        : "Add tags to help organize your images.",
+					placeholder : "Add Tags",
+				}) }}
+			</details>
+
+			<details>
+				<summary>Focal Point</summary>
+				{{ _self.rangeslider("focalpoint-x", {
+					label       : "Focal Point X",
+					help        : "Set the horizontal focal point coordinate of the image.",
+				}) }}
+				{{ _self.rangeslider("focalpoint-y", {
+					label       : "Focal Point Y",
+					help        : "Set the vertical focal point coordinate of the image.",
+				}) }}
+			</details>
+
+			<details>
+				<summary>EXIF - Info</summary>
+				{{ _self.datetime("exif-date", { label:"Date" }) }}
+				{{ _self.input("exif-title", { label:"Title" }) }}
+				{{ _self.input("exif-copyright", { label:"Copyright" }) }}
+				{{ _self.textarea("exif-description", { label:"Description", rows: 3 }) }}
+			</details>
+
+			<details>
+				<summary>EXIF - Camera Settings</summary>
+				{{ _self.input("exif-make", { label:"Make" }) }}
+				{{ _self.input("exif-camera", { label:"Model" }) }}
+				{{ _self.input("exif-aperture", { label:"Aperture" }) }}
+				{{ _self.input("exif-iso", { label:"ISO" }) }}
+				{{ _self.input("exif-shutterSpeed", { label:"Shutter Speed" }) }}
+				{{ _self.input("exif-focalLength", { label:"Focal Length" }) }}
+			</details>
+
+			<details>
+				<summary>Palette</summary>
+				<div class="palette">
+				{{ _self.color("palette-1") }}
+				{{ _self.color("palette-2") }}
+				{{ _self.color("palette-3") }}
+				{{ _self.color("palette-4") }}
+				{{ _self.color("palette-5") }}
+				</div>
+			</details>
+
+			<details>
+				<summary>Meta (Readonly)</summary>
+				{{ _self.number("height") }}
+				{{ _self.number("width") }}
+				{{ _self.number("size") }}
+				{{ _self.input("name") }}
+				{{ _self.input("mime") }}
+				{{ _self.datetime("uploadDate") }}
+			</details>
+
+		</section>
 
 		<button class="close">Close</button>
+
 	</dialog>
 
 	<script>
@@ -114,6 +163,17 @@
 		const button = dialog.querySelector('dialog button.close');
 		button.addEventListener('click', () => dialog.close());
 		dialog.showModal();
+
+		// Close other details when one is opened
+		const details = dialog.querySelectorAll('details');
+		details.forEach((detail) => {
+			detail.addEventListener('toggle', () => {
+				if (detail.open) {
+					const siblings = Array.from(detail.parentNode.children).filter((d) => d !== detail);
+					siblings.forEach((sibling) => sibling.removeAttribute('open'));
+				}
+			});
+		});
 	});
 	</script>
 {% endmacro %}

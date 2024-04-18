@@ -6,242 +6,237 @@
 //--------------------------------
 form.totalform {
 
-    .dz-clickable {
-        cursor:pointer;
-    }
+	.dz-clickable {
+		cursor: pointer;
+	}
 
-    .image-field {
-        box-sizing:border-box;
+	.image-field {
+		box-sizing: border-box;
 
-        * {
-            box-sizing:border-box;
-        }
+		* {
+			box-sizing: border-box;
+		}
 
-        p.placeholder {
-            text-align:center;
-            margin-top:0.3rem;
-            .fa {
-                font-size:1.5em;
-            }
-        }
+		p.placeholder {
+			text-align: center;
+			margin-top: 0.3rem;
 
-        .dz-preview {
-            position:relative;
-            display:block;
-            min-height:2rem;
-            border-width:10px;
-            border-style:solid;
-            border-color:#f8f8f8;
-            box-shadow:0px 0px 2px rgba(0,0,0,0.4);
+			.fa {
+				font-size: 1.5em;
+			}
+		}
 
-            &.empty {
-                display:none;
-            }
-            .fa-check-circle,.fa-times-circle {
-                display          : none;
-                position         : absolute;
-                text-align       : center;
-                opacity          : 0;
-                bottom           : 0;
-                left             : 0;
-                right            : 0;
-                width            : 100%;
-                background-color : rgba(255,255,255,0.9);
-                transition       : opacity 500ms ease-in-out;
-            }
-            &.dz-success .fa-check-circle{
-                display : block;
-                opacity : 1;
-            }
-            &.dz-error .fa-times-circle{
-                display : block;
-                opacity : 1;
-            }
+		.dz-preview {
+			position     : relative;
+			display      : block;
+			min-height   : 2rem;
+			border-width : 10px;
+			border-style : solid;
+			border-color : #f8f8f8;
+			box-shadow   : 0px 0px 2px rgba(0, 0, 0, 0.4);
 
-            &.dz-processing .dz-progress {
-                display:block;
-                opacity:1;
-                transition:all 0.2s linear;
-            }
-            &.dz-complete .dz-progress {
-                opacity:0;
-                transition:opacity 0.4s ease-in;
-            }
+			&.empty {
+				display: none;
+			}
 
-            .dz-progress {
-                opacity:0;
-                z-index:1000;
+			.fa-check-circle,
+			.fa-times-circle {
+				display          : none;
+				position         : absolute;
+				text-align       : center;
+				opacity          : 0;
+				bottom           : 0;
+				left             : 0;
+				right            : 0;
+				width            : 100%;
+				background-color : rgba(255, 255, 255, 0.9);
+				transition       : opacity 500ms ease-in-out;
+			}
 
-                pointer-events:none;
-                position:absolute;
-                height:2rem;
-                left:0;
-                right:0;
-                bottom:0;
-                width:100%;
+			&.dz-success .fa-check-circle {
+				display : block;
+				opacity : 1;
+			}
 
-                background:rgba(0,0,0,0.4);
-                // Fix for chrome bug:https://code.google.com/p/chromium/issues/detail?id=157218
-                -webkit-transform:scale(1);
-                overflow:hidden;
+			&.dz-error .fa-times-circle {
+				display : block;
+				opacity : 1;
+			}
 
-                .dz-upload {
-                    background:#43AC6A;
-                    position:absolute;
-                    top:0;
-                    left:0;
-                    bottom:0;
-                    width:0;
-                    z-index:1001;
-                }
-                .dz-upload-progress-label {
-                    width:100%;
-                    text-align:center;
-                    display:block;
-                    line-height:2rem;
-                    z-index:1002;
-                    position:absolute;
-                    color:#ffffff;
-                }
-            }
-        }
-    }
+			&.dz-processing .dz-progress {
+				display    : block;
+				opacity    : 1;
+				transition : all 0.2s linear;
+			}
+
+			&.dz-complete .dz-progress {
+				opacity    : 0;
+				transition : opacity 0.4s ease-in;
+			}
+
+			.dz-progress {
+				opacity : 0;
+				z-index : 1000;
+
+				pointer-events : none;
+				position       : absolute;
+				height         : 2rem;
+				left           : 0;
+				right          : 0;
+				bottom         : 0;
+				width          : 100%;
+				background     : rgba(0, 0, 0, 0.4);
+
+				// Fix for chrome bug:https://code.google.com/p/chromium/issues/detail?id=157218
+				transform: scale(1);
+				overflow: hidden;
+
+				.dz-upload {
+					background : #43AC6A;
+					position   : absolute;
+					top        : 0;
+					left       : 0;
+					bottom     : 0;
+					width      : 0;
+					z-index    : 1001;
+				}
+
+				.dz-upload-progress-label {
+					width       : 100%;
+					text-align  : center;
+					display     : block;
+					line-height : 2rem;
+					z-index     : 1002;
+					position    : absolute;
+					color       : #ffffff;
+				}
+			}
+		}
+	}
 }
 
 form.totalform {
 
-    .image-field {
+	.image-field {
 
-        .placeholder {
-            margin-bottom:0;
-        }
+		.placeholder {
+			margin-bottom: 0;
+		}
 
-        .total-preview {
-            display:block;
-            min-height:4em;
-            position:relative;
-        }
+		.total-preview {
+			display: block;
+			min-height: 4em;
+			position: relative;
+		}
 
-        img {
-            width:100%!important;
-            height:auto;
-            max-width:100%;
-            display:block;
-            margin:0 auto;
+		img {
+			width     : 100% !important;
+			height    : auto;
+			max-width : 100%;
+			display   : block;
+			margin    : 0 auto;
 
-            &.notfound {
-                display:none;
-            }
-        }
+			&.notfound {
+				display: none;
+			}
+		}
 
-        .dz-overlay {
-            width:100%;
-            height:100%;
-            top:0;
-            left:0;
-            opacity:0.5;
-            position:absolute;
-            display:block;
-            text-align:center;
+		.dz-overlay {
+			width      : 100%;
+			height     : 100%;
+			top        : 0;
+			left       : 0;
+			opacity    : 0.5;
+			position   : absolute;
+			display    : block;
+			text-align : center;
+		}
 
-            .fa {
-                position:absolute;
-                top:50%;
-                left:50%;
-                transform:translateX(-50%) translateY(-50%);
-            }
-        }
-        img {
-            width:100%;
-        }
-        .fa-check-circle,.fa-times-circle {
-            font-size:2rem;
-        }
-        .dz-preview {
-            &.empty {
-                border-style:none!important;
-                box-shadow:none!important;
-            }
-        }
-    }
-    &.dz-drag-hover {
-        fieldset.image-box {
-            .dz-overlay {
-                opacity:1.0;
-            }
-            img{
-                opacity:0.5;
-            }
-        }
-    }
+		img {
+			width : 100%;
+		}
+
+		.dz-preview {
+			&.empty {
+				border-style : none !important;
+				box-shadow   : none !important;
+			}
+		}
+	}
+
+	&.dz-drag-hover {
+		fieldset.image-box {
+			.dz-overlay {
+				opacity: 1.0;
+			}
+
+			img {
+				opacity: 0.5;
+			}
+		}
+	}
 }
 
 form.totalform {
 
-    fieldset.file-box {
+	fieldset.file-box {
 
-        .placeholder {
-            margin-bottom:0;
-        }
+		.placeholder {
+			margin-bottom: 0;
+		}
 
-        .total-preview {
-            display:block;
-            min-height:4em;
-            position:relative;
-        }
+		.total-preview {
+			display    : block;
+			min-height : 4em;
+			position   : relative;
+		}
 
-        img {
-            width:100%!important;
-            height:auto;
-            max-width:100%;
-            display:block;
-            margin:0 auto;
+		img {
+			width     : 100% !important;
+			height    : auto;
+			max-width : 100%;
+			display   : block;
+			margin    : 0 auto;
 
-            &.notfound {
-                display:none;
-            }
-        }
+			&.notfound {
+				display: none;
+			}
+		}
 
-        .dz-overlay {
-            width:100%;
-            height:100%;
-            top:0;
-            left:0;
-            opacity:0.5;
-            position:absolute;
-            display:block;
-            text-align:center;
+		.dz-overlay {
+			width      : 100%;
+			height     : 100%;
+			top        : 0;
+			left       : 0;
+			opacity    : 0.5;
+			position   : absolute;
+			display    : block;
+			text-align : center;
+		}
 
-            .fa {
-                position:absolute;
-                top:50%;
-                left:50%;
-                transform:translateX(-50%) translateY(-50%);
-            }
-        }
-        img {
-            width:100%;
-        }
-        .fa-check-circle,.fa-times-circle {
-            font-size:2rem;
-        }
-        .dz-preview {
-            &.empty {
-                border-style:none!important;
-                box-shadow:none!important;
-            }
-        }
-    }
-    &.dz-drag-hover {
-        fieldset.file-box {
-            .dz-overlay {
-                opacity:1.0;
-            }
-            img{
-                opacity:0.5;
-            }
-        }
-    }
+		img {
+			width: 100%;
+		}
+
+		.dz-preview {
+			&.empty {
+				border-style : none !important;
+				box-shadow   : none !important;
+			}
+		}
+	}
+
+	&.dz-drag-hover {
+		fieldset.file-box {
+			.dz-overlay {
+				opacity: 1.0;
+			}
+
+			img {
+				opacity: 0.5;
+			}
+		}
+	}
 }
 
 form.totalform {
@@ -249,16 +244,17 @@ form.totalform {
 	fieldset.gallery-box {
 
 		.total-preview {
-			width       : 100%;
-			overflow    : hidden;
-			padding-top : 5px;
+			width: 100%;
+			overflow: hidden;
+			padding-top: 5px;
 
 			&.overflow {
-				overflow-y    : scroll;
-				border-bottom : 1px dotted #ccc;
-				text-align    : center;
+				overflow-y: scroll;
+				border-bottom: 1px dotted #ccc;
+				text-align: center;
 			}
 		}
+
 		.dz-preview {
 			border-width   : 5px;
 			opacity        : 1.0;
@@ -272,7 +268,7 @@ form.totalform {
 			height         : 100px;
 			float          : left;
 
-			&:first-child{
+			&:first-child {
 				opacity       : 0.5;
 				border-style  : dashed;
 				border-color  : #222;
@@ -282,43 +278,49 @@ form.totalform {
 			}
 
 			&.sortable-ghost {
-				.actionbar{
-					opacity : 0!important;
+				.actionbar {
+					opacity : 0 !important;
 				}
 			}
 
 			.dz-progress {
-				height:1rem;
+				height : 1rem;
+
 				.dz-upload-progress-label {
 					font-size   : 0.5rem;
 					line-height : 1rem;
 				}
 			}
+
 			.imagebar-featured {
 				.fa-star {
-					display:none;
+					display: none;
 				}
+
 				.fa-star-o {
-					display:inline-block;
+					display: inline-block;
 				}
 			}
+
 			&.featured .imagebar-featured {
 				.fa-star {
-					display:inline-block;
+					display: inline-block;
 				}
+
 				.fa-star-o {
-					display:none;
+					display: none;
 				}
 			}
 		}
 	}
+
 	&.dz-drag-hover {
 		fieldset.gallery-box {
 			.dz-preview {
-				opacity:0.5;
+				opacity: 0.5;
 
 				&:first-child {
-					opacity:1.0;
+					opacity: 1.0;
 				}
 			}
 		}
@@ -335,9 +337,67 @@ dialog {
 	top           : 50%;
 	left          : 50%;
 	transform     : translate(-50%, -50%);
+
+	min-width: 80%;
+	height: 80vh;
+
+	&[open] {
+		display               : grid;
+		gap                   : 1rem;
+		grid-template-columns : 2fr 3fr;
+	}
+
+	&::backdrop {
+		background-color : rgb(0 0 0 / 0.5);
+		backdrop-filter  : blur(3px);
+	}
+
+	.close {
+		position : absolute;
+		bottom   : 0;
+		left     : 0;
+		margin   : 1rem;
+		cursor   : pointer;
+
+	}
+
+	section {
+		max-height : 100%;
+		overflow-y : scroll;
+	}
 }
 
-dialog::backdrop {
-	background-color : rgb(0 0 0 / 0.5);
-	backdrop-filter  : blur(3px);
+
+
+details {
+	padding       : 1rem 1rem 0;
+	margin-bottom : 1rem;
+}
+
+summary {
+	border-radius    : 5px;
+	border           : 1px solid oklch(25% 0 0 / 0.5);
+	font-weight      : bold;
+	font-size        : 1.2rem;
+	margin           : -1rem -1rem 0;
+	padding          : 1rem;
+	background-color : oklch(96% 0 0);
+	cursor           : pointer;
+
+	// &::marker {
+	// 	content : "▶";
+	// }
+}
+
+details[open] {
+	padding : 1rem;
+}
+
+details[open] summary {
+	margin-bottom : 1rem;
+}
+
+.palette {
+	display : flex;
+	gap     : 1rem;
 }
