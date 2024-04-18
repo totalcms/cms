@@ -338,13 +338,23 @@ dialog {
 	left          : 50%;
 	transform     : translate(-50%, -50%);
 
-	min-width: 80%;
-	height: 80vh;
+	min-width  : 80%;
+	height     : 60vh;
+	max-height : 700px;
 
 	&[open] {
 		display               : grid;
 		gap                   : 1rem;
 		grid-template-columns : 2fr 3fr;
+	}
+
+	@media screen and (max-width: 45em) {
+		height : 95vh;
+		width  : 100%;
+
+		&[open] {
+			grid-template-columns : 1fr;
+		}
 	}
 
 	&::backdrop {
@@ -372,6 +382,7 @@ dialog {
 details {
 	padding       : 1rem 1rem 0;
 	margin-bottom : 1rem;
+	transition    : height 0.5s ease-in-out;
 }
 
 summary {

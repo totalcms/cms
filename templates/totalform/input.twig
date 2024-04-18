@@ -36,6 +36,7 @@
 		icon        : true,
 		required    : false,
 		disabled    : false,
+		readonly    : false,
 		min         : false,
 		minlength   : false,
 		max         : false,
@@ -57,6 +58,7 @@
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
         {% if args.disabled %}disabled{% endif %}
+        {% if args.readonly %}readonly{% endif %}
 		{% if value %}value="{{ value|e }}"{% endif %}
     >
     {{ _self.fieldend(uuid, args) }}

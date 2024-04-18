@@ -19,6 +19,7 @@
 		icon        : true,
 		required    : false,
 		disabled    : false,
+		readonly    : false,
 	} | merge(defs) | merge(args) %}
 
 	{% set value = args.value %}
@@ -44,6 +45,7 @@
         {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.disabled %}disabled{% endif %}
+        {% if args.readonly %}readonly{% endif %}
         {% if args.required %}required{% endif %}
 		{% if value %}value="{{ value|e }}"{% endif %}
     >

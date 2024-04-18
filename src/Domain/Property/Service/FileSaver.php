@@ -310,7 +310,7 @@ final class FileSaver
         return array_filter([
             'exif'   => $data,
             'tags'   => is_array($keywords) ? $keywords : [],
-            'alt'    => $data['description'] ?? '',
+            'alt'    => $data['title'] ?? $data['description'] ?? '',
             'mime'   => $exif->getMimeType(),
             'width'  => intval($exif->getWidth()),
             'height' => intval($exif->getHeight()),

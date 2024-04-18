@@ -115,23 +115,58 @@
 			<details>
 				<summary>EXIF - Info</summary>
 				{{ _self.datetime("exif-date", { label:"Date" }) }}
-				{{ _self.input("exif-title", { label:"Title" }) }}
-				{{ _self.input("exif-copyright", { label:"Copyright" }) }}
-				{{ _self.textarea("exif-description", { label:"Description", rows: 3 }) }}
+				{{ _self.input("exif-title", {
+					label       : "Title",
+					placeholder : "No Title Found",
+				}) }}
+				{{ _self.input("exif-copyright", {
+					label:"Copyright",
+					placeholder:"No Copyright Found",
+					class:"icon-copyright",
+				}) }}
+				{{ _self.textarea("exif-description", {
+					label       : "Description",
+					placeholder : "No Description Found",
+					rows        : 3,
+				}) }}
 			</details>
 
 			<details>
 				<summary>EXIF - Camera Settings</summary>
-				{{ _self.input("exif-make", { label:"Make" }) }}
-				{{ _self.input("exif-camera", { label:"Model" }) }}
-				{{ _self.input("exif-aperture", { label:"Aperture" }) }}
-				{{ _self.input("exif-iso", { label:"ISO" }) }}
-				{{ _self.input("exif-shutterSpeed", { label:"Shutter Speed" }) }}
-				{{ _self.input("exif-focalLength", { label:"Focal Length" }) }}
+				{{ _self.input("exif-make", {
+					label       : "Make",
+					class       : "icon-camera",
+					placeholder : "Camera Make Not Found",
+				}) }}
+				{{ _self.input("exif-camera", {
+					label       : "Model",
+					placeholder : "Camera Model Not Found",
+					class       : "icon-camera",
+				}) }}
+				{{ _self.input("exif-aperture", {
+					label       : "Aperture",
+					placeholder : "Aperture Not Found",
+					class       : "icon-shutter",
+				}) }}
+				{{ _self.number("exif-iso", {
+					label       : "ISO",
+					placeholder : "ISO Not Found",
+					class       : "icon-shutter",
+				}) }}
+				{{ _self.number("exif-shutterSpeed", {
+					label       : "Shutter Speed",
+					placeholder : "Shutter Speed Not Found",
+					class       : "icon-shutter",
+				}) }}
+				{{ _self.number("exif-focalLength", {
+					label       : "Focal Length",
+					placeholder : "Focal Length Not Found",
+					class       : "icon-shutter",
+				}) }}
 			</details>
 
 			<details>
-				<summary>Palette</summary>
+				<summary>Color Palette</summary>
 				<div class="palette">
 				{{ _self.color("palette-1") }}
 				{{ _self.color("palette-2") }}
@@ -143,12 +178,36 @@
 
 			<details>
 				<summary>Meta (Readonly)</summary>
-				{{ _self.number("height") }}
-				{{ _self.number("width") }}
-				{{ _self.number("size") }}
-				{{ _self.input("name") }}
-				{{ _self.input("mime") }}
-				{{ _self.datetime("uploadDate") }}
+				{{ _self.number("height", {
+					label    : "Height",
+					icon     : false,
+					readonly : true
+				}) }}
+				{{ _self.number("width", {
+					label    : "Width",
+					icon     : false,
+					readonly : true
+				}) }}
+				{{ _self.number("size", {
+					label    : "Size",
+					icon     : false,
+					readonly : true
+				}) }}
+				{{ _self.input("name", {
+					label    : "Filename",
+					icon     : false,
+					readonly : true
+				}) }}
+				{{ _self.input("mime", {
+					label    : "MIME Type",
+					icon     : false,
+					readonly : true
+				}) }}
+				{{ _self.datetime("uploadDate", {
+					label    : "Upload Date",
+					icon     : false,
+					readonly : true
+				}) }}
 			</details>
 
 		</section>

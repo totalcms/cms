@@ -15,7 +15,7 @@
         height           : 2.4375rem;
         padding          : .5rem;
         border           : 1px solid hsl(0, 0%, 79%);
-        border-radius    : 5px 0 0 5px;
+        border-radius    : 5px;
         background-color : hsl(0, 0%, 100%);
         font-family      : inherit;
         font-size        : 1rem;
@@ -26,6 +26,12 @@
         box-shadow: inset 0 1px 2px hsla(0, 0%, 4%, 0.1);
         transition: box-shadow .5s, border-color .25s ease-in-out;
     }
+
+	input, select, textarea {
+		&:has(+ .form-group-icon) {
+			border-radius: 5px 0 0 5px;
+		}
+	}
 
     textarea {
         max-width: 100%;
@@ -142,4 +148,21 @@
 //------------------------------
 .markdown-field .form-group-icon {
     background-image: var(--icon-markdown);
+}
+
+//------------------------------
+// Copyright Field
+//------------------------------
+.form-field.icon-copyright .form-group-icon {
+    background-image: var(--icon-copyright);
+}
+
+//------------------------------
+// Camera Field
+//------------------------------
+.form-field.icon-camera .form-group-icon {
+    background-image: var(--icon-camera);
+}
+.form-field.icon-shutter .form-group-icon {
+    background-image: var(--icon-shutter);
 }
