@@ -17,12 +17,14 @@ export default class RangeSlider extends NumberField {
 		this.input.addEventListener('change', this.updateRangeValue.bind(this));
 		this.input.addEventListener('drag', this.updateRangeValue.bind(this));
 		this.input.addEventListener('mousemove', this.updateRangeValue.bind(this));
+		this.input.addEventListener('touchmove', this.updateRangeValue.bind(this));
 	}
 
 	watch(callback) {
-		this.input.addEventListener('mousemove', () => {
-			if (typeof callback === 'function') callback();
-		});
+		if (typeof callback === 'function') {
+			this.input.addEventListener('mousemove', () => callback());
+			this.input.addEventListener('touchmove', () => callback());
+		}
 	}
 
 	updateRangeValue() {
