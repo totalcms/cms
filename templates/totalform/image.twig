@@ -74,6 +74,7 @@
 
 		<section>
 			<img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<div class="focal-point" style="top:50%;left:50%"></div>
 		</section>
 
 		<section>
@@ -232,6 +233,16 @@
 					siblings.forEach((sibling) => sibling.removeAttribute('open'));
 				}
 			});
+		});
+
+		const focalPointX = dialog.querySelector('[name=focalpoint-x]');
+		const focalPointY = dialog.querySelector('[name=focalpoint-y]');
+		const focalPoint  = dialog.querySelector('.focal-point');
+		focalPointX.addEventListener('mousemove', () => {
+			focalPoint.style.left = `${focalPointX.value}%`;
+		});
+		focalPointY.addEventListener('mousemove', () => {
+			focalPoint.style.top = `${focalPointY.value}%`;
 		});
 	});
 	</script>
