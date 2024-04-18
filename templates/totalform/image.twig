@@ -222,7 +222,19 @@
 		const dialog = document.querySelector('.image-edit-dialog');
 		const button = dialog.querySelector('dialog button.close');
 		button.addEventListener('click', () => dialog.close());
-		dialog.showModal();
+
+		const edit = document.querySelector('.dz-preview button.edit');
+		edit.addEventListener('click', () => {
+			dialog.showModal();
+			dialog.addEventListener('click', event => {
+				const rect = dialog.getBoundingClientRect();
+				const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height &&
+					rect.left <= event.clientX && event.clientX <= rect.left + rect.width);
+				if (!isInDialog) {
+					dialog.close();
+				}
+			});
+		});
 
 		// Close other details when one is opened
 		const details = dialog.querySelectorAll('details');
@@ -235,14 +247,43 @@
 			});
 		});
 
-		const focalPointX = dialog.querySelector('[name=focalpoint-x]');
-		const focalPointY = dialog.querySelector('[name=focalpoint-y]');
+		const focalPointX = dialog.querySelector('.form-field:has([name=focalpoint-x])');
+		const focalPointY = dialog.querySelector('.form-field:has([name=focalpoint-y])');
 		const focalPoint  = dialog.querySelector('.focal-point');
-		focalPointX.addEventListener('mousemove', () => {
-			focalPoint.style.left = `${focalPointX.value}%`;
+		const focalPointCoords = (event) => {
+			const rect = focalPoint.parentNode.getBoundingClientRect();
+			const x = (event.clientX - rect.left) / rect.width * 100;
+			const y = (event.clientY - rect.top) / rect.height * 100;
+			if (x < 0) x = 0;
+			if (x > 100) x = 100;
+			if (y < 0) y = 0;
+			if (y > 100) y = 100;
+			return { x, y };
+		};
+		focalPointX.totalfield.watch(() => {
+			focalPoint.style.left = `${focalPointX.totalfield.getValue()}%`;
 		});
-		focalPointY.addEventListener('mousemove', () => {
-			focalPoint.style.top = `${focalPointY.value}%`;
+		focalPointY.totalfield.watch(() => {
+			focalPoint.style.top = `${focalPointY.totalfield.getValue()}%`;
+		});
+		let dragging = false;
+
+		focalPoint.addEventListener('mousedown', (event) => {
+			dragging = true;
+		});
+
+		document.addEventListener('mousemove', (event) => {
+			if (dragging) {
+				const { x, y } = focalPointCoords(event);
+				focalPoint.style.left = `${x}%`;
+				focalPoint.style.top = `${y}%`;
+				focalPointX.totalfield.setValue(x.toFixed(1));
+				focalPointY.totalfield.setValue(y.toFixed(1));
+			}
+		});
+
+		document.addEventListener('mouseup', (event) => {
+			if (dragging) dragging = false;
 		});
 	});
 	</script>

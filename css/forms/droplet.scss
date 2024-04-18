@@ -391,6 +391,11 @@ dialog {
 		border-radius    : 50%;
 		opacity          : 0.8;
 		background-image : var(--icon-crosshairs);
+		cursor           : grab;
+
+		&:active {
+			cursor: grabbing;
+		}
 	}
 }
 
