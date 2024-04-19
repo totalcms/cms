@@ -85,9 +85,10 @@ export default class SVGField extends TotalField {
 			htmlUntouched        : true,
 			events: {
 				'initialized': function() {
+					// TODO: Figure out how to enable CodeView without stealing focus
 					// Go into code editor if there is no SVG set
 					if (this.html.get().length === 0) {
-						this.codeView.toggle();
+						// this.codeView.toggle();
 					}
 				}
 			}
