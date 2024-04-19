@@ -13,13 +13,13 @@
 	right            : 0;
 	width            : 100%;
 	margin           : 0;
-	padding          : calc(var(--actionbar-icon-size) / 2);
+	padding          : 1rem;
 	opacity          : 0;
 	transition       : opacity 500ms ease-in-out;
 	z-index          : 1;
 
 	display : flex;
-	gap     : calc(var(--actionbar-icon-size) / 2);
+	gap     : 1rem;
 
     button {
 		appearance       : none;

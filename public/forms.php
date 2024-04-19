@@ -67,7 +67,9 @@ $totalcms->startBuffer(); // Start output buffering again
 
 		{{ form.imageForm('myimage') }}
 
-		{{ form.start("custom", { method:"post" }) }}
+		{{ form.imageForm('newimage') }}
+
+		<!-- {{ form.start("custom", { method:"post" }) }}
 
 
 			{{ form.id('id', { autogen:"${text}" }) }}
@@ -103,7 +105,7 @@ $totalcms->startBuffer(); // Start output buffering again
 			{{ form.styledtext('styledtext') }}
 			{{ form.svg('svg') }}
 
-		{{ form.end() }}
+		{{ form.end() }} -->
 
 	</div>
 

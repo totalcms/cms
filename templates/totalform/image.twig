@@ -31,8 +31,6 @@
 		icon  : false,
 	}) %}
 
-	{% set imageData  = attribute(object, property) %}
-
     {# Migrate these to use args.options to be added to fieldstart
 		{
 			"orientation":"stake_orientation",
@@ -42,21 +40,18 @@
 			"image":true
 		}
 	#}
-
-	{{ print_r(imageData) | raw }}
+	{% set imageData  = attribute(object, property) %}
 
     {{ _self.fieldstart("image", uuid, args) }}
 
 		<div class="total-preview">
-			<div class="dz-overlay dz-clickable">
-				<i class="fa fa-cloud-upload fa-4x"></i>
-			</div>
+			<div class="dz-overlay dz-clickable"></div>
 			{{ _self.imagePreview(object.id, imageData) }}
 		</div>
 
 		{{ _self.imageDialog(object.id, imageData) }}
 
-		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, imageData) }}</template>
+		{# <template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, imageData) }}</template> #}
 
     {{ _self.fieldend(uuid, args) }}
 
@@ -71,7 +66,7 @@
 			<button class="move"     title="Reorder Image"></button>
 			<button class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" onerror="this.parentNode.style.display='none'" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
@@ -85,7 +80,7 @@
 
 	<dialog class="image-edit-dialog">
 
-		<section>
+		<section class="image-preview">
 			<img src="{{ totalcms.image(id,{w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 			<div class="focal-point" style="top:{{ imageData.focalpoint.y }}%;left:{{ imageData.focalpoint.x }}%"></div>
 		</section>

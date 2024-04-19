@@ -138,8 +138,12 @@ final class TotalCMSTwigAdapter
     }
 
     // Get an text property from an object
-    public function image(string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
+    public function image(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
     {
+        if (empty($id)) {
+            return '';
+        }
+
         $type = 'jpg';
         if (isset($options['type'])) {
             $type = $options['type'];
