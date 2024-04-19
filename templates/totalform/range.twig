@@ -2,31 +2,37 @@
   Range Macro
 --------------------------------#}
 {% macro rangeslider(property, args = {}) %}
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args = {
-		class       : "",
-		value       : "",
-		label       : "",
-		placeholder : "",
-		help        : false,
-		required    : false,
-		min         : false,
-		max         : false,
-		step        : false,
-		icon		: false,
-	} | merge(defs) | merge(args) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "range",
+		type  : "range",
+		icon  : false,
+	}) %}
 
     {{ _self.fieldstart("range", uuid, args) }}
     <input
         id="field-{{ uuid }}"
         type="range"
         name="{{ property }}"
-		value="{{ object ? attribute(object, property) : args.value|e }}"
+		value="{{ value }}"
         {% if args.min %}min="{{ args.min }}"{% endif %}
         {% if args.max %}max="{{ args.max }}"{% endif %}
         {% if args.step %}step="{{ args.step }}"{% endif %}
@@ -34,6 +40,6 @@
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
     >
-	<div id="value-{{ uuid }}" class="range-value">{{ args.value }}</div>
+	<div id="value-{{ uuid }}" class="range-value">{{ value }}</div>
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}

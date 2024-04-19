@@ -1,27 +1,33 @@
 {% macro multiselect(property, options = [], args = {}) %}
+	{% set args =  {
+		field : "multiselect",
+		type  : "select",
+	} | merge(args) %}
+
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args = {
-		field       : "multiselect",
-		class       : "",
-		label       : "",
-		placeholder : "",
-		value       : [],
-		help        : false,
-		icon        : true,
-		required    : false,
-		rows        : 10,
-	} | merge(defs) | merge(args) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% set values = [] %}
+
+	{% if args.value %}
+		{% set values = args.value %}
+	{% elseif object %}
+		{% set values = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set values = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
 
 	{# Get the options form the form definitions if none are provided #}
 	{% if options is empty and defs.options is not empty %}
 		{% set options = props.options %}
 	{% endif %}
-
 
     {{ _self.fieldstart(args.field, uuid, args) }}
     <select multiple
@@ -29,18 +35,25 @@
         name="{{ property }}"
         size="{{ args.rows }}"
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
-        {% if args.required %}required{% endif %}
-    >
-		{# Get the default selected value #}
-		{% set value = object ? attribute(object, property) : args.value %}
+        {% if args.required %}required{% endif %}>
 
 		{% if args.placeholder %}
 		<option value="" disabled>{{ args.placeholder }}</option>
 		{% endif %}
 
-        {% for option in options %}
-        <option value="{{ option.value|e }}" {% if option.value in values %}selected{% endif %}>{{ option.label|e }}</option>
+		{% set optionValues = options|column('value') %}
+		{% for value in values %}
+			{% if value not in optionValues %}
+			<option value="{{ value|e }}" selected>{{ value|e }}</option>
+			{% endif %}
         {% endfor %}
+
+        {% for option in options %}
+			{% if option.value not in values %}
+			<option value="{{ option.value|e }}" {% if option.value in values %}selected{% endif %}>{{ option.label|e }}</option>
+			{% endif %}
+        {% endfor %}
+
     </select>
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}

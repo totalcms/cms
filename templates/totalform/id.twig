@@ -2,12 +2,6 @@
   ID Macro
 --------------------------------#}
 {% macro id(property = "id", args = {}) %}
-	{# Defaults #}
-	{% set args = {
-		options  : {},
-		autogen  : false,
-	} | merge(args) %}
-
 	{# Override args with static values #}
 	{% set args =  args | merge({
 		field    : "id",
@@ -20,7 +14,6 @@
 		{% set options = args.options|merge({'autogen': args.autogen}) %}
 		{% set args = args|merge({'options': options}) %}
 	{% endif %}
-
 
     {{ _self.input(property, args) }}
 {% endmacro %}

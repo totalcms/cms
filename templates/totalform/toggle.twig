@@ -2,18 +2,30 @@
   Toggle Macro
 --------------------------------#}
 {% macro toggle(property, args = {}) %}
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args = {
-		class       : "",
-		label       : "",
-		help        : false,
-		required    : false,
-	} | merge(defs) | merge(args) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "toggle",
+		type  : "checkbox",
+		icon  : false,
+	}) %}
 
     {{ _self.fieldstart("toggle", uuid, args) }}
         <div class="switch">
@@ -23,6 +35,7 @@
                 type="checkbox"
                 {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
                 {% if args.required %}required{% endif %}
+				{% if value %}checked{% endif %}
             >
             <label for="field-{{ uuid }}" aria-hidden="true"></label>
         </div>

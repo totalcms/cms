@@ -2,35 +2,36 @@
   Date Macro
 --------------------------------#}
 {% macro date(property, args = {}) %}
+	{% set args = {
+		field : "date",
+		type  : "date",
+	} | merge(args) %}
+
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args  = {
-		field       : "date",
-		type        : "date",
-		class       : "",
-		value       : "",
-		label       : "",
-		placeholder : "",
-		help        : false,
-		icon        : true,
-		required    : false,
-		disabled    : false,
-		readonly    : false,
-	} | merge(defs) | merge(args) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
 
-	{% set value = args.value %}
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
 
-	{# get the date value from the object #}
-	{% if object %}
-		{% set value = attribute(object, property)|date("Y-m-d") %}
+	{% if value %}
 		{% if args.type == "datetime-local" %}
-			{% set value = attribute(object, property)|date("Y-m-d\\TH:i") %}
+			{% set value = value|date("Y-m-d\\TH:i") %}
+		{% else %}
+			{% set value = value|date("Y-m-d") %}
 		{% endif %}
 	{% endif %}
+	{# -- End Boilerplate -- #}
 
 	{# if required and value not set, set to now #}
 	{% if args.required and not value %}

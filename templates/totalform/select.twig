@@ -14,22 +14,29 @@
     rows        = number of rows for multi-select
 #}
 {% macro select(property, options = [], args = {}) %}
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args = {
-		field       : "select",
-		class       : "",
-		value       : "",
-		label       : "",
-		placeholder : "",
-		help        : false,
-		icon        : true,
-		required    : false,
-	} | merge(defs) | merge(args) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "select",
+		type  : "select",
+	}) %}
 
 	{% if options is empty and defs.options is not empty %}
 		{% set options = defs.options %}
@@ -39,16 +46,9 @@
     <select
         id="field-{{ uuid }}"
         name="{{ property }}"
-		{% if object %}
-			value="{{ attribute(object, property)|e }}"
-		{% else %}
-        	{% if args.value %}value="{{ args.value|e }}"{% endif %}
-		{% endif %}
+		{% if value %}value="{{ value|e }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
-        {% if args.multiple %}multiple size="{{ args.rows }}"{% endif %}
-        {% if args.required %}required{% endif %}
-    >
-		{% set value = object ? attribute(object, property) : args.value %}
+        {% if args.required %}required{% endif %}>
 
 		{% if args.placeholder %}
 		<option value="" disabled {% if value is empty %}selected{% endif %}>{{ args.placeholder }}</option>

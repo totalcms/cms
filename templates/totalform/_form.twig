@@ -30,6 +30,9 @@
 		min         = minimum value
 		max         = maximum value
 		step        = step value
+		autogen     = template string to autogenerate a value (in ID)
+		options     = options array added to form-field data-options attribute
+		minlength   = minimum length of the field
 	#}
 	{{ totalcms.storeData("fieldDefaults", {
 		field       : "text",
@@ -38,9 +41,12 @@
 		value       : "",
 		label       : "",
 		placeholder : "",
+		minlength   : false,
+		icon        : true,
+		rows        : false,
+		autogen     : false,
 		options     : false,
 		help        : false,
-		icon        : true,
 		required    : false,
 		disabled    : false,
 		readonly    : false,
@@ -48,6 +54,7 @@
 		minlength   : false,
 		max         : false,
 		step        : false,
+		options     : {},
 	}) }}
 
 	{# Store the collection for this form so that other macros and get it #}

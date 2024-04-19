@@ -4,7 +4,7 @@
 {% macro styledtext(property, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		field  : "styledtext",
+		field : "styledtext",
 	}) %}
     {{ _self.textarea(property, args) }}
 {% endmacro %}

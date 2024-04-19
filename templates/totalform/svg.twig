@@ -4,7 +4,7 @@
 {% macro svg(property, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		field  : "svg",
+		field : "svg",
 	}) %}
     {{ _self.textarea(property, args) }}
 {% endmacro %}

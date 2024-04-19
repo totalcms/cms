@@ -14,19 +14,24 @@
 {# Image Field                     #}
 {#--------------------------------#}
 {% macro image(property, args = {}) %}
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
-	{% set imageData  = attribute(object, property) %}
 
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args = {
-		class       : "",
-		label       : "",
-		help        : false,
-		required    : false,
-	} | merge(defs) | merge(args) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "image",
+		type  : "image",
+		icon  : false,
+	}) %}
+
+	{% set imageData  = attribute(object, property) %}
 
     {# Migrate these to use args.options to be added to fieldstart
 		{
@@ -129,7 +134,10 @@
 
 			<details>
 				<summary>EXIF - Info</summary>
-				{{ _self.datetime("exif-date", { label:"Date" }) }}
+				{{ _self.datetime("exif-date", {
+					label : "Date",
+					value : imageData.exif.date,
+				}) }}
 				{{ _self.input("exif-title", {
 					label       : "Title",
 					placeholder : "No Title Found",
