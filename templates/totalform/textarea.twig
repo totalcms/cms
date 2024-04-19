@@ -2,6 +2,12 @@
     Textarea Field Macro
 #}
 {% macro textarea(property, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  {
+		field : "text",
+		type  : "textarea",
+	} | merge(args) %}
+
 	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
@@ -19,12 +25,6 @@
 		{% set value = args.default %}
 	{% endif %}
 	{# -- End Boilerplate -- #}
-
-	{# Override args with static values #}
-	{% set args =  args | merge({
-		field : "text",
-		type  : "textarea",
-	}) %}
 
     {{ _self.fieldstart(args.field, uuid, args) }}
     <textarea
