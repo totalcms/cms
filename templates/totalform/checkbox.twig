@@ -2,26 +2,30 @@
   Checkbox Macro
 --------------------------------#}
 {% macro checkbox(property, args = {}) %}
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
-	{% if args.value is defined %}
-		{% set checked = args.value %}
-	{% elseif object %}
-		{% set checked = attribute(object, property) %}
-	{% else %}
-		{% set checked = false %}
-	{% endif %}
-
 	{# args priority: args, formDefinitions, defaults #}
-	{% set defs = totalcms.formDefinitions(property, collection, object.id) %}
-	{% set args = {
-		class    : "",
-		label    : "",
-		help     : false,
-		required : false,
-	} | merge(defs) | merge(args) %}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "checkbox",
+		type  : "checkbox",
+		icon  : false,
+	}) %}
 
     {{ _self.fieldstart("checkbox", uuid, args) }}
         <input
@@ -30,7 +34,7 @@
             type="checkbox"
             {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
             {% if args.required %}required{% endif %}
-            {% if checked %}checked{% endif %}
+            {% if value %}checked{% endif %}
         >
         <label for="field-{{ uuid }}">{{ args.label }}</label>
     {{ _self.fieldend(uuid, args) }}

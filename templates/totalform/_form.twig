@@ -15,11 +15,46 @@
 		id     : '',
 	} | merge(args) %}
 
+	{#
+		Default Field Arguments
+		field       = type of the field data from Total CMS: text, number, date, etc
+		type        = type of the input
+		class       = classes added to the field
+		value       = value of the field
+		label       = label of the field
+		default     = default value of the field if object is not set or value is empty
+		placeholder = placeholder of the field
+		help        = help text of the field
+		icon        = show icon
+		required    = required field
+		min         = minimum value
+		max         = maximum value
+		step        = step value
+	#}
+	{{ totalcms.storeData("fieldDefaults", {
+		field       : "text",
+		type        : "text",
+		class       : "",
+		value       : "",
+		label       : "",
+		placeholder : "",
+		options     : false,
+		help        : false,
+		icon        : true,
+		required    : false,
+		disabled    : false,
+		readonly    : false,
+		min         : false,
+		minlength   : false,
+		max         : false,
+		step        : false,
+	}) }}
+
 	{# Store the collection for this form so that other macros and get it #}
 	{{ totalcms.storeData("collection", collection) }}
 
-	{%set id = args.id|default(getParams.id) %}
-	{%set method = args.method %}
+	{% set id = args.id|default(getParams.id) %}
+	{% set method = args.method %}
 
 	{% if id %}
 		{# force method to be PUT you cannot use POST on an existing object #}

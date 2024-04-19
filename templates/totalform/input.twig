@@ -1,22 +1,6 @@
 {#--------------------------------
   Input Macros
 --------------------------------#}
-{#
-    Input Field Macro
-    property        = property of the field
-    field        = type of the field data from Total CMS: text, number, date, etc
-    type       = type of the input
-    class       = classes added to the field
-    value       = value of the field
-    label       = label of the field
-    placeholder = placeholder of the field
-    help        = help text of the field
-    icon        = show icon
-    required    = required field
-    min         = minimum value
-    max         = maximum value
-    step        = step value
-#}
 {% macro input(property, args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
@@ -24,27 +8,15 @@
 
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args  = {
-		field       : "text",
-		type        : "text",
-		class       : "",
-		value       : "",
-		label       : "",
-		placeholder : "",
-		options     : false,
-		help        : false,
-		icon        : true,
-		required    : false,
-		disabled    : false,
-		readonly    : false,
-		min         : false,
-		minlength   : false,
-		max         : false,
-		step        : false,
-	} | merge(defs) | merge(args) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
 
-	{# {% set value = object ? attribute(object, property) : args.value %} #}
-	{% set value = args.value %}
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
 
     {{ _self.fieldstart(args.field, uuid, args) }}
     <input

@@ -2,28 +2,31 @@
   Color Macro
 --------------------------------#}
 {% macro color(property, args = {}) %}
+	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
-	{# Default Value to passed argument #}
-	{% if args.value is defined %}
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
 		{% set value = args.value %}
 	{% elseif object %}
 		{% set color = attribute(object, property) %}
 		{% set value = color.hex %}
+	{% elseif args.default %}
+		{% set value = args.default %}
 	{% endif %}
+	{# -- End Boilerplate -- #}
 
-	{# args priority: args, formDefinitions, defaults #}
-	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args  = {
-		class       : "",
-		value       : "",
-		label       : "",
-		placeholder : "",
-		help        : false,
-		icon        : true,
-	} | merge(defs) | merge(args) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "color",
+		type  : "color",
+		icon  : false,
+	}) %}
 
     {{ _self.fieldstart("color", uuid, args) }}
     <input
