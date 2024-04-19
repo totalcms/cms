@@ -43,7 +43,8 @@
 		step        : false,
 	} | merge(defs) | merge(args) %}
 
-	{% set value = object ? attribute(object, property) : args.value %}
+	{# {% set value = object ? attribute(object, property) : args.value %} #}
+	{% set value = args.value %}
 
     {{ _self.fieldstart(args.field, uuid, args) }}
     <input

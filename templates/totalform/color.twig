@@ -6,6 +6,14 @@
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
+	{# Default Value to passed argument #}
+	{% if args.value is defined %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set color = attribute(object, property) %}
+		{% set value = color.hex %}
+	{% endif %}
+
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
 	{% set args  = {
@@ -16,12 +24,6 @@
 		help        : false,
 		icon        : true,
 	} | merge(defs) | merge(args) %}
-
-	{% set value = args.value %}
-	{% if object %}
-		{% set color = attribute(object, property) %}
-		{% set value = color.hex %}
-	{% endif %}
 
     {{ _self.fieldstart("color", uuid, args) }}
     <input

@@ -1,3 +1,18 @@
+{#--------------------------------#}
+{# Image Form                     #}
+{#--------------------------------#}
+{% macro imageForm(id, args = {}, collection = "image") %}
+	{{ _self.start(collection, { id:id }) }}
+
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.image('image', args) }}
+
+	{{ _self.end() }}
+{% endmacro %}
+
+{#--------------------------------#}
+{# Image Field                     #}
+{#--------------------------------#}
 {% macro image(property, args = {}) %}
     {% set uuid       = uniqid() %}
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
@@ -27,30 +42,22 @@
 
     {{ _self.fieldstart("image", uuid, args) }}
 
-		<input type="hidden"
-			id="field-{{ uuid }}"
-			name="{{ property }}"
-			value="JSON String"
-			data-template="template-{{ uuid }}"
-			{% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
-			{% if args.required %}required{% endif %} />
-
 		<div class="total-preview">
 			<div class="dz-overlay dz-clickable">
 				<i class="fa fa-cloud-upload fa-4x"></i>
 			</div>
-			{{ _self.imagePreview("") }}
+			{{ _self.imagePreview(object.id, imageData) }}
 		</div>
 
-		{{ _self.imageDialog(imageData) }}
+		{{ _self.imageDialog(object.id, imageData) }}
 
-		<template id="template-{{ uuid }}">{{ _self.imagePreview("") }}</template>
+		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, imageData) }}</template>
 
     {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 
-{% macro imagePreview(image) %}
+{% macro imagePreview(id, imageData) %}
 	<div class="dz-preview dz-file-preview">
 		<div class="actionbar">
 			<button class="edit"     title="Edit Image Info"></button>
@@ -59,7 +66,7 @@
 			<button class="move"     title="Reorder Image"></button>
 			<button class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
@@ -69,35 +76,40 @@
 	</div>
 {% endmacro %}
 
-{% macro imageDialog(image) %}
+{% macro imageDialog(id, imageData) %}
+
 	<dialog class="image-edit-dialog">
 
 		<section>
-			<img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
-			<div class="focal-point" style="top:50%;left:50%"></div>
+			<img src="{{ totalcms.image(id,{w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<div class="focal-point" style="top:{{ imageData.focalpoint.y }}%;left:{{ imageData.focalpoint.x }}%"></div>
 		</section>
 
 		<section>
 			<details open>
 				<summary>Info</summary>
 				{{ _self.checkbox("featured", {
-					label       : "Featured",
-					help        : "Mark this image as featured.",
+					label : "Featured",
+					help  : "Mark this image as featured.",
+					value : imageData.featured,
 				}) }}
 				{{ _self.input("alt", {
 					label       : "Alt Text",
 					help        : "Alt text is used by screen readers and search engines to describe the image.",
 					placeholder : "Enter Alt Text",
+					value       : imageData.alt,
 				}) }}
 				{{ _self.url("link", {
 					label       : "Link",
 					help        : "Enter a URL to link the image to.",
 					placeholder : "https://example.com",
+					value       : imageData.link,
 				}) }}
 				{{ _self.list("tags", [], {
 					label       : "Tags",
 					help        : "Add tags to help organize your images.",
 					placeholder : "Add Tags",
+					value       : imageData.tags,
 				}) }}
 			</details>
 
@@ -106,10 +118,12 @@
 				{{ _self.rangeslider("focalpoint-x", {
 					label       : "Focal Point X",
 					help        : "Set the horizontal focal point coordinate of the image.",
+					value       : imageData.focalpoint.x,
 				}) }}
 				{{ _self.rangeslider("focalpoint-y", {
 					label       : "Focal Point Y",
 					help        : "Set the vertical focal point coordinate of the image.",
+					value       : imageData.focalpoint.y,
 				}) }}
 			</details>
 
@@ -119,15 +133,18 @@
 				{{ _self.input("exif-title", {
 					label       : "Title",
 					placeholder : "No Title Found",
+					value       : imageData.exif.title,
 				}) }}
 				{{ _self.input("exif-copyright", {
-					label:"Copyright",
-					placeholder:"No Copyright Found",
-					class:"icon-copyright",
+					label       : "Copyright",
+					placeholder : "No Copyright Found",
+					class       : "icon-copyright",
+					value       : imageData.exif.copyright,
 				}) }}
 				{{ _self.textarea("exif-description", {
 					label       : "Description",
 					placeholder : "No Description Found",
+					value       : imageData.exif.description,
 					rows        : 3,
 				}) }}
 			</details>
@@ -138,42 +155,48 @@
 					label       : "Make",
 					class       : "icon-camera",
 					placeholder : "Camera Make Not Found",
+					value       : imageData.exif.make,
 				}) }}
 				{{ _self.input("exif-camera", {
 					label       : "Model",
 					placeholder : "Camera Model Not Found",
 					class       : "icon-camera",
+					value       : imageData.exif.camera,
 				}) }}
 				{{ _self.input("exif-aperture", {
 					label       : "Aperture",
 					placeholder : "Aperture Not Found",
 					class       : "icon-shutter",
+					value       : imageData.exif.aperture,
 				}) }}
 				{{ _self.number("exif-iso", {
 					label       : "ISO",
 					placeholder : "ISO Not Found",
 					class       : "icon-shutter",
+					value       : imageData.exif.iso,
 				}) }}
 				{{ _self.number("exif-shutterSpeed", {
 					label       : "Shutter Speed",
 					placeholder : "Shutter Speed Not Found",
 					class       : "icon-shutter",
+					value       : imageData.exif.shutterSpeed,
 				}) }}
 				{{ _self.number("exif-focalLength", {
 					label       : "Focal Length",
 					placeholder : "Focal Length Not Found",
 					class       : "icon-shutter",
+					value       : imageData.exif.focalLength,
 				}) }}
 			</details>
 
 			<details>
 				<summary>Color Palette</summary>
 				<div class="palette">
-				{{ _self.color("palette-1") }}
-				{{ _self.color("palette-2") }}
-				{{ _self.color("palette-3") }}
-				{{ _self.color("palette-4") }}
-				{{ _self.color("palette-5") }}
+				{{ _self.color("palette-1", { value : imageData.palette[0] }) }}
+				{{ _self.color("palette-2", { value : imageData.palette[1] }) }}
+				{{ _self.color("palette-3", { value : imageData.palette[2] }) }}
+				{{ _self.color("palette-4", { value : imageData.palette[3] }) }}
+				{{ _self.color("palette-5", { value : imageData.palette[4] }) }}
 				</div>
 			</details>
 
@@ -182,32 +205,38 @@
 				{{ _self.number("height", {
 					label    : "Height",
 					icon     : false,
-					readonly : true
+					readonly : true,
+					value    : imageData.height,
 				}) }}
 				{{ _self.number("width", {
 					label    : "Width",
 					icon     : false,
-					readonly : true
+					readonly : true,
+					value    : imageData.width,
 				}) }}
 				{{ _self.number("size", {
 					label    : "Size",
 					icon     : false,
-					readonly : true
+					readonly : true,
+					value    : imageData.size,
 				}) }}
 				{{ _self.input("name", {
 					label    : "Filename",
 					icon     : false,
-					readonly : true
+					readonly : true,
+					value    : imageData.name,
 				}) }}
 				{{ _self.input("mime", {
 					label    : "MIME Type",
 					icon     : false,
-					readonly : true
+					readonly : true,
+					value    : imageData.mime,
 				}) }}
 				{{ _self.datetime("uploadDate", {
 					label    : "Upload Date",
 					icon     : false,
-					readonly : true
+					readonly : true,
+					value    : imageData.uploadDate,
 				}) }}
 			</details>
 

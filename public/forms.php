@@ -65,9 +65,10 @@ $totalcms->startBuffer(); // Start output buffering again
 
 		{% import "totalform.twig" as form %}
 
+		{{ form.imageForm('myimage') }}
+
 		{{ form.start("custom", { method:"post" }) }}
 
-			{{ form.image('image') }}
 
 			<!-- {{ form.id('id', { autogen:"${text}" }) }}
 			{{ form.text('text') }}

@@ -6,6 +6,14 @@
     {% set collection = args.collection|default(totalcms.getData("collection")) %}
     {% set object     = args.object|default(totalcms.getData("object")) %}
 
+	{% if args.value is defined %}
+		{% set checked = args.value %}
+	{% elseif object %}
+		{% set checked = attribute(object, property) %}
+	{% else %}
+		{% set checked = false %}
+	{% endif %}
+
 	{# args priority: args, formDefinitions, defaults #}
 	{% set defs = totalcms.formDefinitions(property, collection, object.id) %}
 	{% set args = {
@@ -13,10 +21,7 @@
 		label    : "",
 		help     : false,
 		required : false,
-		value    : false,
 	} | merge(defs) | merge(args) %}
-
-	{% set checked = object ? attribute(object, property) : args.value %}
 
     {{ _self.fieldstart("checkbox", uuid, args) }}
         <input
