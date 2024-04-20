@@ -62,6 +62,10 @@ export default class TotalCMS {
         sessionStorage.clear();
     }
 
+	apiUrl(api) {
+		return this.options.uri+api;
+	}
+
     // AJAX Post to the Total CMS API
     postAPI(api, data, method = "POST") {
         // If the POST API sets new data, we should delete form storage it if it exists
@@ -97,6 +101,7 @@ export default class TotalCMS {
         }
 		return this.fetchAPI(api);
     }
+
     // GET from the Total CMS API
     fetchAPI(api, method = "GET") {
 		let headers = {};
