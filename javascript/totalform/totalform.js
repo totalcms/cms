@@ -43,13 +43,13 @@ export default class TotalForm {
 		this.processingLimit = 1500;
 		this.states          = ["success","error","processing","clear"];
 
+		this.fields   = this.processFields();
+        this.droplets = this.fields.filter(field => field.isDroplet());
+
 		// If an ID is set, we are in edit mode
 		if (this.id) {
 			this.editMode();
 		}
-
-		this.fields   = this.processFields();
-        this.droplets = this.fields.filter(field => field.isDroplet());
 
         this.saveListener();
         this.registerButtons();
@@ -345,8 +345,12 @@ export default class TotalForm {
     }
 
     editMode() {
-		if (this.isEditMode()) return;
-		if ("POST" !== this.method.toUpperCase()) return;
+		if (this.isEditMode()) {
+			return;
+		}
+		// if ("POST" !== this.method.toUpperCase()) {
+		// 	return;
+		// }
 
 		// Set the method to PUT for editing existing objects
 		this.method = "PUT";
@@ -364,8 +368,8 @@ export default class TotalForm {
 		// Set the form to edit mode
 		this.form.classList.add("edit-form");
 
-		// TODO: add the below to the droplet field classes
-		// this.droplets.forEach(droplet => droplet.autoProcessQueue());
+		// Update the droplets to autoupload
+		this.droplets.forEach(droplet => droplet.autoProcessQueue());
     }
 
     saving() {
@@ -430,9 +434,9 @@ export default class TotalForm {
 
     // The droplet URL requires the ID but that can change
     // This ensures that the URL is updated when it changes
-    updateDropletUri() {
-		this.droplets.forEach(droplet => droplet.updateUri());
-    }
+    // updateDropletUri() {
+	// 	this.droplets.forEach(droplet => droplet.updateUri());
+    // }
 
     // We only want to process the droplet queue after the inital
     // post request to create the object has been saved

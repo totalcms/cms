@@ -82,12 +82,11 @@ export default class Droplet extends TotalField {
     }
 
     autoProcessQueue() {
-        if (this.dropzone) {
-            this.dropzone.options.autoProcessQueue = true;
-        }
-        else {
-            console.warn("Unable to enable autoProcessQueue");
-        }
+        if (!this.dropzone) {
+			console.warn("Unable to enable autoProcessQueue");
+			return;
+		}
+		this.dropzone.options.autoProcessQueue = true;
     }
 
     // updateUri() {
@@ -108,7 +107,7 @@ export default class Droplet extends TotalField {
             headers           : this.options.requestHeaders,
             parallelUploads   : 1,
             paramName         : this.options.paramName,
-            autoProcessQueue  : this.form.form.classList.contains("edit-form"),
+            autoProcessQueue  : this.form.isEditMode(),
             thumbnailWidth    : null,
             thumbnailHeight   : null,
             previewsContainer : this.options.previewsContainer,
