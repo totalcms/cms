@@ -1,5 +1,6 @@
 import TotalField from "./totalfield";
-// import Dropzone from "dropzone";
+import Dropzone from "@deltablot/dropzone";
+globalThis.Dropzone = Dropzone;
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -36,41 +37,48 @@ export default class Droplet extends TotalField {
         this.setupDropzone();
     }
 
+
     getValue() {
-        return this.input.value.length > 0 ? JSON.parse(this.input.value) : {};
+		const fields = this.container.getElementsByClassName("form-field");
+		const imageData = {};
+		for (const field of fields) {
+			let key = field.totalfield.name;
+			const value = field.totalfield.getValue();
+
+			if (key.startsWith("exif-")) {
+				key = key.replace("exif-","");
+				if (!imageData["exif"]) {
+					imageData["exif"] = {};
+				}
+				imageData["exif"][key] = value;
+
+			} else if (key.startsWith("focalpoint-")) {
+				key = key.replace("focalpoint-","");
+				if (!imageData["focalpoint"]) {
+					imageData["focalpoint"] = {};
+				}
+				imageData["focalpoint"][key] = value;
+
+			} else if (key.startsWith("palette-")) {
+				if (!imageData["palette"]) {
+					imageData["palette"] = [];
+				}
+				imageData["palette"].push(value);
+
+			} else {
+				imageData[key] = value;
+			}
+		}
+        return imageData;
     }
 
     setValue(image) {
-        if (image === null || !image.filename) {
-            console.warn("Image object not valid",image);
-            return;
-        }
-
-        // Set the value to the image object
-        this.input.value = JSON.stringify(image);
-
-        // Create Image Works API for the preview image
-        const imageWorks = new ImageWorks({
-            collection : this.form.collection,
-            id         : this.form.id,
-            property   : this.name,
-            file       : image.filename,
-            date       : image.uploadDate
-        });
-        // Get all of the data needed to build the imageWorks query
-        const rules      = JSON.parse(this.container.dataset.imageworks);
-        const imageQuery = imageWorks.buildQuery(rules);
-        const preview    = this.container.querySelectorAll(".total-preview").item(0);
-
-        this.api.fetchCachedAPI("/templates/admin/image").then(json => {
-            this.api.processTemplate({"image":imageQuery}, json.template, preview);
-        });
-
+		// TODO: what should this do?
     }
 
     apiUrl() {
-        const components = [this.options.uri, "collections", this.form.collection, this.form.id, this.name];
-        return components.join("/");
+		const api = `/collections/${this.form.collection}/${this.form.id}/${this.name}`;
+		return this.api.apiUrl(api);
     }
 
     autoProcessQueue() {
@@ -82,23 +90,20 @@ export default class Droplet extends TotalField {
         }
     }
 
-    updateUri() {
-        if (this.dropzone) {
-            this.dropzone.options.url = this.apiUrl();
-        }
-        else {
-            console.warn("Unable to update dropzone URI");
-        }
-
-    }
+    // updateUri() {
+    //     if (this.dropzone) {
+    //         this.dropzone.options.url = this.apiUrl();
+    //     }
+    //     else {
+    //         console.warn("Unable to update dropzone URI");
+    //     }
+    // }
 
     newDropzone() {
         const disableFunction = function(){};
 
-		const api = `/collections/${this.form.collection}/${this.form.id}/${this.name}`;
-
         return new Dropzone(this.container, {
-            url               : this.api.apiUrl(api),
+            url               : this.apiUrl(),
             method            : "post",
             headers           : this.options.requestHeaders,
             parallelUploads   : 1,
@@ -109,8 +114,7 @@ export default class Droplet extends TotalField {
             previewsContainer : this.options.previewsContainer,
             previewTemplate   : this.previewTemplate,
             clickable         : [
-                this.container.getElementsByClassName("dz-clickable").item(0),
-                // this.container.getElementsByTagName("img").item(0)
+                this.container.querySelector(".dz-clickable"),
             ],
             forceFallback : false,
             addedfile     : disableFunction,
@@ -176,7 +180,7 @@ export default class Droplet extends TotalField {
     // Called just before the file is sent
     event_sending(file,xhr,formData) {
         // Add additional form data
-        formData.append("filesize", file.size);
+        // formData.append("filesize", file.size);
         // formData.append("alt", file.size);
         // formData.append("link", file.size);
         // formData.append("colors", file.size);
@@ -207,8 +211,6 @@ export default class Droplet extends TotalField {
         for (const thumb of thumbs) {
             thumb.alt = file.name;
             thumb.src = data;
-            // thumb.style.width="auto";
-            // thumb.style.height="auto";
         }
 
         // Process file rules

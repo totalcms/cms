@@ -12,8 +12,8 @@ import ListField from './list';
 import RangeSlider from './range';
 import StyledTextField from './styledtext';
 import SVGField from './svg';
+import Droplet from './droplet';
 
-// import Droplet from './droplet';
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
 // import MarkdownField from './markdown';
@@ -177,9 +177,9 @@ export default class TotalForm {
 			// case "radio":
 			// 	return new RadioField(field, options);
 
-            // case "image":
-            // case "file":
-            //     return this.initDroplet(field,options);
+            case "image":
+            case "file":
+                return this.initDroplet(field,options);
 
             // case "gallery":
             // case "depot":
@@ -200,14 +200,14 @@ export default class TotalForm {
     initArrayDroplet(field, options) {
         options.type = field.dataset.type;
         const droplet = new ArrayDroplet(field, options);
-        droplet.updateUri();
+        // droplet.updateUri();
         return droplet;
     }
 
     initDroplet(field, options) {
         options.type = field.dataset.type;
         const droplet = new Droplet(field, options);
-        droplet.updateUri();
+        // droplet.updateUri();
         return droplet;
     }
 

@@ -171,19 +171,18 @@ form.totalform {
 				box-shadow   : none !important;
 			}
 		}
-	}
 
-	&.dz-drag-hover {
-		fieldset.image-box {
+		&.dz-drag-hover {
 			.dz-overlay {
 				opacity: 1.0;
 			}
 
-			img {
+			.total-preview {
 				opacity: 0.5;
 			}
 		}
 	}
+
 }
 
 form.totalform {

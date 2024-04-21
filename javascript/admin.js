@@ -1,9 +1,11 @@
 import TotalForm from './totalform/totalform';
 
-const forms = Array.from(document.querySelectorAll("form.totalform"));
-for (const form of forms) {
-	const totalform = new TotalForm(form);
-}
+document.addEventListener("DOMContentLoaded", event => {
+	const forms = Array.from(document.querySelectorAll("form.totalform"));
+	for (const form of forms) {
+		const totalform = new TotalForm(form);
+	}
+});
 
 // TODO: Need to make sure fields know when they are changed
 // $(".hipwig textarea").on("froalaEditor.save.before",function(e,editor) {
