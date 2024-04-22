@@ -6,7 +6,8 @@ export default class Details  {
     constructor(details, options = {}) {
         // Define option defaults
         const defaults = {
-			soloMode : true,
+			soloMode  : true,
+			openFirst : true,
         };
         this.options = Object.assign({}, defaults, options);
 
@@ -14,6 +15,9 @@ export default class Details  {
 
 		if (this.options.soloMode) {
 			this.soloMode();
+		}
+		if (this.options.openFirst) {
+			this.details[0].setAttribute('open', '');
 		}
     }
 

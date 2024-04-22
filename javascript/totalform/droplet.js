@@ -135,6 +135,7 @@ export default class Droplet {
         file.previewTemplate = file.previewElement;
 
         if (!this.options.gallery) {
+			// Remove all other previews for images
             this.dropzone.previewsContainer.innerHTML = "";
         }
         this.dropzone.previewsContainer.appendChild(file.previewElement);
@@ -245,6 +246,7 @@ export default class Droplet {
 
     // The user dropped something onto the dropzone
     event_drop(event) {
+		// this.container.querySelector(".image-not-found")?.classList.remove("image-not-found");
         return this.container.classList.remove("dz-drag-hover");
     }
 }

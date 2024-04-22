@@ -71,7 +71,7 @@
 			<button class="move"     title="Reorder Image"></button>
 			<button class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" onerror="this.parentNode.style.display='none'" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
@@ -83,7 +83,7 @@
 
 {% macro linkDialog(id, imageData) %}
 
-	<dialog class="image-link-dialog">
+	<dialog class="cms-modal image-link-dialog">
 		<h3>Image Link Builder</h3>
 		<button class="close">Close</button>
 	</dialog>
@@ -93,7 +93,7 @@
 
 {% macro imageDialog(id, imageData) %}
 
-	<dialog class="image-edit-dialog">
+	<dialog class="cms-modal image-edit-dialog">
 
 		<section class="image-preview">
 			<img src="{{ totalcms.image(id,{w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
@@ -101,7 +101,7 @@
 		</section>
 
 		<section>
-			<details open>
+			<details class="cms-accordion">
 				<summary>Info</summary>
 				{{ _self.checkbox("featured", {
 					label : "Featured",
@@ -128,7 +128,7 @@
 				}) }}
 			</details>
 
-			<details>
+			<details class="cms-accordion">
 				<summary>Focal Point</summary>
 				{{ _self.rangeslider("focalpoint-x", {
 					label       : "Focal Point X",
@@ -142,7 +142,7 @@
 				}) }}
 			</details>
 
-			<details>
+			<details class="cms-accordion">
 				<summary>EXIF - Info</summary>
 				{{ _self.datetime("exif-date", {
 					label : "Date",
@@ -173,7 +173,7 @@
 				}) }}
 			</details>
 
-			<details>
+			<details class="cms-accordion">
 				<summary>EXIF - Camera</summary>
 				{{ _self.input("exif-make", {
 					label       : "Make",
@@ -219,7 +219,7 @@
 				}) }}
 			</details>
 
-			<details>
+			<details class="cms-accordion">
 				<summary>EXIF - GPS</summary>
 				{{ _self.input("exif-longitude", {
 					label       : "Longitude",
@@ -241,7 +241,7 @@
 				}) }}
 			</details>
 
-			<details>
+			<details class="cms-accordion">
 				<summary>Color Palette</summary>
 				<div class="palette">
 				{{ _self.color("palette-1", { value : imageData.palette[0] }) }}
@@ -252,7 +252,7 @@
 				</div>
 			</details>
 
-			<details>
+			<details class="cms-accordion">
 				<summary>Meta (Readonly)</summary>
 				{{ _self.number("height", {
 					label    : "Height",
