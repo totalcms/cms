@@ -158,6 +158,20 @@
 }
 
 //------------------------------
+// GPS Field
+//------------------------------
+.form-field.icon-gps .form-group-icon {
+    background-image: var(--icon-gps);
+}
+
+//------------------------------
+// User Field
+//------------------------------
+.form-field.icon-user .form-group-icon {
+    background-image: var(--icon-user);
+}
+
+//------------------------------
 // Camera Field
 //------------------------------
 .form-field.icon-camera .form-group-icon {

@@ -142,6 +142,12 @@
 					placeholder : "No Title Found",
 					value       : imageData.exif.title,
 				}) }}
+				{{ _self.input("exif-author", {
+					label       : "Author",
+					placeholder : "No Autor Found",
+					class       : "icon-user",
+					value       : imageData.exif.author,
+				}) }}
 				{{ _self.input("exif-copyright", {
 					label       : "Copyright",
 					placeholder : "No Copyright Found",
@@ -157,7 +163,7 @@
 			</details>
 
 			<details>
-				<summary>EXIF - Camera Settings</summary>
+				<summary>EXIF - Camera</summary>
 				{{ _self.input("exif-make", {
 					label       : "Make",
 					class       : "icon-camera",
@@ -169,6 +175,18 @@
 					placeholder : "Camera Model Not Found",
 					class       : "icon-camera",
 					value       : imageData.exif.camera,
+				}) }}
+				{{ _self.input("exif-lens", {
+					label       : "Lens",
+					placeholder : "Lens Not Found",
+					class       : "icon-camera",
+					value       : imageData.exif.lens,
+				}) }}
+				{{ _self.number("exif-focalLength", {
+					label       : "Focal Length",
+					placeholder : "Focal Length Not Found",
+					class       : "icon-shutter",
+					value       : imageData.exif.focalLength,
 				}) }}
 				{{ _self.input("exif-aperture", {
 					label       : "Aperture",
@@ -182,17 +200,33 @@
 					class       : "icon-shutter",
 					value       : imageData.exif.iso,
 				}) }}
-				{{ _self.number("exif-shutterSpeed", {
+				{{ _self.input("exif-shutterSpeed", {
 					label       : "Shutter Speed",
 					placeholder : "Shutter Speed Not Found",
 					class       : "icon-shutter",
 					value       : imageData.exif.shutterSpeed,
 				}) }}
-				{{ _self.number("exif-focalLength", {
-					label       : "Focal Length",
-					placeholder : "Focal Length Not Found",
-					class       : "icon-shutter",
-					value       : imageData.exif.focalLength,
+			</details>
+
+			<details>
+				<summary>EXIF - GPS</summary>
+				{{ _self.input("exif-longitude", {
+					label       : "Longitude",
+					class       : "icon-gps",
+					placeholder : "Longitude Not Found",
+					value       : imageData.exif.longitude,
+				}) }}
+				{{ _self.input("exif-latitude", {
+					label       : "Latitude",
+					class       : "icon-gps",
+					placeholder : "Latitude Not Found",
+					value       : imageData.exif.latitude,
+				}) }}
+				{{ _self.input("exif-altitude", {
+					label       : "altitude",
+					class       : "icon-gps",
+					placeholder : "Altitude Not Found",
+					value       : imageData.exif.altitude,
 				}) }}
 			</details>
 
@@ -254,79 +288,80 @@
 	</dialog>
 
 	<script>
-	// document.addEventListener('DOMContentLoaded', () => {
-	// 	const dialog = document.querySelector('.image-edit-dialog');
-	// 	const button = dialog.querySelector('dialog button.close');
-	// 	button.addEventListener('click', () => dialog.close());
+	document.addEventListener('DOMContentLoaded', () => {
+		const dialog = document.querySelector('.image-edit-dialog');
+		const button = dialog.querySelector('dialog button.close');
+		button.addEventListener('click', () => dialog.close());
 
-	// 	const edit = document.querySelector('.dz-preview button.edit');
-	// 	edit.addEventListener('click', () => {
-	// 		dialog.showModal();
-	// 		dialog.addEventListener('click', event => {
-	// 			const rect = dialog.getBoundingClientRect();
-	// 			const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height &&
-	// 				rect.left <= event.clientX && event.clientX <= rect.left + rect.width);
-	// 			if (!isInDialog) {
-	// 				dialog.close();
-	// 			}
-	// 		});
-	// 	});
+		const edit = document.querySelector('.dz-preview button.edit');
+		edit.addEventListener('click', event => {
+			event.preventDefault();
+			dialog.showModal();
+			dialog.addEventListener('click', event => {
+				const rect = dialog.getBoundingClientRect();
+				const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height &&
+					rect.left <= event.clientX && event.clientX <= rect.left + rect.width);
+				if (!isInDialog) {
+					dialog.close();
+				}
+			});
+		});
 
-	// 	// Close other details when one is opened
-	// 	const details = dialog.querySelectorAll('details');
-	// 	details.forEach((detail) => {
-	// 		detail.addEventListener('toggle', () => {
-	// 			if (detail.open) {
-	// 				const siblings = Array.from(detail.parentNode.children).filter((d) => d !== detail);
-	// 				siblings.forEach((sibling) => sibling.removeAttribute('open'));
-	// 			}
-	// 		});
-	// 	});
+		// Close other details when one is opened
+		const details = dialog.querySelectorAll('details');
+		details.forEach((detail) => {
+			detail.addEventListener('toggle', () => {
+				if (detail.open) {
+					const siblings = Array.from(detail.parentNode.children).filter((d) => d !== detail);
+					siblings.forEach((sibling) => sibling.removeAttribute('open'));
+				}
+			});
+		});
 
-	// 	const focalPointX = dialog.querySelector('.form-field:has([name=focalpoint-x])');
-	// 	const focalPointY = dialog.querySelector('.form-field:has([name=focalpoint-y])');
-	// 	const focalPoint  = dialog.querySelector('.focal-point');
-	// 	const focalPointCoords = (event) => {
-	// 		const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-	// 		const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-	// 		const rect = focalPoint.parentNode.getBoundingClientRect();
-	// 		let x = (clientX - rect.left) / rect.width * 100;
-	// 		let y = (clientY - rect.top) / rect.height * 100;
-	// 		if (x < 0) x = 0;
-	// 		if (x > 100) x = 100;
-	// 		if (y < 0) y = 0;
-	// 		if (y > 100) y = 100;
-	// 		return { x, y };
-	// 	};
-	// 	focalPointX.totalfield.watch(() => {
-	// 		focalPoint.style.left = `${focalPointX.totalfield.getValue()}%`;
-	// 	});
-	// 	focalPointY.totalfield.watch(() => {
-	// 		focalPoint.style.top = `${focalPointY.totalfield.getValue()}%`;
-	// 	});
-	// 	let dragging = false;
+		const focalPointX = dialog.querySelector('.form-field:has([name=focalpoint-x])');
+		const focalPointY = dialog.querySelector('.form-field:has([name=focalpoint-y])');
+		const focalPoint  = dialog.querySelector('.focal-point');
+		const focalPointCoords = (event) => {
+			const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+			const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+			const rect = focalPoint.parentNode.getBoundingClientRect();
+			let x = (clientX - rect.left) / rect.width * 100;
+			let y = (clientY - rect.top) / rect.height * 100;
+			if (x < 0) x = 0;
+			if (x > 100) x = 100;
+			if (y < 0) y = 0;
+			if (y > 100) y = 100;
+			return { x, y };
+		};
+		focalPointX.totalfield.watch(() => {
+			focalPoint.style.left = `${focalPointX.totalfield.getValue()}%`;
+		});
+		focalPointY.totalfield.watch(() => {
+			focalPoint.style.top = `${focalPointY.totalfield.getValue()}%`;
+		});
+		let dragging = false;
 
-	// 	const startDragging = () => { dragging = true };
-	// 	const stopDragging  = () => { if (dragging) dragging = false };
-	// 	const moveFocalPoint = (event) => {
-	// 		if (dragging) {
-	// 			event.preventDefault();
-	// 			const { x, y } = focalPointCoords(event);
-	// 			focalPoint.style.left = `${x}%`;
-	// 			focalPoint.style.top = `${y}%`;
-	// 			focalPointX.totalfield.setValue(x.toFixed(1));
-	// 			focalPointY.totalfield.setValue(y.toFixed(1));
-	// 		}
-	// 	};
+		const startDragging = () => { dragging = true };
+		const stopDragging  = () => { if (dragging) dragging = false };
+		const moveFocalPoint = (event) => {
+			if (dragging) {
+				event.preventDefault();
+				const { x, y } = focalPointCoords(event);
+				focalPoint.style.left = `${x}%`;
+				focalPoint.style.top = `${y}%`;
+				focalPointX.totalfield.setValue(x.toFixed(1));
+				focalPointY.totalfield.setValue(y.toFixed(1));
+			}
+		};
 
-	// 	focalPoint.addEventListener('mousedown', startDragging);
-	// 	focalPoint.addEventListener('touchstart', startDragging);
+		focalPoint.addEventListener('mousedown', startDragging);
+		focalPoint.addEventListener('touchstart', startDragging, { passive: true });
 
-	// 	document.addEventListener('mousemove', moveFocalPoint);
-	// 	document.addEventListener('touchmove', moveFocalPoint,  { passive: false });
+		document.addEventListener('mousemove', moveFocalPoint);
+		document.addEventListener('touchmove', moveFocalPoint,  { passive: false });
 
-	// 	focalPoint.addEventListener('mouseup', stopDragging);
-	// 	focalPoint.addEventListener('touchend', stopDragging);
-	// });
+		focalPoint.addEventListener('mouseup', stopDragging);
+		focalPoint.addEventListener('touchend', stopDragging, { passive: true });
+	});
 	</script>
 {% endmacro %}
