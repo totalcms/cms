@@ -1,27 +1,26 @@
-import TotalField from "./totalfield";
+import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 globalThis.Dropzone = Dropzone;
 
 //-----------------------------------------------
 // Total CMS Droplet
 //-----------------------------------------------
-export default class Droplet extends TotalField {
+export default class Droplet {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(field, options = {}) {
+		this.field     = field;
+		this.container = this.field.container;
 
-		// TODO: This should probably swapped out for getting the HTML from the API request
+		// Using an embedded template for the preview instead of an extra API request
 		this.previewTemplate = this.container.querySelector("template").innerHTML;
 
         // Define option defaults
         const defaults = {
             autoProcessQueue  : false,
-            previewsContainer : this.container.getElementsByClassName("total-preview").item(0),
-            previewTemplate   : "",
+            previewsContainer : this.container.querySelector(".total-preview"),
             acceptedFiles     : "image/*",
-            paramName         : this.property,
+            paramName         : "file",
             requestHeaders    : {},
-            type              : "file",
             gallery           : false,
         };
         this.options = Object.assign({}, defaults, options);
@@ -37,50 +36,6 @@ export default class Droplet extends TotalField {
         this.setupDropzone();
     }
 
-
-    getValue() {
-		const fields = this.container.getElementsByClassName("form-field");
-		const imageData = {};
-		for (const field of fields) {
-			let key = field.totalfield.property;
-			const value = field.totalfield.getValue();
-
-			if (key.startsWith("exif-")) {
-				key = key.replace("exif-","");
-				if (!imageData["exif"]) {
-					imageData["exif"] = {};
-				}
-				imageData["exif"][key] = value;
-
-			} else if (key.startsWith("focalpoint-")) {
-				key = key.replace("focalpoint-","");
-				if (!imageData["focalpoint"]) {
-					imageData["focalpoint"] = {};
-				}
-				imageData["focalpoint"][key] = value;
-
-			} else if (key.startsWith("palette-")) {
-				if (!imageData["palette"]) {
-					imageData["palette"] = [];
-				}
-				imageData["palette"].push(value);
-
-			} else {
-				imageData[key] = value;
-			}
-		}
-        return imageData;
-    }
-
-    setValue(image) {
-		// TODO: populate the fields with the image data
-    }
-
-    apiUrl() {
-		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		return this.api.apiUrl(api);
-    }
-
     autoProcessQueue() {
         if (!this.dropzone) {
 			console.warn("Unable to enable autoProcessQueue");
@@ -93,23 +48,20 @@ export default class Droplet extends TotalField {
         const disableFunction = function(){};
 
         return new Dropzone(this.container, {
-            url               : this.apiUrl(),
+            url               : this.options.apiUrl,
             method            : "post",
             headers           : this.options.requestHeaders,
             parallelUploads   : 1,
             paramName         : this.options.paramName,
-            autoProcessQueue  : this.form.isEditMode(),
+            autoProcessQueue  : this.options.autoProcessQueue,
             thumbnailWidth    : null,
             thumbnailHeight   : null,
             previewsContainer : this.options.previewsContainer,
             previewTemplate   : this.previewTemplate,
-            clickable         : [
-                this.container.querySelector(".dz-clickable"),
-            ],
-            forceFallback : false,
-            addedfile     : disableFunction,
-            acceptedFiles : this.options.acceptedFiles,
-            accept        : this.accept
+            clickable         : Array.from(this.container.getElementsByClassName("dz-clickable")),
+            forceFallback     : false,
+            addedfile         : disableFunction,
+            acceptedFiles     : this.options.acceptedFiles,
         });
     }
 
@@ -188,8 +140,7 @@ export default class Droplet extends TotalField {
 
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved
-            this.container.classList.add("unsaved");
-            this.form.unsaved();
+			this.field.changed();
         }
     }
 
@@ -252,10 +203,7 @@ export default class Droplet extends TotalField {
         if (typeof(message) === "object") message = message.message;
         file.previewElement.classList.remove("saving");
         file.previewElement.classList.add("error","dz-error");
-        this.form.error(message);
-        // Add error to tooltip.js (replace foundation tooltips below)
-        // $(file.previewElement).find('.has-tip').attr('title',message);
-        // $(document).foundation('tooltip','reflow');
+        this.field.error(message);
     }
 
     // The file has been uploaded successfully
@@ -297,12 +245,5 @@ export default class Droplet extends TotalField {
     // The user dropped something onto the dropzone
     event_drop(event) {
         return this.container.classList.remove("dz-drag-hover");
-    }
-
-	schema() {
-        return {
-            type     : "object",
-            fieldset : this.options.type
-        };
     }
 }

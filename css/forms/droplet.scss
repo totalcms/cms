@@ -133,11 +133,12 @@ form.totalform {
 		}
 
 		img {
-			width     : 100% !important;
-			height    : auto;
-			max-width : 100%;
-			display   : block;
-			margin    : 0 auto;
+			// width      : 100%;
+			height     : auto;
+			max-width  : 600px;
+			max-height : 400px;
+			display    : block;
+			margin     : 0 auto;
 
 			&.notfound {
 				display: none;

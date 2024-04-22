@@ -53,6 +53,7 @@
 		</div>
 
 		{{ _self.imageDialog(object.id, imageData) }}
+		{{ _self.linkDialog(object.id, imageData) }}
 
 		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, imageData) }}</template>
 
@@ -79,6 +80,16 @@
 		<i class="fa fa-times-circle has-tip" data-tooltip></i>
 	</div>
 {% endmacro %}
+
+{% macro linkDialog(id, imageData) %}
+
+	<dialog class="image-link-dialog">
+		<h3>Image Link Builder</h3>
+		<button class="close">Close</button>
+	</dialog>
+
+{% endmacro %}
+
 
 {% macro imageDialog(id, imageData) %}
 
@@ -223,7 +234,7 @@
 					value       : imageData.exif.latitude,
 				}) }}
 				{{ _self.input("exif-altitude", {
-					label       : "altitude",
+					label       : "Altitude",
 					class       : "icon-gps",
 					placeholder : "Altitude Not Found",
 					value       : imageData.exif.altitude,
@@ -287,81 +298,4 @@
 
 	</dialog>
 
-	<script>
-	document.addEventListener('DOMContentLoaded', () => {
-		const dialog = document.querySelector('.image-edit-dialog');
-		const button = dialog.querySelector('dialog button.close');
-		button.addEventListener('click', () => dialog.close());
-
-		const edit = document.querySelector('.dz-preview button.edit');
-		edit.addEventListener('click', event => {
-			event.preventDefault();
-			dialog.showModal();
-			dialog.addEventListener('click', event => {
-				const rect = dialog.getBoundingClientRect();
-				const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height &&
-					rect.left <= event.clientX && event.clientX <= rect.left + rect.width);
-				if (!isInDialog) {
-					dialog.close();
-				}
-			});
-		});
-
-		// Close other details when one is opened
-		const details = dialog.querySelectorAll('details');
-		details.forEach((detail) => {
-			detail.addEventListener('toggle', () => {
-				if (detail.open) {
-					const siblings = Array.from(detail.parentNode.children).filter((d) => d !== detail);
-					siblings.forEach((sibling) => sibling.removeAttribute('open'));
-				}
-			});
-		});
-
-		const focalPointX = dialog.querySelector('.form-field:has([name=focalpoint-x])');
-		const focalPointY = dialog.querySelector('.form-field:has([name=focalpoint-y])');
-		const focalPoint  = dialog.querySelector('.focal-point');
-		const focalPointCoords = (event) => {
-			const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-			const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-			const rect = focalPoint.parentNode.getBoundingClientRect();
-			let x = (clientX - rect.left) / rect.width * 100;
-			let y = (clientY - rect.top) / rect.height * 100;
-			if (x < 0) x = 0;
-			if (x > 100) x = 100;
-			if (y < 0) y = 0;
-			if (y > 100) y = 100;
-			return { x, y };
-		};
-		focalPointX.totalfield.watch(() => {
-			focalPoint.style.left = `${focalPointX.totalfield.getValue()}%`;
-		});
-		focalPointY.totalfield.watch(() => {
-			focalPoint.style.top = `${focalPointY.totalfield.getValue()}%`;
-		});
-		let dragging = false;
-
-		const startDragging = () => { dragging = true };
-		const stopDragging  = () => { if (dragging) dragging = false };
-		const moveFocalPoint = (event) => {
-			if (dragging) {
-				event.preventDefault();
-				const { x, y } = focalPointCoords(event);
-				focalPoint.style.left = `${x}%`;
-				focalPoint.style.top = `${y}%`;
-				focalPointX.totalfield.setValue(x.toFixed(1));
-				focalPointY.totalfield.setValue(y.toFixed(1));
-			}
-		};
-
-		focalPoint.addEventListener('mousedown', startDragging);
-		focalPoint.addEventListener('touchstart', startDragging, { passive: true });
-
-		document.addEventListener('mousemove', moveFocalPoint);
-		document.addEventListener('touchmove', moveFocalPoint,  { passive: false });
-
-		focalPoint.addEventListener('mouseup', stopDragging);
-		focalPoint.addEventListener('touchend', stopDragging, { passive: true });
-	});
-	</script>
 {% endmacro %}

@@ -12,7 +12,7 @@ import ListField from './list';
 import RangeSlider from './range';
 import StyledTextField from './styledtext';
 import SVGField from './svg';
-import Droplet from './droplet';
+import ImageField from './image';
 
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
@@ -174,9 +174,9 @@ export default class TotalForm {
 			// 	return new RadioField(field, options);
 
             case "image":
-            case "file":
-                return this.initDroplet(field,options);
+				return new ImageField(field,options);
 
+			// case "file":
             // case "gallery":
             // case "depot":
             //     return this.initArrayDroplet(field,options);
@@ -196,13 +196,6 @@ export default class TotalForm {
     initArrayDroplet(field, options) {
         options.type = field.dataset.type;
         const droplet = new ArrayDroplet(field, options);
-        // droplet.updateUri();
-        return droplet;
-    }
-
-    initDroplet(field, options) {
-        options.type = field.dataset.type;
-        const droplet = new Droplet(field, options);
         // droplet.updateUri();
         return droplet;
     }

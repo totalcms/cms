@@ -63,12 +63,25 @@ export default class TotalField {
     changed() {
 		this.container.classList.add("unsaved");
         this.container.dispatchEvent(new Event("field-change"));
+		this.container.dispatchEvent(new CustomEvent("field-change"), {
+			detail: { field : this }
+		});
     }
 
 	saved() {
 		this.container.classList.remove("unsaved");
 		this.changeListener();
 	}
+
+	error(message) {
+		this.container.classList.add("error");
+        this.container.dispatchEvent(new CustomEvent("field-error"), {
+			detail: {
+				msg   : message,
+				field : this,
+			}
+		});
+    }
 
     schema() {
         return {
