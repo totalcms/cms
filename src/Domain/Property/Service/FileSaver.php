@@ -28,13 +28,13 @@ final class FileSaver
     public function __construct(
         private PropertyRepository $storage,
         private PropertyFetcher $propFetcher,
-        private ObjectSaver $objectUpdater,
+        private ObjectSaver $objectSaver,
         private CollectionSchemaFetcher $schemaFetcher,
         private ObjectFetcher $objectFetcher,
     ) {
         $this->storage       = $storage;
         $this->propFetcher   = $propFetcher;
-        $this->objectUpdater = $objectUpdater;
+        $this->objectSaver   = $objectSaver;
         $this->schemaFetcher = $schemaFetcher;
         $this->objectFetcher = $objectFetcher;
 
@@ -42,6 +42,8 @@ final class FileSaver
         // $this->exifReader = ExifReader::factory(ExifReaderType::EXIFTOOL);
         // $this->exifReader = ExifReader::factory(ExifReaderType::FFPROBE);
         // $this->exifReader = ExifReader::factory(ExifReaderType::IMAGICK);
+
+        // TODO: split this class up into smaller classes for ImageSaver, FileSaver, etc.
     }
 
     /**
@@ -103,7 +105,7 @@ final class FileSaver
     {
         $propertyData = [$property => $data];
 
-        return $this->objectUpdater->patchObject($collection, $objectID, $propertyData);
+        return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
     }
 
     /**
@@ -170,9 +172,20 @@ final class FileSaver
      */
     public function saveFileForImage(string $collection, string $objectID, string $property, string $filePath): ObjectData
     {
-        if (!$this->objectFetcher->existsObject($collection, $objectID)) {
-            // TODO: create object if it does not exist
-            throw new \UnexpectedValueException('Object does not exist');
+        $objectExists = $this->objectFetcher->existsObject($collection, $objectID);
+        if (!$objectExists) {
+            // Attempt to create the object if it does not exist
+            try {
+                $image  = new ImageData();
+                $this->objectSaver->saveObject($collection, [
+                    'id'      => $objectID,
+                    $property => $image->transform(),
+                ]);
+            } catch (\Exception $e) {
+                // Object creation failed
+                $msg = "Object $objectID does not exist in collection $collection to save image ($property) to. ";
+                throw new \UnexpectedValueException($msg . $e->getMessage());
+            }
         }
 
         // Clean up existing files in the path. Only one file should exist
@@ -186,6 +199,11 @@ final class FileSaver
         $exifData     = $this->gatherExifData($filePath);
         $colorData    = self::gatherColorData($filePath);
 
+        if ($objectExists) {
+            // If the object existed before, we will keep the existing data for alt, featrued, link, and tags
+            $keep         = ['alt', 'featured', 'link', 'tags'];
+            $existingData = array_filter($existingData, fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+        }
         $newImage = array_merge($existingData, $fileData, $exifData, $colorData);
 
         return $this->updateObject($collection, $objectID, $property, $newImage);
