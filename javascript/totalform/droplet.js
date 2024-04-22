@@ -48,20 +48,21 @@ export default class Droplet {
         const disableFunction = function(){};
 
         return new Dropzone(this.container, {
-            url               : this.options.apiUrl,
-            method            : "post",
-            headers           : this.options.requestHeaders,
-            parallelUploads   : 1,
-            paramName         : this.options.paramName,
-            autoProcessQueue  : this.options.autoProcessQueue,
-            thumbnailWidth    : null,
-            thumbnailHeight   : null,
-            previewsContainer : this.options.previewsContainer,
-            previewTemplate   : this.previewTemplate,
-            clickable         : Array.from(this.container.getElementsByClassName("dz-clickable")),
-            forceFallback     : false,
-            addedfile         : disableFunction,
-            acceptedFiles     : this.options.acceptedFiles,
+			url               : this.options.apiUrl,
+			method            : "post",
+			headers           : this.options.requestHeaders,
+			parallelUploads   : 1,
+			paramName         : this.options.paramName,
+			autoProcessQueue  : this.options.autoProcessQueue,
+			thumbnailWidth    : null,
+			thumbnailHeight   : null,
+			previewsContainer : this.options.previewsContainer,
+			previewTemplate   : this.previewTemplate,
+			clickable         : Array.from(this.container.getElementsByClassName("dz-clickable")),
+			forceFallback     : false,
+			addedfile         : disableFunction,
+			acceptedFiles     : this.options.acceptedFiles,
+			accept            : this.accept,
         });
     }
 
