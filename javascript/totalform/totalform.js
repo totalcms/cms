@@ -211,10 +211,9 @@ export default class TotalForm {
     // Submit functions
     //-------------------------
     saveListener() {
-        this.form.addEventListener("submit", event => {
-            event.preventDefault();
-            this.save();
-        });
+		// Prevent the default form submission
+        this.form.addEventListener("submit", event => event.preventDefault());
+
         document.addEventListener("keydown", (event) => {
             if (this.isUnsaved()) {
                 if (event.key === "s" && (event.ctrlKey||event.metaKey)) {

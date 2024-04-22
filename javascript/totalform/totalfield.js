@@ -37,7 +37,7 @@ export default class TotalField {
 	}
 
 	// Filter for determining if a field is a subproperty of another field
-	isSubfield() {
+	isSubField() {
 		return this.container.closest(".form-field") ? true : false;
 	}
 
