@@ -10,7 +10,7 @@ export default class TotalField {
 		container.totalfield = this;
 
 		this.type = container.dataset.type;
-		this.name = this.input.name;
+		this.property = this.input.name;
 
         // Define option defaults
         const defaults = {
@@ -34,6 +34,11 @@ export default class TotalField {
 		this.input.addEventListener("change", () => this.changed());
 		// the input event happens once since the point is to mark the form as unsaved ASAP
 		this.input.addEventListener("input", () => this.changed(), {once: true});
+	}
+
+	// Filter for determining if a field is a subproperty of another field
+	isSubfield() {
+		return this.container.closest(".form-field") ? true : false;
 	}
 
 	isDroplet() {

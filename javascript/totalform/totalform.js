@@ -68,10 +68,6 @@ export default class TotalForm {
     // Utility Methods
     //-------------------------
 
-    // Filter for determining if inside of a Deck field
-    insideDeck(node) {
-        return node.parentNode.closest(".deck-box") ? true : false;
-    }
     // Check to see if the object is a HTML node.
     isDomNode(node){
         return typeof node === "object" && "nodeType" in node && node.nodeType === 1;
@@ -94,7 +90,7 @@ export default class TotalForm {
     // Init Form
     //-------------------------
     processFields() {
-		const fields = Array.from(this.form.getElementsByClassName("form-field")).filter(field => !this.insideDeck(field));
+		const fields = Array.from(this.form.getElementsByClassName("form-field"));
 		const fieldObjects = [];
         fields.forEach(field => {
             const object = this.generateFieldObject(field);
@@ -357,7 +353,7 @@ export default class TotalForm {
 		this.form.dataset.method = this.method;
 
 		// The ID cannot be changed in edit mode
-		const idField = this.fields.filter(field => field.input.name === "id").shift();
+		const idField = this.fields.filter(field => field.property === "id").shift();
 		idField.disable();
 		idField.lock();
 
@@ -473,7 +469,8 @@ export default class TotalForm {
     generateData() {
         const data = {};
 		this.fields.forEach(field => {
-			data[field.name] = field.getValue();
+			if (field.isSubField()) return; // skip subfields
+			data[field.property] = field.getValue();
 		});
         return data;
     }

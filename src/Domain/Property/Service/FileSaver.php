@@ -62,7 +62,7 @@ final class FileSaver
         $method = 'saveFileFor' . ucfirst($type);
 
         if (!method_exists($this, $method)) {
-            throw new \UnexpectedValueException('Invalid file type found');
+            throw new \UnexpectedValueException("Invalid file type $type found for property $property in collection $collection");
         }
 
         return $this->$method($collection, $objectID, $property, $filePath);

@@ -19,7 +19,7 @@ export default class Droplet extends TotalField {
             previewsContainer : this.container.getElementsByClassName("total-preview").item(0),
             previewTemplate   : "",
             acceptedFiles     : "image/*",
-            paramName         : this.name,
+            paramName         : this.property,
             requestHeaders    : {},
             type              : "file",
             gallery           : false,
@@ -42,7 +42,7 @@ export default class Droplet extends TotalField {
 		const fields = this.container.getElementsByClassName("form-field");
 		const imageData = {};
 		for (const field of fields) {
-			let key = field.totalfield.name;
+			let key = field.totalfield.property;
 			const value = field.totalfield.getValue();
 
 			if (key.startsWith("exif-")) {
@@ -73,11 +73,11 @@ export default class Droplet extends TotalField {
     }
 
     setValue(image) {
-		// TODO: what should this do?
+		// TODO: populate the fields with the image data
     }
 
     apiUrl() {
-		const api = `/collections/${this.form.collection}/${this.form.id}/${this.name}`;
+		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 		return this.api.apiUrl(api);
     }
 
@@ -88,15 +88,6 @@ export default class Droplet extends TotalField {
 		}
 		this.dropzone.options.autoProcessQueue = true;
     }
-
-    // updateUri() {
-    //     if (this.dropzone) {
-    //         this.dropzone.options.url = this.apiUrl();
-    //     }
-    //     else {
-    //         console.warn("Unable to update dropzone URI");
-    //     }
-    // }
 
     newDropzone() {
         const disableFunction = function(){};
