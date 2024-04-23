@@ -50,6 +50,7 @@ export default class ImageField extends TotalField {
 			this.linkDialog.open();
 		});
 		this.setupDelete();
+		this.setupClearCache();
 		this.setupFeaturedToggle();
 	}
 
@@ -77,6 +78,19 @@ export default class ImageField extends TotalField {
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
 					this.toggleFeatured();
+				});
+			});
+		}
+	}
+
+	setupClearCache() {
+		const clearButton = this.container.querySelector(".actionbar .clear");
+		if (clearButton) {
+			clearButton.addEventListener("click", event => {
+				event.preventDefault();
+				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
+					this.container.querySelector(".total-preview").classList.toggle("cleared-cache");
 				});
 			});
 		}

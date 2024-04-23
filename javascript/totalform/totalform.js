@@ -377,7 +377,7 @@ export default class TotalForm {
     }
 
     error(error) {
-        console.error("Form Error: "+error);
+        console.error("Form Error", error);
         this.delayProcessing(() => {
             this.changeState("error");
         });

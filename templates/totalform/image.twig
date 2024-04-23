@@ -7,7 +7,7 @@
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.image('image', args) }}
 
-	{{ _self.end(true) }}
+	{{ _self.end() }}
 {% endmacro %}
 
 {#--------------------------------#}
@@ -69,6 +69,7 @@
 			<button class="links"    title="Image URL"></button>
 			<button class="featured" title="Toggle Featured"></button>
 			<button class="move"     title="Reorder Image"></button>
+			<button class="clear"    title="Clear Cache"></button>
 			<button class="trash"    title="Delete Image"></button>
 		</div>
 		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
@@ -297,7 +298,10 @@
 
 		</section>
 
-		<button class="close">Close</button>
+		<section>
+			<button class="cms-save close">Save</button>
+			<button class="close">Close</button>
+		</section>
 
 	</dialog>
 

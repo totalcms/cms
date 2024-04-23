@@ -11,8 +11,6 @@ use TotalCMS\Utils\PathUtils;
 final class PropertyRepository extends StorageRepository
 {
     /**
-     * Save an object.
-     *
      * @param string $collection
      * @param string $objectID
      * @param string $property
@@ -30,6 +28,19 @@ final class PropertyRepository extends StorageRepository
         } catch (\Exception $exception) {
             throw new \RuntimeException('Unable to delete directory');
         }
+    }
+
+    public function deletePropertyCache(string $collection, string $objectID, string $property): bool
+    {
+        $path = PathUtils::buildPath($collection, $objectID, $property, '.cache');
+
+        try {
+            $this->filesystem->deleteDirectory($path);
+        } catch (\Exception $exception) {
+            throw new \RuntimeException('Unable to delete cache directory');
+        }
+
+        return !$this->filesystem->fileExists($path);
     }
 
     /**

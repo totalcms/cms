@@ -48,14 +48,14 @@
 			-webkit-mask : var(--icon-not-featured);
 			mask         : var(--icon-not-featured);
 		}
-		&.not-featured {
-			-webkit-mask : var(--icon-not-featured);
-			mask         : var(--icon-not-featured);
+		&.clear {
+			-webkit-mask : var(--icon-clean);
+			mask         : var(--icon-clean);
+			margin-left  : auto;
 		}
 		&.trash {
 			-webkit-mask : var(--icon-trash);
 			mask         : var(--icon-trash);
-			margin-left  : auto;
 		}
 		&.links {
 			-webkit-mask : var(--icon-link);
@@ -97,6 +97,12 @@
 	button.featured {
 		-webkit-mask : var(--icon-featured);
 		mask         : var(--icon-featured);
+	}
+}
+.cleared-cache {
+	button.clear {
+		-webkit-mask : var(--icon-success);
+		mask         : var(--icon-success);
 	}
 }
 
