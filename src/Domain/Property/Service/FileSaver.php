@@ -189,6 +189,7 @@ final class FileSaver
         }
 
         // Clean up existing files in the path. Only one file should exist
+        // This also cleans the cache
         $this->storage->deleteDirectory($collection, $objectID, $property);
 
         // Update the object with the new file data
