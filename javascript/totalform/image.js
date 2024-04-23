@@ -24,7 +24,8 @@ export default class ImageField extends TotalField {
 	setupDelete() {
 		const deleteButton = this.container.querySelector(".actionbar .trash");
 		if (deleteButton) {
-			deleteButton.addEventListener("click", () => {
+			deleteButton.addEventListener("click", event => {
+				event.preventDefault();
 				if (confirm("Are you sure that you want to delete this image?")) {
 					const deleteApi = `/collections/${this.form.collection}/${this.form.id}`;
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
@@ -56,8 +57,14 @@ export default class ImageField extends TotalField {
 	setupActionBar() {
 		const edit = this.container.querySelector(".actionbar .edit");
 		const links = this.container.querySelector(".actionbar .links");
-		edit.addEventListener("click", e => this.editDialog.open(e));
-		links.addEventListener("click", e => this.linkDialog.open(e));
+		edit.addEventListener("click", event => {
+			event.preventDefault();
+			this.editDialog.open();
+		});
+		links.addEventListener("click", event => {
+			event.preventDefault();
+			this.linkDialog.open();
+		});
 		this.setupDelete();
 	}
 

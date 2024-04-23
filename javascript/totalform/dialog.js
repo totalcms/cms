@@ -32,8 +32,7 @@ export default class Dialog  {
         return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
     }
 
-	close(event) {
-		if (event) event.preventDefault();
+	close() {
 		this.dialog.close();
 
 		if (this.closeListener) {
@@ -44,8 +43,7 @@ export default class Dialog  {
 		}
 	}
 
-	open(event) {
-		if (event) event.preventDefault();
+	open() {
 		this.dialog.showModal();
 
 		this.closeListener = this.dialog.addEventListener('click', event => {
@@ -76,14 +74,17 @@ export default class Dialog  {
 			// console.warn("Invalid Listener Option");
 			return;
 		}
-		buttons.forEach(button => button.addEventListener('click', event => callback(event)));
+		buttons.forEach(button => button.addEventListener('click', event => {
+			event.preventDefault();
+			callback()
+		}));
 	}
 
 	closeListener() {
-		this.buttonListener(this.options.close, event => this.close(event));
+		this.buttonListener(this.options.close, () => this.close());
 	}
 
 	openListener() {
-		this.buttonListener(this.options.open, event => this.open(event));
+		this.buttonListener(this.options.open, () => this.open());
 	}
 }
