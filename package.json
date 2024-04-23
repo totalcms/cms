@@ -20,6 +20,7 @@
     "dompurify": "^3.0.2",
     "froala-editor": "^4.0.18",
     "slugify": "^1.6.6",
+    "sortablejs": "^1.15.2",
     "swagger-ui-dist": "^5.1.0",
     "tippy.js": "^6.3.7"
   }

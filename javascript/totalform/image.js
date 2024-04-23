@@ -2,7 +2,7 @@ import TotalField from "./totalfield";
 import Dialog from "./dialog";
 import Droplet from "./droplet";
 import Details from "./details";
-import { on } from "codemirror";
+import Sortable from 'sortablejs';
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -19,7 +19,16 @@ export default class ImageField extends TotalField {
 		this.linkDialog = this.setupLinkDialog();
 
 		this.setupActionBar();
+		this.sortablePalette();
     }
+
+	sortablePalette() {
+		const palette = this.editDialog.dialog.querySelector(".palette");
+		Sortable.create(palette, {
+			animation  : 150,
+			ghostClass : 'drag-ghost',
+		});
+	}
 
 	setupDelete() {
 		const deleteButton = this.container.querySelector(".actionbar .trash");
@@ -154,6 +163,16 @@ export default class ImageField extends TotalField {
 		focalPoint.addEventListener('touchend', stopDragging, { passive: true });
 	}
 
+	// getPaletteColors() {
+	// 	// Get the colors in the palette in the order they are in the DOM
+	// 	const palette = this.editDialog.dialog.querySelector(".palette");
+	// 	const colors = [];
+	// 	for (const color of palette.children) {
+	// 		colors.push(color.totalfield.getValue());
+	// 	}
+	// 	return colors;
+	// }
+
     getValue() {
 		const imageData = {};
 		for (const field of this.fields) {
@@ -188,6 +207,7 @@ export default class ImageField extends TotalField {
 	}
 
     setValue(image) {
+		// from tests this.fields updates as colors are dragged in the palette
 		for (const field of this.fields) {
 			const key = field.totalfield.property;
 			if (key.startsWith("exif-")) {

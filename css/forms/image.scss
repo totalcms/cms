@@ -63,5 +63,19 @@
 	.palette {
 		display : flex;
 		gap     : 1rem;
+
+		> *,
+		input {
+			cursor : grab;
+		}
+
+		> *:active,
+		> *:active input {
+			cursor: grabbing;
+		}
+
+		.drag-ghost {
+			opacity : 0.25;
+		}
 	}
 }
