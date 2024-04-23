@@ -34,7 +34,7 @@ final class ObjectDeleteAction
         $deleted = $this->remover->deleteObject($args['collection'], $args['id']);
 
         if ($deleted === false) {
-            return $response->withStatus(500);
+            $response = $response->withStatus(500);
         }
 
         return $this->renderer->json($response, ['deleted' => $deleted]);
