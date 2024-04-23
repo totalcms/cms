@@ -199,12 +199,14 @@ final class FileSaver
         $exifData     = $this->gatherExifData($filePath);
         $colorData    = self::gatherColorData($filePath);
 
+        $newImage = array_merge($existingData, $fileData, $exifData, $colorData);
+
         if ($objectExists) {
             // If the object existed before, we will keep the existing data for alt, featrued, link, and tags
             $keep         = ['alt', 'featured', 'link', 'tags'];
             $existingData = array_filter($existingData, fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+            $newImage     = array_merge($newImage, $existingData);
         }
-        $newImage = array_merge($existingData, $fileData, $exifData, $colorData);
 
         return $this->updateObject($collection, $objectID, $property, $newImage);
     }
