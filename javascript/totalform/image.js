@@ -12,10 +12,13 @@ export default class ImageField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
+		this.fields = this.container.getElementsByClassName("form-field");
+
 		this.droplet    = this.setupDroplet();
 		this.editDialog = this.setupEditDialog();
 		this.linkDialog = this.setupLinkDialog();
-		this.setupDelete();
+
+		this.setupActionBar();
     }
 
 	setupDelete() {
@@ -48,6 +51,14 @@ export default class ImageField extends TotalField {
 				document.removeEventListener(key, this.documentListeners[key]);
 			}
 		}
+	}
+
+	setupActionBar() {
+		const edit = this.container.querySelector(".actionbar .edit");
+		const links = this.container.querySelector(".actionbar .links");
+		edit.addEventListener("click", e => this.editDialog.open(e));
+		links.addEventListener("click", e => this.linksDialog.open(e));
+		this.setupDelete();
 	}
 
 	setupDroplet() {
@@ -137,30 +148,23 @@ export default class ImageField extends TotalField {
 	}
 
     getValue() {
-		const fields = this.container.getElementsByClassName("form-field");
 		const imageData = {};
-		for (const field of fields) {
+		for (const field of this.fields) {
 			let key = field.totalfield.property;
 			const value = field.totalfield.getValue();
 
 			if (key.startsWith("exif-")) {
 				key = key.replace("exif-","");
-				if (!imageData["exif"]) {
-					imageData["exif"] = {};
-				}
+				if (!imageData["exif"]) imageData["exif"] = {};
 				imageData["exif"][key] = value;
 
 			} else if (key.startsWith("focalpoint-")) {
 				key = key.replace("focalpoint-","");
-				if (!imageData["focalpoint"]) {
-					imageData["focalpoint"] = {};
-				}
+				if (!imageData["focalpoint"]) imageData["focalpoint"] = {};
 				imageData["focalpoint"][key] = value;
 
 			} else if (key.startsWith("palette-")) {
-				if (!imageData["palette"]) {
-					imageData["palette"] = [];
-				}
+				if (!imageData["palette"]) imageData["palette"] = [];
 				imageData["palette"].push(value);
 
 			} else {
@@ -171,15 +175,47 @@ export default class ImageField extends TotalField {
     }
 
 	clearValue() {
-		const fields = this.container.getElementsByClassName("form-field");
-		for (const field of fields) {
+		for (const field of this.fields) {
 			field.totalfield.clearValue();
 		}
 	}
 
     setValue(image) {
-		// TODO: populate the fields with the image data
+		for (const field of this.fields) {
+			const key = field.totalfield.property;
+			if (key.startsWith("exif-")) {
+				const exifKey = key.replace("exif-","");
+				field.totalfield.setValue(image.exif[exifKey]||"");
+
+			} else if (key.startsWith("focalpoint-")) {
+				const focalpointKey = key.replace("focalpoint-","");
+				field.totalfield.setValue(image.focalpoint[focalpointKey]||0);
+
+			} else if (key.startsWith("palette-")) {
+				const paletteIndex = parseInt(key.replace("palette-",""));
+				field.totalfield.setValue(image.palette[paletteIndex]);
+
+			} else {
+				field.totalfield.setValue(image[key]||"");
+			}
+			// setting to saved state since this data comes from the server
+			field.totalfield.saved();
+		}
+		this.saved();
     }
+
+	updatePreviewImage() {
+		const newImage = this.container.querySelector(".dz-preview img");
+		const previewImage = this.editDialog.dialog.querySelector("img");
+		previewImage.src = newImage.src;
+	}
+
+	fileUploaded(file, response) {
+		const image = response.data[this.property];
+		this.setValue(image);
+		this.setupActionBar();
+		this.updatePreviewImage();
+	}
 
 	schema() {
         return {

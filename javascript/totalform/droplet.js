@@ -212,11 +212,9 @@ export default class Droplet {
     event_success(file, response) {
         if (typeof(response) === "object") {
             if (file.previewElement) {
-                if (typeof(response.data) === "string") {
-                    file.previewElement.dataset.filename = this.basename(response.data);
-                }
                 file.previewElement.classList.remove("dz-processing");
                 file.previewElement.classList.add("dz-success");
+				this.field.fileUploaded(file, response);
             }
         }
         else {

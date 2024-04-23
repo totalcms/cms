@@ -59,7 +59,7 @@
 {% macro datetime(property, args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
-		field : "date",
+		field : "datetime",
 		type  : "datetime-local",
 	}) %}
     {{ _self.date(property, args) }}

@@ -7,15 +7,19 @@ export default class DateField extends TotalField {
 
 	getValue() {
 		if (this.input.value) {
-			return new Date(this.input.value).toISOString();
+			// Convert to ISO format and remove milliseconds
+			return new Date(this.input.value).toISOString().replace(/\.\d{3}/, '');
 		}
 		return "";
 	}
 
-	setValue(value) {
-		value = new Date(value||this.value).toISOString();
-		if (this.type === 'date') {
-			value = value.split('T')[0];
+	setValue(value = "") {
+		if (value.length > 0) {
+			// Convert to ISO format and remove milliseconds
+			value = new Date(value||this.value).toISOString().slice(0, -5);
+			if (this.type === 'date') {
+				value = value.split('T')[0];
+			}
 		}
 		this.input.value = value;
 		this.changed();
@@ -28,7 +32,7 @@ export default class DateField extends TotalField {
 
     schema() {
         return {
-            "type"  : "date",
+            "type"  : this.type,
             "field" : "date"
         };
     }

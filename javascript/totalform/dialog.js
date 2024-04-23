@@ -73,7 +73,7 @@ export default class Dialog  {
 		} else if (this.isDomNode(selector)) {
 			buttons.push(selector);
 		} else {
-			console.warn("Invalid Listener Option");
+			// console.warn("Invalid Listener Option");
 			return;
 		}
 		buttons.forEach(button => button.addEventListener('click', event => callback(event)));

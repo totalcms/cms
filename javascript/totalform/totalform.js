@@ -150,6 +150,7 @@ export default class TotalForm {
                 return new ColorField(field, options);
 
             case "date":
+			case "datetime":
                 return new DateField(field, options);
 
             case "select":
