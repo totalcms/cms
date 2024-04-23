@@ -194,7 +194,10 @@ final class FileSaver
         // Update the object with the new file data
         $imageProp = $this->fetchProperty($collection, $objectID, $property);
 
-        $existingData = $imageProp->transform();
+        // Only keep the data for alt, featrued, link, and tags
+        $keep         = ['alt', 'featured', 'link', 'tags'];
+        $existingData = array_filter($imageProp->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+
         $fileData     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
         $exifData     = $this->gatherExifData($filePath);
         $colorData    = self::gatherColorData($filePath);
@@ -202,10 +205,8 @@ final class FileSaver
         $newImage = array_merge($existingData, $fileData, $exifData, $colorData);
 
         if ($objectExists) {
-            // If the object existed before, we will keep the existing data for alt, featrued, link, and tags
-            $keep         = ['alt', 'featured', 'link', 'tags'];
-            $existingData = array_filter($existingData, fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
-            $newImage     = array_merge($newImage, $existingData);
+            // If the object existed before, we will keep the existing data
+            $newImage = array_merge($newImage, $existingData);
         }
 
         return $this->updateObject($collection, $objectID, $property, $newImage);
