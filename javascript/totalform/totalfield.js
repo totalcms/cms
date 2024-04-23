@@ -60,6 +60,10 @@ export default class TotalField {
 		this.changed();
     }
 
+	clearValue() {
+		this.setValue("");
+	}
+
     changed() {
 		this.container.classList.add("unsaved");
         this.container.dispatchEvent(new Event("field-change"));

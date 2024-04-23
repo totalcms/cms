@@ -5,14 +5,16 @@ namespace TotalCMS\Action\Object;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
+use TotalCMS\Renderer\JsonRenderer;
 
 final class ObjectDeleteAction
 {
-    private ObjectRemover $remover;
-
-    public function __construct(ObjectRemover $remover)
-    {
-        $this->remover = $remover;
+    public function __construct(
+        private JsonRenderer $renderer,
+        private ObjectRemover $remover
+    ) {
+        $this->remover  = $remover;
+        $this->renderer = $renderer;
     }
 
     /**
@@ -35,6 +37,6 @@ final class ObjectDeleteAction
             return $response->withStatus(500);
         }
 
-        return $response;
+        return $this->renderer->json($response, ['deleted' => $deleted]);
     }
 }

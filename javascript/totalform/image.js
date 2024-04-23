@@ -2,6 +2,7 @@ import TotalField from "./totalfield";
 import Dialog from "./dialog";
 import Droplet from "./droplet";
 import Details from "./details";
+import { on } from "codemirror";
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -14,8 +15,23 @@ export default class ImageField extends TotalField {
 		this.droplet    = this.setupDroplet();
 		this.editDialog = this.setupEditDialog();
 		this.linkDialog = this.setupLinkDialog();
+		this.setupDelete();
     }
 
+	setupDelete() {
+		const deleteButton = this.container.querySelector(".actionbar .trash");
+		if (deleteButton) {
+			deleteButton.addEventListener("click", () => {
+				if (confirm("Are you sure that you want to delete this image?")) {
+					const deleteApi = `/collections/${this.form.collection}/${this.form.id}`;
+					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+						deleteButton.closest(".dz-preview").remove();
+						this.clearValue();
+					});
+				}
+			});
+		}
+	}
 
 	apiUploadImage() {
 		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
@@ -153,6 +169,13 @@ export default class ImageField extends TotalField {
 		}
         return imageData;
     }
+
+	clearValue() {
+		const fields = this.container.getElementsByClassName("form-field");
+		for (const field of fields) {
+			field.totalfield.clearValue();
+		}
+	}
 
     setValue(image) {
 		// TODO: populate the fields with the image data

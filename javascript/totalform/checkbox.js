@@ -14,6 +14,10 @@ export default class Checkbox extends TotalField {
         return this.input.checked;
     }
 
+	clearValue() {
+		this.setValue(false);
+	}
+
     schema() {
         return {
             "type":"boolean",

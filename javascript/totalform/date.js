@@ -12,12 +12,17 @@ export default class DateField extends TotalField {
 		return "";
 	}
 
-	setValue() {
-		let value = new Date(this.value).toISOString();
+	setValue(value) {
+		value = new Date(value||this.value).toISOString();
 		if (this.type === 'date') {
 			value = value.split('T')[0];
 		}
 		this.input.value = value;
+		this.changed();
+	}
+
+	clearValue() {
+		this.input.value = "";
 		this.changed();
 	}
 

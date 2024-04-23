@@ -27,12 +27,14 @@ export default class MultiSelectField extends TotalField {
         // Select Options
         const options = Array.from(this.input.getElementsByTagName("option"));
         for (const option of options) {
-            if (value.indexOf(option.value)>=0) {
-                option.selected = true;
-            }
+			option.selected = (value.indexOf(option.value)>=0);
         }
         this.changed();
     }
+
+	clearValue() {
+		this.setValue([]);
+	}
 
     schema() {
         return {

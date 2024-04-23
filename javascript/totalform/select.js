@@ -18,10 +18,7 @@ export default class SelectField extends TotalField {
         // Select Options
         const options = Array.from(this.input.getElementsByTagName("option"));
         for (const option of options) {
-            if (option.value.trim() === value.trim()) {
-                option.selected = true;
-                break;
-            }
+			option.selected = (option.value.trim() === value.trim());
         }
         this.changed();
     }
