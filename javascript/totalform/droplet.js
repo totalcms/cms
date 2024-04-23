@@ -16,21 +16,22 @@ export default class Droplet {
 
         // Define option defaults
         const defaults = {
-            autoProcessQueue  : false,
-            previewsContainer : this.container.querySelector(".total-preview"),
-            acceptedFiles     : "image/*",
-            paramName         : "file",
-            requestHeaders    : {},
-            gallery           : false,
+			autoProcessQueue  : false,
+			previewsContainer : this.container.querySelector(".total-preview"),
+			acceptedFiles     : "image/*",
+			paramName         : "file",
+			requestHeaders    : {},
+			rules             : {},
+			gallery           : false,
         };
-        this.options = Object.assign({}, defaults, options);
+		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
+        this.options = Object.assign({}, defaults, options, dataOptions);
 
         this.options.gallery = (this.options.type === "gallery"||this.options.type === "depot");
 
         // Get the rule set for uploading the file
-        if (this.container.dataset.rules) {
-            const rules = JSON.parse(this.container.dataset.rules);
-            this.testSet = new DropletTestSet(rules);
+        if (Object.keys(this.options.rules).length > 0) {
+            this.testSet = new DropletTestSet(this.options.rules);
         }
 
         this.setupDropzone();
@@ -159,7 +160,8 @@ export default class Droplet {
         // Process file rules
         // This happens here becuase its the first time that we have access to file info
         if (this.testSet) {
-            this.testSet.processRules(file);
+			const count = this.container.querySelectorAll(".dz-preview").length;
+            this.testSet.processRules(file, count);
             if (!this.testSet.pass) {
                 console.error(this.testSet.errors);
                 file.rejectFile(this.testSet.errors);

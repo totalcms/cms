@@ -31,13 +31,15 @@
 		icon  : false,
 	}) %}
 
-    {# Migrate these to use args.options to be added to fieldstart
-		{
-			"orientation":"stake_orientation",
-			"size":{"min":0,"max":stake_maxsize},
-			"height":{"min":stake_height_0,"max":stake_height_1},
-			"width":{"min":stake_width_0,"max":stake_width_1},
-			"image":true
+    {# Example Rules Options
+		options: {
+			rules : {
+				orientation : "landscape",
+				size        : {min:0,   max:3000},
+				height      : {min:500, max:1000},
+				width       : {min:0,   max:1000},
+				count	    : { max:5 },
+			}
 		}
 	#}
 	{% set imageData  = attribute(object, property) %}

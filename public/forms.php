@@ -67,7 +67,19 @@ $totalcms->startBuffer(); // Start output buffering again
 
 		{{ form.imageForm('myimage') }}
 
-		{{ form.imageForm('newimage') }}
+		{{ form.imageForm('newimage', {
+			options: {
+				rules : {
+					orientation : "landscape",
+					size        : {min:0,max:3000},
+					height      : {min:500,max:1000},
+					width       : {min:0,max:1000},
+					count       : {min:0,max:5},
+					filetype    : ["image"],
+					filename    : ["jpg"]
+				}
+			}
+		}) }}
 
 		<!-- {{ form.start("custom", { method:"post" }) }}
 
