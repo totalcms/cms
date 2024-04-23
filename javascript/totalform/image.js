@@ -19,16 +19,7 @@ export default class ImageField extends TotalField {
 		this.linkDialog = this.setupLinkDialog();
 
 		this.setupActionBar();
-		this.sortablePalette();
     }
-
-	sortablePalette() {
-		const palette = this.editDialog.dialog.querySelector(".palette");
-		Sortable.create(palette, {
-			animation  : 150,
-			ghostClass : 'drag-ghost',
-		});
-	}
 
 	setupDelete() {
 		const deleteButton = this.container.querySelector(".actionbar .trash");
@@ -55,13 +46,13 @@ export default class ImageField extends TotalField {
 		this.droplet.autoProcessQueue();
 	}
 
-	removeListeners() {
-		if (this.documentListeners) {
-			for (const key in this.documentListeners) {
-				document.removeEventListener(key, this.documentListeners[key]);
-			}
-		}
-	}
+	// removeListeners() {
+	// 	if (this.documentListeners) {
+	// 		for (const key in this.documentListeners) {
+	// 			document.removeEventListener(key, this.documentListeners[key]);
+	// 		}
+	// 	}
+	// }
 
 	setupActionBar() {
 		const edit = this.container.querySelector(".actionbar .edit");
@@ -98,26 +89,37 @@ export default class ImageField extends TotalField {
 			open  : null,
 			close : ".close",
 			onOpen : () => {
+				if (this.dialogOpened) return;
+				this.dialogOpened = true;
 				this.setupEditAccordion();
 				this.setupFocalPoint();
+				this.sortablePalette();
 			},
-			onClose : () => {
-				this.removeListeners();
-			}
+			// onClose : () => {
+			// 	this.removeListeners();
+			// }
 		});
 	}
 
 	setupEditAccordion() {
-		if (this.editAccordion) return;
 		// Close other details when one is opened
 		const details = Array.from(this.editDialog.dialog.querySelectorAll("details"));
 		this.editAccordion = new Details(details);
 	}
 
+	sortablePalette() {
+		// Make the color palette sortable
+		const palette = this.editDialog.dialog.querySelector(".palette");
+		Sortable.create(palette, {
+			animation  : 150,
+			ghostClass : 'drag-ghost',
+		});
+	}
+
 	setupFocalPoint() {
+		const focalPoint  = this.editDialog.dialog.querySelector('.focal-point');
 		const focalPointX = this.editDialog.dialog.querySelector('.form-field:has([name=focalpoint-x])');
 		const focalPointY = this.editDialog.dialog.querySelector('.form-field:has([name=focalpoint-y])');
-		const focalPoint  = this.editDialog.dialog.querySelector('.focal-point');
 		const focalPointCoords = (event) => {
 			const clientX = event.touches ? event.touches[0].clientX : event.clientX;
 			const clientY = event.touches ? event.touches[0].clientY : event.clientY;
@@ -151,10 +153,13 @@ export default class ImageField extends TotalField {
 			}
 		};
 
-		this.documentListeners = {
-			"mousemove" : document.addEventListener('mousemove', moveFocalPoint),
-			"touchmove" : document.addEventListener('touchmove', moveFocalPoint, { passive: false }),
-		};
+		// this.documentListeners = {
+		// 	"mousemove" : document.addEventListener('mousemove', moveFocalPoint),
+		// 	"touchmove" : document.addEventListener('touchmove', moveFocalPoint, { passive: false }),
+		// };
+
+		document.addEventListener('mousemove', moveFocalPoint);
+		document.addEventListener('touchmove', moveFocalPoint, { passive: false });
 
 		focalPoint.addEventListener('mousedown', startDragging);
 		focalPoint.addEventListener('touchstart', startDragging, { passive: true });
