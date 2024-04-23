@@ -5,16 +5,18 @@
 	position            : absolute;
 	top                 : 50%;
 	left                : 50%;
-	transform           : translateX(-50%) translateY(-50%);
+	translate           : -50% -50%;
 	width               : 96px;
 	height              : 96px;
 	opacity             : 0.5;
 	background-image    : var(--icon-upload);
 	background-position : center;
-	transition          : opacity 0.3s ease-in-out;
+	transition          : all 300ms ease-in-out;
+	transform-origin    : center;
 
 	&:hover {
-		opacity: 1;
+		opacity : 0.9;
+		scale   : 1.1;
 	}
 }
 
@@ -27,7 +29,8 @@
 		display: none;
 	}
 	.dz-overlay {
-		opacity: 1.0;
+		opacity : 0.9;
+		scale   : 1.1;
 	}
 
 	.total-preview {

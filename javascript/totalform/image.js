@@ -21,22 +21,6 @@ export default class ImageField extends TotalField {
 		this.setupActionBar();
     }
 
-	setupDelete() {
-		const deleteButton = this.container.querySelector(".actionbar .trash");
-		if (deleteButton) {
-			deleteButton.addEventListener("click", event => {
-				event.preventDefault();
-				if (confirm("Are you sure that you want to delete this image?")) {
-					const deleteApi = `/collections/${this.form.collection}/${this.form.id}`;
-					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
-						deleteButton.closest(".dz-preview").remove();
-						this.clearValue();
-					});
-				}
-			});
-		}
-	}
-
 	apiUploadImage() {
 		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 		return this.api.apiUrl(api);
@@ -66,6 +50,52 @@ export default class ImageField extends TotalField {
 			this.linkDialog.open();
 		});
 		this.setupDelete();
+		this.setupFeaturedToggle();
+	}
+
+	isFeatured() {
+		// This is not 100% correct. A user could change the featured value in the edit dialog
+		// and then not save. This could cause this flag to be wrong.
+		const fields = Array.from(this.fields);
+		const field = fields.filter(field => field.totalfield.property === "featured")[0];
+		return field.totalfield.getValue();
+	}
+
+	toggleFeatured() {
+		const fields = Array.from(this.fields);
+		const field = fields.filter(field => field.totalfield.property === "featured")[0];
+		field.totalfield.setValue(!this.isFeatured());
+		this.container.querySelector(".total-preview").classList.toggle("featured");
+	}
+
+	setupFeaturedToggle() {
+		const featureButton = this.container.querySelector(".actionbar .featured");
+		if (featureButton) {
+			featureButton.addEventListener("click", event => {
+				event.preventDefault();
+				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				const newData = { featured: !this.isFeatured() };
+				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
+					this.toggleFeatured();
+				});
+			});
+		}
+	}
+
+	setupDelete() {
+		const deleteButton = this.container.querySelector(".actionbar .trash");
+		if (deleteButton) {
+			deleteButton.addEventListener("click", event => {
+				event.preventDefault();
+				if (confirm("Are you sure that you want to delete this image?")) {
+					const deleteApi = `/collections/${this.form.collection}/${this.form.id}`;
+					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+						deleteButton.closest(".dz-preview").remove();
+						this.clearValue();
+					});
+				}
+			});
+		}
 	}
 
 	setupDroplet() {

@@ -35,7 +35,8 @@ return function (App $app) {
         $group->map(['HEAD'], '/{collection}/{id}', Action\Object\ObjectExistsAction::class)->setName('object-exists');
 
         // Object Property
-        // $group->put('/{collection}/{id}/{property}', Property\PropertyUpdateAction::class)->setName('property-update');
+        $group->put('/{collection}/{id}/{property}', Action\Object\ObjectUpdatePropertyAction::class)->setName('property-update');
+        $group->patch('/{collection}/{id}/{property}', Action\Object\ObjectPatchPropertyAction::class)->setName('property-patch');
         // $group->delete('/{collection}/{id}/{property}', Property\PropertyClearAction::class)->setName('property-clear');
 
         // Property File

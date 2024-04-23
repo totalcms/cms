@@ -80,6 +80,20 @@ final class ObjectSaver
         return $object;
     }
 
+    public function updateObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
+    {
+        $object = $this->storage->fetchObject($collection, $id);
+
+        if (!$object instanceof ObjectData) {
+            throw new \UnexpectedValueException('Unable to locate object to update');
+        }
+
+        $objectData            = $object->toArray();
+        $objectData[$property] = $newData;
+
+        return $this->updateObject($collection, $id, $objectData);
+    }
+
     /**
      * patch a collection object.
      *
@@ -102,5 +116,19 @@ final class ObjectSaver
         $mergedObject = array_merge($object->toArray(), $newData);
 
         return $this->updateObject($collection, $id, $mergedObject);
+    }
+
+    public function patchObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
+    {
+        $object = $this->storage->fetchObject($collection, $id);
+
+        if (!$object instanceof ObjectData) {
+            throw new \UnexpectedValueException('Unable to locate object to update');
+        }
+
+        $objectData            = $object->toArray();
+        $objectData[$property] = array_merge($objectData[$property], $newData);
+
+        return $this->updateObject($collection, $id, $objectData);
     }
 }

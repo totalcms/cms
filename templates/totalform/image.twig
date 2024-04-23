@@ -48,7 +48,7 @@
 
 		<div class="dz-overlay dz-clickable"></div>
 
-		<div class="total-preview">
+		<div class="total-preview {% if imageData.featured %}featured{% endif %}">
 			{{ _self.imagePreview(object.id, imageData) }}
 		</div>
 
@@ -67,7 +67,7 @@
 		<div class="actionbar">
 			<button class="edit"     title="Edit Image Info"></button>
 			<button class="links"    title="Image URL"></button>
-			<button class="featured" title="Featured"></button>
+			<button class="featured" title="Toggle Featured"></button>
 			<button class="move"     title="Reorder Image"></button>
 			<button class="trash"    title="Delete Image"></button>
 		</div>

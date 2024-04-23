@@ -2,7 +2,7 @@
 // Action Bar
 //--------------------------------
 .actionbar {
-	--actionbar-color: oklch(100 0 0 / 0.8);
+	--actionbar-color: oklch(100 0 0 / 0.6);
 	--actionbar-icon-color: #222222;
 	--actionbar-icon-size: 24px;
 
@@ -15,11 +15,14 @@
 	margin           : 0;
 	padding          : 1rem;
 	opacity          : 0;
-	transition       : opacity 500ms ease-in-out;
+	transition       : opacity 300ms ease-in-out;
 	z-index          : 1;
 
 	display : flex;
 	gap     : 1rem;
+
+	backdrop-filter  : blur(3px);
+
 
     button {
 		appearance       : none;
@@ -30,9 +33,11 @@
 		background-color : var(--actionbar-icon-color);
 		width            : var(--actionbar-icon-size);
 		height           : var(--actionbar-icon-size);
+		transition       : scale 300ms ease-in-out;
 
 		&:hover {
-            opacity : 1;
+			opacity : 1;
+			scale   : 1.15;
         }
 
 		&.edit {
@@ -40,8 +45,8 @@
 			mask         : var(--icon-edit);
 		}
 		&.featured {
-			-webkit-mask : var(--icon-featured);
-			mask         : var(--icon-featured);
+			-webkit-mask : var(--icon-not-featured);
+			mask         : var(--icon-not-featured);
 		}
 		&.not-featured {
 			-webkit-mask : var(--icon-not-featured);
@@ -88,6 +93,12 @@
     }
 }
 
+.featured {
+	button.featured {
+		-webkit-mask : var(--icon-featured);
+		mask         : var(--icon-featured);
+	}
+}
 
 .image-field {
     .move {
@@ -100,21 +111,9 @@ div:not(.empty):hover {
         opacity : 1;
     }
 }
+
 .dz-error,.dz-processing {
     .actionbar {
         display : none!important;
     }
-}
-#imagebar-image {
-    img {
-        display    : block;
-        max-height : calc(100vh - 450px);
-        margin     : 0 auto;
-    }
-}
-
-.alt-form img{
-    max-width   : 25%;
-    float       : right;
-    margin-left : 1rem;
 }
