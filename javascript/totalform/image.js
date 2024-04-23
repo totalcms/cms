@@ -41,7 +41,12 @@ export default class ImageField extends TotalField {
 	setupActionBar() {
 		const edit = this.container.querySelector(".actionbar .edit");
 		const links = this.container.querySelector(".actionbar .links");
+		const image = this.container.querySelector(".total-preview img");
 		edit.addEventListener("click", event => {
+			event.preventDefault();
+			this.editDialog.open();
+		});
+		image.addEventListener("click", event => {
 			event.preventDefault();
 			this.editDialog.open();
 		});
