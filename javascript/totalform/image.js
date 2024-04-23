@@ -93,7 +93,7 @@ export default class ImageField extends TotalField {
 		if (clearButton) {
 			clearButton.addEventListener("click", event => {
 				event.preventDefault();
-				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/cache`;
 				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
 					this.container.querySelector(".total-preview").classList.toggle("cleared-cache");
 				});

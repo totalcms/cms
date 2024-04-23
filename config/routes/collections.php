@@ -37,7 +37,8 @@ return function (App $app) {
         // Object Property
         $group->put('/{collection}/{id}/{property}', Action\Object\ObjectUpdatePropertyAction::class)->setName('property-update');
         $group->patch('/{collection}/{id}/{property}', Action\Object\ObjectPatchPropertyAction::class)->setName('property-patch');
-        $group->delete('/{collection}/{id}/{property}', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
+        // $group->delete('/{collection}/{id}/{property}', Property\PropertyClearAction::class)->setName('property-clear');
+        $group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
 
         // Property File
         $group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save');
