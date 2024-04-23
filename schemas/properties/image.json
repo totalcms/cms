@@ -62,7 +62,7 @@
           "type": "string"
         },
         "iso": {
-          "type": "string"
+          "type": "number"
         }
       }
     },

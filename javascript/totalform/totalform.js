@@ -330,16 +330,13 @@ export default class TotalForm {
     }
 
     isEditMode() {
-        return this.form.classList.contains("edit-form");
+        return ("PUT" === this.method.toUpperCase());
     }
 
     editMode() {
 		if (this.isEditMode()) {
 			return;
 		}
-		// if ("POST" !== this.method.toUpperCase()) {
-		// 	return;
-		// }
 
 		// Set the method to PUT for editing existing objects
 		this.method = "PUT";
@@ -353,9 +350,6 @@ export default class TotalForm {
 		// Update the API to the edit endpoint
 		this.baseapi = `${this.baseapi}/${this.id}`;
 		this.form.dataset.api = this.baseapi;
-
-		// Set the form to edit mode
-		this.form.classList.add("edit-form");
 
 		// Update the droplets to autoupload
 		this.droplets.forEach(droplet => droplet.autoProcessQueue());

@@ -7,7 +7,7 @@
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.image('image', args) }}
 
-	{{ _self.end() }}
+	{{ _self.end(true) }}
 {% endmacro %}
 
 {#--------------------------------#}
@@ -196,7 +196,7 @@
 					class       : "icon-camera",
 					value       : imageData.exif.lens,
 				}) }}
-				{{ _self.number("exif-focalLength", {
+				{{ _self.input("exif-focalLength", {
 					label       : "Focal Length",
 					placeholder : "Focal Length Not Found",
 					class       : "icon-shutter",

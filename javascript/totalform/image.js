@@ -185,6 +185,7 @@ export default class ImageField extends TotalField {
 			const value = field.totalfield.getValue();
 
 			if (key.startsWith("exif-")) {
+				if (!value) continue;
 				key = key.replace("exif-","");
 				if (!imageData["exif"]) imageData["exif"] = {};
 				imageData["exif"][key] = value;
@@ -196,7 +197,7 @@ export default class ImageField extends TotalField {
 
 			} else if (key.startsWith("palette-")) {
 				if (!imageData["palette"]) imageData["palette"] = [];
-				imageData["palette"].push(value);
+				imageData["palette"].push(value.hex); // only store the hex value
 
 			} else {
 				imageData[key] = value;

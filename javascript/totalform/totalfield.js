@@ -36,19 +36,18 @@ export default class TotalField {
 		this.input.addEventListener("input", () => this.changed(), {once: true});
 	}
 
-	// Filter for determining if a field is a subproperty of another field
 	isSubField() {
-		return this.container.closest(".form-field") ? true : false;
+		// Filter for determining if a field is a subproperty of another field
+		// Need to look at parentNode since closest also looks at self
+		return this.container.parentNode.closest(".form-field") ? true : false;
 	}
 
 	isDroplet() {
-		const droplets = ['image', 'file', 'gallery', 'depot'];
-		return droplets.includes(this.type);
+		return (this.droplet && typeof this.droplet === "object");
 	}
 
 	isFroala() {
-		const froalaTypes = ['styledtext', 'svg'];
-		return froalaTypes.includes(this.type);
+		return (this.froala && typeof this.froala === "object");
 	}
 
     getValue() {
