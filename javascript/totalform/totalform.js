@@ -70,7 +70,7 @@ export default class TotalForm {
 
     // Check to see if the object is a HTML node.
     isDomNode(node){
-        return typeof node === "object" && "nodeType" in node && node.nodeType === 1;
+        return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
     }
     // Set the form via a DOM element or selector string
     setForm(formRef) {

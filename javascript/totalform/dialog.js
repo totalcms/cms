@@ -29,7 +29,7 @@ export default class Dialog  {
     }
 
     isDomNode(node){
-        return typeof node === "object" && "nodeType" in node && node.nodeType === 1;
+        return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
     }
 
 	close(event) {

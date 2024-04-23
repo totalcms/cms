@@ -57,7 +57,7 @@ export default class ImageField extends TotalField {
 		const edit = this.container.querySelector(".actionbar .edit");
 		const links = this.container.querySelector(".actionbar .links");
 		edit.addEventListener("click", e => this.editDialog.open(e));
-		links.addEventListener("click", e => this.linksDialog.open(e));
+		links.addEventListener("click", e => this.linkDialog.open(e));
 		this.setupDelete();
 	}
 
@@ -72,14 +72,14 @@ export default class ImageField extends TotalField {
 
 	setupLinkDialog() {
 		return new Dialog(this.container.querySelector(".image-link-dialog"), {
-			open  : this.container.querySelector(".actionbar .links"),
+			open  : null,
 			close : ".close",
 		});
 	}
 
 	setupEditDialog() {
 		return new Dialog(this.container.querySelector(".image-edit-dialog"), {
-			open  : this.container.querySelector(".actionbar .edit"),
+			open  : null,
 			close : ".close",
 			onOpen : () => {
 				this.setupEditAccordion();
