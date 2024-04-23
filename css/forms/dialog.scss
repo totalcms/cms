@@ -58,10 +58,10 @@ dialog.cms-modal {
 			}
 
 			&::-webkit-scrollbar-thumb {
+				--accent-light: oklch(calc(var(--totalform-accent-l)*1.15) var(--totalform-accent-c) var(--totalform-accent-h));
 				border-radius : 15px;
-				background    : linear-gradient(180deg,#ff8a00,#da1b60);
+				background    : linear-gradient(180deg,var(--accent-light),var(--totalform-accent));
 				box-shadow    : inset 2px 2px 2px rgba(255,255,255,.25), inset -2px -2px 2px rgba(0,0,0,.25);
-				// background    : -webkit-gradient(linear,left top,left bottom,from(#ff8a00),to(#da1b60));
 			}
 
 			&::-webkit-scrollbar-track {
