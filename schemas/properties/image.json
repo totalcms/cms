@@ -29,7 +29,7 @@
           "type": "string"
         },
         "aperture": {
-          "type": "string"
+          "type": "number"
         },
         "altitude": {
           "type": "number"
@@ -59,9 +59,9 @@
           "type": "string"
         },
         "focalLength": {
-          "type": "string"
+          "type": "number"
         },
-        "iso": {
+		"iso": {
           "type": "number"
         }
       }

@@ -196,13 +196,13 @@
 					class       : "icon-camera",
 					value       : imageData.exif.lens,
 				}) }}
-				{{ _self.input("exif-focalLength", {
+				{{ _self.number("exif-focalLength", {
 					label       : "Focal Length",
 					placeholder : "Focal Length Not Found",
 					class       : "icon-shutter",
 					value       : imageData.exif.focalLength,
 				}) }}
-				{{ _self.input("exif-aperture", {
+				{{ _self.number("exif-aperture", {
 					label       : "Aperture",
 					placeholder : "Aperture Not Found",
 					class       : "icon-shutter",
@@ -224,19 +224,19 @@
 
 			<details class="cms-accordion">
 				<summary>EXIF - GPS</summary>
-				{{ _self.input("exif-longitude", {
+				{{ _self.number("exif-longitude", {
 					label       : "Longitude",
 					class       : "icon-gps",
 					placeholder : "Longitude Not Found",
 					value       : imageData.exif.longitude,
 				}) }}
-				{{ _self.input("exif-latitude", {
+				{{ _self.number("exif-latitude", {
 					label       : "Latitude",
 					class       : "icon-gps",
 					placeholder : "Latitude Not Found",
 					value       : imageData.exif.latitude,
 				}) }}
-				{{ _self.input("exif-altitude", {
+				{{ _self.number("exif-altitude", {
 					label       : "Altitude",
 					class       : "icon-gps",
 					placeholder : "Altitude Not Found",

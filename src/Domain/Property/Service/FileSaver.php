@@ -282,6 +282,31 @@ final class FileSaver
         ];
     }
 
+    private static function floatOrNull(string|float|int|bool $value): ?float
+    {
+        if (!is_bool($value)) {
+            // Remove any non-numeric characters
+            $value = preg_replace('/[^0-9.]/', '', (string)$value);
+            if (is_numeric($value)) {
+                return floatval($value);
+            }
+        }
+
+        return null;
+    }
+
+    private static function shutterSpeed(string|bool $speed): ?string
+    {
+        if (is_bool($speed)) {
+            return null;
+        }
+        if (!str_starts_with($speed, '1/')) {
+            return '1/' . $speed;
+        }
+
+        return $speed;
+    }
+
     /**
      * get image exif data.
      *
@@ -304,14 +329,14 @@ final class FileSaver
 
         $data = [
             // Exposure Data
-            'aperture'     => $exif->getAperture(),
-            'iso'          => $exif->getIso(),
-            'shutterSpeed' => $exif->getExposure(),
+            'aperture'     => self::floatOrNull($exif->getAperture()),
+            'iso'          => self::floatOrNull($exif->getIso()),
+            'shutterSpeed' => self::shutterSpeed($exif->getExposure()),
             // Camera Data
             'make'        => $exif->getMake(),
             'camera'      => $exif->getCamera(),
             'lens'        => $exif->getLens(),
-            'focalLength' => $exif->getFocalLength(),
+            'focalLength' => self::floatOrNull($exif->getFocalLength()),
             // Meta Data
             'author'      => $exif->getAuthor(),
             'description' => $exif->getDescription(),
@@ -320,9 +345,9 @@ final class FileSaver
             'title'       => $exif->getTitle(),
             'date'        => $date,
             // GPS Data
-            'longitude'   => $exif->getLongitude(),
-            'latitude'    => $exif->getLatitude(),
-            'altitude'    => $exif->getAltitude(),
+            'longitude'   => self::floatOrNull($exif->getLongitude()),
+            'latitude'    => self::floatOrNull($exif->getLatitude()),
+            'altitude'    => self::floatOrNull($exif->getAltitude()),
         ];
         // fitler out any null values
         $data     = array_filter($data);
