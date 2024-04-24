@@ -27,7 +27,9 @@ export default class TotalField {
         }
 
 		// throttle the event dispatching
-		this.debounceTimer = null;
+		this.debounceTimer = {
+			delay : 300,
+		};
 
 		this.changeListener();
     }
@@ -66,15 +68,21 @@ export default class TotalField {
 		this.setValue("");
 	}
 
+	dispatchEvent(event, msg = null) {
+		clearTimeout(this.debounceTimer[event]);
+		this.debounceTimer[event] = setTimeout(() => {
+			this.container.dispatchEvent(new CustomEvent(event, {
+				detail: {
+					field : this,
+					msg   : msg,
+				}
+			}));
+		}, this.debounceTimer.delay);
+	}
+
     changed() {
 		this.container.classList.add("unsaved");
-
-		clearTimeout(this.debounceTimer);
-		this.debounceTimer = setTimeout(() => {
-			this.container.dispatchEvent(new CustomEvent("field-change", {
-				detail: { field : this }
-			}));
-		}, 300);
+		this.dispatchEvent("field-change");
     }
 
 	saved() {
@@ -84,12 +92,7 @@ export default class TotalField {
 
 	error(message) {
 		this.container.classList.add("error");
-        this.container.dispatchEvent(new CustomEvent("field-error"), {
-			detail: {
-				msg   : message,
-				field : this,
-			}
-		});
+		this.dispatchEvent("field-error", message);
     }
 
     schema() {
