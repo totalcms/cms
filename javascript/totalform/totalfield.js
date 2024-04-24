@@ -1,3 +1,5 @@
+import TotalDispatcher from "./dispatcher";
+
 //-----------------------------------------------
 // Total CMS Generic Field
 //-----------------------------------------------
@@ -26,10 +28,7 @@ export default class TotalField {
             this.api = this.form.api;
         }
 
-		// throttle the event dispatching
-		this.debounceTimer = {
-			delay : 300,
-		};
+		this.dispathcer = new TotalDispatcher(this.container);
 
 		this.changeListener();
     }
@@ -68,21 +67,9 @@ export default class TotalField {
 		this.setValue("");
 	}
 
-	dispatchEvent(event, msg = null) {
-		clearTimeout(this.debounceTimer[event]);
-		this.debounceTimer[event] = setTimeout(() => {
-			this.container.dispatchEvent(new CustomEvent(event, {
-				detail: {
-					field : this,
-					msg   : msg,
-				}
-			}));
-		}, this.debounceTimer.delay);
-	}
-
     changed() {
 		this.container.classList.add("unsaved");
-		this.dispatchEvent("field-change");
+		this.dispathcer.dispatchEvent("field-change", { field: this });
     }
 
 	saved() {
@@ -92,7 +79,7 @@ export default class TotalField {
 
 	error(message) {
 		this.container.classList.add("error");
-		this.dispatchEvent("field-error", message);
+		this.dispathcer.dispatchEvent("field-error", { field: this, message: message });
     }
 
     schema() {

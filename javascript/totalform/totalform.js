@@ -1,5 +1,6 @@
 import TotalCMS from '../totalcms';
 import TotalField from './totalfield';
+import TotalDispatcher from './dispatcher';
 import Identifier from './identifier';
 import Checkbox from './checkbox';
 import Textarea from './textarea';
@@ -50,6 +51,8 @@ export default class TotalForm {
 		if (this.id) {
 			this.editMode();
 		}
+
+		this.dispathcer = new TotalDispatcher(this.form);
 
         this.saveListener();
         this.registerButtons();
