@@ -133,6 +133,12 @@ export default class ImageField extends TotalField {
 		return new Dialog(this.container.querySelector(".image-link-dialog"), {
 			open  : null,
 			close : ".close",
+			onOpen : () => {
+				const iframe = this.linkDialog.dialog.querySelector("iframe");
+				if (!iframe.src) {
+					iframe.src = iframe.dataset.src;
+				}
+			},
 		});
 	}
 

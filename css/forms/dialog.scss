@@ -32,6 +32,10 @@ dialog.cms-modal {
 		}
 	}
 
+	&.full {
+		grid-template-columns : 1fr;
+	}
+
 	&::backdrop {
 		background-color : rgb(0 0 0 / 0.5);
 		backdrop-filter  : blur(3px);

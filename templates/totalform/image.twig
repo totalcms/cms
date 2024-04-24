@@ -87,12 +87,13 @@
 
 {% macro linkDialog(id, imageData) %}
 
-	<dialog class="cms-modal image-link-dialog">
-
-		<h3>Image Link Builder</h3>
-		{# <iframe src="{{ totalcms.link(id) }}" frameborder="0"></iframe> #}
-
-		<button class="close">Close</button>
+	<dialog class="cms-modal full image-link-dialog">
+		<section>
+			<iframe style="width:100%" data-src="{{totalcms.api}}/admin/imageworks?id={{id}}" frameborder="0"></iframe>
+		</section>
+		<section>
+			<button class="close">Close</button>
+		</section>
 	</dialog>
 
 {% endmacro %}
