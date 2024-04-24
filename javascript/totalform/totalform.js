@@ -208,10 +208,8 @@ export default class TotalForm {
     // Submit functions
     //-------------------------
     saveListener() {
-		if (this.baseapi) {
-			// Prevent the default form submission
-			this.form.addEventListener("submit", event => event.preventDefault());
-		}
+		// Prevent the default form submission
+		this.form.addEventListener("submit", event => event.preventDefault());
 
         document.addEventListener("keydown", (event) => {
             if (this.isUnsaved()) {

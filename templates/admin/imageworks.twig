@@ -43,18 +43,19 @@
 	{% set id = getParams.id ?? postParams.id  %}
 	{% set collection = getParams.collection ?? postParams.collection | default("image") %}
 	{% set property = getParams.property ?? postParams.property | default("image") %}
+	{% set options = { w : 600, h : 400 } | merge(postParams) %}
 
 	<section class="image-preview">
-		<img src="{{ totalcms.image(id, {w:600,h:400}, collection) }}" oncontextmenu="return false;" draggable="false" />
+		<img src="{{ totalcms.image(id, options, collection, property) }}" oncontextmenu="return false;" draggable="false" />
 	</section>
 
-	<form class="totalform" method="post">
+	<form class="totalform">
 
-		<button type="submit">Preview Image</button>
+		<button>Preview Image</button>
 
-		<input type="hidden" name="id" value="{{ id }}">
+		{# <input type="hidden" name="id" value="{{ id }}">
 		<input type="hidden" name="collection" value="{{ collection }}">
-		<input type="hidden" name="property" value="{{ property }}">
+		<input type="hidden" name="property" value="{{ property }}"> #}
 
 		<details class="cms-accordion">
 			<summary>Sizing</summary>
@@ -87,7 +88,7 @@
 
 		<details class="cms-accordion">
 			<summary>Background &amp; Border</summary>
-			{{ _self.input("bg", "color", "Background", "Width of the image") }}
+			{{ _self.input("bg", "text", "Background", "Width of the image") }}
 			{{ _self.input("border", "text", "Border", "width,color,method") }}
 		</details>
 
@@ -96,11 +97,5 @@
 {% endblock %}
 
 {% block bodyBelow %}
-<script>
-document.addEventListener("DOMContentLoaded", event => {
-	const details = new Details(Array.from(document.querySelectorAll("details")), {
-		openFirst: false
-	});
-});
-</script>
+	<script type="module" src="{{ totalcms.assetsDir }}/imageworks-builder.js"></script>
 {% endblock %}

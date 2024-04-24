@@ -8,6 +8,7 @@ const { createImporter } = require("sass-extended-importer");
 esbuild.build({
     entryPoints : [
 		"javascript/admin.js",
+		"javascript/imageworks-builder.js",
 		"javascript/totalcms.js",
 	],
 	format    : "esm",
