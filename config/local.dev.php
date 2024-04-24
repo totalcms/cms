@@ -9,12 +9,13 @@ ini_set('display_errors', '1');
 
 $settings['env'] = 'dev';
 
-$settings['docroot']  = $settings['root'];
-$settings['datadir']  = $settings['root'] . '/tcms-data';
-$settings['cachedir'] = 'false';
-$settings['domain']   = 'totalcms.test';
-$settings['url']      = 'https://totalcms.test';
-$settings['api']      = 'https://totalcms.test';
+$settings['docroot']   = $settings['root'];
+$settings['datadir']   = $settings['root'] . '/tcms-data';
+$settings['cachedir']  = 'false';
+$settings['domain']    = 'totalcms.test';
+$settings['url']       = 'https://totalcms.test';
+$settings['api']       = 'https://totalcms.test';
+$settings['assetsDir'] = '/tcms-assets';
 
 $settings['error']['display_error_details'] = true;
 $settings['error']['log_errors']            = true;

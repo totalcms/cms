@@ -88,3 +88,4 @@ export default class Dialog  {
 		this.buttonListener(this.options.open, () => this.open());
 	}
 }
+window.Dialog = Dialog;

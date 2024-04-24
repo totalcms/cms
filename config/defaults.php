@@ -29,9 +29,10 @@ $settings = [];
 // Default env to production
 $settings['env'] = 'prod';
 
-$settings['domain'] = 'example.com';
-$settings['url']    = 'https://' . $settings['domain'];
-$settings['api']    = $settings['url'] . '/api';
+$settings['domain']    = 'example.com';
+$settings['url']       = 'https://' . $settings['domain'];
+$settings['api']       = $settings['url'] . '/api';
+$settings['assetsDir'] = '/tcms-assets';
 
 // Path settings
 $settings['root']     = dirname(__DIR__);

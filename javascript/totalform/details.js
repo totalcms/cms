@@ -21,6 +21,10 @@ export default class Details  {
 		}
     }
 
+	isDomNode(node){
+        return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
+    }
+
 	findDetails(selector) {
 		let details = [];
 		if (typeof selector === "string") {
@@ -47,3 +51,5 @@ export default class Details  {
 		});
 	}
 }
+
+window.Details = Details;

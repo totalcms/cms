@@ -8,6 +8,7 @@ namespace TotalCMS\Support;
 final class Config
 {
     public string $template  = '';
+    public string $assetsDir = '';
     public string $dataDir   = '';
     public string $cacheDir  = '';
     public string $tmpDir    = '';
@@ -28,5 +29,6 @@ final class Config
         $this->imageworks = $settings['imageworks'];
         $this->domain     = $settings['domain'];
         $this->api        = $settings['api'];
+        $this->assetsDir  = $settings['assetsDir'];
     }
 }

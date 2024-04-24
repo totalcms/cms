@@ -13,6 +13,7 @@ use TotalCMS\Support\Config;
 final class TotalCMSTwigAdapter
 {
     public string $api;
+    public string $assetsDir;
     private array $storage;
     private Config $config;
     private IndexReader $collectionReader;
@@ -30,8 +31,9 @@ final class TotalCMSTwigAdapter
         $this->objectFetcher     = $objectFetcher;
         $this->collectionFetcher = $collectionFetcher;
 
-        $this->api     = $this->config->api;
-        $this->storage = [];
+        $this->api       = $this->config->api;
+        $this->assetsDir = $this->config->assetsDir;
+        $this->storage   = [];
     }
 
     // Get collection meta data

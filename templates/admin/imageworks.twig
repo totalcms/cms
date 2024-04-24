@@ -1,6 +1,106 @@
 {% extends "admin-layout.twig" %}
 
+{% macro input(name, field, label, help, value) %}
+    {% set uuid = uniqid() %}
+    <div class="form-field {{ field }}-field" data-type="{{ field }}">
+	    <label for="field-{{ uuid }}">{{ label }}</label>
+        <div class="form-group">
+			<input
+				id="field-{{uuid}}"
+				type="{{field}}"
+				name="{{name}}"
+				value="{{ value|e }}"
+				aria-describedby="help-{{uuid}}"
+			>
+            <div class="form-group-icon"></div>
+        </div>
+        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+    </div>
+{% endmacro %}
+
+{% macro select(name, label, help, value, options) %}
+    {% set uuid = uniqid() %}
+    <div class="form-field select-field" data-type="select">
+	    <label for="field-{{ uuid }}">{{ label }}</label>
+        <div class="form-group">
+			<select id="field-{{uuid}}" name="{{name}}" value="{{value|e}}" aria-describedby="help-{{uuid}}">
+				<option value="" disabled>None</option>
+
+				{% for option in options %}
+				<option value="{{ option.value|e }}" {%if option.value == value %}selected{% endif %}>{{ option.label|e }}</option>
+				{% endfor %}
+			</select>
+            <div class="form-group-icon"></div>
+        </div>
+        <p class="help" id="help-{{uuid}}">{{ help }}</p>
+    </div>
+{% endmacro %}
+
 {% block content %}
+
     <h1>Imageworks Builder</h1>
-    <p class="important">Let’s get cooking!</p>
+
+	{% set id = getParams.id ?? postParams.id  %}
+	{% set collection = getParams.collection ?? postParams.collection | default("image") %}
+	{% set property = getParams.property ?? postParams.property | default("image") %}
+
+	<section class="image-preview">
+		<img src="{{ totalcms.image(id, {w:600,h:400}, collection) }}" oncontextmenu="return false;" draggable="false" />
+	</section>
+
+	<form class="totalform" method="post">
+
+		<button type="submit">Preview Image</button>
+
+		<input type="hidden" name="id" value="{{ id }}">
+		<input type="hidden" name="collection" value="{{ collection }}">
+		<input type="hidden" name="property" value="{{ property }}">
+
+		<details class="cms-accordion">
+			<summary>Sizing</summary>
+			{{ _self.input("w", "number", "Width", "Width of the image") }}
+			{{ _self.input("h", "number", "Height", "Height of the image") }}
+			{{ _self.input("dpr", "number", "Pixel Density", "Pixel densioty for retina") }}
+			{{ _self.input("q", "number", "Quality", "Quality of the image") }}
+			{{ _self.select("fit", "Crop", "Crop the image") }}
+		</details>
+
+		<details class="cms-accordion">
+			<summary>Watermark</summary>
+			{{ _self.input("mark", "text", "Watermark", "Width of the image") }}
+			{{ _self.input("markw", "number", "Width", "Width of the image") }}
+			{{ _self.input("markh", "number", "Height", "Height of the image") }}
+			{{ _self.input("markpad", "number", "Padding", "Pixel densioty for retina") }}
+			{{ _self.input("markalpha", "number", "Alpha", "Quality of the image") }}
+			{{ _self.select("markpos", "Position", "Crop the image") }}
+		</details>
+
+		<details class="cms-accordion">
+			<summary>Effects</summary>
+			{{ _self.input("bri", "number", "Brightness", "Width of the image") }}
+			{{ _self.input("con", "number", "Contrast", "Width of the image") }}
+			{{ _self.input("gam", "number", "Gamma", "Height of the image") }}
+			{{ _self.input("blur", "number", "Blur", "Pixel densioty for retina") }}
+			{{ _self.input("pixel", "number", "Pixelate", "Quality of the image") }}
+			{{ _self.select("filt", "Filter", "Crop the image") }}
+		</details>
+
+		<details class="cms-accordion">
+			<summary>Background &amp; Border</summary>
+			{{ _self.input("bg", "color", "Background", "Width of the image") }}
+			{{ _self.input("border", "text", "Border", "width,color,method") }}
+		</details>
+
+	</form>
+
+{% endblock %}
+
+{% block bodyBelow %}
+<script>
+document.addEventListener("DOMContentLoaded", event => {
+	const details = new Details(Array.from(document.querySelectorAll("details")), {
+		openFirst: false
+	});
+});
+</script>
 {% endblock %}
