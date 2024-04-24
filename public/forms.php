@@ -66,8 +66,9 @@ $totalcms->startBuffer(); // Start output buffering again
 		{% import "totalform.twig" as form %}
 
 		{{ form.imageForm('myimage') }}
+		{{ form.imageForm('newimage') }}
 
-		{{ form.imageForm('newimage', {
+		<!-- {{ form.imageForm('newimage', {
 			options: {
 				rules : {
 					orientation : "landscape",
@@ -79,7 +80,7 @@ $totalcms->startBuffer(); // Start output buffering again
 					filename    : ["jpg"]
 				}
 			}
-		}) }}
+		}) }} -->
 
 		<!-- {{ form.start("custom", { method:"post" }) }}
 

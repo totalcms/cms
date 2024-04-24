@@ -26,6 +26,9 @@ export default class TotalField {
             this.api = this.form.api;
         }
 
+		// throttle the event dispatching
+		this.debounceTimer = null;
+
 		this.changeListener();
     }
 
@@ -65,10 +68,13 @@ export default class TotalField {
 
     changed() {
 		this.container.classList.add("unsaved");
-        this.container.dispatchEvent(new Event("field-change"));
-		this.container.dispatchEvent(new CustomEvent("field-change"), {
-			detail: { field : this }
-		});
+
+		clearTimeout(this.debounceTimer);
+		this.debounceTimer = setTimeout(() => {
+			this.container.dispatchEvent(new CustomEvent("field-change", {
+				detail: { field : this }
+			}));
+		}, 300);
     }
 
 	saved() {

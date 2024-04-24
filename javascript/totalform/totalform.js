@@ -267,7 +267,7 @@ export default class TotalForm {
         if (!response) return;
 
         if (this.droplets.length > 0) {
-            this.saveDroplets(() => this.afterSaveAction(response));
+            // this.saveDroplets(() => this.afterSaveAction(response));
         }
         else {
             this.afterSaveAction(response);
@@ -365,6 +365,7 @@ export default class TotalForm {
 
 		if (newState) this.form.classList.add(newState);
 		this.form.classList.remove(...remove);
+		this.form.dispatchEvent(new Event(newState));
     }
 
     delayProcessing(callback) {

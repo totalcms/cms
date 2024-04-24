@@ -12,7 +12,8 @@ export default class ImageField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
-		this.fields = this.container.getElementsByClassName("form-field");
+		this.fields        = this.container.getElementsByClassName("form-field");
+		this.featuredField = this.container.querySelector(".form-field:has([name=featured])");
 
 		this.droplet    = this.setupDroplet();
 		this.editDialog = this.setupEditDialog();
@@ -57,21 +58,23 @@ export default class ImageField extends TotalField {
 		this.setupDelete();
 		this.setupClearCache();
 		this.setupFeaturedToggle();
+
+		// Keep the featured field in sync with the featured class for the action bar
+		this.featuredField.addEventListener("field-change", e => this.toggleFeaturedActionButton());
 	}
 
 	isFeatured() {
 		// This is not 100% correct. A user could change the featured value in the edit dialog
 		// and then not save. This could cause this flag to be wrong.
-		const fields = Array.from(this.fields);
-		const field = fields.filter(field => field.totalfield.property === "featured")[0];
-		return field.totalfield.getValue();
+		return this.featuredField.totalfield.getValue();
 	}
 
-	toggleFeatured() {
-		const fields = Array.from(this.fields);
-		const field = fields.filter(field => field.totalfield.property === "featured")[0];
-		field.totalfield.setValue(!this.isFeatured());
+	toggleFeaturedActionButton() {
 		this.container.querySelector(".total-preview").classList.toggle("featured");
+	}
+
+	toggleFeaturedField() {
+		this.featuredField.totalfield.setValue(!this.isFeatured());
 	}
 
 	setupFeaturedToggle() {
@@ -82,7 +85,7 @@ export default class ImageField extends TotalField {
 				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
-					this.toggleFeatured();
+					this.toggleFeaturedField();
 				});
 			});
 		}
