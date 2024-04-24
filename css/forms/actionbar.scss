@@ -18,6 +18,13 @@
 	transition       : opacity 300ms ease-in-out;
 	z-index          : 1;
 
+	@media (hover: none) {
+		opacity : 1;
+	}
+	@media (pointer: coarse) {
+		opacity : 1;
+	}
+
 	display : flex;
 	gap     : 1rem;
 
@@ -127,3 +134,4 @@ div:not(.empty):hover {
         display : none!important;
     }
 }
+
