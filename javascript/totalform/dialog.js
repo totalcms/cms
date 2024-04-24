@@ -10,8 +10,8 @@ export default class Dialog  {
 		}
         // Define option defaults
         const defaults = {
-			open       : "open",
-			close      : "close",
+			open       : null,
+			close      : ".close",
 			onOpen     : null,
 			onClose    : null,
 			openOnLoad : false,

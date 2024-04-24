@@ -1,6 +1,11 @@
 import Details from "./totalform/details";
 import Dialog from "./totalform/dialog";
 
+if (window.self !== window.top) {
+	// The page is in an iframe
+	document.body.classList.add('in-iframe');
+}
+
 document.addEventListener("DOMContentLoaded", event => {
 	// const form = Array.from(document.querySelector("form.totalform"));
 	// const totalform = new TotalForm(form);
