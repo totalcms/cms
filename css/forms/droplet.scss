@@ -9,10 +9,13 @@
 	width               : 96px;
 	height              : 96px;
 	opacity             : 0.5;
-	background-image    : var(--icon-upload);
+	background-color    : #222;
 	background-position : center;
 	transition          : all 300ms ease-in-out;
 	transform-origin    : center;
+	-webkit-mask        : var(--icon-upload);
+	mask                : var(--icon-upload);
+
 
 	&:hover {
 		opacity : 0.9;

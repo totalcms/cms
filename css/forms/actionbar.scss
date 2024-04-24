@@ -40,6 +40,10 @@
 			scale   : 1.15;
         }
 
+		&.upload {
+			-webkit-mask : var(--icon-upload-cloud);
+			mask         : var(--icon-upload-cloud);
+		}
 		&.edit {
 			-webkit-mask : var(--icon-edit);
 			mask         : var(--icon-edit);
