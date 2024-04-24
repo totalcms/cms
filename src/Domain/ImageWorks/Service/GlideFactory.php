@@ -73,7 +73,7 @@ final class GlideFactory
     {
         $newcrop = sprintf('crop-%g-%g', $focalpoint['x'], $focalpoint['y']);
 
-        return str_replace('focalpoint', $newcrop, $crop);
+        return str_replace('crop-focalpoint', $newcrop, $crop);
     }
 
     /**

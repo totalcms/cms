@@ -1,4 +1,5 @@
 import Details from "./totalform/details";
+import Dialog from "./totalform/dialog";
 
 document.addEventListener("DOMContentLoaded", event => {
 	// const form = Array.from(document.querySelector("form.totalform"));
@@ -11,6 +12,15 @@ document.addEventListener("DOMContentLoaded", event => {
 	for (const detail of details) {
 		const accordion = new Details(detail, {openFirst:true});
 	}
+
+	const fitModal = new Dialog(document.getElementById("fit-modal"));
+	const fitButtons = Array.from(document.getElementsByClassName("open-fit-docs"));
+	fitButtons.forEach(button => {
+		button.addEventListener("click", event => {
+			event.preventDefault();
+			fitModal.open();
+		});
+	});
 
 	const getFormData = () => {
 		const form     = document.querySelector("form");
@@ -37,5 +47,7 @@ document.addEventListener("DOMContentLoaded", event => {
 
 		// update the preview image
 		previewImage.src = imageUrl.href;
+
+		// TODO: create a twig statement to display under the image.
 	});
 });

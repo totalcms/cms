@@ -28,16 +28,19 @@
 
 }
 
-.image-link-dialog {
-	padding : 0 !important;;
+dialog.image-link-dialog {
+	padding    : 0 !important;
+	height     : 90svh;
+	max-height : none;
 }
+
 .cms-modal {
 	.image-preview {
 		border-width : 5px;
 		border-style : solid;
 		border-color : #f8f8f8;
 		box-shadow   : 0px 0px 2px rgba(0, 0, 0, 0.4);
-		overflow: visible;
+		overflow     : visible;
 
 		img {
 			width : 100%;

@@ -30,7 +30,8 @@
             border-bottom-right-radius: 0;
         }
         &:has(:focus) .help {
-			box-shadow : 0 1px 2px hsla(0, 0%, 4%, 0.1);
+			opacity      : 1;
+			box-shadow   : 0 1px 2px hsla(0, 0%, 4%, 0.1);
 			border-color : hsl(0, 0%, 69%);
     	}
     }
@@ -39,9 +40,12 @@
         .form-group-icon {
             border-bottom-right-radius: 0;
         }
+		.help {
+			opacity : 1;
+		}
     }
     .help {
-        max-width           : clamp(100px, 50ch, 100%);
+        max-width           : clamp(100px, 50ch, 85%);
         position            : absolute;
         bottom              : 0;
         right               : 0;
