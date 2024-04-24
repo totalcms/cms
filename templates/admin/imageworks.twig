@@ -36,9 +36,11 @@
     </div>
 {% endmacro %}
 
-{% block content %}
+{% block head %}
+	<link rel="stylesheet" href="{{ totalcms.assetsDir }}/imageworks-builder.css"/>
+{% endblock %}
 
-    <h1>Imageworks Builder</h1>
+{% block content %}
 
 	{% set id = getParams.id ?? postParams.id  %}
 	{% set collection = getParams.collection ?? postParams.collection | default("image") %}
@@ -46,51 +48,56 @@
 	{% set options = { w : 600, h : 400 } | merge(postParams) %}
 
 	<section class="image-preview">
+    	<h1>Imageworks Builder</h1>
 		<img src="{{ totalcms.image(id, options, collection, property) }}" oncontextmenu="return false;" draggable="false" />
+		<button>Preview Image</button>
 	</section>
 
 	<form class="totalform">
-
-		<button>Preview Image</button>
 
 		{# <input type="hidden" name="id" value="{{ id }}">
 		<input type="hidden" name="collection" value="{{ collection }}">
 		<input type="hidden" name="property" value="{{ property }}"> #}
 
 		<details class="cms-accordion">
-			<summary>Sizing</summary>
-			{{ _self.input("w", "number", "Width", "Width of the image") }}
-			{{ _self.input("h", "number", "Height", "Height of the image") }}
-			{{ _self.input("dpr", "number", "Pixel Density", "Pixel densioty for retina") }}
-			{{ _self.input("q", "number", "Quality", "Quality of the image") }}
-			{{ _self.select("fit", "Crop", "Crop the image") }}
+			<summary>Sizing &amp; Effects</summary>
+			<div>
+				<section>
+					{{ _self.input("w", "number", "Width", "Width of the image", 600) }}
+					{{ _self.input("h", "number", "Height", "Height of the image", 400) }}
+					{{ _self.input("dpr", "number", "Pixel Density", "Pixel densioty for retina") }}
+					{{ _self.input("q", "number", "Quality", "Quality of the image") }}
+					{{ _self.select("fit", "Crop", "Crop the image") }}
+				</section>
+				<section>
+					{{ _self.input("bri", "number", "Brightness", "Width of the image") }}
+					{{ _self.input("con", "number", "Contrast", "Width of the image") }}
+					{{ _self.input("gam", "number", "Gamma", "Height of the image") }}
+					{{ _self.input("blur", "number", "Blur", "Pixel densioty for retina") }}
+					{{ _self.input("pixel", "number", "Pixelate", "Quality of the image") }}
+					{{ _self.select("filt", "Filter", "Crop the image") }}
+				</section>
+			</div>
 		</details>
 
 		<details class="cms-accordion">
-			<summary>Watermark</summary>
-			{{ _self.input("mark", "text", "Watermark", "Width of the image") }}
-			{{ _self.input("markw", "number", "Width", "Width of the image") }}
-			{{ _self.input("markh", "number", "Height", "Height of the image") }}
-			{{ _self.input("markpad", "number", "Padding", "Pixel densioty for retina") }}
-			{{ _self.input("markalpha", "number", "Alpha", "Quality of the image") }}
-			{{ _self.select("markpos", "Position", "Crop the image") }}
+			<summary>Watermark, Background &amp; Border</summary>
+			<div>
+				<section>
+					{{ _self.input("mark", "text", "Watermark", "Width of the image") }}
+					{{ _self.input("markw", "number", "Width", "Width of the image") }}
+					{{ _self.input("markh", "number", "Height", "Height of the image") }}
+					{{ _self.input("markpad", "number", "Padding", "Pixel densioty for retina") }}
+					{{ _self.input("markalpha", "number", "Alpha", "Quality of the image") }}
+					{{ _self.select("markpos", "Position", "Crop the image") }}
+				</section>
+				<section>
+					{{ _self.input("bg", "text", "Background", "Width of the image") }}
+					{{ _self.input("border", "text", "Border", "width,color,method") }}
+				</section>
+			</div>
 		</details>
 
-		<details class="cms-accordion">
-			<summary>Effects</summary>
-			{{ _self.input("bri", "number", "Brightness", "Width of the image") }}
-			{{ _self.input("con", "number", "Contrast", "Width of the image") }}
-			{{ _self.input("gam", "number", "Gamma", "Height of the image") }}
-			{{ _self.input("blur", "number", "Blur", "Pixel densioty for retina") }}
-			{{ _self.input("pixel", "number", "Pixelate", "Quality of the image") }}
-			{{ _self.select("filt", "Filter", "Crop the image") }}
-		</details>
-
-		<details class="cms-accordion">
-			<summary>Background &amp; Border</summary>
-			{{ _self.input("bg", "text", "Background", "Width of the image") }}
-			{{ _self.input("border", "text", "Border", "width,color,method") }}
-		</details>
 
 	</form>
 

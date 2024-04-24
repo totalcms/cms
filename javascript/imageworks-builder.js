@@ -9,35 +9,33 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const details = Array.from(document.querySelectorAll("details"));
 	for (const detail of details) {
-		const accordion = new Details(detail, {openFirst:false});
+		const accordion = new Details(detail, {openFirst:true});
 	}
 
 	const getFormData = () => {
 		const form     = document.querySelector("form");
 		const formData = Object.fromEntries(new FormData(form));
 
-		const data = Array.from(formData).reduce((acc, [key, value]) => {
+		const data = { cache : Date.now() };
+		for (const [key, value] of Object.entries(formData)) {
 			if (value !== '') {
-				acc[key] = value;
+				data[key] = value;
 			}
-			return acc;
-		}, {});
+		}
 		return data;
 	};
 
-	const button = document.querySelector("form button");
+	const button = document.querySelector("button");
 	button.addEventListener("click", event => {
 		event.preventDefault();
 
 		// get the form data and append it to the URL as search params
 		const data = getFormData();
 
-		if (Object.keys(data).length > 0) {
-			const params = new URLSearchParams(data);
-			imageUrl.search = params.toString();
+		const params = new URLSearchParams(data);
+		imageUrl.search = params.toString();
 
-			// update the preview image
-			previewImage.src = imageUrl.href;
-		}
+		// update the preview image
+		previewImage.src = imageUrl.href;
 	});
 });
