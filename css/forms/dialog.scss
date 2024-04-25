@@ -12,8 +12,9 @@ dialog.cms-modal {
 	left          : 50%;
 	transform     : translate(-50%, -50%);
 
-	min-width  : 80%;
-	height     : 60vh;
+	width      : 90%;
+	max-width  : 1000px;
+	height     : 70vh;
 	max-height : 800px;
 
 	&[open] {

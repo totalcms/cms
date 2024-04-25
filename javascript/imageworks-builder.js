@@ -27,6 +27,33 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
+	const filesize = document.getElementById('filesize');
+
+	const bytesToSize = bytes => {
+		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+		if (bytes === 0) return '0 Byte';
+		const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+		return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+	}
+
+	const getImageSize = () => {
+		fetch(previewImage.src).then(response => {
+			if (response.ok) {
+				const contentLength = response.headers.get('Content-Length');
+				if (contentLength) {
+					filesize.textContent = bytesToSize(contentLength);
+					return;
+				}
+				filesize.textContent = 'Unknown';
+				console.warn('Image Content-Length header missing:', response.headers);
+			} else {
+				filesize.textContent = 'Unknown';
+				console.warn('Image size fetch failed:', response.status);
+			}
+		});
+	};
+	getImageSize();
+
 	const getFormData = () => {
 		const form     = document.querySelector("form");
 		const formData = Object.fromEntries(new FormData(form));
@@ -40,8 +67,8 @@ document.addEventListener("DOMContentLoaded", event => {
 		return data;
 	};
 
-	const button = document.querySelector("button");
-	button.addEventListener("click", event => {
+	const refreshButton = document.getElementById("refresh-image");
+	refreshButton.addEventListener("click", event => {
 		event.preventDefault();
 
 		// get the form data and append it to the URL as search params
@@ -53,6 +80,7 @@ document.addEventListener("DOMContentLoaded", event => {
 		// update the preview image
 		previewImage.src = imageUrl.href;
 
-		// TODO: create a twig statement to display under the image.
+		getImageSize();
 	});
+
 });

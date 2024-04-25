@@ -1,16 +1,15 @@
-body {
+body, h1,h2,h3,h4,h5,h6 {
 	margin  : 0;
 	padding : 0;
 }
 
 .container {
-	padding : 20px;
+	padding : 1.25rem;
 }
 
 .image-preview {
-	display         : grid;
-	gap             : 1rem;
-	justify-content : center;
+	display : grid;
+	gap     : 1rem;
 
 	img {
 		border-width : 10px;
@@ -32,8 +31,34 @@ body {
 		font-weight      : bold;
 		cursor           : pointer;
 	}
+	#copy-macro {
+		border     : 1px solid var(--totalform-accent);
+		background : transparent;
+		color      : var(--totalform-accent);
+		padding    : 0.5rem 1rem;
+		font-size  : 0.8rem;
+	}
 }
 
+.split-view {
+	display : grid;
+	gap     : 1rem;
+	grid-template-columns: auto min-content;
+}
+
+.image-info {
+	display : grid;
+	grid-template-rows: auto min-content;
+}
+
+pre#twig-macro {
+	background-color : oklch(96% 0 0);
+	padding          : 1rem 0.5rem;
+	border           : 1px solid oklch(25% 0 0/.5);
+	border-radius    : 5px;
+	max-width        : 300px;
+	overflow-x       : scroll;
+}
 .totalform {
 	margin-top : 1rem;
 	display    : grid;
@@ -46,7 +71,8 @@ body {
 	}
 }
 
-.in-iframe #fit-modal[open]{
+// If the modal is in an iframe, we need to make it full screen
+.in-iframe #fit-modal[open] {
 	transform  : none;
 	top        : 0;
 	left       : 0;
