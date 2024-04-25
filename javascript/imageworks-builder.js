@@ -7,11 +7,10 @@ if (window.self !== window.top) {
 }
 
 document.addEventListener("DOMContentLoaded", event => {
-	// const form = Array.from(document.querySelector("form.totalform"));
-	// const totalform = new TotalForm(form);
 
 	const previewImage = document.querySelector(".image-preview img");
 	const imageUrl = new URL(previewImage.src);
+	const originalExtension = imageUrl.pathname.split('.').pop();
 
 	const details = Array.from(document.querySelectorAll("details"));
 	for (const detail of details) {
@@ -26,6 +25,50 @@ document.addEventListener("DOMContentLoaded", event => {
 			fitModal.open();
 		});
 	});
+
+	const copyMacroButton = document.getElementById("copy-macro");
+	copyMacroButton.addEventListener("click", event => {
+		event.preventDefault();
+		const macroContent = document.getElementById("twig-macro");
+		navigator.clipboard.writeText(macroContent.textContent).then(() => {
+			console.log('Text copied to clipboard');
+		})
+		.catch(err => {
+			console.warn('Could not copy text: ', err);
+		});
+	});
+
+	const generateTwigMacro = (data) => {
+		const id         = data.id;
+		const collection = data.collection;
+		const property   = data.property;
+
+		// Delete the keys from data
+		delete data.id;
+		delete data.collection;
+		delete data.property;
+		delete data.cache;
+
+		// Convert string numbers to actual numbers
+		data = Object.entries(data).reduce((acc, [key, value]) => {
+			acc[key] = isNaN(value) ? value : parseFloat(value);
+			return acc;
+		}, {});
+
+		let options = JSON.stringify(data);
+		options = options.replace(/"(\w+)"\s*:/g, '$1:');
+
+		let macro = `{{ totalcms.image('${id}', '${options}', '${collection}', '${property}') }}`;
+		if (property === "image") {
+			macro = `{{ totalcms.image('${id}', '${options}', '${collection}') }}`;
+
+			if (collection === "image") {
+				macro = `{{ totalcms.image('${id}', '${options}') }}`;
+			}
+		}
+		const macroContent = document.getElementById("twig-macro");
+		macroContent.textContent = macro;
+	}
 
 	const filesize = document.getElementById('filesize');
 
@@ -47,7 +90,7 @@ document.addEventListener("DOMContentLoaded", event => {
 				filesize.textContent = 'Unknown';
 				console.warn('Image Content-Length header missing:', response.headers);
 			} else {
-				filesize.textContent = 'Unknown';
+				filesize.textContent = 'Error';
 				console.warn('Image size fetch failed:', response.status);
 			}
 		});
@@ -74,6 +117,11 @@ document.addEventListener("DOMContentLoaded", event => {
 		// get the form data and append it to the URL as search params
 		const data = getFormData();
 
+		const extension = data.fm ?? originalExtension;
+
+		// Replace the extension in imageUrl.pathname
+		imageUrl.pathname = imageUrl.pathname.replace(/\.[^/.]+$/, "." + extension);
+
 		const params = new URLSearchParams(data);
 		imageUrl.search = params.toString();
 
@@ -81,6 +129,7 @@ document.addEventListener("DOMContentLoaded", event => {
 		previewImage.src = imageUrl.href;
 
 		getImageSize();
+		generateTwigMacro(data);
 	});
 
 });

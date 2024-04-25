@@ -92,10 +92,14 @@
 		}
 	%}
 
-	<section class="image-preview">
+	<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}">
     	<h1>Total CMS Image Builder</h1>
 		<div class="split-view">
-			<img src="{{ totalcms.image(id, values, collection, property) }}" draggable="false" />
+			<img src="{{ totalcms.image(id, values, collection, property) }}"
+				data-id="{{id}}"
+				data-collection="{{collection}}"
+				data-property="{{property}}"
+				draggable="false" />
 			<div class="image-info">
 				<div>
 					<h4>Macro:</h4>

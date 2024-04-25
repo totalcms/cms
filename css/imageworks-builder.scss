@@ -30,6 +30,11 @@ body, h1,h2,h3,h4,h5,h6 {
 		font-size        : 1.1rem;
 		font-weight      : bold;
 		cursor           : pointer;
+		transition       : all 100ms ease-out;
+
+		&:hover {
+			filter: brightness(0.95);
+		}
 	}
 	#copy-macro {
 		border     : 1px solid var(--totalform-accent);
