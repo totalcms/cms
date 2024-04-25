@@ -1,6 +1,6 @@
 {% extends "admin-layout.twig" %}
 
-{% macro input(name, field, label, help, value, list) %}
+{% macro input(name, field, label, help, value, args = {}) %}
     {% set uuid = uniqid() %}
     <div class="form-field {{ field }}-field help-box help-on-hover help-on-focus" data-type="{{ field }}">
 	    <label for="field-{{ uuid }}">{{ label }}</label>
@@ -11,7 +11,10 @@
 				name="{{name}}"
 				value="{{ value|e }}"
 				aria-describedby="help-{{uuid}}"
-				{% if list %}list="{{list}}"{% endif %}
+				{% if args.min %}min="{{args.min}}"{% endif %}
+				{% if args.max %}max="{{args.max}}"{% endif %}
+				{% if args.step %}step="{{args.step}}"{% endif %}
+				{% if args.list %}list="{{args.list}}"{% endif %}
 			>
             <div class="form-group-icon"></div>
         </div>
@@ -25,7 +28,7 @@
 	    <label for="field-{{ uuid }}">{{ label }}</label>
         <div class="form-group">
 			<select id="field-{{uuid}}" name="{{name}}" value="{{value|e}}" aria-describedby="help-{{uuid}}">
-				<option value="" disabled>None</option>
+				<option value="">None</option>
 
 				{% for option in options %}
 				<option value="{{ option.value|e }}" {%if option.value == value %}selected{% endif %}>{{ option.label|e }}</option>
@@ -105,22 +108,44 @@
 			<summary>Sizing &amp; Effects</summary>
 			<div>
 				<section>
-					{{ _self.input("w", "number", "Width", help.w, values.w) }}
-					{{ _self.input("h", "number", "Height", help.h, values.h) }}
-					{{ _self.input("dpr", "number", "Pixel Density", help.dpr, values.dpr) }}
-					{{ _self.input("q", "number", "Quality", help.q, values.q) }}
-					{{ _self.select("fm", "Format", help.fm, values.fm) }}
-					{{ _self.input("fit", "text", "Fit and Crop", help.fit, values.fit, "fit-options") }}
+					{{ _self.input("w", "number", "Width", help.w, values.w, { min:1 }) }}
+					{{ _self.input("h", "number", "Height", help.h, values.h, { min:1 }) }}
+					{{ _self.input("dpr", "number", "Pixel Density", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
+					{{ _self.input("q", "number", "Quality", help.q, values.q, { min:0, max:100 }) }}
+					{{ _self.select("fm", "Format", help.fm, values.fm, [
+						{ value: "jpg", label: "JPG" },
+						{ value: "pjpg", label: "Progressive JPG" },
+						{ value: "png", label: "PNG" },
+						{ value: "gif", label: "GIF" },
+						{ value: "webp", label: "WebP" },
+						{ value: "avif", label: "AVIF" },
+					]) }}
+					{{ _self.input("fit", "text", "Fit and Crop", help.fit, values.fit, {list : "fit-options"}) }}
 					<button class='open-fit-docs'>Fit Options Docs</button>
 				</section>
 				<section>
-					{{ _self.input("bri", "number", "Brightness", help.bri, values.bri) }}
-					{{ _self.input("con", "number", "Contrast", help.con, values.con) }}
-					{{ _self.input("sharp", "number", "Sharpen", help.sharp, values.sharp) }}
-					{{ _self.input("gam", "number", "Gamma", help.gam, values.gam) }}
-					{{ _self.input("blur", "number", "Blur", help.blur, values.blur) }}
-					{{ _self.input("pixel", "number", "Pixelate", help.pixel, values.pixel) }}
-					{{ _self.select("filt", "Filter", "Filter the image") }}
+					{{ _self.input("sharp", "number", "Sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
+					{{ _self.input("con", "number", "Contrast", help.con, values.con, { min:-100, max:100 }) }}
+					{{ _self.input("bri", "number", "Brightness", help.bri, values.bri, { min:-100, max:100 }) }}
+					{{ _self.input("gam", "number", "Gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
+					{{ _self.input("blur", "number", "Blur", help.blur, values.blur, { min:0, max:100 }) }}
+					{{ _self.input("pixel", "number", "Pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
+					{{ _self.select("filt", "Filter", help.filt, values.filt, [
+						{ value: "greyscale", label: "Black & White" },
+						{ value: "sepia", label: "Sepia" },
+					]) }}
+					{# {{ _self.select("flip", "Flip", "Flip the image", [
+						{ value: "v", label: "Vertical" },
+						{ value: "h", label: "Horizontal" },
+						{ value: "both", label: "Both" },
+					]) }}
+					{{ _self.select("or", "Rotate", "Rotate the image", [
+						{ value: "auto", label: "Auto" },
+						{ value: "0", label: "0°" },
+						{ value: "90", label: "90°" },
+						{ value: "180", label: "180°" },
+						{ value: "270", label: "270°" },
+					]) }} #}
 				</section>
 			</div>
 		</details>
@@ -130,12 +155,23 @@
 			<div>
 				<section>
 					{{ _self.input("mark", "text", "Watermark", help.mark, values.mark) }}
-					{{ _self.input("markw", "number", "Width", help.markw, values.markw) }}
-					{{ _self.input("markh", "number", "Height", help.fit, values.fit) }}
-					{{ _self.input("markpad", "number", "Padding", help.fit, values.fit) }}
-					{{ _self.input("markalpha", "number", "Alpha", help.fit, values.fit) }}
-					{{ _self.select("markpos", "Position", "Crop the image") }}
-					{{ _self.input("markfit", "text", "Fit and Crop", help.markfit, values.markfit, "fit-options") }}
+					{{ _self.input("markw", "text", "Width", help.markw, values.markw) }}
+					{{ _self.input("markh", "text", "Height", help.markh, values.markh) }}
+					{{ _self.input("markpad", "text", "Padding", help.markpad, values.markpad) }}
+					{{ _self.input("markalpha", "number", "Alpha", help.markalpha, values.markalpha, { min:0, max:100 }) }}
+					{{ _self.select("markpos", "Position", help.markpos, values.markpos, [
+						{ value: "top-left", label: "Top Left" },
+						{ value: "top-right", label: "Top Right" },
+						{ value: "bottom-left", label: "Bottom Left" },
+						{ value: "bottom-right", label: "Bottom Right" },
+						{ value: "top-center", label: "Top Center" },
+						{ value: "bottom-center", label: "Bottom Center" },
+						{ value: "left-center", label: "Left Center" },
+						{ value: "right-center", label: "Right Center" },
+						{ value: "center", label: "Center" },
+
+					]) }}
+					{{ _self.input("markfit", "text", "Fit and Crop", help.markfit, values.markfit, {list : "fit-options"}) }}
 					<button class='open-fit-docs'>Fit Options Docs</button>
 				</section>
 				<section>
