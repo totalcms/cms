@@ -31,10 +31,21 @@ document.addEventListener("DOMContentLoaded", event => {
 		event.preventDefault();
 		const macroContent = document.getElementById("twig-macro");
 		navigator.clipboard.writeText(macroContent.textContent).then(() => {
-			console.log('Text copied to clipboard');
+			setTimeout(() => {
+				const originalText = copyMacroButton.textContent;
+				copyMacroButton.style.width = `${copyMacroButton.offsetWidth}px`;
+				copyMacroButton.classList.add("copied");
+				copyMacroButton.textContent = "Copied!";
+
+				setTimeout(() => {
+					copyMacroButton.classList.remove("copied");
+					copyMacroButton.textContent = originalText;
+					copyMacroButton.style.width = "";
+				}, 2000);
+			}, 200);
 		})
 		.catch(err => {
-			console.warn('Could not copy text: ', err);
+			console.warn('Could not copy macro: ', err);
 		});
 	});
 
@@ -133,6 +144,17 @@ document.addEventListener("DOMContentLoaded", event => {
 
 		const params = new URLSearchParams(data);
 		imageUrl.search = params.toString();
+
+		const img = new Image();
+		img.onload = () => {
+			const originalText = refreshButton.textContent;
+			refreshButton.textContent = "Done!";
+
+			setTimeout(() => {
+				refreshButton.textContent = originalText;
+			}, 2000);
+		};
+		img.src = imageUrl.href;
 
 		// update the preview image
 		previewImage.src = imageUrl.href;

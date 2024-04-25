@@ -106,12 +106,12 @@
 				<div>
 					<h4>Macro:</h4>
 					<pre id="twig-macro">&#123;&#123; totalcms.image("{{id}}", {w:{{values.w}}, h:{{values.h}}}) &#125;&#125;</pre>
-					<button id="copy-macro">Copy Macro</button>
+					<button type="button" id="copy-macro">Copy Macro</button>
 				</div>
 				<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
 			</div>
 		</div>
-		<button id="refresh-image">Preview Image</button>
+		<button type="button" id="refresh-image">Preview Image</button>
 	</section>
 
 	<form class="totalform">
@@ -137,7 +137,7 @@
 						{ value: "avif", label: "AVIF" },
 					]) }}
 					{{ _self.input("fit", "text", "Fit and Crop", "icon-crop", help.fit, values.fit, {list : "fit-options"}) }}
-					<button class='open-fit-docs'>Fit Options Docs</button>
+					<button type="button" class='open-fit-docs'>Fit Options Docs</button>
 				</section>
 				<section>
 					{{ _self.input("sharp", "number", "Sharpen", "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
@@ -188,7 +188,7 @@
 
 					]) }}
 					{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
-					<button class='open-fit-docs'>Fit Options Docs</button>
+					<button type="button" class='open-fit-docs'>Fit Options Docs</button>
 				</section>
 				<section>
 					{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}

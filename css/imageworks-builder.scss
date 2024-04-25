@@ -30,7 +30,7 @@ body, h1,h2,h3,h4,h5,h6 {
 		font-size        : 1.1rem;
 		font-weight      : bold;
 		cursor           : pointer;
-		transition       : all 100ms ease-out;
+		transition       : all 200ms ease-out;
 
 		&:hover {
 			filter: brightness(0.95);
@@ -46,6 +46,12 @@ body, h1,h2,h3,h4,h5,h6 {
 		color      : var(--totalform-accent);
 		padding    : 0.5rem 1rem;
 		font-size  : 0.8rem;
+
+		&.copied {
+			content: "Copied!";
+			background : var(--totalform-accent);
+			color      : #fff;
+		}
 	}
 }
 
