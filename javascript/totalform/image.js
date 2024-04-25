@@ -61,7 +61,9 @@ export default class ImageField extends TotalField {
 		this.setupDownload();
 
 		// Keep the featured field in sync with the featured class for the action bar
-		this.featuredField.addEventListener("field-change", e => this.toggleFeaturedActionButton());
+		if (!this.featuredListener) {
+			this.featuredListener = this.featuredField.addEventListener("field-change", e => this.toggleFeaturedActionButton());
+		}
 	}
 
 	isFeatured() {
@@ -71,7 +73,11 @@ export default class ImageField extends TotalField {
 	}
 
 	toggleFeaturedActionButton() {
-		this.container.querySelector(".total-preview").classList.toggle("featured");
+		if (this.isFeatured()) {
+			this.container.querySelector(".total-preview").classList.add("featured");
+		} else {
+			this.container.querySelector(".total-preview").classList.remove("featured");
+		}
 	}
 
 	toggleFeaturedField() {
@@ -324,8 +330,8 @@ export default class ImageField extends TotalField {
 
 	fileUploaded(file, response) {
 		const image = response.data[this.property];
-		this.setValue(image);
 		this.setupActionBar();
+		this.setValue(image);
 		this.updatePreviewImage();
 	}
 
