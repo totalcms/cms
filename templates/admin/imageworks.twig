@@ -1,8 +1,8 @@
 {% extends "admin-layout.twig" %}
 
-{% macro input(name, field, label, help, value, args = {}) %}
+{% macro input(name, field, label, class, help, value, args = {}) %}
     {% set uuid = uniqid() %}
-    <div class="form-field {{ field }}-field help-box help-on-hover help-on-focus" data-type="{{ field }}">
+    <div class="form-field {{ field }}-field {{class}} help-box help-on-hover" data-type="{{ field }}">
 	    <label for="field-{{ uuid }}">{{ label }}</label>
         <div class="form-group">
 			<input
@@ -22,9 +22,9 @@
     </div>
 {% endmacro %}
 
-{% macro select(name, label, help, value, options) %}
+{% macro select(name, label, class, help, value, options) %}
     {% set uuid = uniqid() %}
-    <div class="form-field select-field help-box help-on-hover help-on-focus" data-type="select">
+    <div class="form-field select-field {{class}} help-box help-on-hover" data-type="select">
 	    <label for="field-{{ uuid }}">{{ label }}</label>
         <div class="form-group">
 			<select id="field-{{uuid}}" name="{{name}}" value="{{value|e}}" aria-describedby="help-{{uuid}}">
@@ -108,11 +108,11 @@
 			<summary>Sizing &amp; Effects</summary>
 			<div>
 				<section>
-					{{ _self.input("w", "number", "Width", help.w, values.w, { min:1 }) }}
-					{{ _self.input("h", "number", "Height", help.h, values.h, { min:1 }) }}
-					{{ _self.input("dpr", "number", "Pixel Density", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
-					{{ _self.input("q", "number", "Quality", help.q, values.q, { min:0, max:100 }) }}
-					{{ _self.select("fm", "Format", help.fm, values.fm, [
+					{{ _self.input("w", "number", "Width", "icon-width", help.w, values.w, { min:1 }) }}
+					{{ _self.input("h", "number", "Height", "icon-height", help.h, values.h, { min:1 }) }}
+					{{ _self.input("dpr", "number", "Pixel Density", "icon-pixels", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
+					{{ _self.input("q", "number", "Quality", "icon-quality", help.q, values.q, { min:0, max:100 }) }}
+					{{ _self.select("fm", "Format", "icon-imageformat", help.fm, values.fm, [
 						{ value: "jpg", label: "JPG" },
 						{ value: "pjpg", label: "Progressive JPG" },
 						{ value: "png", label: "PNG" },
@@ -120,17 +120,17 @@
 						{ value: "webp", label: "WebP" },
 						{ value: "avif", label: "AVIF" },
 					]) }}
-					{{ _self.input("fit", "text", "Fit and Crop", help.fit, values.fit, {list : "fit-options"}) }}
+					{{ _self.input("fit", "text", "Fit and Crop", "icon-crop", help.fit, values.fit, {list : "fit-options"}) }}
 					<button class='open-fit-docs'>Fit Options Docs</button>
 				</section>
 				<section>
-					{{ _self.input("sharp", "number", "Sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
-					{{ _self.input("con", "number", "Contrast", help.con, values.con, { min:-100, max:100 }) }}
-					{{ _self.input("bri", "number", "Brightness", help.bri, values.bri, { min:-100, max:100 }) }}
-					{{ _self.input("gam", "number", "Gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
-					{{ _self.input("blur", "number", "Blur", help.blur, values.blur, { min:0, max:100 }) }}
-					{{ _self.input("pixel", "number", "Pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
-					{{ _self.select("filt", "Filter", help.filt, values.filt, [
+					{{ _self.input("sharp", "number", "Sharpen", "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
+					{{ _self.input("con", "number", "Contrast", "icon-contrast", help.con, values.con, { min:-100, max:100 }) }}
+					{{ _self.input("bri", "number", "Brightness", "icon-bright", help.bri, values.bri, { min:-100, max:100 }) }}
+					{{ _self.input("gam", "number", "Gamma", "icon-gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
+					{{ _self.input("blur", "number", "Blur", "icon-blur", help.blur, values.blur, { min:0, max:100 }) }}
+					{{ _self.input("pixel", "number", "Pixelate", "icon-pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
+					{{ _self.select("filt", "Filter", "icon-filter", help.filt, values.filt, [
 						{ value: "greyscale", label: "Black & White" },
 						{ value: "sepia", label: "Sepia" },
 					]) }}
@@ -154,12 +154,12 @@
 			<summary>Watermark, Background &amp; Border</summary>
 			<div>
 				<section>
-					{{ _self.input("mark", "text", "Watermark", help.mark, values.mark) }}
-					{{ _self.input("markw", "text", "Width", help.markw, values.markw) }}
-					{{ _self.input("markh", "text", "Height", help.markh, values.markh) }}
-					{{ _self.input("markpad", "text", "Padding", help.markpad, values.markpad) }}
-					{{ _self.input("markalpha", "number", "Alpha", help.markalpha, values.markalpha, { min:0, max:100 }) }}
-					{{ _self.select("markpos", "Position", help.markpos, values.markpos, [
+					{{ _self.input("mark", "text", "Watermark", "icon-copyright", help.mark, values.mark) }}
+					{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
+					{{ _self.input("markh", "text", "Height", "icon-height", help.markh, values.markh) }}
+					{{ _self.input("markpad", "text", "Padding", "icon-padding", help.markpad, values.markpad) }}
+					{{ _self.input("markalpha", "number", "Alpha", "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
+					{{ _self.select("markpos", "Position", "icon-position", help.markpos, values.markpos, [
 						{ value: "top-left", label: "Top Left" },
 						{ value: "top-right", label: "Top Right" },
 						{ value: "bottom-left", label: "Bottom Left" },
@@ -171,12 +171,12 @@
 						{ value: "center", label: "Center" },
 
 					]) }}
-					{{ _self.input("markfit", "text", "Fit and Crop", help.markfit, values.markfit, {list : "fit-options"}) }}
+					{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
 					<button class='open-fit-docs'>Fit Options Docs</button>
 				</section>
 				<section>
-					{{ _self.input("bg", "text", "Background", help.bg, values.bg) }}
-					{{ _self.input("border", "text", "Border", help.border, values.border) }}
+					{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
+					{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border) }}
 				</section>
 			</div>
 		</details>

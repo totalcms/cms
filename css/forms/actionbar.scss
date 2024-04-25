@@ -47,9 +47,13 @@
 			scale   : 1.15;
         }
 
+		&.download {
+			-webkit-mask : var(--icon-download);
+			mask         : var(--icon-download);
+		}
 		&.upload {
-			-webkit-mask : var(--icon-upload-cloud);
-			mask         : var(--icon-upload-cloud);
+			-webkit-mask : var(--icon-upload-alt);
+			mask         : var(--icon-upload-alt);
 		}
 		&.edit {
 			-webkit-mask : var(--icon-edit);
