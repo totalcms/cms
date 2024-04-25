@@ -130,6 +130,7 @@ document.addEventListener("DOMContentLoaded", event => {
 		return data;
 	};
 
+	const downloadButton = document.getElementById("download-image");
 	const refreshButton = document.getElementById("refresh-image");
 	refreshButton.addEventListener("click", event => {
 		event.preventDefault();
@@ -158,6 +159,7 @@ document.addEventListener("DOMContentLoaded", event => {
 
 		// update the preview image
 		previewImage.src = imageUrl.href;
+		downloadButton.href = imageUrl.href;
 
 		getImageSize();
 		generateTwigMacro(data);
