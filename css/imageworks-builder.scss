@@ -76,6 +76,9 @@ pre#twig-macro {
 	}
 }
 
+#fit-modal .close {
+	margin-right: auto;
+}
 // If the modal is in an iframe, we need to make it full screen
 .in-iframe #fit-modal[open] {
 	transform  : none;
@@ -84,4 +87,14 @@ pre#twig-macro {
 	max-width  : none;
 	max-height : none;
 	height     : 100%;
+	width      : 100%;
+}
+
+.option-docs {
+	margin : 0;
+
+	dt {
+		font-weight : bold;
+		margin-top  : 1rem;
+	}
 }

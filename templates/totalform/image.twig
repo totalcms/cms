@@ -87,7 +87,7 @@
 
 {% macro linkDialog(id, imageData) %}
 
-	<dialog class="cms-modal full image-link-dialog">
+	<dialog class="cms-modal image-link-dialog">
 		<iframe style="width:100%;height:100%" data-src="{{totalcms.api}}/admin/imageworks?id={{id}}" frameborder="0"></iframe>
 	</dialog>
 
@@ -96,7 +96,7 @@
 
 {% macro imageDialog(id, imageData) %}
 
-	<dialog class="cms-modal image-edit-dialog">
+	<dialog class="cms-modal split-view image-edit-dialog">
 
 		<section class="image-preview">
 			<img src="{{ totalcms.image(id,{w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />

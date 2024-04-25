@@ -21,20 +21,21 @@ dialog.cms-modal {
 		display               : grid;
 		align-items           : start;
 		gap                   : 1rem;
-		grid-template-columns : 2fr 3fr;
+	}
+
+	&.split-view {
+		&[open] {
+			grid-template-columns : 2fr 3fr;
+
+			@media screen and (max-width: 45em) {
+				grid-template-columns : 1fr;
+			}
+		}
 	}
 
 	@media screen and (max-width: 45em) {
 		height : 95svh;
 		width  : 100%;
-
-		&[open] {
-			grid-template-columns : 1fr;
-		}
-	}
-
-	&.full {
-		grid-template-columns : 1fr;
 	}
 
 	&::backdrop {
