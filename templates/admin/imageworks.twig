@@ -49,7 +49,7 @@
 	{% set id         = getParams.id  %}
 	{% set collection = getParams.collection | default("image") %}
 	{% set property   = getParams.property | default("image") %}
-	{% set values    = { w : 600, h : 400 } | merge(getParams) %}
+	{% set values    = { w : 600 } | merge(getParams) %}
 	{% set help       = {
 			w         : "Sets the width of the image, in pixels.",
 			h         : "Sets the height of the image, in pixels.",
@@ -82,10 +82,12 @@
 			markalpha : "Sets the alpha of the watermark. Use values between 0 and 100.",
 			markpos   : "Sets the position of the watermark. Accepts top-left, top-right, bottom-left, bottom-right, " ~
 					  	"top-center, bottom-center, left-center, right-center, center.",
-			bg        : "Sets the background color of the image. Accepts hex values (without hashtag) or named colors.",
+			bg        : "Sets the background color of the image. Accepts hex values (without hashtag) or named colors. " ~
+						"You can also use palette and palette0 - palette4 to access colors from the image.",
 			border    : "Sets the border of the image. Accepts width, color, and method. " ~
 					  	"Width is in pixels, color is a hex value (without hashtag) or named color," ~
-					  	" and method is overlay, shrink or expand.",
+					  	" and method is overlay, shrink or expand. " ~
+						"You can also use palette and palette0 - palette4 to access colors from the image.",
 			flip      : "Flips the image. Accepts v, h and both.",
 			"or" 	  : "Rotates the image. Accepts auto, 0, 90, 180 or 270. Default is auto. " ~
 					  	"The auto option uses Exif data to automatically orient images correctly.",
@@ -106,7 +108,7 @@
 					<pre id="twig-macro">&#123;&#123; totalcms.image("{{id}}", {w:{{values.w}}, h:{{values.h}}}) &#125;&#125;</pre>
 					<button id="copy-macro">Copy Macro</button>
 				</div>
-				<h4>Size: <span id="filesize">200KB</span></h4>
+				<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
 			</div>
 		</div>
 		<button id="refresh-image">Preview Image</button>
@@ -190,11 +192,17 @@
 				</section>
 				<section>
 					{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
-					{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border) }}
+					{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border, {list:"border-options"}) }}
 				</section>
 			</div>
 		</details>
 	</form>
+
+	<datalist id="border-options">
+		<option value="10,ffffff,overlay"></option>
+		<option value="15,palette,expand"></option>
+		<option value="15,palette3,shrink"></option>
+	</datalist>
 
 	<datalist id="fit-options">
 		<option value="contain"></option>

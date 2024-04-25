@@ -35,6 +35,10 @@ body, h1,h2,h3,h4,h5,h6 {
 		&:hover {
 			filter: brightness(0.95);
 		}
+		&:active {
+			scale: 0.98;
+			filter: brightness(0.90);
+		}
 	}
 	#copy-macro {
 		border     : 1px solid var(--totalform-accent);
@@ -79,6 +83,11 @@ pre#twig-macro {
 #fit-modal .close {
 	margin-right: auto;
 }
+
+#dimensions {
+	font-weight: normal;
+}
+
 // If the modal is in an iframe, we need to make it full screen
 .in-iframe #fit-modal[open] {
 	transform  : none;

@@ -84,11 +84,7 @@ final class GlideFactory
      */
     public static function updateBackgroundColor(string $background, array $imageColors): string
     {
-        if ($background === self::PALETTE) {
-            return array_shift($imageColors);
-        }
-
-        return $background;
+        return self::colorFromPalette($background, $imageColors);
     }
 
     /**
@@ -99,10 +95,21 @@ final class GlideFactory
      */
     public static function updateBorderColor(string $border, array $imageColors): string
     {
-        if ($border === self::PALETTE) {
-            return array_shift($imageColors);
+        [$size, $border, $method] = explode(',', $border);
+
+        $border = self::colorFromPalette($border, $imageColors);
+
+        return implode(',', [$size, $border, $method]);
+    }
+
+    // This method is used to get the color from the palette if the color is a palette color
+    private static function colorFromPalette(string $color, array $imageColors): string
+    {
+        if (str_starts_with($color, self::PALETTE)) {
+            $index = (int)str_replace(self::PALETTE, '', $color);
+            $color = isset($imageColors[$index]) ? $imageColors[$index] : $imageColors[0];
         }
 
-        return $border;
+        return str_replace('#', '', $color);
     }
 }

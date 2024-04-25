@@ -71,6 +71,7 @@ document.addEventListener("DOMContentLoaded", event => {
 	}
 
 	const filesize = document.getElementById('filesize');
+	const dimensions = document.getElementById('dimensions');
 
 	const bytesToSize = bytes => {
 		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -80,6 +81,12 @@ document.addEventListener("DOMContentLoaded", event => {
 	}
 
 	const getImageSize = () => {
+		const img = new Image();
+		img.onload = function() {
+			dimensions.textContent = `(${this.width}x${this.height})`;
+		};
+		img.src = previewImage.src;
+
 		fetch(previewImage.src).then(response => {
 			if (response.ok) {
 				const contentLength = response.headers.get('Content-Length');
@@ -89,6 +96,8 @@ document.addEventListener("DOMContentLoaded", event => {
 				}
 				filesize.textContent = 'Unknown';
 				console.warn('Image Content-Length header missing:', response.headers);
+
+
 			} else {
 				filesize.textContent = 'Error';
 				console.warn('Image size fetch failed:', response.status);

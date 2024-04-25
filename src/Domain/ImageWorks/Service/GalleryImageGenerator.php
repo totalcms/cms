@@ -53,10 +53,20 @@ final class GalleryImageGenerator
 
         // Integrate Image data into params
 
+        // Make sure that the requested width and height are not larger than the original image
+        if (isset($params['w']) && $params['w'] > $imageData->width) {
+            $params['w'] = $imageData->width;
+        }
+
+        if (isset($params['h']) && $params['h'] > $imageData->height) {
+            $params['h'] = $imageData->height;
+        }
+
         if (isset($params['fit'])) {
             $params['fit'] = GlideFactory::cropFocalpoint($params['fit'], $imageData->focalpoint);
         }
 
+        // Integrate palette colors
         if (isset($params['bg'])) {
             $params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->palette);
         }
