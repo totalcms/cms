@@ -23,6 +23,15 @@ interface StorageAdapterInterface
     public function read(string $location): string;
 
     /**
+     * Read file as a stream.
+     *
+     * @param string $location The path of file to read
+     *
+     * @return resource
+     */
+    public function readStream(string $location);
+
+    /**
      * File exists.
      *
      * @param string $location The location of the file

@@ -47,6 +47,18 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     }
 
     /**
+     * Read file as stream.
+     *
+     * @param string $location The path of file to read
+     *
+     * @return resource
+     */
+    public function readStream(string $location)
+    {
+        return $this->filesystem->readStream($location);
+    }
+
+    /**
      * Delete file.
      *
      * @param string $location The path of file to delete

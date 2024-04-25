@@ -58,6 +58,7 @@ export default class ImageField extends TotalField {
 		this.setupDelete();
 		this.setupClearCache();
 		this.setupFeaturedToggle();
+		this.setupDownload();
 
 		// Keep the featured field in sync with the featured class for the action bar
 		this.featuredField.addEventListener("field-change", e => this.toggleFeaturedActionButton());
@@ -75,6 +76,26 @@ export default class ImageField extends TotalField {
 
 	toggleFeaturedField() {
 		this.featuredField.totalfield.setValue(!this.isFeatured());
+	}
+
+	setupDownload() {
+		const downloadButton = this.container.querySelector(".actionbar .download");
+		if (downloadButton) {
+			downloadButton.addEventListener("click", event => {
+				event.preventDefault();
+				const mimeType = this.container.querySelector('.form-field:has([name=mime])').totalfield.getValue();
+				const format = mimeType.split("/")[1];
+				const downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
+				const downloadUrl = this.api.apiUrl(downloadApi);
+
+				const link = document.createElement('a');
+				link.href = downloadUrl;
+				link.download = `${this.form.id}-${this.property}-original.${format}`; // Suggest a filename for the downloaded file
+				document.body.appendChild(link); // Append the anchor element to the body
+				link.click(); // Programmatically click the anchor element
+				document.body.removeChild(link); // Remove the anchor element from the body
+			});
+		}
 	}
 
 	setupFeaturedToggle() {

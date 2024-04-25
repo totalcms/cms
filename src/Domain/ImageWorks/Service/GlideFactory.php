@@ -25,6 +25,24 @@ final class GlideFactory
     }
 
     /**
+     * Get the original image.
+     *
+     * @param string $imagePath
+     *
+     * @return array
+     */
+    public function originalImage(string $imagePath): array
+    {
+        $imageFile = $this->filesystem->readStream($imagePath);
+        $mimeType  = $this->filesystem->mimeType($imagePath);
+
+        return [
+            'stream'   => new Stream($imageFile),
+            'mimeType' => $mimeType ?: 'image/jpeg',
+        ];
+    }
+
+    /**
      * Create a glide server.
      *
      * @param string $source

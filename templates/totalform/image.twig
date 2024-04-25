@@ -55,7 +55,7 @@
 		</div>
 
 		{{ _self.imageDialog(object.id, imageData) }}
-		{{ _self.linkDialog(object.id, imageData) }}
+		{{ _self.linkDialog(object.id, collection, property) }}
 
 		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, imageData) }}</template>
 
@@ -67,13 +67,14 @@
 	{# This must only have one div wrapper or else preview JS will break #}
 	<div class="dz-preview dz-file-preview">
 		<div class="actionbar">
-			<button class="edit"     title="Edit Image Info"></button>
-			<button class="links"    title="Image URL"></button>
-			<button class="featured" title="Toggle Featured"></button>
-			<button class="upload dz-clickable" title="Upload New Image"></button>
-			<button class="move"     title="Reorder Image"></button>
-			<button class="clear"    title="Clear Cache"></button>
-			<button class="trash"    title="Delete Image"></button>
+			<button type="button" class="edit"     title="Edit Image Info"></button>
+			<button type="button" class="links"    title="Image URL"></button>
+			<button type="button" class="featured" title="Toggle Featured"></button>
+			<button type="button" class="download" title="Download Original Image"></button>
+			<button type="button" class="move"     title="Reorder Image"></button>
+			<button type="button" class="upload dz-clickable" title="Upload New Image"></button>
+			<button type="button" class="clear"    title="Clear Cache"></button>
+			<button type="button" class="trash"    title="Delete Image"></button>
 		</div>
 		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
@@ -85,10 +86,10 @@
 	</div>
 {% endmacro %}
 
-{% macro linkDialog(id, imageData) %}
+{% macro linkDialog(id, collection, property) %}
 
 	<dialog class="cms-modal image-link-dialog">
-		<iframe style="width:100%;height:100%" data-src="{{totalcms.api}}/admin/imageworks?id={{id}}" frameborder="0"></iframe>
+		<iframe style="width:100%;height:100%" data-src="{{totalcms.api}}/admin/imageworks?id={{id}}&collection={{collection}}&property={{property}}" frameborder="0"></iframe>
 	</dialog>
 
 {% endmacro %}
@@ -298,8 +299,8 @@
 		</section>
 
 		<section>
-			<button class="cms-save close">Save</button>
-			<button class="close">Close</button>
+			<button type="button" class="cms-save close">Save</button>
+			<button type="button" class="close">Close</button>
 		</section>
 
 	</dialog>

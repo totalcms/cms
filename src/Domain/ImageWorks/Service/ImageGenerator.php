@@ -3,6 +3,8 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Psr\Http\Message\ResponseInterface;
+use Slim\Psr7\Response;
+use Slim\Psr7\Stream;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Utils\PathUtils;
@@ -16,6 +18,22 @@ final class ImageGenerator
     {
         $this->propertyFetcher = $propertyFetcher;
         $this->glideFactory    = $glideFactory;
+    }
+
+    private function returnOriginalImage(string $collection, string $id, string $property, ImageData $imageData): ResponseInterface
+    {
+        $imagePath = PathUtils::buildPath($collection, $id, $property, $imageData->name);
+        $imageFile = fopen($imagePath, 'rb');
+        if ($imageFile === false) {
+            throw new \UnexpectedValueException("Unable to locate image file: $imagePath");
+        }
+        $stream = new Stream($imageFile);
+
+        $mimeType = mime_content_type($imagePath);
+
+        return (new Response())
+            ->withHeader('Content-Type', $mimeType ?: 'image/jpeg')
+            ->withBody($stream);
     }
 
     /**
@@ -36,6 +54,17 @@ final class ImageGenerator
 
         if (!$imageData instanceof ImageData) {
             throw new \UnexpectedValueException('Invalid image property found');
+        }
+
+        // If no params are provided, return the original image
+        // The Action class automatically adds the format to the params so we need to check for that
+        if (empty($params) || (count($params) === 1 && isset($params['fm']))) {
+            $imagePath = PathUtils::buildPath($collection, $id, $property, $imageData->name);
+            $response  = $this->glideFactory->originalImage($imagePath);
+
+            return (new Response())
+                ->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
+                ->withBody($response['stream']);
         }
 
         $glide = $this->glideFactory->create(

@@ -54,6 +54,7 @@
 		&.upload {
 			-webkit-mask : var(--icon-upload-alt);
 			mask         : var(--icon-upload-alt);
+			margin-left  : auto;
 		}
 		&.edit {
 			-webkit-mask : var(--icon-edit);
@@ -66,7 +67,6 @@
 		&.clear {
 			-webkit-mask : var(--icon-clean);
 			mask         : var(--icon-clean);
-			margin-left  : auto;
 		}
 		&.trash {
 			-webkit-mask : var(--icon-trash);
