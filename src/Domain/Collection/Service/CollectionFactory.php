@@ -95,6 +95,12 @@ final class CollectionFactory
         $collection->id     = $collectionId;
         $collection->schema = $collectionId;
 
+        $schema = $this->schemaFetcher->fetchSchema($collection->schema);
+
+        if (empty($collection->properties)) {
+            $collection->properties = CollectionData::schemaToMetaProps($schema->properties);
+        }
+
         return $collection;
     }
 }
