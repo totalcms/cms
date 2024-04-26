@@ -48,9 +48,12 @@ export default class StyledTextField extends TotalField {
 		this.froala = new FroalaEditor(this.input, {
 			key         : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
 			attribution : false,
-			heightMin   : 300,
+			heightMin   : 200,
 			heightMax   : 800,
-			toolbarButtons: ['bold', 'italic', 'html']
+			toolbarButtons: ['bold', 'italic', 'html'],
+			events: {
+				'contentChanged': () => this.changed()
+			}
 		});
         // .on("froalaEditor.charCounter.exceeded", (e, editor) => this.charCountExceeded())
         // .on("froalaEditor.image.beforeUpload", (e, editor, images) => this.updateUploadURLs(editor))

@@ -90,7 +90,8 @@ export default class SVGField extends TotalField {
 					if (this.html.get().length === 0) {
 						// this.codeView.toggle();
 					}
-				}
+				},
+				'contentChanged': () => this.changed(),
 			}
         });
     }
