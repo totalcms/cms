@@ -3,12 +3,12 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"anyOf": [
 		{
-			"format": "date-time",
 			"examples": [
 				"2018-08-02T08:59:28+00:00"
 			],
 			"description": "Date string stored in ISO8601 formatted datetime",
-			"type": "string"
+			"type": "string",
+    		"format": "date-time"
 		},
 		{
 			"$ref" : "https://www.totalcms.co/schemas/properties/empty.json"

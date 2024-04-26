@@ -75,6 +75,6 @@
 {% macro datetimeForm(id, args = {}, collection = "date") %}
 	{{ _self.start(collection, { id:id }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
-		{{ _self.datetime('datetime', args) }}
+		{{ _self.datetime('date', args) }}
 	{{ _self.end() }}
 {% endmacro %}
