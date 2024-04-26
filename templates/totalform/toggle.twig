@@ -46,6 +46,6 @@
 {% macro toggleForm(id, args = {}, collection = "toggle") %}
 	{{ _self.start(collection, { id:id }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
-		{{ _self.toggle('toggle', args) }}
+		{{ _self.toggle('status', args) }}
 	{{ _self.end() }}
 {% endmacro %}

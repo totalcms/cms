@@ -40,3 +40,10 @@
     {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
+
+{% macro checkboxForm(id, args = {}, collection = "toggle") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.checkbox('status', args) }}
+	{{ _self.end() }}
+{% endmacro %}
