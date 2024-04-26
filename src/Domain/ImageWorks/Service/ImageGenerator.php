@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Response;
-use Slim\Psr7\Stream;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Utils\PathUtils;
@@ -20,22 +19,6 @@ final class ImageGenerator
         $this->glideFactory    = $glideFactory;
     }
 
-    private function returnOriginalImage(string $collection, string $id, string $property, ImageData $imageData): ResponseInterface
-    {
-        $imagePath = PathUtils::buildPath($collection, $id, $property, $imageData->name);
-        $imageFile = fopen($imagePath, 'rb');
-        if ($imageFile === false) {
-            throw new \UnexpectedValueException("Unable to locate image file: $imagePath");
-        }
-        $stream = new Stream($imageFile);
-
-        $mimeType = mime_content_type($imagePath);
-
-        return (new Response())
-            ->withHeader('Content-Type', $mimeType ?: 'image/jpeg')
-            ->withBody($stream);
-    }
-
     /**
      * Generate Image from a property.
      *
@@ -47,6 +30,9 @@ final class ImageGenerator
      * @throws \UnexpectedValueException
      *
      * @return ResponseInterface
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function generate(string $collection, string $id, string $property, array $params): ResponseInterface
     {
