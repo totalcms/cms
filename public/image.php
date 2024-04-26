@@ -63,62 +63,13 @@ $totalcms->startBuffer(); // Start output buffering again
 
 	<div class="container">
 
+		<h1>Total CMS Image Form Demo</h1>
+
 		{% import "totalform.twig" as form %}
 
 		{{ form.imageForm('myimage') }}
-		{{ form.imageForm('newimage') }}
 
-		<!-- {{ form.imageForm('newimage', {
-			options: {
-				rules : {
-					orientation : "landscape",
-					size        : {min:0,max:3000},
-					height      : {min:500,max:1000},
-					width       : {min:0,max:1000},
-					count       : {min:0,max:5},
-					filetype    : ["image"],
-					filename    : ["jpg"]
-				}
-			}
-		}) }} -->
-
-		<!-- {{ form.start("custom", { method:"post" }) }}
-
-
-			{{ form.id('id', { autogen:"${text}" }) }}
-			{{ form.text('text') }}
-
-			{{ form.textarea('textarea') }}
-			{{ form.checkbox('checkbox') }}
-			{{ form.number('number') }}
-			{{ form.toggle('toggle') }}
-			{{ form.color('color') }}
-			{{ form.date('date') }}
-			{{ form.datetime('datetime') }}
-			{{ form.time('time') }}
-			{{ form.email('email') }}
-			{{ form.phone('phone') }}
-			{{ form.url('url') }}
-			{{ form.password('password') }}
-
-			{% set options = [
-				{value:"dog",     label:"Dog"},
-				{value:"cat",     label:"Cat"},
-				{value:"hamster", label:"Hamster"},
-				{value:"parrot",  label:"Parrot"},
-				{value:"spider",  label:"Spider"},
-				{value:"goldfish",label:"Goldfish"},
-			] %}
-
-			{{ form.select('select', options) }}
-			{{ form.multiselect('multiselect', options) }}
-			{{ form.list('list', options) }}
-			{{ form.rangeslider('range') }}
-
-			{{ form.styledtext('styledtext') }}
-			{{ form.svg('svg') }}
-
-		{{ form.end() }} -->
+		<button class="cms-save">Save</button>
 
 	</div>
 
