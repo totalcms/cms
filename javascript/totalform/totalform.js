@@ -106,20 +106,24 @@ export default class TotalForm {
         return fieldObjects;
     }
 
-    registerButton(buttonClass, callback) {
-        const buttons = Array.from(this.form.getElementsByClassName(buttonClass));
-        buttons.forEach(button => {
-            button.addEventListener("click", (event) => {
+    registerButtons() {
+		const saveButtons = Array.from(document.getElementsByClassName("cms-save"));
+        saveButtons.forEach(button => {
+            button.addEventListener("click", event => {
                 event.preventDefault();
-                if (typeof callback === "function") callback(button);
-                return false;
+				if (this.isUnsaved()) {
+					this.save();
+				}
             });
         });
-    }
 
-    registerButtons() {
-        this.registerButton("cms-save", () => this.save());
-        this.registerButton("cms-delete", () => this.delete());
+		const deleteButtons = Array.from(this.form.getElementsByClassName("cms-delete"));
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", event => {
+                event.preventDefault();
+				this.delete();
+            });
+        });
     }
 
     generateFieldObject(field) {
