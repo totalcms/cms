@@ -43,3 +43,10 @@
 	<div id="value-{{ uuid }}" class="range-value">{{ value }}</div>
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
+
+{% macro rangesliderForm(id, args = {}, collection = "number") %}
+	{{ _self.start(collection, { id:id }) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.rangeslider('number', args) }}
+	{{ _self.end() }}
+{% endmacro %}
