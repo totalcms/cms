@@ -111,13 +111,7 @@ export default class TotalForm {
     }
 
     registerButtons() {
-		const saveButtons = Array.from(this.form.getElementsByClassName("cms-save"));
-        saveButtons.forEach(button => {
-            button.addEventListener("click", event => {
-                event.preventDefault();
-				this.save();
-            });
-        });
+		// Save button action is handled by the TotalFormManager
 
 		const deleteButtons = Array.from(this.form.getElementsByClassName("cms-delete"));
         deleteButtons.forEach(button => {

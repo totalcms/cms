@@ -30,25 +30,42 @@ export default class TotalFormManager {
 			form.form.addEventListener("error", () => this.error());
 			form.form.addEventListener("success", () => this.success());
 		});
-	}
-    registerButtons() {
-		const saveButtons = Array.from(document.querySelectorAll(":not(form.totalform) .cms-save"));
-        saveButtons.forEach(button => {
-            button.addEventListener("click", event => this.saveForms());
-        });
-    }
-
-    saveListener() {
-        document.addEventListener("keydown", (event) => {
+		// Save on CMD/Ctrl+S
+		document.addEventListener("keydown", (event) => {
 			if (event.key === "s" && (event.ctrlKey||event.metaKey)) {
 				event.preventDefault();
-				this.saveForms();
+				this.saveAllUnsavedForms();
 			}
         });
-    }
+	}
 
-	saveForms() {
+    registerButtons() {
+		const externalButtons = Array.from(document.querySelectorAll(":not(form.totalform) .cms-save"));
+        externalButtons.forEach(button => {
+            button.addEventListener("click", event => {
+				event.preventDefault();
+				this.saveAllUnsavedForms();
+			});
+        });
+
+		const internalButtons = Array.from(document.querySelectorAll("form.totalform .cms-save"));
+        internalButtons.forEach(button => {
+            button.addEventListener("click", event => {
+				event.preventDefault();
+				this.startProcessing();
+				this.unsavedCounter = 1; // Only one form to save
+				const totalform = button.closest("form").totalform;
+				totalform.save();
+			});
+        });
+	}
+
+	startProcessing() {
 		this.processingStart = Date.now();
+	}
+
+	saveAllUnsavedForms() {
+		this.startProcessing();
 		this.unsavedCounter = this.forms.filter(form => form.isUnsaved()).length;
 
 		for (const form of this.forms) {
