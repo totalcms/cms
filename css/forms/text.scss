@@ -28,7 +28,7 @@
     }
 
 	input, select, textarea {
-		&:has(+ .form-group-icon) {
+		&:has(~ .form-group-icon) {
 			border-radius: 5px 0 0 5px;
 		}
 	}

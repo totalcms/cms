@@ -35,15 +35,13 @@ export default class TotalForm {
 			console.error("form not found");
 			return false;
 		}
-		this.api             = new TotalCMS();
-		this.baseapi         = this.form.dataset.api;
-		this.method          = this.form.dataset.method||"PUT";
-		this.id              = this.form.dataset.id;
-		this.collection      = this.form.dataset.collection;
-		this.processingStart = Date.now();
-		this.processingLimit = 1500;
-		this.states          = ["unsaved","success","error","processing"];
-		this.state           = null;
+		this.api        = new TotalCMS();
+		this.baseapi    = this.form.dataset.api;
+		this.method     = this.form.dataset.method||"PUT";
+		this.id         = this.form.dataset.id;
+		this.collection = this.form.dataset.collection;
+		this.states     = ["unsaved","success","error","processing"];
+		this.state      = null;
 
 		this.fields   = this.processFields();
         this.droplets = this.fields.filter(field => field.isDroplet());
@@ -113,13 +111,11 @@ export default class TotalForm {
     }
 
     registerButtons() {
-		const saveButtons = Array.from(document.getElementsByClassName("cms-save"));
+		const saveButtons = Array.from(this.form.getElementsByClassName("cms-save"));
         saveButtons.forEach(button => {
             button.addEventListener("click", event => {
                 event.preventDefault();
-				if (this.isUnsaved()) {
-					this.save();
-				}
+				this.save();
             });
         });
 
@@ -213,15 +209,6 @@ export default class TotalForm {
     saveListener() {
 		// Prevent the default form submission
 		this.form.addEventListener("submit", event => event.preventDefault());
-
-        document.addEventListener("keydown", (event) => {
-            if (this.isUnsaved()) {
-                if (event.key === "s" && (event.ctrlKey||event.metaKey)) {
-                    event.preventDefault();
-                    this.save();
-                }
-            }
-        });
     }
 
 	validate() {
@@ -344,7 +331,7 @@ export default class TotalForm {
 		// this.form.classList.remove(...remove);
 		this.form.classList.remove(...this.states);
 		this.state = newState;
-		console.log("Form Change State",newState);
+		// console.log("Form Change State",newState);
 		if (newState) {
 			this.form.classList.add(newState);
 			this.form.dispatchEvent(new Event(newState));
@@ -363,18 +350,7 @@ export default class TotalForm {
         return this.state === "unsaved";
     }
 
-	delayProcessing(callback) {
-		// The purpose of this is purely to give the user a visual cue that the form is processing
-        const processingTime = Date.now() - this.processingStart;
-        const delay = this.processingLimit - processingTime;
-		console.log("Processing Delay",delay);
-		window.setTimeout(() => {
-            if (typeof callback === "function") callback();
-        }, delay);
-	}
-
 	processing() {
-		this.processingStart = Date.now();
 		this.changeState("processing");
     }
 
@@ -383,10 +359,8 @@ export default class TotalForm {
     }
 
     error(error) {
+		this.changeState("error");
         console.error("Form Error", error);
-		this.delayProcessing(() => {
-			this.changeState("error");
-        });
     }
 
 	isError() {
@@ -395,10 +369,8 @@ export default class TotalForm {
 
     success() {
 		this.editMode();
-		this.delayProcessing(() => {
-			this.changeState("success");
-			this.fields.forEach(field => field.saved());
-        });
+		this.changeState("success");
+		this.fields.forEach(field => field.saved());
     }
 
 	isSuccess() {
