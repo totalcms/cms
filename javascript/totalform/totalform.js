@@ -42,7 +42,8 @@ export default class TotalForm {
 		this.collection      = this.form.dataset.collection;
 		this.processingStart = Date.now();
 		this.processingLimit = 1500;
-		this.states          = ["success","error","processing","clear"];
+		this.states          = ["unsaved","success","error","processing"];
+		this.state           = null;
 
 		this.fields   = this.processFields();
         this.droplets = this.fields.filter(field => field.isDroplet());
@@ -101,7 +102,12 @@ export default class TotalForm {
             fieldObjects.push(object);
 
 			// Mark as dirty
-            field.addEventListener("field-change", e => this.unsaved());
+            field.addEventListener("field-change", e => {
+				// Ignore change events when form is processing
+				// If a field is in focus on submit, a change event is triggered
+				if (this.isProcessing()) return;
+				this.unsaved();
+			});
         });
         return fieldObjects;
     }
@@ -201,13 +207,6 @@ export default class TotalForm {
         }
     }
 
-    initArrayDroplet(field, options) {
-        options.type = field.dataset.type;
-        const droplet = new ArrayDroplet(field, options);
-        // droplet.updateUri();
-        return droplet;
-    }
-
     //-------------------------
     // Submit functions
     //-------------------------
@@ -259,40 +258,27 @@ export default class TotalForm {
         }
     }
 
-    submit() {
-        this.save();
-    }
-
-    // onSubmit(callback) {
-    //     this.form.addEventListener("submit", event => {
-    //         event.preventDefault();
-    //         if (typeof callback === "function") callback();
-    //     });
-    // }
-
     afterSave(response) {
         if (!response) return;
 
         if (this.droplets.length > 0) {
-            // this.saveDroplets(() => this.afterSaveAction(response));
+            // return this.saveDroplets(() => this.afterSaveAction(response));
         }
-        else {
-            this.afterSaveAction(response);
-        }
+		this.afterSaveAction(response);
     }
 
     afterSaveAction(response) {
         this.success();
         const waitUntilSaved = () => {
             // wait until all saving states have completed
-            if (!this.saving()) {
+            if (this.isSuccess()) {
 				// Mark all fields as saved
 				this.fields.forEach(field => field.saved());
                 // run actions
                 return this.isEditMode() ? this.runEditAction() : this.runNewAction();
             }
             // Check again
-            window.setTimeout(waitUntilSaved,100);
+            window.setTimeout(waitUntilSaved,250);
         };
         waitUntilSaved();
     }
@@ -327,16 +313,7 @@ export default class TotalForm {
     //-------------------------
     // Form States
     //-------------------------
-    isUnsaved() {
-        return this.form.classList.contains("unsaved");
-    }
-
-    unsaved() {
-		this.form.dispatchEvent(new Event("form-change"));
-        return this.form.classList.add("unsaved");
-    }
-
-    isEditMode() {
+	isEditMode() {
         return ("PUT" === this.method.toUpperCase());
     }
 
@@ -362,62 +339,72 @@ export default class TotalForm {
 		this.droplets.forEach(droplet => droplet.autoProcessQueue());
     }
 
-    saving() {
-        const current = this.states.filter(state => this.form.classList.contains(state));
-        return current.length > 0;
+	changeState(newState) {
+		// const remove = this.states.filter(e => e !== newState); // filer the newState and remove all others
+		// this.form.classList.remove(...remove);
+		this.form.classList.remove(...this.states);
+		this.state = newState;
+		console.log("Form Change State",newState);
+		if (newState) {
+			this.form.classList.add(newState);
+			this.form.dispatchEvent(new Event(newState));
+		}
+	}
+
+	clear() {
+		this.changeState(null);
+	}
+
+	unsaved() {
+		this.changeState("unsaved");
+	}
+
+	isUnsaved() {
+        return this.state === "unsaved";
     }
 
-    changeState(newState) {
-        const remove = this.states.filter(e => e !== newState); // filer the newState and remove all others
-
-		if (newState) this.form.classList.add(newState);
-		this.form.classList.remove(...remove);
-		this.form.dispatchEvent(new Event(newState));
-    }
-
-    delayProcessing(callback) {
+	delayProcessing(callback) {
+		// The purpose of this is purely to give the user a visual cue that the form is processing
         const processingTime = Date.now() - this.processingStart;
         const delay = this.processingLimit - processingTime;
-
-        window.setTimeout(() => {
+		console.log("Processing Delay",delay);
+		window.setTimeout(() => {
             if (typeof callback === "function") callback();
         }, delay);
+	}
+
+	processing() {
+		this.processingStart = Date.now();
+		this.changeState("processing");
+    }
+
+	isProcessing() {
+        return this.state === "processing";
     }
 
     error(error) {
         console.error("Form Error", error);
-        this.delayProcessing(() => {
-            this.changeState("error");
+		this.delayProcessing(() => {
+			this.changeState("error");
         });
     }
 
-    clear() {
-        // set the state to clear so that it fades out, then remove all classes
-        this.changeState("clear");
-        window.setTimeout(() => {
-            this.changeState();
-        }, 1000);
-    }
+	isError() {
+		return this.state === "error";
+	}
 
     success() {
 		this.editMode();
-        this.delayProcessing(() => {
-            this.changeState("success");
-            this.form.classList.remove("unsaved");
+		this.delayProcessing(() => {
+			this.changeState("success");
 			this.fields.forEach(field => field.saved());
-            window.setTimeout(() => {
-                this.clear();
-            }, 2000);
         });
     }
 
-    processing() {
-        this.processingStart = Date.now(); // setup for delayProcessing()
-        this.changeState("clear");
-        window.setTimeout(() => {
-            this.changeState("processing");
-        }, 100);
-    }
+	isSuccess() {
+		return this.state === "success";
+	}
+
 
     //-------------------------
     // Droplet Interactions
@@ -433,7 +420,7 @@ export default class TotalForm {
     // post request to create the object has been saved
     saveDroplets(callback) {
 
-        let dropletCount = this.droplet.length;
+        let dropletCount = this.droplets.length;
 
         const dropletComplete = (callback) => {
             // When there are multiple droplets, we need to ensure that the callback

@@ -11,6 +11,11 @@ export default class SelectField extends TotalField {
 		this.input.addEventListener("change", e => {
 			this.input.querySelector("[disabled]")?.removeAttribute("selected");
 		}, {once: true});
+
+		if (window.navigator.userAgent.indexOf("MSIE") > 0 || window.navigator.userAgent.indexOf("Edge") > 0) {
+			// IE Hack - select does not trigger input events. https://connect.microsoft.com/IE/feedback/details/1816207
+			this.input.addEventListener("click", e => { this.changed() }, {once: true});
+		}
     }
 
     setValue(value) {

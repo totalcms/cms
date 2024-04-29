@@ -28,14 +28,14 @@ export default class TotalField {
             this.api = this.form.api;
         }
 
-		this.dispathcer = new TotalDispatcher(this.container);
+		this.dispatcher = new TotalDispatcher(this.container);
 
 		this.changeListener();
     }
 
 	changeListener() {
 		// the change event happens more than once so the ID field can be updated for every change
-		this.input.addEventListener("change", () => this.changed());
+		this.input.addEventListener("change", () => { this.changed() }, {once: true});
 		// the input event happens once since the point is to mark the form as unsaved ASAP
 		this.input.addEventListener("input", () => this.changed(), {once: true});
 	}
@@ -69,7 +69,7 @@ export default class TotalField {
 
     changed() {
 		this.container.classList.add("unsaved");
-		this.dispathcer.dispatchEvent("field-change", { field: this });
+		this.dispatcher.dispatchEvent("field-change", { field: this });
     }
 
 	saved() {
@@ -79,7 +79,7 @@ export default class TotalField {
 
 	error(message) {
 		this.container.classList.add("error");
-		this.dispathcer.dispatchEvent("field-error", { field: this, message: message });
+		this.dispatcher.dispatchEvent("field-error", { field: this, message: message });
     }
 
     schema() {
