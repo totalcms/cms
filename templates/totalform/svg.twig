@@ -10,7 +10,7 @@
 {% endmacro %}
 
 {% macro svgForm(id, args = {}, collection = "svg") %}
-	{{ _self.start(collection, { id:id }) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.svg('svg', args) }}
 	{{ _self.end() }}

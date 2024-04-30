@@ -11,7 +11,7 @@
 {% endmacro %}
 
 {% macro emailForm(id, args = {}, collection = "email") %}
-	{{ _self.start(collection, { id:id }) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.email('email', args) }}
 	{{ _self.end() }}

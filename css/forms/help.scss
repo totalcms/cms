@@ -2,17 +2,18 @@
 // Default Help Text
 //------------------------------
 .help {
-    width: max-content;
-    margin-top: 0.5rem;
-    max-width: 100%;
-    padding: 0 1.1rem;
-    font-size: 0.875rem;
-    font-style: italic;
-    pointer-events: none;
-    background-repeat: no-repeat;
-    background-size: 1rem;
-    background-position: 0 1px;
-    background-image: var(--icon-help);
+	width               : max-content;
+	margin-top          : 0.5rem;
+	max-width           : 100%;
+	padding             : 0 1.1rem;
+	font-size           : var(--totalform-help-size);
+	font-style          : italic;
+	pointer-events      : none;
+	background-repeat   : no-repeat;
+	background-size     : 1rem;
+	background-position : 0 1px;
+	background-image    : var(--icon-help);
+	color               : var(--totalform-help-color);
 }
 
 .check-field .help {
@@ -31,8 +32,8 @@
         }
         &:has(:focus) .help {
 			opacity      : 1;
-			box-shadow   : 0 1px 2px hsla(0, 0%, 4%, 0.1);
-			border-color : hsl(0, 0%, 69%);
+			box-shadow   : 0 1px 2px var(--totalform-shadow);
+			border-color : var(--totalform-border-color);
     	}
     }
     &.help-on-hover:hover {
@@ -51,11 +52,11 @@
         right               : 0;
         z-index             : 10;
         margin              : 0;
-        border              : 1px solid hsl(0, 0%, 79%);
+        border              : 1px solid var(--totalform-border-color);
         padding             : 0.625rem 1.625rem;
-        border-radius       : 2px 0 5px 5px;
+        border-radius       : 2px 0 var(--totalform-radius) var(--totalform-radius);
         transform           : translateY(calc(100% - 1px));
-        background-color    : hsl(0, 0%, 90%);
+        background-color    : var(--totalform-nearwhite);
         background-position : 0.5rem 0.6875rem;
         transition: box-shadow .5s, border-color .25s ease-in-out;
     }
@@ -66,18 +67,18 @@
 //------------------------------
 .help-label {
     .form-field:not(.check-field):not(.radio-field) .help {
-        line-height: 1.8;
-        margin: 0;
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        background-position: left;
-        opacity: 0;
+        line-height         : 1.8;
+        margin              : 0;
+        position            : absolute;
+        top                 : 0;
+        left                : 0;
+        right               : 0;
+        z-index             : 10;
+        overflow            : hidden;
+        white-space         : nowrap;
+        text-overflow       : ellipsis;
+        background-position : left;
+        opacity             : 0;
     }
 }
 
@@ -86,43 +87,43 @@
 //------------------------------
 .help-tooltip {
     label::after {
-        content: " ";
-        display: inline-block;
-        width: 1.5rem;
-        height: 1.5rem;
-        color: hsl(0, 0%, 60%);
-        background-color: transparent;
-        background-repeat: no-repeat;
-        background-size: 1rem;
-        background-position: center;
-        background-image: var(--icon-help);
-        appearance: none;
-        border: none;
-        vertical-align: bottom;
+        content             : " ";
+        display             : inline-block;
+        width               : 1.5rem;
+        height              : 1.5rem;
+        color               : var(--totalform-mediumgray);
+        background-color    : transparent;
+        background-repeat   : no-repeat;
+        background-size     : 1rem;
+        background-position : center;
+        background-image    : var(--icon-help);
+        appearance          : none;
+        border              : none;
+        vertical-align      : bottom;
     }
 
     .help {
-        position: absolute;
-        max-width: clamp(200px, 50ch, 85vw);
-        margin: 0;
-        background-color: black;
-        color: #fff;
-        padding: 10px;
-        border-radius: 6px;
-        top: 0;
-        left: 0;
-        background-image: none;
-        transform: translateX(0) translateY(calc(-100% + 0rem));
+		position         : absolute;
+		max-width        : clamp(200px, 50ch, 85vw);
+		margin           : 0;
+		background-color : var(--totalform-nearblack);
+		color            : var(--totalform-nearwhite);
+		padding          : 10px;
+		border-radius    : var(--totalform-radius);
+		top              : 0;
+		left             : 0;
+		background-image : none;
+		translate        : 0 calc(-100% + 0rem);
 
         &:after {
-            content: " ";
-            position: absolute;
-            top: 100%;
-            left: 5%;
-            margin-left: 0px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: black transparent transparent transparent;
+            content      : " ";
+            position     : absolute;
+            top          : 100%;
+            left         : 5%;
+            margin-left  : 0px;
+            border-width : 5px;
+            border-style : solid;
+            border-color : var(--totalform-nearblack) transparent transparent transparent;
         }
     }
 }

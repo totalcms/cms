@@ -10,7 +10,7 @@
 {% endmacro %}
 
 {% macro styledtextForm(id, args = {}, collection = "styledtext") %}
-	{{ _self.start(collection, { id:id }) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.styledtext('styledtext', args) }}
 	{{ _self.end() }}

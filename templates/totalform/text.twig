@@ -16,15 +16,11 @@
 {#--------------------------------#}
 {% macro textForm(id, args = {}, collection = "text") %}
 
-	{{ _self.start(collection, { id:id }) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
 
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 
-		{% if args.field == 'textarea' %}
-			{{ _self.textarea('text', args) }}
-		{% else %}
-			{{ _self.text('text', args) }}
-		{% endif %}
+		{{ _self.text('text', args) }}
 
 	{{ _self.end() }}
 {% endmacro %}

@@ -2,7 +2,7 @@
 // Text Fields
 //------------------------------
 ::placeholder {
-    color: hsl(0, 0%, 79%)
+    color: var(--totalform-placeholder);
 }
 
 .totalform {
@@ -14,48 +14,49 @@
         width            : 100%;
         height           : 2.4375rem;
         padding          : .5rem;
-        border           : 1px solid hsl(0, 0%, 79%);
-        border-radius    : 5px;
-        background-color : hsl(0, 0%, 100%);
+        border           : 1px solid var(--totalform-border-color);
+        border-radius    : var(--totalform-radius);
+        background-color : var(--totalform-background);
         font-family      : inherit;
-        font-size        : 1rem;
+        font-size        : var(--totalform-font-size);
         font-weight      : 400;
         line-height      : 1.5;
-        color            : hsl(0, 0%, 4%);
+        color            : var(--totalform-text-color);
         appearance       : none;
-        box-shadow: inset 0 1px 2px hsla(0, 0%, 4%, 0.1);
-        transition: box-shadow .5s, border-color .25s ease-in-out;
+        box-shadow       : inset 0 1px 2px var(--totalform-shadow);
+        transition       : box-shadow .5s, border-color .25s ease-in-out;
     }
 
 	input, select, textarea {
 		&:has(~ .form-group-icon) {
-			border-radius: 5px 0 0 5px;
+			border-radius : 5px 0 0 5px;
 		}
 	}
 
     textarea {
-        max-width: 100%;
-        resize: vertical;
+        max-width : 100%;
+        resize    : vertical;
 
         &[rows] {
-            height: auto;
-            min-height: 100px;
+            height     : auto;
+            min-height : 100px;
         }
     }
 
     [readonly] {
-        background-color: hsl(0, 0%, 90%);
-        cursor: not-allowed
+        background-color : var(--totalform-lightgray);
+        cursor           : not-allowed
     }
 
     select {
-        + .form-group-icon {
-            background-image: var(--icon-select);
+        + .form-group-icon:after {
+            -webkit-mask : var(--icon-select);
+            mask         : var(--icon-select);
         }
 
         &:not([multiple]):has([selected][disabled])  {
 			// There is JS that will remove the selected attribute from the first option on change
-            color: hsl(0, 0%, 79%);
+            color : var(--totalform-lightgray);
         }
 
         &:not([multiple]) {
@@ -82,28 +83,40 @@
 //------------------------------
 [type="date"] + .form-group-icon,
 [type="datetime-local"] + .form-group-icon {
-    background-image: var(--icon-date);
+	&:after {
+		-webkit-mask : var(--icon-date);
+		mask         : var(--icon-date);
+	}
 }
 
 //------------------------------
 // Time Field
 //------------------------------
 [type="time"] + .form-group-icon {
-    background-image: var(--icon-time);
+	&:after {
+		-webkit-mask : var(--icon-time);
+		mask         : var(--icon-time);
+	}
 }
 
 //------------------------------
 // Email Field
 //------------------------------
 [type="email"] + .form-group-icon {
-    background-image: var(--icon-email);
+	&:after {
+		-webkit-mask : var(--icon-email);
+		mask         : var(--icon-email);
+	}
 }
 
 //------------------------------
 // Password Field
 //------------------------------
 [type="password"] + .form-group-icon {
-    background-image: var(--icon-lock);
+	&:after {
+		-webkit-mask : var(--icon-lock);
+		mask         : var(--icon-lock);
+	}
 }
 
 //------------------------------
@@ -111,14 +124,17 @@
 //------------------------------
 .id-field {
     .form-group-icon {
-        background-image: var(--icon-id);
-        border-width: 0;
+		&:after {
+			-webkit-mask : var(--icon-id);
+			mask         : var(--icon-id);
+		}
+		border-width : 0;
     }
 
     input[type="text"] {
-        background-color: #f3f3f3;
-        border: none;
-        box-shadow: none;
+        background-color : var(--totalform-lightgray);
+        border           : none;
+        box-shadow       : none;
     }
 }
 
@@ -126,116 +142,197 @@
 // URL Field
 //------------------------------
 [type="url"] + .form-group-icon {
-    background-image: var(--icon-url);
+	&:after {
+		-webkit-mask : var(--icon-url);
+		mask         : var(--icon-url);
+	}
 }
 
 //------------------------------
 // Telephone Field
 //------------------------------
 [type="tel"] + .form-group-icon {
-    background-image: var(--icon-tel);
+	&:after {
+		-webkit-mask : var(--icon-tel);
+		mask         : var(--icon-tel);
+	}
 }
 
 //------------------------------
 // Number Field
 //------------------------------
 [type="number"] + .form-group-icon {
-    background-image: var(--icon-number);
+	&:after {
+		-webkit-mask : var(--icon-number);
+		mask         : var(--icon-number);
+	}
 }
 
 //------------------------------
 // Markdown Field
 //------------------------------
 .markdown-field .form-group-icon {
-    background-image: var(--icon-markdown);
+	&:after {
+		-webkit-mask : var(--icon-markdown);
+		mask         : var(--icon-markdown);
+	}
 }
 
 //------------------------------
 // Copyright Field
 //------------------------------
 .form-field.icon-copyright .form-group-icon {
-    background-image: var(--icon-copyright);
+	&:after {
+		-webkit-mask : var(--icon-copyright);
+		mask         : var(--icon-copyright);
+	}
 }
 
 //------------------------------
 // GPS Field
 //------------------------------
 .form-field.icon-gps .form-group-icon {
-    background-image: var(--icon-gps);
+	&:after {
+		-webkit-mask : var(--icon-gps);
+		mask         : var(--icon-gps);
+	}
 }
 
 //------------------------------
 // User Field
 //------------------------------
 .form-field.icon-user .form-group-icon {
-    background-image: var(--icon-user);
+	&:after {
+		-webkit-mask : var(--icon-user);
+		mask         : var(--icon-user);
+	}
 }
 
 //------------------------------
 // Camera Field
 //------------------------------
 .form-field.icon-camera .form-group-icon {
-    background-image: var(--icon-camera);
+	&:after {
+		-webkit-mask : var(--icon-camera);
+		mask         : var(--icon-camera);
+	}
 }
 .form-field.icon-shutter .form-group-icon {
-    background-image: var(--icon-shutter);
+	&:after {
+		-webkit-mask : var(--icon-shutter);
+		mask         : var(--icon-shutter);
+	}
 }
 
 //------------------------------
 // More Custom Icons
 //------------------------------
 .form-field.icon-width .form-group-icon {
-    background-image: var(--icon-width);
+	&:after {
+		-webkit-mask : var(--icon-width);
+		mask         : var(--icon-width);
+	}
 }
 .form-field.icon-height .form-group-icon {
-	background-image: var(--icon-height);
+	&:after {
+		-webkit-mask : var(--icon-height);
+		mask         : var(--icon-height);
+	}
 }
 .form-field.icon-pixels .form-group-icon {
-	background-image: var(--icon-pixels);
+	&:after {
+		-webkit-mask : var(--icon-pixels);
+		mask         : var(--icon-pixels);
+	}
 }
 .form-field.icon-pixelate .form-group-icon {
-	background-image: var(--icon-pixelate);
+	&:after {
+		-webkit-mask : var(--icon-pixelate);
+		mask         : var(--icon-pixelate);
+	}
 }
 .form-field.icon-imageformat .form-group-icon {
-	background-image: var(--icon-imageformat);
+	&:after {
+		-webkit-mask : var(--icon-imageformat);
+		mask         : var(--icon-imageformat);
+	}
 }
 .form-field.icon-quality .form-group-icon {
-	background-image: var(--icon-quality);
+	&:after {
+		-webkit-mask : var(--icon-quality);
+		mask         : var(--icon-quality);
+	}
 }
 .form-field.icon-crop .form-group-icon {
-	background-image: var(--icon-crop);
+	&:after {
+		-webkit-mask : var(--icon-crop);
+		mask         : var(--icon-crop);
+	}
 }
 .form-field.icon-padding .form-group-icon {
-	background-image: var(--icon-padding);
+	&:after {
+		-webkit-mask : var(--icon-padding);
+		mask         : var(--icon-padding);
+	}
 }
 .form-field.icon-eye .form-group-icon {
-	background-image: var(--icon-eye);
+	&:after {
+		-webkit-mask : var(--icon-eye);
+		mask         : var(--icon-eye);
+	}
 }
 .form-field.icon-position .form-group-icon {
-	background-image: var(--icon-position);
+	&:after {
+		-webkit-mask : var(--icon-position);
+		mask         : var(--icon-position);
+	}
 }
 .form-field.icon-bright .form-group-icon {
-	background-image: var(--icon-bright);
+	&:after {
+		-webkit-mask : var(--icon-bright);
+		mask         : var(--icon-bright);
+	}
 }
 .form-field.icon-contrast .form-group-icon {
-	background-image: var(--icon-contrast);
+	&:after {
+		-webkit-mask : var(--icon-contrast);
+		mask         : var(--icon-contrast);
+	}
 }
 .form-field.icon-gamma .form-group-icon {
-	background-image: var(--icon-gamma);
+	&:after {
+		-webkit-mask : var(--icon-gamma);
+		mask         : var(--icon-gamma);
+	}
 }
 .form-field.icon-sharpen .form-group-icon {
-	background-image: var(--icon-sharpen);
+	&:after {
+		-webkit-mask : var(--icon-sharpen);
+		mask         : var(--icon-sharpen);
+	}
 }
 .form-field.icon-blur .form-group-icon {
-	background-image: var(--icon-blur);
+	&:after {
+		-webkit-mask : var(--icon-blur);
+		mask         : var(--icon-blur);
+	}
 }
 .form-field.icon-filter .form-group-icon {
-	background-image: var(--icon-filter);
+	&:after {
+		-webkit-mask : var(--icon-filter);
+		mask         : var(--icon-filter);
+	}
 }
 .form-field.icon-paint-roller .form-group-icon {
-	background-image: var(--icon-paint-roller);
+	&:after {
+		-webkit-mask : var(--icon-paint-roller);
+		mask         : var(--icon-paint-roller);
+	}
 }
 .form-field.icon-paint-brush .form-group-icon {
-	background-image: var(--icon-paint-brush);
+	&:after {
+		-webkit-mask : var(--icon-paint-brush);
+		mask         : var(--icon-paint-brush);
+	}
 }
 

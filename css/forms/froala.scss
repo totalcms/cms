@@ -12,12 +12,12 @@
     width: 100%;
 }
 .fr-toolbar {
-    border-top-left-radius:5px!important;
-    border-top-right-radius:0!important;
+    border-top-left-radius  : var(--totalform-radius)!important;
+    border-top-right-radius : 0!important;
 }
 .fr-second-toolbar {
-    border-bottom-left-radius:5px!important;
-    border-bottom-right-radius:0!important;
+    border-bottom-left-radius  : var(--totalform-radius)!important;
+    border-bottom-right-radius : 0!important;
 }
 .fr-second-toolbar:empty {
     min-height: 5px !important; // size of radius

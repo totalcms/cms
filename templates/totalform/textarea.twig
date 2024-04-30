@@ -40,5 +40,11 @@
 {% endmacro %}
 
 {% macro textareaForm(id, args = {}, collection = "text",) %}
-	{{ _self.textForm(id, {field:'textarea'}, collection) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
+
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+
+		{{ _self.textarea('text', args) }}
+
+	{{ _self.end() }}
 {% endmacro %}

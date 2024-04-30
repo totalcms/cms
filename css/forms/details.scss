@@ -7,13 +7,13 @@ details.cms-accordion {
 	transition    : height 0.5s ease-in-out;
 
 	summary {
-		border-radius    : 5px;
+		border-radius    : var(--totalform-radius);
 		border           : 1px solid oklch(25% 0 0 / 0.5);
 		font-weight      : bold;
 		font-size        : 1.2rem;
 		margin           : -1rem -1rem 0;
 		padding          : 1rem;
-		background-color : oklch(96% 0 0);
+		background-color : var(--totalform-nearwhite);
 		cursor           : pointer;
 
 		// &::marker {

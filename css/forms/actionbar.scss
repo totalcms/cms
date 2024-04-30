@@ -2,10 +2,6 @@
 // Action Bar
 //--------------------------------
 .actionbar {
-	--actionbar-color: oklch(100 0 0 / 0.6);
-	--actionbar-icon-color: #222222;
-	--actionbar-icon-size: 24px;
-
 	background-color : var(--actionbar-color);
 	position         : absolute;
 	top              : 0;
@@ -17,7 +13,11 @@
 	opacity          : 0;
 	transition       : opacity 300ms ease-in-out;
 	z-index          : 1;
+	display          : flex;
+	gap              : 1rem;
+	backdrop-filter  : blur(3px);
 
+	// always show on touch devices
 	@media (hover: none) {
 		opacity : 1;
 	}
@@ -25,16 +25,10 @@
 		opacity : 1;
 	}
 
-	display : flex;
-	gap     : 1rem;
-
-	backdrop-filter  : blur(3px);
-
-
     button {
-		appearance       : none;
-		border           : none;
-		cursor           : pointer;
+		appearance : none;
+		border     : none;
+		cursor     : pointer;
 
 		opacity          : 0.8;
 		background-color : var(--actionbar-icon-color);
@@ -88,24 +82,23 @@
 		}
     }
 
-    &.fill {
-        position : absolute;
-        top      : 0;
-        bottom   : 0;
-        left     : 0;
-        right    : 0;
-        height   : 100%;
-        padding  : 0;
+    // &.fill {
+    //     position : absolute;
+    //     top      : 0;
+    //     bottom   : 0;
+    //     left     : 0;
+    //     right    : 0;
+    //     height   : 100%;
+    //     padding  : 0;
 
-        button {
-			margin      : 0;
-			width       : 50%;
-			height      : 40px;
-			line-height : 40px;
-			float       : left;
-			font-size   : 1.3rem;
-        }
-    }
+    //     button {
+	// 		margin      : 0;
+	// 		width       : 50%;
+	// 		height      : 40px;
+	// 		line-height : 40px;
+	// 		font-size   : 1.3rem;
+    //     }
+    // }
 }
 
 .featured {

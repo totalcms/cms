@@ -11,7 +11,7 @@
 {% endmacro %}
 
 {% macro numberForm(id, args = {}, collection = "number") %}
-	{{ _self.start(collection, { id:id }) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.number('number', args) }}
 	{{ _self.end() }}

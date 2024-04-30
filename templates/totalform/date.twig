@@ -66,14 +66,14 @@
 {% endmacro %}
 
 {% macro dateForm(id, args = {}, collection = "date") %}
-	{{ _self.start(collection, { id:id }) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.date('date', args) }}
 	{{ _self.end() }}
 {% endmacro %}
 
 {% macro datetimeForm(id, args = {}, collection = "date") %}
-	{{ _self.start(collection, { id:id }) }}
+	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.datetime('date', args) }}
 	{{ _self.end() }}
