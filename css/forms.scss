@@ -53,6 +53,11 @@
 		--totalform-icon-bg      : var(--totalform-changed);
 		--totalform-icon-color   : var(--totalform-white);
 	}
+	&.error {
+		--totalform-border-color : var(--totalform-error);
+		--totalform-icon-bg      : var(--totalform-error);
+		--totalform-icon-color   : var(--totalform-white);
+	}
 }
 
 .cms-save,
