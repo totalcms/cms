@@ -14,7 +14,29 @@ export default class TotalFormManager {
 		this.forms = this.findForms();
 		this.registerButtons();
 		this.formListeners();
+
+		this.statusBanner = this.createStatusBanner();
     }
+
+	createStatusBanner() {
+		const id = "totalcms-status-banner";
+
+		// Check if the banner already exists
+		const existing = document.getElementById(id);
+		if (existing) return existing;
+
+		// Create the banner
+		const banner = document.createElement("div");
+		banner.id = id;
+		document.body.appendChild(banner);
+		return banner;
+	}
+
+	bannerStatus(status) {
+		const remove = Array.from(this.statusBanner.classList);
+		if (status) this.statusBanner.classList.add(status);
+		this.statusBanner.classList.remove(...remove);
+	}
 
 	findForms() {
 		const totalforms = [];
@@ -62,6 +84,7 @@ export default class TotalFormManager {
 
 	startProcessing() {
 		this.processingStart = Date.now();
+		this.bannerStatus("processing");
 	}
 
 	saveAllUnsavedForms() {
@@ -79,7 +102,6 @@ export default class TotalFormManager {
 		// The purpose of this is purely to give the user a visual cue that the form is processing
         const processingTime = Date.now() - this.processingStart;
         const delay = this.processingLimit - processingTime;
-		// console.log("Processing Delay",delay);
 		window.setTimeout(() => {
             if (typeof callback === "function") callback();
         }, delay);
@@ -87,6 +109,7 @@ export default class TotalFormManager {
 
     error(error) {
 		this.delayProcessing(() => {
+			this.bannerStatus("error");
 			console.log("Error saving forms.", error);
         });
     }
@@ -95,7 +118,10 @@ export default class TotalFormManager {
 		this.unsavedCounter--;
 		if (this.unsavedCounter !== 0) return;
 		this.delayProcessing(() => {
+			this.bannerStatus("success");
 			console.log("All forms saved successfully.");
+			this.processingStart = Date.now();
+			this.delayProcessing(() => this.bannerStatus());
 		});
     }
 }

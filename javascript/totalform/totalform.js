@@ -323,15 +323,14 @@ export default class TotalForm {
     }
 
 	changeState(newState) {
-		// const remove = this.states.filter(e => e !== newState); // filer the newState and remove all others
-		// this.form.classList.remove(...remove);
-		this.form.classList.remove(...this.states);
 		this.state = newState;
-		// console.log("Form Change State",newState);
 		if (newState) {
 			this.form.classList.add(newState);
 			this.form.dispatchEvent(new Event(newState));
 		}
+		// filer the newState and remove all others
+		const remove = this.states.filter(e => e !== newState);
+		this.form.classList.remove(...remove);
 	}
 
 	clear() {
