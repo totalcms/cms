@@ -69,8 +69,15 @@ export default class TotalField {
 
     changed() {
 		this.container.classList.add("unsaved");
+		this.container.classList.remove("error");
 		this.dispatcher.dispatchEvent("field-change", { field: this });
     }
+
+	validate() {
+		if (this.input.checkValidity()) return true;
+		this.error(this.input.validationMessage);
+		return false;
+	}
 
 	saved() {
 		this.container.classList.remove("unsaved");
