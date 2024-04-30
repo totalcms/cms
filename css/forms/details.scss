@@ -13,7 +13,7 @@ details.cms-accordion {
 		font-size        : 1.2rem;
 		margin           : -1rem -1rem 0;
 		padding          : 1rem;
-		background-color : var(--totalform-nearwhite);
+		background-color : oklch(var(--totalform-nearwhite));
 		cursor           : pointer;
 
 		// &::marker {

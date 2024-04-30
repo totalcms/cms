@@ -2,7 +2,7 @@
 // Action Bar
 //--------------------------------
 .actionbar {
-	background-color : var(--actionbar-color);
+	background-color : oklch(var(--actionbar-color));
 	position         : absolute;
 	top              : 0;
 	left             : 0;
@@ -31,7 +31,7 @@
 		cursor     : pointer;
 
 		opacity          : 0.8;
-		background-color : var(--actionbar-icon-color);
+		background-color : oklch(var(--actionbar-icon-color));
 		width            : var(--actionbar-icon-size);
 		height           : var(--actionbar-icon-size);
 		transition       : scale 300ms ease-in-out;

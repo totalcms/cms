@@ -14,16 +14,16 @@ body, h1,h2,h3,h4,h5,h6 {
 	img {
 		border-width : 10px;
 		border-style : solid;
-		border-color : var(--totalform-nearwhite);
-		box-shadow   : 0 0 2px var(--totalform-shadow);
+		border-color : oklch(var(--totalform-nearwhite));
+		box-shadow   : 0 0 2px oklch(var(--totalform-shadow));
 		max-width    : 100%;
 		height       : auto;
 		width        : auto;
 	}
 
 	button {
-		background-color : var(--totalform-accent);
-		color            : var(--totalform-white);
+		background-color : oklch(var(--totalform-accent));
+		color            : oklch(var(--totalform-white));
 		padding          : 1rem;
 		border           : none;
 		border-radius    : var(--totalform-radius);
@@ -41,16 +41,16 @@ body, h1,h2,h3,h4,h5,h6 {
 		}
 	}
 	#copy-macro {
-		border     : 1px solid var(--totalform-accent);
+		border     : 1px solid oklch(var(--totalform-accent));
 		background : transparent;
-		color      : var(--totalform-accent);
+		color      : oklch(var(--totalform-accent));
 		padding    : 0.5rem 1rem;
 		font-size  : 0.8rem;
 
 		&.copied {
 			content: "Copied!";
-			background-color : var(--totalform-accent);
-			color      : var(--totalform-white);
+			background-color : oklch(var(--totalform-accent));
+			color      : oklch(var(--totalform-white));
 		}
 	}
 	#download-image {
@@ -58,7 +58,7 @@ body, h1,h2,h3,h4,h5,h6 {
 		vertical-align   : middle;
 		width            : 1.5rem;
 		height           : 1.5rem;
-		background-color : var(--totalform-gray);
+		background-color : oklch(var(--totalform-gray));
 		-webkit-mask     : var(--icon-download);
 		mask             : var(--icon-download);
 		opacity          : 0.5;
@@ -84,9 +84,9 @@ body, h1,h2,h3,h4,h5,h6 {
 }
 
 pre#twig-macro {
-	background-color : var(--totalform-nearwhite);
+	background-color : oklch(var(--totalform-nearwhite));
 	padding          : 1rem 0.5rem;
-	border           : 1px solid var(--totalform-border-color);
+	border           : 1px solid oklch(var(--totalform-border-color));
 	border-radius    : 5px;
 	max-width        : 300px;
 	overflow-x       : scroll;

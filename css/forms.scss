@@ -1,13 +1,5 @@
 @import "variables";
 
-
-// TODO: Variables
-// border radius
-// shadows
-// colors: background, text, border, accent, etc.
-// HSL to OKLCH?
-// hide group label with class (will affect border radius)
-
 //------------------------------
 // Form Defaults
 //------------------------------
@@ -18,8 +10,8 @@
 	input:focus + .form-group-icon,
 	textarea:focus + .form-group-icon {
 		outline      : 0;
-		border-color : var(--totalform-border-color);
-		box-shadow: inset 0 0 0 var(--totalform-shadow);
+		border-color : oklch(var(--totalform-border-color));
+		box-shadow: inset 0 0 0 oklch(var(--totalform-shadow));
 	}
 
     label {
@@ -28,7 +20,7 @@
         font-size   : var(--totalform-label-size);
         font-weight : 400;
         line-height : 1.8;
-        color       : var(--totalform-label-color);
+        color       : oklch(var(--totalform-label-color));
         transition  : opacity 0.5s;
         width       : max-content;
     }
@@ -74,14 +66,11 @@
 	margin-bottom : 1rem;
 	align-items   : stretch;
 	border-radius : var(--totalform-radius);
-	transition    : box-shadow .5s,
-					color .25s ease-in-out,
-					border-color .25s ease-in-out,
-					background-color .25s ease-in-out;
-	box-shadow    : 0 0 0 var(--totalform-shadow);
+	transition    : all 200ms ease-in-out;
+	box-shadow    : 0 0 0 oklch(var(--totalform-shadow));
 
     &:has(:focus) {
-        box-shadow: 0 1px 2px var(--totalform-shadow);
+        box-shadow: 0 1px 2px oklch(var(--totalform-shadow));
 
 		&:has(.actionbar),
 		&:has([type=range]),
@@ -102,11 +91,11 @@
 
 .form-group-icon {
 	width             : 3em;
-	border            : 1px solid var(--totalform-border-color);
+	border            : 1px solid oklch(var(--totalform-border-color));
 	border-left-width : 0;
 	border-radius     : 0 var(--totalform-radius) var(--totalform-radius) 0;
-	background-color  : var(--totalform-icon-bg);
-	transition        : box-shadow .5s, border-color .25s ease-in-out;
+	background-color  : oklch(var(--totalform-icon-bg));
+	transition        : all 200ms ease-in-out;
 	display           : grid;
 	align-items       : center;
 	justify-items     : center;
@@ -114,7 +103,8 @@
 	&:after {
 		display          : block;
 		content          : " ";
-		background-color : var(--totalform-icon-color);
+		transition       : all 200ms ease-in-out;
+		background-color : oklch(var(--totalform-icon-color));
 		width            : 1.1rem;
 		height           : 1.1rem;
 		-webkit-mask     : var(--icon-text);
@@ -122,6 +112,7 @@
 	}
 }
 
+@import "forms/status-banner";
 @import "forms/help";
 @import "forms/text";
 @import "forms/actionbar";

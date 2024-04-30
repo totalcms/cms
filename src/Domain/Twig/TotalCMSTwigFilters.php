@@ -58,39 +58,42 @@ final class TotalCMSTwigFilters
         return $color['hex'] ?? '#000000';
     }
 
-    public static function rgb(array $color, int $alpha = 100): string
+    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    public static function rgb(array $color, int $alpha = 100, bool $wrap = true): string
     {
         $hex = self::hex($color);
         $rgb = ColorData::hexToRgb($hex);
 
-        if ($alpha === 100) {
-            return sprintf('rgb(%d %d %d)', $rgb['r'], $rgb['g'], $rgb['b']);
-        }
+        $color = $alpha === 100 ?
+            sprintf('%d %d %d', $rgb['r'], $rgb['g'], $rgb['b']) :
+            sprintf('%d %d %d / %.2f', $rgb['r'], $rgb['g'], $rgb['b'], $alpha / 100);
 
-        return sprintf('rgb(%d %d %d / %.2f)', $rgb['r'], $rgb['g'], $rgb['b'], $alpha / 100);
+        return $wrap ? sprintf('rgb(%s)', $color) : $color;
     }
 
-    public static function hsl(array $color, int $alpha = 100): string
+    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    public static function hsl(array $color, int $alpha = 100, bool $wrap = true): string
     {
         $hex = self::hex($color);
         $hsl = ColorData::hexToHsl($hex);
 
-        if ($alpha === 100) {
-            return sprintf('hsl(%d %d%% %d%%)', $hsl['h'], $hsl['s'], $hsl['l']);
-        }
+        $color = $alpha === 100 ?
+            sprintf('%d %d%% %d%%', $hsl['h'], $hsl['s'], $hsl['l']) :
+            sprintf('%d %d%% %d%% / %.2f', $hsl['h'], $hsl['s'], $hsl['l'], $alpha / 100);
 
-        return sprintf('hsl(%d %d%% %d%% / %.2f)', $hsl['h'], $hsl['s'], $hsl['l'], $alpha / 100);
+        return $wrap ? sprintf('hsl(%s)', $color) : $color;
     }
 
-    public static function oklch(array $color, int $alpha = 100): string
+    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    public static function oklch(array $color, int $alpha = 100, bool $wrap = true): string
     {
         $oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
 
-        if ($alpha === 100) {
-            return sprintf('oklch(%.3f%% %.3f %.3f)', $oklch['l'], $oklch['c'], $oklch['h']);
-        }
+        $color = $alpha === 100 ?
+            sprintf('oklch(%.3f%% %.3f %.3f)', $oklch['l'], $oklch['c'], $oklch['h']) :
+            sprintf('oklch(%.3f%% %.3f %.3f / %.2f)', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
 
-        return sprintf('oklch(%.3f%% %.3f %.3f / %.2f)', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
+        return $wrap ? sprintf('oklch(%s)', $color) : $color;
     }
 
     public static function lightness(array $color, string $lightness): array

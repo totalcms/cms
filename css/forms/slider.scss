@@ -7,9 +7,9 @@
     height           : 32px;
     outline          : none;
     overflow         : hidden;
-    border           : 1px solid var(--totalform-border-color);
+    border           : 1px solid oklch(var(--totalform-border-color));
     border-radius    : 60px;
-    background-color : var(--totalform-background);
+    background-color : oklch(var(--totalform-background));
     padding          : 0;
 
     &::-webkit-slider-thumb {
@@ -17,10 +17,10 @@
         width              : 30px;
         height             : 30px;
         border-radius      : 60px;
-        background         : var(--totalform-accent);
-        border             : 15px solid var(--totalform-nearwhite);
+        background         : oklch(var(--totalform-accent));
+        border             : 15px solid oklch(var(--totalform-nearwhite));
         cursor             : pointer;
-        box-shadow         : -515px 0 0 500px var(--totalform-accent), 0 0 0 1px hsla(0, 0%, 0%, 0.1), 0 4px 0px 0 hsla(0, 0%, 0%, .04), 0 4px 9px hsla(0, 0%, 0%, .13), 0 3px 3px hsla(0, 0%, 0%, .05);
+        box-shadow         : -515px 0 0 500px oklch(var(--totalform-accent)), 0 0 0 1px hsla(0, 0%, 0%, 0.1), 0 4px 0px 0 hsla(0, 0%, 0%, .04), 0 4px 9px hsla(0, 0%, 0%, .13), 0 3px 3px hsla(0, 0%, 0%, .05);
     }
 }
 .range-value {
