@@ -30,6 +30,7 @@
 		min         = minimum value
 		max         = maximum value
 		step        = step value
+		pattern     = pattern for validation
 		autogen     = template string to autogenerate a value (in ID)
 		options     = options array added to form-field data-options attribute
 		minlength   = minimum length of the field
@@ -84,11 +85,3 @@
 	{% endif %}
 	</form>
 {% endmacro %}
-
-{#
-<div id="form-save-indicator">
-    <i class="fa fa-refresh fa-spin" aria-hidden="true"></i>
-    <i class="fa fa-check" aria-hidden="true"></i>
-    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-</div>
-#}
