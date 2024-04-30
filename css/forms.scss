@@ -47,6 +47,12 @@
 	&.hide {
 		display : none;
 	}
+
+	&.unsaved {
+		--totalform-border-color : var(--totalform-changed);
+		--totalform-icon-bg      : var(--totalform-changed);
+		--totalform-icon-color   : var(--totalform-white);
+	}
 }
 
 .cms-save,
@@ -63,7 +69,10 @@
 	margin-bottom : 1rem;
 	align-items   : stretch;
 	border-radius : var(--totalform-radius);
-	transition    : box-shadow .5s;
+	transition    : box-shadow .5s,
+					color .25s ease-in-out,
+					border-color .25s ease-in-out,
+					background-color .25s ease-in-out;
 	box-shadow    : 0 0 0 var(--totalform-shadow);
 
     &:has(:focus) {
