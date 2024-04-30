@@ -30,6 +30,7 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
+use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -158,8 +159,15 @@ return [
         );
     },
 
+    TotalCMSTwigPatterns::class => function (ContainerInterface $container) {
+        return new TotalCMSTwigPatterns();
+    },
+
     TotalCMSTwigExtension::class => function (ContainerInterface $container) {
-        return new TotalCMSTwigExtension($container->get(TotalCMSTwigAdapter::class));
+        return new TotalCMSTwigExtension(
+            $container->get(TotalCMSTwigAdapter::class),
+            $container->get(TotalCMSTwigPatterns::class),
+        );
     },
 
     TwigEngine::class => function (ContainerInterface $container) {

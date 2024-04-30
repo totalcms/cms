@@ -12,11 +12,12 @@ use Twig\TwigFunction;
  */
 final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterface
 {
-    private TotalCMSTwigAdapter $adapter;
-
-    public function __construct(TotalCMSTwigAdapter $adapter)
-    {
-        $this->adapter = $adapter;
+    public function __construct(
+        private TotalCMSTwigAdapter $adapter,
+        private TotalCMSTwigPatterns $patterns
+    ) {
+        $this->adapter  = $adapter;
+        $this->patterns = $patterns;
     }
 
     /**
@@ -28,6 +29,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
             'totalcms'   => $this->adapter,
             'getParams'  => $_GET,
             'postParams' => array_filter($_POST),
+            'patterns'   => $this->patterns,
         ];
     }
 
