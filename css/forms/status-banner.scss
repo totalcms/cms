@@ -56,7 +56,8 @@
         }
     }
     &.error {
-        background-color : oklch(var(--totalform-error) / 0.8);
+		background-color  : oklch(var(--totalform-error) / 0.8);
+		pointer-events    : auto;
 
         &:after {
 			-webkit-mask-image : var(--icon-error);
@@ -64,6 +65,19 @@
             opacity : 1;
             scale   : 1.2;
         }
+
+		&:before {
+			content    : "An error occurred. See the CMS logs for more details.";
+			position   : absolute;
+			display    : block;
+			bottom     : 1rem;
+			left       : 0;
+			width      : 100%;
+			font-size  : 1.2rem;
+			text-align : center;
+			color      : oklch(var(--totalform-white));
+			transition : all 500ms ease-in-out;
+		}
     }
 }
 

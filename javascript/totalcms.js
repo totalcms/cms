@@ -82,13 +82,14 @@ export default class TotalCMS {
             headers : new Headers(headers),
             body: JSON.stringify(data)
         }).then(response => {
-            if (!response.ok) {
-                response.json().then(json => console.error("postAPI Error",json));
-                throw Error(response.statusText);
-            }
-            return response.json();
-        }).catch(error => {
-            console.error("POST API Request Failed", error);
+			if (!response.ok) {
+				return response.json().then(json => {
+					const error = new Error(json.error.message);
+					error.data = json;
+					throw error;
+				});
+			}
+			return response.json();
         });
     }
 

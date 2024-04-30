@@ -322,11 +322,11 @@ export default class TotalForm {
 		this.droplets.forEach(droplet => droplet.autoProcessQueue());
     }
 
-	changeState(newState) {
+	changeState(newState, details = {}) {
 		this.state = newState;
 		if (newState) {
 			this.form.classList.add(newState);
-			this.form.dispatchEvent(new Event(newState));
+			this.form.dispatchEvent(new CustomEvent(newState, {detail: details}));
 		}
 		// filer the newState and remove all others
 		const remove = this.states.filter(e => e !== newState);
@@ -354,7 +354,7 @@ export default class TotalForm {
     }
 
     error(error) {
-		this.changeState("error");
+		this.changeState("error", {error:error});
         console.error("Form Error", error);
     }
 

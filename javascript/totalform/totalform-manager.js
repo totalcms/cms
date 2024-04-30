@@ -49,7 +49,7 @@ export default class TotalFormManager {
 
 	formListeners() {
 		this.forms.forEach(form => {
-			form.form.addEventListener("error", () => this.error());
+			form.form.addEventListener("error", event => this.error(event.detail.error));
 			form.form.addEventListener("success", () => this.success());
 		});
 		// Save on CMD/Ctrl+S
@@ -110,7 +110,11 @@ export default class TotalFormManager {
     error(error) {
 		this.delayProcessing(() => {
 			this.bannerStatus("error");
-			console.log("Error saving forms.", error);
+			this.statusBanner.addEventListener("click", () => {
+				navigator.clipboard.writeText(error);
+				this.bannerStatus();
+				this.statusBanner.style.setProperty('--totalform-formerror', "");
+			}, {once: true});
         });
     }
 
