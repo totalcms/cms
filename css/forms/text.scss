@@ -79,6 +79,16 @@
 }
 
 //------------------------------
+// List Field
+//------------------------------
+.list-field .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-list);
+		mask         : var(--icon-list);
+	}
+}
+
+//------------------------------
 // Date Field
 //------------------------------
 [type="date"] + .form-group-icon,
