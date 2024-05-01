@@ -31,22 +31,22 @@ final class TotalCMSTwigPatterns
     public string $html                     = '<([a-z]+)([^<]+)*(?:>(.*)<\/\1>|\s+/>)';
 
     public array $postCode = [
-        'Australia'   => '[0-9]{4}',
-        'Austria'     => '[0-9]{4}',
-        'Belgium'     => '[0-9]{4}',
-        'Brazil'      => '[0-9]{5}[\-]?[0-9]{3}',
-        'Canada'      => '^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$',
-        'Germany'     => '[0-9]{5}',
-        'Hungary'     => '[0-9]{4}',
-        'Italy'       => '[0-9]{5}',
-        'Japan'       => '\d{3}-\d{4}',
-        'Luxembourg'  => '(L\s*(-|—|–))\s*?[\d]{4}',
-        'Netherlands' => '[1-9][0-9]{3}\s?[a-zA-Z]{2}',
-        'Poland'      => '[0-9]{2}\-[0-9]{3}',
-        'Spain'       => '\d{3}\s?\d{2}',
-        'Sweden'      => '\d{3}\s?\d{2}',
-        'UK'          => '[A-Za-z]{1,2}[0-9Rr][0-9A-Za-z]? [0-9][ABD-HJLNP-UW-Zabd-hjlnp-uw-z]{2}',
-        'USA'         => '^\d{5}(-\d{4})?$',
+        'australia'   => '[0-9]{4}',
+        'austria'     => '[0-9]{4}',
+        'belgium'     => '[0-9]{4}',
+        'brazil'      => '[0-9]{5}[\-]?[0-9]{3}',
+        'canada'      => '^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$',
+        'germany'     => '[0-9]{5}',
+        'hungary'     => '[0-9]{4}',
+        'italy'       => '[0-9]{5}',
+        'japan'       => '\d{3}-\d{4}',
+        'luxembourg'  => '(L\s*(-|—|–))\s*?[\d]{4}',
+        'netherlands' => '[1-9][0-9]{3}\s?[a-zA-Z]{2}',
+        'poland'      => '[0-9]{2}\-[0-9]{3}',
+        'spain'       => '\d{3}\s?\d{2}',
+        'sweden'      => '\d{3}\s?\d{2}',
+        'uk'          => '[A-Za-z]{1,2}[0-9Rr][0-9A-Za-z]? [0-9][ABD-HJLNP-UW-Zabd-hjlnp-uw-z]{2}',
+        'usa'         => '^\d{5}(-\d{4})?$',
     ];
 
     public array $phone = [

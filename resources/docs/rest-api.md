@@ -42,9 +42,6 @@ The Froala editor is used on the front end. It has some specific APIs
 in order to upload files and images. The Froala APIs are to ensure
 proper translation between the editor and the CMS.
 
-## PHP
-
-You can include the Total CMS PHP classes and directly access the data.
 
 ## Faker
 
