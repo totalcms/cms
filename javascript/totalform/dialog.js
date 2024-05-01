@@ -33,27 +33,45 @@ export default class Dialog  {
     }
 
 	close() {
+		this.allowBodyScrolling();
 		this.dialog.close();
 
-		if (this.closeListener) {
-			this.dialog.removeEventListener('click', this.closeListener);
-		}
 		if (this.options.onClose && typeof this.options.onClose === "function") {
 			this.options.onClose();
 		}
 	}
 
+	stopBodyScrolling() {
+		// When the modal is shown, we want to remain at the top of the scroll position
+		document.body.style.width    = '100%';
+		document.body.style.top      = `-${window.scrollY}px`;
+		document.body.style.position = 'fixed';
+	}
+
+	allowBodyScrolling() {
+		// When the modal is hidden, we want to remain at the top of the scroll position
+		const scrollY = parseInt(document.body.style.top || 0);
+		document.body.style.width = '';
+		document.body.style.position = '';
+		document.body.style.top = '';
+		window.scrollTo(0, scrollY * -1);
+	}
+
 	open() {
+		this.stopBodyScrolling();
 		this.dialog.showModal();
 
-		this.closeListener = this.dialog.addEventListener('click', event => {
-			const rect = this.dialog.getBoundingClientRect();
-			const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height &&
-				rect.left <= event.clientX && event.clientX <= rect.left + rect.width);
-			if (!isInDialog) {
-				this.close();
-			}
-		});
+		if (!this.closeClickListener) {
+			this.dialog.addEventListener('click', event => {
+				const rect = this.dialog.getBoundingClientRect();
+				const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height &&
+					rect.left <= event.clientX && event.clientX <= rect.left + rect.width);
+				if (!isInDialog) {
+					this.close();
+				}
+			});
+		}
+		this.closeClickListener = true;
 
 		if (this.options.onOpen && typeof this.options.onOpen === "function") {
 			this.options.onOpen();
