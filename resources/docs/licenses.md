@@ -10,13 +10,13 @@ Below list will list out the collections that particular license has access to.
 
 * date
 * email
-* id
 * image
 * number
 * svg
 * text
 * toggle
 * url
+* gallery
 
 ## Standard
 
@@ -27,17 +27,16 @@ Everything in Lite including:
 * color
 * depot
 * file
-* gallery
-* list
-* rating
+* watermarking images
 
 ## Professional
 
 Everything in Standard including:
 
+* custom collection schemas
+* ratings
 * podcast
 * menu
-* custom collection schemas
 * site search
 
 ## Free Trial
