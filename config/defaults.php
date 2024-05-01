@@ -27,7 +27,8 @@ if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
 $settings = [];
 
 // Default env to production
-$settings['env'] = 'prod';
+$settings['env']    = 'prod';
+$settings['locale'] = 'en_US';
 
 $settings['domain']    = 'example.com';
 $settings['url']       = 'https://' . $settings['domain'];

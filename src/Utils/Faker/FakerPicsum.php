@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Utils\Faker;
 
 use Faker\Provider\Base;
 

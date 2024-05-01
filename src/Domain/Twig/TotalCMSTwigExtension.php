@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use TotalCMS\Factory\FakerFactory;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 use Twig\TwigFilter;
@@ -14,10 +15,12 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 {
     public function __construct(
         private TotalCMSTwigAdapter $adapter,
-        private TotalCMSTwigPatterns $patterns
+        private TotalCMSTwigPatterns $patterns,
+        private FakerFactory $faker,
     ) {
         $this->adapter  = $adapter;
         $this->patterns = $patterns;
+        $this->faker    = $faker;
     }
 
     /**
@@ -30,6 +33,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
             'getParams'  => $_GET,
             'postParams' => array_filter($_POST),
             'patterns'   => $this->patterns,
+            'factory'    => $this->faker->createFaker(),
         ];
     }
 

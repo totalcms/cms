@@ -32,6 +32,7 @@ use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Support\Config;
@@ -139,6 +140,12 @@ return [
         return new BufferController();
     },
 
+    FakerFactory::class => function (ContainerInterface $container) {
+        return new FakerFactory(
+            $container->get(Config::class)
+        );
+    },
+
     IndexReader::class => function (ContainerInterface $container) {
         return new IndexReader(
             $container->get(IndexRepository::class),
@@ -167,6 +174,7 @@ return [
         return new TotalCMSTwigExtension(
             $container->get(TotalCMSTwigAdapter::class),
             $container->get(TotalCMSTwigPatterns::class),
+            $container->get(FakerFactory::class),
         );
     },
 
