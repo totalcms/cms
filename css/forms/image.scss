@@ -36,14 +36,13 @@ dialog.image-link-dialog {
 
 .cms-modal {
 	.image-preview {
-		border-width : 5px;
-		border-style : solid;
-		border-color : oklch(var(--totalform-nearwhite));
-		box-shadow   : 0px 0px 2px oklch(var(--totalform-shadow));
-		overflow     : visible;
+		border     : 10px solid oklch(var(--totalform-white));
+		box-shadow : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
+		overflow   : visible;
 
 		img {
-			width : 100%;
+			width   : 100%;
+			display : block;
 		}
 	}
 

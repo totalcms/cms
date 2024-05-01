@@ -4,7 +4,7 @@
 dialog.cms-modal {
 	border        : none;
 	box-shadow    : rgb(0 0 0 / 0.3) 2px 2px 5px 0px;
-	border-radius : oklch(var(--totalform-radius));
+	border-radius : var(--totalform-radius);
 	padding       : 1.25rem;
 	z-index       : 5;
 	position      : fixed;

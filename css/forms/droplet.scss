@@ -47,7 +47,7 @@
 	min-height   : 2rem;
 	border-width : 10px;
 	border-style : solid;
-	border-color : oklch(var(--totalform-border-color));
+	border-color : oklch(var(--totalform-white));
 	box-shadow   : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
 
 	&:has(img[src='']) {

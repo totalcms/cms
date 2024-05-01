@@ -88,6 +88,7 @@ export default class TotalField {
 		this.container.classList.add("error");
 		this.dispatcher.dispatchEvent("field-error", { field: this, message: message });
 		console.warn(`Field Error: ${this.property} - ${message}`);
+		this.changeListener();
     }
 
     schema() {

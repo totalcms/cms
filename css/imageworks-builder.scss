@@ -12,13 +12,11 @@ body, h1,h2,h3,h4,h5,h6 {
 	gap     : 1rem;
 
 	img {
-		border-width : 10px;
-		border-style : solid;
-		border-color : oklch(var(--totalform-nearwhite));
-		box-shadow   : 0 0 2px oklch(var(--totalform-shadow));
-		max-width    : 100%;
-		height       : auto;
-		width        : auto;
+		border     : 10px solid oklch(var(--totalform-white));
+		box-shadow : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
+		max-width  : 100%;
+		height     : auto;
+		width      : auto;
 	}
 
 	button {

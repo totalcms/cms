@@ -74,9 +74,12 @@ export default class TotalFormManager {
         internalButtons.forEach(button => {
             button.addEventListener("click", event => {
 				event.preventDefault();
+
+				const totalform = button.closest("form").totalform;
+				if (!totalform.validate()) return;
+
 				this.startProcessing();
 				this.unsavedCounter = 1; // Only one form to save
-				const totalform = button.closest("form").totalform;
 				totalform.save();
 			});
         });
@@ -88,14 +91,20 @@ export default class TotalFormManager {
 	}
 
 	saveAllUnsavedForms() {
-		this.startProcessing();
-		this.unsavedCounter = this.forms.filter(form => form.isUnsaved()).length;
+		this.unsaved = this.forms.filter(form => form.isUnsaved());
+		this.unsavedCounter = this.unsaved.length;
 
-		for (const form of this.forms) {
-			if (form.isUnsaved()) {
-				form.save();
-			}
+		if (this.unsavedCounter === 0) {
+			console.log("No unsaved forms to save.");
+			return;
 		}
+
+		// Validate forms and do not save unless all are valid
+		for (const form of this.unsaved) {
+			if (!form.validate()) return;
+		}
+		this.startProcessing();
+		this.unsaved.forEach(form => form.save());
 	}
 
 	delayProcessing(callback) {
