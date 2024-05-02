@@ -38,6 +38,7 @@ final class DocPageAction
 
         $data            = $document->getData();
         $data['content'] = $parsedown->text($document->getContent());
+        $data['page']    = $page;
 
         return $this->twigRenderer->template($response, 'docs/doc-page.twig', $data);
     }

@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Total CMS 3 Docs</title>
+  <title>{{title}}</title>
   <link rel="stylesheet" href="{{ totalcms.assetsDir }}/docs.css">
 </head>
 
@@ -18,25 +18,45 @@
 		<aside class="main-nav">
 			<nav>
 				<ul class="menu">
-					<li><a class="active" href="#">Home</a></li>
-					<li><a href="#">Docs</a></li>
-					<li><a href="#">About</a></li>
-					<li><a href="#">Contact</a></li>
+					<li><a href="#">Home</a></li>
+					<li>API
+						<ul class="menu">
+							<li><a href="#">REST API</a></li>
+							<li><a href="#">PHP API</a></li>
+							<li><a href="#">Import</a></li>
+							<li><a href="#">Download</a></li>
+						</ul>
+					</li>
+					<li>Twig Templates
+						<ul>
+							<li><a href="#">Overview</a></li>
+							<li><a href="#">Forms</a></li>
+							<li><a href="#">Total CMS Content</a></li>
+							<li><a href="#">Filters</a></li>
+							<li><a href="#">Functions</a></li>
+							<li><a href="#">GET Params</a></li>
+							<li><a href="#">POST Params</a></li>
+
+							<li><a href="#">Factory</a></li>
+						</ul>
+					</li>
+					<li>Behind the Scenes
+						<ul>
+							<li><a href="#">Configuration</a></li>
+							<li><a href="#">Filesystem</a></li>
+							<li><a href="#">Licenses</a></li>
+							<li><a href="#">Data Model</a></li>
+						</ul>
+					</li>
 				</ul>
 			</nav>
 		</aside>
-		<main>
 
+		<main>
+			{{ content|raw }}
 		</main>
 		<aside class="onpage-nav">
-			<nav>
-				<ul class="menu">
-					<li><a href="#">Home</a></li>
-					<li><a href="#">Docs</a></li>
-					<li><a href="#">About</a></li>
-					<li><a href="#">Contact</a></li>
-				</ul>
-			</nav>
+
 		</aside>
 	</div>
 

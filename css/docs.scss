@@ -7,7 +7,6 @@
 
 * {
 	margin  : 0;
-	padding : 0;
 }
 
 /* Prevent font size inflation */
@@ -25,8 +24,18 @@ figure, blockquote, dl, dd {
 
 /* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
 ul[class],
-ol[class] {
+ol[class],
+ul[class] ul,
+ol[class] ol {
   list-style: none;
+}
+
+ul:not(li>ul),
+ol:not(li>ol) {
+	padding-inline-start: 0;
+}
+ul ul, ol ol {
+	padding-inline-start: 1.5rem;
 }
 
 /* Set core body defaults */
@@ -94,14 +103,15 @@ header {
 }
 
 aside {
-	padding:2rem 3rem;
-	min-width: 200px;
+	padding   : 2rem 3rem;
+	min-width : 200px;
 }
 
 main {
 	padding   : 2rem;
 	max-width : 65ch;
-	margin: 0 auto;
+	width     : 100%;
+	margin    : 0 auto;
 }
 
 aside.onpage-nav {
@@ -111,6 +121,16 @@ aside.onpage-nav {
 
 	li {
 		padding: 0.2rem 0;
+
+		&:not(:has(>a)) {
+			font-weight : bold;
+			margin-top  : 1rem;
+		}
+	}
+
+	ul {
+		font-weight          : normal;
+		padding-inline-start : 0;
 	}
 
 	a {
@@ -126,7 +146,7 @@ aside.onpage-nav {
 	}
 }
 
-h1,h2,h3,h4,h5,h6,p {
+h1,h2,h3,h4,h5,h6,p,ul,ol {
 	margin-top: 1em;
 
 	&:first-child {

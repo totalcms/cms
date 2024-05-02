@@ -11,5 +11,5 @@ return function (App $app) {
     $app->get('/docs/api/v3', DocVersion3Action::class)->setName('api-docs');
 
     // Documentation
-    $app->get('/docs/[{page}]', DocPageAction::class)->setName('docs-page');
+    $app->get('/docs[/{page}]', DocPageAction::class)->setName('docs-page');
 };

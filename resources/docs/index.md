@@ -1,3 +1,9 @@
+---
+title: Total CMS 3 Docs
+---
+
+# Total CMS 3 Docs
+
 * Home
 * REST API
   * Collections
