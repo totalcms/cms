@@ -48,12 +48,15 @@
 	<div class="page-layout">
 		<aside class="main-nav">
 			<nav><ul class="menu">
-				<li><a href="/">Home</a></li>
+
+				{% set docs = totalcms.api ~ "/docs" %}
+
+				<li><a href="{{docs}}">Home</a></li>
 				{% for item in menu %}
 					<li>{{ item.title }}
 						<ul>
 							{% for sub in item.sub %}
-							<li><a href="{{ totalcms.api }}/docs{{ sub.path }}" {% if sub.target is defined %}target="{{ sub.target }}"{% endif %}>{{ sub.title|raw }}</a></li>
+							<li><a href="{{ docs }}{{ sub.path }}" {% if sub.target is defined %}target="{{ sub.target }}"{% endif %}>{{ sub.title|raw }}</a></li>
 							{% endfor %}
 						</ul>
 					</li>
