@@ -9,17 +9,16 @@ use TotalCMS\Renderer\RedirectRenderer;
 /**
  * Action.
  */
-final class DocIndexAction
+final class DocRedirectAction
 {
-    private RedirectRenderer $redirectRenderer;
-
-    public function __construct(RedirectRenderer $redirectRenderer)
-    {
+    public function __construct(
+        private RedirectRenderer $redirectRenderer
+    ) {
         $this->redirectRenderer = $redirectRenderer;
     }
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->redirectRenderer->redirectFor($response, 'docs');
+        return $this->redirectRenderer->redirectFor($response, 'api-docs');
     }
 }

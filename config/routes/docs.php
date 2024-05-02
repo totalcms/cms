@@ -1,13 +1,15 @@
 <?php
 
 use Slim\App;
-use TotalCMS\Action\OpenApi\DocIndexAction;
-use TotalCMS\Action\OpenApi\DocVersion1Action;
+use TotalCMS\Action\Docs\DocPageAction;
+use TotalCMS\Action\OpenApi\DocRedirectAction;
+use TotalCMS\Action\OpenApi\DocVersion3Action;
 
 return function (App $app) {
-    // Redirect to Swagger documentation
-    $app->get('/docs', DocIndexAction::class);
-
     // Swagger API documentation
-    $app->get('/docs/v3', DocVersion1Action::class)->setName('docs');
+    $app->get('/docs/api', DocRedirectAction::class); // redirect
+    $app->get('/docs/api/v3', DocVersion3Action::class)->setName('api-docs');
+
+    // Documentation
+    $app->get('/docs/[{page}]', DocPageAction::class)->setName('docs-page');
 };

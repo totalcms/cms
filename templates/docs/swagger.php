@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Total CMS API Specification</title>
-    <link rel="stylesheet" href="../tcms-assets/swagger-ui/swagger-ui.css" />
+    <link rel="stylesheet" href="../../tcms-assets/swagger-ui/swagger-ui.css" />
 </head>
 <body>
 <div id="swagger-ui"></div>
-<script src="../tcms-assets/swagger-ui/swagger-ui-standalone-preset.js"></script>
-<script src="../tcms-assets/swagger-ui/swagger-ui-bundle.js"></script>
+<script src="../../tcms-assets/swagger-ui/swagger-ui-standalone-preset.js"></script>
+<script src="../../tcms-assets/swagger-ui/swagger-ui-bundle.js"></script>
 <script>
     window.onload = function () {
         const ui = SwaggerUIBundle({

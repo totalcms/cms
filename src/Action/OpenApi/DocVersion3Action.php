@@ -9,7 +9,7 @@ use TotalCMS\Renderer\TemplateRenderer;
 /**
  * Action.
  */
-final class DocVersion1Action
+final class DocVersion3Action
 {
     private TemplateRenderer $templateRenderer;
 
@@ -27,6 +27,6 @@ final class DocVersion1Action
             'spec' => file_get_contents($jsonFile),
         ];
 
-        return $this->templateRenderer->template($response, 'doc/swagger.php', $viewData);
+        return $this->templateRenderer->template($response, 'docs/swagger.php', $viewData);
     }
 }
