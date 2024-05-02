@@ -43,15 +43,15 @@ $totalcms->startBuffer(); // Start output buffering
         margin    : 0 auto;
     }
     </style>
-    <link rel="stylesheet" href="{{ totalcms.assetsDir }}/forms.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/codemirror/codemirror.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/froala/froala_editor.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/froala/froala_style.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/froala/plugins/code_view.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/froala/plugins/image_manager.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/froala/plugins/image.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/froala/plugins/table.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.assetsDir }}/froala/plugins/video.min.css"/>
+    <link rel="stylesheet" href="{{ totalcms.api }}/assets/forms.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/codemirror/codemirror.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/froala_editor.min.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/froala_style.min.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/code_view.min.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/image_manager.min.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/image.min.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/table.min.css"/>
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/video.min.css"/>
 </head>
 <body>
 

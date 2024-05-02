@@ -30,10 +30,9 @@ $settings = [];
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
-$settings['domain']    = 'example.com';
-$settings['url']       = 'https://' . $settings['domain'];
-$settings['api']       = $settings['url'] . '/api';
-$settings['assetsDir'] = '/tcms-assets';
+$settings['domain'] = 'example.com';
+$settings['url']    = 'https://' . $settings['domain'];
+$settings['api']    = $settings['url'] . '/api';
 
 // Path settings
 $settings['root']     = dirname(__DIR__);
