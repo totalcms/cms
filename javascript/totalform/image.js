@@ -137,7 +137,10 @@ export default class ImageField extends TotalField {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
 				if (confirm("Are you sure that you want to delete this image?")) {
-					const deleteApi = `/collections/${this.form.collection}/${this.form.id}`;
+					// Delete the entire image object if it's an image schema
+					const deleteApi = this.form.schema === "image" ?
+						`/collections/${this.form.collection}/${this.form.id}` :
+						`/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 						deleteButton.closest(".dz-preview").remove();
 						this.clearValue();

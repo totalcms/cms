@@ -61,7 +61,7 @@ final class ObjectFactory
                 // No use storing the ID a second time in the object properties.
                 continue;
             }
-            if (!isset($objectData[$property])) {
+            if (!array_key_exists($property, $objectData)) {
                 // do not inclue the property if it does not exist
                 // this can happen when a new property has been added to a schema,
                 // but existing objects do not have the property set

@@ -61,11 +61,13 @@
 	{# Store the collection for this form so that other macros and get it #}
 	{{ totalcms.storeData("collection", collection) }}
 
+	{% set collectionData = totalcms.collection(collection) %}
+
 	{% set id = args.id|default(getParams.id) %}
 	{% set method = args.method %}
 
 	{% if id is empty %}
-		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{method}}"
+		<form class="totalform {{args.class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}">
 	{% else %}
 		{# force method to be PUT you cannot use POST on an existing object #}
@@ -73,7 +75,7 @@
 			{%set method = 'put' %}
 		{% endif %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
-		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
+		<form class="totalform {{args.class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
 	{% endif %}
 {% endmacro %}

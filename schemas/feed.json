@@ -52,11 +52,12 @@
 			"default" : "onUpdate"
 		},
 		"image": {
-			"$ref"  : "https://www.totalcms.co/schemas/properties/image.json",
-			"label" : "Image",
-			"help"  : "Image for this post",
-			"field" : "image",
-			"factory" : "imageText|1920,1080"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Image",
+			"help"    : "Image for this post",
+			"field"   : "image",
+			"factory" : "imageText|1920,1080",
+			"image"   : {}
 		},
 		"content": {
 			"type"    : "string",

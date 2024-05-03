@@ -5,21 +5,23 @@ namespace TotalCMS\Domain\Object\Service;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
 /**
  * Service.
  */
 final class ObjectSaver
 {
-    private ObjectRepository $storage;
-    private ObjectFactory $factory;
-    private IndexBuilder $indexBuilder;
-
-    public function __construct(ObjectRepository $storage, ObjectFactory $factory, IndexBuilder $indexBuilder)
-    {
+    public function __construct(
+        private ObjectRepository $storage,
+        private PropertyRepository $propStorage,
+        private ObjectFactory $factory,
+        private IndexBuilder $indexBuilder
+    ) {
         $this->storage      = $storage;
         $this->factory      = $factory;
         $this->indexBuilder = $indexBuilder;
+        $this->propStorage  = $propStorage;
     }
 
     /**
@@ -128,6 +130,22 @@ final class ObjectSaver
 
         $objectData            = $object->toArray();
         $objectData[$property] = array_merge($objectData[$property], $newData);
+
+        return $this->updateObject($collection, $id, $objectData);
+    }
+
+    public function deleteObjectProperty(string $collection, string $id, string $property): ObjectData
+    {
+        $object = $this->storage->fetchObject($collection, $id);
+
+        if (!$object instanceof ObjectData) {
+            throw new \UnexpectedValueException('Unable to locate object to update');
+        }
+
+        $objectData            = $object->toArray();
+        $objectData[$property] = null;
+
+        $this->propStorage->deleteDirectory($collection, $id, $property);
 
         return $this->updateObject($collection, $id, $objectData);
     }

@@ -77,7 +77,7 @@
 			<button type="button" class="clear"    title="Clear Cache"></button>
 			<button type="button" class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ totalcms.image(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" onerror="this.parentNode.remove()" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ totalcms.image(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
