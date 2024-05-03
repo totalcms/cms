@@ -255,6 +255,17 @@ final class TotalCMSTwigFilters
     // -------------------------
 
     /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+    public static function var_dump(mixed $variable): string
+    {
+        ob_start();
+        var_dump($variable);
+        $content = ob_get_contents();
+        ob_end_clean();
+
+        return "<pre>$content</pre>";
+    }
+
+    /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
     public static function print_r(mixed $variable): string
     {
         return '<pre>' . (string)print_r($variable, true) . '</pre>';

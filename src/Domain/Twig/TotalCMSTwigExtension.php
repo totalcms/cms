@@ -47,6 +47,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
             new TwigFunction('istype', [TotalCMSTwigFunctions::class, 'istype']),
             new TwigFunction('json_decode', [TotalCMSTwigFilters::class, 'jsonDecode']),
             new TwigFunction('print_r', [TotalCMSTwigFilters::class, 'print_r']),
+            new TwigFunction('var_dump', [TotalCMSTwigFilters::class, 'var_dump']),
         ];
     }
 
@@ -70,6 +71,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
             new TwigFilter('randomize', [TotalCMSTwigFilters::class, 'randomize']),
             new TwigFilter('json_decode', [TotalCMSTwigFilters::class, 'jsonDecode']),
             new TwigFilter('print_r', [TotalCMSTwigFilters::class, 'print_r']),
+            new TwigFilter('var_dump', [TotalCMSTwigFilters::class, 'var_dump']),
             new TwigFilter('typeof', [TotalCMSTwigFilters::class, 'typeof']),
             new TwigFilter('string', [TotalCMSTwigFilters::class, 'string']),
             new TwigFilter('int', [TotalCMSTwigFilters::class, 'int']),

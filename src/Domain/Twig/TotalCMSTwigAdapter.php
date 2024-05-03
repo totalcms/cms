@@ -60,6 +60,8 @@ final class TotalCMSTwigAdapter
     public function storeData(string $key, mixed $value): void
     {
         $this->storage[$key] = $value;
+
+        return;
     }
 
     // Reset stored collection name
