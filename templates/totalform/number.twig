@@ -14,5 +14,5 @@
 	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.number('number', args) }}
-	{{ _self.end() }}
+	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}

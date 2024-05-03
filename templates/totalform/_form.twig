@@ -80,10 +80,13 @@
 	{% endif %}
 {% endmacro %}
 
-{% macro end(button = false) %}
+{% macro end(save = false, delete = false) %}
 	{{ totalcms.clearStorage() }}
-	{% if button %}
+	{% if save %}
 		{{ _self.saveButton() }}
+	{% endif %}
+	{% if delete %}
+		{{ _self.deleteButton() }}
 	{% endif %}
 	</form>
 {% endmacro %}

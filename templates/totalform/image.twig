@@ -7,7 +7,7 @@
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.image('image', args) }}
 
-	{{ _self.end() }}
+	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}
 
 {#--------------------------------#}

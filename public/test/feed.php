@@ -4,8 +4,6 @@
 
 	{% import "totalform.twig" as form %}
 
-	{{ form.feedForm('feed', { class: "help-on-hover"}) }}
-
-	<button class="cms-save">Save</button>
+	{{ form.feedForm('feed', { class: "help-on-hover", save: true, delete:true }) }}
 
 <?php include __DIR__ . '/_end.php'; ?>

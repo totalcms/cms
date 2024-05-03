@@ -47,5 +47,5 @@
 	{{ _self.start(collection, { id:id }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.toggle('status', args) }}
-	{{ _self.end() }}
+	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}

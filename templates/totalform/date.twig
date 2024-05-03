@@ -69,12 +69,12 @@
 	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.date('date', args) }}
-	{{ _self.end() }}
+	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}
 
 {% macro datetimeForm(id, args = {}, collection = "date") %}
 	{{ _self.start(collection, { id:id, class:args.class }) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.datetime('date', args) }}
-	{{ _self.end() }}
+	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}
