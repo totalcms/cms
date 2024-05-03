@@ -67,19 +67,23 @@
 //------------------------------
 .help-label {
     .form-field:not(.check-field):not(.radio-field) .help {
-        line-height         : 1.8;
-        margin              : 0;
-        position            : absolute;
-        top                 : 0;
-        left                : 0;
-        right               : 0;
-        z-index             : 10;
-        overflow            : hidden;
-        white-space         : nowrap;
-        text-overflow       : ellipsis;
-        background-position : left;
-        opacity             : 0;
+		line-height         : 1.8;
+		margin              : 0;
+		position            : absolute;
+		top                 : 0;
+		left                : 0;
+		right               : 0;
+		z-index             : 10;
+		overflow            : hidden;
+		white-space         : nowrap;
+		text-overflow       : ellipsis;
+		background-position : left;
+		opacity             : 0;
+		width               : 100%;
     }
+	.image-field .help {
+		text-align: center;
+	}
 }
 
 //------------------------------

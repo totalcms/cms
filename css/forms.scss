@@ -27,7 +27,8 @@
 }
 
 .form-field {
-	position   : relative;
+	position : relative;
+	width    : 100%;
 
 	&:not(:first-of-type) {
 		margin-top : 1rem;
@@ -58,6 +59,10 @@
 .cms-save,
 .cms-delete {
 	cursor : pointer;
+}
+
+.totalform:not(.edit-mode) .cms-delete {
+	display : none;
 }
 
 //------------------------------

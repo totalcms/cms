@@ -4,6 +4,6 @@
 
 	{% import "totalform.twig" as form %}
 
-	{{ form.feedForm('feed', { class: "help-on-hover", save: true, delete:true }) }}
+	{{ form.feedForm('feed', { class: "help-on-hover help-label", save: true, delete:true }) }}
 
 <?php include __DIR__ . '/_end.php'; ?>
