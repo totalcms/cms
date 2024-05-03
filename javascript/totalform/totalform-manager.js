@@ -70,19 +70,17 @@ export default class TotalFormManager {
 			});
         });
 
-		const internalButtons = Array.from(document.querySelectorAll("form.totalform .cms-save"));
-        internalButtons.forEach(button => {
-            button.addEventListener("click", event => {
-				event.preventDefault();
+		const internalButton = document.querySelector("form.totalform .cms-save");
+		internalButton.addEventListener("click", event => {
+			event.preventDefault();
 
-				const totalform = button.closest("form").totalform;
-				if (!totalform.validate()) return;
+			this.unsavedCounter = 1; // Only one form to save
+			const totalform = button.closest("form").totalform;
+			if (!totalform.validate()) return;
 
-				this.startProcessing();
-				this.unsavedCounter = 1; // Only one form to save
-				totalform.save();
-			});
-        });
+			this.startProcessing();
+			totalform.save();
+		});
 	}
 
 	startProcessing() {

@@ -75,7 +75,7 @@
 			{%set method = 'put' %}
 		{% endif %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
-		<form class="totalform {{args.class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
+		<form class="totalform edit-mode {{args.class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
 	{% endif %}
 {% endmacro %}

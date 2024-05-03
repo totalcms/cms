@@ -320,6 +320,7 @@ export default class TotalForm {
 		// Set the method to PUT for editing existing objects
 		this.method = "PUT";
 		this.form.dataset.method = this.method;
+		this.form.classList.add("edit-mode");
 
 		// The ID cannot be changed in edit mode
 		const idField = this.fields.filter(field => field.property === "id").shift();
