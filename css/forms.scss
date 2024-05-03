@@ -28,7 +28,10 @@
 
 .form-field {
 	position   : relative;
-	margin-top : 1rem;
+
+	&:not(:first-of-type) {
+		margin-top : 1rem;
+	}
 
     *,
     *:after,
