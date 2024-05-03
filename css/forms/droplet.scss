@@ -53,41 +53,6 @@
 	&:has(img[src='']) {
 		display : none;
 	}
-
-	// .fa-check-circle,
-	// .fa-times-circle {
-	// 	display          : none;
-	// 	position         : absolute;
-	// 	text-align       : center;
-	// 	opacity          : 0;
-	// 	bottom           : 0;
-	// 	left             : 0;
-	// 	right            : 0;
-	// 	width            : 100%;
-	// 	background-color : rgba(255, 255, 255, 0.9);
-	// 	transition       : opacity 500ms ease-in-out;
-	// }
-
-	// &.dz-success .fa-check-circle {
-	// 	display : block;
-	// 	opacity : 1;
-	// }
-
-	// &.dz-error .fa-times-circle {
-	// 	display : block;
-	// 	opacity : 1;
-	// }
-
-	&.dz-processing .dz-progress {
-		display    : block;
-		opacity    : 1;
-		transition : all 0.2s linear;
-	}
-
-	&.dz-complete .dz-progress {
-		opacity    : 0;
-		transition : opacity 0.4s ease-in;
-	}
 }
 
 .dz-progress {
@@ -126,4 +91,45 @@
 		position    : absolute;
 		color       : oklch(var(--totalform-white));
 	}
+
+	.dz-complete &,
+	.dz-processing & {
+		display    : block;
+		opacity    : 1;
+		transition : all 0.2s linear;
+	}
+
+	.dz-complete & > .dz-upload,
+	.dz-complete & > .dz-upload-progress-label {
+		opacity    : 0;
+		transition : opacity 300ms ease-in;
+	}
+
+	.dz-success &, .dz-error & {
+		background      : oklch(var(--totalform-white) / 0.8);
+		backdrop-filter : blur(3px);
+	}
+
+	.dz-status {
+		opacity      : 0;
+		transition   : opacity 200ms linear;
+		height       : 100%;
+		aspect-ratio : 1;
+		margin       : 0 auto;
+
+		.dz-success & {
+			opacity           : 1;
+			background-color  : oklch(var(--totalform-success));
+			-webkit-mask      : var(--icon-success);
+			mask              : var(--icon-success);
+		}
+
+		.dz-error & {
+			opacity          : 1;
+			background-color : oklch(var(--totalform-error));
+			-webkit-mask     : var(--icon-error);
+			mask             : var(--icon-error);
+		}
+	}
+
 }
