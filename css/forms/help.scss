@@ -81,7 +81,7 @@
 		opacity             : 0;
 		width               : 100%;
     }
-	.image-field .help {
+	.image-field > .help {
 		text-align: center;
 	}
 }
@@ -161,3 +161,15 @@
 .help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):hover > label {
     opacity: 0;
 }
+
+.image-edit-dialog {
+	label {
+		opacity : 1!important;
+	}
+	.help {
+		opacity    : 1!important;
+		position   : relative !important;
+		margin-top : -0.5rem!important;
+	}
+}
+
