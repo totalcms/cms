@@ -27,18 +27,6 @@ export default class ImageField extends TotalField {
 		return this.api.apiUrl(api);
     }
 
-	autoProcessQueue() {
-		this.droplet.autoProcessQueue();
-	}
-
-	// removeListeners() {
-	// 	if (this.documentListeners) {
-	// 		for (const key in this.documentListeners) {
-	// 			document.removeEventListener(key, this.documentListeners[key]);
-	// 		}
-	// 	}
-	// }
-
 	setupActionBar() {
 		const edit = this.container.querySelector(".actionbar .edit");
 		const links = this.container.querySelector(".actionbar .links");
@@ -183,9 +171,6 @@ export default class ImageField extends TotalField {
 				this.setupFocalPoint();
 				this.sortablePalette();
 			},
-			// onClose : () => {
-			// 	this.removeListeners();
-			// }
 		});
 	}
 
@@ -340,8 +325,8 @@ export default class ImageField extends TotalField {
 
 	schema() {
         return {
-            type     : "object",
-            fieldset : this.options.type
+            type     : "image",
+            fieldset : this.type
         };
     }
 }

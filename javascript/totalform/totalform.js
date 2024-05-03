@@ -49,7 +49,7 @@ export default class TotalForm {
 		this.droplets = this.fields.filter(field => field.isDroplet());
 
 		// If an ID is set, we are in edit mode
-		if (this.id) {
+		if (this.form.dataset.id) {
 			this.editMode();
 		}
 
@@ -247,7 +247,7 @@ export default class TotalForm {
         if (!response) return;
 
         if (this.droplets.length > 0) {
-            // return this.saveDroplets(() => this.afterSaveAction(response));
+            return this.saveDroplets(() => this.afterSaveAction(response));
         }
 		this.afterSaveAction(response);
     }
@@ -288,11 +288,11 @@ export default class TotalForm {
     }
 
     runNewAction() {
-        // this.runAction(this.options.newAction, this.options.newLink);
+        this.runAction(this.options.newAction, this.options.newLink);
     }
 
     runEditAction() {
-        // this.runAction(this.options.editAction, this.options.editLink);
+        this.runAction(this.options.editAction, this.options.editLink);
     }
 
     //-------------------------
@@ -321,7 +321,7 @@ export default class TotalForm {
 		this.form.dataset.api = this.baseapi;
 
 		// Update the droplets to autoupload
-		this.droplets.forEach(droplet => droplet.autoProcessQueue());
+		this.droplets.forEach(field => field.droplet.autoProcessQueue());
     }
 
 	changeState(newState, details = {}) {
@@ -379,12 +379,6 @@ export default class TotalForm {
     // Droplet Interactions
     //-------------------------
 
-    // The droplet URL requires the ID but that can change
-    // This ensures that the URL is updated when it changes
-    // updateDropletUri() {
-	// 	this.droplets.forEach(droplet => droplet.updateUri());
-    // }
-
     // We only want to process the droplet queue after the inital
     // post request to create the object has been saved
     saveDroplets(callback) {
@@ -401,13 +395,12 @@ export default class TotalForm {
             }
         };
 
-		this.droplets.forEach(droplet => {
+		this.droplets.forEach(field => {
+			const droplet = field.droplet;
             if (droplet.isComplete()) {
                 dropletComplete(callback);
                 return;
             }
-
-            droplet.updateUri();
             droplet.onQueueComplete(() => dropletComplete(callback));
             droplet.processQueue();
 		});

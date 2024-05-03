@@ -25,6 +25,7 @@ export default class Identifier extends TotalField {
     }
 
 	changed() {
+		this.form.id = this.getValue();
 		// don't trigger change events for ID field
 		// turning this on will cause infinite event loops
 		return;
