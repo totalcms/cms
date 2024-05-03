@@ -35,6 +35,16 @@ export default class TotalForm {
 			console.error("form not found");
 			return false;
 		}
+
+		// Define option defaults
+		const defaults = {
+			editAction : null,
+			editLink   : null,
+			newAction  : null,
+			newLink    : null,
+		};
+		this.options = Object.assign({}, defaults, options);
+
 		this.api        = new TotalCMS();
 		this.baseapi    = this.form.dataset.api;
 		this.method     = this.form.dataset.method||"PUT";
