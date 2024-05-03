@@ -25,4 +25,16 @@ class PropertyData implements PropertyDataInterface
     {
         return null;
     }
+
+    public static function defaultValue(mixed $value, mixed $default): mixed
+    {
+        if (isset($default)) {
+            if ($value === null) {
+                // Set the value from the schema default
+                $value = $default;
+            }
+        }
+
+        return $value;
+    }
 }

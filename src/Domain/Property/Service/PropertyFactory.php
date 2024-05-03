@@ -23,17 +23,17 @@ final class PropertyFactory
      */
     public function generateProperty(array $propertySchema, mixed $value): PropertyData
     {
-        if ($value === null && isset($propertySchema['default'])) {
-            // Set the value from the schema default
-            $value = $propertySchema['default'];
-        }
-
         $type = $propertySchema['type'] ?? basename($propertySchema['$ref'], StorageRepository::FILE_EXT);
 
         $className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
         if (!class_exists($className)) {
             throw new \UnexpectedValueException('Unknown property type for object.');
         }
+
+        if (isset($propertySchema['default'])) {
+            $value = $className::defaultValue($value, $propertySchema['default']);
+        }
+
         $property = null === $value ? new $className() : new $className($value);
 
         if (!$property instanceof PropertyData) {
