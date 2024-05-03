@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Watching..."
+
 ignore=("totalform.twig")
 
 fswatch -0 templates css javascript | while read -d "" file; do
@@ -13,4 +15,5 @@ fswatch -0 templates css javascript | while read -d "" file; do
     done
 
     bin/build-assets.sh
+	echo "Watching..."
 done
