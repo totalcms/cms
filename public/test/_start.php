@@ -39,8 +39,9 @@ $totalcms->startBuffer(); // Start output buffering
         font-size : 0.7em;
     }
     .container {
-        max-width : 1000px;
-        margin    : 0 auto;
+		max-width : 1000px;
+		margin    : 0 auto;
+		padding   : 3rem;
     }
     </style>
     <link rel="stylesheet" href="{{ totalcms.api }}/assets/docs.css"/>

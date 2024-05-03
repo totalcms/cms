@@ -44,6 +44,7 @@
 	#}
 	{% set imageData  = attribute(object, property) %}
 
+
     {{ _self.fieldstart("image", uuid, args) }}
 
 		<input type="hidden" name="{{ property }}" />
@@ -51,21 +52,21 @@
 		<div class="dz-overlay dz-clickable"></div>
 
 		<div class="total-preview {% if imageData.featured %}featured{% endif %}">
-			{{ _self.imagePreview(object.id, imageData) }}
+			{{ _self.imagePreview(object.id, collection, property) }}
 		</div>
 
-		{{ _self.imageDialog(object.id, imageData) }}
+		{{ _self.imageDialog(object.id, collection, property, imageData) }}
 		{{ _self.linkDialog(object.id, collection, property) }}
 
-		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, imageData) }}</template>
+		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, collection, property) }}</template>
 
     {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 
-{% macro imagePreview(id, imageData) %}
+{% macro imagePreview(id, collection, property) %}
 	{# This must only have one div wrapper or else preview JS will break #}
-	<div class="dz-preview dz-file-preview">
+	<div class="dz-preview dz-file-preview not-found">
 		<div class="actionbar">
 			<button type="button" class="edit"     title="Edit Image Info"></button>
 			<button type="button" class="links"    title="Image URL"></button>
@@ -76,7 +77,7 @@
 			<button type="button" class="clear"    title="Clear Cache"></button>
 			<button type="button" class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ totalcms.image(id, {w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ totalcms.image(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" onerror="this.parentNode.remove()" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
@@ -95,12 +96,12 @@
 {% endmacro %}
 
 
-{% macro imageDialog(id, imageData) %}
+{% macro imageDialog(id, collection, property, imageData) %}
 
 	<dialog class="cms-modal split-view image-edit-dialog">
 
 		<section class="image-preview">
-			<img src="{{ totalcms.image(id,{w:600,h:400}) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<img src="{{ totalcms.image(id,{w:600,h:400}, collection, property) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 			<div class="focal-point" style="top:{{ imageData.focalpoint.y }}%;left:{{ imageData.focalpoint.x }}%"></div>
 		</section>
 

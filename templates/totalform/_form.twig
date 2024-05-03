@@ -10,7 +10,7 @@
 --------------------------------#}
 {% macro start(collection, args = {}) %}
 	{% set args = {
-		method : 'put',
+		method : 'post',
 		class  : '',
 		id     : '',
 	} | merge(args) %}
@@ -64,7 +64,10 @@
 	{% set id = args.id|default(getParams.id) %}
 	{% set method = args.method %}
 
-	{% if id %}
+	{% if id is empty %}
+		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{method}}"
+			data-api="{{totalcms.api}}/collections/{{collection}}">
+	{% else %}
 		{# force method to be PUT you cannot use POST on an existing object #}
 		{% if method == 'post' %}
 			{%set method = 'put' %}
@@ -72,9 +75,6 @@
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
 		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
-	{% else %}
-		<form class="totalform {{args.class}}" data-collection="{{collection}}" data-method="{{method}}"
-			data-api="{{totalcms.api}}/collections/{{collection}}">
 	{% endif %}
 {% endmacro %}
 

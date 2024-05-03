@@ -41,8 +41,11 @@ class TotalCMS
         try {
             return $this->twigEngine->renderString($content, $data);
         } catch (\Throwable $th) {
-            // TODO: Handle exception
-            return $th->getMessage() . ':' . $th->getTraceAsString();
+            // TODO: log exception instead of throwing it
+            $error = $th->getMessage() . ':' . $th->getTraceAsString();
+            throw new \Exception($error);
+
+            return '';
         }
     }
 

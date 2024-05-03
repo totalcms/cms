@@ -71,16 +71,17 @@
 		"id",
 		"title",
 		"content",
-		"date",
+		"created",
+		"updated",
 		"featured",
-		"tags",
-		"image"
+		"tags"
 	],
 	"index": [
 		"id",
 		"title",
 		"content",
-		"date",
+		"created",
+		"updated",
 		"featured",
 		"tags",
 		"image"
