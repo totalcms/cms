@@ -40,6 +40,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
     public function getFunctions(): array
     {
         return [
+            new TwigFunction('selectOptions', [TotalCMSTwigFunctions::class, 'selectOptions']),
             new TwigFunction('uniqid', [TotalCMSTwigFunctions::class, 'uniqid']),
             new TwigFunction('contains', [TotalCMSTwigFunctions::class, 'contains']),
             new TwigFunction('startsWith', [TotalCMSTwigFunctions::class, 'startsWith']),

@@ -28,18 +28,17 @@ class ObjectData
     public function __construct(string $id, array $properties)
     {
         $this->id         = (new Slugify())->slugify($id);
-        $this->properties = new Collection($properties);
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        // Transform properties
+        $collection       = new Collection($properties);
+        $this->properties = $collection->map(fn ($property) => $property->transform());
     }
 
     public function toArray(): array
     {
         $base = ['id' => $this->id];
 
-        // Transform properties
-        $properties = $this->properties->map(fn ($property) => $property->transform());
-
-        return array_merge($base, $properties->toArray());
+        return array_merge($base, $this->properties->toArray());
     }
 
     public function toJson(): string

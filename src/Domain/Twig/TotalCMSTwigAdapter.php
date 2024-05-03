@@ -91,7 +91,7 @@ final class TotalCMSTwigAdapter
     {
         $collection = $this->collectionReader->fetchIndex($collection);
 
-        return $collection->objects->pluck($property)->toArray();
+        return $collection->objects->pluck($property)->flatten()->unique()->toArray();
     }
 
     // Get an objects from a collection

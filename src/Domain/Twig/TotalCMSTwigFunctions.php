@@ -15,6 +15,13 @@ final class TotalCMSTwigFunctions
     // -------------------------
     // Tests
     // -------------------------
+    public static function selectOptions(array $options): array
+    {
+        // this takes a normal array and converts it to an array of arrays with label and value keys
+        // the resulting array can be used for select options in a form
+        return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $options);
+    }
+
     public static function contains(string $string, string $contains): bool
     {
         return str_contains($string, $contains);
