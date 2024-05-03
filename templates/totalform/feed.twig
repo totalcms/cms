@@ -1,0 +1,24 @@
+{#--------------------------------#}
+{# Feed Forms                    #}
+{#--------------------------------#}
+{% macro feedForm(collection, args = {}) %}
+	{{ _self.start(collection, { class:args.class }) }}
+
+		{{ _self.id('id', { autogen : "${timestamp}-${uuid}", class : "hide" }) }}
+		{{ _self.hidden('created') }}
+		{{ _self.hidden('updated') }}
+
+		<div class="form-columns col-2">
+			<section>
+				{{ _self.text('title') }}
+				{{ _self.styledtext('content') }}
+				{{ _self.list('tags') }}
+			</section>
+			<section class="center">
+				{{ _self.image('image', { label:false }) }}
+				{{ _self.toggle('featured', { help:false }) }}
+			</section>
+		</div>
+
+	{{ _self.end() }}
+{% endmacro %}

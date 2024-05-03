@@ -5,9 +5,6 @@
 .CodeMirror-scroll {
     height:auto;
 }
-.styledtext-field .form-group-icon {
-    background-image: var(--icon-styledtext);
-}
 .fr-box {
     width: 100%;
 }
@@ -21,10 +18,4 @@
 }
 .fr-second-toolbar:empty {
     min-height: 5px !important; // size of radius
-}
-//------------------------------
-// SVG Field
-//------------------------------
-.svg-field .form-group-icon {
-    background-image: var(--icon-svg);
 }

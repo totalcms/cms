@@ -1,7 +1,7 @@
 {#--------------------------------
   List Macro
 --------------------------------#}
-{% macro list(property, options, args = {}) %}
+{% macro list(property, options = [], args = {}) %}
 	{# Override args with static values #}
 	{% set args =  args | merge({
 		field : "list",

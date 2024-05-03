@@ -112,6 +112,21 @@
 	}
 }
 
+.form-columns {
+	display : grid;
+	gap     : 1rem;
+
+	&.col-2 {
+		grid-template-columns : 3fr 2fr;
+	}
+	section.center {
+		display       : grid;
+		justify-items : center;
+		align-content : start;
+		gap           : 1rem;
+	}
+}
+
 @import "forms/status-banner";
 @import "forms/help";
 @import "forms/text";

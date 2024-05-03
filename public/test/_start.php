@@ -43,6 +43,7 @@ $totalcms->startBuffer(); // Start output buffering
         margin    : 0 auto;
     }
     </style>
+    <link rel="stylesheet" href="{{ totalcms.api }}/assets/docs.css"/>
     <link rel="stylesheet" href="{{ totalcms.api }}/assets/forms.css"/>
     <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/codemirror/codemirror.css"/>
     <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/froala_editor.min.css"/>

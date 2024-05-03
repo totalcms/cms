@@ -19,6 +19,9 @@ export default class Identifier extends TotalField {
 			// The ID cannot be changed in edit mode
 			this.disable();
 		}
+		if (this.getValue() === "") {
+			this.setValue(this.autogenId());
+		}
     }
 
 	changed() {
@@ -65,8 +68,10 @@ export default class Identifier extends TotalField {
 		data.timestamp = new Date().toISOString().slice(0, -5).replace(/-|:/g, '');
 		data.uuid      = Math.random().toString(36).substring(2,9);
 
+		// Examples: ${title}-${timestamp}, ${title}-${now}, ${title}-${uuid}
+
 		// Magic happens here
-		const autogen = this.options.autogen.replace(/\${(.*?)}/g, (match, key) => data[key]);
+		const autogen = this.options.autogen.replace(/\${(.*?)}/g, (match, key) => data[key] || "");
 		return this.slugify(autogen);
 	}
 

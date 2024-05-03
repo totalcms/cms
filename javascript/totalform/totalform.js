@@ -43,8 +43,9 @@ export default class TotalForm {
 		this.states     = ["unsaved","success","error","processing"];
 		this.state      = null;
 
+		this.fields   = []; // set to empty array to avoid issues with ID autogen field
 		this.fields   = this.processFields();
-        this.droplets = this.fields.filter(field => field.isDroplet());
+		this.droplets = this.fields.filter(field => field.isDroplet());
 
 		// If an ID is set, we are in edit mode
 		if (this.id) {

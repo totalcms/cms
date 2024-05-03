@@ -36,7 +36,7 @@
 			border-color : oklch(var(--totalform-border-color));
     	}
     }
-    &.help-on-hover:hover {
+    &.help-on-hover .form-field:hover {
         input,
         .form-group-icon {
             border-bottom-right-radius: 0;

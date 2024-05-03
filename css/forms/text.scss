@@ -79,6 +79,22 @@
 }
 
 //------------------------------
+// SVG + StyledText Field
+//------------------------------
+.svg-field .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-svg);
+		mask         : var(--icon-svg);
+	}
+}
+.styledtext-field .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-styledtext);
+		mask         : var(--icon-styledtext);
+	}
+}
+
+//------------------------------
 // List Field
 //------------------------------
 .list-field .form-group-icon {
@@ -142,7 +158,7 @@
     }
 
     input[type="text"] {
-        background-color : oklch(var(--totalform-lightgray));
+        background-color : oklch(var(--totalform-nearwhite));
         border           : none;
         box-shadow       : none;
     }
