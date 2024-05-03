@@ -122,12 +122,14 @@
 		<input type="hidden" name="property" value="{{ property }}">
 
 		<details class="cms-accordion">
-			<summary>Sizing &amp; Effects</summary>
+			<summary>Sizing &amp; Crop</summary>
 			<div>
 				<section>
 					{{ _self.input("w", "number", "Width", "icon-width", help.w, values.w, { min:1 }) }}
 					{{ _self.input("h", "number", "Height", "icon-height", help.h, values.h, { min:1 }) }}
 					{{ _self.input("dpr", "number", "Pixel Density", "icon-pixels", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
+				</section>
+				<section>
 					{{ _self.input("q", "number", "Quality", "icon-quality", help.q, values.q, { min:0, max:100 }) }}
 					{{ _self.select("fm", "Format", "icon-imageformat", help.fm, values.fm, [
 						{ value: "jpg", label: "JPG" },
@@ -140,11 +142,19 @@
 					{{ _self.input("fit", "text", "Fit and Crop", "icon-crop", help.fit, values.fit, {list : "fit-options"}) }}
 					<button type="button" class='open-fit-docs'>Fit Options Docs</button>
 				</section>
+			</div>
+		</details>
+
+		<details class="cms-accordion">
+			<summary>Effects</summary>
+			<div>
 				<section>
 					{{ _self.input("sharp", "number", "Sharpen", "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
 					{{ _self.input("con", "number", "Contrast", "icon-contrast", help.con, values.con, { min:-100, max:100 }) }}
 					{{ _self.input("bri", "number", "Brightness", "icon-bright", help.bri, values.bri, { min:-100, max:100 }) }}
 					{{ _self.input("gam", "number", "Gamma", "icon-gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
+				</section>
+				<section>
 					{{ _self.input("blur", "number", "Blur", "icon-blur", help.blur, values.blur, { min:0, max:100 }) }}
 					{{ _self.input("pixel", "number", "Pixelate", "icon-pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
 					{{ _self.select("filt", "Filter", "icon-filter", help.filt, values.filt, [
@@ -168,14 +178,28 @@
 		</details>
 
 		<details class="cms-accordion">
-			<summary>Watermark, Background &amp; Border</summary>
+			<summary>Background &amp; Border</summary>
+			<div>
+				<section>
+					{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
+				</section>
+				<section>
+					{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border, {list:"border-options"}) }}
+				</section>
+			</div>
+		</details>
+
+		<details class="cms-accordion">
+			<summary>Watermark</summary>
 			<div>
 				<section>
 					{{ _self.input("mark", "text", "Watermark", "icon-copyright", help.mark, values.mark) }}
 					{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
 					{{ _self.input("markh", "text", "Height", "icon-height", help.markh, values.markh) }}
-					{{ _self.input("markpad", "text", "Padding", "icon-padding", help.markpad, values.markpad) }}
 					{{ _self.input("markalpha", "number", "Alpha", "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
+				</section>
+				<section>
+					{{ _self.input("markpad", "text", "Padding", "icon-padding", help.markpad, values.markpad) }}
 					{{ _self.select("markpos", "Position", "icon-position", help.markpos, values.markpos, [
 						{ value: "top-left", label: "Top Left" },
 						{ value: "top-right", label: "Top Right" },
@@ -190,10 +214,6 @@
 					]) }}
 					{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
 					<button type="button" class='open-fit-docs'>Fit Options Docs</button>
-				</section>
-				<section>
-					{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
-					{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border, {list:"border-options"}) }}
 				</section>
 			</div>
 		</details>
