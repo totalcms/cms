@@ -27,6 +27,10 @@ export default class ImageField extends TotalField {
 		return this.api.apiUrl(api);
     }
 
+	updateAPIUrl() {
+		this.droplet.updateUrl(this.apiUploadImage());
+	}
+
 	setupActionBar() {
 		const edit = this.container.querySelector(".actionbar .edit");
 		const links = this.container.querySelector(".actionbar .links");

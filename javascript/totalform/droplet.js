@@ -20,6 +20,7 @@ export default class Droplet {
 			previewsContainer : this.container.querySelector(".total-preview"),
 			acceptedFiles     : "image/*",
 			paramName         : "file",
+			apiUrl            : "",
 			requestHeaders    : {},
 			rules             : {},
 			gallery           : false,
@@ -36,6 +37,10 @@ export default class Droplet {
 
         this.setupDropzone();
     }
+
+	updateUrl(url) {
+		this.dropzone.options.url = url;
+	}
 
     autoProcessQueue() {
         if (!this.dropzone) {

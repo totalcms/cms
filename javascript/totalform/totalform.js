@@ -415,6 +415,7 @@ export default class TotalForm {
         };
 
 		this.droplets.forEach(field => {
+			field.updateAPIUrl(); // update the droplet API URL
 			const droplet = field.droplet;
             if (droplet.isComplete()) {
                 dropletComplete(callback);
