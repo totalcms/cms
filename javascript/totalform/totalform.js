@@ -118,6 +118,7 @@ export default class TotalForm {
 				if (this.isProcessing()) return;
 				this.unsaved();
 			});
+            field.addEventListener("field-error", e => this.error(e.detail.error));
         });
         return fieldObjects;
     }
