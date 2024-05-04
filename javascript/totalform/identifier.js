@@ -15,9 +15,12 @@ export default class Identifier extends TotalField {
 
 		super(container, options);
 
+		this.valid = false;
+
 		if (this.form.isEditMode()) {
 			// The ID cannot be changed in edit mode
 			this.disable();
+			this.valid = false;
 		}
 		if (this.getValue() === "") {
 			this.setValue(this.autogenId());
@@ -25,7 +28,7 @@ export default class Identifier extends TotalField {
     }
 
 	changed() {
-		this.form.id = this.getValue();
+		this.form.setId(this.getValue());
 		// don't trigger change events for ID field
 		// turning this on will cause infinite event loops
 		return;
@@ -81,11 +84,11 @@ export default class Identifier extends TotalField {
 	}
 
 	lock() {
-		return this.input.classList.add("locked");
+		return this.container.classList.add("locked");
 	}
 
 	isLocked() {
-		return this.input.classList.contains("locked") || this.input.hasAttribute("disabled");
+		return this.container.classList.contains("locked") || this.input.hasAttribute("disabled");
 	}
 
     slugify(id){
@@ -93,16 +96,26 @@ export default class Identifier extends TotalField {
     }
 
     idExists() {
-		console.warn("ID already exists", this.getValue());
-        this.input.classList.remove("saving", "success");
-        this.input.classList.add("error");
+		this.valid = false;
+		this.form.setId("");
+		console.warn("ID already exists: "+this.getValue());
+        this.container.classList.remove("unsaved");
+        this.container.classList.add("error");
+		this.input.setCustomValidity("ID already exists");
     }
 
     idAvailable() {
-        this.input.classList.remove("saving", "error");
-        this.input.classList.add("success");
-		this.form.id = this.getValue();
+		this.valid = true;
+		this.form.setId(this.getValue());
+		this.form.unsaved();
+        this.container.classList.remove("error");
+        this.container.classList.add("unsaved");
+		this.input.setCustomValidity("");
     }
+
+	validate() {
+		return this.valid;
+	}
 
     validateIdExists() {
 		const id = this.getValue();

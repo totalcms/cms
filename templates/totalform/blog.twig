@@ -1,2 +1,47 @@
-{% macro blog() %}
+{#--------------------------------#}
+{# Blog Forms                    #}
+{#--------------------------------#}
+{% macro blogForm(collection, args = {}) %}
+	{{ _self.start(collection, { class:args.class }) }}
+
+		{% set tags       = selectOptions(totalcms.property(collection, "tags")) %}
+		{% set categories = selectOptions(totalcms.property(collection, "categories")) %}
+		{% set labels     = selectOptions(totalcms.property(collection, "labels")) %}
+		{% set genres     = selectOptions(totalcms.property(collection, "genre")) %}
+		{% set authors    = selectOptions(totalcms.property(collection, "authors")) %}
+
+		<div class="form-columns col-2">
+			<section>
+				{{ _self.id('id', { autogen : "${title}" }) }}
+				{{ _self.text('title') }}
+
+				{{ _self.date('date') }}
+				{{ _self.hidden('created') }}
+				{{ _self.hidden('updated') }}
+
+				{{ _self.styledtext('summary') }}
+				{{ _self.styledtext('content') }}
+
+				{{ _self.styledtext('extra') }}
+				{{ _self.styledtext('extra2') }}
+
+				{{ _self.url('media') }}
+
+				{{ _self.text('genre', genres) }}
+				{{ _self.text('author', authors) }}
+
+				{{ _self.list('tags', tags) }}
+				{{ _self.list('categories', categories) }}
+				{{ _self.list('labels', labels) }}
+			</section>
+			<section>
+				{{ _self.toggle('featured', { help:false }) }}
+				{{ _self.toggle('draft', { help:false }) }}
+				{{ _self.toggle('archived', { help:false }) }}
+				{{ _self.image('image') }}
+				{# {{ _self.gallery('gallery') }} #}
+			</section>
+		</div>
+
+	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}

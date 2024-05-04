@@ -100,6 +100,11 @@ export default class TotalForm {
         return null;
     }
 
+	setId(id) {
+		this.id = id;
+		this.form.dataset.id = id;
+	}
+
     //-------------------------
     // Init Form
     //-------------------------
@@ -219,6 +224,8 @@ export default class TotalForm {
     }
 
 	validate() {
+		if (this.id.length === 0) return false;
+
 		this.fields.forEach(field => field.validate());
 
 		if (this.form.checkValidity()) {
