@@ -1,8 +1,8 @@
-Twig Templates Notes
---------------------
+# PHP API
 
-- All templates are stored in the root templates folder
-- Custom templates should go into tcms-data/templates
+* Custom templates should go into tcms-data/templates
+* Global templates that can be used
+  * totalform.twig
 
 
 
@@ -28,8 +28,10 @@ very bottom of page
 echo $totalcms->processBufferMacros();
 ```
 
+Sample twig templates.
 
-```html
+
+```twig
 {% set objects = totalcms.objects("text") %}
 
 {% for object in objects %}

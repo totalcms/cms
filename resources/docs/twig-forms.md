@@ -3,10 +3,13 @@
 
 ## Importing Form Macros
 
+```
 {% import "totalform.twig" as form %}
+```
 
 ## Default Field Arguments
 
+```
 field       = type of the field data from Total CMS: text, number, date, etc
 type        = type of the input
 class       = classes added to the field
@@ -24,78 +27,85 @@ pattern     = pattern for validation
 autogen     = template string to autogenerate a value (in ID)
 options     = options array added to form-field data-options attribute
 minlength   = minimum length of the field
-
+```
 
 ## Premade Collection Forms
 
-{{ totalcms.blogForm() }}
-{{ totalcms.checkboxForm(id, args = {}, collection = "toggle") }}
-{{ totalcms.colorForm(id, args = {}, collection = "color") }}
-{{ totalcms.dateForm(id, args = {}, collection = "date") }}
-{{ totalcms.datetimeForm(id, args = {}, collection = "date") }}
-{{ totalcms.emailForm(id, args = {}, collection = "email") }}
-{{ totalcms.imageForm(id, args = {}, collection = "image") }}
-{{ totalcms.numberForm(id, args = {}, collection = "number") }}
-{{ totalcms.rangesliderForm(id, args = {}, collection = "number") }}
-{{ totalcms.styledtextForm(id, args = {}, collection = "styledtext") }}
-{{ totalcms.svgForm(id, args = {}, collection = "svg") }}
-{{ totalcms.textForm(id, args = {}, collection = "text") }}
-{{ totalcms.textareaForm(id, args = {}, collection = "text",) }}
-{{ totalcms.toggleForm(id, args = {}, collection = "toggle") }}
-{{ totalcms.urlForm(id, args = {}, collection = "url") }}
+```
+{{ form.blogForm() }}
+{{ form.checkboxForm(id, args = {}, collection = "toggle") }}
+{{ form.colorForm(id, args = {}, collection = "color") }}
+{{ form.dateForm(id, args = {}, collection = "date") }}
+{{ form.datetimeForm(id, args = {}, collection = "date") }}
+{{ form.emailForm(id, args = {}, collection = "email") }}
+{{ form.imageForm(id, args = {}, collection = "image") }}
+{{ form.numberForm(id, args = {}, collection = "number") }}
+{{ form.rangesliderForm(id, args = {}, collection = "number") }}
+{{ form.selectForm(id, options = [], args = {}, collection = "text") }}
+{{ form.styledtextForm(id, args = {}, collection = "styledtext") }}
+{{ form.svgForm(id, args = {}, collection = "svg") }}
+{{ form.textForm(id, args = {}, collection = "text") }}
+{{ form.textareaForm(id, args = {}, collection = "text",) }}
+{{ form.toggleForm(id, args = {}, collection = "toggle") }}
+{{ form.urlForm(id, args = {}, collection = "url") }}
+```
 
 ## Custom Forms
 
 ### Form Wrappers
 
-{{ totalcms.start(collection, args = {}) }}
-{{ totalcms.end(button = false) }}
+```
+{{ form.start(collection, args = {}) }}
+{{ form.end(button = false) }}
+```
 
 ### Buttons
 
-{{ totalcms.saveButton(label = "Save") }}
-{{ totalcms.deleteButton(label = "Delete") }}
+```
+{{ form.saveButton(label = "Save") }}
+{{ form.deleteButton(label = "Delete") }}
+```
 
 ### Fields
 
-{{ totalcms.checkbox(property, args = {}) }}
-{{ totalcms.color(property, args = {}) }}
-{{ totalcms.date(property, args = {}) }}
-{{ totalcms.datetime(property, args = {}) }}
-{{ totalcms.deck(property, value) }}
-{{ totalcms.depot(property, value) }}
-{{ totalcms.email(property, args = {}) }}
-{{ totalcms.file(property, value) }}
-{{ totalcms.gallery(property, value) }}
-{{ totalcms.hidden(property, args = {}) }}
-{{ totalcms.id(property = "id", args = {}) }}
-{{ totalcms.image(property, args = {}) }}
-{{ totalcms.input(property, args = {}) }}
-{{ totalcms.list(property, options, args = {}) }}
-{{ totalcms.markdown(property, args = {}) }}
-{{ totalcms.multiselect(property, options = [], args = {}) }}
-{{ totalcms.number(property, args = {}) }}
-{{ totalcms.password(property, args = {}) }}
-{{ totalcms.phone(property, args = {}) }}
-{{ totalcms.radio(property, options = [], args = {}) }}
-{{ totalcms.rangeslider(property, args = {}) }}
-{{ totalcms.select(property, options = [], args = {}) }}
-{{ totalcms.styledtext(property, args = {}) }}
-{{ totalcms.svg(property, args = {}) }}
-{{ totalcms.text(property, args = {}) }}
-{{ totalcms.textarea(property, args = {}) }}
-{{ totalcms.time(property, args = {}) }}
-{{ totalcms.toggle(property, args = {}) }}
-{{ totalcms.url(property, args = {}) }}
-
+```
+{{ form.checkbox(property, args = {}) }}
+{{ form.color(property, args = {}) }}
+{{ form.date(property, args = {}) }}
+{{ form.datetime(property, args = {}) }}
+{{ form.deck(property, value) }}
+{{ form.depot(property, value) }}
+{{ form.email(property, args = {}) }}
+{{ form.file(property, value) }}
+{{ form.gallery(property, value) }}
+{{ form.hidden(property, args = {}) }}
+{{ form.id(property = "id", args = {}) }}
+{{ form.image(property, args = {}) }}
+{{ form.input(property, args = {}) }}
+{{ form.list(property, options, args = {}) }}
+{{ form.markdown(property, args = {}) }}
+{{ form.multiselect(property, options = [], args = {}) }}
+{{ form.number(property, args = {}) }}
+{{ form.password(property, args = {}) }}
+{{ form.phone(property, args = {}) }}
+{{ form.radio(property, options = [], args = {}) }}
+{{ form.rangeslider(property, args = {}) }}
+{{ form.select(property, options = [], args = {}) }}
+{{ form.styledtext(property, args = {}) }}
+{{ form.svg(property, args = {}) }}
+{{ form.text(property, args = {}) }}
+{{ form.textarea(property, args = {}) }}
+{{ form.time(property, args = {}) }}
+{{ form.toggle(property, args = {}) }}
+{{ form.url(property, args = {}) }}
+```
 
 ## Form Patterns
 
+```
 paterns.alphaNumeric
 paterns.notBlank
 paterns.passwordUpperLowerNumber
-paterns.email
-paterns.url
 paterns.date
 paterns.time
 paterns.dateTime
@@ -134,3 +144,4 @@ patterns.phone.uk
 patterns.phone.france
 patterns.phone.international
 patterns.passwordMinLength(int minLength = 8)
+```

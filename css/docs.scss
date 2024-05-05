@@ -146,8 +146,14 @@ aside.onpage-nav {
 	}
 }
 
-h1,h2,h3,h4,h5,h6,p,ul,ol {
-	margin-top: 1em;
+pre {
+	background-color : oklch(95% 0 0);
+	padding          : 1rem;
+	border-radius    : 5px;
+	overflow-x       : auto;
+}
+h1,h2,h3,h4,h5,h6,p,ul,ol,pre {
+	margin-block-start: 1em;
 
 	&:first-child {
 		margin-top: 0;
