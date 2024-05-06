@@ -20,6 +20,8 @@ placeholder = placeholder of the field
 help        = help text of the field
 icon        = show icon
 required    = required field
+disabled    = disable field
+readonly	= readonly
 min         = minimum value
 max         = maximum value
 step        = step value
@@ -28,6 +30,24 @@ autogen     = template string to autogenerate a value (in ID)
 options     = options array added to form-field data-options attribute
 minlength   = minimum length of the field
 ```
+
+```
+{{ form.text(property, {
+	class       : "class",
+	value       : "Set Value",
+	label       : "Text Label",
+	default     : "Default Value",
+	placeholder : "Placeholder",
+	help        : "Help Text",
+	icon        : true,
+	required    : true,
+	readonly    : true,
+	disabled    : true,
+	pattern     : "\S+",
+	minlength   : "10",
+}) }}
+```
+
 
 ## Premade Collection Forms
 
@@ -75,7 +95,6 @@ minlength   = minimum length of the field
 {{ form.datetime(property, args = {}) }}
 {{ form.deck(property, value) }}
 {{ form.depot(property, value) }}
-{{ form.email(property, args = {}) }}
 {{ form.file(property, value) }}
 {{ form.gallery(property, value) }}
 {{ form.hidden(property, args = {}) }}
@@ -87,18 +106,36 @@ minlength   = minimum length of the field
 {{ form.multiselect(property, options = [], args = {}) }}
 {{ form.number(property, args = {}) }}
 {{ form.password(property, args = {}) }}
-{{ form.phone(property, args = {}) }}
 {{ form.radio(property, options = [], args = {}) }}
 {{ form.rangeslider(property, args = {}) }}
 {{ form.select(property, options = [], args = {}) }}
 {{ form.styledtext(property, args = {}) }}
 {{ form.svg(property, args = {}) }}
-{{ form.text(property, args = {}) }}
 {{ form.textarea(property, args = {}) }}
 {{ form.time(property, args = {}) }}
 {{ form.toggle(property, args = {}) }}
+```
+
+```
+{{ form.text(property, {
+	class       : "string",
+	value       : "string",
+	default     : "string",
+	label       : "string",
+	placeholder : "string",
+	help        : "string",
+	pattern     : "string",
+	icon        : true,
+	required    : true,
+	readonly    : true,
+	disabled    : true,
+	minlength   : 10,
+}) }}
+{{ form.phone(property, args = {}) }}
+{{ form.email(property, args = {}) }}
 {{ form.url(property, args = {}) }}
 ```
+
 
 ## Form Patterns
 
