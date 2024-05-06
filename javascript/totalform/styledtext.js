@@ -118,7 +118,6 @@ export default class StyledTextField extends TotalField {
     }
 
     charCountExceeded() {
-        //! convert to native JS... lazy asshole
         // $(this.input).closest("fieldset").find(".fr-counter").addClass("exceeded");
     }
 
