@@ -1,5 +1,9 @@
 import TotalField from "./totalfield.js";
 
+import FroalaEditor from "froala-editor";
+import "froala-editor/js/plugins/code_beautifier.min.js";
+import "froala-editor/js/plugins/code_view.min.js";
+
 //-----------------------------------------------
 // Total CMS SVG Field
 //-----------------------------------------------

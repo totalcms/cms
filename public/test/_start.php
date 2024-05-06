@@ -46,14 +46,6 @@ $totalcms->startBuffer(); // Start output buffering
     </style>
     <link rel="stylesheet" href="{{ totalcms.api }}/assets/docs.css"/>
     <link rel="stylesheet" href="{{ totalcms.api }}/assets/forms.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/codemirror/codemirror.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/froala_editor.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/froala_style.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/code_view.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/image_manager.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/image.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/table.min.css"/>
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="{{ totalcms.api }}/assets/froala/plugins/video.min.css"/>
 </head>
 <body>
 

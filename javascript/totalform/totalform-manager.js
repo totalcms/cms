@@ -71,6 +71,7 @@ export default class TotalFormManager {
         });
 
 		const internalButton = document.querySelector("form.totalform .cms-save");
+		if (!internalButton) return;
 		internalButton.addEventListener("click", event => {
 			event.preventDefault();
 

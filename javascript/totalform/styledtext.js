@@ -1,34 +1,60 @@
-/*
-<script type="text/javascript" src="{{ totalcms.api }}/assets/codemirror/codemirror.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/codemirror/xml.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/dompurify/purify.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/froala_editor.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/align.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/code_beautifier.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/code_view.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/draggable.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/image.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/image_manager.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/link.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/lists.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/paragraph_format.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/paragraph_style.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/table.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/video.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/url.min.js"></script>
-<script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/entities.min.js"></script>
-*/
-
 import TotalField from "./totalfield.js";
 
-// import "codemirror/lib/codemirror.js";
-// import "codemirror/mode/xml/xml.js";
-// import "dompurify/dist/purify.min.js";
+import "codemirror/lib/codemirror.js";
+import "codemirror/mode/xml/xml.js";
+import "codemirror/mode/twig/twig.js";
+import "dompurify/dist/purify.min.js";
 
-// import FroalaEditor from "froala-editor";
-// import "froala-editor/js/plugins/align.min.js";
-// import "froala-editor/js/plugins/code_beautifier.min.js";
-// import "froala-editor/js/plugins/code_view.min.js";
+import FroalaEditor from "froala-editor";
+import "froala-editor/js/plugins/align.min.js";
+// import "froala-editor/js/plugins/char_counter.min.js";
+import "froala-editor/js/plugins/code_beautifier.min.js";
+import "froala-editor/js/plugins/code_view.min.js";
+import "froala-editor/js/plugins/colors.min.js";
+// import "froala-editor/js/plugins/cryptojs.min.js";
+import "froala-editor/js/plugins/draggable.min.js";
+// import "froala-editor/js/plugins/edit_in_popup.min.js";
+// import "froala-editor/js/plugins/emoticons.min.js";
+import "froala-editor/js/plugins/entities.min.js";
+import "froala-editor/js/plugins/file.min.js";
+import "froala-editor/js/plugins/files_manager.min.js";
+// import "froala-editor/js/plugins/font_family.min.js";
+// import "froala-editor/js/plugins/font_size.min.js";
+// import "froala-editor/js/plugins/forms.min.js";
+import "froala-editor/js/plugins/fullscreen.min.js";
+// import "froala-editor/js/plugins/help.min.js";
+import "froala-editor/js/plugins/image.min.js";
+import "froala-editor/js/plugins/image_manager.min.js";
+import "froala-editor/js/plugins/inline_class.min.js";
+import "froala-editor/js/plugins/inline_style.min.js";
+import "froala-editor/js/plugins/line_breaker.min.js";
+// import "froala-editor/js/plugins/line_height.min.js";
+import "froala-editor/js/plugins/link.min.js";
+import "froala-editor/js/plugins/lists.min.js";
+// import "froala-editor/js/plugins/markdown.min.js";
+import "froala-editor/js/plugins/paragraph_format.min.js";
+import "froala-editor/js/plugins/paragraph_style.min.js";
+// import "froala-editor/js/plugins/print.min.js";
+import "froala-editor/js/plugins/quick_insert.min.js";
+import "froala-editor/js/plugins/quote.min.js";
+// import "froala-editor/js/plugins/save.min.js";
+// import "froala-editor/js/plugins/special_characters.min.js";
+import "froala-editor/js/plugins/table.min.js";
+import "froala-editor/js/plugins/track_changes.min.js";
+import "froala-editor/js/plugins/trim_video.min.js";
+import "froala-editor/js/plugins/url.min.js";
+import "froala-editor/js/plugins/video.min.js";
+// import "froala-editor/js/plugins/word_counter.min.js";
+// import "froala-editor/js/plugins/word_paste.min.js";
+// import "froala-editor/js/third_party/embedly.min.js";
+// import "froala-editor/js/third_party/font_awesome.min.js";
+// import "froala-editor/js/third_party/image_tui.min.js";
+// import "froala-editor/js/third_party/showdown.min.js";
+// import "froala-editor/js/third_party/spell_checker.min.js";
+
+// TODO: how to handle localization for Froala?
+// import "froala-editor/js/languages/de.js";
+// import "froala-editor/js/languages/es.js";
 
 //-----------------------------------------------
 // Total CMS Styled Text Field

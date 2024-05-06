@@ -3,39 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <title>Total CMS API Specification</title>
-    <link rel="stylesheet" href="../../assets/swagger-ui/swagger-ui.css" />
+    <link rel="stylesheet" href="../../assets/swagger.css" />
 </head>
 <body>
 <div id="swagger-ui"></div>
-<script src="../../assets/swagger-ui/swagger-ui-standalone-preset.js"></script>
-<script src="../../assets/swagger-ui/swagger-ui-bundle.js"></script>
+<script type="module" src="../../assets/swagger.js"></script>
 <script>
-    window.onload = function () {
-        const ui = SwaggerUIBundle({
-            spec: <?php echo $spec; // @phpstan-ignore-line?>,
-            dom_id: '#swagger-ui',
-            deepLinking: true,
-            supportedSubmitMethods: [],
-            presets: [
-                SwaggerUIBundle.presets.apis,
-            ],
-            plugins: [
-                SwaggerUIBundle.plugins.DownloadUrl,
-                function() {
-                    return {
-                        statePlugins: {
-                            spec: {
-                                wrapSelectors: {
-                                    allowTryItOutFor: () => () => false
-                                }
-                            }
-                        }
-                    }
-                }
-            ],
-        })
-        window.ui = ui
-    }
+window.onload = function () {
+	const ui = SwaggerUIBundle({
+		spec: <?php echo $spec; // @phpstan-ignore-line?>,
+		dom_id: '#swagger-ui',
+		deepLinking: true,
+		supportedSubmitMethods: [],
+		presets: [
+			SwaggerUIBundle.presets.apis,
+		],
+		plugins: [
+			SwaggerUIBundle.plugins.DownloadUrl,
+			function() {
+				return {
+					statePlugins: {
+						spec: {
+							wrapSelectors: {
+								allowTryItOutFor: () => () => false
+							}
+						}
+					}
+				}
+			}
+		],
+	})
+	window.ui = ui
+}
 </script>
 </body>
 </html>
