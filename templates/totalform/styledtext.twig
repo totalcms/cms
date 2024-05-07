@@ -3,10 +3,41 @@
 --------------------------------#}
 {% macro styledtext(property, args = {}) %}
 	{# Override args with static values #}
-	{% set args =  args | merge({
+	{% set args =  {
 		field : "styledtext",
-	}) %}
-    {{ _self.textarea(property, args) }}
+		type  : "textarea",
+	} | merge(args) %}
+
+	{# -- Begin Boilerplate -- #}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+    {{ _self.fieldstart(args.field, uuid, args) }}
+	<div class="styledtext-wrapper">
+		<textarea
+			id="field-{{ uuid }}"
+			name="{{ property }}"
+			{% if args.rows %}rows="{{ args.rows }}"{% endif %}
+			{% if args.placeholder %}placeholder="{{ args.placeholder }}"{% endif %}
+			{% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+			{% if args.required %}required{% endif %}
+		>{{ value }}</textarea>
+	</div>
+    {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
 
 {% macro styledtextForm(id, args = {}, collection = "styledtext") %}
