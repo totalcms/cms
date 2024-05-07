@@ -33,9 +33,14 @@ final class IndexBuilder
     public function buildIndex(string $collection): IndexData
     {
         $objectIds  = $this->storage->fetchObjectIds($collection);
+        $index      = new IndexData();
+
+        if (count($objectIds) === 0) {
+            return $index;
+        }
+
         $schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
         $indexProps = $schema->index;
-        $index      = new IndexData();
 
         foreach ($objectIds as $id) {
             $object  = $this->objectFetcher->fetchObject($collection, $id);

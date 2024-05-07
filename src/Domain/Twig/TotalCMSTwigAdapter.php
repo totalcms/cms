@@ -40,7 +40,11 @@ final class TotalCMSTwigAdapter
         $collection = $this->collectionFetcher->fetchCollection($collection);
         $properties = [];
 
-        if (isset($collection->properties[$property])) {
+        if ($collection === null) {
+            return [];
+        }
+
+        if (key_exists($property, $collection->properties)) {
             $properties = $collection->properties[$property];
         }
         if (!empty($id) && isset($collection->customProperties[$id][$property])) {
@@ -53,7 +57,7 @@ final class TotalCMSTwigAdapter
     // store data in the adapter
     public function getData(string $key): mixed
     {
-        return isset($this->storage[$key]) ? $this->storage[$key] : null;
+        return key_exists($key, $this->storage) ? $this->storage[$key] : null;
     }
 
     // store data in the adapter
@@ -85,7 +89,16 @@ final class TotalCMSTwigAdapter
     // Get all objects from a collection
     public function objects(string $collection): array
     {
-        $collection = $this->collectionReader->fetchIndex($collection);
+        // if there is an exception, return an empty array
+        try {
+            $collection = $this->collectionReader->fetchIndex($collection);
+        } catch (\Exception $e) {
+            return [];
+        }
+
+        if ($collection === null) {
+            return [];
+        }
 
         return $collection->objects->toArray();
     }
@@ -94,6 +107,10 @@ final class TotalCMSTwigAdapter
     public function property(string $collection, string $property): array
     {
         $collection = $this->collectionReader->fetchIndex($collection);
+
+        if ($collection === null) {
+            return [];
+        }
 
         return $collection->objects->pluck($property)->flatten()->unique()->toArray();
     }
@@ -116,7 +133,7 @@ final class TotalCMSTwigAdapter
     {
         $object = $this->object($collection, $id);
 
-        if (key_exists($property, $object)) {
+        if (is_array($object) && key_exists($property, $object)) {
             return $object[$property];
         }
 
@@ -151,7 +168,7 @@ final class TotalCMSTwigAdapter
         }
 
         $type = 'jpg';
-        if (isset($options['type'])) {
+        if (key_exists('type', $options)) {
             $type = $options['type'];
             unset($options['type']);
         }
@@ -160,8 +177,10 @@ final class TotalCMSTwigAdapter
 
         // cache busting links
         $image = $this->data($collection, $id, 'image');
-        $cache = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
-        $api .= "?cache=$cache";
+        if (is_array($image) && key_exists('uploadDate', $image)) {
+            $cache = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+            $api .= "?cache=$cache";
+        }
 
         if (!empty($options)) {
             $options = http_build_query($options);
@@ -176,6 +195,6 @@ final class TotalCMSTwigAdapter
     {
         $image = $this->data($collection, $id, $property);
 
-        return $image['alt'];
+        return is_array($image) && key_exists('alt', $image) ? $image['alt'] : '';
     }
 }
