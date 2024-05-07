@@ -30,7 +30,7 @@ $settings = [];
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
-$settings['domain'] = 'example.com';
+$settings['domain'] = $_SERVER['HTTP_HOST'];
 $settings['url']    = 'https://' . $settings['domain'];
 $settings['api']    = $settings['url'] . '/api';
 
