@@ -75,6 +75,10 @@ final class TotalCMSTwigAdapter
     {
         $collection = $this->collectionFetcher->fetchCollection($collection);
 
+        if ($collection === null) {
+            return [];
+        }
+
         return $collection->toArray();
     }
 

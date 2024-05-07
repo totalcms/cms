@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Collection\Repository;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
@@ -125,6 +126,11 @@ final class CollectionRepository extends StorageRepository
         $this->filesystem->write($metaFile, $jsonContent);
     }
 
+    public function isReservedCollection(string $collectionId): bool
+    {
+        return in_array($collectionId, SchemaData::RESERVED_SCHEMAS);
+    }
+
     /**
      * Create a collection for a reserved collection.
      *
@@ -132,9 +138,10 @@ final class CollectionRepository extends StorageRepository
      */
     public function saveReservedCollection(string $collectionId): void
     {
-        $collection = $this->factory->generateReservedCollection($collectionId);
-
-        $this->saveCollection($collection);
+        if ($this->isReservedCollection($collectionId)) {
+            $collection = $this->factory->generateReservedCollection($collectionId);
+            $this->saveCollection($collection);
+        }
     }
 
     private function buildMetaPath(string $collection): string

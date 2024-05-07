@@ -24,16 +24,27 @@ final class CollectionFetcher
      *
      * @return CollectionData
      */
-    public function fetchCollection(string $collectionId): CollectionData
+    public function fetchCollection(string $collectionId): ?CollectionData
     {
-        try {
+        if ($this->collectionExists($collectionId)) {
             $collection = $this->storage->getCollection($collectionId);
-        } catch (\DomainException $de) {
+
+            return $collection;
+        }
+
+        if ($this->storage->isReservedCollection($collectionId)) {
             // If the collection is not found or invalid, try to create it
             $this->storage->saveReservedCollection($collectionId);
             $collection = $this->storage->getCollection($collectionId);
+
+            return $collection;
         }
 
-        return $collection;
+        return null;
+    }
+
+    public function collectionExists(string $collectionId): bool
+    {
+        return $this->storage->collectionExists($collectionId);
     }
 }
