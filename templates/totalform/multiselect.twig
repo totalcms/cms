@@ -41,12 +41,15 @@
 		<option value="" disabled>{{ args.placeholder }}</option>
 		{% endif %}
 
-		{% set optionValues = options|column('value') %}
-		{% for value in values %}
-			{% if value not in optionValues %}
-			<option value="{{ value|e }}" selected>{{ value|e }}</option>
-			{% endif %}
-        {% endfor %}
+
+		{% if totalcms.array(options) and options is not empty %}
+			{% set optionValues = options|column('value') %}
+			{% for value in values %}
+				{% if value not in optionValues %}
+				<option value="{{ value|e }}" selected>{{ value|e }}</option>
+				{% endif %}
+			{% endfor %}
+		{% endif %}
 
         {% for option in options %}
 			{% if option.value not in values %}
