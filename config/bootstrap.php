@@ -13,6 +13,9 @@ if (php_sapi_name() == 'cli-server') {
         /* Return contents of the static file. */
         return false;
     }
+
+    // Stacks Internal PHP Preview server
+    $_SERVER['APP_ENV'] = 'preview';
 }
 
 require_once __DIR__ . '/../vendor/autoload.php';

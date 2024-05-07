@@ -11,7 +11,7 @@ $settings['env'] = 'preview';
 $settings['docroot']   = $settings['root'];
 $settings['datadir']   = $settings['root'] . '/tcms-data';
 $settings['cachedir']  = 'false';
-$settings['api']       = $_SERVER['TCMS_API'] ?: '/rw_common/plugins/stacks/tcms/';
+$settings['api']       = '/rw_common/plugins/stacks/tcms/public/?route=';
 
 $settings['error']['display_error_details'] = false;
 $settings['error']['log_errors']            = true;
