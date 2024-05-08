@@ -120,6 +120,10 @@
 	}
 }
 
+.form-group:has([readonly]) .form-group-icon {
+	background-color : oklch(var(--totalform-lightgray));
+}
+
 .form-columns {
 	display : grid;
 	gap     : 1rem;

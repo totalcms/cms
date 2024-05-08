@@ -12,9 +12,9 @@
 	{% set args = {
 		method : 'post',
 		id     : '',
-		helpOnHover : true,
-		helpOnFocus : true,
-		helpStyle   : "default",
+		helpOnHover : false,
+		helpOnFocus : false,
+		helpStyle   : "",
 	} | merge(args) %}
 
 	{#
@@ -77,7 +77,7 @@
 		{% set class = class ~ " help-on-hover" %}
 	{% endif %}
 
-	{% if args.helpOnFocus %}
+	{% if args.helpOnFocus == true %}
 		{% set class = class ~ " help-on-focus" %}
 	{% endif %}
 
