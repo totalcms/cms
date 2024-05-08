@@ -15,12 +15,10 @@ use Psr\Http\Server\RequestHandlerInterface;
 final class PreviewRouteMiddleware implements MiddlewareInterface
 {
     /**
-     * Invoke middleware.
+     * @SuppressWarnings(PHPMD.Superglobals)
      *
-     * @param ServerRequestInterface $request The request
-     * @param RequestHandlerInterface $handler The handler
-     *
-     * @return ResponseInterface The response
+     * @param ServerRequestInterface $request
+     * @param RequestHandlerInterface $handler
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -34,7 +32,7 @@ final class PreviewRouteMiddleware implements MiddlewareInterface
             $request   = $request->withUri($uri);
         }
         if (isset($queryParams['datadir'])) {
-            $_SERVER['TCMSDIR'] = $queryParams['datadir'];
+            $_SERVER['PREVIEW_TCMSDIR'] = $queryParams['datadir'];
         }
 
         $response = $handler->handle($request);
