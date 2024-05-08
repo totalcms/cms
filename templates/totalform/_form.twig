@@ -11,12 +11,17 @@
 {% macro start(collection, args = {}) %}
 	{% set args = {
 		method : 'post',
-		class  : '',
 		id     : '',
+		helpOnHover : true,
+		helpOnFocus : true,
+		helpStyle   : "default",
 	} | merge(args) %}
 
 	{#
 		Default Field Arguments
+		helpOnHover : true,
+		helpOnFocus : true,
+		helpStyle   : "label", // default, label, tooltip, box
 		field       = type of the field data from Total CMS: text, number, date, etc
 		type        = type of the input
 		class       = classes added to the field
@@ -66,8 +71,22 @@
 	{% set id = args.id|default(getParams.id) %}
 	{% set method = args.method %}
 
+	{% set class = "" %}
+
+	{% if args.helpOnHover %}
+		{% set class = class ~ " help-on-hover" %}
+	{% endif %}
+
+	{% if args.helpOnFocus %}
+		{% set class = class ~ " help-on-focus" %}
+	{% endif %}
+
+	{% if args.helpStyle is not empty %}
+		{% set class = class ~ " help-" ~ args.helpStyle %}
+	{% endif %}
+
 	{% if id is empty %}
-		<form class="totalform {{args.class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-method="{{method}}"
+		<form class="totalform {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}">
 	{% else %}
 		{# force method to be PUT you cannot use POST on an existing object #}
@@ -75,7 +94,7 @@
 			{%set method = 'put' %}
 		{% endif %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
-		<form class="totalform edit-mode {{args.class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
+		<form class="totalform edit-mode {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
 			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
 	{% endif %}
 {% endmacro %}

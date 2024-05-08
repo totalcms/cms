@@ -117,7 +117,10 @@ minlength   = minimum length of the field
 ```
 
 ```
-{{ form.text(property, {
+{{ form.textForm(property, {
+	helpOnHover : true,
+	helpOnFocus : true,
+	helpStyle   : "label", // default, label, tooltip, box
 	class       : "string",
 	value       : "string",
 	default     : "string",

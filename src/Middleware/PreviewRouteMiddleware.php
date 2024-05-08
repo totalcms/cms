@@ -33,6 +33,9 @@ final class PreviewRouteMiddleware implements MiddlewareInterface
             $uri       = $request->getUri()->withPath($routePath);
             $request   = $request->withUri($uri);
         }
+        if (isset($queryParams['datadir'])) {
+            $_SERVER['TCMSDIR'] = $queryParams['datadir'];
+        }
 
         $response = $handler->handle($request);
 

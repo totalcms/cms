@@ -9,9 +9,9 @@ ini_set('display_errors', '1');
 $settings['env'] = 'preview';
 
 $settings['docroot']   = $settings['root'];
-$settings['datadir']   = $settings['root'] . '/tcms-data';
+$settings['datadir']   = $_SERVER['TCMSDIR'] ?: $settings['root'] . '/tcms-data';
 $settings['cachedir']  = 'false';
-$settings['api']       = '/rw_common/plugins/stacks/tcms/public/?route=';
+$settings['api']       = sprintf('/rw_common/plugins/stacks/tcms/public/?datadir=%sroute=', $settings['datadir']);
 
 $settings['error']['display_error_details'] = false;
 $settings['error']['log_errors']            = true;
