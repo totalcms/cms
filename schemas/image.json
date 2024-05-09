@@ -14,6 +14,7 @@
         },
         "image": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Image",
 			"help"    : "Drag and drop an image here, or click to select.",
 			"field"   : "image",
 			"factory" : "imageText|1920,1080"
