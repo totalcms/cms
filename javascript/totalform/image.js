@@ -24,7 +24,7 @@ export default class ImageField extends TotalField {
 
 	apiUploadImage() {
 		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		return this.api.apiUrl(api);
+		return this.api.buildApiQuery(api);
     }
 
 	updateAPIUrl() {
@@ -84,7 +84,7 @@ export default class ImageField extends TotalField {
 				const mimeType = this.container.querySelector('.form-field:has([name=mime])').totalfield.getValue();
 				const format = mimeType.split("/")[1];
 				const downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
-				const downloadUrl = this.api.apiUrl(downloadApi);
+				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
 				const link = document.createElement('a');
 				link.href = downloadUrl;

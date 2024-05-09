@@ -92,7 +92,7 @@
 
 	{% if id is empty %}
 		<form class="totalform {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-method="{{method}}"
-			data-api="{{totalcms.api}}/collections/{{collection}}">
+			data-api="{{totalcms.api}}" data-route="/collections/{{collection}}">
 	{% else %}
 		{# force method to be PUT you cannot use POST on an existing object #}
 		{% if method == 'post' %}
@@ -100,7 +100,7 @@
 		{% endif %}
 		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
 		<form class="totalform edit-mode {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
-			data-api="{{totalcms.api}}/collections/{{collection}}/{{id}}">
+			data-api="{{totalcms.api}}" data-route="/collections/{{collection}}/{{id}}">
 	{% endif %}
 {% endmacro %}
 

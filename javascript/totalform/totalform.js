@@ -45,8 +45,10 @@ export default class TotalForm {
 		};
 		this.options = Object.assign({}, defaults, options);
 
-		this.api        = new TotalCMS();
-		this.baseapi    = this.form.dataset.api;
+		this.api = new TotalCMS({
+			url: this.form.dataset.api,
+		});
+		this.route      = this.form.dataset.route;
 		this.method     = this.form.dataset.method||"PUT";
 		this.id         = this.form.dataset.id;
 		this.collection = this.form.dataset.collection;
@@ -244,7 +246,7 @@ export default class TotalForm {
 	save() {
 		if (!this.validate()) return;
         this.processing();
-        this.api.postAPI(this.baseapi, this.generateData(), this.method)
+        this.api.postAPI(this.route, this.generateData(), this.method)
             .then(response => this.afterSave(response))
             .catch(error => this.error(error));
     }
@@ -341,8 +343,8 @@ export default class TotalForm {
 		idField.lock();
 
 		// Update the API to the edit endpoint
-		this.baseapi = `${this.baseapi}/${this.id}`;
-		this.form.dataset.api = this.baseapi;
+		this.route = `${this.route}/${this.id}`;
+		this.form.dataset.route = this.route;
 
 		// Update the droplets to autoupload
 		this.droplets.forEach(field => field.droplet.autoProcessQueue());

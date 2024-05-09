@@ -10,7 +10,7 @@
  * <pre>
  * const totalcms = new TotalCMS({
  *       passport: "topsecret",
- *       uri: "http://localhost:8000/api.php",
+ *       url: "http://localhost:8000/api.php",
  * });
  * </pre>
  *
@@ -29,7 +29,7 @@ export default class TotalCMS {
             locale          : "en",
             localizeStrings : {},
             config          : {},
-            uri             : ""
+            url             : ""
         };
         // get the global options and merge with defaults/arguments
         const globals = typeof window.totalcms === "object" ? window.totalcms.options : {};
@@ -62,10 +62,6 @@ export default class TotalCMS {
         sessionStorage.clear();
     }
 
-	apiUrl(api) {
-		return this.options.uri+api;
-	}
-
     // AJAX Post to the Total CMS API
     postAPI(api, data, method = "POST") {
         // If the POST API sets new data, we should delete form storage it if it exists
@@ -74,9 +70,9 @@ export default class TotalCMS {
 		let headers = { "Content-Type":"application/json" };
 		if (method !== "POST") headers["X-Http-Method-Override"] = method.toUpperCase();
 
-		console.log(method, headers);
+		// console.log(method, headers);
 
-        return fetch(this.options.uri+api, {
+        return fetch(this.buildApiQuery(api), {
             method  : "POST",
             mode    : this.options.cors ? "cors" : "same-origin",
             headers : new Headers(headers),
@@ -108,7 +104,7 @@ export default class TotalCMS {
 		let headers = {};
 		if (method !== "GET") headers["X-Http-Method-Override"] = method.toUpperCase();
 
-		return fetch(this.options.uri+api, {
+		return fetch(this.buildApiQuery(api), {
             method  : "GET",
             mode    : this.options.cors ? "cors" : "same-origin",
             headers : new Headers(headers)
@@ -129,7 +125,7 @@ export default class TotalCMS {
 
 	// HEAD from the Total CMS API
 	existsAPI(api) {
-		return fetch(this.options.uri+api, {
+		return fetch(this.buildApiQuery(api), {
 			method  : "GET",
 			mode    : this.options.cors ? "cors" : "same-origin",
 			headers : new Headers({
@@ -172,9 +168,17 @@ export default class TotalCMS {
 	}
     // Build a URL with a query string
 	buildApiQuery(api, params) {
-		const baseapi = this.options.uri + api;
-		if (typeof params !== "object") return baseapi;
-		const queryString = new URLSearchParams(params).toString();
-		return `${baseapi}?${queryString}`;
+		let baseUrl = this.options.url;
+		if (!baseUrl.includes(window.location.origin)) {
+			baseUrl = window.location.origin + baseUrl;
+		}
+		const url = new URL(baseUrl + api);
+		if (typeof params === "object") {
+			const newParams = new URLSearchParams(params);
+			for (const [key, value] of newParams) {
+				url.searchParams.append(key, value);
+			}
+		}
+		return url.toString();
 	}
 }
