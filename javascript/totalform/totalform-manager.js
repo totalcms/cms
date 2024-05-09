@@ -33,6 +33,7 @@ export default class TotalFormManager {
 	}
 
 	bannerStatus(status) {
+		if (this.statusBanner.classList.contains(status)) return;
 		const remove = Array.from(this.statusBanner.classList);
 		if (status) this.statusBanner.classList.add(status);
 		this.statusBanner.classList.remove(...remove);
@@ -62,7 +63,10 @@ export default class TotalFormManager {
 	}
 
     registerButtons() {
-		const externalButtons = Array.from(document.querySelectorAll(":not(form.totalform) .cms-save"));
+		const saveButtons = Array.from(document.getElementsByClassName("cms-save"));
+		const externalButtons = saveButtons.filter(button => button.closest("form.totalform") === null);
+		const internalButtons = saveButtons.filter(button => button.closest("form.totalform") !== null);
+
         externalButtons.forEach(button => {
             button.addEventListener("click", event => {
 				event.preventDefault();
@@ -70,18 +74,19 @@ export default class TotalFormManager {
 			});
         });
 
-		const internalButton = document.querySelector("form.totalform .cms-save");
-		if (!internalButton) return;
-		internalButton.addEventListener("click", event => {
-			event.preventDefault();
+        internalButtons.forEach(button => {
+			button.addEventListener("click", event => {
+				event.preventDefault();
 
-			this.unsavedCounter = 1; // Only one form to save
-			const totalform = button.closest("form").totalform;
-			if (!totalform.validate()) return;
+				const totalform = event.target.closest("form").totalform;
+				if (!totalform.validate()) return;
 
-			this.startProcessing();
-			totalform.save();
-		});
+ 				// Only one form to save
+ 				this.unsavedCounter = 1;
+				this.startProcessing();
+				totalform.save();
+			});
+        });
 	}
 
 	startProcessing() {
