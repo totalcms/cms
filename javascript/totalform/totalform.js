@@ -68,6 +68,10 @@ export default class TotalForm {
         this.saveListener();
         this.registerButtons();
 
+		if (this.form.classList.contains("autosave")) {
+			this.autosave = true;
+		}
+
         window.onbeforeunload = e => {
             if (this.isUnsaved()) {
 				e.preventDefault();
@@ -122,6 +126,7 @@ export default class TotalForm {
 				// If a field is in focus on submit, a change event is triggered
 				if (this.isProcessing()) return;
 				this.unsaved();
+				if (this.autosave) this.save();
 			});
             field.addEventListener("field-error", e => this.error(e.detail.error));
         });

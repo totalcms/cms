@@ -10,8 +10,9 @@
 --------------------------------#}
 {% macro start(collection, args = {}) %}
 	{% set args = {
-		method : 'post',
-		id     : '',
+		method      : 'post',
+		id          : '',
+		autosave    : false,
 		helpOnHover : false,
 		helpOnFocus : false,
 		helpStyle   : "",
@@ -83,6 +84,10 @@
 
 	{% if args.helpStyle is not empty %}
 		{% set class = class ~ " help-" ~ args.helpStyle %}
+	{% endif %}
+
+	{% if args.autosave == true %}
+		{% set class = class ~ " autosave" %}
 	{% endif %}
 
 	{% if id is empty %}
