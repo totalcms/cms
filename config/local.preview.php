@@ -1,7 +1,7 @@
 <?php
 
-// Preview Environment
-// echo "Preview Environment\n";
+// Stacks Preview Environment
+// echo "Stacks Preview Environment\n";
 
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
