@@ -63,7 +63,7 @@ export default class TotalFormManager {
 	}
 
     registerButtons() {
-		const saveButtons = Array.from(document.getElementsByClassName("cms-save"));
+		const saveButtons = Array.from(document.querySelectorAll("button.cms-save,a.cms-save,.cms-save a,.cms-save button"));
 		const externalButtons = saveButtons.filter(button => button.closest("form.totalform") === null);
 		const internalButtons = saveButtons.filter(button => button.closest("form.totalform") !== null);
 
