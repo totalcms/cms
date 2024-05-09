@@ -1,7 +1,7 @@
 //------------------------------
 // Color Field
 //------------------------------
-[type="color"] {
+input[type="color"] {
 	appearance       : none;
 	border           : none;
 	width            : 64px;
@@ -22,6 +22,10 @@
     + .form-group-icon {
         display : none;
     }
+
+	&:focus {
+		border : none;
+	}
 }
 .color-field {
 	width : auto;

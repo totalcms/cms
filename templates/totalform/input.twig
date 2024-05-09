@@ -24,8 +24,8 @@
         type="{{ args.type }}"
         name="{{ property }}"
         {% if args.minlength %}minlength="{{ args.minlength }}"{% endif %}
-        {% if args.min %}min="{{ args.min }}"{% endif %}
-        {% if args.max %}max="{{ args.max }}"{% endif %}
+        {% if args.min is not empty %}min="{{ args.min }}"{% endif %}
+        {% if args.max is not empty %}max="{{ args.max }}"{% endif %}
         {% if args.step %}step="{{ args.step }}"{% endif %}
         {% if args.pattern %}pattern="{{ args.pattern }}"{% endif %}
         {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
@@ -33,7 +33,7 @@
         {% if args.required %}required{% endif %}
         {% if args.disabled %}disabled{% endif %}
         {% if args.readonly %}readonly{% endif %}
-		{% if value %}value="{{ value|e }}"{% endif %}
+		{% if value is not empty %}value="{{ value|e }}"{% endif %}
     >
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}
