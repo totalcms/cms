@@ -74,7 +74,7 @@
 	margin-bottom : 1rem;
 	align-items   : stretch;
 	border-radius : var(--totalform-radius);
-	transition    : all 200ms ease-in-out;
+	transition    : box-shadow 200ms ease-in-out;
 	box-shadow    : 0 0 0 oklch(var(--totalform-shadow));
 
     &:has(:focus) {
@@ -103,7 +103,7 @@
 	border-left-width : 0;
 	border-radius     : 0 var(--totalform-radius) var(--totalform-radius) 0;
 	background-color  : oklch(var(--totalform-icon-bg));
-	transition        : all 200ms ease-in-out;
+	transition        : background-color 200ms ease-in-out;
 	display           : grid;
 	align-items       : center;
 	justify-items     : center;
@@ -111,7 +111,7 @@
 	&:after {
 		display          : block;
 		content          : " ";
-		transition       : all 200ms ease-in-out;
+		transition       : background-color 200ms ease-in-out;
 		background-color : oklch(var(--totalform-icon-color));
 		width            : 1.1rem;
 		height           : 1.1rem;
