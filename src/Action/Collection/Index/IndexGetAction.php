@@ -39,10 +39,12 @@ final class IndexGetAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        return $this->renderer->jsonItem(
-            $response,
-            $this->service->fetchIndex($args['collection']),
-            new IndexTransformer()
-        );
+        $index = $this->service->fetchIndex($args['collection']);
+
+        if ($index === null) {
+            return $this->renderer->json($response, []);
+        }
+
+        return $this->renderer->jsonItem($response, $index, new IndexTransformer());
     }
 }

@@ -39,10 +39,10 @@ final class CollectionFetchAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        try {
-            $collection = $this->service->fetchCollection($args['collection']);
-        } catch (\UnexpectedValueException $e) {
-            throw new HttpNotFoundException($request, $e->getMessage());
+        $collection = $this->service->fetchCollection($args['collection']);
+
+        if ($collection === null) {
+            throw new HttpNotFoundException($request, 'Collection not found');
         }
 
         return $this->renderer->jsonItem($response, $collection, new CollectionMetaTransformer());

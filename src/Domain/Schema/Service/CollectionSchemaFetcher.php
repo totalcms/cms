@@ -33,6 +33,10 @@ final class CollectionSchemaFetcher
     {
         $collection = $this->collectionService->fetchCollection($collection);
 
+        if ($collection === null) {
+            throw new \UnexpectedValueException('Collection for Schema not found: ' . $collection);
+        }
+
         return $this->storage->getSchema($collection->schema);
     }
 }

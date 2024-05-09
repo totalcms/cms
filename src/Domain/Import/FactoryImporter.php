@@ -64,11 +64,15 @@ final class FactoryImporter
     public function fetchCollectionFactories(string $collection): array
     {
         // Get factory definitions from collection
-        $properties = $this->collectionFetcher->fetchCollection($collection)->properties;
+        $properties = $this->collectionFetcher->fetchCollection($collection);
+
+        if (is_null($properties)) {
+            return [];
+        }
 
         return array_map(function ($property) {
             return $property['factory'] ?? self::DEFAULT_FACTORY;
-        }, $properties);
+        }, $properties->properties);
     }
 
     public function import(string $collection, int $quantity = 1, array $defs = []): int

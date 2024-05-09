@@ -53,6 +53,10 @@ final class ObjectRepository extends StorageRepository
 
         $collectionInfo = $this->collectionFetcher->fetchCollection($collection);
 
+        if ($collectionInfo === null) {
+            throw new \UnexpectedValueException('Collection not found: ' . $collection);
+        }
+
         if ($this->validator->validateSchema($object->toArray(), $collectionInfo->schema) === false) {
             throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
         }
