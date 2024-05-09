@@ -10,7 +10,12 @@
 {% endmacro %}
 
 {% macro svgForm(id, args = {}, collection = "svg") %}
-	{{ _self.start(collection, { id:id, class:args.class }) }}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.svg('svg', args) }}
 	{{ _self.end(args.save, args.delete) }}

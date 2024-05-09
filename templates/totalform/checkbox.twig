@@ -42,7 +42,12 @@
 {% endmacro %}
 
 {% macro checkboxForm(id, args = {}, collection = "toggle") %}
-	{{ _self.start(collection, { id:id, class:args.class }) }}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.checkbox('status', args) }}
 	{{ _self.end(args.save, args.delete) }}

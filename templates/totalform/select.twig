@@ -63,7 +63,12 @@
 {% endmacro %}
 
 {% macro selectForm(id, args = {}, collection = "text") %}
-	{{ _self.start(collection, { id:id, class:args.class }) }}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.select('text', args) }}
 	{{ _self.end(args.save, args.delete) }}

@@ -34,17 +34,21 @@
         {% if args.placeholder %}placeholder="{{ args.placeholder }}"{% endif %}
         {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
         {% if args.required %}required{% endif %}
+		{% if args.disabled %}disabled{% endif %}
+        {% if args.readonly %}readonly{% endif %}
     >{{ value }}</textarea>
     {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 
 {% macro textareaForm(id, args = {}, collection = "text",) %}
-	{{ _self.start(collection, { id:id, class:args.class }) }}
-
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
-
 		{{ _self.textarea('text', args) }}
-
 	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}

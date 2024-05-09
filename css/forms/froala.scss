@@ -35,6 +35,14 @@
 .fr-box {
     width: 100%;
 }
+textarea.fr-code {
+	display       : none;
+	resize        : none;
+	border        : none;
+	box-shadow    : none;
+	padding       : 1.5rem;
+	border-radius : 0;
+}
 .fr-toolbar {
     border-top-left-radius  : var(--totalform-radius)!important;
     border-top-right-radius : 0!important;

@@ -2,7 +2,11 @@
 {# Blog Forms                    #}
 {#--------------------------------#}
 {% macro blogForm(collection, args = {}) %}
-	{{ _self.start(collection, { class:args.class }) }}
+	{{ _self.start(collection, {
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
 
 		{% set tags       = selectOptions(totalcms.property(collection, "tags")) %}
 		{% set categories = selectOptions(totalcms.property(collection, "categories")) %}

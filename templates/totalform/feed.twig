@@ -2,7 +2,11 @@
 {# Feed Forms                    #}
 {#--------------------------------#}
 {% macro feedForm(collection, args = {}) %}
-	{{ _self.start(collection, { class:args.class }) }}
+	{{ _self.start(collection, {
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
 
 		{{ _self.id('id', { autogen : "${timestamp}-${uuid}", class : "hide" }) }}
 		{{ _self.hidden('created') }}
