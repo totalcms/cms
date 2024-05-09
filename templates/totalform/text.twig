@@ -15,16 +15,13 @@
 {# Text Forms                     #}
 {#--------------------------------#}
 {% macro textForm(id, args = {}, collection = "text") %}
-
 	{{ _self.start(collection, {
 		id          : id,
 		helpOnHover : args.helpOnHover,
 		helpOnFocus : args.helpOnFocus,
 		helpStyle   : args.helpStyle,
 	}) }}
-
 		{{ _self.id('id', { value:id, class: "hide" }) }}
 		{{ _self.text('text', args) }}
-
 	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}
