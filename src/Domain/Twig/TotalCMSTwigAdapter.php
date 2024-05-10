@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
@@ -197,20 +198,26 @@ final class TotalCMSTwigAdapter
             return '';
         }
 
-        $type = 'jpg';
-        if (key_exists('type', $options)) {
-            $type = $options['type'];
-            unset($options['type']);
+        $image = $this->data($collection, $id, 'image');
+        if (!is_array($image) && !key_exists('uploadDate', $image)) {
+            return '';
         }
+
+        // Default to original image type
+        $type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+        // If type is set in options, use that
+        if (key_exists('fm', $options)) {
+            $type = $options['fm'];
+            unset($options['fm']);
+        }
+        // If type is not in the list of allowed types, default to jpg
+        $type = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
 
         $api = $this->api . "/imageworks/$collection/$id/$property.$type";
 
         // cache busting links
-        $image = $this->data($collection, $id, 'image');
-        if (is_array($image) && key_exists('uploadDate', $image)) {
-            $cache = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
-            $api .= "?cache=$cache";
-        }
+        $cache = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+        $api .= "?cache=$cache";
 
         if (!empty($options)) {
             $options = http_build_query($options);

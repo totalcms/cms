@@ -15,8 +15,9 @@ final class GlideFactory
     private StorageAdapterInterface $filesystem;
     private Config $config;
 
-    public const CACHEDIR = '.cache';
-    public const PALETTE  = 'palette';
+    public const CACHEDIR  = '.cache';
+    public const PALETTE   = 'palette';
+    public const IMG_TYPES = ['jpg', 'jpeg', 'pjpg', 'png', 'gif', 'webp', 'avif'];
 
     public function __construct(StorageAdapterInterface $filesystem, Config $config)
     {
