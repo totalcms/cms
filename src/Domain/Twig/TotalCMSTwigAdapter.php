@@ -141,6 +141,11 @@ final class TotalCMSTwigAdapter
         return '';
     }
 
+    public function toggle(string $id, string $collection = 'toggle', string $property = 'status'): bool
+    {
+        return boolval($this->data($collection, $id, $property));
+    }
+
     public function date(string $id, string $collection = 'date', string $property = 'date'): string
     {
         return strval($this->data($collection, $id, $property));
