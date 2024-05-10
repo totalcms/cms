@@ -140,6 +140,36 @@ final class TotalCMSTwigAdapter
         return '';
     }
 
+    public function date(string $id, string $collection = 'date', string $property = 'date'): string
+    {
+        return strval($this->data($collection, $id, $property));
+    }
+
+    public function color(string $id, string $collection = 'color', string $property = 'color'): string
+    {
+        return $this->data($collection, $id, $property);
+    }
+
+    public function svg(string $id, string $collection = 'svg', string $property = 'svg'): string
+    {
+        return strval($this->data($collection, $id, $property));
+    }
+
+    public function email(string $id, string $collection = 'email', string $property = 'email'): string
+    {
+        return strval($this->data($collection, $id, $property));
+    }
+
+    public function url(string $id, string $collection = 'url', string $property = 'url'): string
+    {
+        return strval($this->data($collection, $id, $property));
+    }
+
+    public function number(string $id, string $collection = 'number', string $property = 'number'): string
+    {
+        return strval($this->data($collection, $id, $property));
+    }
+
     // Get an text property from an object
     public function text(string $id, string $collection = 'text', string $property = 'text'): string
     {
