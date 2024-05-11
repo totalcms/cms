@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Action\Import;
 
-use TotalCMS\Domain\Import\UrlImporter;
-use TotalCMS\Renderer\JsonRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Import\UrlImporter;
+use TotalCMS\Renderer\JsonRenderer;
 
 final class ImportUrlAction
 {

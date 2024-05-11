@@ -14,6 +14,12 @@ use TotalCMS\Domain\Property\Data\PropertyData;
  */
 class ObjectData
 {
+    // Reserved names that cannot be used for objects
+    public const RESERVED_NAMES = [
+        'index',
+        'id',
+    ];
+
     public string $id;
     /** @var Collection<string, PropertyData> */
     public Collection $properties;
@@ -31,9 +37,7 @@ class ObjectData
         $base = ['id' => $this->id];
 
         // Transform properties
-        $properties = $this->properties->map(function ($property) {
-            return $property->transform();
-        });
+        $properties = $this->properties->map(fn ($property) => $property->transform());
 
         return array_merge($base, $properties->toArray());
     }

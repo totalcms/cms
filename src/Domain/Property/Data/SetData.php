@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use InvalidArgumentException;
-
 /**
  * String type property data.
  */
@@ -14,11 +12,12 @@ class SetData extends PropertyData
     public function __construct(array $set)
     {
         if (!self::verifySet($set)) {
-            throw new InvalidArgumentException('Set must be a set of simple objects');
+            throw new \InvalidArgumentException('Set must be a set of simple objects');
         }
         $this->set = $set;
     }
 
+    // phpcs:ignore Generic.Metrics.NestingLevel.TooHigh
     private static function verifySet(array $set): bool
     {
         if (!array_is_list($set)) {

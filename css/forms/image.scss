@@ -1,0 +1,96 @@
+//--------------------------------
+// Fieldset - Image Field
+//--------------------------------
+.image-field {
+
+	display: grid;
+	justify-items: center;
+
+	.total-preview {
+		position   : relative;
+		min-height : 96px;
+
+		img {
+			// width      : 100%;
+			height     : auto;
+			max-width  : 100%;
+			max-height : 400px;
+			display    : block;
+			margin     : 0 auto;
+			cursor     : pointer;
+		}
+	}
+
+	> .help {
+		padding    : 0;
+		background : none;
+	}
+
+	.not-found {
+		display : none;
+	}
+
+}
+
+dialog.image-link-dialog {
+	padding    : 0 !important;
+	height     : 90svh;
+	max-height : none;
+}
+
+.cms-modal {
+	.image-preview {
+		border     : 10px solid oklch(var(--totalform-white));
+		box-shadow : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
+		overflow   : visible;
+
+		img {
+			width   : 100%;
+			display : block;
+		}
+	}
+
+	.focal-point {
+		position         : absolute;
+		top              : 50%;
+		left             : 50%;
+		transform        : translate(-50%, -50%);
+		width            : 48px;
+		height           : 48px;
+		background-color : oklch(var(--totalform-white) / 0.6);
+		border           : 2px solid #222;
+		box-shadow       : rgb(0 0 0 / 0.3) 2px 2px 5px 0px;
+		border-radius    : 50%;
+		opacity          : 0.8;
+		background-image : var(--icon-crosshairs);
+		cursor           : grab;
+
+		&:active {
+			cursor: grabbing;
+		}
+	}
+
+	.palette {
+		display : flex;
+		flex-wrap: wrap;
+		gap     : 1rem;
+
+		* {
+			margin: 0;
+		}
+
+		> *,
+		input {
+			cursor : grab;
+		}
+
+		> *:active,
+		> *:active input {
+			cursor: grabbing;
+		}
+
+		.drag-ghost {
+			opacity : 0.25;
+		}
+	}
+}

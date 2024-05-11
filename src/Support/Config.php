@@ -13,6 +13,7 @@ final class Config
     public string $tmpDir    = '';
     public string $domain    = '';
     public string $api       = '';
+    public string $locale    = '';
     public array $logger     = [];
     public array $error      = [];
     public array $imageworks = [];
@@ -28,5 +29,6 @@ final class Config
         $this->imageworks = $settings['imageworks'];
         $this->domain     = $settings['domain'];
         $this->api        = $settings['api'];
+        $this->locale     = $settings['locale'];
     }
 }

@@ -1,0 +1,75 @@
+{#
+    Select Field Macro
+    property        = property of the field
+    type        = type of the field data from Total CMS: text, number, date, etc
+    class       = classes added to the field
+    value       = value of the field
+    label       = label of the field
+    placeholder = placeholder of the field
+    help        = help text of the field
+    icon        = show icon
+    required    = required field
+    options     = array of options
+    multiple    = enable multiple select
+    rows        = number of rows for multi-select
+#}
+{% macro select(property, options = [], args = {}) %}
+	{# -- Begin Boilerplate -- #}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "select",
+		type  : "select",
+	}) %}
+
+	{% if options is empty and defs.options is not empty %}
+		{% set options = defs.options %}
+	{% endif %}
+
+    {{ _self.fieldstart(args.field, uuid, args) }}
+    <select
+        id="field-{{ uuid }}"
+        name="{{ property }}"
+		{% if value %}value="{{ value|e }}"{% endif %}
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.required %}required{% endif %}>
+
+		{% if args.placeholder %}
+		<option value="" disabled {% if value is empty %}selected{% endif %}>{{ args.placeholder }}</option>
+		{% endif %}
+
+		{% for option in options %}
+		<option value="{{ option.value|e }}" {%if option.value == value %}selected{% endif %}>{{ option.label|e }}</option>
+		{% endfor %}
+    </select>
+    {{ _self.fieldend(uuid, args) }}
+
+{% endmacro %}
+
+{% macro selectForm(id, args = {}, collection = "text") %}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.select('text', args) }}
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}

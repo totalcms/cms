@@ -4,6 +4,8 @@ namespace TotalCMS\Domain\Collection\Repository;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -16,19 +18,21 @@ final class CollectionRepository extends StorageRepository
 {
     private const META_FILE = '.meta.json';
     private CollectionFactory $factory;
+    private SchemaValidator $validator;
 
     /**
      * The constructor.
      *
      * @param StorageFilesystemAdapter $filesystem The filesystem factory
-     * @param CollectionFactory $CollectionFactory
      * @param CollectionFactory $factory
+     * @param SchemaValidator $validator
      */
-    public function __construct(StorageAdapterInterface $filesystem, CollectionFactory $factory)
+    public function __construct(StorageAdapterInterface $filesystem, CollectionFactory $factory, SchemaValidator $validator)
     {
         parent::__construct($filesystem);
 
-        $this->factory = $factory;
+        $this->factory   = $factory;
+        $this->validator = $validator;
     }
 
     /**
@@ -65,20 +69,35 @@ final class CollectionRepository extends StorageRepository
     }
 
     /**
-     * Fetch a collection.
+     * Verify that a collection exists.
      *
      * @param string $collection
+     */
+    public function collectionExists(string $collection): bool
+    {
+        $metaFile = $this->buildMetaPath($collection);
+
+        return $this->filesystem->fileExists($metaFile);
+    }
+
+    /**
+     * Fetch a collection.
+     *
+     * @param string $collectionName
      *
      * @throws \DomainException
      *
      * @return CollectionData
      */
-    public function getCollection(string $collection): CollectionData
+    public function getCollection(string $collectionName): CollectionData
     {
-        $collection = $this->fetchCollection($collection);
+        $collection = $this->fetchCollection($collectionName);
 
         if ($collection === null) {
-            throw new \DomainException(sprintf('Collection does not exist: %s', $collection));
+            throw new \DomainException(sprintf('Collection does not exist: %s', $collectionName));
+        }
+        if ($collection->isValid() === false) {
+            throw new \DomainException(sprintf('Collection is invalid: %s', $collectionName));
         }
 
         return $collection;
@@ -97,26 +116,32 @@ final class CollectionRepository extends StorageRepository
             throw new \UnexpectedValueException('Cannot save collection with a reserved name');
         }
 
+        if ($this->validator->validateSchema($collection->toArray(), 'meta') === false) {
+            throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
+        }
+
         $jsonContent = $collection->toJson();
         $metaFile    = $this->buildMetaPath($collection->id);
 
         $this->filesystem->write($metaFile, $jsonContent);
     }
 
+    public function isReservedCollection(string $collectionId): bool
+    {
+        return in_array($collectionId, SchemaData::RESERVED_SCHEMAS);
+    }
+
     /**
      * Create a collection for a reserved collection.
      *
      * @param string $collectionId The collection id
-     *
-     * @throws \DomainException
-     *
-     * @return CollectionData
      */
     public function saveReservedCollection(string $collectionId): void
     {
-        $collection = $this->factory->generateReservedCollection($collectionId);
-
-        $this->saveCollection($collection);
+        if ($this->isReservedCollection($collectionId)) {
+            $collection = $this->factory->generateReservedCollection($collectionId);
+            $this->saveCollection($collection);
+        }
     }
 
     private function buildMetaPath(string $collection): string

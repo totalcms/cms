@@ -7,7 +7,7 @@
 	"properties"  : {
 		"id": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"   : "Feed ID",
+			"label"   : "Feed Post ID",
 			"help"    : "A unique ID for this feed item. No spaces or special characters.",
 			"field"   : "slug",
 			"factory" : "uuid"
@@ -30,30 +30,40 @@
 		"title": {
 			"type"    : "string",
 			"label"   : "Title",
-			"help"    : "Blog Post title",
+			"help"    : "A title for your post",
 			"field"   : "input",
 			"factory" : "sentence",
 			"default" : ""
 		},
-		"date": {
+		"created": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"   : "Date",
-			"help"    : "Blog Post date",
-			"field"   : "date",
-			"factory" : "iso8601"
+			"label"   : "Date Created",
+			"help"    : "The date the post was created",
+			"field"   : "hidden",
+			"factory" : "iso8601",
+			"default" : "onCreate"
+		},
+		"updated": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Date Updated",
+			"help"    : "The date the post was updated",
+			"field"   : "hidden",
+			"factory" : "iso8601",
+			"default" : "onUpdate"
 		},
 		"image": {
-			"$ref"  : "https://www.totalcms.co/schemas/properties/image.json",
-			"label" : "Image",
-			"help"  : "Image for this post",
-			"field" : "image",
-			"factory" : "imageText|1920,1080"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Image",
+			"help"    : "Image for this post",
+			"field"   : "image",
+			"factory" : "imageText|1920,1080",
+			"image"   : {}
 		},
 		"content": {
 			"type"    : "string",
 			"label"   : "Content",
 			"help"    : "Post content",
-			"field"   : "textarea",
+			"field"   : "styledtext",
 			"factory" : "paragraphs",
 			"default" : ""
 		}
@@ -62,16 +72,17 @@
 		"id",
 		"title",
 		"content",
-		"date",
+		"created",
+		"updated",
 		"featured",
-		"tags",
-		"image"
+		"tags"
 	],
 	"index": [
 		"id",
 		"title",
 		"content",
-		"date",
+		"created",
+		"updated",
 		"featured",
 		"tags",
 		"image"

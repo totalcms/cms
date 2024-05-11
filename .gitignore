@@ -5,7 +5,6 @@ composer.lock
 .DS_STORE
 cache.properties
 .php_cs.cache
-.vscode
 .phpunit.result.cache
 
 vendor/
@@ -21,3 +20,5 @@ env.php
 config/env.php
 /cache
 /tests/tcms-data
+public/assets
+/templates/totalform.twig

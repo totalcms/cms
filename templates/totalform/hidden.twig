@@ -1,0 +1,25 @@
+{# Hidden Field #}
+{% macro hidden(property, args = {}) %}
+	{# -- Begin Boilerplate -- #}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set color = attribute(object, property) %}
+		{% set value = color.hex %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+    <div class="form-field hidden-field" data-type="hidden">
+        <input type="hidden" name="{{ property }}" value="{{ value|e }}">
+    </div>
+
+{% endmacro %}

@@ -41,7 +41,82 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function bootstrap()
 {
-    // ..
+    $app = require __DIR__ . '/../config/bootstrap.php';
+
+    return $app;
+}
+
+function testDataDir(): string
+{
+    return __DIR__ . '/test-data/';
+}
+
+function testData(string $file): string
+{
+    return __DIR__ . '/test-data/' . $file;
+}
+
+function cmsDataDir(): string
+{
+    return __DIR__ . '/tcms-data/';
+}
+
+function templatePath(string $id): string
+{
+    return cmsDataDir() . "templates/$id.twig";
+}
+
+function collectionPath(string $collection): string
+{
+    return cmsDataDir() . "$collection/";
+}
+
+function metaPath(string $collection): string
+{
+    return cmsDataDir() . "$collection/.meta.json";
+}
+
+function schemaPath(string $id): string
+{
+    return cmsDataDir() . ".schemas/$id.json";
+}
+
+function indexPath(string $collection): string
+{
+    return cmsDataDir() . "$collection/.index.json";
+}
+
+function objectPath(string $collection, string $id): string
+{
+    return cmsDataDir() . "$collection/$id.json";
+}
+
+function objectFilesPath(string $collection, string $id): string
+{
+    return cmsDataDir() . "$collection/$id";
+}
+
+function recursiveDelete($dir)
+{
+    if (!file_exists($dir)) {
+        return true;
+    }
+
+    if (!is_dir($dir)) {
+        return unlink($dir);
+    }
+
+    foreach (scandir($dir) as $item) {
+        if ($item == '.' || $item == '..') {
+            continue;
+        }
+
+        if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item)) {
+            return false;
+        }
+    }
+
+    return rmdir($dir);
 }

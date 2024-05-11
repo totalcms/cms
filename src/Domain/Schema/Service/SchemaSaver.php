@@ -24,21 +24,22 @@ final class SchemaSaver
     /**
      * Save a schema.
      *
-     * @param string $schemaJSON
+     * @param array $schemaData
      *
      * @throws \UnexpectedValueException
      *
      * @return SchemaData
      */
-    public function saveSchema(string $schemaJSON): SchemaData
+    public function saveSchema(array $schemaData): SchemaData
     {
-        $schema = $this->factory->generateSchema($schemaJSON);
+        $schema = $this->factory->generateSchema($schemaData);
 
         if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, $this->storage->reservedSchemasIds())) {
             throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
         }
 
-        if ($this->validator->validateSchema($schema->toJson()) === false) {
+        // This is not in Repository in order to prevent circular dependency
+        if ($this->validator->validateSchema($schema->toArray()) === false) {
             throw new \UnexpectedValueException('Invalid Schema data provided');
         }
 

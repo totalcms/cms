@@ -1,0 +1,19 @@
+{
+	"$schema" : "https://json-schema.org/draft/2020-12/schema",
+	"$id"     : "https://www.totalcms.co/schemas/properties/phone.json",
+	"anyOf"   : [
+		{
+			"pattern"     : "^\\+?([0-9 ]?){6,14}[0-9]$",
+			"description" : "International phone number in various formats or empty",
+			"type"        : "string",
+			"examples"    : [
+				"+1 800 123 4567",
+				"+44 20 1234 5678",
+				"+918001234567"
+			]
+		},
+		{
+			"$ref" : "https://www.totalcms.co/schemas/properties/empty.json"
+		}
+	]
+}

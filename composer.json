@@ -8,8 +8,12 @@
     "cms"
   ],
   "license": "Commercial",
+  "repositories": [
+	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
+	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
+  ],
   "require": {
-    "php": "^8",
+    "php": ">=8.2",
     "cakephp/chronos": "^3.0",
     "cakephp/validation": "^4.2",
     "cocur/slugify": "^4.0",
@@ -31,6 +35,7 @@
     "league/glide": "^2.2",
     "league/uri": "^6.8",
     "lychee-org/php-exif": "^1.0",
+    "matthieumastadenis/couleur": "^0.1.2",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.4",
@@ -48,12 +53,14 @@
     "symfony/property-access": "^6.1",
     "symfony/serializer": "^6.1",
     "twig/extra-bundle": "^3.6",
-    "twig/twig": "^3.4"
+    "twig/twig": "^3.4",
+    "webuni/front-matter": "^2.0"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
-    "nekofar/pest-plugin-slim": "^3.1",
+    "nekofar/pest-plugin-slim": "dev-develop",
+    "nekofar/slim-test": "dev-develop",
     "overtrue/phplint": "^9.0",
     "pestphp/pest": "^2.16",
     "pestphp/pest-plugin-arch": "^2.3",
@@ -97,7 +104,7 @@
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcs.xml",
     "sniffer:fix": "phpcbf --standard=phpcs.xml",
-    "test": "pest",
+    "test": "pest --display-notices --display-warnings --display-errors --display-deprecations",
     "test:coverage": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
     "md": [

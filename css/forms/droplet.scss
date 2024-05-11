@@ -1,0 +1,135 @@
+//--------------------------------
+// Fieldset - Droplets
+//--------------------------------
+.dz-overlay {
+	position            : absolute;
+	top                 : 50%;
+	left                : 50%;
+	translate           : -50% -50%;
+	width               : 96px;
+	height              : 96px;
+	opacity             : 0.5;
+	background-color    : #222;
+	background-position : center;
+	transition          : opacity 300ms ease-in-out, scale 300ms ease-in-out;
+	transform-origin    : center;
+	-webkit-mask        : var(--icon-upload);
+	mask                : var(--icon-upload);
+
+
+	&:hover {
+		opacity : 0.9;
+		scale   : 1.1;
+	}
+}
+
+.dz-clickable {
+	cursor: pointer;
+}
+
+.dz-drag-hover {
+	.actionbar {
+		display: none;
+	}
+	.dz-overlay {
+		opacity : 0.9;
+		scale   : 1.1;
+	}
+
+	.total-preview {
+		opacity: 0.5;
+	}
+}
+
+.dz-preview {
+	position     : relative;
+	display      : block;
+	min-height   : 2rem;
+	border-width : 10px;
+	border-style : solid;
+	border-color : oklch(var(--totalform-white));
+	box-shadow   : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
+
+	&:has(img[src='']) {
+		display : none;
+	}
+}
+
+.dz-progress {
+	opacity : 0;
+	z-index : 1000;
+
+	pointer-events : none;
+	position       : absolute;
+	height         : 2rem;
+	left           : 0;
+	right          : 0;
+	bottom         : 0;
+	width          : 100%;
+	background     : oklch(var(--totalform-black) / 0.4);
+
+	// Fix for chrome bug:https://code.google.com/p/chromium/issues/detail?id=157218
+	transform: scale(1);
+	overflow: hidden;
+
+	.dz-upload {
+		background : oklch(var(--totalform-success));
+		position   : absolute;
+		top        : 0;
+		left       : 0;
+		bottom     : 0;
+		width      : 0;
+		z-index    : 1001;
+	}
+
+	.dz-upload-progress-label {
+		width       : 100%;
+		text-align  : center;
+		display     : block;
+		line-height : 2rem;
+		z-index     : 1002;
+		position    : absolute;
+		color       : oklch(var(--totalform-white));
+	}
+
+	.dz-complete &,
+	.dz-processing & {
+		display    : block;
+		opacity    : 1;
+		transition : all 0.2s linear;
+	}
+
+	.dz-complete & > .dz-upload,
+	.dz-complete & > .dz-upload-progress-label {
+		opacity    : 0;
+		transition : opacity 300ms ease-in;
+	}
+
+	.dz-success &, .dz-error & {
+		background      : oklch(var(--totalform-white) / 0.8);
+		backdrop-filter : blur(3px);
+	}
+
+	.dz-status {
+		opacity      : 0;
+		transition   : opacity 200ms linear;
+		height       : 100%;
+		aspect-ratio : 1;
+		margin       : 0 auto;
+
+		.dz-success & {
+			opacity           : 1;
+			background-color  : oklch(var(--totalform-success));
+			-webkit-mask      : var(--icon-success);
+			mask              : var(--icon-success);
+		}
+
+		.dz-error & {
+			opacity          : 1;
+			background-color : oklch(var(--totalform-error));
+			-webkit-mask     : var(--icon-error);
+			mask             : var(--icon-error);
+		}
+	}
+
+}

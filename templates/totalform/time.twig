@@ -1,0 +1,11 @@
+{#--------------------------------
+  Time Macro
+--------------------------------#}
+{% macro time(property, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "time",
+		type  : "time",
+	}) %}
+    {{ _self.input(property, args) }}
+{% endmacro %}

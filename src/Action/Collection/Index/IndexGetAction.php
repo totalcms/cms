@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Action\Collection\Index;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\IndexTransformer;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 final class IndexGetAction
 {
@@ -39,10 +39,12 @@ final class IndexGetAction
         ResponseInterface $response,
         array $args
     ): ResponseInterface {
-        return $this->renderer->jsonItem(
-            $response,
-            $this->service->fetchIndex($args['collection']),
-            new IndexTransformer()
-        );
+        $index = $this->service->fetchIndex($args['collection']);
+
+        if ($index === null) {
+            return $this->renderer->json($response, []);
+        }
+
+        return $this->renderer->jsonItem($response, $index, new IndexTransformer());
     }
 }

@@ -1,0 +1,90 @@
+{#--------------------------------
+  Date Macro
+--------------------------------#}
+{% macro date(property, args = {}) %}
+	{% set args = {
+		field : "date",
+		type  : "date",
+	} | merge(args) %}
+
+	{# -- Begin Boilerplate -- #}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+
+	{% if args.value %}
+		{% set value = args.value %}
+	{% elseif object %}
+		{% set value = attribute(object, property) %}
+	{% elseif args.default %}
+		{% set value = args.default %}
+	{% endif %}
+
+	{% if value %}
+		{% if args.type == "datetime-local" %}
+			{% set value = value|date("Y-m-d\\TH:i") %}
+		{% else %}
+			{% set value = value|date("Y-m-d") %}
+		{% endif %}
+	{% endif %}
+	{# -- End Boilerplate -- #}
+
+	{# if required and value not set, set to now #}
+	{% if args.required and not value %}
+		{% set value = args.type == "datetime-local" ? "now"|date("Y-m-d\\TH:i") : "now"|date("Y-m-d") %}
+	{% endif %}
+
+    {{ _self.fieldstart(args.field, uuid, args) }}
+    <input
+        id="field-{{ uuid }}"
+        type="{{ args.type }}"
+        name="{{ property }}"
+        {% if args.placeholder %}placeholder="{{ args.placeholder|e }}"{% endif %}
+        {% if args.help %}aria-describedby="help-{{ uuid }}"{% endif %}
+        {% if args.disabled %}disabled{% endif %}
+        {% if args.readonly %}readonly{% endif %}
+        {% if args.required %}required{% endif %}
+		{% if value %}value="{{ value|e }}"{% endif %}
+    >
+    {{ _self.fieldend(uuid, args) }}
+{% endmacro %}
+
+{#--------------------------------
+  Datetime Macros
+--------------------------------#}
+{% macro datetime(property, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "datetime",
+		type  : "datetime-local",
+	}) %}
+    {{ _self.date(property, args) }}
+{% endmacro %}
+
+{% macro dateForm(id, args = {}, collection = "date") %}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.date('date', args) }}
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}
+
+{% macro datetimeForm(id, args = {}, collection = "date") %}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.datetime('date', args) }}
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}

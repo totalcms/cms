@@ -45,7 +45,7 @@ final class UrlImporter
             $uri    = Uri::createFromString($link);
             $domain = $uri->getHost();
 
-            if ($this->storage->existsObjectId($collection, $id)) {
+            if ($this->storage->existsObject($collection, $id)) {
                 // Deal with duplicate IDs
                 $id = uniqid($id . '-');
             }

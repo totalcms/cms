@@ -1,7 +1,9 @@
+import TotalField from './totalfield';
+
 //-----------------------------------------------
 // Total CMS MultiSelect Field
 //-----------------------------------------------
-class MultiSelectField extends SelectField {
+export default class MultiSelectField extends TotalField {
 
     constructor(container, options) {
         super(...arguments);
@@ -20,17 +22,19 @@ class MultiSelectField extends SelectField {
 
     setValue(value) {
         if (typeof value !== "object") {
-            console.error(`Unable to set value for multiselect: ${this.input.id}`);
+            console.error(`Unable to set value for multiselect: ${this.form.id}`);
         }
         // Select Options
         const options = Array.from(this.input.getElementsByTagName("option"));
         for (const option of options) {
-            if (value.indexOf(option.value)>=0) {
-                option.selected = true;
-            }
+			option.selected = (value.indexOf(option.value)>=0);
         }
         this.changed();
     }
+
+	clearValue() {
+		this.setValue([]);
+	}
 
     schema() {
         return {

@@ -17,12 +17,15 @@
 			"label"   : "Color",
 			"help"    : "The color to use.",
 			"field"   : "color",
-			"factory" : "hslColor",
+			"factory" : "hexColor",
 			"default" : {
-				"h" : 0,
-				"s" : 0,
-				"l" : 0,
-				"a" : 1
+				"alpha": 100,
+				"oklch": {
+					"l": 100,
+					"c": 0,
+					"h": 0
+				},
+				"hex": "#ffffff"
 			}
         }
     },

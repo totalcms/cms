@@ -4,8 +4,6 @@ namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
-use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
 /**
  * Service.
@@ -13,41 +11,80 @@ use TotalCMS\Domain\Schema\Service\SchemaValidator;
 final class CollectionSaver
 {
     private CollectionRepository $storage;
-    private IndexBuilder $indexBuilder;
-    private SchemaValidator $validator;
     private CollectionFactory $factory;
 
-    public function __construct(CollectionRepository $storage, IndexBuilder $indexBuilder, CollectionFactory $factory, SchemaValidator $validator)
+    public function __construct(CollectionRepository $storage, CollectionFactory $factory)
     {
-        $this->storage      = $storage;
-        $this->indexBuilder = $indexBuilder;
-        $this->factory      = $factory;
-        $this->validator    = $validator;
+        $this->storage   = $storage;
+        $this->factory   = $factory;
     }
 
     /**
      * Save Collection data.
      *
-     * @param string $json The collection data to save. This should be json encoded.
+     * @param array $data
+     *
+     * @throws \DomainException
+     * @throws \UnexpectedValueException
+     *
+     * @return CollectionData
+     */
+    public function saveCollection(array $data): CollectionData
+    {
+        $collection = $this->factory->generateCollection($data);
+
+        if ($this->storage->collectionExists($collection->id)) {
+            throw new \DomainException(sprintf('Collection with id %s already exists', $collection->id));
+        }
+
+        $this->storage->saveCollection($collection);
+
+        return $collection;
+    }
+
+    /**
+     * update Collection data.
+     *
+     * @param string $collectionId
+     * @param array $data The collection data to save
      *
      * @throws \UnexpectedValueException
      *
      * @return CollectionData
      */
-    public function saveCollection(string $json): CollectionData
+    public function updateCollection(string $collectionId, array $data): CollectionData
     {
-        $collection = $this->factory->generateCollection($json);
+        $collection = $this->factory->generateCollection($data);
 
-        // Verify Schema Exists and is Valid
-
-        if ($this->validator->validateSchema($collection->toJson(), 'meta') === false) {
-            throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
+        if ($collection->id !== $collectionId) {
+            throw new \UnexpectedValueException('Invalid Collection data provided. Does not match collection ID.', 1);
         }
 
         $this->storage->saveCollection($collection);
 
-        $this->indexBuilder->buildIndex($collection->id);
-
         return $collection;
+    }
+
+    /**
+     * update Collection data.
+     *
+     * @param string $collectionId
+     * @param array $patch The collection data to patch
+     *
+     * @throws \UnexpectedValueException
+     *
+     * @return CollectionData
+     */
+    public function patchCollection(string $collectionId, array $patch): CollectionData
+    {
+        $collection = $this->storage->fetchCollection($collectionId);
+
+        if ($collection === null) {
+            throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+        }
+
+        $mergedCollection = array_merge($collection->toArray(), $patch);
+
+        return $this->updateCollection($collectionId, $mergedCollection);
     }
 }

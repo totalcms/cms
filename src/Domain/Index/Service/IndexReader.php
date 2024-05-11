@@ -26,15 +26,22 @@ final class IndexReader
      *
      * @return IndexData
      */
-    public function fetchIndex(string $collection): IndexData
+    public function fetchIndex(string $collection): ?IndexData
     {
         $index = $this->storage->fetchIndex($collection);
 
-        if (!$index instanceof IndexData) {
+        if ($index instanceof IndexData) {
             // Build the index if it does not exist
-            return $this->builder->buildIndex($collection);
+            $this->builder->buildIndex($collection);
         }
 
-        return $index;
+        $index = $this->storage->fetchIndex($collection);
+
+        if ($index instanceof IndexData) {
+            // Build the index if it does not exist
+            return $index;
+        }
+
+        return null;
     }
 }

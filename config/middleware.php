@@ -5,8 +5,10 @@ use Selective\BasePath\BasePathMiddleware;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
+use Slim\Middleware\MethodOverrideMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
 use TotalCMS\Middleware\LiteLicenseMiddleware;
+use TotalCMS\Middleware\PreviewRouteMiddleware;
 
 return function (App $app) {
     $app->addBodyParsingMiddleware();
@@ -17,4 +19,11 @@ return function (App $app) {
     $app->add(BasePathMiddleware::class);
     $app->add(ErrorMiddleware::class);
     $app->add(TrailingSlash::class);
+    $app->add(MethodOverrideMiddleware::class);
+
+    // Stacks internal PHP server
+    $environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+    if ($environment === 'preview') {
+        $app->add(PreviewRouteMiddleware::class);
+    }
 };

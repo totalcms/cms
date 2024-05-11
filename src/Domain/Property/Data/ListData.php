@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use InvalidArgumentException;
-
 /**
  * List type property data.
  */
@@ -14,7 +12,7 @@ class ListData extends PropertyData
     public function __construct(array $list)
     {
         if (!self::verifyList($list)) {
-            throw new InvalidArgumentException('List must be a list');
+            throw new \InvalidArgumentException('List must be a list:' . json_encode($list));
         }
         $this->list = $list;
     }

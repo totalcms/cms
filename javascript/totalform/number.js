@@ -1,7 +1,9 @@
+import TotalField from './totalfield';
+
 //-----------------------------------------------
-// Total CMS Checkbox Field
+// Total CMS Number Field
 //-----------------------------------------------
-class NumberField extends Fieldset {
+export default class NumberField extends TotalField {
 
     getValue() {
         return parseFloat(this.input.value);
@@ -9,9 +11,8 @@ class NumberField extends Fieldset {
 
     schema() {
         return {
-            "type":"number",
-            "fieldset":"number"
+            "type"  : "number",
+            "field" : "number"
         };
     }
-
 }

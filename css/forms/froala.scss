@@ -1,0 +1,60 @@
+//------------------------------
+// Styled Text Field
+//------------------------------
+@import "froala-editor/css/froala_editor.css";
+// @import "froala-editor/css/plugins/char_counter.css";
+@import "froala-editor/css/plugins/code_view.css";
+@import "froala-editor/css/plugins/colors.css";
+@import "froala-editor/css/plugins/draggable.css";
+// @import "froala-editor/css/plugins/emoticons.css";
+@import "froala-editor/css/plugins/file.css";
+@import "froala-editor/css/plugins/files_manager.css";
+@import "froala-editor/css/plugins/fullscreen.css";
+// @import "froala-editor/css/plugins/help.css";
+@import "froala-editor/css/plugins/image.css";
+@import "froala-editor/css/plugins/image_manager.css";
+@import "froala-editor/css/plugins/line_breaker.css";
+// @import "froala-editor/css/plugins/markdown.css";
+@import "froala-editor/css/plugins/quick_insert.css";
+@import "froala-editor/css/plugins/special_characters.css";
+@import "froala-editor/css/plugins/table.css";
+// @import "froala-editor/css/plugins/trim_video.css";
+@import "froala-editor/css/plugins/video.css";
+// @import "froala-editor/css/themes/dark.css";
+// @import "froala-editor/css/themes/gray.css";
+// @import "froala-editor/css/themes/royal.css";
+// @import "froala-editor/css/third_party/embedly.css";
+// @import "froala-editor/css/third_party/font_awesome.css";
+// @import "froala-editor/css/third_party/spell_checker.css";
+// @import "froala-editor/css/third_party/image_tui.css";
+
+
+.CodeMirror-scroll {
+    height:auto;
+}
+.fr-box {
+    width: 100%;
+}
+textarea.fr-code {
+	display       : none;
+	resize        : none;
+	border        : none;
+	box-shadow    : none;
+	padding       : 1.5rem;
+	border-radius : 0;
+}
+.fr-toolbar {
+    border-top-left-radius  : var(--totalform-radius)!important;
+    border-top-right-radius : 0!important;
+}
+.fr-second-toolbar {
+    border-bottom-left-radius  : var(--totalform-radius)!important;
+    border-bottom-right-radius : 0!important;
+}
+.fr-second-toolbar:empty {
+    min-height: 5px !important; // size of radius
+}
+.styledtext-wrapper {
+	width      : 100%;
+	min-height : 100px;
+}

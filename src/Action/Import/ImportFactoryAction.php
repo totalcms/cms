@@ -16,7 +16,7 @@ final class ImportFactoryAction
      * The constructor.
      *
      * @param JsonRenderer $renderer The renderer
-     * @param FactoryImporter $importer factory import service
+     * @param FactoryImporter $importer Factory import service
      */
     public function __construct(JsonRenderer $renderer, FactoryImporter $importer)
     {
@@ -38,6 +38,9 @@ final class ImportFactoryAction
         $quantity   = $request->getQueryParams()['quantity'] ?? 1;
         $defs       = $request->getParsedBody() ?? [];
 
+        if (is_object($defs)) {
+            $defs = (array)$defs;
+        }
         $importCount = $this->importer->import($collection, $quantity, $defs);
 
         return $this->renderer->json($response, ['import_count' => $importCount]);

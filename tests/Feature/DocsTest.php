@@ -3,8 +3,7 @@
 use function Nekofar\Slim\Pest\get;
 
 beforeEach(function (): void {
-    $app = require __DIR__ . '/../../config/bootstrap.php';
-    $this->setUpApp($app);
+    $this->setUpApp(bootstrap());
 });
 
 it('redirects to current version', function (): void {

@@ -1,0 +1,30 @@
+{#--------------------------------#}
+{# Feed Forms                    #}
+{#--------------------------------#}
+{% macro feedForm(collection, args = {}) %}
+	{{ _self.start(collection, {
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
+
+		{{ _self.id('id', { autogen : "${timestamp}-${uuid}", class : "hide" }) }}
+		{{ _self.hidden('created') }}
+		{{ _self.hidden('updated') }}
+
+		{% set options = selectOptions(totalcms.property(collection, "tags")) %}
+
+		<div class="form-columns col-2">
+			<section>
+				{{ _self.text('title') }}
+				{{ _self.styledtext('content') }}
+				{{ _self.list('tags', options) }}
+			</section>
+			<section class="center">
+				{{ _self.image('image') }}
+				{{ _self.toggle('featured', { help:false }) }}
+			</section>
+		</div>
+
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}

@@ -27,9 +27,10 @@ if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
 $settings = [];
 
 // Default env to production
-$settings['env'] = 'prod';
+$settings['env']    = 'prod';
+$settings['locale'] = 'en_US';
 
-$settings['domain'] = 'example.com';
+$settings['domain'] = $_SERVER['HTTP_HOST'];
 $settings['url']    = 'https://' . $settings['domain'];
 $settings['api']    = $settings['url'] . '/api';
 
@@ -64,7 +65,7 @@ $settings['logger'] = [
     'name'        => 'totalcms',
     'path'        => __DIR__ . '/../logs',
     'filename'    => 'totalcms.log',
-    'level'       => \Monolog\Level::Info,
+    'level'       => Monolog\Level::Info,
     'maxFiles'    => 30,
     'permissions' => 0775,
 ];

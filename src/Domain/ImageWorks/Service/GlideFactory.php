@@ -2,28 +2,45 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
-use TotalCMS\Domain\Property\Data\ColorData;
-use TotalCMS\Domain\Storage\StorageAdapterInterface;
-use TotalCMS\Support\Config;
-use TotalCMS\Utils\ColorUtils;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Support\Config;
 
 final class GlideFactory
 {
     private StorageAdapterInterface $filesystem;
     private Config $config;
 
-    public const CACHEDIR    = '.cache';
-    public const COLOR_NAMES = ['main', 'complimentary'];
+    public const CACHEDIR  = '.cache';
+    public const PALETTE   = 'palette';
+    public const IMG_TYPES = ['jpg', 'jpeg', 'pjpg', 'png', 'gif', 'webp', 'avif'];
 
     public function __construct(StorageAdapterInterface $filesystem, Config $config)
     {
         $this->filesystem = $filesystem;
         $this->config     = $config;
+    }
+
+    /**
+     * Get the original image.
+     *
+     * @param string $imagePath
+     *
+     * @return array
+     */
+    public function originalImage(string $imagePath): array
+    {
+        $imageFile = $this->filesystem->readStream($imagePath);
+        $mimeType  = $this->filesystem->mimeType($imagePath);
+
+        return [
+            'stream'   => new Stream($imageFile),
+            'mimeType' => $mimeType ?: 'image/jpeg',
+        ];
     }
 
     /**
@@ -75,7 +92,7 @@ final class GlideFactory
     {
         $newcrop = sprintf('crop-%g-%g', $focalpoint['x'], $focalpoint['y']);
 
-        return str_replace('focalpoint', $newcrop, $crop);
+        return str_replace('crop-focalpoint', $newcrop, $crop);
     }
 
     /**
@@ -86,13 +103,7 @@ final class GlideFactory
      */
     public static function updateBackgroundColor(string $background, array $imageColors): string
     {
-        foreach (self::COLOR_NAMES as $color) {
-            if ($background === $color) {
-                return ColorUtils::colorToHex(new ColorData($imageColors[$color]));
-            }
-        }
-
-        return $background;
+        return self::colorFromPalette($background, $imageColors);
     }
 
     /**
@@ -103,14 +114,21 @@ final class GlideFactory
      */
     public static function updateBorderColor(string $border, array $imageColors): string
     {
-        foreach (self::COLOR_NAMES as $color) {
-            if (str_contains($border, $color)) {
-                $hex = ColorUtils::colorToHex(new ColorData($imageColors[$color]));
+        [$size, $border, $method] = explode(',', $border);
 
-                return str_replace($color, $hex, $border);
-            }
+        $border = self::colorFromPalette($border, $imageColors);
+
+        return implode(',', [$size, $border, $method]);
+    }
+
+    // This method is used to get the color from the palette if the color is a palette color
+    private static function colorFromPalette(string $color, array $imageColors): string
+    {
+        if (str_starts_with($color, self::PALETTE)) {
+            $index = (int)str_replace(self::PALETTE, '', $color);
+            $color = isset($imageColors[$index]) ? $imageColors[$index] : $imageColors[0];
         }
 
-        return $border;
+        return str_replace('#', '', $color);
     }
 }

@@ -1,71 +1,124 @@
-$.FroalaEditor.DEFAULTS.key = "AODOd2HLEBFZOTGHW==";
-$.FroalaEditor.SHORTCUTS_MAP = {
-    69    : { cmd: "show" },
-    66    : { cmd: "bold" },
-    73    : { cmd: "italic" },
-    85    : { cmd: "underline" },
-    221   : { cmd: "indent" },
-    219   : { cmd: "outdent" },
-    90    : { cmd: "undo" },
-    "-90" : { cmd: "redo" }
-};
+import TotalField from "./totalfield.js";
+
+import "codemirror/lib/codemirror.js";
+import "codemirror/mode/xml/xml.js";
+import "codemirror/mode/twig/twig.js";
+import "dompurify/dist/purify.min.js";
+
+import FroalaEditor from "froala-editor";
+import "froala-editor/js/plugins/align.min.js";
+// import "froala-editor/js/plugins/char_counter.min.js";
+import "froala-editor/js/plugins/code_beautifier.min.js";
+import "froala-editor/js/plugins/code_view.min.js";
+import "froala-editor/js/plugins/colors.min.js";
+// import "froala-editor/js/plugins/cryptojs.min.js";
+import "froala-editor/js/plugins/draggable.min.js";
+// import "froala-editor/js/plugins/edit_in_popup.min.js";
+// import "froala-editor/js/plugins/emoticons.min.js";
+import "froala-editor/js/plugins/entities.min.js";
+import "froala-editor/js/plugins/file.min.js";
+import "froala-editor/js/plugins/files_manager.min.js";
+// import "froala-editor/js/plugins/font_family.min.js";
+// import "froala-editor/js/plugins/font_size.min.js";
+// import "froala-editor/js/plugins/forms.min.js";
+import "froala-editor/js/plugins/fullscreen.min.js";
+// import "froala-editor/js/plugins/help.min.js";
+import "froala-editor/js/plugins/image.min.js";
+import "froala-editor/js/plugins/image_manager.min.js";
+import "froala-editor/js/plugins/inline_class.min.js";
+import "froala-editor/js/plugins/inline_style.min.js";
+import "froala-editor/js/plugins/line_breaker.min.js";
+// import "froala-editor/js/plugins/line_height.min.js";
+import "froala-editor/js/plugins/link.min.js";
+import "froala-editor/js/plugins/lists.min.js";
+// import "froala-editor/js/plugins/markdown.min.js";
+import "froala-editor/js/plugins/paragraph_format.min.js";
+import "froala-editor/js/plugins/paragraph_style.min.js";
+// import "froala-editor/js/plugins/print.min.js";
+import "froala-editor/js/plugins/quick_insert.min.js";
+import "froala-editor/js/plugins/quote.min.js";
+// import "froala-editor/js/plugins/save.min.js";
+// import "froala-editor/js/plugins/special_characters.min.js";
+import "froala-editor/js/plugins/table.min.js";
+import "froala-editor/js/plugins/track_changes.min.js";
+import "froala-editor/js/plugins/trim_video.min.js";
+import "froala-editor/js/plugins/url.min.js";
+import "froala-editor/js/plugins/video.min.js";
+// import "froala-editor/js/plugins/word_counter.min.js";
+// import "froala-editor/js/plugins/word_paste.min.js";
+// import "froala-editor/js/third_party/embedly.min.js";
+// import "froala-editor/js/third_party/font_awesome.min.js";
+// import "froala-editor/js/third_party/image_tui.min.js";
+// import "froala-editor/js/third_party/showdown.min.js";
+// import "froala-editor/js/third_party/spell_checker.min.js";
+
+// TODO: how to handle localization for Froala?
+// import "froala-editor/js/languages/de.js";
+// import "froala-editor/js/languages/es.js";
 
 //-----------------------------------------------
 // Total CMS Styled Text Field
 //-----------------------------------------------
-class StyledTextField extends Fieldset {
+export default class StyledTextField extends TotalField {
 
     constructor(container, options) {
         super(container, options);
 
         // get final options... defaultConfig() -> global window.totalcms options -> options from arguments
-        this.options = Object.assign({}, this.defaultConfig(), window.totalcms.getConfig("styledtext"), this.options);
+        this.options = Object.assign({}, this.defaultConfig(), this.options);
 
         this.initFroala();
     }
 
     initFroala() {
-        // jQuery sad panda
-        $(this.input).froalaEditor(this.options)
-        .on("froalaEditor.charCounter.exceeded", (e, editor) => this.charCountExceeded())
-        .on("froalaEditor.image.beforeUpload", (e, editor, images) => this.updateUploadURLs(editor))
-        .on("froalaEditor.file.beforeUpload",  (e, editor, files)  => this.updateUploadURLs(editor))
-        .on("froalaEditor.video.beforeUpload", (e, editor, videos) => this.updateUploadURLs(editor));
+		this.froala = new FroalaEditor(this.input, {
+			key         : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
+			attribution : false,
+			heightMin   : 200,
+			heightMax   : 800,
+			toolbarButtons: ['bold', 'italic', 'html'],
+			events: {
+				'contentChanged': () => this.changed()
+			}
+		});
+        // .on("froalaEditor.charCounter.exceeded", (e, editor) => this.charCountExceeded())
+        // .on("froalaEditor.image.beforeUpload", (e, editor, images) => this.updateUploadURLs(editor))
+        // .on("froalaEditor.file.beforeUpload",  (e, editor, files)  => this.updateUploadURLs(editor))
+        // .on("froalaEditor.video.beforeUpload", (e, editor, videos) => this.updateUploadURLs(editor));
     }
 
     setValue(value) {
         this.input.value = value;
-        $(this.input).froalaEditor("html.set", value);
+		this.froala.html.set(value);
+		this.changed();
     }
 
     getValue() {
-        return $(this.input).froalaEditor("html.get");
+        return this.froala.html.get();
     }
 
     uploadAPI(type) {
-        if (!this.form) return null;
-        const collection = this.form.collection;
-        const id         = this.form.id;
-        const field      = this.input.name;
-        return this.api.buildUrlQuery(`/upload/${collection}/${id}/${field}/${type}`);
+        // if (!this.form) return null;
+        // const collection = this.form.collection;
+        // const id         = this.form.id;
+        // const field      = this.input.name;
+        // return this.api.buildUrlQuery(`/upload/${collection}/${id}/${field}/${type}`);
     }
 
     updateUploadURLs(editor) {
         // Cannot upload unless the form has an ID set
-        if (!this.form.id) {
-            console.warn("Unable to upload. Could not find object ID.");
-            return false;
-        }
+        // if (!this.form.id) {
+        //     console.warn("Unable to upload. Could not find object ID.");
+        //     return false;
+        // }
         // Update the Froala upload URL
-        editor.opts.imageUploadURL = this.uploadAPI("image");
-        editor.opts.fileUploadURL  = this.uploadAPI("file");
-        editor.opts.videoUploadURL = this.uploadAPI("video");
-        // $(editor).data("froala.editor").opts.fileUploadURL = this.uploadAPI("file");
+        // editor.opts.imageUploadURL = this.uploadAPI("image");
+        // editor.opts.fileUploadURL  = this.uploadAPI("file");
+        // editor.opts.videoUploadURL = this.uploadAPI("video");
     }
 
     charCountExceeded() {
-        //! convert to native JS... lazy asshole
-        $(this.input).closest("fieldset").find(".fr-counter").addClass("exceeded");
+        // $(this.input).closest("fieldset").find(".fr-counter").addClass("exceeded");
     }
 
     defaultConfig() {
@@ -175,7 +228,7 @@ class StyledTextField extends Fieldset {
             quickInsertButtons     : false,
             quickInsertTags        : quickInsertTags,
             paragraphFormat        : paragraphFormat,
-            enter                  : $.FroalaEditor.ENTER_P,
+            enter                  : FroalaEditor.ENTER_P,
             htmlRemoveTags         : ["script"],
             heightMax              : 1000,
             height                 : height
@@ -184,8 +237,8 @@ class StyledTextField extends Fieldset {
 
     schema() {
         return {
-            "type"     : "string",
-            "fieldset" : "styledtext"
+            "type"  : "string",
+            "field" : "styledtext"
         };
     }
 }

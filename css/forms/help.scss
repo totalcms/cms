@@ -1,0 +1,175 @@
+//------------------------------
+// Default Help Text
+//------------------------------
+.help {
+	width               : max-content;
+	margin-top          : 0.5rem;
+	max-width           : 100%;
+	padding             : 0 1.1rem;
+	font-size           : var(--totalform-help-size);
+	font-style          : italic;
+	pointer-events      : none;
+	background-repeat   : no-repeat;
+	background-size     : 1rem;
+	background-position : 0 1px;
+	background-image    : var(--icon-help);
+	color               : oklch(var(--totalform-help-color));
+}
+
+.check-field .help {
+	flex-basis: 100%;
+}
+
+//------------------------------
+// Help Box - Bottom Right Tooltip
+//------------------------------
+.help-box {
+
+    &.help-on-focus {
+        :focus,
+        :focus + .form-group-icon {
+            border-bottom-right-radius: 0;
+        }
+        &:has(:focus) .help {
+			opacity      : 1;
+			box-shadow   : 0 1px 2px oklch(var(--totalform-shadow));
+			border-color : oklch(var(--totalform-border-color));
+    	}
+    }
+    &.help-on-hover .form-field:hover {
+        input,
+        .form-group-icon {
+            border-bottom-right-radius: 0;
+        }
+		.help {
+			opacity : 1;
+		}
+    }
+    .help {
+        max-width           : clamp(100px, 50ch, 85%);
+        position            : absolute;
+        bottom              : 0;
+        right               : 0;
+        z-index             : 10;
+        margin              : 0;
+        border              : 1px solid oklch(var(--totalform-border-color));
+        padding             : 0.625rem 1.625rem;
+        border-radius       : 2px 0 var(--totalform-radius) var(--totalform-radius);
+        transform           : translateY(calc(100% - 1px));
+        background-color    : oklch(var(--totalform-nearwhite));
+        background-position : 0.5rem 0.6875rem;
+        transition: box-shadow .5s, border-color .25s ease-in-out;
+    }
+}
+
+//------------------------------
+// Help Label Overlay
+//------------------------------
+.help-label {
+    .form-field:not(.check-field):not(.radio-field) .help {
+		line-height         : 1.8;
+		margin              : 0;
+		position            : absolute;
+		top                 : 0;
+		left                : 0;
+		right               : 0;
+		z-index             : 10;
+		overflow            : hidden;
+		white-space         : nowrap;
+		text-overflow       : ellipsis;
+		background-position : left;
+		opacity             : 0;
+		width               : 100%;
+    }
+	.image-field > .help {
+		text-align: center;
+	}
+}
+
+//------------------------------
+// Help Tooltip
+//------------------------------
+.help-tooltip {
+    label::after {
+        content             : " ";
+        display             : inline-block;
+        width               : 1.5rem;
+        height              : 1.5rem;
+        color               : oklch(var(--totalform-mediumgray));
+        background-color    : transparent;
+        background-repeat   : no-repeat;
+        background-size     : 1rem;
+        background-position : center;
+        background-image    : var(--icon-help);
+        appearance          : none;
+        border              : none;
+        vertical-align      : bottom;
+    }
+
+    .help {
+		position         : absolute;
+		max-width        : clamp(200px, 50ch, 85vw);
+		margin           : 0;
+		background-color : oklch(var(--totalform-nearblack));
+		color            : oklch(var(--totalform-nearwhite));
+		padding          : 10px;
+		border-radius    : var(--totalform-radius);
+		top              : 0;
+		left             : 0;
+		background-image : none;
+		translate        : 0 calc(-100% + 0rem);
+
+        &:after {
+            content      : " ";
+            position     : absolute;
+            top          : 100%;
+            left         : 5%;
+            margin-left  : 0px;
+            border-width : 5px;
+            border-style : solid;
+            border-color : oklch(var(--totalform-nearblack)) transparent transparent transparent;
+        }
+    }
+}
+
+//------------------------------
+// Help Animations
+//------------------------------
+.help-on-focus,
+.help-on-hover {
+    .help {
+        opacity: 0;
+        transition: opacity var(--help-animation-timing);
+    }
+}
+
+.help-label .form-field:not(.check-field):not(.radio-field) > label {
+    transition: opacity var(--help-animation-timing);
+}
+
+.help-on-focus .form-field:has(input:focus) .help,
+.help-on-hover .form-field:hover .help {
+    opacity: 1;
+}
+
+.help-on-hover .form-field:hover .help,
+.help-on-focus .form-field:has(input:focus) .help {
+    opacity: 1!important;
+}
+
+.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):has(input:focus) > label,
+.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):hover > label {
+    opacity: 0;
+}
+
+.image-edit-dialog {
+	label {
+		opacity : 1!important;
+	}
+	.help {
+		opacity    : 1!important;
+		position   : relative !important;
+		margin-top : -0.5rem!important;
+	}
+}
+

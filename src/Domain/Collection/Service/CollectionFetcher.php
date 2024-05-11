@@ -11,12 +11,10 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 final class CollectionFetcher
 {
     private CollectionRepository $storage;
-    // private CollectionSaver $saver;
 
     public function __construct(CollectionRepository $storage)
     {
         $this->storage = $storage;
-        // $this->saver   = $saver;
     }
 
     /**
@@ -26,16 +24,27 @@ final class CollectionFetcher
      *
      * @return CollectionData
      */
-    public function fetchCollection(string $collectionId): CollectionData
+    public function fetchCollection(string $collectionId): ?CollectionData
     {
-        try {
+        if ($this->collectionExists($collectionId)) {
             $collection = $this->storage->getCollection($collectionId);
-        } catch (\DomainException $de) {
-            // If the collection is not found, try to create it
-            $this->storage->saveReservedCollection($collectionId);
-            $collection = $this->storage->getCollection($collectionId);
+
+            return $collection;
         }
 
-        return $collection;
+        if ($this->storage->isReservedCollection($collectionId)) {
+            // If the collection is not found or invalid, try to create it
+            $this->storage->saveReservedCollection($collectionId);
+            $collection = $this->storage->getCollection($collectionId);
+
+            return $collection;
+        }
+
+        return null;
+    }
+
+    public function collectionExists(string $collectionId): bool
+    {
+        return $this->storage->collectionExists($collectionId);
     }
 }

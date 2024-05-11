@@ -15,9 +15,8 @@ return function (App $app) {
         // Collection
         $group->post('', Collection\CollectionSaveAction::class)->setName('collection-save');
         $group->get('/{collection}', Collection\CollectionFetchAction::class)->setName('collection-fetch');
-        $group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-udpate');
-        // !!! Delete collection could be dangerous, maybe we should not implement it.
-        // $group->delete('/{collection}', Collection\CollectionDeleteAction::class)->setName('collection-delete');
+        $group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
+        $group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
 
         // Collection Schema
         $group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
@@ -27,19 +26,19 @@ return function (App $app) {
         $group->put('/{collection}/index', Collection\Index\IndexBuildAction::class)->setName('collection-reindex');
 
         // Objects
-        // TODO: Add a clone query parameter to the object-save action to allow cloning an object.
-        // TODO: Also add ability to clone into a different collection.
         $group->post('/{collection}', Action\Object\ObjectSaveAction::class)->setName('object-save');
         $group->get('/{collection}/{id}', Action\Object\ObjectFetchAction::class)->setName('object-fetch');
         $group->delete('/{collection}/{id}', Action\Object\ObjectDeleteAction::class)->setName('object-delete');
         $group->put('/{collection}/{id}', Action\Object\ObjectUpdateAction::class)->setName('object-update');
-        // TODO: Add a patch action to allow partial updates.
-        // $group->patch('/{collection}/{id}', Action\Object\ObjectUpdateAction::class)->setName('object-update');
+        $group->patch('/{collection}/{id}', Action\Object\ObjectPatchAction::class)->setName('object-patch');
+        $group->post('/{collection}/{id}/clone', Action\Object\ObjectCloneAction::class)->setName('object-clone');
         $group->map(['HEAD'], '/{collection}/{id}', Action\Object\ObjectExistsAction::class)->setName('object-exists');
 
         // Object Property
-        // $group->put('/{collection}/{id}/{property}', Property\PropertyUpdateAction::class)->setName('property-update');
-        // $group->delete('/{collection}/{id}/{property}', Property\PropertyClearAction::class)->setName('property-clear');
+        $group->put('/{collection}/{id}/{property}', Action\Object\ObjectUpdatePropertyAction::class)->setName('property-update');
+        $group->patch('/{collection}/{id}/{property}', Action\Object\ObjectPatchPropertyAction::class)->setName('property-patch');
+        $group->delete('/{collection}/{id}/{property}', Action\Object\ObjectDeletePropertyAction::class)->setName('property-delete');
+        $group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
 
         // Property File
         $group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save');

@@ -1,6 +1,9 @@
 //-----------------------------------------------
 // Total CMS Array Droplet for Gallery and Depot
 //-----------------------------------------------
+
+// https://sortablejs.github.io/Sortable/
+
 class ArrayDroplet extends Droplet {
 
     constructor(container, options) {

@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Action\Template;
 
-use TotalCMS\Domain\Template\Service\TemplateFetcher;
-use TotalCMS\Renderer\RawRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Service\TemplateFetcher;
+use TotalCMS\Renderer\RawRenderer;
 
 final class TemplateFetchAction
 {

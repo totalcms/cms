@@ -2,23 +2,22 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use UnexpectedValueException;
-
 /**
  * String type property data.
  */
 class FileData extends PropertyData
 {
-    public ListData     $tags;
+    public ListData $tags;
     public PasswordData $password;
-    public DateData     $uploadDate;
-    public bool         $protected;
-    public string       $mime;
-    public string       $label;
-    public string       $name;
-    public string       $comments;
-    public int          $size;
+    public DateData $uploadDate;
+    public bool $protected;
+    public string $mime;
+    public string $label;
+    public string $name;
+    public string $comments;
+    public int $size;
 
+    // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function __construct(array $file = [])
     {
         $this->protected = $file['protected'] ?? false;
@@ -34,7 +33,7 @@ class FileData extends PropertyData
         $this->uploadDate = new DateData($uploadDate);
 
         if ($this->protected && empty($this->password->hash)) {
-            throw new UnexpectedValueException('Password is required for protected file');
+            throw new \UnexpectedValueException('Password is required for protected file');
         }
     }
 

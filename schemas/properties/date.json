@@ -1,10 +1,17 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "format": "date-time",
-  "$id": "https://www.totalcms.co/schemas/properties/date.json",
-  "examples": [
-    "2018-08-02T08:59:28+00:00"
-  ],
-  "description": "Date string stored in ISO8601 formated datetime",
-  "type": "string"
+	"$id": "https://www.totalcms.co/schemas/properties/date.json",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"anyOf": [
+		{
+			"examples": [
+				"2018-08-02T08:59:28+00:00"
+			],
+			"description": "Date string stored in ISO8601 formatted datetime",
+			"type": "string",
+    		"format": "date-time"
+		},
+		{
+			"$ref" : "https://www.totalcms.co/schemas/properties/empty.json"
+		}
+	]
 }

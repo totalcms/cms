@@ -28,11 +28,8 @@ final class SchemaListAction
      *
      * @return ResponseInterface the response
      */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
         $params = $request->getQueryParams();
         $filter = $params['filter'] ?? 'all';
 

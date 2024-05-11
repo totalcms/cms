@@ -1,0 +1,32 @@
+//--------------------------------
+// Details Styles
+//--------------------------------
+details.cms-accordion {
+	padding       : 1rem 1rem 0;
+	margin-bottom : 1rem;
+	transition    : height 0.5s ease-in-out;
+
+	summary {
+		border-radius    : var(--totalform-radius);
+		border           : 1px solid oklch(25% 0 0 / 0.5);
+		font-weight      : bold;
+		font-size        : 1.2rem;
+		margin           : -1rem -1rem 0;
+		padding          : 1rem;
+		background-color : oklch(var(--totalform-nearwhite));
+		cursor           : pointer;
+
+		// &::marker {
+		// 	content : "▶";
+		// }
+	}
+
+	&[open] {
+		padding : 1rem;
+
+		summary {
+			margin-bottom : 1rem;
+		}
+	}
+}
+

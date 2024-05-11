@@ -1,0 +1,23 @@
+{#--------------------------------
+  Number Macro
+--------------------------------#}
+{% macro number(property, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "number",
+		type  : "number",
+	}) %}
+    {{ _self.input(property, args) }}
+{% endmacro %}
+
+{% macro numberForm(id, args = {}, collection = "number") %}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.number('number', args) }}
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}

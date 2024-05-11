@@ -6,7 +6,11 @@ parameters:
   paths:
     - src
     - config
-    - tests
+  excludePaths:
+    analyse:
+      - tests
+    analyseAndScan:
+      - tests
   ignoreErrors:
     - message: '#Trying to invoke#'
       path: config

@@ -1,0 +1,310 @@
+{#--------------------------------#}
+{# Image Form                     #}
+{#--------------------------------#}
+{% macro imageForm(id, args = {}, collection = "image") %}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+	}) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.image('image', args) }}
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}
+
+{#--------------------------------#}
+{# Image Field                     #}
+{#--------------------------------#}
+{% macro image(property, args = {}) %}
+	{# -- Begin Boilerplate -- #}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(totalcms.getData("collection")) %}
+    {% set object     = args.object|default(totalcms.getData("object")) %}
+
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "image",
+		type  : "image",
+		icon  : false,
+	}) %}
+
+    {# Example Rules Options
+		options: {
+			rules : {
+				orientation : "landscape",
+				size        : {min:0,   max:3000},
+				height      : {min:500, max:1000},
+				width       : {min:0,   max:1000},
+				count	    : { max:5 },
+			}
+		}
+	#}
+	{% set imageData  = attribute(object, property) %}
+
+
+    {{ _self.fieldstart("image", uuid, args) }}
+
+		<input type="hidden" name="{{ property }}" />
+
+		<div class="dz-overlay dz-clickable"></div>
+
+		<div class="total-preview {% if imageData.featured %}featured{% endif %}">
+			{{ _self.imagePreview(object.id, collection, property) }}
+		</div>
+
+		{{ _self.imageDialog(object.id, collection, property, imageData) }}
+		{{ _self.linkDialog(object.id, collection, property) }}
+
+		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, collection, property) }}</template>
+
+    {{ _self.fieldend(uuid, args) }}
+
+{% endmacro %}
+
+{% macro imagePreview(id, collection, property) %}
+	{# This must only have one div wrapper or else preview JS will break #}
+	<div class="dz-preview dz-file-preview not-found">
+		<div class="actionbar">
+			<button type="button" class="edit"     title="Edit Image Info"></button>
+			<button type="button" class="links"    title="Image URL"></button>
+			<button type="button" class="featured" title="Toggle Featured"></button>
+			<button type="button" class="download" title="Download Original Image"></button>
+			<button type="button" class="move"     title="Reorder Image"></button>
+			<button type="button" class="upload dz-clickable" title="Upload New Image"></button>
+			<button type="button" class="clear"    title="Clear Cache"></button>
+			<button type="button" class="trash"    title="Delete Image"></button>
+		</div>
+		<img src="{{ totalcms.image(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<div class="dz-progress">
+			<span class="dz-upload" data-dz-uploadprogress></span>
+			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
+			<div class="dz-status"></div>
+		</div>
+	</div>
+{% endmacro %}
+
+{% macro linkDialog(id, collection, property) %}
+
+	<dialog class="cms-modal image-link-dialog">
+		{% set join = '?' in totalcms.api ? '&' : '?' %}
+		<iframe style="width:100%;height:100%" data-src="{{totalcms.api}}/admin/imageworks{{join}}id={{id}}&collection={{collection}}&property={{property}}" frameborder="0"></iframe>
+	</dialog>
+
+{% endmacro %}
+
+
+{% macro imageDialog(id, collection, property, imageData) %}
+
+	<dialog class="cms-modal split-view image-edit-dialog">
+
+		<section class="image-preview">
+			<img src="{{ totalcms.image(id,{w:600,h:400}, collection, property) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<div class="focal-point" style="top:{{ imageData.focalpoint.y }}%;left:{{ imageData.focalpoint.x }}%"></div>
+		</section>
+
+		<section class="scroller">
+			<details class="cms-accordion">
+				<summary>Info</summary>
+				{{ _self.checkbox("featured", {
+					label : "Featured",
+					help  : "Mark this image as featured.",
+					value : imageData.featured,
+				}) }}
+				{{ _self.input("alt", {
+					label       : "Alt Text",
+					help        : "Alt text is used by screen readers and search engines to describe the image.",
+					placeholder : "Enter Alt Text",
+					value       : imageData.alt,
+				}) }}
+				{{ _self.url("link", {
+					label       : "Link",
+					help        : "Enter a URL to link the image to.",
+					placeholder : "https://example.com",
+					value       : imageData.link,
+				}) }}
+				{{ _self.list("tags", [], {
+					label       : "Tags",
+					help        : "Add tags to help organize your images.",
+					placeholder : "Add Tags",
+					value       : imageData.tags,
+				}) }}
+			</details>
+
+			<details class="cms-accordion">
+				<summary>Focal Point</summary>
+				{{ _self.rangeslider("focalpoint-x", {
+					label       : "Focal Point X",
+					help        : "Set the horizontal focal point coordinate of the image.",
+					value       : imageData.focalpoint.x,
+				}) }}
+				{{ _self.rangeslider("focalpoint-y", {
+					label       : "Focal Point Y",
+					help        : "Set the vertical focal point coordinate of the image.",
+					value       : imageData.focalpoint.y,
+				}) }}
+			</details>
+
+			<details class="cms-accordion">
+				<summary>EXIF - Info</summary>
+				{{ _self.datetime("exif-date", {
+					label : "Date",
+					value : imageData.exif.date,
+				}) }}
+				{{ _self.input("exif-title", {
+					label       : "Title",
+					placeholder : "No Title Found",
+					value       : imageData.exif.title,
+				}) }}
+				{{ _self.input("exif-author", {
+					label       : "Author",
+					placeholder : "No Autor Found",
+					class       : "icon-user",
+					value       : imageData.exif.author,
+				}) }}
+				{{ _self.input("exif-copyright", {
+					label       : "Copyright",
+					placeholder : "No Copyright Found",
+					class       : "icon-copyright",
+					value       : imageData.exif.copyright,
+				}) }}
+				{{ _self.textarea("exif-description", {
+					label       : "Description",
+					placeholder : "No Description Found",
+					value       : imageData.exif.description,
+					rows        : 3,
+				}) }}
+			</details>
+
+			<details class="cms-accordion">
+				<summary>EXIF - Camera</summary>
+				{{ _self.input("exif-make", {
+					label       : "Make",
+					class       : "icon-camera",
+					placeholder : "Camera Make Not Found",
+					value       : imageData.exif.make,
+				}) }}
+				{{ _self.input("exif-camera", {
+					label       : "Model",
+					placeholder : "Camera Model Not Found",
+					class       : "icon-camera",
+					value       : imageData.exif.camera,
+				}) }}
+				{{ _self.input("exif-lens", {
+					label       : "Lens",
+					placeholder : "Lens Not Found",
+					class       : "icon-camera",
+					value       : imageData.exif.lens,
+				}) }}
+				{{ _self.number("exif-focalLength", {
+					label       : "Focal Length",
+					placeholder : "Focal Length Not Found",
+					class       : "icon-shutter",
+					value       : imageData.exif.focalLength,
+				}) }}
+				{{ _self.number("exif-aperture", {
+					label       : "Aperture",
+					placeholder : "Aperture Not Found",
+					class       : "icon-shutter",
+					value       : imageData.exif.aperture,
+				}) }}
+				{{ _self.number("exif-iso", {
+					label       : "ISO",
+					placeholder : "ISO Not Found",
+					class       : "icon-shutter",
+					value       : imageData.exif.iso,
+				}) }}
+				{{ _self.input("exif-shutterSpeed", {
+					label       : "Shutter Speed",
+					placeholder : "Shutter Speed Not Found",
+					class       : "icon-shutter",
+					value       : imageData.exif.shutterSpeed,
+				}) }}
+			</details>
+
+			<details class="cms-accordion">
+				<summary>EXIF - GPS</summary>
+				{{ _self.number("exif-longitude", {
+					label       : "Longitude",
+					class       : "icon-gps",
+					placeholder : "Longitude Not Found",
+					value       : imageData.exif.longitude,
+				}) }}
+				{{ _self.number("exif-latitude", {
+					label       : "Latitude",
+					class       : "icon-gps",
+					placeholder : "Latitude Not Found",
+					value       : imageData.exif.latitude,
+				}) }}
+				{{ _self.number("exif-altitude", {
+					label       : "Altitude",
+					class       : "icon-gps",
+					placeholder : "Altitude Not Found",
+					value       : imageData.exif.altitude,
+				}) }}
+			</details>
+
+			<details class="cms-accordion">
+				<summary>Color Palette</summary>
+				<div class="palette">
+				{{ _self.color("palette-0", { value : imageData.palette[0] }) }}
+				{{ _self.color("palette-1", { value : imageData.palette[1] }) }}
+				{{ _self.color("palette-2", { value : imageData.palette[2] }) }}
+				{{ _self.color("palette-3", { value : imageData.palette[3] }) }}
+				{{ _self.color("palette-4", { value : imageData.palette[4] }) }}
+				</div>
+			</details>
+
+			<details class="cms-accordion">
+				<summary>Meta (Readonly)</summary>
+				{{ _self.number("height", {
+					label    : "Height",
+					icon     : false,
+					readonly : true,
+					value    : imageData.height,
+				}) }}
+				{{ _self.number("width", {
+					label    : "Width",
+					icon     : false,
+					readonly : true,
+					value    : imageData.width,
+				}) }}
+				{{ _self.number("size", {
+					label    : "Size",
+					icon     : false,
+					readonly : true,
+					value    : imageData.size,
+				}) }}
+				{{ _self.input("name", {
+					label    : "Filename",
+					icon     : false,
+					readonly : true,
+					value    : imageData.name,
+				}) }}
+				{{ _self.input("mime", {
+					label    : "MIME Type",
+					icon     : false,
+					readonly : true,
+					value    : imageData.mime,
+				}) }}
+				{{ _self.datetime("uploadDate", {
+					label    : "Upload Date",
+					icon     : false,
+					readonly : true,
+					value    : imageData.uploadDate,
+				}) }}
+			</details>
+
+		</section>
+
+		<section>
+			<button type="button" class="cms-save close button btn">Save</button>
+			<button type="button" class="close button btn">Close</button>
+		</section>
+
+	</dialog>
+
+{% endmacro %}

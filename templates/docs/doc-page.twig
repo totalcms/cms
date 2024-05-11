@@ -1,0 +1,78 @@
+{% set menu = [ {
+	"title": "API",
+	"sub": [
+		{ "title": "REST API", 				  	"path": "/rest-api" },
+		{ "title": "OpenAPI Docs <em>↗</em>", 	"path": "/api", "target": "_blank" },
+		{ "title": "PHP API", 					"path": "/php-api" },
+		{ "title": "Import", 					"path": "/import" },
+		{ "title": "Download", 					"path": "/download" }
+	]
+},{
+	"title": "Twig Templates",
+	"sub": [
+		{ "title": "Overview", 			"path": "/twig-overview" },
+		{ "title": "Forms",    			"path": "/twig-forms" },
+		{ "title": "Total CMS Content", "path": "/twig-totalcms" },
+		{ "title": "Filters", 			"path": "/twig-filters" },
+		{ "title": "Functions", 		"path": "/twig-functions" },
+		{ "title": "GET Params", 		"path": "/twig-get-params" },
+		{ "title": "POST Params", 		"path": "/twig-post-params" },
+		{ "title": "Factory", 			"path": "/twig-factory" }
+	]
+},{
+	"title": "Behind the Scenes",
+	"sub": [
+		{ "title": "Configuration", "path": "/configuration" },
+		{ "title": "Filesystem", 	"path": "/filesystem" },
+		{ "title": "Licenses", 		"path": "/licenses" },
+		{ "title": "Data Model", 	"path": "/data-model" },
+	]
+}] %}
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex, nofollow">
+	<title>{{title}}</title>
+	<link rel="stylesheet" href="{{ totalcms.api }}/assets/docs.css">
+</head>
+
+<body>
+
+	<header>
+		<h1>Total CMS 3 Docs</h1>
+	</header>
+
+	<div class="page-layout">
+		<aside class="main-nav">
+			<nav><ul class="menu">
+
+				{% set docs = totalcms.api ~ "/docs" %}
+
+				<li><a href="{{docs}}">Home</a></li>
+				{% for item in menu %}
+					<li>{{ item.title }}
+						<ul>
+							{% for sub in item.sub %}
+							<li><a href="{{ docs }}{{ sub.path }}" {% if sub.target is defined %}target="{{ sub.target }}"{% endif %}>{{ sub.title|raw }}</a></li>
+							{% endfor %}
+						</ul>
+					</li>
+				{% endfor %}
+			</ul></nav>
+		</aside>
+
+		<main>
+			{{ content|raw }}
+		</main>
+
+		<aside class="onpage-nav">
+
+		</aside>
+	</div>
+
+</body>
+
+</html>

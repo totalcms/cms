@@ -2,12 +2,11 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use Psr\Http\Message\ResponseInterface;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Utils\PathUtils;
-use Psr\Http\Message\ResponseInterface;
-use UnexpectedValueException;
 
 final class GalleryImageGenerator
 {
@@ -29,7 +28,7 @@ final class GalleryImageGenerator
      * @param string $filename
      * @param array  $params
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return ResponseInterface
      */
@@ -38,14 +37,14 @@ final class GalleryImageGenerator
         $galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
         if (!$galleryData instanceof GalleryData) {
-            throw new UnexpectedValueException('Invalid gallery property found');
+            throw new \UnexpectedValueException('Invalid gallery property found');
         }
 
         $imageData = array_filter($galleryData->images, fn ($image) => $image['name'] === $filename)[0];
         $imageData = new ImageData($imageData);
 
         if (!$imageData instanceof ImageData) {
-            throw new UnexpectedValueException('Invalid image property found in gallery');
+            throw new \UnexpectedValueException('Invalid image property found in gallery');
         }
 
         $glide = $this->glideFactory->create(
@@ -54,16 +53,30 @@ final class GalleryImageGenerator
 
         // Integrate Image data into params
 
+        // Make sure that the requested width and height are not larger than the original image
+        if (isset($params['w']) && $params['w'] > $imageData->width) {
+            $params['w'] = $imageData->width;
+        }
+
+        if (isset($params['h']) && $params['h'] > $imageData->height) {
+            $params['h'] = $imageData->height;
+        }
+
         if (isset($params['fit'])) {
             $params['fit'] = GlideFactory::cropFocalpoint($params['fit'], $imageData->focalpoint);
         }
 
+        // Integrate palette colors
         if (isset($params['bg'])) {
-            $params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->color);
+            $params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->palette);
         }
 
         if (isset($params['border'])) {
-            $params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->color);
+            $params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->palette);
+        }
+
+        if (isset($params['cache'])) {
+            unset($params['cache']);
         }
 
         $response = $glide->getImageResponse($imageData->name, $params);

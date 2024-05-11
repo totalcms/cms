@@ -1,7 +1,9 @@
+import TotalField from './totalfield';
+
 //-----------------------------------------------
 // Total CMS Checkbox Field
 //-----------------------------------------------
-class Checkbox extends Fieldset {
+export default class Checkbox extends TotalField {
 
     setValue(value) {
         this.input.checked = (value === true||value === "true"||value === 1);
@@ -12,11 +14,14 @@ class Checkbox extends Fieldset {
         return this.input.checked;
     }
 
+	clearValue() {
+		this.setValue(false);
+	}
+
     schema() {
         return {
             "type":"boolean",
             "fieldset":"checkbox"
         };
     }
-
 }

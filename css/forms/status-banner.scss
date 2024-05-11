@@ -1,0 +1,91 @@
+#totalcms-status-banner {
+	position         : fixed;
+	top              : 0;
+	left             : 0;
+	width            : 100vw;
+	height           : var(--totalform-status-banner-height);
+	min-height       : 150px;
+	opacity          : 0;
+	transition       : all 500ms ease-in-out, opacity 500ms linear;
+	z-index          : 999999;
+	pointer-events   : none;
+	background-color : transparent;
+	backdrop-filter  : blur(5px);
+
+    &:after {
+		content            : "";
+		background-color   : oklch(var(--totalform-white));
+		-webkit-mask-image : var(--icon-blank);
+		mask-image         : var(--icon-blank);
+		position           : absolute;
+		display            : block;
+		top                : 50%;
+		left               : 50%;
+		height             : 50%;
+		aspect-ratio       : 1/1;
+		max-height         : 200px;
+		max-width          : 200px;
+		translate          : -50% -50%;
+		opacity            : 0;
+		transition         : all 500ms ease-in-out, opacity 500ms linear;
+		scale              : 0.6;
+    }
+
+    &.processing,&.success,&.error{
+        opacity : 1;
+    }
+    &.processing {
+		background-color : oklch(var(--totalform-blue) / 0.8);
+
+        &:after {
+			animation          : totalform-spin 2.5s linear infinite;
+			-webkit-mask-image : var(--icon-processing);
+			mask-image         : var(--icon-processing);
+			opacity            : 1;
+			scale              : 1;
+        }
+    }
+    &.success {
+        background-color : oklch(var(--totalform-success) / 0.8);
+
+        &:after {
+			-webkit-mask-image : var(--icon-success);
+			mask-image         : var(--icon-success);
+            opacity : 1;
+            scale   : 1.2;
+        }
+    }
+    &.error {
+		background-color  : oklch(var(--totalform-error) / 0.8);
+		pointer-events    : auto;
+
+        &:after {
+			-webkit-mask-image : var(--icon-error);
+			mask-image         : var(--icon-error);
+            opacity : 1;
+            scale   : 1.2;
+        }
+
+		&:before {
+			content    : "An error occurred. See the CMS logs for more details.";
+			position   : absolute;
+			display    : block;
+			bottom     : 1rem;
+			left       : 0;
+			width      : 100%;
+			font-size  : 1.2rem;
+			text-align : center;
+			color      : oklch(var(--totalform-white));
+			transition : all 500ms ease-in-out;
+		}
+    }
+}
+
+@keyframes totalform-spin {
+	0% {
+		rotate : 0deg;
+	}
+	100% {
+		rotate : 360deg;
+	}
+}

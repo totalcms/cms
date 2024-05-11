@@ -1,25 +1,33 @@
-class DropletTestSet {
+
+export default class DropletTestSet {
 
     // const testset = new DropletTestSet({
     //     height:{min:500,max:1000 },
     //     width:{min:500,max:1000},
     //     size:{min:0,max:1000},
+    //     count:{max:10},
     //     orientation:'landscape',
     //     orientation:'4:3', // width:height ratio
+	// 	   filetype:['image/jpeg'],
+	//     filename:['image.jpg'],
     // });
 
     constructor() {
         // Grabbing these from the global variable is not the best but will work for now
+		// TODO : Need to localize these strings
         this.errorStrings = {
-            imgLandscape: window.totalcms.options.localizeStrings.imgLandscape||"imgLandscape error",
-            imgPortrait : window.totalcms.options.localizeStrings.imgPortrait||"imgPortrait error",
-            imgSquare   : window.totalcms.options.localizeStrings.imgSquare||"imgSquare error",
-            imgRatio    : window.totalcms.options.localizeStrings.imgRatio||"imgRatio error",
-            imgMaxSize  : window.totalcms.options.localizeStrings.imgMaxSize||"imgMaxSize error",
-            imgMinWidth : window.totalcms.options.localizeStrings.imgMinWidth||"imgMinWidth error",
-            imgMaxWidth : window.totalcms.options.localizeStrings.imgMaxWidth||"imgMaxWidth error",
-            imgMinHeight: window.totalcms.options.localizeStrings.imgMinHeight||"imgMinHeight error",
-            imgMaxHeight: window.totalcms.options.localizeStrings.imgMaxHeight||"imgMaxHeight error"
+            imgLandscape : "imgLandscape error",
+            imgPortrait  : "imgPortrait error",
+            imgSquare    : "imgSquare error",
+            imgRatio     : "imgRatio error",
+            imgMaxSize   : "imgMaxSize error",
+            imgMinWidth  : "imgMinWidth error",
+            imgMaxWidth  : "imgMaxWidth error",
+            imgMinHeight : "imgMinHeight error",
+            imgMaxHeight : "imgMaxHeight error",
+            countMax     : "countMax error",
+            filetype     : "filetype error",
+			filename     : "filename error",
         };
         this.rules = arguments[0]||{};
         this.pass = true;
@@ -31,7 +39,7 @@ class DropletTestSet {
         return this.errors.join(". ");
     }
 
-    processRules(file) {
+    processRules(file, count) {
         if (this.rules.height) {
             this.rules.height.maxError = this.errorStrings.imgMaxHeight;
             this.rules.height.minError = this.errorStrings.imgMinHeight;
@@ -47,12 +55,33 @@ class DropletTestSet {
             this.rules.size.minError = this.errorStrings.imgMaxSize;
             this.minMax(file.size/1024 ,this.rules.size);
         }
+        if (this.rules.count) {
+            this.rules.size.maxError = this.errorStrings.countMax;
+			this.rules.count.min = 0;
+            this.minMax(count ,this.rules.count);
+        }
         if (this.rules.orientation) {
             this.orientation(this.rules.orientation,file.width,file.height);
+        }
+        if (this.rules.filetype) {
+            this.patternMatch(this.rules.filetype, file.type);
+        }
+        if (this.rules.filename) {
+            this.patternMatch(this.rules.filename, file.name);
         }
         return this.pass;
     }
 
+	patternMatch(rules, value) {
+		for (const rule of rules) {
+			const pattern = new RegExp(rule);
+			if (!pattern.test(value)) {
+				this.errors.push(this.errorStrings.filetype);
+				this.pass = false;
+			}
+		}
+		return this.pass;
+	}
     minMax(value,rule) {
         if (value > rule.max) {
             this.errors.push(rule.maxError);

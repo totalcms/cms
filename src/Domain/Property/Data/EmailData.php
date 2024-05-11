@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use InvalidArgumentException;
-
 /**
  * Email type property data.
  */
@@ -18,10 +16,14 @@ class EmailData extends PropertyData
 
     private static function cleanEmail(string $email): string
     {
+        if (empty($email)) {
+            return $email;
+        }
+
         $email = filter_var($email, FILTER_SANITIZE_EMAIL);
 
         if ($email === false || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new InvalidArgumentException('Invalid email');
+            throw new \InvalidArgumentException('Invalid email');
         }
 
         return $email;

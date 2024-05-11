@@ -141,4 +141,4 @@ You get to define your own indexed and which
 fields get added to the collection digest.
 
 Custom schemas will be stored inside of a
-`.schemas` folder inside the `tams-data` directory.
+`.schemas` folder inside the `tcms-data` directory.

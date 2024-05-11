@@ -17,3 +17,6 @@ return function (App $app) {
         // !$group->get('/{collection}/{id}/{property}/{file}', Download\DownloadFileFromSetAction::class)->setName('download-file-from-set');
     });
 };
+
+// Large file streaming
+// https://discourse.slimframework.com/t/slim4-output-buffering-large-files-zip-streaming/4917

@@ -23,6 +23,7 @@ final class LoggerFactory
      * @var array<HandlerInterface>
      */
     private array $handler = [];
+    private string $format = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
 
     private ?LoggerInterface $testLogger;
 
@@ -49,7 +50,7 @@ final class LoggerFactory
      *
      * @return LoggerInterface The logger
      */
-    public function createLogger(string $name = null): LoggerInterface
+    public function createLogger(?string $name = null): LoggerInterface
     {
         if (isset($this->testLogger)) {
             return $this->testLogger;
@@ -90,19 +91,17 @@ final class LoggerFactory
      *
      * @return self The logger factory
      */
-    public function addFileHandler(
-        string $filename,
-        int $maxFiles = 0,
-        int $permissions = 0777,
-        Level $level = null
-    ): self {
+    public function addFileHandler(string $filename, int $maxFiles = 0, int $permissions = 0777, ?Level $level = null): self
+    {
         $filename = sprintf('%s/%s', $this->path, $filename);
         $level    = $level ?? $this->level;
         /** @phpstan-ignore-next-line */
         $rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level, true, $permissions);
 
         // The last "true" here tells monolog to remove empty []'s
-        $rotatingFileHandler->setFormatter(new LineFormatter(null, null, false, true));
+        $lineFormatter = new LineFormatter($this->format, null, true, true, true);
+        $lineFormatter->indentStacktraces('    ');
+        $rotatingFileHandler->setFormatter($lineFormatter);
 
         $this->addHandler($rotatingFileHandler);
 
@@ -116,11 +115,13 @@ final class LoggerFactory
      *
      * @return self The logger factory
      */
-    public function addConsoleHandler(Level $level = null): self
+    public function addConsoleHandler(?Level $level = null): self
     {
         /** @phpstan-ignore-next-line */
         $streamHandler = new StreamHandler('php://output', $level ?? $this->level);
-        $streamHandler->setFormatter(new LineFormatter(null, null, false, true));
+        $lineFormatter = new LineFormatter($this->format, null, true, true, true);
+        $lineFormatter->indentStacktraces('    ');
+        $streamHandler->setFormatter($lineFormatter);
 
         $this->addHandler($streamHandler);
 

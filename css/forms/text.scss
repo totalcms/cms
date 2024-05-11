@@ -1,0 +1,364 @@
+//------------------------------
+// Text Fields
+//------------------------------
+::placeholder {
+    color: oklch(var(--totalform-placeholder));
+}
+
+.totalform {
+    [type="text"], [type="email"], [type="date"], [type="datetime-local"], [type="month"],
+    [type="number"], [type="password"], [type="tel"], [type="time"],
+    [type="url"], [type="week"], select, textarea {
+        display          : block;
+        box-sizing       : border-box;
+        width            : 100%;
+        height           : 2.4375rem;
+        padding          : .5rem;
+        border           : 1px solid oklch(var(--totalform-border-color));
+        border-radius    : var(--totalform-radius);
+        background-color : oklch(var(--totalform-background));
+        font-family      : inherit;
+        font-size        : var(--totalform-font-size);
+        font-weight      : 400;
+        line-height      : 1.5;
+        color            : oklch(var(--totalform-text-color));
+        appearance       : none;
+        box-shadow       : inset 0 1px 2px oklch(var(--totalform-shadow));
+        transition       : box-shadow .5s, border-color .25s ease-in-out;
+    }
+
+	input, select, textarea {
+		&:has(~ .form-group-icon) {
+			border-radius : 5px 0 0 5px;
+		}
+	}
+
+    textarea {
+        max-width : 100%;
+        resize    : vertical;
+
+        &[rows] {
+            height     : auto;
+            min-height : 100px;
+        }
+    }
+
+    [readonly] {
+        background-color : oklch(var(--totalform-lightgray));
+        cursor           : not-allowed
+    }
+
+    select {
+        + .form-group-icon:after {
+            -webkit-mask : var(--icon-select);
+            mask         : var(--icon-select);
+        }
+
+        &:not([multiple]):has([selected][disabled])  {
+			// There is JS that will remove the selected attribute from the first option on change
+            color : oklch(var(--totalform-lightgray));
+        }
+
+        &:not([multiple]) {
+            background-image    : url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZlcnNpb249JzEuMScgd2lkdGg9JzMyJyBoZWlnaHQ9JzI0JyB2aWV3Qm94PScwIDAgMzIgMjQnPjxwb2x5Z29uIHBvaW50cz0nMCwwIDMyLDAgMTYsMjQnIHN0eWxlPSdmaWxsOiM4YThhOGEnPjwvcG9seWdvbj48L3N2Zz4=);
+            background-origin   : content-box;
+            background-position : right -1rem center;
+            background-repeat   : no-repeat;
+            background-size     : 9px 6px;
+            padding-right       : 1.5rem;
+        }
+        &[multiple] {
+            height           : auto;
+            background-image : none;
+
+            // + .form-group-icon {
+            //     background-image: var(--icon-select-multi);
+            // }
+        }
+    }
+}
+
+//------------------------------
+// SVG + StyledText Field
+//------------------------------
+.svg-field .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-svg);
+		mask         : var(--icon-svg);
+	}
+}
+.styledtext-field .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-styledtext);
+		mask         : var(--icon-styledtext);
+	}
+}
+
+//------------------------------
+// List Field
+//------------------------------
+.list-field .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-list);
+		mask         : var(--icon-list);
+	}
+}
+
+//------------------------------
+// Date Field
+//------------------------------
+[type="date"] + .form-group-icon,
+[type="datetime-local"] + .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-date);
+		mask         : var(--icon-date);
+	}
+}
+
+//------------------------------
+// Time Field
+//------------------------------
+[type="time"] + .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-time);
+		mask         : var(--icon-time);
+	}
+}
+
+//------------------------------
+// Email Field
+//------------------------------
+[type="email"] + .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-email);
+		mask         : var(--icon-email);
+	}
+}
+
+//------------------------------
+// Password Field
+//------------------------------
+[type="password"] + .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-lock);
+		mask         : var(--icon-lock);
+	}
+}
+
+//------------------------------
+// ID Field
+//------------------------------
+.id-field {
+    .form-group-icon {
+		&:after {
+			-webkit-mask : var(--icon-id);
+			mask         : var(--icon-id);
+		}
+		border-width : 0;
+    }
+
+    input[type="text"] {
+        background-color : oklch(var(--totalform-nearwhite));
+        border           : none;
+        box-shadow       : none;
+    }
+}
+
+//------------------------------
+// URL Field
+//------------------------------
+[type="url"] + .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-url);
+		mask         : var(--icon-url);
+	}
+}
+
+//------------------------------
+// Telephone Field
+//------------------------------
+[type="tel"] + .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-tel);
+		mask         : var(--icon-tel);
+	}
+}
+
+//------------------------------
+// Number Field
+//------------------------------
+[type="number"] + .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-number);
+		mask         : var(--icon-number);
+	}
+}
+
+//------------------------------
+// Markdown Field
+//------------------------------
+.markdown-field .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-markdown);
+		mask         : var(--icon-markdown);
+	}
+}
+
+//------------------------------
+// Copyright Field
+//------------------------------
+.form-field.icon-copyright .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-copyright);
+		mask         : var(--icon-copyright);
+	}
+}
+
+//------------------------------
+// GPS Field
+//------------------------------
+.form-field.icon-gps .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-gps);
+		mask         : var(--icon-gps);
+	}
+}
+
+//------------------------------
+// User Field
+//------------------------------
+.form-field.icon-user .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-user);
+		mask         : var(--icon-user);
+	}
+}
+
+//------------------------------
+// Camera Field
+//------------------------------
+.form-field.icon-camera .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-camera);
+		mask         : var(--icon-camera);
+	}
+}
+.form-field.icon-shutter .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-shutter);
+		mask         : var(--icon-shutter);
+	}
+}
+
+//------------------------------
+// More Custom Icons
+//------------------------------
+.form-field.icon-width .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-width);
+		mask         : var(--icon-width);
+	}
+}
+.form-field.icon-height .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-height);
+		mask         : var(--icon-height);
+	}
+}
+.form-field.icon-pixels .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-pixels);
+		mask         : var(--icon-pixels);
+	}
+}
+.form-field.icon-pixelate .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-pixelate);
+		mask         : var(--icon-pixelate);
+	}
+}
+.form-field.icon-imageformat .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-imageformat);
+		mask         : var(--icon-imageformat);
+	}
+}
+.form-field.icon-quality .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-quality);
+		mask         : var(--icon-quality);
+	}
+}
+.form-field.icon-crop .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-crop);
+		mask         : var(--icon-crop);
+	}
+}
+.form-field.icon-padding .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-padding);
+		mask         : var(--icon-padding);
+	}
+}
+.form-field.icon-eye .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-eye);
+		mask         : var(--icon-eye);
+	}
+}
+.form-field.icon-position .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-position);
+		mask         : var(--icon-position);
+	}
+}
+.form-field.icon-bright .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-bright);
+		mask         : var(--icon-bright);
+	}
+}
+.form-field.icon-contrast .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-contrast);
+		mask         : var(--icon-contrast);
+	}
+}
+.form-field.icon-gamma .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-gamma);
+		mask         : var(--icon-gamma);
+	}
+}
+.form-field.icon-sharpen .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-sharpen);
+		mask         : var(--icon-sharpen);
+	}
+}
+.form-field.icon-blur .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-blur);
+		mask         : var(--icon-blur);
+	}
+}
+.form-field.icon-filter .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-filter);
+		mask         : var(--icon-filter);
+	}
+}
+.form-field.icon-paint-roller .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-paint-roller);
+		mask         : var(--icon-paint-roller);
+	}
+}
+.form-field.icon-paint-brush .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-paint-brush);
+		mask         : var(--icon-paint-brush);
+	}
+}
+

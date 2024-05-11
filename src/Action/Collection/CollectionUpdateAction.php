@@ -30,16 +30,17 @@ final class CollectionUpdateAction
      *
      * @param ServerRequestInterface $request The request
      * @param ResponseInterface $response The response
+     * @param array $args
      *
      * @return ResponseInterface The response
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        $body = $request->getBody();
+        $data = json_decode($request->getBody(), true);
 
         return $this->renderer->jsonItem(
             $response,
-            $this->service->saveCollection($body),
+            $this->service->updateCollection($args['collection'], $data),
             new CollectionMetaTransformer()
         );
     }

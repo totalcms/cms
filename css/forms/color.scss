@@ -1,0 +1,36 @@
+//------------------------------
+// Color Field
+//------------------------------
+input[type="color"] {
+	appearance       : none;
+	border           : none;
+	width            : 64px;
+	height           : 64px;
+	padding          : 0;
+	box-shadow       : none;
+	background-color : transparent;
+
+    &::-webkit-color-swatch-wrapper {
+        padding : 0;
+    }
+
+    &::-webkit-color-swatch {
+        border        : none;
+        border-radius : 50%;
+    }
+
+    + .form-group-icon {
+        display : none;
+    }
+
+	&:focus {
+		border : none;
+	}
+}
+.color-field {
+	width : auto;
+
+    .form-group {
+        box-shadow : none;
+    }
+}

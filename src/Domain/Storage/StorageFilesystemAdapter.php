@@ -7,6 +7,8 @@ use League\Flysystem\StorageAttributes;
 
 /**
  * Filesystem.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 final class StorageFilesystemAdapter implements StorageAdapterInterface
 {
@@ -42,6 +44,18 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     public function read(string $location): string
     {
         return $this->filesystem->read($location);
+    }
+
+    /**
+     * Read file as stream.
+     *
+     * @param string $location The path of file to read
+     *
+     * @return resource
+     */
+    public function readStream(string $location)
+    {
+        return $this->filesystem->readStream($location);
     }
 
     /**
@@ -126,8 +140,8 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     /**
      * Import a file into the filesystem.
      *
-     * @param string $import path to the file to import
-     * @param string $dest path to put the file
+     * @param string $import Path to the file to import
+     * @param string $dest Path to put the file
      *
      * @return bool
      */
@@ -142,8 +156,8 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
     /**
      * Move a file.
      *
-     * @param string $old existing path
-     * @param string $new new location
+     * @param string $old Existing path
+     * @param string $new New location
      *
      * @return bool
      */

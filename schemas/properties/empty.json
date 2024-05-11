@@ -1,0 +1,8 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/properties/empty.json",
+	"description" : "Empty string",
+	"type"        : "string",
+	"maxLength"   : 0,
+	"examples"    : [""]
+}

@@ -6,18 +6,6 @@
       "$comment": "The rating of the image",
       "$ref": "https://www.totalcms.co/schemas/properties/rating.json"
     },
-    "color": {
-      "type": "object",
-      "$comment": "User defined colors to be used in association with this image",
-      "properties": {
-        "main": {
-          "$ref": "https://www.totalcms.co/schemas/properties/color.json"
-        },
-        "complimentary": {
-          "$ref": "https://www.totalcms.co/schemas/properties/color.json"
-        }
-      }
-    },
     "uploadDate": {
       "$comment": "The date the image was uploaded",
       "$ref": "https://www.totalcms.co/schemas/properties/date.json"
@@ -40,12 +28,8 @@
         "description": {
           "type": "string"
         },
-        "keywords": {
-          "$comment": "Tags associated with the image",
-          "$ref": "https://www.totalcms.co/schemas/properties/list.json"
-        },
         "aperture": {
-          "type": "string"
+          "type": "number"
         },
         "altitude": {
           "type": "number"
@@ -75,10 +59,10 @@
           "type": "string"
         },
         "focalLength": {
-          "type": "string"
+          "type": "number"
         },
-        "iso": {
-          "type": "string"
+		"iso": {
+          "type": "number"
         }
       }
     },
@@ -141,24 +125,12 @@
       "$ref": "https://www.totalcms.co/schemas/properties/list.json"
     },
     "palette": {
-      "type": "object",
-      "$comment": "The color palette extracted from the image. Two palettes are stored with a max of 6 hexidecimal color strings for primary and secondary colors",
-      "properties": {
-        "main": {
-          "items": {
-            "$ref": "https://www.totalcms.co/schemas/properties/color.json"
-          },
-          "type": "array",
-          "maxContains": 5
-        },
-        "complimentary": {
-          "items": {
-            "$ref": "https://www.totalcms.co/schemas/properties/color.json"
-          },
-          "type": "array",
-          "maxContains": 5
-        }
-      }
+		"$comment": "The color palette extracted from the image. Two palettes are stored with a max of 6 hexidecimal color strings for primary and secondary colors",
+      	"type": "array",
+	  	"maxContains": 5,
+	  	"items": {
+			"pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+	  	}
     }
   },
   "required": [
@@ -183,20 +155,6 @@
         "max": 5,
         "total": 10,
         "rating": 4.5
-      },
-      "color": {
-        "primary": {
-          "l": 359.60000000000002,
-          "s": 79,
-          "a": 1,
-          "h": 35.700000000000003
-        },
-        "secondary": {
-          "l": 359.60000000000002,
-          "s": 79,
-          "a": 1,
-          "h": 35.700000000000003
-        }
       },
       "uploadDate": "2018-08-02T08:59:28+00:00",
       "featured": false,
@@ -229,24 +187,14 @@
         "tag1",
         "tag2"
       ],
-      "palette": {
-        "primary": [
+      "palette": [
           "1e140e",
           "7d3012",
           "8f9217",
           "c3bc25",
           "c61d1d",
           "e68685"
-        ],
-        "secondary": [
-          "19797a",
-          "39e2e2",
-          "3c43da",
-          "706de8",
-          "82cfed",
-          "e1ebf1"
-        ]
-      }
+      ]
     }
   ],
   "$id": "https://www.totalcms.co/schemas/properties/image.json"

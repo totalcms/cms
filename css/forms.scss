@@ -1,0 +1,160 @@
+@import "variables";
+
+//------------------------------
+// Form Defaults
+//------------------------------
+.totalform {
+
+	input:focus,
+	textarea:focus,
+	input:focus + .form-group-icon,
+	textarea:focus + .form-group-icon {
+		outline      : 0;
+		border-color : oklch(var(--totalform-border-color));
+		box-shadow: inset 0 0 0 oklch(var(--totalform-shadow));
+	}
+
+    label {
+        display     : block;
+        margin      : 0;
+        font-size   : var(--totalform-label-size);
+        font-weight : 400;
+        line-height : 1.8;
+        color       : oklch(var(--totalform-label-color));
+        transition  : opacity 0.5s;
+        width       : max-content;
+    }
+}
+
+.form-field {
+	position : relative;
+	width    : 100%;
+
+	&:not(:first-of-type) {
+		margin-top : 1rem;
+	}
+
+    *,
+    *:after,
+    *:before {
+        box-sizing: border-box;
+    }
+
+	&.hide {
+		display : none;
+	}
+
+	&.unsaved {
+		--totalform-border-color : var(--totalform-changed);
+		--totalform-icon-bg      : var(--totalform-changed);
+		--totalform-icon-color   : var(--totalform-white);
+	}
+	&.error {
+		--totalform-border-color : var(--totalform-error);
+		--totalform-icon-bg      : var(--totalform-error);
+		--totalform-icon-color   : var(--totalform-white);
+	}
+}
+
+.cms-save,
+.cms-delete {
+	cursor : pointer;
+}
+
+.totalform:not(.edit-mode) .cms-delete {
+	display : none;
+}
+
+//------------------------------
+// Form Groups
+//------------------------------
+.form-group {
+	display       : flex;
+	position      : relative;
+	margin-bottom : 1rem;
+	align-items   : stretch;
+	border-radius : var(--totalform-radius);
+	transition    : box-shadow 200ms ease-in-out;
+	box-shadow    : 0 0 0 oklch(var(--totalform-shadow));
+
+    &:has(:focus) {
+        box-shadow: 0 1px 2px oklch(var(--totalform-shadow));
+
+		&:has(.actionbar),
+		&:has([type=range]),
+		&:has([type=checkbox]),
+		&:has([type=radio]) {
+			box-shadow: none;
+		}
+    }
+
+    & > * {
+        margin: 0;
+    }
+
+    & + .help {
+        margin-top: -0.5rem;
+    }
+}
+
+.form-group-icon {
+	width             : 3em;
+	border            : 1px solid oklch(var(--totalform-border-color));
+	border-left-width : 0;
+	border-radius     : 0 var(--totalform-radius) var(--totalform-radius) 0;
+	background-color  : oklch(var(--totalform-icon-bg));
+	transition        : background-color 200ms ease-in-out;
+	display           : grid;
+	align-items       : center;
+	justify-items     : center;
+
+	&:after {
+		display          : block;
+		content          : " ";
+		transition       : background-color 200ms ease-in-out;
+		background-color : oklch(var(--totalform-icon-color));
+		width            : 1.1rem;
+		height           : 1.1rem;
+		-webkit-mask     : var(--icon-text);
+		mask             : var(--icon-text);
+	}
+}
+
+.form-group:has([readonly]) .form-group-icon {
+	background-color : oklch(var(--totalform-lightgray));
+}
+
+.form-columns {
+	display : grid;
+	gap     : 1rem;
+
+	&.col-2 {
+		grid-template-columns : 3fr 2fr;
+	}
+	section.center {
+		display       : grid;
+		justify-items : center;
+		align-content : start;
+		gap           : 1rem;
+	}
+}
+
+@import "forms/status-banner";
+@import "forms/help";
+@import "forms/text";
+@import "forms/actionbar";
+@import "forms/checkbox";
+@import "forms/color";
+@import "forms/droplet";
+@import "forms/froala";
+@import "forms/list";
+@import "forms/radio";
+@import "forms/set";
+@import "forms/slider";
+@import "forms/toggle";
+@import "forms/details";
+@import "forms/dialog";
+@import "forms/image";
+@import "forms/file";
+@import "forms/gallery";
+@import "codemirror";

@@ -23,6 +23,15 @@ interface StorageAdapterInterface
     public function read(string $location): string;
 
     /**
+     * Read file as a stream.
+     *
+     * @param string $location The path of file to read
+     *
+     * @return resource
+     */
+    public function readStream(string $location);
+
+    /**
      * File exists.
      *
      * @param string $location The location of the file
@@ -62,8 +71,8 @@ interface StorageAdapterInterface
     /**
      * Import a file into the filesystem.
      *
-     * @param string $import path to the file to import
-     * @param string $dest path to put the file
+     * @param string $import Path to the file to import
+     * @param string $dest Path to put the file
      *
      * @return bool
      */
@@ -72,8 +81,8 @@ interface StorageAdapterInterface
     /**
      * Move a file.
      *
-     * @param string $old existing path
-     * @param string $new new location
+     * @param string $old Existing path
+     * @param string $new New location
      *
      * @return bool
      */

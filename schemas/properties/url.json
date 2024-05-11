@@ -1,12 +1,19 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "pattern": "^(http[s]*://\\S+||\\s*)$",
-  "type": "string",
-  "description": "A field for storing URLs to media and other data",
-  "examples": [
-    "https://www.youtube.com/watch?v=UCeYTysLyGI",
-    "https://www.totalcms.co/",
-    "https://www.weavers.space/"
-  ],
-  "$id": "https://www.totalcms.co/schemas/properties/url.json"
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/properties/url.json",
+	"anyOf": [
+		{
+			"pattern"     : "^(http[s]*://\\S+||\\s*)$",
+			"type"        : "string",
+			"description" : "A field for storing URLs to media and other data",
+			"examples"    : [
+				"https://www.youtube.com/watch?v=UCeYTysLyGI",
+				"https://www.totalcms.co/",
+				"https://www.weavers.space/"
+			]
+		},
+		{
+			"$ref" : "https://www.totalcms.co/schemas/properties/empty.json"
+		}
+	]
 }

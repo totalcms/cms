@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Action\ImageWorks;
 
-use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
 final class ImageWorksImageFetchAction
 {

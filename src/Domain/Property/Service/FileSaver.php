@@ -6,46 +6,44 @@ use ColorThief\ColorThief;
 use PHPExif\Enum\ReaderType as ExifReaderType;
 use PHPExif\Exif;
 use PHPExif\Reader\Reader as ExifReader;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
-use TotalCMS\Utils\ColorUtils;
 
 /**
  * Service.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 final class FileSaver
 {
-    private Serializer $serializer;
     private ExifReader $exifReader;
 
     public function __construct(
         private PropertyRepository $storage,
         private PropertyFetcher $propFetcher,
-        private ObjectUpdater $objectUpdater,
+        private ObjectSaver $objectSaver,
         private CollectionSchemaFetcher $schemaFetcher,
         private ObjectFetcher $objectFetcher,
     ) {
         $this->storage       = $storage;
         $this->propFetcher   = $propFetcher;
-        $this->objectUpdater = $objectUpdater;
+        $this->objectSaver   = $objectSaver;
         $this->schemaFetcher = $schemaFetcher;
         $this->objectFetcher = $objectFetcher;
-        $this->serializer    = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 
         $this->exifReader = ExifReader::factory(ExifReaderType::NATIVE);
         // $this->exifReader = ExifReader::factory(ExifReaderType::EXIFTOOL);
         // $this->exifReader = ExifReader::factory(ExifReaderType::FFPROBE);
         // $this->exifReader = ExifReader::factory(ExifReaderType::IMAGICK);
+
+        // TODO: split this class up into smaller classes for ImageSaver, FileSaver, etc.
     }
 
     /**
@@ -66,7 +64,7 @@ final class FileSaver
         $method = 'saveFileFor' . ucfirst($type);
 
         if (!method_exists($this, $method)) {
-            throw new \UnexpectedValueException('Invalid file type found');
+            throw new \UnexpectedValueException("Invalid file type $type found for property $property in collection $collection");
         }
 
         return $this->$method($collection, $objectID, $property, $filePath);
@@ -105,9 +103,9 @@ final class FileSaver
      */
     private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
     {
-        $propertyJson = $this->serializer->serialize([$property => $data], 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+        $propertyData = [$property => $data];
 
-        return $this->objectUpdater->updateObject($collection, $objectID, $propertyJson);
+        return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
     }
 
     /**
@@ -174,23 +172,43 @@ final class FileSaver
      */
     public function saveFileForImage(string $collection, string $objectID, string $property, string $filePath): ObjectData
     {
-        if (!$this->objectFetcher->existsObject($collection, $objectID)) {
-            // TODO: create object if it does not exist
-            throw new \UnexpectedValueException('Object does not exist');
+        $objectExists = $this->objectFetcher->existsObject($collection, $objectID);
+        if (!$objectExists) {
+            // Attempt to create the object if it does not exist
+            try {
+                $image  = new ImageData();
+                $this->objectSaver->saveObject($collection, [
+                    'id'      => $objectID,
+                    $property => $image->transform(),
+                ]);
+            } catch (\Exception $e) {
+                // Object creation failed
+                $msg = "Object $objectID does not exist in collection $collection to save image ($property) to. ";
+                throw new \UnexpectedValueException($msg . $e->getMessage());
+            }
         }
 
         // Clean up existing files in the path. Only one file should exist
+        // This also cleans the cache
         $this->storage->deleteDirectory($collection, $objectID, $property);
 
         // Update the object with the new file data
         $imageProp = $this->fetchProperty($collection, $objectID, $property);
 
-        $existingData = $imageProp->transform();
+        // Only keep the data for alt, featrued, link, and tags
+        $keep         = ['alt', 'featured', 'link', 'tags'];
+        $existingData = array_filter($imageProp->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+
         $fileData     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
         $exifData     = $this->gatherExifData($filePath);
         $colorData    = self::gatherColorData($filePath);
 
         $newImage = array_merge($existingData, $fileData, $exifData, $colorData);
+
+        if ($objectExists) {
+            // If the object existed before, we will keep the existing data
+            $newImage = array_merge($newImage, $existingData);
+        }
 
         return $this->updateObject($collection, $objectID, $property, $newImage);
     }
@@ -234,24 +252,14 @@ final class FileSaver
     {
         // Getting the top 15 colors from the image then reduce to top 5
         // This produces the best results after a lot of testing
+        /** @var array<string> $palette */
         $palette = ColorThief::getPalette($imagepath, 15, 10, null, 'hex');
         if (!is_array($palette) || count($palette) === 0) {
             return [];
         }
-        $palette       = array_slice($palette, 0, 5);
-        $palette       = array_map(fn ($hex) => ColorUtils::colorFromHex((string)$hex), $palette);
-        $complimentary = array_map(fn ($color) => ColorUtils::complementary($color), $palette);
+        $palette = array_slice($palette, 0, 5);
 
-        return [
-            'palette' => [
-                'main'          => array_map(fn ($c) => $c->transform(), $palette),
-                'complimentary' => array_map(fn ($c) => $c->transform(), $complimentary),
-            ],
-            'color' => [
-                'main'          => $palette[0]->transform(),
-                'complimentary' => $complimentary[0]->transform(),
-            ],
-        ];
+        return ['palette' => $palette];
     }
 
     /**
@@ -273,6 +281,31 @@ final class FileSaver
             'width'  => $imageData[0],
             'height' => $imageData[1],
         ];
+    }
+
+    private static function floatOrNull(string|float|int|bool $value): ?float
+    {
+        if (!is_bool($value)) {
+            // Remove any non-numeric characters
+            $value = preg_replace('/[^0-9.]/', '', (string)$value);
+            if (is_numeric($value)) {
+                return floatval($value);
+            }
+        }
+
+        return null;
+    }
+
+    private static function shutterSpeed(string|bool $speed): ?string
+    {
+        if (is_bool($speed)) {
+            return null;
+        }
+        if (!str_starts_with($speed, '1/')) {
+            return '1/' . $speed;
+        }
+
+        return $speed;
     }
 
     /**
@@ -297,33 +330,34 @@ final class FileSaver
 
         $data = [
             // Exposure Data
-            'aperture'     => $exif->getAperture(),
-            'iso'          => $exif->getIso(),
-            'shutterSpeed' => $exif->getExposure(),
+            'aperture'     => self::floatOrNull($exif->getAperture()),
+            'iso'          => self::floatOrNull($exif->getIso()),
+            'shutterSpeed' => self::shutterSpeed($exif->getExposure()),
             // Camera Data
             'make'        => $exif->getMake(),
             'camera'      => $exif->getCamera(),
             'lens'        => $exif->getLens(),
-            'focalLength' => $exif->getFocalLength(),
+            'focalLength' => self::floatOrNull($exif->getFocalLength()),
             // Meta Data
             'author'      => $exif->getAuthor(),
             'description' => $exif->getDescription(),
-            'keywords'    => $exif->getKeywords(),
+            // 'keywords'    => $exif->getKeywords(),
             'copyright'   => $exif->getCopyright(),
             'title'       => $exif->getTitle(),
             'date'        => $date,
             // GPS Data
-            'longitude'   => $exif->getLongitude(),
-            'latitude'    => $exif->getLatitude(),
-            'altitude'    => $exif->getAltitude(),
+            'longitude'   => self::floatOrNull($exif->getLongitude()),
+            'latitude'    => self::floatOrNull($exif->getLatitude()),
+            'altitude'    => self::floatOrNull($exif->getAltitude()),
         ];
         // fitler out any null values
-        $data = array_filter($data);
+        $data     = array_filter($data);
+        $keywords = $exif->getKeywords();
 
         return array_filter([
             'exif'   => $data,
-            'tags'   => $data['keywords'] ?? [],
-            'alt'    => $data['description'] ?? '',
+            'tags'   => is_array($keywords) ? $keywords : [],
+            'alt'    => $data['title'] ?? $data['description'] ?? '',
             'mime'   => $exif->getMimeType(),
             'width'  => intval($exif->getWidth()),
             'height' => intval($exif->getHeight()),

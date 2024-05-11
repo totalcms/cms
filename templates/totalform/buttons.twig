@@ -1,0 +1,10 @@
+{#--------------------------------
+  Button Macros
+--------------------------------#}
+{% macro saveButton(label = "Save") %}
+	<button class="cms-save button btn" type="submit">{{ label }}</button>
+{% endmacro %}
+
+{% macro deleteButton(label = "Delete") %}
+	<button class="cms-delete button btn">{{ label }}</button>
+{% endmacro %}

@@ -26,8 +26,8 @@ final class CollectionData
     public string $description;      // collection description
     public string $schema;           // schema name
     public string $url;              // collection url to object page minus the slug
-    public array $properties;        // Rules for form labels, help text and field types
-    public array $customProperties;  // Rules for factory object generation
+    public array $properties;        // Rules for fields defined in schemaToMetaProps
+    public array $customProperties;  // Custom properties for specific objects
 
     public function __construct()
     {
@@ -36,6 +36,9 @@ final class CollectionData
 
     public function toArray(): array
     {
+        if (!$this->isValid()) {
+            throw new \RuntimeException('CollectionData is not valid.');
+        }
         $collection = [
             'id'          => $this->id,
             'schema'      => $this->schema,
@@ -60,5 +63,20 @@ final class CollectionData
     public function toJson(): string
     {
         return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+    }
+
+    // This method converts schema property
+    public static function schemaToMetaProps(array $schema): array
+    {
+        $metaProps = ['label', 'help', 'field', 'factory'];
+
+        foreach ($schema as $key => $prop) {
+            // Only keep the meta properties that we need from the schema
+            $schema[$key] = array_filter($prop, function ($key) use ($metaProps) {
+                return in_array($key, $metaProps);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        return $schema;
     }
 }

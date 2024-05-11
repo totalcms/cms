@@ -9,32 +9,27 @@ class ImageData extends PropertyData
 {
     public ListData $tags;
     public DateData $uploadDate;
-    public array    $color;
-    public array    $exif;
-    public array    $focalpoint;
-    public array    $palette;
-    public string   $alt;
-    public string   $mime;
-    public string   $link;
-    public string   $name;
-    public int      $size;
-    public int      $width;
-    public int      $height;
-    public bool     $featured;
+    public array $exif;
+    public array $focalpoint;
+    public array $palette;
+    public string $alt;
+    public string $mime;
+    public string $link;
+    public string $name;
+    public int $size;
+    public int $width;
+    public int $height;
+    public bool $featured;
 
-    public const DEFAULT_PALETTE = [
-        'main'          => [],
-        'complimentary' => [],
-    ];
     public const DEFAULT_FOCALPOINT = [
         'x' => 50,
         'y' => 50,
     ];
 
+    // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function __construct(array $file = [])
     {
         $this->alt        = $file['alt'] ?? '';
-        $this->color      = $file['color'] ?? self::DEFAULT_PALETTE;
         $this->exif       = $file['exif'] ?? ['nodata' => ''];
         $this->featured   = $file['featured'] ?? false;
         $this->focalpoint = $file['focalpoint'] ?? self::DEFAULT_FOCALPOINT;
@@ -42,7 +37,7 @@ class ImageData extends PropertyData
         $this->link       = $file['link'] ?? '';
         $this->mime       = $file['mime'] ?? '';
         $this->name       = $file['name'] ?? '';
-        $this->palette    = $file['palette'] ?? self::DEFAULT_PALETTE;
+        $this->palette    = $file['palette'] ?? [];
         $this->size       = intval($file['size'] ?? 0);
         $this->tags       = new ListData($file['tags'] ?? []);
         $this->width      = intval($file['width'] ?? 0);
@@ -55,7 +50,6 @@ class ImageData extends PropertyData
     {
         return [
             'alt'        => $this->alt,
-            'color'      => $this->color,
             'exif'       => $this->exif,
             'featured'   => $this->featured,
             'focalpoint' => $this->focalpoint,

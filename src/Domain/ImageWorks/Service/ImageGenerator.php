@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use Psr\Http\Message\ResponseInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Utils\PathUtils;
-use Psr\Http\Message\ResponseInterface;
-use UnexpectedValueException;
 
 final class ImageGenerator
 {
@@ -27,16 +27,30 @@ final class ImageGenerator
      * @param string $property
      * @param array  $params
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return ResponseInterface
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function generate(string $collection, string $id, string $property, array $params): ResponseInterface
     {
         $imageData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
         if (!$imageData instanceof ImageData) {
-            throw new UnexpectedValueException('Invalid image property found');
+            throw new \UnexpectedValueException('Invalid image property found');
+        }
+
+        // If no params are provided, return the original image
+        // The Action class automatically adds the format to the params so we need to check for that
+        if (empty($params) || (count($params) === 1 && isset($params['fm']))) {
+            $imagePath = PathUtils::buildPath($collection, $id, $property, $imageData->name);
+            $response  = $this->glideFactory->originalImage($imagePath);
+
+            return (new Response())
+                ->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
+                ->withBody($response['stream']);
         }
 
         $glide = $this->glideFactory->create(
@@ -45,16 +59,29 @@ final class ImageGenerator
 
         // Integrate Image data into params
 
+        // Make sure that the requested width and height are not larger than the original image
+        if (isset($params['w']) && $params['w'] > $imageData->width) {
+            $params['w'] = $imageData->width;
+        }
+
+        if (isset($params['h']) && $params['h'] > $imageData->height) {
+            $params['h'] = $imageData->height;
+        }
+
         if (isset($params['fit'])) {
             $params['fit'] = GlideFactory::cropFocalpoint($params['fit'], $imageData->focalpoint);
         }
 
         if (isset($params['bg'])) {
-            $params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->color);
+            $params['bg'] = GlideFactory::updateBackgroundColor($params['bg'], $imageData->palette);
         }
 
         if (isset($params['border'])) {
-            $params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->color);
+            $params['border'] = GlideFactory::updateBorderColor($params['border'], $imageData->palette);
+        }
+
+        if (isset($params['cache'])) {
+            unset($params['cache']);
         }
 
         $response = $glide->getImageResponse($imageData->name, array_filter($params));

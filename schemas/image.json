@@ -25,6 +25,7 @@
         "image"
     ],
     "index": [
-        "id"
+        "id",
+		"image"
     ]
 }

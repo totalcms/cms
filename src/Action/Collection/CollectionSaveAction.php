@@ -35,11 +35,11 @@ final class CollectionSaveAction
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        $body = $request->getBody();
+        $data = json_decode($request->getBody(), true);
 
         return $this->renderer->jsonItem(
             $response,
-            $this->service->saveCollection($body),
+            $this->service->saveCollection($data),
             new CollectionMetaTransformer()
         );
     }

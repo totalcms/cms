@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Property\Repository;
 
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\PathUtils;
-use RuntimeException;
 
 /**
  * Repository.
@@ -12,13 +11,11 @@ use RuntimeException;
 final class PropertyRepository extends StorageRepository
 {
     /**
-     * Save an object.
-     *
      * @param string $collection
      * @param string $objectID
      * @param string $property
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      *
      * @return void
      */
@@ -29,8 +26,21 @@ final class PropertyRepository extends StorageRepository
         try {
             $this->filesystem->deleteDirectory($path);
         } catch (\Exception $exception) {
-            throw new RuntimeException('Unable to delete directory');
+            throw new \RuntimeException('Unable to delete directory');
         }
+    }
+
+    public function deletePropertyCache(string $collection, string $objectID, string $property): bool
+    {
+        $path = PathUtils::buildPath($collection, $objectID, $property, '.cache');
+
+        try {
+            $this->filesystem->deleteDirectory($path);
+        } catch (\Exception $exception) {
+            throw new \RuntimeException('Unable to delete cache directory');
+        }
+
+        return !$this->filesystem->fileExists($path);
     }
 
     /**
@@ -41,7 +51,7 @@ final class PropertyRepository extends StorageRepository
      * @param string $property
      * @param string $filePath
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      *
      * @return array
      */
@@ -57,7 +67,7 @@ final class PropertyRepository extends StorageRepository
         }
 
         if (!$this->filesystem->import($filePath, $newpath)) {
-            throw new RuntimeException('File not saved');
+            throw new \RuntimeException('File not saved');
         }
 
         return [
@@ -76,7 +86,7 @@ final class PropertyRepository extends StorageRepository
      * @param string $property
      * @param string $filePath
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      *
      * @return array
      */
@@ -86,7 +96,7 @@ final class PropertyRepository extends StorageRepository
         $newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
 
         if (!$this->filesystem->import($filePath, $newpath)) {
-            throw new RuntimeException('File not saved');
+            throw new \RuntimeException('File not saved');
         }
 
         // Update to be Image data

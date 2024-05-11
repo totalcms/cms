@@ -1,0 +1,134 @@
+//--------------------------------
+// Action Bar
+//--------------------------------
+.actionbar {
+	background-color : oklch(var(--actionbar-color));
+	position         : absolute;
+	top              : 0;
+	left             : 0;
+	right            : 0;
+	width            : 100%;
+	margin           : 0;
+	padding          : 1rem;
+	opacity          : 0;
+	transition       : opacity 300ms ease-in-out;
+	z-index          : 1;
+	display          : flex;
+	gap              : 1rem;
+	backdrop-filter  : blur(3px);
+
+	// always show on touch devices
+	@media (hover: none) {
+		opacity : 1;
+	}
+	@media (pointer: coarse) {
+		opacity : 1;
+	}
+
+    button {
+		appearance : none;
+		border     : none;
+		cursor     : pointer;
+
+		opacity          : 0.8;
+		background-color : oklch(var(--actionbar-icon-color));
+		width            : var(--actionbar-icon-size);
+		height           : var(--actionbar-icon-size);
+		transition       : scale 300ms ease-in-out;
+
+		&:hover {
+			opacity : 1;
+			scale   : 1.15;
+        }
+
+		&.download {
+			-webkit-mask : var(--icon-download);
+			mask         : var(--icon-download);
+		}
+		&.upload {
+			-webkit-mask : var(--icon-upload-alt);
+			mask         : var(--icon-upload-alt);
+			margin-left  : auto;
+		}
+		&.edit {
+			-webkit-mask : var(--icon-edit);
+			mask         : var(--icon-edit);
+		}
+		&.featured {
+			-webkit-mask : var(--icon-not-featured);
+			mask         : var(--icon-not-featured);
+		}
+		&.clear {
+			-webkit-mask : var(--icon-clean);
+			mask         : var(--icon-clean);
+		}
+		&.trash {
+			-webkit-mask : var(--icon-trash);
+			mask         : var(--icon-trash);
+		}
+		&.links {
+			-webkit-mask : var(--icon-link);
+			mask         : var(--icon-link);
+		}
+		&.move {
+			cursor       : grab;
+			-webkit-mask : var(--icon-bars);
+			mask         : var(--icon-bars);
+			margin       : 0 auto;
+
+			&:active {
+				cursor : grabbing;
+			}
+		}
+    }
+
+    // &.fill {
+    //     position : absolute;
+    //     top      : 0;
+    //     bottom   : 0;
+    //     left     : 0;
+    //     right    : 0;
+    //     height   : 100%;
+    //     padding  : 0;
+
+    //     button {
+	// 		margin      : 0;
+	// 		width       : 50%;
+	// 		height      : 40px;
+	// 		line-height : 40px;
+	// 		font-size   : 1.3rem;
+    //     }
+    // }
+}
+
+.featured {
+	button.featured {
+		-webkit-mask : var(--icon-featured);
+		mask         : var(--icon-featured);
+	}
+}
+.cleared-cache {
+	button.clear {
+		-webkit-mask : var(--icon-success);
+		mask         : var(--icon-success);
+	}
+}
+
+.image-field {
+    .move {
+        display : none;
+    }
+}
+
+div:not(.empty):hover {
+    > .actionbar {
+        opacity : 1;
+    }
+}
+
+.dz-error,.dz-processing {
+    .actionbar {
+        display : none!important;
+    }
+}
+

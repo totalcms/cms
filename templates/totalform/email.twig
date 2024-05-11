@@ -1,0 +1,23 @@
+{#--------------------------------
+  Email Macro
+--------------------------------#}
+{% macro email(property, args = {}) %}
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "email",
+		type  : "email",
+	}) %}
+    {{ _self.input(property, args) }}
+{% endmacro %}
+
+{% macro emailForm(id, args = {}, collection = "email") %}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+		helpOnFocus : args.helpOnFocus,
+		helpStyle   : args.helpStyle,
+	}) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.email('email', args) }}
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}

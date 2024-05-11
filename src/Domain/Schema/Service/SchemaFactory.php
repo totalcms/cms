@@ -22,19 +22,38 @@ final class SchemaFactory
     /**
      * create a schema object.
      *
-     * @param string $schemaJson
-     * @param string $id
+     * @param array $schemaData
      *
      * @throws \UnexpectedValueException
      *
      * @return SchemaData
      */
-    public function generateSchema(string $schemaJson): SchemaData
+    public function generateSchema(array $schemaData): SchemaData
+    {
+        $schema = $this->serializer->denormalize($schemaData, SchemaData::class);
+
+        if (!$schema instanceof SchemaData) {
+            throw new \UnexpectedValueException('Invalid Schema data provided');
+        }
+
+        return $schema;
+    }
+
+    /**
+     * create a schema object.
+     *
+     * @param string $schemaJson
+     *
+     * @throws \UnexpectedValueException
+     *
+     * @return SchemaData
+     */
+    public function generateSchemaFromJson(string $schemaJson): SchemaData
     {
         $schema = $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
 
         if (!$schema instanceof SchemaData) {
-            throw new \UnexpectedValueException('Invalid Schema data provided');
+            throw new \UnexpectedValueException('Invalid Schema json provided');
         }
 
         return $schema;

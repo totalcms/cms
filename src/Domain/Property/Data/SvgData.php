@@ -2,9 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use DOMDocument;
-use InvalidArgumentException;
-
 /**
  * SVG type property data.
  */
@@ -14,15 +11,15 @@ class SvgData extends PropertyData
 
     public function __construct(string $svg)
     {
-        if (!self::verifySvg($svg)) {
-            throw new InvalidArgumentException('Invalid SVG');
+        if (!empty($svg) & !self::verifySvg($svg)) {
+            throw new \InvalidArgumentException('Invalid SVG');
         }
         $this->svg = $svg;
     }
 
     private static function verifySvg(string $svg): bool
     {
-        $doc = new DOMDocument();
+        $doc = new \DOMDocument();
         $doc->loadXML($svg);
 
         return $doc->getElementsByTagName('svg')->length > 0;

@@ -1,47 +1,21 @@
+import TotalField from './totalfield';
+
 //-----------------------------------------------
 // Total CMS Select Field
 //-----------------------------------------------
-class SelectField extends Fieldset {
+export default class SelectField extends TotalField {
 
     constructor(container, options) {
         super(...arguments);
 
-        this.select    = container.querySelector("select");
-        this.templates = Array.from(this.select.querySelectorAll("template"));
+		this.input.addEventListener("change", e => {
+			this.input.querySelector("[disabled]")?.removeAttribute("selected");
+		}, {once: true});
 
-        if (this.templates) this.processTemplates();
-    }
-
-    sort() {
-        const tmpAry = new Array();
-        for (let i=0;i<this.select.options.length;i++) {
-            tmpAry[i] = new Array();
-            tmpAry[i][0] = this.select.options[i].text;
-            tmpAry[i][1] = this.select.options[i].value;
-        }
-        tmpAry.sort();
-        while (this.select.options.length > 0) {
-            this.select.options[0] = null;
-        }
-        for (let i=0;i<tmpAry.length;i++) {
-            const op = new Option(tmpAry[i][0], tmpAry[i][1]);
-            this.select.options[i] = op;
-        }
-        return;
-    }
-
-    processTemplates() {
-        this.templates.forEach(template => {
-            const collection = template.dataset.collection;
-            if (!collection) {
-                console.warn("No collection defined for select template");
-                return;
-            }
-            this.api.fetchAPI(`/collections/${collection}`).then(data => {
-                data.map(object => this.api.processTemplate(object, template.innerHTML, this.select));
-                this.sort();
-            });
-        });
+		if (window.navigator.userAgent.indexOf("MSIE") > 0 || window.navigator.userAgent.indexOf("Edge") > 0) {
+			// IE Hack - select does not trigger input events. https://connect.microsoft.com/IE/feedback/details/1816207
+			this.input.addEventListener("click", e => { this.changed() }, {once: true});
+		}
     }
 
     setValue(value) {
@@ -49,10 +23,7 @@ class SelectField extends Fieldset {
         // Select Options
         const options = Array.from(this.input.getElementsByTagName("option"));
         for (const option of options) {
-            if (option.value.trim() === value.trim()) {
-                option.selected = true;
-                break;
-            }
+			option.selected = (option.value.trim() === value.trim());
         }
         this.changed();
     }
@@ -60,7 +31,7 @@ class SelectField extends Fieldset {
     schema() {
         return {
             "type":"string",
-            "fieldset":"select"
+            "field":"select"
         };
     }
 }

@@ -1,7 +1,10 @@
 //-----------------------------------------------
 // Total CMS Deck Field
 //-----------------------------------------------
-class Deck extends Fieldset {
+
+// https://sortablejs.github.io/Sortable/
+
+class Deck extends TotalField {
 
     constructor(container, options) {
         super(container, options);

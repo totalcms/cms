@@ -1,170 +1,98 @@
+import DropletTestSet from "./droplet-testset";
+import Dropzone from "@deltablot/dropzone";
+globalThis.Dropzone = Dropzone;
+
 //-----------------------------------------------
 // Total CMS Droplet
 //-----------------------------------------------
-class Droplet extends Fieldset {
+export default class Droplet {
 
-    constructor(container, options) {
-        super(container, options);
+    constructor(field, options = {}) {
+		this.field     = field;
+		this.container = this.field.container;
 
-        this.name = this.container.dataset.name||"file";
+		// Using an embedded template for the preview instead of an extra API request
+		this.previewTemplate = this.container.querySelector("template").innerHTML;
 
         // Define option defaults
         const defaults = {
-            autoProcessQueue  : false,
-            previewsContainer : this.container.getElementsByClassName("total-preview").item(0),
-            previewTemplate   : "",
-            acceptedFiles     : "image/*",
-            paramName         : this.name,
-            requestHeaders    : {},
-            type              : "file",
-            form              : null,
-            gallery           : false,
+			autoProcessQueue  : false,
+			previewsContainer : this.container.querySelector(".total-preview"),
+			acceptedFiles     : "image/*",
+			paramName         : "file",
+			apiUrl            : "",
+			requestHeaders    : {},
+			rules             : {},
+			gallery           : false,
         };
-        const globals  = typeof window.totalcms === "object" ? window.totalcms.options : {};
-        this.options = Object.assign({}, globals, defaults, options);
+		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
+        this.options = Object.assign({}, defaults, options, dataOptions);
 
         this.options.gallery = (this.options.type === "gallery"||this.options.type === "depot");
 
-        // Delete the request content type. Let Dropzone set it.
-        // this.options.requestHeaders["Content-Type"] = "multipart/form-data;";
-        if (this.options.requestHeaders["Content-Type"]) {
-            delete this.options.requestHeaders["Content-Type"];
-        }
-
-        this.log.debug(this.constructor.name+" Options",this.options);
-
         // Get the rule set for uploading the file
-        if (this.container.dataset.rules) {
-            const rules = JSON.parse(this.container.dataset.rules);
-            this.testSet = new DropletTestSet(rules);
+        if (Object.keys(this.options.rules).length > 0) {
+            this.testSet = new DropletTestSet(this.options.rules);
         }
-
-        this.form = this.options.form;
-        if (!this.form) console.error("Droplet: No form defined");
 
         this.setupDropzone();
     }
 
-    schema() {
-        return {
-            type     : "object",
-            fieldset : this.options.type
-        };
-    }
-
-    getValue() {
-        return this.input.value.length > 0 ? JSON.parse(this.input.value) : {};
-    }
-
-    setValue(image) {
-        if (image === null || !image.filename) {
-            console.warn("Image object not valid",image);
-            return;
-        }
-
-        // Set the value to the image object
-        this.input.value = JSON.stringify(image);
-
-        // Create Image Works API for the preview image
-        const imageWorks = new ImageWorks({
-            collection : this.form.collection,
-            id         : this.form.id,
-            property   : this.name,
-            file       : image.filename,
-            date       : image.uploadDate
-        });
-        // Get all of the data needed to build the imageWorks query
-        const rules      = JSON.parse(this.container.dataset.imageworks);
-        const imageQuery = imageWorks.buildQuery(rules);
-        const preview    = this.container.querySelectorAll(".total-preview").item(0);
-
-        this.log.debug("image query",imageQuery);
-
-        this.api.fetchCachedAPI("/templates/admin/image").then(json => {
-            this.api.processTemplate({"image":imageQuery}, json.template, preview);
-        });
-
-    }
-
-    apiUrl() {
-        const components = [this.options.uri, "collections", this.form.collection, this.form.id, this.name];
-        this.log.debug("Droplet API Components:",components);
-        return components.join("/");
-    }
+	updateUrl(url) {
+		this.dropzone.options.url = url;
+	}
 
     autoProcessQueue() {
-        if (this.dropzone) {
-            this.log.info("Enabled autoProcessQueue");
-            this.dropzone.options.autoProcessQueue = true;
-        }
-        else {
-            this.log.warn("Unable to enable autoProcessQueue");
-        }
-    }
-
-    updateUri() {
-        if (this.dropzone) {
-            this.log.info("Updated dropzone URI");
-            this.dropzone.options.url = this.apiUrl();
-        }
-        else {
-            this.log.warn("Unable to update dropzone URI");
-        }
-
+        if (!this.dropzone) {
+			console.warn("Unable to enable autoProcessQueue");
+			return;
+		}
+		this.dropzone.options.autoProcessQueue = true;
     }
 
     newDropzone() {
         const disableFunction = function(){};
 
         return new Dropzone(this.container, {
-            url: this.apiUrl(),
-            method:"post",
-            headers:this.options.requestHeaders,
-            parallelUploads:1,
-            paramName:this.options.paramName,
-            autoProcessQueue:this.form.form.classList.contains("edit-form"),
-            thumbnailWidth:null,
-            thumbnailHeight:null,
-            previewsContainer: this.options.previewsContainer,
-            previewTemplate: this.previewTemplate,
-            clickable: [
-                this.container.getElementsByClassName("dz-clickable").item(0),
-                // this.container.getElementsByTagName("img").item(0)
-            ],
-            forceFallback: false,
-            addedfile:disableFunction,
-            acceptedFiles: this.options.acceptedFiles,
-            accept: this.accept
+			url               : this.options.apiUrl,
+			method            : "post",
+			headers           : this.options.requestHeaders,
+			parallelUploads   : 1,
+			paramName         : this.options.paramName,
+			autoProcessQueue  : this.options.autoProcessQueue,
+			thumbnailWidth    : null,
+			thumbnailHeight   : null,
+			previewsContainer : this.options.previewsContainer,
+			previewTemplate   : this.previewTemplate,
+			clickable         : Array.from(this.container.getElementsByClassName("dz-clickable")),
+			forceFallback     : false,
+			addedfile         : disableFunction,
+			acceptedFiles     : this.options.acceptedFiles,
+			accept            : this.accept,
         });
     }
 
     setupDropzone() {
-        // Fetch the image template
-        this.api.fetchCachedAPI("/templates/admin/image").then(json => {
-            // assign template to the object so Dropzone can access it
-            this.previewTemplate = json.template;
+		// Create new Dropzone
+		this.dropzone = this.newDropzone();
 
-            // Create new Dropzone
-            this.dropzone = this.newDropzone();
+		// File Events
+		this.dropzone.on("addedfile", file => this.event_addedfile(file));
+		this.dropzone.on("thumbnail", (file,data) => this.event_thumbnail(file,data));
+		this.dropzone.on("uploadprogress", (file, progress, bytes) => this.event_uploadprogress(file, progress, bytes));
+		this.dropzone.on("error", (file, message) => this.event_error(file, message));
+		this.dropzone.on("sending", (file, xhr, formData) => this.event_sending(file, xhr, formData));
+		this.dropzone.on("success", (file, xhr, formData) => this.event_success(file, xhr, formData));
 
-            // File Events
-            this.dropzone.on("addedfile", file => this.event_addedfile(file));
-            this.dropzone.on("thumbnail", (file,data) => this.event_thumbnail(file,data));
-            this.dropzone.on("uploadprogress", (file, progress, bytes) => this.event_uploadprogress(file, progress, bytes));
-            this.dropzone.on("error", (file, message) => this.event_error(file, message));
-            this.dropzone.on("sending", (file, xhr, formData) => this.event_sending(file, xhr, formData));
-            this.dropzone.on("success", (file, xhr, formData) => this.event_success(file, xhr, formData));
+		// Mouse Events
+		this.dropzone.on("dragenter", event => this.event_dragenter(event));
+		this.dropzone.on("dragleave", event => this.event_dragleave(event));
+		this.dropzone.on("drop", event => this.event_drop(event));
 
-            // Mouse Events
-            this.dropzone.on("dragenter", event => this.event_dragenter(event));
-            this.dropzone.on("dragleave", event => this.event_dragleave(event));
-            this.dropzone.on("drop", event => this.event_drop(event));
-
-            // Event Listeners
-            this.container.addEventListener("processing", () => {
-                this.dropzone.options.autoProcessQueue = true;
-            });
-        });
+		// Event Listeners
+		this.container.addEventListener("processing", () => {
+			this.dropzone.options.autoProcessQueue = true;
+		});
     }
 
     onQueueComplete(callback) {
@@ -175,7 +103,6 @@ class Droplet extends Fieldset {
 
     pendingFiles() {
         const files = this.dropzone.getQueuedFiles().concat(this.dropzone.getUploadingFiles());
-        this.log.debug("Pending Files",files);
         return files;
     }
 
@@ -202,7 +129,7 @@ class Droplet extends Fieldset {
     // Called just before the file is sent
     event_sending(file,xhr,formData) {
         // Add additional form data
-        formData.append("filesize", file.size);
+        // formData.append("filesize", file.size);
         // formData.append("alt", file.size);
         // formData.append("link", file.size);
         // formData.append("colors", file.size);
@@ -210,18 +137,18 @@ class Droplet extends Fieldset {
 
     // When a file is added to the list
     event_addedfile(file) {
-        file.previewElement  = window.Dropzone.createElement(this.dropzone.options.previewTemplate.trim());
+        file.previewElement  = Dropzone.createElement(this.dropzone.options.previewTemplate.trim());
         file.previewTemplate = file.previewElement;
 
         if (!this.options.gallery) {
+			// Remove all other previews for images
             this.dropzone.previewsContainer.innerHTML = "";
         }
         this.dropzone.previewsContainer.appendChild(file.previewElement);
 
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved
-            this.container.classList.add("unsaved");
-            this.form.unsaved();
+			this.field.changed();
         }
     }
 
@@ -233,14 +160,13 @@ class Droplet extends Fieldset {
         for (const thumb of thumbs) {
             thumb.alt = file.name;
             thumb.src = data;
-            // thumb.style.width="auto";
-            // thumb.style.height="auto";
         }
 
         // Process file rules
         // This happens here becuase its the first time that we have access to file info
         if (this.testSet) {
-            this.testSet.processRules(file);
+			const count = this.container.querySelectorAll(".dz-preview").length;
+            this.testSet.processRules(file, count);
             if (!this.testSet.pass) {
                 console.error(this.testSet.errors);
                 file.rejectFile(this.testSet.errors);
@@ -286,21 +212,16 @@ class Droplet extends Fieldset {
         if (typeof(message) === "object") message = message.message;
         file.previewElement.classList.remove("saving");
         file.previewElement.classList.add("error","dz-error");
-        this.form.error(message);
-        // Add error to tooltip.js (replace foundation tooltips below)
-        // $(file.previewElement).find('.has-tip').attr('title',message);
-        // $(document).foundation('tooltip','reflow');
+        this.field.error(message);
     }
 
     // The file has been uploaded successfully
     event_success(file, response) {
         if (typeof(response) === "object") {
             if (file.previewElement) {
-                if (typeof(response.data) === "string") {
-                    file.previewElement.dataset.filename = this.basename(response.data);
-                }
                 file.previewElement.classList.remove("dz-processing");
                 file.previewElement.classList.add("dz-success");
+				this.field.fileUploaded(file, response);
             }
         }
         else {
@@ -315,7 +236,6 @@ class Droplet extends Fieldset {
 
     // The user dragged a file onto the Dropzone
     event_dragenter(event) {
-        this.log.debug("event_dragenter",event);
         const classesToRemove = ["dz-processing", "dz-success", "dz-complete"];
         const preview = this.container.getElementsByClassName("dz-preview").item(0);
         if (preview) {
@@ -326,13 +246,12 @@ class Droplet extends Fieldset {
 
     // The user dragged a file out of the Dropzone
     event_dragleave(event) {
-        this.log.debug("event_dragleave",event);
         return this.container.classList.remove("dz-drag-hover");
     }
 
     // The user dropped something onto the dropzone
     event_drop(event) {
-        this.log.debug("event_drop",event);
+		// this.container.querySelector(".image-not-found")?.classList.remove("image-not-found");
         return this.container.classList.remove("dz-drag-hover");
     }
 }

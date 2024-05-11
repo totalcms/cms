@@ -20,6 +20,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -29,7 +30,9 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
+use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Support\Config;
@@ -137,6 +140,12 @@ return [
         return new BufferController();
     },
 
+    FakerFactory::class => function (ContainerInterface $container) {
+        return new FakerFactory(
+            $container->get(Config::class)
+        );
+    },
+
     IndexReader::class => function (ContainerInterface $container) {
         return new IndexReader(
             $container->get(IndexRepository::class),
@@ -153,11 +162,20 @@ return [
             $container->get(Config::class),
             $container->get(IndexReader::class),
             $container->get(ObjectFetcher::class),
+            $container->get(CollectionFetcher::class),
         );
     },
 
+    TotalCMSTwigPatterns::class => function (ContainerInterface $container) {
+        return new TotalCMSTwigPatterns();
+    },
+
     TotalCMSTwigExtension::class => function (ContainerInterface $container) {
-        return new TotalCMSTwigExtension($container->get(TotalCMSTwigAdapter::class));
+        return new TotalCMSTwigExtension(
+            $container->get(TotalCMSTwigAdapter::class),
+            $container->get(TotalCMSTwigPatterns::class),
+            $container->get(FakerFactory::class),
+        );
     },
 
     TwigEngine::class => function (ContainerInterface $container) {

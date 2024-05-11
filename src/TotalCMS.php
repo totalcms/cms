@@ -3,8 +3,10 @@
 namespace TotalCMS;
 
 use DI\Container;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Factory\LoggerFactory;
 
 // ---------------------------------------------------------------------------------
 // Entry point for Total CMS PHP API
@@ -14,11 +16,15 @@ class TotalCMS
     private BufferController $buffer;
     private Container $container;
     private TwigEngine $twigEngine;
+    private LoggerInterface $logger;
 
     public function __construct()
     {
         // Build PHP-DI Container instance
         $this->container = new Container(require __DIR__ . '/../config/container.php');
+
+        $loggerFactory = $this->container->get(LoggerFactory::class);
+        $this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
 
         $this->buffer     = $this->container->get(BufferController::class);
         $this->twigEngine = $this->container->get(TwigEngine::class);
@@ -41,9 +47,11 @@ class TotalCMS
         try {
             return $this->twigEngine->renderString($content, $data);
         } catch (\Throwable $th) {
-            // TODO: Handle exception
-            return $th->getMessage() . ':' . $th->getTraceAsString();
+            $error = sprintf('processBufferMacros: %s: %s', $th->getMessage(), $th->getTraceAsString());
+            $this->logger->error($error);
         }
+
+        return $content;
     }
 
     public function processMacros(string $templateName, array $data = []): string
@@ -51,8 +59,9 @@ class TotalCMS
         try {
             return $this->twigEngine->render($templateName, $data);
         } catch (\Throwable $th) {
-            // TODO: Handle exception
-            // return $th->getMessage() . ':' . $th->getTraceAsString();
+            $error = sprintf('processMacros: %s: %s', $th->getMessage(), $th->getTraceAsString());
+            $this->logger->error($error);
+
             return '';
         }
     }

@@ -1,16 +1,44 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+	<meta name="robots" content="noindex, nofollow">
 	<title>Total CMS Admin</title>
-	<meta name="description" content="Total CMS Admin">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+    html {
+        box-sizing : border-box;
+        font-size  : 100%
+    }
+    *,
+    ::after,
+    ::before {
+        box-sizing : inherit
+    }
+    body {
+        font-family : ui-sans-serif, system-ui, -system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        -webkit-font-smoothing : antialiased;
+    }
+    .container {
+        max-width : 1000px;
+        margin    : 0 auto;
+    }
+    </style>
+
+	<link rel="stylesheet" href="{{ totalcms.api }}/assets/forms.css"/>
+
+	{% block head %}{% endblock %}
 </head>
 <body>
 
-	<main>
+	<main class="admin-layout container">
 		{% block content %}{% endblock %}
 	</main>
 
+	<script type="module" src="{{ totalcms.api }}/assets/admin.js"></script>
+
+	{% block bodyBelow %}{% endblock %}
 </body>
 </html>

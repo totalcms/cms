@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Action\Schema;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\SchemaMetaTransformer;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 final class SchemaSaveAction
 {
@@ -34,17 +34,10 @@ final class SchemaSaveAction
      *
      * @return ResponseInterface
      */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
-        $body = (string)$request->getBody();
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $data = json_decode($request->getBody(), true);
 
-        return $this->renderer->jsonItem(
-            $response,
-            $this->service->saveSchema($body),
-            new SchemaMetaTransformer()
-        );
+        return $this->renderer->jsonItem($response, $this->service->saveSchema($data), new SchemaMetaTransformer());
     }
 }
