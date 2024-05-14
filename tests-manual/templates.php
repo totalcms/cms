@@ -83,7 +83,7 @@ $totalcms->startBuffer(); // Start output buffering again
     {% endfor %}
 
     <!-- Image -->
-    <img src="{{ cms.image('myimage', 'w=200&h=400&fit=focalpoint', 'jpg') }}" alt="{{ cms.alt('myimage') }}">
+    <img src="{{ cms.imagePath('myimage', 'w=200&h=400&fit=focalpoint', 'jpg') }}" alt="{{ cms.alt('myimage') }}">
 
     <p>End</p>
 

@@ -11,7 +11,7 @@
 	<h2>Feed Posts</h2>
 	{% for post in posts %}
 		<article>
-			<img = src="{{ cms.image(post.id, {w:600}, 'feed','image') }}" alt="{{ cms.alt(post.id, 'feed','image') }}">
+			<img = src="{{ cms.imagePath(post.id, {w:600}, 'feed','image') }}" alt="{{ cms.alt(post.id, 'feed','image') }}">
 			<h4>{{ post.title }}</h4>
 			<p>{{ post.created }}</p>
 			<p>{{ post.content | raw }}</p>

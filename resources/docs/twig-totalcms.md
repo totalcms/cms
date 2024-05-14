@@ -36,6 +36,6 @@ cms.depot(string $id, string $collection = 'depot', string $property = 'files'):
 ### Image Data
 
 ```
-cms.image(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
+cms.imagePath(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
 cms.alt(string $id, string $collection = 'image', string $property = 'image'): string
 ```

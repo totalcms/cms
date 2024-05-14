@@ -59,5 +59,5 @@ Sample twig templates.
 {% endfor %}
 
 <!-- Image -->
-<img src="{{ cms.image('myimage',{w:600,h:500}) }}" alt="{{ cms.alt('myimage') }}">
+<img src="{{ cms.imagePath('myimage',{w:600,h:500}) }}" alt="{{ cms.alt('myimage') }}">
 ```

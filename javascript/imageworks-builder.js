@@ -74,12 +74,12 @@ document.addEventListener("DOMContentLoaded", event => {
 		let options = JSON.stringify(data);
 		options = options.replace(/"(\w+)"\s*:/g, '$1:');
 
-		let macro = `{{ cms.image('${id}', '${options}', '${collection}', '${property}') }}`;
+		let macro = `{{ cms.imagePath('${id}', '${options}', '${collection}', '${property}') }}`;
 		if (property === "image") {
-			macro = `{{ cms.image('${id}', '${options}', '${collection}') }}`;
+			macro = `{{ cms.imagePath('${id}', '${options}', '${collection}') }}`;
 
 			if (collection === "image") {
-				macro = `{{ cms.image('${id}', '${options}') }}`;
+				macro = `{{ cms.imagePath('${id}', '${options}') }}`;
 			}
 		}
 		const macroContent = document.getElementById("twig-macro");

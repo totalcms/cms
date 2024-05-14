@@ -78,7 +78,7 @@
 			<button type="button" class="clear"    title="Clear Cache"></button>
 			<button type="button" class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ cms.image(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ cms.imagePath(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
@@ -102,7 +102,7 @@
 	<dialog class="cms-modal split-view image-edit-dialog">
 
 		<section class="image-preview">
-			<img src="{{ cms.image(id,{w:600,h:400}, collection, property) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<img src="{{ cms.imagePath(id,{w:600,h:400}, collection, property) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 			<div class="focal-point" style="top:{{ imageData.focalpoint.y }}%;left:{{ imageData.focalpoint.x }}%"></div>
 		</section>
 
