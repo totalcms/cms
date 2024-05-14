@@ -11,23 +11,12 @@ if (php_sapi_name() == 'cli-server') {
     if (str_contains($_SERVER['DOCUMENT_ROOT'], 'RapidWeaver') || str_contains($_SERVER['DOCUMENT_ROOT'], 'Stacks')) {
         $_SERVER['APP_ENV'] = 'preview';
     }
-    if ($_GET['route']) {
-        $path = __DIR__ . $_GET['route'];
-        if (file_exists($path)) {
-            $ext  = pathinfo($path, PATHINFO_EXTENSION);
-            switch ($ext) {
-                case 'css':
-                    $mime = 'text/css';
-                    break;
-                case 'js':
-                    $mime = 'application/javascript';
-                    break;
-                default:
-                    $mime = mime_content_type($path);
-            }
-
-            header('Content-Type: ' . $mime);
-            echo file_get_contents($path);
+    if (isset($_GET['route'])) {
+        $filepath = __DIR__ . $_GET['route'];
+        if (file_exists($filepath)) {
+            // redirect to the static asset files in the public folder
+            $path = rtrim($path, '/') . $_GET['route'];
+            header("Location: $path");
             exit;
         }
     }

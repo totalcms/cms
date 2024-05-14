@@ -221,13 +221,24 @@ final class TotalCMSTwigAdapter
         $api = $this->api . "/imageworks/$collection/$id/$property.$type";
 
         // cache busting links
-        $cache = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
-        $api .= "?cache=$cache";
+        $options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
 
-        if (!empty($options)) {
-            $options = http_build_query($options);
-            $api .= "&$options";
+        // From Stacks Preview Server - Not used in Imageworks and breaks the image generation
+        unset($options['datadir']);
+        unset($options['route']);
+
+        // Parse the existing URL and its query parameters
+        $parsedUrl      = parse_url($api);
+        $existingParams = [];
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $existingParams);
         }
+
+        // Merge the existing parameters with the new options
+        $options = array_merge($existingParams, $options);
+
+        // Reconstruct the URL without the original query string, and append the new query string
+        $api = $parsedUrl['path'] . '?' . http_build_query($options);
 
         return $api;
     }
