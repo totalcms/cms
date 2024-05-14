@@ -228,7 +228,12 @@ final class TotalCMSTwigAdapter
         unset($options['route']);
 
         // Parse the existing URL and its query parameters
-        $parsedUrl      = parse_url($api);
+        $parsedUrl = parse_url($api);
+
+        if (!isset($parsedUrl['path'])) {
+            return '';
+        }
+
         $existingParams = [];
         if (isset($parsedUrl['query'])) {
             parse_str($parsedUrl['query'], $existingParams);

@@ -14,7 +14,7 @@ final class TwigCacheCleaner
     ) {
     }
 
-    private function deleteDir($dir): bool
+    private function deleteDir(string $dir): bool
     {
         if (!file_exists($dir)) {
             return true;
@@ -24,7 +24,12 @@ final class TwigCacheCleaner
             return unlink($dir);
         }
 
-        foreach (scandir($dir) as $item) {
+        $dirs = scandir($dir);
+        if ($dirs === false) {
+            return false;
+        }
+
+        foreach ($dirs as $item) {
             if ($item == '.' || $item == '..') {
                 continue;
             }
