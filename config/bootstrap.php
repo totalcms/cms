@@ -7,15 +7,9 @@ use Slim\App;
 if (php_sapi_name() == 'cli-server') {
     $_SERVER['SCRIPT_NAME'] = basename($_SERVER['SCRIPT_FILENAME']);
     $file                   = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
     if (file_exists(__DIR__ . $file)) {
         /* Return contents of the static file. */
         return false;
-    }
-
-    if (str_contains($_SERVER['DOCUMENT_ROOT'], 'RapidWeaver') || str_contains($_SERVER['DOCUMENT_ROOT'], 'Stacks')) {
-        // Stacks Internal PHP Preview server
-        $_SERVER['APP_ENV'] = 'preview';
     }
 }
 
