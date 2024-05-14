@@ -41,6 +41,36 @@ export default class TotalCMS {
         this.config = this.options.config||{};
     }
 
+	clearTwigCacheListeners() {
+		const clearCacheButtons = Array.from(document.querySelectorAll("button.cms-clear-cache,a.cms-clear-cache,.cms-clear-cache a,.cms-clear-cache button"));
+		clearCacheButtons.forEach(button => {
+			button.addEventListener("click", event => {
+				event.preventDefault();
+				this.clearTwigCache(event.target);
+			});
+		});
+	}
+
+	clearTwigCache(button) {
+		this.postAPI('/cache', {}, "DELETE").then(response => {
+			this.toggleButtonContent(button, "✓");
+			console.log("Cache Cleared", response);
+		});
+	}
+
+	toggleButtonContent(button, newContent, toggleClass, timeout = 2000) {
+		const originalText = button.textContent;
+		button.style.width = `${button.offsetWidth}px`;
+		if (toggleClass) button.classList.add(toggleClass);
+		button.textContent = newContent;
+
+		setTimeout(() => {
+			if (toggleClass) button.classList.remove(toggleClass);
+			button.textContent = originalText;
+			button.style.width = "";
+		}, timeout);
+	}
+
     // Set, Get, Update config values
     setConfig(key, value) {
         this.config[key] = value;
