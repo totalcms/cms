@@ -180,5 +180,5 @@ document.addEventListener("DOMContentLoaded", event => {
 		getImageSize();
 		generateTwigMacro(data);
 	});
-
+	generateTwigMacro(getFormData());
 });
