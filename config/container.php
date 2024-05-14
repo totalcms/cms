@@ -31,6 +31,7 @@ use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
+use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
@@ -180,5 +181,9 @@ return [
 
     TwigEngine::class => function (ContainerInterface $container) {
         return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
+    },
+
+    TwigCacheCleaner::class => function (ContainerInterface $container) {
+        return new TwigCacheCleaner($container->get(Config::class));
     },
 ];

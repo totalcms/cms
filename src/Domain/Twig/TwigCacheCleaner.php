@@ -14,7 +14,7 @@ final class TwigCacheCleaner
     ) {
     }
 
-    private function deleteDir(string $dir): bool
+    private static function deleteDir(string $dir): bool
     {
         if (!file_exists($dir)) {
             return true;
