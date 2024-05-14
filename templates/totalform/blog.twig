@@ -8,11 +8,11 @@
 		helpStyle   : args.helpStyle,
 	}) }}
 
-		{% set tags       = selectOptions(totalcms.property(collection, "tags")) %}
-		{% set categories = selectOptions(totalcms.property(collection, "categories")) %}
-		{% set labels     = selectOptions(totalcms.property(collection, "labels")) %}
-		{% set genres     = selectOptions(totalcms.property(collection, "genre")) %}
-		{% set authors    = selectOptions(totalcms.property(collection, "authors")) %}
+		{% set tags       = selectOptions(cms.property(collection, "tags")) %}
+		{% set categories = selectOptions(cms.property(collection, "categories")) %}
+		{% set labels     = selectOptions(cms.property(collection, "labels")) %}
+		{% set genres     = selectOptions(cms.property(collection, "genre")) %}
+		{% set authors    = selectOptions(cms.property(collection, "authors")) %}
 
 		<div class="form-columns col-2">
 			<section>

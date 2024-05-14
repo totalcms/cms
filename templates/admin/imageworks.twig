@@ -41,7 +41,7 @@
 {% endmacro %}
 
 {% block head %}
-	<link rel="stylesheet" href="{{ totalcms.api }}/assets/imageworks-builder.css"/>
+	<link rel="stylesheet" href="{{ cms.api }}/assets/imageworks-builder.css"/>
 {% endblock %}
 
 {% block content %}
@@ -97,7 +97,7 @@
 	<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}">
     	<h1>Total CMS Image Builder</h1>
 		<div class="split-view">
-			<img src="{{ totalcms.image(id, values, collection, property) }}"
+			<img src="{{ cms.image(id, values, collection, property) }}"
 				data-id="{{id}}"
 				data-collection="{{collection}}"
 				data-property="{{property}}"
@@ -105,9 +105,9 @@
 			<div class="image-info">
 				<div>
 					<h4>Macro:</h4>
-					<pre id="twig-macro">&#123;&#123; totalcms.image("{{id}}", {w:{{values.w}}, h:{{values.h}}}) &#125;&#125;</pre>
+					<pre id="twig-macro">&#123;&#123; cms.image("{{id}}", {w:{{values.w}}, h:{{values.h}}}) &#125;&#125;</pre>
 					<button type="button" id="copy-macro">Copy Macro</button>
-					<a href="{{ totalcms.image(id, values, collection, property) }}" download id="download-image" title="Download Preview Image"></a>
+					<a href="{{ cms.image(id, values, collection, property) }}" download id="download-image" title="Download Preview Image"></a>
 				</div>
 				<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
 			</div>
@@ -309,5 +309,5 @@
 {% endblock %}
 
 {% block bodyBelow %}
-	<script type="module" src="{{ totalcms.api }}/assets/imageworks-builder.js"></script>
+	<script type="module" src="{{ cms.api }}/assets/imageworks-builder.js"></script>
 {% endblock %}

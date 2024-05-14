@@ -56,34 +56,34 @@ $totalcms->startBuffer(); // Start output buffering again
     <!-- Twig Template Testing -->
 
     <!-- Get Collection -->
-    {% set objects = totalcms.collection("text") %}
+    {% set objects = cms.collection("text") %}
 
     {% for object in objects %}
     <h1>{{ object.id }}</h1>
     {% endfor %}
 
     <!-- Get index of a property from a collection. Ex: list of all categories -->
-    {% for id in totalcms.property("text", "id") %}
+    {% for id in cms.property("text", "id") %}
         <span class="label">{{ id|upper }}</span>
     {% endfor %}
 
     <!-- Get Object -->
-    {% set page = totalcms.object("page", "about") %}
+    {% set page = cms.object("page", "about") %}
     <h1>{{ page.title }}</h1>
     <p>{{ page.desc }}</p>
 
     <!-- Get Text -->
-    <h3>{{ totalcms.text("mytext") }}</h3>
-    <h3>{{ totalcms.data("text", "mytext", "id") }}</h3>
+    <h3>{{ cms.text("mytext") }}</h3>
+    <h3>{{ cms.data("text", "mytext", "id") }}</h3>
 
     <!-- Depot -->
-    {% for file in totalcms.depot("mydepot") %}
+    {% for file in cms.depot("mydepot") %}
         <h1>{{ file.name }}</h1>
         <p>{{ file.uploadDate | date('c') }}</p>
     {% endfor %}
 
     <!-- Image -->
-    <img src="{{ totalcms.image('myimage', 'w=200&h=400&fit=focalpoint', 'jpg') }}" alt="{{ totalcms.alt('myimage') }}">
+    <img src="{{ cms.image('myimage', 'w=200&h=400&fit=focalpoint', 'jpg') }}" alt="{{ cms.alt('myimage') }}">
 
     <p>End</p>
 
@@ -109,5 +109,5 @@ echo $totalcms->processBufferMacros();
     - There should be an API to save templates to the CMS
     - There will be macros to help with common Total CMS elements
     - There will be a global variable called totalcms that contains the TotalCMS object
-    - Function for loading in data from the CMS via global totalcms variable. ex: {{ totalcms.load('collection/blog') }}
+    - Function for loading in data from the CMS via global totalcms variable. ex: {{ cms.load('collection/blog') }}
  -->

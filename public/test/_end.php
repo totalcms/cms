@@ -1,6 +1,6 @@
 </div>
 
-<script type="module" src="{{ totalcms.api }}/assets/admin.js"></script>
+<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
 </body>
 </html>
 

@@ -43,7 +43,7 @@ $totalcms->startBuffer(); // Start output buffering
         margin    : 0 auto;
     }
     </style>
-	<link rel="stylesheet" href="{{ totalcms.api }}/assets/forms.css">
+	<link rel="stylesheet" href="{{ cms.api }}/assets/forms.css">
 </head>
 <body>
 
@@ -57,7 +57,7 @@ $totalcms->startBuffer(); // Start output buffering again
     <!-- Twig Template Testing -->
 
     <!-- Get Collection -->
-    {% set objects = totalcms.objects("custom") %}
+    {% set objects = cms.objects("custom") %}
 
     {% for object in objects %}
     <h1>{{ object.id | humanize }}</h1>
@@ -74,27 +74,27 @@ $totalcms->startBuffer(); // Start output buffering again
     {% endfor %}
 
     <!-- Get index of a property from a collection. Ex: list of all categories -->
-    {% for id in totalcms.property("text", "id") %}
+    {% for id in cms.property("text", "id") %}
         <span class="label">{{ id|upper }}</span>
     {% endfor %}
 
     <!-- Get Object -->
-    {% set page = totalcms.object("page", "about") %}
+    {% set page = cms.object("page", "about") %}
     <h1>{{ page.title }}</h1>
     <p>{{ page.desc }}</p>
 
     <!-- Get Text -->
-    <h3>{{ totalcms.text("mytext") }}</h3>
-    <h3>{{ totalcms.data("text", "mytext", "id") }}</h3>
+    <h3>{{ cms.text("mytext") }}</h3>
+    <h3>{{ cms.data("text", "mytext", "id") }}</h3>
 
     <!-- Depot -->
-    {% for file in totalcms.depot("mydepot") %}
+    {% for file in cms.depot("mydepot") %}
         <h1>{{ file.name }}</h1>
         <p>{{ file.uploadDate | date('c') }}</p>
     {% endfor %}
 
     <!-- Image -->
-    <img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" alt="{{ totalcms.alt('myimage') }}">
+    <img src="{{ cms.image('myimage',{w:600,h:500}) }}" alt="{{ cms.alt('myimage') }}">
 
 
 	<div class="container">
@@ -112,7 +112,7 @@ $totalcms->startBuffer(); // Start output buffering again
     });
     </script>
 
-	<script src="{{ totalcms.api }}/assets/choices/choices.js"></script>
+	<script src="{{ cms.api }}/assets/choices/choices.js"></script>
     <script>
     const elements = Array.from(document.querySelectorAll('.list-field select'));
 	elements.forEach(element => {
@@ -125,24 +125,24 @@ $totalcms->startBuffer(); // Start output buffering again
 	});
     </script>
 
-	<script type="text/javascript" src="{{ totalcms.api }}/assets/codemirror/codemirror.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/codemirror/xml.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/dompurify/purify.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/froala_editor.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/align.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/code_beautifier.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/code_view.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/draggable.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/image.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/image_manager.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/link.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/lists.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/paragraph_format.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/paragraph_style.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/table.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/video.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/url.min.js"></script>
-    <script type="text/javascript" src="{{ totalcms.api }}/assets/froala/plugins/entities.min.js"></script>
+	<script type="text/javascript" src="{{ cms.api }}/assets/codemirror/codemirror.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/codemirror/xml.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/dompurify/purify.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/froala_editor.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/align.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/code_beautifier.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/code_view.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/draggable.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/image.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/image_manager.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/link.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/lists.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/paragraph_format.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/paragraph_style.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/table.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/video.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/url.min.js"></script>
+    <script type="text/javascript" src="{{ cms.api }}/assets/froala/plugins/entities.min.js"></script>
     <script>
     (function () {
 		const styledfields = Array.from(document.querySelectorAll('.styledtext-field textarea'));
@@ -247,5 +247,5 @@ echo $totalcms->processBufferMacros();
     - There should be an API to save templates to the CMS
     - There will be macros to help with common Total CMS elements
     - There will be a global variable called totalcms that contains the TotalCMS object
-    - Function for loading in data from the CMS via global totalcms variable. ex: {{ totalcms.load('collection/blog') }}
+    - Function for loading in data from the CMS via global totalcms variable. ex: {{ cms.load('collection/blog') }}
  -->

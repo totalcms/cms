@@ -10,12 +10,12 @@
 
 	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
-    {% set collection = args.collection|default(totalcms.getData("collection")) %}
-    {% set object     = args.object|default(totalcms.getData("object")) %}
+    {% set collection = args.collection|default(cms.getData("collection")) %}
+    {% set object     = args.object|default(cms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
-	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+	{% set defs = cms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = cms.getData("fieldDefaults") | merge(defs) | merge(args) %}
 
 	{% if args.value %}
 		{% set value = args.value %}

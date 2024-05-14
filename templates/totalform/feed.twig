@@ -12,7 +12,7 @@
 		{{ _self.hidden('created') }}
 		{{ _self.hidden('updated') }}
 
-		{% set options = selectOptions(totalcms.property(collection, "tags")) %}
+		{% set options = selectOptions(cms.property(collection, "tags")) %}
 
 		<div class="form-columns col-2">
 			<section>
