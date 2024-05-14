@@ -204,7 +204,7 @@ final class TotalCMSTwigAdapter
         }
 
         $image = $this->data($collection, $id, 'image');
-        if (!is_array($image) && !key_exists('uploadDate', $image)) {
+        if (!is_array($image) || !key_exists('uploadDate', $image)) {
             return '';
         }
 
