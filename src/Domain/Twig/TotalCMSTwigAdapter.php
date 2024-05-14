@@ -196,6 +196,22 @@ final class TotalCMSTwigAdapter
         return is_array($files) ? $files : [];
     }
 
+    public function image(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
+    {
+        if (empty($id)) {
+            return '';
+        }
+
+        $imagePath = $this->imagePath($id, $options, $collection, $property);
+        if (empty($imagePath)) {
+            return '';
+        }
+
+        $alt = $this->alt($id, $collection, $property);
+
+        return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
+    }
+
     // Get an text property from an object
     public function imagePath(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
     {
