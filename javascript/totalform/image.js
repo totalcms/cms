@@ -148,16 +148,7 @@ export default class ImageField extends TotalField {
 			apiUrl           : this.apiUploadImage(),
 			autoProcessQueue : this.form.isEditMode(),
 			acceptedFiles    : "image/*",
-			rules            : {
-				height:{min:500,max:1000},
-				width:{min:500,max:1000},
-				size:{min:0,max:1000},
-				orientation:'landscape',
-				aspectratio:'4:3', // width:height ratio
-				count:{max:10},
-				filetype:['image/jpeg'],
-				filename:['image.jpg'],
-			}
+			rules            : this.options.rules,
 		});
 	}
 

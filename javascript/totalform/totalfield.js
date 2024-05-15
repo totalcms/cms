@@ -21,6 +21,10 @@ export default class TotalField {
         this.options = Object.assign({}, defaults, options);
         this.form = this.options.form;
 
+		if (this.container.dataset.options) {
+			this.options = Object.assign(this.options, JSON.parse(this.container.dataset.options));
+		}
+
         // Delele the form from the options in case its used in JSON
         delete this.options.form;
 

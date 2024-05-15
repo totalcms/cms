@@ -34,12 +34,18 @@ export default class DropletTestSet {
         this.errors = [];
     }
 
+	clearErrors() {
+		this.errors = [];
+	}
+
     errors() {
         if (this.errors.length === 0) return null;
         return this.errors.join(". ");
     }
 
     processRules(file, count) {
+		this.clearErrors();
+
         if (this.rules.height) {
             this.rules.height.maxError = this.errorStrings.imgMaxHeight;
             this.rules.height.minError = this.errorStrings.imgMinHeight;

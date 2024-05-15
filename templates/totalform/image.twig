@@ -35,14 +35,18 @@
     {# Example Rules Options
 		options: {
 			rules : {
-				orientation : "landscape",
-				size        : {min:0,   max:3000},
-				height      : {min:500, max:1000},
-				width       : {min:0,   max:1000},
-				count	    : { max:5 },
+				height      : {min:500,max:1000},
+				width       : {min:500,max:1000},
+				size        : {min:0,max:1000},
+				orientation : 'landscape',
+				aspectratio : '4:3',
+				count       : {max:10},
+				filetype    : ['image/jpeg'],
+				filename    : ['image.jpg'],
 			}
 		}
 	#}
+
 	{% set imageData  = attribute(object, property) %}
 
 

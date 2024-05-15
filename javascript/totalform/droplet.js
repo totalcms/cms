@@ -31,7 +31,7 @@ export default class Droplet {
         this.options.gallery = (this.options.type === "gallery"||this.options.type === "depot");
 
         // Get the rule set for uploading the file
-        if (Object.keys(this.options.rules).length > 0) {
+        if (this.options.rules && Object.keys(this.options.rules).length > 0) {
             this.testSet = new DropletTestSet(this.options.rules);
         }
 
@@ -163,13 +163,13 @@ export default class Droplet {
         }
 
         // Process file rules
-        // This happens here becuase its the first time that we have access to file info
+        // This happens here because its the first time that we have access to file info
         if (this.testSet) {
 			const count = this.container.querySelectorAll(".dz-preview").length;
             this.testSet.processRules(file, count);
             if (!this.testSet.pass) {
-                console.error(this.testSet.errors);
                 file.rejectFile(this.testSet.errors);
+				this.displayTestSetErrors();
             }
         }
         file.acceptFile();
@@ -212,7 +212,14 @@ export default class Droplet {
         if (typeof(message) === "object") message = message.message;
         file.previewElement.classList.remove("saving");
         file.previewElement.classList.add("error","dz-error");
-        this.field.error(message);
+		if (this.testSet && this.testSet.errors) {
+			console.warn("Pre-Upload Validation Errors:",this.testSet.errors);
+			return;
+		}
+		if (!message) {
+			console.error("Undefined Droplet Error");
+		}
+		this.field.error(message);
     }
 
     // The file has been uploaded successfully
@@ -229,6 +236,11 @@ export default class Droplet {
             this.event_error(file, "Unknown error: "+response);
         }
     }
+
+	displayTestSetErrors() {
+		const errors = this.testSet.errors;
+		// TODO: Display errors
+	}
 
     //-----------------------------------------------------------------------
     // Mouse Event Methods
