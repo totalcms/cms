@@ -7,7 +7,7 @@ export default class DropletTestSet {
     //     size:{min:0,max:1000},
     //     count:{max:10},
     //     orientation:'landscape',
-    //     orientation:'4:3', // width:height ratio
+    //     aspectratio:'4:3', // width:height ratio
 	// 	   filetype:['image/jpeg'],
 	//     filename:['image.jpg'],
     // });
@@ -63,6 +63,9 @@ export default class DropletTestSet {
         if (this.rules.orientation) {
             this.orientation(this.rules.orientation,file.width,file.height);
         }
+		if (this.rules.aspectratio) {
+			this.aspectRatio(this.rules.aspectratio,file.width,file.height);
+		}
         if (this.rules.filetype) {
             this.patternMatch(this.rules.filetype, file.type);
         }
@@ -94,6 +97,20 @@ export default class DropletTestSet {
         return this.pass;
     }
 
+	aspectRatio(ratio, width, height) {
+        if (ratio.match(/\d+:\d+/)) {
+            const fields = ratio.match(/(\d+):(\d+)/);
+            const ratioRule = fields[1]/field[2];
+            const ratio = width/height;
+
+            if (ratio !== ratioRule) {
+                this.errors.push(this.errorStrings.imgRatio);
+                this.pass = false;
+            }
+        }
+        return this.pass;
+    }
+
     orientation(orientation, width, height) {
         if (orientation === "landscape" && width < height) {
             this.errors.push(this.errorStrings.imgLandscape);
@@ -106,16 +123,6 @@ export default class DropletTestSet {
         else if (orientation === "square" && width !== height) {
             this.errors.push(this.errorStrings.imgSquare);
             this.pass = false;
-        }
-        else if (orientation.match(/\d+:\d+/)) {
-            const fields = orientation.match(/(\d+):(\d+)/);
-            const ratioRule = fields[1]/field[2];
-            const ratio = width/height;
-
-            if (ratio !== ratioRule) {
-                this.errors.push(this.errorStrings.imgRatio);
-                this.pass = false;
-            }
         }
         return this.pass;
     }
