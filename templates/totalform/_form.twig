@@ -16,6 +16,8 @@
 		helpOnHover : false,
 		helpOnFocus : false,
 		helpStyle   : "",
+		newAction   : false,
+		editAction  : false,
 	} | merge(args) %}
 
 	{#
@@ -91,16 +93,37 @@
 	{% endif %}
 
 	{% if id is empty %}
-		<form class="totalform {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-method="{{method}}"
-			data-api="{{cms.api}}" data-route="/collections/{{collection}}">
+		<form class="totalform {{class}}"
+			{% if args.newAction %}
+				data-new-action="{{args.newAction|json_encode}}"
+			{% endif %}
+			{% if args.editAction %}
+				data-edit-action="{{args.editAction|json_encode}}"
+			{% endif %}
+			data-schema="{{collectionData.schema}}"
+			data-collection="{{collection}}"
+			data-method="{{method}}"
+			data-api="{{cms.api}}"
+			data-route="/collections/{{collection}}">
 	{% else %}
 		{# force method to be PUT you cannot use POST on an existing object #}
 		{% if method == 'post' %}
 			{%set method = 'put' %}
 		{% endif %}
 		{{ cms.storeData("object", cms.object(collection, id)) }}
-		<form class="totalform edit-mode {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
-			data-api="{{cms.api}}" data-route="/collections/{{collection}}/{{id}}">
+		<form class="totalform edit-mode {{class}}"
+			{% if args.newAction %}
+				data-new-action="{{args.newAction|json_encode}}"
+			{% endif %}
+			{% if args.editAction %}
+				data-edit-action="{{args.editAction|json_encode}}"
+			{% endif %}
+			data-schema="{{collectionData.schema}}"
+			data-collection="{{collection}}"
+			data-id="{{id}}"
+			data-method="{{method}}"
+			data-api="{{cms.api}}"
+			data-route="/collections/{{collection}}/{{id}}">
 	{% endif %}
 {% endmacro %}
 
