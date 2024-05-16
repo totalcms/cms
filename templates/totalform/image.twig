@@ -17,12 +17,12 @@
 {% macro image(property, args = {}) %}
 	{# -- Begin Boilerplate -- #}
     {% set uuid       = uniqid() %}
-    {% set collection = args.collection|default(totalcms.getData("collection")) %}
-    {% set object     = args.object|default(totalcms.getData("object")) %}
+    {% set collection = args.collection|default(cms.getData("collection")) %}
+    {% set object     = args.object|default(cms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
-	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
-	{% set args = totalcms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+	{% set defs = cms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = cms.getData("fieldDefaults") | merge(defs) | merge(args) %}
 	{# -- End Boilerplate -- #}
 
 	{# Override args with static values #}
@@ -35,14 +35,18 @@
     {# Example Rules Options
 		options: {
 			rules : {
-				orientation : "landscape",
-				size        : {min:0,   max:3000},
-				height      : {min:500, max:1000},
-				width       : {min:0,   max:1000},
-				count	    : { max:5 },
+				height      : {min:500,max:1000},
+				width       : {min:500,max:1000},
+				size        : {min:0,max:1000},
+				orientation : 'landscape',
+				aspectratio : '4:3',
+				count       : {max:10},
+				filetype    : ['image/jpeg'],
+				filename    : ['image.jpg'],
 			}
 		}
 	#}
+
 	{% set imageData  = attribute(object, property) %}
 
 
@@ -78,7 +82,7 @@
 			<button type="button" class="clear"    title="Clear Cache"></button>
 			<button type="button" class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ totalcms.image(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ cms.imagePath(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
@@ -90,8 +94,8 @@
 {% macro linkDialog(id, collection, property) %}
 
 	<dialog class="cms-modal image-link-dialog">
-		{% set join = '?' in totalcms.api ? '&' : '?' %}
-		<iframe style="width:100%;height:100%" data-src="{{totalcms.api}}/admin/imageworks{{join}}id={{id}}&collection={{collection}}&property={{property}}" frameborder="0"></iframe>
+		{% set join = '?' in cms.api ? '&' : '?' %}
+		<iframe style="width:100%;height:100%" data-src="{{cms.api}}/admin/imageworks{{join}}id={{id}}&collection={{collection}}&property={{property}}" frameborder="0"></iframe>
 	</dialog>
 
 {% endmacro %}
@@ -102,7 +106,7 @@
 	<dialog class="cms-modal split-view image-edit-dialog">
 
 		<section class="image-preview">
-			<img src="{{ totalcms.image(id,{w:600,h:400}, collection, property) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<img src="{{ cms.imagePath(id,{w:600,h:400}, collection, property) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 			<div class="focal-point" style="top:{{ imageData.focalpoint.y }}%;left:{{ imageData.focalpoint.x }}%"></div>
 		</section>
 

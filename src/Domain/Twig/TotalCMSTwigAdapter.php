@@ -196,15 +196,31 @@ final class TotalCMSTwigAdapter
         return is_array($files) ? $files : [];
     }
 
-    // Get an text property from an object
     public function image(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
     {
         if (empty($id)) {
             return '';
         }
 
+        $imagePath = $this->imagePath($id, $options, $collection, $property);
+        if (empty($imagePath)) {
+            return '';
+        }
+
+        $alt = $this->alt($id, $collection, $property);
+
+        return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
+    }
+
+    // Get an text property from an object
+    public function imagePath(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
+    {
+        if (empty($id)) {
+            return '';
+        }
+
         $image = $this->data($collection, $id, 'image');
-        if (!is_array($image) && !key_exists('uploadDate', $image)) {
+        if (!is_array($image) || !key_exists('uploadDate', $image)) {
             return '';
         }
 
@@ -221,13 +237,29 @@ final class TotalCMSTwigAdapter
         $api = $this->api . "/imageworks/$collection/$id/$property.$type";
 
         // cache busting links
-        $cache = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
-        $api .= "?cache=$cache";
+        $options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
 
-        if (!empty($options)) {
-            $options = http_build_query($options);
-            $api .= "&$options";
+        // From Stacks Preview Server - Not used in Imageworks and breaks the image generation
+        unset($options['datadir']);
+        unset($options['route']);
+
+        // Parse the existing URL and its query parameters
+        $parsedUrl = parse_url($api);
+
+        if (!isset($parsedUrl['path'])) {
+            return '';
         }
+
+        $existingParams = [];
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $existingParams);
+        }
+
+        // Merge the existing parameters with the new options
+        $options = array_merge($existingParams, $options);
+
+        // Reconstruct the URL without the original query string, and append the new query string
+        $api = $parsedUrl['path'] . '?' . http_build_query($options);
 
         return $api;
     }

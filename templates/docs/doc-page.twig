@@ -17,7 +17,8 @@
 		{ "title": "Functions", 		"path": "/twig-functions" },
 		{ "title": "GET Params", 		"path": "/twig-get-params" },
 		{ "title": "POST Params", 		"path": "/twig-post-params" },
-		{ "title": "Factory", 			"path": "/twig-factory" }
+		{ "title": "Factory", 			"path": "/twig-factory" },
+		{ "title": "QR Codes", 			"path": "/twig-qrcodes" }
 	]
 },{
 	"title": "Behind the Scenes",
@@ -36,7 +37,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="robots" content="noindex, nofollow">
 	<title>{{title}}</title>
-	<link rel="stylesheet" href="{{ totalcms.api }}/assets/docs.css">
+	<link rel="stylesheet" href="{{ cms.api }}/assets/docs.css">
 </head>
 
 <body>
@@ -49,7 +50,7 @@
 		<aside class="main-nav">
 			<nav><ul class="menu">
 
-				{% set docs = totalcms.api ~ "/docs" %}
+				{% set docs = cms.api ~ "/docs" %}
 
 				<li><a href="{{docs}}">Home</a></li>
 				{% for item in menu %}

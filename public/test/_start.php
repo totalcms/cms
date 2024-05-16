@@ -44,8 +44,8 @@ $totalcms->startBuffer(); // Start output buffering
 		padding   : 3rem;
     }
     </style>
-    <link rel="stylesheet" href="{{ totalcms.api }}/assets/docs.css"/>
-    <link rel="stylesheet" href="{{ totalcms.api }}/assets/forms.css"/>
+    <link rel="stylesheet" href="{{ cms.api }}/assets/docs.css"/>
+    <link rel="stylesheet" href="{{ cms.api }}/assets/forms.css"/>
 </head>
 <body>
 

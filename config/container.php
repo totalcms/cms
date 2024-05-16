@@ -28,14 +28,17 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Twig\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
+use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\QRGenerator;
 
 return [
     // Application settings
@@ -175,10 +178,23 @@ return [
             $container->get(TotalCMSTwigAdapter::class),
             $container->get(TotalCMSTwigPatterns::class),
             $container->get(FakerFactory::class),
+            $container->get(QRCodeTwigAdapter::class),
         );
+    },
+
+    QRCodeTwigAdapter::class => function (ContainerInterface $container) {
+        return new QRCodeTwigAdapter($container->get(QRGenerator::class));
+    },
+
+    QRGenerator::class => function (ContainerInterface $container) {
+        return new QRGenerator();
     },
 
     TwigEngine::class => function (ContainerInterface $container) {
         return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
+    },
+
+    TwigCacheCleaner::class => function (ContainerInterface $container) {
+        return new TwigCacheCleaner($container->get(Config::class));
     },
 ];

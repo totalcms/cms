@@ -3,11 +3,11 @@
 --------------------------------#}
 {% macro radio(property, options = [], args = {}) %}
     {% set uuid       = uniqid() %}
-    {% set collection = args.collection|default(totalcms.getData("collection")) %}
-    {% set object     = args.object|default(totalcms.getData("object")) %}
+    {% set collection = args.collection|default(cms.getData("collection")) %}
+    {% set object     = args.object|default(cms.getData("object")) %}
 
 	{# args priority: args, formDefinitions, defaults #}
-	{% set defs = totalcms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set defs = cms.formDefinitions(property, collection, object.id|default("")) %}
 	{% set args = {
 		class       : "",
 		label       : "",

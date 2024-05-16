@@ -12,6 +12,11 @@ document.addEventListener("DOMContentLoaded", event => {
 	const imageUrl = new URL(previewImage.src);
 	const originalExtension = imageUrl.pathname.split('.').pop();
 
+	// Get the page URL and its search parameters
+	const imageParams = imageUrl.searchParams;
+	const datadir = imageParams.get('datadir');
+	const route = imageParams.get('route');
+
 	const details = Array.from(document.querySelectorAll("details"));
 	for (const detail of details) {
 		const accordion = new Details(detail, {openFirst:true});
@@ -69,12 +74,12 @@ document.addEventListener("DOMContentLoaded", event => {
 		let options = JSON.stringify(data);
 		options = options.replace(/"(\w+)"\s*:/g, '$1:');
 
-		let macro = `{{ totalcms.image('${id}', '${options}', '${collection}', '${property}') }}`;
+		let macro = `{{ cms.imagePath('${id}', '${options}', '${collection}', '${property}') }}`;
 		if (property === "image") {
-			macro = `{{ totalcms.image('${id}', '${options}', '${collection}') }}`;
+			macro = `{{ cms.imagePath('${id}', '${options}', '${collection}') }}`;
 
 			if (collection === "image") {
-				macro = `{{ totalcms.image('${id}', '${options}') }}`;
+				macro = `{{ cms.imagePath('${id}', '${options}') }}`;
 			}
 		}
 		const macroContent = document.getElementById("twig-macro");
@@ -144,6 +149,17 @@ document.addEventListener("DOMContentLoaded", event => {
 		imageUrl.pathname = imageUrl.pathname.replace(/\.[^/.]+$/, "." + extension);
 
 		const params = new URLSearchParams(data);
+
+		// If 'datadir' and 'route' parameters exist, add them to the image parameters
+		// This is used in Stacks PHP Preview Server
+		if (datadir !== null) {
+			params.set('datadir', datadir);
+		}
+		if (route !== null) {
+			params.set('route', route);
+		}
+
+		// Update the image URL search parameters
 		imageUrl.search = params.toString();
 
 		const img = new Image();
@@ -164,5 +180,5 @@ document.addEventListener("DOMContentLoaded", event => {
 		getImageSize();
 		generateTwigMacro(data);
 	});
-
+	generateTwigMacro(getFormData());
 });

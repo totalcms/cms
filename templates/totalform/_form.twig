@@ -16,6 +16,8 @@
 		helpOnHover : false,
 		helpOnFocus : false,
 		helpStyle   : "",
+		newAction   : false,
+		editAction  : false,
 	} | merge(args) %}
 
 	{#
@@ -41,7 +43,7 @@
 		options     = options array added to form-field data-options attribute
 		minlength   = minimum length of the field
 	#}
-	{{ totalcms.storeData("fieldDefaults", {
+	{{ cms.storeData("fieldDefaults", {
 		field       : "text",
 		type        : "text",
 		class       : "",
@@ -65,9 +67,9 @@
 	}) }}
 
 	{# Store the collection for this form so that other macros and get it #}
-	{{ totalcms.storeData("collection", collection) }}
+	{{ cms.storeData("collection", collection) }}
 
-	{% set collectionData = totalcms.collection(collection) %}
+	{% set collectionData = cms.collection(collection) %}
 
 	{% set id = args.id|default(getParams.id) %}
 	{% set method = args.method %}
@@ -91,21 +93,42 @@
 	{% endif %}
 
 	{% if id is empty %}
-		<form class="totalform {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-method="{{method}}"
-			data-api="{{totalcms.api}}" data-route="/collections/{{collection}}">
+		<form class="totalform {{class}}"
+			{% if args.newAction %}
+				data-new-action="{{args.newAction|json_encode}}"
+			{% endif %}
+			{% if args.editAction %}
+				data-edit-action="{{args.editAction|json_encode}}"
+			{% endif %}
+			data-schema="{{collectionData.schema}}"
+			data-collection="{{collection}}"
+			data-method="{{method}}"
+			data-api="{{cms.api}}"
+			data-route="/collections/{{collection}}">
 	{% else %}
 		{# force method to be PUT you cannot use POST on an existing object #}
 		{% if method == 'post' %}
 			{%set method = 'put' %}
 		{% endif %}
-		{{ totalcms.storeData("object", totalcms.object(collection, id)) }}
-		<form class="totalform edit-mode {{class}}" data-schema="{{collectionData.schema}}" data-collection="{{collection}}" data-id="{{id}}" data-method="{{method}}"
-			data-api="{{totalcms.api}}" data-route="/collections/{{collection}}/{{id}}">
+		{{ cms.storeData("object", cms.object(collection, id)) }}
+		<form class="totalform edit-mode {{class}}"
+			{% if args.newAction %}
+				data-new-action="{{args.newAction|json_encode}}"
+			{% endif %}
+			{% if args.editAction %}
+				data-edit-action="{{args.editAction|json_encode}}"
+			{% endif %}
+			data-schema="{{collectionData.schema}}"
+			data-collection="{{collection}}"
+			data-id="{{id}}"
+			data-method="{{method}}"
+			data-api="{{cms.api}}"
+			data-route="/collections/{{collection}}/{{id}}">
 	{% endif %}
 {% endmacro %}
 
 {% macro end(save = false, delete = false) %}
-	{{ totalcms.clearStorage() }}
+	{{ cms.clearStorage() }}
 	{% if save %}
 		{{ _self.saveButton() }}
 	{% endif %}

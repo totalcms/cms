@@ -22,7 +22,6 @@ final class TotalCMSTwigPatterns
     public string $slug                     = '[a-z0-9-]+';
     public string $uuid                     = '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}';
     public string $macAddress               = '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})';
-    public string $creditCard               = '((4\d{3})|(5[1-5]\d{2})|(6011)|(34\d{1})|(37\d{1}))-?\d{4}-?\d{4}-?\d{4}|3[4,7]\d{13}';
     public string $isbn                     = '(97(8|9))?\d{9}(\d|X)';
     public string $currency                 = '\d+([\.\,]\d{1,2})?';
     public string $latitudeLongitude        = '(\-?\d+(\.\d+)?),\s*(\-?\d+(\.\d+)?)';

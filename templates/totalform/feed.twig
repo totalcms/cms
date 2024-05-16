@@ -6,13 +6,15 @@
 		helpOnHover : args.helpOnHover,
 		helpOnFocus : args.helpOnFocus,
 		helpStyle   : args.helpStyle,
+		newAction   : args.newAction,
+		editAction  : args.editAction,
 	}) }}
 
 		{{ _self.id('id', { autogen : "${timestamp}-${uuid}", class : "hide" }) }}
 		{{ _self.hidden('created') }}
 		{{ _self.hidden('updated') }}
 
-		{% set options = selectOptions(totalcms.property(collection, "tags")) %}
+		{% set options = selectOptions(cms.property(collection, "tags")) %}
 
 		<div class="form-columns col-2">
 			<section>

@@ -32,32 +32,32 @@ Sample twig templates.
 
 
 ```twig
-{% set objects = totalcms.objects("text") %}
+{% set objects = cms.objects("text") %}
 
 {% for object in objects %}
 <h1>{{ object.id }}</h1>
 {% endfor %}
 
 <!-- Get index of a property from a collection. Ex: list of all categories -->
-{% for id in totalcms.property("text", "id") %}
+{% for id in cms.property("text", "id") %}
 	<span class="label">{{ id|upper }}</span>
 {% endfor %}
 
 <!-- Get Object -->
-{% set page = totalcms.object("page", "about") %}
+{% set page = cms.object("page", "about") %}
 <h1>{{ page.title }}</h1>
 <p>{{ page.desc }}</p>
 
 <!-- Get Text -->
-<h3>{{ totalcms.text("mytext") }}</h3>
-<h3>{{ totalcms.data("text", "mytext", "id") }}</h3>
+<h3>{{ cms.text("mytext") }}</h3>
+<h3>{{ cms.data("text", "mytext", "id") }}</h3>
 
 <!-- Depot -->
-{% for file in totalcms.depot("mydepot") %}
+{% for file in cms.depot("mydepot") %}
 	<h1>{{ file.name }}</h1>
 	<p>{{ file.uploadDate | date('c') }}</p>
 {% endfor %}
 
 <!-- Image -->
-<img src="{{ totalcms.image('myimage',{w:600,h:500}) }}" alt="{{ totalcms.alt('myimage') }}">
+<img src="{{ cms.imagePath('myimage',{w:600,h:500}) }}" alt="{{ cms.alt('myimage') }}">
 ```

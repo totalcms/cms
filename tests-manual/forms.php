@@ -66,7 +66,7 @@ $totalcms->startBuffer(); // Start output buffering again
     <!-- Macros for forms -->
     {% import "form-macros.twig" as form %}
 
-    <form class="total-form" action="{{ totalcms.api }}/collection/blog">
+    <form class="total-form" action="{{ cms.api }}/collection/blog">
 
         <!-- form.input(name, type, input, class, value, label, placeholder, help, icon, required ) -->
         {{ form.input("mytext", "text", "text", "help-on-hover", "", "Text Input", "Text Placeholder", "This is my super help text.", true ) }}
@@ -295,5 +295,5 @@ echo $totalcms->processBufferMacros();
     - There should be an API to save templates to the CMS
     - There will be macros to help with common Total CMS elements
     - There will be a global variable called totalcms that contains the TotalCMS object
-    - Function for loading in data from the CMS via global totalcms variable. ex: {{ totalcms.load('collection/blog') }}
+    - Function for loading in data from the CMS via global totalcms variable. ex: {{ cms.load('collection/blog') }}
  -->

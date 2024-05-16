@@ -5,6 +5,7 @@ namespace TotalCMS;
 use DI\Container;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -17,6 +18,7 @@ class TotalCMS
     private Container $container;
     private TwigEngine $twigEngine;
     private LoggerInterface $logger;
+    private TwigCacheCleaner $twigCacheCleaner;
 
     public function __construct()
     {
@@ -26,8 +28,9 @@ class TotalCMS
         $loggerFactory = $this->container->get(LoggerFactory::class);
         $this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
 
-        $this->buffer     = $this->container->get(BufferController::class);
-        $this->twigEngine = $this->container->get(TwigEngine::class);
+        $this->buffer           = $this->container->get(BufferController::class);
+        $this->twigEngine       = $this->container->get(TwigEngine::class);
+        $this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
     }
 
     public function startBuffer(): void
@@ -38,6 +41,11 @@ class TotalCMS
     public function endBuffer(): void
     {
         $this->buffer->end();
+    }
+
+    public function clearCache(): void
+    {
+        $this->twigCacheCleaner->deleteCache();
     }
 
     public function processBufferMacros(array $data = []): string

@@ -148,6 +148,7 @@ export default class ImageField extends TotalField {
 			apiUrl           : this.apiUploadImage(),
 			autoProcessQueue : this.form.isEditMode(),
 			acceptedFiles    : "image/*",
+			rules            : this.options.rules,
 		});
 	}
 
