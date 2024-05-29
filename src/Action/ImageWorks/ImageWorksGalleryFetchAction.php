@@ -38,6 +38,8 @@ final class ImageWorksGalleryFetchAction
         $filename    = $args['filename'];
         $queryParams = $request->getQueryParams();
 
+        $queryParams['fm'] = $args['format'];
+
         try {
             $image = $this->imageGenerator->generate($collection, $id, $property, $filename, $queryParams);
         } catch (\Exception $e) {
