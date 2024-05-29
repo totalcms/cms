@@ -1,2 +1,54 @@
-{% macro gallery(property, value) %}
+{#--------------------------------#}
+{# Gallery Form                     #}
+{#--------------------------------#}
+{% macro galleryForm(id, args = {}, collection = "gallery") %}
+	{{ _self.start(collection, {
+		id          : id,
+		helpOnHover : args.helpOnHover,
+	}) }}
+		{{ _self.id('id', { value:id, class: "hide" }) }}
+		{{ _self.image('image', args) }}
+	{{ _self.end(args.save, args.delete) }}
+{% endmacro %}
+
+{#--------------------------------#}
+{# Gallery Field                 #}
+{#--------------------------------#}
+{% macro gallery(property, args = {}) %}
+
+	{# -- Begin Boilerplate -- #}
+    {% set uuid       = uniqid() %}
+    {% set collection = args.collection|default(cms.getData("collection")) %}
+    {% set object     = args.object|default(cms.getData("object")) %}
+
+	{# args priority: args, formDefinitions, defaults #}
+	{% set defs = cms.formDefinitions(property, collection, object.id|default("")) %}
+	{% set args = cms.getData("fieldDefaults") | merge(defs) | merge(args) %}
+	{# -- End Boilerplate -- #}
+
+	{# Override args with static values #}
+	{% set args =  args | merge({
+		field : "gallery",
+		type  : "gallery",
+		icon  : false,
+	}) %}
+
+	{% set galleryData = attribute(object, property) %}
+
+    {{ _self.fieldstart("image", uuid, args) }}
+
+		<input type="hidden" name="{{ property }}" />
+
+		<div class="dz-overlay dz-clickable"></div>
+
+		<div class="total-preview {% if imageData.featured %}featured{% endif %}">
+			{{ _self.imagePreview(object.id, collection, property) }}
+		</div>
+
+		{{ _self.imageDialog(object.id, collection, property, imageData) }}
+		{{ _self.linkDialog(object.id, collection, property) }}
+
+		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, collection, property) }}</template>
+
+    {{ _self.fieldend(uuid, args) }}
 {% endmacro %}

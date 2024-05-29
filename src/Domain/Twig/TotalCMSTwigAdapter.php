@@ -10,6 +10,9 @@ use TotalCMS\Support\Config;
 
 /**
  * Twig Adapter with Total CMS.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 final class TotalCMSTwigAdapter
 {
@@ -212,14 +215,83 @@ final class TotalCMSTwigAdapter
         return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
     }
 
-    // Get an text property from an object
+    // Get the image path for an image property
     public function imagePath(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
     {
         if (empty($id)) {
             return '';
         }
 
-        $image = $this->data($collection, $id, 'image');
+        $image = $this->data($collection, $id, $property);
+        if (!is_array($image) || !key_exists('uploadDate', $image)) {
+            return '';
+        }
+
+        // Default to original image type
+        $type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+        // If type is set in options, use that
+        if (key_exists('fm', $options)) {
+            $type = $options['fm'];
+            unset($options['fm']);
+        }
+        // If type is not in the list of allowed types, default to jpg
+        $type = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
+
+        $api = $this->api . "/imageworks/$collection/$id/$property.$type";
+
+        // cache busting links
+        $options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+
+        // From Stacks Preview Server - Not used in Imageworks and breaks the image generation
+        unset($options['datadir']);
+        unset($options['route']);
+
+        // Parse the existing URL and its query parameters
+        $parsedUrl = parse_url($api);
+
+        if (!isset($parsedUrl['path'])) {
+            return '';
+        }
+
+        $existingParams = [];
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $existingParams);
+        }
+
+        // Merge the existing parameters with the new options
+        $options = array_merge($existingParams, $options);
+
+        // Reconstruct the URL without the original query string, and append the new query string
+        $api = $parsedUrl['path'] . '?' . http_build_query($options);
+
+        return $api;
+    }
+
+    // get an image object from inside a gallery by it's name
+    public function galleryImage(string $id, string $name, string $collection = 'gallery', string $property = 'gallery'): ?array
+    {
+        $gallery = $this->data($collection, $id, $property);
+        if (!is_array($gallery)) {
+            return null;
+        }
+
+        foreach ($gallery as $image) {
+            if ($image['name'] === $name) {
+                return $image;
+            }
+        }
+
+        return null;
+    }
+
+    // Get the image path for gallery image
+    public function galleryPath(?string $id, ?string $name, array $options = [], string $collection = 'gallery', string $property = 'gallery'): string
+    {
+        if (empty($id) || empty($name)) {
+            return '';
+        }
+
+        $image = $this->galleryImage($id, $name, $collection, $property);
         if (!is_array($image) || !key_exists('uploadDate', $image)) {
             return '';
         }
