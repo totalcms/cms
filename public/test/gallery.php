@@ -1,10 +1,10 @@
 <?php include __DIR__ . '/_start.php'; ?>
 
-	<h1>Total CMS Image Form Demo</h1>
+	<h1>Total CMS Gallery Form Demo</h1>
 
 	{% import "totalform.twig" as form %}
 
-	{{ form.imageForm('myimage') }}
+	{{ form.galleryForm('mygallery') }}
 
 	<button class="cms-save">Save</button>
 

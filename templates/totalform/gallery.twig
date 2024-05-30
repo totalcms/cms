@@ -35,18 +35,19 @@
 
 	{% set galleryData = attribute(object, property) %}
 
-    {{ _self.fieldstart("image", uuid, args) }}
+    {{ _self.fieldstart("gallery", uuid, args) }}
 
 		<input type="hidden" name="{{ property }}" />
 
 		<div class="dz-overlay dz-clickable"></div>
 
-		<div class="total-preview {% if imageData.featured %}featured{% endif %}">
-			{{ _self.imagePreview(object.id, collection, property) }}
-		</div>
-
-		{{ _self.imageDialog(object.id, collection, property, imageData) }}
-		{{ _self.linkDialog(object.id, collection, property) }}
+		{% for imageData in galleryData %}
+			<div class="total-preview {% if imageData.featured %}featured{% endif %}">
+				{{ _self.imagePreview(object.id, collection, property, imageData) }}
+				{{ _self.imageDialog(object.id, collection, property, imageData) }}
+				{{ _self.linkDialog(object.id, collection, property) }}
+			</div>
+		{% endfor %}
 
 		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, collection, property) }}</template>
 
