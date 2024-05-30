@@ -7,7 +7,7 @@
 		helpOnHover : args.helpOnHover,
 	}) }}
 		{{ _self.id('id', { value:id, class: "hide" }) }}
-		{{ _self.image('image', args) }}
+		{{ _self.gallery('gallery', args) }}
 	{{ _self.end(args.save, args.delete) }}
 {% endmacro %}
 
@@ -42,10 +42,11 @@
 		<div class="dz-overlay dz-clickable"></div>
 
 		{% for imageData in galleryData %}
+			{% set imagePath = cms.galleryPath(object.id, imageData.name, {w:600,h:400}, collection, property) %}
 			<div class="total-preview {% if imageData.featured %}featured{% endif %}">
-				{{ _self.imagePreview(object.id, collection, property, imageData) }}
-				{{ _self.imageDialog(object.id, collection, property, imageData) }}
-				{{ _self.linkDialog(object.id, collection, property) }}
+				{{ _self.imagePreview(imagePath, imageData) }}
+				{{ _self.imageDialog(imagePath, imageData) }}
+				{{ _self.linkDialog(object.id, collection, property, imageData.name) }}
 			</div>
 		{% endfor %}
 
