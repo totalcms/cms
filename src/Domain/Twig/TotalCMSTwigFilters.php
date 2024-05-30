@@ -89,12 +89,20 @@ final class TotalCMSTwigFilters
 
     public static function hex(?array $color): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         return $color['hex'] ?? '#000000';
     }
 
     /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
     public static function rgb(?array $color, int $alpha = 100, bool $wrap = true): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         $hex = self::hex($color);
         $rgb = ColorData::hexToRgb($hex);
 
@@ -108,6 +116,10 @@ final class TotalCMSTwigFilters
     /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
     public static function hsl(?array $color, int $alpha = 100, bool $wrap = true): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         $hex = self::hex($color);
         $hsl = ColorData::hexToHsl($hex);
 
@@ -121,6 +133,10 @@ final class TotalCMSTwigFilters
     /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
     public static function oklch(?array $color, int $alpha = 100, bool $wrap = true): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         $oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
 
         $color = $alpha === 100 ?
@@ -130,23 +146,27 @@ final class TotalCMSTwigFilters
         return $wrap ? sprintf('oklch(%s)', $color) : $color;
     }
 
-    public static function lightness(?array $color, string $lightness): array
+    public static function lightness(?array $color, string $lightness): ?array
     {
         return self::adjustColor($color, $lightness);
     }
 
-    public static function chroma(?array $color, string $chroma): array
+    public static function chroma(?array $color, string $chroma): ?array
     {
         return self::adjustColor($color, null, $chroma);
     }
 
-    public static function hue(?array $color, string $hue): array
+    public static function hue(?array $color, string $hue): ?array
     {
         return self::adjustColor($color, null, null, $hue);
     }
 
-    public static function adjustColor(?array $color, ?string $lightness = null, ?string $chroma = null, ?string $hue = null): array
+    public static function adjustColor(?array $color, ?string $lightness = null, ?string $chroma = null, ?string $hue = null): ?array
     {
+        if ($color === null) {
+            return null;
+        }
+
         $oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
 
         $oklch = ColorData::oklchChange($oklch, [
@@ -223,11 +243,6 @@ final class TotalCMSTwigFilters
         return ceil($wordCount / $wpm);
     }
 
-    public static function count(array $array): int
-    {
-        return count($array);
-    }
-
     // -------------------------
     // Array Manipulation
     // -------------------------
@@ -293,17 +308,12 @@ final class TotalCMSTwigFilters
     /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
     public static function var_dump(mixed $variable): string
     {
-        ob_start();
-        var_dump($variable);
-        $content = ob_get_contents();
-        ob_end_clean();
-
-        return "<pre>$content</pre>";
+        return TotalCMSTwigFunctions::var_dump($variable);
     }
 
     /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
     public static function print_r(mixed $variable): string
     {
-        return '<pre>' . (string)print_r($variable, true) . '</pre>';
+        return TotalCMSTwigFunctions::print_r($variable);
     }
 }
