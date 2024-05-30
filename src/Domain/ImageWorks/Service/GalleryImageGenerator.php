@@ -46,7 +46,7 @@ final class GalleryImageGenerator
             throw new \UnexpectedValueException('Gallery Image not found');
         }
 
-        $imageData = new ImageData($imageData[0]);
+        $imageData = new ImageData(array_shift($imageData));
 
         if (!$imageData instanceof ImageData) {
             throw new \UnexpectedValueException('Invalid image property found in gallery');

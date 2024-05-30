@@ -75,7 +75,7 @@ export default class TotalForm {
 		const formIDSet = (typeof this.form.dataset.id !== "undefined" && this.form.dataset.id.length > 0);
 
 		this.fields   = []; // set to empty array to avoid issues with ID autogen field
-		this.fields   = this.processFields();
+		this.processFields();
 		this.droplets = this.fields.filter(field => field.isDroplet());
 
 		// If an ID is set, we are in edit mode
@@ -136,7 +136,13 @@ export default class TotalForm {
 		const fields = Array.from(this.form.getElementsByClassName("form-field"));
 		const fieldObjects = [];
         fields.forEach(field => {
-            const object = this.generateFieldObject(field);
+			// skip if field is already processed
+			if (field.totalfield) {
+				fieldObjects.push(field.totalfield);
+				return;
+			}
+
+			const object = this.generateFieldObject(field);
             if (object === null) return; // if the object is not set, skip it
             fieldObjects.push(object);
 
@@ -150,7 +156,7 @@ export default class TotalForm {
 			});
             field.addEventListener("field-error", e => this.error(e.detail.error));
         });
-        return fieldObjects;
+        this.fields = fieldObjects;
     }
 
     registerButtons() {
@@ -217,16 +223,18 @@ export default class TotalForm {
             case "svg":
                 return new SVGField(field, options);
 
-			// case "radio":
-			// 	return new RadioField(field, options);
-
-            case "image":
+			case "image":
 				return new ImageField(field,options);
 
+			case "gallery":
+				return new GalleryField(field,options);
+
 			// case "file":
-            // case "gallery":
-            // case "depot":
-            //     return this.initArrayDroplet(field,options);
+			// case "depot":
+			//     return this.initArrayDroplet(field,options);
+
+			// case "radio":
+			// 	return new RadioField(field, options);
 
 			// case "deck":
             //     return new Deck(field, options);

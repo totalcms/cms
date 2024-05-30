@@ -141,8 +141,8 @@ export default class Droplet {
         file.previewTemplate = file.previewElement;
 
         if (!this.options.gallery) {
-			// Remove all other previews for images
-            this.dropzone.previewsContainer.innerHTML = "";
+			// Remove preview for image
+			Array.from(this.dropzone.previewsContainer.children).forEach(node => node.remove());
         }
         this.dropzone.previewsContainer.appendChild(file.previewElement);
 

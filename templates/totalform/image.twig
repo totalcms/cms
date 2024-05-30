@@ -56,13 +56,16 @@
 
 		<div class="dz-overlay dz-clickable"></div>
 
-		<div class="total-preview {% if imageData.featured %}featured{% endif %}">
-			{{ _self.imagePreview(imagePath) }}
-			{{ _self.imageDialog(imagePath, imageData) }}
-			{{ _self.linkDialog(object.id, collection, property) }}
-		</div>
+		{% set preview %}
+			<div class="image-preview {% if imageData.featured %}featured{% endif %}">
+				{{ _self.imagePreview(imagePath) }}
+				{{ _self.imageDialog(imagePath, imageData) }}
+				{{ _self.linkDialog(object.id, collection, property) }}
+			</div>
+		{% endset %}
 
-		<template id="template-{{ uuid }}">{{ _self.imagePreview(imagePath) }}</template>
+		<div class="total-preview">{{ preview }}</div>
+		<template id="template-{{ uuid }}">{{ preview }}</template>
 
     {{ _self.fieldend(uuid, args) }}
 

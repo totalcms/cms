@@ -275,6 +275,8 @@ final class TotalCMSTwigAdapter
             return null;
         }
 
+        $image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
+
         foreach ($gallery as $image) {
             if ($image['name'] === $name) {
                 return $image;
@@ -304,9 +306,10 @@ final class TotalCMSTwigAdapter
             unset($options['fm']);
         }
         // If type is not in the list of allowed types, default to jpg
-        $type = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
+        $type     = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
+        $basename = pathinfo($name)['filename'];
 
-        $api = $this->api . "/imageworks/$collection/$id/$property.$type";
+        $api = $this->api . "/imageworks/$collection/$id/$property/$basename.$type";
 
         // cache busting links
         $options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
