@@ -14,12 +14,12 @@ import RangeSlider from './range';
 import StyledTextField from './styledtext';
 import SVGField from './svg';
 import ImageField from './image';
+import GalleryField from './gallery';
 
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
 // import MarkdownField from './markdown';
 // import Schema from './schema';
-
 
 //-----------------------------------------------
 // Total CMS Form constructor

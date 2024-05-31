@@ -10,6 +10,8 @@ export default class ImagePreview {
     constructor(container, totalfield) {
 		this.container  = container;
 
+		this.container.preview = this;
+
 		this.api      = totalfield.api;
 		this.form     = totalfield.form;
 		this.property = totalfield.property;
