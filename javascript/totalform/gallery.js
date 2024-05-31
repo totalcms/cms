@@ -1,4 +1,6 @@
 import ImageField from "./image";
+import ImagePreview from "./image-preview";
+import DropletArray from "./droplet-array";
 
 //-----------------------------------------------
 // Total CMS Gallery Field
@@ -16,6 +18,16 @@ export default class GalleryField extends ImageField {
 			const newPreview = new ImagePreview(preview, this)
 			if (image) newPreview.setValue(image);
 			return newPreview;
+		});
+	}
+
+	setupDroplet() {
+		return new DropletArray(this, {
+			paramName        : this.property,
+			apiUrl           : this.apiUploadImage(),
+			autoProcessQueue : this.form.isEditMode(),
+			acceptedFiles    : "image/*",
+			rules            : this.options.rules,
 		});
 	}
 

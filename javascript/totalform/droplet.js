@@ -23,12 +23,10 @@ export default class Droplet {
 			apiUrl            : "",
 			requestHeaders    : {},
 			rules             : {},
-			gallery           : false,
+			singleMode        : true,
         };
 		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
         this.options = Object.assign({}, defaults, options, dataOptions);
-
-        this.options.gallery = (this.options.type === "gallery"||this.options.type === "depot");
 
         // Get the rule set for uploading the file
         if (this.options.rules && Object.keys(this.options.rules).length > 0) {
@@ -140,7 +138,7 @@ export default class Droplet {
         file.previewElement  = Dropzone.createElement(this.dropzone.options.previewTemplate.trim());
         file.previewTemplate = file.previewElement;
 
-        if (!this.options.gallery) {
+        if (this.options.singleMode) {
 			// Remove preview for image
 			Array.from(this.dropzone.previewsContainer.children).forEach(node => node.remove());
         }
