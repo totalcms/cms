@@ -1,88 +1,94 @@
 //--------------------------------
 // Fieldset - Gallery Field
 //--------------------------------
-// fieldset.gallery-field {
 
-// 	.total-preview {
-// 		width: 100%;
-// 		overflow: hidden;
-// 		padding-top: 5px;
+.gallery-field {
+	&> .form-group {
+		display  : block;
+		overflow : hidden;
+	}
+	.total-preview {
+		--scroll-height       : 600px;
+		display               : grid;
+		gap                   : 0.8rem;
+		grid-template-columns : repeat(auto-fill, minmax(200px, 1fr));
+		align-items           : center;
+		justify-items         : center;
+		box-shadow            : none;
+		transition            : none;
+		min-height            : 96px;
 
-// 		&.overflow {
-// 			overflow-y: scroll;
-// 			border-bottom: 1px dotted #ccc;
-// 			text-align: center;
-// 		}
-// 	}
+		&.scrollable {
+			max-height      : var(--scroll-height);
+			overflow-y      : scroll;
+			padding         : 3px 3px 10px 3px;
+			border-radius   : 5px;
 
-// 	.dz-preview {
-// 		border-width   : 5px;
-// 		opacity        : 1.0;
-// 		display        : inline-block;
-// 		margin-right   : 10px;
-// 		margin-bottom  : 10px;
-// 		text-align     : center;
-// 		vertical-align : top;
-// 		overflow       : hidden;
-// 		width          : 100px;
-// 		height         : 100px;
-// 		float          : left;
+			&:after {
+				content         : "";
+				display         : block;
+				height          : 20px;
+				position        : absolute;
+				width           : 100%;
+				bottom          : -10px;
+				background      : radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+				z-index         : 999;
+			}
+		}
+	}
+	.dz-preview {
+		width : fit-content;
 
-// 		&:first-child {
-// 			opacity       : 0.5;
-// 			border-style  : dashed;
-// 			border-color  : #222;
-// 			border-width  : 2px;
-// 			box-shadow    : none;
-// 			border-radius : 3px;
-// 		}
+		img {
+			max-height : 200px;
+			min-height : 125px;
+			object-fit : cover;
+		}
+	}
+	&:not(.dz-drag-hover):has(.image-preview) .dz-overlay {
+		opacity : 0;
+	}
+	.actionbar {
+		padding             : 0.5rem 0;
+		bottom              : 0;
+		display             : grid;
+		gap                 : 1rem 0;
+		justify-items       : center;
+		align-content       : start;
+		grid-template-rows  : auto auto 1fr;
+		grid-template-areas :
+			"edit      links    featured"
+			"download  clear    trash"
+			"move      move     move";
 
-// 		&.sortable-ghost {
-// 			.actionbar {
-// 				opacity : 0 !important;
-// 			}
-// 		}
-
-// 		.dz-progress {
-// 			height : 1rem;
-
-// 			.dz-upload-progress-label {
-// 				font-size   : 0.5rem;
-// 				line-height : 1rem;
-// 			}
-// 		}
-
-// 		.imagebar-featured {
-// 			.fa-star {
-// 				display: none;
-// 			}
-
-// 			.fa-star-o {
-// 				display: inline-block;
-// 			}
-// 		}
-
-// 		&.featured .imagebar-featured {
-// 			.fa-star {
-// 				display: inline-block;
-// 			}
-
-// 			.fa-star-o {
-// 				display: none;
-// 			}
-// 		}
-// 	}
-// }
-
-// &.dz-drag-hover {
-// 	fieldset.gallery-box {
-// 		.dz-preview {
-// 			opacity: 0.5;
-
-// 			&:first-child {
-// 				opacity: 1.0;
-// 			}
-// 		}
-// 	}
-// }
-
+		button {
+			margin : 0;
+		}
+		.edit {
+			grid-area : edit;
+		}
+		.links {
+			grid-area : links;
+		}
+		.featured {
+			grid-area : featured;
+		}
+		.download {
+			grid-area : download;
+		}
+		.move {
+			grid-area  : move;
+			align-self : end;
+		}
+		.upload {
+			display   : none;
+			grid-area : upload;
+		}
+		.clear {
+			grid-area : clear;
+		}
+		.trash {
+			grid-area : trash;
+		}
+	}
+}

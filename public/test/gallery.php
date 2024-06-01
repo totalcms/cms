@@ -6,6 +6,4 @@
 
 	{{ form.galleryForm('mygallery') }}
 
-	<button class="cms-save">Save</button>
-
 <?php include __DIR__ . '/_end.php'; ?>

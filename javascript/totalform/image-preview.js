@@ -8,6 +8,8 @@ import Sortable from 'sortablejs';
 export default class ImagePreview {
 
     constructor(container, totalfield) {
+		if (container.preview) return container.preview;
+
 		this.container  = container;
 
 		this.container.preview = this;

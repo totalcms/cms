@@ -41,16 +41,24 @@
 
 		<div class="dz-overlay dz-clickable"></div>
 
+		<div class="total-preview scrollable">
 		{% for imageData in galleryData %}
 			{% set imagePath = cms.galleryPath(object.id, imageData.name, {w:600,h:400}, collection, property) %}
-			<div class="total-preview {% if imageData.featured %}featured{% endif %}">
+			<div class="image-preview {% if imageData.featured %}featured{% endif %}">
 				{{ _self.imagePreview(imagePath, imageData) }}
 				{{ _self.imageDialog(imagePath, imageData) }}
 				{{ _self.linkDialog(object.id, collection, property, imageData.name) }}
 			</div>
 		{% endfor %}
+		</div>
 
-		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, collection, property) }}</template>
+		<template id="template-{{ uuid }}">
+			<div class="image-preview">
+				{{ _self.imagePreview() }}
+				{{ _self.imageDialog() }}
+				{{ _self.linkDialog(object.id, collection, property) }}
+			</div>
+		</template>
 
     {{ _self.fieldend(uuid, args) }}
 {% endmacro %}

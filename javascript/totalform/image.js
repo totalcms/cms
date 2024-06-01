@@ -10,6 +10,8 @@ export default class ImageField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
+		this.previewContainer = container.querySelector(".total-preview");
+
 		this.preview = this.setupPreview();
 		this.droplet = this.setupDroplet();
     }
@@ -24,8 +26,8 @@ export default class ImageField extends TotalField {
 	}
 
 	setupPreview(image) {
-		const previewContainer = Array.from(this.container.getElementsByClassName("image-preview"))[0];
-		const preview = new ImagePreview(previewContainer, this);
+		const imagePreview = this.previewContainer.children.item(0);
+		const preview = new ImagePreview(imagePreview, this);
 		if (image) preview.setValue(image);
 		return preview;
 	}

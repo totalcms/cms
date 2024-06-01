@@ -148,6 +148,7 @@ export default class Droplet {
             // if autoprocessQueue is not used, mark as unsaved
 			this.field.changed();
         }
+		this.field.fileAdded(file);
     }
 
     // When the thumbnail has been generated. Receives the dataUrl as second parameter.
@@ -226,6 +227,11 @@ export default class Droplet {
             if (file.previewElement) {
                 file.previewElement.classList.remove("dz-processing");
                 file.previewElement.classList.add("dz-success");
+				file.previewElement.addEventListener("pointerover", () => {
+					// remove the success class after the user hovers over the image
+					// this allows the actionbar to be interacted with
+					file.previewElement.classList.remove("dz-success","dz-complete");
+				}, {once:true});
 				this.field.fileUploaded(file, response);
             }
         }
@@ -246,10 +252,10 @@ export default class Droplet {
 
     // The user dragged a file onto the Dropzone
     event_dragenter(event) {
-        const classesToRemove = ["dz-processing", "dz-success", "dz-complete"];
-        const preview = this.container.getElementsByClassName("dz-preview").item(0);
-        if (preview) {
-            preview.classList.remove(...classesToRemove);
+        const classesToRemove = ["dz-success", "dz-complete"];
+        const previews = Array.from(this.container.getElementsByClassName("image-preview"));
+        if (previews.length > 0) {
+			previews.forEach(preview => preview.classList.remove(...classesToRemove));
         }
         return this.container.classList.add("dz-drag-hover");
     }
