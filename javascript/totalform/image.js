@@ -30,6 +30,10 @@ export default class ImageField extends TotalField {
 		const preview = new ImagePreview(imagePreview, this);
 		if (image) preview.setValue(image);
 		this.preview = preview;
+
+		Array.from(preview.fields).forEach(field => {
+			field.addEventListener("subfield-change", () => this.changed());
+		});
 	}
 
 	setupDroplet() {
@@ -40,6 +44,30 @@ export default class ImageField extends TotalField {
 			acceptedFiles    : "image/*",
 			rules            : this.options.rules,
 		});
+	}
+
+	autosave() {
+		// Only patch the gallery if we are in edit mode
+		if (!this.form.isEditMode()) return;
+
+		if (!this.isUnsaved()) return;
+
+		const patchApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {
+			console.log("Image Meta Autosaved", response);
+			this.saved();
+		});
+	}
+
+	isUnsaved() {
+		const unsavedChildren = this.previewContainer.querySelectorAll(".unsaved");
+		return this.container.classList.contains("unsaved") || unsavedChildren.length > 0;
+	}
+
+	saved() {
+		super.saved();
+		const unsavedChildren = this.previewContainer.querySelectorAll(".unsaved");
+		unsavedChildren.forEach(unsavedChild => unsavedChild.classList.remove("unsaved"));
 	}
 
     getValue() {

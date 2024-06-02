@@ -1,6 +1,7 @@
 import Dialog from "./dialog";
 import Details from "./details";
 import Sortable from 'sortablejs';
+import { on } from "codemirror";
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -18,6 +19,7 @@ export default class ImagePreview {
 		this.form     = totalfield.form;
 		this.property = totalfield.property;
 		this.type     = totalfield.type;
+		this.field    = totalfield;
 
 		this.fields        = this.container.getElementsByClassName("form-field");
 		this.featuredField = this.container.querySelector(".form-field:has([name=featured])");
@@ -182,6 +184,10 @@ export default class ImagePreview {
 				this.setupFocalPoint();
 				this.sortablePalette();
 			},
+			onClose : () => {
+				this.dialogOpened = false;
+				this.field.autosave();
+			}
 		});
 	}
 

@@ -60,6 +60,10 @@ export default class GalleryField extends ImageField {
 				const preview = new ImagePreview(imagePreview, this)
 				previews.push(preview);
 			}
+
+			Array.from(imagePreview.preview.fields).forEach(field => {
+				field.addEventListener("subfield-change", () => this.changed());
+			});
 		});
 		if (image) {
 			imagePreviews.forEach(imagePreview => {
@@ -92,18 +96,8 @@ export default class GalleryField extends ImageField {
 				this.previewContainer.classList.remove('sorting');
 
 				// Update the order of the images in the CMS
-				this.patchGallery();
+				this.autosave();
 			}
-		});
-	}
-
-	patchGallery() {
-		// Only patch the gallery if we are in edit mode
-		if (!this.form.isEditMode()) return;
-
-		const patchApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {
-			console.log("Gallery patched", response);
 		});
 	}
 

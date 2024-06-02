@@ -54,6 +54,12 @@
 		--totalform-icon-bg      : var(--totalform-error);
 		--totalform-icon-color   : var(--totalform-white);
 	}
+	// fix for subfields getting over styled (image and gallery dialogs)
+	.form-field:not(.unsaved):not(.error) {
+		--totalform-border-color : var(--totalform-lightgray);
+		--totalform-icon-bg      : var(--totalform-nearwhite);
+		--totalform-icon-color   : var(--totalform-darkgray);
+	}
 }
 
 .cms-save,
