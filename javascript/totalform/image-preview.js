@@ -15,11 +15,11 @@ export default class ImagePreview {
 
 		this.container.preview = this;
 
-		this.api      = totalfield.api;
-		this.form     = totalfield.form;
-		this.property = totalfield.property;
-		this.type     = totalfield.type;
-		this.field    = totalfield;
+		this.api        = totalfield.api;
+		this.form       = totalfield.form;
+		this.property   = totalfield.property;
+		this.type       = totalfield.type;
+		this.totalfield = totalfield;
 
 		this.fields        = this.container.getElementsByClassName("form-field");
 		this.featuredField = this.container.querySelector(".form-field:has([name=featured])");
@@ -57,7 +57,7 @@ export default class ImagePreview {
 
 		// Keep the featured field in sync with the featured class for the action bar
 		if (!this.featuredListener) {
-			this.featuredListener = this.featuredField.addEventListener("field-change", e => this.toggleFeaturedActionButton());
+			this.featuredListener = this.featuredField.addEventListener("subfield-change", e => this.toggleFeaturedActionButton());
 		}
 	}
 
@@ -186,7 +186,7 @@ export default class ImagePreview {
 			},
 			onClose : () => {
 				this.dialogOpened = false;
-				this.field.autosave();
+				this.totalfield.autosave();
 			}
 		});
 	}
