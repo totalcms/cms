@@ -1,6 +1,7 @@
 import ImageField from "./image";
 import ImagePreview from "./image-preview";
 import DropletArray from "./droplet-array";
+import Sortable from 'sortablejs';
 
 //-----------------------------------------------
 // Total CMS Gallery Field
@@ -42,7 +43,7 @@ export default class GalleryField extends ImageField {
 		const observer = new MutationObserver((mutationsList, observer) => {
 			for (const mutation of mutationsList) {
 				if (mutation.type === 'childList') {
-					this.preview = this.setupPreview();
+					this.setupPreview();
 				}
 			}
 		});
@@ -68,11 +69,46 @@ export default class GalleryField extends ImageField {
 				}
 			});
 		}
-		return previews;
+		this.preview = previews;
+		this.setupReorder();
+	}
+
+	setupReorder() {
+		this.sortable = new Sortable(this.previewContainer, {
+			animation : 500,
+			handle    : ".move",
+			draggable : ".image-preview",
+			onStart   : (event) => {
+				// Add a class to the container to indicate sorting
+				this.previewContainer.classList.add('sorting');
+			},
+			onEnd : (event) => {
+				// Set the order of the preview data to match the new order
+				const moved = this.preview[event.oldIndex];
+				this.preview.splice(event.newIndex, 0, moved);
+				this.preview.splice(event.newIndex, 1);
+
+				// Remove the sorting class
+				this.previewContainer.classList.remove('sorting');
+
+				// Update the order of the images in the CMS
+				this.patchGallery();
+			}
+		});
+	}
+
+	patchGallery() {
+		// Only patch the gallery if we are in edit mode
+		if (!this.form.isEditMode()) return;
+
+		const patchApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {
+			console.log("Gallery patched", response);
+		});
 	}
 
 	setupDroplet() {
-		return new DropletArray(this, {
+		this.droplet = new DropletArray(this, {
 			paramName        : this.property,
 			apiUrl           : this.apiUploadImage(),
 			autoProcessQueue : this.form.isEditMode(),
@@ -101,7 +137,7 @@ export default class GalleryField extends ImageField {
 	fileUploaded(file, response) {
 		const images = response.data[this.property];
 		const image = images.filter(image => image.name === file.name).shift();
-		this.preview = this.setupPreview(image);
+		this.setupPreview(image);
 	}
 
 	schema() {

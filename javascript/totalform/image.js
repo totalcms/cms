@@ -12,8 +12,8 @@ export default class ImageField extends TotalField {
 
 		this.previewContainer = container.querySelector(".total-preview");
 
-		this.preview = this.setupPreview();
-		this.droplet = this.setupDroplet();
+		this.setupPreview();
+		this.setupDroplet();
     }
 
 	apiUploadImage() {
@@ -29,11 +29,11 @@ export default class ImageField extends TotalField {
 		const imagePreview = this.previewContainer.children.item(0);
 		const preview = new ImagePreview(imagePreview, this);
 		if (image) preview.setValue(image);
-		return preview;
+		this.preview = preview;
 	}
 
 	setupDroplet() {
-		return new Droplet(this, {
+		this.droplet = new Droplet(this, {
 			paramName        : this.property,
 			apiUrl           : this.apiUploadImage(),
 			autoProcessQueue : this.form.isEditMode(),
@@ -61,7 +61,7 @@ export default class ImageField extends TotalField {
 
 	fileUploaded(file, response) {
 		const image = response.data[this.property];
-		this.preview = this.setupPreview(image);
+		this.setupPreview(image);
 	}
 
 	schema() {

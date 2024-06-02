@@ -121,7 +121,7 @@
 			opacity : 0.95;
 			scale   : 1.15;
 		}
-		.dz-drag-hover & {
+		.dz-drag-hover:not(.sorting) & {
 			opacity : 0;
 		}
 	}
@@ -134,4 +134,23 @@
 			display : block;
 		}
 	}
+	.sorting {
+		.image-preview {
+			opacity : 1;
+		}
+		.sortable-ghost {
+			opacity : 0.5;
+		}
+		.actionbar {
+			display : none;
+		}
+	}
+	&:has(.sorting) {
+		.dz-overlay {
+			display : none;
+		}
+	}
+	// change border color?
+	// .sortable-chosen {
+	// }
 }
