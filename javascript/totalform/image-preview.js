@@ -17,6 +17,7 @@ export default class ImagePreview {
 		this.api      = totalfield.api;
 		this.form     = totalfield.form;
 		this.property = totalfield.property;
+		this.filename = null;
 
 		this.fields        = this.container.getElementsByClassName("form-field");
 		this.featuredField = this.container.querySelector(".form-field:has([name=featured])");
@@ -26,6 +27,11 @@ export default class ImagePreview {
 
 		this.setupActionBar();
     }
+
+	setupGallery() {
+		const data = this.getValue();
+		this.filename = data.name;
+	}
 
 	setupActionBar() {
 		const edit  = this.container.querySelector(".actionbar .edit");
@@ -97,7 +103,9 @@ export default class ImagePreview {
 		if (featureButton) {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
-				const featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				const featureApi = this.filename ?
+					`/collections/${this.form.collection}/${this.form.id}/${this.property}/${this.filename}` :
+					`/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
 					this.toggleFeaturedField();
@@ -254,6 +262,11 @@ export default class ImagePreview {
 				imageData[key] = value;
 			}
 		}
+		if (!imageData["exif"]) {
+			// if there was no exif data, add an empty object
+			imageData["exif"] = { "nodata": "" };
+		}
+
         return imageData;
     }
 

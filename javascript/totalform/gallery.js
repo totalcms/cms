@@ -43,6 +43,7 @@ export default class GalleryField extends ImageField {
 			if (imagePreview.preview) return previews.push(imagePreview.preview);
 			const preview = new ImagePreview(imagePreview, this)
 			if (image) preview.setValue(image);
+			preview.setupGallery();
 			previews.push(preview);
 		});
 		return previews;
