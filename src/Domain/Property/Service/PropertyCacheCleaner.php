@@ -11,18 +11,15 @@ final class PropertyCacheCleaner
 {
     public function __construct(private PropertyRepository $storage)
     {
-        $this->storage = $storage;
     }
 
-    /**
-     * Delete property cache.
-     *
-     * @param string $collection
-     * @param string $objectID
-     * @param string $property
-     */
     public function deletePropertyCache(string $collection, string $objectID, string $property): bool
     {
         return $this->storage->deletePropertyCache($collection, $objectID, $property);
+    }
+
+    public function deleteFileCache(string $collection, string $objectID, string $property, string $name): bool
+    {
+        return $this->storage->deleteFileCache($collection, $objectID, $property, $name);
     }
 }

@@ -120,7 +120,11 @@ export default class ImagePreview {
 		if (clearButton) {
 			clearButton.addEventListener("click", event => {
 				event.preventDefault();
-				const clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/cache`;
+				let clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/cache`;
+				if (this.isGallery()) {
+					const name = this.getValue().name;
+					clearApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}/cache`;
+				}
 				this.form.api.postAPI(clearApi, "", "DELETE").then(response => {
 					this.container.classList.toggle("cleared-cache");
 				});
