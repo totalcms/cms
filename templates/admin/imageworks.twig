@@ -49,7 +49,8 @@
 	{% set id         = getParams.id  %}
 	{% set collection = getParams.collection | default("image") %}
 	{% set property   = getParams.property | default("image") %}
-	{% set values    = { w : 600 } | merge(getParams) %}
+	{% set name       = getParams.name %}
+	{% set values     = { w : 600 } | merge(getParams) %}
 	{% set help       = {
 			w         : "Sets the width of the image, in pixels.",
 			h         : "Sets the height of the image, in pixels.",
@@ -94,10 +95,17 @@
 		}
 	%}
 
-	<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}">
+	<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}" data-name="{{name}}">
     	<h1>Total CMS Image Builder</h1>
 		<div class="split-view">
-			<img src="{{ cms.imagePath(id, values, collection, property) }}"
+
+			{% set imagePath = cms.imagePath(id, values, collection, property) %}
+
+			{% if name %}
+				{% set imagePath = cms.galleryPath(id, name, values, collection, property) %}
+			{% endif %}
+
+			<img src="{{ imagePath }}"
 				data-id="{{id}}"
 				data-collection="{{collection}}"
 				data-property="{{property}}"
@@ -105,9 +113,15 @@
 			<div class="image-info">
 				<div>
 					<h4>Macro:</h4>
+
+					{% if name %}
+					<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}", {w:{{values.w}}}) &#125;&#125;</pre>
+					{% else %}
 					<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}", {w:{{values.w}}}) &#125;&#125;</pre>
+					{% endif %}
+
 					<button type="button" id="copy-macro">Copy Macro</button>
-					<a href="{{ cms.imagePath(id, values, collection, property) }}" download id="download-image" title="Download Preview Image"></a>
+					<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
 				</div>
 				<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
 			</div>
@@ -120,6 +134,7 @@
 		<input type="hidden" name="id" value="{{ id }}">
 		<input type="hidden" name="collection" value="{{ collection }}">
 		<input type="hidden" name="property" value="{{ property }}">
+		<input type="hidden" name="name" value="{{ name }}">
 
 		<details class="cms-accordion">
 			<summary>Sizing &amp; Crop</summary>

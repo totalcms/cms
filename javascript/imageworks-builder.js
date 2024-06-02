@@ -58,12 +58,14 @@ document.addEventListener("DOMContentLoaded", event => {
 		const id         = data.id;
 		const collection = data.collection;
 		const property   = data.property;
+		const name       = data.name;
 
 		// Delete the keys from data
 		delete data.id;
 		delete data.collection;
 		delete data.property;
 		delete data.cache;
+		delete data.name;
 
 		// Convert string numbers to actual numbers
 		data = Object.entries(data).reduce((acc, [key, value]) => {
@@ -82,6 +84,18 @@ document.addEventListener("DOMContentLoaded", event => {
 				macro = `{{ cms.imagePath('${id}', '${options}') }}`;
 			}
 		}
+
+		if (name) {
+			macro = `{{ cms.galleryPath('${id}', '${name}', '${options}', '${collection}', '${property}') }}`;
+			if (property === "gallery") {
+				macro = `{{ cms.galleryPath('${id}', '${name}', '${options}', '${collection}') }}`;
+
+				if (collection === "gallery") {
+					macro = `{{ cms.galleryPath('${id}', '${name}', '${options}') }}`;
+				}
+			}
+		}
+
 		const macroContent = document.getElementById("twig-macro");
 		macroContent.textContent = macro;
 	}

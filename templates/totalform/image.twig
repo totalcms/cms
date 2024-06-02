@@ -93,13 +93,13 @@
 	</div>
 {% endmacro %}
 
-{% macro linkDialog(id, collection, property, filename = null) %}
+{% macro linkDialog(id, collection, property, name = null) %}
 
 	{% set query = http_build_query({
 		id         : id,
 		collection : collection,
 		property   : property,
-		filename   : filename,
+		name       : name,
 	}) %}
 
 	<dialog class="cms-modal image-link-dialog">
