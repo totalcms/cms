@@ -120,7 +120,7 @@
 	}
 }
 
-.form-group:has([readonly]) .form-group-icon {
+.form-group:has(>[readonly]) .form-group-icon {
 	background-color : oklch(var(--totalform-lightgray));
 }
 
