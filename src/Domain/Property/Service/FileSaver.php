@@ -39,10 +39,8 @@ final class FileSaver
         $this->schemaFetcher = $schemaFetcher;
         $this->objectFetcher = $objectFetcher;
 
-        $this->exifReader = ExifReader::factory(ExifReaderType::NATIVE);
-        // $this->exifReader = ExifReader::factory(ExifReaderType::EXIFTOOL);
-        // $this->exifReader = ExifReader::factory(ExifReaderType::FFPROBE);
-        // $this->exifReader = ExifReader::factory(ExifReaderType::IMAGICK);
+        $readerType       = extension_loaded('imagick') ? ExifReaderType::IMAGICK : ExifReaderType::NATIVE;
+        $this->exifReader = ExifReader::factory($readerType);
 
         // TODO: split this class up into smaller classes for ImageSaver, FileSaver, etc.
     }
