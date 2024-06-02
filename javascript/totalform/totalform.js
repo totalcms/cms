@@ -404,7 +404,9 @@ export default class TotalForm {
 	}
 
 	isUnsaved() {
-        return this.state === "unsaved";
+		let unsaved = false;
+		this.fields.forEach(field => { if (field.isUnsaved()) unsaved = true; });
+        return unsaved;
     }
 
 	processing() {
