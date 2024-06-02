@@ -46,11 +46,11 @@ export default class ImageField extends TotalField {
 		});
 	}
 
-	autosave() {
+	autosave(force = false) {
 		// Only autosave if we are in edit mode
 		if (!this.form.isEditMode()) return;
 
-		if (!this.isUnsaved()) return;
+		if (!force && !this.isUnsaved()) return;
 
 		const patchApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {

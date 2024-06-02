@@ -96,7 +96,7 @@ export default class GalleryField extends ImageField {
 				this.previewContainer.classList.remove('sorting');
 
 				// Update the order of the images in the CMS
-				this.autosave();
+				this.autosave(true);
 			}
 		});
 	}
