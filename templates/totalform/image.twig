@@ -58,7 +58,7 @@
 
 		{% set preview %}
 			<div class="image-preview {% if imageData.featured %}featured{% endif %}">
-				{{ _self.imagePreview(imagePath) }}
+				{{ _self.imagePreview(imagePath, imageData.name) }}
 				{{ _self.imageDialog(imagePath, imageData) }}
 				{{ _self.linkDialog(object.id, collection, property) }}
 			</div>
@@ -71,7 +71,7 @@
 
 {% endmacro %}
 
-{% macro imagePreview(imagePath) %}
+{% macro imagePreview(imagePath, alt) %}
 	{# This must only have one div wrapper or else preview JS will break #}
 	<div class="dz-preview dz-file-preview not-found">
 		<div class="actionbar">
@@ -84,7 +84,7 @@
 			<button type="button" class="clear"    title="Clear Cache"></button>
 			<button type="button" class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ imagePath }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ imagePath }}" alt="{{ alt }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>

@@ -6,9 +6,11 @@
 	display: grid;
 	justify-items: center;
 
+	.total-preview {
+		min-height : 96px;
+	}
 	.image-preview {
 		position   : relative;
-		min-height : 96px;
 
 		img {
 			// width      : 100%;

@@ -45,7 +45,7 @@
 		{% for imageData in galleryData %}
 			{% set imagePath = cms.galleryPath(object.id, imageData.name, {w:600,h:400}, collection, property) %}
 			<div class="image-preview {% if imageData.featured %}featured{% endif %}">
-				{{ _self.imagePreview(imagePath, imageData) }}
+				{{ _self.imagePreview(imagePath, imageData.name) }}
 				{{ _self.imageDialog(imagePath, imageData) }}
 				{{ _self.linkDialog(object.id, collection, property, imageData.name) }}
 			</div>

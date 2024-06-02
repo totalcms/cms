@@ -55,6 +55,10 @@ export default class ImageField extends TotalField {
 		this.saved();
     }
 
+	fileAdded(file) {
+		// Do nothing
+	}
+
 	fileUploaded(file, response) {
 		const image = response.data[this.property];
 		this.preview = this.setupPreview(image);

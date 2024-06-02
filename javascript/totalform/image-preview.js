@@ -17,7 +17,7 @@ export default class ImagePreview {
 		this.api      = totalfield.api;
 		this.form     = totalfield.form;
 		this.property = totalfield.property;
-		this.filename = null;
+		this.type     = totalfield.type;
 
 		this.fields        = this.container.getElementsByClassName("form-field");
 		this.featuredField = this.container.querySelector(".form-field:has([name=featured])");
@@ -28,9 +28,8 @@ export default class ImagePreview {
 		this.setupActionBar();
     }
 
-	setupGallery() {
-		const data = this.getValue();
-		this.filename = data.name;
+	isGallery() {
+		return this.type === "gallery";
 	}
 
 	setupActionBar() {
@@ -103,9 +102,11 @@ export default class ImagePreview {
 		if (featureButton) {
 			featureButton.addEventListener("click", event => {
 				event.preventDefault();
-				const featureApi = this.filename ?
-					`/collections/${this.form.collection}/${this.form.id}/${this.property}/${this.filename}` :
-					`/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				let featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+				if (this.isGallery()) {
+					const name = this.getValue().name;
+					featureApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+				}
 				const newData = { featured: !this.isFeatured() };
 				this.form.api.postAPI(featureApi, newData, "patch").then(response => {
 					this.toggleFeaturedField();
@@ -134,12 +135,13 @@ export default class ImagePreview {
 				event.preventDefault();
 				if (confirm("Are you sure that you want to delete this image?")) {
 					// Delete the entire image object if it's an image schema
-					const deleteApi = this.form.schema === "image" ?
-						`/collections/${this.form.collection}/${this.form.id}` :
-						`/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+					let deleteApi = `/collections/${this.form.collection}/${this.form.id}`;
+					if (this.isGallery()) {
+						const name = this.getValue().name;
+						deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+					}
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
-						deleteButton.closest(".dz-preview").remove();
-						this.clearValue();
+						this.container.remove();
 					});
 				}
 			});

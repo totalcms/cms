@@ -11,6 +11,7 @@ export default class GalleryField extends ImageField {
         super(container, options);
 
 		this.makeScrollable();
+		this.watchPreviews();
     }
 
 	makeScrollable() {
@@ -36,16 +37,37 @@ export default class GalleryField extends ImageField {
 		});
 	}
 
+	watchPreviews() {
+		// Watch for changes in previews
+		const observer = new MutationObserver((mutationsList, observer) => {
+			for (const mutation of mutationsList) {
+				if (mutation.type === 'childList') {
+					this.preview = this.setupPreview();
+				}
+			}
+		});
+		observer.observe(this.previewContainer, { childList: true });
+	}
+
 	setupPreview(image) {
 		const previews      = [];
 		const imagePreviews = Array.from(this.previewContainer.children);
 		imagePreviews.forEach(imagePreview => {
-			if (imagePreview.preview) return previews.push(imagePreview.preview);
-			const preview = new ImagePreview(imagePreview, this)
-			if (image) preview.setValue(image);
-			preview.setupGallery();
-			previews.push(preview);
+			if (imagePreview.preview) {
+				previews.push(imagePreview.preview);
+			} else {
+				const preview = new ImagePreview(imagePreview, this)
+				previews.push(preview);
+			}
 		});
+		if (image) {
+			imagePreviews.forEach(imagePreview => {
+				const img = imagePreview.querySelector('img');
+				if (image.name === img.alt) {
+					imagePreview.preview.setValue(image);
+				}
+			});
+		}
 		return previews;
 	}
 
@@ -77,7 +99,8 @@ export default class GalleryField extends ImageField {
 	}
 
 	fileUploaded(file, response) {
-		const image = response.data[this.property];
+		const images = response.data[this.property];
+		const image = images.filter(image => image.name === file.name).shift();
 		this.preview = this.setupPreview(image);
 	}
 

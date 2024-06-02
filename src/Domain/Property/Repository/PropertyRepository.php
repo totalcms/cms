@@ -43,6 +43,31 @@ final class PropertyRepository extends StorageRepository
         return !$this->filesystem->fileExists($path);
     }
 
+    public function deleteFileCache(string $collection, string $objectID, string $property, string $filename): bool
+    {
+        $path = PathUtils::buildPath($collection, $objectID, $property, '.cache', $filename);
+
+        try {
+            $this->filesystem->deleteDirectory($path);
+        } catch (\Exception $exception) {
+            throw new \RuntimeException('Unable to delete cache directory');
+        }
+
+        return !$this->filesystem->fileExists($path);
+    }
+
+    public function deleteFile(string $collection, string $objectID, string $property, string $filename): void
+    {
+        $path = PathUtils::buildPath($collection, $objectID, $property, $filename);
+
+        try {
+            $this->filesystem->delete($path);
+        } catch (\Exception $exception) {
+            throw new \RuntimeException("Unable to delete file $filename");
+        }
+        $this->deleteFileCache($collection, $objectID, $property, $filename);
+    }
+
     /**
      * Save file to an object property.
      *

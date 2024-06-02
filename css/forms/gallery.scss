@@ -17,6 +17,7 @@
 		box-shadow            : none;
 		transition            : none;
 		min-height            : 96px;
+		padding               : 3px;
 
 		&.scrollable {
 			max-height      : var(--scroll-height);
