@@ -47,7 +47,7 @@ export default class ImageField extends TotalField {
 	}
 
 	autosave() {
-		// Only patch the gallery if we are in edit mode
+		// Only autosave if we are in edit mode
 		if (!this.form.isEditMode()) return;
 
 		if (!this.isUnsaved()) return;
