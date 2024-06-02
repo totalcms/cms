@@ -84,7 +84,11 @@ export default class ImagePreview {
 				event.preventDefault();
 				const mimeType = this.container.querySelector('.form-field:has([name=mime])').totalfield.getValue();
 				const format = mimeType.split("/")[1];
-				const downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
+				let downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}.${format}`;
+				if (this.isGallery()) {
+					const name = this.getValue().name;
+					downloadApi = `/imageworks/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+				}
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
 				const link = document.createElement('a');
