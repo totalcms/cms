@@ -4,7 +4,15 @@
 .image-field {
 
 	display: grid;
-	justify-items: center;
+
+	&.center {
+		justify-items: center;
+
+		// > .help {
+		// 	padding    : 0;
+		// 	background : none;
+		// }
+	}
 
 	.total-preview {
 		min-height : 96px;
@@ -23,10 +31,6 @@
 		}
 	}
 
-	> .help {
-		padding    : 0;
-		background : none;
-	}
 
 	.not-found {
 		display : none;

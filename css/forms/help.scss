@@ -11,7 +11,7 @@
 	pointer-events      : none;
 	background-repeat   : no-repeat;
 	background-size     : 1rem;
-	background-position : 0 1px;
+	background-position : 0 center;
 	background-image    : var(--icon-help);
 	color               : oklch(var(--totalform-help-color));
 }
