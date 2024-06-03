@@ -1,7 +1,7 @@
 {#--------------------------------#}
 {# Blog Forms                    #}
 {#--------------------------------#}
-{% macro blogForm(collection, args = {}) %}
+{% macro blogForm(collection, args = {}, fields = {}) %}
 	{{ _self.start(collection, {
 		helpOnHover : args.helpOnHover,
 		helpOnFocus : args.helpOnFocus,
@@ -9,6 +9,25 @@
 		newAction   : args.newAction,
 		editAction  : args.editAction,
 	}) }}
+
+		{% set fields = {
+			date       : true,
+			summary    : true,
+			content    : true,
+			author     : true,
+			tags       : true,
+			featured   : true,
+			draft      : true,
+			image      : true,
+			categories : false,
+			extra      : false,
+			extra2     : false,
+			media      : false,
+			genre      : false,
+			labels     : false,
+			archived   : false,
+			gallery    : false,
+		} | merge(fields) %}
 
 		{% set tags       = selectOptions(cms.property(collection, "tags")) %}
 		{% set categories = selectOptions(cms.property(collection, "categories")) %}
@@ -21,31 +40,32 @@
 				{{ _self.id('id', { autogen : "${title}" }) }}
 				{{ _self.text('title') }}
 
-				{{ _self.date('date') }}
 				{{ _self.hidden('created') }}
 				{{ _self.hidden('updated') }}
 
-				{{ _self.styledtext('summary') }}
-				{{ _self.styledtext('content') }}
+				{% if fields.date %} {{ _self.date('date') }} {% endif %}
 
-				{{ _self.styledtext('extra') }}
-				{{ _self.styledtext('extra2') }}
+				{% if field.summary %} {{ _self.styledtext('summary') }} {% endif %}
+				{% if field.content %} {{ _self.styledtext('content') }} {% endif %}
 
-				{{ _self.url('media') }}
+				{% if field.extra %} {{ _self.styledtext('extra') }} {% endif %}
+				{% if field.extra2 %} {{ _self.styledtext('extra2') }} {% endif %}
 
-				{{ _self.text('genre', genres) }}
+				{% if field.media %} {{ _self.url('media') }} {% endif %}
+
+				{% if field.genre %} {{ _self.text('genre', genres) }} {% endif %}
 				{{ _self.text('author', authors) }}
 
-				{{ _self.list('tags', tags) }}
-				{{ _self.list('categories', categories) }}
-				{{ _self.list('labels', labels) }}
+				{% if field.tags %} {{ _self.list('tags', options) }} {% endif %}
+				{% if field.categories %} {{ _self.list('categories', categories) }} {% endif %}
+				{% if field.labels %} {{ _self.list('labels', labels) }} {% endif %}
 			</section>
 			<section>
-				{{ _self.toggle('featured', { help:false }) }}
-				{{ _self.toggle('draft', { help:false }) }}
-				{{ _self.toggle('archived', { help:false }) }}
-				{{ _self.image('image') }}
-				{# {{ _self.gallery('gallery') }} #}
+				{% if field.featured %} {{ _self.toggle('featured', { help:false }) }} {% endif %}
+				{% if field.draft %} {{ _self.toggle('draft', { help:false }) }} {% endif %}
+				{% if field.archived %} {{ _self.toggle('archived', { help:false }) }} {% endif %}
+				{% if field.image %} {{ _self.image('image') }} {% endif %}
+				{% if field.gallery %} {{ _self.gallery('gallery') }} {% endif %}
 			</section>
 		</div>
 
