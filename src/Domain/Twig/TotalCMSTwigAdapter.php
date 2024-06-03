@@ -58,6 +58,20 @@ final class TotalCMSTwigAdapter
         return $properties;
     }
 
+    public function config(string $key, ?string $setting): mixed
+    {
+        if ($setting === null) {
+            return $this->config->$key;
+        }
+
+        $config = $this->config->$key;
+        if (is_array($config) && key_exists($setting, $config)) {
+            return $config[$setting];
+        }
+
+        return '';
+    }
+
     // store data in the adapter
     public function getData(string $key): mixed
     {

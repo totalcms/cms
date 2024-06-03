@@ -7,6 +7,7 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
+use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
@@ -49,10 +50,11 @@ final class GlideFactory
      * @param string $source
      * @param ?string $cache
      * @param ?string $watermark
+     * @param ImageData $imageData
      *
      * @return Server
      */
-    public function create(string $source, ?string $cache = null, ?string $watermark = null): Server
+    public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null): Server
     {
         $glide = ServerFactory::create([
             'source'                 => $this->filesystem->flysystem(),
@@ -63,18 +65,26 @@ final class GlideFactory
             'watermarks_path_prefix' => $this->watermarkPath($watermark),
             'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
             'defaults'               => $this->config->imageworks['defaults'],
-            'presets'                => $this->config->imageworks['presets'],
+            'presets'                => $this->presets($imageData),
             'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
         ]);
 
         return $glide;
     }
 
-    /**
-     * @param ?string $watermark
-     *
-     * @return string
-     */
+    public function presets(ImageData $imageData): array
+    {
+        $presets = $this->config->imageworks['presets'];
+
+        foreach ($presets as $key => $preset) {
+            if (array_key_exists('fit', $preset)) {
+                $presets[$key]['fit'] = self::cropFocalpoint($preset['fit'], $imageData->focalpoint);
+            }
+        }
+
+        return $presets;
+    }
+
     public function watermarkPath(?string $watermark): string
     {
         $objectID = $watermark ?? $this->config->imageworks['watermarksGallery'];
@@ -82,12 +92,6 @@ final class GlideFactory
         return sprintf('gallery/%s/gallery', $objectID);
     }
 
-    /**
-     * @param string $crop
-     * @param array $focalpoint
-     *
-     * @return string
-     */
     public static function cropFocalpoint(string $crop, array $focalpoint): string
     {
         $newcrop = sprintf('crop-%g-%g', $focalpoint['x'], $focalpoint['y']);
@@ -95,23 +99,11 @@ final class GlideFactory
         return str_replace('crop-focalpoint', $newcrop, $crop);
     }
 
-    /**
-     * @param string $background
-     * @param array $imageColors
-     *
-     * @return string
-     */
     public static function updateBackgroundColor(string $background, array $imageColors): string
     {
         return self::colorFromPalette($background, $imageColors);
     }
 
-    /**
-     * @param string $border
-     * @param array $imageColors
-     *
-     * @return string
-     */
     public static function updateBorderColor(string $border, array $imageColors): string
     {
         [$size, $border, $method] = explode(',', $border);

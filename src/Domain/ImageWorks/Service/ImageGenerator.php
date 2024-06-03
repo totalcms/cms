@@ -141,7 +141,8 @@ final class ImageGenerator
         }
 
         $glide = $this->glideFactory->create(
-            source: PathUtils::buildPath($this->collection, $this->id, $this->property),
+            source    : PathUtils::buildPath($this->collection, $this->id, $this->property),
+            imageData : $imageData,
         );
 
         return $glide->getImageResponse($imageData->name, $this->params);

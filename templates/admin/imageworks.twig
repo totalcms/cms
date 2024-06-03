@@ -50,8 +50,11 @@
 	{% set collection = getParams.collection | default("image") %}
 	{% set property   = getParams.property | default("image") %}
 	{% set name       = getParams.name %}
-	{% set values     = { w : 600 } | merge(getParams) %}
+	{# if only the ID is set in the URL, then set a default width, else just use the values passed #}
+	{% set values     = getParams|keys|count > 1 ? getParams : { w : 600 } | merge(getParams) %}
 	{% set help       = {
+			p         : "Select a preset to apply a set of predefined options to the image. Any settings set" ~
+						"below will override values defined in the preset. New presets can be added in the CMS config.",
 			w         : "Sets the width of the image, in pixels.",
 			h         : "Sets the height of the image, in pixels.",
 			dpr       : "The device pixel ratio is used to easily convert between CSS pixels and device pixels. " ~
@@ -136,6 +139,12 @@
 		<input type="hidden" name="property" value="{{ property }}">
 		<input type="hidden" name="name" value="{{ name }}">
 
+
+		<section>
+			{% set presets = cms.config("imageworks", "presets") | keys %}
+			{{ _self.select("p", "Preset", "icon-settings", help.p, values.p, selectOptions(presets)) }}
+		</section>
+
 		<details class="cms-accordion">
 			<summary>Sizing &amp; Crop</summary>
 			<div>
@@ -208,8 +217,9 @@
 			<summary>Watermark</summary>
 			<div>
 				<section>
-					{# TODO: query the config for the watermark gallery and use that #}
-					{% set watermarks = selectOptions(cms.data("gallery", "watermarks", "gallery"), "name", "name") %}
+
+					{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
+					{% set watermarks = selectOptions(cms.data("gallery", watermarkID, "gallery"), "name", "name") %}
 
 					{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
 					{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
