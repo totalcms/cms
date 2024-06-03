@@ -5,15 +5,12 @@ namespace TotalCMS\Action\ImageWorks;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
-use TotalCMS\Domain\ImageWorks\Service\GalleryImageGenerator;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
 final class ImageWorksGalleryFetchAction
 {
-    private GalleryImageGenerator $imageGenerator;
-
-    public function __construct(GalleryImageGenerator $imageGenerator)
+    public function __construct(private ImageGenerator $imageGenerator)
     {
-        $this->imageGenerator = $imageGenerator;
     }
 
     /**
@@ -41,7 +38,7 @@ final class ImageWorksGalleryFetchAction
         $queryParams['fm'] = $args['format'];
 
         try {
-            $image = $this->imageGenerator->generate($collection, $id, $property, $filename, $queryParams);
+            $image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $filename, $queryParams);
         } catch (\Exception $e) {
             throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
         }

@@ -9,11 +9,8 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
 final class ImageWorksImageFetchAction
 {
-    private ImageGenerator $imageGenerator;
-
-    public function __construct(ImageGenerator $imageGenerator)
+    public function __construct(private ImageGenerator $imageGenerator)
     {
-        $this->imageGenerator = $imageGenerator;
     }
 
     /**
@@ -40,7 +37,7 @@ final class ImageWorksImageFetchAction
         $queryParams['fm'] = $args['format'];
 
         try {
-            $image = $this->imageGenerator->generate($collection, $id, $property, $queryParams);
+            $image = $this->imageGenerator->generateImage($collection, $id, $property, $queryParams);
         } catch (\Exception $e) {
             throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
         }
