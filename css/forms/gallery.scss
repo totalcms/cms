@@ -2,6 +2,11 @@
 // Fieldset - Gallery Field
 //--------------------------------
 
+@keyframes fadeInScrollable {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
 .gallery-field {
 	&> .form-group {
 		display  : block;
@@ -17,23 +22,24 @@
 		box-shadow            : none;
 		transition            : none;
 		min-height            : 96px;
-		padding               : 3px;
+		padding               : 3px 3px 10px 3px;
 
 		&.scrollable {
 			max-height      : var(--scroll-height);
 			overflow-y      : scroll;
-			padding         : 3px 3px 10px 3px;
 			border-radius   : 5px;
 
 			&:after {
-				content         : "";
-				display         : block;
-				height          : 20px;
-				position        : absolute;
-				width           : 100%;
-				bottom          : -10px;
-				background      : radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
-				z-index         : 999;
+				content    : "";
+				display    : block;
+				height     : 20px;
+				position   : absolute;
+				width      : 100%;
+				bottom     : -10px;
+				background : radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+				z-index    : 999;
+				opacity    : 0;
+				animation  : fadeInScrollable 1s 1s forwards;
 			}
 		}
 	}
