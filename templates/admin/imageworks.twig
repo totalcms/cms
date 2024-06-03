@@ -208,7 +208,10 @@
 			<summary>Watermark</summary>
 			<div>
 				<section>
-					{{ _self.input("mark", "text", "Watermark", "icon-copyright", help.mark, values.mark) }}
+					{# TODO: query the config for the watermark gallery and use that #}
+					{% set watermarks = selectOptions(cms.data("gallery", "watermarks", "gallery"), "name", "name") %}
+
+					{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
 					{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
 					{{ _self.input("markh", "text", "Height", "icon-height", help.markh, values.markh) }}
 					{{ _self.input("markalpha", "number", "Alpha", "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
@@ -225,7 +228,6 @@
 						{ value: "left-center", label: "Left Center" },
 						{ value: "right-center", label: "Right Center" },
 						{ value: "center", label: "Center" },
-
 					]) }}
 					{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
 					<button type="button" class='open-fit-docs'>Fit Options Docs</button>

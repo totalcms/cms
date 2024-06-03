@@ -59,11 +59,15 @@ final class TotalCMSTwigFunctions
     // -------------------------
     // Custom Functions
     // -------------------------
-    public static function selectOptions(array $options): array
+    public static function selectOptions(array $data, ?string $label, ?string $value): array
     {
         // this takes a normal array and converts it to an array of arrays with label and value keys
         // the resulting array can be used for select options in a form
-        return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $options);
+        if ($value === null || $label === null) {
+            return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $data);
+        }
+
+        return array_map(fn ($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
     }
 
     public static function istype(mixed $variable, string $type): bool
