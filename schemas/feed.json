@@ -19,14 +19,6 @@
 			"field"   : "checkbox",
 			"default" : false
 		},
-		"tags": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"   : "Tags",
-			"help"    : "A list of tags for this post",
-			"field"   : "list",
-			"factory" : "words",
-			"default" : []
-		},
 		"title": {
 			"type"    : "string",
 			"label"   : "Title",
