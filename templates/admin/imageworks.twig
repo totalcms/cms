@@ -218,7 +218,8 @@
 				<section>
 
 					{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
-					{% set watermarks = selectOptions(cms.data("gallery", watermarkID, "gallery"), "name", "name") %}
+					{% set watermarkData = cms.data("gallery", watermarkID, "gallery") | default([]) %}
+					{% set watermarks = selectOptions(watermarkData, "name", "name") %}
 
 					{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
 					{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
