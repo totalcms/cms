@@ -73,25 +73,30 @@ document.addEventListener("DOMContentLoaded", event => {
 			return acc;
 		}, {});
 
-		let options = JSON.stringify(data);
-		options = options.replace(/"(\w+)"\s*:/g, '$1:');
+		let options = '';
 
-		let macro = `{{ cms.imagePath('${id}', '${options}', '${collection}', '${property}') }}`;
+		if (Object.keys(data).length > 0) {
+			options = JSON.stringify(data);
+			options = options.replace(/"(\w+)"\s*:/g, '$1:').trim();
+			options = `, '${options}'`;
+		}
+
+		let macro = `{{ cms.imagePath('${id}'${options}, '${collection}', '${property}') }}`;
 		if (property === "image") {
-			macro = `{{ cms.imagePath('${id}', '${options}', '${collection}') }}`;
+			macro = `{{ cms.imagePath('${id}'${options}, '${collection}') }}`;
 
 			if (collection === "image") {
-				macro = `{{ cms.imagePath('${id}', '${options}') }}`;
+				macro = `{{ cms.imagePath('${id}'${options}) }}`;
 			}
 		}
 
 		if (name) {
-			macro = `{{ cms.galleryPath('${id}', '${name}', '${options}', '${collection}', '${property}') }}`;
+			macro = `{{ cms.galleryPath('${id}', '${name}'${options}, '${collection}', '${property}') }}`;
 			if (property === "gallery") {
-				macro = `{{ cms.galleryPath('${id}', '${name}', '${options}', '${collection}') }}`;
+				macro = `{{ cms.galleryPath('${id}', '${name}'${options}, '${collection}') }}`;
 
 				if (collection === "gallery") {
-					macro = `{{ cms.galleryPath('${id}', '${name}', '${options}') }}`;
+					macro = `{{ cms.galleryPath('${id}', '${name}'${options}) }}`;
 				}
 			}
 		}

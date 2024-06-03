@@ -103,8 +103,9 @@
 	}) %}
 
 	<dialog class="cms-modal image-link-dialog">
+		{# The cms.api may have a ? because of the Stacks Preview server #}
 		{% set join = '?' in cms.api ? '&' : '?' %}
-		<iframe style="width:100%;height:100%" data-src="{{cms.api}}/admin/imageworks{{join}}{{query}}" frameborder="0"></iframe>
+		<iframe style="width:100%;height:100%" data-src="{{cms.api}}/admin/imageworks{{join}}{{query}}&w=600" frameborder="0"></iframe>
 	</dialog>
 
 {% endmacro %}

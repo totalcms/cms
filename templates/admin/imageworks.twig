@@ -50,8 +50,7 @@
 	{% set collection = getParams.collection | default("image") %}
 	{% set property   = getParams.property | default("image") %}
 	{% set name       = getParams.name %}
-	{# if only the ID is set in the URL, then set a default width, else just use the values passed #}
-	{% set values     = getParams|keys|count > 1 ? getParams : { w : 600 } | merge(getParams) %}
+	{% set values     = getParams %}
 	{% set help       = {
 			p         : "Select a preset to apply a set of predefined options to the image. Any settings set" ~
 						"below will override values defined in the preset. New presets can be added in the CMS config.",
@@ -118,9 +117,9 @@
 					<h4>Macro:</h4>
 
 					{% if name %}
-					<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}", {w:{{values.w}}}) &#125;&#125;</pre>
+					<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
 					{% else %}
-					<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}", {w:{{values.w}}}) &#125;&#125;</pre>
+					<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
 					{% endif %}
 
 					<button type="button" id="copy-macro">Copy Macro</button>
