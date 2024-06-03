@@ -14,17 +14,15 @@ final class TotalCMSTwigFunctions
         'floor',
         'ceil',
         'addslashes',
-        'chr',
         'chunk_split',
-        'convert_uudecode',
-        'crc32',
-        'crypt',
-        'hex2bin',
         'md5',
         'sha1',
+        'explode',
         'strpos',
+        'similar_text',
+        'str_pad',
+        'strlen',
         'strrpos',
-        'ucwords',
         'wordwrap',
         'gettype',
         'str_contains',
@@ -59,11 +57,11 @@ final class TotalCMSTwigFunctions
     // -------------------------
     // Custom Functions
     // -------------------------
-    public static function selectOptions(array $data, ?string $label, ?string $value): array
+    public static function selectOptions(array $data, string $label = '', string $value = ''): array
     {
         // this takes a normal array and converts it to an array of arrays with label and value keys
         // the resulting array can be used for select options in a form
-        if ($value === null || $label === null) {
+        if (empty($value) || empty($label)) {
             return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $data);
         }
 

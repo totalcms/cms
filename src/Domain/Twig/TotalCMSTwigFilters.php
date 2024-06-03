@@ -15,6 +15,10 @@ final class TotalCMSTwigFilters
         'dirname',
         'rtrim',
         'ltrim',
+        'trim',
+        'ucwords',
+        'lcfirst',
+        'str_word_count',
         'count',
         'json_decode',
     ];
