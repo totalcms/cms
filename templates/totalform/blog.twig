@@ -1,7 +1,7 @@
 {#--------------------------------#}
 {# Blog Forms                    #}
 {#--------------------------------#}
-{% macro blogForm(collection, args = {}, fields = {}) %}
+{% macro blogForm(collection, args = {}) %}
 	{{ _self.start(collection, {
 		helpOnHover : args.helpOnHover,
 		helpOnFocus : args.helpOnFocus,
@@ -27,7 +27,7 @@
 			labels     : false,
 			archived   : false,
 			gallery    : false,
-		} | merge(fields) %}
+		} | merge(args.fields|default({})) %}
 
 		{% set tags       = selectOptions(cms.property(collection, "tags")) %}
 		{% set categories = selectOptions(cms.property(collection, "categories")) %}
