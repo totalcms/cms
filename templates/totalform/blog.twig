@@ -10,24 +10,24 @@
 		editAction  : args.editAction,
 	}) }}
 
-		{% set fields = {
-			date       : true,
-			summary    : true,
-			content    : true,
+		{% set field = {
 			author     : true,
-			tags       : true,
-			featured   : true,
+			content    : true,
+			date       : true,
 			draft      : true,
+			featured   : true,
 			image      : true,
+			summary    : true,
+			tags       : true,
+			archived   : false,
 			categories : false,
 			extra      : false,
 			extra2     : false,
-			media      : false,
+			gallery    : false,
 			genre      : false,
 			labels     : false,
-			archived   : false,
-			gallery    : false,
-		} | merge(args.fields|default({})) %}
+			media      : false,
+		} | merge(args.field|default({})) %}
 
 		{% set tags       = selectOptions(cms.property(collection, "tags")) %}
 		{% set categories = selectOptions(cms.property(collection, "categories")) %}
@@ -43,27 +43,26 @@
 				{{ _self.hidden('created') }}
 				{{ _self.hidden('updated') }}
 
-				{% if fields.date %} {{ _self.date('date') }} {% endif %}
-
+				{% if field.date %} {{ _self.date('date') }} {% endif %}
+				{% if field.media %} {{ _self.url('media') }} {% endif %}
 				{% if field.summary %} {{ _self.styledtext('summary') }} {% endif %}
 				{% if field.content %} {{ _self.styledtext('content') }} {% endif %}
-
 				{% if field.extra %} {{ _self.styledtext('extra') }} {% endif %}
 				{% if field.extra2 %} {{ _self.styledtext('extra2') }} {% endif %}
-
-				{% if field.media %} {{ _self.url('media') }} {% endif %}
-
-				{% if field.genre %} {{ _self.text('genre', genres) }} {% endif %}
-				{{ _self.text('author', authors) }}
-
-				{% if field.tags %} {{ _self.list('tags', options) }} {% endif %}
-				{% if field.categories %} {{ _self.list('categories', categories) }} {% endif %}
-				{% if field.labels %} {{ _self.list('labels', labels) }} {% endif %}
 			</section>
 			<section>
-				{% if field.featured %} {{ _self.toggle('featured', { help:false }) }} {% endif %}
-				{% if field.draft %} {{ _self.toggle('draft', { help:false }) }} {% endif %}
-				{% if field.archived %} {{ _self.toggle('archived', { help:false }) }} {% endif %}
+				{% if field.author %} {{ _self.text('author', authors) }} {% endif %}
+				{% if field.genre %} {{ _self.text('genre', genres) }} {% endif %}
+				{% if field.tags %} {{ _self.list('tags', tags) }} {% endif %}
+				{% if field.categories %} {{ _self.list('categories', categories) }} {% endif %}
+				{% if field.labels %} {{ _self.list('labels', labels) }} {% endif %}
+
+				<div class="form-inline-fields">
+					{% if field.featured %} {{ _self.toggle('featured', { help:false }) }} {% endif %}
+					{% if field.draft %} {{ _self.toggle('draft', { help:false }) }} {% endif %}
+					{% if field.archived %} {{ _self.toggle('archived', { help:false }) }} {% endif %}
+				</div>
+
 				{% if field.image %} {{ _self.image('image') }} {% endif %}
 				{% if field.gallery %} {{ _self.gallery('gallery') }} {% endif %}
 			</section>
