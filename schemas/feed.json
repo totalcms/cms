@@ -66,8 +66,7 @@
 		"content",
 		"created",
 		"updated",
-		"featured",
-		"tags"
+		"featured"
 	],
 	"index": [
 		"id",
@@ -76,7 +75,6 @@
 		"created",
 		"updated",
 		"featured",
-		"tags",
 		"image"
 	]
 }
