@@ -55,13 +55,26 @@ final class ImageGenerator
             throw new \UnexpectedValueException('Invalid gallery property found');
         }
 
-        $imageData = array_filter($galleryData->images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
+        switch ($filename) {
+            case 'first':
+                $imageData = array_shift($galleryData->images);
+                break;
+            case 'last':
+                $imageData = array_pop($galleryData->images);
+                break;
+            case 'random':
+                $imageData = $galleryData->images[array_rand($galleryData->images)];
+                break;
+            default:
+                $imageData = array_filter($galleryData->images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
+                $imageData = array_shift($imageData);
+        }
 
         if (empty($imageData)) {
             throw new \UnexpectedValueException('Gallery Image not found');
         }
 
-        $imageData = new ImageData(array_shift($imageData));
+        $imageData = new ImageData($imageData);
 
         if (!$imageData instanceof ImageData) {
             throw new \UnexpectedValueException('Invalid image property found in gallery');
