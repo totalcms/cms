@@ -80,6 +80,18 @@ final class TotalCMSTwigFilters
         return ucwords(str_replace($sep, ' ', $slug));
     }
 
+    public static function obfuscate(string $string): string
+    {
+        $length = strlen($string);
+        $result = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $result .= '&#' . ord($string[$i]) . ';';
+        }
+
+        return $result;
+    }
+
     // -------------------------
     // Total CMS Color Manipulation
     // -------------------------
