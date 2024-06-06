@@ -281,8 +281,24 @@ final class TotalCMSTwigAdapter
         return $api;
     }
 
+    public function galleryImage(?string $id, ?string $filename, array $options = [], string $collection = 'gallery', string $property = 'gallery'): string
+    {
+        if (empty($id) || empty($filename)) {
+            return '';
+        }
+
+        $imagePath = $this->galleryPath($id, $filename, $options, $collection, $property);
+        if (empty($imagePath)) {
+            return '';
+        }
+
+        $alt = $this->galleryAlt($id, $filename, $collection, $property);
+
+        return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
+    }
+
     // get an image object from inside a gallery by it's name
-    public function galleryImage(string $id, string $name, string $collection = 'gallery', string $property = 'gallery'): ?array
+    public function galleryImageData(string $id, string $name, string $collection = 'gallery', string $property = 'gallery'): ?array
     {
         $gallery = $this->data($collection, $id, $property);
         if (!is_array($gallery)) {
@@ -307,26 +323,34 @@ final class TotalCMSTwigAdapter
             return '';
         }
 
-        $image = $this->galleryImage($id, $name, $collection, $property);
-        if (!is_array($image) || !key_exists('uploadDate', $image)) {
-            return '';
+        // Default to dynamic API routes
+        $api              = $this->api . "/imageworks/$collection/$id/$property/$name";
+        $options['cache'] = uniqid();
+        $dynamicRoutes    = ['first', 'last', 'random', 'featured'];
+
+        // Process the image as regular filename
+        if (!in_array($name, $dynamicRoutes)) {
+            $image = $this->galleryImageData($id, $name, $collection, $property);
+            if (!is_array($image) || !key_exists('uploadDate', $image)) {
+                return '';
+            }
+
+            // Default to original image type
+            $type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+            // If type is set in options, use that
+            if (key_exists('fm', $options)) {
+                $type = $options['fm'];
+                unset($options['fm']);
+            }
+            // If type is not in the list of allowed types, default to jpg
+            $type     = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
+            $basename = pathinfo($name)['filename'];
+
+            $api = $this->api . "/imageworks/$collection/$id/$property/$basename.$type";
+
+            // cache busting links
+            $options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
         }
-
-        // Default to original image type
-        $type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
-        // If type is set in options, use that
-        if (key_exists('fm', $options)) {
-            $type = $options['fm'];
-            unset($options['fm']);
-        }
-        // If type is not in the list of allowed types, default to jpg
-        $type     = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
-        $basename = pathinfo($name)['filename'];
-
-        $api = $this->api . "/imageworks/$collection/$id/$property/$basename.$type";
-
-        // cache busting links
-        $options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
 
         // From Stacks Preview Server - Not used in Imageworks and breaks the image generation
         unset($options['datadir']);
@@ -358,6 +382,22 @@ final class TotalCMSTwigAdapter
     {
         $image = $this->data($collection, $id, $property);
 
-        return is_array($image) && key_exists('alt', $image) ? $image['alt'] : '';
+        if (!is_array($image) || !key_exists('alt', $image)) {
+            return '';
+        }
+
+        return $image['alt'];
+    }
+
+    // Get an alt tag for a gallery image
+    public function galleryAlt(string $id, string $filename, string $collection = 'gallery', string $property = 'gallery'): string
+    {
+        $image = $this->galleryImageData($id, $filename, $collection, $property);
+
+        if (!is_array($image) || !key_exists('alt', $image)) {
+            return '';
+        }
+
+        return $image['alt'];
     }
 }
