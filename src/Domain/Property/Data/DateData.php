@@ -22,13 +22,12 @@ class DateData extends PropertyData
         if (isset($default)) {
             if (empty($value) && $default === self::CREATION_DATE) {
                 $value = self::cleanDate();
-            }
-            if ($default === self::UPDATE_DATE) {
+            } elseif ($default === self::UPDATE_DATE) {
                 $value = self::cleanDate();
             }
         }
 
-        return $value;
+        return self::cleanDate($value);
     }
 
     private static function cleanDate(string $date = ''): string
