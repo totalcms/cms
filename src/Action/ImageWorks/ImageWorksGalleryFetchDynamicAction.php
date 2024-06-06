@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
-final class ImageWorksGalleryFetchFirstAction
+final class ImageWorksGalleryFetchDynamicAction
 {
     public function __construct(private ImageGenerator $imageGenerator)
     {
@@ -32,11 +32,11 @@ final class ImageWorksGalleryFetchFirstAction
         $collection  = $args['collection'] ?? 'gallery';
         $id          = $args['id'];
         $property    = $args['property'] ?? 'gallery';
-        $filename    = 'first';
+        $action      = $args['action'];
         $queryParams = $request->getQueryParams();
 
         try {
-            $image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $filename, $queryParams);
+            $image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $action, $queryParams);
         } catch (\Exception $e) {
             throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
         }

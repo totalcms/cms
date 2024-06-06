@@ -65,6 +65,10 @@ final class ImageGenerator
             case 'random':
                 $imageData = $galleryData->images[array_rand($galleryData->images)];
                 break;
+            case 'featured':
+                usort($galleryData->images, fn ($a, $b) => $a['featured'] <=> $b['featured']);
+                $imageData = array_shift($galleryData->images);
+                break;
             default:
                 $imageData = array_filter($galleryData->images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
                 $imageData = array_shift($imageData);
