@@ -1,0 +1,18 @@
+{#--------------------------------#}
+{# Factory Form                  #}
+{#--------------------------------#}
+{% macro factoryForm(collection, fqty = 3, button = "Generate New Objects", fields = {}) %}
+	<form class="factory-form" data-collection="{{collection}}" data-api="{{cms.api}}" >
+		<input type="hidden" name="fqty" value="{{fqty}}">
+
+		{% if gettype(fields) == 'string' %}
+			{{ fields | raw }}
+		{% elseif gettype(fields) == 'array' %}
+			{% for property, rule in fields %}
+				<input type="hidden" name="{{property}}" value="{{rule}}">
+			{% endfor %}
+		{% endif %}
+
+		<button class="button btn" type="submit">{{ button }}</button>
+	</form>
+{% endmacro %}

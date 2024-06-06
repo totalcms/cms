@@ -29,19 +29,24 @@ final class ImportFactoryAction
      *
      * @param ServerRequestInterface $request The request
      * @param ResponseInterface $response The response
+     * @param array $args
      *
      * @return ResponseInterface The response
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        $collection = $request->getAttribute('collection');
-        $quantity   = $request->getQueryParams()['quantity'] ?? 1;
-        $defs       = $request->getParsedBody() ?? [];
+        $collection = $args['collection'];
+        $params     = $request->getQueryParams();
+        $rules      = json_decode($request->getBody(), true);
 
-        if (is_object($defs)) {
-            $defs = (array)$defs;
+        // using fqty so that it's not a common name that could be used by the user
+        $quantity = intval($params['fqty'] ?? $rules['fqty'] ?? 1);
+
+        if (isset($rules['fqty'])) {
+            unset($rules['fqty']);
         }
-        $importCount = $this->importer->import($collection, $quantity, $defs);
+
+        $importCount = $this->importer->import($collection, $quantity, $rules);
 
         return $this->renderer->json($response, ['import_count' => $importCount]);
     }

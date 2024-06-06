@@ -1,0 +1,21 @@
+//------------------------------
+// Factory Form
+//------------------------------
+.factory-form {
+	button {
+		transition-property : opacity color background-color;
+		transition-duration : 500ms;
+		opacity             : 1;
+	}
+	button.processing {
+		opacity : 0.5;
+	}
+	button.success {
+		background-color : oklch(var(--totalform-success));
+		color            : oklch(var(--totalform-white));
+	}
+	button.error {
+		background-color : oklch(var(--totalform-error));
+		color            : oklch(var(--totalform-white));
+	}
+}
