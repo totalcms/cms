@@ -108,11 +108,11 @@ final class ImageGenerator
         }
 
         // Make sure that the requested width and height are not larger than the original image
-        if (isset($params['w']) && $params['w'] > $imageData->width) {
+        if (isset($params['w']) && $params['w'] > $imageData->width && $imageData->width > 0) {
             $params['w'] = $imageData->width;
         }
 
-        if (isset($params['h']) && $params['h'] > $imageData->height) {
+        if (isset($params['h']) && $params['h'] > $imageData->height && $imageData->height > 0) {
             $params['h'] = $imageData->height;
         }
 
