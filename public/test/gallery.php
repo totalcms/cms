@@ -8,7 +8,11 @@
 
 	{% import "content.twig" as content %}
 
-	<!-- {{ cms.galleryImage("mygallery", "vw-van5.jpg") | raw }} -->
+	<h3>Gallery Image</h3>
+
+	{{ cms.galleryImage("mygallery", "vw-van5.jpg") | raw }}
+
+	<h3>Gallery Content</h3>
 
 	{{ content.gallery("mygallery") }}
 

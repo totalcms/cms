@@ -1,15 +1,92 @@
-@import "lightgallery/css/lightgallery.css";
+$backdrop-opacity: 1;
+$lg-toolbar-bg: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0),
+    rgba(0, 0, 0, 0.4)
+);
+$lg-border-radius-base: 2px;
+$lg-theme-highlight: rgb(169, 7, 7);
+$lg-theme-color: #000;
 
-// @import "lightgallery/css/lg-autoplay.css";
-// @import "lightgallery/css/lg-comments.css";
-// @import "lightgallery/css/lg-fullscreen.css";
-// @import "lightgallery/css/lg-medium-zoom.css";
-// @import "lightgallery/css/lg-pager.css";
-// @import "lightgallery/css/lg-relative-caption.css";
-// @import "lightgallery/css/lg-rotate.css";
-// @import "lightgallery/css/lg-share.css";
-@import "lightgallery/css/lg-thumbnail.css";
-// @import "lightgallery/css/lg-transitions.css";
-// @import "lightgallery/css/lg-video.css";
-@import "lightgallery/css/lg-zoom.css";
+// basic icon colours
+$lg-icon-bg: rgba(0, 0, 0, 0.45);
+$lg-icon-color: #999;
+$lg-icon-hover-color: #fff;
 
+// counter
+$lg-counter-color: #e6e6e6;
+$lg-counter-font-size: 16px;
+
+// Next prev icons
+$lg-next-prev-bg: $lg-icon-bg;
+$lg-next-prev-color: $lg-icon-color;
+$lg-next-prev-hover-color: $lg-icon-hover-color;
+
+// toolbar icons
+$lg-toolbar-icon-color: $lg-icon-color;
+$lg-toolbar-icon-hover-color: $lg-icon-hover-color;
+$lg-toolbar-icon-disabled-opacity: 0.75;
+
+// autoplay progress bar
+$lg-progress-bar-bg: #333;
+$lg-progress-bar-active-bg: $lg-theme-highlight;
+$lg-progress-bar-height: 5px;
+
+// paths
+$lg-path-fonts: 'gallery';
+$lg-path-images: 'gallery';
+
+// Zoom plugin
+$zoom-transition-duration: 0.5s;
+
+// Sub html - titile
+$lg-sub-html-bg: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0),
+    rgba(0, 0, 0, 0.6)
+);
+$lg-sub-html-color: #eee;
+
+// thumbnail toggle button
+$lg-thumb-toggle-bg: #0d0a0a;
+$lg-thumb-toggle-color: $lg-icon-color;
+$lg-thumb-bg: #0d0a0a;
+$lg-thumb-container-height: 100px;
+
+// Pager
+
+// z-index
+$zindex-outer: 1050;
+$zindex-progressbar: 1083;
+$zindex-controls: 1084;
+$zindex-toolbar: 1082;
+$zindex-subhtml: 1080;
+$zindex-components: 1080;
+$zindex-pager: 1080;
+$zindex-playbutton: 1080;
+$zindex-item: 1060;
+$zindex-backdrop: 1040;
+
+@import "lightgallery";
+
+// @import "lg-autoplay";
+// @import "lg-comments";
+// @import "lg-fullscreen";
+// @import "lg-medium-zoom";
+// @import "lg-pager";
+// @import "lg-relative-caption";
+// @import "lg-rotate";
+// @import "lg-share";
+@import "lg-thumbnail";
+// @import "lg-transitions";
+// @import "lg-video";
+@import "lg-zoom";
+
+
+.cms-gallery {
+	display               : grid;
+	gap                   : 0.8rem;
+	grid-template-columns : repeat(auto-fill, minmax(200px, 1fr));
+	align-items           : center;
+	justify-items         : center;
+}
