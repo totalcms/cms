@@ -50,6 +50,7 @@ final class TotalCMSTwigFilters
         'chroma',
         'hue',
         'adjustColor',
+        'obfuscate',
     ];
 
     public static function getFilters(): array
