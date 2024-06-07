@@ -1,0 +1,9 @@
+{% macro gallery(id, collection = "gallery", property = "gallery") %}
+	<div class="cms-gallery">
+		{% for image in cms.data(collection, id, property) %}
+			<a href="{{ cms.galleryPath(id, image.name, {}, collection, property) }}" data-lg-size="{{ image.width }}-{{ image.height }}">
+				<img alt="{{ image.alt }}" src="{{ cms.galleryPath(id, image.name, {w:300, h:300}, collection, property) }}" />
+			</a>
+		{% endfor %}
+	</div>
+{% endmacro %}

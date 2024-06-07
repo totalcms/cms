@@ -2,6 +2,7 @@
 
 echo "Building Twig Templates..."
 cat templates/totalform/* > templates/totalform.twig
+cat templates/content/* > templates/content.twig
 
 echo "Building frontend assets..."
 node esbuild.config.js
