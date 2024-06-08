@@ -1,8 +1,12 @@
 {#--------------------------------#}
 {# Factory Form                  #}
 {#--------------------------------#}
-{% macro factoryForm(collection, fqty = 3, button = "Generate New Objects", fields = {}) %}
-	<form class="factory-form" data-collection="{{collection}}" data-api="{{cms.api}}" >
+{% macro factoryForm(collection, fqty = 3, button = "Generate New Objects", refresh = true, fields = {}) %}
+	<form class="factory-form"
+		data-collection="{{collection}}"
+		data-api="{{cms.api}}"
+		data-refresh="{{refresh}}"
+	>
 		<input type="hidden" name="fqty" value="{{fqty}}">
 
 		{% if gettype(fields) == 'string' %}

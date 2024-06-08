@@ -18,6 +18,7 @@ export default class FactoryForm {
 		this.collection = this.form.dataset.collection;
 		this.route      = `/import/${this.collection}/factory`;
 		this.api        = new TotalCMS({ url: this.form.dataset.api});
+		this.refresh    = this.form.dataset.refresh || false;
 
 		this.form.addEventListener("submit", event => event.preventDefault());
 
@@ -55,6 +56,9 @@ export default class FactoryForm {
 
 	success(response) {
 		this.toggleButton("success", "🥳");
+		if (this.refresh) {
+			window.location.reload();
+		}
 	}
 
 	error(error) {
