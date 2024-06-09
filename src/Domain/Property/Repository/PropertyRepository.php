@@ -120,6 +120,8 @@ final class PropertyRepository extends StorageRepository
         $filename = basename($filePath);
         $newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
 
+        [$width, $height] = getimagesize($filePath);
+
         if (!$this->filesystem->import($filePath, $newpath)) {
             throw new \RuntimeException('File not saved');
         }
@@ -129,6 +131,8 @@ final class PropertyRepository extends StorageRepository
             'name'       => basename($newpath),
             'size'       => intval($this->filesystem->fileSize($newpath)),
             'mime'       => $this->filesystem->mimeType($newpath),
+            'width'      => $width,
+            'height'     => $height,
             'uploadDate' => date('c'),
         ];
     }

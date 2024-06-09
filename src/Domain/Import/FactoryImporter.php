@@ -71,7 +71,7 @@ final class FactoryImporter
         }
 
         return array_map(function ($property) {
-            return $property['factory'] ?? self::DEFAULT_FACTORY;
+            return $property['factory'] ?? null;
         }, $properties->properties);
     }
 
@@ -84,17 +84,20 @@ final class FactoryImporter
 
         for ($i = 0; $i < $quantity; $i++) {
             $objectData = [];
+
+            // Generate object id first since other methods may require it
+            [$method, $args]  = self::parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
+            $objectData['id'] = $this->faker->unique()->$method(...$args);
+
             foreach ($defs as $key => $value) {
-                [$method, $args] = self::parseFakerRule($value ?? self::DEFAULT_FACTORY);
-                if ($key === 'id') {
-                    // Make sure ID is unique
-                    $objectData[$key] = $this->faker->unique()->$method(...$args);
+                if (empty($value) || $key === 'id') {
                     continue;
                 }
-                if (str_starts_with($method, 'image') && isset($objectData['id'])) {
+                [$method, $args] = self::parseFakerRule($value ?? self::DEFAULT_FACTORY);
+                if (str_starts_with($method, 'image')) {
                     // Save image to file and store path in object data
                     $path             = $this->faker->$method(...$args);
-                    $objectData[$key] = $this->propertyRepository->saveFile($collection, $objectData['id'], $key, $path);
+                    $objectData[$key] = $this->propertyRepository->saveImage($collection, $objectData['id'], $key, $path);
                     continue;
                 }
                 $objectData[$key] = $this->faker->$method(...$args);
