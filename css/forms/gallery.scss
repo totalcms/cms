@@ -12,6 +12,10 @@
 		display  : block;
 		overflow : hidden;
 	}
+	.image-preview {
+		background-image : var(--opacity-grid);
+		background-size  : 20%;
+	}
 	.total-preview {
 		--scroll-height       : 600px;
 		display               : grid;
@@ -44,7 +48,7 @@
 		}
 	}
 	.dz-preview {
-		width : fit-content;
+		width            : fit-content;
 
 		img {
 			max-height : 200px;

@@ -18,7 +18,9 @@
 		min-height : 96px;
 	}
 	.image-preview {
-		position   : relative;
+		position         : relative;
+		background-image : var(--opacity-grid);
+		background-size  : 20%;
 
 		img {
 			// width      : 100%;
@@ -35,7 +37,6 @@
 	.not-found {
 		display : none;
 	}
-
 }
 
 dialog.image-link-dialog {
