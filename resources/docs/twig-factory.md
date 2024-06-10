@@ -20,7 +20,13 @@ realTextBetween($minNbChars = 160, $maxNbChars = 200, $indexSize = 2)
 ### Images
 
 ```
-factory.imageUrl(int $width = 640, int $height = 480): string
+imageUrl(int $width = 640, int $height = 480): string
+image(int $width = 640, int $height = 480): string
+imageBlur(int $width = 640, int $height = 480, int $blur = 10): string
+imageBW(int $width = 640, int $height = 480): string
+imageBWBlur(int $width = 640, int $height = 480, int $blur = 10): string
+imageText(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): string
+imageShapes(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
 ```
 
 ### Tags

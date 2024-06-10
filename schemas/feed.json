@@ -49,7 +49,7 @@
 			"label"   : "Image",
 			"help"    : "Image for this post",
 			"field"   : "image",
-			"factory" : "imageText|1920,1080"
+			"factory" : "imageShapes(1920,1080)"
 		},
 		"content": {
 			"type"    : "string",

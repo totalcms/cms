@@ -63,7 +63,7 @@
 			"label"   : "Image",
 			"help"    : "Main image for this post",
 			"field"   : "image",
-			"factory" : "imageText|1920,1080",
+			"factory" : "imageShapes(1920,1080)",
 			"default" : {}
 		},
 		"archived": {
@@ -137,7 +137,7 @@
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
-			"factory" : "numberBetween|0,1",
+			"factory" : "numberBetween(0,1)",
 			"default" : false
 		},
 		"categories": {

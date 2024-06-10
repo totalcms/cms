@@ -48,15 +48,33 @@ final class FactoryImporter
 
     private static function parseFakerRule(string $rule): array
     {
-        $parts  = explode('|', $rule);
-        $method = $parts[0];
-        $args   = [];
-        if (count($parts) > 1) {
-            $args = preg_split('/\s*,\s*/', $parts[1]);
+        // Extract method name and arguments string
+        preg_match('/^(\w+)(\((.*)\))*$/', $rule, $matches);
+        $method = $matches[1] ?? '';
+        $args   = $matches[3] ?? '';
+        $args   = trim($args);
+
+        if (!empty($args)) {
+            $args = preg_split('/\s*,\s*/', trim($args));
             if ($args === false) {
                 $args = [];
             }
         }
+
+        if (empty($args)) {
+            $args = [];
+        }
+
+        // Loop through $args and convert values to int or bool if applicable
+        foreach ($args as &$arg) {
+            if (filter_var($arg, FILTER_VALIDATE_INT) !== false) {
+                $arg = (int)$arg; // Convert to int
+            } elseif (filter_var($arg, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== null) {
+                $arg = filter_var($arg, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE); // Convert to bool
+            }
+            // Leave $arg as a string if it doesn't look like an int or a bool
+        }
+        unset($arg); // Break the reference with the last element
 
         return [$method, $args];
     }
