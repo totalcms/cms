@@ -5,12 +5,19 @@
 	"type"        : "object",
 	"description" : "A schema for a Total CMS Blog object",
 	"properties"  : {
+		"id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Blog Post ID",
+			"help"    : "A unique ID for this post. No spaces or special characters.",
+			"field"   : "slug",
+			"factory" : "slug"
+		},
 		"content": {
 			"type"    : "string",
 			"label"   : "Content",
 			"help"    : "Main blog post content",
 			"field"   : "textarea",
-			"factory" : "paragraphs",
+			"factory" : "paragraph",
 			"default" : ""
 		},
 		"labels": {
@@ -18,6 +25,7 @@
 			"label"   : "Labels",
 			"help"    : "A list of labels for this post",
 			"field"   : "list",
+			"factory" : "tags",
 			"default" : []
 		},
 		"extra": {
@@ -32,14 +40,14 @@
 			"label"   : "Title",
 			"help"    : "Blog Post title",
 			"field"   : "input",
-			"factory" : "sentence"
+			"factory" : "catchPhrase"
 		},
 		"tags": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"   : "Tags",
 			"help"    : "A list of tags for this post",
 			"field"   : "list",
-			"factory" : "words",
+			"factory" : "tags",
 			"default" : []
 		},
 		"summary": {
@@ -55,7 +63,7 @@
 			"label"   : "Image",
 			"help"    : "Main image for this post",
 			"field"   : "image",
-			"factory" : "imageText|1920,1080",
+			"factory" : "imageShapes(1920,1080)",
 			"default" : {}
 		},
 		"archived": {
@@ -79,13 +87,6 @@
 			"field"   : "hidden",
 			"factory" : "iso8601",
 			"default" : "now"
-		},
-		"id": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"   : "Blog Post ID",
-			"help"    : "A unique ID for this post. No spaces or special characters.",
-			"field"   : "slug",
-			"factory" : "slug"
 		},
 		"date": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
@@ -136,7 +137,7 @@
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
-			"factory" : "numberBetween|0,1",
+			"factory" : "numberBetween(0,1)",
 			"default" : false
 		},
 		"categories": {
@@ -144,7 +145,7 @@
 			"label"   : "Categories",
 			"help"    : "A list of categories for this post",
 			"field"   : "list",
-			"factory" : "words",
+			"factory" : "tags",
 			"default" : []
 		},
 		"author": {

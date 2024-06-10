@@ -48,15 +48,33 @@ final class FactoryImporter
 
     private static function parseFakerRule(string $rule): array
     {
-        $parts  = explode('|', $rule);
-        $method = $parts[0];
-        $args   = [];
-        if (count($parts) > 1) {
-            $args = preg_split('/\s*,\s*/', $parts[1]);
+        // Extract method name and arguments string
+        preg_match('/^(\w+)(\((.*)\))*$/', $rule, $matches);
+        $method = $matches[1] ?? '';
+        $args   = $matches[3] ?? '';
+        $args   = trim($args);
+
+        if (!empty($args)) {
+            $args = preg_split('/\s*,\s*/', trim($args));
             if ($args === false) {
                 $args = [];
             }
         }
+
+        if (empty($args)) {
+            $args = [];
+        }
+
+        // Loop through $args and convert values to int or bool if applicable
+        foreach ($args as &$arg) {
+            if (filter_var($arg, FILTER_VALIDATE_INT) !== false) {
+                $arg = (int)$arg; // Convert to int
+            } elseif (filter_var($arg, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== null) {
+                $arg = filter_var($arg, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE); // Convert to bool
+            }
+            // Leave $arg as a string if it doesn't look like an int or a bool
+        }
+        unset($arg); // Break the reference with the last element
 
         return [$method, $args];
     }
@@ -71,7 +89,7 @@ final class FactoryImporter
         }
 
         return array_map(function ($property) {
-            return $property['factory'] ?? self::DEFAULT_FACTORY;
+            return $property['factory'] ?? null;
         }, $properties->properties);
     }
 
@@ -84,17 +102,20 @@ final class FactoryImporter
 
         for ($i = 0; $i < $quantity; $i++) {
             $objectData = [];
+
+            // Generate object id first since other methods may require it
+            [$method, $args]  = self::parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
+            $objectData['id'] = $this->faker->unique()->$method(...$args);
+
             foreach ($defs as $key => $value) {
-                [$method, $args] = self::parseFakerRule($value ?? self::DEFAULT_FACTORY);
-                if ($key === 'id') {
-                    // Make sure ID is unique
-                    $objectData[$key] = $this->faker->unique()->$method(...$args);
+                if (empty($value) || $key === 'id') {
                     continue;
                 }
-                if (str_starts_with($method, 'image') && isset($objectData['id'])) {
+                [$method, $args] = self::parseFakerRule($value ?? self::DEFAULT_FACTORY);
+                if (str_starts_with($method, 'image')) {
                     // Save image to file and store path in object data
                     $path             = $this->faker->$method(...$args);
-                    $objectData[$key] = $this->propertyRepository->saveFile($collection, $objectData['id'], $key, $path);
+                    $objectData[$key] = $this->propertyRepository->saveImage($collection, $objectData['id'], $key, $path);
                     continue;
                 }
                 $objectData[$key] = $this->faker->$method(...$args);

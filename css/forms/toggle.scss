@@ -5,7 +5,8 @@
 	width : auto;
 
 	.switch {
-        position : relative;
+		position  : relative;
+		min-width : 50px;
     }
     input[type="checkbox"] {
         opacity : 0;     // hides checkbox

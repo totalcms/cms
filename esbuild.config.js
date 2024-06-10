@@ -1,4 +1,5 @@
 const esbuild            = require('esbuild');
+const copy               = require('esbuild-plugin-copy');
 const { clean }          = require('esbuild-plugin-clean');
 const { globPlugin }     = require('esbuild-plugin-glob');
 const { sassPlugin }     = require("esbuild-sass-plugin");
@@ -7,6 +8,7 @@ const { createImporter } = require("sass-extended-importer");
 esbuild.build({
     entryPoints : [
 		"javascript/admin.js",
+		"javascript/gallery.js",
 		"javascript/imageworks-builder.js",
 		"javascript/totalcms.js",
 		"javascript/swagger.js",
@@ -39,16 +41,33 @@ esbuild.build({
     sourcemap : true,
     outdir      : 'public/assets',
     external    : [
+		"gallery/*",
     ],
+	loader: {
+		".woff2" : "file",
+		".woff"  : "file",
+		".gif"   : "file",
+		".ttf"   : "file",
+		".svg"   : "file",
+	},
     plugins     : [
         globPlugin(),
+		copy.default({assets: {
+            from : "node_modules/lightgallery/fonts/*",
+            to   : "gallery"
+        }}),
+		copy.default({assets: {
+            from : "node_modules/lightgallery/images/*",
+            to   : "gallery"
+        }}),
         // Sass includes
         sassPlugin({
             loadPaths: [
                 "node_modules/choices.js/src/styles/",
                 "node_modules/froala-editor/css/",
                 "node_modules/codemirror/lib/",
-                "node_modules/dropzone/src/"
+                "node_modules/dropzone/src/",
+				"node_modules/lightgallery/scss/",
             ],
             importer: createImporter(),
         }),

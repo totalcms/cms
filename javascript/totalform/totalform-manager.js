@@ -63,7 +63,8 @@ export default class TotalFormManager {
 	}
 
     registerButtons() {
-		const saveButtons = Array.from(document.querySelectorAll("button.cms-save,a.cms-save,.cms-save a,.cms-save button"));
+		const buttonSelector = "button.cms-save,a.cms-save,.cms-save a,.cms-save button";
+		const saveButtons = Array.from(document.querySelectorAll(buttonSelector));
 		const externalButtons = saveButtons.filter(button => button.closest("form.totalform") === null);
 		const internalButtons = saveButtons.filter(button => button.closest("form.totalform") !== null);
 
@@ -74,7 +75,7 @@ export default class TotalFormManager {
 			});
         });
 
-        internalButtons.forEach(button => {
+		const saveFormWithButton = (button) => {
 			button.addEventListener("click", event => {
 				event.preventDefault();
 
@@ -86,7 +87,27 @@ export default class TotalFormManager {
 				this.startProcessing();
 				totalform.save();
 			});
-        });
+		};
+
+        internalButtons.forEach(button => saveFormWithButton(button));
+
+		// Watch for new save buttons added to droplets
+		const observer = new MutationObserver((mutationsList, observer) => {
+			for (const mutation of mutationsList) {
+				if (mutation.type === 'childList') {
+					mutation.addedNodes.forEach(node => {
+						if (node.nodeType === Node.ELEMENT_NODE) {
+							const button = node.querySelector(buttonSelector);
+							if (button) saveFormWithButton(button);
+						}
+					});
+				}
+			}
+		});
+
+		// Start observing for droplet previews
+		const dropletPreviews = Array.from(document.querySelectorAll("form.totalform .total-preview"));
+		dropletPreviews.forEach(preview => observer.observe(preview, { childList: true }));
 	}
 
 	startProcessing() {

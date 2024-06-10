@@ -58,12 +58,14 @@ document.addEventListener("DOMContentLoaded", event => {
 		const id         = data.id;
 		const collection = data.collection;
 		const property   = data.property;
+		const name       = data.name;
 
 		// Delete the keys from data
 		delete data.id;
 		delete data.collection;
 		delete data.property;
 		delete data.cache;
+		delete data.name;
 
 		// Convert string numbers to actual numbers
 		data = Object.entries(data).reduce((acc, [key, value]) => {
@@ -71,17 +73,34 @@ document.addEventListener("DOMContentLoaded", event => {
 			return acc;
 		}, {});
 
-		let options = JSON.stringify(data);
-		options = options.replace(/"(\w+)"\s*:/g, '$1:');
+		let options = '';
 
-		let macro = `{{ cms.imagePath('${id}', '${options}', '${collection}', '${property}') }}`;
+		if (Object.keys(data).length > 0) {
+			options = JSON.stringify(data);
+			options = options.replace(/"(\w+)"\s*:/g, '$1:').trim();
+			options = `, '${options}'`;
+		}
+
+		let macro = `{{ cms.imagePath('${id}'${options}, '${collection}', '${property}') }}`;
 		if (property === "image") {
-			macro = `{{ cms.imagePath('${id}', '${options}', '${collection}') }}`;
+			macro = `{{ cms.imagePath('${id}'${options}, '${collection}') }}`;
 
 			if (collection === "image") {
-				macro = `{{ cms.imagePath('${id}', '${options}') }}`;
+				macro = `{{ cms.imagePath('${id}'${options}) }}`;
 			}
 		}
+
+		if (name) {
+			macro = `{{ cms.galleryPath('${id}', '${name}'${options}, '${collection}', '${property}') }}`;
+			if (property === "gallery") {
+				macro = `{{ cms.galleryPath('${id}', '${name}'${options}, '${collection}') }}`;
+
+				if (collection === "gallery") {
+					macro = `{{ cms.galleryPath('${id}', '${name}'${options}) }}`;
+				}
+			}
+		}
+
 		const macroContent = document.getElementById("twig-macro");
 		macroContent.textContent = macro;
 	}

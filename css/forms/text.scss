@@ -7,7 +7,7 @@
 
 .totalform {
     [type="text"], [type="email"], [type="date"], [type="datetime-local"], [type="month"],
-    [type="number"], [type="password"], [type="tel"], [type="time"],
+    [type="number"], [type="password"], [type="tel"], [type="time"], [type="search"],
     [type="url"], [type="week"], select, textarea {
         display          : block;
         box-sizing       : border-box;
@@ -75,6 +75,9 @@
             //     background-image: var(--icon-select-multi);
             // }
         }
+		&:focus-visible {
+			outline : none;
+		}
     }
 }
 
@@ -359,6 +362,12 @@
 	&:after {
 		-webkit-mask : var(--icon-paint-brush);
 		mask         : var(--icon-paint-brush);
+	}
+}
+.form-field.icon-settings .form-group-icon {
+	&:after {
+		-webkit-mask : var(--icon-settings);
+		mask         : var(--icon-settings);
 	}
 }
 

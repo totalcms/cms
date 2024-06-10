@@ -48,28 +48,30 @@
 	#}
 
 	{% set imageData  = attribute(object, property) %}
-
+	{% set imagePath = cms.imagePath(object.id,{w:600,h:400}, collection, property) %}
 
     {{ _self.fieldstart("image", uuid, args) }}
 
-		<input type="hidden" name="{{ property }}" />
+		<input id="field-{{ uuid }}" type="hidden" name="{{ property }}" />
 
 		<div class="dz-overlay dz-clickable"></div>
 
-		<div class="total-preview {% if imageData.featured %}featured{% endif %}">
-			{{ _self.imagePreview(object.id, collection, property) }}
-		</div>
+		{% set preview %}
+			<div class="image-preview {% if imageData.featured %}featured{% endif %}">
+				{{ _self.imagePreview(imagePath, imageData.name) }}
+				{{ _self.imageDialog(imagePath, imageData) }}
+				{{ _self.linkDialog(object.id, collection, property) }}
+			</div>
+		{% endset %}
 
-		{{ _self.imageDialog(object.id, collection, property, imageData) }}
-		{{ _self.linkDialog(object.id, collection, property) }}
-
-		<template id="template-{{ uuid }}">{{ _self.imagePreview(object.id, collection, property) }}</template>
+		<div class="total-preview">{{ preview }}</div>
+		<template id="template-{{ uuid }}">{{ preview }}</template>
 
     {{ _self.fieldend(uuid, args) }}
 
 {% endmacro %}
 
-{% macro imagePreview(id, collection, property) %}
+{% macro imagePreview(imagePath, alt) %}
 	{# This must only have one div wrapper or else preview JS will break #}
 	<div class="dz-preview dz-file-preview not-found">
 		<div class="actionbar">
@@ -82,7 +84,7 @@
 			<button type="button" class="clear"    title="Clear Cache"></button>
 			<button type="button" class="trash"    title="Delete Image"></button>
 		</div>
-		<img src="{{ cms.imagePath(id, {w:600,h:400}, collection, property) }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+		<img src="{{ imagePath }}" alt="{{ alt }}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 		<div class="dz-progress">
 			<span class="dz-upload" data-dz-uploadprogress></span>
 			<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
@@ -91,22 +93,30 @@
 	</div>
 {% endmacro %}
 
-{% macro linkDialog(id, collection, property) %}
+{% macro linkDialog(id, collection, property, name = null) %}
+
+	{% set query = http_build_query({
+		id         : id,
+		collection : collection,
+		property   : property,
+		name       : name,
+	}) %}
 
 	<dialog class="cms-modal image-link-dialog">
+		{# The cms.api may have a ? because of the Stacks Preview server #}
 		{% set join = '?' in cms.api ? '&' : '?' %}
-		<iframe style="width:100%;height:100%" data-src="{{cms.api}}/admin/imageworks{{join}}id={{id}}&collection={{collection}}&property={{property}}" frameborder="0"></iframe>
+		<iframe style="width:100%;height:100%" data-src="{{cms.api}}/admin/imageworks{{join}}{{query}}&w=600" frameborder="0"></iframe>
 	</dialog>
 
 {% endmacro %}
 
 
-{% macro imageDialog(id, collection, property, imageData) %}
+{% macro imageDialog(imagePath, imageData) %}
 
 	<dialog class="cms-modal split-view image-edit-dialog">
 
 		<section class="image-preview">
-			<img src="{{ cms.imagePath(id,{w:600,h:400}, collection, property) }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<img src="{{ imagePath }}" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 			<div class="focal-point" style="top:{{ imageData.focalpoint.y }}%;left:{{ imageData.focalpoint.x }}%"></div>
 		</section>
 
@@ -305,7 +315,7 @@
 		</section>
 
 		<section>
-			<button type="button" class="cms-save close button btn">Save</button>
+			{# <button type="button" class="cms-save close button btn">Save</button> #}
 			<button type="button" class="close button btn">Close</button>
 		</section>
 

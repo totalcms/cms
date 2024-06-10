@@ -43,6 +43,31 @@ final class PropertyRepository extends StorageRepository
         return !$this->filesystem->fileExists($path);
     }
 
+    public function deleteFileCache(string $collection, string $objectID, string $property, string $filename): bool
+    {
+        $path = PathUtils::buildPath($collection, $objectID, $property, ".cache/$filename");
+
+        try {
+            $this->filesystem->deleteDirectory($path);
+        } catch (\Exception $exception) {
+            throw new \RuntimeException('Unable to delete cache directory');
+        }
+
+        return !$this->filesystem->fileExists($path);
+    }
+
+    public function deleteFile(string $collection, string $objectID, string $property, string $filename): void
+    {
+        $path = PathUtils::buildPath($collection, $objectID, $property, $filename);
+
+        try {
+            $this->filesystem->delete($path);
+        } catch (\Exception $exception) {
+            throw new \RuntimeException("Unable to delete file $filename");
+        }
+        $this->deleteFileCache($collection, $objectID, $property, $filename);
+    }
+
     /**
      * Save file to an object property.
      *
@@ -95,6 +120,8 @@ final class PropertyRepository extends StorageRepository
         $filename = basename($filePath);
         $newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
 
+        [$width, $height] = getimagesize($filePath);
+
         if (!$this->filesystem->import($filePath, $newpath)) {
             throw new \RuntimeException('File not saved');
         }
@@ -104,6 +131,8 @@ final class PropertyRepository extends StorageRepository
             'name'       => basename($newpath),
             'size'       => intval($this->filesystem->fileSize($newpath)),
             'mime'       => $this->filesystem->mimeType($newpath),
+            'width'      => $width,
+            'height'     => $height,
             'uploadDate' => date('c'),
         ];
     }

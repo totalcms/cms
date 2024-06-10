@@ -96,6 +96,51 @@ final class ObjectSaver
         return $this->updateObject($collection, $id, $objectData);
     }
 
+    public function updateObjectPropertyMeta(string $collection, string $id, string $property, string $name, array $newData): ObjectData
+    {
+        $object = $this->storage->fetchObject($collection, $id);
+
+        if (!$object instanceof ObjectData) {
+            throw new \UnexpectedValueException('Unable to locate object to update');
+        }
+
+        $objectData   = $object->toArray();
+        $propertyData = $objectData[$property];
+
+        if (!is_array($propertyData)) {
+            throw new \UnexpectedValueException('Property is not an array');
+        }
+
+        foreach ($propertyData as $index => $child) {
+            if ($child['name'] === $name) {
+                $propertyData[$index] = $newData;
+                break;
+            }
+        }
+
+        $objectData[$property] = $propertyData;
+
+        return $this->updateObject($collection, $id, $objectData);
+    }
+
+    public function updateObjectPropertyFile(string $collection, string $id, string $property, string $file, array $newData): ObjectData
+    {
+        $object = $this->storage->fetchObject($collection, $id);
+
+        if (!$object instanceof ObjectData) {
+            throw new \UnexpectedValueException('Unable to locate object to update');
+        }
+
+        $objectData = $object->toArray();
+        $property   = $objectData[$property];
+
+        if (!is_array($property)) {
+            throw new \UnexpectedValueException('Property is not an array');
+        }
+
+        return $this->updateObject($collection, $id, $objectData);
+    }
+
     /**
      * patch a collection object.
      *
@@ -130,6 +175,33 @@ final class ObjectSaver
 
         $objectData            = $object->toArray();
         $objectData[$property] = array_merge($objectData[$property], $newData);
+
+        return $this->updateObject($collection, $id, $objectData);
+    }
+
+    public function patchObjectPropertyMeta(string $collection, string $id, string $property, string $name, array $newData): ObjectData
+    {
+        $object = $this->storage->fetchObject($collection, $id);
+
+        if (!$object instanceof ObjectData) {
+            throw new \UnexpectedValueException('Unable to locate object to update');
+        }
+
+        $objectData   = $object->toArray();
+        $propertyData = $objectData[$property];
+
+        if (!is_array($propertyData)) {
+            throw new \UnexpectedValueException('Property is not an array');
+        }
+
+        foreach ($propertyData as $index => $child) {
+            if ($child['name'] === $name) {
+                $propertyData[$index] = array_merge($child, $newData);
+                break;
+            }
+        }
+
+        $objectData[$property] = $propertyData;
 
         return $this->updateObject($collection, $id, $objectData);
     }

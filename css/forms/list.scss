@@ -31,8 +31,13 @@ $choices-z-index: 10;
     margin-bottom: 0;
 
     [type="search"] {
-        box-shadow : none;
-        width      : auto;
+		box-shadow  : none;
+		width       : auto;
+		height      : auto;
+		line-height : 1;
+		border      : none;
+		margin      : 0;
+		padding     : 4px 0 4px 2px;
     }
     &.is-focused {
         &.is-flipped {

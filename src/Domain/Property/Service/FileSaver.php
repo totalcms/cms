@@ -10,6 +10,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -38,10 +39,8 @@ final class FileSaver
         $this->schemaFetcher = $schemaFetcher;
         $this->objectFetcher = $objectFetcher;
 
-        $this->exifReader = ExifReader::factory(ExifReaderType::NATIVE);
-        // $this->exifReader = ExifReader::factory(ExifReaderType::EXIFTOOL);
-        // $this->exifReader = ExifReader::factory(ExifReaderType::FFPROBE);
-        // $this->exifReader = ExifReader::factory(ExifReaderType::IMAGICK);
+        $readerType       = extension_loaded('imagick') ? ExifReaderType::IMAGICK : ExifReaderType::NATIVE;
+        $this->exifReader = ExifReader::factory($readerType);
 
         // TODO: split this class up into smaller classes for ImageSaver, FileSaver, etc.
     }
@@ -225,9 +224,20 @@ final class FileSaver
      */
     public function saveFileForGallery(string $collection, string $objectID, string $property, string $filePath): ObjectData
     {
-        if (!$this->objectFetcher->existsObject($collection, $objectID)) {
-            // TODO: create object if it does not exist
-            throw new \UnexpectedValueException('Object does not exist');
+        $objectExists = $this->objectFetcher->existsObject($collection, $objectID);
+        if (!$objectExists) {
+            // Attempt to create the object if it does not exist
+            try {
+                $gallery  = new GalleryData();
+                $this->objectSaver->saveObject($collection, [
+                    'id'      => $objectID,
+                    $property => $gallery->transform(),
+                ]);
+            } catch (\Exception $e) {
+                // Object creation failed
+                $msg = "Gallery Object $objectID does not exist in collection $collection to save image ($property) to.";
+                throw new \UnexpectedValueException($msg . $e->getMessage());
+            }
         }
 
         $images    = $this->fetchProperty($collection, $objectID, $property)->transform();

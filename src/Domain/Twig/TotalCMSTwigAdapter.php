@@ -10,6 +10,9 @@ use TotalCMS\Support\Config;
 
 /**
  * Twig Adapter with Total CMS.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 final class TotalCMSTwigAdapter
 {
@@ -53,6 +56,20 @@ final class TotalCMSTwigAdapter
         }
 
         return $properties;
+    }
+
+    public function config(string $key, ?string $setting): mixed
+    {
+        if ($setting === null) {
+            return $this->config->$key;
+        }
+
+        $config = $this->config->$key;
+        if (is_array($config) && key_exists($setting, $config)) {
+            return $config[$setting];
+        }
+
+        return '';
     }
 
     // store data in the adapter
@@ -212,14 +229,14 @@ final class TotalCMSTwigAdapter
         return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
     }
 
-    // Get an text property from an object
+    // Get the image path for an image property
     public function imagePath(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
     {
         if (empty($id)) {
             return '';
         }
 
-        $image = $this->data($collection, $id, 'image');
+        $image = $this->data($collection, $id, $property);
         if (!is_array($image) || !key_exists('uploadDate', $image)) {
             return '';
         }
@@ -264,11 +281,123 @@ final class TotalCMSTwigAdapter
         return $api;
     }
 
+    public function galleryImage(?string $id, ?string $filename, array $options = [], string $collection = 'gallery', string $property = 'gallery'): string
+    {
+        if (empty($id) || empty($filename)) {
+            return '';
+        }
+
+        $imagePath = $this->galleryPath($id, $filename, $options, $collection, $property);
+        if (empty($imagePath)) {
+            return '';
+        }
+
+        $alt = $this->galleryAlt($id, $filename, $collection, $property);
+
+        return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
+    }
+
+    // get an image object from inside a gallery by it's name
+    public function galleryImageData(string $id, string $name, string $collection = 'gallery', string $property = 'gallery'): ?array
+    {
+        $gallery = $this->data($collection, $id, $property);
+        if (!is_array($gallery)) {
+            return null;
+        }
+
+        $image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
+
+        foreach ($gallery as $image) {
+            if ($image['name'] === $name) {
+                return $image;
+            }
+        }
+
+        return null;
+    }
+
+    // Get the image path for gallery image
+    public function galleryPath(?string $id, ?string $name, array $options = [], string $collection = 'gallery', string $property = 'gallery'): string
+    {
+        if (empty($id) || empty($name)) {
+            return '';
+        }
+
+        // Default to dynamic API routes
+        $api              = $this->api . "/imageworks/$collection/$id/$property/$name";
+        $options['cache'] = uniqid();
+        $dynamicRoutes    = ['first', 'last', 'random', 'featured'];
+
+        // Process the image as regular filename
+        if (!in_array($name, $dynamicRoutes)) {
+            $image = $this->galleryImageData($id, $name, $collection, $property);
+            if (!is_array($image) || !key_exists('uploadDate', $image)) {
+                return '';
+            }
+
+            // Default to original image type
+            $type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+            // If type is set in options, use that
+            if (key_exists('fm', $options)) {
+                $type = $options['fm'];
+                unset($options['fm']);
+            }
+            // If type is not in the list of allowed types, default to jpg
+            $type     = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
+            $basename = pathinfo($name)['filename'];
+
+            $api = $this->api . "/imageworks/$collection/$id/$property/$basename.$type";
+
+            // cache busting links
+            $options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+        }
+
+        // From Stacks Preview Server - Not used in Imageworks and breaks the image generation
+        unset($options['datadir']);
+        unset($options['route']);
+
+        // Parse the existing URL and its query parameters
+        $parsedUrl = parse_url($api);
+
+        if (!isset($parsedUrl['path'])) {
+            return '';
+        }
+
+        $existingParams = [];
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $existingParams);
+        }
+
+        // Merge the existing parameters with the new options
+        $options = array_merge($existingParams, $options);
+
+        // Reconstruct the URL without the original query string, and append the new query string
+        $api = $parsedUrl['path'] . '?' . http_build_query($options);
+
+        return $api;
+    }
+
     // Get an alt tag for an image
     public function alt(string $id, string $collection = 'image', string $property = 'image'): string
     {
         $image = $this->data($collection, $id, $property);
 
-        return is_array($image) && key_exists('alt', $image) ? $image['alt'] : '';
+        if (!is_array($image) || !key_exists('alt', $image)) {
+            return '';
+        }
+
+        return $image['alt'];
+    }
+
+    // Get an alt tag for a gallery image
+    public function galleryAlt(string $id, string $filename, string $collection = 'gallery', string $property = 'gallery'): string
+    {
+        $image = $this->galleryImageData($id, $filename, $collection, $property);
+
+        if (!is_array($image) || !key_exists('alt', $image)) {
+            return '';
+        }
+
+        return $image['alt'];
     }
 }

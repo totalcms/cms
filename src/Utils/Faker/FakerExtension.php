@@ -44,9 +44,14 @@ class FakerExtension extends Base
         return FakerPicsum::picsum(self::$dir, $width, $height, true, $blur);
     }
 
-    public static function imageText(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 100, ?string $textColor = null, ?string $text = null): string
+    public static function imageText(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): string
     {
-        return FakerImageGD::imageGD(self::$dir, $width, $height, $text, $textSize, $textColor, $bgColor);
+        return FakerImageGD::imageText(self::$dir, $width, $height, $text, $textSize, $textColor, $bgColor);
+    }
+
+    public static function imageShapes(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
+    {
+        return FakerImageGD::imageShapes(self::$dir, $width, $height, $bgColor);
     }
 
     public static function tags(int $min = 0, int $max = 5): array

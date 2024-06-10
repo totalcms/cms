@@ -49,8 +49,11 @@
 	{% set id         = getParams.id  %}
 	{% set collection = getParams.collection | default("image") %}
 	{% set property   = getParams.property | default("image") %}
-	{% set values    = { w : 600 } | merge(getParams) %}
+	{% set name       = getParams.name %}
+	{% set values     = getParams %}
 	{% set help       = {
+			p         : "Select a preset to apply a set of predefined options to the image. Any settings set" ~
+						"below will override values defined in the preset. New presets can be added in the CMS config.",
 			w         : "Sets the width of the image, in pixels.",
 			h         : "Sets the height of the image, in pixels.",
 			dpr       : "The device pixel ratio is used to easily convert between CSS pixels and device pixels. " ~
@@ -94,10 +97,17 @@
 		}
 	%}
 
-	<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}">
+	<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}" data-name="{{name}}">
     	<h1>Total CMS Image Builder</h1>
 		<div class="split-view">
-			<img src="{{ cms.imagePath(id, values, collection, property) }}"
+
+			{% set imagePath = cms.imagePath(id, values, collection, property) %}
+
+			{% if name %}
+				{% set imagePath = cms.galleryPath(id, name, values, collection, property) %}
+			{% endif %}
+
+			<img src="{{ imagePath }}"
 				data-id="{{id}}"
 				data-collection="{{collection}}"
 				data-property="{{property}}"
@@ -105,9 +115,15 @@
 			<div class="image-info">
 				<div>
 					<h4>Macro:</h4>
-					<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}", {w:{{values.w}}}) &#125;&#125;</pre>
+
+					{% if name %}
+					<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
+					{% else %}
+					<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
+					{% endif %}
+
 					<button type="button" id="copy-macro">Copy Macro</button>
-					<a href="{{ cms.imagePath(id, values, collection, property) }}" download id="download-image" title="Download Preview Image"></a>
+					<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
 				</div>
 				<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
 			</div>
@@ -120,6 +136,13 @@
 		<input type="hidden" name="id" value="{{ id }}">
 		<input type="hidden" name="collection" value="{{ collection }}">
 		<input type="hidden" name="property" value="{{ property }}">
+		<input type="hidden" name="name" value="{{ name }}">
+
+
+		<section>
+			{% set presets = cms.config("imageworks", "presets") | keys %}
+			{{ _self.select("p", "Preset", "icon-settings", help.p, values.p, selectOptions(presets)) }}
+		</section>
 
 		<details class="cms-accordion">
 			<summary>Sizing &amp; Crop</summary>
@@ -193,7 +216,12 @@
 			<summary>Watermark</summary>
 			<div>
 				<section>
-					{{ _self.input("mark", "text", "Watermark", "icon-copyright", help.mark, values.mark) }}
+
+					{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
+					{% set watermarkData = cms.data("gallery", watermarkID, "gallery") | default([]) %}
+					{% set watermarks = selectOptions(watermarkData, "name", "name") %}
+
+					{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
 					{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
 					{{ _self.input("markh", "text", "Height", "icon-height", help.markh, values.markh) }}
 					{{ _self.input("markalpha", "number", "Alpha", "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
@@ -210,7 +238,6 @@
 						{ value: "left-center", label: "Left Center" },
 						{ value: "right-center", label: "Right Center" },
 						{ value: "center", label: "Center" },
-
 					]) }}
 					{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
 					<button type="button" class='open-fit-docs'>Fit Options Docs</button>

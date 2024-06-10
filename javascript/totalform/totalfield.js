@@ -71,9 +71,17 @@ export default class TotalField {
 		this.setValue("");
 	}
 
+	isUnsaved() {
+		return this.container.classList.contains("unsaved");
+	}
+
     changed() {
 		this.container.classList.add("unsaved");
 		this.container.classList.remove("error");
+		if (this.isSubField()) {
+			this.dispatcher.dispatchEvent("subfield-change", { field: this });
+			return;
+		}
 		this.dispatcher.dispatchEvent("field-change", { field: this });
     }
 

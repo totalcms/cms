@@ -4,11 +4,23 @@
 .image-field {
 
 	display: grid;
-	justify-items: center;
+
+	&.center {
+		justify-items: center;
+
+		// > .help {
+		// 	padding    : 0;
+		// 	background : none;
+		// }
+	}
 
 	.total-preview {
-		position   : relative;
 		min-height : 96px;
+	}
+	.image-preview {
+		position         : relative;
+		background-image : var(--opacity-grid);
+		background-size  : 20%;
 
 		img {
 			// width      : 100%;
@@ -21,15 +33,10 @@
 		}
 	}
 
-	> .help {
-		padding    : 0;
-		background : none;
-	}
 
 	.not-found {
 		display : none;
 	}
-
 }
 
 dialog.image-link-dialog {

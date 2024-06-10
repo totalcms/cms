@@ -3,12 +3,71 @@
 namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Property\Data\ColorData;
+use Twig\TwigFilter;
 
 /**
  * Twig Functions for Total CMS.
  */
 final class TotalCMSTwigFilters
 {
+    public static array $phpFunctions = [
+        'basename',
+        'dirname',
+        'rtrim',
+        'ltrim',
+        'trim',
+        'ucwords',
+        'lcfirst',
+        'str_word_count',
+        'count',
+        'json_decode',
+    ];
+
+    public static array $customFunctions = [
+        'charcount',
+        'wordcount',
+        'readtime',
+        'humanize',
+        'titleize',
+        'truncate',
+        'truncateWords',
+        'ksort',
+        'krsort',
+        'randomize',
+        'print_r',
+        'var_dump',
+        'typeof',
+        'string',
+        'int',
+        'float',
+        'bool',
+        'array',
+        'hex',
+        'rgb',
+        'hsl',
+        'oklch',
+        'lightness',
+        'chroma',
+        'hue',
+        'adjustColor',
+        'obfuscate',
+    ];
+
+    public static function getFilters(): array
+    {
+        $twigFunctions = [];
+
+        foreach (self::$customFunctions as $function) {
+            $twigFunctions[] = new TwigFilter($function, [self::class, $function]);
+        }
+
+        foreach (self::$phpFunctions as $function) {
+            $twigFunctions[] = new TwigFilter($function, $function);
+        }
+
+        return $twigFunctions;
+    }
+
     // -------------------------
     // Text Manipulation
     // -------------------------
@@ -22,24 +81,16 @@ final class TotalCMSTwigFilters
         return ucwords(str_replace($sep, ' ', $slug));
     }
 
-    public static function basename(string $file): string
+    public static function obfuscate(string $string): string
     {
-        return basename($file);
-    }
+        $length = strlen($string);
+        $result = '';
 
-    public static function dirname(string $file): string
-    {
-        return dirname($file);
-    }
+        for ($i = 0; $i < $length; $i++) {
+            $result .= '&#' . ord($string[$i]) . ';';
+        }
 
-    public static function rtrim(string $string): string
-    {
-        return rtrim($string);
-    }
-
-    public static function ltrim(string $string): string
-    {
-        return ltrim($string);
+        return $result;
     }
 
     // -------------------------
@@ -53,14 +104,22 @@ final class TotalCMSTwigFilters
         ];
     }
 
-    public static function hex(array $color): string
+    public static function hex(?array $color): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         return $color['hex'] ?? '#000000';
     }
 
     /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
-    public static function rgb(array $color, int $alpha = 100, bool $wrap = true): string
+    public static function rgb(?array $color, int $alpha = 100, bool $wrap = true): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         $hex = self::hex($color);
         $rgb = ColorData::hexToRgb($hex);
 
@@ -72,8 +131,12 @@ final class TotalCMSTwigFilters
     }
 
     /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
-    public static function hsl(array $color, int $alpha = 100, bool $wrap = true): string
+    public static function hsl(?array $color, int $alpha = 100, bool $wrap = true): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         $hex = self::hex($color);
         $hsl = ColorData::hexToHsl($hex);
 
@@ -85,8 +148,12 @@ final class TotalCMSTwigFilters
     }
 
     /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
-    public static function oklch(array $color, int $alpha = 100, bool $wrap = true): string
+    public static function oklch(?array $color, int $alpha = 100, bool $wrap = true): string
     {
+        if ($color === null) {
+            return '';
+        }
+
         $oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
 
         $color = $alpha === 100 ?
@@ -96,24 +163,30 @@ final class TotalCMSTwigFilters
         return $wrap ? sprintf('oklch(%s)', $color) : $color;
     }
 
-    public static function lightness(array $color, string $lightness): array
+    public static function lightness(?array $color, string $lightness): ?array
     {
         return self::adjustColor($color, $lightness);
     }
 
-    public static function chroma(array $color, string $chroma): array
+    public static function chroma(?array $color, string $chroma): ?array
     {
         return self::adjustColor($color, null, $chroma);
     }
 
-    public static function hue(array $color, string $hue): array
+    public static function hue(?array $color, string $hue): ?array
     {
         return self::adjustColor($color, null, null, $hue);
     }
 
-    public static function adjustColor(array $color, ?string $lightness = null, ?string $chroma = null, ?string $hue = null): array
+    public static function adjustColor(?array $color, ?string $lightness = null, ?string $chroma = null, ?string $hue = null): ?array
     {
-        $oklch = ColorData::oklchChange($color['oklch'], [
+        if ($color === null) {
+            return null;
+        }
+
+        $oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
+
+        $oklch = ColorData::oklchChange($oklch, [
             'l' => $lightness,
             'c' => $chroma,
             'h' => $hue,
@@ -187,11 +260,6 @@ final class TotalCMSTwigFilters
         return ceil($wordCount / $wpm);
     }
 
-    public static function count(array $array): int
-    {
-        return count($array);
-    }
-
     // -------------------------
     // Array Manipulation
     // -------------------------
@@ -257,23 +325,12 @@ final class TotalCMSTwigFilters
     /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
     public static function var_dump(mixed $variable): string
     {
-        ob_start();
-        var_dump($variable);
-        $content = ob_get_contents();
-        ob_end_clean();
-
-        return "<pre>$content</pre>";
+        return TotalCMSTwigFunctions::var_dump($variable);
     }
 
     /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
     public static function print_r(mixed $variable): string
     {
-        return '<pre>' . (string)print_r($variable, true) . '</pre>';
-    }
-
-    /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
-    public static function json_decode(mixed $variable): array
-    {
-        return json_decode($variable);
+        return TotalCMSTwigFunctions::print_r($variable);
     }
 }

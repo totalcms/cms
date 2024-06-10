@@ -38,11 +38,15 @@ return function (App $app) {
         $group->put('/{collection}/{id}/{property}', Action\Object\ObjectUpdatePropertyAction::class)->setName('property-update');
         $group->patch('/{collection}/{id}/{property}', Action\Object\ObjectPatchPropertyAction::class)->setName('property-patch');
         $group->delete('/{collection}/{id}/{property}', Action\Object\ObjectDeletePropertyAction::class)->setName('property-delete');
-        $group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
+
+        // Object Property Meta
+        $group->put('/{collection}/{id}/{property}/{name}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
+        $group->patch('/{collection}/{id}/{property}/{name}', Action\Object\ObjectPatchPropertyMetaAction::class)->setName('property-meta-patch');
 
         // Property File
         $group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save');
-        // $group->put('/{collection}/{id}/{property}/{file}', Property\File\FileUpdateAction::class)->setName('property-file-update-meta');
-        // $group->delete('/{collection}/{id}/{property}/{file}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
+        $group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
+        $group->delete('/{collection}/{id}/{property}/{file}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
+        $group->delete('/{collection}/{id}/{property}/{file}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
     });
 };

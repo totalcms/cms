@@ -17,22 +17,15 @@
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
+			"factory" : "boolean",
 			"default" : false
-		},
-		"tags": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"   : "Tags",
-			"help"    : "A list of tags for this post",
-			"field"   : "list",
-			"factory" : "words",
-			"default" : []
 		},
 		"title": {
 			"type"    : "string",
 			"label"   : "Title",
 			"help"    : "A title for your post",
 			"field"   : "input",
-			"factory" : "sentence",
+			"factory" : "catchPhrase",
 			"default" : ""
 		},
 		"created": {
@@ -56,15 +49,14 @@
 			"label"   : "Image",
 			"help"    : "Image for this post",
 			"field"   : "image",
-			"factory" : "imageText|1920,1080",
-			"image"   : {}
+			"factory" : "imageShapes(1920,1080)"
 		},
 		"content": {
 			"type"    : "string",
 			"label"   : "Content",
 			"help"    : "Post content",
 			"field"   : "styledtext",
-			"factory" : "paragraphs",
+			"factory" : "paragraph",
 			"default" : ""
 		}
 	},
@@ -74,8 +66,7 @@
 		"content",
 		"created",
 		"updated",
-		"featured",
-		"tags"
+		"featured"
 	],
 	"index": [
 		"id",
@@ -84,7 +75,6 @@
 		"created",
 		"updated",
 		"featured",
-		"tags",
 		"image"
 	]
 }
