@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 /**
@@ -19,7 +20,7 @@ final class SchemaLister
     /**
      * List all Schemas.
      *
-     * @return array<object>
+     * @return array<SchemaData>
      */
     public function listAllSchemas(): array
     {
@@ -32,7 +33,7 @@ final class SchemaLister
     /**
      * List reserved Schemas.
      *
-     * @return array<object>
+     * @return array<SchemaData>
      */
     public function listReservedSchemas(): array
     {
@@ -42,7 +43,7 @@ final class SchemaLister
     /**
      * List custom Schemas.
      *
-     * @return array<object>
+     * @return array<SchemaData>
      */
     public function listCustomSchemas(): array
     {

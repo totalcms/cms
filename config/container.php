@@ -21,11 +21,14 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\QRCodeTwigAdapter;
@@ -165,7 +168,10 @@ return [
             $container->get(Config::class),
             $container->get(IndexReader::class),
             $container->get(ObjectFetcher::class),
+            $container->get(CollectionLister::class),
             $container->get(CollectionFetcher::class),
+            $container->get(SchemaLister::class),
+            $container->get(SchemaFetcher::class),
         );
     },
 

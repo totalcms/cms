@@ -2,7 +2,7 @@
 
 echo "Watching..."
 
-ignore=("totalform.twig")
+ignore=("totalform.twig" "content.twig")
 
 fswatch -0 templates css javascript | while read -d "" file; do
     echo Detected Change on ${file}...
