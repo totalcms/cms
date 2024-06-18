@@ -1,0 +1,17 @@
+{#--------------------------------
+  Form Macros
+--------------------------------#}
+{% macro collectionForm(collection, args = {}) %}
+
+<form class="totalform">
+	{% set schemas = selectOptions([]) %}
+
+	{{ _self.id('id', { autogen : "${title}" }) }}
+	{{ _self.text('title') }}
+	{{ _self.textarea('description') }}
+	{{ _self.url('url') }}
+
+
+</form>
+
+{% endmacro %}
