@@ -111,7 +111,7 @@ final class FactoryImporter
                 if (empty($value) || $key === 'id') {
                     continue;
                 }
-                [$method, $args] = self::parseFakerRule($value ?? self::DEFAULT_FACTORY);
+                [$method, $args] = self::parseFakerRule($value);
                 if (str_starts_with($method, 'image')) {
                     // Save image to file and store path in object data
                     $path             = $this->faker->$method(...$args);
