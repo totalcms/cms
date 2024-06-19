@@ -40,6 +40,7 @@ use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
+use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\QRGenerator;
 
@@ -106,6 +107,12 @@ return [
         $factory = $container->get(ResponseFactoryInterface::class);
 
         return new ValidationExceptionMiddleware($factory, new ErrorDetailsResultTransformer(), new JsonEncoder());
+    },
+
+    SentryMiddleware::class => function (ContainerInterface $container) {
+        $config = (array)$container->get(Config::class)->sentry;
+
+        return new SentryMiddleware($config);
     },
 
     ErrorMiddleware::class => function (ContainerInterface $container) {

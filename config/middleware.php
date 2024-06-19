@@ -9,6 +9,7 @@ use Slim\Middleware\MethodOverrideMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
 use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
+use TotalCMS\Middleware\SentryMiddleware;
 
 return function (App $app) {
     $app->addBodyParsingMiddleware();
@@ -17,6 +18,7 @@ return function (App $app) {
     $app->add(ValidationExceptionMiddleware::class);
     $app->addRoutingMiddleware();
     $app->add(BasePathMiddleware::class);
+    $app->add(SentryMiddleware::class);
     $app->add(ErrorMiddleware::class);
     $app->add(TrailingSlash::class);
     $app->add(MethodOverrideMiddleware::class);
