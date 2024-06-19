@@ -32,8 +32,12 @@ final class SentryMiddleware implements MiddlewareInterface
         ServerRequestInterface $request,
         RequestHandlerInterface $handler
     ): ResponseInterface {
+        if ($this->options['enable'] === false || !isset($this->options['init']['dsn'])) {
+            return $handler->handle($request);
+        }
+
         try {
-            \Sentry\init($this->options);
+            \Sentry\init($this->options['init']);
 
             return $handler->handle($request);
         } catch (\Throwable $exception) {

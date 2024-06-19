@@ -23,7 +23,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $container = new Container(require __DIR__ . '/container.php');
 
 // Sentry Logger
-\Sentry\init((array)$container->get(Config::class)->sentry);
+$sentry = (array)$container->get(Config::class)->sentry;
+if ($sentry['enable'] === true) {
+    \Sentry\init($sentry['init']);
+}
 
 // Create App instance
 $app = $container->get(App::class);
