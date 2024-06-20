@@ -7,17 +7,42 @@
 	--admin-list-bg-alt   : oklch(var(--totalform-lightgray) / 50%);
 	--admin-list-bg-hover : oklch(var(--totalform-blue) / 20%);
 
-	border        : 1px solid var(--admin-list-bg-alt);
-	border-radius : var(--totalform-radius);
+	input {
+        display          : block;
+        box-sizing       : border-box;
+        width            : 16rem;
+        height           : 2.4375rem;
+        padding          : .5rem;
+        border           : 1px solid oklch(var(--totalform-border-color));
+        border-radius    : var(--totalform-radius);
+        background-color : oklch(var(--totalform-background));
+        font-family      : inherit;
+        font-size        : var(--totalform-font-size);
+        font-weight      : 400;
+        line-height      : 1.5;
+        color            : oklch(var(--totalform-text-color));
+        appearance       : none;
+        box-shadow       : inset 0 1px 2px oklch(var(--totalform-shadow));
+        transition       : box-shadow .5s, border-color .25s ease-in-out;
+    }
 
-	.list-content > * {
-		background-color : var(--admin-list-bg);
+	.list-content {
+		border        : 1px solid var(--admin-list-bg-alt);
+		border-radius : var(--totalform-radius);
 
-		&:nth-child(even) {
-			background-color : var(--admin-list-bg-alt);
+		> * {
+			background-color : var(--admin-list-bg);
+
+			&:nth-child(even) {
+				background-color : var(--admin-list-bg-alt);
+			}
+			&:hover {
+				background-color : var(--admin-list-bg-hover);
+			}
 		}
-		&:hover {
-			background-color : var(--admin-list-bg-hover);
+
+		.filtered {
+			display : none !important;
 		}
 	}
 }

@@ -25,6 +25,10 @@ export default class Scrollable {
 		return parseInt(style.getPropertyValue('--scrollable-height'));
 	}
 
+	refresh() {
+		this.isScrollable();
+	}
+
 	isScrollable() {
 		if (this.container.scrollHeight > this.maxHeight) {
 			this.container.classList.add('scrollable');
