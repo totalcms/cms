@@ -7,15 +7,17 @@
     100% { opacity: 1; }
 }
 
-.scrollable {
-	--scrollable-height   : 600px;
-	--scrollable-bg       : transparent;
-	--scrollable-bg-alt   : oklch(var(--totalform-lightgray) / 50%);
-	--scrollable-bg-hover : oklch(var(--totalform-blue) / 20%);
+:has(>.scrollable) {
+	overflow : hidden;
+	position : relative;
+}
 
-	max-height      : var(--scrollable-height);
-	overflow-y      : scroll;
-	border-radius   : 5px;
+.scrollable {
+	--scrollable-height : 600px;
+
+	max-height    : var(--scrollable-height);
+	overflow-y    : scroll;
+	border-radius : var(--totalform-radius);
 
 	&:after {
 		content    : "";
@@ -28,17 +30,5 @@
 		z-index    : 999;
 		opacity    : 0;
 		animation  : fadeInScrollable 1s 1s forwards;
-	}
-
-	> a {
-		display          : block;
-		background-color : var(--scrollable-bg);
-
-		&:nth-child(even) {
-			background-color : var(--scrollable-bg-alt);
-		}
-		&:hover {
-			background-color : var(--scrollable-bg-hover);
-		}
 	}
 }

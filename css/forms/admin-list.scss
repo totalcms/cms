@@ -1,0 +1,23 @@
+//--------------------------------
+// Admin List
+//--------------------------------
+
+.admin-list {
+	--admin-list-bg       : transparent;
+	--admin-list-bg-alt   : oklch(var(--totalform-lightgray) / 50%);
+	--admin-list-bg-hover : oklch(var(--totalform-blue) / 20%);
+
+	border        : 1px solid var(--admin-list-bg-alt);
+	border-radius : var(--totalform-radius);
+
+	.list-content > * {
+		background-color : var(--admin-list-bg);
+
+		&:nth-child(even) {
+			background-color : var(--admin-list-bg-alt);
+		}
+		&:hover {
+			background-color : var(--admin-list-bg-hover);
+		}
+	}
+}
