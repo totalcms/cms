@@ -44,7 +44,7 @@
 
 	{% if id %}
 		{% set method = "put" %}
-		{% set route  = "/collections/{{ id }}" %}
+		{% set route  = "/collections/" ~ id %}
 		{% set collection = cms.collection(id) %}
 	{% endif %}
 
@@ -52,6 +52,7 @@
 		data-method="{{ method }}"
 		data-api="{{ cms.api }}"
 		data-route="{{ route }}"
+		data-id="{{id}}"
 	>
 		{# ID FIELD #}
 		{{ _self.fieldstart("id", args.id.uuid, args.id) }}

@@ -120,8 +120,16 @@ export default class Identifier extends TotalField {
     validateIdExists() {
 		const id = this.getValue();
 		if (!id) return;
-        // Check that the id exists on the server or not
-		const api = `/collections/${this.form.collection}/${id}`;
+
+		let api = `/collections/${this.form.collection}/${id}`;
+
+		if (this.form.isCollectionForm()) {
+			api = `/collections/${id}`;
+		}
+		if (this.form.isSchemaForm()) {
+			api = `/schemas/${id}`;
+		}
+
         this.api.existsAPI(api).then(response => {
 			response.ok ? this.idExists() : this.idAvailable();
 		});

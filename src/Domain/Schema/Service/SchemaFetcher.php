@@ -28,4 +28,9 @@ final class SchemaFetcher
     {
         return $this->storage->getSchema($id);
     }
+
+    public function schemaExists(string $id): bool
+    {
+        return $this->storage->schemaExists($id);
+    }
 }

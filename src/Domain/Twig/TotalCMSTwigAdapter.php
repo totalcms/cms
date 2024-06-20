@@ -139,6 +139,23 @@ final class TotalCMSTwigAdapter
         return $collection->toArray();
     }
 
+    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    public function objectUrl(string $id, string $collection, bool $pretty = false): string
+    {
+        $collection = $this->collection($collection);
+        $url        = $collection['url'] ?: '';
+
+        if ($pretty) {
+            if (str_ends_with($url, '/')) {
+                return sprintf('%s%s', $url, $id);
+            }
+
+            return sprintf('%s/%s', $url, $id);
+        }
+
+        return sprintf('%s?id=%s', $url, $id);
+    }
+
     // Get all objects from a collection
     public function objects(string $collection): array
     {
