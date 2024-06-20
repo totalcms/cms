@@ -101,14 +101,17 @@ export default class TotalForm {
 			this.autosave = true;
 		}
 
-        window.onbeforeunload = e => {
-            if (this.isUnsaved()) {
-				e.preventDefault();
-                const dialogText = "There are unsaved changes";
-                e.returnValue = dialogText;
-                return dialogText;
-            }
-        };
+		// Don't run the beforeunload event when inside iframes
+		if (window === window.top) {
+			window.onbeforeunload = e => {
+				if (this.isUnsaved()) {
+					e.preventDefault();
+					const dialogText = "There are unsaved changes";
+					e.returnValue = dialogText;
+					return dialogText;
+				}
+			};
+		}
     }
 
     //-------------------------
