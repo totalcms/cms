@@ -33,7 +33,7 @@ final class TotalCMSTwigFilters
         'truncateWords',
         'ksort',
         'krsort',
-        'randomize',
+        'shuffle',
         'print_r',
         'var_dump',
         'typeof',
@@ -277,7 +277,7 @@ final class TotalCMSTwigFilters
         return $array;
     }
 
-    public static function randomize(array $array): array
+    public static function shuffle(array $array): array
     {
         shuffle($array);
 
