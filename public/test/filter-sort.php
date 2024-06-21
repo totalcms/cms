@@ -21,9 +21,44 @@
 	reverse - reverse array
 	prioritySort - sort by priority, manually define order for some items
 
+	sortProperty - sort by property
+	natsortProperty - sort by property in natural order
+
 	### Filtering Array
 	filter - filter array with function
 	map - map array with function
+
+	### Filtering Collections
+
+	equal
+	contains
+	starts
+	ends
+	equalCaseInsensitive
+	containsCaseInsensitive
+	startsCaseInsensitive
+	endsCaseInsensitive
+	like - regex?
+	less
+	lessEqual
+	greater
+	greaterEqual
+	between
+	in
+	notIn
+	isTrue
+	isFalse
+	isEmpty
+	isNotEmpty
+	past
+	future
+	today
+	pastPlusToday
+	futurePlusToday
+
+
+	{% set filtered = cms.objects("blog") | contains("title", "demo", "josh") | equal("author", "Joe") %}
+
 
 	<button class="cms-save">Save</button>
 
