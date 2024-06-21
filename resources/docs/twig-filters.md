@@ -37,7 +37,7 @@ adjustColor(array $color, ?string $lightness = null, ?string $chroma = null, ?st
 count(array $array): int
 ksort(array $array): array
 krsort(array $array): array
-randomize(array $array): array
+shuffle(array $array): array
 ```
 
 

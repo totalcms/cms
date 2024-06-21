@@ -3,9 +3,12 @@
 namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\Config;
 
 /**
@@ -18,22 +21,16 @@ final class TotalCMSTwigAdapter
 {
     public string $api;
     private array $storage;
-    private Config $config;
-    private IndexReader $collectionReader;
-    private ObjectFetcher $objectFetcher;
-    private CollectionFetcher $collectionFetcher;
 
     public function __construct(
-        Config $config,
-        IndexReader $collectionReader,
-        ObjectFetcher $objectFetcher,
-        CollectionFetcher $collectionFetcher
+        private Config $config,
+        private IndexReader $collectionReader,
+        private ObjectFetcher $objectFetcher,
+        private CollectionLister $collectionLister,
+        private CollectionFetcher $collectionFetcher,
+        private SchemaLister $schemaLister,
+        private SchemaFetcher $schemaFetcher,
     ) {
-        $this->config            = $config;
-        $this->collectionReader  = $collectionReader;
-        $this->objectFetcher     = $objectFetcher;
-        $this->collectionFetcher = $collectionFetcher;
-
         $this->api     = $this->config->api;
         $this->storage = [];
     }
@@ -92,6 +89,44 @@ final class TotalCMSTwigAdapter
         $this->storage = [];
     }
 
+    // Get all schemas
+    public function schemas(): array
+    {
+        $schemas = $this->schemaLister->listAllSchemas();
+
+        return array_map(fn ($schema) => $schema->toArray(), $schemas);
+    }
+
+    // Get all reserved schemas
+    public function reservedSchemas(): array
+    {
+        $schemas = $this->schemaLister->listReservedSchemas();
+
+        return array_map(fn ($schema) => $schema->toArray(), $schemas);
+    }
+
+    // Get all custom schemas
+    public function customSchemas(): array
+    {
+        $schemas = $this->schemaLister->listCustomSchemas();
+
+        return array_map(fn ($schema) => $schema->toArray(), $schemas);
+    }
+
+    // Get schema definition
+    public function schema(string $schema): array
+    {
+        $schema = $this->schemaFetcher->fetchSchema($schema);
+
+        return $schema->toArray();
+    }
+
+    // Get all collections
+    public function collections(): array
+    {
+        return $this->collectionLister->listAllCollections();
+    }
+
     // Get collection meta data
     public function collection(string $collection): array
     {
@@ -102,6 +137,23 @@ final class TotalCMSTwigAdapter
         }
 
         return $collection->toArray();
+    }
+
+    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    public function objectUrl(string $id, string $collection, bool $pretty = false): string
+    {
+        $collection = $this->collection($collection);
+        $url        = $collection['url'] ?: '';
+
+        if ($pretty) {
+            if (str_ends_with($url, '/')) {
+                return sprintf('%s%s', $url, $id);
+            }
+
+            return sprintf('%s/%s', $url, $id);
+        }
+
+        return sprintf('%s?id=%s', $url, $id);
     }
 
     // Get all objects from a collection

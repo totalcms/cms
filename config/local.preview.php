@@ -8,6 +8,8 @@ ini_set('display_errors', '1');
 
 $settings['env'] = 'preview';
 
+$settings['sentry']['enable'] = false;
+
 $settings['datadir']   = sys_get_temp_dir() . '/tcms-data';
 if (isset($_SERVER['DOMAIN']) && is_string($_SERVER['DOMAIN'])) {
     $settings['datadir'] .= '-' . $_SERVER['DOMAIN'];

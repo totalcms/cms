@@ -152,6 +152,21 @@ final class SchemaRepository extends StorageRepository
         return $schema;
     }
 
+    public function schemaExists(string $id): bool
+    {
+        $schema = $this->fetchDefaultSchema($id);
+
+        if ($schema === null) {
+            $schema = $this->fetchCustomSchema($id);
+        }
+
+        if ($schema === null) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * save a collection schema.
      *

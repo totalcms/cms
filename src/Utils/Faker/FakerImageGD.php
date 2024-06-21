@@ -22,6 +22,7 @@ class FakerImageGD extends Base
     /**
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ElseExpression)
      *
      * @param ?string $dir
      * @param int $width
@@ -159,6 +160,10 @@ class FakerImageGD extends Base
             $y1        = rand(0, $height / 2);                                            // Random start y
             $x2        = $x1 + rand($width / 5, $width / 3);                              // Random end x
             $y2        = $y1 + rand($height / 5, $height / 3);                            // Random end y
+
+            if ($color === false) {
+                $color = 1;
+            }
             imagefilledrectangle($image, $x1, $y1, $x2, $y2, $color);
         }
 
@@ -172,6 +177,9 @@ class FakerImageGD extends Base
             $cy        = rand(0, $height);                                                // Center y
             // $cx          = rand($width / 4, 3 * $width / 4); // Center x
             // $cy          = rand($height / 4, 3 * $height / 4); // Center y
+            if ($color === false) {
+                $color = 1;
+            }
             imagefilledellipse($image, $cx, $cy, 2 * $cr, 2 * $cr, $color);
         }
 

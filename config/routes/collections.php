@@ -17,6 +17,7 @@ return function (App $app) {
         $group->get('/{collection}', Collection\CollectionFetchAction::class)->setName('collection-fetch');
         $group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
         $group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
+        $group->map(['HEAD'], '/{collection}', Collection\CollectionExistsAction::class)->setName('collection-exists');
 
         // Collection Schema
         $group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');

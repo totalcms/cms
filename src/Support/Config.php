@@ -15,6 +15,7 @@ final class Config
     public string $api       = '';
     public string $locale    = '';
     public array $logger     = [];
+    public array $sentry     = [];
     public array $error      = [];
     public array $imageworks = [];
 
@@ -25,6 +26,7 @@ final class Config
         $this->tmpDir     = $settings['tmpdir'];
         $this->cacheDir   = $settings['cachedir'];
         $this->logger     = $settings['logger'];
+        $this->sentry     = $settings['sentry'];
         $this->error      = $settings['error'];
         $this->imageworks = $settings['imageworks'];
         $this->domain     = $settings['domain'];

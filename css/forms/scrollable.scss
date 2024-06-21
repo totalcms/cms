@@ -1,0 +1,34 @@
+//--------------------------------
+// Scrollable
+//--------------------------------
+
+@keyframes fadeInScrollable {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+:has(>.scrollable) {
+	overflow : hidden;
+	position : relative;
+}
+
+.scrollable {
+	--scrollable-height : 600px;
+
+	max-height    : var(--scrollable-height);
+	overflow-y    : scroll;
+	border-radius : var(--totalform-radius);
+
+	&:after {
+		content    : "";
+		display    : block;
+		height     : 20px;
+		position   : absolute;
+		width      : 100%;
+		bottom     : -10px;
+		background : radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+		z-index    : 999;
+		opacity    : 0;
+		animation  : fadeInScrollable 1s 1s forwards;
+	}
+}

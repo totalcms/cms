@@ -1,0 +1,124 @@
+{#--------------------------------
+  Form Macros
+--------------------------------#}
+{% macro collectionForm(id, args = {}) %}
+
+	{% set args = {
+		id : {
+			label   : 'ID',
+			help    : 'The unique identifier for this collection',
+			icon    : true,
+			options : { autogen : "${name}" },
+			uuid	: uniqid(),
+		},
+		name : {
+			label   : 'Name',
+			help    : 'The name of the collection',
+			icon    : true,
+			uuid	: uniqid(),
+		},
+		schema : {
+			label   : 'Schema',
+			help    : 'The schema objects in this collection conform to',
+			icon    : true,
+			uuid	: uniqid(),
+		},
+		url : {
+			label   : 'URL',
+			help    : 'The URL for objects within this collection',
+			icon    : true,
+			uuid	: uniqid(),
+		},
+		description : {
+			label   : 'Description',
+			help    : 'A description of the collection',
+			icon    : true,
+			uuid	: uniqid(),
+		},
+	} | merge(args) %}
+
+
+	{% set id = id | default(getParams.id) %}
+	{% set method = "post" %}
+	{% set route  = "/collections" %}
+
+	{% if id %}
+		{% set method = "put" %}
+		{% set route  = "/collections/" ~ id %}
+		{% set collection = cms.collection(id) %}
+	{% endif %}
+
+	<form class="totalform collection-form"
+		data-method="{{ method }}"
+		data-api="{{ cms.api }}"
+		data-route="{{ route }}"
+		data-id="{{id}}"
+	>
+		{# ID FIELD #}
+		{{ _self.fieldstart("id", args.id.uuid, args.id) }}
+			<input type="text" name="id" required
+				id="field-{{ args.id.uuid }}"
+				aria-describedby="help-{{ args.id.uuid }}"
+				{% if id %}value="{{ id }}" readonly{% endif %}
+			>
+		{{ _self.fieldend(args.id.uuid, args.id) }}
+
+		{# NAME FIELD #}
+		{{ _self.fieldstart("text", args.name.uuid, args.name) }}
+			<input type="text" name="name" required
+				id="field-{{ args.name.uuid }}"
+				aria-describedby="help-{{ args.name.uuid }}"
+				{% if id %}value="{{ collection.name }}"{% endif %}
+			>
+		{{ _self.fieldend(args.name.uuid, args.name) }}
+
+		{# SCHEMA FIELD #}
+		{{ _self.fieldstart("select", args.schema.uuid, args.schema) }}
+			<select name="schema" required
+				id="field-{{ args.schema.uuid }}"
+				aria-describedby="help-{{ args.schema.uuid }}"
+				{% if id %}value="{{ collection.schema }}" disabled readonly {% endif %}
+			>
+				<option value="" disabled {% if not id %}selected{% endif %}>Select a Schema</option>
+
+				{% set schemaCustomOptions = selectOptions(cms.customSchemas(), "id", "id") %}
+
+				<optgroup label="Custom Schemas">
+					{% for option in schemaCustomOptions %}
+						<option value="{{ option.value|e }}" {%if option.value == collection.schema %}selected{% endif %}>{{ option.label|e }}</option>
+					{% endfor %}
+				</optgroup>
+
+				{% set schemaReservedOptions = selectOptions(cms.reservedSchemas(), "id", "id") %}
+
+				<optgroup label="Reserved Schemas">
+					{% for option in schemaReservedOptions %}
+						{% if option.value != "schema" %}
+						<option value="{{ option.value|e }}" {%if option.value == collection.schema %}selected{% endif %}>{{ option.label|e }}</option>
+						{% endif %}
+					{% endfor %}
+				</optgroup>
+			</select>
+		{{ _self.fieldend(args.schema.uuid, args.schema) }}
+
+		{# URL FIELD #}
+		{{ _self.fieldstart("url", args.url.uuid, args.url) }}
+			<input type="url" name="url"
+				id="field-{{ args.url.uuid }}"
+				aria-describedby="help-{{ args.url.uuid }}"
+				{% if id %}value="{{ collection.url }}"{% endif %}
+			>
+		{{ _self.fieldend(args.url.uuid, args.url) }}
+
+		{# DESCRIPTION FIELD #}
+		{{ _self.fieldstart("text", args.description.uuid, args.description) }}
+			<textarea type="text" name="description"
+				id="field-{{ args.description.uuid }}"
+				aria-describedby="help-{{ args.description.uuid }}"
+			>{% if id %}{{ collection.description }}{% endif %}</textarea>
+		{{ _self.fieldend(args.description.uuid, args.description) }}
+
+		{# SAVE #}
+		{{ _self.saveButton() }}
+	</form>
+{% endmacro %}

@@ -2,6 +2,7 @@ import ImageField from "./image";
 import ImagePreview from "./image-preview";
 import DropletArray from "./droplet-array";
 import Sortable from 'sortablejs';
+import Scrollable from "./scrollable";
 
 //-----------------------------------------------
 // Total CMS Gallery Field
@@ -11,32 +12,9 @@ export default class GalleryField extends ImageField {
     constructor(container, options) {
         super(container, options);
 
-		this.makeScrollable();
+		this.scrollable = new Scrollable(this.previewContainer);
 		this.watchPreviews();
     }
-
-	makeScrollable() {
-		const style     = getComputedStyle(this.previewContainer);
-		const maxHeight = parseInt(style.getPropertyValue('--scroll-height'));
-		if (!maxHeight) return;
-
-		if (this.previewContainer.scrollHeight > maxHeight) {
-			return this.previewContainer.classList.add('scrollable');
-		}
-		this.previewContainer.classList.remove('scrollable');
-	}
-
-	isScrollable() {
-		return this.previewContainer.classList.contains('scrollable');
-	}
-
-	scrollToBottom() {
-		if (!this.isScrollable()) return;
-		this.previewContainer.scrollTo({
-			top      : this.previewContainer.scrollHeight,
-			behavior : 'smooth'
-		});
-	}
 
 	watchPreviews() {
 		// Watch for changes in previews
@@ -124,8 +102,7 @@ export default class GalleryField extends ImageField {
     }
 
 	fileAdded(file) {
-		this.makeScrollable();
-		this.scrollToBottom();
+		this.scrollable.scrollToBottom();
 	}
 
 	fileUploaded(file, response) {

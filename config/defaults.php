@@ -26,6 +26,17 @@ if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
 // Settings
 $settings = [];
 
+$settings['sentry'] = [
+    'enable' => true,
+    'init'   => [
+        'dsn' => 'https://775b3fb249ce601ef6af48ba67bc29f6@o4507455543312384.ingest.us.sentry.io/4507455545081856',
+        // Specify a fixed sample rate
+        'traces_sample_rate' => 1.0,
+        // Set a sampling rate for profiling - this is relative to traces_sample_rate
+        'profiles_sample_rate' => 1.0,
+    ],
+];
+
 // Default env to production
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
