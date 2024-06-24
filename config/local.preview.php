@@ -19,6 +19,10 @@ if (isset($_SERVER['PREVIEW_TCMSDIR']) && is_string($_SERVER['PREVIEW_TCMSDIR'])
     // PreviewRouteMiddleware adds it to $_SERVER['PREVIEW_TCMSDIR']
     $settings['datadir'] = $_SERVER['PREVIEW_TCMSDIR'];
 }
+if (isset($_GET['datadir']) && is_string($_GET['datadir'])) {
+    // Get the datadir from the query string
+    $settings['datadir'] = $_GET['datadir'];
+}
 $settings['docroot']   = $settings['root'];
 $settings['cachedir']  = 'false';
 $settings['api']       = sprintf('/rw_common/plugins/stacks/tcms/public/?datadir=%s&route=', $settings['datadir']);
