@@ -1,0 +1,197 @@
+{#--------------------------------
+  Form Macros
+--------------------------------#}
+{% macro schemaForm(id, args = {}) %}
+
+	{% set args = {
+		id : {
+			label   : 'ID',
+			help    : 'The unique identifier for this schema',
+			icon    : true,
+		},
+		description : {
+			label   : 'Description',
+			help    : 'A description of the collection',
+			icon    : true,
+		},
+		field : {
+			label   : 'Type',
+			help    : 'The type of field to add to the schema',
+			icon    : true,
+		},
+		label : {
+			label   : 'Label',
+			help    : 'The label that will be added to the field form',
+			icon    : true,
+		},
+		help : {
+			label   : 'Help',
+			help    : 'The help text that will be added to the field form',
+			icon    : true,
+		},
+		factory : {
+			label   : 'Factory Rule',
+			help    : 'The factory rule to use when auto-generating content for this field',
+			icon    : true,
+		},
+		default : {
+			label   : 'Default Value',
+			help    : 'The default value for this field if none is provided',
+			icon    : true,
+		},
+		name : {
+			placeholder : 'Field Name',
+			icon    : true,
+		},
+		required : {
+			label : 'Mark as Required',
+		},
+		index : {
+			label : 'Add to Index',
+		},
+	} | merge(args) %}
+
+
+	{% set id = id | default(getParams.id) %}
+	{% set method = "post" %}
+	{% set route  = "/schemas" %}
+
+	{% if id %}
+		{% set method = "put" %}
+		{% set route  = "/schemas/" ~ id %}
+		{% set collection = cms.schema(id) %}
+	{% endif %}
+
+	<form class="totalform schema-form help-on-hover help-box"
+		data-method="{{ method }}"
+		data-api="{{ cms.api }}"
+		data-route="{{ route }}"
+		data-id="{{id}}"
+	>
+		{# ID FIELD #}
+		{% set uuid = uniqid() %}
+		{{ _self.fieldstart("id", uuid, args.id) }}
+			<input type="text" name="id" required id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+		{{ _self.fieldend(uuid, args.id) }}
+
+		{# DESCRIPTION FIELD #}
+		{% set uuid = uniqid() %}
+		{{ _self.fieldstart("text", uuid, args.description) }}
+			<textarea type="text" name="description" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}"></textarea>
+		{{ _self.fieldend(uuid, args.description) }}
+
+		{# Schema Property fields :
+			$ref            : "https://www.totalcms.co/schemas/properties/date.json",
+			label           : "Date",
+			help            : "Blog Post date",
+			field           : "date",
+			factory         : "iso8601",
+			default         : "now"
+			required        : true
+			index           : true #}
+
+
+		{% for i in 0..0 %}
+
+
+
+		<dialog class="cms-modal">
+
+			{# NAME #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("id", uuid, args.name) }}
+				<input type="text" name="fieldname" placeholder="{{ args.name.placeholder }}" required id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.name) }}
+
+			{# FIELD TYPE - determines $ref #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("select", args.uuid, args.field) }}
+				<select name="field" required
+					id="field-{{ uuid }}"
+					aria-describedby="help-{{ uuid }}"
+				>
+					<option value="" disabled {% if not id %}selected{% endif %}>Select a Field Type</option>
+
+					{% set options = [
+						"id",
+						"text",
+						"time",
+						"url",
+						"hidden",
+						"email",
+						"phone",
+						"password",
+						"textarea",
+						"checkbox",
+						"toggle",
+						"number",
+						"color",
+						"date",
+						"datetime",
+						"select",
+						"multiselect",
+						"list",
+						"range",
+						"styledtext",
+						"svg",
+						"image",
+						"gallery",
+						"file",
+						"depot",
+						"radio",
+						"deck",
+					] %}
+
+					{% for option in options %}
+						<option value="{{ option }}">{{ option }}</option>
+					{% endfor %}
+				</select>
+			{{ _self.fieldend(uuid, args.field) }}
+
+			{# LABEL #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("text", uuid, args.label) }}
+				<input type="text" name="label" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.label) }}
+
+			{# HELP #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("text", uuid, args.help) }}
+				<input type="text" name="help" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.help) }}
+
+			{# FACTORY #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("text", uuid, args.factory) }}
+				<input type="text" name="factory" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.factory) }}
+
+			{# DEFAULT #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("text", uuid, args.default) }}
+				<input type="text" name="default" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.default) }}
+
+			{# REQUIRED #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("checkbox", uuid, args.required) }}
+				<input type="checkbox" name="required" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+				<label for="field-{{ uuid }}">{{ args.required.label }}</label>
+			{{ _self.fieldend(uuid, args.required) }}
+
+			{# INDEX #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("checkbox", uuid, args.index) }}
+				<input type="checkbox" name="index" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+				<label for="field-{{ uuid }}">{{ args.index.label }}</label>
+			{{ _self.fieldend(uuid, args.index) }}
+
+		</dialog>
+
+
+		{% endfor %}
+
+		{# SAVE #}
+		{# {{ _self.saveButton() }} #}
+	</form>
+{% endmacro %}
