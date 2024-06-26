@@ -19,6 +19,10 @@ dialog.cms-modal {
 	height     : 70vh;
 	max-height : 800px;
 
+	&.small {
+		max-width : 75ch;
+	}
+
 	&[open] {
 		display               : grid;
 		align-items           : start;

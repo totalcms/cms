@@ -15,8 +15,13 @@
 			icon    : true,
 		},
 		field : {
-			label   : 'Type',
-			help    : 'The type of field to add to the schema',
+			label   : 'Field Type',
+			help	: 'The type form field that this field will use',
+			icon    : true,
+		},
+		ref : {
+			label   : 'Schema Reference',
+			help    : 'The type of data that this property will contain',
 			icon    : true,
 		},
 		label : {
@@ -104,7 +109,7 @@
 			<button type="button"></button>
 		</div>
 
-		<div class="schema-field text-field">
+		<div class = "schema-field text-field">
 			{{ _self.fieldstart("id") }}
 				<input autocomplete="off" type="text" name="name" placeholder="{{ args.name.placeholder }}" required>
 			{{ _self.fieldend(uuid, args.name) }}
@@ -125,61 +130,76 @@
 			<button type="button"></button>
 		</div>
 
-
-		<dialog class="cms-modal" open>
+		<dialog class="cms-modal small" open>
 
 			<section class="scroller">
 
-			<h3>Edit Text Field</h3>
+				<details class="cms-accordion" open>
+					<summary>Property Data</summary>
+					{# REFERENCE #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("text", uuid, args.ref) }}
+						<input type="text" readonly name="ref" id="field-{{ uuid }}">
+					{{ _self.fieldend(uuid, args.ref) }}
 
-			{# FIELD #}
-			<input type="hidden" name="field" value="text">
-			<input type="hidden" name="ref" value="string">
+					{# DEFAULT #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("text", uuid, args.default) }}
+						<input type="text" name="default" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+					{{ _self.fieldend(uuid, args.default) }}
 
-			{# FACTORY #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("text", uuid, args.factory) }}
-				<input type="text" name="factory" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-			{{ _self.fieldend(uuid, args.factory) }}
+					{# FACTORY #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("text", uuid, args.factory) }}
+						<input type="text" name="factory" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+					{{ _self.fieldend(uuid, args.factory) }}
 
-			{# DEFAULT #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("text", uuid, args.default) }}
-				<input type="text" name="default" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-			{{ _self.fieldend(uuid, args.default) }}
+					{# REQUIRED #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("checkbox", uuid, args.required) }}
+						<input type="checkbox" name="required" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+						<label for="field-{{ uuid }}">{{ args.required.label }}</label>
+					{{ _self.fieldend(uuid, args.required) }}
 
-			{# REQUIRED #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("checkbox", uuid, args.required) }}
-				<input type="checkbox" name="required" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-				<label for="field-{{ uuid }}">{{ args.required.label }}</label>
-			{{ _self.fieldend(uuid, args.required) }}
+					{# INDEX #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("checkbox", uuid, args.index) }}
+						<input type="checkbox" name="index" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+						<label for="field-{{ uuid }}">{{ args.index.label }}</label>
+					{{ _self.fieldend(uuid, args.index) }}
+				</details>
 
-			{# INDEX #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("checkbox", uuid, args.index) }}
-				<input type="checkbox" name="index" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-				<label for="field-{{ uuid }}">{{ args.index.label }}</label>
-			{{ _self.fieldend(uuid, args.index) }}
+				<details class="cms-accordion">
+					<summary>Form Info</summary>
+					{# FIELD #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("text", uuid, args.field) }}
+						<input type="text" readonly name="field" id="field-{{ uuid }}">
+					{{ _self.fieldend(uuid, args.field) }}
 
-			{# LABEL #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("text", uuid, args.label) }}
-				<input type="text" name="label" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-			{{ _self.fieldend(uuid, args.label) }}
+					{# LABEL #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("text", uuid, args.label) }}
+						<input type="text" name="label" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+					{{ _self.fieldend(uuid, args.label) }}
 
-			{# PLACEHOLDER #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("text", uuid, args.placeholder) }}
-				<input type="text" name="placeholder" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-			{{ _self.fieldend(uuid, args.placeholder) }}
+					{# PLACEHOLDER #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("text", uuid, args.placeholder) }}
+						<input type="text" name="placeholder" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+					{{ _self.fieldend(uuid, args.placeholder) }}
 
-			{# HELP #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("text", uuid, args.help) }}
-				<input type="text" name="help" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-			{{ _self.fieldend(uuid, args.help) }}
+					{# HELP #}
+					{% set uuid = uniqid() %}
+					{{ _self.fieldstart("text", uuid, args.help) }}
+						<input type="text" name="help" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+					{{ _self.fieldend(uuid, args.help) }}
+				</details>
 
+				<details class="cms-accordion">
+					<summary>Additional Options</summary>
+					<p>There are no additional options for this property.</p>
+				</details>
 
 			</section>
 
@@ -187,8 +207,8 @@
 				<button type="button" class="close button btn">Close</button>
 				<button type="button" class="delete  button btn">Delete</button>
 			</section>
-		</dialog>
 
+		</dialog>
 
 		{# SAVE #}
 		{{ _self.saveButton() }}
