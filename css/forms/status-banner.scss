@@ -15,7 +15,6 @@
     &:after {
 		content            : "";
 		background-color   : oklch(var(--totalform-white));
-		-webkit-mask-image : var(--icon-blank);
 		mask-image         : var(--icon-blank);
 		position           : absolute;
 		display            : block;
@@ -38,21 +37,19 @@
 		background-color : oklch(var(--totalform-blue) / 0.8);
 
         &:after {
-			animation          : totalform-spin 2.5s linear infinite;
-			-webkit-mask-image : var(--icon-processing);
-			mask-image         : var(--icon-processing);
-			opacity            : 1;
-			scale              : 1;
+			animation  : totalform-spin 2.5s linear infinite;
+			mask-image : var(--icon-processing);
+			opacity    : 1;
+			scale      : 1;
         }
     }
     &.success {
         background-color : oklch(var(--totalform-success) / 0.8);
 
         &:after {
-			-webkit-mask-image : var(--icon-success);
-			mask-image         : var(--icon-success);
-            opacity : 1;
-            scale   : 1.2;
+			mask-image : var(--icon-success);
+			opacity    : 1;
+			scale      : 1.2;
         }
     }
     &.error {
@@ -60,10 +57,9 @@
 		pointer-events    : auto;
 
         &:after {
-			-webkit-mask-image : var(--icon-error);
-			mask-image         : var(--icon-error);
-            opacity : 1;
-            scale   : 1.2;
+			mask-image : var(--icon-error);
+			opacity    : 1;
+			scale      : 1.2;
         }
 
 		&:before {

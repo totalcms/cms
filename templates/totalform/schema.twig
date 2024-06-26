@@ -24,6 +24,11 @@
 			help    : 'The label that will be added to the field form',
 			icon    : true,
 		},
+		placeholder : {
+			label   : 'Placeholder',
+			help    : 'The placeholder text that will be added to the field form',
+			icon    : true,
+		},
 		help : {
 			label   : 'Help',
 			help    : 'The help text that will be added to the field form',
@@ -36,12 +41,11 @@
 		},
 		default : {
 			label   : 'Default Value',
-			help    : 'The default value for this field if none is provided',
+			help    : 'The default value for this field if no data is provided when creating a new record',
 			icon    : true,
 		},
 		name : {
-			placeholder : 'Field Name',
-			icon    : true,
+			placeholder : 'name',
 		},
 		required : {
 			label : 'Mark as Required',
@@ -62,7 +66,7 @@
 		{% set collection = cms.schema(id) %}
 	{% endif %}
 
-	<form class="totalform schema-form help-on-hover help-box"
+	<form class="totalform schema-form help-on-hover help-label"
 		data-method="{{ method }}"
 		data-api="{{ cms.api }}"
 		data-route="{{ route }}"
@@ -77,7 +81,7 @@
 		{# DESCRIPTION FIELD #}
 		{% set uuid = uniqid() %}
 		{{ _self.fieldstart("text", uuid, args.description) }}
-			<textarea type="text" name="description" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}"></textarea>
+			<textarea type="text" name="description" id="field-{{ uuid }}" rows="2" aria-describedby="help-{{ uuid }}"></textarea>
 		{{ _self.fieldend(uuid, args.description) }}
 
 		{# Schema Property fields :
@@ -90,75 +94,47 @@
 			required        : true
 			index           : true #}
 
+		{# SCHEMA FIELDS #}
+		<label>Schema Properties</label>
 
-		{% for i in 0..0 %}
-
-
-
-		<dialog class="cms-modal">
-
-			{# NAME #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("id", uuid, args.name) }}
-				<input type="text" name="fieldname" placeholder="{{ args.name.placeholder }}" required id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+		<div class="schema-field id-field">
+			{{ _self.fieldstart("id") }}
+				<input autocomplete="off" type="text" name="name" placeholder="{{ args.name.placeholder }}" required>
 			{{ _self.fieldend(uuid, args.name) }}
+			<button type="button"></button>
+		</div>
 
-			{# FIELD TYPE - determines $ref #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("select", args.uuid, args.field) }}
-				<select name="field" required
-					id="field-{{ uuid }}"
-					aria-describedby="help-{{ uuid }}"
-				>
-					<option value="" disabled {% if not id %}selected{% endif %}>Select a Field Type</option>
+		<div class="schema-field text-field">
+			{{ _self.fieldstart("id") }}
+				<input autocomplete="off" type="text" name="name" placeholder="{{ args.name.placeholder }}" required>
+			{{ _self.fieldend(uuid, args.name) }}
+			<button type="button"></button>
+		</div>
 
-					{% set options = [
-						"id",
-						"text",
-						"time",
-						"url",
-						"hidden",
-						"email",
-						"phone",
-						"password",
-						"textarea",
-						"checkbox",
-						"toggle",
-						"number",
-						"color",
-						"date",
-						"datetime",
-						"select",
-						"multiselect",
-						"list",
-						"range",
-						"styledtext",
-						"svg",
-						"image",
-						"gallery",
-						"file",
-						"depot",
-						"radio",
-						"deck",
-					] %}
+		<div class="schema-field date-field">
+			{{ _self.fieldstart("id") }}
+				<input autocomplete="off" type="text" name="name" placeholder="{{ args.name.placeholder }}" required>
+			{{ _self.fieldend(uuid, args.name) }}
+			<button type="button"></button>
+		</div>
 
-					{% for option in options %}
-						<option value="{{ option }}">{{ option }}</option>
-					{% endfor %}
-				</select>
-			{{ _self.fieldend(uuid, args.field) }}
+		<div class="schema-field image-field">
+			{{ _self.fieldstart("id") }}
+				<input autocomplete="off" type="text" name="name" placeholder="{{ args.name.placeholder }}" required>
+			{{ _self.fieldend(uuid, args.name) }}
+			<button type="button"></button>
+		</div>
 
-			{# LABEL #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("text", uuid, args.label) }}
-				<input type="text" name="label" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-			{{ _self.fieldend(uuid, args.label) }}
 
-			{# HELP #}
-			{% set uuid = uniqid() %}
-			{{ _self.fieldstart("text", uuid, args.help) }}
-				<input type="text" name="help" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-			{{ _self.fieldend(uuid, args.help) }}
+		<dialog class="cms-modal" open>
+
+			<section class="scroller">
+
+			<h3>Edit Text Field</h3>
+
+			{# FIELD #}
+			<input type="hidden" name="field" value="text">
+			<input type="hidden" name="ref" value="string">
 
 			{# FACTORY #}
 			{% set uuid = uniqid() %}
@@ -186,12 +162,81 @@
 				<label for="field-{{ uuid }}">{{ args.index.label }}</label>
 			{{ _self.fieldend(uuid, args.index) }}
 
+			{# LABEL #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("text", uuid, args.label) }}
+				<input type="text" name="label" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.label) }}
+
+			{# PLACEHOLDER #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("text", uuid, args.placeholder) }}
+				<input type="text" name="placeholder" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.placeholder) }}
+
+			{# HELP #}
+			{% set uuid = uniqid() %}
+			{{ _self.fieldstart("text", uuid, args.help) }}
+				<input type="text" name="help" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
+			{{ _self.fieldend(uuid, args.help) }}
+
+
+			</section>
+
+			<section>
+				<button type="button" class="close button btn">Close</button>
+				<button type="button" class="delete  button btn">Delete</button>
+			</section>
 		</dialog>
 
 
-		{% endfor %}
-
 		{# SAVE #}
-		{# {{ _self.saveButton() }} #}
+		{{ _self.saveButton() }}
 	</form>
 {% endmacro %}
+
+
+{# FIELD TYPE - determines $ref #}
+{# {% set uuid = uniqid() %}
+{{ _self.fieldstart("select", args.uuid, args.field) }}
+	<select name="field" required
+		id="field-{{ uuid }}"
+		aria-describedby="help-{{ uuid }}"
+	>
+		<option value="" disabled {% if not id %}selected{% endif %}>Select a Field Type</option>
+
+		{% set options = [
+			"id",
+			"checkbox",
+			"color",
+			"date",
+			"datetime",
+			"deck",
+			"depot",
+			"email",
+			"file",
+			"gallery",
+			"hidden",
+			"image",
+			"list",
+			"multiselect",
+			"number",
+			"password",
+			"phone",
+			"radio",
+			"range",
+			"select",
+			"styledtext",
+			"svg",
+			"textarea",
+			"text",
+			"time",
+			"toggle",
+			"url",
+		] %}
+
+		{% for option in options %}
+			<option value="{{ option }}">{{ option }}</option>
+		{% endfor %}
+	</select>
+{{ _self.fieldend(uuid, args.field) }} #}

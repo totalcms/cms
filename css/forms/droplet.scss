@@ -13,8 +13,7 @@
 	background-position : center;
 	transition          : opacity 300ms ease-in-out, scale 300ms ease-in-out;
 	transform-origin    : center;
-	-webkit-mask        : var(--icon-upload);
-	mask                : var(--icon-upload);
+	mask-image          : var(--icon-upload);
 
 
 	&:hover {
@@ -118,17 +117,15 @@
 		margin       : 0 auto;
 
 		.dz-success & {
-			opacity           : 1;
-			background-color  : oklch(var(--totalform-success));
-			-webkit-mask      : var(--icon-success);
-			mask              : var(--icon-success);
+			opacity          : 1;
+			background-color : oklch(var(--totalform-success));
+			mask-image       : var(--icon-success);
 		}
 
 		.dz-error & {
 			opacity          : 1;
 			background-color : oklch(var(--totalform-error));
-			-webkit-mask     : var(--icon-error);
-			mask             : var(--icon-error);
+			mask-image       : var(--icon-error);
 		}
 	}
 

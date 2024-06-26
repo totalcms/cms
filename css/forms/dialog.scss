@@ -12,6 +12,7 @@ dialog.cms-modal {
 	left          : 50%;
 	transform     : translate(-50%, -50%);
 	margin        : 0;
+	overflow-y    : auto;
 
 	width      : 90%;
 	max-width  : 1000px;
