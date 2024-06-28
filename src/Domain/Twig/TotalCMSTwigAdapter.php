@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -30,6 +32,7 @@ final class TotalCMSTwigAdapter
         private CollectionFetcher $collectionFetcher,
         private SchemaLister $schemaLister,
         private SchemaFetcher $schemaFetcher,
+        private TotalFormFactory $totalFormFactory,
     ) {
         $this->api     = $this->config->api;
         $this->storage = [];
@@ -451,5 +454,10 @@ final class TotalCMSTwigAdapter
         }
 
         return $image['alt'];
+    }
+
+    public function objectFormBuilder(array $options = []): TotalForm
+    {
+        return $this->totalFormFactory->objectFormBuilder($options);
     }
 }
