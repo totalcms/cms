@@ -55,7 +55,7 @@
     "symfony/property-access": "^6.1",
     "symfony/serializer": "^6.1",
     "twig/extra-bundle": "^3.6",
-    "twig/twig": "^3.4",
+    "twig/twig": "^3.10",
     "webuni/front-matter": "^2.0"
   },
   "require-dev": {
