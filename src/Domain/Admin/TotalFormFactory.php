@@ -12,8 +12,8 @@ use TotalCMS\Support\Config;
  * Total Form Builder.
  *
  * This class is a factory for creating TotalForm objects.
- * I cannot use Dependency Injection in the template, so I need to create a factory class
- * This encapsulate the creation of the TotalForm object without depencency injection here.
+ * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
+ * This encapsulates the creation of the TotalForm object without depencency injection here.
  */
 final class TotalFormFactory
 {

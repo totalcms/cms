@@ -44,11 +44,11 @@ final class TotalCMSTwigFunctions
         $twigFunctions = [];
 
         foreach (self::$customFunctions as $function) {
-            $twigFunctions[] = new TwigFunction($function, [self::class, $function]);
+            $twigFunctions[] = new TwigFunction($function, [self::class, $function], ['is_safe' => ['html']]);
         }
 
         foreach (self::$phpFunctions as $function) {
-            $twigFunctions[] = new TwigFunction($function, $function);
+            $twigFunctions[] = new TwigFunction($function, $function, ['is_safe' => ['html']]);
         }
 
         return $twigFunctions;
