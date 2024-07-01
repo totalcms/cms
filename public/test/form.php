@@ -4,7 +4,10 @@
 
 {% set form  = cms.objectFormBuilder({collection: 'blog'}) %}
 
-{{ form.addField() }}
+{{ form.addField({
+	type: 'text',
+	name: 'title',
+}) }}
 {{ form.build() }}
 
 <?php include __DIR__ . '/_end.php'; ?>
