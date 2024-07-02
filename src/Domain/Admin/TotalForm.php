@@ -153,11 +153,15 @@ final class TotalForm
 	public function addField(array $options): void
 	{
 		if (!isset($options['name']) || empty($options['name'])) {
-			throw new \Exception('FormField name is required');
+			// TODO: Add some sort of warning here to be logged. This is not a critical error.
+			// throw new \Exception('FormField name is required');
+			return;
 		}
 		$name = $options['name'];
 		if (!isset($this->schemaData->properties[$name])) {
-			throw new \Exception("Field '{$name}' not found in schema");
+			// TODO: Add some sort of warning here to be logged. This is not a critical error.
+			// throw new \Exception("Field '{$name}' not found in schema");
+			return;
 		}
 
 		$defaults = $this->fieldDefaults($name);
