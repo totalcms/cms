@@ -20,8 +20,8 @@ final class TwigEngine
     public function __construct(Config $config, TotalCMSTwigExtension $extension)
     {
         $internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
-        $customTemplates   = $config->dataDir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
-        $cacheDir          = $config->cacheDir === 'false' ? false : $config->cacheDir;
+        $customTemplates   = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
+        $cacheDir          = $config->cachedir === 'false' ? false : $config->cachedir;
         $debug             = $cacheDir === false ? true : false;                        // enable debug is no cache dir
 
         if (!file_exists($internalTemplates)) {
@@ -49,6 +49,7 @@ final class TwigEngine
         ]);
     }
 
+    /** @param array<mixed> $data */
     public function render(string $templateName, array $data = []): string
     {
         try {
@@ -61,6 +62,7 @@ final class TwigEngine
         return $string;
     }
 
+    /** @param array<mixed> $data */
     public function renderString(string $template, array $data = []): string
     {
         $twig = $this->twig->createTemplate($template);

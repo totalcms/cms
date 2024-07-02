@@ -19,7 +19,7 @@ final class TemplateLister
     /**
      * List reserved templates.
      *
-     * @return array
+     * @return array<string>
      */
     public function listReservedTemplates(): array
     {
@@ -29,7 +29,7 @@ final class TemplateLister
     /**
      * List custom templates.
      *
-     * @return array
+     * @return array<string>
      */
     public function listCustomTemplates(): array
     {
@@ -39,7 +39,7 @@ final class TemplateLister
     /**
      * List all templates.
      *
-     * @return array
+     * @return array<string>
      */
     public function listAllTemplates(): array
     {

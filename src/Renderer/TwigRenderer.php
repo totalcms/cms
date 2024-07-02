@@ -27,7 +27,7 @@ final class TwigRenderer
      *
      * @param ResponseInterface $response The response
      * @param string $template Template pathname relative to templates directory
-     * @param array $data Associative array of template variables
+     * @param array<mixed> $data Associative array of template variables
      *
      * @return ResponseInterface The response
      */

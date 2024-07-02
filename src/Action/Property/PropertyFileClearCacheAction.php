@@ -15,6 +15,7 @@ final class PropertyFileClearCacheAction
     ) {
     }
 
+    /** @param array<string,string> $args */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $deleted = $this->service->deleteFileCache(

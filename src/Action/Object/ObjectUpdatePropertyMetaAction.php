@@ -30,7 +30,7 @@ final class ObjectUpdatePropertyMetaAction
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param array $args
+     * @param array<string,string> $args
      *
      * @return ResponseInterface
      */

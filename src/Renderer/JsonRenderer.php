@@ -43,7 +43,7 @@ final class JsonRenderer
      * response to the client.
      *
      * @param ResponseInterface $response The response
-     * @param array $collection The data
+     * @param array<mixed> $collection The data
      * @param TransformerAbstract $transformer The data transformer
      *
      * @return ResponseInterface The response

@@ -24,7 +24,7 @@ final class ObjectFactory
      * create a schema object.
      *
      * @param string $collection
-     * @param array $objectData
+     * @param array<string,mixed> $objectData
      *
      * @throws \UnexpectedValueException
      *
@@ -51,6 +51,11 @@ final class ObjectFactory
         return $object;
     }
 
+    /**
+     * @param array<string,mixed> $objectData
+     *
+     * @return array<string,mixed>
+     */
     private function generateProperties(array $objectData, SchemaData $schema): array
     {
         $properties = [];
@@ -69,8 +74,10 @@ final class ObjectFactory
                 // but existing objects do not have the property set
                 // also let the property be included if it has a default value
                 // the schema validation will pass a missing value if it has a default value
-                if (!in_array($property, $schema->required)
-                    && !array_key_exists('default', $propertySchema)) {
+                if (
+                    !in_array($property, $schema->required)
+                    && !array_key_exists('default', $propertySchema)
+                ) {
                     continue;
                 }
             }

@@ -181,7 +181,7 @@ final class TemplateRepository extends StorageRepository
     /**
      * List custom templates.
      *
-     * @return array
+     * @return array<string>
      */
     public function listCustomTemplates(): array
     {
@@ -195,7 +195,7 @@ final class TemplateRepository extends StorageRepository
     /**
      * List reserved templates.
      *
-     * @return array
+     * @return array<string>
      */
     public function listReservedTemplates(): array
     {

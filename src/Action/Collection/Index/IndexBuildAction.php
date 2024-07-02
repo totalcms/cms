@@ -30,7 +30,7 @@ final class IndexBuildAction
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param array $args
+     * @param array<string,string> $args
      *
      * @return ResponseInterface
      */

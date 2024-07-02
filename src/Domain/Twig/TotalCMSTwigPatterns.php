@@ -27,6 +27,7 @@ final class TotalCMSTwigPatterns
     public string $latitudeLongitude        = '(\-?\d+(\.\d+)?),\s*(\-?\d+(\.\d+)?)';
     public string $html                     = '<([a-z]+)([^<]+)*(?:>(.*)<\/\1>|\s+/>)';
 
+    /** @var array<string> */
     public array $postCode = [
         'australia'   => '[0-9]{4}',
         'austria'     => '[0-9]{4}',
@@ -46,6 +47,7 @@ final class TotalCMSTwigPatterns
         'usa'         => '\d{5}(-\d{4})?',
     ];
 
+    /** @var array<string> */
     public array $phone = [
         'usa'           => '\d{3}[\-]\d{3}[\-]\d{4}',
         'uk'            => '\s*\(?(020[7,8]{1}\)?[ ]?[1-9]{1}[0-9{2}[ ]?[0-9]{4})|(0[1-8]{1}[0-9]{3}\)?[ ]?[1-9]{1}[0-9]{2}[ ]?[0-9]{3})\s*',

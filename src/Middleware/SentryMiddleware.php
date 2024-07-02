@@ -12,7 +12,7 @@ final class SentryMiddleware implements MiddlewareInterface
     /**
      * The constructor.
      *
-     * @param array $options The sentry options
+     * @param array<string,mixed> $options The sentry options
      */
     public function __construct(private array $options)
     {

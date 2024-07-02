@@ -22,7 +22,7 @@ final class SchemaFactory
     /**
      * create a schema object.
      *
-     * @param array $schemaData
+     * @param array<string,mixed> $schemaData
      *
      * @throws \UnexpectedValueException
      *

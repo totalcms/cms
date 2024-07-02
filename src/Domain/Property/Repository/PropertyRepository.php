@@ -78,7 +78,7 @@ final class PropertyRepository extends StorageRepository
      *
      * @throws \RuntimeException
      *
-     * @return array
+     * @return array<string,string|int>
      */
     public function saveFile(string $collection, string $objectID, string $property, string $filePath): array
     {
@@ -113,7 +113,7 @@ final class PropertyRepository extends StorageRepository
      *
      * @throws \RuntimeException
      *
-     * @return array
+     * @return array<string,string|int>
      */
     public function saveImage(string $collection, string $objectID, string $property, string $filePath): array
     {

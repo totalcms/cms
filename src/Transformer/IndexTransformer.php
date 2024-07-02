@@ -12,7 +12,7 @@ final class IndexTransformer extends Fractal\TransformerAbstract
      *
      * @param IndexData $index The collection index object
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function transform(IndexData $index): array
     {

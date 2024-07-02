@@ -23,8 +23,8 @@ final class ObjectCloner
     /**
      * save a collection object.
      *
-     * @param array $from
-     * @param array $to
+     * @param array<string,mixed> $from
+     * @param array<string,mixed> $to
      *
      * @throws \UnexpectedValueException
      * @throws \RuntimeException

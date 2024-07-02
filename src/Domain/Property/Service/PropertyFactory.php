@@ -13,7 +13,7 @@ final class PropertyFactory
     /**
      * create a property object.
      *
-     * @param array  $propertySchema
+     * @param array<string,mixed>  $propertySchema
      * @param mixed  $value
      *
      * @throws \DomainException

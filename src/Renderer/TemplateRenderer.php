@@ -27,7 +27,7 @@ final class TemplateRenderer
      *
      * @param ResponseInterface $response The response
      * @param string $template Template pathname relative to templates directory
-     * @param array $data Associative array of template variables
+     * @param array<string,string|false> $data Associative array of template variables
      *
      * @return ResponseInterface The response
      */

@@ -9,6 +9,7 @@ class FakerPicsum extends Base
     public const JPG_IMAGE  = 'jpg';
     public const WEBP_IMAGE = 'webp';
 
+    /** @var array<string> */
     private static array $extensions = [self::JPG_IMAGE, self::WEBP_IMAGE];
 
     /**

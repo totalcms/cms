@@ -7,9 +7,8 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class SetData extends PropertyData
 {
-    public array $set;
-
-    public function __construct(array $set)
+    /** @param array<string> $set */
+    public function __construct(public array $set)
     {
         if (!self::verifySet($set)) {
             throw new \InvalidArgumentException('Set must be a set of simple objects');
@@ -17,7 +16,7 @@ class SetData extends PropertyData
         $this->set = $set;
     }
 
-    // phpcs:ignore Generic.Metrics.NestingLevel.TooHigh
+    /** @param array<mixed> $set */
     private static function verifySet(array $set): bool
     {
         if (!array_is_list($set)) {
@@ -37,6 +36,7 @@ class SetData extends PropertyData
         return true;
     }
 
+    /** @return array<string> */
     public function transform(): array
     {
         return $this->set;

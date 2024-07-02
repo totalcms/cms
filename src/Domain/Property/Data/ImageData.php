@@ -9,8 +9,11 @@ class ImageData extends PropertyData
 {
     public ListData $tags;
     public DateData $uploadDate;
+    /** @var array<string,string|int> */
     public array $exif;
+    /** @var array<string,int> */
     public array $focalpoint;
+    /** @var array<string> */
     public array $palette;
     public string $alt;
     public string $mime;
@@ -26,7 +29,7 @@ class ImageData extends PropertyData
         'y' => 50,
     ];
 
-    // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    /** @param array<string,mixed> $file */
     public function __construct(array $file = [])
     {
         $this->alt        = $file['alt'] ?? '';
@@ -46,6 +49,7 @@ class ImageData extends PropertyData
         $this->uploadDate = new DateData($uploadDate);
     }
 
+    /** @return array<string,mixed> */
     public function transform(): array
     {
         return [

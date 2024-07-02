@@ -28,7 +28,7 @@ final class ObjectSaver
      * save a collection object.
      *
      * @param string $collection
-     * @param array $objectData
+     * @param array<string,mixed> $objectData
      *
      * @throws \UnexpectedValueException
      * @throws \RuntimeException
@@ -59,7 +59,7 @@ final class ObjectSaver
      *
      * @param string $collection
      * @param string $id
-     * @param array $newData
+     * @param array<string,mixed> $newData
      *
      * @throws \UnexpectedValueException
      *
@@ -82,6 +82,7 @@ final class ObjectSaver
         return $object;
     }
 
+    /** @param array<string,mixed> $newData */
     public function updateObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
     {
         $object = $this->storage->fetchObject($collection, $id);
@@ -96,6 +97,7 @@ final class ObjectSaver
         return $this->updateObject($collection, $id, $objectData);
     }
 
+    /** @param array<string,mixed> $newData */
     public function updateObjectPropertyMeta(string $collection, string $id, string $property, string $name, array $newData): ObjectData
     {
         $object = $this->storage->fetchObject($collection, $id);
@@ -123,30 +125,12 @@ final class ObjectSaver
         return $this->updateObject($collection, $id, $objectData);
     }
 
-    public function updateObjectPropertyFile(string $collection, string $id, string $property, string $file, array $newData): ObjectData
-    {
-        $object = $this->storage->fetchObject($collection, $id);
-
-        if (!$object instanceof ObjectData) {
-            throw new \UnexpectedValueException('Unable to locate object to update');
-        }
-
-        $objectData = $object->toArray();
-        $property   = $objectData[$property];
-
-        if (!is_array($property)) {
-            throw new \UnexpectedValueException('Property is not an array');
-        }
-
-        return $this->updateObject($collection, $id, $objectData);
-    }
-
     /**
      * patch a collection object.
      *
      * @param string $collection
      * @param string $id
-     * @param array $newData
+     * @param array<string,mixed> $newData
      *
      * @throws \UnexpectedValueException
      *
@@ -165,6 +149,7 @@ final class ObjectSaver
         return $this->updateObject($collection, $id, $mergedObject);
     }
 
+    /** @param array<string,mixed> $newData */
     public function patchObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
     {
         $object = $this->storage->fetchObject($collection, $id);
@@ -179,6 +164,7 @@ final class ObjectSaver
         return $this->updateObject($collection, $id, $objectData);
     }
 
+    /** @param array<string,mixed> $newData */
     public function patchObjectPropertyMeta(string $collection, string $id, string $property, string $name, array $newData): ObjectData
     {
         $object = $this->storage->fetchObject($collection, $id);

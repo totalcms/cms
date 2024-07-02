@@ -10,6 +10,7 @@ use Twig\TwigFilter;
  */
 final class TotalCMSTwigFilters
 {
+    /** @var array<string> */
     public static array $phpFunctions = [
         'basename',
         'dirname',
@@ -18,11 +19,9 @@ final class TotalCMSTwigFilters
         'trim',
         'ucwords',
         'lcfirst',
-        'str_word_count',
-        'count',
-        'json_decode',
     ];
 
+    /** @var array<string> */
     public static array $customFunctions = [
         'charcount',
         'wordcount',
@@ -53,6 +52,7 @@ final class TotalCMSTwigFilters
         'obfuscate',
     ];
 
+    /** @return array<TwigFilter> */
     public static function getFilters(): array
     {
         $twigFunctions = [];
@@ -62,7 +62,8 @@ final class TotalCMSTwigFilters
         }
 
         foreach (self::$phpFunctions as $function) {
-            $twigFunctions[] = new TwigFilter($function, $function, ['is_safe' => ['html']]);
+            // @phpstan-ignore-next-line
+            $twigFunctions[] = new TwigFilter($function, $function);
         }
 
         return $twigFunctions;
@@ -96,6 +97,7 @@ final class TotalCMSTwigFilters
     // -------------------------
     // Total CMS Color Manipulation
     // -------------------------
+    /** @return array<string,mixed> */
     public static function hexToColor(string $hex): array
     {
         return [
@@ -104,6 +106,7 @@ final class TotalCMSTwigFilters
         ];
     }
 
+    /** @param ?array<string,mixed> $color */
     public static function hex(?array $color): string
     {
         if ($color === null) {
@@ -113,7 +116,11 @@ final class TotalCMSTwigFilters
         return $color['hex'] ?? '#000000';
     }
 
-    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    /**
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
+     * @param ?array<string,mixed> $color
+     */
     public static function rgb(?array $color, int $alpha = 100, bool $wrap = true): string
     {
         if ($color === null) {
@@ -130,7 +137,11 @@ final class TotalCMSTwigFilters
         return $wrap ? sprintf('rgb(%s)', $color) : $color;
     }
 
-    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    /**
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
+     * @param ?array<string,mixed> $color
+     */
     public static function hsl(?array $color, int $alpha = 100, bool $wrap = true): string
     {
         if ($color === null) {
@@ -147,7 +158,11 @@ final class TotalCMSTwigFilters
         return $wrap ? sprintf('hsl(%s)', $color) : $color;
     }
 
-    /** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+    /**
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
+     * @param ?array<string,mixed> $color
+     */
     public static function oklch(?array $color, int $alpha = 100, bool $wrap = true): string
     {
         if ($color === null) {
@@ -163,21 +178,41 @@ final class TotalCMSTwigFilters
         return $wrap ? sprintf('oklch(%s)', $color) : $color;
     }
 
+    /**
+     * @param ?array<string,mixed> $color
+     *
+     * @return ?array<string,mixed>
+     */
     public static function lightness(?array $color, string $lightness): ?array
     {
         return self::adjustColor($color, $lightness);
     }
 
+    /**
+     * @param ?array<string,mixed> $color
+     *
+     * @return ?array<string,mixed>
+     */
     public static function chroma(?array $color, string $chroma): ?array
     {
         return self::adjustColor($color, null, $chroma);
     }
 
+    /**
+     * @param ?array<string,mixed> $color
+     *
+     * @return ?array<string,mixed>
+     */
     public static function hue(?array $color, string $hue): ?array
     {
         return self::adjustColor($color, null, null, $hue);
     }
 
+    /**
+     * @param ?array<string,mixed> $color
+     *
+     * @return ?array<string,mixed>
+     */
     public static function adjustColor(?array $color, ?string $lightness = null, ?string $chroma = null, ?string $hue = null): ?array
     {
         if ($color === null) {
@@ -263,6 +298,11 @@ final class TotalCMSTwigFilters
     // -------------------------
     // Array Manipulation
     // -------------------------
+    /**
+     * @param array<mixed> $array
+     *
+     * @return array<mixed>
+     */
     public static function ksort(array $array): array
     {
         ksort($array);
@@ -270,6 +310,11 @@ final class TotalCMSTwigFilters
         return $array;
     }
 
+    /**
+     * @param array<mixed> $array
+     *
+     * @return array<mixed>
+     */
     public static function krsort(array $array): array
     {
         krsort($array);
@@ -277,6 +322,11 @@ final class TotalCMSTwigFilters
         return $array;
     }
 
+    /**
+     * @param array<mixed> $array
+     *
+     * @return array<mixed>
+     */
     public static function shuffle(array $array): array
     {
         shuffle($array);
@@ -313,6 +363,9 @@ final class TotalCMSTwigFilters
         return (bool)$variable;
     }
 
+    /**
+     * @return array<mixed>
+     */
     public static function array(mixed $variable): array
     {
         return (array)$variable;

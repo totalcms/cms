@@ -18,7 +18,7 @@ final class ImageWorksGalleryFetchAction
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param array $args The arguments
+     * @param array<string,string> $args The arguments
      *
      * @throws HttpNotFoundException
      *

@@ -35,6 +35,7 @@ final class FileRemover
         return $fileProperty;
     }
 
+    /** @param array<array<string,mixed>> $data */
     private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
     {
         $propertyData = [$property => $data];

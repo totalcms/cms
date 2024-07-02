@@ -48,6 +48,7 @@ class TotalCMS
         $this->twigCacheCleaner->deleteCache();
     }
 
+    /** @param array<mixed> $data */
     public function processBufferMacros(array $data = []): string
     {
         $content = $this->buffer->end();
@@ -62,6 +63,7 @@ class TotalCMS
         return $content;
     }
 
+    /** @param array<mixed> $data */
     public function processMacros(string $templateName, array $data = []): string
     {
         try {

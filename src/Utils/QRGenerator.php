@@ -92,11 +92,12 @@ class QRGenerator
         return $svg;
     }
 
+    /** @param array<string,string> $data */
     public function event(array $data): string
     {
         date_default_timezone_set('UTC');
-        $start = date("Ymd\THis\Z", strtotime($data['start']));
-        $end   = date("Ymd\THis\Z", strtotime($data['end']));
+        $start = date("Ymd\THis\Z", intval(strtotime($data['start'])));
+        $end   = date("Ymd\THis\Z", intval(strtotime($data['end'])));
 
         $vcard = <<<EVENT
 BEGIN:VEVENT
@@ -112,6 +113,7 @@ EVENT;
         return $svg;
     }
 
+    /** @param array<string,string> $data */
     public function vcf(array $data): string
     {
         $vcard = <<<VCF

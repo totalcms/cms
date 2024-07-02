@@ -12,7 +12,7 @@ final class SchemaMetaTransformer extends Fractal\TransformerAbstract
      *
      * @param SchemaData $schema The schema object
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function transform(SchemaData $schema): array
     {

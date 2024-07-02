@@ -11,6 +11,7 @@ use Faker\Provider\Lorem;
  */
 class FakerImageGD extends Base
 {
+    /** @return array<int> */
     private static function hex2rgb(string $hex): array
     {
         $rgb = str_split(ltrim($hex, '#'), 2);

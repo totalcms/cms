@@ -35,8 +35,11 @@ final class SchemaData
 
     public string $id;
     public string $description;
+    /** @var array<string,mixed> */
     public array $properties;
+    /** @var array<string> */
     public array $required;
+    /** @var array<string> */
     public array $index;
     protected Serializer $serializer;
 
@@ -45,6 +48,7 @@ final class SchemaData
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
     }
 
+    /** @return array<string,mixed> */
     public function toArray(): array
     {
         return [

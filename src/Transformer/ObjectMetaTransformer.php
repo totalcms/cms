@@ -12,7 +12,7 @@ final class ObjectMetaTransformer extends Fractal\TransformerAbstract
      *
      * @param ObjectData $object The object
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function transform(ObjectData $object): array
     {

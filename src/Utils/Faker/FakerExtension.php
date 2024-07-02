@@ -54,6 +54,7 @@ class FakerExtension extends Base
         return FakerImageGD::imageShapes(self::$dir, $width, $height, $bgColor);
     }
 
+    /** @return array<string> */
     public static function tags(int $min = 0, int $max = 5): array
     {
         return array_values(array_unique((array)Lorem::words(self::numberBetween($min, $max), false)));

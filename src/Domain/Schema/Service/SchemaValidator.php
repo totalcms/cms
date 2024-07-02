@@ -23,7 +23,7 @@ final class SchemaValidator
     /**
      * Validate a schema.
      *
-     * @param array $object
+     * @param array<string,mixed> $object
      * @param string $schemaType
      *
      * @throws \DomainException

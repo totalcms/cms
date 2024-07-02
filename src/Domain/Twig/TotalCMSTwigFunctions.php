@@ -9,6 +9,7 @@ use Twig\TwigFunction;
  */
 final class TotalCMSTwigFunctions
 {
+    /** @var array<string> */
     public static array $phpFunctions = [
         'uniqid',
         'floor',
@@ -32,6 +33,7 @@ final class TotalCMSTwigFunctions
         'http_build_query',
     ];
 
+    /** @var array<string> */
     public static array $customFunctions = [
         'selectOptions',
         'istype',
@@ -39,6 +41,7 @@ final class TotalCMSTwigFunctions
         'print_r',
     ];
 
+    /** @return array<TwigFunction> */
     public static function getFunctions(): array
     {
         $twigFunctions = [];
@@ -48,6 +51,7 @@ final class TotalCMSTwigFunctions
         }
 
         foreach (self::$phpFunctions as $function) {
+            // @phpstan-ignore-next-line
             $twigFunctions[] = new TwigFunction($function, $function, ['is_safe' => ['html']]);
         }
 
@@ -57,6 +61,11 @@ final class TotalCMSTwigFunctions
     // -------------------------
     // Custom Functions
     // -------------------------
+    /**
+     * @param array<mixed> $data
+     *
+     * @return array<array<string,string>>
+     */
     public static function selectOptions(array $data, string $label = '', string $value = ''): array
     {
         // this takes a normal array and converts it to an array of arrays with label and value keys

@@ -24,7 +24,7 @@ final class SchemaSaver
     /**
      * Save a schema.
      *
-     * @param array $schemaData
+     * @param array<string,mixed> $schemaData
      *
      * @throws \UnexpectedValueException
      *

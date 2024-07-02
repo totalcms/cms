@@ -18,6 +18,15 @@ final class ObjectDeletePropertyAction
         $this->service  = $service;
     }
 
+    /**
+     * Action.
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param array<string,string> $args The routing arguments
+     *
+     * @return ResponseInterface the response
+     */
     public function __invoke(
         ServerRequestInterface $request,
         ResponseInterface $response,

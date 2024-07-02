@@ -30,7 +30,7 @@ final class CollectionPatchAction
      *
      * @param ServerRequestInterface $request The request
      * @param ResponseInterface $response The response
-     * @param array $args
+     * @param array<string,string> $args
      *
      * @return ResponseInterface The response
      */

@@ -18,7 +18,7 @@ final class FakerFactory
         private Config $config,
     ) {
         $this->config   = $config;
-        $this->cacheDir = $this->config->tmpDir . '/faker-images';
+        $this->cacheDir = $this->config->tmpdir . '/faker-images';
     }
 
     public function createFaker(): Generator

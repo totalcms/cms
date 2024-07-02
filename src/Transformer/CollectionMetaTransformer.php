@@ -12,7 +12,7 @@ final class CollectionMetaTransformer extends Fractal\TransformerAbstract
      *
      * @param Collection $collection The collection object
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function transform(Collection $collection): array
     {

@@ -48,11 +48,13 @@ final class QRCodeTwigAdapter
         return $this->generator->mailto($email, $subject, $body);
     }
 
+    /** @param array<string,string> $data */
     public function event(array $data): string
     {
         return $this->generator->event($data);
     }
 
+    /** @param array<string,string> $data */
     public function vcf(array $data): string
     {
         return $this->generator->vcf($data);

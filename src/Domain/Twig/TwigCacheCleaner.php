@@ -44,7 +44,7 @@ final class TwigCacheCleaner
 
     public function deleteCache(): bool
     {
-        $cacheDir = $this->config->cacheDir;
+        $cacheDir = $this->config->cachedir;
 
         self::deleteDir($cacheDir);
 

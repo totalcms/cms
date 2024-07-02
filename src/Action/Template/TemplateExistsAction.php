@@ -21,7 +21,7 @@ final class TemplateExistsAction
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param array $args The routing arguments
+     * @param array<string,string> $args The routing arguments
      *
      * @return ResponseInterface the response
      */

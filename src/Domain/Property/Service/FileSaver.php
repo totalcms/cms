@@ -96,7 +96,7 @@ final class FileSaver
      * @param string $collection
      * @param string $objectID
      * @param string $property
-     * @param array $data
+     * @param array<string,mixed> $data
      *
      * @return ObjectData
      */
@@ -256,7 +256,7 @@ final class FileSaver
      *
      * @param string $imagepath
      *
-     * @return array
+     * @return array<string,array<string>>
      */
     private static function gatherColorData(string $imagepath): array
     {
@@ -277,7 +277,7 @@ final class FileSaver
      *
      * @param string $imagepath
      *
-     * @return array
+     * @return array<string,string|int>
      */
     private static function gatherBasicImageData(string $imagepath): array
     {
@@ -323,7 +323,7 @@ final class FileSaver
      *
      * @param string $imagepath
      *
-     * @return array
+     * @return array<string,mixed>
      */
     private function gatherExifData(string $imagepath): array
     {
