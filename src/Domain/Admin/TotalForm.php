@@ -82,8 +82,8 @@ final class TotalForm
 
 	public function autoBuild(): string
 	{
-		// TODO: Read in the schema and build the form automatically
-		return '';
+		$this->addFieldsFromSchema();
+		return $this->build();
 	}
 
 	public function build(): string
@@ -118,6 +118,11 @@ final class TotalForm
 
 	private function fieldContent(): string
 	{
+		if (!isset($this->fields['id'])) {
+			// Add the ID field if it does not exist
+			$this->addField(['name' => 'id']);
+		}
+
 		$content = '';
 		foreach ($this->fields as $field) {
 			$content .= $field->build();
@@ -129,6 +134,7 @@ final class TotalForm
 	/** @return array<string,mixed> */
 	public function fieldDefaults(string $property): array
 	{
+		// Get the schema and collection settings for a property
 		$schema = $this->schemaData->properties[$property] ?: [];
 		$collection = $this->collectionData->properties[$property] ?: [];
 
@@ -149,14 +155,23 @@ final class TotalForm
 		if (!isset($options['name']) || empty($options['name'])) {
 			throw new \Exception('FormField name is required');
 		}
-		if (!isset($this->schemaData->properties[$options['name']])) {
-			throw new \Exception("Field '{$options['name']}' not found in schema");
+		$name = $options['name'];
+		if (!isset($this->schemaData->properties[$name])) {
+			throw new \Exception("Field '{$name}' not found in schema");
 		}
 
-		$defaults = $this->fieldDefaults($options['name']);
+		$defaults = $this->fieldDefaults($name);
 		$options  = array_merge($defaults, $options);
 
-		$this->fields[] = new FormField(...$options);
+		$this->fields[$name] = new FormField(...$options);
+	}
+
+	public function addFieldsFromSchema(): void
+	{
+		$properties = array_keys($this->schemaData->properties);
+		foreach ($properties as $property) {
+			$this->addField(['name' => $property]);
+		}
 	}
 
 	public function __toString()
