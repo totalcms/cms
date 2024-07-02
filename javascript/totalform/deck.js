@@ -43,21 +43,21 @@ class Deck extends TotalField {
     initSVGBoxes(card) {
         const nodes = card.getElementsByClassName("svg-box");
         for (const node of nodes) {
-            const svg = new SVGField(node, JSON.parse(node.dataset.settings||"{}"));
+            const svg = new SVGField(node, JSON.parse(node.dataset.options||"{}"));
         }
     }
 
     initDatePickers(card) {
         const nodes = card.getElementsByClassName("date-box");
         for (const node of nodes) {
-            const picker = new DatePicker(node, JSON.parse(node.dataset.settings||"{}"));
+            const picker = new DatePicker(node, JSON.parse(node.dataset.options||"{}"));
         }
     }
 
     initRangeSliders(card) {
         const nodes = card.getElementsByClassName("range-slider");
         for (const node of nodes) {
-            const slider = new RangeSlider(node, JSON.parse(node.dataset.settings||"{}"));
+            const slider = new RangeSlider(node, JSON.parse(node.dataset.options||"{}"));
         }
     }
 

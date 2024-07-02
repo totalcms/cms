@@ -56,7 +56,7 @@ class FormField
 		if (!empty($this->settings)) {
 			$json = json_encode($this->settings);
 			if ($json) {
-				$formFieldAtrributes['data-settings'] = $json;
+				$formFieldAtrributes['data-options'] = $json;
 			}
 		}
 
