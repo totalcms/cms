@@ -10,7 +10,7 @@
 
     <div class="form-field {{ field }}-field {{ args.class }}"
 		data-type="{{ field }}"
-		{% if args.options %}data-options="{{ args.options|json_encode }}"{% endif %}
+		{% if args.options %}data-settings="{{ args.options|json_encode }}"{% endif %}
 	>
         {% if field != "checkbox" %} {% if args.label %}
         <label for="field-{{ uuid }}">{{ args.label }}</label>

@@ -193,7 +193,7 @@ export default class TotalForm {
     }
 
     generateFieldObject(field) {
-        const options = JSON.parse(field.dataset.options||"{}");
+        const options = JSON.parse(field.dataset.settings||"{}");
         options.form = this;
 
         switch (field.dataset.type) {

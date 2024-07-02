@@ -12,6 +12,10 @@
 					"type" : "string",
 					"description": "The label for the field."
 				},
+				"placeholder": {
+					"type" : "string",
+					"description": "The placeholder for the field."
+				},
 				"help": {
 					"type" : "string",
 					"description": "The help text for the field."

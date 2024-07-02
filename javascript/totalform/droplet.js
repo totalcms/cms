@@ -25,7 +25,7 @@ export default class Droplet {
 			rules             : {},
 			singleMode        : true,
         };
-		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
+		const dataOptions = this.container.dataset.settings ? JSON.parse(this.container.dataset.settings) : {};
         this.options = Object.assign({}, defaults, options, dataOptions);
 
         // Get the rule set for uploading the file

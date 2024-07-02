@@ -132,7 +132,19 @@ final class TotalForm
 		$schema = $this->schemaData->properties[$property] ?: [];
 		$collection = $this->collectionData->properties[$property] ?: [];
 
-		return array_merge($schema, $collection);
+		$defaults = array_merge($schema, $collection);
+		$defaults['type'] = $defaults['field'];
+
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		$fieldDefaults = ["label", "placeholder", "help", "settings"];
+		foreach (array_keys($defaults) as $key) {
+			if (!in_array($key, $fieldDefaults)) {
+				unset($defaults[$key]);
+			}
+		}
+
+		return $defaults;
 	}
 
 	/** @param array<string,mixed> $options */
@@ -145,8 +157,8 @@ final class TotalForm
 			throw new \Exception("Field '{$options['name']}' not found in schema");
 		}
 
-		// $defaults = $this->fieldDefaults($options['name']);
-		// $options  = array_merge($defaults, $options);
+		$defaults = $this->fieldDefaults($options['name']);
+		$options  = array_merge($defaults, $options);
 
 		$this->fields[] = new FormField(...$options);
 	}

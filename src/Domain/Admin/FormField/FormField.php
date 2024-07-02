@@ -15,7 +15,7 @@ final class FormField
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
-	 * @param array<string,mixed> $options
+	 * @param array<string,mixed> $settings
 	 */
 	public function __construct(
 		private string $name,
@@ -26,7 +26,7 @@ final class FormField
 		private string $help        = '',
 		private string $value       = '',
 		private string $pattern     = '',
-		private array $options      = [],
+		private array $settings      = [],
 		private bool $required      = false,
 		private bool $disabled      = false,
 		private bool $readonly      = false,
@@ -52,10 +52,10 @@ final class FormField
 			'class'     => "form-field {$this->type}-field {$this->class}",
 			'data-type' => $this->type,
 		];
-		if (!empty($this->options)) {
-			$json = json_encode($this->options);
+		if (!empty($this->settings)) {
+			$json = json_encode($this->settings);
 			if ($json) {
-				$formFieldAtrributes['data-options'] = $json;
+				$formFieldAtrributes['data-settings'] = $json;
 			}
 		}
 
