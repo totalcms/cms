@@ -135,12 +135,9 @@ final class TotalForm
 	/** @return array<string,mixed> */
 	public function fieldDefaults(string $property): array
 	{
-		$schemaProps = $this->schemaData->properties;
-		$collectionProps = $this->collectionData->properties;
-
 		// Get the schema and collection settings for a property
-		$schema = isset($schemaProps[$property]) ? $schemaProps[$property] : [];
-		$collection = isset($collectionProps[$property]) ? $collectionProps[$property] : [];
+		$schema = $this->schemaData->properties[$property] ?? [];
+		$collection = $this->collectionData->properties[$property] ?? [];
 
 		$defaults = array_merge($schema, $collection);
 
