@@ -2,15 +2,18 @@
 
 <h1>Total CMS Form Demo</h1>
 
-{% set form  = cms.objectFormBuilder({collection: 'blog'}) %}
+{% set form  = cms.objectFormBuilder({
+	collection: 'feed',
+	id: '2c715fc0-8652-397b-b4a1-0f006a966e9d',
+}) %}
 
 {{ form.addField({
-	type: 'text',
+	field: 'text',
 	name: 'title',
 }) }}
 {{ form.addField({
-	type: 'text',
-	name: 'summary',
+	field: 'text',
+	name: 'content',
 }) }}
 
 {{ form.build() | raw }}

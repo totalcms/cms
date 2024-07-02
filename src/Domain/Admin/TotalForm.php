@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Admin\FormField\FormField;
+use TotalCMS\Domain\Admin\FormField\TextField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -63,7 +64,7 @@ final class TotalForm
 		if (empty($this->id) && isset($_GET['id'])) {
 			$this->id = $_GET['id'];
 		}
-		if (!empty($this->id) && $this->method === 'post') {
+		if (!empty($this->id)) {
 			// If the form is for editing an existing item, change the method to PUT
 			$this->method     = 'put';
 			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
@@ -139,11 +140,10 @@ final class TotalForm
 		$collection = $this->collectionData->properties[$property] ?: [];
 
 		$defaults = array_merge($schema, $collection);
-		$defaults['type'] = $defaults['field']; // Schemas use 'field' instead of 'type'
 
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		$fieldDefaults = ["label", "placeholder", "help", "settings"];
+		$fieldDefaults = ["label", "placeholder", "help", "settings", "field"];
 		$defaults = array_filter($defaults, fn ($key) => in_array($key, $fieldDefaults), ARRAY_FILTER_USE_KEY);
 
 		return $defaults;
@@ -167,6 +167,19 @@ final class TotalForm
 		$defaults = $this->fieldDefaults($name);
 		$options  = array_merge($defaults, $options);
 
+		// Get the value from the object data if it exists
+		if (!empty($this->id)) {
+			$value = $this->objectData->toArray()[$name] ?? '';
+			if (!empty($value)) {
+				$options['value'] = $value;
+			}
+		}
+
+		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field']) . 'Field';
+		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
+			$this->fields[$name] = new $typeClass(...$options);
+			return;
+		}
 		$this->fields[$name] = new FormField(...$options);
 	}
 

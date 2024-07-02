@@ -7,9 +7,10 @@ use TotalCMS\Utils\HTMLUtils;
 /**
  * Total Form Field Builder.
  */
-final class FormField
+class FormField
 {
 	private string $uuid;
+	private string $inputType = 'text';
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -20,13 +21,13 @@ final class FormField
 	public function __construct(
 		private string $name,
 		private string $class       = '',
-		private string $type        = 'text',
+		private string $field       = 'text',
 		private string $label       = '',
 		private string $placeholder = '',
 		private string $help        = '',
 		private string $value       = '',
 		private string $pattern     = '',
-		private array $settings      = [],
+		private array $settings     = [],
 		private bool $required      = false,
 		private bool $disabled      = false,
 		private bool $readonly      = false,
@@ -49,8 +50,8 @@ final class FormField
 		]);
 
 		$formFieldAtrributes = [
-			'class'     => "form-field {$this->type}-field {$this->class}",
-			'data-type' => $this->type,
+			'class'     => "form-field {$this->field}-field {$this->class}",
+			'data-type' => $this->field,
 		];
 		if (!empty($this->settings)) {
 			$json = json_encode($this->settings);
@@ -68,7 +69,7 @@ final class FormField
 	public function inputTemplate(): string
 	{
 		$attributes = [
-			'type'             => $this->type,
+			'type'             => $this->inputType,
 			'id'               => "field-{$this->uuid}",
 			'name'             => $this->name,
 			'required'         => $this->required ? '' : null,
