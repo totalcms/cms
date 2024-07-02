@@ -39,6 +39,7 @@ final class TotalCMSTwigAdapter
 	}
 
 	// Get collection meta data
+	// TODO: REMOVE after refactor
 	public function formDefinitions(string $property, string $collection, ?string $id): array
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collection);
@@ -73,12 +74,14 @@ final class TotalCMSTwigAdapter
 	}
 
 	// store data in the adapter
+	// TODO: REMOVE after refactor
 	public function getData(string $key): mixed
 	{
 		return key_exists($key, $this->storage) ? $this->storage[$key] : null;
 	}
 
 	// store data in the adapter
+	// TODO: REMOVE after refactor
 	public function storeData(string $key, mixed $value): void
 	{
 		$this->storage[$key] = $value;
@@ -87,6 +90,7 @@ final class TotalCMSTwigAdapter
 	}
 
 	// Reset stored collection name
+	// TODO: REMOVE after refactor
 	public function clearStorage(): void
 	{
 		$this->storage = [];

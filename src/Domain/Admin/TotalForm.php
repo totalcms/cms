@@ -133,16 +133,12 @@ final class TotalForm
 		$collection = $this->collectionData->properties[$property] ?: [];
 
 		$defaults = array_merge($schema, $collection);
-		$defaults['type'] = $defaults['field'];
+		$defaults['type'] = $defaults['field']; // Schemas use 'field' instead of 'type'
 
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
 		$fieldDefaults = ["label", "placeholder", "help", "settings"];
-		foreach (array_keys($defaults) as $key) {
-			if (!in_array($key, $fieldDefaults)) {
-				unset($defaults[$key]);
-			}
-		}
+		$defaults = array_filter($defaults, fn ($key) => in_array($key, $fieldDefaults), ARRAY_FILTER_USE_KEY);
 
 		return $defaults;
 	}
