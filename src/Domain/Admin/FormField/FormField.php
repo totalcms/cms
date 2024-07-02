@@ -4,13 +4,13 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Utils\HTMLUtils;
 
-/**
- * Total Form Field Builder.
- */
 class FormField
 {
+	const INPUT_TYPE = "text";
+	const FIELD_TYPE = "text";
+
 	private string $uuid;
-	private string $inputType = 'text';
+	private string $inputType = self::INPUT_TYPE;
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -21,7 +21,7 @@ class FormField
 	public function __construct(
 		private string $name,
 		private string $class       = '',
-		private string $field       = 'text',
+		private string $field       = self::FIELD_TYPE,
 		private string $label       = '',
 		private string $placeholder = '',
 		private string $help        = '',

@@ -3,17 +3,12 @@
 <h1>Total CMS Form Demo</h1>
 
 {% set form  = cms.objectFormBuilder({
-	collection: 'feed',
-	id: '2c715fc0-8652-397b-b4a1-0f006a966e9d',
+	collection: 'email',
 }) %}
 
 {{ form.addField({
-	field: 'text',
-	name: 'title',
-}) }}
-{{ form.addField({
-	field: 'text',
-	name: 'content',
+	field : 'email',
+	name  : 'email',
 }) }}
 
 {{ form.build() | raw }}
