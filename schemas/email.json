@@ -9,7 +9,7 @@
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"   : "Email ID",
 			"help"    : "A unique ID for this email. No spaces or special characters.",
-			"field"   : "slug",
+			"field"   : "id",
 			"factory" : "slug"
         },
         "email": {
