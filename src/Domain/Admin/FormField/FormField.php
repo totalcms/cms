@@ -2,48 +2,88 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use TotalCMS\Utils\HTMLUtils;
+
 /**
  * Total Form Field Builder.
  */
 final class FormField
 {
+	private string $uuid;
+
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 * @SuppressWarnings(PHPMD.Superglobals)
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 *
+	 * @param array<string,mixed> $options
 	 */
-	public function __construct()
-	{
+	public function __construct(
+		private string $name,
+		private string $class       = '',
+		private string $type        = 'text',
+		private string $label       = '',
+		private string $placeholder = '',
+		private string $help        = '',
+		private string $value       = '',
+		private string $pattern     = '',
+		private array $options      = [],
+		private bool $required      = false,
+		private bool $disabled      = false,
+		private bool $readonly      = false,
+		private bool $icon          = true,
+		private int $minlength      = 0,
+	) {
+		$this->uuid = uniqid();
 	}
 
 	public function build(): string
 	{
-		$attributes = [
-			// 'class'           => "totalform {$this->class}",
-			// 'data-schema'     => $this->collectionData->schema,
-			// 'data-collection' => $this->collection,
-			// 'data-method'     => $this->method,
-			// 'data-api'        => $this->api,
-			// 'data-route'      => $this->route,
+		$input = $this->inputTemplate();
+		$icon  = $this->icon ? HTMLUtils::createHTMLElement('div', '', ['class' => 'form-group-icon']) : '';
+
+		$group = HTMLUtils::createHTMLElement('div', $input . $icon, ['class' => 'form-group']);
+		$label = HTMLUtils::createHTMLElement('label', $this->label, ['for' => "field-{$this->uuid}"]);
+		$help  = empty($this->help) ? '' : HTMLUtils::createHTMLElement('p', $this->help, [
+			'class' => 'help',
+			'id'    => "help-{$this->uuid}",
+		]);
+
+		$formFieldAtrributes = [
+			'class'     => "form-field {$this->type}-field {$this->class}",
+			'data-type' => $this->type,
 		];
-
-		return self::createHTMLElement('form', $this->fieldContent(), $attributes);
-	}
-
-	public static function createHTMLElement(string $tag, string $content, array $attributes = []): string
-	{
-		// Start the element with the opening tag
-		$element = "<$tag";
-
-		// Add attributes to the tag
-		foreach ($attributes as $attr => $value) {
-			if ($value !== false) { // Example condition: add attribute if its value is not false
-				$element .= " $attr=\"" . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '"';
+		if (!empty($this->options)) {
+			$json = json_encode($this->options);
+			if ($json) {
+				$formFieldAtrributes['data-options'] = $json;
 			}
 		}
 
-		// Close the opening tag and add content
-		$element .= ">$content</$tag>";
+		$formField = HTMLUtils::createHTMLElement('div', $label . $group . $help, $formFieldAtrributes);
 
-		return $element;
+		return $formField;
+	}
+
+	/** @SuppressWarnings(PHPMD.NPathComplexity) */
+	public function inputTemplate(): string
+	{
+		$attributes = [
+			'type'             => $this->type,
+			'id'               => "field-{$this->uuid}",
+			'name'             => $this->name,
+			'required'         => $this->required ? '' : null,
+			'disabled'         => $this->disabled ? '' : null,
+			'readonly'         => $this->readonly ? '' : null,
+			'minlength'        => $this->minlength > 0 ? (string)$this->minlength : null,
+			'pattern'          => empty($this->pattern) ? null : $this->pattern,
+			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
+			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
+			'value'            => empty($this->value) ? null : htmlspecialchars($this->value, ENT_QUOTES, 'UTF-8'),
+		];
+
+		// Remove null values from the attributes array
+		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+
+		return HTMLUtils::createInlineHTMLElement('input', $attributes);
 	}
 }

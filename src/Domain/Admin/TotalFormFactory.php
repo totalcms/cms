@@ -17,26 +17,27 @@ use TotalCMS\Support\Config;
  */
 final class TotalFormFactory
 {
-    private string $api;
+	private string $api;
 
-    public function __construct(
-        private Config $config,
-        private ObjectFetcher $objectFetcher,
-        private CollectionFetcher $collectionFetcher,
-        private SchemaFetcher $schemaFetcher,
-        private SchemaLister $schemaLister,
-    ) {
-        $this->api = $this->config->api;
-    }
+	public function __construct(
+		private Config $config,
+		private ObjectFetcher $objectFetcher,
+		private CollectionFetcher $collectionFetcher,
+		private SchemaFetcher $schemaFetcher,
+		private SchemaLister $schemaLister,
+	) {
+		$this->api = $this->config->api;
+	}
 
-    public function objectFormBuilder(array $options = []): TotalForm
-    {
-        $options['api']               = $this->api;
-        $options['objectFetcher']     = $this->objectFetcher;
-        $options['collectionFetcher'] = $this->collectionFetcher;
-        $options['schemaFetcher']     = $this->schemaFetcher;
-        $options['schemaLister']      = $this->schemaLister;
+	/** @param array<string,mixed> $options */
+	public function objectFormBuilder(array $options = []): TotalForm
+	{
+		$options['api']               = $this->api;
+		$options['objectFetcher']     = $this->objectFetcher;
+		$options['collectionFetcher'] = $this->collectionFetcher;
+		$options['schemaFetcher']     = $this->schemaFetcher;
+		$options['schemaLister']      = $this->schemaLister;
 
-        return new TotalForm(...$options);
-    }
+		return new TotalForm(...$options);
+	}
 }

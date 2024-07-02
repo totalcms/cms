@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -9,12 +10,14 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Utils\HTMLUtils;
 
 /**
  * Total Form Builder.
  */
 final class TotalForm
 {
+	/** @var array<FormField> */
 	private array $fields = [];
 	private string $route;
 	private CollectionData $collectionData;
@@ -67,8 +70,20 @@ final class TotalForm
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
 		}
 
-		$this->collectionData = $this->collectionFetcher->fetchCollection($this->collection);
+		$collectionData   = $this->collectionFetcher->fetchCollection($this->collection);
+
+		if (is_null($collectionData)) {
+			throw new \Exception('Collection not found for TotalForm');
+		}
+
+		$this->collectionData = $collectionData;
 		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+	}
+
+	public function autoBuild(): string
+	{
+		// TODO: Read in the schema and build the form automatically
+		return '';
 	}
 
 	public function build(): string
@@ -86,41 +101,54 @@ final class TotalForm
 			$attributes['data-id'] = $this->id;
 		}
 		if ($this->newAction) {
-			$attributes['data-new-action'] = json_encode($this->newAction);
+			$json = json_encode($this->newAction);
+			if ($json) {
+				$attributes['data-new-action'] = $json;
+			}
 		}
 		if ($this->editAction) {
-			$attributes['data-edit-action'] = json_encode($this->editAction);
+			$json = json_encode($this->editAction);
+			if ($json) {
+				$attributes['data-edit-action'] = $json;
+			}
 		}
 
-		return self::createHTMLElement('form', $this->fieldContent(), $attributes);
+		return HTMLUtils::createHTMLElement('form', $this->fieldContent(), $attributes);
 	}
 
 	private function fieldContent(): string
 	{
-		return 'Field Content';
-	}
-
-	public function addField(): void
-	{
-		return;
-	}
-
-	public static function createHTMLElement(string $tag, string $content, array $attributes = []): string
-	{
-		// Start the element with the opening tag
-		$element = "<$tag";
-
-		// Add attributes to the tag
-		foreach ($attributes as $attr => $value) {
-			if ($value !== false) { // Example condition: add attribute if its value is not false
-				$element .= " $attr=\"" . htmlspecialchars($value, ENT_QUOTES, 'UTF-8') . '"';
-			}
+		$content = '';
+		foreach ($this->fields as $field) {
+			$content .= $field->build();
 		}
 
-		// Close the opening tag and add content
-		$element .= ">$content</$tag>";
+		return $content;
+	}
 
-		return $element;
+	/** @return array<string,mixed> */
+	public function fieldDefaults(string $property): array
+	{
+		$schema = $this->schemaData->properties[$property] ?: [];
+		$collection = $this->collectionData->properties[$property] ?: [];
+
+		return array_merge($schema, $collection);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function addField(array $options): void
+	{
+		if (!isset($options['name']) || empty($options['name'])) {
+			throw new \Exception('FormField name is required');
+		}
+		if (!isset($this->schemaData->properties[$options['name']])) {
+			throw new \Exception("Field '{$options['name']}' not found in schema");
+		}
+
+		// $defaults = $this->fieldDefaults($options['name']);
+		// $options  = array_merge($defaults, $options);
+
+		$this->fields[] = new FormField(...$options);
 	}
 
 	public function __toString()
