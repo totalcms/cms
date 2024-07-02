@@ -9,11 +9,12 @@ use Illuminate\Support\Collection;
  */
 final class IndexData
 {
-    /** @var Collection<int,array> */
-    public Collection $objects;
+	/** @var Collection<int,array<string,mixed>> */
+	public Collection $objects;
 
-    public function __construct(array $objects = [])
-    {
-        $this->objects = collect($objects);
-    }
+	/** @param array<int,array<string,mixed>> $objects */
+	public function __construct(array $objects = [])
+	{
+		$this->objects = collect($objects);
+	}
 }

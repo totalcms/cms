@@ -13,114 +13,119 @@ use TotalCMS\Support\Config;
 
 final class GlideFactory
 {
-    private StorageAdapterInterface $filesystem;
-    private Config $config;
+	private StorageAdapterInterface $filesystem;
+	private Config $config;
 
-    public const CACHEDIR  = '.cache';
-    public const PALETTE   = 'palette';
-    public const IMG_TYPES = ['jpg', 'jpeg', 'pjpg', 'png', 'gif', 'webp', 'avif'];
+	public const CACHEDIR  = '.cache';
+	public const PALETTE   = 'palette';
+	public const IMG_TYPES = ['jpg', 'jpeg', 'pjpg', 'png', 'gif', 'webp', 'avif'];
 
-    public function __construct(StorageAdapterInterface $filesystem, Config $config)
-    {
-        $this->filesystem = $filesystem;
-        $this->config     = $config;
-    }
+	public function __construct(StorageAdapterInterface $filesystem, Config $config)
+	{
+		$this->filesystem = $filesystem;
+		$this->config     = $config;
+	}
 
-    /**
-     * Get the original image.
-     *
-     * @param string $imagePath
-     *
-     * @return array
-     */
-    public function originalImage(string $imagePath): array
-    {
-        $imageFile = $this->filesystem->readStream($imagePath);
-        $mimeType  = $this->filesystem->mimeType($imagePath);
+	/**
+	 * Get the original image.
+	 *
+	 * @param string $imagePath
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function originalImage(string $imagePath): array
+	{
+		$imageFile = $this->filesystem->readStream($imagePath);
+		$mimeType  = $this->filesystem->mimeType($imagePath);
 
-        return [
-            'stream'   => new Stream($imageFile),
-            'mimeType' => $mimeType ?: 'image/jpeg',
-        ];
-    }
+		return [
+			'stream'   => new Stream($imageFile),
+			'mimeType' => $mimeType ?: 'image/jpeg',
+		];
+	}
 
-    /**
-     * Create a glide server.
-     *
-     * @param string $source
-     * @param ?string $cache
-     * @param ?string $watermark
-     * @param ImageData $imageData
-     *
-     * @return Server
-     */
-    public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null): Server
-    {
-        $glide = ServerFactory::create([
-            'source'                 => $this->filesystem->flysystem(),
-            'cache'                  => $this->filesystem->flysystem(),
-            'watermarks'             => $this->filesystem->flysystem(),
-            'source_path_prefix'     => $source,
-            'cache_path_prefix'      => sprintf('%s/%s', $source, $cache ?? self::CACHEDIR),
-            'watermarks_path_prefix' => $this->watermarkPath($watermark),
-            'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
-            'defaults'               => $this->config->imageworks['defaults'],
-            'presets'                => $this->presets($imageData),
-            'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
-        ]);
+	/**
+	 * Create a glide server.
+	 *
+	 * @param string $source
+	 * @param ?string $cache
+	 * @param ?string $watermark
+	 * @param ImageData $imageData
+	 *
+	 * @return Server
+	 */
+	public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null): Server
+	{
+		$glide = ServerFactory::create([
+			'source'                 => $this->filesystem->flysystem(),
+			'cache'                  => $this->filesystem->flysystem(),
+			'watermarks'             => $this->filesystem->flysystem(),
+			'source_path_prefix'     => $source,
+			'cache_path_prefix'      => sprintf('%s/%s', $source, $cache ?? self::CACHEDIR),
+			'watermarks_path_prefix' => $this->watermarkPath($watermark),
+			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
+			'defaults'               => $this->config->imageworks['defaults'],
+			'presets'                => $this->presets($imageData),
+			'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
+		]);
 
-        return $glide;
-    }
+		return $glide;
+	}
 
-    public function presets(ImageData $imageData): array
-    {
-        $presets = $this->config->imageworks['presets'];
+	/** @return array<string,array<string,mixed>> */
+	public function presets(ImageData $imageData): array
+	{
+		$presets = $this->config->imageworks['presets'];
 
-        foreach ($presets as $key => $preset) {
-            if (array_key_exists('fit', $preset)) {
-                $presets[$key]['fit'] = self::cropFocalpoint($preset['fit'], $imageData->focalpoint);
-            }
-        }
+		foreach ($presets as $key => $preset) {
+			if (array_key_exists('fit', $preset)) {
+				$presets[$key]['fit'] = self::cropFocalpoint($preset['fit'], $imageData->focalpoint);
+			}
+		}
 
-        return $presets;
-    }
+		return $presets;
+	}
 
-    public function watermarkPath(?string $watermark): string
-    {
-        $objectID = $watermark ?? $this->config->imageworks['watermarksGallery'];
+	public function watermarkPath(?string $watermark): string
+	{
+		$objectID = $watermark ?? $this->config->imageworks['watermarksGallery'];
 
-        return sprintf('gallery/%s/gallery', $objectID);
-    }
+		return sprintf('gallery/%s/gallery', $objectID);
+	}
 
-    public static function cropFocalpoint(string $crop, array $focalpoint): string
-    {
-        $newcrop = sprintf('crop-%g-%g', $focalpoint['x'], $focalpoint['y']);
+	/** @param array<string,int> $focalpoint */
+	public static function cropFocalpoint(string $crop, array $focalpoint): string
+	{
+		$newcrop = sprintf('crop-%g-%g', $focalpoint['x'], $focalpoint['y']);
 
-        return str_replace('crop-focalpoint', $newcrop, $crop);
-    }
+		return str_replace('crop-focalpoint', $newcrop, $crop);
+	}
 
-    public static function updateBackgroundColor(string $background, array $imageColors): string
-    {
-        return self::colorFromPalette($background, $imageColors);
-    }
+	/** @param array<string> $imageColors */
+	public static function updateBackgroundColor(string $background, array $imageColors): string
+	{
+		return self::colorFromPalette($background, $imageColors);
+	}
 
-    public static function updateBorderColor(string $border, array $imageColors): string
-    {
-        [$size, $border, $method] = explode(',', $border);
+	/** @param array<string> $imageColors */
+	public static function updateBorderColor(string $border, array $imageColors): string
+	{
+		[$size, $border, $method] = explode(',', $border);
 
-        $border = self::colorFromPalette($border, $imageColors);
+		$border = self::colorFromPalette($border, $imageColors);
 
-        return implode(',', [$size, $border, $method]);
-    }
+		return implode(',', [$size, $border, $method]);
+	}
 
-    // This method is used to get the color from the palette if the color is a palette color
-    private static function colorFromPalette(string $color, array $imageColors): string
-    {
-        if (str_starts_with($color, self::PALETTE)) {
-            $index = (int)str_replace(self::PALETTE, '', $color);
-            $color = isset($imageColors[$index]) ? $imageColors[$index] : $imageColors[0];
-        }
+	/** @param array<string> $imageColors */
+	private static function colorFromPalette(string $color, array $imageColors): string
+	{
+		// This method is used to get the color from the palette if the color is a palette color
+		if (str_starts_with($color, self::PALETTE)) {
+			$index = (int)str_replace(self::PALETTE, '', $color);
+			$color = isset($imageColors[$index]) ? $imageColors[$index] : $imageColors[0];
+		}
 
-        return str_replace('#', '', $color);
-    }
+		return str_replace('#', '', $color);
+	}
 }
