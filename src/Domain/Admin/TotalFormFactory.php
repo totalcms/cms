@@ -104,4 +104,19 @@ final class TotalFormFactory
 
 		return $form->autoBuild();
 	}
+
+	/** @param array<string,mixed> $options */
+	public function toggle(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'toggle',
+			'hideID'     => true,
+			'autosave'   => true,
+		], $options);
+
+		$form = $this->builder($options);
+
+		return $form->autoBuild();
+	}
 }
