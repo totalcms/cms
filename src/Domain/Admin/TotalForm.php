@@ -27,11 +27,12 @@ final class TotalForm
 	private SchemaData $schemaData;
 
 	const FIELD_PROPERTIES = [
+		'default',
+		'field',
+		'help',
 		'label',
 		'placeholder',
-		'help',
 		'settings',
-		'field',
 	];
 
 	/**

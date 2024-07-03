@@ -19,7 +19,8 @@ final class TextareaField extends FormField
 		protected string $label       = '',
 		protected string $placeholder = '',
 		protected string $help        = '',
-		protected string $value       = '',
+		protected mixed $value        = '',
+		protected mixed $default      = '',
 		protected int  $rows          = 0,
 		protected bool $required      = false,
 		protected bool $disabled      = false,
@@ -28,6 +29,11 @@ final class TextareaField extends FormField
 	) {
 		$this->uuid      = uniqid();
 		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
+
+		// Set a default value if one is not provided
+		if (empty($this->value) && !empty($this->default)) {
+			$this->value = $this->default;
+		}
 	}
 
 
@@ -55,6 +61,6 @@ final class TextareaField extends FormField
 	{
 		$attributes = $this->inputDefaultAttributes();
 
-		return HTMLUtils::createHTMLElement('textarea', $this->value ?? "", $attributes);
+		return HTMLUtils::createHTMLElement('textarea', (string)$this->value, $attributes);
 	}
 }

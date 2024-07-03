@@ -25,7 +25,8 @@ class FormField
 		protected string $label       = '',
 		protected string $placeholder = '',
 		protected string $help        = '',
-		protected string $value       = '',
+		protected mixed $value        = '',
+		protected mixed $default      = '',
 		protected string $pattern     = '',
 		protected array $settings     = [],
 		protected bool $required      = false,
@@ -38,6 +39,11 @@ class FormField
 		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
 		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
 		$this->init();
+
+		// Set a default value if one is not provided
+		if (empty($this->value) && !empty($this->default)) {
+			$this->value = $this->default;
+		}
 	}
 
 	public function init(): void
@@ -90,7 +96,7 @@ class FormField
 			'pattern'          => empty($this->pattern) ? null : $this->pattern,
 			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
-			'value'            => empty($this->value) ? null : htmlspecialchars($this->value, ENT_QUOTES, 'UTF-8'),
+			'value'            => empty($this->value) ? null : htmlspecialchars((string)$this->value, ENT_QUOTES, 'UTF-8'),
 		];
 
 		// Remove null values from the attributes array
