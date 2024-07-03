@@ -485,4 +485,12 @@ final class TotalCMSTwigAdapter
     {
         return $this->totalFormFactory->objectFormBuilder($options);
     }
+
+    /** @param array<string,mixed> $options */
+    public function textForm(array $options): string
+    {
+        $form = $this->totalFormFactory->objectFormBuilder($options);
+
+        return $form->autoBuild();
+    }
 }
