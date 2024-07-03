@@ -75,6 +75,20 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function color(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'color',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function text(string $id, array $options = []): string
 	{
 		$options = array_merge([
