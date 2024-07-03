@@ -89,6 +89,36 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function date(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'date',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function datetime(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'date',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options);
+
+		$form->addField('date', ['field' => 'datetime']);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function text(string $id, array $options = []): string
 	{
 		$options = array_merge([

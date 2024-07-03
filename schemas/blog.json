@@ -86,15 +86,14 @@
 			"help"    : "Blog Post updated date",
 			"field"   : "hidden",
 			"factory" : "iso8601",
-			"default" : "now"
+			"default" : "onUpdate"
 		},
 		"date": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"   : "Date",
 			"help"    : "Blog Post date",
 			"field"   : "date",
-			"factory" : "iso8601",
-			"default" : "now"
+			"factory" : "iso8601"
 		},
 		"created": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
@@ -102,7 +101,7 @@
 			"help"    : "Blog Post creation date",
 			"field"   : "hidden",
 			"factory" : "iso8601",
-			"default" : "now"
+			"default" : "onCreate"
 		},
 		"extra2": {
 			"type"    : "string",

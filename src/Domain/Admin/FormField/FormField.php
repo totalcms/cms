@@ -38,12 +38,13 @@ class FormField
 		$this->uuid      = uniqid();
 		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
 		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
-		$this->init();
 
 		// Set a default value if one is not provided
 		if (empty($this->value) && !empty($this->default)) {
 			$this->value = $this->default;
 		}
+
+		$this->init();
 	}
 
 	public function init(): void
