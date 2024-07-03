@@ -5,6 +5,10 @@
 //------------------------------
 .totalform {
 
+	&:not(:first-of-type) {
+		margin-top : 1rem;
+	}
+
 	input:focus,
 	textarea:focus,
 	input:focus + .form-group-icon,
@@ -30,7 +34,7 @@
 	position : relative;
 	width    : 100%;
 
-	&:not(:first-of-type) {
+	&:is(:visible):not(:first-of-type) {
 		margin-top : 1rem;
 	}
 
@@ -60,11 +64,18 @@
 		--totalform-icon-bg      : var(--totalform-nearwhite);
 		--totalform-icon-color   : var(--totalform-darkgray);
 	}
+	&.hidden-field {
+		display : none;
+	}
 }
 
 .cms-save,
 .cms-delete {
 	cursor : pointer;
+
+	.totalform & {
+		margin-top: 1rem;
+	}
 }
 
 .totalform:not(.edit-mode) .cms-delete {

@@ -6,11 +6,10 @@ use TotalCMS\Utils\HTMLUtils;
 
 class FormField
 {
-	const INPUT_TYPE = "text";
-	const FIELD_TYPE = "text";
+	protected string $defaultInputType = 'text';
+	protected string $defaultFieldType = 'text';
 
-	private string $uuid;
-	private string $inputType = self::INPUT_TYPE;
+	protected string $uuid;
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -19,22 +18,30 @@ class FormField
 	 * @param array<string,mixed> $settings
 	 */
 	public function __construct(
-		private string $name,
-		private string $class       = '',
-		private string $field       = self::FIELD_TYPE,
-		private string $label       = '',
-		private string $placeholder = '',
-		private string $help        = '',
-		private string $value       = '',
-		private string $pattern     = '',
-		private array $settings     = [],
-		private bool $required      = false,
-		private bool $disabled      = false,
-		private bool $readonly      = false,
-		private bool $icon          = true,
-		private int $minlength      = 0,
+		protected string $name,
+		protected string $class       = '',
+		protected string $field       = '',
+		protected string $inputType   = '',
+		protected string $label       = '',
+		protected string $placeholder = '',
+		protected string $help        = '',
+		protected string $value       = '',
+		protected string $pattern     = '',
+		protected array $settings     = [],
+		protected bool $required      = false,
+		protected bool $disabled      = false,
+		protected bool $readonly      = false,
+		protected bool $icon          = true,
+		protected int $minlength      = 0,
 	) {
-		$this->uuid = uniqid();
+		$this->uuid      = uniqid();
+		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
+		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
+		$this->init();
+	}
+
+	public function init(): void
+	{
 	}
 
 	public function build(): string
@@ -65,8 +72,12 @@ class FormField
 		return $formField;
 	}
 
-	/** @SuppressWarnings(PHPMD.NPathComplexity) */
-	public function inputTemplate(): string
+	/**
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 *
+	 * @return array<string,?string>
+	 */
+	public function inputDefaultAttributes(): array
 	{
 		$attributes = [
 			'type'             => $this->inputType,
@@ -84,6 +95,13 @@ class FormField
 
 		// Remove null values from the attributes array
 		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+
+		return $attributes;
+	}
+
+	public function inputTemplate(): string
+	{
+		$attributes = $this->inputDefaultAttributes();
 
 		return HTMLUtils::createInlineHTMLElement('input', $attributes);
 	}

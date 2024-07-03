@@ -155,6 +155,10 @@
         background-color : oklch(var(--totalform-nearwhite));
         border           : none;
         box-shadow       : none;
+
+		&[readonly] {
+			background-color : oklch(var(--totalform-lightgray));
+		}
     }
 }
 

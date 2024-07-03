@@ -11,190 +11,266 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Admin\FormField\DeleteButton;
 
 /**
  * Total Form Builder.
  */
 final class TotalForm
 {
-    /** @var array<FormField> */
-    private array $fields = [];
-    private string $route;
-    private CollectionData $collectionData;
-    private ObjectData $objectData;
-    private SchemaData $schemaData;
+	/** @var array<FormField> */
+	private array $fields = [];
+	private string $route;
+	private CollectionData $collectionData;
+	private ObjectData $objectData;
+	private SchemaData $schemaData;
 
-    /**
-     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-     * @SuppressWarnings(PHPMD.Superglobals)
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-     */
-    public function __construct(
-        private ObjectFetcher $objectFetcher,
-        private CollectionFetcher $collectionFetcher,
-        private SchemaFetcher $schemaFetcher,
-        private SchemaLister $schemaLister,
-        private string $api,
-        private string $collection,
-        private string $method     = 'post',
-        private string $id         = '',
-        private string $class      = '',
-        private string $helpStyle  = '',
-        private string $newAction  = '',
-        private string $editAction = '',
-        private bool $autosave     = false,
-        private bool $helpOnHover  = false,
-        private bool $helpOnFocus  = false,
-    ) {
-        if ($this->autosave === true) {
-            $this->class .= ' autosave';
-        }
-        if ($this->helpOnHover === true) {
-            $this->class .= ' help-on-hover';
-        }
-        if ($this->helpOnFocus === true) {
-            $this->class .= ' help-on-focus';
-        }
-        if (!empty($this->helpStyle)) {
-            $this->class .= " help-{$this->helpStyle}";
-        }
+	const FIELD_PROPERTIES = [
+		'label',
+		'placeholder',
+		'help',
+		'settings',
+		'field',
+	];
 
-        $this->route = "/collections/{$this->collection}";
+	/**
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings(PHPMD.Superglobals)
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 */
+	public function __construct(
+		private ObjectFetcher $objectFetcher,
+		private CollectionFetcher $collectionFetcher,
+		private SchemaFetcher $schemaFetcher,
+		private SchemaLister $schemaLister,
+		private string $api,
+		private string $collection,
+		private string $method     = 'post',
+		private string $id         = '',
+		private string $class      = '',
+		private string $helpStyle  = '',
+		private string $newAction  = '',
+		private string $editAction = '',
+		private string $save       = '',
+		private string $delete     = '',
+		private bool $autosave     = false,
+		private bool $helpOnHover  = false,
+		private bool $helpOnFocus  = false,
+		private bool $hideID       = false,
+	) {
+		if ($this->autosave === true) {
+			$this->class .= ' autosave';
+		}
+		if ($this->helpOnHover === true) {
+			$this->class .= ' help-on-hover';
+		}
+		if ($this->helpOnFocus === true) {
+			$this->class .= ' help-on-focus';
+		}
+		if (!empty($this->helpStyle)) {
+			$this->class .= " help-{$this->helpStyle}";
+		}
 
-        if (empty($this->id) && isset($_GET['id'])) {
-            $this->id = $_GET['id'];
-        }
-        if (!empty($this->id)) {
-            // If the form is for editing an existing item, change the method to PUT
-            $this->method     = 'put';
-            $this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
-            $this->route      = "/collections/{$this->collection}/{$this->id}";
-        }
+		$this->route = "/collections/{$this->collection}";
 
-        $collectionData   = $this->collectionFetcher->fetchCollection($this->collection);
+		if (empty($this->id) && isset($_GET['id'])) {
+			$this->id = $_GET['id'];
+		}
+		if (!empty($this->id)) {
+			// If the form is for editing an existing item, change the method to PUT
+			$this->method     = 'put';
+			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
+			$this->route      = "/collections/{$this->collection}/{$this->id}";
+		}
 
-        if (is_null($collectionData)) {
-            throw new \Exception('Collection not found for TotalForm');
-        }
+		$collectionData   = $this->collectionFetcher->fetchCollection($this->collection);
 
-        $this->collectionData = $collectionData;
-        $this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
-    }
+		if (is_null($collectionData)) {
+			throw new \Exception('Collection not found for TotalForm');
+		}
 
-    public function autoBuild(): string
-    {
-        $this->addFieldsFromSchema();
+		$this->collectionData = $collectionData;
+		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+	}
 
-        return $this->build();
-    }
+	/** @param array<string,string> $options */
+	public function autoBuild(array $options = []): string
+	{
+		$this->addFieldsFromSchema();
 
-    public function build(): string
-    {
-        $attributes = [
-            'class'           => "totalform {$this->class}",
-            'data-schema'     => $this->collectionData->schema,
-            'data-collection' => $this->collection,
-            'data-method'     => $this->method,
-            'data-api'        => $this->api,
-            'data-route'      => $this->route,
-        ];
+		return $this->build();
+	}
 
-        if (!empty($this->id)) {
-            $attributes['data-id'] = $this->id;
-        }
-        if ($this->newAction) {
-            $json = json_encode($this->newAction);
-            if ($json) {
-                $attributes['data-new-action'] = $json;
-            }
-        }
-        if ($this->editAction) {
-            $json = json_encode($this->editAction);
-            if ($json) {
-                $attributes['data-edit-action'] = $json;
-            }
-        }
+	public function build(): string
+	{
+		$attributes = [
+			'class'           => "totalform {$this->class}",
+			'data-schema'     => $this->collectionData->schema,
+			'data-collection' => $this->collection,
+			'data-method'     => $this->method,
+			'data-api'        => $this->api,
+			'data-route'      => $this->route,
+		];
 
-        return HTMLUtils::createHTMLElement('form', $this->fieldContent(), $attributes);
-    }
+		if (!empty($this->id)) {
+			$attributes['data-id'] = $this->id;
+		}
+		if ($this->newAction) {
+			$json = json_encode($this->newAction);
+			if ($json) {
+				$attributes['data-new-action'] = $json;
+			}
+		}
+		if ($this->editAction) {
+			$json = json_encode($this->editAction);
+			if ($json) {
+				$attributes['data-edit-action'] = $json;
+			}
+		}
 
-    private function fieldContent(): string
-    {
-        if (!isset($this->fields['id'])) {
-            // Add the ID field if it does not exist
-            $this->addField(['name' => 'id']);
-        }
+		$content = $this->fieldContent();
+		$content .= $this->saveButton();
+		$content .= $this->deleteButton();
 
-        $content = '';
-        foreach ($this->fields as $field) {
-            $content .= $field->build();
-        }
+		return HTMLUtils::createHTMLElement('form', $content, $attributes);
+	}
 
-        return $content;
-    }
+	private function saveButton(): string
+	{
+		if (empty($this->save)) {
+			return '';
+		}
 
-    /** @return array<string,mixed> */
-    public function fieldDefaults(string $property): array
-    {
-        // Get the schema and collection settings for a property
-        $schema     = $this->schemaData->properties[$property] ?? [];
-        $collection = $this->collectionData->properties[$property] ?? [];
+		$saveButton = new SaveButton($this->save);
 
-        $defaults = array_merge($schema, $collection);
+		return $saveButton->build();
+	}
 
-        // Remove any keys that are not needed for the field
-        // Since PHP will unknown named parameters
-        $fieldDefaults = ['label', 'placeholder', 'help', 'settings', 'field'];
-        $defaults      = array_filter($defaults, fn ($key) => in_array($key, $fieldDefaults), ARRAY_FILTER_USE_KEY);
+	private function deleteButton(): string
+	{
+		if (empty($this->delete)) {
+			return '';
+		}
 
-        return $defaults;
-    }
+		$deleteButton = new DeleteButton($this->delete);
 
-    /** @param array<string,mixed> $options */
-    public function addField(array $options): void
-    {
-        if (!isset($options['name']) || empty($options['name'])) {
-            // TODO: Add some sort of warning here to be logged. This is not a critical error.
-            // throw new \Exception('FormField name is required');
-            return;
-        }
-        $name = $options['name'];
-        if (!isset($this->schemaData->properties[$name])) {
-            // TODO: Add some sort of warning here to be logged. This is not a critical error.
-            // throw new \Exception("Field '{$name}' not found in schema");
-            return;
-        }
+		return $deleteButton->build();
+	}
 
-        $defaults = $this->fieldDefaults($name);
-        $options  = array_merge($defaults, $options);
+	private function fieldContent(): string
+	{
+		if (!isset($this->fields['id'])) {
+			// Add the ID field if it does not exist
+			$this->addField('id');
+		}
 
-        // Get the value from the object data if it exists
-        if (!empty($this->id)) {
-            $value = $this->objectData->toArray()[$name] ?? '';
-            if (!empty($value)) {
-                $options['value'] = $value;
-            }
-        }
+		$content = '';
+		foreach ($this->fields as $field) {
+			$content .= $field->build();
+		}
 
-        $typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field']) . 'Field';
-        if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
-            $this->fields[$name] = new $typeClass(...$options);
+		return $content;
+	}
 
-            return;
-        }
-        $this->fields[$name] = new FormField(...$options);
-    }
+	/**
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function filterFieldProperties(array $properties): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($properties, fn ($key) => in_array($key, self::FIELD_PROPERTIES), ARRAY_FILTER_USE_KEY);
+	}
 
-    public function addFieldsFromSchema(): void
-    {
-        $properties = array_keys($this->schemaData->properties);
-        foreach ($properties as $property) {
-            $this->addField(['name' => $property]);
-        }
-    }
+	/** @return array<string,mixed> */
+	public function fieldDefaults(string $property): array
+	{
+		// Get the schema and collection settings for a property
+		$schema     = $this->schemaData->properties[$property] ?? [];
+		$collection = $this->collectionData->properties[$property] ?? [];
 
-    public function __toString()
-    {
-        return $this->build();
-    }
+		$defaults = array_merge($schema, $collection);
+
+		return $this->filterFieldProperties($defaults);
+	}
+
+	/**
+	 * Get the properties for a object from customProperties in the collection meta data
+	 *
+	 * @return array<string,mixed>
+	 * */
+	public function objectFieldProperties(string $property): array
+	{
+		if (empty($this->id)) {
+			return [];
+		}
+
+		// Get the schema and collection settings for a property
+		$properties = $this->collectionData->customProperties[$this->id][$property] ?? [];
+
+		return $this->filterFieldProperties($properties);
+	}
+
+	/**
+	 * @param array<string,mixed> $options
+	 * @return array<string,mixed>
+	 */
+	private function buildFieldOptions(string $name, array $options = [])
+	{
+		$defaults = $this->fieldDefaults($name);
+		$options  = array_merge($defaults, $options);
+
+		// Set the name of the field
+		$options['name'] = $name;
+
+		// Get the value from the object data if it exists
+		if (!empty($this->id)) {
+			$options = array_merge($options, $this->objectFieldProperties($name));
+
+			$value = $this->objectData->toArray()[$name] ?? '';
+			if (!empty($value)) {
+				$options['value'] = $value;
+			}
+			if ($this->hideID && $name === 'id') {
+				// Hide the ID field if it exists
+				$options['field'] = 'hidden';
+			}
+		}
+		return $options;
+	}
+
+	/** @param array<string,mixed> $options */
+	public function addField(string $name, array $options = []): void
+	{
+		if (!isset($this->schemaData->properties[$name])) {
+			// Field '{$name}' not found in schema
+			return;
+		}
+
+		$options = $this->buildFieldOptions($name, $options);
+
+		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field']) . 'Field';
+		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
+			$this->fields[$name] = new $typeClass(...$options);
+
+			return;
+		}
+		$this->fields[$name] = new FormField(...$options);
+	}
+
+	public function addFieldsFromSchema(): void
+	{
+		$properties = array_keys($this->schemaData->properties);
+		foreach ($properties as $property) {
+			$this->addField($property);
+		}
+	}
+
+	public function __toString()
+	{
+		return $this->build();
+	}
 }
