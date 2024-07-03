@@ -9,24 +9,6 @@ class CheckboxField extends FormField
 	protected string $defaultInputType = 'checkbox';
 	protected string $defaultFieldType = 'checkbox';
 
-	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 */
-	public function __construct(
-		protected string $name,
-		protected string $class     = '',
-		protected string $field     = '',
-		protected string $inputType = '',
-		protected string $label     = '',
-		protected string $help      = '',
-		protected string $value     = '',
-		protected bool $required    = false,
-	) {
-		$this->uuid      = uniqid();
-		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
-		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
-	}
-
 	public function build(): string
 	{
 		$input = $this->inputTemplate();
