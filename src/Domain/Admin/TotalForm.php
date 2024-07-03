@@ -77,10 +77,10 @@ final class TotalForm
 		if (empty($this->id) && isset($_GET['id'])) {
 			$this->id = $_GET['id'];
 		}
-		if (!empty($this->id)) {
+		if (!empty($this->id) && $this->objectFetcher->existsObject($this->collection, $this->id)) {
 			// If the form is for editing an existing item, change the method to PUT
-			$this->method     = 'put';
 			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
+			$this->method     = 'put';
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
 		}
 
@@ -230,13 +230,17 @@ final class TotalForm
 		if (!empty($this->id)) {
 			$options = array_merge($options, $this->objectFieldProperties($name));
 
-			$value = $this->objectData->toArray()[$name] ?? '';
-			if (!empty($value)) {
-				$options['value'] = $value;
+			if ($name === 'id') {
+				$options['value'] = $this->id;
+				// Hide the ID field if requested
+				if ($this->hideID) $options['field'] = 'hidden';
 			}
-			if ($this->hideID && $name === 'id') {
-				// Hide the ID field if it exists
-				$options['field'] = 'hidden';
+
+			if (isset($this->objectData)) {
+				$value = $this->objectData->toArray()[$name] ?? '';
+				if (!empty($value)) {
+					$options['value'] = $value;
+				}
 			}
 		}
 		return $options;

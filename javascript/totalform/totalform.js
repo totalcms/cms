@@ -392,10 +392,13 @@ export default class TotalForm {
 		this.form.dataset.method = this.method;
 		this.form.classList.add("edit-mode");
 
-		// The ID cannot be changed in edit mode
+		// The ID cannot be changed in edit form
 		const idField = this.fields.filter(field => field.property === "id").shift();
-		idField.disable();
-		idField.lock();
+		// if ID field is hidden, these may not exist
+		if (idField.disable) {
+			idField.disable();
+			idField.lock();
+		}
 
 		// Update the API to the edit endpoint
 		this.route = `${this.route}/${this.id}`;
