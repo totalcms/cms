@@ -31,6 +31,7 @@ final class TotalFormFactory
 		$this->api = $this->config->api;
 	}
 
+
 	/** @param array<string,mixed> $options */
 	public function builder(array $options = []): TotalForm
 	{
@@ -55,6 +56,23 @@ final class TotalFormFactory
 		return $button->build();
 	}
 
+	/** @param array<string,mixed> $options */
+	public function checkbox(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'toggle',
+			'hideID'     => true,
+			'autosave'   => true,
+		], $options);
+
+		$form = $this->builder($options);
+
+		$form->addField('id');
+		$form->addField('status', ['field' => 'checkbox']);
+
+		return $form->build();
+	}
 
 	/** @param array<string,mixed> $options */
 	public function text(string $id, array $options = []): string
@@ -79,20 +97,6 @@ final class TotalFormFactory
 		$options = array_merge([
 			'id'         => $id,
 			'collection' => 'text',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options);
-
-		return $form->autoBuild();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function email(string $id, array $options = []): string
-	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'email',
 			'hideID'     => true,
 		], $options);
 
