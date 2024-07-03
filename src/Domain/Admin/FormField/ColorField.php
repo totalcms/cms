@@ -7,12 +7,8 @@ final class ColorField extends FormField
 	protected string $defaultInputType = 'color';
 	protected string $defaultFieldType = 'color';
 
-	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
-	 *
-	 * @return array<string,?string>
-	 */
-	protected function inputDefaultAttributes(): array
+	/** @SuppressWarnings(PHPMD.ElseExpression) */
+	public function init(): void
 	{
 		if (empty($this->value)) {
 			$this->value = null;
@@ -21,7 +17,11 @@ final class ColorField extends FormField
 		} else {
 			$this->value = (string)$this->value;
 		}
+	}
 
+	/** @return array<string,?string> */
+	protected function inputDefaultAttributes(): array
+	{
 		$attributes = [
 			'id'               => "field-{$this->uuid}",
 			'name'             => $this->name,
