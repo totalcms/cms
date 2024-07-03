@@ -88,7 +88,7 @@ return [
 
 	// The data dir iterator factory
 	StorageFilesystemAdapter::class => function (ContainerInterface $container) {
-		$rootPath   = $container->get(Config::class)->dataDir;
+		$rootPath   = $container->get(Config::class)->datadir;
 		$filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
 
 		return new StorageFilesystemAdapter($filesystem);
