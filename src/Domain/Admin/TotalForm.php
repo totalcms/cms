@@ -162,7 +162,7 @@ final class TotalForm
 	{
 		if (!isset($this->fields['id'])) {
 			// Add the ID field if it does not exist
-			$this->addField('id');
+			$this->addField('id', ["required" => true]);
 		}
 
 		$content = '';

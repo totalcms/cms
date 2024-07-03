@@ -11,7 +11,6 @@ final class IdField extends FormField
 	{
 		if (!empty($this->value)) {
 			$this->readonly = true;
-			$this->disabled = true;
 		}
 	}
 }

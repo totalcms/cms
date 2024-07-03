@@ -77,7 +77,7 @@ class FormField
 	 *
 	 * @return array<string,?string>
 	 */
-	public function inputDefaultAttributes(): array
+	protected function inputDefaultAttributes(): array
 	{
 		$attributes = [
 			'type'             => $this->inputType,

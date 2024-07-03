@@ -71,11 +71,8 @@
 
 .cms-save,
 .cms-delete {
-	cursor : pointer;
-
-	.totalform & {
-		margin-top: 1rem;
-	}
+	cursor     : pointer;
+	margin-top : 1rem;
 }
 
 .totalform:not(.edit-mode) .cms-delete {
