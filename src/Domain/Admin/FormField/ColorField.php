@@ -10,6 +10,8 @@ final class ColorField extends FormField
 	/** @SuppressWarnings(PHPMD.ElseExpression) */
 	public function init(): void
 	{
+		parent::init();
+
 		if (empty($this->value)) {
 			$this->value = null;
 		} elseif (is_array($this->value)) {
@@ -20,7 +22,7 @@ final class ColorField extends FormField
 	}
 
 	/** @return array<string,?string> */
-	protected function inputDefaultAttributes(): array
+	protected function formFieldAttributes(): array
 	{
 		$attributes = [
 			'id'               => "field-{$this->uuid}",

@@ -38,7 +38,7 @@ final class TextareaField extends FormField
 
 
 	/** @return array<string,string> */
-	protected function inputDefaultAttributes(): array
+	protected function formFieldAttributes(): array
 	{
 		$attributes = [
 			'id'               => "field-{$this->uuid}",
@@ -57,9 +57,9 @@ final class TextareaField extends FormField
 		return $attributes;
 	}
 
-	public function inputTemplate(): string
+	public function buildFormField(): string
 	{
-		$attributes = $this->inputDefaultAttributes();
+		$attributes = $this->formFieldAttributes();
 
 		return HTMLUtils::createHTMLElement('textarea', (string)$this->value, $attributes);
 	}

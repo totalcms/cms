@@ -10,6 +10,8 @@ class DateField extends FormField
 
 	public function init(): void
 	{
+		parent::init();
+
 		if (!empty($this->value)) {
 			$this->value = date($this->dateFormat, strtotime($this->value));
 		}

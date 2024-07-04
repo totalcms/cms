@@ -9,6 +9,8 @@ final class IdField extends FormField
 
 	public function init(): void
 	{
+		parent::init();
+
 		if ($this->name === 'id') {
 			$this->required = true;
 		}

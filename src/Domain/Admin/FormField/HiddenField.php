@@ -9,6 +9,7 @@ final class HiddenField extends FormField
 
 	public function init(): void
 	{
+		parent::init();
 		$this->icon  = false;
 		$this->label = '';
 		$this->help  = '';

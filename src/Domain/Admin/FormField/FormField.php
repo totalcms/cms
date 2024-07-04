@@ -35,6 +35,11 @@ class FormField
 		protected bool $icon          = true,
 		protected int $minlength      = 0,
 	) {
+		$this->init();
+	}
+
+	public function init(): void
+	{
 		$this->uuid      = uniqid();
 		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
 		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
@@ -43,17 +48,11 @@ class FormField
 		if (empty($this->value) && !empty($this->default)) {
 			$this->value = $this->default;
 		}
-
-		$this->init();
-	}
-
-	public function init(): void
-	{
 	}
 
 	public function build(): string
 	{
-		$input = $this->inputTemplate();
+		$input = $this->buildFormField();
 		$icon  = $this->icon ? HTMLUtils::createHTMLElement('div', '', ['class' => 'form-group-icon']) : '';
 
 		$group = HTMLUtils::createHTMLElement('div', $input . $icon, ['class' => 'form-group']);
@@ -84,7 +83,7 @@ class FormField
 	 *
 	 * @return array<string,?string>
 	 */
-	protected function inputDefaultAttributes(): array
+	protected function formFieldAttributes(): array
 	{
 		$attributes = [
 			'type'             => $this->inputType,
@@ -106,9 +105,9 @@ class FormField
 		return $attributes;
 	}
 
-	public function inputTemplate(): string
+	public function buildFormField(): string
 	{
-		$attributes = $this->inputDefaultAttributes();
+		$attributes = $this->formFieldAttributes();
 
 		return HTMLUtils::createInlineHTMLElement('input', $attributes);
 	}

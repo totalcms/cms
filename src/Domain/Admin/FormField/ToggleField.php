@@ -11,7 +11,7 @@ final class ToggleField extends CheckboxField
 
 	public function build(): string
 	{
-		$input = $this->inputTemplate();
+		$input = $this->buildFormField();
 
 		$switchLabel = HTMLUtils::createHTMLElement('label', $this->label, [
 			'for'         => "field-{$this->uuid}",
