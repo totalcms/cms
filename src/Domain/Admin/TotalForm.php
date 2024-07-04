@@ -66,9 +66,6 @@ final class TotalForm
 		private bool $helpOnFocus   = false,
 		private bool $hideID        = false,
 	) {
-		$this->initClass();
-		$this->initCollectionData();
-
 		$this->route = "/collections/{$this->collection}";
 
 		if (empty($this->id) && isset($_GET['id'])) {
@@ -80,6 +77,9 @@ final class TotalForm
 			$this->method     = 'PUT';
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
 		}
+
+		$this->initClass();
+		$this->initCollectionData();
 	}
 
 	private function initClass(): void
@@ -95,6 +95,9 @@ final class TotalForm
 		}
 		if (!empty($this->helpStyle)) {
 			$this->class .= " help-{$this->helpStyle}";
+		}
+		if ($this->method === 'PUT') {
+			$this->class .= ' edit-mode';
 		}
 	}
 
