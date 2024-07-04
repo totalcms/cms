@@ -66,7 +66,8 @@ final class ImageGenerator
 				$imageData = array_pop($galleryData->images);
 				break;
 			case 'random':
-				$imageData = $galleryData->images[array_rand($galleryData->images)];
+				$randomKey = mt_rand(0, count($galleryData->images) - 1);
+				$imageData = $galleryData->images[$randomKey];
 				break;
 			case 'featured':
 				usort($galleryData->images, fn ($a, $b) => $a['featured'] <=> $b['featured']);
