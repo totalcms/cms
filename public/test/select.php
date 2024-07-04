@@ -9,10 +9,9 @@
 	}
 }) }}
 
-{% set selectform = cms.form.builder({
-	id         : 'customselect',
-	collection : 'text',
-	hideID     : true,
+{% set selectform = cms.form.builder('text', {
+	id     : 'customselect',
+	hideID : true,
 }) %}
 
 {{ selectform.addField('text', {

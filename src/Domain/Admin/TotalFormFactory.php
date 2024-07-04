@@ -32,8 +32,9 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function builder(array $options = []): TotalForm
+	public function builder(string $collection, array $options = []): TotalForm
 	{
+		$options['collection']        = $collection;
 		$options['api']               = $this->api;
 		$options['objectFetcher']     = $this->objectFetcher;
 		$options['collectionFetcher'] = $this->collectionFetcher;
@@ -67,7 +68,7 @@ final class TotalFormFactory
 			'autosave'   => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		$form->addField('id');
 		$form->addField('status', ['field' => 'checkbox']);
@@ -84,7 +85,7 @@ final class TotalFormFactory
 			'hideID'     => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		return $form->autoBuild();
 	}
@@ -98,7 +99,7 @@ final class TotalFormFactory
 			'hideID'     => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		return $form->autoBuild();
 	}
@@ -112,11 +113,25 @@ final class TotalFormFactory
 			'hideID'     => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		$form->addField('date', ['field' => 'datetime']);
 
 		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function number(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'number',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options['collection'], $options);
+
+		return $form->autoBuild();
 	}
 
 	/** @param array<string,mixed> $options */
@@ -128,7 +143,7 @@ final class TotalFormFactory
 			'hideID'     => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		$form->addField('id');
 		$form->addField('text', ['field' => 'select']);
@@ -145,7 +160,7 @@ final class TotalFormFactory
 			'hideID'     => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		$form->addField('id');
 		$form->addField('text', ['field' => 'text']);
@@ -162,7 +177,7 @@ final class TotalFormFactory
 			'hideID'     => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		return $form->autoBuild();
 	}
@@ -177,7 +192,7 @@ final class TotalFormFactory
 			'autosave'   => true,
 		], $options);
 
-		$form = $this->builder($options);
+		$form = $this->builder($options['collection'], $options);
 
 		return $form->autoBuild();
 	}
