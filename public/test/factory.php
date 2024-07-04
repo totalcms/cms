@@ -11,10 +11,10 @@
 <h2>Blog Posts</h2>
 {% for post in posts %}
 <article>
-	<img=src="{{ cms.imagePath(post.id, {w:600}, 'blog','image') }}" alt="{{ cms.alt(post.id, 'blog','image') }}">
-		<h4>{{ post.title }}</h4>
-		<p>{{ post.created }}</p>
-		<p>{{ post.summary | raw }}</p>
+	<img src="{{ cms.imagePath(post.id, {w:600}, 'blog','image') }}" alt="{{ cms.alt(post.id, 'blog','image') }}" />
+	<h4>{{ post.title }}</h4>
+	<p>{{ post.created }}</p>
+	<p>{{ post.summary }}</p>
 </article>
 {% endfor %}
 
