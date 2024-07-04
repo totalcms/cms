@@ -47,6 +47,10 @@ export default class TotalForm {
 					action : null,
 					link   : null,
 				},
+				delete : {
+					action : null,
+					link   : null,
+				},
 			}
 		};
 		this.options = Object.assign({}, defaults, options);

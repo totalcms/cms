@@ -7,6 +7,7 @@ use TotalCMS\Utils\HTMLUtils;
 class SelectField extends FormField
 {
 	protected string $defaultFieldType = 'select';
+	protected string $defaultInputType = 'select';
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)

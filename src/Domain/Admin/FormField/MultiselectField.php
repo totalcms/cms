@@ -6,6 +6,9 @@ use TotalCMS\Utils\HTMLUtils;
 
 class MultiselectField extends SelectField
 {
+	protected string $defaultFieldType = 'multiselect';
+	protected string $defaultInputType = 'select';
+
 	public function init(): void
 	{
 		parent::init();
@@ -36,5 +39,16 @@ class MultiselectField extends SelectField
 		}
 
 		return $options;
+	}
+
+	protected function placeholderOption(): string
+	{
+		if (empty($this->placeholder)) {
+			return '';
+		}
+
+		$attributes = ['value' => '', 'disabled' => ''];
+
+		return HTMLUtils::createHTMLElement('option', $this->placeholder, $attributes);
 	}
 }

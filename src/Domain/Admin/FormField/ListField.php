@@ -2,8 +2,15 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-final class ListField extends FormField
+class ListField extends MultiselectField
 {
-	protected string $defaultInputType = 'multiselect';
+	protected string $defaultInputType = 'select';
 	protected string $defaultFieldType = 'list';
+
+	public function init(): void
+	{
+		parent::init();
+
+		$this->rows = 6;
+	}
 }
