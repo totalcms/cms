@@ -23,9 +23,11 @@ class SelectField extends FormField
 		protected string $help        = '',
 		protected mixed $value        = '',
 		protected mixed $default      = '',
+		protected int   $rows         = 0,
 		protected array $options      = [],
 		protected bool $required      = false,
 		protected bool $icon          = true,
+		protected bool $multiple      = false,
 	) {
 		$this->init();
 	}
@@ -42,8 +44,9 @@ class SelectField extends FormField
 			'id'               => "field-{$this->uuid}",
 			'name'             => $this->name,
 			'required'         => $this->required ? '' : null,
+			'multiple'         => $this->multiple ? '' : null,
+			'size'             => $this->rows ? (string)$this->rows : null,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
-			'value'            => empty($this->value) ? null : htmlspecialchars((string)$this->value, ENT_QUOTES, 'UTF-8'),
 		];
 
 		// Remove null values from the attributes array
