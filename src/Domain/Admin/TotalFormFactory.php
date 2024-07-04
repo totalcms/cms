@@ -240,4 +240,18 @@ final class TotalFormFactory
 
 		return $form->autoBuild();
 	}
+
+	/** @param array<string,mixed> $options */
+	public function url(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'url',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options['collection'], $options);
+
+		return $form->autoBuild();
+	}
 }
