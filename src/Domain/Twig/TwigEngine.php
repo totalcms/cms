@@ -44,10 +44,10 @@ final class TwigEngine
 		}
 
 		// !BUG: this is not working: https://github.com/twigphp/Twig/issues/4113
-		$this->twig->getRuntime(EscaperRuntime::class)->setSafeClasses([
-			TotalForm::class           => ['html'],
-			TotalCMSTwigAdapter::class => ['html'],
-		]);
+		// $this->twig->getRuntime(EscaperRuntime::class)->setSafeClasses([
+		// 	TotalForm::class           => ['html'],
+		// 	TotalCMSTwigAdapter::class => ['html'],
+		// ]);
 	}
 
 	/** @param array<mixed> $data */
