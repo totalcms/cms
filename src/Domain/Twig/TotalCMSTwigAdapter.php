@@ -355,6 +355,24 @@ final class TotalCMSTwigAdapter
 			return '';
 		}
 
+		return self::buildImageworksAPI($this->api, $id, $image, $imageworks, $options);
+	}
+
+	/**
+	 * @param array<string,mixed> $image
+	 * @param array<string,string> $options
+	 * @param array<string,string|int> $imageworks
+	 */
+	public static function buildImageworksAPI(string $api, string $id, array $image, array $imageworks = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+		], $options);
+
+		$collection = $options['collection'];
+		$property   = $options['property'];
+
 		// Default to original image type
 		$type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
 		// If type is set in imageworks options, use that
@@ -365,7 +383,7 @@ final class TotalCMSTwigAdapter
 		// If type is not in the list of allowed types, default to jpg
 		$type = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
 
-		$api = $this->api . "/imageworks/$collection/$id/$property.$type";
+		$api .= "/imageworks/$collection/$id/$property.$type";
 
 		// cache busting links
 		$imageworks['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));

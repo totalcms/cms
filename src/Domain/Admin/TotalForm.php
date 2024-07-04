@@ -50,10 +50,10 @@ final class TotalForm
 		private CollectionFetcher $collectionFetcher,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
-		private string $api,
-		private string $collection,
+		public  string $api,
+		public  string $collection,
+		public  string $id          = '',
 		private string $method      = 'POST',
-		private string $id          = '',
 		private string $class       = '',
 		private string $helpStyle   = '',
 		private string $save        = '',
@@ -248,6 +248,9 @@ final class TotalForm
 
 		// Set the name of the field
 		$options['name'] = $name;
+
+		// Setup communication between the field and the form
+		$options['form'] = $this;
 
 		// Get the value from the object data if it exists
 		if (!empty($this->id)) {

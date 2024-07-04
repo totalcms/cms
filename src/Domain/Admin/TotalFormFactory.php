@@ -13,6 +13,8 @@ use TotalCMS\Support\Config;
 /**
  * Total Form Builder.
  *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ *
  * This class is a factory for creating TotalForm objects.
  * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
  * This encapsulates the creation of the TotalForm object without depencency injection here.
@@ -129,6 +131,20 @@ final class TotalFormFactory
 		$form->addField('date', ['field' => 'datetime']);
 
 		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function image(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'image',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options['collection'], $options);
+
+		return $form->autoBuild();
 	}
 
 	/** @param array<string,mixed> $options */

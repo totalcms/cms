@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Admin\TotalForm;
 
 class FormField
 {
@@ -18,6 +19,7 @@ class FormField
 	 * @param array<string,mixed> $settings
 	 */
 	public function __construct(
+		protected TotalForm $form,
 		protected string $name,
 		protected string $class       = '',
 		protected string $field       = '',
