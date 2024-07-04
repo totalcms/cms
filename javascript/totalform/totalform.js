@@ -57,6 +57,9 @@ export default class TotalForm {
 		if (this.form.dataset.editAction) {
 			this.options.actions.edit = JSON.parse(this.form.dataset.editAction);
 		}
+		if (this.form.dataset.deleteAction) {
+			this.options.actions.delete = JSON.parse(this.form.dataset.deleteAction);
+		}
 		this.delayActions = 2500;
 
 		this.api = new TotalCMS({
@@ -310,7 +313,7 @@ export default class TotalForm {
             this.options.editLink   = location.origin + location.pathname;
 
             this.api.postAPI(`/collections/${this.collection}/${this.id}`, {}, "DELETE")
-                .then(response => this.afterSave(response))
+                .then(response => this.runDeleteAction(response))
                 .catch(error => this.error(error));
         }
     }
@@ -375,11 +378,15 @@ export default class TotalForm {
 		setTimeout(() => this.runAction(this.options.actions.edit), this.delayActions);
     }
 
+	runDeleteAction() {
+		setTimeout(() => this.runAction(this.options.actions.delete), 250);
+    }
+
     //-------------------------
     // Form States
     //-------------------------
 	isEditMode() {
-        return ("PUT" === this.method.toUpperCase());
+        return ("PUT" === this.method.toUpperCase() && this.form.classList.contains("edit-mode"));
     }
 
     editMode() {

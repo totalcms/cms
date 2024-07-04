@@ -3,7 +3,10 @@
 <h1>Total CMS Text Form Demo</h1>
 
 {{ cms.form.select("myselect", {
-	delete : "Clear Value"
+	delete : "Clear Value",
+	deleteAction : {
+		action : "refresh",
+	}
 }) }}
 
 {% set selectform = cms.form.builder({
