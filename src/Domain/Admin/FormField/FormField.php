@@ -34,6 +34,7 @@ class FormField
 		protected bool $readonly      = false,
 		protected bool $icon          = true,
 		protected int $minlength      = 0,
+		protected int $rows           = 0,
 		protected ?int $min           = null,
 		protected ?int $max           = null,
 		protected ?float $step        = null,

@@ -4,37 +4,10 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Utils\HTMLUtils;
 
-final class TextareaField extends FormField
+class TextareaField extends FormField
 {
 	protected string $defaultFieldType = 'text';
-
-	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-	 */
-	public function __construct(
-		protected string $name,
-		protected string $class       = '',
-		protected string $field       = '',
-		protected string $label       = '',
-		protected string $placeholder = '',
-		protected string $help        = '',
-		protected mixed $value        = '',
-		protected mixed $default      = '',
-		protected int $rows          = 0,
-		protected bool $required      = false,
-		protected bool $disabled      = false,
-		protected bool $readonly      = false,
-		protected bool $icon          = true,
-	) {
-		$this->uuid      = uniqid();
-		$this->field     = empty($this->field) ? $this->defaultFieldType : $this->field;
-
-		// Set a default value if one is not provided
-		if (empty($this->value) && !empty($this->default)) {
-			$this->value = $this->default;
-		}
-	}
+	protected string $defaultInputType = 'textarea';
 
 	/** @return array<string,string> */
 	protected function formFieldAttributes(): array
