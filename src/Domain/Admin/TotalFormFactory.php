@@ -32,6 +32,17 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function factory(string $collection, array $options = []): string
+	{
+		$options['api']        = $this->api;
+		$options['collection'] = $collection;
+
+		$form = new FactoryForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function builder(string $collection, array $options = []): TotalForm
 	{
 		$options['collection']        = $collection;
