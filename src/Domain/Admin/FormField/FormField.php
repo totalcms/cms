@@ -34,6 +34,9 @@ class FormField
 		protected bool $readonly      = false,
 		protected bool $icon          = true,
 		protected int $minlength      = 0,
+		protected ?int $min           = null,
+		protected ?int $max           = null,
+		protected ?float $step        = null,
 	) {
 		$this->init();
 	}
@@ -82,6 +85,7 @@ class FormField
 
 	/**
 	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 *
 	 * @return array<string,?string>
 	 */
@@ -99,6 +103,9 @@ class FormField
 			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
 			'value'            => empty($this->value) ? null : htmlspecialchars((string)$this->value, ENT_QUOTES, 'UTF-8'),
+			'min'              => is_null($this->min) ? null : (string)$this->min,
+			'max'              => is_null($this->max) ? null : (string)$this->max,
+			'step'             => is_null($this->step) ? null : (string)$this->step,
 		];
 
 		// Remove null values from the attributes array
