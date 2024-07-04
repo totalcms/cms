@@ -54,14 +54,18 @@ class SelectField extends FormField
 
 	protected function converOptionsList(): void
 	{
-		if (empty($this->options) || !is_string($this->options[0])) return;
+		if (empty($this->options) || !is_string($this->options[0])) {
+			return;
+		}
 
 		$this->options = array_map(fn ($o) => ['value' => $o, 'label' => $o], $this->options);
 	}
 
 	protected function placeholderOption(): string
 	{
-		if (empty($this->placeholder)) return "";
+		if (empty($this->placeholder)) {
+			return '';
+		}
 
 		$attributes = ['value' => '', 'disabled' => ''];
 		if (empty($this->value)) {
@@ -73,7 +77,7 @@ class SelectField extends FormField
 
 	protected function buildOptions(): string
 	{
-		$options = "";
+		$options = '';
 
 		$options .= $this->placeholderOption();
 

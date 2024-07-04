@@ -10,41 +10,41 @@ use TotalCMS\Transformer\IndexTransformer;
 
 final class IndexGetAction
 {
-    private JsonRenderer $renderer;
-    private IndexReader $service;
+	private JsonRenderer $renderer;
+	private IndexReader $service;
 
-    /**
-     * The constructor.
-     *
-     * @param JsonRenderer $renderer The renderer
-     * @param IndexReader $service The service
-     */
-    public function __construct(JsonRenderer $renderer, IndexReader $service)
-    {
-        $this->renderer = $renderer;
-        $this->service  = $service;
-    }
+	/**
+	 * The constructor.
+	 *
+	 * @param JsonRenderer $renderer The renderer
+	 * @param IndexReader $service The service
+	 */
+	public function __construct(JsonRenderer $renderer, IndexReader $service)
+	{
+		$this->renderer = $renderer;
+		$this->service  = $service;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request The request
-     * @param ResponseInterface $response The response
-     * @param array<string,string> $args The routing arguments
-     *
-     * @return ResponseInterface The response
-     */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
-        $index = $this->service->fetchIndex($args['collection']);
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request The request
+	 * @param ResponseInterface $response The response
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @return ResponseInterface The response
+	 */
+	public function __invoke(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		array $args
+	): ResponseInterface {
+		$index = $this->service->fetchIndex($args['collection']);
 
-        if ($index === null) {
-            return $this->renderer->json($response, []);
-        }
+		if ($index === null) {
+			return $this->renderer->json($response, []);
+		}
 
-        return $this->renderer->jsonItem($response, $index, new IndexTransformer());
-    }
+		return $this->renderer->jsonItem($response, $index, new IndexTransformer());
+	}
 }

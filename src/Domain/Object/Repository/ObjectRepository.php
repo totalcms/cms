@@ -16,96 +16,96 @@ use TotalCMS\Utils\PathUtils;
  */
 final class ObjectRepository extends StorageRepository
 {
-    private ObjectFactory $factory;
-    private SchemaValidator $validator;
-    private CollectionFetcher $collectionFetcher;
+	private ObjectFactory $factory;
+	private SchemaValidator $validator;
+	private CollectionFetcher $collectionFetcher;
 
-    /**
-     * The constructor.
-     *
-     * @param StorageFilesystemAdapter $filesystem The filesystem factory
-     * @param ObjectFactory $factory
-     * @param SchemaValidator $validator
-     * @param CollectionFetcher $collectionFetcher
-     */
-    public function __construct(StorageAdapterInterface $filesystem, ObjectFactory $factory, SchemaValidator $validator, CollectionFetcher $collectionFetcher)
-    {
-        parent::__construct($filesystem);
+	/**
+	 * The constructor.
+	 *
+	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
+	 * @param ObjectFactory $factory
+	 * @param SchemaValidator $validator
+	 * @param CollectionFetcher $collectionFetcher
+	 */
+	public function __construct(StorageAdapterInterface $filesystem, ObjectFactory $factory, SchemaValidator $validator, CollectionFetcher $collectionFetcher)
+	{
+		parent::__construct($filesystem);
 
-        $this->factory           = $factory;
-        $this->validator         = $validator;
-        $this->collectionFetcher = $collectionFetcher;
-    }
+		$this->factory           = $factory;
+		$this->validator         = $validator;
+		$this->collectionFetcher = $collectionFetcher;
+	}
 
-    /**
-     * Save an object.
-     *
-     * @param string $collection
-     * @param ObjectData $object
-     *
-     * @return void
-     */
-    public function saveObject(string $collection, ObjectData $object): void
-    {
-        if (in_array($object->id, ObjectData::RESERVED_NAMES)) {
-            throw new \UnexpectedValueException('Cannot save object with a reserved name:' . $object->id);
-        }
+	/**
+	 * Save an object.
+	 *
+	 * @param string $collection
+	 * @param ObjectData $object
+	 *
+	 * @return void
+	 */
+	public function saveObject(string $collection, ObjectData $object): void
+	{
+		if (in_array($object->id, ObjectData::RESERVED_NAMES)) {
+			throw new \UnexpectedValueException('Cannot save object with a reserved name:' . $object->id);
+		}
 
-        $collectionInfo = $this->collectionFetcher->fetchCollection($collection);
+		$collectionInfo = $this->collectionFetcher->fetchCollection($collection);
 
-        if ($collectionInfo === null) {
-            throw new \UnexpectedValueException('Collection not found: ' . $collection);
-        }
+		if ($collectionInfo === null) {
+			throw new \UnexpectedValueException('Collection not found: ' . $collection);
+		}
 
-        if ($this->validator->validateSchema($object->toArray(), $collectionInfo->schema) === false) {
-            throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
-        }
+		if ($this->validator->validateSchema($object->toArray(), $collectionInfo->schema) === false) {
+			throw new \UnexpectedValueException('Invalid object data provided. Failed schema validation.', 1);
+		}
 
-        $objectFile = $this->buildObjectPath($collection, $object->id);
+		$objectFile = $this->buildObjectPath($collection, $object->id);
 
-        $this->filesystem->write($objectFile, $object->toJson());
-    }
+		$this->filesystem->write($objectFile, $object->toJson());
+	}
 
-    public function existsObject(string $collection, string $id): bool
-    {
-        $objectFile = $this->buildObjectPath($collection, $id);
+	public function existsObject(string $collection, string $id): bool
+	{
+		$objectFile = $this->buildObjectPath($collection, $id);
 
-        return $this->filesystem->fileExists($objectFile);
-    }
+		return $this->filesystem->fileExists($objectFile);
+	}
 
-    public function fetchObject(string $collection, string $id): ?ObjectData
-    {
-        $objectFile = $this->buildObjectPath($collection, $id);
+	public function fetchObject(string $collection, string $id): ?ObjectData
+	{
+		$objectFile = $this->buildObjectPath($collection, $id);
 
-        if ($this->filesystem->fileExists($objectFile)) {
-            $contents = json_decode($this->filesystem->read($objectFile), true);
-            $object   = $this->factory->generateObject($collection, $contents);
+		if ($this->filesystem->fileExists($objectFile)) {
+			$contents = json_decode($this->filesystem->read($objectFile), true);
+			$object   = $this->factory->generateObject($collection, $contents);
 
-            if ($object instanceof ObjectData) {
-                return $object;
-            }
-        }
+			if ($object instanceof ObjectData) {
+				return $object;
+			}
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public function deleteObject(string $collection, string $id): bool
-    {
-        $filesPath  = $this->buildObjectFilesPath($collection, $id);
-        $objectFile = $this->buildObjectPath($collection, $id);
+	public function deleteObject(string $collection, string $id): bool
+	{
+		$filesPath  = $this->buildObjectFilesPath($collection, $id);
+		$objectFile = $this->buildObjectPath($collection, $id);
 
-        $this->filesystem->deleteDirectory($filesPath);
+		$this->filesystem->deleteDirectory($filesPath);
 
-        return $this->filesystem->delete($objectFile);
-    }
+		return $this->filesystem->delete($objectFile);
+	}
 
-    private function buildObjectFilesPath(string $collection, string $id): string
-    {
-        return PathUtils::buildPath(collection: $collection, filename: $id);
-    }
+	private function buildObjectFilesPath(string $collection, string $id): string
+	{
+		return PathUtils::buildPath(collection: $collection, filename: $id);
+	}
 
-    private function buildObjectPath(string $collection, string $id): string
-    {
-        return PathUtils::buildPath(collection: $collection, filename: $id . self::FILE_EXT);
-    }
+	private function buildObjectPath(string $collection, string $id): string
+	{
+		return PathUtils::buildPath(collection: $collection, filename: $id . self::FILE_EXT);
+	}
 }

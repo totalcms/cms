@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Twig;
 
-use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;

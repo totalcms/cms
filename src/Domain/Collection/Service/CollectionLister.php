@@ -9,20 +9,20 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
  */
 final class CollectionLister
 {
-    private CollectionRepository $storage;
+	private CollectionRepository $storage;
 
-    public function __construct(CollectionRepository $storage)
-    {
-        $this->storage = $storage;
-    }
+	public function __construct(CollectionRepository $storage)
+	{
+		$this->storage = $storage;
+	}
 
-    /**
-     * List all collections.
-     *
-     * @return array<object>
-     */
-    public function listAllCollections(): array
-    {
-        return $this->storage->listAllCollections();
-    }
+	/**
+	 * List all collections.
+	 *
+	 * @return array<object>
+	 */
+	public function listAllCollections(): array
+	{
+		return $this->storage->listAllCollections();
+	}
 }

@@ -7,15 +7,15 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 
 final class ObjectMetaTransformer extends Fractal\TransformerAbstract
 {
-    /**
-     * Fractal transform for a object.
-     *
-     * @param ObjectData $object The object
-     *
-     * @return array<string,mixed>
-     */
-    public function transform(ObjectData $object): array
-    {
-        return $object->toArray();
-    }
+	/**
+	 * Fractal transform for a object.
+	 *
+	 * @param ObjectData $object The object
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function transform(ObjectData $object): array
+	{
+		return $object->toArray();
+	}
 }

@@ -14,7 +14,7 @@ final class DeleteButton
 	public function build(): string
 	{
 		$attributes = [
-			'class' => "cms-delete button btn",
+			'class' => 'cms-delete button btn',
 		];
 
 		return HTMLUtils::createHTMLElement('button', $this->label, $attributes);

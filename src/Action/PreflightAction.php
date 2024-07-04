@@ -10,17 +10,17 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PreflightAction
 {
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request The request
-     * @param ResponseInterface $response The response
-     *
-     * @return ResponseInterface The response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        // Do nothing here. Just return the response.
-        return $response;
-    }
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request The request
+	 * @param ResponseInterface $response The response
+	 *
+	 * @return ResponseInterface The response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		// Do nothing here. Just return the response.
+		return $response;
+	}
 }

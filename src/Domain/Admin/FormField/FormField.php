@@ -41,7 +41,7 @@ class FormField
 	public function init(): void
 	{
 		$this->uuid      = uniqid();
-		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
+		$this->field     = empty($this->field) ? $this->defaultFieldType : $this->field;
 		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
 
 		// Set a default value if one is not provided
@@ -57,7 +57,7 @@ class FormField
 
 		$group = HTMLUtils::createHTMLElement('div', $input . $icon, ['class' => 'form-group']);
 		$label = empty($this->label) ? '' : HTMLUtils::createHTMLElement('label', $this->label, [
-			'for' => "field-{$this->uuid}"
+			'for' => "field-{$this->uuid}",
 		]);
 		$help  = empty($this->help) ? '' : HTMLUtils::createHTMLElement('p', $this->help, [
 			'class' => 'help',

@@ -10,27 +10,27 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
  */
 final class SchemaFetcher
 {
-    private SchemaRepository $storage;
+	private SchemaRepository $storage;
 
-    public function __construct(SchemaRepository $storage)
-    {
-        $this->storage = $storage;
-    }
+	public function __construct(SchemaRepository $storage)
+	{
+		$this->storage = $storage;
+	}
 
-    /**
-     * fetch a schema.
-     *
-     * @param string $id
-     *
-     * @return SchemaData
-     */
-    public function fetchSchema(string $id): SchemaData
-    {
-        return $this->storage->getSchema($id);
-    }
+	/**
+	 * fetch a schema.
+	 *
+	 * @param string $id
+	 *
+	 * @return SchemaData
+	 */
+	public function fetchSchema(string $id): SchemaData
+	{
+		return $this->storage->getSchema($id);
+	}
 
-    public function schemaExists(string $id): bool
-    {
-        return $this->storage->schemaExists($id);
-    }
+	public function schemaExists(string $id): bool
+	{
+		return $this->storage->schemaExists($id);
+	}
 }

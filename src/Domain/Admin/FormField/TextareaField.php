@@ -21,21 +21,20 @@ final class TextareaField extends FormField
 		protected string $help        = '',
 		protected mixed $value        = '',
 		protected mixed $default      = '',
-		protected int  $rows          = 0,
+		protected int $rows          = 0,
 		protected bool $required      = false,
 		protected bool $disabled      = false,
 		protected bool $readonly      = false,
 		protected bool $icon          = true,
 	) {
 		$this->uuid      = uniqid();
-		$this->field     = empty($this->field)     ? $this->defaultFieldType : $this->field;
+		$this->field     = empty($this->field) ? $this->defaultFieldType : $this->field;
 
 		// Set a default value if one is not provided
 		if (empty($this->value) && !empty($this->default)) {
 			$this->value = $this->default;
 		}
 	}
-
 
 	/** @return array<string,string> */
 	protected function formFieldAttributes(): array

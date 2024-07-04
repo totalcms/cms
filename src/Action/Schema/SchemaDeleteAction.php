@@ -8,30 +8,30 @@ use TotalCMS\Domain\Schema\Service\SchemaRemover;
 
 final class SchemaDeleteAction
 {
-    private SchemaRemover $schemaRemover;
+	private SchemaRemover $schemaRemover;
 
-    public function __construct(SchemaRemover $service)
-    {
-        $this->schemaRemover = $service;
-    }
+	public function __construct(SchemaRemover $service)
+	{
+		$this->schemaRemover = $service;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param array<string,string> $args The routing arguments
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $deleted = $this->schemaRemover->deleteSchema($args['id']);
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param ResponseInterface $response
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		$deleted = $this->schemaRemover->deleteSchema($args['id']);
 
-        if ($deleted === false) {
-            return $response->withStatus(500);
-        }
+		if ($deleted === false) {
+			return $response->withStatus(500);
+		}
 
-        return $response;
-    }
+		return $response;
+	}
 }

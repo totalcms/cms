@@ -11,43 +11,43 @@ use TotalCMS\Renderer\JsonRenderer;
 
 final class ImportCsvAction
 {
-    private CsvImporter $csvImporter;
-    private JsonRenderer $renderer;
+	private CsvImporter $csvImporter;
+	private JsonRenderer $renderer;
 
-    public function __construct(CsvImporter $csvImporter, JsonRenderer $renderer)
-    {
-        $this->csvImporter = $csvImporter;
-        $this->renderer    = $renderer;
-    }
+	public function __construct(CsvImporter $csvImporter, JsonRenderer $renderer)
+	{
+		$this->csvImporter = $csvImporter;
+		$this->renderer    = $renderer;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request The request
-     * @param ResponseInterface $response The response
-     *
-     * @throws HttpBadRequestException
-     *
-     * @return ResponseInterface The response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        $collection = $request->getAttribute('collection');
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request The request
+	 * @param ResponseInterface $response The response
+	 *
+	 * @throws HttpBadRequestException
+	 *
+	 * @return ResponseInterface The response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		$collection = $request->getAttribute('collection');
 
-        /** @var UploadedFileInterface[] $files */
-        $files = $request->getUploadedFiles();
+		/** @var UploadedFileInterface[] $files */
+		$files = $request->getUploadedFiles();
 
-        if (!isset($files['csv']) || $files['csv']->getError() !== UPLOAD_ERR_OK) {
-            throw new HttpBadRequestException($request, 'Upload failed');
-        }
+		if (!isset($files['csv']) || $files['csv']->getError() !== UPLOAD_ERR_OK) {
+			throw new HttpBadRequestException($request, 'Upload failed');
+		}
 
-        $importCount = $this->csvImporter->import($collection, $files['csv']);
+		$importCount = $this->csvImporter->import($collection, $files['csv']);
 
-        return $this->renderer->json(
-            $response,
-            [
-                'import_count' => $importCount,
-            ]
-        );
-    }
+		return $this->renderer->json(
+			$response,
+			[
+				'import_count' => $importCount,
+			]
+		);
+	}
 }

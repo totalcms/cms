@@ -3,6 +3,8 @@
 return (new PhpCsFixer\Config())
     ->setUsingCache(false)
     ->setRiskyAllowed(true)
+    ->setLineEnding("\n")
+    ->setIndent("\t")
     ->setRules(
         [
             '@PSR1'           => true,

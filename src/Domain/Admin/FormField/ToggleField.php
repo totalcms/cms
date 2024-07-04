@@ -26,7 +26,6 @@ final class ToggleField extends CheckboxField
 			'id'    => "help-{$this->uuid}",
 		]);
 
-
 		$formFieldAtrributes = [
 			'class'     => "form-field {$this->field}-field {$this->class}",
 			'data-type' => $this->field,

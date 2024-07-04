@@ -7,15 +7,15 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class DepotData extends PropertyData
 {
-    /** @param array<array<string,mixed>> $files */
-    public function __construct(
-        public array $files = []
-    ) {
-    }
+	/** @param array<array<string,mixed>> $files */
+	public function __construct(
+		public array $files = []
+	) {
+	}
 
-    /** @return array<array<string,mixed>> */
-    public function transform(): array
-    {
-        return $this->files;
-    }
+	/** @return array<array<string,mixed>> */
+	public function transform(): array
+	{
+		return $this->files;
+	}
 }

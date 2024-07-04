@@ -10,31 +10,31 @@ use TotalCMS\Transformer\SchemaMetaTransformer;
 
 final class SchemaFetchForCollectionAction
 {
-    private JsonRenderer $renderer;
-    private CollectionSchemaFetcher $schemaFetcher;
+	private JsonRenderer $renderer;
+	private CollectionSchemaFetcher $schemaFetcher;
 
-    public function __construct(JsonRenderer $renderer, CollectionSchemaFetcher $service)
-    {
-        $this->renderer      = $renderer;
-        $this->schemaFetcher = $service;
-    }
+	public function __construct(JsonRenderer $renderer, CollectionSchemaFetcher $service)
+	{
+		$this->renderer      = $renderer;
+		$this->schemaFetcher = $service;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param array<string,string> $args The routing arguments
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
-        $schema = $this->schemaFetcher->fetchSchemaForCollection($args['collection']);
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param ResponseInterface $response
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		array $args
+	): ResponseInterface {
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($args['collection']);
 
-        return $this->renderer->jsonItem($response, $schema, new SchemaMetaTransformer());
-    }
+		return $this->renderer->jsonItem($response, $schema, new SchemaMetaTransformer());
+	}
 }

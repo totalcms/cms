@@ -72,6 +72,7 @@ final class CollectionData
 
 	/**
 	 * @param array<string,array<string,mixed>> $schema
+	 *
 	 * @return array<string,mixed>
 	 */
 	public static function schemaToMetaProps(array $schema): array

@@ -7,6 +7,6 @@ namespace TotalCMS\Domain\Template\Data;
  */
 final class TemplateData
 {
-    public string $contents;
-    public string $id;
+	public string $contents;
+	public string $id;
 }

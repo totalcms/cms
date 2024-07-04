@@ -2,13 +2,13 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\FormField\DeleteButton;
+use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\Config;
-use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Admin\FormField\DeleteButton;
 
 /**
  * Total Form Builder.
@@ -31,7 +31,6 @@ final class TotalFormFactory
 		$this->api = $this->config->api;
 	}
 
-
 	/** @param array<string,mixed> $options */
 	public function builder(array $options = []): TotalForm
 	{
@@ -44,15 +43,17 @@ final class TotalFormFactory
 		return new TotalForm(...$options);
 	}
 
-	public function save(string $label = "Save"): string
+	public function save(string $label = 'Save'): string
 	{
 		$button = new SaveButton($label);
+
 		return $button->build();
 	}
 
-	public function delete(string $label = "Delete"): string
+	public function delete(string $label = 'Delete'): string
 	{
 		$button = new DeleteButton($label);
+
 		return $button->build();
 	}
 

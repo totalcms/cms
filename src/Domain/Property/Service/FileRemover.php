@@ -15,53 +15,53 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
  */
 final class FileRemover
 {
-    public function __construct(
-        private PropertyRepository $storage,
-        private PropertyFetcher $propFetcher,
-        private ObjectSaver $objectSaver,
-        private ObjectFetcher $objectFetcher,
-    ) {
-    }
+	public function __construct(
+		private PropertyRepository $storage,
+		private PropertyFetcher $propFetcher,
+		private ObjectSaver $objectSaver,
+		private ObjectFetcher $objectFetcher,
+	) {
+	}
 
-    private function fetchProperty(string $collection, string $objectID, string $property): PropertyData
-    {
-        // Get the existing object property data
-        $fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
+	private function fetchProperty(string $collection, string $objectID, string $property): PropertyData
+	{
+		// Get the existing object property data
+		$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
 
-        if (!$fileProperty instanceof PropertyData) {
-            throw new \UnexpectedValueException('Invalid file property found');
-        }
+		if (!$fileProperty instanceof PropertyData) {
+			throw new \UnexpectedValueException('Invalid file property found');
+		}
 
-        return $fileProperty;
-    }
+		return $fileProperty;
+	}
 
-    /** @param array<array<string,mixed>> $data */
-    private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
-    {
-        $propertyData = [$property => $data];
+	/** @param array<array<string,mixed>> $data */
+	private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
+	{
+		$propertyData = [$property => $data];
 
-        return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
-    }
+		return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
+	}
 
-    public function deleteFile(string $collection, string $objectID, string $property, string $filename): ObjectData
-    {
-        if (!$this->objectFetcher->existsObject($collection, $objectID)) {
-            throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
-        }
+	public function deleteFile(string $collection, string $objectID, string $property, string $filename): ObjectData
+	{
+		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
+		}
 
-        $this->storage->deleteFile($collection, $objectID, $property, $filename);
+		$this->storage->deleteFile($collection, $objectID, $property, $filename);
 
-        $files = $this->fetchProperty($collection, $objectID, $property)->transform();
-        foreach ($files as $key => $file) {
-            if ($file['name'] === $filename) {
-                unset($files[$key]);
-                break;
-            }
-        }
+		$files = $this->fetchProperty($collection, $objectID, $property)->transform();
+		foreach ($files as $key => $file) {
+			if ($file['name'] === $filename) {
+				unset($files[$key]);
+				break;
+			}
+		}
 
-        // Reindex the array
-        $files = array_values($files);
+		// Reindex the array
+		$files = array_values($files);
 
-        return $this->updateObject($collection, $objectID, $property, $files);
-    }
+		return $this->updateObject($collection, $objectID, $property, $files);
+	}
 }

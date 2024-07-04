@@ -11,14 +11,14 @@ use TotalCMS\Renderer\RedirectRenderer;
  */
 final class DocRedirectAction
 {
-    public function __construct(
-        private RedirectRenderer $redirectRenderer
-    ) {
-        $this->redirectRenderer = $redirectRenderer;
-    }
+	public function __construct(
+		private RedirectRenderer $redirectRenderer
+	) {
+		$this->redirectRenderer = $redirectRenderer;
+	}
 
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->redirectRenderer->redirectFor($response, 'api-docs');
-    }
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		return $this->redirectRenderer->redirectFor($response, 'api-docs');
+	}
 }

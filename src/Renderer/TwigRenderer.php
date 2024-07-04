@@ -10,33 +10,33 @@ use TotalCMS\Domain\Twig\TwigEngine;
  */
 final class TwigRenderer
 {
-    private TwigEngine $twigEngine;
+	private TwigEngine $twigEngine;
 
-    /**
-     * The constructor.
-     *
-     * @param TwigEngine $twigEngine
-     */
-    public function __construct(TwigEngine $twigEngine)
-    {
-        $this->twigEngine = $twigEngine;
-    }
+	/**
+	 * The constructor.
+	 *
+	 * @param TwigEngine $twigEngine
+	 */
+	public function __construct(TwigEngine $twigEngine)
+	{
+		$this->twigEngine = $twigEngine;
+	}
 
-    /**
-     * Output rendered template.
-     *
-     * @param ResponseInterface $response The response
-     * @param string $template Template pathname relative to templates directory
-     * @param array<mixed> $data Associative array of template variables
-     *
-     * @return ResponseInterface The response
-     */
-    public function template(ResponseInterface $response, string $template, array $data = []): ResponseInterface
-    {
-        $body = $this->twigEngine->render($template, $data);
+	/**
+	 * Output rendered template.
+	 *
+	 * @param ResponseInterface $response The response
+	 * @param string $template Template pathname relative to templates directory
+	 * @param array<mixed> $data Associative array of template variables
+	 *
+	 * @return ResponseInterface The response
+	 */
+	public function template(ResponseInterface $response, string $template, array $data = []): ResponseInterface
+	{
+		$body = $this->twigEngine->render($template, $data);
 
-        $response->getBody()->write($body);
+		$response->getBody()->write($body);
 
-        return $response;
-    }
+		return $response;
+	}
 }

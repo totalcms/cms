@@ -9,45 +9,45 @@ use TotalCMS\Renderer\RawRenderer;
 
 final class TemplateListAction
 {
-    private RawRenderer $renderer;
-    private TemplateLister $templateLister;
+	private RawRenderer $renderer;
+	private TemplateLister $templateLister;
 
-    public function __construct(RawRenderer $renderer, TemplateLister $service)
-    {
-        $this->renderer       = $renderer;
-        $this->templateLister = $service;
-    }
+	public function __construct(RawRenderer $renderer, TemplateLister $service)
+	{
+		$this->renderer       = $renderer;
+		$this->templateLister = $service;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param array<string,string> $args The routing arguments
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $params = $request->getQueryParams();
-        $filter = $params['filter'] ?? 'all';
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param ResponseInterface $response
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		$params = $request->getQueryParams();
+		$filter = $params['filter'] ?? 'all';
 
-        switch ($filter) {
-            case 'reserved':
-                $templates = $this->templateLister->listReservedTemplates();
-                break;
-            case 'custom':
-                $templates = $this->templateLister->listCustomTemplates();
-                break;
-            default:
-                $templates = $this->templateLister->listAllTemplates();
-        }
+		switch ($filter) {
+			case 'reserved':
+				$templates = $this->templateLister->listReservedTemplates();
+				break;
+			case 'custom':
+				$templates = $this->templateLister->listCustomTemplates();
+				break;
+			default:
+				$templates = $this->templateLister->listAllTemplates();
+		}
 
-        $json = json_encode($templates);
-        if ($json === false) {
-            throw new \RuntimeException('json_encode error: ' . json_last_error_msg());
-        }
+		$json = json_encode($templates);
+		if ($json === false) {
+			throw new \RuntimeException('json_encode error: ' . json_last_error_msg());
+		}
 
-        return $this->renderer->render($response, $json);
-    }
+		return $this->renderer->render($response, $json);
+	}
 }

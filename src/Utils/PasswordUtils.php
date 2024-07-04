@@ -9,8 +9,8 @@ use TotalCMS\Domain\Property\Data\PasswordData;
  */
 class PasswordUtils
 {
-    public static function verify(string $password, PasswordData $passwordData): bool
-    {
-        return password_verify($password, (string)$passwordData);
-    }
+	public static function verify(string $password, PasswordData $passwordData): bool
+	{
+		return password_verify($password, (string)$passwordData);
+	}
 }

@@ -14,65 +14,65 @@ use TotalCMS\Factory\LoggerFactory;
 // ---------------------------------------------------------------------------------
 class TotalCMS
 {
-    private BufferController $buffer;
-    private Container $container;
-    private TwigEngine $twigEngine;
-    private LoggerInterface $logger;
-    private TwigCacheCleaner $twigCacheCleaner;
+	private BufferController $buffer;
+	private Container $container;
+	private TwigEngine $twigEngine;
+	private LoggerInterface $logger;
+	private TwigCacheCleaner $twigCacheCleaner;
 
-    public function __construct()
-    {
-        // Build PHP-DI Container instance
-        $this->container = new Container(require __DIR__ . '/../config/container.php');
+	public function __construct()
+	{
+		// Build PHP-DI Container instance
+		$this->container = new Container(require __DIR__ . '/../config/container.php');
 
-        $loggerFactory = $this->container->get(LoggerFactory::class);
-        $this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
+		$loggerFactory = $this->container->get(LoggerFactory::class);
+		$this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
 
-        $this->buffer           = $this->container->get(BufferController::class);
-        $this->twigEngine       = $this->container->get(TwigEngine::class);
-        $this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
-    }
+		$this->buffer           = $this->container->get(BufferController::class);
+		$this->twigEngine       = $this->container->get(TwigEngine::class);
+		$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
+	}
 
-    public function startBuffer(): void
-    {
-        $this->buffer->start();
-    }
+	public function startBuffer(): void
+	{
+		$this->buffer->start();
+	}
 
-    public function endBuffer(): void
-    {
-        $this->buffer->end();
-    }
+	public function endBuffer(): void
+	{
+		$this->buffer->end();
+	}
 
-    public function clearCache(): void
-    {
-        $this->twigCacheCleaner->deleteCache();
-    }
+	public function clearCache(): void
+	{
+		$this->twigCacheCleaner->deleteCache();
+	}
 
-    /** @param array<mixed> $data */
-    public function processBufferMacros(array $data = []): string
-    {
-        $content = $this->buffer->end();
+	/** @param array<mixed> $data */
+	public function processBufferMacros(array $data = []): string
+	{
+		$content = $this->buffer->end();
 
-        try {
-            return $this->twigEngine->renderString($content, $data);
-        } catch (\Throwable $th) {
-            $error = sprintf('processBufferMacros: %s: %s', $th->getMessage(), $th->getTraceAsString());
-            $this->logger->error($error);
-        }
+		try {
+			return $this->twigEngine->renderString($content, $data);
+		} catch (\Throwable $th) {
+			$error = sprintf('processBufferMacros: %s: %s', $th->getMessage(), $th->getTraceAsString());
+			$this->logger->error($error);
+		}
 
-        return $content;
-    }
+		return $content;
+	}
 
-    /** @param array<mixed> $data */
-    public function processMacros(string $templateName, array $data = []): string
-    {
-        try {
-            return $this->twigEngine->render($templateName, $data);
-        } catch (\Throwable $th) {
-            $error = sprintf('processMacros: %s: %s', $th->getMessage(), $th->getTraceAsString());
-            $this->logger->error($error);
+	/** @param array<mixed> $data */
+	public function processMacros(string $templateName, array $data = []): string
+	{
+		try {
+			return $this->twigEngine->render($templateName, $data);
+		} catch (\Throwable $th) {
+			$error = sprintf('processMacros: %s: %s', $th->getMessage(), $th->getTraceAsString());
+			$this->logger->error($error);
 
-            return '';
-        }
-    }
+			return '';
+		}
+	}
 }

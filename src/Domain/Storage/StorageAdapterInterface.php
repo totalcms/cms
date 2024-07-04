@@ -6,121 +6,121 @@ use League\Flysystem\FilesystemOperator;
 
 interface StorageAdapterInterface
 {
-    /**
-     * Access the flysystem filesystem.
-     *
-     * @return FilesystemOperator
-     */
-    public function flysystem(): FilesystemOperator;
+	/**
+	 * Access the flysystem filesystem.
+	 *
+	 * @return FilesystemOperator
+	 */
+	public function flysystem(): FilesystemOperator;
 
-    /**
-     * Read file.
-     *
-     * @param string $location The path of file to read
-     *
-     * @return string The content
-     */
-    public function read(string $location): string;
+	/**
+	 * Read file.
+	 *
+	 * @param string $location The path of file to read
+	 *
+	 * @return string The content
+	 */
+	public function read(string $location): string;
 
-    /**
-     * Read file as a stream.
-     *
-     * @param string $location The path of file to read
-     *
-     * @return resource
-     */
-    public function readStream(string $location);
+	/**
+	 * Read file as a stream.
+	 *
+	 * @param string $location The path of file to read
+	 *
+	 * @return resource
+	 */
+	public function readStream(string $location);
 
-    /**
-     * File exists.
-     *
-     * @param string $location The location of the file
-     *
-     * @return bool True if exists
-     */
-    public function fileExists(string $location): bool;
+	/**
+	 * File exists.
+	 *
+	 * @param string $location The location of the file
+	 *
+	 * @return bool True if exists
+	 */
+	public function fileExists(string $location): bool;
 
-    /**
-     * File mime type.
-     *
-     * @param string $location The path of file
-     *
-     * @return string the mime type
-     */
-    public function mimeType(string $location): string;
+	/**
+	 * File mime type.
+	 *
+	 * @param string $location The path of file
+	 *
+	 * @return string the mime type
+	 */
+	public function mimeType(string $location): string;
 
-    /**
-     * File size.
-     *
-     * @param string $location The path of file
-     *
-     * @return int file size
-     */
-    public function fileSize(string $location): int;
+	/**
+	 * File size.
+	 *
+	 * @param string $location The path of file
+	 *
+	 * @return int file size
+	 */
+	public function fileSize(string $location): int;
 
-    /**
-     * Save file.
-     *
-     * @param string $location The path of file to write to
-     * @param string $contents The data to write to the file
-     *
-     * @return bool
-     */
-    public function write(string $location, string $contents): bool;
+	/**
+	 * Save file.
+	 *
+	 * @param string $location The path of file to write to
+	 * @param string $contents The data to write to the file
+	 *
+	 * @return bool
+	 */
+	public function write(string $location, string $contents): bool;
 
-    /**
-     * Import a file into the filesystem.
-     *
-     * @param string $import Path to the file to import
-     * @param string $dest Path to put the file
-     *
-     * @return bool
-     */
-    public function import(string $import, string $dest): bool;
+	/**
+	 * Import a file into the filesystem.
+	 *
+	 * @param string $import Path to the file to import
+	 * @param string $dest Path to put the file
+	 *
+	 * @return bool
+	 */
+	public function import(string $import, string $dest): bool;
 
-    /**
-     * Move a file.
-     *
-     * @param string $old Existing path
-     * @param string $new New location
-     *
-     * @return bool
-     */
-    public function move(string $old, string $new): bool;
+	/**
+	 * Move a file.
+	 *
+	 * @param string $old Existing path
+	 * @param string $new New location
+	 *
+	 * @return bool
+	 */
+	public function move(string $old, string $new): bool;
 
-    /**
-     * Delete file.
-     *
-     * @param string $location The path of file to write to
-     *
-     * @return bool
-     */
-    public function delete(string $location): bool;
+	/**
+	 * Delete file.
+	 *
+	 * @param string $location The path of file to write to
+	 *
+	 * @return bool
+	 */
+	public function delete(string $location): bool;
 
-    /**
-     * Delete directory.
-     *
-     * @param string $location The path of directory to delete
-     *
-     * @return bool
-     */
-    public function deleteDirectory(string $location): bool;
+	/**
+	 * Delete directory.
+	 *
+	 * @param string $location The path of directory to delete
+	 *
+	 * @return bool
+	 */
+	public function deleteDirectory(string $location): bool;
 
-    /**
-     * List directories.
-     *
-     * @param string $directory The path to iterate through
-     *
-     * @return array<string>
-     */
-    public function listDirectories(string $directory): array;
+	/**
+	 * List directories.
+	 *
+	 * @param string $directory The path to iterate through
+	 *
+	 * @return array<string>
+	 */
+	public function listDirectories(string $directory): array;
 
-    /**
-     * List files.
-     *
-     * @param string $directory The path to iterate through
-     *
-     * @return array<string>
-     */
-    public function listFiles(string $directory): array;
+	/**
+	 * List files.
+	 *
+	 * @param string $directory The path to iterate through
+	 *
+	 * @return array<string>
+	 */
+	public function listFiles(string $directory): array;
 }

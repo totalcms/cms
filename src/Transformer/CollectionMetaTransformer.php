@@ -7,15 +7,15 @@ use TotalCMS\Domain\Collection\Data\CollectionData as Collection;
 
 final class CollectionMetaTransformer extends Fractal\TransformerAbstract
 {
-    /**
-     * Fractal transform for a collection.
-     *
-     * @param Collection $collection The collection object
-     *
-     * @return array<string,mixed>
-     */
-    public function transform(Collection $collection): array
-    {
-        return $collection->toArray();
-    }
+	/**
+	 * Fractal transform for a collection.
+	 *
+	 * @param Collection $collection The collection object
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function transform(Collection $collection): array
+	{
+		return $collection->toArray();
+	}
 }

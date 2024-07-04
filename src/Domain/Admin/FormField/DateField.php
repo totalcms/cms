@@ -6,7 +6,7 @@ class DateField extends FormField
 {
 	protected string $defaultInputType = 'date';
 	protected string $defaultFieldType = 'date';
-	protected string $dateFormat = 'Y-m-d';
+	protected string $dateFormat       = 'Y-m-d';
 
 	public function init(): void
 	{

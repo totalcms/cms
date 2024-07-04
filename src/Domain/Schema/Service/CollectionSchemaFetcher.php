@@ -11,32 +11,32 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
  */
 final class CollectionSchemaFetcher
 {
-    private CollectionFetcher $collectionService;
-    private SchemaRepository $storage;
+	private CollectionFetcher $collectionService;
+	private SchemaRepository $storage;
 
-    public function __construct(
-        SchemaRepository $storage,
-        CollectionFetcher $collectionService
-    ) {
-        $this->storage           = $storage;
-        $this->collectionService = $collectionService;
-    }
+	public function __construct(
+		SchemaRepository $storage,
+		CollectionFetcher $collectionService
+	) {
+		$this->storage           = $storage;
+		$this->collectionService = $collectionService;
+	}
 
-    /**
-     * fetch a collection's schema.
-     *
-     * @param string $collection
-     *
-     * @return SchemaData
-     */
-    public function fetchSchemaForCollection(string $collection): SchemaData
-    {
-        $collection = $this->collectionService->fetchCollection($collection);
+	/**
+	 * fetch a collection's schema.
+	 *
+	 * @param string $collection
+	 *
+	 * @return SchemaData
+	 */
+	public function fetchSchemaForCollection(string $collection): SchemaData
+	{
+		$collection = $this->collectionService->fetchCollection($collection);
 
-        if ($collection === null) {
-            throw new \UnexpectedValueException('Collection for Schema not found: ' . $collection);
-        }
+		if ($collection === null) {
+			throw new \UnexpectedValueException('Collection for Schema not found: ' . $collection);
+		}
 
-        return $this->storage->getSchema($collection->schema);
-    }
+		return $this->storage->getSchema($collection->schema);
+	}
 }

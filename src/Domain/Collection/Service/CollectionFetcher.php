@@ -10,41 +10,41 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
  */
 final class CollectionFetcher
 {
-    private CollectionRepository $storage;
+	private CollectionRepository $storage;
 
-    public function __construct(CollectionRepository $storage)
-    {
-        $this->storage = $storage;
-    }
+	public function __construct(CollectionRepository $storage)
+	{
+		$this->storage = $storage;
+	}
 
-    /**
-     * Fetch a collection.
-     *
-     * @param string $collectionId
-     *
-     * @return CollectionData
-     */
-    public function fetchCollection(string $collectionId): ?CollectionData
-    {
-        if ($this->collectionExists($collectionId)) {
-            $collection = $this->storage->getCollection($collectionId);
+	/**
+	 * Fetch a collection.
+	 *
+	 * @param string $collectionId
+	 *
+	 * @return CollectionData
+	 */
+	public function fetchCollection(string $collectionId): ?CollectionData
+	{
+		if ($this->collectionExists($collectionId)) {
+			$collection = $this->storage->getCollection($collectionId);
 
-            return $collection;
-        }
+			return $collection;
+		}
 
-        if ($this->storage->isReservedCollection($collectionId)) {
-            // If the collection is not found or invalid, try to create it
-            $this->storage->saveReservedCollection($collectionId);
-            $collection = $this->storage->getCollection($collectionId);
+		if ($this->storage->isReservedCollection($collectionId)) {
+			// If the collection is not found or invalid, try to create it
+			$this->storage->saveReservedCollection($collectionId);
+			$collection = $this->storage->getCollection($collectionId);
 
-            return $collection;
-        }
+			return $collection;
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public function collectionExists(string $collectionId): bool
-    {
-        return $this->storage->collectionExists($collectionId);
-    }
+	public function collectionExists(string $collectionId): bool
+	{
+		return $this->storage->collectionExists($collectionId);
+	}
 }

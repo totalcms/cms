@@ -7,20 +7,20 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class BooleanData extends PropertyData
 {
-    public bool $status;
+	public bool $status;
 
-    public function __construct(bool $status)
-    {
-        $this->status = $status;
-    }
+	public function __construct(bool $status)
+	{
+		$this->status = $status;
+	}
 
-    public function transform(): bool
-    {
-        return $this->status;
-    }
+	public function transform(): bool
+	{
+		return $this->status;
+	}
 
-    public function __toString(): string
-    {
-        return $this->status ? 'true' : 'false';
-    }
+	public function __toString(): string
+	{
+		return $this->status ? 'true' : 'false';
+	}
 }

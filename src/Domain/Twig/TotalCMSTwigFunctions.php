@@ -9,97 +9,97 @@ use Twig\TwigFunction;
  */
 final class TotalCMSTwigFunctions
 {
-    /** @var array<string> */
-    public static array $phpFunctions = [
-        'uniqid',
-        'floor',
-        'ceil',
-        'addslashes',
-        'chunk_split',
-        'md5',
-        'sha1',
-        'explode',
-        'strpos',
-        'similar_text',
-        'str_pad',
-        'strlen',
-        'strrpos',
-        'wordwrap',
-        'gettype',
-        'str_contains',
-        'str_starts_with',
-        'str_ends_with',
-        'json_decode',
-        'http_build_query',
-    ];
+	/** @var array<string> */
+	public static array $phpFunctions = [
+		'uniqid',
+		'floor',
+		'ceil',
+		'addslashes',
+		'chunk_split',
+		'md5',
+		'sha1',
+		'explode',
+		'strpos',
+		'similar_text',
+		'str_pad',
+		'strlen',
+		'strrpos',
+		'wordwrap',
+		'gettype',
+		'str_contains',
+		'str_starts_with',
+		'str_ends_with',
+		'json_decode',
+		'http_build_query',
+	];
 
-    /** @var array<string> */
-    public static array $customFunctions = [
-        'selectOptions',
-        'istype',
-        'var_dump',
-        'print_r',
-    ];
+	/** @var array<string> */
+	public static array $customFunctions = [
+		'selectOptions',
+		'istype',
+		'var_dump',
+		'print_r',
+	];
 
-    /** @return array<TwigFunction> */
-    public static function getFunctions(): array
-    {
-        $twigFunctions = [];
+	/** @return array<TwigFunction> */
+	public static function getFunctions(): array
+	{
+		$twigFunctions = [];
 
-        foreach (self::$customFunctions as $function) {
-            $twigFunctions[] = new TwigFunction($function, [self::class, $function], ['is_safe' => ['html']]);
-        }
+		foreach (self::$customFunctions as $function) {
+			$twigFunctions[] = new TwigFunction($function, [self::class, $function], ['is_safe' => ['html']]);
+		}
 
-        foreach (self::$phpFunctions as $function) {
-            // @phpstan-ignore-next-line
-            $twigFunctions[] = new TwigFunction($function, $function, ['is_safe' => ['html']]);
-        }
+		foreach (self::$phpFunctions as $function) {
+			// @phpstan-ignore-next-line
+			$twigFunctions[] = new TwigFunction($function, $function, ['is_safe' => ['html']]);
+		}
 
-        return $twigFunctions;
-    }
+		return $twigFunctions;
+	}
 
-    // -------------------------
-    // Custom Functions
-    // -------------------------
-    /**
-     * @param array<mixed> $data
-     *
-     * @return array<array<string,string>>
-     */
-    public static function selectOptions(array $data, string $label = '', string $value = ''): array
-    {
-        // this takes a normal array and converts it to an array of arrays with label and value keys
-        // the resulting array can be used for select options in a form
-        if (empty($value) || empty($label)) {
-            return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $data);
-        }
+	// -------------------------
+	// Custom Functions
+	// -------------------------
+	/**
+	 * @param array<mixed> $data
+	 *
+	 * @return array<array<string,string>>
+	 */
+	public static function selectOptions(array $data, string $label = '', string $value = ''): array
+	{
+		// this takes a normal array and converts it to an array of arrays with label and value keys
+		// the resulting array can be used for select options in a form
+		if (empty($value) || empty($label)) {
+			return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $data);
+		}
 
-        return array_map(fn ($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
-    }
+		return array_map(fn ($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
+	}
 
-    public static function istype(mixed $variable, string $type): bool
-    {
-        return gettype($variable) === $type;
-    }
+	public static function istype(mixed $variable, string $type): bool
+	{
+		return gettype($variable) === $type;
+	}
 
-    // -------------------------
-    // Utilities
-    // -------------------------
+	// -------------------------
+	// Utilities
+	// -------------------------
 
-    /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
-    public static function var_dump(mixed $variable): string
-    {
-        ob_start();
-        var_dump($variable);
-        $content = ob_get_contents();
-        ob_end_clean();
+	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	public static function var_dump(mixed $variable): string
+	{
+		ob_start();
+		var_dump($variable);
+		$content = ob_get_contents();
+		ob_end_clean();
 
-        return "<pre>$content</pre>";
-    }
+		return "<pre>$content</pre>";
+	}
 
-    /** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
-    public static function print_r(mixed $variable): string
-    {
-        return '<pre>' . (string)print_r($variable, true) . '</pre>';
-    }
+	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	public static function print_r(mixed $variable): string
+	{
+		return '<pre>' . (string)print_r($variable, true) . '</pre>';
+	}
 }
