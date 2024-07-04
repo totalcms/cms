@@ -119,6 +119,23 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function select(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'text',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options);
+
+		$form->addField('id');
+		$form->addField('text', ['field' => 'select']);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function text(string $id, array $options = []): string
 	{
 		$options = array_merge([

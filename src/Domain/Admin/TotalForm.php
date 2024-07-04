@@ -39,6 +39,9 @@ final class TotalForm
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.Superglobals)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 *
+	 * @param array<string,mixed> $settings
 	 */
 	public function __construct(
 		private ObjectFetcher $objectFetcher,
@@ -55,6 +58,7 @@ final class TotalForm
 		private string $editAction = '',
 		private string $save       = '',
 		private string $delete     = '',
+		private array  $settings   = [],
 		private bool $autosave     = false,
 		private bool $helpOnHover  = false,
 		private bool $helpOnFocus  = false,
@@ -75,6 +79,15 @@ final class TotalForm
 
 		$this->route = "/collections/{$this->collection}";
 
+		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
+
+		if (is_null($collectionData)) {
+			throw new \Exception('Collection not found for TotalForm');
+		}
+
+		$this->collectionData = $collectionData;
+		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+
 		if (empty($this->id) && isset($_GET['id'])) {
 			$this->id = $_GET['id'];
 		}
@@ -84,19 +97,9 @@ final class TotalForm
 			$this->method     = 'put';
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
 		}
-
-		$collectionData   = $this->collectionFetcher->fetchCollection($this->collection);
-
-		if (is_null($collectionData)) {
-			throw new \Exception('Collection not found for TotalForm');
-		}
-
-		$this->collectionData = $collectionData;
-		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
 	}
 
-	/** @param array<string,string> $options */
-	public function autoBuild(array $options = []): string
+	public function autoBuild(): string
 	{
 		$this->addFieldsFromSchema();
 
@@ -142,10 +145,9 @@ final class TotalForm
 		if (empty($this->save)) {
 			return '';
 		}
+		$button = new SaveButton($this->save);
 
-		$saveButton = new SaveButton($this->save);
-
-		return $saveButton->build();
+		return $button->build();
 	}
 
 	private function deleteButton(): string
@@ -153,10 +155,9 @@ final class TotalForm
 		if (empty($this->delete)) {
 			return '';
 		}
+		$button = new DeleteButton($this->delete);
 
-		$deleteButton = new DeleteButton($this->delete);
-
-		return $deleteButton->build();
+		return $button->build();
 	}
 
 	private function fieldContent(): string
@@ -223,6 +224,9 @@ final class TotalForm
 	{
 		$defaults = $this->fieldDefaults($name);
 		$options  = array_merge($defaults, $options);
+
+		// Merge the settings from the schema and collection
+		$options['settings'] = array_merge($options['settings'] ?? [], $this->settings);
 
 		// Set the name of the field
 		$options['name'] = $name;
