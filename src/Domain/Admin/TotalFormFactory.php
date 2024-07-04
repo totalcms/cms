@@ -182,6 +182,20 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function svg(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'svg',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options['collection'], $options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function text(string $id, array $options = []): string
 	{
 		$options = array_merge([
