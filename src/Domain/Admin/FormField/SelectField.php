@@ -7,14 +7,12 @@ use TotalCMS\Utils\HTMLUtils;
 class SelectField extends FormField
 {
 	protected string $defaultFieldType = 'select';
-	/** @var array<mixed> */
-	protected array $options = [];
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
-	 * @param array<string,mixed> $settings
+	 * @param array<mixed> $options
 	 */
 	public function __construct(
 		protected string $name,
@@ -25,7 +23,7 @@ class SelectField extends FormField
 		protected string $help        = '',
 		protected mixed $value        = '',
 		protected mixed $default      = '',
-		protected array $settings     = [],
+		protected array $options      = [],
 		protected bool $required      = false,
 		protected bool $icon          = true,
 	) {
@@ -35,8 +33,6 @@ class SelectField extends FormField
 	public function init(): void
 	{
 		parent::init();
-		$this->options = $this->settings['options'] ?? [];
-		unset($this->settings['options']);
 	}
 
 	/** @return array<string,?string> */

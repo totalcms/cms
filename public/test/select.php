@@ -16,16 +16,14 @@ The Select options can be defined inside of the collection meta
 				"help"        : "Choose your selection here.",
 				"field"       : "select",
 				"placeholder" : "Click to Choose Something",
-				"settings" : {
-					"options" : [
-						{ "value" : "1", "label" : "Option 1" },
-						{ "value" : "2", "label" : "Option 2" },
-						{ "value" : "3", "label" : "Option 3" },
-						{ "value" : "4", "label" : "Option 4" },
-						{ "value" : "5", "label" : "Option 5" },
-						{ "value" : "6", "label" : "Option 6" }
-					]
-				}
+				"options" : [
+					{ "value" : "1", "label" : "Option 1" },
+					{ "value" : "2", "label" : "Option 2" },
+					{ "value" : "3", "label" : "Option 3" },
+					{ "value" : "4", "label" : "Option 4" },
+					{ "value" : "5", "label" : "Option 5" },
+					{ "value" : "6", "label" : "Option 6" }
+				]
 			}
 		}
     }

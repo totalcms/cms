@@ -33,15 +33,13 @@ final class TotalForm
 		'label',
 		'placeholder',
 		'settings',
+		'options',
 	];
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.Superglobals)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
-	 *
-	 * @param array<string,mixed> $settings
 	 */
 	public function __construct(
 		private ObjectFetcher $objectFetcher,
@@ -58,12 +56,29 @@ final class TotalForm
 		private string $editAction = '',
 		private string $save       = '',
 		private string $delete     = '',
-		private array  $settings   = [],
 		private bool $autosave     = false,
 		private bool $helpOnHover  = false,
 		private bool $helpOnFocus  = false,
 		private bool $hideID       = false,
 	) {
+		$this->initClass();
+		$this->initCollectionData();
+
+		$this->route = "/collections/{$this->collection}";
+
+		if (empty($this->id) && isset($_GET['id'])) {
+			$this->id = $_GET['id'];
+		}
+		if (!empty($this->id) && $this->objectFetcher->existsObject($this->collection, $this->id)) {
+			// If the form is for editing an existing item, change the method to PUT
+			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
+			$this->method     = 'put';
+			$this->route      = "/collections/{$this->collection}/{$this->id}";
+		}
+	}
+
+	private function initClass(): void
+	{
 		if ($this->autosave === true) {
 			$this->class .= ' autosave';
 		}
@@ -76,9 +91,10 @@ final class TotalForm
 		if (!empty($this->helpStyle)) {
 			$this->class .= " help-{$this->helpStyle}";
 		}
+	}
 
-		$this->route = "/collections/{$this->collection}";
-
+	private function initCollectionData(): void
+	{
 		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
 
 		if (is_null($collectionData)) {
@@ -87,16 +103,6 @@ final class TotalForm
 
 		$this->collectionData = $collectionData;
 		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
-
-		if (empty($this->id) && isset($_GET['id'])) {
-			$this->id = $_GET['id'];
-		}
-		if (!empty($this->id) && $this->objectFetcher->existsObject($this->collection, $this->id)) {
-			// If the form is for editing an existing item, change the method to PUT
-			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
-			$this->method     = 'put';
-			$this->route      = "/collections/{$this->collection}/{$this->id}";
-		}
 	}
 
 	public function autoBuild(): string
@@ -224,9 +230,6 @@ final class TotalForm
 	{
 		$defaults = $this->fieldDefaults($name);
 		$options  = array_merge($defaults, $options);
-
-		// Merge the settings from the schema and collection
-		$options['settings'] = array_merge($options['settings'] ?? [], $this->settings);
 
 		// Set the name of the field
 		$options['name'] = $name;
