@@ -103,7 +103,310 @@ final class ImageField extends FormField
 
 	private function imageDialog(): string
 	{
-		return '';
+		$content = $this->imagePreviewSection();
+		$content .= $this->imageFieldsSection();
+		$content .= $this->closeSection();
+
+		$dialog = HTMLUtils::createHTMLElement('dialog', $content, ['class' => 'cms-modal split-view image-edit-dialog']);
+
+		return $dialog;
+	}
+
+	private function imagePreviewSection(): string
+	{
+		$image = HTMLUtils::createInlineHTMLElement('img', [
+			'src'               => $this->imagePath,
+			'oncontextmenu'     => 'return false;',
+			'draggable'         => 'false',
+			'data-dz-thumbnail' => '',
+		]);
+
+		$top    = $this->imageData['focalpoint']['y'] ?? 50;
+		$left   = $this->imageData['focalpoint']['x'] ?? 50;
+		$fpoint = HTMLUtils::createHTMLElement('div', '', [
+			'class' => 'focal-point',
+			'style' => "top:{$top}%;left:{$left}%",
+		]);
+
+		return HTMLUtils::createHTMLElement('section', $image . $fpoint, ['class' => 'image-preview']);
+	}
+
+	private function imageFieldsSection(): string
+	{
+		$fields = $this->infoFields();
+		$fields .= $this->focalFields();
+		$fields .= $this->exifFields();
+		$fields .= $this->cameraFields();
+		$fields .= $this->gpsFields();
+		$fields .= $this->paletteFields();
+		$fields .= $this->metaFields();
+
+		return HTMLUtils::createHTMLElement('section', $fields, ['class' => 'scroller']);
+	}
+
+	private function closeSection(): string
+	{
+		$button = HTMLUtils::createHTMLElement('button', 'Close', [
+			'type'  => 'button',
+			'class' => 'close button btn',
+		]);
+
+		return HTMLUtils::createHTMLElement('section', $button);
+	}
+
+	private function detailsAccordion(string $title, string $content): string
+	{
+		$summary = HTMLUtils::createHTMLElement('summary', $title);
+		$details = HTMLUtils::createHTMLElement('details', $summary . $content, ['class' => 'cms-accordion']);
+
+		return $details;
+	}
+
+	private function infoFields(): string
+	{
+		$content = $this->form->field('featured', [
+			'field' => 'checkbox',
+			'label' => 'Featured',
+			'help'  => "Mark this image as featured.",
+			'value' => $this->imageData['featured'] ?? false,
+		]);
+		$content .= $this->form->field('alt', [
+			'field'       => 'text',
+			'label'       => 'Alt Text',
+			'help'        => "Alt text is used by screen readers and search engines to describe the image.",
+			'placeholder' => 'Enter Alt Text',
+			'value'       => $this->imageData['alt'] ?? '',
+		]);
+		$content .= $this->form->field('link', [
+			'field'       => 'url',
+			'label'       => 'Link',
+			'help'        => "Enter a URL to link the image to.",
+			'placeholder' => 'https://example.com',
+			'value'       => $this->imageData['link'] ?? '',
+		]);
+		$content .= $this->form->field('tags', [
+			'field'       => 'list',
+			'label'       => 'Tags',
+			'help'        => "Add tags to help organize your images.",
+			'placeholder' => 'Add Tags',
+			'value'       => $this->imageData['tags'] ?? [],
+		]);
+
+		return $this->detailsAccordion('Info', $content);
+	}
+
+	private function focalFields(): string
+	{
+		$content = $this->form->field('focalpoint-x', [
+			'field' => 'range',
+			'label' => 'Focal Point X',
+			'help'  => "Set the horizontal focal point coordinate of the image.",
+			'value' => $this->imageData['focalpoint']['x'] ?? 50,
+		]);
+		$content .= $this->form->field('focalpoint-y', [
+			'field' => 'range',
+			'label' => 'Focal Point Y',
+			'help'  => "Set the vertical focal point coordinate of the image.",
+			'value' => $this->imageData['focalpoint']['y'] ?? 50,
+		]);
+
+		return $this->detailsAccordion('Focal Point', $content);
+	}
+
+	private function exifFields(): string
+	{
+		$content = $this->form->field('exif-date', [
+			'field' => 'datetime',
+			'label' => 'Date',
+			'value' => $this->imageData['exif']['date'] ?? '',
+		]);
+		$content .= $this->form->field('exif-title', [
+			'field'       => 'text',
+			'label'       => 'Title',
+			'placeholder' => 'No Title Found',
+			'value'       => $this->imageData['exif']['title'] ?? '',
+		]);
+		$content .= $this->form->field('exif-author', [
+			'field'       => 'text',
+			'label'       => 'Author',
+			'placeholder' => 'No Autor Found',
+			'class'       => 'icon-user',
+			'value'       => $this->imageData['exif']['author'] ?? '',
+		]);
+		$content .= $this->form->field('exif-copyright', [
+			'field'       => 'text',
+			'label'       => 'Copyright',
+			'placeholder' => 'No Copyright Found',
+			'class'       => 'icon-copyright',
+			'value'       => $this->imageData['exif']['copyright'] ?? '',
+		]);
+		$content .= $this->form->field('exif-description', [
+			'field'       => 'textarea',
+			'label'       => 'Description',
+			'placeholder' => 'No Description Found',
+			'value'       => $this->imageData['exif']['description'] ?? '',
+			'rows'        => 3,
+		]);
+
+		return $this->detailsAccordion('EXIF - Info', $content);
+	}
+
+	private function cameraFields(): string
+	{
+		$content = $this->form->field('exif-make', [
+			'field'       => 'text',
+			'label'       => 'Make',
+			'class'       => 'icon-camera',
+			'placeholder' => 'Camera Make Not Found',
+			'value'       => $this->imageData['exif']['make'] ?? '',
+		]);
+		$content .= $this->form->field('exif-camera', [
+			'field'       => 'text',
+			'label'       => 'Model',
+			'placeholder' => 'Camera Model Not Found',
+			'class'       => 'icon-camera',
+			'value'       => $this->imageData['exif']['camera'] ?? '',
+		]);
+		$content .= $this->form->field('exif-lens', [
+			'field'       => 'text',
+			'label'       => 'Lens',
+			'placeholder' => 'Lens Not Found',
+			'class'       => 'icon-camera',
+			'value'       => $this->imageData['exif']['lens'] ?? '',
+		]);
+		$content .= $this->form->field('exif-focalLength', [
+			'field'       => 'number',
+			'label'       => 'Focal Length',
+			'placeholder' => 'Focal Length Not Found',
+			'class'       => 'icon-shutter',
+			'value'       => $this->imageData['exif']['focalLength'] ?? '',
+		]);
+		$content .= $this->form->field('exif-aperture', [
+			'field'       => 'number',
+			'label'       => 'Aperture',
+			'placeholder' => 'Aperture Not Found',
+			'class'       => 'icon-shutter',
+			'value'       => $this->imageData['exif']['aperture'] ?? '',
+		]);
+		$content .= $this->form->field('exif-iso', [
+			'field'       => 'number',
+			'label'       => 'ISO',
+			'placeholder' => 'ISO Not Found',
+			'class'       => 'icon-shutter',
+			'value'       => $this->imageData['exif']['iso'] ?? '',
+		]);
+		$content .= $this->form->field('exif-shutterSpeed', [
+			'field'       => 'text',
+			'label'       => 'Shutter Speed',
+			'placeholder' => 'Shutter Speed Not Found',
+			'class'       => 'icon-shutter',
+			'value'       => $this->imageData['exif']['shutterSpeed'] ?? '',
+		]);
+
+		return $this->detailsAccordion('EXIF - Camera', $content);
+	}
+
+	private function gpsFields(): string
+	{
+		$content = $this->form->field('exif-longitude', [
+			'field'       => 'text',
+			'label'       => 'Longitude',
+			'class'       => 'icon-gps',
+			'placeholder' => 'Longitude Not Found',
+			'value'       => $this->imageData['exif']['longitude'] ?? '',
+		]);
+		$content .= $this->form->field('exif-latitude', [
+			'field'       => 'text',
+			'label'       => 'Latitude',
+			'class'       => 'icon-gps',
+			'placeholder' => 'Latitude Not Found',
+			'value'       => $this->imageData['exif']['latitude'] ?? '',
+		]);
+		$content .= $this->form->field('exif-altitude', [
+			'field'       => 'text',
+			'label'       => 'Altitude',
+			'class'       => 'icon-gps',
+			'placeholder' => 'Altitude Not Found',
+			'value'       => $this->imageData['exif']['altitude'] ?? '',
+		]);
+
+		return $this->detailsAccordion('EXIF - GPS', $content);
+	}
+
+	private function paletteFields(): string
+	{
+		$content = $this->form->field('palette-0', [
+			'field' => 'color',
+			'value' => $this->imageData['palette'][0] ?? '',
+		]);
+		$content .= $this->form->field('palette-1', [
+			'field' => 'color',
+			'value' => $this->imageData['palette'][1] ?? '',
+		]);
+		$content .= $this->form->field('palette-2', [
+			'field' => 'color',
+			'value' => $this->imageData['palette'][2] ?? '',
+		]);
+		$content .= $this->form->field('palette-3', [
+			'field' => 'color',
+			'value' => $this->imageData['palette'][3] ?? '',
+		]);
+		$content .= $this->form->field('palette-4', [
+			'field' => 'color',
+			'value' => $this->imageData['palette'][4] ?? '',
+		]);
+
+		$palette = HTMLUtils::createHTMLElement('div', $content, ['class' => 'palette']);
+
+		return $this->detailsAccordion('Color Palette', $palette);
+	}
+
+	private function metaFields(): string
+	{
+		$content = $this->form->field('height', [
+			'field'    => 'number',
+			'label'    => 'Height',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $this->imageData['height'] ?? '',
+		]);
+		$content .= $this->form->field('width', [
+			'field'    => 'number',
+			'label'    => 'Width',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $this->imageData['width'] ?? '',
+		]);
+		$content .= $this->form->field('size', [
+			'field'    => 'number',
+			'label'    => 'Size',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $this->imageData['size'] ?? '',
+		]);
+		$content .= $this->form->field('name', [
+			'field'    => 'text',
+			'label'    => 'Filename',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $this->imageData['name'] ?? '',
+		]);
+		$content .= $this->form->field('mime', [
+			'field'    => 'text',
+			'label'    => 'MIME Type',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $this->imageData['mime'] ?? '',
+		]);
+		$content .= $this->form->field('uploadDate', [
+			'field'    => 'datetime',
+			'label'    => 'Upload Date',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $this->imageData['uploadDate'] ?? '',
+		]);
+
+		return $this->detailsAccordion('Meta (Readonly)', $content);
 	}
 }
 

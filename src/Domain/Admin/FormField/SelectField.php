@@ -9,30 +9,6 @@ class SelectField extends FormField
 	protected string $defaultFieldType = 'select';
 	protected string $defaultInputType = 'select';
 
-	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-	 *
-	 * @param array<mixed> $options
-	 */
-	public function __construct(
-		protected string $name,
-		protected string $class       = '',
-		protected string $field       = '',
-		protected string $label       = '',
-		protected string $placeholder = '',
-		protected string $help        = '',
-		protected mixed $value        = '',
-		protected mixed $default      = '',
-		protected int   $rows         = 0,
-		protected array $options      = [],
-		protected bool $required      = false,
-		protected bool $icon          = true,
-		protected bool $multiple      = false,
-	) {
-		$this->init();
-	}
-
 	public function init(): void
 	{
 		parent::init();

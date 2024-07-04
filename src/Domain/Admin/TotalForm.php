@@ -283,15 +283,26 @@ final class TotalForm
 			return;
 		}
 
+		$this->fields[$name] = $this->createDynamicField($name, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function field(string $name, array $options = []): string
+	{
+		$field = $this->createDynamicField($name, $options);
+		return $field->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	private function createDynamicField(string $name, array $options = []): FormField
+	{
 		$options = $this->buildFieldOptions($name, $options);
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field']) . 'Field';
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
-			$this->fields[$name] = new $typeClass(...$options);
-
-			return;
+			return new $typeClass(...$options);
 		}
-		$this->fields[$name] = new FormField(...$options);
+		return new FormField(...$options);
 	}
 
 	public function addFieldsFromSchema(): void

@@ -17,6 +17,7 @@ class FormField
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
 	 * @param array<string,mixed> $settings
+	 * @param array<mixed> $options
 	 */
 	public function __construct(
 		protected TotalForm $form,
@@ -31,10 +32,12 @@ class FormField
 		protected mixed $default      = '',
 		protected string $pattern     = '',
 		protected array $settings     = [],
+		protected array $options      = [],
 		protected bool $required      = false,
 		protected bool $disabled      = false,
 		protected bool $readonly      = false,
 		protected bool $icon          = true,
+		protected bool $multiple      = false,
 		protected int $minlength      = 0,
 		protected int $rows           = 0,
 		protected ?int $min           = null,
