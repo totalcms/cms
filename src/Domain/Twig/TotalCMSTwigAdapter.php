@@ -108,13 +108,21 @@ final class TotalCMSTwigAdapter
 		return $collection->toArray();
 	}
 
-	/** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
-	public function objectUrl(string $id, string $collection, bool $pretty = false): string
+	/**
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 *
+	 * @param array<string,bool> $options
+	 */
+	public function objectUrl(string $id, string $collection, array $options = []): string
 	{
+		$options = array_merge([
+			'pretty' => false,
+		], $options);
+
 		$collection = $this->collection($collection);
 		$url        = $collection['url'] ?: '';
 
-		if ($pretty) {
+		if ($options['pretty']) {
 			if (str_ends_with($url, '/')) {
 				return sprintf('%s%s', $url, $id);
 			}
@@ -182,86 +190,165 @@ final class TotalCMSTwigAdapter
 		return '';
 	}
 
-	public function toggle(string $id, string $collection = 'toggle', string $property = 'status'): bool
+	/** @param array<string,string> $options */
+	public function toggle(string $id, array $options = []): bool
 	{
-		return boolval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'toggle',
+			'property'   => 'status',
+		], $options);
+
+		return boolval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	public function date(string $id, string $collection = 'date', string $property = 'date'): string
+	/** @param array<string,string> $options */
+	public function date(string $id, array $options = []): string
 	{
-		return strval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'date',
+			'property'   => 'date',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	public function color(string $id, string $collection = 'color', string $property = 'color'): string
+	/** @param array<string,string> $options */
+	public function color(string $id, array $options = []): string
 	{
-		return $this->data($collection, $id, $property);
+		$options = array_merge([
+			'collection' => 'color',
+			'property'   => 'color',
+		], $options);
+
+		return $this->data($options['collection'], $id, $options['property']);
 	}
 
-	public function svg(string $id, string $collection = 'svg', string $property = 'svg'): string
+	/** @param array<string,string> $options */
+	public function svg(string $id, array $options = []): string
 	{
-		return strval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'svg',
+			'property'   => 'svg',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	public function email(string $id, string $collection = 'email', string $property = 'email'): string
+	/** @param array<string,string> $options */
+	public function email(string $id, array $options = []): string
 	{
-		return strval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'email',
+			'property'   => 'email',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	public function url(string $id, string $collection = 'url', string $property = 'url'): string
+	/** @param array<string,string> $options */
+	public function url(string $id, array $options = []): string
 	{
-		return strval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'url',
+			'property'   => 'url',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	public function number(string $id, string $collection = 'number', string $property = 'number'): string
+	/** @param array<string,string> $options */
+	public function number(string $id, array $options = []): string
 	{
-		return strval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'number',
+			'property'   => 'number',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	// Get an text property from an object
-	public function text(string $id, string $collection = 'text', string $property = 'text'): string
+	/** @param array<string,string> $options */
+	public function text(string $id, array $options = []): string
 	{
-		return strval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'text',
+			'property'   => 'text',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	// Get an styledtext property from an object
-	public function styledtext(string $id, string $collection = 'styledtext', string $property = 'styledtext'): string
+	/** @param array<string,string> $options */
+	public function styledtext(string $id, array $options = []): string
 	{
-		return strval($this->data($collection, $id, $property));
+		$options = array_merge([
+			'collection' => 'styledtext',
+			'property'   => 'styledtext',
+		], $options);
+
+		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	// Get an property from an object
-	/** @return array<array<string,string|int>> */
-	public function depot(string $id, string $collection = 'depot', string $property = 'files'): array
+	/**
+	 * @param array<string,string> $options
+	 *
+	 * @return array<array<string,string|int>>
+	 */
+	public function depot(string $id, array $options = []): array
 	{
-		$files = $this->data($collection, $id, $property);
+		$options = array_merge([
+			'collection' => 'depot',
+			'property'   => 'files',
+		], $options);
+
+		$files = $this->data($options['collection'], $id, $options['property']);
 
 		return is_array($files) ? $files : [];
 	}
 
-	/** @param array<string,string|int> $options */
-	public function image(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
+	/**
+	 * @param array<string,string> $options
+	 * @param array<string,string|int> $imageworks
+	 */
+	public function image(?string $id, array $imageworks = [], array $options = []): string
 	{
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+		], $options);
+
 		if (empty($id)) {
 			return '';
 		}
 
-		$imagePath = $this->imagePath($id, $options, $collection, $property);
+		$imagePath = $this->imagePath($id, $imageworks, $options);
 		if (empty($imagePath)) {
 			return '';
 		}
 
-		$alt = $this->alt($id, $collection, $property);
+		$alt = $this->alt($id, $options);
 
 		return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
 	}
 
 	// Get the image path for an image property
-	/** @param array<string,string|int> $options */
-	public function imagePath(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
+	/**
+	 * @param array<string,string> $options
+	 * @param array<string,string|int> $imageworks
+	 */
+	public function imagePath(?string $id, array $imageworks = [], array $options = []): string
 	{
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+		], $options);
+
 		if (empty($id)) {
 			return '';
 		}
+
+		$collection = $options['collection'];
+		$property   = $options['property'];
 
 		$image = $this->data($collection, $id, $property);
 		if (!is_array($image) || !key_exists('uploadDate', $image)) {
@@ -270,10 +357,10 @@ final class TotalCMSTwigAdapter
 
 		// Default to original image type
 		$type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
-		// If type is set in options, use that
-		if (key_exists('fm', $options)) {
-			$type = $options['fm'];
-			unset($options['fm']);
+		// If type is set in imageworks options, use that
+		if (key_exists('fm', $imageworks)) {
+			$type = $imageworks['fm'];
+			unset($imageworks['fm']);
 		}
 		// If type is not in the list of allowed types, default to jpg
 		$type = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
@@ -281,11 +368,11 @@ final class TotalCMSTwigAdapter
 		$api = $this->api . "/imageworks/$collection/$id/$property.$type";
 
 		// cache busting links
-		$options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+		$imageworks['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
 
 		// From Stacks Preview Server - Not used in Imageworks and breaks the image generation
-		unset($options['datadir']);
-		unset($options['route']);
+		unset($imageworks['datadir']);
+		unset($imageworks['route']);
 
 		// Parse the existing URL and its query parameters
 		$parsedUrl = parse_url($api);
@@ -299,37 +386,54 @@ final class TotalCMSTwigAdapter
 			parse_str($parsedUrl['query'], $existingParams);
 		}
 
-		// Merge the existing parameters with the new options
-		$options = array_merge($existingParams, $options);
+		// Merge the existing parameters with the new imageworks options
+		$imageworks = array_merge($existingParams, $imageworks);
 
 		// Reconstruct the URL without the original query string, and append the new query string
-		$api = $parsedUrl['path'] . '?' . http_build_query($options);
+		$api = $parsedUrl['path'] . '?' . http_build_query($imageworks);
 
 		return $api;
 	}
 
-	/** @param array<string,string|int> $options */
-	public function galleryImage(?string $id, ?string $filename, array $options = [], string $collection = 'gallery', string $property = 'gallery'): string
+	/**
+	 * @param array<string,string> $options
+	 * @param array<string,string|int> $imageworks
+	 */
+	public function galleryImage(?string $id, ?string $filename, array $imageworks = [], array $options = []): string
 	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
 		if (empty($id) || empty($filename)) {
 			return '';
 		}
 
-		$imagePath = $this->galleryPath($id, $filename, $options, $collection, $property);
+		$imagePath = $this->galleryPath($id, $filename, $imageworks, $options);
 		if (empty($imagePath)) {
 			return '';
 		}
 
-		$alt = $this->galleryAlt($id, $filename, $collection, $property);
+		$alt = $this->galleryAlt($id, $filename, $options);
 
 		return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
 	}
 
 	// get an image object from inside a gallery by it's name
-	/** @return array<string,mixed> */
-	public function galleryImageData(string $id, string $name, string $collection = 'gallery', string $property = 'gallery'): ?array
+	/**
+	 * @param array<string,string> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function galleryImageData(string $id, string $name, array $options = []): ?array
 	{
-		$gallery = $this->data($collection, $id, $property);
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		$gallery = $this->data($options['collection'], $id, $options['property']);
 		if (!is_array($gallery)) {
 			return null;
 		}
@@ -349,32 +453,41 @@ final class TotalCMSTwigAdapter
 	/**
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 *
-	 * @param array<string,string|int> $options
+	 * @param array<string,string> $options
+	 * @param array<string,string|int> $imageworks
 	 */
-	public function galleryPath(?string $id, ?string $name, array $options = [], string $collection = 'gallery', string $property = 'gallery'): string
+	public function galleryPath(?string $id, ?string $name, array $imageworks = [], array $options = []): string
 	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
 		if (empty($id) || empty($name)) {
 			return '';
 		}
 
+		$collection = $options['collection'];
+		$property   = $options['property'];
+
 		// Default to dynamic API routes
 		$api              = $this->api . "/imageworks/$collection/$id/$property/$name";
-		$options['cache'] = uniqid();
+		$imageworks['cache'] = uniqid();
 		$dynamicRoutes    = ['first', 'last', 'random', 'featured'];
 
 		// Process the image as regular filename
 		if (!in_array($name, $dynamicRoutes)) {
-			$image = $this->galleryImageData($id, $name, $collection, $property);
+			$image = $this->galleryImageData($id, $name, $options);
 			if (!is_array($image) || !key_exists('uploadDate', $image)) {
 				return '';
 			}
 
 			// Default to original image type
 			$type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
-			// If type is set in options, use that
-			if (key_exists('fm', $options)) {
-				$type = $options['fm'];
-				unset($options['fm']);
+			// If type is set in imageworks, use that
+			if (key_exists('fm', $imageworks)) {
+				$type = $imageworks['fm'];
+				unset($imageworks['fm']);
 			}
 			// If type is not in the list of allowed types, default to jpg
 			$type     = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
@@ -383,12 +496,12 @@ final class TotalCMSTwigAdapter
 			$api = $this->api . "/imageworks/$collection/$id/$property/$basename.$type";
 
 			// cache busting links
-			$options['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+			$imageworks['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
 		}
 
 		// From Stacks Preview Server - Not used in Imageworks and breaks the image generation
-		unset($options['datadir']);
-		unset($options['route']);
+		unset($imageworks['datadir']);
+		unset($imageworks['route']);
 
 		// Parse the existing URL and its query parameters
 		$parsedUrl = parse_url($api);
@@ -402,19 +515,25 @@ final class TotalCMSTwigAdapter
 			parse_str($parsedUrl['query'], $existingParams);
 		}
 
-		// Merge the existing parameters with the new options
-		$options = array_merge($existingParams, $options);
+		// Merge the existing parameters with the new imageworks
+		$imageworks = array_merge($existingParams, $imageworks);
 
 		// Reconstruct the URL without the original query string, and append the new query string
-		$api = $parsedUrl['path'] . '?' . http_build_query($options);
+		$api = $parsedUrl['path'] . '?' . http_build_query($imageworks);
 
 		return $api;
 	}
 
 	// Get an alt tag for an image
-	public function alt(string $id, string $collection = 'image', string $property = 'image'): string
+	/** @param array<string,string> $options */
+	public function alt(string $id, array $options = []): string
 	{
-		$image = $this->data($collection, $id, $property);
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+		], $options);
+
+		$image = $this->data($options['collection'], $id, $options['property']);
 
 		if (!is_array($image) || !key_exists('alt', $image)) {
 			return '';
@@ -424,9 +543,15 @@ final class TotalCMSTwigAdapter
 	}
 
 	// Get an alt tag for a gallery image
-	public function galleryAlt(string $id, string $filename, string $collection = 'gallery', string $property = 'gallery'): string
+	/** @param array<string,string> $options */
+	public function galleryAlt(string $id, string $filename, array $options = []): string
 	{
-		$image = $this->galleryImageData($id, $filename, $collection, $property);
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		$image = $this->galleryImageData($id, $filename, $options);
 
 		if (!is_array($image) || !key_exists('alt', $image)) {
 			return '';
