@@ -17,15 +17,12 @@ use TotalCMS\Support\Config;
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  */
 final class TotalCMSTwigAdapter
 {
 	public TotalFormFactory $form;
 	public string $api;
-
-	// TODO: REMOVE after refactor
-	/** @var array<string,mixed> */
-	private array $storage;
 
 	public function __construct(
 		private Config $config,
@@ -39,30 +36,6 @@ final class TotalCMSTwigAdapter
 	) {
 		$this->api  = $this->config->api;
 		$this->form = $this->totalFormFactory;
-
-		// TODO: REMOVE after refactor
-		$this->storage = [];
-	}
-
-	// TODO: REMOVE after refactor
-	/** @return array<string,mixed> */
-	public function formDefinitions(string $property, string $collection, ?string $id): array
-	{
-		$collection = $this->collectionFetcher->fetchCollection($collection);
-		$properties = [];
-
-		if ($collection === null) {
-			return [];
-		}
-
-		if (key_exists($property, $collection->properties)) {
-			$properties = $collection->properties[$property];
-		}
-		if (!empty($id) && isset($collection->customProperties[$id][$property])) {
-			$properties = array_merge($properties, $collection->customProperties[$id][$property]);
-		}
-
-		return $properties;
 	}
 
 	public function config(string $key, ?string $setting): mixed
@@ -77,29 +50,6 @@ final class TotalCMSTwigAdapter
 		}
 
 		return '';
-	}
-
-	// store data in the adapter
-	// TODO: REMOVE after refactor
-	public function getData(string $key): mixed
-	{
-		return key_exists($key, $this->storage) ? $this->storage[$key] : null;
-	}
-
-	// store data in the adapter
-	// TODO: REMOVE after refactor
-	public function storeData(string $key, mixed $value): void
-	{
-		$this->storage[$key] = $value;
-
-		return;
-	}
-
-	// Reset stored collection name
-	// TODO: REMOVE after refactor
-	public function clearStorage(): void
-	{
-		$this->storage = [];
 	}
 
 	// Get all schemas
