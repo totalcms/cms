@@ -10,6 +10,9 @@ final class ImageField extends FormField
 	protected string $defaultFieldType = 'image';
 	protected string $defaultInputType = 'image';
 
+	const PREVIEW_WIDTH  = 600;
+	const PREVIEW_HEIGHT = 400;
+
 	private string $imagePath;
 	/** @var array<string,mixed> */
 	private array $imageData;
@@ -22,7 +25,7 @@ final class ImageField extends FormField
 		$this->imageData = $this->value; // Image data is stored in the value field
 
 		$api        = $this->form->api;
-		$imageworks = ['w' => 600, 'h' => 400];
+		$imageworks = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT];
 		$options    = ['collection' => $this->form->collection, 'property' => $this->name];
 		$id         = $this->form->id;
 
@@ -73,9 +76,29 @@ final class ImageField extends FormField
 		HTML;
 	}
 
-	private function linkDialog(): string
+	private function linkDialog(?string $name = null): string
 	{
-		return '';
+		// Gallery passes the name of the image
+		// The name should be null for an image field
+
+		$query = http_build_query([
+			'id'         => $this->form->id,
+			'collection' => $this->form->collection,
+			'property'   => $this->name,
+			'name'       => $name,
+			'w'          => self::PREVIEW_WIDTH,
+		]);
+		// 	The cms.api may have a ? because of the Stacks Preview server
+		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
+
+		$iframe = HTMLUtils::createHTMLElement('iframe', '', [
+			'style'     => 'width:100%;height:100%',
+			'data-src'  => "{$this->form->api}/admin/imageworks{$join}{$query}",
+			'frameborder' => '0',
+		]);
+		$dialog = HTMLUtils::createHTMLElement('dialog', $iframe, ['class' => 'cms-modal image-link-dialog']);
+
+		return $dialog;
 	}
 
 	private function imageDialog(): string
