@@ -56,7 +56,9 @@ class FormField
 		$icon  = $this->icon ? HTMLUtils::createHTMLElement('div', '', ['class' => 'form-group-icon']) : '';
 
 		$group = HTMLUtils::createHTMLElement('div', $input . $icon, ['class' => 'form-group']);
-		$label = HTMLUtils::createHTMLElement('label', $this->label, ['for' => "field-{$this->uuid}"]);
+		$label = empty($this->label) ? '' : HTMLUtils::createHTMLElement('label', $this->label, [
+			'for' => "field-{$this->uuid}"
+		]);
 		$help  = empty($this->help) ? '' : HTMLUtils::createHTMLElement('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
