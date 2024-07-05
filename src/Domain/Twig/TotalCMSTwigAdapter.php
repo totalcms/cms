@@ -485,17 +485,36 @@ final class TotalCMSTwigAdapter
 			return '';
 		}
 
+		$image = $this->galleryImageData($id, $name, $options) ?? [];
+
+		return self::buildImageworksGalleryAPI($this->api, $id, $name, $image, $imageworks, $options);
+	}
+
+	/**
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 *
+	 * @param array<string,mixed> $image
+	 * @param array<string,string> $options
+	 * @param array<string,string|int> $imageworks
+	 */
+	public static function buildImageworksGalleryAPI(string $baseapi, string $id, string $name, array $image, array $imageworks = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
 		// Default to dynamic API routes
-		$api              = $this->api . "/imageworks/$collection/$id/$property/$name";
+		$api                 = $baseapi . "/imageworks/$collection/$id/$property/$name";
 		$imageworks['cache'] = uniqid();
-		$dynamicRoutes    = ['first', 'last', 'random', 'featured'];
+		$dynamicRoutes       = ['first', 'last', 'random', 'featured'];
 
 		// Process the image as regular filename
 		if (!in_array($name, $dynamicRoutes)) {
-			$image = $this->galleryImageData($id, $name, $options);
+
 			if (!is_array($image) || !key_exists('uploadDate', $image)) {
 				return '';
 			}
@@ -511,7 +530,7 @@ final class TotalCMSTwigAdapter
 			$type     = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
 			$basename = pathinfo($name)['filename'];
 
-			$api = $this->api . "/imageworks/$collection/$id/$property/$basename.$type";
+			$api = $baseapi . "/imageworks/$collection/$id/$property/$basename.$type";
 
 			// cache busting links
 			$imageworks['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));

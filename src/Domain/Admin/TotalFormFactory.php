@@ -134,6 +134,20 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function gallery(string $id, array $options = []): string
+	{
+		$options = array_merge([
+			'id'         => $id,
+			'collection' => 'gallery',
+			'hideID'     => true,
+		], $options);
+
+		$form = $this->builder($options['collection'], $options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function image(string $id, array $options = []): string
 	{
 		$options = array_merge([

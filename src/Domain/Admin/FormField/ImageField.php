@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 
-final class ImageField extends FormField
+class ImageField extends FormField
 {
 	protected string $defaultFieldType = 'image';
 	protected string $defaultInputType = 'image';
@@ -13,34 +13,31 @@ final class ImageField extends FormField
 	const PREVIEW_WIDTH  = 600;
 	const PREVIEW_HEIGHT = 400;
 
-	private string $imagePath;
-	/** @var array<string,mixed> */
-	private array $imageData;
-
 	public function init(): void
 	{
 		parent::init();
 
-		$this->icon = false; // No icon for image field
-		$this->imageData = $this->value; // Image data is stored in the value field
+		$this->icon = false; // No icon for image fields
+	}
+
+	public function buildFormField(): string
+	{
+		$imageData = $this->value; // Image data is stored in the value field
 
 		$api        = $this->form->api;
 		$imageworks = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT];
 		$options    = ['collection' => $this->form->collection, 'property' => $this->name];
 		$id         = $this->form->id;
 
-		$this->imagePath = TotalCMSTwigAdapter::buildImageworksAPI($api, $id, $this->imageData, $imageworks, $options);
-	}
+		$imagePath = TotalCMSTwigAdapter::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);
 
-	public function buildFormField(): string
-	{
 		$previewAttrs = ['class' => 'image-preview'];
-		if ($this->imageData['featured'] ?? false) {
+		if ($imageData['featured'] ?? false) {
 			$previewAttrs['class'] .= " featured";
 		}
-		$imagePreview = $this->imagePreview($this->imagePath, $this->imageData['name'] ?? '');
+		$imagePreview = $this->imagePreview($imagePath, $imageData['name'] ?? '');
 		$linkDialog   = $this->linkDialog();
-		$imageDialog  = $this->imageDialog($this->imagePath, $this->imageData);
+		$imageDialog  = $this->imageDialog($imagePath, $imageData);
 
 		$previewTemplate = HTMLUtils::createHTMLElement('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
 
@@ -52,7 +49,7 @@ final class ImageField extends FormField
 		return $input . $overlay . $preview . $template;
 	}
 
-	private function imagePreview(string $imagePath, string $alt): string
+	protected function imagePreview(string $imagePath, string $alt): string
 	{
 		return <<<HTML
 		<div class="dz-preview dz-file-preview not-found">
@@ -76,7 +73,7 @@ final class ImageField extends FormField
 		HTML;
 	}
 
-	private function linkDialog(?string $name = null): string
+	protected function linkDialog(?string $name = null): string
 	{
 		// Gallery passes the name of the image
 		// The name should be null for an image field
@@ -102,7 +99,7 @@ final class ImageField extends FormField
 	}
 
 	/** @param array<string,mixed> $imageData */
-	private function imageDialog(string $imagePath, array $imageData): string
+	protected function imageDialog(string $imagePath, array $imageData): string
 	{
 		$content = $this->imagePreviewSection($imagePath, $imageData);
 		$content .= $this->imageFieldsSection($imageData);
