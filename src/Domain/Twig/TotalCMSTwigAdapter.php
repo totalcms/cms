@@ -373,6 +373,10 @@ final class TotalCMSTwigAdapter
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
+		if (empty($image) || !key_exists('name', $image)) {
+			return '';
+		}
+
 		// Default to original image type
 		$type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
 		// If type is set in imageworks options, use that

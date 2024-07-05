@@ -22,7 +22,7 @@ class ImageField extends FormField
 
 	public function buildFormField(): string
 	{
-		$imageData = $this->value; // Image data is stored in the value field
+		$imageData = is_array($this->value) ? $this->value : []; // Image data is stored in the value field
 
 		$api        = $this->form->api;
 		$imageworks = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT];
