@@ -12,7 +12,7 @@ final class GalleryField extends ImageField
 
 	public function buildFormField(): string
 	{
-		$imageData  = $this->value; // Image data is stored in the value field
+		$imageData  = is_array($this->value) ? $this->value : []; // Image data is stored in the value field
 		$api        = $this->form->api;
 		$imageworks = ['w' => ImageField::PREVIEW_WIDTH, 'h' => ImageField::PREVIEW_HEIGHT];
 		$options    = ['collection' => $this->form->collection, 'property' => $this->name];

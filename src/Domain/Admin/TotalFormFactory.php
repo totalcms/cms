@@ -71,6 +71,82 @@ final class TotalFormFactory
 		return $button->build();
 	}
 
+	/**
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function blog(array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'blog',
+			'save'       => 'Save',
+			'delete'     => 'Delete',
+			'fields'     => [],
+		], $options);
+
+		$fields = array_merge([
+			'date'       => true,
+			'summary'    => true,
+			'content'    => true,
+			'author'     => true,
+			'tags'       => true,
+			'featured'   => true,
+			'draft'      => true,
+			'image'      => true,
+			'categories' => false,
+			'extra'      => false,
+			'extra2'     => false,
+			'media'      => false,
+			'genre'      => false,
+			'labels'     => false,
+			'archived'   => false,
+			'gallery'    => false,
+		], $options['fields']);
+		// remove fields from options since it's not a valid option for TotalForm
+		unset($options['fields']);
+
+		// {% set tags       = selectOptions(cms.property(collection, "tags")) %}
+		// {% set categories = selectOptions(cms.property(collection, "categories")) %}
+		// {% set labels     = selectOptions(cms.property(collection, "labels")) %}
+		// {% set genres     = selectOptions(cms.property(collection, "genre")) %}
+		// {% set authors    = selectOptions(cms.property(collection, "authors")) %}
+
+		$form = $this->builder($options['collection'], $options);
+
+		$col1  = $form->field('id', ['settings' => ['autogen' => '${title}']]);
+		$col1 .= $form->field('created', ['field' => 'hidden']);
+		$col1 .= $form->field('updated', ['field' => 'hidden']);
+		$col1 .= $form->field('title');
+		if ($fields['date']) $col1 .= $form->field('date');
+		if ($fields['media']) $col1 .= $form->field('media', ['field' => 'url']);
+		if ($fields['summary']) $col1 .= $form->field('summary', ['field' => 'styledtext']);
+		if ($fields['content']) $col1 .= $form->field('content', ['field' => 'styledtext']);
+		if ($fields['extra']) $col1 .= $form->field('extra', ['field' => 'styledtext']);
+		if ($fields['extra2']) $col1 .= $form->field('extra2',  ['field' => 'styledtext']);
+
+		$col2 = '';
+		if ($fields['author']) $col2 .= $form->field('author');
+		if ($fields['genre']) $col2 .= $form->field('genre');
+		if ($fields['tags']) $col2 .= $form->field('tags', ['field' => 'list']);
+		if ($fields['categories']) $col2 .= $form->field('categories', ['field' => 'list']);
+		if ($fields['labels']) $col2 .= $form->field('labels', ['field' => 'list']);
+
+		$inline = '';
+		if ($fields['featured']) $inline .= $form->field('featured', ['field' => 'toggle', 'help' => false]);
+		if ($fields['draft']) $inline .= $form->field('draft', ['field' => 'toggle', 'help' => false]);
+		if ($fields['archived']) $inline .= $form->field('archived', ['field' => 'toggle', 'help' => false]);
+		$col2 .= $form->layoutInline($inline);
+
+		if ($fields['image']) $col2 .= $form->field('image');
+		if ($fields['gallery']) $col2 .= $form->field('gallery');
+
+		$layout = $form->layout2Columns($col1, $col2);
+
+		return $form->build($layout);
+	}
+
 	/** @param array<string,mixed> $options */
 	public function checkbox(string $id, array $options = []): string
 	{

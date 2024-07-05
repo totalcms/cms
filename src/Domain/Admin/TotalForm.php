@@ -169,6 +169,13 @@ final class TotalForm
 		return $layout;
 	}
 
+	public function layoutInline(string $content): string
+	{
+		$layout = HTMLUtils::createHTMLElement('div', $content, ['class' => 'form-inline-fields']);
+
+		return $layout;
+	}
+
 	private function saveButton(): string
 	{
 		if (empty($this->save)) {
