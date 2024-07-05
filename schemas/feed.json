@@ -24,7 +24,7 @@
 			"type"    : "string",
 			"label"   : "Title",
 			"help"    : "A title for your post",
-			"field"   : "input",
+			"field"   : "text",
 			"factory" : "catchPhrase",
 			"default" : ""
 		},

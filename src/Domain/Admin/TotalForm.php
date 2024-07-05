@@ -113,14 +113,14 @@ final class TotalForm
 		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
 	}
 
-	public function autoBuild(): string
+	public function autoBuild(string $content = ''): string
 	{
 		$this->addFieldsFromSchema();
 
-		return $this->build();
+		return $this->build($content);
 	}
 
-	public function build(): string
+	public function build(string $content = ''): string
 	{
 		$attributes = [
 			'class'           => "totalform {$this->class}",
@@ -153,11 +153,20 @@ final class TotalForm
 			}
 		}
 
-		$content = $this->fieldContent();
+		$content .= $this->fieldContent();
 		$content .= $this->saveButton();
 		$content .= $this->deleteButton();
 
 		return HTMLUtils::createHTMLElement('form', $content, $attributes);
+	}
+
+	public function layout2Columns(string $col1, string $col2): string
+	{
+		$col1   = HTMLUtils::createHTMLElement('section', $col1);
+		$col2   = HTMLUtils::createHTMLElement('section', $col2);
+		$layout = HTMLUtils::createHTMLElement('div', $col1 . $col2, ['class' => 'form-columns col-2']);
+
+		return $layout;
 	}
 
 	private function saveButton(): string
@@ -182,7 +191,7 @@ final class TotalForm
 
 	private function fieldContent(): string
 	{
-		if (!isset($this->fields['id'])) {
+		if (!empty($this->fields) && !isset($this->fields['id'])) {
 			// Add the ID field if it does not exist
 			$this->addField('id', ['required' => true]);
 		}

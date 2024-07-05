@@ -134,6 +134,36 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function feed(array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'feed',
+			'save'       => 'Save',
+			'delete'     => 'Delete',
+		], $options);
+
+		$form = $this->builder($options['collection'], $options);
+
+		$top = $form->field('id', [
+			'settings' => ['autogen' => '${timestamp}-${uuid}'],
+			'readonly' => true,
+			'class'    => 'hidden-field',
+		]);
+		$top .= $form->field('created', ['field' => 'hidden']);
+		$top .= $form->field('updated', ['field' => 'hidden']);
+
+		$col1  = $form->field('title');
+		$col1 .= $form->field('content', ['field' => 'styledtext']);
+
+		$col2  = $form->field('image');
+		$col2 .= $form->field('featured', ['help' => false, 'field' => 'toggle']);
+
+		$layout = $form->layout2Columns($col1, $col2);
+
+		return $form->build($top . $layout);
+	}
+
+	/** @param array<string,mixed> $options */
 	public function gallery(string $id, array $options = []): string
 	{
 		$options = array_merge([
