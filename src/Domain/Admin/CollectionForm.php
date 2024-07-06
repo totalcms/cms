@@ -19,7 +19,7 @@ use TotalCMS\Utils\HTMLUtils;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-abstract class TotalForm
+final class CollectionForm
 {
 	/** @var array<FormField> */
 	protected array $fields = [];

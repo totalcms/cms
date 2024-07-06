@@ -45,7 +45,7 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function builder(string $collection, array $options = []): TotalForm
+	public function collectionBuilder(string $collection, array $options = []): CollectionForm
 	{
 		$options['collection']        = $collection;
 		$options['api']               = $this->api;
@@ -54,7 +54,37 @@ final class TotalFormFactory
 		$options['schemaFetcher']     = $this->schemaFetcher;
 		$options['schemaLister']      = $this->schemaLister;
 
-		return new TotalForm(...$options);
+		return new CollectionForm(...$options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function collection(array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'collection',
+			'save'       => 'Save',
+			'delete'     => 'Delete',
+		], $options);
+
+		$form = $this->collectionBuilder($options['collection'], $options);
+
+		$form->addField('id');
+		$form->addField('status', ['field' => 'checkbox']);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function builder(string $collection, array $options = []): ObjectForm
+	{
+		$options['collection']        = $collection;
+		$options['api']               = $this->api;
+		$options['objectFetcher']     = $this->objectFetcher;
+		$options['collectionFetcher'] = $this->collectionFetcher;
+		$options['schemaFetcher']     = $this->schemaFetcher;
+		$options['schemaLister']      = $this->schemaLister;
+
+		return new ObjectForm(...$options);
 	}
 
 	public function save(string $label = 'Save'): string

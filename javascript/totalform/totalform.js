@@ -207,7 +207,7 @@ export default class TotalForm {
 			case "id":
                 return new Identifier(field, options);
 
-            case "text":
+			case "text":
 			case "time":
             case "url":
 			case "hidden":
@@ -272,7 +272,7 @@ export default class TotalForm {
 
             default:
                 console.warn("Unknown field",field);
-                return null;
+				return new TotalField(field, options);
         }
     }
 

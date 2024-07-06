@@ -6,4 +6,7 @@
 
 {{ form.collectionForm() }}
 
+<hr>
+
+
 <?php include __DIR__ . '/_end.php'; ?>
