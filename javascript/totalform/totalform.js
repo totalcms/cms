@@ -15,6 +15,7 @@ import StyledTextField from './styledtext';
 import SVGField from './svg';
 import ImageField from './image';
 import GalleryField from './gallery';
+import PropertiesField from './properties';
 
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
@@ -257,6 +258,7 @@ export default class TotalForm {
 			case "gallery":
 				return new GalleryField(field,options);
 
+
 			// case "file":
 			// case "depot":
 			//     return this.initArrayDroplet(field,options);
@@ -269,6 +271,9 @@ export default class TotalForm {
 
 			// case "markdown":
             //     return new MarkdownField(field, options);
+
+			case "properties":
+				return new PropertiesField(field,options);
 
             default:
                 console.warn("Unknown field",field);
