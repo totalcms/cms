@@ -13,14 +13,17 @@
 			"type"   : "string",
 			"format" : "uri"
 		},
-		"properties": {
-			"$ref" : "https://www.totalcms.co/schemas/properties/properties.json"
+		"id": {
+			"$ref" : "https://www.totalcms.co/schemas/properties/slug.json",
+		},
+		"type": {
+			"type" : "string"
 		},
 		"description": {
 			"type" : "string"
 		},
-		"type": {
-			"type" : "string"
+		"properties": {
+			"$ref" : "https://www.totalcms.co/schemas/properties/properties.json"
 		},
 		"required": {
 			"type"     : "array",
