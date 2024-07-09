@@ -1,10 +1,10 @@
 <?php
 
-namespace TotalCMS\Domain\Admin\SchemaField;
+namespace TotalCMS\Domain\Admin\PropertyField;
 
 use TotalCMS\Utils\HTMLUtils;
 
-class SchemaField
+class PropertyField
 {
 	/**
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
@@ -29,7 +29,7 @@ class SchemaField
 
 	public function build(): string
 	{
-		// <div class="schema-field id-field">
+		// <div class="property-field id-field">
 		// 	<input autocomplete="off" type="text" name="property" placeholder="name" required>
 		// 	<button type="button"></button>
 		// 	<dialog class="cms-modal small" ></dialog>
@@ -49,7 +49,7 @@ class SchemaField
 		$button = HTMLUtils::createHTMLElement('button', '', ['type' => 'button']);
 		$input  = HTMLUtils::createInlineHTMLElement('input', $inputAttributes);
 		$field  = HTMLUtils::createHTMLElement('div', $input . $button . $dialog, [
-			'class' => "schema-field {$this->field}-field"
+			'class' => "property-field {$this->field}-field"
 		]);
 
 		return $field;

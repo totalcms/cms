@@ -9,11 +9,10 @@ export default class PropertiesField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
-		this.propertyFields = Array.from(this.container.getElementsByClassName("schema-field"));
-
 		this.properties = [];
 
-		this.propertyFields.forEach(field => {
+		const propertyFields = Array.from(this.container.getElementsByClassName("property-field"));
+		propertyFields.forEach(field => {
 			const property = new PropertyField(field);
 			this.properties.push(property);
 		});
@@ -39,12 +38,9 @@ export default class PropertiesField extends TotalField {
 	}
 
 	clearValue() {
-		this.preview.clearValue();
 	}
 
-    setValue(image) {
-		this.preview.setValue(image);
-		this.saved();
+    setValue() {
     }
 
 	schema() {

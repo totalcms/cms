@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Admin\SchemaField\SchemaField;
+use TotalCMS\Domain\Admin\PropertyField\PropertyField;
 
 class PropertiesField extends FormField
 {
@@ -26,7 +26,7 @@ class PropertiesField extends FormField
 
 		if (is_array($this->value)) {
 			foreach ($this->value as $property => $options) {
-				$this->properties[(string)$property] = $this->createSchemaField($property, $options);
+				$this->properties[(string)$property] = $this->createPropertyField($property, $options);
 			}
 		}
 	}
@@ -43,13 +43,13 @@ class PropertiesField extends FormField
 	}
 
 	/** @param array<string,mixed> $options */
-	private function createSchemaField(string $property, array $options): SchemaField
+	private function createPropertyField(string $property, array $options): PropertyField
 	{
 		$options['property'] = $property;
-		$typeClass = 'TotalCMS\\Domain\\Admin\\SchemaField\\' . ucfirst($options['field'] ?? '') . 'Field';
-		if (class_exists($typeClass) && is_subclass_of($typeClass, SchemaField::class)) {
+		$typeClass = 'TotalCMS\\Domain\\Admin\\PropertyField\\' . ucfirst($options['field'] ?? '') . 'Field';
+		if (class_exists($typeClass) && is_subclass_of($typeClass, PropertyField::class)) {
 			return new $typeClass(...$options);
 		}
-		return new SchemaField(...$options);
+		return new PropertyField(...$options);
 	}
 }
