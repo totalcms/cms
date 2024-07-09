@@ -55,17 +55,19 @@ abstract class TotalForm
 		public    string $collection,
 		public    string $id          = '',
 		protected string $method      = 'POST',
-		private   string $class       = '',
-		private   string $helpStyle   = '',
-		private   string $save        = '',
-		private   string $delete      = '',
-		private   array $newAction    = [],
-		private   array $editAction   = [],
-		private   array $deleteAction = [],
-		private   bool $autosave      = false,
-		private   bool $helpOnHover   = false,
-		private   bool $helpOnFocus   = false,
-		private   bool $hideID        = false,
+		protected string $class       = '',
+		protected string $helpStyle   = '',
+		protected string $save        = '',
+		protected string $delete      = '',
+		protected string $formType    = '',
+		protected string $schema      = '',
+		protected array $newAction    = [],
+		protected array $editAction   = [],
+		protected array $deleteAction = [],
+		protected bool $autosave      = false,
+		protected bool $helpOnHover   = false,
+		protected bool $helpOnFocus   = false,
+		protected bool $hideID        = false,
 	) {
 		$this->init();
 		$this->initClass();
@@ -79,7 +81,7 @@ abstract class TotalForm
 		}
 	}
 
-	private function initClass(): void
+	protected function initClass(): void
 	{
 		if ($this->autosave === true) {
 			$this->class .= ' autosave';
@@ -98,18 +100,6 @@ abstract class TotalForm
 		}
 	}
 
-	protected function initCollectionData(): void
-	{
-		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
-
-		if (is_null($collectionData)) {
-			throw new \Exception('Collection not found for TotalForm');
-		}
-
-		$this->collectionData = $collectionData;
-		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
-	}
-
 	public function autoBuild(string $content = ''): string
 	{
 		$this->addFieldsFromSchema();
@@ -119,34 +109,28 @@ abstract class TotalForm
 
 	public function build(string $content = ''): string
 	{
-		$attributes = [
+		$attributes = array_filter([
 			'class'           => "totalform {$this->class}",
-			'data-schema'     => $this->collectionData->schema,
-			'data-collection' => $this->collection,
+			'data-form'       => $this->formType,
+			'data-schema'     => $this->schema,
+			'data-collection' => $this->collection ?? null,
 			'data-method'     => $this->method,
 			'data-api'        => $this->api,
 			'data-route'      => $this->route,
-		];
+			'data-id'         => $this->id ?? null,
+		]);
 
-		if (!empty($this->id)) {
-			$attributes['data-id'] = $this->id;
-		}
-		if (!empty($this->newAction)) {
-			$json = json_encode($this->newAction);
-			if ($json) {
-				$attributes['data-new-action'] = $json;
-			}
-		}
-		if (!empty($this->editAction)) {
-			$json = json_encode($this->editAction);
-			if ($json) {
-				$attributes['data-edit-action'] = $json;
-			}
-		}
-		if (!empty($this->deleteAction)) {
-			$json = json_encode($this->deleteAction);
-			if ($json) {
-				$attributes['data-delete-action'] = $json;
+		$actions = [
+			'newAction'    => 'data-new-action',
+			'editAction'   => 'data-edit-action',
+			'deleteAction' => 'data-delete-action',
+		];
+		foreach ($actions as $action => $attribute) {
+			if (!empty($this->$action)) {
+				$json = json_encode($this->$action);
+				if ($json) {
+					$attributes[$attribute] = $json;
+				}
 			}
 		}
 
@@ -193,7 +177,7 @@ abstract class TotalForm
 		return $button->build();
 	}
 
-	private function fieldContent(): string
+	protected function fieldContent(): string
 	{
 		if (!empty($this->fields) && !isset($this->fields['id'])) {
 			// Add the ID field if it does not exist
@@ -213,40 +197,11 @@ abstract class TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function filterFieldProperties(array $properties): array
+	protected function filterFieldProperties(array $properties): array
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
 		return array_filter($properties, fn ($key) => in_array($key, self::FIELD_PROPERTIES), ARRAY_FILTER_USE_KEY);
-	}
-
-	/** @return array<string,mixed> */
-	private function fieldDefaults(string $property): array
-	{
-		// Get the schema and collection settings for a property
-		$schema     = $this->schemaData->properties[$property] ?? [];
-		$collection = $this->collectionData->properties[$property] ?? [];
-
-		$defaults = array_merge($schema, $collection);
-
-		return $this->filterFieldProperties($defaults);
-	}
-
-	/**
-	 * Get the properties for a object from customProperties in the collection meta data.
-	 *
-	 * @return array<string,mixed>
-	 * */
-	private function objectFieldProperties(string $property): array
-	{
-		if (empty($this->id)) {
-			return [];
-		}
-
-		// Get the schema and collection settings for a property
-		$properties = $this->collectionData->customProperties[$this->id][$property] ?? [];
-
-		return $this->filterFieldProperties($properties);
 	}
 
 	/**
@@ -254,37 +209,8 @@ abstract class TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function buildFieldOptions(string $name, array $options = [])
+	protected function buildFieldOptions(string $name, array $options = [])
 	{
-		$defaults = $this->fieldDefaults($name);
-		$options  = array_merge($defaults, $options);
-
-		// Set the name of the field
-		$options['name'] = $name;
-
-		// Setup communication between the field and the form
-		$options['form'] = $this;
-
-		// Get the value from the object data if it exists
-		if (!empty($this->id)) {
-			$options = array_merge($options, $this->objectFieldProperties($name));
-
-			if ($name === 'id') {
-				$options['value'] = $this->id;
-				// Hide the ID field if requested
-				if ($this->hideID) {
-					$options['field'] = 'hidden';
-				}
-			}
-
-			if (isset($this->objectData)) {
-				$value = $this->objectData->toArray()[$name] ?? '';
-				if (!empty($value)) {
-					$options['value'] = $value;
-				}
-			}
-		}
-
 		return $options;
 	}
 
@@ -318,7 +244,7 @@ abstract class TotalForm
 		return new FormField(...$options);
 	}
 
-	public function addFieldsFromSchema(): void
+	private function addFieldsFromSchema(): void
 	{
 		$properties = array_keys($this->schemaData->properties);
 		foreach ($properties as $property) {

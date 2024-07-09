@@ -71,7 +71,7 @@ export default class TotalForm {
 		});
 		this.route      = this.form.dataset.route;
 		this.method     = this.form.dataset.method||"PUT";
-		this.id         = this.form.dataset.id;
+		this.id         = this.form.dataset.id||"";
 		this.collection = this.form.dataset.collection;
 		this.schema     = this.form.dataset.schema;
 		this.states     = ["unsaved","success","error","processing"];
