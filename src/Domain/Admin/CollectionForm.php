@@ -86,13 +86,13 @@ final class CollectionForm extends TotalForm
 		return parent::fieldContent();
 	}
 
-
 	/** @return array<string> */
 	private function reservedSchemas(): array
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
-
-		return array_map(fn ($schema) => $schema->id, $schemas);
+		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
+		$ignore  = ['collection', 'schema'];
+		return array_filter($schemas, fn ($schema) => !in_array($schema, $ignore));
 	}
 
 	/** @return array<string> */
