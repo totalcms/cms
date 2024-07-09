@@ -14,7 +14,7 @@
 			"format" : "uri"
 		},
 		"id": {
-			"$ref" : "https://www.totalcms.co/schemas/properties/slug.json",
+			"$ref" : "https://www.totalcms.co/schemas/properties/slug.json"
 		},
 		"type": {
 			"type" : "string"
