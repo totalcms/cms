@@ -97,6 +97,10 @@ class FormField
 	 */
 	protected function formFieldAttributes(): array
 	{
+		if (!empty($this->value) && is_array($this->value)) {
+			$this->value = json_encode($this->value);
+		}
+
 		$attributes = [
 			'type'             => $this->inputType,
 			'id'               => "field-{$this->uuid}",
@@ -108,7 +112,7 @@ class FormField
 			'pattern'          => empty($this->pattern) ? null : $this->pattern,
 			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
-			'value'            => empty($this->value) ? null : htmlspecialchars((string)$this->value, ENT_QUOTES, 'UTF-8'),
+			'value'            => empty($this->value) ? null : $this->value,
 			'min'              => is_null($this->min) ? null : (string)$this->min,
 			'max'              => is_null($this->max) ? null : (string)$this->max,
 			'step'             => is_null($this->step) ? null : (string)$this->step,

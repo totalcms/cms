@@ -38,8 +38,8 @@ final class CollectionForm extends TotalForm
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
-		public string $id          = '',
-		protected string $method      = 'POST',
+		public string $id           = '',
+		protected string $method    = 'POST',
 		private string $class       = '',
 		private string $helpStyle   = '',
 		private string $save        = '',
@@ -93,7 +93,8 @@ final class CollectionForm extends TotalForm
 		$collectionData = $this->collectionFetcher->fetchCollection($this->id);
 
 		if (is_null($collectionData)) {
-			throw new \Exception('Collection not found for TotalForm');
+			// throw new \Exception('Collection not found for TotalForm');
+			return;
 		}
 
 		$this->collectionData = $collectionData;
@@ -127,6 +128,7 @@ final class CollectionForm extends TotalForm
 	{
 		$this->addFieldsFromSchema();
 
+		// Generate the schema field options
 		$schemaField = $this->fields['schema'];
 		if ($schemaField instanceof SelectField) {
 			$schemaField->setOptions([
@@ -184,7 +186,7 @@ final class CollectionForm extends TotalForm
 	private function fieldContent(): string
 	{
 		if (!empty($this->fields) && !isset($this->fields['id'])) {
-			// Add the ID field if it does not exist
+			// Add the ID field if it does not exist1
 			$this->addField('id', ['required' => true]);
 		}
 
@@ -226,6 +228,13 @@ final class CollectionForm extends TotalForm
 
 		// Setup communication between the field and the form
 		$options['form'] = $this;
+
+		if (isset($this->collectionData)) {
+			$value = $this->collectionData->toArray()[$name] ?? '';
+			if (!empty($value)) {
+				$options['value'] = $value;
+			}
+		}
 
 		return $options;
 	}
