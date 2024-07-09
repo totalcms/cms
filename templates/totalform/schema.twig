@@ -102,10 +102,9 @@
 		{# SCHEMA FIELDS #}
 		<label>Schema Properties</label>
 
+
 		<div class="schema-field id-field">
-			{{ _self.fieldstart("id") }}
-				<input autocomplete="off" type="text" name="name" placeholder="{{ args.name.placeholder }}" required>
-			{{ _self.fieldend(uuid, args.name) }}
+			<input autocomplete="off" type="text" name="name" placeholder="{{ args.name.placeholder }}" required>
 			<button type="button"></button>
 		</div>
 
@@ -130,9 +129,10 @@
 			<button type="button"></button>
 		</div>
 
-		<dialog class="cms-modal small">
+		<dialog class="cms-modal small" open>
 
 			<section class="scroller">
+
 
 				<details class="cms-accordion" open>
 					<summary>Property Data</summary>
@@ -154,19 +154,6 @@
 						<input type="text" name="factory" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
 					{{ _self.fieldend(uuid, args.factory) }}
 
-					{# REQUIRED #}
-					{% set uuid = uniqid() %}
-					{{ _self.fieldstart("checkbox", uuid, args.required) }}
-						<input type="checkbox" name="required" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-						<label for="field-{{ uuid }}">{{ args.required.label }}</label>
-					{{ _self.fieldend(uuid, args.required) }}
-
-					{# INDEX #}
-					{% set uuid = uniqid() %}
-					{{ _self.fieldstart("checkbox", uuid, args.index) }}
-						<input type="checkbox" name="index" id="field-{{ uuid }}" aria-describedby="help-{{ uuid }}">
-						<label for="field-{{ uuid }}">{{ args.index.label }}</label>
-					{{ _self.fieldend(uuid, args.index) }}
 				</details>
 
 				<details class="cms-accordion">

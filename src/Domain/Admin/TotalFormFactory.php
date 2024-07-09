@@ -56,6 +56,9 @@ final class TotalFormFactory
 			'collectionFetcher' => $this->collectionFetcher,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'helpStyle'         => 'label',
+			'helpOnHover'       => true,
+			'helpOnFocus'       => true,
 		]);
 
 		$form = new CollectionForm(...$options);

@@ -1,3 +1,10 @@
+.properties-field {
+	> .form-group {
+		display    : block;
+		box-shadow : none !important;
+	}
+}
+
 .schema-field {
 	display          : flex;
 	align-items      : stretch;
@@ -7,6 +14,12 @@
 	border-radius    : var(--totalform-radius);
 	background-color : oklch(var(--totalform-nearwhite));
 	position         : relative;
+	border           : 1px solid oklch(var(--totalform-nearwhite));
+	transition       : border-color 200ms ease-in-out;
+
+	&:hover {
+		border-color : oklch(var(--totalform-lightgray));
+	}
 
 	--schema-icon    : var(--icon-text);
 
@@ -24,10 +37,7 @@
 		translate        : 60% -50%;
 	}
 
-	>.form-field>.form-group {
-		margin-bottom : 0;
-	}
-	>.form-field>.form-group input[type="text"] {
+	> input[type="text"] {
 		flex             : 1;
 		padding          : 0.5rem;
 		height           : 2rem;
@@ -43,7 +53,7 @@
 		}
 
 	}
-	button {
+	> button {
 		appearance       : none;
 		cursor           : pointer;
 		border           : 0px solid oklch(var(--totalform-icon-color));

@@ -16,8 +16,8 @@ class FormField
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
-	 * @param array<string,mixed> $settings
-	 * @param array<mixed> $options
+	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
+	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
 	public function __construct(
 		protected TotalForm $form,

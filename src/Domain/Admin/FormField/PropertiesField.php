@@ -3,12 +3,53 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Admin\SchemaField\SchemaField;
 
 class PropertiesField extends FormField
 {
-	public function build(): string
+	protected string $defaultInputType = 'properties';
+	protected string $defaultFieldType = 'properties';
+
+	/** @var array<string,mixed> */
+	private array $properties = [];
+
+	public function init(): void
 	{
-		return '';
+		if (empty($this->value) || !is_array($this->value)) {
+			$this->class .= ' hide';
+		}
+
+		$this->uuid       = uniqid();
+		$this->field      = $this->defaultFieldType;
+		$this->inputType  = $this->defaultInputType;
+		$this->icon       = false;
+
+		if (is_array($this->value)) {
+			foreach ($this->value as $property => $options) {
+				$this->properties[(string)$property] = $this->createSchemaField($property, $options);
+			}
+		}
+	}
+
+	public function buildFormField(): string
+	{
+		$content = '';
+
+		foreach ($this->properties as $field) {
+			$content .= $field->build();
+		}
+
+		return $content;
+	}
+
+	/** @param array<string,mixed> $options */
+	private function createSchemaField(string $property, array $options): SchemaField
+	{
+		$options['property'] = $property;
+		$typeClass = 'TotalCMS\\Domain\\Admin\\SchemaField\\' . ucfirst($options['field'] ?? '') . 'Field';
+		if (class_exists($typeClass) && is_subclass_of($typeClass, SchemaField::class)) {
+			return new $typeClass(...$options);
+		}
+		return new SchemaField(...$options);
 	}
 }
