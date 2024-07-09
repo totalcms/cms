@@ -138,21 +138,21 @@ abstract class TotalForm
 		$content .= $this->saveButton();
 		$content .= $this->deleteButton();
 
-		return HTMLUtils::createHTMLElement('form', $content, $attributes);
+		return HTMLUtils::element('form', $content, $attributes);
 	}
 
 	public function layout2Columns(string $col1, string $col2): string
 	{
-		$col1   = HTMLUtils::createHTMLElement('section', $col1);
-		$col2   = HTMLUtils::createHTMLElement('section', $col2);
-		$layout = HTMLUtils::createHTMLElement('div', $col1 . $col2, ['class' => 'form-columns col-2']);
+		$col1   = HTMLUtils::element('section', $col1);
+		$col2   = HTMLUtils::element('section', $col2);
+		$layout = HTMLUtils::element('div', $col1 . $col2, ['class' => 'form-columns col-2']);
 
 		return $layout;
 	}
 
 	public function layoutInline(string $content): string
 	{
-		$layout = HTMLUtils::createHTMLElement('div', $content, ['class' => 'form-inline-fields']);
+		$layout = HTMLUtils::element('div', $content, ['class' => 'form-inline-fields']);
 
 		return $layout;
 	}

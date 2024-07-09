@@ -62,13 +62,13 @@ class FormField
 	public function build(): string
 	{
 		$input = $this->buildFormField();
-		$icon  = $this->icon ? HTMLUtils::createHTMLElement('div', '', ['class' => 'form-group-icon']) : '';
+		$icon  = $this->icon ? HTMLUtils::element('div', '', ['class' => 'form-group-icon']) : '';
 
-		$group = HTMLUtils::createHTMLElement('div', $input . $icon, ['class' => 'form-group']);
-		$label = empty($this->label) ? '' : HTMLUtils::createHTMLElement('label', $this->label, [
+		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
+		$label = empty($this->label) ? '' : HTMLUtils::element('label', $this->label, [
 			'for' => "field-{$this->uuid}",
 		]);
-		$help  = empty($this->help) ? '' : HTMLUtils::createHTMLElement('p', $this->help, [
+		$help  = empty($this->help) ? '' : HTMLUtils::element('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
@@ -84,7 +84,7 @@ class FormField
 			}
 		}
 
-		$formField = HTMLUtils::createHTMLElement('div', $label . $group . $help, $formFieldAtrributes);
+		$formField = HTMLUtils::element('div', $label . $group . $help, $formFieldAtrributes);
 
 		return $formField;
 	}
@@ -128,6 +128,6 @@ class FormField
 	{
 		$attributes = $this->formFieldAttributes();
 
-		return HTMLUtils::createInlineHTMLElement('input', $attributes);
+		return HTMLUtils::inlineElement('input', $attributes);
 	}
 }

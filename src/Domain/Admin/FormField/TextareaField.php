@@ -33,6 +33,6 @@ class TextareaField extends FormField
 	{
 		$attributes = $this->formFieldAttributes();
 
-		return HTMLUtils::createHTMLElement('textarea', (string)$this->value, $attributes);
+		return HTMLUtils::element('textarea', (string)$this->value, $attributes);
 	}
 }

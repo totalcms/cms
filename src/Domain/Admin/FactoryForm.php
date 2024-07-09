@@ -31,7 +31,7 @@ final class FactoryForm
 			'name'  => 'fqty',
 			'value' => (string)$this->quantity,
 		];
-		$qty = HTMLUtils::createInlineHTMLElement('input', $qtyAttrs);
+		$qty = HTMLUtils::inlineElement('input', $qtyAttrs);
 
 		$rules = "";
 		foreach ($this->rules as $property => $rule) {
@@ -40,10 +40,10 @@ final class FactoryForm
 				'name'  => $property,
 				'value' => $rule,
 			];
-			$rules .= HTMLUtils::createInlineHTMLElement('input', $ruleAttrs);
+			$rules .= HTMLUtils::inlineElement('input', $ruleAttrs);
 		}
 
-		$button = HTMLUtils::createHTMLElement('button', $this->label, [
+		$button = HTMLUtils::element('button', $this->label, [
 			'class' => 'button btn',
 			'type'  => 'submit'
 		]);
@@ -54,7 +54,7 @@ final class FactoryForm
 			'data-api'        => $this->api,
 			'data-refresh'    => $this->refresh ? 'true' : 'false',
 		];
-		$form = HTMLUtils::createHTMLElement('form', $qty . $rules . $button, $formAttrs);
+		$form = HTMLUtils::element('form', $qty . $rules . $button, $formAttrs);
 		return $form;
 	}
 

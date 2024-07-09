@@ -12,9 +12,9 @@ class CheckboxField extends FormField
 	public function build(): string
 	{
 		$input = $this->buildFormField();
-		$label = HTMLUtils::createHTMLElement('label', $this->label, ['for' => "field-{$this->uuid}"]);
-		$group = HTMLUtils::createHTMLElement('div', $input . $label, ['class' => 'form-group']);
-		$help  = empty($this->help) ? '' : HTMLUtils::createHTMLElement('p', $this->help, [
+		$label = HTMLUtils::element('label', $this->label, ['for' => "field-{$this->uuid}"]);
+		$group = HTMLUtils::element('div', $input . $label, ['class' => 'form-group']);
+		$help  = empty($this->help) ? '' : HTMLUtils::element('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
@@ -30,7 +30,7 @@ class CheckboxField extends FormField
 			}
 		}
 
-		$formField = HTMLUtils::createHTMLElement('div', $group . $help, $formFieldAtrributes);
+		$formField = HTMLUtils::element('div', $group . $help, $formFieldAtrributes);
 
 		return $formField;
 	}

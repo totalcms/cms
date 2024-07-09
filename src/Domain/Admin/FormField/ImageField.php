@@ -39,12 +39,12 @@ class ImageField extends FormField
 		$linkDialog   = $this->linkDialog();
 		$imageDialog  = $this->imageDialog($imagePath, $imageData);
 
-		$previewTemplate = HTMLUtils::createHTMLElement('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
+		$previewTemplate = HTMLUtils::element('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
 
-		$input    = HTMLUtils::createInlineHTMLElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'hidden', 'name' => $this->name]);
-		$overlay  = HTMLUtils::createHTMLElement('div', '', ['class' => 'dz-overlay dz-clickable']);
-		$preview  = HTMLUtils::createHTMLElement('div', $previewTemplate, ['class' => 'total-preview']);
-		$template = HTMLUtils::createHTMLElement('template', $previewTemplate, ['id' => 'template-' . $this->uuid]);
+		$input    = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'hidden', 'name' => $this->name]);
+		$overlay  = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
+		$preview  = HTMLUtils::element('div', $previewTemplate, ['class' => 'total-preview']);
+		$template = HTMLUtils::element('template', $previewTemplate, ['id' => 'template-' . $this->uuid]);
 
 		return $input . $overlay . $preview . $template;
 	}
@@ -88,12 +88,8 @@ class ImageField extends FormField
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
 
-		$iframe = HTMLUtils::createHTMLElement('iframe', '', [
-			'style'     => 'width:100%;height:100%',
-			'data-src'  => "{$this->form->api}/admin/imageworks{$join}{$query}",
-			'frameborder' => '0',
-		]);
-		$dialog = HTMLUtils::createHTMLElement('dialog', $iframe, ['class' => 'cms-modal image-link-dialog']);
+		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/imageworks{$join}{$query}");
+		$dialog = HTMLUtils::dialog($iframe, 'image-link-dialog');
 
 		return $dialog;
 	}
@@ -105,7 +101,7 @@ class ImageField extends FormField
 		$content .= $this->imageFieldsSection($imageData);
 		$content .= $this->closeSection();
 
-		$dialog = HTMLUtils::createHTMLElement('dialog', $content, ['class' => 'cms-modal split-view image-edit-dialog']);
+		$dialog = HTMLUtils::dialog($content, 'split-view image-edit-dialog');
 
 		return $dialog;
 	}
@@ -113,7 +109,7 @@ class ImageField extends FormField
 	/** @param array<string,mixed> $imageData */
 	private function imagePreviewSection(string $imagePath, array $imageData): string
 	{
-		$image = HTMLUtils::createInlineHTMLElement('img', [
+		$image = HTMLUtils::inlineElement('img', [
 			'src'               => $imagePath,
 			'oncontextmenu'     => 'return false;',
 			'draggable'         => 'false',
@@ -122,12 +118,12 @@ class ImageField extends FormField
 
 		$top    = $imageData['focalpoint']['y'] ?? 50;
 		$left   = $imageData['focalpoint']['x'] ?? 50;
-		$fpoint = HTMLUtils::createHTMLElement('div', '', [
+		$fpoint = HTMLUtils::element('div', '', [
 			'class' => 'focal-point',
 			'style' => "top:{$top}%;left:{$left}%",
 		]);
 
-		return HTMLUtils::createHTMLElement('section', $image . $fpoint, ['class' => 'image-preview']);
+		return HTMLUtils::element('section', $image . $fpoint, ['class' => 'image-preview']);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -141,25 +137,17 @@ class ImageField extends FormField
 		$fields .= $this->paletteFields($imageData);
 		$fields .= $this->metaFields($imageData);
 
-		return HTMLUtils::createHTMLElement('section', $fields, ['class' => 'scroller']);
+		return HTMLUtils::scroller($fields);
 	}
 
 	private function closeSection(): string
 	{
-		$button = HTMLUtils::createHTMLElement('button', 'Close', [
+		$button = HTMLUtils::element('button', 'Close', [
 			'type'  => 'button',
 			'class' => 'close button btn',
 		]);
 
-		return HTMLUtils::createHTMLElement('section', $button);
-	}
-
-	private function detailsAccordion(string $title, string $content): string
-	{
-		$summary = HTMLUtils::createHTMLElement('summary', $title);
-		$details = HTMLUtils::createHTMLElement('details', $summary . $content, ['class' => 'cms-accordion']);
-
-		return $details;
+		return HTMLUtils::element('section', $button);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -193,7 +181,7 @@ class ImageField extends FormField
 			'value'       => $imageData['tags'] ?? [],
 		]);
 
-		return $this->detailsAccordion('Info', $content);
+		return HTMLUtils::details('Info', $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -212,7 +200,7 @@ class ImageField extends FormField
 			'value' => $imageData['focalpoint']['y'] ?? 50,
 		]);
 
-		return $this->detailsAccordion('Focal Point', $content);
+		return HTMLUtils::details('Focal Point', $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -251,7 +239,7 @@ class ImageField extends FormField
 			'rows'        => 3,
 		]);
 
-		return $this->detailsAccordion('EXIF - Info', $content);
+		return HTMLUtils::details('EXIF - Info', $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -307,7 +295,7 @@ class ImageField extends FormField
 			'value'       => $imageData['exif']['shutterSpeed'] ?? '',
 		]);
 
-		return $this->detailsAccordion('EXIF - Camera', $content);
+		return HTMLUtils::details('EXIF - Camera', $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -335,7 +323,7 @@ class ImageField extends FormField
 			'value'       => $imageData['exif']['altitude'] ?? '',
 		]);
 
-		return $this->detailsAccordion('EXIF - GPS', $content);
+		return HTMLUtils::details('EXIF - GPS', $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -362,9 +350,9 @@ class ImageField extends FormField
 			'value' => $imageData['palette'][4] ?? '',
 		]);
 
-		$palette = HTMLUtils::createHTMLElement('div', $content, ['class' => 'palette']);
+		$palette = HTMLUtils::element('div', $content, ['class' => 'palette']);
 
-		return $this->detailsAccordion('Color Palette', $palette);
+		return HTMLUtils::details('Color Palette', $palette);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -413,7 +401,7 @@ class ImageField extends FormField
 			'value'    => $imageData['uploadDate'] ?? '',
 		]);
 
-		return $this->detailsAccordion('Meta (Readonly)', $content);
+		return HTMLUtils::details('Meta (Readonly)', $content);
 	}
 }
 

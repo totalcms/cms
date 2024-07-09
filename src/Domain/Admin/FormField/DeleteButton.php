@@ -17,6 +17,6 @@ final class DeleteButton
 			'class' => 'cms-delete button btn',
 		];
 
-		return HTMLUtils::createHTMLElement('button', $this->label, $attributes);
+		return HTMLUtils::element('button', $this->label, $attributes);
 	}
 }

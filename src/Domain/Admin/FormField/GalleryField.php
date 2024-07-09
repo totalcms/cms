@@ -30,33 +30,33 @@ final class GalleryField extends ImageField
 			if ($image['featured'] ?? false) {
 				$previewAttrs['class'] .= " featured";
 			}
-			$previews .= HTMLUtils::createHTMLElement('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
+			$previews .= HTMLUtils::element('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
 		}
-		$previews = HTMLUtils::createHTMLElement('div', $previews, ['class' => 'total-preview']);
+		$previews = HTMLUtils::element('div', $previews, ['class' => 'total-preview']);
 
-		$input = HTMLUtils::createInlineHTMLElement('input', [
+		$input = HTMLUtils::inlineElement('input', [
 			'id'   => 'field-' . $this->uuid,
 			'type' => 'hidden',
 			'name' => $this->name
 		]);
-		$overlay = HTMLUtils::createHTMLElement('div', '', ['class' => 'dz-overlay dz-clickable']);
+		$overlay = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
 
 		$imagePreview    = $this->imagePreview('', '');
 		$linkDialog      = $this->linkDialog();
 		$imageDialog     = $this->imageDialog('', []);
-		$previewTemplate = HTMLUtils::createHTMLElement('div', $imagePreview . $imageDialog . $linkDialog, [
+		$previewTemplate = HTMLUtils::element('div', $imagePreview . $imageDialog . $linkDialog, [
 			'class' => 'image-preview'
 		]);
 
-		$template = HTMLUtils::createHTMLElement('template', $previewTemplate, [
+		$template = HTMLUtils::element('template', $previewTemplate, [
 			'id' => 'template-' . $this->uuid
 		]);
 
-		$uploadButton = HTMLUtils::createHTMLElement('button', '', [
+		$uploadButton = HTMLUtils::element('button', '', [
 			'type'  => 'button',
 			'title' => 'Upload New Image'
 		]);
-		$uploadButton = HTMLUtils::createHTMLElement('div', $uploadButton, [
+		$uploadButton = HTMLUtils::element('div', $uploadButton, [
 			'class' => 'gallery-upload dz-clickable'
 		]);
 

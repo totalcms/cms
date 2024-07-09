@@ -8,7 +8,7 @@ namespace TotalCMS\Utils;
 class HTMLUtils
 {
 	/** @param array<string,?string> $attributes */
-	public static function createHTMLElement(string $tag, string $content, array $attributes = []): string
+	public static function element(string $tag, string $content, array $attributes = []): string
 	{
 		$element  = "<$tag";
 		$element .= self::buildHTMLAttributes($attributes);
@@ -18,7 +18,7 @@ class HTMLUtils
 	}
 
 	/** @param array<string,?string> $attributes */
-	public static function createInlineHTMLElement(string $tag, array $attributes = []): string
+	public static function inlineElement(string $tag, array $attributes = []): string
 	{
 		$element  = "<$tag";
 		$element .= self::buildHTMLAttributes($attributes);
@@ -41,5 +41,33 @@ class HTMLUtils
 		}
 
 		return $element;
+	}
+
+	public static function details(string $title, string $content, string $class = ''): string
+	{
+		$summary = self::element('summary', $title);
+		$details = self::element('details', $summary . $content, ['class' => "cms-accordion $class"]);
+
+		return $details;
+	}
+
+	public static function dialog(string $content, string $class = ''): string
+	{
+		return self::element('dialog', $content, ['class' => "cms-modal $class"]);
+	}
+
+	public static function iframe(string $url, string $class = ''): string
+	{
+		return self::element('iframe', '', [
+			'style'       => 'width:100%;height:100%',
+			'data-src'    => $url,
+			'frameborder' => '0',
+			'class'       => "cms-iframe $class",
+		]);
+	}
+
+	public static function scroller(string $content): string
+	{
+		return self::element('section', $content, ['class' => "scroller"]);
 	}
 }

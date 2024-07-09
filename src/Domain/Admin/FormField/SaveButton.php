@@ -18,6 +18,6 @@ final class SaveButton
 			'type'  => 'submit',
 		];
 
-		return HTMLUtils::createHTMLElement('button', $this->label, $attributes);
+		return HTMLUtils::element('button', $this->label, $attributes);
 	}
 }

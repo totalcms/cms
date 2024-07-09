@@ -65,7 +65,7 @@ class SelectField extends FormField
 			$attributes['selected'] = '';
 		}
 
-		return HTMLUtils::createHTMLElement('option', $this->placeholder, $attributes);
+		return HTMLUtils::element('option', $this->placeholder, $attributes);
 	}
 
 	/** @param array<string,string> $option */
@@ -75,7 +75,7 @@ class SelectField extends FormField
 		if ($option['value'] == $this->value) {
 			$attributes['selected'] = '';
 		}
-		return HTMLUtils::createHTMLElement('option', $option['label'], $attributes);
+		return HTMLUtils::element('option', $option['label'], $attributes);
 	}
 
 	/** @param array<string|array<string,string>> $options */
@@ -89,7 +89,7 @@ class SelectField extends FormField
 			$groupOptions .= $this->buildOption($option);
 		}
 
-		return HTMLUtils::createHTMLElement('optgroup', $groupOptions, ['label' => $group]);
+		return HTMLUtils::element('optgroup', $groupOptions, ['label' => $group]);
 	}
 
 	protected function buildOptions(): string
@@ -112,7 +112,7 @@ class SelectField extends FormField
 	{
 		$attributes = $this->formFieldAttributes();
 
-		return HTMLUtils::createHTMLElement('select', $this->buildOptions(), $attributes);
+		return HTMLUtils::element('select', $this->buildOptions(), $attributes);
 	}
 }
 

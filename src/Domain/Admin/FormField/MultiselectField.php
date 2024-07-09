@@ -29,7 +29,7 @@ class MultiselectField extends SelectField
 		if (in_array($option['value'], $this->value)) {
 			$attributes['selected'] = '';
 		}
-		return HTMLUtils::createHTMLElement('option', $option['label'], $attributes);
+		return HTMLUtils::element('option', $option['label'], $attributes);
 	}
 
 	protected function placeholderOption(): string
@@ -40,6 +40,6 @@ class MultiselectField extends SelectField
 
 		$attributes = ['value' => '', 'disabled' => ''];
 
-		return HTMLUtils::createHTMLElement('option', $this->placeholder, $attributes);
+		return HTMLUtils::element('option', $this->placeholder, $attributes);
 	}
 }
