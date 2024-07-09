@@ -45,33 +45,22 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function collectionBuilder(string $collection, array $options = []): CollectionForm
-	{
-		$options['collection']        = $collection;
-		$options['api']               = $this->api;
-		$options['objectFetcher']     = $this->objectFetcher;
-		$options['collectionFetcher'] = $this->collectionFetcher;
-		$options['schemaFetcher']     = $this->schemaFetcher;
-		$options['schemaLister']      = $this->schemaLister;
-
-		return new CollectionForm(...$options);
-	}
-
-	/** @param array<string,mixed> $options */
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([
-			'collection' => 'collection',
-			'save'       => 'Save',
-			'delete'     => 'Delete',
-		], $options);
+			'id'   => '',
+			'save' => 'Save',
+		], $options, [
+			// These options cannot be overridden
+			'api'               => $this->api,
+			'collectionFetcher' => $this->collectionFetcher,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+		]);
 
-		$form = $this->collectionBuilder($options['collection'], $options);
+		$form = new CollectionForm(...$options);
 
-		$form->addField('id');
-		$form->addField('status', ['field' => 'checkbox']);
-
-		return $form->build();
+		return $form->autoBuild();
 	}
 
 	/** @param array<string,mixed> $options */
@@ -149,28 +138,60 @@ final class TotalFormFactory
 		$col1 .= $form->field('created', ['field' => 'hidden']);
 		$col1 .= $form->field('updated', ['field' => 'hidden']);
 		$col1 .= $form->field('title');
-		if ($fields['date']) $col1 .= $form->field('date');
-		if ($fields['media']) $col1 .= $form->field('media', ['field' => 'url']);
-		if ($fields['summary']) $col1 .= $form->field('summary', ['field' => 'styledtext']);
-		if ($fields['content']) $col1 .= $form->field('content', ['field' => 'styledtext']);
-		if ($fields['extra']) $col1 .= $form->field('extra', ['field' => 'styledtext']);
-		if ($fields['extra2']) $col1 .= $form->field('extra2',  ['field' => 'styledtext']);
+		if ($fields['date']) {
+			$col1 .= $form->field('date');
+		}
+		if ($fields['media']) {
+			$col1 .= $form->field('media', ['field' => 'url']);
+		}
+		if ($fields['summary']) {
+			$col1 .= $form->field('summary', ['field' => 'styledtext']);
+		}
+		if ($fields['content']) {
+			$col1 .= $form->field('content', ['field' => 'styledtext']);
+		}
+		if ($fields['extra']) {
+			$col1 .= $form->field('extra', ['field' => 'styledtext']);
+		}
+		if ($fields['extra2']) {
+			$col1 .= $form->field('extra2', ['field' => 'styledtext']);
+		}
 
 		$col2 = '';
-		if ($fields['author']) $col2 .= $form->field('author');
-		if ($fields['genre']) $col2 .= $form->field('genre');
-		if ($fields['tags']) $col2 .= $form->field('tags', ['field' => 'list']);
-		if ($fields['categories']) $col2 .= $form->field('categories', ['field' => 'list']);
-		if ($fields['labels']) $col2 .= $form->field('labels', ['field' => 'list']);
+		if ($fields['author']) {
+			$col2 .= $form->field('author');
+		}
+		if ($fields['genre']) {
+			$col2 .= $form->field('genre');
+		}
+		if ($fields['tags']) {
+			$col2 .= $form->field('tags', ['field' => 'list']);
+		}
+		if ($fields['categories']) {
+			$col2 .= $form->field('categories', ['field' => 'list']);
+		}
+		if ($fields['labels']) {
+			$col2 .= $form->field('labels', ['field' => 'list']);
+		}
 
 		$inline = '';
-		if ($fields['featured']) $inline .= $form->field('featured', ['field' => 'toggle', 'help' => false]);
-		if ($fields['draft']) $inline .= $form->field('draft', ['field' => 'toggle', 'help' => false]);
-		if ($fields['archived']) $inline .= $form->field('archived', ['field' => 'toggle', 'help' => false]);
+		if ($fields['featured']) {
+			$inline .= $form->field('featured', ['field' => 'toggle', 'help' => false]);
+		}
+		if ($fields['draft']) {
+			$inline .= $form->field('draft', ['field' => 'toggle', 'help' => false]);
+		}
+		if ($fields['archived']) {
+			$inline .= $form->field('archived', ['field' => 'toggle', 'help' => false]);
+		}
 		$col2 .= $form->layoutInline($inline);
 
-		if ($fields['image']) $col2 .= $form->field('image');
-		if ($fields['gallery']) $col2 .= $form->field('gallery');
+		if ($fields['image']) {
+			$col2 .= $form->field('image');
+		}
+		if ($fields['gallery']) {
+			$col2 .= $form->field('gallery');
+		}
 
 		$layout = $form->layout2Columns($col1, $col2);
 

@@ -22,23 +22,14 @@ class MultiselectField extends SelectField
 		}
 	}
 
-	protected function buildOptions(): string
+	/** @param array<string,string> $option */
+	protected function buildOption(array $option): string
 	{
-		$options = '';
-
-		$options .= $this->placeholderOption();
-
-		$this->converOptionsList();
-
-		foreach ($this->options as $option) {
-			$attributes = ['value' => $option['value']];
-			if (in_array($option['value'], $this->value)) {
-				$attributes['selected'] = '';
-			}
-			$options .= HTMLUtils::createHTMLElement('option', $option['label'], $attributes);
+		$attributes = ['value' => $option['value']];
+		if (in_array($option['value'], $this->value)) {
+			$attributes['selected'] = '';
 		}
-
-		return $options;
+		return HTMLUtils::createHTMLElement('option', $option['label'], $attributes);
 	}
 
 	protected function placeholderOption(): string

@@ -116,7 +116,7 @@ final class CollectionRepository extends StorageRepository
 			throw new \UnexpectedValueException('Cannot save collection with a reserved name');
 		}
 
-		if ($this->validator->validateSchema($collection->toArray(), 'meta') === false) {
+		if ($this->validator->validateSchema($collection->toArray(), 'collection') === false) {
 			throw new \UnexpectedValueException('Invalid Collection data provided. Failed schema validation.', 1);
 		}
 

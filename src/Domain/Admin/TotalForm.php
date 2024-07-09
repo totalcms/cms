@@ -21,7 +21,7 @@ use TotalCMS\Utils\HTMLUtils;
  */
 abstract class TotalForm
 {
-	/** @var array<FormField> */
+	/** @var array<string,FormField> */
 	protected array $fields = [];
 	protected string $route;
 	protected CollectionData $collectionData;
@@ -311,7 +311,7 @@ abstract class TotalForm
 	{
 		$options = $this->buildFieldOptions($name, $options);
 
-		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field']) . 'Field';
+		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field'] ?? '') . 'Field';
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
 			return new $typeClass(...$options);
 		}

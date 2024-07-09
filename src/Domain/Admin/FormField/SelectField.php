@@ -32,13 +32,26 @@ class SelectField extends FormField
 		return $attributes;
 	}
 
-	protected function converOptionsList(): void
+	/** @param array<mixed> $options */
+	public function setOptions(array $options): void
 	{
+		$this->options = $options;
+	}
+
+	protected function convertOptionsList(): void
+	{
+		// this method takes a simple list of options and converts it to a list of associative arrays
 		if (empty($this->options) || !is_string($this->options[0])) {
 			return;
 		}
 
 		$this->options = array_map(fn ($o) => ['value' => $o, 'label' => $o], $this->options);
+	}
+
+	/** @return array<string,string> */
+	protected function optionFromString(string $option): array
+	{
+		return ['value' => $option, 'label' => $option];
 	}
 
 	protected function placeholderOption(): string
@@ -55,20 +68,41 @@ class SelectField extends FormField
 		return HTMLUtils::createHTMLElement('option', $this->placeholder, $attributes);
 	}
 
+	/** @param array<string,string> $option */
+	protected function buildOption(array $option): string
+	{
+		$attributes = ['value' => $option['value']];
+		if ($option['value'] == $this->value) {
+			$attributes['selected'] = '';
+		}
+		return HTMLUtils::createHTMLElement('option', $option['label'], $attributes);
+	}
+
+	/** @param array<string|array<string,string>> $options */
+	protected function buildOptionGroup(string $group, array $options): string
+	{
+		$groupOptions = '';
+		foreach ($options as $option) {
+			if (is_string($option)) {
+				$option = $this->optionFromString($option);
+			}
+			$groupOptions .= $this->buildOption($option);
+		}
+
+		return HTMLUtils::createHTMLElement('optgroup', $groupOptions, ['label' => $group]);
+	}
+
 	protected function buildOptions(): string
 	{
 		$options = '';
 
 		$options .= $this->placeholderOption();
 
-		$this->converOptionsList();
-
-		foreach ($this->options as $option) {
-			$attributes = ['value' => $option['value']];
-			if ($option['value'] == $this->value) {
-				$attributes['selected'] = '';
+		foreach ($this->options as $key => $option) {
+			if (is_string($option)) {
+				$option = $this->optionFromString($option);
 			}
-			$options .= HTMLUtils::createHTMLElement('option', $option['label'], $attributes);
+			$options .= is_string($key) ? $this->buildOptionGroup($key, $option) : $this->buildOption($option);
 		}
 
 		return $options;
@@ -81,3 +115,36 @@ class SelectField extends FormField
 		return HTMLUtils::createHTMLElement('select', $this->buildOptions(), $attributes);
 	}
 }
+
+
+/* Options Possibilities
+
+Example 1: Simple list of options
+$field = new SelectField(options : ['Option 1', 'Option 2', 'Option 3']);
+
+Example 2: Options with values
+$field = new SelectField(options : [
+	['value' => '1', 'label' => 'Option 1'],
+	['value' => '2', 'label' => 'Option 2'],
+	['value' => '3', 'label' => 'Option 3'],
+]);
+
+Example 3: Grouped options
+$field = new SelectField(options : [
+	'Group 1' => ['Option 1', 'Option 2'],
+	'Group 2' => ['Option 3', 'Option 4'],
+]);
+
+Example 4: Grouped options with values
+$field = new SelectField(options : [
+	'Group 1' => [
+		['value' => '1', 'label' => 'Option 1'],
+		['value' => '2', 'label' => 'Option 2'],
+	],
+	'Group 2' => [
+		['value' => '3', 'label' => 'Option 3'],
+		['value' => '4', 'label' => 'Option 4'],
+	],
+]);
+
+*/

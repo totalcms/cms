@@ -16,6 +16,7 @@ final class SchemaData
 	public const RESERVED_SCHEMAS = [
 		'blog',
 		'color',
+		'collection',
 		'date',
 		'depot',
 		'email',
@@ -23,7 +24,6 @@ final class SchemaData
 		'file',
 		'gallery',
 		'image',
-		'meta',
 		'number',
 		'schema',
 		'styledtext',
