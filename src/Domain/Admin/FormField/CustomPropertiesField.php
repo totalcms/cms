@@ -7,4 +7,8 @@ use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 
 class CustomPropertiesField extends FormField
 {
+	public function build(): string
+	{
+		return '';
+	}
 }
