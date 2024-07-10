@@ -9,7 +9,7 @@ export default class PropertyField {
     constructor(container) {
 		this.container = container;
 		this.name      = this.container.querySelector('[name=property]').value;
-		this.fields    = this.container.getElementsByClassName("form-field");
+		this.fields    = Array.from(this.container.getElementsByClassName("form-field"));
 		this.dialog    = this.setupDialog();
     }
 

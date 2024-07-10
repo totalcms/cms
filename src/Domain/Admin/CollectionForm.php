@@ -32,7 +32,10 @@ final class CollectionForm extends TotalForm
 		protected string $class     = '',
 		protected string $helpStyle = '',
 		protected string $save      = '',
-		protected array $newAction  = [],
+		protected array $newAction  = [
+			'action' => 'redirect-object',
+			'link'   => '?id='
+		],
 		protected array $editAction = [],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,

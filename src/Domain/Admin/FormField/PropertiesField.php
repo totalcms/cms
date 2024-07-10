@@ -35,6 +35,11 @@ class PropertiesField extends FormField
 	{
 		$content = '';
 
+		$content .= HTMLUtils::inlineElement('input', [
+			'type'  => 'hidden',
+			'name'  => $this->name,
+		]);
+
 		foreach ($this->properties as $field) {
 			$content .= $field->build();
 		}

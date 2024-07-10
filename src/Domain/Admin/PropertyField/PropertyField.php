@@ -8,6 +8,8 @@ use TotalCMS\Utils\HTMLUtils;
 class PropertyField
 {
 	/**
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
@@ -18,6 +20,8 @@ class PropertyField
 		protected string $label       = '',
 		protected string $help        = '',
 		protected string $placeholder = '',
+		protected string $factory     = '',
+		protected string $default     = '',
 		protected array $options      = [],
 		protected array $settings     = [],
 	) {
@@ -90,9 +94,12 @@ class PropertyField
 			'name'         => 'property',
 			'placeholder'  => 'name',
 			'required'     => '',
-			// 'disabled'     => '',
 			'value'        => $this->property,
 		];
+
+		if ($this->property === 'id') {
+			$inputAttributes['disabled'] = '';
+		}
 
 		$dialog = $this->buildDialog();
 		$button = HTMLUtils::element('button', '', ['type' => 'button']);
