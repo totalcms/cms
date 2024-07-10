@@ -68,9 +68,9 @@
 		},
 		"customProperties": {
 			"type"              : "object",
-			"label"             : "Custom Properties",
+			"label"             : "Object Form Overrides",
 			"field"             : "customProperties",
-			"description"       : "Custom values for the form fields for specific objects.",
+			"help"              : "Custom values for the form fields for specific objects.",
 			"patternProperties" : {
 				"^\\S+$": {
 					"$ref": "https://www.totalcms.co/schemas/properties/properties.json"

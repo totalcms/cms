@@ -1,10 +1,21 @@
+.customProperties-field,
 .properties-field {
+	margin-top : 2rem;
+
 	> .form-group {
 		display    : block;
 		box-shadow : none !important;
 	}
 }
 
+.customProperties-field {
+	.cms-accordion {
+		summary {
+			font-size   : 1rem;
+			font-weight : normal;
+		}
+	}
+}
 .property-field {
 	display          : flex;
 	align-items      : stretch;

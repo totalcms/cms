@@ -9,6 +9,7 @@ class PropertyField
 {
 	/**
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
 	 * @param array<mixed> $options - Options for select fields and datalists
@@ -94,12 +95,9 @@ class PropertyField
 			'name'         => 'property',
 			'placeholder'  => 'name',
 			'required'     => '',
+			'disabled'     => '',
 			'value'        => $this->property,
 		];
-
-		if ($this->property === 'id') {
-			$inputAttributes['disabled'] = '';
-		}
 
 		$dialog = $this->buildDialog();
 		$button = HTMLUtils::element('button', '', ['type' => 'button']);

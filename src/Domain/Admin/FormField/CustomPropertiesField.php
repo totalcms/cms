@@ -2,13 +2,20 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Admin\PropertyField\CustomPropertyField;
 
-class CustomPropertiesField extends FormField
+class CustomPropertiesField extends PropertiesField
 {
-	public function build(): string
+	protected string $defaultInputType = 'customProperties';
+	protected string $defaultFieldType = 'customProperties';
+
+	/** @param array<string,mixed> $properties */
+	protected function createPropertyField(string $objectID, array $properties): CustomPropertyField
 	{
-		return '';
+		return new CustomPropertyField(
+			object: $objectID,
+			form: $this->form,
+			properties: $properties
+		);
 	}
 }

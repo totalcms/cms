@@ -4,6 +4,8 @@
 // Form Defaults
 //------------------------------
 .totalform {
+	display : grid;
+	gap     : 1rem;
 
 	&:not(:first-of-type) {
 		margin-top : 1rem;
@@ -28,6 +30,13 @@
         transition  : opacity 0.5s;
         width       : max-content;
     }
+}
+
+.totalform:not(.edit-mode) {
+	.customProperties-field,
+	.properties-field {
+		display : none;
+	}
 }
 
 .form-field {
@@ -71,8 +80,8 @@
 
 .cms-save,
 .cms-delete {
+	width      : fit-content;
 	cursor     : pointer;
-	margin-top : 1rem;
 }
 
 .totalform:not(.edit-mode) .cms-delete {
@@ -85,7 +94,6 @@
 .form-group {
 	display       : flex;
 	position      : relative;
-	margin-bottom : 1rem;
 	align-items   : stretch;
 	border-radius : var(--totalform-radius);
 	transition    : box-shadow 200ms ease-in-out;

@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Domain\Admin\PropertyField\PropertyField;
+use TotalCMS\Domain\Admin\PropertyField\CustomPropertyField;
 
 class PropertiesField extends FormField
 {
@@ -11,14 +12,10 @@ class PropertiesField extends FormField
 	protected string $defaultFieldType = 'properties';
 
 	/** @var array<string,mixed> */
-	private array $properties = [];
+	protected array $properties = [];
 
 	public function init(): void
 	{
-		if (empty($this->value) || !is_array($this->value)) {
-			$this->class .= ' hide';
-		}
-
 		$this->uuid       = uniqid();
 		$this->field      = $this->defaultFieldType;
 		$this->inputType  = $this->defaultInputType;
@@ -48,7 +45,7 @@ class PropertiesField extends FormField
 	}
 
 	/** @param array<string,mixed> $options */
-	private function createPropertyField(string $property, array $options): PropertyField
+	protected function createPropertyField(string $property, array $options): PropertyField|CustomPropertyField
 	{
 		$options['property'] = $property;
 		$options['form'] = $this->form;
