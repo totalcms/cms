@@ -75,6 +75,10 @@
 
 	}
 
+	dialog {
+		grid-template-rows: auto min-content;
+	}
+
 	&.id-field {
 		--schema-icon : var(--icon-id);
 	}

@@ -13,11 +13,9 @@ final class SaveButton
 
 	public function build(): string
 	{
-		$attributes = [
-			'class' => 'cms-save button btn',
+		return HTMLUtils::button($this->label, [
+			'class' => 'cms-save',
 			'type'  => 'submit',
-		];
-
-		return HTMLUtils::element('button', $this->label, $attributes);
+		]);
 	}
 }

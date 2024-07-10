@@ -147,15 +147,15 @@
     transition: opacity var(--help-animation-timing);
 }
 
-.help-on-focus .form-field:has(input:focus) .help,
-.help-on-hover .form-field:hover .help {
-    opacity: 1;
+.help-on-focus .form-field:has(input:focus) > .help,
+.help-on-hover .form-field:hover > .help {
+    opacity: 1 !important;
 }
 
-.help-on-hover .form-field:hover .help,
-.help-on-focus .form-field:has(input:focus) .help {
-    opacity: 1!important;
-}
+// .help-on-hover .form-field:hover .help,
+// .help-on-focus .form-field:has(input:focus) .help {
+//     opacity: 1!important;
+// }
 
 .help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):has(input:focus) > label,
 .help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):hover > label {

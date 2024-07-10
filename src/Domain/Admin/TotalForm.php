@@ -28,6 +28,36 @@ abstract class TotalForm
 	protected ObjectData $objectData;
 	protected SchemaData $schemaData;
 
+	public const FIELDS = [
+		'checkbox',
+		'color',
+		'date',
+		'datetime',
+		'deck',
+		'depot',
+		'email',
+		'file',
+		'gallery',
+		'hidden',
+		'id',
+		'image',
+		'list',
+		'muiltiselect',
+		'number',
+		'password',
+		'phone',
+		'radio',
+		'range',
+		'select',
+		'styledtext',
+		'svg',
+		'text',
+		'textarea',
+		'time',
+		'toggle',
+		'url',
+	];
+
 	public const FIELD_PROPERTIES = [
 		'default',
 		'field',

@@ -142,10 +142,7 @@ class ImageField extends FormField
 
 	private function closeSection(): string
 	{
-		$button = HTMLUtils::element('button', 'Close', [
-			'type'  => 'button',
-			'class' => 'close button btn',
-		]);
+		$button = HTMLUtils::button('Close', ['class' => 'close']);
 
 		return HTMLUtils::element('section', $button);
 	}

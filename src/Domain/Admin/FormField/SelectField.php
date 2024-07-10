@@ -21,6 +21,7 @@ class SelectField extends FormField
 			'id'               => "field-{$this->uuid}",
 			'name'             => $this->name,
 			'required'         => $this->required ? '' : null,
+			'disabled'         => $this->disabled ? '' : null,
 			'multiple'         => $this->multiple ? '' : null,
 			'size'             => $this->rows ? (string)$this->rows : null,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",

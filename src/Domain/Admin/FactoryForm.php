@@ -43,10 +43,7 @@ final class FactoryForm
 			$rules .= HTMLUtils::inlineElement('input', $ruleAttrs);
 		}
 
-		$button = HTMLUtils::element('button', $this->label, [
-			'class' => 'button btn',
-			'type'  => 'submit'
-		]);
+		$button = HTMLUtils::button($this->label, ['type'  => 'submit']);
 
 		$formAttrs = [
 			'class'           => 'factory-form',

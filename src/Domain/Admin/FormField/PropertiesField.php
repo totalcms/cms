@@ -46,6 +46,8 @@ class PropertiesField extends FormField
 	private function createPropertyField(string $property, array $options): PropertyField
 	{
 		$options['property'] = $property;
+		$options['form'] = $this->form;
+
 		$typeClass = 'TotalCMS\\Domain\\Admin\\PropertyField\\' . ucfirst($options['field'] ?? '') . 'Field';
 		if (class_exists($typeClass) && is_subclass_of($typeClass, PropertyField::class)) {
 			return new $typeClass(...$options);

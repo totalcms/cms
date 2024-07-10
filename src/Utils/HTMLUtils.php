@@ -70,4 +70,16 @@ class HTMLUtils
 	{
 		return self::element('section', $content, ['class' => "scroller"]);
 	}
+
+	/** @param array<string,?string> $attributes */
+	public static function button(string $content, array $attributes = []): string
+	{
+		$attributes = array_merge([
+			'type' => 'button',
+		], $attributes);
+
+		$attributes['class'] = "button btn " . ($attributes['class'] ?? '');
+
+		return self::element('button', $content, $attributes);
+	}
 }
