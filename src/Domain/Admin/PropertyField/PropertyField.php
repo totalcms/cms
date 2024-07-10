@@ -51,6 +51,7 @@ class PropertyField
 		$formInfo .= $this->form->field('help', [
 			'field'       => 'textarea',
 			'label'       => 'Help',
+			'rows'        => 2,
 			'placeholder' => 'Enter help text',
 			'help'        => 'The help text that will be added to the field form',
 			'value'       => $this->help,
