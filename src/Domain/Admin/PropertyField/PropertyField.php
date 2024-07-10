@@ -32,7 +32,7 @@ class PropertyField
 			'help'        => 'The type form field that this field will use',
 			'value'       => $this->field,
 			'disabled'    => ($this->property === 'id'), // Disable field type for id property
-			'options'     => TotalForm::FIELDS,
+			'options'     => TotalForm::FIELDS_BY_TYPE,
 		]);
 		$formInfo .= $this->form->field('label', [
 			'field'       => 'text',
