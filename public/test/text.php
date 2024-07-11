@@ -8,6 +8,15 @@
 	save : "Save Me",
 }) }}
 
-{{ cms.form.save("Save ALL") }}
+<!-- This has custom properties set in text collection -->
+{{ cms.form.select("myselect") }}
+
+{{ cms.form.select("myselect2", {
+	options : {
+		"1" : "One",
+		"2" : "Two",
+		"3" : "Three",
+	},
+}) }}
 
 <?php include __DIR__ . '/_end.php'; ?>

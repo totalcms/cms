@@ -79,6 +79,32 @@ final class TotalFormFactory
 		return new ObjectForm(...$options);
 	}
 
+	/** @param array<string,mixed> $options */
+	private function singleFieldFormBuilder(string $id, string $defaultCollection, string $property, string $field, array $options = []): string
+	{
+		$collection = $options['collection'] ?? $defaultCollection;
+
+		$form = $this->builder($collection, [
+			'id'       => $id,
+			'hideID'   => true,
+			'save'     => $options['save'] ?? '',
+			'delete'   => $options['delete'] ?? '',
+			'autosave' => $options['autosave'] ?? false,
+		]);
+
+		$formOptions = ['collection', 'save', 'delete', 'autosave'];
+		foreach ($formOptions as $option) {
+			unset($options[$option]);
+		}
+
+		$options['field'] = $field;
+
+		$form->addField('id');
+		$form->addField($property, $options);
+
+		return $form->build();
+	}
+
 	public function save(string $label = 'Save'): string
 	{
 		$button = new SaveButton($label);
@@ -204,63 +230,26 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function checkbox(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'toggle',
-			'hideID'     => true,
-			'autosave'   => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		$form->addField('id');
-		$form->addField('status', ['field' => 'checkbox']);
-
-		return $form->build();
+		$options['autosave'] = true;
+		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'checkbox', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function color(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'color',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'color', 'color', 'color', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function date(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'date',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'date', 'date', 'date', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function datetime(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'date',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		$form->addField('date', ['field' => 'datetime']);
-
-		return $form->build();
+		return $this->singleFieldFormBuilder($id, 'date', 'date', 'datetime', $options);
 	}
 
 	/** @param array<string,mixed> $options */
@@ -292,163 +281,67 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function gallery(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'gallery',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'gallery', 'gallery', 'gallery', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function image(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'image',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'image', 'image', 'image', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function number(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'number',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'number', 'number', 'number', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function range(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'number',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		$form->addField('number', ['field' => 'range']);
-
-		return $form->build();
+		return $this->singleFieldFormBuilder($id, 'number', 'number', 'range', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function select(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'text',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		$form->addField('id');
-		$form->addField('text', ['field' => 'select']);
-
-		return $form->build();
+		return $this->singleFieldFormBuilder($id, 'text', 'text', 'select', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function styledtext(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'styledtext',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'styledtext', 'styledtext', 'styledtext', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function svg(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'svg',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'svg', 'svg', 'svg', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function text(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'text',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		$form->addField('id');
-		$form->addField('text', ['field' => 'text']);
-
-		return $form->build();
+		return $this->singleFieldFormBuilder($id, 'text', 'text', 'text', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function textarea(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'text',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'text', 'text', 'textarea', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function toggle(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'toggle',
-			'hideID'     => true,
-			'autosave'   => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		$options['autosave'] = true;
+		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'toggle', $options);
 	}
 
 	/** @param array<string,mixed> $options */
 	public function url(string $id, array $options = []): string
 	{
-		$options = array_merge([
-			'id'         => $id,
-			'collection' => 'url',
-			'hideID'     => true,
-		], $options);
-
-		$form = $this->builder($options['collection'], $options);
-
-		return $form->autoBuild();
+		return $this->singleFieldFormBuilder($id, 'url', 'url', 'url', $options);
 	}
 }

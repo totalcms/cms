@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-final class IdField extends FormField
+class IdField extends FormField
 {
 	protected string $defaultInputType = 'text';
 	protected string $defaultFieldType = 'id';
