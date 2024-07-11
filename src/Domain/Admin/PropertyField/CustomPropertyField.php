@@ -27,7 +27,14 @@ class CustomPropertyField
 		foreach ($this->properties as $field) {
 			$content .= $field->build();
 		}
-		$content = HTMLUtils::details($this->object, $content);
+		$objectInput = HTMLUtils::inlineElement('input', [
+			'type'        => 'text',
+			'name'        => 'object',
+			'placeholder' => 'myobject',
+			'value'       => $this->object,
+			'required'    => 'required',
+		]);
+		$content = HTMLUtils::details($objectInput, $content);
 
 		// Add plus button + template to add new custom property
 

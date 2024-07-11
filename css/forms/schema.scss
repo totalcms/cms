@@ -13,9 +13,22 @@
 		summary {
 			font-size   : 1rem;
 			font-weight : normal;
+
+			input {
+				width         : fit-content;
+				height        : auto;
+				display       : inline-block;
+				background    : transparent;
+				border        : none;
+				box-shadow    : none;
+				padding       : 0;
+				border-radius : 0;
+				text-indent   : 0.5rem;
+			}
 		}
 	}
 }
+
 .property-field {
 	display          : flex;
 	align-items      : stretch;
