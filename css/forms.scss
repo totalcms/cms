@@ -79,9 +79,39 @@
 }
 
 .cms-save,
-.cms-delete {
-	width      : fit-content;
-	cursor     : pointer;
+.cms-delete,
+.cms-add {
+	width  : fit-content;
+	cursor : pointer;
+}
+
+.cms-add {
+	width            : 3rem;
+	height           : 3rem;
+	border-radius    : 50%;
+	background-color : oklch(var(--totalform-blue) / 0.95);
+	color            : oklch(var(--totalform-white));
+	font-size        : 1.5rem;
+	box-shadow       : 0 1px 5px oklch(var(--totalform-black) / 0.5);
+	border           : 2px solid oklch(var(--totalform-white));
+	display          : grid;
+	align-content    : center;
+	transition       : all 100ms ease-in-out;
+	margin           : 1rem auto 0 auto;
+
+	&:after {
+		content : "+";
+		translate: 0 -0.1rem;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-blue));
+	}
+
+	&:active {
+		transform  : scale(0.97);
+		box-shadow : 0 1px 2px oklch(var(--totalform-black) / 0.5);
+	}
 }
 
 .totalform:not(.edit-mode) .cms-delete {
@@ -110,9 +140,9 @@
 		}
     }
 
-    & > * {
-        margin: 0;
-    }
+    // & > * {
+    //     margin: 0;
+    // }
 
     & + .help {
         margin-top: -0.5rem;

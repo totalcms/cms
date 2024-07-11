@@ -83,4 +83,14 @@ class HTMLUtils
 
 		return self::element('button', $content, $attributes);
 	}
+
+	public static function add(string $title): string
+	{
+		$attributes = [
+			'title' => $title,
+			'class' => 'cms-add',
+		];
+
+		return self::button('', $attributes);
+	}
 }
