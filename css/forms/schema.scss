@@ -6,10 +6,20 @@
 		display    : block;
 		box-shadow : none !important;
 	}
+
+	.cms-accordion {
+
+		&:has(.form-field.unsaved) > summary {
+			border-color: oklch(var(--totalform-changed)) !important;
+		}
+		&:has(.form-field.error) > summary {
+			border-color : oklch(var(--totalform-error)) !important;
+		}
+	}
 }
 
 .customProperties-field {
-	.cms-accordion {
+	>div>.cms-accordion {
 		summary {
 			font-size   : 1rem;
 			font-weight : normal;
@@ -43,6 +53,13 @@
 
 	&:hover {
 		border-color : oklch(var(--totalform-lightgray));
+	}
+
+	&:has(.form-field.unsaved) {
+		border-color: oklch(var(--totalform-changed)) !important;
+	}
+	&:has(.form-field.error) {
+		border-color : oklch(var(--totalform-error)) !important;
 	}
 
 	--schema-icon    : var(--icon-text);
@@ -183,5 +200,8 @@
 	}
 	&.deck-field {
 		--schema-icon : var(--icon-deck);
+	}
+	&.json-field {
+		--schema-icon : var(--icon-json);
 	}
 }

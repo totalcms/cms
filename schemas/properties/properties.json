@@ -34,6 +34,10 @@
 				"settings": {
 					"type" : "object",
 					"description": "The settings for generating the field."
+				},
+				"options": {
+					"type" : ["array", "object"],
+					"description": "The options for the field."
 				}
 			},
 			"required": [

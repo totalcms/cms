@@ -32,6 +32,7 @@ abstract class TotalForm
 		"Text Fields" => [
 			'email',
 			'hidden',
+			'json',
 			'phone',
 			'radio',
 			'select',
@@ -83,6 +84,7 @@ abstract class TotalForm
 		'hidden',
 		'id',
 		'image',
+		'json',
 		'list',
 		'muiltiselect',
 		'number',

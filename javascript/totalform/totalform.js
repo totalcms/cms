@@ -17,6 +17,7 @@ import ImageField from './image';
 import GalleryField from './gallery';
 import PropertiesField from './properties';
 import CustomPropertiesField from './customProperties';
+import JSONField from './json';
 
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
@@ -252,6 +253,9 @@ export default class TotalForm {
 
 			case "gallery":
 				return new GalleryField(field,options);
+
+			case "json":
+				return new JSONField(field,options);
 
 
 			// case "file":

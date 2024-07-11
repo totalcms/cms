@@ -95,6 +95,15 @@
 }
 
 //------------------------------
+// JSON Field
+//------------------------------
+.json-field .form-group-icon {
+	&:after {
+		mask-image : var(--icon-json);
+	}
+}
+
+//------------------------------
 // List Field
 //------------------------------
 .list-field .form-group-icon {

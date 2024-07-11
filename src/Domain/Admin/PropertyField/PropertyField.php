@@ -64,14 +64,14 @@ class PropertyField
 		$formInfo = HTMLUtils::details('Form Info', $formInfo);
 
 		$settings = $this->form->field('settings', [
-			'field'       => 'textarea',
+			'field'       => 'json',
 			'label'       => 'Settings',
 			'placeholder' => '{ "key": "value" }',
 			'help'        => 'The settings for this field in valid JSON format',
 			'value'       => empty($this->settings) ? '' : json_encode($this->settings, JSON_PRETTY_PRINT),
 		]);
 		$settings .= $this->form->field('options', [
-			'field'       => 'textarea',
+			'field'       => 'json',
 			'label'       => 'Options &amp; Datalist',
 			'placeholder' => '[ "option1", "option2", "option3" ]',
 			'help'        => 'The options for select fields and datalists in valid JSON format.',
