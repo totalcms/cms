@@ -46,6 +46,7 @@ class HTMLUtils
 	public static function details(string $title, string $content, string $class = ''): string
 	{
 		$summary = self::element('summary', $title);
+		$content = self::element('div', $content, ['class' => 'content']);
 		$details = self::element('details', $summary . $content, ['class' => "cms-accordion $class"]);
 
 		return $details;

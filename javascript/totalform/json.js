@@ -6,7 +6,7 @@ import TotalField from './totalfield';
 export default class JSONField extends TotalField {
 
     setValue(value) {
-        if (typeof value === 'object' || typeof value === 'array') {
+        if (typeof value === 'object') {
             value = JSON.stringify(value);
         }
         this.input.innerHTML = value;

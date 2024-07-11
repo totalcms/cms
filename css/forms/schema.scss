@@ -3,8 +3,9 @@
 	margin-top : 2rem;
 
 	> .form-group {
-		display    : block;
+		display    : grid;
 		box-shadow : none !important;
+		gap        : 0.5rem;
 	}
 
 	.cms-accordion {
@@ -19,25 +20,172 @@
 }
 
 .customProperties-field {
-	>div>.cms-accordion > summary {
-		font-size   : 1rem;
-		font-weight : normal;
+	>div>.cms-accordion {
+		> .content {
+			gap : 0.5rem;
+		}
 
-		input {
-			width         : fit-content;
-			height        : auto;
-			display       : inline-block;
-			background    : transparent;
-			border        : none;
-			box-shadow    : none;
-			padding       : 0;
-			border-radius : 0;
-			text-indent   : 0.5rem;
+		> summary {
+			font-size   : 1rem;
+			font-weight : normal;
+
+			input {
+				width         : fit-content;
+				height        : auto;
+				display       : inline-block;
+				background    : transparent;
+				border        : none;
+				box-shadow    : none;
+				padding       : 0;
+				border-radius : 0;
+				text-indent   : 0.5rem;
+			}
 		}
 	}
 }
-
 .property-field {
+	--schema-icon : var(--icon-text);
+
+	> button {
+		appearance       : none;
+		cursor           : pointer;
+		width            : 100%;
+		padding          : 1rem;
+		border-radius    : var(--totalform-radius);
+		background-color : oklch(var(--totalform-nearwhite));
+		position         : relative;
+		border           : 1px solid oklch(var(--totalform-nearwhite));
+		transition       : border-color 200ms ease-in-out;
+		text-align       : left;
+		text-indent      : 2rem;
+
+		&:hover {
+			border-color : oklch(var(--totalform-lightgray));
+		}
+
+		&:after, &:before {
+			display          : block;
+			content          : " ";
+			transition       : background-color 200ms ease-in-out;
+			background-color : oklch(var(--totalform-icon-color));
+			width            : 1.1rem;
+			height           : 1.1rem;
+			mask-image       : var(--schema-icon);
+			mask-repeat      : no-repeat;
+			position         : absolute;
+			top              : 50%;
+		}
+
+		&:before {
+			left      : 0;
+			translate : 100% -50%;
+		}
+		&:after {
+			mask-image : var(--icon-settings);
+			right      : 0;
+			translate  : -100% -50%;
+		}
+
+	}
+
+	&:has(.form-field.unsaved) > button {
+		border-color: oklch(var(--totalform-changed)) !important;
+	}
+	&:has(.form-field.error) > button {
+		border-color : oklch(var(--totalform-error)) !important;
+	}
+
+	dialog {
+		grid-template-rows: auto min-content;
+	}
+
+	&.id-field {
+		--schema-icon : var(--icon-id);
+	}
+	&.text-field {
+		--schema-icon : var(--icon-text);
+	}
+	&.time-field {
+		--schema-icon : var(--icon-time);
+	}
+	&.url-field {
+		--schema-icon : var(--icon-url);
+	}
+	&.hidden-field {
+		--schema-icon : var(--icon-hidden);
+	}
+	&.email-field {
+		--schema-icon : var(--icon-email);
+	}
+	&.phone-field {
+		--schema-icon : var(--icon-tel);
+	}
+	&.password-field {
+		--schema-icon : var(--icon-lock);
+	}
+	&.textarea-field {
+		--schema-icon : var(--icon-text);
+	}
+	&.checkbox-field {
+		--schema-icon : var(--icon-checkbox);
+	}
+	&.toggle-field {
+		--schema-icon : var(--icon-toggle);
+	}
+	&.number-field {
+		--schema-icon : var(--icon-number);
+	}
+	&.color-field {
+		--schema-icon : var(--icon-paint-roller);
+	}
+	&.date-field {
+		--schema-icon : var(--icon-date);
+	}
+	&.datetime-field {
+		--schema-icon : var(--icon-date);
+	}
+	&.select-field {
+		--schema-icon : var(--icon-select);
+	}
+	&.multiselect-field {
+		--schema-icon : var(--icon-select-multi);
+	}
+	&.list-field {
+		--schema-icon : var(--icon-list);
+	}
+	&.range-field {
+		--schema-icon : var(--icon-range);
+	}
+	&.styledtext-field {
+		--schema-icon : var(--icon-styledtext);
+	}
+	&.svg-field {
+		--schema-icon : var(--icon-svg);
+	}
+	&.image-field {
+		--schema-icon : var(--icon-image);
+	}
+	&.gallery-field {
+		--schema-icon : var(--icon-gallery);
+	}
+	&.file-field {
+		--schema-icon : var(--icon-file);
+	}
+	&.depot-field {
+		--schema-icon : var(--icon-depot);
+	}
+	&.radio-field {
+		--schema-icon : var(--icon-radio);
+	}
+	&.deck-field {
+		--schema-icon : var(--icon-deck);
+	}
+	&.json-field {
+		--schema-icon : var(--icon-json);
+	}
+}
+
+.schema-field {
 	display          : flex;
 	align-items      : stretch;
 	margin-bottom    : 0.5rem;
@@ -60,7 +208,7 @@
 		border-color : oklch(var(--totalform-error)) !important;
 	}
 
-	--schema-icon    : var(--icon-text);
+	--schema-icon : var(--icon-text);
 
 	&:after {
 		display          : block;

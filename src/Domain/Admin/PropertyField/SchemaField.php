@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin\PropertyField;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
-class PropertyField
+class SchemaField
 {
 	/**
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -90,17 +90,20 @@ class PropertyField
 	public function build(): string
 	{
 		$inputAttributes = [
-			'type'         => 'hidden',
+			'autocomplete' => 'off',
+			'type'         => 'text',
 			'name'         => 'property',
+			'placeholder'  => 'name',
+			'required'     => '',
+			'disabled'     => '',
 			'value'        => $this->property,
 		];
 
 		$dialog = $this->buildDialog();
-		// not using HTMLUtils::button because I don't want it to look like a button
-		$button = HTMLUtils::element('button', $this->property, ['type' => 'button']);
+		$button = HTMLUtils::element('button', '', ['type' => 'button']);
 		$input  = HTMLUtils::inlineElement('input', $inputAttributes);
 		$field  = HTMLUtils::element('div', $input . $button . $dialog, [
-			'class' => "property-field {$this->field}-field"
+			'class' => "schema-field {$this->field}-field"
 		]);
 
 		return $field;
