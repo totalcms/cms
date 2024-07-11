@@ -326,6 +326,18 @@ abstract class TotalForm
 		}
 	}
 
+	/** @return array<string,mixed> */
+	public function propertiesForSchema(): array
+	{
+		$schema = $this->collectionData->schema;
+		$schemaData = $this->schemaFetcher->fetchSchema($schema);
+		$properties = $schemaData->properties;
+		foreach ($properties as $property => $options) {
+			$properties[$property] = $this->filterFieldProperties($options);
+		}
+		return $properties;
+	}
+
 	public function __toString()
 	{
 		return $this->build();

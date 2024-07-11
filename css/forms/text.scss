@@ -77,6 +77,10 @@
 		&:focus-visible {
 			outline : none;
 		}
+		&[disabled] {
+			box-shadow : none;
+			opacity    : 1;
+		}
     }
 }
 

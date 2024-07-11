@@ -124,6 +124,12 @@ class FormField
 		return $attributes;
 	}
 
+	public function disable(): void
+	{
+		$this->disabled = true;
+		$this->readonly = true;
+	}
+
 	public function buildFormField(): string
 	{
 		$attributes = $this->formFieldAttributes();

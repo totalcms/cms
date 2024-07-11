@@ -63,18 +63,6 @@ final class CollectionForm extends TotalForm
 		$this->autoBuild();
 	}
 
-	/** @return array<string,mixed> */
-	public function propertiesForSchema(): array
-	{
-		$schema = $this->collectionData->schema;
-		$schemaData = $this->schemaFetcher->fetchSchema($schema);
-		$properties = $schemaData->properties;
-		foreach ($properties as $property => $options) {
-			$properties[$property] = $this->filterFieldProperties($options);
-		}
-		return $properties;
-	}
-
 	private function initCollectionData(): void
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($this->id);
@@ -96,6 +84,10 @@ final class CollectionForm extends TotalForm
 				'Custom Schemas'   => $this->customSchemas(),
 				'Reserved Schemas' => $this->reservedSchemas(),
 			]);
+			if ($this->method === 'PUT') {
+				// disable schema for edit mode
+				$schemaField->disable();
+			}
 		}
 
 		return parent::fieldContent();

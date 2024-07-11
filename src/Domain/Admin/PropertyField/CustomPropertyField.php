@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\PropertyField;
 
-use TotalCMS\Domain\Admin\CollectionForm;
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
 class CustomPropertyField
@@ -12,7 +12,7 @@ class CustomPropertyField
 
 	/** @param array<string,mixed> $properties */
 	public function __construct(
-		protected CollectionForm $form,
+		protected TotalForm $form,
 		protected string $object,
 		protected array $properties = [],
 	) {
