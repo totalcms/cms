@@ -37,8 +37,15 @@ export default class PropertyField {
 	getValue() {
 		const properties = {};
 		this.fields.forEach(field => {
-			const value = field.totalfield.getValue();
+			let value = field.totalfield.getValue();
 			if (value) {
+				if (field.totalfield.property === "options" || field.totalfield.property === "settings") {
+					// trim trailing commas for users from JSON string.
+					value = value.replaceAll("\n", "")
+						.replaceAll(/,\s*\}/g, "}")
+						.replaceAll(/,\s*\]/g, "]");
+					value = JSON.parse(value);
+				}
 				properties[field.totalfield.property] = value;
 			}
 		});

@@ -34,7 +34,7 @@ class CustomPropertyField
 			'value'       => $this->object,
 			'required'    => 'required',
 		]);
-		$content = HTMLUtils::details($objectInput, $content);
+		$content = HTMLUtils::details($objectInput, $content, "customProperties-object");
 
 		// Add plus button + template to add new custom property
 

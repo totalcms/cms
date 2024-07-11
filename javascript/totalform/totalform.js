@@ -16,6 +16,7 @@ import SVGField from './svg';
 import ImageField from './image';
 import GalleryField from './gallery';
 import PropertiesField from './properties';
+import CustomPropertiesField from './customProperties';
 
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
@@ -268,6 +269,9 @@ export default class TotalForm {
 
 			case "properties":
 				return new PropertiesField(field,options);
+
+			case "customProperties":
+				return new CustomPropertiesField(field,options);
 
             default:
                 console.warn("Unknown field",field);
