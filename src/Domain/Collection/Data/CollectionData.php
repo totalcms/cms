@@ -77,7 +77,7 @@ final class CollectionData
 	 */
 	public static function schemaToMetaProps(array $schema): array
 	{
-		$metaProps = ['label', 'help', 'placeholder', 'field', 'factory'];
+		$metaProps = ['label', 'help', 'placeholder', 'field', 'options', 'settings'];
 
 		foreach ($schema as $key => $prop) {
 			// Only keep the meta properties that we need from the schema
