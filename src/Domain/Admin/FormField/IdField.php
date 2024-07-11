@@ -18,6 +18,5 @@ final class IdField extends FormField
 		if (!empty($this->value)) {
 			$this->readonly = true;
 		}
-		// TODO: make sure that autogen works $this->settings['autogen'] = '{$title}';
 	}
 }
