@@ -42,18 +42,17 @@ final class ObjectForm extends TotalForm
 	 */
 	protected function buildFieldOptions(string $name, array $options = [])
 	{
-		$defaults = $this->fieldDefaults($name);
-		$options  = array_merge($defaults, $options);
-
 		// Set the name of the field
 		$options['name'] = $name;
 
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
+		$defaults = $this->fieldDefaults($name);
+
 		// Get the value from the object data if it exists
 		if (!empty($this->id)) {
-			$options = array_merge($options, $this->objectFieldProperties($name));
+			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
 
 			if ($name === 'id') {
 				$options['value'] = $this->id;
@@ -70,6 +69,8 @@ final class ObjectForm extends TotalForm
 				}
 			}
 		}
+
+		$options = array_merge($defaults, $options);
 
 		return $options;
 	}
