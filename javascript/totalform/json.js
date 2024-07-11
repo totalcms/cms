@@ -24,7 +24,6 @@ export default class JSONField extends TotalField {
     }
 
     validate() {
-        console.log("Validating JSON", this.input);
         try {
             this.getValue();
             return true;

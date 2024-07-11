@@ -28,21 +28,76 @@
 		> summary {
 			font-size   : 1rem;
 			font-weight : normal;
+			padding     : 0.5rem 1rem;
+		}
+	}
+	.customProperties-actionbar {
+		display               : inline-grid;
+		grid-template-columns : auto auto;
+		justify-content       : space-between;
+		width                 : calc(100% - 1rem);
 
-			input {
-				width         : fit-content;
-				height        : auto;
-				display       : inline-block;
-				background    : transparent;
-				border        : none;
-				box-shadow    : none;
-				padding       : 0;
-				border-radius : 0;
-				text-indent   : 0.5rem;
+		input {
+			width         : fit-content;
+			height        : auto;
+			display       : inline-block;
+			background    : transparent;
+			border        : none;
+			box-shadow    : none;
+			padding       : 0.5rem;
+			transition    : background-color 200ms ease;
+
+			&:focus, &:hover {
+				background-color : oklch(var(--totalform-lightgray) / 50%);
 			}
+		}
+		.actions {
+			display     : flex;
+			align-items : center;
+			gap         : 0.5rem;
 		}
 	}
 }
+
+.properties-field button:active,
+.customProperties-object > summary:active {
+	cursor : grabbing;
+}
+
+.customProperties-field summary {
+	position: relative;
+
+	button {
+		appearance  : none;
+		border      : none;
+		cursor      : pointer;
+		margin-left : auto;
+
+		opacity          : 0;
+		background-color : oklch(var(--totalform-icon-color));
+		width            : 1.5rem;
+		height           : 1.5rem;
+		transition       : scale 200ms ease-in-out, opacity 200ms ease;
+
+		&:hover {
+			scale : 1.1;
+        }
+		&:active {
+			scale : 1;
+        }
+
+		&.trash {
+			mask-image : var(--icon-trash);
+		}
+		&.duplicate {
+			mask-image : var(--icon-duplicate);
+		}
+    }
+	&:hover button {
+		opacity : 1;
+	}
+}
+
 .property-field {
 	--schema-icon : var(--icon-text);
 

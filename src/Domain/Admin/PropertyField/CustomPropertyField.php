@@ -53,7 +53,7 @@ class CustomPropertyField
 
 	private static function accordion(string $title = '', string $content = ''): string
 	{
-		$titleInput = HTMLUtils::inlineElement('input', [
+		$input = HTMLUtils::inlineElement('input', [
 			'type'        => 'text',
 			'name'        => 'object',
 			'placeholder' => 'myobject',
@@ -61,7 +61,13 @@ class CustomPropertyField
 			'value'       => $title,
 		]);
 
-		return HTMLUtils::details($titleInput, $content, 'customProperties-object');
+		$duplicate = HTMLUtils::element('button', '', ['class' => 'duplicate', 'title' => 'Duplicate object']);
+		$trash     = HTMLUtils::element('button', '', ['class' => 'trash', 'title' => 'Delete object']);
+		$actions   = HTMLUtils::element('div', $duplicate . $trash, ['class' => 'actions']);
+
+		$actionbar = HTMLUtils::element('div', $input . $actions, ['class' => 'customProperties-actionbar']);
+
+		return HTMLUtils::details($actionbar, $content, 'customProperties-object');
 	}
 
 	public function build(): string

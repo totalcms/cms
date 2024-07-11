@@ -1,5 +1,6 @@
 import PropertyField from "./property";
 import TotalField from "./totalfield";
+import Sortable from 'sortablejs';
 
 //-----------------------------------------------
 // Total CMS Properties
@@ -9,16 +10,22 @@ export default class PropertiesField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
-		this.properties = [];
+		// not storing this as an array so that it can be updated simply through the DOM
+		this.propertyFields = this.container.getElementsByClassName("property-field");
+		for (const field of this.propertyFields) {
+			new PropertyField(field);
+		}
 
-		const propertyFields = Array.from(this.container.getElementsByClassName("property-field"));
-		propertyFields.forEach(field => {
-			const property = new PropertyField(field);
-			this.properties.push(property);
-		});
-
-		// this.form.processFields();
+		this.sortableProperties();
     }
+
+	sortableProperties() {
+		// Make the fields sortable
+		Sortable.create(this.propertyFields[0].parentNode, {
+			animation  : 150,
+			ghostClass : 'drag-ghost',
+		});
+	}
 
 	isUnsaved() {
 		const unsavedChildren = this.container.querySelectorAll(".unsaved");
@@ -33,7 +40,10 @@ export default class PropertiesField extends TotalField {
 
     getValue() {
 		const properties = {};
-		this.properties.forEach(prop => properties[prop.name] = prop.getValue());
+		for (const field of this.propertyFields) {
+			const property = field.totalfield;
+			properties[property.name] = property.getValue()
+		}
 		return properties;
 	}
 

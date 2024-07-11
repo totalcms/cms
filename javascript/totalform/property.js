@@ -8,9 +8,11 @@ export default class PropertyField {
 
     constructor(container) {
 		this.container = container;
-		this.name      = this.container.querySelector('[name=property]').value;
-		this.fields    = Array.from(this.container.getElementsByClassName("form-field"));
-		this.dialog    = this.setupDialog();
+		this.container.totalfield = this;
+
+		this.name   = this.container.querySelector('[name=property]').value;
+		this.fields = this.container.getElementsByClassName("form-field");
+		this.dialog = this.setupDialog();
     }
 
 	setupDialog() {
@@ -36,12 +38,12 @@ export default class PropertyField {
 
 	getValue() {
 		const properties = {};
-		this.fields.forEach(field => {
+		for (const field of this.fields) {
 			let value = field.totalfield.getValue();
 			if (value) {
 				properties[field.totalfield.property] = value;
 			}
-		});
+		}
 		return properties;
 	}
 }

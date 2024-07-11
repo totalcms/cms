@@ -58,7 +58,7 @@ final class TotalFormFactory
 			'schemaLister'      => $this->schemaLister,
 			'helpStyle'         => 'label',
 			'helpOnHover'       => true,
-			'helpOnFocus'       => true,
+			'helpOnFocus'       => false,
 		]);
 
 		$form = new CollectionForm(...$options);
