@@ -12,14 +12,15 @@ export default class PropertiesField extends TotalField {
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		this.propertyFields = this.container.getElementsByClassName("property-field");
+
 		for (const field of this.propertyFields) {
 			new PropertyField(field);
 		}
-
 		this.sortableProperties();
     }
 
 	sortableProperties() {
+		if (this.propertyFields.length === 0) return;
 		// Make the fields sortable
 		Sortable.create(this.propertyFields[0].parentNode, {
 			animation  : 150,

@@ -12,18 +12,20 @@ export default class CustomPropertiesField extends TotalField {
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		this.objectFields = this.container.getElementsByClassName("customProperties-object");
+
 		for (const field of this.objectFields) {
 			this.newField(field)
 		}
+		this.sortableObjects();
 
 		this.template = this.container.querySelector("template");
 		this.addButton = this.container.querySelector(".cms-add");
 		this.addButton.addEventListener("click", this.addTemplate.bind(this));
-
-		this.sortableObjects();
     }
 
 	sortableObjects() {
+		if (this.objectFields.length === 0) return;
+
 		// Make the object fields sortable
 		const objects = this.container.querySelector(".form-group");
 		Sortable.create(objects, {
