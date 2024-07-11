@@ -137,7 +137,7 @@ final class TotalFormFactory
 
 		$form = $this->builder($options['collection'], $options);
 
-		$col1  = $form->field('id', ['settings' => ['autogen' => '${title}']]);
+		$col1  = $form->field('id');
 		$col1 .= $form->field('created', ['field' => 'hidden']);
 		$col1 .= $form->field('updated', ['field' => 'hidden']);
 		$col1 .= $form->field('title');
@@ -274,11 +274,7 @@ final class TotalFormFactory
 
 		$form = $this->builder($options['collection'], $options);
 
-		$top = $form->field('id', [
-			'settings' => ['autogen' => '${timestamp}-${uuid}'],
-			'readonly' => true,
-			'class'    => 'hidden-field',
-		]);
+		$top = $form->field('id', ['class' => 'hidden-field']);
 		$top .= $form->field('created', ['field' => 'hidden']);
 		$top .= $form->field('updated', ['field' => 'hidden']);
 

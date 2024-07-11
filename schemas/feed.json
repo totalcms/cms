@@ -10,7 +10,8 @@
 			"label"   : "Feed Post ID",
 			"help"    : "A unique ID for this feed item. No spaces or special characters.",
 			"field"   : "id",
-			"factory" : "uuid"
+			"factory" : "uuid",
+			"settings" : { "autogen" : "${title}-${uuid}" }
 		},
 		"featured": {
 			"type"    : "boolean",

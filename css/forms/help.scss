@@ -3,7 +3,7 @@
 //------------------------------
 .help {
 	width               : max-content;
-	margin-top          : 0.5rem;
+	margin              : 0;
 	max-width           : 100%;
 	padding             : 0 1.1rem;
 	font-size           : var(--totalform-help-size);
@@ -138,8 +138,8 @@
 .help-on-focus,
 .help-on-hover {
     .help {
-        opacity: 0;
-        transition: opacity var(--help-animation-timing);
+        opacity    : 0;
+        transition : opacity var(--help-animation-timing);
     }
 }
 
@@ -152,11 +152,6 @@
     opacity: 1 !important;
 }
 
-// .help-on-hover .form-field:hover .help,
-// .help-on-focus .form-field:has(input:focus) .help {
-//     opacity: 1!important;
-// }
-
 .help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):has(input:focus) > label,
 .help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):hover > label {
     opacity: 0;
@@ -167,9 +162,8 @@
 		opacity : 1!important;
 	}
 	.help {
-		opacity    : 1!important;
-		position   : relative !important;
-		margin-top : -0.5rem!important;
+		opacity  : 1!important;
+		position : relative !important;
 	}
 }
 

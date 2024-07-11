@@ -30,6 +30,11 @@
         transition  : opacity 0.5s;
         width       : max-content;
     }
+
+	section {
+		display : grid;
+		gap     : 1rem;
+	}
 }
 
 .totalform:not(.edit-mode) {
@@ -144,9 +149,9 @@
     //     margin: 0;
     // }
 
-    & + .help {
-        margin-top: -0.5rem;
-    }
+    // & + .help {
+    //     margin-top: -0.5rem;
+    // }
 }
 
 .form-group-icon {

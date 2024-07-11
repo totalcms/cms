@@ -6,11 +6,12 @@
 	"description" : "A schema for a Total CMS Blog object",
 	"properties"  : {
 		"id": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"   : "Blog Post ID",
-			"help"    : "A unique ID for this post. No spaces or special characters.",
-			"field"   : "id",
-			"factory" : "slug"
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Blog Post ID",
+			"help"     : "A unique ID for this post. No spaces or special characters.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : { "autogen" : "${title}" }
 		},
 		"content": {
 			"type"    : "string",
