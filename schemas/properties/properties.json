@@ -41,9 +41,7 @@
 				}
 			},
 			"required": [
-				"field",
-				"label",
-				"help"
+				"field"
 			]
 		}
 	}

@@ -10,12 +10,26 @@ export default class CustomPropertiesField extends TotalField {
         super(container, options);
 
 		this.objects = [];
-
 		const objectFields = Array.from(this.container.getElementsByClassName("customProperties-object"));
 		objectFields.forEach(field => {
 			this.objects.push(new PropertiesField(field));
 		});
+
+		this.template = this.container.querySelector("template");
+		this.addButton = this.container.querySelector(".cms-add");
+		this.addButton.addEventListener("click", this.addTemplate.bind(this));
     }
+
+	addTemplate() {
+		const clone = this.template.content.cloneNode(true);
+		const parent = this.addButton.parentNode;
+		parent.insertBefore(clone, this.addButton);
+
+		this.form.processFields();
+
+		const field = Array.from(parent.querySelectorAll(".customProperties-object")).pop();
+		this.objects.push(new PropertiesField(field));
+	}
 
 	isUnsaved() {
 		const unsavedChildren = this.container.querySelectorAll(".unsaved");

@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\PropertyField;
 
-use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Admin\CollectionForm;
 use TotalCMS\Utils\HTMLUtils;
 
 class CustomPropertyField
@@ -12,7 +12,7 @@ class CustomPropertyField
 
 	/** @param array<string,mixed> $properties */
 	public function __construct(
-		protected TotalForm $form,
+		protected CollectionForm $form,
 		protected string $object,
 		protected array $properties = [],
 	) {
@@ -39,7 +39,8 @@ class CustomPropertyField
 			'options'     => [],
 			'settings'    => [],
 		];
-		foreach ($this->properties as $property => $options) {
+		$properties = $this->form->propertiesForSchema();
+		foreach ($properties as $property => $options) {
 			$options = array_merge($options, $blankOptions);
 			$fields[$property] = $this->createPropertyField($property, $options);
 		}
@@ -54,8 +55,8 @@ class CustomPropertyField
 	{
 		$titleInput = HTMLUtils::inlineElement('input', [
 			'type'        => 'text',
-			'name'        => 'property',
-			'placeholder' => 'myproperty',
+			'name'        => 'object',
+			'placeholder' => 'myobject',
 			'required'    => 'required',
 			'value'       => $title,
 		]);
