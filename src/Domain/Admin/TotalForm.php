@@ -24,9 +24,9 @@ abstract class TotalForm
 	/** @var array<string,FormField> */
 	protected array $fields = [];
 	protected string $route;
-	protected CollectionData $collectionData;
-	protected ObjectData $objectData;
-	protected SchemaData $schemaData;
+	public CollectionData $collectionData;
+	public ObjectData $objectData;
+	public SchemaData $schemaData;
 
 	public const FIELDS_BY_TYPE = [
 		"Text Fields" => [

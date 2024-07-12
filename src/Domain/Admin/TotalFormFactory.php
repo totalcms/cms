@@ -155,13 +155,31 @@ final class TotalFormFactory
 		// remove fields from options since it's not a valid option for TotalForm
 		unset($options['fields']);
 
-		// {% set tags       = selectOptions(cms.property(collection, "tags")) %}
-		// {% set categories = selectOptions(cms.property(collection, "categories")) %}
-		// {% set labels     = selectOptions(cms.property(collection, "labels")) %}
-		// {% set genres     = selectOptions(cms.property(collection, "genre")) %}
-		// {% set authors    = selectOptions(cms.property(collection, "authors")) %}
 
 		$form = $this->builder($options['collection'], $options);
+
+		$tags       = [];
+		$categories = [];
+		$labels     = [];
+		$genres     = [];
+		$authors    = [];
+
+		if ($form->id) {
+			$object     = $form->objectData->toArray();
+			// Need to replicate cms.property() here
+
+			// $collection = $this->collectionReader->fetchIndex($collection);
+			// if ($collection === null) {
+			// 	return [];
+			// }
+			// return $collection->objects->pluck($property)->flatten()->unique()->toArray();
+
+			$tags       = $object['tags'];
+			$categories = $object['categories'];
+			$labels     = $object['labels'];
+			$genres     = $object['genre'];
+			$authors    = $object['author'];
+		}
 
 		$col1  = $form->field('id');
 		$col1 .= $form->field('created', ['field' => 'hidden']);
