@@ -40,7 +40,11 @@ class SelectField extends FormField
 			return '';
 		}
 
-		return HTMLUtils::option($this->placeholder, $this->value, ['value' => '', 'disabled' => '']);
+		return HTMLUtils::option($this->placeholder, $this->value, [
+			'class'    => 'placeholder',
+			'value'    => '',
+			'disabled' => '',
+		]);
 	}
 
 	protected function buildOptions(string $options = ''): string

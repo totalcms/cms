@@ -60,6 +60,9 @@ export default class TotalField {
 		const options = Array.from(container.querySelectorAll("option"));
 		options.sort((a, b) => a.text.localeCompare(b.text));
 		options.forEach((option) => container.appendChild(option));
+
+		const placeholder = container.querySelector(".placeholder");
+		if (placeholder) container.insertBefore(placeholder, container.firstChild);
 	}
 
 	isSubField() {
