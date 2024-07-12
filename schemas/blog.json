@@ -50,6 +50,7 @@
 			"help"    : "A list of tags for this post",
 			"field"   : "list",
 			"factory" : "tags",
+			"settings": { "propertyOptions" : true },
 			"default" : []
 		},
 		"summary": {
@@ -124,6 +125,7 @@
 			"label"   : "Genre",
 			"help"    : "Genre for this post",
 			"field"   : "text",
+			"settings": { "propertyOptions" : true },
 			"default" : ""
 		},
 		"gallery": {
@@ -147,6 +149,7 @@
 			"help"    : "A list of categories for this post",
 			"field"   : "list",
 			"factory" : "tags",
+			"settings": { "propertyOptions" : true },
 			"default" : []
 		},
 		"author": {
@@ -155,6 +158,7 @@
 			"help"    : "Author for this post",
 			"field"   : "text",
 			"factory" : "name",
+			"settings": { "propertyOptions" : true },
 			"default" : ""
 		}
 	},
