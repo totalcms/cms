@@ -39,9 +39,9 @@ export default class TotalField {
 
 	changeListener() {
 		// the change event happens more than once so the ID field can be updated for every change
-		this.input.addEventListener("change", () => { this.changed() }, {once: true});
+		this.input.addEventListener("change", () => this.changed());
 		// the input event happens once since the point is to mark the form as unsaved ASAP
-		this.input.addEventListener("input", () => this.changed(), {once: true});
+		this.input.addEventListener("input", () => this.changed());
 	}
 
 	isSubField() {
@@ -76,6 +76,11 @@ export default class TotalField {
 	}
 
     changed() {
+		if (this.isUnsaved()) return;
+
+		if (this.storedValue === this.getValue()) return;
+		this.storedValue = this.getValue();
+
 		this.container.classList.add("unsaved");
 		this.container.classList.remove("error");
 		if (this.isSubField()) {
@@ -93,14 +98,12 @@ export default class TotalField {
 
 	saved() {
 		this.container.classList.remove("unsaved");
-		this.changeListener();
 	}
 
 	error(message) {
 		this.container.classList.add("error");
 		this.dispatcher.dispatchEvent("field-error", { field: this, message: message });
 		console.warn(`Field Error: ${this.property} - ${message}`);
-		this.changeListener();
     }
 
     schema() {

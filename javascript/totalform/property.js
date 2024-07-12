@@ -11,7 +11,6 @@ export default class PropertyField {
 		this.container.totalfield = this;
 
 		this.name   = this.container.querySelector('[name=property]').value;
-		this.fields = this.container.getElementsByClassName("form-field");
 		this.dialog = this.setupDialog();
     }
 
@@ -37,8 +36,10 @@ export default class PropertyField {
 	}
 
 	getValue() {
+		const fields = this.container.getElementsByClassName("form-field");
 		const properties = {};
-		for (const field of this.fields) {
+
+		for (const field of fields) {
 			let value = field.totalfield.getValue();
 			if (value) {
 				properties[field.totalfield.property] = value;

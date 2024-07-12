@@ -11,18 +11,17 @@ export default class PropertiesField extends TotalField {
         super(container, options);
 
 		// not storing this as an array so that it can be updated simply through the DOM
-		this.propertyFields = this.container.getElementsByClassName("property-field");
-
-		for (const field of this.propertyFields) {
+		const propertyFields = this.container.getElementsByClassName("property-field");
+		for (const field of propertyFields) {
 			new PropertyField(field);
 		}
-		this.sortableProperties();
+		this.sortableProperties(propertyFields);
     }
 
-	sortableProperties() {
-		if (this.propertyFields.length === 0) return;
+	sortableProperties(propertyFields) {
+		if (propertyFields.length === 0) return;
 		// Make the fields sortable
-		Sortable.create(this.propertyFields[0].parentNode, {
+		Sortable.create(propertyFields[0].parentNode, {
 			animation  : 150,
 			ghostClass : 'drag-ghost',
 		});
@@ -40,8 +39,10 @@ export default class PropertiesField extends TotalField {
 	}
 
     getValue() {
+		const propertyFields = this.container.getElementsByClassName("property-field");
+
 		const properties = {};
-		for (const field of this.propertyFields) {
+		for (const field of propertyFields) {
 			const property = field.totalfield;
 			properties[property.name] = property.getValue()
 		}
