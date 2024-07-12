@@ -2,9 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use PHP_CodeSniffer\Generators\HTML;
-use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Utils\HTMLUtils;
 
 class FormField
 {
