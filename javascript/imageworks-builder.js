@@ -81,9 +81,9 @@ document.addEventListener("DOMContentLoaded", event => {
 			options = `, '${options}'`;
 		}
 
-		let macro = `{{ cms.imagePath('${id}'${options}, '${collection}', '${property}') }}`;
+		let macro = `{{ cms.imagePath('${id}'${options}, {collection:'${collection}',property:'${property}'}) }}`;
 		if (property === "image") {
-			macro = `{{ cms.imagePath('${id}'${options}, '${collection}') }}`;
+			macro = `{{ cms.imagePath('${id}'${options}, {collection:'${collection}'}) }}`;
 
 			if (collection === "image") {
 				macro = `{{ cms.imagePath('${id}'${options}) }}`;
@@ -91,9 +91,9 @@ document.addEventListener("DOMContentLoaded", event => {
 		}
 
 		if (name) {
-			macro = `{{ cms.galleryPath('${id}', '${name}'${options}, '${collection}', '${property}') }}`;
+			macro = `{{ cms.galleryPath('${id}', '${name}'${options}, {collection:'${collection}',property:'${property}'}) }}`;
 			if (property === "gallery") {
-				macro = `{{ cms.galleryPath('${id}', '${name}'${options}, '${collection}') }}`;
+				macro = `{{ cms.galleryPath('${id}', '${name}'${options}, {collection:'${collection}'}) }}`;
 
 				if (collection === "gallery") {
 					macro = `{{ cms.galleryPath('${id}', '${name}'${options}) }}`;
