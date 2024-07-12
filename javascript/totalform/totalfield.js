@@ -35,6 +35,7 @@ export default class TotalField {
 		this.dispatcher = new TotalDispatcher(this.container);
 
 		this.changeListener();
+		this.sortOptions();
     }
 
 	changeListener() {
@@ -42,6 +43,23 @@ export default class TotalField {
 		this.input.addEventListener("change", () => this.changed());
 		// the input event happens once since the point is to mark the form as unsaved ASAP
 		this.input.addEventListener("input", () => this.changed());
+	}
+
+	sortOptions() {
+		const container = this.container.querySelector("select,datalist");
+		if (!container) return;
+		if (container.querySelector("optgroup")) {
+			const optgroups = Array.from(container.querySelectorAll("optgroup"));
+			optgroups.forEach((optgroup) => {
+				const options = Array.from(optgroup.querySelectorAll("option"));
+				options.sort((a, b) => a.text.localeCompare(b.text));
+				options.forEach((option) => optgroup.appendChild(option));
+			});
+			return;
+		}
+		const options = Array.from(container.querySelectorAll("option"));
+		options.sort((a, b) => a.text.localeCompare(b.text));
+		options.forEach((option) => container.appendChild(option));
 	}
 
 	isSubField() {
