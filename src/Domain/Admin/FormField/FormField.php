@@ -178,8 +178,35 @@ class FormField
 		return HTMLUtils::element('optgroup', $groupOptions, ['label' => $group]);
 	}
 
+	/** @return array<string> */
+	protected function buildOptionsForProperty(): array
+	{
+		return $this->form->propertyListForCollection($this->name);
+	}
+
+	/** @return array<array<string,string>> */
+	protected function buildRelationalOptions(): array
+	{
+		$settings      = $this->settings['relationalOptions'];
+		$labelProperty = $settings['label'] ?? 'id';
+		$valueProperty = $settings['value'] ?? 'id';
+		$collection    = $settings['collection'] ?? '';
+
+		$properties = $this->form->propertiesForCollection([$labelProperty, $valueProperty], $collection);
+
+		// reformat the properties array to match the options array
+		return array_map(fn ($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
+	}
+
 	protected function buildOptions(string $options = ''): string
 	{
+		if (isset($this->settings['propertyOptions']) && $this->settings['propertyOptions'] === true) {
+			$this->options = array_merge($this->options, $this->buildOptionsForProperty());
+		}
+		if (isset($this->settings['relationalOptions'])) {
+			$this->options = array_merge($this->options, $this->buildRelationalOptions());
+		}
+
 		foreach ($this->options as $key => $option) {
 			if (is_string($option)) {
 				$option = $this->optionFromString($option);

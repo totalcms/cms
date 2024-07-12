@@ -234,9 +234,13 @@ abstract class TotalForm
 	}
 
 	// Get a list of all values from a property in a collection
-	/** @return array<mixed> */
-	public function propertyListForCollection(string $collection, string $property): array
+	/** @return array<string> */
+	public function propertyListForCollection(string $property, string $collection = ''): array
 	{
+		if (empty($collection)) {
+			$collection = $this->collection;
+		}
+
 		$collection = $this->collectionReader->fetchIndex($collection);
 
 		if ($collection === null) {
@@ -244,6 +248,30 @@ abstract class TotalForm
 		}
 
 		return $collection->objects->pluck($property)->flatten()->unique()->toArray();
+	}
+
+	/**
+	 * @param array<string> $properties
+	 *
+	 * @return array<mixed>
+	 */
+	public function propertiesForCollection(array $properties, string $collection = ''): array
+	{
+		if (empty($collection)) {
+			$collection = $this->collection;
+		}
+
+		$collection = $this->collectionReader->fetchIndex($collection);
+
+		if ($collection === null) {
+			return [];
+		}
+
+		$filteredArray = $collection->objects->map(function ($item) use ($properties) {
+			return collect($item)->only($properties)->toArray();
+		})->toArray();
+
+		return $filteredArray;
 	}
 
 	private function saveButton(): string
