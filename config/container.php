@@ -176,6 +176,7 @@ return [
 			$container->get(Config::class),
 			$container->get(ObjectFetcher::class),
 			$container->get(CollectionFetcher::class),
+			$container->get(IndexReader::class),
 			$container->get(SchemaFetcher::class),
 			$container->get(SchemaLister::class),
 		);

@@ -7,6 +7,7 @@ use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -123,6 +124,7 @@ abstract class TotalForm
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
+		protected IndexReader $collectionReader,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public    string $api,
@@ -229,6 +231,19 @@ abstract class TotalForm
 		$layout = HTMLUtils::element('div', $content, ['class' => 'form-inline-fields']);
 
 		return $layout;
+	}
+
+	// Get a list of all values from a property in a collection
+	/** @return array<mixed> */
+	public function propertyListForCollection(string $collection, string $property): array
+	{
+		$collection = $this->collectionReader->fetchIndex($collection);
+
+		if ($collection === null) {
+			return [];
+		}
+
+		return $collection->objects->pluck($property)->flatten()->unique()->toArray();
 	}
 
 	private function saveButton(): string

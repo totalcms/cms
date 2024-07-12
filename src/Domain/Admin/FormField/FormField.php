@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Domain\Admin\TotalForm;
 
@@ -11,6 +12,7 @@ class FormField
 	protected string $defaultFieldType = 'text';
 
 	protected string $uuid;
+	protected bool $datalist = false;
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -52,6 +54,8 @@ class FormField
 		$this->uuid      = uniqid();
 		$this->field     = empty($this->field) ? $this->defaultFieldType : $this->field;
 		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
+
+		$this->datalist = (isset($this->settings['propertyOptions']) || isset($this->settings['relationalOptions']));
 
 		// Set a default value if one is not provided
 		if (empty($this->value) && !empty($this->default)) {
@@ -116,6 +120,7 @@ class FormField
 			'min'              => is_null($this->min) ? null : (string)$this->min,
 			'max'              => is_null($this->max) ? null : (string)$this->max,
 			'step'             => is_null($this->step) ? null : (string)$this->step,
+			'list'             => $this->datalist ? "datalist-{$this->uuid}" : null,
 		];
 
 		// Remove null values from the attributes array
@@ -133,7 +138,103 @@ class FormField
 	public function buildFormField(): string
 	{
 		$attributes = $this->formFieldAttributes();
+		$input      = HTMLUtils::inlineElement('input', $attributes);
+		$datalist   = $this->datalist ? $this->buildDatalist() : '';
 
-		return HTMLUtils::inlineElement('input', $attributes);
+		return $input . $datalist;
+	}
+
+	/** @param array<mixed> $options */
+	public function setOptions(array $options): void
+	{
+		$this->options = $options;
+	}
+
+	/** @return array<string,string> */
+	protected function optionFromString(string $option): array
+	{
+		return ['value' => $option, 'label' => $option];
+	}
+
+	/** @param array<string,string> $option */
+	protected function buildOption(array $option): string
+	{
+		$attributes = ['value' => $option['value']];
+
+		return HTMLUtils::option($option['label'], $this->value, $attributes);
+	}
+
+	/** @param array<string|array<string,string>> $options */
+	protected function buildOptionGroup(string $group, array $options): string
+	{
+		$groupOptions = '';
+		foreach ($options as $option) {
+			if (is_string($option)) {
+				$option = $this->optionFromString($option);
+			}
+			$groupOptions .= $this->buildOption($option);
+		}
+
+		return HTMLUtils::element('optgroup', $groupOptions, ['label' => $group]);
+	}
+
+	protected function buildOptions(string $options = ''): string
+	{
+		foreach ($this->options as $key => $option) {
+			if (is_string($option)) {
+				$option = $this->optionFromString($option);
+			}
+			$options .= is_string($key) ? $this->buildOptionGroup($key, $option) : $this->buildOption($option);
+		}
+
+		return $options;
+	}
+
+	protected function buildDatalist(): string
+	{
+		return HTMLUtils::element('datalist', $this->buildOptions(), ['id' => "datalist-{$this->uuid}"]);
 	}
 }
+
+/* Options Possibilities
+
+Example 1: Simple list of options
+$field = new SelectField(options : ['Option 1', 'Option 2', 'Option 3']);
+
+Example 2: Options with values
+$field = new SelectField(options : [
+	['value' => '1', 'label' => 'Option 1'],
+	['value' => '2', 'label' => 'Option 2'],
+	['value' => '3', 'label' => 'Option 3'],
+]);
+
+Example 3: Grouped options
+$field = new SelectField(options : [
+	'Group 1' => ['Option 1', 'Option 2'],
+	'Group 2' => ['Option 3', 'Option 4'],
+]);
+
+Example 4: Grouped options with values
+$field = new SelectField(options : [
+	'Group 1' => [
+		['value' => '1', 'label' => 'Option 1'],
+		['value' => '2', 'label' => 'Option 2'],
+	],
+	'Group 2' => [
+		['value' => '3', 'label' => 'Option 3'],
+		['value' => '4', 'label' => 'Option 4'],
+	],
+]);
+
+### AutoBuild options via collection data
+
+"settings": {
+	"propertyOptions" : true,
+	"relationalOptions" : {
+		"collection" : "mycollection",
+		"label"      : "name",
+		"value"      : "id"
+	}
+},
+
+*/

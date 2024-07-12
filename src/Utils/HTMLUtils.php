@@ -93,4 +93,18 @@ class HTMLUtils
 
 		return self::button('', $attributes);
 	}
+
+	/** @param array<string,?string> $attributes */
+	public static function option(string $label, string $eval = '', array $attributes = []): string
+	{
+		$attributes = array_merge([
+			'value' => $label,
+		], $attributes);
+
+		if ($eval === $attributes['value']) {
+			$attributes['selected'] = '';
+		}
+
+		return self::element('option', $label, $attributes);
+	}
 }

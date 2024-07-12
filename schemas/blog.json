@@ -27,6 +27,7 @@
 			"help"    : "A list of labels for this post",
 			"field"   : "list",
 			"factory" : "tags",
+			"settings": { "propertyOptions" : true },
 			"default" : []
 		},
 		"extra": {

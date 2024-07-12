@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -27,6 +28,7 @@ final class TotalFormFactory
 		private Config $config,
 		private ObjectFetcher $objectFetcher,
 		private CollectionFetcher $collectionFetcher,
+		private IndexReader $collectionReader,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
 	) {
@@ -73,6 +75,7 @@ final class TotalFormFactory
 		$options['api']               = $this->api;
 		$options['objectFetcher']     = $this->objectFetcher;
 		$options['collectionFetcher'] = $this->collectionFetcher;
+		$options['collectionReader']  = $this->collectionReader;
 		$options['schemaFetcher']     = $this->schemaFetcher;
 		$options['schemaLister']      = $this->schemaLister;
 
@@ -155,31 +158,7 @@ final class TotalFormFactory
 		// remove fields from options since it's not a valid option for TotalForm
 		unset($options['fields']);
 
-
 		$form = $this->builder($options['collection'], $options);
-
-		$tags       = [];
-		$categories = [];
-		$labels     = [];
-		$genres     = [];
-		$authors    = [];
-
-		if ($form->id) {
-			$object     = $form->objectData->toArray();
-			// Need to replicate cms.property() here
-
-			// $collection = $this->collectionReader->fetchIndex($collection);
-			// if ($collection === null) {
-			// 	return [];
-			// }
-			// return $collection->objects->pluck($property)->flatten()->unique()->toArray();
-
-			$tags       = $object['tags'];
-			$categories = $object['categories'];
-			$labels     = $object['labels'];
-			$genres     = $object['genre'];
-			$authors    = $object['author'];
-		}
 
 		$col1  = $form->field('id');
 		$col1 .= $form->field('created', ['field' => 'hidden']);
