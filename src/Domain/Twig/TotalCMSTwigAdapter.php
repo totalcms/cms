@@ -11,6 +11,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\HTMLUtils;
 
 /**
  * Twig Adapter with Total CMS.
@@ -418,6 +419,40 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
+	 * @param array<string,string|int> $thumbSettings
+	 * @param array<string,string|int> $fullSettings
+	 * @param array<string,string> $options
+	 */
+	public function gallery(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'gallery',
+			'property'   => 'gallery',
+		], $options);
+
+		if (empty($thumbSettings)) {
+			$thumbSettings = ['w' => 300, 'h' => 200];
+		}
+
+		$gallery = '';
+
+		$images = $this->data($options['collection'], $id, $options['property']);
+		foreach ($images as $image) {
+			$img = HTMLUtils::inlineElement('img', [
+				'src' => $this->galleryImage($id, $image['name'], $thumbSettings, $options),
+				'alt' => $image['alt'],
+			]);
+			$link = HTMLUtils::element('a', $img, [
+				'href'         => $this->galleryImage($id, $image['name'], $fullSettings, $options),
+				'data-lg-size' => "{$image['width']}-{$image['height']}",
+			]);
+			$gallery .= $link;
+		}
+
+		return HTMLUtils::element('div', $gallery, ['class' => 'cms-gallery']);
+	}
+
+	/**
 	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
 	 */
@@ -518,7 +553,6 @@ final class TotalCMSTwigAdapter
 
 		// Process the image as regular filename
 		if (!in_array($name, $dynamicRoutes)) {
-
 			if (!is_array($image) || !key_exists('uploadDate', $image)) {
 				return '';
 			}
