@@ -11,7 +11,7 @@
 <!-- This has custom properties set in text collection -->
 {{ cms.form.select("myselect") }}
 
-{{ cms.form.select("myselect2", {
+{{ cms.form.select("myselect2", {}, {
 	options : {
 		"1" : "One",
 		"2" : "Two",
@@ -20,7 +20,7 @@
 }) }}
 
 <!-- List all of the objects from another collection -->
-{{ cms.form.select("relational", {
+{{ cms.form.select("relational", {}, {
 	options : {
 		"1" : "One",
 		"2" : "Two",

@@ -7,7 +7,7 @@
 	hideID : true,
 }) %}
 
-{{ numberform.addField('text', { field:'time' }) }}
+{{ numberform.addField('text', {}, { field:'time' }) }}
 
 {{ numberform.build() }}
 
