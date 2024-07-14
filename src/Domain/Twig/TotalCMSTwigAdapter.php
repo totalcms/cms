@@ -439,11 +439,11 @@ final class TotalCMSTwigAdapter
 		$images = $this->data($options['collection'], $id, $options['property']);
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
-				'src' => $this->galleryImage($id, $image['name'], $thumbSettings, $options),
+				'src' => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
 				'alt' => $image['alt'],
 			]);
 			$link = HTMLUtils::element('a', $img, [
-				'href'         => $this->galleryImage($id, $image['name'], $fullSettings, $options),
+				'href'         => $this->galleryPath($id, $image['name'], $fullSettings, $options),
 				'data-lg-size' => "{$image['width']}-{$image['height']}",
 			]);
 			$gallery .= $link;
