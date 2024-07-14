@@ -202,6 +202,7 @@ export default class TotalForm {
 
         switch (field.dataset.type) {
 			case "id":
+			case "slug":
                 return new Identifier(field, options);
 
 			case "text":
