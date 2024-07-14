@@ -211,8 +211,12 @@ abstract class TotalForm
 		}
 
 		$content .= $this->fieldContent();
-		$content .= $this->saveButton();
-		$content .= $this->deleteButton();
+
+		if (!empty($this->save) || !empty($this->delete)) {
+			$save     = $this->saveButton();
+			$delete   = $this->deleteButton();
+			$content .= HTMLUtils::element('div', $save . $delete, ['class' => 'form-inline-fields']);
+		}
 
 		return HTMLUtils::element('form', $content, $attributes);
 	}

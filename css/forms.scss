@@ -102,6 +102,7 @@
 	border           : 2px solid oklch(var(--totalform-white));
 	display          : grid;
 	align-content    : center;
+	justify-content  : center;
 	transition       : all 100ms ease-in-out;
 	margin           : 1rem auto 0 auto;
 
@@ -197,12 +198,12 @@
 	}
 }
 
-.form-inline-fields {
+.totalform .form-inline-fields {
 	display         : flex;
 	flex-wrap       : wrap;
 	align-items     : center;
 	justify-content : flex-start;
-	gap             : 2rem;
+	gap             : 1.5rem;
 
 	& > .form-field {
 		margin : 0;
