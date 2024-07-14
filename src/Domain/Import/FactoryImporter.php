@@ -10,6 +10,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -27,6 +28,7 @@ final class FactoryImporter
 		private FakerFactory $fakerFactory,
 		private IndexBuilder $indexBuilder,
 		private CollectionFetcher $collectionFetcher,
+		private SchemaFetcher $schemaFetcher,
 		private PropertyRepository $propertyRepository
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler('importer-factory.log')->createLogger();
@@ -84,15 +86,17 @@ final class FactoryImporter
 	public function fetchCollectionFactories(string $collection): array
 	{
 		// Get factory definitions from collection
-		$properties = $this->collectionFetcher->fetchCollection($collection);
+		$collection = $this->collectionFetcher->fetchCollection($collection);
 
-		if (is_null($properties)) {
+		if (is_null($collection)) {
 			return [];
 		}
 
+		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
+
 		return array_map(function ($property) {
 			return $property['factory'] ?? null;
-		}, $properties->properties);
+		}, $schema->properties);
 	}
 
 	/** @param array<string,string> $defs */

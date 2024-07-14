@@ -267,6 +267,15 @@ final class TotalFormFactory
 		return $this->singleFieldFormBuilder($id, 'date', 'date', 'datetime', $formOptions, $fieldOptions);
 	}
 
+	/**
+	 * @param array<string,mixed> $formOptions
+	 * @param array<string,mixed> $fieldOptions
+	 */
+	public function email(string $id, array $formOptions = [], array $fieldOptions = []): string
+	{
+		return $this->singleFieldFormBuilder($id, 'email', 'email', 'email', $formOptions, $fieldOptions);
+	}
+
 	/** @param array<string,mixed> $options */
 	public function feed(array $options = []): string
 	{
@@ -371,7 +380,7 @@ final class TotalFormFactory
 	 */
 	public function textarea(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
-		return $this->singleFieldFormBuilder($id, 'textarea', 'textarea', 'textarea', $formOptions, $fieldOptions);
+		return $this->singleFieldFormBuilder($id, 'text', 'text', 'textarea', $formOptions, $fieldOptions);
 	}
 
 	/**
@@ -380,6 +389,7 @@ final class TotalFormFactory
 	 */
 	public function toggle(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
+		$formOptions['autosave'] = true;
 		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'toggle', $formOptions, $fieldOptions);
 	}
 

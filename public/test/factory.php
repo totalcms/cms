@@ -11,7 +11,7 @@
 <h2>Blog Posts</h2>
 {% for post in posts %}
 <article>
-	<img src="{{ cms.imagePath(post.id, {w:600}, 'blog','image') }}" alt="{{ cms.alt(post.id, 'blog','image') }}" />
+	<img src="{{ cms.imagePath(post.id, {w:600}, {collection: 'blog'}) }}" alt="{{ cms.alt(post.id, {collection:'blog'}) }}" />
 	<h4>{{ post.title }}</h4>
 	<p>{{ post.created }}</p>
 	<p>{{ post.summary }}</p>

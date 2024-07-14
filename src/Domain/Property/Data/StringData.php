@@ -7,11 +7,9 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class StringData extends PropertyData
 {
-	public string $text;
-
-	public function __construct(string $text)
-	{
-		$this->text = $text;
+	public function __construct(
+		public string $text = ''
+	) {
 	}
 
 	public function transform(): string

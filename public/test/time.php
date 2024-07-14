@@ -2,14 +2,14 @@
 
 <h1>Total CMS Time Form Demo</h1>
 
-{% set numberform = cms.form.builder('text', {
+{% set form = cms.form.builder('text', {
 	id     : 'mytime',
 	hideID : true,
 }) %}
 
-{{ numberform.addField('text', {}, { field:'time' }) }}
+{{ form.addField('text', { field:'time' }) }}
 
-{{ numberform.build() }}
+{{ form.build() }}
 
 
 <?php include __DIR__ . '/_end.php'; ?>
