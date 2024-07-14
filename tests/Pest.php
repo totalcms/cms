@@ -27,7 +27,7 @@ $_SERVER['APP_ENV'] = 'test';
 */
 
 expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+	return $this->toBe(1);
 });
 
 /*
@@ -43,80 +43,80 @@ expect()->extend('toBeOne', function () {
 
 function bootstrap()
 {
-    $app = require __DIR__ . '/../config/bootstrap.php';
+	$app = require __DIR__ . '/../config/bootstrap.php';
 
-    return $app;
+	return $app;
 }
 
 function testDataDir(): string
 {
-    return __DIR__ . '/test-data/';
+	return __DIR__ . '/test-data/';
 }
 
 function testData(string $file): string
 {
-    return __DIR__ . '/test-data/' . $file;
+	return __DIR__ . '/test-data/' . $file;
 }
 
 function cmsDataDir(): string
 {
-    return __DIR__ . '/tcms-data/';
+	return __DIR__ . '/tcms-data/';
 }
 
 function templatePath(string $id): string
 {
-    return cmsDataDir() . "templates/$id.twig";
+	return cmsDataDir() . "templates/$id.twig";
 }
 
 function collectionPath(string $collection): string
 {
-    return cmsDataDir() . "$collection/";
+	return cmsDataDir() . "$collection/";
 }
 
 function metaPath(string $collection): string
 {
-    return cmsDataDir() . "$collection/.meta.json";
+	return cmsDataDir() . "$collection/.meta.json";
 }
 
 function schemaPath(string $id): string
 {
-    return cmsDataDir() . ".schemas/$id.json";
+	return cmsDataDir() . ".schemas/$id.json";
 }
 
 function indexPath(string $collection): string
 {
-    return cmsDataDir() . "$collection/.index.json";
+	return cmsDataDir() . "$collection/.index.json";
 }
 
 function objectPath(string $collection, string $id): string
 {
-    return cmsDataDir() . "$collection/$id.json";
+	return cmsDataDir() . "$collection/$id.json";
 }
 
 function objectFilesPath(string $collection, string $id): string
 {
-    return cmsDataDir() . "$collection/$id";
+	return cmsDataDir() . "$collection/$id";
 }
 
 function recursiveDelete($dir)
 {
-    if (!file_exists($dir)) {
-        return true;
-    }
+	if (!file_exists($dir)) {
+		return true;
+	}
 
-    if (!is_dir($dir)) {
-        return unlink($dir);
-    }
+	if (!is_dir($dir)) {
+		return unlink($dir);
+	}
 
-    foreach (scandir($dir) as $item) {
-        if ($item == '.' || $item == '..') {
-            continue;
-        }
+	foreach (scandir($dir) as $item) {
+		if ($item == '.' || $item == '..') {
+			continue;
+		}
 
-        if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item)) {
-            return false;
-        }
-    }
+		if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item)) {
+			return false;
+		}
+	}
 
-    return rmdir($dir);
+	return rmdir($dir);
 }

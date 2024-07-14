@@ -15,116 +15,116 @@ use Psr\Log\LoggerInterface;
  */
 final class LoggerFactory
 {
-    private string $path;
+	private string $path;
 
-    private Level $level;
+	private Level $level;
 
-    /**
-     * @var array<HandlerInterface>
-     */
-    private array $handler = [];
-    private string $format = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
+	/**
+	 * @var array<HandlerInterface>
+	 */
+	private array $handler = [];
+	private string $format = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
 
-    private ?LoggerInterface $testLogger;
+	private ?LoggerInterface $testLogger;
 
-    /**
-     * The constructor.
-     *
-     * @param array $settings The settings
-     */
-    public function __construct(array $settings = [])
-    {
-        $this->path  = (string)($settings['path'] ?? '');
-        $this->level = is_a($settings['level'], Level::class) ? $settings['level'] : Level::Debug;
+	/**
+	 * The constructor.
+	 *
+	 * @param array<string,mixed> $settings The settings
+	 */
+	public function __construct(array $settings = [])
+	{
+		$this->path  = (string)($settings['path'] ?? '');
+		$this->level = is_a($settings['level'], Level::class) ? $settings['level'] : Level::Debug;
 
-        // This can be used for testing to make the Factory testable
-        if (isset($settings['test'])) {
-            $this->testLogger = $settings['test'];
-        }
-    }
+		// This can be used for testing to make the Factory testable
+		if (isset($settings['test'])) {
+			$this->testLogger = $settings['test'];
+		}
+	}
 
-    /**
-     * Build the logger.
-     *
-     * @param string|null $name The logging channel
-     *
-     * @return LoggerInterface The logger
-     */
-    public function createLogger(?string $name = null): LoggerInterface
-    {
-        if (isset($this->testLogger)) {
-            return $this->testLogger;
-        }
+	/**
+	 * Build the logger.
+	 *
+	 * @param string|null $name The logging channel
+	 *
+	 * @return LoggerInterface The logger
+	 */
+	public function createLogger(?string $name = null): LoggerInterface
+	{
+		if (isset($this->testLogger)) {
+			return $this->testLogger;
+		}
 
-        $logger = new Logger($name ?: uuid_create());
+		$logger = new Logger($name ?: uuid_create());
 
-        foreach ($this->handler as $handler) {
-            $logger->pushHandler($handler);
-        }
+		foreach ($this->handler as $handler) {
+			$logger->pushHandler($handler);
+		}
 
-        $this->handler = [];
+		$this->handler = [];
 
-        return $logger;
-    }
+		return $logger;
+	}
 
-    /**
-     * Add a handler.
-     *
-     * @param HandlerInterface $handler The handler
-     *
-     * @return self The logger factory
-     */
-    public function addHandler(HandlerInterface $handler): self
-    {
-        $this->handler[] = $handler;
+	/**
+	 * Add a handler.
+	 *
+	 * @param HandlerInterface $handler The handler
+	 *
+	 * @return self The logger factory
+	 */
+	public function addHandler(HandlerInterface $handler): self
+	{
+		$this->handler[] = $handler;
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Add rotating file logger handler.
-     *
-     * @param string $filename The filename
-     * @param int $maxFiles Max files before rotated (optional)
-     * @param int $permissions File permissions on file (optional)
-     * @param ?Level $level The level (optional)
-     *
-     * @return self The logger factory
-     */
-    public function addFileHandler(string $filename, int $maxFiles = 0, int $permissions = 0777, ?Level $level = null): self
-    {
-        $filename = sprintf('%s/%s', $this->path, $filename);
-        $level    = $level ?? $this->level;
-        /** @phpstan-ignore-next-line */
-        $rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level, true, $permissions);
+	/**
+	 * Add rotating file logger handler.
+	 *
+	 * @param string $filename The filename
+	 * @param int $maxFiles Max files before rotated (optional)
+	 * @param int $permissions File permissions on file (optional)
+	 * @param ?Level $level The level (optional)
+	 *
+	 * @return self The logger factory
+	 */
+	public function addFileHandler(string $filename, int $maxFiles = 0, int $permissions = 0777, ?Level $level = null): self
+	{
+		$filename = sprintf('%s/%s', $this->path, $filename);
+		$level    = $level ?? $this->level;
+		/** @phpstan-ignore-next-line */
+		$rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level, true, $permissions);
 
-        // The last "true" here tells monolog to remove empty []'s
-        $lineFormatter = new LineFormatter($this->format, null, true, true, true);
-        $lineFormatter->indentStacktraces('    ');
-        $rotatingFileHandler->setFormatter($lineFormatter);
+		// The last "true" here tells monolog to remove empty []'s
+		$lineFormatter = new LineFormatter($this->format, null, true, true, true);
+		$lineFormatter->indentStacktraces('    ');
+		$rotatingFileHandler->setFormatter($lineFormatter);
 
-        $this->addHandler($rotatingFileHandler);
+		$this->addHandler($rotatingFileHandler);
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Add a console logger.
-     *
-     * @param Level|null $level The level (optional)
-     *
-     * @return self The logger factory
-     */
-    public function addConsoleHandler(?Level $level = null): self
-    {
-        /** @phpstan-ignore-next-line */
-        $streamHandler = new StreamHandler('php://output', $level ?? $this->level);
-        $lineFormatter = new LineFormatter($this->format, null, true, true, true);
-        $lineFormatter->indentStacktraces('    ');
-        $streamHandler->setFormatter($lineFormatter);
+	/**
+	 * Add a console logger.
+	 *
+	 * @param Level|null $level The level (optional)
+	 *
+	 * @return self The logger factory
+	 */
+	public function addConsoleHandler(?Level $level = null): self
+	{
+		/** @phpstan-ignore-next-line */
+		$streamHandler = new StreamHandler('php://output', $level ?? $this->level);
+		$lineFormatter = new LineFormatter($this->format, null, true, true, true);
+		$lineFormatter->indentStacktraces('    ');
+		$streamHandler->setFormatter($lineFormatter);
 
-        $this->addHandler($streamHandler);
+		$this->addHandler($streamHandler);
 
-        return $this;
-    }
+		return $this;
+	}
 }

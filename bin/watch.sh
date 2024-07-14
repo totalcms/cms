@@ -1,5 +1,7 @@
 #!/bin/bash
 
+bin/build-assets.sh
+
 echo "Watching..."
 
 ignore=("totalform.twig" "content.twig")

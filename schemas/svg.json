@@ -9,7 +9,7 @@
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"   : "SVG ID",
 			"help"    : "A unique ID for this svg. No spaces or special characters.",
-			"field"   : "slug",
+			"field"   : "id",
 			"factory" : "slug"
         },
         "svg": {

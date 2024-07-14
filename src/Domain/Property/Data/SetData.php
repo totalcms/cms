@@ -7,38 +7,38 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class SetData extends PropertyData
 {
-    public array $set;
+	/** @param array<string> $set */
+	public function __construct(public array $set)
+	{
+		if (!self::verifySet($set)) {
+			throw new \InvalidArgumentException('Set must be a set of simple objects');
+		}
+		$this->set = $set;
+	}
 
-    public function __construct(array $set)
-    {
-        if (!self::verifySet($set)) {
-            throw new \InvalidArgumentException('Set must be a set of simple objects');
-        }
-        $this->set = $set;
-    }
+	/** @param array<mixed> $set */
+	private static function verifySet(array $set): bool
+	{
+		if (!array_is_list($set)) {
+			return false;
+		}
+		foreach ($set as $item) {
+			if (!is_array($item)) {
+				return false;
+			}
+			foreach ($item as $attribute) {
+				if (!is_scalar($attribute)) {
+					return false;
+				}
+			}
+		}
 
-    // phpcs:ignore Generic.Metrics.NestingLevel.TooHigh
-    private static function verifySet(array $set): bool
-    {
-        if (!array_is_list($set)) {
-            return false;
-        }
-        foreach ($set as $item) {
-            if (!is_array($item)) {
-                return false;
-            }
-            foreach ($item as $attribute) {
-                if (!is_scalar($attribute)) {
-                    return false;
-                }
-            }
-        }
+		return true;
+	}
 
-        return true;
-    }
-
-    public function transform(): array
-    {
-        return $this->set;
-    }
+	/** @return array<string> */
+	public function transform(): array
+	{
+		return $this->set;
+	}
 }

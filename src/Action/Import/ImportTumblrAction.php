@@ -8,18 +8,18 @@ use Slim\Exception\HttpInternalServerErrorException;
 
 final class ImportTumblrAction
 {
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request The request
-     * @param ResponseInterface $response The response
-     *
-     * @throws HttpInternalServerErrorException
-     *
-     * @return ResponseInterface The response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        throw new HttpInternalServerErrorException($request, 'Not implemented');
-    }
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request The request
+	 * @param ResponseInterface $response The response
+	 *
+	 * @throws HttpInternalServerErrorException
+	 *
+	 * @return ResponseInterface The response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		throw new HttpInternalServerErrorException($request, 'Not implemented');
+	}
 }

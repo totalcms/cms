@@ -9,30 +9,30 @@ use TotalCMS\Domain\Template\Service\TemplateFetcher;
 
 final class TemplateExistsAction
 {
-    private TemplateFetcher $templateFetcher;
+	private TemplateFetcher $templateFetcher;
 
-    public function __construct(TemplateFetcher $service)
-    {
-        $this->templateFetcher = $service;
-    }
+	public function __construct(TemplateFetcher $service)
+	{
+		$this->templateFetcher = $service;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param array $args The routing arguments
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $exists = $this->templateFetcher->templateExists($args['template']);
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param ResponseInterface $response
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		$exists = $this->templateFetcher->templateExists($args['template']);
 
-        if ($exists === false) {
-            throw new HttpNotFoundException($request);
-        }
+		if ($exists === false) {
+			throw new HttpNotFoundException($request);
+		}
 
-        return $response;
-    }
+		return $response;
+	}
 }

@@ -12,20 +12,20 @@ use TotalCMS\Renderer\JsonRenderer;
  */
 final class CacheDeleteAction
 {
-    public function __construct(
-        private TwigCacheCleaner $twigCacheCleaner,
-        private JsonRenderer $renderer
-    ) {
-    }
+	public function __construct(
+		private TwigCacheCleaner $twigCacheCleaner,
+		private JsonRenderer $renderer
+	) {
+	}
 
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        $deleted = $this->twigCacheCleaner->deleteCache();
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		$deleted = $this->twigCacheCleaner->deleteCache();
 
-        if ($deleted === false) {
-            $response = $response->withStatus(500);
-        }
+		if ($deleted === false) {
+			$response = $response->withStatus(500);
+		}
 
-        return $this->renderer->json($response, ['deleted' => $deleted]);
-    }
+		return $this->renderer->json($response, ['deleted' => $deleted]);
+	}
 }

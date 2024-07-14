@@ -98,8 +98,7 @@
 			background-color : oklch(var(--totalform-help-color));
 			width            : 1.5rem;
 			aspect-ratio     : 1;
-			-webkit-mask     : var(--icon-upload-alt);
-			mask             : var(--icon-upload-alt);
+			mask-image       : var(--icon-upload-alt);
 
 		}
 		&:hover {

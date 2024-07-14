@@ -42,39 +42,31 @@
         }
 
 		&.download {
-			-webkit-mask : var(--icon-download);
-			mask         : var(--icon-download);
+			mask-image : var(--icon-download);
 		}
 		&.upload {
-			-webkit-mask : var(--icon-upload-alt);
-			mask         : var(--icon-upload-alt);
-			margin-left  : auto;
+			mask-image  : var(--icon-upload-alt);
+			margin-left : auto;
 		}
 		&.edit {
-			-webkit-mask : var(--icon-edit);
-			mask         : var(--icon-edit);
+			mask-image : var(--icon-edit);
 		}
 		&.featured {
-			-webkit-mask : var(--icon-not-featured);
-			mask         : var(--icon-not-featured);
+			mask-image : var(--icon-not-featured);
 		}
 		&.clear {
-			-webkit-mask : var(--icon-clean);
-			mask         : var(--icon-clean);
+			mask-image : var(--icon-clean);
 		}
 		&.trash {
-			-webkit-mask : var(--icon-trash);
-			mask         : var(--icon-trash);
+			mask-image : var(--icon-trash);
 		}
 		&.links {
-			-webkit-mask : var(--icon-link);
-			mask         : var(--icon-link);
+			mask-image : var(--icon-link);
 		}
 		&.move {
-			cursor       : grab;
-			-webkit-mask : var(--icon-bars);
-			mask         : var(--icon-bars);
-			margin       : 0 auto;
+			cursor     : grab;
+			mask-image : var(--icon-bars);
+			margin     : 0 auto;
 
 			&:active {
 				cursor : grabbing;
@@ -103,14 +95,12 @@
 
 .featured {
 	button.featured {
-		-webkit-mask : var(--icon-featured);
-		mask         : var(--icon-featured);
+		mask-image : var(--icon-featured);
 	}
 }
 .cleared-cache {
 	button.clear {
-		-webkit-mask : var(--icon-success);
-		mask         : var(--icon-success);
+		mask-image : var(--icon-success);
 	}
 }
 

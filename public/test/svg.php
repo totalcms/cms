@@ -1,11 +1,7 @@
 <?php include __DIR__ . '/_start.php'; ?>
 
-	<h1>Total CMS SVG Form Demo</h1>
+<h1>Total CMS SVG Form Demo</h1>
 
-	{% import "totalform.twig" as form %}
-
-	{{ form.svgForm('mysvg') }}
-
-	<button class="cms-save">Save</button>
+{{ cms.form.svg('mysvg') }}
 
 <?php include __DIR__ . '/_end.php'; ?>

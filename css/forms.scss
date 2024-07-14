@@ -4,6 +4,12 @@
 // Form Defaults
 //------------------------------
 .totalform {
+	display : grid;
+	gap     : 1rem;
+
+	&:not(:first-of-type) {
+		margin-top : 1rem;
+	}
 
 	input:focus,
 	textarea:focus,
@@ -24,13 +30,26 @@
         transition  : opacity 0.5s;
         width       : max-content;
     }
+
+	section {
+		display       : grid;
+		gap           : 1rem;
+		align-content : start;
+	}
+}
+
+.totalform:not(.edit-mode) {
+	.customProperties-field,
+	.properties-field {
+		display : none;
+	}
 }
 
 .form-field {
 	position : relative;
 	width    : 100%;
 
-	&:not(:first-of-type) {
+	&:is(:visible):not(:first-of-type) {
 		margin-top : 1rem;
 	}
 
@@ -60,11 +79,46 @@
 		--totalform-icon-bg      : var(--totalform-nearwhite);
 		--totalform-icon-color   : var(--totalform-darkgray);
 	}
+	&.hidden-field {
+		display : none;
+	}
 }
 
 .cms-save,
-.cms-delete {
+.cms-delete,
+.cms-add {
+	width  : fit-content;
 	cursor : pointer;
+}
+
+.cms-add {
+	width            : 3rem;
+	height           : 3rem;
+	border-radius    : 50%;
+	background-color : oklch(var(--totalform-blue) / 0.95);
+	color            : oklch(var(--totalform-white));
+	font-size        : 1.5rem;
+	box-shadow       : 0 1px 5px oklch(var(--totalform-black) / 0.5);
+	border           : 2px solid oklch(var(--totalform-white));
+	display          : grid;
+	align-content    : center;
+	justify-content  : center;
+	transition       : all 100ms ease-in-out;
+	margin           : 1rem auto 0 auto;
+
+	&:after {
+		content : "+";
+		translate: 0 -0.1rem;
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-blue));
+	}
+
+	&:active {
+		transform  : scale(0.97);
+		box-shadow : 0 1px 2px oklch(var(--totalform-black) / 0.5);
+	}
 }
 
 .totalform:not(.edit-mode) .cms-delete {
@@ -77,7 +131,6 @@
 .form-group {
 	display       : flex;
 	position      : relative;
-	margin-bottom : 1rem;
 	align-items   : stretch;
 	border-radius : var(--totalform-radius);
 	transition    : box-shadow 200ms ease-in-out;
@@ -94,13 +147,13 @@
 		}
     }
 
-    & > * {
-        margin: 0;
-    }
+    // & > * {
+    //     margin: 0;
+    // }
 
-    & + .help {
-        margin-top: -0.5rem;
-    }
+    // & + .help {
+    //     margin-top: -0.5rem;
+    // }
 }
 
 .form-group-icon {
@@ -121,8 +174,8 @@
 		background-color : oklch(var(--totalform-icon-color));
 		width            : 1.1rem;
 		height           : 1.1rem;
-		-webkit-mask     : var(--icon-text);
-		mask             : var(--icon-text);
+		mask-image       : var(--icon-text);
+		mask-repeat      : no-repeat;
 	}
 }
 
@@ -145,12 +198,12 @@
 	}
 }
 
-.form-inline-fields {
+.totalform .form-inline-fields {
 	display         : flex;
 	flex-wrap       : wrap;
 	align-items     : center;
 	justify-content : flex-start;
-	gap             : 2rem;
+	gap             : 1.5rem;
 
 	& > .form-field {
 		margin : 0;
@@ -177,6 +230,6 @@
 @import "forms/gallery";
 @import "forms/scrollable";
 @import "forms/admin-list";
-@import "factory";
+@import "forms/schema";
 @import "factory";
 @import "codemirror";

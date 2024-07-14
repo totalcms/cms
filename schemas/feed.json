@@ -9,8 +9,9 @@
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"   : "Feed Post ID",
 			"help"    : "A unique ID for this feed item. No spaces or special characters.",
-			"field"   : "slug",
-			"factory" : "uuid"
+			"field"   : "id",
+			"factory" : "uuid",
+			"settings" : { "autogen" : "${title}-${uuid}" }
 		},
 		"featured": {
 			"type"    : "boolean",
@@ -24,7 +25,7 @@
 			"type"    : "string",
 			"label"   : "Title",
 			"help"    : "A title for your post",
-			"field"   : "input",
+			"field"   : "text",
 			"factory" : "catchPhrase",
 			"default" : ""
 		},

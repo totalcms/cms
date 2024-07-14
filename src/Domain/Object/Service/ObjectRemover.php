@@ -10,31 +10,31 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
  */
 final class ObjectRemover
 {
-    private ObjectRepository $storage;
-    private IndexBuilder $indexBuilder;
+	private ObjectRepository $storage;
+	private IndexBuilder $indexBuilder;
 
-    public function __construct(ObjectRepository $storage, IndexBuilder $indexBuilder)
-    {
-        $this->storage      = $storage;
-        $this->indexBuilder = $indexBuilder;
-    }
+	public function __construct(ObjectRepository $storage, IndexBuilder $indexBuilder)
+	{
+		$this->storage      = $storage;
+		$this->indexBuilder = $indexBuilder;
+	}
 
-    /**
-     * delete a collection object.
-     *
-     * @param string $collection
-     * @param string $id
-     *
-     * @return bool
-     */
-    public function deleteObject(string $collection, string $id): bool
-    {
-        $status = $this->storage->deleteObject($collection, $id);
+	/**
+	 * delete a collection object.
+	 *
+	 * @param string $collection
+	 * @param string $id
+	 *
+	 * @return bool
+	 */
+	public function deleteObject(string $collection, string $id): bool
+	{
+		$status = $this->storage->deleteObject($collection, $id);
 
-        if ($status) {
-            $this->indexBuilder->buildIndex($collection);
-        }
+		if ($status) {
+			$this->indexBuilder->buildIndex($collection);
+		}
 
-        return $status;
-    }
+		return $status;
+	}
 }

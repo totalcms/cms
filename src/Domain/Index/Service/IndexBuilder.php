@@ -12,49 +12,49 @@ use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
  */
 final class IndexBuilder
 {
-    private IndexRepository $storage;
-    private ObjectFetcher $objectFetcher;
-    private CollectionSchemaFetcher $schemaFetcher;
+	private IndexRepository $storage;
+	private ObjectFetcher $objectFetcher;
+	private CollectionSchemaFetcher $schemaFetcher;
 
-    public function __construct(IndexRepository $storage, ObjectFetcher $objectFetcher, CollectionSchemaFetcher $schemaFetcher)
-    {
-        $this->storage       = $storage;
-        $this->objectFetcher = $objectFetcher;
-        $this->schemaFetcher = $schemaFetcher;
-    }
+	public function __construct(IndexRepository $storage, ObjectFetcher $objectFetcher, CollectionSchemaFetcher $schemaFetcher)
+	{
+		$this->storage       = $storage;
+		$this->objectFetcher = $objectFetcher;
+		$this->schemaFetcher = $schemaFetcher;
+	}
 
-    /**
-     * Save Index data.
-     *
-     * @param string $collection The collection
-     *
-     * @return IndexData
-     */
-    public function buildIndex(string $collection): IndexData
-    {
-        $objectIds  = $this->storage->fetchObjectIds($collection);
-        $index      = new IndexData();
+	/**
+	 * Save Index data.
+	 *
+	 * @param string $collection The collection
+	 *
+	 * @return IndexData
+	 */
+	public function buildIndex(string $collection): IndexData
+	{
+		$objectIds  = $this->storage->fetchObjectIds($collection);
+		$index      = new IndexData();
 
-        if (count($objectIds) === 0) {
-            return $index;
-        }
+		if (count($objectIds) === 0) {
+			return $index;
+		}
 
-        $schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-        $indexProps = $schema->index;
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$indexProps = $schema->index;
 
-        foreach ($objectIds as $id) {
-            $object  = $this->objectFetcher->fetchObject($collection, $id);
-            // The reject method is used to filter out properties that are not in the index
-            // The map method is used to transform the properties into an array
-            $summary = $object->properties
-                ->reject(fn ($value, $key) => !in_array($key, $indexProps, true))
-                ->map(fn ($property) => $property->transform());
-            $summary->put('id', $id);
-            $index->objects->push($summary->toArray());
-        }
+		foreach ($objectIds as $id) {
+			$object  = $this->objectFetcher->fetchObject($collection, $id);
+			// The reject method is used to filter out properties that are not in the index
+			// The map method is used to transform the properties into an array
+			$summary = $object->properties
+				->reject(fn ($value, $key) => !in_array($key, $indexProps, true))
+				->map(fn ($property) => $property->transform());
+			$summary->put('id', $id);
+			$index->objects->push($summary->toArray());
+		}
 
-        $this->storage->saveIndex($collection, $index);
+		$this->storage->saveIndex($collection, $index);
 
-        return $index;
-    }
+		return $index;
+	}
 }

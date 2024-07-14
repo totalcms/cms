@@ -7,15 +7,15 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class GalleryData extends PropertyData
 {
-    public array $images = [];
+	/** @param array<array<string,mixed>> $images */
+	public function __construct(
+		public array $images = []
+	) {
+	}
 
-    public function __construct(array $images = [])
-    {
-        $this->images = $images;
-    }
-
-    public function transform(): array
-    {
-        return $this->images;
-    }
+	/** @return array<array<string,mixed>> */
+	public function transform(): array
+	{
+		return $this->images;
+	}
 }

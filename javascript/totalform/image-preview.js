@@ -1,7 +1,6 @@
 import Dialog from "./dialog";
 import Details from "./details";
 import Sortable from 'sortablejs';
-import { on } from "codemirror";
 
 //-----------------------------------------------
 // Total CMS Droplet

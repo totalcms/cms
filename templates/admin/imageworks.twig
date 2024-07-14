@@ -101,10 +101,10 @@
     	<h1>Total CMS Image Builder</h1>
 		<div class="split-view">
 
-			{% set imagePath = cms.imagePath(id, values, collection, property) %}
+			{% set imagePath = cms.imagePath(id, values, {collection: collection, property: property}) %}
 
 			{% if name %}
-				{% set imagePath = cms.galleryPath(id, name, values, collection, property) %}
+				{% set imagePath = cms.galleryPath(id, name, values, {collection: collection, property: property}) %}
 			{% endif %}
 
 			<img src="{{ imagePath }}"

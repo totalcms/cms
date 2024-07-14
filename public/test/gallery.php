@@ -1,22 +1,18 @@
 <?php include __DIR__ . '/_start.php'; ?>
 
-	<h1>Total CMS Gallery Form Demo</h1>
+<h1>Total CMS Gallery Form Demo</h1>
 
-	{% import "totalform.twig" as form %}
+{{ cms.form.gallery('mygallery') }}
 
-	{{ form.galleryForm('mygallery') }}
+<h3>Gallery Image</h3>
 
-	{% import "content.twig" as content %}
+{{ cms.galleryImage("mygallery", "vw-van5.jpg") }}
 
-	<h3>Gallery Image</h3>
+<h3>Gallery Content</h3>
 
-	{{ cms.galleryImage("mygallery", "vw-van5.jpg") | raw }}
+{{ cms.gallery("mygallery") }}
 
-	<h3>Gallery Content</h3>
-
-	{{ content.gallery("mygallery") }}
-
-	<script type="module" src="{{ cms.api }}/assets/gallery.js"></script>
-	<link rel="stylesheet" href="{{ cms.api }}/assets/gallery.css">
+<script type="module" src="{{ cms.api }}/assets/gallery.js"></script>
+<link rel="stylesheet" href="{{ cms.api }}/assets/gallery.css">
 
 <?php include __DIR__ . '/_end.php'; ?>

@@ -6,11 +6,12 @@
 	"description" : "A schema for a Total CMS Blog object",
 	"properties"  : {
 		"id": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"   : "Blog Post ID",
-			"help"    : "A unique ID for this post. No spaces or special characters.",
-			"field"   : "slug",
-			"factory" : "slug"
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Blog Post ID",
+			"help"     : "A unique ID for this post. No spaces or special characters.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : { "autogen" : "${title}" }
 		},
 		"content": {
 			"type"    : "string",
@@ -26,6 +27,7 @@
 			"help"    : "A list of labels for this post",
 			"field"   : "list",
 			"factory" : "tags",
+			"settings": { "propertyOptions" : true },
 			"default" : []
 		},
 		"extra": {
@@ -39,7 +41,7 @@
 			"type"    : "string",
 			"label"   : "Title",
 			"help"    : "Blog Post title",
-			"field"   : "input",
+			"field"   : "text",
 			"factory" : "catchPhrase"
 		},
 		"tags": {
@@ -48,6 +50,7 @@
 			"help"    : "A list of tags for this post",
 			"field"   : "list",
 			"factory" : "tags",
+			"settings": { "propertyOptions" : true },
 			"default" : []
 		},
 		"summary": {
@@ -86,15 +89,14 @@
 			"help"    : "Blog Post updated date",
 			"field"   : "hidden",
 			"factory" : "iso8601",
-			"default" : "now"
+			"default" : "onUpdate"
 		},
 		"date": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"   : "Date",
 			"help"    : "Blog Post date",
 			"field"   : "date",
-			"factory" : "iso8601",
-			"default" : "now"
+			"factory" : "iso8601"
 		},
 		"created": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
@@ -102,7 +104,7 @@
 			"help"    : "Blog Post creation date",
 			"field"   : "hidden",
 			"factory" : "iso8601",
-			"default" : "now"
+			"default" : "onCreate"
 		},
 		"extra2": {
 			"type"    : "string",
@@ -123,6 +125,7 @@
 			"label"   : "Genre",
 			"help"    : "Genre for this post",
 			"field"   : "text",
+			"settings": { "propertyOptions" : true },
 			"default" : ""
 		},
 		"gallery": {
@@ -146,6 +149,7 @@
 			"help"    : "A list of categories for this post",
 			"field"   : "list",
 			"factory" : "tags",
+			"settings": { "propertyOptions" : true },
 			"default" : []
 		},
 		"author": {
@@ -154,6 +158,7 @@
 			"help"    : "Author for this post",
 			"field"   : "text",
 			"factory" : "name",
+			"settings": { "propertyOptions" : true },
 			"default" : ""
 		}
 	},

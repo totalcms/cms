@@ -33,6 +33,10 @@
 		}
 	}
 
+	> .form-group {
+		width     : fit-content;
+		min-width : 300px;
+	}
 
 	.not-found {
 		display : none;

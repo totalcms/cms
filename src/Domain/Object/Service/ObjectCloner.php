@@ -11,43 +11,43 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
  */
 final class ObjectCloner
 {
-    private ObjectRepository $storage;
-    private IndexBuilder $indexBuilder;
+	private ObjectRepository $storage;
+	private IndexBuilder $indexBuilder;
 
-    public function __construct(ObjectRepository $storage, IndexBuilder $indexBuilder)
-    {
-        $this->storage      = $storage;
-        $this->indexBuilder = $indexBuilder;
-    }
+	public function __construct(ObjectRepository $storage, IndexBuilder $indexBuilder)
+	{
+		$this->storage      = $storage;
+		$this->indexBuilder = $indexBuilder;
+	}
 
-    /**
-     * save a collection object.
-     *
-     * @param array $from
-     * @param array $to
-     *
-     * @throws \UnexpectedValueException
-     * @throws \RuntimeException
-     *
-     * @return ObjectData
-     */
-    public function cloneObject(array $from, array $to): ObjectData
-    {
-        $object = $this->storage->fetchObject($from['collection'], $from['id']);
+	/**
+	 * save a collection object.
+	 *
+	 * @param array<string,mixed> $from
+	 * @param array<string,mixed> $to
+	 *
+	 * @throws \UnexpectedValueException
+	 * @throws \RuntimeException
+	 *
+	 * @return ObjectData
+	 */
+	public function cloneObject(array $from, array $to): ObjectData
+	{
+		$object = $this->storage->fetchObject($from['collection'], $from['id']);
 
-        if (!$object instanceof ObjectData) {
-            throw new \UnexpectedValueException('Unable to find object to clone');
-        }
-        $object->id = $to['id'];
+		if (!$object instanceof ObjectData) {
+			throw new \UnexpectedValueException('Unable to find object to clone');
+		}
+		$object->id = $to['id'];
 
-        if ($this->storage->existsObject($to['collection'], $to['id'])) {
-            throw new \DomainException(sprintf('Object with id %s already exists in %s', $to['id'], $to['collection']));
-        }
+		if ($this->storage->existsObject($to['collection'], $to['id'])) {
+			throw new \DomainException(sprintf('Object with id %s already exists in %s', $to['id'], $to['collection']));
+		}
 
-        $this->storage->saveObject($to['collection'], $object);
+		$this->storage->saveObject($to['collection'], $object);
 
-        $this->indexBuilder->buildIndex($to['collection']);
+		$this->indexBuilder->buildIndex($to['collection']);
 
-        return $object;
-    }
+		return $object;
+	}
 }

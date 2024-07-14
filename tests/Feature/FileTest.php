@@ -1,7 +1,7 @@
 <?php
 
 beforeEach(function (): void {
-    $this->setUpApp(bootstrap());
+	$this->setUpApp(bootstrap());
 });
 
 it('can upload a file', function (): void {

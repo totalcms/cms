@@ -19,6 +19,7 @@ use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
+use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -45,169 +46,181 @@ use TotalCMS\Support\Config;
 use TotalCMS\Utils\QRGenerator;
 
 return [
-    // Application settings
-    Config::class => function () {
-        return new Config(require __DIR__ . '/settings.php');
-    },
+	// Application settings
+	Config::class => function () {
+		return new Config(require __DIR__ . '/settings.php');
+	},
 
-    App::class => function (ContainerInterface $container) {
-        AppFactory::setContainer($container);
+	App::class => function (ContainerInterface $container) {
+		AppFactory::setContainer($container);
 
-        return AppFactory::create();
-    },
+		return AppFactory::create();
+	},
 
-    ResponseFactoryInterface::class => function (ContainerInterface $container) {
-        return $container->get(App::class)->getResponseFactory();
-    },
+	ResponseFactoryInterface::class => function (ContainerInterface $container) {
+		return $container->get(App::class)->getResponseFactory();
+	},
 
-    ServerRequestFactoryInterface::class => function (ContainerInterface $container) {
-        return $container->get(Psr17Factory::class);
-    },
+	ServerRequestFactoryInterface::class => function (ContainerInterface $container) {
+		return $container->get(Psr17Factory::class);
+	},
 
-    StreamFactoryInterface::class => function (ContainerInterface $container) {
-        return $container->get(Psr17Factory::class);
-    },
+	StreamFactoryInterface::class => function (ContainerInterface $container) {
+		return $container->get(Psr17Factory::class);
+	},
 
-    UploadedFileFactoryInterface::class => function (ContainerInterface $container) {
-        return $container->get(Psr17Factory::class);
-    },
+	UploadedFileFactoryInterface::class => function (ContainerInterface $container) {
+		return $container->get(Psr17Factory::class);
+	},
 
-    UriFactoryInterface::class => function (ContainerInterface $container) {
-        return $container->get(Psr17Factory::class);
-    },
+	UriFactoryInterface::class => function (ContainerInterface $container) {
+		return $container->get(Psr17Factory::class);
+	},
 
-    RouteParserInterface::class => function (ContainerInterface $container) {
-        return $container->get(App::class)->getRouteCollector()->getRouteParser();
-    },
+	RouteParserInterface::class => function (ContainerInterface $container) {
+		return $container->get(App::class)->getRouteCollector()->getRouteParser();
+	},
 
-    // The logger factory
-    LoggerFactory::class => function (ContainerInterface $container) {
-        return new LoggerFactory($container->get(Config::class)->logger);
-    },
+	// The logger factory
+	LoggerFactory::class => function (ContainerInterface $container) {
+		return new LoggerFactory($container->get(Config::class)->logger);
+	},
 
-    // The data dir iterator factory
-    StorageFilesystemAdapter::class => function (ContainerInterface $container) {
-        $rootPath   = $container->get(Config::class)->dataDir;
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
+	// The data dir iterator factory
+	StorageFilesystemAdapter::class => function (ContainerInterface $container) {
+		$rootPath   = $container->get(Config::class)->datadir;
+		$filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
 
-        return new StorageFilesystemAdapter($filesystem);
-    },
+		return new StorageFilesystemAdapter($filesystem);
+	},
 
-    StorageAdapterInterface::class => function (ContainerInterface $container) {
-        return $container->get(StorageFilesystemAdapter::class);
-    },
+	StorageAdapterInterface::class => function (ContainerInterface $container) {
+		return $container->get(StorageFilesystemAdapter::class);
+	},
 
-    BasePathMiddleware::class => function (ContainerInterface $container) {
-        $app = $container->get(App::class);
+	BasePathMiddleware::class => function (ContainerInterface $container) {
+		$app = $container->get(App::class);
 
-        return new BasePathMiddleware($app);
-    },
+		return new BasePathMiddleware($app);
+	},
 
-    ValidationExceptionMiddleware::class => function (ContainerInterface $container) {
-        $factory = $container->get(ResponseFactoryInterface::class);
+	ValidationExceptionMiddleware::class => function (ContainerInterface $container) {
+		$factory = $container->get(ResponseFactoryInterface::class);
 
-        return new ValidationExceptionMiddleware($factory, new ErrorDetailsResultTransformer(), new JsonEncoder());
-    },
+		return new ValidationExceptionMiddleware($factory, new ErrorDetailsResultTransformer(), new JsonEncoder());
+	},
 
-    SentryMiddleware::class => function (ContainerInterface $container) {
-        $config = (array)$container->get(Config::class)->sentry;
+	SentryMiddleware::class => function (ContainerInterface $container) {
+		$config = (array)$container->get(Config::class)->sentry;
 
-        return new SentryMiddleware($config);
-    },
+		return new SentryMiddleware($config);
+	},
 
-    ErrorMiddleware::class => function (ContainerInterface $container) {
-        $app = $container->get(App::class);
+	ErrorMiddleware::class => function (ContainerInterface $container) {
+		$app = $container->get(App::class);
 
-        $config = (array)$container->get(Config::class)->logger;
-        $logger = $container->get(LoggerFactory::class)->addFileHandler(
-            filename    : $config['filename'],
-            maxFiles    : $config['maxFiles'],
-            permissions : $config['permissions'],
-            level       : $config['level'],
-        )->createLogger($config['name']);
+		$config = (array)$container->get(Config::class)->logger;
+		$logger = $container->get(LoggerFactory::class)->addFileHandler(
+			filename: $config['filename'],
+			maxFiles: $config['maxFiles'],
+			permissions: $config['permissions'],
+			level: $config['level'],
+		)->createLogger($config['name']);
 
-        $config          = (array)$container->get(Config::class)->error;
-        $errorMiddleware = new ErrorMiddleware(
-            $app->getCallableResolver(),
-            $app->getResponseFactory(),
-            (bool)$config['display_error_details'],
-            (bool)$config['log_errors'],
-            (bool)$config['log_error_details'],
-            $logger
-        );
+		$config          = (array)$container->get(Config::class)->error;
+		$errorMiddleware = new ErrorMiddleware(
+			$app->getCallableResolver(),
+			$app->getResponseFactory(),
+			(bool)$config['display_error_details'],
+			(bool)$config['log_errors'],
+			(bool)$config['log_error_details'],
+			$logger
+		);
 
-        $errorMiddleware->setDefaultErrorHandler($container->get(DefaultErrorHandler::class));
+		$errorMiddleware->setDefaultErrorHandler($container->get(DefaultErrorHandler::class));
 
-        return $errorMiddleware;
-    },
+		return $errorMiddleware;
+	},
 
-    PhpRenderer::class => function (ContainerInterface $container) {
-        return new PhpRenderer($container->get(Config::class)->template);
-    },
+	PhpRenderer::class => function (ContainerInterface $container) {
+		return new PhpRenderer($container->get(Config::class)->template);
+	},
 
-    TrailingSlash::class => function (ContainerInterface $container) {
-        return new TrailingSlash();
-    },
+	TrailingSlash::class => function (ContainerInterface $container) {
+		return new TrailingSlash();
+	},
 
-    BufferController::class => function (ContainerInterface $container) {
-        return new BufferController();
-    },
+	BufferController::class => function (ContainerInterface $container) {
+		return new BufferController();
+	},
 
-    FakerFactory::class => function (ContainerInterface $container) {
-        return new FakerFactory(
-            $container->get(Config::class)
-        );
-    },
+	FakerFactory::class => function (ContainerInterface $container) {
+		return new FakerFactory(
+			$container->get(Config::class)
+		);
+	},
 
-    IndexReader::class => function (ContainerInterface $container) {
-        return new IndexReader(
-            $container->get(IndexRepository::class),
-            $container->get(IndexBuilder::class),
-        );
-    },
+	IndexReader::class => function (ContainerInterface $container) {
+		return new IndexReader(
+			$container->get(IndexRepository::class),
+			$container->get(IndexBuilder::class),
+		);
+	},
 
-    ObjectFetcher::class => function (ContainerInterface $container) {
-        return new ObjectFetcher($container->get(ObjectRepository::class));
-    },
+	ObjectFetcher::class => function (ContainerInterface $container) {
+		return new ObjectFetcher($container->get(ObjectRepository::class));
+	},
 
-    TotalCMSTwigAdapter::class => function (ContainerInterface $container) {
-        return new TotalCMSTwigAdapter(
-            $container->get(Config::class),
-            $container->get(IndexReader::class),
-            $container->get(ObjectFetcher::class),
-            $container->get(CollectionLister::class),
-            $container->get(CollectionFetcher::class),
-            $container->get(SchemaLister::class),
-            $container->get(SchemaFetcher::class),
-        );
-    },
+	TotalFormFactory::class => function (ContainerInterface $container) {
+		return new TotalFormFactory(
+			$container->get(Config::class),
+			$container->get(ObjectFetcher::class),
+			$container->get(CollectionFetcher::class),
+			$container->get(IndexReader::class),
+			$container->get(SchemaFetcher::class),
+			$container->get(SchemaLister::class),
+		);
+	},
 
-    TotalCMSTwigPatterns::class => function (ContainerInterface $container) {
-        return new TotalCMSTwigPatterns();
-    },
+	TotalCMSTwigAdapter::class => function (ContainerInterface $container) {
+		return new TotalCMSTwigAdapter(
+			$container->get(Config::class),
+			$container->get(IndexReader::class),
+			$container->get(ObjectFetcher::class),
+			$container->get(CollectionLister::class),
+			$container->get(CollectionFetcher::class),
+			$container->get(SchemaLister::class),
+			$container->get(SchemaFetcher::class),
+			$container->get(TotalFormFactory::class),
+		);
+	},
 
-    TotalCMSTwigExtension::class => function (ContainerInterface $container) {
-        return new TotalCMSTwigExtension(
-            $container->get(TotalCMSTwigAdapter::class),
-            $container->get(TotalCMSTwigPatterns::class),
-            $container->get(FakerFactory::class),
-            $container->get(QRCodeTwigAdapter::class),
-        );
-    },
+	TotalCMSTwigPatterns::class => function (ContainerInterface $container) {
+		return new TotalCMSTwigPatterns();
+	},
 
-    QRCodeTwigAdapter::class => function (ContainerInterface $container) {
-        return new QRCodeTwigAdapter($container->get(QRGenerator::class));
-    },
+	TotalCMSTwigExtension::class => function (ContainerInterface $container) {
+		return new TotalCMSTwigExtension(
+			$container->get(TotalCMSTwigAdapter::class),
+			$container->get(TotalCMSTwigPatterns::class),
+			$container->get(FakerFactory::class),
+			$container->get(QRCodeTwigAdapter::class),
+		);
+	},
 
-    QRGenerator::class => function (ContainerInterface $container) {
-        return new QRGenerator();
-    },
+	QRCodeTwigAdapter::class => function (ContainerInterface $container) {
+		return new QRCodeTwigAdapter($container->get(QRGenerator::class));
+	},
 
-    TwigEngine::class => function (ContainerInterface $container) {
-        return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
-    },
+	QRGenerator::class => function (ContainerInterface $container) {
+		return new QRGenerator();
+	},
 
-    TwigCacheCleaner::class => function (ContainerInterface $container) {
-        return new TwigCacheCleaner($container->get(Config::class));
-    },
+	TwigEngine::class => function (ContainerInterface $container) {
+		return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
+	},
+
+	TwigCacheCleaner::class => function (ContainerInterface $container) {
+		return new TwigCacheCleaner($container->get(Config::class));
+	},
 ];

@@ -1,0 +1,87 @@
+{
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/collection.json",
+    "id"          : "collection",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Collection meta data file.",
+    "properties"  : {
+        "id": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"       : "ID",
+			"help"        : "The unique identifier for this collection.",
+			"placeholder" : "myobjects",
+			"field"       : "id",
+			"settings"     : {
+				"autogen" : "${name}"
+			}
+        },
+        "name": {
+			"type"        : "string",
+			"label"       : "Name",
+			"help"        : "The name of the collection.",
+			"placeholder" : "My Objects",
+			"field"       : "text"
+        },
+        "schema": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"       : "Schema",
+			"help"        : "The name of the schema that the collection objects conform to",
+			"field"       : "select",
+			"placeholder" : "Select a Schema",
+			"options"     : [
+				"blog",
+				"color",
+				"date",
+				"depot",
+				"email",
+				"feed",
+				"file",
+				"gallery",
+				"image",
+				"number",
+				"styledtext",
+				"svg",
+				"text",
+				"toggle",
+				"url"
+			]
+        },
+        "description": {
+			"type"        : "string",
+			"label"       : "Description",
+			"help"        : "A decription of the collection.",
+			"placeholder" : "About your collection.",
+			"field"       : "textarea"
+        },
+        "url": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/url.json",
+			"label"       : "URL",
+			"help"        : "The base url for objects stored in this collection.",
+			"placeholder" : "https://www.example.com/objects/",
+			"field"       : "url"
+        },
+		"properties": {
+			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
+			"help"  : "Edit the form fields for the collection objects.",
+			"label" : "Property Form Fields",
+			"field" : "properties"
+		},
+		"customProperties": {
+			"type"              : "object",
+			"label"             : "Object Form Overrides",
+			"field"             : "customProperties",
+			"help"              : "Custom values for the form fields for specific objects.",
+			"patternProperties" : {
+				"^\\S+$": {
+					"$ref": "https://www.totalcms.co/schemas/properties/properties.json"
+				}
+			}
+		}
+    },
+    "required": [
+        "id",
+        "name",
+        "schema",
+		"properties"
+    ]
+}

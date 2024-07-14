@@ -9,38 +9,38 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
 final class ImageWorksGalleryFetchDynamicAction
 {
-    public function __construct(private ImageGenerator $imageGenerator)
-    {
-    }
+	public function __construct(private ImageGenerator $imageGenerator)
+	{
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param array $args The arguments
-     *
-     * @throws HttpNotFoundException
-     *
-     * @return ResponseInterface
-     */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
-        $collection  = $args['collection'] ?? 'gallery';
-        $id          = $args['id'];
-        $property    = $args['property'] ?? 'gallery';
-        $action      = $args['action'];
-        $queryParams = $request->getQueryParams();
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param ResponseInterface $response
+	 * @param array<string,string> $args The arguments
+	 *
+	 * @throws HttpNotFoundException
+	 *
+	 * @return ResponseInterface
+	 */
+	public function __invoke(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		array $args
+	): ResponseInterface {
+		$collection  = $args['collection'] ?? 'gallery';
+		$id          = $args['id'];
+		$property    = $args['property'] ?? 'gallery';
+		$action      = $args['action'];
+		$queryParams = $request->getQueryParams();
 
-        try {
-            $image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $action, $queryParams);
-        } catch (\Exception $e) {
-            throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
-        }
+		try {
+			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $action, $queryParams);
+		} catch (\Exception $e) {
+			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
+		}
 
-        return $image;
-    }
+		return $image;
+	}
 }

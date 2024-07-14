@@ -62,6 +62,9 @@ class Deck extends TotalField {
     }
 
     getValue() {
+        // when getValue is called during super() the propertyFields are not yet defined
+		if (!this.cards) return {};
+
         const deckData = [];
         const cards = Array.from(this.deck.getElementsByClassName("card"));
         for (const card of cards) {

@@ -9,32 +9,32 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class PropertyData implements PropertyDataInterface
 {
-    public string $id;
+	public string $id;
 
-    public function __construct(string $id)
-    {
-        $this->id = $id;
-    }
+	public function __construct(string $id)
+	{
+		$this->id = $id;
+	}
 
-    /**
-     * transform the property data.
-     *
-     * @return mixed
-     */
-    public function transform(): mixed
-    {
-        return null;
-    }
+	/**
+	 * transform the property data.
+	 *
+	 * @return mixed
+	 */
+	public function transform(): mixed
+	{
+		return null;
+	}
 
-    public static function defaultValue(mixed $value, mixed $default): mixed
-    {
-        if (isset($default)) {
-            if ($value === null) {
-                // Set the value from the schema default
-                $value = $default;
-            }
-        }
+	public static function defaultValue(mixed $value, mixed $default): mixed
+	{
+		if (isset($default)) {
+			if ($value === null) {
+				// Set the value from the schema default
+				$value = $default;
+			}
+		}
 
-        return $value;
-    }
+		return $value;
+	}
 }

@@ -12,93 +12,94 @@ use BaconQrCode\Writer;
 // ---------------------------------------------------------------------------------
 class QRGenerator
 {
-    private Writer $writer;
+	private Writer $writer;
 
-    public function __construct(int $size = 512)
-    {
-        // TODO: ImagickImageBackEnd and GDLibRenderer for PNG support
+	public function __construct(int $size = 512)
+	{
+		// TODO: ImagickImageBackEnd and GDLibRenderer for PNG support
 
-        $margin   = 0;
-        $renderer = new ImageRenderer(
-            new RendererStyle($size, $margin),
-            new SvgImageBackEnd()
-        );
-        $this->writer = new Writer($renderer);
-    }
+		$margin   = 0;
+		$renderer = new ImageRenderer(
+			new RendererStyle($size, $margin),
+			new SvgImageBackEnd()
+		);
+		$this->writer = new Writer($renderer);
+	}
 
-    private function generateSVG(string $text): string
-    {
-        $svg = $this->stripFirstLine($this->writer->writeString($text));
+	private function generateSVG(string $text): string
+	{
+		$svg = $this->stripFirstLine($this->writer->writeString($text));
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    private function stripFirstLine(string $text): string
-    {
-        return substr($text, strpos($text, "\n") + 1);
-    }
+	private function stripFirstLine(string $text): string
+	{
+		return substr($text, strpos($text, "\n") + 1);
+	}
 
-    public function text(string $text): string
-    {
-        $svg = $this->generateSVG($text);
+	public function text(string $text): string
+	{
+		$svg = $this->generateSVG($text);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function url(string $text): string
-    {
-        $svg = $this->generateSVG($text);
+	public function url(string $text): string
+	{
+		$svg = $this->generateSVG($text);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function tel(string $text): string
-    {
-        $url  = "tel:$text";
-        $svg  = $this->generateSVG($url);
+	public function tel(string $text): string
+	{
+		$url  = "tel:$text";
+		$svg  = $this->generateSVG($url);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function gps(string $latitude, string $longitude): string
-    {
-        $url  = 'geo:' . $latitude . ',' . $longitude;
-        $svg  = $this->generateSVG($url);
+	public function gps(string $latitude, string $longitude): string
+	{
+		$url  = 'geo:' . $latitude . ',' . $longitude;
+		$svg  = $this->generateSVG($url);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function sms(string $telephone, string $message): string
-    {
-        $url  = 'smsto:' . $telephone . ':' . $message;
-        $svg  = $this->generateSVG($url);
+	public function sms(string $telephone, string $message): string
+	{
+		$url  = 'smsto:' . $telephone . ':' . $message;
+		$svg  = $this->generateSVG($url);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function wifi(string $auth, string $ssid, string $password, string $hidden): string
-    {
-        $url  = 'WIFI:T:' . $auth . ';S:' . $ssid . ';P:' . $password . ';H:' . $hidden;
-        $svg  = $this->generateSVG($url);
+	public function wifi(string $auth, string $ssid, string $password, string $hidden): string
+	{
+		$url  = 'WIFI:T:' . $auth . ';S:' . $ssid . ';P:' . $password . ';H:' . $hidden;
+		$svg  = $this->generateSVG($url);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function mailto(string $email, string $subject = '', string $body = ''): string
-    {
-        $url  = 'mailto:' . $email . '?subject=' . $subject . '&body=' . $body;
-        $svg  =  $this->generateSVG($url);
+	public function mailto(string $email, string $subject = '', string $body = ''): string
+	{
+		$url  = 'mailto:' . $email . '?subject=' . $subject . '&body=' . $body;
+		$svg  =  $this->generateSVG($url);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function event(array $data): string
-    {
-        date_default_timezone_set('UTC');
-        $start = date("Ymd\THis\Z", strtotime($data['start']));
-        $end   = date("Ymd\THis\Z", strtotime($data['end']));
+	/** @param array<string,string> $data */
+	public function event(array $data): string
+	{
+		date_default_timezone_set('UTC');
+		$start = date("Ymd\THis\Z", intval(strtotime($data['start'])));
+		$end   = date("Ymd\THis\Z", intval(strtotime($data['end'])));
 
-        $vcard = <<<EVENT
+		$vcard = <<<EVENT
 BEGIN:VEVENT
 SUMMARY:{$data['title']}
 DESCRIPTION:{$data['desc']}
@@ -107,14 +108,15 @@ DTSTART:{$start}
 DTEND:{$end}
 END:VEVENT
 EVENT;
-        $svg = $this->generateSVG($vcard);
+		$svg = $this->generateSVG($vcard);
 
-        return $svg;
-    }
+		return $svg;
+	}
 
-    public function vcf(array $data): string
-    {
-        $vcard = <<<VCF
+	/** @param array<string,string> $data */
+	public function vcf(array $data): string
+	{
+		$vcard = <<<VCF
 BEGIN:VCARD
 VERSION:3.0
 N:{$data['last']};{$data['first']}
@@ -127,8 +129,8 @@ EMAIL;WORK;INTERNET:{$data['email']}
 URL:{$data['website']}
 END:VCARD
 VCF;
-        $svg = $this->generateSVG($vcard);
+		$svg = $this->generateSVG($vcard);
 
-        return $svg;
-    }
+		return $svg;
+	}
 }

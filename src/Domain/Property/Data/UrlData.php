@@ -7,35 +7,35 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class UrlData extends PropertyData
 {
-    public string $url;
+	public string $url;
 
-    public function __construct(string $url)
-    {
-        $this->url = self::cleanUrl($url);
-    }
+	public function __construct(string $url)
+	{
+		$this->url = self::cleanUrl($url);
+	}
 
-    private static function cleanUrl(string $url): string
-    {
-        if (empty($url)) {
-            return $url;
-        }
+	private static function cleanUrl(string $url): string
+	{
+		if (empty($url)) {
+			return $url;
+		}
 
-        $url = filter_var($url, FILTER_SANITIZE_URL);
+		$url = filter_var($url, FILTER_SANITIZE_URL);
 
-        if ($url === false || !filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new \InvalidArgumentException('Invalid URL');
-        }
+		if ($url === false || !filter_var($url, FILTER_VALIDATE_URL)) {
+			throw new \InvalidArgumentException('Invalid URL');
+		}
 
-        return $url;
-    }
+		return $url;
+	}
 
-    public function transform(): string
-    {
-        return (string)$this;
-    }
+	public function transform(): string
+	{
+		return (string)$this;
+	}
 
-    public function __toString(): string
-    {
-        return $this->url;
-    }
+	public function __toString(): string
+	{
+		return $this->url;
+	}
 }

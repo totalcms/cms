@@ -3,6 +3,8 @@
 return (new PhpCsFixer\Config())
     ->setUsingCache(false)
     ->setRiskyAllowed(true)
+    ->setLineEnding("\n")
+    ->setIndent("\t")
     ->setRules(
         [
             '@PSR1'           => true,
@@ -26,7 +28,7 @@ return (new PhpCsFixer\Config())
             'increment_style'                     => ['style' => 'post'],
             'list_syntax'                         => ['syntax' => 'short'],
             'echo_tag_syntax'                     => ['format' => 'long'],
-            'phpdoc_add_missing_param_annotation' => ['only_untyped' => false],
+            'phpdoc_add_missing_param_annotation' => ['only_untyped' => true],
             'phpdoc_align'                        => false,
             'phpdoc_no_empty_return'              => false,
             'phpdoc_order'                        => true, // psr-5

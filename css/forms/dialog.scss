@@ -12,11 +12,16 @@ dialog.cms-modal {
 	left          : 50%;
 	transform     : translate(-50%, -50%);
 	margin        : 0;
+	overflow-y    : auto;
 
 	width      : 90%;
 	max-width  : 1000px;
 	height     : 70vh;
 	max-height : 800px;
+
+	&.small {
+		max-width : 75ch;
+	}
 
 	&[open] {
 		display               : grid;
@@ -46,15 +51,18 @@ dialog.cms-modal {
 
 	.close {
 		cursor : pointer;
-		margin : 0;
+		width  : fit-content;
 	}
 
 	section {
-		position   : relative;
+		position : relative;
+		display  : grid;
+		gap      : 0.5rem;
 
 		&.scroller {
 			max-height    : 100%;
 			overflow-y    : auto;
+			overflow-x    : hidden;
 			padding-right : 0.5rem;
 
 			&::-webkit-scrollbar {

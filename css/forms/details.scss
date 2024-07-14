@@ -2,9 +2,10 @@
 // Details Styles
 //--------------------------------
 details.cms-accordion {
-	padding       : 1rem 1rem 0;
-	margin-bottom : 1rem;
-	transition    : height 0.5s ease-in-out;
+	padding    : 1rem 1rem 0;
+	transition : height 0.5s ease-in-out;
+	display    : grid;
+	gap        : 1rem;
 
 	summary {
 		border-radius    : var(--totalform-radius);
@@ -19,6 +20,11 @@ details.cms-accordion {
 		// &::marker {
 		// 	content : "▶";
 		// }
+	}
+
+	> .content {
+		display : grid;
+		gap     : 1rem;
 	}
 
 	&[open] {

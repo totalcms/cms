@@ -9,31 +9,31 @@ use TotalCMS\Renderer\JsonRenderer;
 
 final class PropertyClearCacheAction
 {
-    public function __construct(
-        private JsonRenderer $renderer,
-        private PropertyCacheCleaner $service,
-    ) {
-        $this->renderer = $renderer;
-        $this->service  = $service;
-    }
+	public function __construct(
+		private JsonRenderer $renderer,
+		private PropertyCacheCleaner $service,
+	) {
+		$this->renderer = $renderer;
+		$this->service  = $service;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param array $args
-     *
-     * @return ResponseInterface
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
-    {
-        $deleted = $this->service->deletePropertyCache($args['collection'], $args['id'], $args['property']);
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param ResponseInterface $response
+	 * @param array<string,string> $args
+	 *
+	 * @return ResponseInterface
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		$deleted = $this->service->deletePropertyCache($args['collection'], $args['id'], $args['property']);
 
-        if ($deleted === false) {
-            $response = $response->withStatus(500);
-        }
+		if ($deleted === false) {
+			$response = $response->withStatus(500);
+		}
 
-        return $this->renderer->json($response, ['deleted' => $deleted]);
-    }
+		return $this->renderer->json($response, ['deleted' => $deleted]);
+	}
 }

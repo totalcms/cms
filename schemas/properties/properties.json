@@ -12,6 +12,10 @@
 					"type" : "string",
 					"description": "The label for the field."
 				},
+				"placeholder": {
+					"type" : "string",
+					"description": "The placeholder for the field."
+				},
 				"help": {
 					"type" : "string",
 					"description": "The help text for the field."
@@ -30,12 +34,14 @@
 				"settings": {
 					"type" : "object",
 					"description": "The settings for generating the field."
+				},
+				"options": {
+					"type" : ["array", "object"],
+					"description": "The options for the field."
 				}
 			},
 			"required": [
-				"field",
-				"label",
-				"help"
+				"field"
 			]
 		}
 	}

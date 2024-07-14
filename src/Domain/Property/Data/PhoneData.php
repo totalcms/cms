@@ -7,20 +7,20 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class PhoneData extends PropertyData
 {
-    public string $phone;
+	public string $phone;
 
-    public function __construct(string $phone)
-    {
-        $this->phone = $phone;
-    }
+	public function __construct(string $phone)
+	{
+		$this->phone = $phone;
+	}
 
-    public function transform(): string
-    {
-        return (string)$this;
-    }
+	public function transform(): string
+	{
+		return (string)$this;
+	}
 
-    public function __toString(): string
-    {
-        return $this->phone;
-    }
+	public function __toString(): string
+	{
+		return $this->phone;
+	}
 }

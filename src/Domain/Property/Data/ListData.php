@@ -7,32 +7,33 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class ListData extends PropertyData
 {
-    public array $list;
+	/** @param array<string> $list */
+	public function __construct(public array $list)
+	{
+		if (!self::verifyList($list)) {
+			throw new \InvalidArgumentException('List must be a list:' . json_encode($list));
+		}
+		$this->list = $list;
+	}
 
-    public function __construct(array $list)
-    {
-        if (!self::verifyList($list)) {
-            throw new \InvalidArgumentException('List must be a list:' . json_encode($list));
-        }
-        $this->list = $list;
-    }
+	/** @param array<string> $list */
+	private static function verifyList(array $list): bool
+	{
+		if (!array_is_list($list)) {
+			return false;
+		}
+		foreach ($list as $item) {
+			if (!is_scalar($item)) {
+				return false;
+			}
+		}
 
-    private static function verifyList(array $list): bool
-    {
-        if (!array_is_list($list)) {
-            return false;
-        }
-        foreach ($list as $item) {
-            if (!is_scalar($item)) {
-                return false;
-            }
-        }
+		return true;
+	}
 
-        return true;
-    }
-
-    public function transform(): array
-    {
-        return $this->list;
-    }
+	/** @return array<string> */
+	public function transform(): array
+	{
+		return $this->list;
+	}
 }

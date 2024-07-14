@@ -10,38 +10,38 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectPatchPropertyMetaAction
 {
-    private JsonRenderer $renderer;
-    private ObjectSaver $service;
+	private JsonRenderer $renderer;
+	private ObjectSaver $service;
 
-    /**
-     * The constructor.
-     *
-     * @param JsonRenderer $renderer The renderer
-     * @param ObjectSaver $service Object save service
-     */
-    public function __construct(JsonRenderer $renderer, ObjectSaver $service)
-    {
-        $this->renderer = $renderer;
-        $this->service  = $service;
-    }
+	/**
+	 * The constructor.
+	 *
+	 * @param JsonRenderer $renderer The renderer
+	 * @param ObjectSaver $service Object save service
+	 */
+	public function __construct(JsonRenderer $renderer, ObjectSaver $service)
+	{
+		$this->renderer = $renderer;
+		$this->service  = $service;
+	}
 
-    /**
-     * Action.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param array $args
-     *
-     * @return ResponseInterface
-     */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
-    ): ResponseInterface {
-        $data   = json_decode($request->getBody(), true);
-        $object = $this->service->patchObjectPropertyMeta($args['collection'], $args['id'], $args['property'], $args['name'], $data);
+	/**
+	 * Action.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param ResponseInterface $response
+	 * @param array<string,string> $args
+	 *
+	 * @return ResponseInterface
+	 */
+	public function __invoke(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		array $args
+	): ResponseInterface {
+		$data   = json_decode($request->getBody(), true);
+		$object = $this->service->patchObjectPropertyMeta($args['collection'], $args['id'], $args['property'], $args['name'], $data);
 
-        return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
-    }
+		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
+	}
 }

@@ -9,22 +9,23 @@
     [type="text"], [type="email"], [type="date"], [type="datetime-local"], [type="month"],
     [type="number"], [type="password"], [type="tel"], [type="time"], [type="search"],
     [type="url"], [type="week"], select, textarea {
-        display          : block;
-        box-sizing       : border-box;
-        width            : 100%;
-        height           : 2.4375rem;
-        padding          : .5rem;
-        border           : 1px solid oklch(var(--totalform-border-color));
-        border-radius    : var(--totalform-radius);
-        background-color : oklch(var(--totalform-background));
-        font-family      : inherit;
-        font-size        : var(--totalform-font-size);
-        font-weight      : 400;
-        line-height      : 1.5;
-        color            : oklch(var(--totalform-text-color));
-        appearance       : none;
-        box-shadow       : inset 0 1px 2px oklch(var(--totalform-shadow));
-        transition       : box-shadow .5s, border-color .25s ease-in-out;
+		display          : block;
+		box-sizing       : border-box;
+		width            : 100%;
+		height           : 2.4375rem;
+		padding          : .5rem;
+		margin           : 0;
+		border           : 1px solid oklch(var(--totalform-border-color));
+		border-radius    : var(--totalform-radius);
+		background-color : oklch(var(--totalform-background));
+		font-family      : inherit;
+		font-size        : var(--totalform-font-size);
+		font-weight      : 400;
+		line-height      : 1.5;
+		color            : oklch(var(--totalform-text-color));
+		appearance       : none;
+		box-shadow       : inset 0 1px 2px oklch(var(--totalform-shadow));
+		transition       : box-shadow .5s, border-color .25s ease-in-out;
     }
 
 	input, select, textarea {
@@ -39,7 +40,7 @@
 
         &[rows] {
             height     : auto;
-            min-height : 100px;
+            min-height : 3em;
         }
     }
 
@@ -50,8 +51,7 @@
 
     select {
         + .form-group-icon:after {
-            -webkit-mask : var(--icon-select);
-            mask         : var(--icon-select);
+            mask-image : var(--icon-select);
         }
 
         &:not([multiple]):has([selected][disabled])  {
@@ -78,6 +78,10 @@
 		&:focus-visible {
 			outline : none;
 		}
+		&[disabled] {
+			box-shadow : none;
+			opacity    : 1;
+		}
     }
 }
 
@@ -86,14 +90,21 @@
 //------------------------------
 .svg-field .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-svg);
-		mask         : var(--icon-svg);
+		mask-image : var(--icon-svg);
 	}
 }
 .styledtext-field .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-styledtext);
-		mask         : var(--icon-styledtext);
+		mask-image : var(--icon-styledtext);
+	}
+}
+
+//------------------------------
+// JSON Field
+//------------------------------
+.json-field .form-group-icon {
+	&:after {
+		mask-image : var(--icon-json);
 	}
 }
 
@@ -102,8 +113,7 @@
 //------------------------------
 .list-field .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-list);
-		mask         : var(--icon-list);
+		mask-image : var(--icon-list);
 	}
 }
 
@@ -113,8 +123,7 @@
 [type="date"] + .form-group-icon,
 [type="datetime-local"] + .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-date);
-		mask         : var(--icon-date);
+		mask-image : var(--icon-date);
 	}
 }
 
@@ -123,8 +132,7 @@
 //------------------------------
 [type="time"] + .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-time);
-		mask         : var(--icon-time);
+		mask-image : var(--icon-time);
 	}
 }
 
@@ -133,8 +141,7 @@
 //------------------------------
 [type="email"] + .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-email);
-		mask         : var(--icon-email);
+		mask-image : var(--icon-email);
 	}
 }
 
@@ -143,19 +150,17 @@
 //------------------------------
 [type="password"] + .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-lock);
-		mask         : var(--icon-lock);
+		mask-image : var(--icon-lock);
 	}
 }
 
 //------------------------------
 // ID Field
 //------------------------------
-.id-field {
+.form-field.id-field {
     .form-group-icon {
 		&:after {
-			-webkit-mask : var(--icon-id);
-			mask         : var(--icon-id);
+			mask-image : var(--icon-id);
 		}
 		border-width : 0;
     }
@@ -164,6 +169,10 @@
         background-color : oklch(var(--totalform-nearwhite));
         border           : none;
         box-shadow       : none;
+
+		&[readonly] {
+			background-color : oklch(var(--totalform-lightgray));
+		}
     }
 }
 
@@ -172,8 +181,7 @@
 //------------------------------
 [type="url"] + .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-url);
-		mask         : var(--icon-url);
+		mask-image : var(--icon-url);
 	}
 }
 
@@ -182,8 +190,7 @@
 //------------------------------
 [type="tel"] + .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-tel);
-		mask         : var(--icon-tel);
+		mask-image : var(--icon-tel);
 	}
 }
 
@@ -192,8 +199,7 @@
 //------------------------------
 [type="number"] + .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-number);
-		mask         : var(--icon-number);
+		mask-image : var(--icon-number);
 	}
 }
 
@@ -202,8 +208,7 @@
 //------------------------------
 .markdown-field .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-markdown);
-		mask         : var(--icon-markdown);
+		mask-image : var(--icon-markdown);
 	}
 }
 
@@ -212,8 +217,7 @@
 //------------------------------
 .form-field.icon-copyright .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-copyright);
-		mask         : var(--icon-copyright);
+		mask-image : var(--icon-copyright);
 	}
 }
 
@@ -222,8 +226,7 @@
 //------------------------------
 .form-field.icon-gps .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-gps);
-		mask         : var(--icon-gps);
+		mask-image : var(--icon-gps);
 	}
 }
 
@@ -232,8 +235,7 @@
 //------------------------------
 .form-field.icon-user .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-user);
-		mask         : var(--icon-user);
+		mask-image : var(--icon-user);
 	}
 }
 
@@ -242,14 +244,12 @@
 //------------------------------
 .form-field.icon-camera .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-camera);
-		mask         : var(--icon-camera);
+		mask-image : var(--icon-camera);
 	}
 }
 .form-field.icon-shutter .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-shutter);
-		mask         : var(--icon-shutter);
+		mask-image : var(--icon-shutter);
 	}
 }
 
@@ -258,116 +258,97 @@
 //------------------------------
 .form-field.icon-width .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-width);
-		mask         : var(--icon-width);
+		mask-image : var(--icon-width);
 	}
 }
 .form-field.icon-height .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-height);
-		mask         : var(--icon-height);
+		mask-image : var(--icon-height);
 	}
 }
 .form-field.icon-pixels .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-pixels);
-		mask         : var(--icon-pixels);
+		mask-image : var(--icon-pixels);
 	}
 }
 .form-field.icon-pixelate .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-pixelate);
-		mask         : var(--icon-pixelate);
+		mask-image : var(--icon-pixelate);
 	}
 }
 .form-field.icon-imageformat .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-imageformat);
-		mask         : var(--icon-imageformat);
+		mask-image : var(--icon-imageformat);
 	}
 }
 .form-field.icon-quality .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-quality);
-		mask         : var(--icon-quality);
+		mask-image : var(--icon-quality);
 	}
 }
 .form-field.icon-crop .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-crop);
-		mask         : var(--icon-crop);
+		mask-image : var(--icon-crop);
 	}
 }
 .form-field.icon-padding .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-padding);
-		mask         : var(--icon-padding);
+		mask-image : var(--icon-padding);
 	}
 }
 .form-field.icon-eye .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-eye);
-		mask         : var(--icon-eye);
+		mask-image : var(--icon-eye);
 	}
 }
 .form-field.icon-position .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-position);
-		mask         : var(--icon-position);
+		mask-image : var(--icon-position);
 	}
 }
 .form-field.icon-bright .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-bright);
-		mask         : var(--icon-bright);
+		mask-image : var(--icon-bright);
 	}
 }
 .form-field.icon-contrast .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-contrast);
-		mask         : var(--icon-contrast);
+		mask-image : var(--icon-contrast);
 	}
 }
 .form-field.icon-gamma .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-gamma);
-		mask         : var(--icon-gamma);
+		mask-image : var(--icon-gamma);
 	}
 }
 .form-field.icon-sharpen .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-sharpen);
-		mask         : var(--icon-sharpen);
+		mask-image : var(--icon-sharpen);
 	}
 }
 .form-field.icon-blur .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-blur);
-		mask         : var(--icon-blur);
+		mask-image : var(--icon-blur);
 	}
 }
 .form-field.icon-filter .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-filter);
-		mask         : var(--icon-filter);
+		mask-image : var(--icon-filter);
 	}
 }
 .form-field.icon-paint-roller .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-paint-roller);
-		mask         : var(--icon-paint-roller);
+		mask-image : var(--icon-paint-roller);
 	}
 }
 .form-field.icon-paint-brush .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-paint-brush);
-		mask         : var(--icon-paint-brush);
+		mask-image : var(--icon-paint-brush);
 	}
 }
 .form-field.icon-settings .form-group-icon {
 	&:after {
-		-webkit-mask : var(--icon-settings);
-		mask         : var(--icon-settings);
+		mask-image : var(--icon-settings);
 	}
 }
 

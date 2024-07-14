@@ -14,36 +14,38 @@ use TotalCMS\Domain\Property\Data\PropertyData;
  */
 class ObjectData
 {
-    // Reserved names that cannot be used for objects
-    public const RESERVED_NAMES = [
-        'index',
-        'id',
-    ];
+	// Reserved names that cannot be used for objects
+	public const RESERVED_NAMES = [
+		'index',
+		'id',
+	];
 
-    public string $id;
-    /** @var Collection<string, PropertyData> */
-    public Collection $properties;
-    protected Serializer $serializer;
+	public string $id;
+	/** @var Collection<string,PropertyData> */
+	public Collection $properties;
+	protected Serializer $serializer;
 
-    public function __construct(string $id, array $properties)
-    {
-        $this->id         = (new Slugify())->slugify($id);
-        $this->properties = new Collection($properties);
-        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-    }
+	/** @param array<string,mixed> $properties */
+	public function __construct(string $id, array $properties)
+	{
+		$this->id         = (new Slugify())->slugify($id);
+		$this->properties = new Collection($properties);
+		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+	}
 
-    public function toArray(): array
-    {
-        $base = ['id' => $this->id];
+	/** @return array<string,mixed> */
+	public function toArray(): array
+	{
+		$base = ['id' => $this->id];
 
-        // Transform properties
-        $properties = $this->properties->map(fn ($property) => $property->transform());
+		// Transform properties
+		$properties = $this->properties->map(fn ($property) => $property->transform());
 
-        return array_merge($base, $properties->toArray());
-    }
+		return array_merge($base, $properties->toArray());
+	}
 
-    public function toJson(): string
-    {
-        return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
-    }
+	public function toJson(): string
+	{
+		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+	}
 }
