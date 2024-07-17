@@ -20,7 +20,7 @@ class DateData extends PropertyData
 	public static function defaultValue(mixed $value, mixed $default): mixed
 	{
 		if (isset($default)) {
-			if (empty($value) && $default === self::CREATION_DATE) {
+			if ((empty($value) || $value === self::CREATION_DATE) && $default === self::CREATION_DATE) {
 				$value = self::cleanDate();
 			} elseif ($default === self::UPDATE_DATE) {
 				$value = self::cleanDate();
