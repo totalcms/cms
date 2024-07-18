@@ -32,6 +32,28 @@ final class SchemaData
 		'toggle',
 		'url',
 	];
+	public const PROPERTY_TYPES = [
+		'string',
+		'number',
+		'boolean',
+		'array',
+		'object',
+		'color',
+		'date',
+		'time',
+		'deck',
+		'email',
+		'file',
+		'image',
+		'url',
+		'depot',
+		'gallery',
+		'list',
+		'password',
+		'phone',
+		'slug',
+		'svg',
+	];
 
 	public string $id;
 	public string $description;

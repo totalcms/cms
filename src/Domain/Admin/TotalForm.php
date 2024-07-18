@@ -103,7 +103,7 @@ abstract class TotalForm
 		'url',
 	];
 
-	public const FIELD_PROPERTIES = [
+	public const PROPERTY_FIELDS = [
 		'default',
 		'field',
 		'help',
@@ -322,7 +322,7 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => in_array($key, self::FIELD_PROPERTIES), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**

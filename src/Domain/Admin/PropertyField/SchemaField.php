@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Admin\PropertyField;
 
 use TotalCMS\Domain\Admin\TotalForm;
-use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Utils\HTMLUtils;
 
 class SchemaField extends PropertyField
@@ -38,7 +38,7 @@ class SchemaField extends PropertyField
 			'placeholder' => 'Select a data type',
 			'help'        => 'The data type of the property',
 			'value'       => $this->type,
-			'options'     => PropertyData::PROPERTY_TYPES,
+			'options'     => SchemaData::PROPERTY_TYPES,
 		]);
 		$content .= $this->form->field('factory', [
 			'field'       => 'text',

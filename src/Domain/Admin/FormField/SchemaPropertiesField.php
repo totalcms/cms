@@ -2,9 +2,9 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use PhpParser\Node\Expr\Instanceof_;
 use TotalCMS\Domain\Admin\PropertyField\SchemaField;
 use TotalCMS\Domain\Admin\SchemaForm;
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
 class SchemaPropertiesField extends PropertiesField
