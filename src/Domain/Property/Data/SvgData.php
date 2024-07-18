@@ -7,11 +7,9 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class SvgData extends PropertyData
 {
-	public string $svg;
-
-	public function __construct(string $svg)
+	public function __construct(public string $svg = '')
 	{
-		if (!empty($svg) & !self::verifySvg($svg)) {
+		if (!empty($svg) && !self::verifySvg($svg)) {
 			throw new \InvalidArgumentException('Invalid SVG');
 		}
 		$this->svg = $svg;

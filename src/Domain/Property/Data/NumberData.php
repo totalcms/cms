@@ -23,4 +23,16 @@ class NumberData extends PropertyData
 	{
 		return (string)$this->number;
 	}
+
+	public static function defaultValue(mixed $value, mixed $default): mixed
+	{
+		if (isset($default)) {
+			if ($value === null) {
+				// Set the value from the schema default
+				$value = floatval($default);
+			}
+		}
+
+		return $value;
+	}
 }

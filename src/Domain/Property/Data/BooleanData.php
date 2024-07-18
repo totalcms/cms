@@ -9,7 +9,8 @@ class BooleanData extends PropertyData
 {
 	public bool $status;
 
-	public function __construct(bool $status)
+	/** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+	public function __construct(bool $status = false)
 	{
 		$this->status = $status;
 	}
@@ -22,5 +23,17 @@ class BooleanData extends PropertyData
 	public function __toString(): string
 	{
 		return $this->status ? 'true' : 'false';
+	}
+
+	public static function defaultValue(mixed $value, mixed $default): mixed
+	{
+		if (isset($default)) {
+			if ($value === null) {
+				// Set the value from the schema default
+				$value = boolval($default);
+			}
+		}
+
+		return $value;
 	}
 }
