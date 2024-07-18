@@ -318,11 +318,23 @@ abstract class TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function filterFieldProperties(array $properties): array
+	public static function filterFieldProperties(array $properties): array
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
 		return array_filter($properties, fn ($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+	}
+
+	/**
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterExtraFields(array $properties): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($properties, fn ($key) => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -380,7 +392,7 @@ abstract class TotalForm
 		$schemaData = $this->schemaFetcher->fetchSchema($schema);
 		$properties = $schemaData->properties;
 		foreach ($properties as $property => $options) {
-			$properties[$property] = $this->filterFieldProperties($options);
+			$properties[$property] = self::filterFieldProperties($options);
 		}
 		return $properties;
 	}

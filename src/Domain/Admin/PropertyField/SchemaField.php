@@ -8,11 +8,24 @@ use TotalCMS\Utils\HTMLUtils;
 
 class SchemaField extends PropertyField
 {
+	public const SCHEMA_PROPERTY_FIELDS = [
+		'default',
+		'factory',
+		'field',
+		'help',
+		'label',
+		'placeholder',
+		'options',
+		'settings',
+		'type',
+	];
+
 	/**
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
+	 * @param array<string,mixed> $extra - extra attributes for the field schema such as minItems, items, patternProperties, etc.
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
 	public function __construct(
@@ -27,6 +40,7 @@ class SchemaField extends PropertyField
 		protected string $default     = '',
 		protected array $options      = [],
 		protected array $settings     = [],
+		protected array $extra        = [],
 	) {
 	}
 
@@ -53,6 +67,13 @@ class SchemaField extends PropertyField
 			'placeholder' => '',
 			'help'        => 'The default value for this property when an object is saved without a value',
 			'value'       => $this->default ?? '',
+		]);
+		$content .= $this->form->field('extra', [
+			'field'       => 'json',
+			'label'       => 'Extra Schema Definitions',
+			'placeholder' => '{ "key": "value" }',
+			'help'        => 'Extra schema definitions for this property in valid JSON format',
+			'value'       => empty($this->extra) ? "" : json_encode($this->extra, JSON_PRETTY_PRINT),
 		]);
 
 		return HTMLUtils::details('Property Info', $content);
@@ -88,5 +109,29 @@ class SchemaField extends PropertyField
 		]);
 
 		return $field;
+	}
+
+	/**
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterSchemaProperties(array $properties): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($properties, fn ($key) => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+	}
+
+	/**
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterExtraProperties(array $properties): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($properties, fn ($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 }

@@ -33,12 +33,19 @@ class SchemaPropertiesField extends PropertiesField
 	/** @param array<string,mixed> $options */
 	protected function createPropertyField(string $property, array $options): SchemaField
 	{
-		$options['property'] = $property;
-		$options['form'] = $this->form;
-
 		if (isset($options['$ref'])) {
 			$options['type'] = basename($options['$ref'], '.json');
 			unset($options['$ref']);
+		}
+
+		$extra   = SchemaField::filterExtraProperties($options);
+		$options = SchemaField::filterSchemaProperties($options);
+
+		$options['property'] = $property;
+		$options['form'] = $this->form;
+
+		if (!empty($extra)) {
+			$options['extra'] = $extra;
 		}
 
 		return new SchemaField(...$options);

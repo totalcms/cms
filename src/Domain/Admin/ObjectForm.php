@@ -84,7 +84,7 @@ final class ObjectForm extends TotalForm
 
 		$defaults = array_merge($schema, $collection);
 
-		return $this->filterFieldProperties($defaults);
+		return TotalForm::filterFieldProperties($defaults);
 	}
 
 	/**
@@ -101,7 +101,7 @@ final class ObjectForm extends TotalForm
 		// Get the schema and collection settings for a property
 		$properties = $this->collectionData->customProperties[$this->id][$property] ?? [];
 
-		return $this->filterFieldProperties($properties);
+		return TotalForm::filterFieldProperties($properties);
 	}
 
 	private function initCollectionData(): void
