@@ -39,6 +39,14 @@ final class SchemaSaver
 			throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
 		}
 
+		// Ensure that the ID is required and indexed
+		if (!in_array("id", $schema->required)) {
+			$schema->required[] = "id";
+		}
+		if (!in_array("id", $schema->index)) {
+			$schema->index[] = "id";
+		}
+
 		// This is not in Repository in order to prevent circular dependency
 		if ($this->validator->validateSchema($schema->toArray()) === false) {
 			throw new \UnexpectedValueException('Invalid Schema data provided');
@@ -57,7 +65,7 @@ final class SchemaSaver
 	{
 		// Convert property types to $ref when possible
 		foreach ($properties as $key => $options) {
-			if (isset($options['type']) && in_array($options['type'], SchemaData::PROPERTY_TYPES)) {
+			if (isset($options['type']) && array_key_exists($options['type'], SchemaData::PROPERTY_TYPE_TO_REF)) {
 				$properties[$key]['$ref'] = SchemaData::PROPERTY_TYPE_TO_REF[$options['type']];
 				unset($properties[$key]['type']);
 			}
