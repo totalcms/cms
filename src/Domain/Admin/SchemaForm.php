@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -66,7 +65,7 @@ final class SchemaForm extends TotalForm
 
 		if ($this->reserved) {
 			// Do not allow delete or save for reserved schemas
-			$this->save = '';
+			$this->save   = '';
 			$this->delete = '';
 		}
 	}
@@ -106,6 +105,14 @@ final class SchemaForm extends TotalForm
 		if ($this->reserved) {
 			$options['disabled'] = true;
 			$options['readonly'] = true;
+		}
+
+		// This method is used to build field options for the main schema fields as well as the
+		// schema property fields. Since both have a type property, there is a conflict.
+		// This following ensures that when the type property is set, it is not overwritten with
+		// the type from schemaObjectData
+		if ($name === 'type' && isset($options['value'])) {
+			return $options;
 		}
 
 		if (isset($this->schemaObjectData)) {

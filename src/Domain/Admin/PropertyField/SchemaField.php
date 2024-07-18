@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin\PropertyField;
 
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Utils\HTMLUtils;
 
 class SchemaField extends PropertyField
@@ -29,9 +30,17 @@ class SchemaField extends PropertyField
 	) {
 	}
 
-	protected function buildSchemaOptions(): string
+	protected function buildPropertyInfo(): string
 	{
-		$content = $this->form->field('factory', [
+		$content = $this->form->field('type', [
+			'field'       => 'select',
+			'label'       => 'Type',
+			'placeholder' => 'Select a data type',
+			'help'        => 'The data type of the property',
+			'value'       => $this->type,
+			'options'     => PropertyData::PROPERTY_TYPES,
+		]);
+		$content .= $this->form->field('factory', [
 			'field'       => 'text',
 			'label'       => 'Factory',
 			'placeholder' => 'text(300)',
@@ -45,12 +54,14 @@ class SchemaField extends PropertyField
 			'help'        => 'The default value for this property when an object is saved without a value',
 			'value'       => $this->default ?? '',
 		]);
-		return HTMLUtils::details('Default &amp; Factory', $content);
+
+		return HTMLUtils::details('Property Info', $content);
 	}
 
 	protected function buildDialog(string $content = ''): string
 	{
-		$content = $this->buildSchemaOptions();
+		$content = $this->buildPropertyInfo();
+
 		return parent::buildDialog($content);
 	}
 
@@ -73,7 +84,7 @@ class SchemaField extends PropertyField
 		$button = HTMLUtils::element('button', '', ['type' => 'button']);
 		$input  = HTMLUtils::inlineElement('input', $inputAttributes);
 		$field  = HTMLUtils::element('div', $input . $button . $dialog, [
-			'class' => "schema-field {$this->field}-field"
+			'class' => "schema-field {$this->field}-field",
 		]);
 
 		return $field;
