@@ -11,7 +11,7 @@ export default class PropertiesField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
-		this.fieldClass = options.fieldClass || "property-field";
+		this.fieldClass = options?.fieldClass || "property-field";
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		const propertyFields = this.container.getElementsByClassName(this.fieldClass);
