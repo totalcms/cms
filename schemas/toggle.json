@@ -16,8 +16,7 @@
 			"type"    : "boolean",
 			"label"   : "Toggle",
 			"help"    : "Click to toggle the status.",
-			"field"   : "toggle",
-			"default" : false
+			"field"   : "toggle"
         }
     },
     "required": [

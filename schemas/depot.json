@@ -16,8 +16,7 @@
 			"$ref"    : "https://www.totalcms.co/schemas/properties/depot.json",
 			"label"   : "Files",
 			"help"    : "Drag and drop files here.",
-			"type"    : "depot",
-			"default" : []
+			"type"    : "depot"
         }
     },
     "required": [

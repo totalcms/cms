@@ -18,15 +18,7 @@
 			"help"    : "The color to use.",
 			"field"   : "color",
 			"factory" : "hexColor",
-			"default" : {
-				"alpha": 100,
-				"oklch": {
-					"l": 100,
-					"c": 0,
-					"h": 0
-				},
-				"hex": "#ffffff"
-			}
+			"default" : "#ffffff"
         }
     },
     "required": [
