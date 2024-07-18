@@ -70,6 +70,14 @@ final class SchemaForm extends TotalForm
 		}
 	}
 
+	public function autoBuild(string $content = ''): string
+	{
+		if ($this->id === 'schema' || $this->id === 'collection') {
+			return "<p class='alert'>You cannot edit the `{$this->id}` schema.</p>";
+		}
+		return parent::autoBuild($content);
+	}
+
 	private function isReservedSchema(string $id): bool
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
