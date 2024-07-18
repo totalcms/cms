@@ -84,7 +84,7 @@ final class SchemaForm extends TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function buildFieldOptions(string $name, array $options = [])
+	protected function buildFieldOptions(string $name, array $options = []): array
 	{
 		// Get the schema settings for a property
 		$defaults = $this->schemaData->properties[$name] ?? [];

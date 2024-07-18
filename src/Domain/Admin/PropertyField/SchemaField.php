@@ -18,6 +18,7 @@ class SchemaField extends PropertyField
 		protected TotalForm $form,
 		protected string $property,
 		protected string $field       = 'text',
+		protected string $type        = 'string',
 		protected string $label       = '',
 		protected string $help        = '',
 		protected string $placeholder = '',
@@ -61,9 +62,12 @@ class SchemaField extends PropertyField
 			'name'         => 'property',
 			'placeholder'  => 'name',
 			'required'     => '',
-			'disabled'     => '',
 			'value'        => $this->property,
 		];
+
+		if ($this->property === 'id') {
+			$inputAttributes['disabled'] = '';
+		}
 
 		$dialog = $this->buildDialog();
 		$button = HTMLUtils::element('button', '', ['type' => 'button']);
