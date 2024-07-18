@@ -7,37 +7,57 @@
 	"properties"  : {
 		"$id": {
 			"type"   : "string",
-			"format" : "uri"
+			"format" : "uri",
+			"field"  : "hidden"
 		},
 		"$schema": {
 			"type"   : "string",
-			"format" : "uri"
-		},
-		"id": {
-			"$ref" : "https://www.totalcms.co/schemas/properties/slug.json"
+			"format" : "uri",
+			"field"  : "hidden"
 		},
 		"type": {
-			"type" : "string"
+			"type"  : "string",
+			"field" : "hidden"
+		},
+		"id": {
+			"$ref" : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"       : "ID",
+			"help"        : "The unique identifier for this schema.",
+			"placeholder" : "myschema",
+			"field"       : "id"
 		},
 		"description": {
-			"type" : "string"
-		},
-		"properties": {
-			"$ref" : "https://www.totalcms.co/schemas/properties/properties.json"
+			"type"        : "string",
+			"label"       : "Description",
+			"help"        : "A decription of the schema.",
+			"placeholder" : "About your schema.",
+			"field"       : "textarea"
 		},
 		"required": {
-			"type"     : "array",
-			"minItems" : 1,
-			"items"    : {
+			"type"        : "array",
+			"label"       : "Required Properties",
+			"help"        : "A list of required properties.",
+			"field"       : "list",
+			"minItems"    : 1,
+			"items"       : {
 				"type" : "string"
 			}
 		},
 		"index": {
-			"type"     : "array",
+			"type"        : "array",
+			"label"       : "Indexed Properties",
+			"help"        : "A list of properties to index. These will be accessible in a Collection's Index.",
+			"field"       : "list",
 			"minItems" : 1,
 			"items"    : {
 				"type" : "string"
 			}
+		},
+		"properties": {
+			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
+			"help"  : "Define what properties are available in this schema.",
+			"label" : "Schema Fields",
+			"field" : "schemaProperties"
 		}
 	},
 	"required": [

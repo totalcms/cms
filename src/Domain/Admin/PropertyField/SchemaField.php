@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin\PropertyField;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
-class SchemaField
+class SchemaField extends PropertyField
 {
 	/**
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -28,63 +28,29 @@ class SchemaField
 	) {
 	}
 
-	private function buildDialog(): string
+	protected function buildSchemaOptions(): string
 	{
-		$formInfo = $this->form->field('field', [
-			'field'       => 'select',
-			'label'       => 'Field Type',
-			'placeholder' => 'Select a field type',
-			'help'        => 'The type form field that this field will use',
-			'value'       => $this->field,
-			'disabled'    => ($this->property === 'id'), // Disable field type for id property
-			'options'     => TotalForm::FIELDS_BY_TYPE,
-		]);
-		$formInfo .= $this->form->field('label', [
+		$content = $this->form->field('factory', [
 			'field'       => 'text',
-			'label'       => 'Label',
-			'placeholder' => 'Enter a label',
-			'help'        => 'The label that will be added to the field form',
-			'value'       => $this->label,
+			'label'       => 'Factory',
+			'placeholder' => 'text(300)',
+			'help'        => 'The factory that will be used to generate the field form. See docs for more info.',
+			'value'       => $this->factory ?? '',
 		]);
-		$formInfo .= $this->form->field('placeholder', [
+		$content .= $this->form->field('default', [
 			'field'       => 'text',
-			'label'       => 'Placeholder',
-			'placeholder' => 'Enter a placeholder',
-			'help'        => 'The placeholder text that will be added to the field form',
-			'value'       => $this->placeholder,
+			'label'       => 'Default Value',
+			'placeholder' => '',
+			'help'        => 'The default value for this property when an object is saved without a value',
+			'value'       => $this->default ?? '',
 		]);
-		$formInfo .= $this->form->field('help', [
-			'field'       => 'textarea',
-			'label'       => 'Help',
-			'rows'        => 2,
-			'placeholder' => 'Enter help text',
-			'help'        => 'The help text that will be added to the field form',
-			'value'       => $this->help,
-		]);
-		$formInfo = HTMLUtils::details('Form Info', $formInfo);
+		return HTMLUtils::details('Default &amp; Factory', $content);
+	}
 
-		$settings = $this->form->field('settings', [
-			'field'       => 'json',
-			'label'       => 'Settings',
-			'placeholder' => '{ "key": "value" }',
-			'help'        => 'The settings for this field in valid JSON format',
-			'value'       => empty($this->settings) ? '' : json_encode($this->settings, JSON_PRETTY_PRINT),
-		]);
-		$settings .= $this->form->field('options', [
-			'field'       => 'json',
-			'label'       => 'Options &amp; Datalist',
-			'placeholder' => '[ "option1", "option2", "option3" ]',
-			'help'        => 'The options for select fields and datalists in valid JSON format.',
-			'value'       => empty($this->options) ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
-		]);
-		$settings = HTMLUtils::details('Settings &amp; Options', $settings);
-
-		$close = HTMLUtils::button('Close', ['class' => 'close']);
-
-		$content  = HTMLUtils::scroller($formInfo . $settings);
-		$content .= HTMLUtils::element('section', $close);
-
-		return HTMLUtils::dialog($content, 'small');
+	protected function buildDialog(string $content = ''): string
+	{
+		$content = $this->buildSchemaOptions();
+		return parent::buildDialog($content);
 	}
 
 	public function build(): string

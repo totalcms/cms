@@ -205,6 +205,9 @@ class FormField
 		if (isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->options, $this->buildRelationalOptions());
 		}
+		if (is_array($this->value) && !empty($this->value)) {
+			$this->options = array_merge($this->options, $this->value);
+		}
 
 		foreach ($this->options as $key => $option) {
 			if (is_string($option)) {

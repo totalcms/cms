@@ -47,6 +47,27 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function schema(array $options = []): string
+	{
+		$options = array_merge([
+			'id'   => '',
+			'save' => 'Save',
+		], $options, [
+			// These options cannot be overridden
+			'api'               => $this->api,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+			'helpStyle'         => 'label',
+			'helpOnHover'       => true,
+			'helpOnFocus'       => false,
+		]);
+
+		$form = new SchemaForm(...$options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([
@@ -94,7 +115,6 @@ final class TotalFormFactory
 		array $formOptions = [],
 		array $fieldOptions = [],
 	): string {
-
 		$formOptions = array_merge([
 			'collection' => $defaultCollection,
 			'hideID'     => true,
@@ -237,6 +257,7 @@ final class TotalFormFactory
 	public function checkbox(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		$formOptions['autosave'] = true;
+
 		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'checkbox', $formOptions, $fieldOptions);
 	}
 
@@ -390,6 +411,7 @@ final class TotalFormFactory
 	public function toggle(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		$formOptions['autosave'] = true;
+
 		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'toggle', $formOptions, $fieldOptions);
 	}
 

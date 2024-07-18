@@ -153,91 +153,6 @@
 	dialog {
 		grid-template-rows: auto min-content;
 	}
-
-	&.id-field {
-		--schema-icon : var(--icon-id);
-	}
-	&.text-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.time-field {
-		--schema-icon : var(--icon-time);
-	}
-	&.url-field {
-		--schema-icon : var(--icon-url);
-	}
-	&.hidden-field {
-		--schema-icon : var(--icon-hidden);
-	}
-	&.email-field {
-		--schema-icon : var(--icon-email);
-	}
-	&.phone-field {
-		--schema-icon : var(--icon-tel);
-	}
-	&.password-field {
-		--schema-icon : var(--icon-lock);
-	}
-	&.textarea-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.checkbox-field {
-		--schema-icon : var(--icon-checkbox);
-	}
-	&.toggle-field {
-		--schema-icon : var(--icon-toggle);
-	}
-	&.number-field {
-		--schema-icon : var(--icon-number);
-	}
-	&.color-field {
-		--schema-icon : var(--icon-paint-roller);
-	}
-	&.date-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.datetime-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.select-field {
-		--schema-icon : var(--icon-select);
-	}
-	&.multiselect-field {
-		--schema-icon : var(--icon-select-multi);
-	}
-	&.list-field {
-		--schema-icon : var(--icon-list);
-	}
-	&.range-field {
-		--schema-icon : var(--icon-range);
-	}
-	&.styledtext-field {
-		--schema-icon : var(--icon-styledtext);
-	}
-	&.svg-field {
-		--schema-icon : var(--icon-svg);
-	}
-	&.image-field {
-		--schema-icon : var(--icon-image);
-	}
-	&.gallery-field {
-		--schema-icon : var(--icon-gallery);
-	}
-	&.file-field {
-		--schema-icon : var(--icon-file);
-	}
-	&.depot-field {
-		--schema-icon : var(--icon-depot);
-	}
-	&.radio-field {
-		--schema-icon : var(--icon-radio);
-	}
-	&.deck-field {
-		--schema-icon : var(--icon-deck);
-	}
-	&.json-field {
-		--schema-icon : var(--icon-json);
-	}
 }
 
 .schema-field {
@@ -320,89 +235,89 @@
 	dialog {
 		grid-template-rows: auto min-content;
 	}
+}
 
-	&.id-field {
-		--schema-icon : var(--icon-id);
-	}
-	&.text-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.time-field {
-		--schema-icon : var(--icon-time);
-	}
-	&.url-field {
-		--schema-icon : var(--icon-url);
-	}
-	&.hidden-field {
-		--schema-icon : var(--icon-hidden);
-	}
-	&.email-field {
-		--schema-icon : var(--icon-email);
-	}
-	&.phone-field {
-		--schema-icon : var(--icon-tel);
-	}
-	&.password-field {
-		--schema-icon : var(--icon-lock);
-	}
-	&.textarea-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.checkbox-field {
-		--schema-icon : var(--icon-checkbox);
-	}
-	&.toggle-field {
-		--schema-icon : var(--icon-toggle);
-	}
-	&.number-field {
-		--schema-icon : var(--icon-number);
-	}
-	&.color-field {
-		--schema-icon : var(--icon-paint-roller);
-	}
-	&.date-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.datetime-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.select-field {
-		--schema-icon : var(--icon-select);
-	}
-	&.multiselect-field {
-		--schema-icon : var(--icon-select-multi);
-	}
-	&.list-field {
-		--schema-icon : var(--icon-list);
-	}
-	&.range-field {
-		--schema-icon : var(--icon-range);
-	}
-	&.styledtext-field {
-		--schema-icon : var(--icon-styledtext);
-	}
-	&.svg-field {
-		--schema-icon : var(--icon-svg);
-	}
-	&.image-field {
-		--schema-icon : var(--icon-image);
-	}
-	&.gallery-field {
-		--schema-icon : var(--icon-gallery);
-	}
-	&.file-field {
-		--schema-icon : var(--icon-file);
-	}
-	&.depot-field {
-		--schema-icon : var(--icon-depot);
-	}
-	&.radio-field {
-		--schema-icon : var(--icon-radio);
-	}
-	&.deck-field {
-		--schema-icon : var(--icon-deck);
-	}
-	&.json-field {
-		--schema-icon : var(--icon-json);
-	}
+.id-field {
+	--schema-icon : var(--icon-id);
+}
+.text-field {
+	--schema-icon : var(--icon-text);
+}
+.time-field {
+	--schema-icon : var(--icon-time);
+}
+.url-field {
+	--schema-icon : var(--icon-url);
+}
+.hidden-field {
+	--schema-icon : var(--icon-hidden);
+}
+.email-field {
+	--schema-icon : var(--icon-email);
+}
+.phone-field {
+	--schema-icon : var(--icon-tel);
+}
+.password-field {
+	--schema-icon : var(--icon-lock);
+}
+.textarea-field {
+	--schema-icon : var(--icon-text);
+}
+.checkbox-field {
+	--schema-icon : var(--icon-checkbox);
+}
+.toggle-field {
+	--schema-icon : var(--icon-toggle);
+}
+.number-field {
+	--schema-icon : var(--icon-number);
+}
+.color-field {
+	--schema-icon : var(--icon-paint-roller);
+}
+.date-field {
+	--schema-icon : var(--icon-date);
+}
+.datetime-field {
+	--schema-icon : var(--icon-date);
+}
+.select-field {
+	--schema-icon : var(--icon-select);
+}
+.multiselect-field {
+	--schema-icon : var(--icon-select-multi);
+}
+.list-field {
+	--schema-icon : var(--icon-list);
+}
+.range-field {
+	--schema-icon : var(--icon-range);
+}
+.styledtext-field {
+	--schema-icon : var(--icon-styledtext);
+}
+.svg-field {
+	--schema-icon : var(--icon-svg);
+}
+.image-field {
+	--schema-icon : var(--icon-image);
+}
+.gallery-field {
+	--schema-icon : var(--icon-gallery);
+}
+.file-field {
+	--schema-icon : var(--icon-file);
+}
+.depot-field {
+	--schema-icon : var(--icon-depot);
+}
+.radio-field {
+	--schema-icon : var(--icon-radio);
+}
+.deck-field {
+	--schema-icon : var(--icon-deck);
+}
+.json-field {
+	--schema-icon : var(--icon-json);
 }

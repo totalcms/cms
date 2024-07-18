@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Admin\FormField\SelectField;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 
@@ -12,8 +12,10 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-final class CollectionForm extends TotalForm
+final class SchemaForm extends TotalForm
 {
+	public bool $reserved = false;
+	public SchemaData $schemaObjectData;
 
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -23,11 +25,10 @@ final class CollectionForm extends TotalForm
 	 * @param array<string,string> $editAction
 	 */
 	public function __construct(
-		protected CollectionFetcher $collectionFetcher,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
-		public    string $api,
-		public    string $id        = '',
+		public string $api,
+		public string $id        = '',
 		protected string $method    = 'POST',
 		protected string $class     = '',
 		protected string $helpStyle = '',
@@ -35,7 +36,7 @@ final class CollectionForm extends TotalForm
 		protected array $editAction = [],
 		protected array $newAction  = [
 			'action' => 'redirect-object',
-			'link'   => '?id='
+			'link'   => '?id=',
 		],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
@@ -49,64 +50,33 @@ final class CollectionForm extends TotalForm
 	{
 		parent::init();
 
-		$this->route = '/collections';
+		$this->route = '/schemas';
 
 		if (!empty($this->id)) {
-			$this->initCollectionData();
-			$this->route  = '/collections/' . $this->id;
-			$this->method = 'PUT';
+			$this->route            = '/schemas/' . $this->id;
+			$this->method           = 'PUT';
+			$this->reserved         = $this->isReservedSchema($this->id);
+			// This is the actual schema object data
+			$this->schemaObjectData = $this->schemaFetcher->fetchSchema($this->id);
 		}
-		$this->delete     = ''; // do not allow delete
-		$this->formType   = 'collection';
-		$this->schema     = 'collection';
+		$this->formType   = 'schema';
+		$this->schema     = 'schema';
+		// This is the schema for a schema object
 		$this->schemaData = $this->schemaFetcher->fetchSchema($this->schema);
-	}
 
-	private function initCollectionData(): void
-	{
-		$collectionData = $this->collectionFetcher->fetchCollection($this->id);
-
-		if (is_null($collectionData)) {
-			// throw new \Exception('Collection not found for TotalForm');
-			return;
+		if ($this->reserved) {
+			// Do not allow delete or save for reserved schemas
+			$this->save = '';
+			$this->delete = '';
 		}
-
-		$this->collectionData = $collectionData;
 	}
 
-	protected function fieldContent(): string
-	{
-		// Generate the schema field options
-		$schemaField = $this->fields['schema'];
-		if ($schemaField instanceof SelectField) {
-			$schemaField->setOptions([
-				'Custom Schemas'   => $this->customSchemas(),
-				'Reserved Schemas' => $this->reservedSchemas(),
-			]);
-			if ($this->method === 'PUT') {
-				// disable schema for edit mode
-				$schemaField->disable();
-			}
-		}
-
-		return parent::fieldContent();
-	}
-
-	/** @return array<string> */
-	private function reservedSchemas(): array
+	private function isReservedSchema(string $id): bool
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
-		$ignore  = ['collection', 'schema'];
-		return array_filter($schemas, fn ($schema) => !in_array($schema, $ignore));
-	}
 
-	/** @return array<string> */
-	private function customSchemas(): array
-	{
-		$schemas = $this->schemaLister->listCustomSchemas();
-
-		return array_map(fn ($schema) => $schema->id, $schemas);
+		return in_array($id, $schemas);
 	}
 
 	/**
@@ -128,8 +98,18 @@ final class CollectionForm extends TotalForm
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
-		if (isset($this->collectionData)) {
-			$value = $this->collectionData->toArray()[$name] ?? '';
+		if (!empty($this->id) && ($name === 'required' || $name === 'index')) {
+			// Set all of the properties as options for the required and index fields
+			$options['options'] = array_keys($this->schemaObjectData->toArray()['properties']);
+		}
+
+		if ($this->reserved) {
+			$options['disabled'] = true;
+			$options['readonly'] = true;
+		}
+
+		if (isset($this->schemaObjectData)) {
+			$value = $this->schemaObjectData->toArray()[$name] ?? '';
 			if (!empty($value)) {
 				$options['value'] = $value;
 			}

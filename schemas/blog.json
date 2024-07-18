@@ -163,23 +163,7 @@
 		}
 	},
 	"required": [
-		"archived",
-		"author",
-		"categories",
-		"content",
-		"date",
-		"draft",
-		"extra",
-		"extra2",
-		"featured",
-		"gallery",
-		"genre",
 		"id",
-		"image",
-		"labels",
-		"media",
-		"summary",
-		"tags",
 		"title",
 		"updated",
 		"created"
