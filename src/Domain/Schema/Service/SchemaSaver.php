@@ -32,6 +32,7 @@ final class SchemaSaver
 	 */
 	public function saveSchema(array $schemaData): SchemaData
 	{
+		$schemaData['properties'] = $this->propertyTypeToRef($schemaData['properties']);
 		$schema = $this->factory->generateSchema($schemaData);
 
 		if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, $this->storage->reservedSchemasIds())) {
@@ -46,5 +47,21 @@ final class SchemaSaver
 		$this->storage->saveSchema($schema);
 
 		return $schema;
+	}
+
+	/**
+	 * @param array<string,array<string,mixed>> $properties
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function propertyTypeToRef(array $properties): array
+	{
+		// Convert property types to $ref when possible
+		foreach ($properties as $key => $options) {
+			if (isset($options['type']) && in_array($options['type'], SchemaData::PROPERTY_TYPES)) {
+				$properties[$key]['$ref'] = SchemaData::PROPERTY_TYPE_TO_REF[$options['type']];
+				unset($properties[$key]['type']);
+			}
+		}
+		return $properties;
 	}
 }
