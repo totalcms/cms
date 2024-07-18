@@ -17,12 +17,12 @@ import ImageField from './image';
 import GalleryField from './gallery';
 import PropertiesField from './properties';
 import CustomPropertiesField from './customProperties';
+import SchemaPropertiesField from './schemaProperties';
 import JSONField from './json';
 
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
 // import MarkdownField from './markdown';
-// import Schema from './schema';
 
 //-----------------------------------------------
 // Total CMS Form constructor
@@ -277,6 +277,9 @@ export default class TotalForm {
 
 			case "customProperties":
 				return new CustomPropertiesField(field,options);
+
+			case "schemaProperties":
+				return new SchemaPropertiesField(field,options);
 
             default:
                 console.warn("Unknown field",field);
