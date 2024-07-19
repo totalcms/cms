@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin\PropertyField;
 
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Admin\SchemaForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Utils\HTMLUtils;
 
@@ -92,7 +93,7 @@ class SchemaField extends PropertyField
 			'autocomplete' => 'off',
 			'type'         => 'text',
 			'name'         => 'property',
-			'placeholder'  => 'name',
+			'placeholder'  => 'property',
 			'required'     => '',
 			'value'        => $this->property,
 		];
@@ -102,10 +103,16 @@ class SchemaField extends PropertyField
 			$inputAttributes['readonly'] = '';
 		}
 
-		$dialog = $this->buildDialog();
-		$button = HTMLUtils::element('button', '', ['type' => 'button']);
-		$input  = HTMLUtils::inlineElement('input', $inputAttributes);
-		$field  = HTMLUtils::element('div', $input . $button . $dialog, [
+		$dialog  = $this->buildDialog();
+		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
+		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => 'Edit property']);
+
+		if ($this->form instanceof SchemaForm && !$this->form->reserved) {
+			$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => 'Duplicate property']);
+			$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => 'Delete property']);
+		}
+
+		$field  = HTMLUtils::element('div', $input . $buttons . $dialog, [
 			'class' => "schema-field {$this->field}-field",
 		]);
 
