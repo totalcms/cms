@@ -33,7 +33,7 @@ final class FactoryForm
 		];
 		$qty = HTMLUtils::inlineElement('input', $qtyAttrs);
 
-		$rules = "";
+		$rules = '';
 		foreach ($this->rules as $property => $rule) {
 			$ruleAttrs = [
 				'type'  => 'hidden',
@@ -52,6 +52,7 @@ final class FactoryForm
 			'data-refresh'    => $this->refresh ? 'true' : 'false',
 		];
 		$form = HTMLUtils::element('form', $qty . $rules . $button, $formAttrs);
+
 		return $form;
 	}
 

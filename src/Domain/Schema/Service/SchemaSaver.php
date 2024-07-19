@@ -55,18 +55,18 @@ final class SchemaSaver
 	public function saveSchema(array $schemaData): SchemaData
 	{
 		$schemaData['properties'] = $this->propertyTypeToRef($schemaData['properties']);
-		$schema = $this->factory->generateSchema($schemaData);
+		$schema                   = $this->factory->generateSchema($schemaData);
 
 		if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, $this->storage->reservedSchemasIds())) {
 			throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
 		}
 
 		// Ensure that the ID is required and indexed
-		if (!in_array("id", $schema->required)) {
-			$schema->required[] = "id";
+		if (!in_array('id', $schema->required)) {
+			$schema->required[] = 'id';
 		}
-		if (!in_array("id", $schema->index)) {
-			$schema->index[] = "id";
+		if (!in_array('id', $schema->index)) {
+			$schema->index[] = 'id';
 		}
 
 		// This is not in Repository in order to prevent circular dependency
@@ -81,6 +81,7 @@ final class SchemaSaver
 
 	/**
 	 * @param array<string,array<string,mixed>> $properties
+	 *
 	 * @return array<string,array<string,mixed>>
 	 */
 	private function propertyTypeToRef(array $properties): array
@@ -92,6 +93,7 @@ final class SchemaSaver
 				unset($properties[$key]['type']);
 			}
 		}
+
 		return $properties;
 	}
 }

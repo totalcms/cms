@@ -30,7 +30,7 @@ abstract class TotalForm
 	public SchemaData $schemaData;
 
 	public const FIELDS_BY_TYPE = [
-		"Text Fields" => [
+		'Text Fields' => [
 			'email',
 			'hidden',
 			'json',
@@ -44,23 +44,23 @@ abstract class TotalForm
 			'time',
 			'url',
 		],
-		"Boolean Fields" => [
+		'Boolean Fields' => [
 			'checkbox',
 			'toggle',
 		],
-		"Number Fields" => [
+		'Number Fields' => [
 			'number',
 			'range',
 		],
-		"Date Fields" => [
+		'Date Fields' => [
 			'date',
 			'datetime',
 		],
-		"Array Fields" => [
+		'Array Fields' => [
 			'list',
 			'muiltiselect',
 		],
-		"Special Fields" => [
+		'Special Fields' => [
 			'color',
 			'deck',
 			'depot',
@@ -127,9 +127,9 @@ abstract class TotalForm
 		protected IndexReader $collectionReader,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
-		public    string $api,
-		public    string $collection,
-		public    string $id          = '',
+		public string $api,
+		public string $collection,
+		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
 		protected string $helpStyle   = '',
@@ -362,6 +362,7 @@ abstract class TotalForm
 	public function field(string $name, array $options = []): string
 	{
 		$field = $this->createDynamicField($name, $options);
+
 		return $field->build();
 	}
 
@@ -374,6 +375,7 @@ abstract class TotalForm
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
 			return new $typeClass(...$options);
 		}
+
 		return new FormField(...$options);
 	}
 
@@ -388,12 +390,13 @@ abstract class TotalForm
 	/** @return array<string,mixed> */
 	public function propertiesForSchema(): array
 	{
-		$schema = $this->collectionData->schema;
+		$schema     = $this->collectionData->schema;
 		$schemaData = $this->schemaFetcher->fetchSchema($schema);
 		$properties = $schemaData->properties;
 		foreach ($properties as $property => $options) {
 			$properties[$property] = self::filterFieldProperties($options);
 		}
+
 		return $properties;
 	}
 

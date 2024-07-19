@@ -10,7 +10,6 @@ use TotalCMS\Transformer\SchemaMetaTransformer;
 
 final class SchemaUpdateAction
 {
-
 	public function __construct(
 		private JsonRenderer $renderer,
 		private SchemaSaver $service
@@ -28,7 +27,7 @@ final class SchemaUpdateAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = json_decode($request->getBody(), true);
+		$data   = json_decode($request->getBody(), true);
 		$schema = $this->service->updateSchema($args['id'], $data);
 
 		return $this->renderer->jsonItem($response, $schema, new SchemaMetaTransformer());

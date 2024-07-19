@@ -17,9 +17,11 @@ class TimeData extends PropertyData
 
 		$this->time = $time;
 	}
+
 	private static function verifyTime(string $time): bool
 	{
 		$strtotime = strtotime($time);
+
 		return $time === date('H:i', $strtotime ?: 0);
 	}
 

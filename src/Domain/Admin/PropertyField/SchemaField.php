@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\PropertyField;
 
-use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Admin\SchemaForm;
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Utils\HTMLUtils;
 
@@ -26,7 +26,7 @@ class SchemaField extends PropertyField
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
-	 * @param array<string,mixed> $extra - extra attributes for the field schema such as minItems, items, patternProperties, etc.
+	 * @param array<string,mixed> $extra - extra attributes for the field schema such as minItems, items, patternProperties, etc
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
 	public function __construct(
@@ -74,7 +74,7 @@ class SchemaField extends PropertyField
 			'label'       => 'Extra Schema Definitions',
 			'placeholder' => '{ "key": "value" }',
 			'help'        => 'Extra schema definitions for this property in valid JSON format',
-			'value'       => empty($this->extra) ? "" : json_encode($this->extra, JSON_PRETTY_PRINT),
+			'value'       => empty($this->extra) ? '' : json_encode($this->extra, JSON_PRETTY_PRINT),
 		]);
 
 		return HTMLUtils::details('Property Info', $content);

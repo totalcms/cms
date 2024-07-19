@@ -12,7 +12,7 @@ final class StyledtextField extends TextareaField
 	public function buildFormField(): string
 	{
 		$attributes = $this->formFieldAttributes();
-		$textarea = HTMLUtils::element('textarea', (string)$this->value, $attributes);
+		$textarea   = HTMLUtils::element('textarea', (string)$this->value, $attributes);
 
 		return HTMLUtils::element('div', $textarea, ['class' => 'styledtext-wrapper']);
 	}

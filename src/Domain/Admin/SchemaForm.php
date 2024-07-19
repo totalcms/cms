@@ -75,6 +75,7 @@ final class SchemaForm extends TotalForm
 		if ($this->id === 'schema' || $this->id === 'collection') {
 			return "<p class='alert'>You cannot edit the `{$this->id}` schema.</p>";
 		}
+
 		return parent::autoBuild($content);
 	}
 

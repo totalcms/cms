@@ -69,7 +69,7 @@ class HTMLUtils
 
 	public static function scroller(string $content): string
 	{
-		return self::element('section', $content, ['class' => "scroller"]);
+		return self::element('section', $content, ['class' => 'scroller']);
 	}
 
 	/** @param array<string,?string> $attributes */
@@ -79,7 +79,7 @@ class HTMLUtils
 			'type' => 'button',
 		], $attributes);
 
-		$attributes['class'] = "button btn " . ($attributes['class'] ?? '');
+		$attributes['class'] = 'button btn ' . ($attributes['class'] ?? '');
 
 		return self::element('button', $content, $attributes);
 	}

@@ -12,7 +12,6 @@ class CustomPropertiesField extends PropertiesField
 
 	public function buildFormField(): string
 	{
-
 		$content  = parent::buildFormField();
 
 		if (!empty($this->properties)) {

@@ -2,9 +2,9 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Admin\PropertyField\PropertyField;
 use TotalCMS\Domain\Admin\PropertyField\CustomPropertyField;
+use TotalCMS\Domain\Admin\PropertyField\PropertyField;
+use TotalCMS\Utils\HTMLUtils;
 
 class PropertiesField extends FormField
 {
@@ -48,12 +48,13 @@ class PropertiesField extends FormField
 	protected function createPropertyField(string $property, array $options): PropertyField|CustomPropertyField
 	{
 		$options['property'] = $property;
-		$options['form'] = $this->form;
+		$options['form']     = $this->form;
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\PropertyField\\' . ucfirst($options['field'] ?? '') . 'Field';
 		if (class_exists($typeClass) && is_subclass_of($typeClass, PropertyField::class)) {
 			return new $typeClass(...$options);
 		}
+
 		return new PropertyField(...$options);
 	}
 }

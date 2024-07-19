@@ -26,7 +26,6 @@ class PropertyField
 	) {
 	}
 
-
 	protected function buildFormInfo(): string
 	{
 		$formInfo = $this->form->field('field', [
@@ -60,6 +59,7 @@ class PropertyField
 			'help'        => 'The help text that will be added to the field form',
 			'value'       => $this->help,
 		]);
+
 		return HTMLUtils::details('Form Info', $formInfo);
 	}
 
@@ -79,6 +79,7 @@ class PropertyField
 			'help'        => 'The options for select fields and datalists in valid JSON format.',
 			'value'       => empty($this->options) ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
 		]);
+
 		return HTMLUtils::details('Settings &amp; Options', $settings);
 	}
 
@@ -108,7 +109,7 @@ class PropertyField
 		$button = HTMLUtils::element('button', $this->property, ['type' => 'button']);
 		$input  = HTMLUtils::inlineElement('input', $inputAttributes);
 		$field  = HTMLUtils::element('div', $input . $button . $dialog, [
-			'class' => "property-field {$this->field}-field"
+			'class' => "property-field {$this->field}-field",
 		]);
 
 		return $field;

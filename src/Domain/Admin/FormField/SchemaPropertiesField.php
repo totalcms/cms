@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Admin\PropertyField\SchemaField;
 use TotalCMS\Domain\Admin\SchemaForm;
-use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
 class SchemaPropertiesField extends PropertiesField
@@ -12,7 +11,7 @@ class SchemaPropertiesField extends PropertiesField
 	protected string $defaultInputType = 'schemaProperties';
 	protected string $defaultFieldType = 'schemaProperties';
 
-	const DEFAULT_ID_OPTIONS = [
+	public const DEFAULT_ID_OPTIONS = [
 		'field'       => 'id',
 		'type'        => 'slug',
 		'label'       => 'ID',
@@ -59,7 +58,7 @@ class SchemaPropertiesField extends PropertiesField
 		$options = SchemaField::filterSchemaProperties($options);
 
 		$options['property'] = $property;
-		$options['form'] = $this->form;
+		$options['form']     = $this->form;
 
 		if (!empty($extra)) {
 			$options['extra'] = $extra;

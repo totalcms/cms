@@ -2,18 +2,6 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Admin\FormField\DeleteButton;
-use TotalCMS\Domain\Admin\FormField\FormField;
-use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Utils\HTMLUtils;
-
 /**
  * Total Form Builder.
  */

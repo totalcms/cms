@@ -14,7 +14,6 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  */
 final class CollectionForm extends TotalForm
 {
-
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -26,8 +25,8 @@ final class CollectionForm extends TotalForm
 		protected CollectionFetcher $collectionFetcher,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
-		public    string $api,
-		public    string $id        = '',
+		public string $api,
+		public string $id        = '',
 		protected string $method    = 'POST',
 		protected string $class     = '',
 		protected string $helpStyle = '',
@@ -35,7 +34,7 @@ final class CollectionForm extends TotalForm
 		protected array $editAction = [],
 		protected array $newAction  = [
 			'action' => 'redirect-object',
-			'link'   => '?id='
+			'link'   => '?id=',
 		],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
@@ -98,6 +97,7 @@ final class CollectionForm extends TotalForm
 		$schemas = $this->schemaLister->listReservedSchemas();
 		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
 		$ignore  = ['collection', 'schema'];
+
 		return array_filter($schemas, fn ($schema) => !in_array($schema, $ignore));
 	}
 

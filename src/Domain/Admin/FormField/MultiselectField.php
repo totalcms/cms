@@ -29,6 +29,7 @@ class MultiselectField extends SelectField
 		if (in_array($option['value'], $this->value)) {
 			$attributes['selected'] = '';
 		}
+
 		return HTMLUtils::element('option', $option['label'], $attributes);
 	}
 
