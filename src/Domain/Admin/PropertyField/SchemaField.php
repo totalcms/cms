@@ -99,6 +99,7 @@ class SchemaField extends PropertyField
 
 		if ($this->property === 'id') {
 			$inputAttributes['disabled'] = '';
+			$inputAttributes['readonly'] = '';
 		}
 
 		$dialog = $this->buildDialog();
