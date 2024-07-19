@@ -45,6 +45,11 @@ export default class PropertyField {
 				properties[field.totalfield.property] = value;
 			}
 		}
+		if (properties.extra && typeof properties.extra === "object") {
+			// Merge properties.extra into properties
+			Object.assign(properties, properties.extra);
+			delete properties.extra;
+		}
 		return properties;
 	}
 }
