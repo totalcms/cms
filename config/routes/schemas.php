@@ -13,6 +13,7 @@ return function (App $app) {
 
 		// Pro Only License
 		$group->post('', Schema\SchemaSaveAction::class)->setName('schema-save');
+		$group->put('/{id}', Schema\SchemaUpdateAction::class)->setName('schema-update');
 		$group->delete('/{id}', Schema\SchemaDeleteAction::class)->setName('schema-delete');
 	});
 };

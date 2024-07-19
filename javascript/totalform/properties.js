@@ -47,7 +47,7 @@ export default class PropertiesField extends TotalField {
 		const properties = {};
 		for (const field of propertyFields) {
 			const property = field.totalfield;
-			properties[property.name] = property.getValue()
+			properties[property.getName()] = property.getValue()
 		}
 		return properties;
 	}

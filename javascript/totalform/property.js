@@ -10,7 +10,6 @@ export default class PropertyField {
 		this.container = container;
 		this.container.totalfield = this;
 
-		this.name   = this.container.querySelector('[name=property]').value;
 		this.dialog = this.setupDialog();
     }
 
@@ -33,6 +32,10 @@ export default class PropertyField {
 		// Close other details when one is opened
 		const details = Array.from(this.dialog.dialog.querySelectorAll("details"));
 		this.accordion = new Details(details);
+	}
+
+	getName(){
+		return this.container.querySelector('[name=property]').value;
 	}
 
 	getValue() {

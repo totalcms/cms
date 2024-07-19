@@ -14,7 +14,7 @@ export default class SchemaPropertiesField extends PropertiesField {
         this.addButton = this.container.querySelector(".cms-add");
 		this.addButton.addEventListener("click", this.addTemplate.bind(this));
 
-		const fields = this.container.getElementsByClassName("schema-field");
+		const fields = this.container.getElementsByClassName(this.fieldClass);
 		for (const field of fields) {
 			this.initActionbar(field);
 		}
@@ -25,7 +25,7 @@ export default class SchemaPropertiesField extends PropertiesField {
 		const parent = this.addButton.parentNode;
 		parent.insertBefore(clone, this.addButton);
 
-		const field = Array.from(parent.querySelectorAll(".schema-field")).pop();
+		const field = Array.from(parent.querySelectorAll("."+this.fieldClass)).pop();
 		field.querySelector("input").focus();
 		this.newField(field);
 	}

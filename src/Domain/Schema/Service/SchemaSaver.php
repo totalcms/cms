@@ -22,6 +22,28 @@ final class SchemaSaver
 	}
 
 	/**
+	 * @param array<string,mixed> $schemaData
+	 *
+	 * @throws \UnexpectedValueException
+	 *
+	 * @return SchemaData
+	 */
+	public function updateSchema(string $schemaId, array $schemaData): SchemaData
+	{
+		if ($schemaId !== $schemaData['id']) {
+			throw new \UnexpectedValueException('Schema ID does not match');
+		}
+
+		$schema = $this->storage->getSchema($schemaId);
+
+		if (!$schema instanceof SchemaData) {
+			throw new \UnexpectedValueException('Unable to locate schema to update');
+		}
+
+		return $this->saveSchema($schemaData);
+	}
+
+	/**
 	 * Save a schema.
 	 *
 	 * @param array<string,mixed> $schemaData
