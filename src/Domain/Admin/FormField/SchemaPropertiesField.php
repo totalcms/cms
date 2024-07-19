@@ -12,15 +12,32 @@ class SchemaPropertiesField extends PropertiesField
 	protected string $defaultInputType = 'schemaProperties';
 	protected string $defaultFieldType = 'schemaProperties';
 
+	const DEFAULT_ID_OPTIONS = [
+		'field'       => 'id',
+		'type'        => 'slug',
+		'label'       => 'ID',
+		'help'        => 'The unique identifier',
+		'placeholder' => 'Enter a unique identifier',
+	];
+
+	public function init(): void
+	{
+		parent::init();
+
+		if (!isset($this->properties['id'])) {
+			// Add the default ID property if it doesn't exist
+			$this->properties['id'] = $this->createPropertyField('id', self::DEFAULT_ID_OPTIONS);
+		}
+	}
+
 	public function buildFormField(): string
 	{
-
 		$content = parent::buildFormField();
 
-		// if (!empty($this->properties)) {
-		// 	$templateProperty = $this->properties[array_key_first($this->properties)];
-		// 	$content .= $templateProperty->template();
-		// }
+		if (!empty($this->properties)) {
+			$template = $this->createPropertyField('', []);
+			$content .= HTMLUtils::element('template', $template->build());
+		}
 
 		// Don't add the add property button if the form is reserved
 		if ($this->form instanceof SchemaForm && !$this->form->reserved) {
