@@ -36,6 +36,9 @@ final class TotalCMSTwigFunctions
 	/** @var array<string> */
 	public static array $customFunctions = [
 		'selectOptions',
+		'ksort',
+		'krsort',
+		'sortByKey',
 		'istype',
 		'var_dump',
 		'print_r',
@@ -80,6 +83,45 @@ final class TotalCMSTwigFunctions
 	public static function istype(mixed $variable, string $type): bool
 	{
 		return gettype($variable) === $type;
+	}
+
+	/**
+	 * @param array<mixed> $array
+	 *
+	 * @return array<mixed>
+	 */
+	public static function sortByKey(array $array, string $key = 'id'): array
+	{
+		usort($array, function ($a, $b) use ($key) {
+			if (!is_array($a)) $a = (array)$a;
+			if (!is_array($b)) $b = (array)$b;
+			return $a[$key] <=> $b[$key];
+		});
+		return $array;
+	}
+
+	/**
+	 * @param array<mixed> $array
+	 *
+	 * @return array<mixed>
+	 */
+	public static function ksort(array $array): array
+	{
+		ksort($array);
+
+		return $array;
+	}
+
+	/**
+	 * @param array<mixed> $array
+	 *
+	 * @return array<mixed>
+	 */
+	public static function krsort(array $array): array
+	{
+		krsort($array);
+
+		return $array;
 	}
 
 	// -------------------------

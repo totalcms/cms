@@ -3,6 +3,7 @@ import TotalCMS from './totalcms';
 import FactoryForm from './totalform/factory';
 import Scrollable from './totalform/scrollable';
 import AdminList from './totalform/admin-list';
+import { Grid } from "gridjs";
 
 globalThis.TotalCMS = TotalCMS;
 
@@ -17,4 +18,10 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const adminlists = Array.from(document.getElementsByClassName("admin-list"));
 	adminlists.forEach(list => new AdminList(list));
+
+	const tables = Array.from(document.getElementsByClassName("admin-table"));
+	tables.forEach(table => {
+		const grid = new Grid({ from: table.querySelector("table") });
+		grid.render(table);
+	});
 });

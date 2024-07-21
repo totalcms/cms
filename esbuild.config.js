@@ -68,6 +68,7 @@ esbuild.build({
                 "node_modules/codemirror/lib/",
                 "node_modules/dropzone/src/",
 				"node_modules/lightgallery/scss/",
+                "node_modules/gridjs/dist/theme/"
             ],
             importer: createImporter(),
         }),
