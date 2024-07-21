@@ -97,242 +97,246 @@
 		}
 	%}
 
-	<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}" data-name="{{name}}">
-    	<h1>Total CMS Image Builder</h1>
-		<div class="split-view">
+	<main class="admin-layout container">
 
-			{% set imagePath = cms.imagePath(id, values, {collection: collection, property: property}) %}
+		<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}" data-name="{{name}}">
+			<h1>Total CMS Image Builder</h1>
+			<div class="split-view">
 
-			{% if name %}
-				{% set imagePath = cms.galleryPath(id, name, values, {collection: collection, property: property}) %}
-			{% endif %}
+				{% set imagePath = cms.imagePath(id, values, {collection: collection, property: property}) %}
 
-			<img src="{{ imagePath }}"
-				data-id="{{id}}"
-				data-collection="{{collection}}"
-				data-property="{{property}}"
-				draggable="false" />
-			<div class="image-info">
-				<div>
-					<h4>Macro:</h4>
+				{% if name %}
+					{% set imagePath = cms.galleryPath(id, name, values, {collection: collection, property: property}) %}
+				{% endif %}
 
-					{% if name %}
-					<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
-					{% else %}
-					<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
-					{% endif %}
+				<img src="{{ imagePath }}"
+					data-id="{{id}}"
+					data-collection="{{collection}}"
+					data-property="{{property}}"
+					draggable="false" />
+				<div class="image-info">
+					<div>
+						<h4>Macro:</h4>
 
-					<button type="button" id="copy-macro">Copy Macro</button>
-					<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
+						{% if name %}
+						<pre id="twig-macro">&#123;&#123; cms.galleryPath("{{id}}", "{{name}}") &#125;&#125;</pre>
+						{% else %}
+						<pre id="twig-macro">&#123;&#123; cms.imagePath("{{id}}") &#125;&#125;</pre>
+						{% endif %}
+
+						<button type="button" id="copy-macro">Copy Macro</button>
+						<a href="{{ imagePath }}" download id="download-image" title="Download Preview Image"></a>
+					</div>
+					<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
 				</div>
-				<h4>Size: <span id="filesize"></span> <span id="dimensions"></span></h4>
 			</div>
-		</div>
-		<button type="button" id="refresh-image">Preview Image</button>
-	</section>
-
-	<form class="totalform help-box help-on-hover">
-
-		<input type="hidden" name="id" value="{{ id }}">
-		<input type="hidden" name="collection" value="{{ collection }}">
-		<input type="hidden" name="property" value="{{ property }}">
-		<input type="hidden" name="name" value="{{ name }}">
-
-
-		<section>
-			{% set presets = cms.config("imageworks", "presets") | keys %}
-			{{ _self.select("p", "Preset", "icon-settings", help.p, values.p, selectOptions(presets)) }}
+			<button type="button" id="refresh-image">Preview Image</button>
 		</section>
 
-		<details class="cms-accordion">
-			<summary>Sizing &amp; Crop</summary>
-			<div>
-				<section>
-					{{ _self.input("w", "number", "Width", "icon-width", help.w, values.w, { min:1 }) }}
-					{{ _self.input("h", "number", "Height", "icon-height", help.h, values.h, { min:1 }) }}
-					{{ _self.input("dpr", "number", "Pixel Density", "icon-pixels", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
-				</section>
-				<section>
-					{{ _self.input("q", "number", "Quality", "icon-quality", help.q, values.q, { min:0, max:100 }) }}
-					{{ _self.select("fm", "Format", "icon-imageformat", help.fm, values.fm, [
-						{ value: "jpg", label: "JPG" },
-						{ value: "pjpg", label: "Progressive JPG" },
-						{ value: "png", label: "PNG" },
-						{ value: "gif", label: "GIF" },
-						{ value: "webp", label: "WebP" },
-						{ value: "avif", label: "AVIF" },
-					]) }}
-					{{ _self.input("fit", "text", "Fit and Crop", "icon-crop", help.fit, values.fit, {list : "fit-options"}) }}
-					<button type="button" class='open-fit-docs'>Fit Options Docs</button>
-				</section>
-			</div>
-		</details>
+		<form class="totalform help-box help-on-hover">
 
-		<details class="cms-accordion">
-			<summary>Effects</summary>
-			<div>
-				<section>
-					{{ _self.input("sharp", "number", "Sharpen", "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
-					{{ _self.input("con", "number", "Contrast", "icon-contrast", help.con, values.con, { min:-100, max:100 }) }}
-					{{ _self.input("bri", "number", "Brightness", "icon-bright", help.bri, values.bri, { min:-100, max:100 }) }}
-					{{ _self.input("gam", "number", "Gamma", "icon-gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
-				</section>
-				<section>
-					{{ _self.input("blur", "number", "Blur", "icon-blur", help.blur, values.blur, { min:0, max:100 }) }}
-					{{ _self.input("pixel", "number", "Pixelate", "icon-pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
-					{{ _self.select("filt", "Filter", "icon-filter", help.filt, values.filt, [
-						{ value: "greyscale", label: "Black & White" },
-						{ value: "sepia", label: "Sepia" },
-					]) }}
-					{# {{ _self.select("flip", "Flip", "Flip the image", [
-						{ value: "v", label: "Vertical" },
-						{ value: "h", label: "Horizontal" },
-						{ value: "both", label: "Both" },
-					]) }}
-					{{ _self.select("or", "Rotate", "Rotate the image", [
-						{ value: "auto", label: "Auto" },
-						{ value: "0", label: "0°" },
-						{ value: "90", label: "90°" },
-						{ value: "180", label: "180°" },
-						{ value: "270", label: "270°" },
-					]) }} #}
-				</section>
-			</div>
-		</details>
+			<input type="hidden" name="id" value="{{ id }}">
+			<input type="hidden" name="collection" value="{{ collection }}">
+			<input type="hidden" name="property" value="{{ property }}">
+			<input type="hidden" name="name" value="{{ name }}">
 
-		<details class="cms-accordion">
-			<summary>Background &amp; Border</summary>
-			<div>
-				<section>
-					{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
-				</section>
-				<section>
-					{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border, {list:"border-options"}) }}
-				</section>
-			</div>
-		</details>
 
-		<details class="cms-accordion">
-			<summary>Watermark</summary>
-			<div>
-				<section>
+			<section>
+				{% set presets = cms.config("imageworks", "presets") | keys %}
+				{{ _self.select("p", "Preset", "icon-settings", help.p, values.p, selectOptions(presets)) }}
+			</section>
 
-					{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
-					{% set watermarkData = cms.data("gallery", watermarkID, "gallery") | default([]) %}
-					{% set watermarks = selectOptions(watermarkData, "name", "name") %}
+			<details class="cms-accordion">
+				<summary>Sizing &amp; Crop</summary>
+				<div>
+					<section>
+						{{ _self.input("w", "number", "Width", "icon-width", help.w, values.w, { min:1 }) }}
+						{{ _self.input("h", "number", "Height", "icon-height", help.h, values.h, { min:1 }) }}
+						{{ _self.input("dpr", "number", "Pixel Density", "icon-pixels", help.dpr, values.dpr, { min:1, max:8, step: 0.5 }) }}
+					</section>
+					<section>
+						{{ _self.input("q", "number", "Quality", "icon-quality", help.q, values.q, { min:0, max:100 }) }}
+						{{ _self.select("fm", "Format", "icon-imageformat", help.fm, values.fm, [
+							{ value: "jpg", label: "JPG" },
+							{ value: "pjpg", label: "Progressive JPG" },
+							{ value: "png", label: "PNG" },
+							{ value: "gif", label: "GIF" },
+							{ value: "webp", label: "WebP" },
+							{ value: "avif", label: "AVIF" },
+						]) }}
+						{{ _self.input("fit", "text", "Fit and Crop", "icon-crop", help.fit, values.fit, {list : "fit-options"}) }}
+						<button type="button" class='open-fit-docs'>Fit Options Docs</button>
+					</section>
+				</div>
+			</details>
 
-					{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
-					{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
-					{{ _self.input("markh", "text", "Height", "icon-height", help.markh, values.markh) }}
-					{{ _self.input("markalpha", "number", "Alpha", "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
-				</section>
-				<section>
-					{{ _self.input("markpad", "text", "Padding", "icon-padding", help.markpad, values.markpad) }}
-					{{ _self.select("markpos", "Position", "icon-position", help.markpos, values.markpos, [
-						{ value: "top-left", label: "Top Left" },
-						{ value: "top-right", label: "Top Right" },
-						{ value: "bottom-left", label: "Bottom Left" },
-						{ value: "bottom-right", label: "Bottom Right" },
-						{ value: "top-center", label: "Top Center" },
-						{ value: "bottom-center", label: "Bottom Center" },
-						{ value: "left-center", label: "Left Center" },
-						{ value: "right-center", label: "Right Center" },
-						{ value: "center", label: "Center" },
-					]) }}
-					{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
-					<button type="button" class='open-fit-docs'>Fit Options Docs</button>
-				</section>
-			</div>
-		</details>
-	</form>
+			<details class="cms-accordion">
+				<summary>Effects</summary>
+				<div>
+					<section>
+						{{ _self.input("sharp", "number", "Sharpen", "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
+						{{ _self.input("con", "number", "Contrast", "icon-contrast", help.con, values.con, { min:-100, max:100 }) }}
+						{{ _self.input("bri", "number", "Brightness", "icon-bright", help.bri, values.bri, { min:-100, max:100 }) }}
+						{{ _self.input("gam", "number", "Gamma", "icon-gamma", help.gam, values.gam, { min:0.1, max:9.99, step:0.01 }) }}
+					</section>
+					<section>
+						{{ _self.input("blur", "number", "Blur", "icon-blur", help.blur, values.blur, { min:0, max:100 }) }}
+						{{ _self.input("pixel", "number", "Pixelate", "icon-pixelate", help.pixel, values.pixel, { min:0, max:1000 }) }}
+						{{ _self.select("filt", "Filter", "icon-filter", help.filt, values.filt, [
+							{ value: "greyscale", label: "Black & White" },
+							{ value: "sepia", label: "Sepia" },
+						]) }}
+						{# {{ _self.select("flip", "Flip", "Flip the image", [
+							{ value: "v", label: "Vertical" },
+							{ value: "h", label: "Horizontal" },
+							{ value: "both", label: "Both" },
+						]) }}
+						{{ _self.select("or", "Rotate", "Rotate the image", [
+							{ value: "auto", label: "Auto" },
+							{ value: "0", label: "0°" },
+							{ value: "90", label: "90°" },
+							{ value: "180", label: "180°" },
+							{ value: "270", label: "270°" },
+						]) }} #}
+					</section>
+				</div>
+			</details>
 
-	<datalist id="border-options">
-		<option value="10,ffffff,overlay"></option>
-		<option value="15,palette,expand"></option>
-		<option value="15,palette3,shrink"></option>
-	</datalist>
+			<details class="cms-accordion">
+				<summary>Background &amp; Border</summary>
+				<div>
+					<section>
+						{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
+					</section>
+					<section>
+						{{ _self.input("border", "text", "Border", "icon-paint-brush", help.border, values.border, {list:"border-options"}) }}
+					</section>
+				</div>
+			</details>
 
-	<datalist id="fit-options">
-		<option value="contain"></option>
-		<option value="max"></option>
-		<option value="fill"></option>
-		<option value="fill-max"></option>
-		<option value="stretch"></option>
-		<option value="crop"></option>
-		<option value="crop-top"></option>
-		<option value="crop-bottom"></option>
-		<option value="crop-left"></option>
-		<option value="crop-right"></option>
-		<option value="crop-top-left"></option>
-		<option value="crop-top-right"></option>
-		<option value="crop-bottom-left"></option>
-		<option value="crop-bottom-right"></option>
-		<option value="crop-50-50"></option>
-		<option value="crop-25-75-1.5"></option>
-		<option value="crop-focalpoint"></option>
-		<option value="crop-focalpoint-1.5"></option>
-	</datalist>
+			<details class="cms-accordion">
+				<summary>Watermark</summary>
+				<div>
+					<section>
 
-	<dialog id="fit-modal" class="cms-modal">
-		<section class="scroller">
-			<h3>Fit and Crop Options</h3>
-			<button type="button" class="close">Close</button>
-			<dl class="option-docs">
-				<dt>contain</dt>
-				<dd>(<em>Default</em>) Resizes the image to fit within the width and height boundaries without
-				cropping, distorting or altering the aspect ratio.</dd>
+						{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
+						{% set watermarkData = cms.data("gallery", watermarkID, "gallery") | default([]) %}
+						{% set watermarks = selectOptions(watermarkData, "name", "name") %}
 
-				<dt>max</dt>
-				<dd>Resizes the image to fit within the width and height boundaries without cropping,
-				distorting or altering the aspect ratio, and will also not increase the size of the
-				image if it is smaller than the output size.</dd>
+						{{ _self.select("mark", "Watermark", "icon-copyright", help.mark, values.mark, watermarks) }}
+						{{ _self.input("markw", "text", "Width", "icon-width", help.markw, values.markw) }}
+						{{ _self.input("markh", "text", "Height", "icon-height", help.markh, values.markh) }}
+						{{ _self.input("markalpha", "number", "Alpha", "icon-eye", help.markalpha, values.markalpha, { min:0, max:100 }) }}
+					</section>
+					<section>
+						{{ _self.input("markpad", "text", "Padding", "icon-padding", help.markpad, values.markpad) }}
+						{{ _self.select("markpos", "Position", "icon-position", help.markpos, values.markpos, [
+							{ value: "top-left", label: "Top Left" },
+							{ value: "top-right", label: "Top Right" },
+							{ value: "bottom-left", label: "Bottom Left" },
+							{ value: "bottom-right", label: "Bottom Right" },
+							{ value: "top-center", label: "Top Center" },
+							{ value: "bottom-center", label: "Bottom Center" },
+							{ value: "left-center", label: "Left Center" },
+							{ value: "right-center", label: "Right Center" },
+							{ value: "center", label: "Center" },
+						]) }}
+						{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
+						<button type="button" class='open-fit-docs'>Fit Options Docs</button>
+					</section>
+				</div>
+			</details>
+		</form>
 
-				<dt>fill</dt>
-				<dd>Resizes the image to fit within the width and height boundaries without cropping
-				or distorting the image, and the remaining space is filled with the background color.
-				The resulting image will match the constraining dimensions.</dd>
+		<datalist id="border-options">
+			<option value="10,ffffff,overlay"></option>
+			<option value="15,palette,expand"></option>
+			<option value="15,palette3,shrink"></option>
+		</datalist>
 
-				<dt>fill-max</dt>
-				<dd>Resizes the image to fit within the width and height boundaries without cropping
-				but upscaling the image if it's smaller. The finished image will have remaining space
-				on either width or height (except if the aspect ratio of the new image is the same as
-				the old image). The remaining space will be filled with the background color. The
-				resulting image will match the constraining dimensions.</dd>
+		<datalist id="fit-options">
+			<option value="contain"></option>
+			<option value="max"></option>
+			<option value="fill"></option>
+			<option value="fill-max"></option>
+			<option value="stretch"></option>
+			<option value="crop"></option>
+			<option value="crop-top"></option>
+			<option value="crop-bottom"></option>
+			<option value="crop-left"></option>
+			<option value="crop-right"></option>
+			<option value="crop-top-left"></option>
+			<option value="crop-top-right"></option>
+			<option value="crop-bottom-left"></option>
+			<option value="crop-bottom-right"></option>
+			<option value="crop-50-50"></option>
+			<option value="crop-25-75-1.5"></option>
+			<option value="crop-focalpoint"></option>
+			<option value="crop-focalpoint-1.5"></option>
+		</datalist>
 
-				<dt>stretch</dt>
-				<dd>Stretches the image to fit the constraining dimensions exactly. The resulting image
-				will fill the dimensions, and will not maintain the aspect ratio of the input image.</dd>
+		<dialog id="fit-modal" class="cms-modal">
+			<section class="scroller">
+				<h3>Fit and Crop Options</h3>
+				<button type="button" class="close">Close</button>
+				<dl class="option-docs">
+					<dt>contain</dt>
+					<dd>(<em>Default</em>) Resizes the image to fit within the width and height boundaries without
+					cropping, distorting or altering the aspect ratio.</dd>
 
-				<dt>crop</dt>
-				<dd>Resizes the image to fill the width and height boundaries and crops any excess
-				image data. The resulting image will match the width and height constraints without
-				distorting the image. See the crop page for more information.</dd>
+					<dt>max</dt>
+					<dd>Resizes the image to fit within the width and height boundaries without cropping,
+					distorting or altering the aspect ratio, and will also not increase the size of the
+					image if it is smaller than the output size.</dd>
 
-				<dt>crop-<code>position</code></dt>
-				<dd>You can also set where the image is cropped by adding a crop position.
-				Example: <code>crop-top-left</code></dd>
+					<dt>fill</dt>
+					<dd>Resizes the image to fit within the width and height boundaries without cropping
+					or distorting the image, and the remaining space is filled with the background color.
+					The resulting image will match the constraining dimensions.</dd>
 
-				<dt>crop-<code>x</code>-<code>y</code></dt>
-				<dd>You can be more specific about the exact crop position using a focal point.
-				This is defined using two offset percentages: <code>crop-40-60</code>.</dd>
+					<dt>fill-max</dt>
+					<dd>Resizes the image to fit within the width and height boundaries without cropping
+					but upscaling the image if it's smaller. The finished image will have remaining space
+					on either width or height (except if the aspect ratio of the new image is the same as
+					the old image). The remaining space will be filled with the background color. The
+					resulting image will match the constraining dimensions.</dd>
 
-				<dt>crop-<code>x</code>-<code>y</code>-<code>zoom</code></dt>
-				<dd>You may also choose to zoom into your focal point by providing a third value: a float
-				between 1 and 100. Each full step is the equivalent of a 100% zoom. (eg. x%-y%-2 is the
-				equivalent of viewing the image at 200%). The suggested range is 1-10.</dd>
+					<dt>stretch</dt>
+					<dd>Stretches the image to fit the constraining dimensions exactly. The resulting image
+					will fill the dimensions, and will not maintain the aspect ratio of the input image.</dd>
 
-				<dt>crop-focalpoint</dt>
-				<dd>Since every image is different, you can store the focal point of an image into the CMS.
-				when using this option, the focal point stored within the CMS for the specified image will be used.
-				This is the same as defining the focal points above. However, it is dynamic since the values are
-				pulled from the CMS.</dd>
+					<dt>crop</dt>
+					<dd>Resizes the image to fill the width and height boundaries and crops any excess
+					image data. The resulting image will match the width and height constraints without
+					distorting the image. See the crop page for more information.</dd>
 
-				<dt>crop-focalpoint-<code>zoom</code></dt>
-				<dd>Just like the explicit option above, you can zoom into the focal point that is stored
-				within the CMS.</dd>
-			</dl>
-		</section>
-	</dialog>
+					<dt>crop-<code>position</code></dt>
+					<dd>You can also set where the image is cropped by adding a crop position.
+					Example: <code>crop-top-left</code></dd>
+
+					<dt>crop-<code>x</code>-<code>y</code></dt>
+					<dd>You can be more specific about the exact crop position using a focal point.
+					This is defined using two offset percentages: <code>crop-40-60</code>.</dd>
+
+					<dt>crop-<code>x</code>-<code>y</code>-<code>zoom</code></dt>
+					<dd>You may also choose to zoom into your focal point by providing a third value: a float
+					between 1 and 100. Each full step is the equivalent of a 100% zoom. (eg. x%-y%-2 is the
+					equivalent of viewing the image at 200%). The suggested range is 1-10.</dd>
+
+					<dt>crop-focalpoint</dt>
+					<dd>Since every image is different, you can store the focal point of an image into the CMS.
+					when using this option, the focal point stored within the CMS for the specified image will be used.
+					This is the same as defining the focal points above. However, it is dynamic since the values are
+					pulled from the CMS.</dd>
+
+					<dt>crop-focalpoint-<code>zoom</code></dt>
+					<dd>Just like the explicit option above, you can zoom into the focal point that is stored
+					within the CMS.</dd>
+				</dl>
+			</section>
+		</dialog>
+
+	</main>
 {% endblock %}
 
 {% block bodyBelow %}
