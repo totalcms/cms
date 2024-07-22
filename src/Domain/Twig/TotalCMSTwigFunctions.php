@@ -93,10 +93,22 @@ final class TotalCMSTwigFunctions
 	public static function sortByKey(array $array, string $key = 'id'): array
 	{
 		usort($array, function ($a, $b) use ($key) {
-			if (!is_array($a)) $a = (array)$a;
-			if (!is_array($b)) $b = (array)$b;
+			if ((!is_array($a) && !is_object($a)) || (!is_array($b) && !is_object($b))) {
+				return 0;
+			}
+			if (!is_array($a)) {
+				$a = (array)$a;
+			}
+			if (!is_array($b)) {
+				$b = (array)$b;
+			}
+			if (!array_key_exists($key, $a) || !array_key_exists($key, $b)) {
+				return 0;
+			}
+
 			return $a[$key] <=> $b[$key];
 		});
+
 		return $array;
 	}
 
