@@ -1,5 +1,11 @@
 {% extends "admin-dashboard.twig" %}
 
+{% set collectionIndex %}
+	<h1>Collection Help</h1>
+	<p>Choose a collection to edit or create a new one.</p>
+{% endset %}
+
+
 {% block dashcontent %}
 
 <aside class="dash-content-sidebar">
@@ -10,20 +16,74 @@
 	<nav class="links">
 		<ul>
 			{% for collection in sortByKey(cms.collections()) %}
-			<li class="schema-{{collection.schema}}">
-				<a href="/admin/collections/{{ collection.id }}" title="{{ collection.description }}">{{ collection.name }}</a>
-			</li>
+
+				<li class="schema-{{collection.schema}}">
+					<a {% if url.collection == collection.id %}class="active"{% endif %}
+						href="/admin/collections/{{ collection.id }}"
+						title="{{ collection.description }}">{{ collection.name }}</a>
+				</li>
+
 			{% endfor %}
 		</ul>
 	</nav>
 
 	<footer>
-		<a class="new" href="/admin/collections/new" title="Create a new collection">+ New Collection</a>
+		<a class="dash-button full transparent" href="/admin/collections/new" title="Create a new collection">+ New Collection</a>
 	</footer>
 </aside>
 
-<main class="content">
+<main class="dash-main-content">
+	{% if url.collection is empty %}
 
+		{% include "admin/collection-index.twig" %}
+
+	{% elseif url.collection == "new" %}
+
+		<h1>Collections / <span>new</span></h1>
+		{{ cms.form.collection() }}
+
+	{% elseif url.id is empty %}
+
+		<header>
+			<h1>Collections / {{ url.collection }} / <span>objects</span></h1>
+			<a class="dash-button transparent" href="/admin/collections/{{ url.collection }}/edit" title="Edit Collection">Edit Collection</a>
+			<a class="dash-button" href="/admin/collections/{{ url.collection }}/add" title="Add new object to collection">+ New Object</a>
+		</header>
+
+		{% set objects = cms.objects(url.collection) %}
+		{% if objects|length > 0 %}
+
+			<ul>
+				{% for object in objects %}
+				<li><a href="/admin/collections/{{ url.collection }}/{{ object.id }}"
+					title="Edit object">{{object.id}}</a></li>
+				{% endfor %}
+			</ul>
+
+		{% else %}
+
+			<p>No objects in this collection yet.</p>
+
+		{% endif %}
+
+	{% elseif url.id == "edit" %}
+
+		<h1>Collections / <span>{{ url.collection }}</span></h1>
+		{{ cms.form.collection({ id : url.collection }) }}
+
+	{% elseif url.id == "add" %}
+
+		<h1>Collections / {{ url.collection }} / <span>new object</span></h1>
+		{% set form = cms.form.builder(url.collection) %}
+		{{ form.autoBuild() }}
+
+	{% else %}
+
+		<h1>Collections / {{ url.collection }} / <span>{{ url.id }}</span></h1>
+		{% set form = cms.form.builder(url.collection, { id : url.id }) %}
+		{{ form.autoBuild() }}
+
+	{% endif %}
 </main>
 
 {% endblock %}

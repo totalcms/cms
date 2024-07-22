@@ -178,19 +178,6 @@ body {
 
 	footer {
 		padding       : 1.5rem 1rem;
-
-		a.new {
-			display          : block;
-			width            : 100%;
-			padding          : 0.75rem 1rem;
-			border-radius    : var(--totalform-radius);
-			background-color : transparent;
-			color            : oklab(var(--totalform-nearblack));
-			border           : 2px solid oklch(var(--totalform-nearblack));
-			text-align       : center;
-			text-decoration  : none;
-			font-weight      : bold;
-		}
 	}
 }
 
@@ -214,5 +201,36 @@ body {
 	}
 	form {
 		max-width : 800px;
+	}
+	header {
+		display     : flex;
+		gap         : 1rem;
+		align-items : end;
+
+		h1 {
+			flex-grow : 1;
+		}
+	}
+}
+
+.dash-button {
+	display          : inline-block;
+	padding          : 0.75rem 1rem;
+	border-radius    : var(--totalform-radius);
+	background-color : oklab(var(--totalform-nearblack));
+	color            : oklab(var(--totalform-white));
+	border           : 2px solid oklch(var(--totalform-nearblack));
+	text-align       : center;
+	text-decoration  : none;
+	font-weight      : bold;
+
+	&.full {
+		display : block;
+		width   : 100%;
+	}
+	&.transparent {
+		background-color : transparent;
+		color            : oklab(var(--totalform-nearblack));
+		border           : 2px solid oklch(var(--totalform-nearblack));
 	}
 }

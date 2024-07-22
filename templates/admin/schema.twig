@@ -1,24 +1,5 @@
 {% extends "admin-dashboard.twig" %}
 
-{% set schemaIndex %}
-	<h1>Schema Help</h1>
-	<p>Choose a schema to edit or create a new one.</p>
-{% endset %}
-
-{% set schemaForm %}
-	{% if url.schema == "new" %}
-		<h1>Schemas / <span>New</span></h1>
-		{{ cms.form.schema() }}
-	{% else %}
-		<h1>Schemas / <span>{{ url.schema }}</span></h1>
-		{{ cms.form.schema({
-			id     : url.schema,
-			save   : 'Save',
-		}) }}
-	{% endif %}
-{% endset %}
-
-
 {% block dashcontent %}
 
 <aside class="dash-content-sidebar">
@@ -56,9 +37,18 @@
 
 <main class="dash-main-content">
 	{% if url.schema is empty %}
-		{{ schemaIndex }}
+		{% include "admin/schema-index.twig" %}
 	{% else %}
-		{{ schemaForm }}
+		{% if url.schema == "new" %}
+			<h1>Schemas / <span>new</span></h1>
+			{{ cms.form.schema() }}
+		{% else %}
+			<h1>Schemas / <span>{{ url.schema }}</span></h1>
+			{{ cms.form.schema({
+				id     : url.schema,
+				save   : 'Save',
+			}) }}
+		{% endif %}
 	{% endif %}
 </main>
 
