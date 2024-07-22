@@ -11,7 +11,10 @@
 		{{ cms.form.schema() }}
 	{% else %}
 		<h1>Schemas / <span>{{ url.schema }}</span></h1>
-		{{ cms.form.schema({ id : url.schema }) }}
+		{{ cms.form.schema({
+			id     : url.schema,
+			save   : 'Save',
+		}) }}
 	{% endif %}
 {% endset %}
 
