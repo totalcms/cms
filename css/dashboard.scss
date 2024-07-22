@@ -156,6 +156,7 @@ body {
 			border-radius   : var(--totalform-radius);
 			transition      : background-color 200ms ease-in-out;
 
+			&.active,
 			&:hover {
 				background-color : oklch(var(--totalform-nearwhite));
 			}
