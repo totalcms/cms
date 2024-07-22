@@ -1,45 +1,9 @@
-{% extends "admin-layout.twig" %}
+{% extends "admin-dashboard.twig" %}
 
-{% block content %}
+{% block dashcontent %}
 
-{# TODO: Display current Total CMS version somewhere #}
-
-<div class="admin-dashboard">
-	<aside class="dash-sidebar">
-		<nav>
-		<ul class="menu">
-			<li class="menu-item"><a class="home" href="/admin" title="Home">Home</a></li>
-			<li class="menu-item"><a class="schemas" href="/admin/schemas" title="Schemas">Schemas</a></li>
-			<li class="menu-item active"><a class="collections" href="/admin/collections" title="Collections">Collections</a></li>
-			<li class="menu-item"><a class="logs" href="/admin/logs" title="Logs">Logs</a></li>
-			<li class="menu-item"><a class="docs" href="/admin/docs" title="Docs">Docs</a></li>
-			<li class="menu-item"><a class="settings" href="/admin/settings" title="Settings">Settings</a></li>
-		</ul>
-		</nav>
-	</aside>
-	<section class="dash-content">
-		<aside class="dash-content-sidebar">
-			<header>
-				<input type="search" class="filter" placeholder="Filter collections" />
-			</header>
-
-			<nav class="links">
-				<ul>
-					{% for collection in sortByKey(cms.collections()) %}
-					<li class="schema-{{collection.schema}}">
-						<a href="/admin/collections/{{ collection.id }}" title="{{ collection.description }}">{{ collection.name }}</a>
-					</li>
-					{% endfor %}
-				</ul>
-			</nav>
-
-			<footer>
-				<a class="new" href="/admin/collections/new" title="Create a new collection">+ New Collection</a>
-			</footer>
-		</aside>
-		<main class="content">
-		</main>
-	</section>
-</div>
+<section class="container">
+	<h1>Welcome to Total CMS 3</h1>
+</section>
 
 {% endblock %}

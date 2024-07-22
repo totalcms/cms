@@ -3,15 +3,13 @@
 use Slim\App;
 use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
+use TotalCMS\Action\Admin\AdminSchemaAction;
 
 return function (App $app) {
 	// Display Admin Interface
 	$app->get('/admin', AdminIndexAction::class)->setName('admin-index');
 
-	$app->get('/admin/schemas', AdminIndexAction::class)->setName('admin-index');
-	$app->get('/admin/schemas/{schema}', AdminIndexAction::class)->setName('admin-index');
-	$app->get('/admin/schemas/{schema}/new', AdminIndexAction::class)->setName('admin-index');
-	$app->get('/admin/schemas/{schema}/{id}', AdminIndexAction::class)->setName('admin-index');
+	$app->get('/admin/schemas[/{schema}]', AdminSchemaAction::class)->setName('admin-schema');
 
 	$app->get('/admin/collections', AdminIndexAction::class)->setName('admin-index');
 	$app->get('/admin/collections/new', AdminIndexAction::class)->setName('admin-index');

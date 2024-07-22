@@ -91,11 +91,45 @@
 	cursor : pointer;
 }
 
+.cms-save,
+.cms-delete {
+	appearance       : none;
+	border-radius    : var(--totalform-radius);
+	background-color : oklch(var(--totalform-darkgray));
+	color            : oklch(var(--totalform-white));
+	padding          : 0.75rem 1rem;
+	margin           : 0;
+	border           : 2px solid oklch(var(--totalform-nearblack));
+	font-size        : 1rem;
+	display          : flex;
+	align-items      : center;
+	transition       : scale 200ms ease-in-out;
+
+	&:hover {
+		scale : 1.03;
+	}
+	&:active {
+		scale : 0.97;
+	}
+}
+.cms-save:before {
+	content          : " ";
+	display          : inline-block;
+	width            : 1rem;
+	height           : 1rem;
+	background-color : oklch(var(--totalform-white));
+	mask-image       : var(--icon-save);
+	margin-right     : 0.5rem;
+	mask-size        : 0.8rem;
+	mask-repeat      : no-repeat;
+	mask-position    : center;
+}
+
 .cms-add {
 	width            : 3rem;
 	height           : 3rem;
 	border-radius    : 50%;
-	background-color : oklch(var(--totalform-blue) / 0.95);
+	background-color : oklch(var(--totalform-accent) / 0.95);
 	color            : oklch(var(--totalform-white));
 	font-size        : 1.5rem;
 	box-shadow       : 0 1px 5px oklch(var(--totalform-black) / 0.5);
@@ -108,11 +142,10 @@
 
 	&:after {
 		content : "+";
-		translate: 0 -0.1rem;
 	}
 
 	&:hover {
-		background-color : oklch(var(--totalform-blue));
+		background-color : oklch(var(--totalform-accent));
 	}
 
 	&:active {

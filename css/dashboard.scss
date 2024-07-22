@@ -75,11 +75,17 @@ body {
 }
 
 .dash-content-sidebar {
-	display       : grid;
-	gap           : 1rem;
-	align-content : start;
-	border-right  : 1px solid oklch(var(--totalform-lightgray));
-	min-width     : 256px;
+	height             : 100%;
+	display            : grid;
+	grid-template-rows : min-content 1fr min-content;
+	gap                : 1rem;
+	align-content      : start;
+	border-right       : 1px solid oklch(var(--totalform-lightgray));
+	min-width          : 256px;
+
+	h3 {
+		color: oklch(var(--totalform-mediumgray));
+	}
 
 	header {
 		padding       : 1.5rem 1rem;
@@ -184,5 +190,27 @@ body {
 			text-decoration  : none;
 			font-weight      : bold;
 		}
+	}
+}
+
+.dash-main-content {
+	height           : 100%;
+	overflow         : auto;
+	padding          : 2rem;
+	flex-grow        : 1;
+	background-color : oklch(99% 0 0);
+	display          : grid;
+	gap              : 1.5rem;
+	align-content    : start;
+
+	h1 {
+		color : oklch(var(--totalform-mediumgray));
+
+		span {
+			color : oklch(var(--totalform-darkgray));
+		}
+	}
+	form {
+		max-width : 800px;
 	}
 }

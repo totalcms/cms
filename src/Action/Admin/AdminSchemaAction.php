@@ -9,7 +9,7 @@ use TotalCMS\Renderer\TwigRenderer;
 /**
  * Action.
  */
-final class AdminIndexAction
+final class AdminSchemaAction
 {
 	private TwigRenderer $twigRenderer;
 
@@ -24,12 +24,18 @@ final class AdminIndexAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		return $this->twigRenderer->template($response, 'admin/index.twig', [
+
+		// /schemas - index page
+		// /schemas/{schema} - schema edit page
+		// /schemas/new - schema create form
+
+		return $this->twigRenderer->template($response, 'admin/schema.twig', [
 			'url' => [
 				'path'   => $request->getUri()->getPath(),
 				'query'  => $request->getUri()->getQuery(),
 				'params' => $args,
-				'page'   => 'index',
+				'page'   => 'schemas',
+				'schema' => $args['schema'] ?? '',
 			]
 		]);
 	}

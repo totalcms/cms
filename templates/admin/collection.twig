@@ -1,0 +1,29 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter collections" />
+	</header>
+
+	<nav class="links">
+		<ul>
+			{% for collection in sortByKey(cms.collections()) %}
+			<li class="schema-{{collection.schema}}">
+				<a href="/admin/collections/{{ collection.id }}" title="{{ collection.description }}">{{ collection.name }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</nav>
+
+	<footer>
+		<a class="new" href="/admin/collections/new" title="Create a new collection">+ New Collection</a>
+	</footer>
+</aside>
+
+<main class="content">
+
+</main>
+
+{% endblock %}

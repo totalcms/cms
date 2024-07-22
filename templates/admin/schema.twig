@@ -1,0 +1,64 @@
+{% extends "admin-dashboard.twig" %}
+
+{% set schemaIndex %}
+	<h1>Schema Help</h1>
+	<p>Choose a schema to edit or create a new one.</p>
+{% endset %}
+
+{% set schemaForm %}
+	{% if url.schema == "new" %}
+		<h1>Schemas / <span>New</span></h1>
+		{{ cms.form.schema() }}
+	{% else %}
+		<h1>Schemas / <span>{{ url.schema }}</span></h1>
+		{{ cms.form.schema({ id : url.schema }) }}
+	{% endif %}
+{% endset %}
+
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter schemas" />
+	</header>
+
+	<nav class="links">
+		<h3>Custom Schemas</h3>
+		<ul>
+			{% for schema in sortByKey(cms.customSchemas()) %}
+			<li class="schema-{{schema.id}}">
+				<a  {% if url.schema == schema.id %}class="active"{% endif %}
+					href="/admin/schemas/{{ schema.id }}"
+					title="{{ schema.description }}">{{ schema.id }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+		<h3>Built-in Schemas</h3>
+		<ul>
+			{% for schema in sortByKey(cms.reservedSchemas()) %}
+			<li class="schema-{{schema.id}}">
+				<a  {% if url.schema == schema.id %}class="active"{% endif %}
+					href="/admin/schemas/{{ schema.id }}"
+					title="{{ schema.description }}">{{ schema.id }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</nav>
+
+	<footer>
+		<a class="new" href="/admin/schemas/new" title="Create a new schema">+ New Schema</a>
+	</footer>
+</aside>
+
+<main class="dash-main-content">
+	{% if url.schema is empty %}
+		{{ schemaIndex }}
+	{% else %}
+		{{ schemaForm }}
+	{% endif %}
+</main>
+
+{% endblock %}
+
+

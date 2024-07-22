@@ -86,9 +86,14 @@ final class SchemaRepository extends StorageRepository
 			throw new \RuntimeException('Failed to list reserved schemas');
 		}
 
-		return array_map(function (string $file) {
+		$ids = array_map(function (string $file) {
 			return basename($file, self::FILE_EXT);
 		}, $files);
+
+		return array_filter($ids, function (string $id) {
+			// Exclude the schema and collection schemas
+			return ($id !== 'schema' && $id !== 'collection');
+		});
 	}
 
 	/**
