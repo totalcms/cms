@@ -11,11 +11,9 @@ use TotalCMS\Renderer\TwigRenderer;
  */
 final class AdminCollectionAction
 {
-	private TwigRenderer $twigRenderer;
-
-	public function __construct(TwigRenderer $twigRenderer)
-	{
-		$this->twigRenderer = $twigRenderer;
+	public function __construct(
+		private TwigRenderer $twigRenderer
+	) {
 	}
 
 	/** @param array<string,string> $args The routing arguments */
