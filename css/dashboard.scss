@@ -201,11 +201,12 @@ body {
 	flex-grow        : 1;
 	background-color : oklch(99% 0 0);
 	display          : grid;
-	gap              : 1.5rem;
+	gap              : 2rem;
 	align-content    : start;
 
 	h1 {
-		color : oklch(var(--totalform-mediumgray));
+		color  : oklch(var(--totalform-mediumgray));
+		margin : 0;
 
 		span {
 			color : oklch(var(--totalform-darkgray));
