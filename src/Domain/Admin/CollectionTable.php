@@ -2,17 +2,15 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Utils\HTMLUtils;
 
 /**
  * Total Table Builder.
- *
  */
 final class CollectionTable
 {
@@ -47,27 +45,30 @@ final class CollectionTable
 		if (isset($propertyData['$ref'])) {
 			return basename($propertyData['$ref'], '.json');
 		}
+
 		return 'string';
 	}
 
 	private function buildTableHead(): string
 	{
-		$headings = '';
-		$properties = array_keys($this->objects[0]);
+		$headings   = '';
+		// order the columns by the index in the schema
+		$properties = $this->schemaData->index;
 		foreach ($properties as $property) {
-			$class = 'schema-' . $this->getPropertyType((string) $property);
+			$class = 'schema-' . $this->getPropertyType((string)$property);
 			$headings .= HTMLUtils::element('th', $property, ['class' => $class]);
 		}
 		$row = HTMLUtils::element('tr', $headings);
+
 		return HTMLUtils::element('thead', $row);
 	}
 
 	/** @param array<string,mixed> $image */
 	private function imagePreivew(string $id, string $property, array $image): string
 	{
-		$imageworks = ['w' => 64, 'h' => 63, 'fit' => 'crop-focalpoint'];
-		$options = ['collection' => $this->collection, 'property' => $property];
-		$imageSrc = TotalCMSTwigAdapter::buildImageworksAPI(
+		$imageworks = ['w' => 128, 'h' => 128, 'q' => 10, 'fit' => 'crop-focalpoint'];
+		$options    = ['collection' => $this->collection, 'property' => $property];
+		$imageSrc   = TotalCMSTwigAdapter::buildImageworksAPI(
 			api: $this->api,
 			id: $id,
 			image: $image,
@@ -78,29 +79,38 @@ final class CollectionTable
 		return HTMLUtils::element('img', '', [
 			'src'    => $imageSrc,
 			'alt'    => $image['alt'],
-			'width'  => 64,
-			'height' => 64,
+			'width'  => 128,
+			'height' => 128,
 		]);
 	}
 
 	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */
 	private function formatCellData(string $id, string $property, string $type, mixed $value): string
 	{
-		switch ($type) {
+		if (is_null($value) || $value === '') {
+			return '';
+		}
 
+		switch ($type) {
 			case 'boolean':
-				return $value ? '✔' : 'X';
+				return $value ? '✔' : '';
 
 			case 'color':
 				return HTMLUtils::element('div', $value['hex'], [
 					'class' => 'color-preview',
-					'style' => "background-color: {$value['hex']}"
+					'style' => "background-color: {$value['hex']}",
 				]);
 
 			case 'deck':
 			case 'depot':
 			case 'array':
 				return (string)count($value);
+
+			case 'date':
+				return date('Y-m-d H:m', strtotime($value));
+
+			case 'image':
+				return $this->imagePreivew($id, $property, $value);
 
 			case 'image':
 				return $this->imagePreivew($id, $property, $value);
@@ -109,6 +119,7 @@ final class CollectionTable
 				if (count($value) === 0) {
 					return '';
 				}
+
 				return $this->imagePreivew($id, $property, $value[0]);
 
 			case 'file':
@@ -120,7 +131,8 @@ final class CollectionTable
 			case 'password':
 				return '********';
 		}
-		return (string)$value;
+
+		return strip_tags((string)$value);
 	}
 
 	private function buildTableBody(): string
@@ -128,13 +140,15 @@ final class CollectionTable
 		$rows = '';
 		foreach ($this->objects as $object) {
 			$cell = '';
-			foreach ($object as $property => $value) {
+			// order the columns by the index in the schema
+			$properties = $this->schemaData->index;
+			foreach ($properties as $property) {
 				$type = $this->getPropertyType($property);
 				$data = $this->formatCellData(
 					id: $object['id'],
 					property: $property,
 					type: $type,
-					value: $value,
+					value: $object[$property] ?? '',
 				);
 				$cell .= HTMLUtils::element('td', $data, ['class' => $type . '-data']);
 			}
@@ -142,13 +156,14 @@ final class CollectionTable
 				'data-object-id' => $object['id'],
 			]);
 		}
+
 		return HTMLUtils::element('tbody', $rows);
 	}
-
 
 	public function build(): string
 	{
 		$table = $this->buildTableHead() . $this->buildTableBody();
+
 		return HTMLUtils::element('table', $table, [
 			'class'           => 'collection-table',
 			'data-collection' => $this->collection,

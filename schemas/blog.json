@@ -154,19 +154,19 @@
 		"created"
 	],
 	"index": [
-		"archived",
-		"author",
-		"categories",
+		"id",
+		"title",
+		"image",
 		"date",
 		"draft",
 		"featured",
+		"archived",
+		"author",
 		"genre",
-		"id",
-		"image",
+		"categories",
 		"labels",
-		"summary",
 		"tags",
-		"title",
+		"summary",
 		"updated",
 		"created"
 	]

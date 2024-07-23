@@ -19,9 +19,23 @@ document.addEventListener("DOMContentLoaded", event => {
 	const adminlists = Array.from(document.getElementsByClassName("admin-list"));
 	adminlists.forEach(list => new AdminList(list));
 
-	const tables = Array.from(document.getElementsByClassName("admin-table"));
+	const tables = Array.from(document.getElementsByClassName("collection-table"));
 	tables.forEach(table => {
-		const grid = new Grid({ from: table.querySelector("table") });
-		grid.render(table);
+		const wrapper = document.createElement("div");
+		wrapper.classList.add("collection-table-wrapper");
+		table.parentNode.insertBefore(wrapper, table);
+
+		const grid = new Grid({
+			from        : table,
+			pagination  : {
+				limit   : 25,
+			},
+			search      : true,
+			sort        : true,
+			resizable   : true,
+			autoWidth   : true,
+			fixedHeader : true,
+		});
+		grid.render(wrapper);
 	});
 });
