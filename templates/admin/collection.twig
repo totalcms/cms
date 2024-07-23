@@ -53,12 +53,7 @@
 		{% set objects = cms.objects(url.collection) %}
 		{% if objects|length > 0 %}
 
-			<ul>
-				{% for object in objects %}
-				<li><a href="/admin/collections/{{ url.collection }}/{{ object.id }}"
-					title="Edit object">{{object.id}}</a></li>
-				{% endfor %}
-			</ul>
+			{{ cms.form.collectionTable(url.collection) }}
 
 		{% else %}
 

@@ -67,6 +67,21 @@ final class TotalFormFactory
 		return $form->autoBuild();
 	}
 
+	public function collectionTable(string $collection): string
+	{
+		$options = [
+			'api'               => $this->api,
+			'collection'        => $collection,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'schemaFetcher'     => $this->schemaFetcher,
+		];
+
+		$table = new CollectionTable(...$options);
+
+		return $table->build();
+	}
+
 	/** @param array<string,mixed> $options */
 	public function collection(array $options = []): string
 	{
