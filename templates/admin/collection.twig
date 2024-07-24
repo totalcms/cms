@@ -39,13 +39,13 @@
 
 	{% elseif url.collection == "new" %}
 
-		<h1>Collections / <span>new</span></h1>
+		<h1>collections / <span>new</span></h1>
 		{{ cms.form.collection() }}
 
 	{% elseif url.id is empty %}
 
 		<header>
-			<h1>Collections / {{ url.collection }} / <span>objects</span></h1>
+			<h1>collections / {{ url.collection }} / <span>objects</span></h1>
 			<a class="dash-button transparent" href="/admin/collections/{{ url.collection }}/edit" title="Edit Collection">Edit Collection</a>
 			<a class="dash-button" href="/admin/collections/{{ url.collection }}/add" title="Add new object to collection">+ New Object</a>
 		</header>
@@ -63,18 +63,18 @@
 
 	{% elseif url.id == "edit" %}
 
-		<h1>Collections / <span>{{ url.collection }}</span></h1>
+		<h1>collections / <span>{{ url.collection }}</span></h1>
 		{{ cms.form.collection({ id : url.collection }) }}
 
 	{% elseif url.id == "add" %}
 
-		<h1>Collections / {{ url.collection }} / <span>new object</span></h1>
+		<h1>collections / {{ url.collection }} / <span>new object</span></h1>
 		{% set form = cms.form.builder(url.collection) %}
 		{{ form.autoBuild() }}
 
 	{% else %}
 
-		<h1>Collections / {{ url.collection }} / <span>{{ url.id }}</span></h1>
+		<h1>collections / {{ url.collection }} / <span>{{ url.id }}</span></h1>
 		{% set form = cms.form.builder(url.collection, { id : url.id }) %}
 		{{ form.autoBuild() }}
 

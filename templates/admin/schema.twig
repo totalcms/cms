@@ -40,10 +40,10 @@
 		{% include "admin/schema-index.twig" %}
 	{% else %}
 		{% if url.schema == "new" %}
-			<h1>Schemas / <span>new</span></h1>
+			<h1>schemas / <span>new</span></h1>
 			{{ cms.form.schema() }}
 		{% else %}
-			<h1>Schemas / <span>{{ url.schema }}</span></h1>
+			<h1>schemas / <span>{{ url.schema }}</span></h1>
 			{{ cms.form.schema({
 				id     : url.schema,
 				save   : 'Save',

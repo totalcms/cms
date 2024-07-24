@@ -35,6 +35,11 @@ document.addEventListener("DOMContentLoaded", event => {
 			resizable   : true,
 			autoWidth   : true,
 			fixedHeader : true,
+			language    : {
+				search: {
+					placeholder : "Filter objects",
+				},
+			}
 		});
 		grid.render(wrapper);
 	});

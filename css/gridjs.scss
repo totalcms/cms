@@ -35,19 +35,6 @@
 	z-index: 0;
 }
 
-input.gridjs-input {
-	outline: none;
-	background-color: #fff;
-	border: 1px solid #d2d6dc;
-	border-radius: 5px;
-	padding: 10px 13px;
-	font-size: 14px;
-	line-height: 1.45;
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
-}
-
 .gridjs-pagination {
 	color: #3d4044;
 }
@@ -295,11 +282,7 @@ th.gridjs-th:last-child {
 }
 
 .gridjs-search {
-	float: left;
-}
-
-.gridjs-search-input {
-	width: 250px;
+	width: 100%;
 }
 
 .gridjs-loading-bar {
