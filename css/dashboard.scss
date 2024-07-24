@@ -150,7 +150,7 @@ body {
 	}
 
 	footer {
-		padding       : 1.5rem 1rem;
+		padding : 1.5rem 1rem;
 	}
 }
 
@@ -168,6 +168,10 @@ body {
 		color  : oklch(var(--totalform-mediumgray));
 		margin : 0;
 
+		a {
+			text-decoration : none;
+			color           : inherit;
+		}
 		span {
 			color : oklch(var(--totalform-darkgray));
 		}
