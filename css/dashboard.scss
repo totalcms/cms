@@ -232,6 +232,11 @@ body {
 		grid-template-rows    : max-content auto max-content 0;
 		align-content         : stretch;
 	}
+	.color-preview {
+		height        : 100%;
+		text-indent   : -9999px;
+		border-radius : var(--totalform-radius);
+	}
 }
 
 .collection-table-wrapper,
