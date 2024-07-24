@@ -4,8 +4,9 @@
 // Form Defaults
 //------------------------------
 .totalform {
-	display : grid;
-	gap     : 1rem;
+	display       : grid;
+	gap           : 1rem;
+	align-content : start;
 
 	&:not(:first-of-type) {
 		margin-top : 1rem;
