@@ -1,4 +1,4 @@
-@import "mermaid";
+@import "gridjs";
 
 body {
 	margin : 0;
@@ -183,13 +183,14 @@ body {
 }
 
 .dash-main-content {
-	height           : 100%;
-	overflow         : hidden scroll;
-	padding          : 2rem;
-	background-color : oklch(99% 0 0);
-	display          : grid;
-	gap              : 2rem;
-	align-content    : start;
+	height             : 100%;
+	overflow           : hidden scroll;
+	padding            : 2rem;
+	background-color   : oklch(99% 0 0);
+	display            : grid;
+	gap                : 2rem;
+	align-content      : stretch;
+	grid-template-rows : max-content auto;
 
 	h1 {
 		color  : oklch(var(--totalform-mediumgray));
@@ -239,23 +240,20 @@ body {
 	display: none;
 }
 .collection-table-wrapper {
-	overflow-x : auto;
+	font-size: 0.9em;
 
-	td {
-		max-height    : 4rem;
-		overflow      : hidden;
-		white-space   : nowrap;
-		max-width     : 256px;
-		min-width     : 128px;
-		text-overflow : ellipsis;
-		padding       : 0.5rem 1rem;
-	}
 	img {
-		max-width : 48px;
+		max-width : 3rem;
 		height    : auto;
 		border-radius: var(--totalform-radius);
 	}
 	.gridjs-wrapper, table {
 		max-height : calc(100vh - 300px);
+	}
+	.gridjs-container {
+		height                : 100%;
+		display               : grid;
+		grid-template-rows    : max-content auto max-content 0;
+		align-content         : stretch;
 	}
 }

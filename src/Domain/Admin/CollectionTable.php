@@ -66,6 +66,10 @@ final class CollectionTable
 	/** @param array<string,mixed> $image */
 	private function imagePreivew(string $id, string $property, array $image): string
 	{
+		if ($image['size'] === 0) {
+			return '';
+		}
+
 		$imageworks = ['w' => 128, 'h' => 128, 'q' => 10, 'fit' => 'crop-focalpoint'];
 		$options    = ['collection' => $this->collection, 'property' => $property];
 		$imageSrc   = TotalCMSTwigAdapter::buildImageworksAPI(
