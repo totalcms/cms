@@ -70,7 +70,7 @@ final class CollectionTable
 			return '';
 		}
 
-		$imageworks = ['w' => 128, 'h' => 128, 'q' => 10, 'fit' => 'crop-focalpoint'];
+		$imageworks = ['w' => 128, 'h' => 128, 'q' => 30, 'fit' => 'crop-focalpoint'];
 		$options    = ['collection' => $this->collection, 'property' => $property];
 		$imageSrc   = TotalCMSTwigAdapter::buildImageworksAPI(
 			api: $this->api,
@@ -83,8 +83,29 @@ final class CollectionTable
 		return HTMLUtils::element('img', '', [
 			'src'    => $imageSrc,
 			'alt'    => $image['alt'],
-			'width'  => 128,
-			'height' => 128,
+			'width'  => "128",
+			'height' => "128",
+		]);
+	}
+
+	private function galleryPreivew(string $id, string $property): string
+	{
+		$imageworks = ['w' => 128, 'h' => 128, 'q' => 30, 'fit' => 'crop-focalpoint'];
+		$options    = ['collection' => $this->collection, 'property' => $property];
+		$imageSrc   = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
+			baseapi: $this->api,
+			id: $id,
+			name: 'first',
+			image: [],
+			imageworks: $imageworks,
+			options: $options
+		);
+
+		return HTMLUtils::element('img', '', [
+			'src'    => $imageSrc,
+			'alt'    => "{$this->collection} / {$id} / {$property} gallery preview",
+			'width'  => "128",
+			'height' => "128",
 		]);
 	}
 
@@ -116,15 +137,12 @@ final class CollectionTable
 			case 'image':
 				return $this->imagePreivew($id, $property, $value);
 
-			case 'image':
-				return $this->imagePreivew($id, $property, $value);
-
 			case 'gallery':
 				if (count($value) === 0) {
 					return '';
 				}
 
-				return $this->imagePreivew($id, $property, $value[0]);
+				return $this->galleryPreivew($id, $property);
 
 			case 'file':
 				return $value['name'];
