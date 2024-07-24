@@ -11,6 +11,6 @@ class ListField extends MultiselectField
 	{
 		parent::init();
 
-		$this->rows = 6;
+		$this->rows = 1;
 	}
 }

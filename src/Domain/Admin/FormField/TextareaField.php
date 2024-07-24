@@ -18,7 +18,7 @@ class TextareaField extends FormField
 			'required'         => $this->required ? '' : null,
 			'disabled'         => $this->disabled ? '' : null,
 			'readonly'         => $this->readonly ? '' : null,
-			'rows'             => $this->rows > 0 ? strval($this->rows) : null,
+			'rows'             => $this->rows > 0 ? strval($this->rows) : "3",
 			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
 		];
