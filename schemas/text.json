@@ -25,6 +25,7 @@
         "text"
     ],
     "index": [
-        "id"
+        "id",
+        "text"
     ]
 }

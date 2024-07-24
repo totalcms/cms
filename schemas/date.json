@@ -25,6 +25,7 @@
         "date"
     ],
     "index": [
-        "id"
+        "id",
+        "date"
     ]
 }

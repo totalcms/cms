@@ -25,6 +25,7 @@
         "number"
     ],
     "index": [
-        "id"
+        "id",
+        "number"
     ]
 }

@@ -23,6 +23,7 @@
         "id"
     ],
     "index": [
-        "id"
+        "id",
+        "files"
     ]
 }

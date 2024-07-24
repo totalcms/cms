@@ -25,6 +25,7 @@
         "email"
     ],
     "index": [
-        "id"
+        "id",
+        "email"
     ]
 }

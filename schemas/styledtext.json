@@ -25,6 +25,7 @@
         "styledtext"
     ],
     "index": [
-        "id"
+        "id",
+        "styledtext"
     ]
 }

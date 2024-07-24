@@ -24,6 +24,7 @@
         "status"
     ],
     "index": [
-        "id"
+        "id",
+        "status"
     ]
 }

@@ -26,6 +26,7 @@
         "color"
     ],
     "index": [
-        "id"
+        "id",
+        "color"
     ]
 }
