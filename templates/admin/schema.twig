@@ -50,6 +50,10 @@
 				save        : "Save",
 				helpStyle   : 'label',
 				helpOnHover : true,
+				newAction : {
+					"action" : "redirect-object",
+					"link"   : "/admin/schemas/"
+				},
 			}) }}
 		{% else %}
 			<h1><a href="/admin/schemas">schemas</a> / <span>{{ url.schema }}</span></h1>
@@ -59,6 +63,10 @@
 				delete      : "Delete",
 				helpStyle   : 'label',
 				helpOnHover : true,
+				deleteAction : {
+					"action" : "redirect",
+					"link"   : "/admin/schemas"
+				}
 			}) }}
 		{% endif %}
 	{% endif %}

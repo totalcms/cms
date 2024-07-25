@@ -21,23 +21,22 @@ final class SchemaForm extends TotalForm
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
 	 * @param array<string,string> $newAction
+	 * @param array<string,string> $deleteAction
 	 * @param array<string,string> $editAction
 	 */
 	public function __construct(
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
-		public    string $id        = '',
-		protected string $method    = 'POST',
-		protected string $class     = '',
-		protected string $helpStyle = '',
-		protected string $save      = '',
-		protected string $delete    = '',
-		protected array $editAction = [],
-		protected array $newAction  = [
-			'action' => 'redirect-object',
-			'link'   => '?id=',
-		],
+		public    string $id          = '',
+		protected string $method      = 'POST',
+		protected string $class       = '',
+		protected string $helpStyle   = '',
+		protected string $save        = '',
+		protected string $delete      = '',
+		protected array $editAction   = [],
+		protected array $deleteAction = [],
+		protected array $newAction    = [],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
 		protected bool $helpOnFocus = false,
