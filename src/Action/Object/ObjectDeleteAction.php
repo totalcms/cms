@@ -13,8 +13,6 @@ final class ObjectDeleteAction
 		private JsonRenderer $renderer,
 		private ObjectRemover $remover
 	) {
-		$this->remover  = $remover;
-		$this->renderer = $renderer;
 	}
 
 	/**

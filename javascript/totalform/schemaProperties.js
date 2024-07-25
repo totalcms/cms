@@ -12,7 +12,7 @@ export default class SchemaPropertiesField extends PropertiesField {
 
         this.template  = this.container.querySelector("template");
         this.addButton = this.container.querySelector(".cms-add");
-		this.addButton.addEventListener("click", this.addTemplate.bind(this));
+		this.addButton?.addEventListener("click", this.addTemplate.bind(this));
 
 		const fields = this.container.getElementsByClassName(this.fieldClass);
 		for (const field of fields) {
@@ -40,8 +40,8 @@ export default class SchemaPropertiesField extends PropertiesField {
 		const trash = field.querySelector("button.trash");
 		const duplicate = field.querySelector("button.duplicate");
 
-		trash.addEventListener("click", () => this.removeField(field));
-		duplicate.addEventListener("click", () => this.duplicateField(field));
+		trash?.addEventListener("click", () => this.removeField(field));
+		duplicate?.addEventListener("click", () => this.duplicateField(field));
 	}
 
 	removeField(field) {

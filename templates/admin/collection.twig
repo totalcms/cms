@@ -40,7 +40,11 @@
 	{% elseif url.collection == "new" %}
 
 		<h1><a href="/admin/collections">collections</a> / <span>new</span></h1>
-		{{ cms.form.collection() }}
+		{{ cms.form.collection({
+			save        : "Save",
+			helpStyle   : 'label',
+			helpOnHover : true,
+		}) }}
 
 	{% elseif url.id is empty %}
 
@@ -64,18 +68,33 @@
 	{% elseif url.id == "edit" %}
 
 		<h1><a href="/admin/collections">collections</a> / <span>{{ url.collection }}</span></h1>
-		{{ cms.form.collection({ id : url.collection }) }}
+		{{ cms.form.collection({
+			id          : url.collection,
+			save        : "Save",
+			helpStyle   : 'label',
+			helpOnHover : true,
+		}) }}
 
 	{% elseif url.id == "add" %}
 
 		<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>new object</span></h1>
-		{% set form = cms.form.builder(url.collection) %}
+		{% set form = cms.form.builder(url.collection, {
+			save        : "Save",
+			helpStyle   : 'label',
+			helpOnHover : true,
+		}) %}
 		{{ form.autoBuild() }}
 
 	{% else %}
 
 		<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>{{ url.id }}</span></h1>
-		{% set form = cms.form.builder(url.collection, { id : url.id }) %}
+		{% set form = cms.form.builder(url.collection, {
+			id          : url.id,
+			save        : "Save",
+			delete      : "Delete",
+			helpStyle   : 'label',
+			helpOnHover : true,
+		}) %}
 		{{ form.autoBuild() }}
 
 	{% endif %}

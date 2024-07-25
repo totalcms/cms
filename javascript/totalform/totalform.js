@@ -327,7 +327,13 @@ export default class TotalForm {
             this.options.editAction = "redirect";
             this.options.editLink   = location.origin + location.pathname;
 
-            this.api.postAPI(`/collections/${this.collection}/${this.id}`, {}, "DELETE")
+			let deleteAPI = `/collections/${this.collection}/${this.id}`;
+
+			if (this.isSchemaForm()) {
+				deleteAPI = `/schemas/${this.id}`;
+			}
+
+            this.api.postAPI(deleteAPI, {}, "DELETE")
                 .then(response => this.runDeleteAction(response))
                 .catch(error => this.error(error));
         }

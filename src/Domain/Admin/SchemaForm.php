@@ -27,11 +27,12 @@ final class SchemaForm extends TotalForm
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
-		public string $id        = '',
+		public    string $id        = '',
 		protected string $method    = 'POST',
 		protected string $class     = '',
 		protected string $helpStyle = '',
 		protected string $save      = '',
+		protected string $delete    = '',
 		protected array $editAction = [],
 		protected array $newAction  = [
 			'action' => 'redirect-object',

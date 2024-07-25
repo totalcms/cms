@@ -9,14 +9,19 @@
 
 	<nav class="links">
 		<h3>Custom Schemas</h3>
+		{% set customSchemas = sortByKey(cms.customSchemas()) %}
 		<ul>
-			{% for schema in sortByKey(cms.customSchemas()) %}
+		{% if customSchemas|length == 0 %}
+			<li class="no-schemas" style="padding-left:1rem">No custom schemas</li>
+		{% else %}
+			{% for schema in customSchemas %}
 			<li class="schema-{{schema.id}}">
 				<a  {% if url.schema == schema.id %}class="active"{% endif %}
 					href="/admin/schemas/{{ schema.id }}"
 					title="{{ schema.description }}">{{ schema.id }}</a>
 			</li>
 			{% endfor %}
+		{% endif %}
 		</ul>
 		<h3>Built-in Schemas</h3>
 		<ul>
@@ -41,12 +46,19 @@
 	{% else %}
 		{% if url.schema == "new" %}
 			<h1><a href="/admin/schemas">schemas</a> / <span>new</span></h1>
-			{{ cms.form.schema() }}
+			{{ cms.form.schema({
+				save        : "Save",
+				helpStyle   : 'label',
+				helpOnHover : true,
+			}) }}
 		{% else %}
 			<h1><a href="/admin/schemas">schemas</a> / <span>{{ url.schema }}</span></h1>
 			{{ cms.form.schema({
-				id     : url.schema,
-				save   : 'Save',
+				id          : url.schema,
+				save        : "Save",
+				delete      : "Delete",
+				helpStyle   : 'label',
+				helpOnHover : true,
 			}) }}
 		{% endif %}
 	{% endif %}
