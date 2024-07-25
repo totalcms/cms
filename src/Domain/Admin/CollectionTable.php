@@ -152,6 +152,9 @@ final class CollectionTable
 			case 'list':
 				return implode(', ', $value);
 
+			case 'svg':
+				return $value;
+
 			case 'password':
 				return '********';
 		}
