@@ -15,6 +15,7 @@ return function (App $app) {
 		// Collection
 		$group->post('', Collection\CollectionSaveAction::class)->setName('collection-save');
 		$group->get('/{collection}', Collection\CollectionFetchAction::class)->setName('collection-fetch');
+		$group->delete('/{collection}', Collection\CollectionDeleteAction::class)->setName('collection-delete');
 		$group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
 		$group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
 		$group->map(['HEAD'], '/{collection}', Collection\CollectionExistsAction::class)->setName('collection-exists');

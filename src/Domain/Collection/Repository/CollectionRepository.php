@@ -54,18 +54,19 @@ final class CollectionRepository extends StorageRepository
 		return $collections;
 	}
 
-	/**
-	 * Fetch a collection.
-	 *
-	 * @param string $collection
-	 *
-	 * @return CollectionData|null
-	 */
 	public function fetchCollection(string $collection): ?CollectionData
 	{
 		$metaFile = $this->buildMetaPath($collection);
 
 		return $this->fetchAndDeserialize($metaFile, CollectionData::class);
+	}
+
+
+	public function deleteCollection(string $collection): bool
+	{
+		$metaFile = $this->buildMetaPath($collection);
+
+		return $this->filesystem->delete($metaFile);
 	}
 
 	/**

@@ -332,6 +332,9 @@ export default class TotalForm {
 			if (this.isSchemaForm()) {
 				deleteAPI = `/schemas/${this.id}`;
 			}
+			if (this.isCollectionForm()) {
+				deleteAPI = `/collections/${this.id}`;
+			}
 
             this.api.postAPI(deleteAPI, {}, "DELETE")
                 .then(response => this.runDeleteAction(response))
@@ -371,7 +374,12 @@ export default class TotalForm {
                 location.reload(true);
                 break;
             case "redirect-object":
-                document.location = action.link+this.id;
+				const link = decodeURI(action.link);
+				if (link.match("{id}"))  {
+					document.location = link.replace("{id}",this.id);
+				} else {
+					document.location = link+this.id;
+				}
                 break;
             case "redirect":
                 document.location = action.link;

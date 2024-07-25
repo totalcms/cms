@@ -26,13 +26,15 @@ final class CollectionForm extends TotalForm
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
-		public string $id        = '',
-		protected string $method    = 'POST',
-		protected string $class     = '',
-		protected string $helpStyle = '',
-		protected string $save      = '',
-		protected array $editAction = [],
-		protected array $newAction  = [
+		public    string $id          = '',
+		protected string $method      = 'POST',
+		protected string $class       = '',
+		protected string $helpStyle   = '',
+		protected string $save        = '',
+		protected string $delete      = '',
+		protected array $deleteAction = [],
+		protected array $editAction   = [],
+		protected array $newAction    = [
 			'action' => 'redirect-object',
 			'link'   => '?id=',
 		],
@@ -55,7 +57,6 @@ final class CollectionForm extends TotalForm
 			$this->route  = '/collections/' . $this->id;
 			$this->method = 'PUT';
 		}
-		$this->delete     = ''; // do not allow delete
 		$this->formType   = 'collection';
 		$this->schema     = 'collection';
 		$this->schemaData = $this->schemaFetcher->fetchSchema($this->schema);

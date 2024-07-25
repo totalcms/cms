@@ -39,15 +39,21 @@
 
 	{% elseif url.collection == "new" %}
 
+		{# New Collection Form #}
 		<h1><a href="/admin/collections">collections</a> / <span>new</span></h1>
 		{{ cms.form.collection({
 			save        : "Save",
 			helpStyle   : 'label',
 			helpOnHover : true,
+			newAction : {
+				"action" : "redirect-object",
+				"link"   : "/admin/collections/{id}/edit"
+			},
 		}) }}
 
 	{% elseif url.id is empty %}
 
+		{# Collection Object Table #}
 		<header>
 			<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>objects</span></h1>
 			<a class="dash-button transparent" href="/admin/collections/{{ url.collection }}/edit" title="Edit Collection">Edit Collection</a>
@@ -67,12 +73,18 @@
 
 	{% elseif url.id == "edit" %}
 
+		{# Edit Collection #}
 		<h1><a href="/admin/collections">collections</a> / <span>{{ url.collection }}</span></h1>
 		{{ cms.form.collection({
 			id          : url.collection,
 			save        : "Save",
+			delete      : "Delete",
 			helpStyle   : 'label',
 			helpOnHover : true,
+			deleteAction : {
+				"action" : "redirect",
+				"link"   : "/admin/collections"
+			},
 		}) }}
 
 	{% elseif url.id == "add" %}
