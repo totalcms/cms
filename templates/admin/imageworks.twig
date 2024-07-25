@@ -84,7 +84,7 @@
 					   	"For relative dimensions, 5w represents 5% of the width of the image.",
 			markalpha : "Sets the alpha of the watermark. Use values between 0 and 100.",
 			markpos   : "Sets the position of the watermark. Accepts top-left, top-right, bottom-left, bottom-right, " ~
-					  	"top-center, bottom-center, left-center, right-center, center.",
+					  	"top, bottom, left, right, center.",
 			bg        : "Sets the background color of the image. Accepts hex values (without hashtag) or named colors. " ~
 						"You can also use palette and palette0 - palette4 to access colors from the image.",
 			border    : "Sets the border of the image. Accepts width, color, and method. " ~
@@ -235,10 +235,10 @@
 							{ value: "top-right", label: "Top Right" },
 							{ value: "bottom-left", label: "Bottom Left" },
 							{ value: "bottom-right", label: "Bottom Right" },
-							{ value: "top-center", label: "Top Center" },
-							{ value: "bottom-center", label: "Bottom Center" },
-							{ value: "left-center", label: "Left Center" },
-							{ value: "right-center", label: "Right Center" },
+							{ value: "top", label: "Top Center" },
+							{ value: "bottom", label: "Bottom Center" },
+							{ value: "left", label: "Left Center" },
+							{ value: "right", label: "Right Center" },
 							{ value: "center", label: "Center" },
 						]) }}
 						{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
