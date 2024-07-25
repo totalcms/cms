@@ -88,7 +88,7 @@ final class CollectionTable
 		]);
 	}
 
-	private function galleryPreivew(string $id, string $property): string
+	private function galleryPreivew(string $id, string $property, int $count = 0): string
 	{
 		$imageworks = ['w' => 128, 'h' => 128, 'q' => 30, 'fit' => 'crop-focalpoint'];
 		$options    = ['collection' => $this->collection, 'property' => $property];
@@ -101,12 +101,14 @@ final class CollectionTable
 			options: $options
 		);
 
-		return HTMLUtils::element('img', '', [
+		$badge = HTMLUtils::element('span', (string)$count, ['class' => 'image-count']);
+		$image = HTMLUtils::element('img', '', [
 			'src'    => $imageSrc,
 			'alt'    => "{$this->collection} / {$id} / {$property} gallery preview",
 			'width'  => "128",
 			'height' => "128",
 		]);
+		return HTMLUtils::element('div', $image . $badge, ['class' => 'gallery-preview']);
 	}
 
 	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */
@@ -142,7 +144,7 @@ final class CollectionTable
 					return '';
 				}
 
-				return $this->galleryPreivew($id, $property);
+				return $this->galleryPreivew($id, $property, count($value));
 
 			case 'file':
 				return $value['name'];
