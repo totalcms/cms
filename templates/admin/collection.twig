@@ -89,16 +89,22 @@
 
 	{% elseif url.id == "add" %}
 
+		{# New Object Form #}
 		<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>new object</span></h1>
 		{% set form = cms.form.builder(url.collection, {
 			save        : "Save",
 			helpStyle   : 'label',
 			helpOnHover : true,
+			newAction : {
+				"action" : "redirect-object",
+				"link"   : "/admin/collections/#{url.collection}/{id}"
+			},
 		}) %}
 		{{ form.autoBuild() }}
 
 	{% else %}
 
+		{# Edit Object Form #}
 		<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>{{ url.id }}</span></h1>
 		{% set form = cms.form.builder(url.collection, {
 			id          : url.id,
