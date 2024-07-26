@@ -1,3 +1,4 @@
+@import "reset";
 @import "variables";
 
 //------------------------------
@@ -187,14 +188,6 @@
 			box-shadow: none;
 		}
     }
-
-    // & > * {
-    //     margin: 0;
-    // }
-
-    // & + .help {
-    //     margin-top: -0.5rem;
-    // }
 }
 
 .form-group-icon {
