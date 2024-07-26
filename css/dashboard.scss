@@ -218,12 +218,17 @@ body {
 	height           : 3rem;
 	padding          : 0;
 	border           : none;
-	background-color : oklch(var(--totalform-nearblack));
+	background-color : oklch(var(--totalform-gray));
 	mask-image       : var(--icon-dots);
 	mask-repeat      : no-repeat;
 	mask-position    : center;
 	mask-size        : 1.75rem;
 	cursor           : pointer;
+	transition       : background-color 200ms ease-in-out;
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearblack));
+	}
 }
 .collection-table {
 	display: none;
