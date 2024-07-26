@@ -181,8 +181,9 @@ body {
 	}
 	header {
 		display     : flex;
-		gap         : 1rem;
+		gap         : 0.75rem;
 		align-items : end;
+		position    : relative;
 
 		h1 {
 			flex-grow : 1;
@@ -211,7 +212,19 @@ body {
 		border           : 2px solid oklch(var(--totalform-nearblack));
 	}
 }
-
+.dash-action-dots {
+	appearance       : none;
+	width            : 0.5rem;
+	height           : 3rem;
+	padding          : 0;
+	border           : none;
+	background-color : oklch(var(--totalform-nearblack));
+	mask-image       : var(--icon-dots);
+	mask-repeat      : no-repeat;
+	mask-position    : center;
+	mask-size        : 1.75rem;
+	cursor           : pointer;
+}
 .collection-table {
 	display: none;
 }
@@ -288,6 +301,60 @@ body {
 		&:hover, &:focus {
 			background-color : oklch(var(--totalform-nearwhite));
 			outline          : none;
+		}
+	}
+}
+
+#collection-actions  {
+	// eventually this should move to the new CSS Anchor positioning
+	position         : absolute;
+	inset            : unset;
+	top              : 5rem;
+	right            : 2rem;
+	margin           : 1rem 0;
+	background-color : oklch(var(--totalform-white));
+	padding          : 0;
+	border-radius    : var(--totalform-radius);
+	border           : none;
+	box-shadow       : 0 0 10px 2px oklch(var(--totalform-shadow));
+
+	ul {
+		list-style : none;
+		padding    : 0;
+		margin     : 0;
+	}
+	li {
+		--action-icon : var(--icon-logo);
+
+		&.factory { --action-icon : var(--icon-factory) }
+		&.import { --action-icon : var(--icon-import) }
+	}
+	a {
+		display         : flex;
+		align-items     : center;
+		text-decoration : none;
+		color           : oklch(var(--totalform-text-color));
+		padding         : 0.75rem 1rem;
+		// border-radius   : var(--totalform-radius);
+		transition      : background-color 200ms ease-in-out;
+		min-width       : 200px;
+
+		&.active,
+		&:hover {
+			background-color : oklch(var(--totalform-nearwhite));
+		}
+
+		&:before {
+			content          : " ";
+			display          : inline-block;
+			width            : 1rem;
+			height           : 1rem;
+			background-color : oklch(var(--totalform-text-color));
+			mask-image       : var(--action-icon);
+			margin-right     : 0.5rem;
+			mask-size        : 0.8rem;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
 		}
 	}
 }

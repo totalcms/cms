@@ -58,6 +58,13 @@
 			<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>objects</span></h1>
 			<a class="dash-button transparent" href="/admin/collections/{{ url.collection }}/edit" title="Edit Collection">Edit Collection</a>
 			<a class="dash-button" href="/admin/collections/{{ url.collection }}/add" title="Add new object to collection">+ New Object</a>
+			<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
+			<nav popover id="collection-actions">
+				<ul>
+					<li class="factory"><a href="/admin/collections/{{ url.collection }}/factory">Factory</a></li>
+					<li class="import"><a href="/admin/collections/{{ url.collection }}/import">Import</a></li>
+				</ul>
+			</nav>
 		</header>
 
 		{% set objects = cms.objects(url.collection) %}
@@ -70,6 +77,21 @@
 			<p>No objects in this collection yet.</p>
 
 		{% endif %}
+
+	{% elseif url.id == "factory" %}
+
+		{# Factory Import into Collection #}
+		<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>factory</span></h1>
+
+		<p>Factory form goes here...</p>
+
+
+	{% elseif url.id == "import" %}
+
+		{# Import into Collection #}
+		<h1><a href="/admin/collections">collections</a> / <a href="/admin/collections/{{ url.collection }}">{{ url.collection }}</a> / <span>import</span></h1>
+
+		<p>Import form goes here...</p>
 
 	{% elseif url.id == "edit" %}
 
