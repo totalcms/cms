@@ -214,7 +214,7 @@ body {
 }
 .dash-action-dots {
 	appearance       : none;
-	width            : 0.5rem;
+	min-width        : 0.5rem;
 	height           : 3rem;
 	padding          : 0;
 	border           : none;
