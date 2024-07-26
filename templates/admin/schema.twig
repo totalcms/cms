@@ -12,7 +12,7 @@
 		{% set customSchemas = sortByKey(cms.customSchemas()) %}
 		<ul>
 		{% if customSchemas|length == 0 %}
-			<li class="no-schemas" style="padding-left:1rem">No custom schemas</li>
+			<li class="no-schemas">No custom schemas</li>
 		{% else %}
 			{% for schema in customSchemas %}
 			<li class="schema-{{schema.id}}">
