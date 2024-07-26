@@ -63,7 +63,6 @@ esbuild.build({
         // Sass includes
         sassPlugin({
             loadPaths: [
-                "node_modules/choices.js/src/styles/",
                 "node_modules/froala-editor/css/",
                 "node_modules/codemirror/lib/",
                 "node_modules/dropzone/src/",
