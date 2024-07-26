@@ -7,26 +7,7 @@
 	<meta name="robots" content="noindex, nofollow">
 	<title>Total CMS Admin</title>
 
-    <style>
-    html {
-        box-sizing : border-box;
-        font-size  : 100%
-    }
-    *,
-    ::after,
-    ::before {
-        box-sizing : inherit
-    }
-    body {
-        font-family : ui-sans-serif, system-ui, -system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        -webkit-font-smoothing : antialiased;
-    }
-    .container {
-        max-width : 1000px;
-        margin    : 0 auto;
-    }
-    </style>
-
+    <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
 
 	{% block head %}{% endblock %}
@@ -39,12 +20,12 @@
         <aside class="dash-sidebar">
             <nav>
             <ul class="menu">
-                <li class="menu-item"><a class="home" href="/admin" title="Home">Home</a></li>
-                <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}"><a class="schemas" href="/admin/schemas" title="Schemas">Schemas</a></li>
-                <li class="menu-item{% if url.page == 'collections' %} active{% endif %}"><a class="collections" href="/admin/collections" title="Collections">Collections</a></li>
-                <li class="menu-item{% if url.page == 'docs' %} active{% endif %}"><a class="docs" href="/admin/docs" title="Docs">Docs</a></li>
-                <li class="menu-item{% if url.page == 'logs' %} active{% endif %}"><a class="logs" href="/admin/logs" title="Logs">Logs</a></li>
-                <li class="menu-item{% if url.page == 'settings' %} active{% endif %}"><a class="settings" href="/admin/settings" title="Settings">Settings</a></li>
+                <li class="menu-item"><a class="home" href="" title="Home">Home</a></li>
+                <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}"><a class="schemas" href="schemas" title="Schemas">Schemas</a></li>
+                <li class="menu-item{% if url.page == 'collections' %} active{% endif %}"><a class="collections" href="collections" title="Collections">Collections</a></li>
+                <li class="menu-item{% if url.page == 'docs' %} active{% endif %}"><a class="docs" href="docs" title="Docs">Docs</a></li>
+                <li class="menu-item{% if url.page == 'logs' %} active{% endif %}"><a class="logs" href="logs" title="Logs">Logs</a></li>
+                <li class="menu-item{% if url.page == 'settings' %} active{% endif %}"><a class="settings" href="settings" title="Settings">Settings</a></li>
             </ul>
             </nav>
         </aside>

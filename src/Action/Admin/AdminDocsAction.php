@@ -53,6 +53,12 @@ final class AdminDocsAction
 		}
 
 		$data['page'] = $page;
+		$data['url']  = [
+			'path'   => $request->getUri()->getPath(),
+			'query'  => $request->getUri()->getQuery(),
+			'params' => $args,
+			'page'   => 'docs',
+		];
 
 		return $this->twigRenderer->template($response, 'admin/docs.twig', $data);
 	}

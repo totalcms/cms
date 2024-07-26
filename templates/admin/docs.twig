@@ -44,7 +44,7 @@
 		<h3>{{ item.title }}</h3>
 		<ul>
 			{% for sub in item.sub %}
-			<li><a href="/admin/docs/{{ sub.path }}" {% if sub.target is defined %}target="{{ sub.target }}"{% endif %}>{{ sub.title }}</a></li>
+			<li><a href="docs/{{ sub.path }}" {% if sub.target is defined %}target="{{ sub.target }}"{% endif %}>{{ sub.title }}</a></li>
 			{% endfor %}
 		</ul>
 		{% endfor %}
