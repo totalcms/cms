@@ -17,7 +17,11 @@ final class AdminDocsAction
 	) {
 	}
 
-	/** @param array<string,string> $args The routing arguments */
+	/**
+	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 *
+	 * @param array<string,string> $args The routing arguments
+	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -25,24 +29,30 @@ final class AdminDocsAction
 	): ResponseInterface {
 		$page = $args['page'] ?? 'index';
 
+		$data = [];
+
+		$htmlFile = __DIR__ . "/../../../resources/docs/{$page}.html";
 		$markdownFile = __DIR__ . "/../../../resources/docs/{$page}.md";
 
-		if (!file_exists($markdownFile)) {
-			throw new \UnexpectedValueException("Doc Page not found $page");
+		if (file_exists($markdownFile)) {
+			$contents = file_get_contents($markdownFile);
+			if (!$contents) {
+				throw new \UnexpectedValueException("Unable to read Doc Page $page");
+			}
+
+			$parsedown   = new \ParsedownExtra();
+			$frontMatter = FrontMatterChain::create();
+			$document    = $frontMatter->parse($contents);
+
+			$data            = $document->getData();
+			$data['content'] = $parsedown->text($document->getContent());
+		} else if (file_exists($htmlFile)) {
+			$data['content'] = file_get_contents($htmlFile);
+		} else {
+			$data['content'] = "Page not found";
 		}
 
-		$contents = file_get_contents($markdownFile);
-		if (!$contents) {
-			throw new \UnexpectedValueException("Unable to read Doc Page $page");
-		}
-
-		$parsedown   = new \ParsedownExtra();
-		$frontMatter = FrontMatterChain::create();
-		$document    = $frontMatter->parse($contents);
-
-		$data            = $document->getData();
-		$data['content'] = $parsedown->text($document->getContent());
-		$data['page']    = $page;
+		$data['page'] = $page;
 
 		return $this->twigRenderer->template($response, 'admin/docs.twig', $data);
 	}
