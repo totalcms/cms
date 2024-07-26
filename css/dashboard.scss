@@ -8,6 +8,7 @@ body {
 	grid-template-columns : 75px auto;
 	width                 : 100%;
 	height                : 100vh;
+	overflow              : hidden;
 }
 
 .dash-sidebar {
@@ -71,18 +72,17 @@ body {
 	flex-grow             : 1;
 	display               : grid;
 	grid-template-columns : max-content auto;
-	height                : 100%;
 	align-items           : stretch;
 }
 
 .dash-content-sidebar {
-	height             : 100%;
 	display            : grid;
 	grid-template-rows : min-content 1fr min-content;
 	gap                : 1rem;
 	align-content      : start;
 	border-right       : 1px solid oklch(var(--totalform-lightgray));
 	min-width          : 256px;
+	height             : 100vh;
 
 	h3 {
 		color: oklch(var(--totalform-mediumgray));
@@ -97,8 +97,12 @@ body {
 		overflow : auto;
 		padding  : 0 1rem;
 
-		h3:not(:first-child) {
-			margin-top : 1.5rem;
+		h3 {
+			margin-bottom: 0.5rem;
+
+			&:not(:first-child) {
+				margin-top : 1.5rem;
+			}
 		}
 
 		ul {
@@ -159,7 +163,7 @@ body {
 }
 
 .dash-main-content {
-	height             : 100%;
+	height             : 100vh;
 	overflow           : hidden scroll;
 	padding            : 2rem;
 	background-color   : oklch(99% 0 0);
