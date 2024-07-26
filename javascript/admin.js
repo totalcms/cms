@@ -36,5 +36,7 @@ document.addEventListener("DOMContentLoaded", event => {
 	});
 
 	const tables = Array.from(document.getElementsByClassName("collection-table"));
-	tables.forEach(table => new CollectionTable(table));
+	tables.forEach(table => new CollectionTable(table, {
+		limit : 25,
+	}));
 });
