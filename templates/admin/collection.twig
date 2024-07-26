@@ -134,6 +134,10 @@
 			delete      : "Delete",
 			helpStyle   : 'label',
 			helpOnHover : true,
+			deleteAction : {
+				"action" : "redirect",
+				"link"   : "collections/#{url.collection}"
+			},
 		}) %}
 		{{ form.autoBuild() }}
 
