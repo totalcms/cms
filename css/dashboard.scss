@@ -162,6 +162,7 @@ body {
 	}
 }
 
+
 .dash-main-content {
 	height             : 100vh;
 	overflow           : hidden scroll;
@@ -195,6 +196,34 @@ body {
 
 		h1 {
 			flex-grow : 1;
+		}
+	}
+}
+
+.doc-content {
+	display      : block;
+	padding-left : 4rem;
+
+	> *:not(pre) {
+		max-width : 65ch;
+	}
+
+	h1,h2,h3,h4,h5,h6,p,ul,ol,pre {
+		margin-block-start: 1em;
+
+		&:first-child {
+			margin-top: 0;
+		}
+	}
+
+	pre {
+		background-color : oklch(var(--totalform-lightgray));
+		padding          : 1rem;
+		border-radius    : 5px;
+		overflow-x       : auto;
+
+		code {
+			font-family : 'Fira Code', 'Source Code Pro', 'Operator Mono', monospace;
 		}
 	}
 }

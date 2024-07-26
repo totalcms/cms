@@ -85,11 +85,3 @@ textarea:not([rows]) {
 body {
 	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
-
-pre {
-	background-color : oklch(var(--totalform-lightgray));
-	padding          : 1rem;
-	border-radius    : 5px;
-	overflow-x       : auto;
-	font-family      : monospace;
-}
