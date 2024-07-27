@@ -57,8 +57,8 @@ body {
 	.collections {
 		mask-image : var(--icon-collections);
 	}
-	.logs {
-		mask-image : var(--icon-warn);
+	.utils {
+		mask-image : var(--icon-tools);
 	}
 	.settings {
 		mask-image : var(--icon-settings);
@@ -132,6 +132,9 @@ body {
 			&.schema-text { --collection-icon : var(--icon-text) }
 			&.schema-toggle { --collection-icon : var(--icon-toggle) }
 			&.schema-url { --collection-icon : var(--icon-url) }
+			&.logs { --collection-icon : var(--icon-warn) }
+			&.image-batcher { --collection-icon : var(--icon-image) }
+			&.cache-cleaner { --collection-icon : var(--icon-clean) }
 		}
 		a {
 			display         : flex;

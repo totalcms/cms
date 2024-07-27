@@ -9,7 +9,7 @@ use TotalCMS\Renderer\TwigRenderer;
 /**
  * Action.
  */
-final class AdminLogsAction
+final class AdminUtilsAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer
@@ -22,14 +22,16 @@ final class AdminLogsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
+		$page = $args['page'] ?? 'index';
 
-		return $this->twigRenderer->template($response, 'admin/logs.twig', [
-			'url' => [
+		return $this->twigRenderer->template($response, 'admin/utils.twig', [
+			'page' => $page,
+			'url'  => [
 				'path'   => $request->getUri()->getPath(),
 				'query'  => $request->getUri()->getQuery(),
 				'params' => $args,
-				'page'   => 'logs',
-			]
+				'page'   => 'utils',
+			],
 		]);
 	}
 }
