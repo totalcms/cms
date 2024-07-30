@@ -14,7 +14,7 @@ use TotalCMS\Domain\Storage\StorageRepository;
  */
 final class SchemaRepository extends StorageRepository
 {
-	public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../schemas/';
+	public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../resources/schemas/';
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
 	private SchemaFactory $factory;

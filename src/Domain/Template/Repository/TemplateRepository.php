@@ -13,7 +13,7 @@ use TotalCMS\Domain\Template\Service\TemplateFactory;
  */
 final class TemplateRepository extends StorageRepository
 {
-	public const RESERVED_TEMPLATE_DIR    = __DIR__ . '/../../../../templates/';
+	public const RESERVED_TEMPLATE_DIR    = __DIR__ . '/../../../../resources/templates/';
 	public const FILE_EXT                 = '.twig';
 	public const CUSTOM_TEMPLATE_DIR      = 'templates/';
 

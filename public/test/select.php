@@ -18,7 +18,7 @@
 	label       : 'Select Something',
 	help        : 'Choose your selection here.',
 	placeholder : 'Click to Choose Something',
-	field       : 'select',
+	field       : 'multiselect',
 	options     : [
 		{ "value" : "1", "label" : "Custom Option 1" },
 		{ "value" : "2", "label" : "Custom Option 2" },

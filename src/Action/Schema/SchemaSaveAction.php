@@ -10,19 +10,10 @@ use TotalCMS\Transformer\SchemaMetaTransformer;
 
 final class SchemaSaveAction
 {
-	private JsonRenderer $renderer;
-	private SchemaSaver $service;
-
-	/**
-	 * The constructor.
-	 *
-	 * @param JsonRenderer $renderer The renderer
-	 * @param SchemaSaver $service Schema save service
-	 */
-	public function __construct(JsonRenderer $renderer, SchemaSaver $service)
-	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
+	public function __construct(
+		private JsonRenderer $renderer,
+		private SchemaSaver $service
+	) {
 	}
 
 	/**
