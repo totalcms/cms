@@ -129,9 +129,10 @@ abstract class TotalForm
 		protected SchemaLister $schemaLister,
 		public string $api,
 		public string $collection,
-		public string $id          = '',
+		public    string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
+		protected string $buildError  = '',
 		protected string $helpStyle   = '',
 		protected string $save        = '',
 		protected string $delete      = '',
@@ -183,6 +184,15 @@ abstract class TotalForm
 		return $this->build($content);
 	}
 
+	protected function buildError(): string
+	{
+		if (empty($this->buildError)) {
+			return '';
+		}
+
+		return HTMLUtils::element('p', $this->buildError, ['class' => 'form-build-error']);
+	}
+
 	public function build(string $content = ''): string
 	{
 		$attributes = array_filter([
@@ -209,7 +219,7 @@ abstract class TotalForm
 				}
 			}
 		}
-
+		$content  = $this->buildError() . $content;
 		$content .= $this->fieldContent();
 
 		if (!empty($this->save) || !empty($this->delete)) {

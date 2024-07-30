@@ -114,6 +114,7 @@
 		transition       : border-color 200ms ease-in-out;
 		text-align       : left;
 		text-indent      : 2rem;
+		margin           : 0;
 
 		&:hover {
 			border-color : oklch(var(--totalform-lightgray));
@@ -226,6 +227,7 @@
 		mask-size        : 1.1rem;
 		min-width        : 2rem;
 		transition       : mask-size 200ms ease-in-out;
+		margin           : 0;
 
 		&:hover,
 		&:focus-visible {

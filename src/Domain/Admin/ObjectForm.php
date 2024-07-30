@@ -97,7 +97,8 @@ final class ObjectForm extends TotalForm
 		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
 
 		if (is_null($collectionData)) {
-			throw new \Exception('Collection not found for TotalForm');
+			$this->buildError = "Collection {$this->collection} not found for TotalForm";
+			return;
 		}
 
 		$this->collectionData = $collectionData;
