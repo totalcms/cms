@@ -158,6 +158,7 @@
 }
 
 .schema-field {
+	--schema-icon : var(--icon-text);
 	display               : inline-grid;
 	grid-template-columns : max-content auto max-content max-content;
 	padding               : 0.5rem 1rem;
@@ -178,8 +179,6 @@
 	&:has(.form-field.error) {
 		border-color : oklch(var(--totalform-error)) !important;
 	}
-
-	--schema-icon : var(--icon-text);
 
 	&:after {
 		display          : block;

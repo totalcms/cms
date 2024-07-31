@@ -159,10 +159,11 @@
 //------------------------------
 .form-field.id-field {
     .form-group-icon {
+		border-width : 0;
+
 		&:after {
 			mask-image : var(--icon-id);
 		}
-		border-width : 0;
     }
 
     input[type="text"] {
