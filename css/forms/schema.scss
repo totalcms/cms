@@ -1,3 +1,4 @@
+.schemaProperties-field,
 .customProperties-field,
 .properties-field {
 	margin-top : 2rem;
@@ -113,6 +114,7 @@
 		transition       : border-color 200ms ease-in-out;
 		text-align       : left;
 		text-indent      : 2rem;
+		margin           : 0;
 
 		&:hover {
 			border-color : oklch(var(--totalform-lightgray));
@@ -153,104 +155,19 @@
 	dialog {
 		grid-template-rows: auto min-content;
 	}
-
-	&.id-field {
-		--schema-icon : var(--icon-id);
-	}
-	&.text-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.time-field {
-		--schema-icon : var(--icon-time);
-	}
-	&.url-field {
-		--schema-icon : var(--icon-url);
-	}
-	&.hidden-field {
-		--schema-icon : var(--icon-hidden);
-	}
-	&.email-field {
-		--schema-icon : var(--icon-email);
-	}
-	&.phone-field {
-		--schema-icon : var(--icon-tel);
-	}
-	&.password-field {
-		--schema-icon : var(--icon-lock);
-	}
-	&.textarea-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.checkbox-field {
-		--schema-icon : var(--icon-checkbox);
-	}
-	&.toggle-field {
-		--schema-icon : var(--icon-toggle);
-	}
-	&.number-field {
-		--schema-icon : var(--icon-number);
-	}
-	&.color-field {
-		--schema-icon : var(--icon-paint-roller);
-	}
-	&.date-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.datetime-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.select-field {
-		--schema-icon : var(--icon-select);
-	}
-	&.multiselect-field {
-		--schema-icon : var(--icon-select-multi);
-	}
-	&.list-field {
-		--schema-icon : var(--icon-list);
-	}
-	&.range-field {
-		--schema-icon : var(--icon-range);
-	}
-	&.styledtext-field {
-		--schema-icon : var(--icon-styledtext);
-	}
-	&.svg-field {
-		--schema-icon : var(--icon-svg);
-	}
-	&.image-field {
-		--schema-icon : var(--icon-image);
-	}
-	&.gallery-field {
-		--schema-icon : var(--icon-gallery);
-	}
-	&.file-field {
-		--schema-icon : var(--icon-file);
-	}
-	&.depot-field {
-		--schema-icon : var(--icon-depot);
-	}
-	&.radio-field {
-		--schema-icon : var(--icon-radio);
-	}
-	&.deck-field {
-		--schema-icon : var(--icon-deck);
-	}
-	&.json-field {
-		--schema-icon : var(--icon-json);
-	}
 }
 
 .schema-field {
-	display          : flex;
-	align-items      : stretch;
-	margin-bottom    : 0.5rem;
-	padding          : 0.5rem;
-	gap              : 0;
-	border-radius    : var(--totalform-radius);
-	background-color : oklch(var(--totalform-nearwhite));
-	position         : relative;
-	border           : 1px solid oklch(var(--totalform-nearwhite));
-	transition       : border-color 200ms ease-in-out;
+	--schema-icon : var(--icon-text);
+	display               : inline-grid;
+	grid-template-columns : max-content auto max-content max-content;
+	padding               : 0.5rem 1rem;
+	gap                   : 0;
+	border-radius         : var(--totalform-radius);
+	background-color      : oklch(var(--totalform-nearwhite));
+	position              : relative;
+	border                : 1px solid oklch(var(--totalform-nearwhite));
+	transition            : border-color 200ms ease-in-out;
 
 	&:hover {
 		border-color : oklch(var(--totalform-lightgray));
@@ -263,8 +180,6 @@
 		border-color : oklch(var(--totalform-error)) !important;
 	}
 
-	--schema-icon : var(--icon-text);
-
 	&:after {
 		display          : block;
 		content          : " ";
@@ -276,133 +191,145 @@
 		mask-repeat      : no-repeat;
 		position         : absolute;
 		top              : 50%;
-		translate        : 60% -50%;
+		translate        : 125% -50%;
 	}
 
 	> input[type="text"] {
-		flex             : 1;
 		padding          : 0.5rem;
+		min-width        : 250px;
 		height           : 2rem;
 		border           : none;
 		border-radius    : var(--totalform-radius);
 		background-color : oklch(var(--totalform-nearwhite));
 		box-shadow       : none;
 		text-indent      : 2rem;
-		transition       : background-color 300ms;
+		transition       : background-color 200ms ease-in-out;
 
 		&:focus {
 			background-color : oklch(var(--totalform-lightgray) / 50%);
 		}
 
 	}
+	&:hover > input {
+		background-color : oklch(var(--totalform-lightgray) / 50%);
+	}
+
 	> button {
 		appearance       : none;
 		cursor           : pointer;
 		border           : 0px solid oklch(var(--totalform-icon-color));
-		width            : 3em;
-		padding          : 0;
+		padding          : 0 0.5rem 0 0;
 		background-color : oklch(var(--totalform-icon-color));
 		mask-image       : var(--icon-settings);
 		mask-repeat      : no-repeat;
-		mask-position    : center center;
+		mask-position    : center right;
 		mask-size        : 1.1rem;
-		transition       : mask-size 100ms;
+		min-width        : 2rem;
+		transition       : mask-size 200ms ease-in-out;
+		margin           : 0;
 
+		&:hover,
 		&:focus-visible {
 			mask-size : 1.2rem;
 		}
 		&:active {
-			mask-size : 1rem;
+			mask-size : 1.1rem;
 		}
 
+		&.trash {
+			mask-image : var(--icon-trash);
+		}
+		&.duplicate {
+			mask-image : var(--icon-duplicate);
+		}
 	}
 
 	dialog {
 		grid-template-rows: auto min-content;
 	}
+}
 
-	&.id-field {
-		--schema-icon : var(--icon-id);
-	}
-	&.text-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.time-field {
-		--schema-icon : var(--icon-time);
-	}
-	&.url-field {
-		--schema-icon : var(--icon-url);
-	}
-	&.hidden-field {
-		--schema-icon : var(--icon-hidden);
-	}
-	&.email-field {
-		--schema-icon : var(--icon-email);
-	}
-	&.phone-field {
-		--schema-icon : var(--icon-tel);
-	}
-	&.password-field {
-		--schema-icon : var(--icon-lock);
-	}
-	&.textarea-field {
-		--schema-icon : var(--icon-text);
-	}
-	&.checkbox-field {
-		--schema-icon : var(--icon-checkbox);
-	}
-	&.toggle-field {
-		--schema-icon : var(--icon-toggle);
-	}
-	&.number-field {
-		--schema-icon : var(--icon-number);
-	}
-	&.color-field {
-		--schema-icon : var(--icon-paint-roller);
-	}
-	&.date-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.datetime-field {
-		--schema-icon : var(--icon-date);
-	}
-	&.select-field {
-		--schema-icon : var(--icon-select);
-	}
-	&.multiselect-field {
-		--schema-icon : var(--icon-select-multi);
-	}
-	&.list-field {
-		--schema-icon : var(--icon-list);
-	}
-	&.range-field {
-		--schema-icon : var(--icon-range);
-	}
-	&.styledtext-field {
-		--schema-icon : var(--icon-styledtext);
-	}
-	&.svg-field {
-		--schema-icon : var(--icon-svg);
-	}
-	&.image-field {
-		--schema-icon : var(--icon-image);
-	}
-	&.gallery-field {
-		--schema-icon : var(--icon-gallery);
-	}
-	&.file-field {
-		--schema-icon : var(--icon-file);
-	}
-	&.depot-field {
-		--schema-icon : var(--icon-depot);
-	}
-	&.radio-field {
-		--schema-icon : var(--icon-radio);
-	}
-	&.deck-field {
-		--schema-icon : var(--icon-deck);
-	}
-	&.json-field {
-		--schema-icon : var(--icon-json);
-	}
+.id-field {
+	--schema-icon : var(--icon-id);
+}
+.text-field {
+	--schema-icon : var(--icon-text);
+}
+.time-field {
+	--schema-icon : var(--icon-time);
+}
+.url-field {
+	--schema-icon : var(--icon-url);
+}
+.hidden-field {
+	--schema-icon : var(--icon-hidden);
+}
+.email-field {
+	--schema-icon : var(--icon-email);
+}
+.phone-field {
+	--schema-icon : var(--icon-tel);
+}
+.password-field {
+	--schema-icon : var(--icon-lock);
+}
+.textarea-field {
+	--schema-icon : var(--icon-text);
+}
+.checkbox-field {
+	--schema-icon : var(--icon-checkbox);
+}
+.toggle-field {
+	--schema-icon : var(--icon-toggle);
+}
+.number-field {
+	--schema-icon : var(--icon-number);
+}
+.color-field {
+	--schema-icon : var(--icon-paint-roller);
+}
+.date-field {
+	--schema-icon : var(--icon-date);
+}
+.datetime-field {
+	--schema-icon : var(--icon-date);
+}
+.select-field {
+	--schema-icon : var(--icon-select);
+}
+.multiselect-field {
+	--schema-icon : var(--icon-select-multi);
+}
+.list-field {
+	--schema-icon : var(--icon-list);
+}
+.range-field {
+	--schema-icon : var(--icon-range);
+}
+.styledtext-field {
+	--schema-icon : var(--icon-styledtext);
+}
+.svg-field {
+	--schema-icon : var(--icon-svg);
+}
+.image-field {
+	--schema-icon : var(--icon-image);
+}
+.gallery-field {
+	--schema-icon : var(--icon-gallery);
+}
+.file-field {
+	--schema-icon : var(--icon-file);
+}
+.depot-field {
+	--schema-icon : var(--icon-depot);
+}
+.radio-field {
+	--schema-icon : var(--icon-radio);
+}
+.deck-field {
+	--schema-icon : var(--icon-deck);
+}
+.json-field {
+	--schema-icon : var(--icon-json);
 }

@@ -10,7 +10,6 @@ export default class PropertyField {
 		this.container = container;
 		this.container.totalfield = this;
 
-		this.name   = this.container.querySelector('[name=property]').value;
 		this.dialog = this.setupDialog();
     }
 
@@ -35,6 +34,10 @@ export default class PropertyField {
 		this.accordion = new Details(details);
 	}
 
+	getName(){
+		return this.container.querySelector('[name=property]').value;
+	}
+
 	getValue() {
 		const fields = this.container.getElementsByClassName("form-field");
 		const properties = {};
@@ -44,6 +47,11 @@ export default class PropertyField {
 			if (value) {
 				properties[field.totalfield.property] = value;
 			}
+		}
+		if (properties.extra && typeof properties.extra === "object") {
+			// Merge properties.extra into properties
+			Object.assign(properties, properties.extra);
+			delete properties.extra;
 		}
 		return properties;
 	}

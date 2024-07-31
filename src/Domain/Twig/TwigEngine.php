@@ -56,7 +56,6 @@ final class TwigEngine
 		try {
 			$string = $this->twig->render($templateName, $data);
 		} catch (\Exception $e) {
-			// throw new \DomainException("Error rendering template: $templateName - " . $e->getMessage());
 			$string = "<!-- Error rendering template: $templateName - " . $e->getMessage() . '-->';
 		}
 
@@ -68,6 +67,10 @@ final class TwigEngine
 	{
 		$twig = $this->twig->createTemplate($template);
 
-		return $twig->render($data);
+		try {
+			return $twig->render($data);
+		} catch (\Exception $e) {
+			throw $e->getPrevious() ?? $e;
+		}
 	}
 }

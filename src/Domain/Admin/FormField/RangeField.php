@@ -19,7 +19,7 @@ final class RangeField extends FormField
 	public function buildFormField(): string
 	{
 		$attributes = $this->formFieldAttributes();
-		$input = HTMLUtils::inlineElement('input', $attributes);
+		$input      = HTMLUtils::inlineElement('input', $attributes);
 
 		$rangeValue = HTMLUtils::element('div', $this->value, [
 			'class' => 'range-value',

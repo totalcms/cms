@@ -11,17 +11,24 @@ use TotalCMS\Renderer\TwigRenderer;
  */
 final class AdminIndexAction
 {
-	private TwigRenderer $twigRenderer;
-
-	public function __construct(TwigRenderer $twigRenderer)
-	{
-		$this->twigRenderer = $twigRenderer;
+	public function __construct(
+		private TwigRenderer $twigRenderer
+	) {
 	}
 
+	/** @param array<string,string> $args The routing arguments */
 	public function __invoke(
 		ServerRequestInterface $request,
-		ResponseInterface $response
+		ResponseInterface $response,
+		array $args,
 	): ResponseInterface {
-		return $this->twigRenderer->template($response, 'admin/index.twig');
+		return $this->twigRenderer->template($response, 'admin/index.twig', [
+			'url' => [
+				'path'   => $request->getUri()->getPath(),
+				'query'  => $request->getUri()->getQuery(),
+				'params' => $args,
+				'page'   => 'index',
+			]
+		]);
 	}
 }

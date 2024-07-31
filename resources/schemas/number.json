@@ -1,0 +1,31 @@
+{
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/number.json",
+    "id"          : "number",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Number object",
+    "properties"  : {
+        "id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Number ID",
+			"help"    : "A unique ID for this number. No spaces or special characters.",
+			"field"   : "id",
+			"factory" : "slug"
+        },
+        "number": {
+			"type"    : "number",
+			"label"   : "Number",
+			"help"    : "Enter your number.",
+			"field"   : "number",
+			"factory" : "randomDigit"
+        }
+    },
+    "required": [
+        "id",
+        "number"
+    ],
+    "index": [
+        "id",
+        "number"
+    ]
+}

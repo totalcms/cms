@@ -8,7 +8,7 @@ namespace TotalCMS\Domain\Property\Data;
 class ListData extends PropertyData
 {
 	/** @param array<string> $list */
-	public function __construct(public array $list)
+	public function __construct(public array $list = [])
 	{
 		if (!self::verifyList($list)) {
 			throw new \InvalidArgumentException('List must be a list:' . json_encode($list));

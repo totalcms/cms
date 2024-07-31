@@ -14,28 +14,31 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  */
 final class CollectionForm extends TotalForm
 {
-
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
 	 * @param array<string,string> $newAction
 	 * @param array<string,string> $editAction
+	 * @param array<string,string> $deleteAction
+	 *
 	 */
 	public function __construct(
 		protected CollectionFetcher $collectionFetcher,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
-		public    string $api,
-		public    string $id        = '',
-		protected string $method    = 'POST',
-		protected string $class     = '',
-		protected string $helpStyle = '',
-		protected string $save      = '',
-		protected array $editAction = [],
-		protected array $newAction  = [
+		public string $api,
+		public    string $id          = '',
+		protected string $method      = 'POST',
+		protected string $class       = '',
+		protected string $helpStyle   = '',
+		protected string $save        = '',
+		protected string $delete      = '',
+		protected array $deleteAction = [],
+		protected array $editAction   = [],
+		protected array $newAction    = [
 			'action' => 'redirect-object',
-			'link'   => '?id='
+			'link'   => '?id=',
 		],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
@@ -56,11 +59,9 @@ final class CollectionForm extends TotalForm
 			$this->route  = '/collections/' . $this->id;
 			$this->method = 'PUT';
 		}
-		$this->delete     = ''; // do not allow delete
 		$this->formType   = 'collection';
 		$this->schema     = 'collection';
 		$this->schemaData = $this->schemaFetcher->fetchSchema($this->schema);
-		$this->autoBuild();
 	}
 
 	private function initCollectionData(): void
@@ -68,7 +69,7 @@ final class CollectionForm extends TotalForm
 		$collectionData = $this->collectionFetcher->fetchCollection($this->id);
 
 		if (is_null($collectionData)) {
-			// throw new \Exception('Collection not found for TotalForm');
+			$this->buildError = "Collection {$this->id} not found for TotalForm";
 			return;
 		}
 
@@ -99,6 +100,7 @@ final class CollectionForm extends TotalForm
 		$schemas = $this->schemaLister->listReservedSchemas();
 		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
 		$ignore  = ['collection', 'schema'];
+
 		return array_filter($schemas, fn ($schema) => !in_array($schema, $ignore));
 	}
 
@@ -119,7 +121,7 @@ final class CollectionForm extends TotalForm
 	{
 		// Get the schema settings for a property
 		$defaults = $this->schemaData->properties[$name] ?? [];
-		$defaults = $this->filterFieldProperties($defaults);
+		$defaults = TotalForm::filterFieldProperties($defaults);
 
 		$options  = array_merge($defaults, $options);
 

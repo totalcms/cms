@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Utils\HTMLUtils;
 
 final class GalleryField extends ImageField
 {
@@ -28,7 +28,7 @@ final class GalleryField extends ImageField
 
 			$previewAttrs = ['class' => 'image-preview'];
 			if ($image['featured'] ?? false) {
-				$previewAttrs['class'] .= " featured";
+				$previewAttrs['class'] .= ' featured';
 			}
 			$previews .= HTMLUtils::element('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
 		}
@@ -37,7 +37,7 @@ final class GalleryField extends ImageField
 		$input = HTMLUtils::inlineElement('input', [
 			'id'   => 'field-' . $this->uuid,
 			'type' => 'hidden',
-			'name' => $this->name
+			'name' => $this->name,
 		]);
 		$overlay = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
 
@@ -45,19 +45,19 @@ final class GalleryField extends ImageField
 		$linkDialog      = $this->linkDialog();
 		$imageDialog     = $this->imageDialog('', []);
 		$previewTemplate = HTMLUtils::element('div', $imagePreview . $imageDialog . $linkDialog, [
-			'class' => 'image-preview'
+			'class' => 'image-preview',
 		]);
 
 		$template = HTMLUtils::element('template', $previewTemplate, [
-			'id' => 'template-' . $this->uuid
+			'id' => 'template-' . $this->uuid,
 		]);
 
 		$uploadButton = HTMLUtils::element('button', '', [
 			'type'  => 'button',
-			'title' => 'Upload New Image'
+			'title' => 'Upload New Image',
 		]);
 		$uploadButton = HTMLUtils::element('div', $uploadButton, [
-			'class' => 'gallery-upload dz-clickable'
+			'class' => 'gallery-upload dz-clickable',
 		]);
 
 		return $input . $overlay . $previews . $template . $uploadButton;

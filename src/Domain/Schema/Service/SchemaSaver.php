@@ -22,6 +22,28 @@ final class SchemaSaver
 	}
 
 	/**
+	 * @param array<string,mixed> $schemaData
+	 *
+	 * @throws \UnexpectedValueException
+	 *
+	 * @return SchemaData
+	 */
+	public function updateSchema(string $schemaId, array $schemaData): SchemaData
+	{
+		if ($schemaId !== $schemaData['id']) {
+			throw new \UnexpectedValueException('Schema ID does not match');
+		}
+
+		$schema = $this->storage->getSchema($schemaId);
+
+		if (!$schema instanceof SchemaData) {
+			throw new \UnexpectedValueException('Unable to locate schema to update');
+		}
+
+		return $this->saveSchema($schemaData);
+	}
+
+	/**
 	 * Save a schema.
 	 *
 	 * @param array<string,mixed> $schemaData
@@ -32,10 +54,19 @@ final class SchemaSaver
 	 */
 	public function saveSchema(array $schemaData): SchemaData
 	{
-		$schema = $this->factory->generateSchema($schemaData);
+		$schemaData['properties'] = $this->propertyTypeToRef($schemaData['properties']);
+		$schema                   = $this->factory->generateSchema($schemaData);
 
 		if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, $this->storage->reservedSchemasIds())) {
 			throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
+		}
+
+		// Ensure that the ID is required and indexed
+		if (!in_array('id', $schema->required)) {
+			$schema->required[] = 'id';
+		}
+		if (!in_array('id', $schema->index)) {
+			$schema->index[] = 'id';
 		}
 
 		// This is not in Repository in order to prevent circular dependency
@@ -46,5 +77,23 @@ final class SchemaSaver
 		$this->storage->saveSchema($schema);
 
 		return $schema;
+	}
+
+	/**
+	 * @param array<string,array<string,mixed>> $properties
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function propertyTypeToRef(array $properties): array
+	{
+		// Convert property types to $ref when possible
+		foreach ($properties as $key => $options) {
+			if (isset($options['type']) && array_key_exists($options['type'], SchemaData::PROPERTY_TYPE_TO_REF)) {
+				$properties[$key]['$ref'] = SchemaData::PROPERTY_TYPE_TO_REF[$options['type']];
+				unset($properties[$key]['type']);
+			}
+		}
+
+		return $properties;
 	}
 }

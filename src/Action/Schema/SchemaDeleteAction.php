@@ -5,14 +5,14 @@ namespace TotalCMS\Action\Schema;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Schema\Service\SchemaRemover;
+use TotalCMS\Renderer\JsonRenderer;
 
 final class SchemaDeleteAction
 {
-	private SchemaRemover $schemaRemover;
-
-	public function __construct(SchemaRemover $service)
-	{
-		$this->schemaRemover = $service;
+	public function __construct(
+		private JsonRenderer $renderer,
+		private SchemaRemover $remover
+	) {
 	}
 
 	/**
@@ -26,12 +26,12 @@ final class SchemaDeleteAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$deleted = $this->schemaRemover->deleteSchema($args['id']);
+		$deleted = $this->remover->deleteSchema($args['id']);
 
 		if ($deleted === false) {
 			return $response->withStatus(500);
 		}
 
-		return $response;
+		return $this->renderer->json($response, ['deleted' => $deleted]);
 	}
 }

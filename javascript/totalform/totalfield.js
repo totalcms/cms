@@ -45,6 +45,19 @@ export default class TotalField {
 		this.input.addEventListener("input", () => this.changed());
 	}
 
+	cleanupDuplicateOptions() {
+		const container = this.container.querySelector("select,datalist");
+		if (!container) return;
+		const options = Array.from(container.querySelectorAll("option"));
+		const values = [];
+		options.forEach((option) => {
+			if (values.includes(option.value)) {
+				return option.remove();
+			}
+			values.push(option.value);
+		});
+	}
+
 	sortOptions() {
 		const container = this.container.querySelector("select,datalist");
 		if (!container) return;
@@ -55,11 +68,14 @@ export default class TotalField {
 				options.sort((a, b) => a.text.localeCompare(b.text));
 				options.forEach((option) => optgroup.appendChild(option));
 			});
+			this.cleanupDuplicateOptions();
 			return;
 		}
 		const options = Array.from(container.querySelectorAll("option"));
 		options.sort((a, b) => a.text.localeCompare(b.text));
 		options.forEach((option) => container.appendChild(option));
+
+		this.cleanupDuplicateOptions();
 
 		const placeholder = container.querySelector(".placeholder");
 		if (placeholder) container.insertBefore(placeholder, container.firstChild);

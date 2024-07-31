@@ -30,7 +30,7 @@ abstract class TotalForm
 	public SchemaData $schemaData;
 
 	public const FIELDS_BY_TYPE = [
-		"Text Fields" => [
+		'Text Fields' => [
 			'email',
 			'hidden',
 			'json',
@@ -44,23 +44,23 @@ abstract class TotalForm
 			'time',
 			'url',
 		],
-		"Boolean Fields" => [
+		'Boolean Fields' => [
 			'checkbox',
 			'toggle',
 		],
-		"Number Fields" => [
+		'Number Fields' => [
 			'number',
 			'range',
 		],
-		"Date Fields" => [
+		'Date Fields' => [
 			'date',
 			'datetime',
 		],
-		"Array Fields" => [
+		'Array Fields' => [
 			'list',
 			'muiltiselect',
 		],
-		"Special Fields" => [
+		'Special Fields' => [
 			'color',
 			'deck',
 			'depot',
@@ -103,7 +103,7 @@ abstract class TotalForm
 		'url',
 	];
 
-	public const FIELD_PROPERTIES = [
+	public const PROPERTY_FIELDS = [
 		'default',
 		'field',
 		'help',
@@ -127,11 +127,12 @@ abstract class TotalForm
 		protected IndexReader $collectionReader,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
-		public    string $api,
-		public    string $collection,
-		public    string $id          = '',
+		public string $api,
+		public string $collection,
+		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
+		protected string $buildError  = '',
 		protected string $helpStyle   = '',
 		protected string $save        = '',
 		protected string $delete      = '',
@@ -183,6 +184,15 @@ abstract class TotalForm
 		return $this->build($content);
 	}
 
+	protected function buildError(): string
+	{
+		if (empty($this->buildError)) {
+			return '';
+		}
+
+		return HTMLUtils::element('p', $this->buildError, ['class' => 'cms-twig-error']);
+	}
+
 	public function build(string $content = ''): string
 	{
 		$attributes = array_filter([
@@ -209,7 +219,7 @@ abstract class TotalForm
 				}
 			}
 		}
-
+		$content  = $this->buildError() . $content;
 		$content .= $this->fieldContent();
 
 		if (!empty($this->save) || !empty($this->delete)) {
@@ -318,11 +328,23 @@ abstract class TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function filterFieldProperties(array $properties): array
+	public static function filterFieldProperties(array $properties): array
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => in_array($key, self::FIELD_PROPERTIES), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+	}
+
+	/**
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterExtraFields(array $properties): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($properties, fn ($key) => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -350,6 +372,7 @@ abstract class TotalForm
 	public function field(string $name, array $options = []): string
 	{
 		$field = $this->createDynamicField($name, $options);
+
 		return $field->build();
 	}
 
@@ -362,6 +385,7 @@ abstract class TotalForm
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
 			return new $typeClass(...$options);
 		}
+
 		return new FormField(...$options);
 	}
 
@@ -376,12 +400,13 @@ abstract class TotalForm
 	/** @return array<string,mixed> */
 	public function propertiesForSchema(): array
 	{
-		$schema = $this->collectionData->schema;
+		$schema     = $this->collectionData->schema;
 		$schemaData = $this->schemaFetcher->fetchSchema($schema);
 		$properties = $schemaData->properties;
 		foreach ($properties as $property => $options) {
-			$properties[$property] = $this->filterFieldProperties($options);
+			$properties[$property] = self::filterFieldProperties($options);
 		}
+
 		return $properties;
 	}
 

@@ -1,0 +1,29 @@
+{
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/depot.json",
+    "id"          : "depot",
+    "description" : "A schema for a Total CMS Depot object",
+    "type"        : "object",
+    "properties"  : {
+        "id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Depot ID",
+			"help"    : "A unique ID for this depot. No spaces or special characters.",
+			"field"   : "id",
+			"factory" : "slug"
+        },
+        "files": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/depot.json",
+			"label"   : "Files",
+			"help"    : "Drag and drop files here.",
+			"type"    : "depot"
+        }
+    },
+    "required": [
+        "id"
+    ],
+    "index": [
+        "id",
+        "files"
+    ]
+}

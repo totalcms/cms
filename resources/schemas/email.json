@@ -1,0 +1,31 @@
+{
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/email.json",
+    "id"          : "email",
+    "description" : "A schema for a Total CMS Email object",
+    "type"        : "object",
+    "properties"  : {
+        "id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Email ID",
+			"help"    : "A unique ID for this email. No spaces or special characters.",
+			"field"   : "id",
+			"factory" : "slug"
+        },
+        "email": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/email.json",
+			"label"   : "Email",
+			"help"    : "The email to use.",
+			"field"   : "email",
+			"factory" : "email"
+        }
+    },
+    "required": [
+        "id",
+        "email"
+    ],
+    "index": [
+        "id",
+        "email"
+    ]
+}

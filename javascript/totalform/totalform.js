@@ -17,12 +17,12 @@ import ImageField from './image';
 import GalleryField from './gallery';
 import PropertiesField from './properties';
 import CustomPropertiesField from './customProperties';
+import SchemaPropertiesField from './schemaProperties';
 import JSONField from './json';
 
 // import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
 // import MarkdownField from './markdown';
-// import Schema from './schema';
 
 //-----------------------------------------------
 // Total CMS Form constructor
@@ -278,6 +278,9 @@ export default class TotalForm {
 			case "customProperties":
 				return new CustomPropertiesField(field,options);
 
+			case "schemaProperties":
+				return new SchemaPropertiesField(field,options);
+
             default:
                 console.warn("Unknown field",field);
 				return new TotalField(field, options);
@@ -324,7 +327,16 @@ export default class TotalForm {
             this.options.editAction = "redirect";
             this.options.editLink   = location.origin + location.pathname;
 
-            this.api.postAPI(`/collections/${this.collection}/${this.id}`, {}, "DELETE")
+			let deleteAPI = `/collections/${this.collection}/${this.id}`;
+
+			if (this.isSchemaForm()) {
+				deleteAPI = `/schemas/${this.id}`;
+			}
+			if (this.isCollectionForm()) {
+				deleteAPI = `/collections/${this.id}`;
+			}
+
+            this.api.postAPI(deleteAPI, {}, "DELETE")
                 .then(response => this.runDeleteAction(response))
                 .catch(error => this.error(error));
         }
@@ -362,7 +374,12 @@ export default class TotalForm {
                 location.reload(true);
                 break;
             case "redirect-object":
-                document.location = action.link+this.id;
+				const link = decodeURI(action.link);
+				if (link.match("{id}"))  {
+					document.location = link.replace("{id}",this.id);
+				} else {
+					document.location = link+this.id;
+				}
                 break;
             case "redirect":
                 document.location = action.link;

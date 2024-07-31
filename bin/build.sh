@@ -29,7 +29,7 @@ find vendor -name test -type d | xargs rm -rf
 echo "Moving required files to dist..."
 rm -rf dist
 mkdir dist
-cp -r config public resources schemas src templates vendor autoload.php .htaccess dist
+cp -r config public resources src vendor autoload.php .htaccess dist
 
 # remove all public dev/test files
 rm -rf dist/public/test

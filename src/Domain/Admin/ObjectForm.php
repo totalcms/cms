@@ -2,18 +2,6 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Admin\FormField\DeleteButton;
-use TotalCMS\Domain\Admin\FormField\FormField;
-use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Utils\HTMLUtils;
-
 /**
  * Total Form Builder.
  */
@@ -84,7 +72,7 @@ final class ObjectForm extends TotalForm
 
 		$defaults = array_merge($schema, $collection);
 
-		return $this->filterFieldProperties($defaults);
+		return TotalForm::filterFieldProperties($defaults);
 	}
 
 	/**
@@ -101,7 +89,7 @@ final class ObjectForm extends TotalForm
 		// Get the schema and collection settings for a property
 		$properties = $this->collectionData->customProperties[$this->id][$property] ?? [];
 
-		return $this->filterFieldProperties($properties);
+		return TotalForm::filterFieldProperties($properties);
 	}
 
 	private function initCollectionData(): void
@@ -109,7 +97,8 @@ final class ObjectForm extends TotalForm
 		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
 
 		if (is_null($collectionData)) {
-			throw new \Exception('Collection not found for TotalForm');
+			$this->buildError = "Collection {$this->collection} not found for TotalForm";
+			return;
 		}
 
 		$this->collectionData = $collectionData;

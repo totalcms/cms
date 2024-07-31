@@ -21,14 +21,12 @@ class PropertyField
 		protected string $label       = '',
 		protected string $help        = '',
 		protected string $placeholder = '',
-		protected string $factory     = '',
-		protected string $default     = '',
 		protected array $options      = [],
 		protected array $settings     = [],
 	) {
 	}
 
-	private function buildDialog(): string
+	protected function buildFormInfo(): string
 	{
 		$formInfo = $this->form->field('field', [
 			'field'       => 'select',
@@ -61,8 +59,12 @@ class PropertyField
 			'help'        => 'The help text that will be added to the field form',
 			'value'       => $this->help,
 		]);
-		$formInfo = HTMLUtils::details('Form Info', $formInfo);
 
+		return HTMLUtils::details('Form Info', $formInfo);
+	}
+
+	protected function buildSettingsOptions(): string
+	{
 		$settings = $this->form->field('settings', [
 			'field'       => 'json',
 			'label'       => 'Settings',
@@ -77,11 +79,18 @@ class PropertyField
 			'help'        => 'The options for select fields and datalists in valid JSON format.',
 			'value'       => empty($this->options) ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
 		]);
-		$settings = HTMLUtils::details('Settings &amp; Options', $settings);
+
+		return HTMLUtils::details('Settings &amp; Options', $settings);
+	}
+
+	protected function buildDialog(string $content = ''): string
+	{
+		$content .= $this->buildFormInfo();
+		$content .= $this->buildSettingsOptions();
 
 		$close = HTMLUtils::button('Close', ['class' => 'close']);
 
-		$content  = HTMLUtils::scroller($formInfo . $settings);
+		$content  = HTMLUtils::scroller($content);
 		$content .= HTMLUtils::element('section', $close);
 
 		return HTMLUtils::dialog($content, 'small');
@@ -100,7 +109,7 @@ class PropertyField
 		$button = HTMLUtils::element('button', $this->property, ['type' => 'button']);
 		$input  = HTMLUtils::inlineElement('input', $inputAttributes);
 		$field  = HTMLUtils::element('div', $input . $button . $dialog, [
-			'class' => "property-field {$this->field}-field"
+			'class' => "property-field {$this->field}-field",
 		]);
 
 		return $field;

@@ -35,6 +35,10 @@ $settings['sentry'] = [
 		// Set a sampling rate for profiling - this is relative to traces_sample_rate
 		'profiles_sample_rate' => 1.0,
 	],
+	'ignore_exceptions' => [
+		Slim\Exception\HttpNotFoundException::class,
+		Slim\Exception\HttpMethodNotAllowedException::class,
+	],
 ];
 
 // Default env to production

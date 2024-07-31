@@ -22,7 +22,7 @@ export default class Identifier extends TotalField {
 			this.disable();
 			this.valid = false;
 		}
-		if (this.getValue() === "") {
+		if (this.getValue() === "" && this.options.autogen) {
 			this.setValue(this.autogenId());
 		}
     }
@@ -118,8 +118,12 @@ export default class Identifier extends TotalField {
 	}
 
     validateIdExists() {
-		const id = this.getValue();
+		// slugify the value to ensure it's a valid ID
+		const id = this.slugify(this.getValue());
 		if (!id) return;
+
+		// Set the slugified value
+		this.setValue(id);
 
 		let api = `/collections/${this.form.collection}/${id}`;
 

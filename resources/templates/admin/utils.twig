@@ -1,0 +1,46 @@
+{% extends "admin-dashboard.twig" %}
+
+{% set menu = [
+	{
+		"title" : "Cache Cleaner",
+		"path"  : "cache-cleaner",
+	},
+	{
+		"title" : "Image Batcher",
+		"path"  : "image-batcher",
+	},
+	{
+		"title" : "Log Analyzer",
+		"path"  : "logs",
+	},
+] %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter utils" />
+	</header>
+
+	<nav class="links">
+		<ul>
+		{% for item in menu %}
+			<li class="{{ item.path }}">
+				<a {% if page == item.path %}class="active"{% endif %}
+					href="utils/{{ item.path }}">{{ item.title }}</a>
+			</li>
+		{% endfor %}
+		</ul>
+	</nav>
+
+	<footer>
+	</footer>
+</aside>
+
+<main class="dash-main-content">
+
+	{% include "admin/utils/" ~ page ~ ".twig" %}
+
+</main>
+
+{% endblock %}

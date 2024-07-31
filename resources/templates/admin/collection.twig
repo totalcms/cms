@@ -1,0 +1,147 @@
+{% extends "admin-dashboard.twig" %}
+
+{% set collectionIndex %}
+	<h1>Collection Help</h1>
+	<p>Choose a collection to edit or create a new one.</p>
+{% endset %}
+
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter collections" />
+	</header>
+
+	<nav class="links">
+		<ul>
+			{% for collection in sortByKey(cms.collections()) %}
+
+				<li class="schema-{{collection.schema}}">
+					<a {% if url.collection == collection.id %}class="active"{% endif %}
+						href="collections/{{ collection.id }}"
+						title="{{ collection.description }}">{{ collection.name }}</a>
+				</li>
+
+			{% endfor %}
+		</ul>
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="collections/new" title="Create a new collection">+ New Collection</a>
+	</footer>
+</aside>
+
+<main class="dash-main-content">
+	{% if url.collection is empty %}
+
+		{% include "admin/collection-index.twig" %}
+
+	{% elseif url.collection == "new" %}
+
+		{# New Collection Form #}
+		<h1><a href="collections">collections</a> / <span>new</span></h1>
+		{{ cms.form.collection({
+			save        : "Save",
+			helpStyle   : 'label',
+			helpOnHover : true,
+			newAction : {
+				"action" : "redirect-object",
+				"link"   : "collections/{id}/edit"
+			},
+		}) }}
+
+	{% elseif url.id is empty %}
+
+		{# Collection Object Table #}
+		<header>
+			<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>objects</span></h1>
+			<a class="dash-button transparent" href="collections/{{ url.collection }}/edit" title="Edit Collection">Edit Collection</a>
+			<a class="dash-button" href="collections/{{ url.collection }}/add" title="Add new object to collection">+ New Object</a>
+			<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
+			<nav popover id="collection-actions">
+				<ul>
+					<li class="factory"><a href="collections/{{ url.collection }}/factory">Factory</a></li>
+					<li class="import"><a href="collections/{{ url.collection }}/import">Import</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		{% set objects = cms.objects(url.collection) %}
+		{% if objects|length > 0 %}
+
+			{{ cms.form.collectionTable(url.collection) }}
+
+		{% else %}
+
+			<p>No objects in this collection yet.</p>
+
+		{% endif %}
+
+	{% elseif url.id == "factory" %}
+
+		{# Factory Import into Collection #}
+		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>factory</span></h1>
+
+		<p>Factory form goes here...</p>
+
+
+	{% elseif url.id == "import" %}
+
+		{# Import into Collection #}
+		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>import</span></h1>
+
+		<p>Import form goes here...</p>
+
+	{% elseif url.id == "edit" %}
+
+		{# Edit Collection #}
+		<h1><a href="collections">collections</a> / <span>{{ url.collection }}</span></h1>
+		{{ cms.form.collection({
+			id          : url.collection,
+			save        : "Save",
+			delete      : "Delete",
+			helpStyle   : 'label',
+			helpOnHover : true,
+			deleteAction : {
+				"action" : "redirect",
+				"link"   : "collections"
+			},
+		}) }}
+
+	{% elseif url.id == "add" %}
+
+		{# New Object Form #}
+		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>new object</span></h1>
+		{% set form = cms.form.builder(url.collection, {
+			save        : "Save",
+			helpStyle   : 'label',
+			helpOnHover : true,
+			newAction : {
+				"action" : "redirect-object",
+				"link"   : "collections/#{url.collection}/{id}"
+			},
+		}) %}
+		{{ form.autoBuild() }}
+
+	{% else %}
+
+		{# Edit Object Form #}
+		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>{{ url.id }}</span></h1>
+		{% set form = cms.form.builder(url.collection, {
+			id          : url.id,
+			save        : "Save",
+			delete      : "Delete",
+			helpStyle   : 'label',
+			helpOnHover : true,
+			deleteAction : {
+				"action" : "redirect",
+				"link"   : "collections/#{url.collection}"
+			},
+		}) %}
+		{{ form.autoBuild() }}
+
+	{% endif %}
+</main>
+
+{% endblock %}

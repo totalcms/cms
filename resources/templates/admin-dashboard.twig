@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+	<meta name="robots" content="noindex, nofollow">
+	<title>Total CMS Admin</title>
+
+    <base href="{{ cms.api }}/admin/">
+	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
+
+	{% block head %}{% endblock %}
+</head>
+<body>
+
+    {% block content %}
+
+    <div class="admin-dashboard">
+        <aside class="dash-sidebar">
+            <nav>
+            <ul class="menu">
+                <li class="menu-item"><a class="home" href="" title="Home">Home</a></li>
+                <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}"><a class="schemas" href="schemas" title="Schemas">Schemas</a></li>
+                <li class="menu-item{% if url.page == 'collections' %} active{% endif %}"><a class="collections" href="collections" title="Collections">Collections</a></li>
+                <li class="menu-item{% if url.page == 'docs' %} active{% endif %}"><a class="docs" href="docs" title="Docs">Docs</a></li>
+                <li class="menu-item{% if url.page == 'utils' %} active{% endif %}"><a class="utils" href="utils" title="Utils">Utils</a></li>
+                <li class="menu-item{% if url.page == 'settings' %} active{% endif %}"><a class="settings" href="settings" title="Settings">Settings</a></li>
+            </ul>
+            </nav>
+        </aside>
+        <section class="dash-content">
+
+        	{% block dashcontent %}{% endblock %}
+
+        </section>
+    </div>
+
+    {% endblock %}
+
+
+	<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
+
+	{% block bodyBelow %}{% endblock %}
+</body>
+</html>

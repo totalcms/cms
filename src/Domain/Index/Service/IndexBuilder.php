@@ -12,15 +12,11 @@ use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
  */
 final class IndexBuilder
 {
-	private IndexRepository $storage;
-	private ObjectFetcher $objectFetcher;
-	private CollectionSchemaFetcher $schemaFetcher;
-
-	public function __construct(IndexRepository $storage, ObjectFetcher $objectFetcher, CollectionSchemaFetcher $schemaFetcher)
-	{
-		$this->storage       = $storage;
-		$this->objectFetcher = $objectFetcher;
-		$this->schemaFetcher = $schemaFetcher;
+	public function __construct(
+		private IndexRepository $storage,
+		private ObjectFetcher $objectFetcher,
+		private CollectionSchemaFetcher $schemaFetcher
+	) {
 	}
 
 	/**

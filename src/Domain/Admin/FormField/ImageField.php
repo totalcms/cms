@@ -2,16 +2,16 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Utils\HTMLUtils;
 
 class ImageField extends FormField
 {
 	protected string $defaultFieldType = 'image';
 	protected string $defaultInputType = 'image';
 
-	const PREVIEW_WIDTH  = 600;
-	const PREVIEW_HEIGHT = 400;
+	public const PREVIEW_WIDTH  = 600;
+	public const PREVIEW_HEIGHT = 400;
 
 	public function init(): void
 	{
@@ -33,7 +33,7 @@ class ImageField extends FormField
 
 		$previewAttrs = ['class' => 'image-preview'];
 		if ($imageData['featured'] ?? false) {
-			$previewAttrs['class'] .= " featured";
+			$previewAttrs['class'] .= ' featured';
 		}
 		$imagePreview = $this->imagePreview($imagePath, $imageData['name'] ?? '');
 		$linkDialog   = $this->linkDialog();
@@ -153,27 +153,27 @@ class ImageField extends FormField
 		$content = $this->form->field('featured', [
 			'field' => 'checkbox',
 			'label' => 'Featured',
-			'help'  => "Mark this image as featured.",
+			'help'  => 'Mark this image as featured.',
 			'value' => $imageData['featured'] ?? false,
 		]);
 		$content .= $this->form->field('alt', [
 			'field'       => 'text',
 			'label'       => 'Alt Text',
-			'help'        => "Alt text is used by screen readers and search engines to describe the image.",
+			'help'        => 'Alt text is used by screen readers and search engines to describe the image.',
 			'placeholder' => 'Enter Alt Text',
 			'value'       => $imageData['alt'] ?? '',
 		]);
 		$content .= $this->form->field('link', [
 			'field'       => 'url',
 			'label'       => 'Link',
-			'help'        => "Enter a URL to link the image to.",
+			'help'        => 'Enter a URL to link the image to.',
 			'placeholder' => 'https://example.com',
 			'value'       => $imageData['link'] ?? '',
 		]);
 		$content .= $this->form->field('tags', [
 			'field'       => 'list',
 			'label'       => 'Tags',
-			'help'        => "Add tags to help organize your images.",
+			'help'        => 'Add tags to help organize your images.',
 			'placeholder' => 'Add Tags',
 			'value'       => $imageData['tags'] ?? [],
 		]);
@@ -187,13 +187,13 @@ class ImageField extends FormField
 		$content = $this->form->field('focalpoint-x', [
 			'field' => 'range',
 			'label' => 'Focal Point X',
-			'help'  => "Set the horizontal focal point coordinate of the image.",
+			'help'  => 'Set the horizontal focal point coordinate of the image.',
 			'value' => $imageData['focalpoint']['x'] ?? 50,
 		]);
 		$content .= $this->form->field('focalpoint-y', [
 			'field' => 'range',
 			'label' => 'Focal Point Y',
-			'help'  => "Set the vertical focal point coordinate of the image.",
+			'help'  => 'Set the vertical focal point coordinate of the image.',
 			'value' => $imageData['focalpoint']['y'] ?? 50,
 		]);
 

@@ -1,0 +1,77 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter schemas" />
+	</header>
+
+	<nav class="links">
+		<h3>Custom Schemas</h3>
+		{% set customSchemas = sortByKey(cms.customSchemas()) %}
+		<ul>
+		{% if customSchemas|length == 0 %}
+			<li class="no-schemas">No custom schemas</li>
+		{% else %}
+			{% for schema in customSchemas %}
+			<li class="schema-{{schema.id}}">
+				<a  {% if url.schema == schema.id %}class="active"{% endif %}
+					href="schemas/{{ schema.id }}"
+					title="{{ schema.description }}">{{ schema.id }}</a>
+			</li>
+			{% endfor %}
+		{% endif %}
+		</ul>
+		<h3>Built-in Schemas</h3>
+		<ul>
+			{% for schema in sortByKey(cms.reservedSchemas()) %}
+			<li class="schema-{{schema.id}}">
+				<a  {% if url.schema == schema.id %}class="active"{% endif %}
+					href="schemas/{{ schema.id }}"
+					title="{{ schema.description }}">{{ schema.id }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="schemas/new" title="Create a new schema">+ New Schema</a>
+	</footer>
+</aside>
+
+<main class="dash-main-content">
+	{% if url.schema is empty %}
+		{% include "admin/schema-index.twig" %}
+	{% else %}
+		{% if url.schema == "new" %}
+			<h1><a href="schemas">schemas</a> / <span>new</span></h1>
+			{{ cms.form.schema({
+				save        : "Save",
+				helpStyle   : 'label',
+				helpOnHover : true,
+				newAction : {
+					"action" : "redirect-object",
+					"link"   : "schemas/"
+				},
+			}) }}
+		{% else %}
+			<h1><a href="schemas">schemas</a> / <span>{{ url.schema }}</span></h1>
+			{{ cms.form.schema({
+				id          : url.schema,
+				save        : "Save",
+				delete      : "Delete",
+				helpStyle   : 'label',
+				helpOnHover : true,
+				deleteAction : {
+					"action" : "redirect",
+					"link"   : "schemas"
+				}
+			}) }}
+		{% endif %}
+	{% endif %}
+</main>
+
+{% endblock %}
+
+

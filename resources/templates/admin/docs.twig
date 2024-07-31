@@ -1,0 +1,61 @@
+{% extends "admin-dashboard.twig" %}
+
+{% set menu = [ {
+	"title": "API",
+	"sub": [
+		{ "title": "REST API", 		"path": "rest-api" },
+		{ "title": "OpenAPI Docs", 	"path": "api", },
+		{ "title": "PHP API", 		"path": "php-api" },
+		{ "title": "Import", 		"path": "import" },
+		{ "title": "Download", 		"path": "download" }
+	]
+},{
+	"title": "Twig Templates",
+	"sub": [
+		{ "title": "Overview", 			"path": "twig-overview" },
+		{ "title": "Forms",    			"path": "twig-forms" },
+		{ "title": "Total CMS Content", "path": "twig-totalcms" },
+		{ "title": "Filters", 			"path": "twig-filters" },
+		{ "title": "Functions", 		"path": "twig-functions" },
+		{ "title": "GET Params", 		"path": "twig-get-params" },
+		{ "title": "POST Params", 		"path": "twig-post-params" },
+		{ "title": "Factory", 			"path": "twig-factory" },
+		{ "title": "QR Codes", 			"path": "twig-qrcodes" }
+	]
+},{
+	"title": "Behind the Scenes",
+	"sub": [
+		{ "title": "Configuration", "path": "configuration" },
+		{ "title": "Filesystem", 	"path": "filesystem" },
+		{ "title": "Licenses", 		"path": "licenses" },
+		{ "title": "Data Model", 	"path": "data-model" },
+	]
+}] %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter docs" />
+	</header>
+
+	<nav class="links">
+		{% for item in menu %}
+		<h3>{{ item.title }}</h3>
+		<ul>
+			{% for sub in item.sub %}
+			<li><a href="docs/{{ sub.path }}" {% if sub.target is defined %}target="{{ sub.target }}"{% endif %}>{{ sub.title }}</a></li>
+			{% endfor %}
+		</ul>
+		{% endfor %}
+	</nav>
+
+	<footer>
+	</footer>
+</aside>
+
+<main class="dash-main-content doc-content">
+	{{ content }}
+</main>
+
+{% endblock %}

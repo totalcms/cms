@@ -30,8 +30,8 @@ class CustomPropertyField
 	{
 		// This is the template for the custom properties
 		// It clears all values so that all inputs are blank
-		$content = '';
-		$fields = [];
+		$content      = '';
+		$fields       = [];
 		$blankOptions = [
 			'label'       => '',
 			'help'        => '',
@@ -41,13 +41,14 @@ class CustomPropertyField
 		];
 		$properties = $this->form->propertiesForSchema();
 		foreach ($properties as $property => $options) {
-			$options = array_merge($options, $blankOptions);
+			$options           = array_merge($options, $blankOptions);
 			$fields[$property] = $this->createPropertyField($property, $options);
 		}
 		foreach ($fields as $field) {
 			$content .= $field->build();
 		}
 		$content = self::accordion('', $content);
+
 		return HTMLUtils::element('template', $content);
 	}
 

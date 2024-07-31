@@ -47,20 +47,48 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function schema(array $options = []): string
+	{
+		$options = array_merge([
+			'id'   => '',
+		], $options, [
+			// These options cannot be overridden
+			'api'           => $this->api,
+			'schemaFetcher' => $this->schemaFetcher,
+			'schemaLister'  => $this->schemaLister,
+		]);
+
+		$form = new SchemaForm(...$options);
+
+		return $form->autoBuild();
+	}
+
+	public function collectionTable(string $collection): string
+	{
+		$options = [
+			'api'               => $this->api,
+			'collection'        => $collection,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'schemaFetcher'     => $this->schemaFetcher,
+		];
+
+		$table = new CollectionTable(...$options);
+
+		return $table->build();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([
 			'id'   => '',
-			'save' => 'Save',
 		], $options, [
 			// These options cannot be overridden
 			'api'               => $this->api,
 			'collectionFetcher' => $this->collectionFetcher,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
-			'helpStyle'         => 'label',
-			'helpOnHover'       => true,
-			'helpOnFocus'       => false,
 		]);
 
 		$form = new CollectionForm(...$options);
@@ -71,13 +99,16 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function builder(string $collection, array $options = []): ObjectForm
 	{
-		$options['collection']        = $collection;
-		$options['api']               = $this->api;
-		$options['objectFetcher']     = $this->objectFetcher;
-		$options['collectionFetcher'] = $this->collectionFetcher;
-		$options['collectionReader']  = $this->collectionReader;
-		$options['schemaFetcher']     = $this->schemaFetcher;
-		$options['schemaLister']      = $this->schemaLister;
+		$options = array_merge($options, [
+			// These options cannot be overridden
+			'collection'        => $collection,
+			'api'               => $this->api,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'objectFetcher'     => $this->objectFetcher,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+		]);
 
 		return new ObjectForm(...$options);
 	}
@@ -94,7 +125,6 @@ final class TotalFormFactory
 		array $formOptions = [],
 		array $fieldOptions = [],
 	): string {
-
 		$formOptions = array_merge([
 			'collection' => $defaultCollection,
 			'hideID'     => true,
@@ -237,6 +267,7 @@ final class TotalFormFactory
 	public function checkbox(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		$formOptions['autosave'] = true;
+
 		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'checkbox', $formOptions, $fieldOptions);
 	}
 
@@ -390,6 +421,7 @@ final class TotalFormFactory
 	public function toggle(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		$formOptions['autosave'] = true;
+
 		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'toggle', $formOptions, $fieldOptions);
 	}
 

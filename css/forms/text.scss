@@ -30,7 +30,7 @@
 
 	input, select, textarea {
 		&:has(~ .form-group-icon) {
-			border-radius : 5px 0 0 5px;
+			border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
 		}
 	}
 
@@ -159,10 +159,11 @@
 //------------------------------
 .form-field.id-field {
     .form-group-icon {
+		border-width : 0;
+
 		&:after {
 			mask-image : var(--icon-id);
 		}
-		border-width : 0;
     }
 
     input[type="text"] {

@@ -2,22 +2,38 @@
 
 namespace TotalCMS\Domain\Admin\PropertyField;
 
+use TotalCMS\Domain\Admin\SchemaForm;
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Utils\HTMLUtils;
 
-class SchemaField
+class SchemaField extends PropertyField
 {
+	public const SCHEMA_PROPERTY_FIELDS = [
+		'default',
+		'factory',
+		'field',
+		'help',
+		'label',
+		'placeholder',
+		'options',
+		'settings',
+		'type',
+	];
+
 	/**
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
+	 * @param array<string,mixed> $extra - extra attributes for the field schema such as minItems, items, patternProperties, etc
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
 	public function __construct(
 		protected TotalForm $form,
 		protected string $property,
 		protected string $field       = 'text',
+		protected string $type        = 'string',
 		protected string $label       = '',
 		protected string $help        = '',
 		protected string $placeholder = '',
@@ -25,66 +41,50 @@ class SchemaField
 		protected string $default     = '',
 		protected array $options      = [],
 		protected array $settings     = [],
+		protected array $extra        = [],
 	) {
 	}
 
-	private function buildDialog(): string
+	protected function buildPropertyInfo(): string
 	{
-		$formInfo = $this->form->field('field', [
+		$content = $this->form->field('type', [
 			'field'       => 'select',
-			'label'       => 'Field Type',
-			'placeholder' => 'Select a field type',
-			'help'        => 'The type form field that this field will use',
-			'value'       => $this->field,
-			'disabled'    => ($this->property === 'id'), // Disable field type for id property
-			'options'     => TotalForm::FIELDS_BY_TYPE,
+			'label'       => 'Type',
+			'placeholder' => 'Select a data type',
+			'help'        => 'The data type of the property',
+			'value'       => $this->type,
+			'options'     => SchemaData::PROPERTY_TYPES,
 		]);
-		$formInfo .= $this->form->field('label', [
+		$content .= $this->form->field('factory', [
 			'field'       => 'text',
-			'label'       => 'Label',
-			'placeholder' => 'Enter a label',
-			'help'        => 'The label that will be added to the field form',
-			'value'       => $this->label,
+			'label'       => 'Factory',
+			'placeholder' => 'text(300)',
+			'help'        => 'The factory that will be used to generate the field form. See docs for more info.',
+			'value'       => $this->factory ?? '',
 		]);
-		$formInfo .= $this->form->field('placeholder', [
+		$content .= $this->form->field('default', [
 			'field'       => 'text',
-			'label'       => 'Placeholder',
-			'placeholder' => 'Enter a placeholder',
-			'help'        => 'The placeholder text that will be added to the field form',
-			'value'       => $this->placeholder,
+			'label'       => 'Default Value',
+			'placeholder' => '',
+			'help'        => 'The default value for this property when an object is saved without a value',
+			'value'       => $this->default ?? '',
 		]);
-		$formInfo .= $this->form->field('help', [
-			'field'       => 'textarea',
-			'label'       => 'Help',
-			'rows'        => 2,
-			'placeholder' => 'Enter help text',
-			'help'        => 'The help text that will be added to the field form',
-			'value'       => $this->help,
-		]);
-		$formInfo = HTMLUtils::details('Form Info', $formInfo);
-
-		$settings = $this->form->field('settings', [
+		$content .= $this->form->field('extra', [
 			'field'       => 'json',
-			'label'       => 'Settings',
+			'label'       => 'Extra Schema Definitions',
 			'placeholder' => '{ "key": "value" }',
-			'help'        => 'The settings for this field in valid JSON format',
-			'value'       => empty($this->settings) ? '' : json_encode($this->settings, JSON_PRETTY_PRINT),
+			'help'        => 'Extra schema definitions for this property in valid JSON format',
+			'value'       => empty($this->extra) ? '' : json_encode($this->extra, JSON_PRETTY_PRINT),
 		]);
-		$settings .= $this->form->field('options', [
-			'field'       => 'json',
-			'label'       => 'Options &amp; Datalist',
-			'placeholder' => '[ "option1", "option2", "option3" ]',
-			'help'        => 'The options for select fields and datalists in valid JSON format.',
-			'value'       => empty($this->options) ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
-		]);
-		$settings = HTMLUtils::details('Settings &amp; Options', $settings);
 
-		$close = HTMLUtils::button('Close', ['class' => 'close']);
+		return HTMLUtils::details('Property Info', $content);
+	}
 
-		$content  = HTMLUtils::scroller($formInfo . $settings);
-		$content .= HTMLUtils::element('section', $close);
+	protected function buildDialog(string $content = ''): string
+	{
+		$content = $this->buildPropertyInfo();
 
-		return HTMLUtils::dialog($content, 'small');
+		return parent::buildDialog($content);
 	}
 
 	public function build(): string
@@ -93,19 +93,53 @@ class SchemaField
 			'autocomplete' => 'off',
 			'type'         => 'text',
 			'name'         => 'property',
-			'placeholder'  => 'name',
+			'placeholder'  => 'property',
 			'required'     => '',
-			'disabled'     => '',
 			'value'        => $this->property,
 		];
 
-		$dialog = $this->buildDialog();
-		$button = HTMLUtils::element('button', '', ['type' => 'button']);
-		$input  = HTMLUtils::inlineElement('input', $inputAttributes);
-		$field  = HTMLUtils::element('div', $input . $button . $dialog, [
-			'class' => "schema-field {$this->field}-field"
+		if ($this->property === 'id') {
+			$inputAttributes['disabled'] = '';
+			$inputAttributes['readonly'] = '';
+		}
+
+		$dialog  = $this->buildDialog();
+		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
+		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => 'Edit property']);
+
+		if ($this->form instanceof SchemaForm && !$this->form->reserved) {
+			$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => 'Duplicate property']);
+			$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => 'Delete property']);
+		}
+
+		$field  = HTMLUtils::element('div', $input . $buttons . $dialog, [
+			'class' => "schema-field {$this->field}-field",
 		]);
 
 		return $field;
+	}
+
+	/**
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterSchemaProperties(array $properties): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($properties, fn ($key) => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+	}
+
+	/**
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterExtraProperties(array $properties): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($properties, fn ($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 }
