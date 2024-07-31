@@ -8,6 +8,7 @@ use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Utils\HTMLUtils;
 
 // ---------------------------------------------------------------------------------
 // Entry point for Total CMS PHP API
@@ -48,7 +49,11 @@ class TotalCMS
 		$this->twigCacheCleaner->deleteCache();
 	}
 
-	/** @param array<mixed> $data */
+	/**
+	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 *
+	 * @param array<mixed> $data
+	 */
 	public function processBufferMacros(array $data = []): string
 	{
 		$content = $this->buffer->end();
@@ -56,8 +61,16 @@ class TotalCMS
 		try {
 			return $this->twigEngine->renderString($content, $data);
 		} catch (\Throwable $th) {
-			$error = sprintf('processBufferMacros: %s: %s', $th->getMessage(), $th->getTraceAsString());
-			$this->logger->error($error);
+			$error = sprintf('processBufferMacros: %s', $th->getMessage());
+			$error = HTMLUtils::element('p', $error, ['class' => 'cms-twig-error']);
+
+			$this->logger->error(sprintf('%s: %s', $error, $th->getTraceAsString()));
+
+			if (str_contains($content, '<body>')) {
+				$content = str_replace('<body>', '<body>' . $error, $content);
+			} else {
+				$content = $error . $content;
+			}
 		}
 
 		return $content;

@@ -129,7 +129,7 @@ abstract class TotalForm
 		protected SchemaLister $schemaLister,
 		public string $api,
 		public string $collection,
-		public    string $id          = '',
+		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
 		protected string $buildError  = '',
@@ -190,7 +190,7 @@ abstract class TotalForm
 			return '';
 		}
 
-		return HTMLUtils::element('p', $this->buildError, ['class' => 'form-build-error']);
+		return HTMLUtils::element('p', $this->buildError, ['class' => 'cms-twig-error']);
 	}
 
 	public function build(string $content = ''): string

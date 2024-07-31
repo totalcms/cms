@@ -244,13 +244,6 @@ button.cms-add {
 		margin : 0;
 	}
 }
-.form-build-error {
-	padding          : 0.5rem;
-	color            : oklch(var(--totalform-error));
-	border           : 1px solid oklch(var(--totalform-error));
-	background-color : oklch(var(--totalform-error) / 0.1);
-	border-radius    : var(--totalform-radius);
-}
 
 @import "forms/status-banner";
 @import "forms/help";

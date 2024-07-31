@@ -6,3 +6,12 @@
 .link-container {
 	display : block;
 }
+.cms-twig-error {
+	--total-red      : 63% 0.22 32.01;
+	padding          : 0.5rem;
+	margin           : 0.5rem;
+	color            : oklch(var(--total-red));
+	border           : 1px solid oklch(var(--total-red));
+	background-color : oklch(var(--total-red) / 0.1);
+	border-radius    : 5px;
+}
