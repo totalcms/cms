@@ -144,10 +144,10 @@ export default class ImagePreview {
 				event.preventDefault();
 				if (confirm("Are you sure that you want to delete this image?")) {
 					// Delete the entire image object if it's an image schema
-					let deleteApi = `/collections/${this.form.collection}/${this.form.id}`;
+					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					if (this.isGallery()) {
 						const name = this.getValue().name;
-						deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+						deleteApi  = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
 					}
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 						this.container.remove();
