@@ -400,6 +400,10 @@ abstract class TotalForm
 	/** @return array<string,mixed> */
 	public function propertiesForSchema(): array
 	{
+		// A new collection form will not have a schema yet
+		if (!isset($this->collectionData)) {
+			return [];
+		}
 		$schema     = $this->collectionData->schema;
 		$schemaData = $this->schemaFetcher->fetchSchema($schema);
 		$properties = $schemaData->properties;
