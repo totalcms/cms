@@ -1,5 +1,6 @@
 import PropertiesField from "./properties";
 import PropertyField from "./property";
+const slugify = require('slugify')
 
 //-----------------------------------------------
 // Total CMS Properties
@@ -37,8 +38,14 @@ export default class SchemaPropertiesField extends PropertiesField {
 	}
 
 	initActionbar(field) {
-		const trash = field.querySelector("button.trash");
+		const trash     = field.querySelector("button.trash");
 		const duplicate = field.querySelector("button.duplicate");
+		const property  = field.querySelector("input");
+
+		// Ensure properties are all lowercase
+		property?.addEventListener("change", () => {
+			property.value = slugify(property.value, { lower: true });
+		});
 
 		trash?.addEventListener("click", () => this.removeField(field));
 		duplicate?.addEventListener("click", () => this.duplicateField(field));

@@ -92,7 +92,7 @@ export default class Identifier extends TotalField {
 	}
 
     slugify(id){
-        return slugify(id).toLowerCase();
+        return slugify(id, { lower: true });
     }
 
     idExists() {
