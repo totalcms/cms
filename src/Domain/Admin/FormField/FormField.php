@@ -171,7 +171,9 @@ class FormField
 			if (is_string($option)) {
 				$option = $this->optionFromString($option);
 			}
-			$groupOptions .= $this->buildOption($option);
+			if (is_array($option)) {
+				$groupOptions .= $this->buildOption($option);
+			}
 		}
 
 		return HTMLUtils::element('optgroup', $groupOptions, ['label' => $group]);
@@ -213,7 +215,9 @@ class FormField
 			if (is_string($option)) {
 				$option = $this->optionFromString($option);
 			}
-			$options .= is_string($key) ? $this->buildOptionGroup($key, $option) : $this->buildOption($option);
+			if (is_array($option)) {
+				$options .= is_string($key) ? $this->buildOptionGroup($key, $option) : $this->buildOption($option);
+			}
 		}
 
 		return $options;
