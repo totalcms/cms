@@ -14,10 +14,11 @@ class CustomPropertiesField extends PropertiesField
 	{
 		$content  = parent::buildFormField();
 
-		if (!empty($this->properties)) {
-			$templateProperty = $this->properties[array_key_first($this->properties)];
-			$content .= $templateProperty->template();
-		}
+		$templateProperty = new CustomPropertyField(
+			object: '',
+			form: $this->form
+		);
+		$content .= $templateProperty->template();
 
 		$content .= HTMLUtils::add('Add Object Override');
 

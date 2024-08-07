@@ -104,7 +104,6 @@ abstract class TotalForm
 	];
 
 	public const PROPERTY_FIELDS = [
-		'default',
 		'field',
 		'help',
 		'label',
