@@ -261,7 +261,8 @@ abstract class TotalForm
 			return [];
 		}
 
-		return $collection->objects->pluck($property)->flatten()->unique()->toArray();
+		// array_filter removes any empty values
+		return array_filter($collection->objects->pluck($property)->flatten()->unique()->toArray());
 	}
 
 	/**
