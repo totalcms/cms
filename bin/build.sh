@@ -25,6 +25,9 @@ find vendor -empty -type d -delete
 find vendor -name bin -type d | xargs rm -rf
 find vendor -name test -type d | xargs rm -rf
 
+# generate schema hash to verify schema files after installation
+bin/schema-hash.sh
+
 # move required files to dist
 echo "Moving required files to dist..."
 rm -rf dist
@@ -37,3 +40,13 @@ rm -rf dist/public/test
 # install all required composer packages for dev environment
 echo "Installing all required composer packages back for dev environment..."
 composer install --quiet
+
+# remove write permissions from all files
+find dist/resources -type f -exec chmod 444 {} +
+
+VERSION=`jq -r '.version' composer.json`
+BUILD=`git rev-parse --short HEAD`
+
+echo "$VERSION ($BUILD)" > dist/version
+
+echo "Build for v$VERSION ($BUILD) is complete."

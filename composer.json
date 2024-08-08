@@ -1,6 +1,7 @@
 {
   "name": "joeworkman/totalcms",
   "type": "project",
+  "version": "3.0.7",
   "description": "Total CMS",
   "keywords": [
     "total-cms",
