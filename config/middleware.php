@@ -10,9 +10,11 @@ use TotalCMS\Middleware\CorsMiddleware;
 use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
+use TotalCMS\Middleware\BetaMiddleware;
 
 return function (App $app) {
 	$app->addBodyParsingMiddleware();
+	$app->add(BetaMiddleware::class);
 	$app->add(CorsMiddleware::class);
 	$app->add(LiteLicenseMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
