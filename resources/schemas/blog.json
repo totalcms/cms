@@ -102,7 +102,6 @@
 			"label"   : "Updated Date",
 			"help"    : "Blog Post updated date",
 			"field"   : "hidden",
-			"factory" : "iso8601",
 			"default" : "onUpdate"
 		},
 		"created": {
@@ -110,7 +109,6 @@
 			"label"   : "Creation Date",
 			"help"    : "Blog Post creation date",
 			"field"   : "hidden",
-			"factory" : "iso8601",
 			"default" : "onCreate"
 		}
 	},
