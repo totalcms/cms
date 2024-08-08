@@ -18,7 +18,7 @@ export default class FactoryForm {
 		this.collection = this.form.dataset.collection;
 		this.route      = `/import/${this.collection}/factory`;
 		this.api        = new TotalCMS({ url: this.form.dataset.api});
-		this.refresh    = this.form.dataset.refresh || false;
+		this.refresh    = this.form.dataset.refresh === "true";
 
 		this.form.addEventListener("submit", event => event.preventDefault());
 
