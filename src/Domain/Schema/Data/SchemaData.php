@@ -14,6 +14,7 @@ final class SchemaData
 	public const SCHEMA_PREFIX    = 'https://www.totalcms.co/schemas/';
 	public const SCHEMA_VERSION   = 'https://json-schema.org/draft/2020-12/schema';
 	public const RESERVED_SCHEMAS = [
+		'blog-legacy',
 		'blog',
 		'color',
 		'collection',

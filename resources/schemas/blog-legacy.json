@@ -1,9 +1,9 @@
 {
 	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
-	"$id"         : "https://www.totalcms.co/schemas/blog.json",
-	"id"          : "blog",
+	"$id"         : "https://www.totalcms.co/schemas/blog-legacy.json",
+	"id"          : "blog-legacy",
 	"type"        : "object",
-	"description" : "A schema for a Total CMS Blog object",
+	"description" : "A schema for a Total CMS Legacy Blog object. This is used for backwards compatibility with older versions of Total CMS.",
 	"properties"  : {
 		"draft": {
 			"type"    : "boolean",
@@ -17,6 +17,12 @@
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
 			"factory" : "boolean"
+		},
+		"archvied": {
+			"type"    : "boolean",
+			"label"   : "Archived",
+			"help"    : "Mark this post as a archived",
+			"field"   : "checkbox"
 		},
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -68,6 +74,25 @@
 			"field"   : "styledtext",
 			"factory" : "paragraph"
 		},
+		"extra": {
+			"type"    : "string",
+			"label"   : "Extra Content",
+			"help"    : "Extra content area for this post",
+			"field"   : "textarea"
+		},
+		"extra2": {
+			"type"    : "string",
+			"label"   : "Extra Content 2",
+			"help"    : "Extra content area for this post",
+			"field"   : "textarea"
+		},
+		"genre": {
+			"type"    : "string",
+			"label"   : "Genre",
+			"help"    : "Genre for this post",
+			"field"   : "text",
+			"settings": { "propertyOptions" : true }
+		},
 		"categories": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"   : "Categories",
@@ -80,6 +105,14 @@
 			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"   : "Tags",
 			"help"    : "A list of tags for this post",
+			"field"   : "list",
+			"factory" : "tags",
+			"settings": { "propertyOptions" : true }
+		},
+		"labels": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"   : "Labels",
+			"help"    : "A list of labels for this post",
 			"field"   : "list",
 			"factory" : "tags",
 			"settings": { "propertyOptions" : true }
@@ -124,11 +157,15 @@
 		"id",
 		"title",
 		"image",
+		"gallery",
 		"date",
 		"draft",
 		"featured",
+		"archived",
 		"author",
+		"genre",
 		"categories",
+		"labels",
 		"tags",
 		"summary",
 		"updated",

@@ -118,6 +118,9 @@ body {
 		li {
 			--collection-icon : var(--icon-collections);
 
+			// Hide this legacy blog schema
+			&.schema-blog-legacy { display: none;}
+
 			&.schema-blog { --collection-icon : var(--icon-blog) }
 			&.schema-color { --collection-icon : var(--icon-paint-brush) }
 			&.schema-date { --collection-icon : var(--icon-date) }
