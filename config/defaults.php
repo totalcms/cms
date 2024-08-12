@@ -53,8 +53,8 @@ $settings['api']    = $settings['url'] . '/api';
 $settings['root']     = dirname(__DIR__);
 $settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['public']   = $settings['root'] . '/public';
-$settings['template'] = $settings['root'] . '/templates';
-$settings['schemas']  = $settings['root'] . '/schemas';
+$settings['template'] = $settings['root'] . '/resources/templates';
+$settings['schemas']  = $settings['root'] . '/resources/schemas';
 $settings['cachedir'] = $settings['root'] . '/cache';
 
 // Clean up trailing slashes in DOCUMENT_ROOT

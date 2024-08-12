@@ -11,11 +11,9 @@ use TotalCMS\Renderer\TemplateRenderer;
  */
 final class DocVersion3Action
 {
-	private TemplateRenderer $templateRenderer;
-
-	public function __construct(TemplateRenderer $templateRenderer)
-	{
-		$this->templateRenderer = $templateRenderer;
+	public function __construct(
+		private TemplateRenderer $templateRenderer
+	) {
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface

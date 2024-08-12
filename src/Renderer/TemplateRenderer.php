@@ -10,16 +10,14 @@ use Slim\Views\PhpRenderer;
  */
 final class TemplateRenderer
 {
-	private PhpRenderer $phpRenderer;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param PhpRenderer $phpRenderer The template engine
 	 */
-	public function __construct(PhpRenderer $phpRenderer)
-	{
-		$this->phpRenderer = $phpRenderer;
+	public function __construct(
+		private PhpRenderer $phpRenderer
+	) {
 	}
 
 	/**
