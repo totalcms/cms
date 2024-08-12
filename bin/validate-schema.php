@@ -1,7 +1,7 @@
 <?php
 
 $directory = __DIR__ . '/../resources/schemas'; // Directory containing the schema JSON files
-$hashFile  = __DIR__ . '/../resources/.installed.json'; // Output JSON file
+$hashFile  = __DIR__ . '/../resources/installed'; // Output JSON file
 
 // Read the JSON file with the expected hashes
 if (!file_exists($hashFile)) {

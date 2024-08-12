@@ -6,7 +6,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Slim\Routing\RouteContext;
 use Slim\Psr7\Response;
 
 /**
@@ -29,7 +28,7 @@ final class BetaMiddleware implements MiddlewareInterface
 		$response = new Response();
 		$response->getBody()->write('Total CMS Beta has expired');
 
-		$expireFile = __DIR__ . '/../../resources/.beta';
+		$expireFile = __DIR__ . '/../../resources/beta';
 		if (!file_exists($expireFile)) {
 			return $response->withStatus(403);
 		}

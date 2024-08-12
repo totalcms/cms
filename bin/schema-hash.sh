@@ -3,7 +3,7 @@
 # Directory containing the JSON files
 DIRECTORY="resources/schemas"
 # Output JSON file
-OUTPUT_FILE="resources/.installed.json"
+OUTPUT_FILE="resources/installed"
 
 # Initialize the JSON structure
 echo "{" > $OUTPUT_FILE

@@ -31,7 +31,7 @@ bin/schema-hash.sh
 # generate beta expiration date
 EXPIRE=`date -v +45d +"%Y-%m-%d"`
 echo "Beta expiration date: $EXPIRE"
-echo $EXPIRE | base64 > resources/.beta
+echo $EXPIRE | base64 > resources/beta
 
 # move required files to dist
 echo "Moving required files to dist..."
