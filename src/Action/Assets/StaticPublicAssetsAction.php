@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Assets;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Utils\MimeLookup;
+use Slim\Exception\HttpNotFoundException;
 
 // This Action is used to serve static assets from the public/assets directory
 // This should really only ever be used with using the PHP built-in server
@@ -20,13 +21,13 @@ final class StaticPublicAssetsAction
 	): ResponseInterface {
 
 		if (!isset($args['asset'])) {
-			return $response->withStatus(404);
+			throw new \UnexpectedValueException("Missing asset argument");
 		}
 
 		$assetPath = __DIR__ . '/../../../public/assets/' . $args['asset'];
 
 		if (!file_exists($assetPath)) {
-			return $response->withStatus(404);
+			throw new HttpNotFoundException($request, 'Asset not found');
 		}
 
 		$contents = file_get_contents($assetPath);
@@ -34,7 +35,7 @@ final class StaticPublicAssetsAction
 		$mimeType = MimeLookup::getMimeType($assetPath);
 
 		if ($filesize === false || $contents === false) {
-			return $response->withStatus(500);
+			throw new \RuntimeException("Failed to read asset file");
 		}
 
 		$response->getBody()->write($contents);
