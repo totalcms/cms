@@ -251,7 +251,15 @@ body {
 		border    : none;
 	}
 }
+.dash-content-section {
+	display       : grid;
+	gap           : 1rem;
+	align-content : start;
 
+	p, ul, ol {
+		max-width : 65ch;
+	}
+}
 .dash-button {
 	display          : inline-block;
 	padding          : 0.75rem 1rem;
@@ -263,6 +271,7 @@ body {
 	text-decoration  : none;
 	font-weight      : bold;
 	cursor           : pointer;
+	width            : max-content;
 
 	&.full {
 		display : block;
