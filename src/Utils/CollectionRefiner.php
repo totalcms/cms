@@ -1,0 +1,254 @@
+<?php
+
+namespace TotalCMS\Utils;
+
+use ReflectionMethod;
+
+/**
+ * Collection Refiner
+ * Filters a collection of items.
+ */
+class CollectionRefiner
+{
+	/**
+	 * Constructor
+	 *
+	 * @param array<array<string,mixed>> $collection
+	 */
+	public function __construct(
+		private array $collection,
+	) {}
+
+	/**
+	 * Filters the collection by the rules.
+	 *
+	 * @param array<array<string,mixed>> $rules
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function filter(array $rules): array
+	{
+		$filteredCollection = $this->collection;
+
+		foreach ($rules as $rule) {
+			$filteredCollection = $this->filterByRule(
+				collection: $filteredCollection,
+				property: $rule['property'],
+				value: $rule['value'],
+				operator: $rule['rule'],
+			);
+		}
+
+		return $filteredCollection;
+	}
+
+	/**
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 *
+	 * @param array<array<string,mixed>> $collection
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function filterByRule(array $collection, string $property, mixed $value, string $operator = "equal"): array
+	{
+		return array_filter($collection, function ($record) use ($property, $value, $operator) {
+			if (!array_key_exists($property, $record)) {
+				return false;
+			}
+
+			// If rule is prepended by not-, then invert the result
+			$not = false;
+			if (self::starts($operator, 'not-')) {
+				$not = true;
+				$operator = mb_substr($operator, 4);
+			}
+			// If value is prepended by !, then invert the result
+			if (self::starts($value, '!')) {
+				$not = true;
+				$value = mb_substr($value, 1);
+			}
+
+			if (method_exists($this, $operator)) {
+				$item = $record[$property];
+
+				if (is_array($item)) {
+					$found = self::filterArrayByRule($item, $value, $operator);
+					return $not ? !$found : $found;
+				}
+
+				$reflection = new ReflectionMethod(CollectionRefiner::class, "$operator");
+				switch ($reflection->getNumberOfParameters()) {
+					case 1:
+						$found = self::$operator($item);
+						break;
+					case 2:
+						$found = self::$operator($item, $value);
+						break;
+					default:
+						$found = false;
+				}
+
+				return $not ? !$found : $found;
+			}
+
+			return $record[$property] == $value;
+		});
+	}
+
+	/** @param array<int,mixed> $items */
+	protected static function filterArrayByRule(array $items, mixed $value, string $operator): bool
+	{
+		$found = false;
+		foreach ($items as $item) {
+			if (self::$operator($item, $value)) {
+				$found = true;
+				break;
+			}
+		}
+		return $found;
+	}
+
+	// public function getRow(int $row): void
+	// {
+	// 	$records = [];
+	// 	if (isset($this->records[$row - 1])) {
+	// 		$records[] = $this->records[$row - 1];
+	// 	}
+	// 	$this->records = $records;
+	// }
+
+	// private function excludeData(array $records): array
+	// {
+	//     foreach ($this->excludes as $exclude) {
+	//         if (isset($records[$exclude])) {
+	//             unset($records[$exclude]);
+	//             continue;
+	//         }
+	//         foreach ($records as $property => $record) {
+	//             if (isset($record[$exclude])) {
+	//                 unset($records[$property][$exclude]);
+	//             }
+	//         }
+	//     }
+	//     return $records;
+	// }
+
+	// public function limitRecords(int $offset = 0): array
+	// {
+	//     $records = $this->records;
+	//     if ($this->limit > 0) {
+	//         $records = array_slice($this->records, $offset, $this->limit, true);
+	//     }
+	//     return $this->excludeData($records);
+	// }
+
+	protected static function equal(mixed $haystack, mixed $needle): bool
+	{
+		return $haystack === $needle;
+	}
+
+	protected static function contains(string $haystack, string $needle): bool
+	{
+		return mb_strpos($haystack, $needle) !== false;
+	}
+
+	protected static function starts(string $haystack, string $needle): bool
+	{
+		return mb_strpos($haystack, $needle) === 0;
+	}
+
+	protected static function ends(string $haystack, string $needle): bool
+	{
+		$length = mb_strlen($needle);
+		return $length > 0 ? mb_substr($haystack, -$length) === $needle : true;
+	}
+
+	protected static function equalCaseInsensitive(string $haystack, string $needle): bool
+	{
+		return mb_strtolower($haystack) === mb_strtolower($needle);
+	}
+
+	protected static function containsCaseInsensitive(string $haystack, string $needle): bool
+	{
+		return mb_strpos(mb_strtolower($haystack), mb_strtolower($needle)) !== false;
+	}
+
+	protected static function startsCaseInsensitive(string $haystack, string $needle): bool
+	{
+		return mb_strpos(mb_strtolower($haystack), mb_strtolower($needle)) === 0;
+	}
+
+	protected static function endsCaseInsensitive(string $haystack, string $needle): bool
+	{
+		$length = mb_strlen($needle);
+		return $length > 0 ? mb_substr(mb_strtolower($haystack), -$length) === mb_strtolower($needle) : true;
+	}
+
+	protected static function less(string $haystack, string $needle): bool
+	{
+		return $haystack < $needle;
+	}
+
+	protected static function lesseq(string $haystack, string $needle): bool
+	{
+		return $haystack <= $needle;
+	}
+
+	protected static function greater(string $haystack, string $needle): bool
+	{
+		return $haystack > $needle;
+	}
+
+	protected static function greatereq(string $haystack, string $needle): bool
+	{
+		return $haystack >= $needle;
+	}
+
+	/** @param string|int|bool $haystack */
+	protected static function istrue(mixed $haystack): bool
+	{
+		return $haystack === true || $haystack === "true" || $haystack === "1" || $haystack === 1;
+	}
+
+	/** @param string|int|bool $haystack */
+	protected static function isfalse(mixed $haystack): bool
+	{
+		return $haystack === false || $haystack === "false" || $haystack === "0" || $haystack === 0;
+	}
+
+	protected static function isempty(mixed $haystack): bool
+	{
+		return empty($haystack);
+	}
+
+	protected static function isnotempty(mixed $haystack): bool
+	{
+		return !empty($haystack);
+	}
+
+	protected static function pastToday(string $date): bool
+	{
+		return self::past($date) || self::today($date);
+	}
+
+	protected static function futureToday(string $date): bool
+	{
+		return self::future($date) || self::today($date);
+	}
+
+	protected static function past(string $date): bool
+	{
+		return strtotime($date) < time();
+	}
+
+	protected static function future(string $date): bool
+	{
+		return strtotime($date) > time();
+	}
+
+	protected static function today(string $date): bool
+	{
+		$time = strtotime($date);
+		return $time >= strtotime("today") && $time < strtotime("tomorrow");
+	}
+}

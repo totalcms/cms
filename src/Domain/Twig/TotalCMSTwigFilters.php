@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Property\Data\ColorData;
 use Twig\TwigFilter;
+use TotalCMS\Utils\CollectionRefiner;
 
 /**
  * Twig Functions for Total CMS.
@@ -50,6 +51,8 @@ final class TotalCMSTwigFilters
 		'hue',
 		'adjustColor',
 		'obfuscate',
+		'filterByProps',
+		'sortByProps',
 	];
 
 	/** @return array<TwigFilter> */
@@ -332,6 +335,18 @@ final class TotalCMSTwigFilters
 		shuffle($array);
 
 		return $array;
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>> $rules
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public static function filterCollection(array $collection, array $rules): array
+	{
+		$refiner = new CollectionRefiner($collection);
+		return $refiner->filter($rules);
 	}
 
 	// -------------------------
