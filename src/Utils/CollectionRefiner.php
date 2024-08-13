@@ -195,6 +195,30 @@ class CollectionRefiner
 		return $haystack >= $needle;
 	}
 
+	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	protected static function lt(string $haystack, string $needle): bool
+	{
+		return self::less($haystack, $needle);
+	}
+
+	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	protected static function le(string $haystack, string $needle): bool
+	{
+		return self::lesseq($haystack, $needle);
+	}
+
+	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	protected static function gt(string $haystack, string $needle): bool
+	{
+		return self::greater($haystack, $needle);
+	}
+
+	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	protected static function ge(string $haystack, string $needle): bool
+	{
+		return self::greatereq($haystack, $needle);
+	}
+
 	/** @param string|int|bool $haystack */
 	protected static function istrue(mixed $haystack): bool
 	{
