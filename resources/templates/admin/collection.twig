@@ -16,6 +16,7 @@
 			<ul>
 				<li class="factory"><a href="collections/{{ collection }}/factory">Factory</a></li>
 				<li class="import"><a href="collections/{{ collection }}/import">Import</a></li>
+				<li class="reindex"><a class="cms-quick-action" data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
 			</ul>
 		</nav>
 	</header>
@@ -28,7 +29,7 @@
 		<input type="search" class="filter" placeholder="Filter collections" />
 	</header>
 
-	<nav class="links">
+	<nav class="links" id="collection-links">
 		<ul>
 			{% for collection in sortByKey(cms.collections()) %}
 

@@ -4,6 +4,7 @@ import FactoryForm from './totalform/factory';
 import Scrollable from './totalform/scrollable';
 import FilterList from './totalform/filter-list';
 import CollectionTable from './totalform/collection-table';
+import QuickAction from './quickaction';
 
 globalThis.TotalCMS = TotalCMS;
 
@@ -39,4 +40,7 @@ document.addEventListener("DOMContentLoaded", event => {
 	tables.forEach(table => new CollectionTable(table, {
 		limit : 25,
 	}));
+
+	const reindex = Array.from(document.getElementsByClassName("cms-quick-action"));
+	reindex.forEach(link => new QuickAction(link));
 });

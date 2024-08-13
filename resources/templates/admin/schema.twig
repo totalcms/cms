@@ -7,7 +7,7 @@
 		<input type="search" class="filter" placeholder="Filter schemas" />
 	</header>
 
-	<nav class="links">
+	<nav class="links" id="schema-links">
 		<h3>Custom Schemas</h3>
 		{% set customSchemas = sortByKey(cms.customSchemas()) %}
 		<ul>

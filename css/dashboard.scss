@@ -118,9 +118,6 @@ body {
 		li {
 			--collection-icon : var(--icon-collections);
 
-			// Hide this legacy blog schema
-			&.schema-blog-legacy { display: none;}
-
 			&.schema-blog { --collection-icon : var(--icon-blog) }
 			&.schema-color { --collection-icon : var(--icon-paint-brush) }
 			&.schema-date { --collection-icon : var(--icon-date) }
@@ -173,6 +170,10 @@ body {
 	}
 }
 
+#schema-links {
+	// Hide this legacy blog schema
+	.schema-blog-legacy { display: none;}
+}
 
 .dash-main-content {
 	height             : 100vh;
@@ -391,6 +392,7 @@ body {
 
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
+		&.reindex { --action-icon : var(--icon-refresh) }
 	}
 	a {
 		display         : flex;

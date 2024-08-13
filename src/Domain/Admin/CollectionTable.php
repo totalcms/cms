@@ -38,12 +38,14 @@ final class CollectionTable
 
 	private function getPropertyType(string $property): string
 	{
-		$propertyData = $this->schemaData->properties[$property];
-		if (isset($propertyData['type'])) {
-			return $propertyData['type'];
-		}
-		if (isset($propertyData['$ref'])) {
-			return basename($propertyData['$ref'], '.json');
+		if (isset($this->schemaData->properties[$property])) {
+			$propertyData = $this->schemaData->properties[$property];
+			if (isset($propertyData['type'])) {
+				return $propertyData['type'];
+			}
+			if (isset($propertyData['$ref'])) {
+				return basename($propertyData['$ref'], '.json');
+			}
 		}
 
 		return 'string';
