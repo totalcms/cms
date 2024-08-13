@@ -4,14 +4,22 @@
 
 {% set objects = cms.objects("blog") | filterCollection([
 	{
-		"property" : "date",
-		"operator" : "before",
-		"value"    : "2000-01-01"
+		property : "date",
+		operator : "before",
+		value    : "2000-01-01"
 	},
 	{
-		"property" : "image.size",
-		"operator" : "greater",
-		"value"    : 4000
+		property : "image.size",
+		operator : "lt",
+		value    : 4000
+	},
+]) | sortCollection([
+	{
+		property : "date",
+	},
+	{
+		property : "image.size",
+		reverse  : true,
 	},
 ]) %}
 

@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig;
 use TotalCMS\Domain\Property\Data\ColorData;
 use Twig\TwigFilter;
 use TotalCMS\Utils\CollectionRefiner;
+use TotalCMS\Utils\CollectionSorter;
 
 /**
  * Twig Functions for Total CMS.
@@ -358,8 +359,8 @@ final class TotalCMSTwigFilters
 	 */
 	public static function sortCollection(array $collection, array $rules): array
 	{
-		$refiner = new CollectionRefiner($collection);
-		return $refiner->filter($rules);
+		$sorter = new CollectionSorter($collection);
+		return $sorter->sortByRules($rules);
 	}
 
 	/**

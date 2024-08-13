@@ -52,7 +52,7 @@ class CollectionRefiner
 	public function filterByRule(array $collection, string $property, mixed $value, string $operator = "equal"): array
 	{
 		return array_filter($collection, function ($record) use ($property, $value, $operator) {
-			$item = $this->getPropertyValueForRecord($record, $property);
+			$item = self::getPropertyValueForRecord($record, $property);
 
 			if ($item === null) {
 				return false;
@@ -96,12 +96,22 @@ class CollectionRefiner
 		});
 	}
 
+	// private static function isAssociativeArray(array $array): bool {
+	// 	return array_keys($array) !== range(0, count($array) - 1);
+	// }
+
+	/** @param array<mixed> $array */
+	private static function isIndexedArray(array $array): bool
+	{
+		return array_keys($array) === range(0, count($array) - 1);
+	}
+
 	/**
 	 * @SuppressWarnings(PHPMD.ElseExpression)
 	 *
 	 * @param array<string,mixed> $record
 	 */
-	private function getPropertyValueForRecord(array $record, string $property): mixed
+	public static function getPropertyValueForRecord(array $record, string $property): mixed
 	{
 		if (array_key_exists($property, $record)) {
 			return $record[$property];
@@ -112,6 +122,11 @@ class CollectionRefiner
 		foreach ($properties as $property) {
 			if (is_array($value) && array_key_exists($property, $value)) {
 				$value = $value[$property];
+
+				if (is_array($value) && self::isIndexedArray($value)) {
+					// Set $value to the first item in the array
+					$value = $value[0];
+				}
 			} else {
 				return null;
 			}
