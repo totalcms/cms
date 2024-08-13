@@ -134,7 +134,10 @@ body {
 			&.schema-url { --collection-icon : var(--icon-url) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
-			&.cache-cleaner { --collection-icon : var(--icon-clean) }
+			&.cache-cleaner { --collection-icon : var(--icon-clean-o) }
+			&.project-setup { --collection-icon : var(--icon-flag) }
+			&.macro-builder { --collection-icon : var(--icon-build) }
+			&.server-checker { --collection-icon : var(--icon-health) }
 		}
 		a {
 			display         : flex;
