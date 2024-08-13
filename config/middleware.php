@@ -11,10 +11,12 @@ use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Middleware\BetaMiddleware;
+use Odan\Session\Middleware\SessionStartMiddleware;
 
 return function (App $app) {
 	$app->addBodyParsingMiddleware();
 	$app->add(BetaMiddleware::class);
+	$app->add(SessionStartMiddleware::class);
 	$app->add(CorsMiddleware::class);
 	$app->add(LiteLicenseMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
@@ -27,7 +29,7 @@ return function (App $app) {
 
 	// Stacks internal PHP server
 	$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
-	if ($environment === 'preview') {
+	if ($environment === 'preview' || PHP_SAPI === 'cli-server') {
 		$app->add(PreviewRouteMiddleware::class);
 	}
 };

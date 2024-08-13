@@ -12,6 +12,8 @@ final class Config
 	public string $api       = '';
 	public string $locale    = '';
 	/** @var array<string,mixed> */
+	public array $session     = [];
+	/** @var array<string,mixed> */
 	public array $logger     = [];
 	/** @var array<string,mixed> */
 	public array $sentry     = [];
@@ -34,5 +36,6 @@ final class Config
 		$this->domain     = $settings['domain'];
 		$this->api        = $settings['api'];
 		$this->locale     = $settings['locale'];
+		$this->session    = $settings['session'];
 	}
 }

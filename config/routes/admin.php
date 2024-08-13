@@ -9,6 +9,7 @@ use TotalCMS\Action\Admin\AdminIndexAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
+use Odan\Session\Middleware\SessionStartMiddleware;
 
 return function (App $app) {
 	$app->group('/admin', function (RouteCollectorProxy $group) {
@@ -23,5 +24,5 @@ return function (App $app) {
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
-	});
+	})->add(SessionStartMiddleware::class);;
 };

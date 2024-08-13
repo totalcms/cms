@@ -45,6 +45,9 @@ use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\QRGenerator;
+use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
+use Odan\Session\SessionManagerInterface;
 
 return [
 	// Application settings
@@ -56,6 +59,16 @@ return [
 		AppFactory::setContainer($container);
 
 		return AppFactory::create();
+	},
+
+	SessionManagerInterface::class => function (ContainerInterface $container) {
+		return $container->get(SessionInterface::class);
+	},
+
+	SessionInterface::class => function (ContainerInterface $container) {
+		$options = $container->get(Config::class)->session;
+
+		return new PhpSession($options);
 	},
 
 	ResponseFactoryInterface::class => function (ContainerInterface $container) {
@@ -99,12 +112,6 @@ return [
 		return $container->get(StorageFilesystemAdapter::class);
 	},
 
-	PreviewRouteMiddleware::class => function (ContainerInterface $container) {
-		$config = $container->get(Config::class);
-
-		return new PreviewRouteMiddleware($config);
-	},
-
 	BasePathMiddleware::class => function (ContainerInterface $container) {
 		$app = $container->get(App::class);
 
@@ -115,6 +122,12 @@ return [
 		$factory = $container->get(ResponseFactoryInterface::class);
 
 		return new ValidationExceptionMiddleware($factory, new ErrorDetailsResultTransformer(), new JsonEncoder());
+	},
+
+	PreviewRouteMiddleware::class => function (ContainerInterface $container) {
+		$api = $container->get(Config::class)->api;
+
+		return new PreviewRouteMiddleware($api);
 	},
 
 	SentryMiddleware::class => function (ContainerInterface $container) {

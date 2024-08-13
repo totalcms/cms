@@ -6,7 +6,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Support\Config;
 
 /**
  * Stacks Preview middleware.
@@ -15,26 +14,17 @@ use TotalCMS\Support\Config;
  */
 final class PreviewRouteMiddleware implements MiddlewareInterface
 {
-	public function __construct(
-		private Config $config,
-	) {
-	}
+	public function __construct(private string $api) {}
 
-	/**
-	 * @SuppressWarnings(PHPMD.Superglobals)
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param RequestHandlerInterface $handler
-	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		$routePath = $this->getPreviewRoute($request);
+		$route = $this->getPreviewRoute($request);
 
-		// Update the request path to match the "route" query parameter
-		$uri     = $request->getUri()->withPath($routePath);
-		$request = $request->withUri($uri);
-
-		$_SERVER['PREVIEW_TCMSDIR'] = $this->config->datadir;
+		if (!empty($route)) {
+			// Update the request path to match the "route" query parameter
+			$uri     = $request->getUri()->withPath($route);
+			$request = $request->withUri($uri);
+		}
 
 		$response = $handler->handle($request);
 
@@ -46,8 +36,9 @@ final class PreviewRouteMiddleware implements MiddlewareInterface
 		$server = $request->getServerParams();
 		$url = isset($server['REQUEST_URI']) ? $server['REQUEST_URI'] : '';
 
-		// Find the position of "tcms/public" in the request URI
-		$parts = explode('tcms/public', $url);
+		$api = $this->api ?: 'tcms/public';
+
+		$parts = explode($api, $url);
 		$route = $parts[1] ?? '';
 
 		return $route;
