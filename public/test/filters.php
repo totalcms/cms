@@ -8,10 +8,15 @@
 		"operator" : "before",
 		"value"    : "2000-01-01"
 	},
+	{
+		"property" : "image.size",
+		"operator" : "greater",
+		"value"    : 4000
+	},
 ]) %}
 
 {% for object in objects %}
-<p>{{ object.id }}: {{ object.date }}</p>
+<p>{{ object.id }}: {{ object.date }}: {{ object.image.size }}</p>
 {% endfor %}
 
 

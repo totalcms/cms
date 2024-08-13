@@ -52,7 +52,9 @@ class CollectionRefiner
 	public function filterByRule(array $collection, string $property, mixed $value, string $operator = "equal"): array
 	{
 		return array_filter($collection, function ($record) use ($property, $value, $operator) {
-			if (!array_key_exists($property, $record)) {
+			$item = $this->getPropertyValueForRecord($record, $property);
+
+			if ($item === null) {
 				return false;
 			}
 
@@ -69,7 +71,6 @@ class CollectionRefiner
 			}
 
 			if (method_exists($this, $operator)) {
-				$item = $record[$property];
 
 				if (is_array($item)) {
 					$found = self::filterArrayByRule($item, $value, $operator);
@@ -93,6 +94,30 @@ class CollectionRefiner
 
 			return $record[$property] == $value;
 		});
+	}
+
+	/**
+	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 *
+	 * @param array<string,mixed> $record
+	 */
+	private function getPropertyValueForRecord(array $record, string $property): mixed
+	{
+		if (array_key_exists($property, $record)) {
+			return $record[$property];
+		}
+
+		$properties = explode('.', $property);
+		$value = $record;
+		foreach ($properties as $property) {
+			if (is_array($value) && array_key_exists($property, $value)) {
+				$value = $value[$property];
+			} else {
+				return null;
+			}
+		}
+
+		return $value;
 	}
 
 	/** @param array<int,mixed> $items */
