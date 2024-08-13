@@ -33,9 +33,7 @@ final class PreviewRouteMiddleware implements MiddlewareInterface
 
 	private function getPreviewRoute(ServerRequestInterface $request): string
 	{
-		$server = $request->getServerParams();
-		$url = isset($server['REQUEST_URI']) ? $server['REQUEST_URI'] : '';
-
+		$url = $request->getUri()->getPath();
 		$api = $this->api ?: 'tcms/public';
 
 		$parts = explode($api, $url);
