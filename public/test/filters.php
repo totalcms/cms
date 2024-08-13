@@ -2,35 +2,16 @@
 
 <h1>Total CMS Filter Test</h1>
 
-{% set objects = cms.objects("blog") | filterProps([
-	{
-		"property" : "title",
-		"operator" : "contains",
-		"value"    : "test"
-	},
-	{
-		"property" : "tags",
-		"operator" : "contains",
-		"value"    : cms.getParams.tags
-	},
+{% set objects = cms.objects("blog") | filterCollection([
 	{
 		"property" : "date",
-		"operator" : "greaterThan",
-		"value"    : "2019-01-01"
-	}
-]) | sortByProps([
-	{
-		"property" : "date",
-		"direction": "desc"
+		"operator" : "before",
+		"value"    : "2000-01-01"
 	},
-	{
-		"property" : "title",
-		"direction": "asc"
-	}
 ]) %}
 
 {% for object in objects %}
-
+<p>{{ object.id }}: {{ object.date }}</p>
 {% endfor %}
 
 

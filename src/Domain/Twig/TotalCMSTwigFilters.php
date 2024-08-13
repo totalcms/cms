@@ -51,8 +51,9 @@ final class TotalCMSTwigFilters
 		'hue',
 		'adjustColor',
 		'obfuscate',
-		'filterByProps',
-		'sortByProps',
+		'filterCollection',
+		'sortCollection',
+		'paginate',
 	];
 
 	/** @return array<TwigFilter> */
@@ -348,6 +349,30 @@ final class TotalCMSTwigFilters
 		$refiner = new CollectionRefiner($collection);
 		return $refiner->filter($rules);
 	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>> $rules
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public static function sortCollection(array $collection, array $rules): array
+	{
+		$refiner = new CollectionRefiner($collection);
+		return $refiner->filter($rules);
+	}
+
+	/**
+	 * @param array<int,mixed> $collection
+	 *
+	 * @return array<int,mixed>
+	 */
+	public static function paginate(array $collection, int $limit, int $page = 1): array
+	{
+		$offset = ($page - 1) * $limit;
+		return array_slice($collection, $offset, $limit);
+	}
+
 
 	// -------------------------
 	// Type Casting

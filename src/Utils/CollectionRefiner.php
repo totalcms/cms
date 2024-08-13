@@ -35,7 +35,7 @@ class CollectionRefiner
 				collection: $filteredCollection,
 				property: $rule['property'],
 				value: $rule['value'],
-				operator: $rule['rule'],
+				operator: $rule['operator'],
 			);
 		}
 
@@ -107,40 +107,6 @@ class CollectionRefiner
 		}
 		return $found;
 	}
-
-	// public function getRow(int $row): void
-	// {
-	// 	$records = [];
-	// 	if (isset($this->records[$row - 1])) {
-	// 		$records[] = $this->records[$row - 1];
-	// 	}
-	// 	$this->records = $records;
-	// }
-
-	// private function excludeData(array $records): array
-	// {
-	//     foreach ($this->excludes as $exclude) {
-	//         if (isset($records[$exclude])) {
-	//             unset($records[$exclude]);
-	//             continue;
-	//         }
-	//         foreach ($records as $property => $record) {
-	//             if (isset($record[$exclude])) {
-	//                 unset($records[$property][$exclude]);
-	//             }
-	//         }
-	//     }
-	//     return $records;
-	// }
-
-	// public function limitRecords(int $offset = 0): array
-	// {
-	//     $records = $this->records;
-	//     if ($this->limit > 0) {
-	//         $records = array_slice($this->records, $offset, $this->limit, true);
-	//     }
-	//     return $this->excludeData($records);
-	// }
 
 	protected static function equal(mixed $haystack, mixed $needle): bool
 	{
@@ -250,5 +216,15 @@ class CollectionRefiner
 	{
 		$time = strtotime($date);
 		return $time >= strtotime("today") && $time < strtotime("tomorrow");
+	}
+
+	protected static function after(string $date, string $dateAfter): bool
+	{
+		return strtotime($date) > strtotime($dateAfter);
+	}
+
+	protected static function before(string $date, string $dateBefore): bool
+	{
+		return strtotime($date) < strtotime($dateBefore);
 	}
 }
