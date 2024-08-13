@@ -42,6 +42,7 @@ use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Middleware\SentryMiddleware;
+use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\QRGenerator;
 
@@ -96,6 +97,12 @@ return [
 
 	StorageAdapterInterface::class => function (ContainerInterface $container) {
 		return $container->get(StorageFilesystemAdapter::class);
+	},
+
+	PreviewRouteMiddleware::class => function (ContainerInterface $container) {
+		$config = $container->get(Config::class);
+
+		return new PreviewRouteMiddleware($config);
 	},
 
 	BasePathMiddleware::class => function (ContainerInterface $container) {
