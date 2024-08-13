@@ -10,9 +10,14 @@ $settings['env'] = 'preview';
 
 $settings['sentry']['enable'] = false;
 
+// This file can exist in order to set a preview domain for the preview environment
+$previewDomainFile = __DIR__ . '/preview-domain';
+
 $settings['datadir'] = sys_get_temp_dir() . '/tcms-data';
 if (isset($_SERVER['DOMAIN']) && is_string($_SERVER['DOMAIN'])) {
 	$settings['datadir'] .= '-' . $_SERVER['DOMAIN'];
+} elseif (file_exists($previewDomainFile)) {
+	$settings['datadir'] .= '-' . file_get_contents($previewDomainFile);
 }
 
 $settings['docroot']   = $settings['root'];
