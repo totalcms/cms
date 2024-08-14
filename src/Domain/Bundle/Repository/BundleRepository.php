@@ -7,8 +7,9 @@ use TotalCMS\Domain\Bundle\Data\BundleData;
 
 final class BundleRepository extends StorageRepository
 {
-	const BUNDLE      = __DIR__ . '../../resources/bundle';
-	const LOCALBUNDLE = __DIR__ . '../../resources/.bundle';
+	const RESOURCES   = __DIR__ . '/../../../../resources/';
+	const BUNDLE      = self::RESOURCES . 'bundle';
+	const LOCALBUNDLE = self::RESOURCES . '.bundle';
 	const VALIDITY    = 60 * 60;
 
 	public function saveLocalBundle(BundleData $bundle): bool
@@ -55,6 +56,8 @@ final class BundleRepository extends StorageRepository
 
 	private function localValidity(): void
 	{
+		if (!file_exists(self::LOCALBUNDLE)) return;
+
 		$time = time() - filemtime(self::LOCALBUNDLE);
 		if ($time > self::VALIDITY) {
 			unlink(self::LOCALBUNDLE);
