@@ -23,7 +23,7 @@ class BundleChecker
 		$names   = $this->matchBundleNames();
 
 		if ($bundles && $names) {
-			$this->wrapBundle();
+			$this->saveLocalBundle();
 		}
 
 		return $this->verified();

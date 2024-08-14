@@ -8,79 +8,8 @@ use Symfony\Component\Serializer\Serializer;
 
 final class BundleData
 {
-	public const SCHEMA_PREFIX    = 'https://www.totalcms.co/schemas/';
-	public const SCHEMA_VERSION   = 'https://json-schema.org/draft/2020-12/schema';
-	public const RESERVED_SCHEMAS = [
-		'blog-legacy',
-		'blog',
-		'color',
-		'collection',
-		'date',
-		'depot',
-		'email',
-		'feed',
-		'file',
-		'gallery',
-		'image',
-		'new', // not allowed for /admin url routes
-		'number',
-		'schema',
-		'styledtext',
-		'svg',
-		'text',
-		'toggle',
-		'url',
-	];
-	public const PROPERTY_TYPES = [
-		'string',
-		'number',
-		'boolean',
-		'array',
-		'object',
-		'color',
-		'date',
-		'time',
-		'deck',
-		'email',
-		'file',
-		'image',
-		'url',
-		'depot',
-		'gallery',
-		'list',
-		'password',
-		'phone',
-		'slug',
-		'svg',
-	];
-	public const PROPERTY_TYPE_TO_REF = [
-		'color'    => 'https://www.totalcms.co/schemas/properties/color.json',
-		'date'     => 'https://www.totalcms.co/schemas/properties/date.json',
-		'deck'     => 'https://www.totalcms.co/schemas/properties/deck.json',
-		'depot'    => 'https://www.totalcms.co/schemas/properties/depot.json',
-		'email'    => 'https://www.totalcms.co/schemas/properties/email.json',
-		'file'     => 'https://www.totalcms.co/schemas/properties/file.json',
-		'gallery'  => 'https://www.totalcms.co/schemas/properties/gallery.json',
-		'image'    => 'https://www.totalcms.co/schemas/properties/image.json',
-		'list'     => 'https://www.totalcms.co/schemas/properties/list.json',
-		'password' => 'https://www.totalcms.co/schemas/properties/password.json',
-		'phone'    => 'https://www.totalcms.co/schemas/properties/phone.json',
-		'rating'   => 'https://www.totalcms.co/schemas/properties/rating.json',
-		'slug'     => 'https://www.totalcms.co/schemas/properties/slug.json',
-		'svg'      => 'https://www.totalcms.co/schemas/properties/svg.json',
-		'time'     => 'https://www.totalcms.co/schemas/properties/time.json',
-		'url'      => 'https://www.totalcms.co/schemas/properties/url.json',
-	];
-
-	public string $id;
-	public string $description;
-	/** @var array<string,mixed> */
-	public array $properties;
-	/** @var array<string> */
-	public array $required;
-	/** @var array<string> */
-	public array $index;
-	protected Serializer $serializer;
+	public string $name;
+	public string $bundle;
 
 	public function __construct()
 	{
