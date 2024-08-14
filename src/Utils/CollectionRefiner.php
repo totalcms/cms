@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Utils;
 
-use ReflectionMethod;
-
 /**
  * Collection Refiner
  * Filters a collection of items.
@@ -11,7 +9,7 @@ use ReflectionMethod;
 class CollectionRefiner
 {
 	/**
-	 * Constructor
+	 * Constructor.
 	 *
 	 * @param array<array<string,mixed>> $collection
 	 */
@@ -49,9 +47,17 @@ class CollectionRefiner
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function filterByRule(array $collection, string $property, mixed $value, string $operator = "equal"): array
+	public function filterByRule(array $collection, string $property, string $value, string $operator = 'equal'): array
 	{
-		return array_filter($collection, function ($record) use ($property, $value, $operator) {
+		$reflection = new \ReflectionMethod(CollectionRefiner::class, "$operator");
+		$numParams  = $reflection->getNumberOfParameters();
+
+		// If operator requires a value and it's empty, return all records
+		if ($numParams === 2 && $value === '') {
+			return $collection;
+		}
+
+		return array_filter($collection, function ($record) use ($property, $value, $operator, $numParams) {
 			$item = self::getPropertyValueForRecord($record, $property);
 
 			if ($item === null) {
@@ -61,24 +67,23 @@ class CollectionRefiner
 			// If rule is prepended by not-, then invert the result
 			$not = false;
 			if (self::starts($operator, 'not-')) {
-				$not = true;
+				$not      = true;
 				$operator = mb_substr($operator, 4);
 			}
 			// If value is prepended by !, then invert the result
 			if (self::starts($value, '!')) {
-				$not = true;
+				$not   = true;
 				$value = mb_substr($value, 1);
 			}
 
 			if (method_exists($this, $operator)) {
-
 				if (is_array($item)) {
 					$found = self::filterArrayByRule($item, $value, $operator);
+
 					return $not ? !$found : $found;
 				}
 
-				$reflection = new ReflectionMethod(CollectionRefiner::class, "$operator");
-				switch ($reflection->getNumberOfParameters()) {
+				switch ($numParams) {
 					case 1:
 						$found = self::$operator($item);
 						break;
@@ -118,7 +123,7 @@ class CollectionRefiner
 		}
 
 		$properties = explode('.', $property);
-		$value = $record;
+		$value      = $record;
 		foreach ($properties as $property) {
 			if (is_array($value) && array_key_exists($property, $value)) {
 				$value = $value[$property];
@@ -145,6 +150,7 @@ class CollectionRefiner
 				break;
 			}
 		}
+
 		return $found;
 	}
 
@@ -166,7 +172,13 @@ class CollectionRefiner
 	protected static function ends(string $haystack, string $needle): bool
 	{
 		$length = mb_strlen($needle);
+
 		return $length > 0 ? mb_substr($haystack, -$length) === $needle : true;
+	}
+
+	protected static function like(string $haystack, string $regex): bool
+	{
+		return preg_match("/$regex/", $haystack) === 1;
 	}
 
 	protected static function equalCaseInsensitive(string $haystack, string $needle): bool
@@ -187,6 +199,7 @@ class CollectionRefiner
 	protected static function endsCaseInsensitive(string $haystack, string $needle): bool
 	{
 		$length = mb_strlen($needle);
+
 		return $length > 0 ? mb_substr(mb_strtolower($haystack), -$length) === mb_strtolower($needle) : true;
 	}
 
@@ -237,13 +250,13 @@ class CollectionRefiner
 	/** @param string|int|bool $haystack */
 	protected static function istrue(mixed $haystack): bool
 	{
-		return $haystack === true || $haystack === "true" || $haystack === "1" || $haystack === 1;
+		return $haystack === true || $haystack === 'true' || $haystack === '1' || $haystack === 1;
 	}
 
 	/** @param string|int|bool $haystack */
 	protected static function isfalse(mixed $haystack): bool
 	{
-		return $haystack === false || $haystack === "false" || $haystack === "0" || $haystack === 0;
+		return $haystack === false || $haystack === 'false' || $haystack === '0' || $haystack === 0;
 	}
 
 	protected static function isempty(mixed $haystack): bool
@@ -279,7 +292,8 @@ class CollectionRefiner
 	protected static function today(string $date): bool
 	{
 		$time = strtotime($date);
-		return $time >= strtotime("today") && $time < strtotime("tomorrow");
+
+		return $time >= strtotime('today') && $time < strtotime('tomorrow');
 	}
 
 	protected static function after(string $date, string $dateAfter): bool
@@ -290,5 +304,11 @@ class CollectionRefiner
 	protected static function before(string $date, string $dateBefore): bool
 	{
 		return strtotime($date) < strtotime($dateBefore);
+	}
+
+	/** @param array<string> $haystack */
+	protected static function inArray(array $haystack, string $needle): bool
+	{
+		return in_array($needle, $haystack);
 	}
 }
