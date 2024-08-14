@@ -8,31 +8,30 @@ use Symfony\Component\Serializer\Serializer;
 
 final class BundleData
 {
-	public string $name;
-	public string $bundle;
+	/** @var array<string,string> */
+	public array $bundle;
+	private Serializer $serializer;
 
 	public function __construct()
 	{
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 	}
 
-	/** @return array<string,mixed> */
-	public function toArray(): array
+	public function __toString(): string
 	{
-		return [
-			'$schema'     => self::SCHEMA_VERSION,
-			'$id'         => self::SCHEMA_PREFIX . $this->id . '.json',
-			'type'        => 'object',
-			'id'          => $this->id,
-			'description' => $this->description,
-			'properties'  => $this->properties,
-			'required'    => $this->required,
-			'index'       => $this->index ?? [],
-		];
+		return $this->toJson();
 	}
 
 	public function toJson(): string
 	{
-		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+		return $this->serializer->serialize($this->bundle, 'json');
+	}
+
+	/** @param array<string,string> $data */
+	public static function fromArray(array $data): BundleData
+	{
+		$bundleData = new BundleData();
+		$bundleData->bundle = $data;
+		return $bundleData;
 	}
 }

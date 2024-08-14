@@ -25,8 +25,8 @@ find vendor -empty -type d -delete
 find vendor -name bin -type d | xargs rm -rf
 find vendor -name test -type d | xargs rm -rf
 
-# generate schema hash to verify schema files after installation
-bin/schema-hash.sh
+# generate bundle to verify schema files after installation
+php bin/make-bundle.php
 
 # generate beta expiration date
 EXPIRE=`date -v +45d +"%Y-%m-%d"`

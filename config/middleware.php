@@ -11,11 +11,13 @@ use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Middleware\BetaMiddleware;
+use TotalCMS\Middleware\BundleMiddleware;
 use Odan\Session\Middleware\SessionStartMiddleware;
 
 return function (App $app) {
 	$app->addBodyParsingMiddleware();
 	$app->add(BetaMiddleware::class);
+	$app->add(BundleMiddleware::class);
 	$app->add(SessionStartMiddleware::class);
 	$app->add(CorsMiddleware::class);
 	$app->add(LiteLicenseMiddleware::class);

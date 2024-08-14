@@ -23,12 +23,8 @@ final class BundleMiddleware implements MiddlewareInterface
 	{
 		$method = $request->getMethod();
 
-		if ($method === 'GET' && $this->bundleChecker->verified()) {
-			return $handler->handle($request);
-		}
-
-		if (!$this->bundleChecker->verify()) {
-			throw new \RuntimeException("Total CMS installation has been corrupted. Please reinstall.");
+		if ($method !== 'GET' && !$this->bundleChecker->verified()) {
+			throw new \RuntimeException('Total CMS installation has been corrupted. Please reinstall.');
 		}
 
 		$response = $handler->handle($request);

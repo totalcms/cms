@@ -2,32 +2,21 @@
 
 namespace TotalCMS\Domain\Bundle\Service;
 
+use TotalCMS\Domain\Bundle\Data\BundleData;
 use TotalCMS\Domain\Bundle\Repository\BundleRepository;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 class BundleChecker
 {
-	/** @var array<string,string> */
-	private array $bundles;
+	private const BASEDIR = __DIR__ . '/../../../../';
+
+	private BundleData $bundle;
 
 	public function __construct(
-		private BundleRepository $bundleRepository
-	) {
-		$this->bundles = [];
-	}
-
-	public function verify(): bool
-	{
-		$this->bundles = $this->fileBundles();
-
-		$bundles = $this->matchBundles();
-		$names   = $this->matchBundleNames();
-
-		if ($bundles && $names) {
-			$this->saveLocalBundle();
-		}
-
-		return $this->verified();
-	}
+		private BundleRepository $bundleRepository,
+		private SchemaLister $schemaLister,
+	) {}
 
 	public function verified(): bool
 	{
@@ -35,82 +24,64 @@ class BundleChecker
 			$this->verify();
 		}
 
-		if ($this->bundleRepository->bundleExists() && $this->bundleRepository->localBundleExists()) {
+		if (
+			$this->bundleRepository->bundleExists() &&
+			$this->bundleRepository->localBundleExists()
+		) {
 			return true;
 		}
 
 		return false;
 	}
 
-	/** @return array<string,string> */
-	private function fileBundles(): array
+	private function verify(): bool
 	{
-		$bundle = file_get_contents(self::BUNDLE);
+		$this->bundle = $this->bundleRepository->fetchBundle();
 
-		if ($bundle === false) {
-			throw new \RuntimeException(self::REINSTALL .
-				'Error reading Bundle file.');
+		if ($this->compareBundle()) {
+			$this->saveBundle();
 		}
 
-		$hashes = json_decode(base64_decode($bundle), true);
-
-		if (json_last_error() !== JSON_ERROR_NONE) {
-			throw new \RuntimeException(self::REINSTALL .
-				'Error decoding Bundle file: ' . json_last_error_msg());
-		}
-
-		return $hashes;
+		return $this->verified();
 	}
 
-	private function wrapBundle(): bool
+	private function saveBundle(): void
 	{
-		$wrap = json_encode(array_keys($this->bundles));
-		return file_put_contents(self::DOTBUNDLE, $wrap) !== false;
+		$this->bundleRepository->saveLocalBundle($this->bundle);
 	}
 
-	private function matchBundleNames(): bool
+	private function compareBundle(): bool
 	{
-		$match = true;
-
-		$dh = opendir(SchemaRepository::DEFAULT_SCHEMA_DIR);
-		if ($dh !== false) {
-			while (($file = readdir($dh)) !== false) {
-				$filePath = SchemaRepository::DEFAULT_SCHEMA_DIR . "/$file";
-				if (is_file($filePath) && pathinfo($filePath, PATHINFO_EXTENSION) === 'json') {
-					$bundleName = pathinfo($file, PATHINFO_FILENAME);
-					if (!isset($this->bundles[$bundleName])) {
-						$match = false;
-						throw new \DomainException(self::REINSTALL . "Bundle $bundleName missing.");
-					}
-				}
-			}
-			closedir($dh);
-		}
-
-		return $match;
-	}
-
-	private function matchBundles(): bool
-	{
-		$match = true;
-
-		foreach ($this->bundles as $name => $bundle) {
-			$bundlePath = SchemaRepository::DEFAULT_SCHEMA_DIR . "/$name.json";
+		foreach ($this->bundle->bundle as $name => $bundle) {
+			$bundlePath = self::BASEDIR . $name;
 
 			if (!file_exists($bundlePath)) {
-				$match = false;
-				throw new \DomainException(self::REINSTALL . "Bundle $name missing.");
+				throw new \DomainException("$name missing from local Bundle.");
 			}
 
-			$installed = hash_file('sha256', $bundlePath);
-
-			if ($installed !== $bundle) {
-				$match = false;
-				throw new \UnexpectedValueException(self::REINSTALL .
-					"Bundle $name cannot be verified. Corrupted Installation. Please reinstall TotalCMS");
+			if (hash_file('sha256', $bundlePath) !== $bundle) {
+				throw new \UnexpectedValueException("Bundle $name cannot be verified.");
 			}
 		}
 
-		return $match;
+		return $this->compareLocalBundle();
+	}
+
+	private function compareLocalBundle(): bool
+	{
+		$schemas = $this->schemaLister->listReservedSchemas();
+		foreach ($schemas as $schema) {
+			$schemaPath = SchemaRepository::DEFAULT_SCHEMA_DIR . "{$schema->id}.json";
+			$bundlePath = "resources/schemas/{$schema->id}.json";
+
+			if (!isset($this->bundle->bundle[$bundlePath])) {
+				throw new \DomainException("$bundlePath missing from Bundle.");
+			}
+			if (hash_file('sha256', $schemaPath) !== $this->bundle->bundle[$bundlePath]) {
+				throw new \UnexpectedValueException("Bundle $bundlePath cannot be validated.");
+			}
+		}
+
+		return true;
 	}
 }
