@@ -3,7 +3,7 @@
 # Directory containing the JSON files
 DIRECTORY="resources/schemas"
 # Output JSON file
-OUTPUT_FILE="resources/installed"
+OUTPUT_FILE="resources/bundle"
 
 # Initialize the JSON structure
 echo "{" > $OUTPUT_FILE
@@ -21,6 +21,8 @@ done
 # Remove the last comma and close the JSON structure
 sed '$ s/,$//' $OUTPUT_FILE > $OUTPUT_FILE.tmp && mv $OUTPUT_FILE.tmp $OUTPUT_FILE
 echo "}" >> $OUTPUT_FILE
+
+cat $OUTPUT_FILE | jq -c | base64 > $OUTPUT_FILE.tmp && mv $OUTPUT_FILE.tmp $OUTPUT_FILE
 
 php bin/validate-schema.php
 

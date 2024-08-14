@@ -1,14 +1,14 @@
 <?php
 
 $directory = __DIR__ . '/../resources/schemas'; // Directory containing the schema JSON files
-$hashFile  = __DIR__ . '/../resources/installed'; // Output JSON file
+$hashFile  = __DIR__ . '/../resources/bundle'; // Output JSON file
 
 // Read the JSON file with the expected hashes
 if (!file_exists($hashFile)) {
 	exit("Hash file $hashFile does not exist.\n");
 }
 
-$hashes = json_decode(file_get_contents($hashFile), true);
+$hashes = json_decode(base64_decode(file_get_contents($hashFile)), true);
 
 if (json_last_error() !== JSON_ERROR_NONE) {
 	exit('Error decoding JSON file: ' . json_last_error_msg() . "\n");
