@@ -25,7 +25,7 @@ find vendor -empty -type d -delete
 find vendor -name bin -type d | xargs rm -rf
 find vendor -name test -type d | xargs rm -rf
 
-# generate bundle to verify schema files after installation
+# generate bundle to verify installation
 php bin/make-bundle.php
 
 # generate beta expiration date
@@ -50,7 +50,7 @@ composer install --quiet
 find dist/resources -type f -exec chmod 444 {} +
 
 # Ensure this does not get shipped
-rm dist/resources/.bundle
+rm -f dist/resources/.bundle
 
 VERSION=`jq -r '.version' composer.json`
 BUILD=`git rev-parse --short HEAD`
