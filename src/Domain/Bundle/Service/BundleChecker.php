@@ -4,29 +4,31 @@ namespace TotalCMS\Domain\Bundle\Service;
 
 use TotalCMS\Domain\Bundle\Data\BundleData;
 use TotalCMS\Domain\Bundle\Repository\BundleRepository;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
 
 class BundleChecker
 {
-	private const BASEDIR = __DIR__ . '/../../../../';
+	private const BASEDIR   = __DIR__ . '/../../../../';
+	private const REINSTALL = 'Total CMS installation has been corrupted. Please reinstall. ';
 
 	private BundleData $bundle;
 
 	public function __construct(
 		private BundleRepository $bundleRepository,
 		private SchemaLister $schemaLister,
-	) {}
+	) {
+	}
 
-	public function verified(): bool
+	public function check(): bool
 	{
 		if (!$this->bundleRepository->localBundleExists()) {
 			$this->verify();
 		}
 
 		if (
-			$this->bundleRepository->bundleExists() &&
-			$this->bundleRepository->localBundleExists()
+			$this->bundleRepository->bundleExists()
+			&& $this->bundleRepository->localBundleExists()
 		) {
 			return true;
 		}
@@ -34,7 +36,7 @@ class BundleChecker
 		return false;
 	}
 
-	private function verify(): bool
+	public function verify(): bool
 	{
 		$this->bundle = $this->bundleRepository->fetchBundle();
 
@@ -42,7 +44,7 @@ class BundleChecker
 			$this->saveBundle();
 		}
 
-		return $this->verified();
+		return $this->check();
 	}
 
 	private function saveBundle(): void
@@ -56,10 +58,10 @@ class BundleChecker
 			$bundlePath = self::BASEDIR . $name;
 
 			if (!file_exists($bundlePath)) {
-				throw new \DomainException("$name missing from local Bundle.");
+				throw new \DomainException(self::REINSTALL . "$name missing from local Bundle.");
 			}
 			if (hash_file('sha256', $bundlePath) !== $bundle) {
-				throw new \UnexpectedValueException("Bundle $name cannot be verified.");
+				throw new \UnexpectedValueException(self::REINSTALL . "Bundle $name cannot be verified.");
 			}
 		}
 
@@ -74,10 +76,10 @@ class BundleChecker
 			$bundlePath = "resources/schemas/{$schema->id}.json";
 
 			if (!isset($this->bundle->bundle[$bundlePath])) {
-				throw new \DomainException("$bundlePath missing from Bundle.");
+				throw new \DomainException(self::REINSTALL . "$bundlePath missing from Bundle.");
 			}
 			if (hash_file('sha256', $schemaPath) !== $this->bundle->bundle[$bundlePath]) {
-				throw new \UnexpectedValueException("Bundle $bundlePath cannot be validated.");
+				throw new \UnexpectedValueException(self::REINSTALL . "Bundle $bundlePath cannot be validated.");
 			}
 		}
 

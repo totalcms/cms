@@ -17,14 +17,15 @@ final class BundleMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private BundleChecker $bundleChecker
-	) {}
+	) {
+	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		$method = $request->getMethod();
 
-		if ($method !== 'GET' && !$this->bundleChecker->verified()) {
-			throw new \RuntimeException('Total CMS installation has been corrupted. Please reinstall.');
+		if ($method !== 'GET') {
+			$this->bundleChecker->check();
 		}
 
 		$response = $handler->handle($request);
