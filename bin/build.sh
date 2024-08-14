@@ -49,6 +49,9 @@ composer install --quiet
 # remove write permissions from all files
 find dist/resources -type f -exec chmod 444 {} +
 
+# Ensure this does not get shipped
+rm dist/resources/.bundle
+
 VERSION=`jq -r '.version' composer.json`
 BUILD=`git rev-parse --short HEAD`
 

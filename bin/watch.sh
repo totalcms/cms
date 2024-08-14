@@ -1,6 +1,7 @@
 #!/bin/bash
 
 bin/build-assets.sh
+php bin/make-bundle.php
 
 echo "Watching..."
 

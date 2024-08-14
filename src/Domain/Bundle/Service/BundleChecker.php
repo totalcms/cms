@@ -58,11 +58,6 @@ class BundleChecker
 			if (!file_exists($bundlePath)) {
 				throw new \DomainException("$name missing from local Bundle.");
 			}
-
-			var_dump($bundlePath);
-			var_dump($bundle);
-			var_dump(hash_file('sha256', $bundlePath));
-			exit;
 			if (hash_file('sha256', $bundlePath) !== $bundle) {
 				throw new \UnexpectedValueException("Bundle $name cannot be verified.");
 			}
