@@ -137,6 +137,7 @@ body {
 			&.cache-cleaner { --collection-icon : var(--icon-clean-o) }
 			&.project-setup { --collection-icon : var(--icon-flag) }
 			&.macro-builder { --collection-icon : var(--icon-build) }
+			&.pretty-url-builder { --collection-icon : var(--icon-link) }
 			&.server-checker { --collection-icon : var(--icon-health) }
 		}
 		a {
