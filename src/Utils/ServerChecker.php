@@ -15,13 +15,16 @@ class ServerChecker
 		'exif',
 		'fileinfo',
 		'gd',
-		'intl',
+		// 'intl',
 		'json',
 		'mbstring',
 		'openssl',
+		// 'pdo',
 	];
 	private const OPTIONAL_SOFTWARE = [
 		'imagick',
+		// 'memcached',
+		// 'opcache',
 	];
 	private const PHP_VERSION = '8.2.0';
 
