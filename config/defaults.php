@@ -78,7 +78,7 @@ $settings['error'] = [
 // Logger settings
 $settings['logger'] = [
 	'name'        => 'totalcms',
-	'path'        => __DIR__ . '/../logs',
+	'path'        => realpath(__DIR__ . '/../logs'),
 	'filename'    => 'totalcms.log',
 	'level'       => Monolog\Level::Info,
 	'maxFiles'    => 30,

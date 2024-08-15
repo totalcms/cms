@@ -75,7 +75,7 @@
 			{% if istype(value, "string") %}
 				<td>{{ value }}</td>
 			{% else %}
-				<td><pre>{{ json_pretty(value) }}</pre></td>
+				<td><pre>{{ json_pretty(value) | ltrim('{') | rtrim('}') | replace({"\n    ":"\n", '"':'', ',':'', '\\/':'/'})}}</pre></td>
 			{% endif %}
 		</tr>
 		{% endfor %}

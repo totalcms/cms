@@ -384,8 +384,14 @@ body {
 		padding     : 0 1rem;
 		white-space : wrap;
 	}
+	th.gridjs-th:first-child {
+		max-width : 200px !important;
+	}
 	.gridjs-wrapper, table {
 		max-height : none;
+	}
+	pre {
+		padding: 0.5rem 0;
 	}
 }
 .admin-table-wrapper,

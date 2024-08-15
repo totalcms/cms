@@ -31,8 +31,7 @@ class ServerChecker
 	public function __construct(
 		private BundleChecker $bundleChecker,
 		private Config $config,
-	) {
-	}
+	) {}
 
 	/**
 	 * @SuppressWarnings(PHPMD.Superglobals)
@@ -92,12 +91,13 @@ class ServerChecker
 	/** @return array<string,bool> */
 	public function checkPermissions(): array
 	{
-		return [
+		return array_filter([
 			'tcms-data' => is_writable($this->config->datadir),
-			'cache'     => is_writable($this->config->cachedir),
-			'tmp'       => is_writable($this->config->tmpdir),
-			'logs'      => is_writable($this->config->logger['path']),
-		];
+			// Don't check cache if it's disabled
+			'cache' => $this->config->cachedir !== "false" ? is_writable($this->config->cachedir) : null,
+			'logs'  => is_writable($this->config->logger['path']),
+			'tmp'   => is_writable($this->config->tmpdir),
+		]);
 	}
 
 	public function bundleCheck(): bool
@@ -113,8 +113,13 @@ class ServerChecker
 
 	public function getVersion(): string
 	{
-		$version = trim(file_get_contents(__DIR__ . '/../../version'));
+		$version = false;
+		$file    = __DIR__ . '/../../version';
 
-		return $version ?: 'Unknown';
+		if (file_exists($file)) {
+			$version = file_get_contents($file);
+		}
+
+		return $version ? trim($version) : 'Unknown';
 	}
 }
