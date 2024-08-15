@@ -326,12 +326,6 @@ body {
 		max-height : calc(100vh - 300px);
 	}
 
-	.server-checker & {
-		.gridjs-wrapper, table {
-			max-height : none;
-		}
-	}
-
 	.gridjs-container {
 		height                : 100%;
 		display               : grid;
@@ -363,6 +357,15 @@ body {
 	}
 }
 .server-checker {
+	.bundle-error {
+		display          : grid;
+		gap              : 1rem;
+		padding          : 1rem;
+		max-width        : 65ch;
+		background-color : oklch(var(--totalform-red) / 10%);
+		border: 1px solid oklch(var(--totalform-red) / 50%);
+		border-radius: var(--totalform-radius);
+	}
 	.error {
 		font-weight    : bold;
 		text-transform : uppercase;
@@ -380,6 +383,9 @@ body {
 	td.gridjs-td {
 		padding     : 0 1rem;
 		white-space : wrap;
+	}
+	.gridjs-wrapper, table {
+		max-height : none;
 	}
 }
 .admin-table-wrapper,

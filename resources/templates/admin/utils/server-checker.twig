@@ -3,7 +3,12 @@
 <section class="dash-content-section server-checker">
 
 	{% if not cms.checker.bundleCheck %}
-		<h2>Cortupt Installation</h2>
+	<div class="bundle-error">
+		<h2>Total CMS Installation Integrity Failed</h2>
+		<p>Your Total CMS installation has been modified. For the safety of your website,
+		the CMS has been disabled. Please reinstall Total CMS. All disabled functionality will
+		be restored once the situation has been remedied.</p>
+	</div>
 	{% endif %}
 
 	<h2>Server Info</h2>
