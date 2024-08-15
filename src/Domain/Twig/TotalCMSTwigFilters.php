@@ -21,6 +21,9 @@ final class TotalCMSTwigFilters
 		'trim',
 		'ucwords',
 		'lcfirst',
+		'html_entity_decode',
+		'urldecode',
+		'urlencode',
 	];
 
 	/** @var array<string> */

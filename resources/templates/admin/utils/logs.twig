@@ -1,3 +1,56 @@
 <h1>Log Analyzer</h1>
 
-<p>Use this tool to analyze the Total CMS log file.</p>
+<section class="dash-content-section log-analyzer">
+
+	<form id="log-analyzer" class="totalform" data-disabled>
+		<div class="form-field select-field">
+			<label for="logfile">Select Logfile</label>
+			<select name="logfile" id="logfile">
+				{% if not getParams.logfile %}<option value=""></option>{% endif %}
+				{% for log,path in cms.logger.logfiles %}
+					<option value="{{ log }}" {% if getParams.logfile == log %}selected{% endif %}>{{ log }}</option>
+				{% endfor %}
+			</select>
+		</div>
+	</form>
+	<script>
+	document.getElementById('logfile').addEventListener('change', e => document.getElementById('log-analyzer').submit());
+	</script>
+
+	{% if getParams.logfile %}
+
+
+		{% set analysis = cms.logger.analyze(getParams.logfile) %}
+		{# {% set total = 0 %}
+		{% for error, value in analysis %}
+			{% set total = total + value.count %}
+		{% endfor %} #}
+
+		<h2>Log Analysis <small>Found {{ analysis | length }} Errors</small></h2>
+
+		<table class="admin-table" data-sort>
+			<thead>
+				<tr><th>Count</th><th>Logged Error</th></tr>
+			</thead>
+			{% for error, value in analysis %}
+			<tr>
+				<td>{{ value.count }}</td>
+				<td>{{ error }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+
+		<h2>Log Contents</h2>
+		<div class="log-contents">
+{% apply spaceless %}
+<pre>
+{% for line in cms.logger.logfile(getParams.logfile) %}
+{{ line | trim }}
+{% endfor %}
+</pre>
+{% endapply %}
+		</div>
+	{% endif %}
+
+</section>
+

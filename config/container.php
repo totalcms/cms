@@ -47,6 +47,7 @@ use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\LogAnalyzer;
 use TotalCMS\Utils\QRGenerator;
 use TotalCMS\Utils\ServerChecker;
 
@@ -214,6 +215,7 @@ return [
 			$container->get(SchemaFetcher::class),
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
+			$container->get(LogAnalyzer::class),
 		);
 	},
 

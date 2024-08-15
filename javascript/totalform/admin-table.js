@@ -39,7 +39,9 @@ export default class AdminTable {
 			cells.forEach(cell => {
 				if (cell.dataset.columnId === 'id') id = cell.innerText;
 			});
-			window.location.href = `${window.location.href}/${id}`;
+			if (id) {
+				window.location.href = `${window.location.href}/${id}`;
+			}
 		});
 	}
 
