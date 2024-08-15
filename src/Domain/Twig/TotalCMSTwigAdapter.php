@@ -24,6 +24,7 @@ final class TotalCMSTwigAdapter
 {
 	public TotalFormFactory $form;
 	public string $api;
+	public string $dashboard;
 
 	public function __construct(
 		private Config $config,
@@ -35,8 +36,9 @@ final class TotalCMSTwigAdapter
 		private SchemaFetcher $schemaFetcher,
 		private TotalFormFactory $totalFormFactory,
 	) {
-		$this->api  = $this->config->api;
-		$this->form = $this->totalFormFactory;
+		$this->api       = $this->config->api;
+		$this->dashboard = $this->api . '/admin';
+		$this->form      = $this->totalFormFactory;
 	}
 
 	public function config(string $key, ?string $setting): mixed
