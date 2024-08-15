@@ -2,13 +2,20 @@
 
 <section class="dash-content-section log-analyzer">
 
+	<p>Total CMS has several different log files that it writes to depending on the task
+		being performed. This page allows you to view the contents of these log files and
+		analyze the errors that have been logged. You can select the log file you want to
+		view from the dropdown below.</p>
+
+	{% set logfiles = cms.logger.logfiles %}
+	{% set activelog = getParams.logfile | default(logfiles | keys | last)%}
+
 	<form id="log-analyzer" class="totalform" data-disabled>
 		<div class="form-field select-field">
 			<label for="logfile">Select Logfile</label>
 			<select name="logfile" id="logfile">
-				{% if not getParams.logfile %}<option value=""></option>{% endif %}
-				{% for log,path in cms.logger.logfiles %}
-					<option value="{{ log }}" {% if getParams.logfile == log %}selected{% endif %}>{{ log }}</option>
+				{% for log,path in logfiles %}
+					<option value="{{ log }}" {% if activelog == log %}selected{% endif %}>{{ log }}</option>
 				{% endfor %}
 			</select>
 		</div>
@@ -17,40 +24,36 @@
 	document.getElementById('logfile').addEventListener('change', e => document.getElementById('log-analyzer').submit());
 	</script>
 
-	{% if getParams.logfile %}
 
+	{% set analysis = cms.logger.analyze(activelog) %}
+	{# {% set total = 0 %}
+	{% for error, value in analysis %}
+		{% set total = total + value.count %}
+	{% endfor %} #}
 
-		{% set analysis = cms.logger.analyze(getParams.logfile) %}
-		{# {% set total = 0 %}
+	<h2>Log Analysis <small>Found {{ analysis | length }} Errors</small></h2>
+
+	<table class="admin-table" data-sort>
+		<thead>
+			<tr><th>Count</th><th>Logged Error</th></tr>
+		</thead>
 		{% for error, value in analysis %}
-			{% set total = total + value.count %}
-		{% endfor %} #}
+		<tr>
+			<td>{{ value.count }}</td>
+			<td>{{ error }}</td>
+		</tr>
+		{% endfor %}
+	</table>
 
-		<h2>Log Analysis <small>Found {{ analysis | length }} Errors</small></h2>
-
-		<table class="admin-table" data-sort>
-			<thead>
-				<tr><th>Count</th><th>Logged Error</th></tr>
-			</thead>
-			{% for error, value in analysis %}
-			<tr>
-				<td>{{ value.count }}</td>
-				<td>{{ error }}</td>
-			</tr>
-			{% endfor %}
-		</table>
-
-		<h2>Log Contents</h2>
-		<div class="log-contents">
-{% apply spaceless %}
+	<h2>Log Contents</h2>
+	<div class="log-contents">
 <pre>
-{% for line in cms.logger.logfile(getParams.logfile) %}
+{% for line in cms.logger.logfile(activelog) %}
 {{ line | trim }}
 {% endfor %}
 </pre>
-{% endapply %}
-		</div>
-	{% endif %}
+	</div>
+
 
 </section>
 
