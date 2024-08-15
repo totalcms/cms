@@ -42,6 +42,7 @@ final class TotalCMSTwigFunctions
 		'istype',
 		'var_dump',
 		'print_r',
+		'json_pretty',
 	];
 
 	/** @return array<TwigFunction> */
@@ -155,5 +156,11 @@ final class TotalCMSTwigFunctions
 	public static function print_r(mixed $variable): string
 	{
 		return '<pre>' . (string)print_r($variable, true) . '</pre>';
+	}
+
+	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	public static function json_pretty(mixed $variable): string
+	{
+		return json_encode($variable, JSON_PRETTY_PRINT) ?: '';
 	}
 }

@@ -85,8 +85,8 @@ final class CollectionTable
 		return HTMLUtils::element('img', '', [
 			'src'    => $imageSrc,
 			'alt'    => $image['alt'],
-			'width'  => "128",
-			'height' => "128",
+			'width'  => '128',
+			'height' => '128',
 		]);
 	}
 
@@ -107,9 +107,10 @@ final class CollectionTable
 		$image = HTMLUtils::element('img', '', [
 			'src'    => $imageSrc,
 			'alt'    => "{$this->collection} / {$id} / {$property} gallery preview",
-			'width'  => "128",
-			'height' => "128",
+			'width'  => '128',
+			'height' => '128',
 		]);
+
 		return HTMLUtils::element('div', $image . $badge, ['class' => 'gallery-preview']);
 	}
 
@@ -194,8 +195,11 @@ final class CollectionTable
 		$table = $this->buildTableHead() . $this->buildTableBody();
 
 		return HTMLUtils::element('table', $table, [
-			'class'           => 'collection-table',
-			'data-collection' => $this->collection,
+			'class'            => 'admin-table',
+			'data-limit'       => '25',
+			'data-search'      => 'true',
+			'data-sort'        => 'true',
+			'data-placeholder' => 'Filter Objects',
 		]);
 	}
 }

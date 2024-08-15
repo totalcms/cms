@@ -38,4 +38,10 @@ final class Config
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];
 	}
+
+	/** @return array<string,mixed> */
+	public function toArray(): array
+	{
+		return get_object_vars($this);
+	}
 }

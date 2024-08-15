@@ -12,6 +12,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Utils\ServerChecker;
 
 /**
  * Twig Adapter with Total CMS.
@@ -19,10 +20,12 @@ use TotalCMS\Utils\HTMLUtils;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 final class TotalCMSTwigAdapter
 {
 	public TotalFormFactory $form;
+	public ServerChecker $checker;
 	public string $api;
 	public string $dashboard;
 
@@ -35,10 +38,12 @@ final class TotalCMSTwigAdapter
 		private SchemaLister $schemaLister,
 		private SchemaFetcher $schemaFetcher,
 		private TotalFormFactory $totalFormFactory,
+		private ServerChecker $serverChecker,
 	) {
 		$this->api       = $this->config->api;
 		$this->dashboard = $this->api . '/admin';
 		$this->form      = $this->totalFormFactory;
+		$this->checker   = $this->serverChecker;
 	}
 
 	public function config(string $key, ?string $setting): mixed

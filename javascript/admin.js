@@ -3,7 +3,7 @@ import TotalCMS from './totalcms';
 import SimpleForm from './totalform/simpleform';
 import Scrollable from './totalform/scrollable';
 import FilterList from './totalform/filter-list';
-import CollectionTable from './totalform/collection-table';
+import AdminTable from './totalform/admin-table';
 import QuickAction from './quickaction';
 
 globalThis.TotalCMS = TotalCMS;
@@ -36,10 +36,8 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
-	const tables = Array.from(document.getElementsByClassName("collection-table"));
-	tables.forEach(table => new CollectionTable(table, {
-		limit : 25,
-	}));
+	const tables = Array.from(document.getElementsByClassName("admin-table"));
+	tables.forEach(table => new AdminTable(table));
 
 	const reindex = Array.from(document.getElementsByClassName("cms-quick-action"));
 	reindex.forEach(link => new QuickAction(link));

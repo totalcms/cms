@@ -4,6 +4,9 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Middlewares\TrailingSlash;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
+use Odan\Session\SessionManagerInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -41,13 +44,11 @@ use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
-use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
+use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\QRGenerator;
-use Odan\Session\PhpSession;
-use Odan\Session\SessionInterface;
-use Odan\Session\SessionManagerInterface;
+use TotalCMS\Utils\ServerChecker;
 
 return [
 	// Application settings
@@ -212,6 +213,7 @@ return [
 			$container->get(SchemaLister::class),
 			$container->get(SchemaFetcher::class),
 			$container->get(TotalFormFactory::class),
+			$container->get(ServerChecker::class),
 		);
 	},
 
