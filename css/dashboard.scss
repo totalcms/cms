@@ -398,7 +398,7 @@ body {
 	}
 }
 .log-analyzer {
-	h2:not(:first-child) {
+	form,h2:not(:first-child) {
 		margin-top : 2rem;
 	}
 	h2 small {
@@ -424,6 +424,18 @@ body {
 		max-height       : 75vh;
 		overflow         : auto;
 		border: 2px inset oklch(var(--totalform-lightgray) / 50%);
+	}
+	.no-logs {
+		padding          : 1rem;
+		max-width        : 65ch;
+		background-color : oklch(var(--totalform-success) / 25%);
+		border: 1px solid oklch(var(--totalform-success) / 50%);
+		border-radius: var(--totalform-radius);
+	}
+	&:has(.no-logs) {
+		h2, form, .log-contents {
+			display : none;
+		}
 	}
 }
 .admin-table-wrapper,

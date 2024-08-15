@@ -12,6 +12,12 @@
 		happening.</p>
 
 	{% set logfiles = cms.logger.logfiles %}
+
+	{% if logfiles | length == 0 %}
+		<p class="no-logs">There are no log files available to view.
+		The developer of this app must be a stud! 😎</p>
+	{% endif %}
+
 	{% set activelog = getParams.logfile | default(logfiles | keys | last)%}
 
 	<form id="log-analyzer" class="totalform" data-disabled>
