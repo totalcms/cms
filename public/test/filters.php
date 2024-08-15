@@ -10,8 +10,7 @@
 	},
 ]) | sortCollection([
 	{
-		property : "image.size",
-		reverse  : true,
+		shuffle  : true,
 	},
 ]) %}
 

@@ -15,7 +15,8 @@ class CollectionRefiner
 	 */
 	public function __construct(
 		private array $collection,
-	) {}
+	) {
+	}
 
 	/**
 	 * Filters the collection by the rules.
@@ -304,11 +305,5 @@ class CollectionRefiner
 	protected static function before(string $date, string $dateBefore): bool
 	{
 		return strtotime($date) < strtotime($dateBefore);
-	}
-
-	/** @param array<string> $haystack */
-	protected static function inArray(array $haystack, string $needle): bool
-	{
-		return in_array($needle, $haystack);
 	}
 }

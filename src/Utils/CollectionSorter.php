@@ -3,7 +3,6 @@
 namespace TotalCMS\Utils;
 
 use Illuminate\Support\Collection;
-use TotalCMS\Utils\CollectionRefiner;
 
 /**
  * Collection Sorter
@@ -12,14 +11,14 @@ use TotalCMS\Utils\CollectionRefiner;
 class CollectionSorter
 {
 	/**
-	 * Constructor
+	 * Constructor.
 	 *
 	 * @param array<array<string,mixed>> $collection
 	 */
 	public function __construct(
 		private array $collection,
-	) {}
-
+	) {
+	}
 
 	/** @return array<array<string,mixed>> */
 	public function shuffle(): array
@@ -40,11 +39,9 @@ class CollectionSorter
 		$sortedCollection = $this->collection;
 
 		foreach ($rules as $rule) {
-			if (!isset($rule['property'])) {
-				continue;
-			}
 			$sortedCollection = $this->sortByRule($sortedCollection, $rule);
 		}
+
 		return $sortedCollection;
 	}
 
@@ -56,15 +53,22 @@ class CollectionSorter
 	 */
 	private function sortByRule(array $collection, array $rule): array
 	{
+		if (isset($rule['shuffle']) && boolval($rule['shuffle']) === true) {
+			return $this->shuffle();
+		}
+		if (!isset($rule['property'])) {
+			return $collection;
+		}
 		$operator = 'sort';
 		if (isset($rule['natural']) && boolval($rule['natural']) === true) {
 			$operator = 'natsort';
 		}
-		$collection = self::$operator($collection, $rule['property']);
+		$collection = self::$operator($collection, strval($rule['property']));
 
 		if (isset($rule['reverse']) && boolval($rule['reverse']) === true) {
 			$collection = array_reverse($collection);
 		}
+
 		return $collection;
 	}
 
@@ -88,8 +92,10 @@ class CollectionSorter
 			} elseif ($bExists) {
 				return 1; // prioritize $b
 			}
+
 			return 0; // Niether contain key
 		});
+
 		return $collection;
 	}
 
@@ -113,8 +119,10 @@ class CollectionSorter
 			} elseif ($bExists) {
 				return 1; // prioritize $b
 			}
+
 			return 0; // Niether contain key
 		});
+
 		return $collection;
 	}
 }
