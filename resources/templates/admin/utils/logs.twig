@@ -7,6 +7,10 @@
 		analyze the errors that have been logged. You can select the log file you want to
 		view from the dropdown below.</p>
 
+	<p>Please note that not all errors are critical. Some errors are logged as a way to
+		track the progress of a task or to provide additional information about what is
+		happening.</p>
+
 	{% set logfiles = cms.logger.logfiles %}
 	{% set activelog = getParams.logfile | default(logfiles | keys | last)%}
 
@@ -21,7 +25,8 @@
 		</div>
 	</form>
 	<script>
-	document.getElementById('logfile').addEventListener('change', e => document.getElementById('log-analyzer').submit());
+	document.getElementById('logfile').addEventListener('change',
+		e => document.getElementById('log-analyzer').submit());
 	</script>
 
 
