@@ -3,13 +3,15 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Admin\FormField\NumberField;
+use TotalCMS\Domain\Admin\SimpleForm;
 
 /**
  * Factory Form Builder.
  */
 final class FactoryForm
 {
+	private SimpleForm $simpleform;
+
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
@@ -24,6 +26,13 @@ final class FactoryForm
 		private int $quantity = 3,
 		private array $rules  = [],
 	) {
+		$this->simpleform = new SimpleForm(
+			api: $this->api,
+			route: "/import/{$this->collection}/factory",
+			method: 'POST',
+			label: $this->label,
+			refresh: $this->refresh
+		);
 	}
 
 	private function hiddenQuantityField(): string
@@ -69,21 +78,7 @@ final class FactoryForm
 			$rules .= HTMLUtils::inlineElement('input', $ruleAttrs);
 		}
 
-		$button = HTMLUtils::button($this->label, [
-			'type'  => 'submit',
-			'class' => 'dash-button',
-		]);
-		$buttonWrapper = HTMLUtils::element('div', $button, ['class' => 'form-inline-fields']);
-
-		$formAttrs = [
-			'class'           => 'factory-form totalform',
-			'data-collection' => $this->collection,
-			'data-api'        => $this->api,
-			'data-refresh'    => $this->refresh ? 'true' : 'false',
-		];
-		$form = HTMLUtils::element('form', $qty . $rules . $buttonWrapper, $formAttrs);
-
-		return $form;
+		return $this->simpleform->build($qty . $rules);
 	}
 
 	public function __toString()

@@ -1,24 +1,24 @@
 import TotalCMS from '../totalcms';
 
 //-----------------------------------------------
-// Total CMS Factory Form constructor
+// Total CMS Simple Form constructor
 //-----------------------------------------------
-export default class FactoryForm {
+export default class SimpleForm {
 
     // Constructors
     constructor(formRef, options = {}) {
         this.form = this.setForm(formRef);
-		formRef.factoryform = this;
+		formRef.simpleform = this;
 
 		if (!formRef || !this.form) {
 			console.error("form not found");
 			return false;
 		}
 
-		this.collection = this.form.dataset.collection;
-		this.route      = `/import/${this.collection}/factory`;
-		this.api        = new TotalCMS({ url: this.form.dataset.api});
-		this.refresh    = this.form.dataset.refresh === "true";
+		this.method  = this.form.dataset.method || "POST";
+		this.route   = this.form.dataset.route;
+		this.api     = new TotalCMS({ url: this.form.dataset.api});
+		this.refresh = this.form.dataset.refresh === "true";
 
 		this.form.addEventListener("submit", event => event.preventDefault());
 
@@ -49,7 +49,7 @@ export default class FactoryForm {
 		this.button.classList.remove("success", "error");
 		this.button.classList.add("processing");
 
-        this.api.postAPI(this.route, this.generateData())
+        this.api.postAPI(this.route, this.generateData(), this.method)
             .then(response => this.success(response))
             .catch(error => this.error(error));
     }
@@ -62,7 +62,7 @@ export default class FactoryForm {
 	}
 
 	error(error) {
-		console.log("FactoryForm error", error);
+		console.log("Form error", error);
 		this.toggleButton("error", "😭");
 	}
 
