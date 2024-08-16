@@ -36,6 +36,19 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function simple(string $route, string $content = "", array $options = []): string
+	{
+		$options['api']   = $this->api;
+		$options['route'] = $route;
+
+		// options: method, label, refresh
+
+		$form = new SimpleForm(...$options);
+
+		return $form->build($content);
+	}
+
+	/** @param array<string,mixed> $options */
 	public function factory(string $collection, array $options = []): string
 	{
 		$options['api']        = $this->api;

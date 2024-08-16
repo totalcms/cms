@@ -31,7 +31,7 @@ final class AdminDocsAction
 
 		$data = [];
 
-		$htmlFile = __DIR__ . "/../../../resources/docs/{$page}.html";
+		$htmlFile     = __DIR__ . "/../../../resources/docs/{$page}.html";
 		$markdownFile = __DIR__ . "/../../../resources/docs/{$page}.md";
 
 		if (file_exists($markdownFile)) {
@@ -46,10 +46,10 @@ final class AdminDocsAction
 
 			$data            = $document->getData();
 			$data['content'] = $parsedown->text($document->getContent());
-		} else if (file_exists($htmlFile)) {
+		} elseif (file_exists($htmlFile)) {
 			$data['content'] = file_get_contents($htmlFile);
 		} else {
-			$data['content'] = "Page not found";
+			$data['content'] = 'Page not found';
 		}
 
 		$data['page'] = $page;
@@ -57,7 +57,7 @@ final class AdminDocsAction
 			'path'   => $request->getUri()->getPath(),
 			'query'  => $request->getUri()->getQuery(),
 			'params' => $args,
-			'page'   => 'docs',
+			'page'   => $args['page'] ?? '',
 		];
 
 		return $this->twigRenderer->template($response, 'admin/docs.twig', $data);

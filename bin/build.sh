@@ -25,6 +25,14 @@ find vendor -empty -type d -delete
 find vendor -name bin -type d | xargs rm -rf
 find vendor -name test -type d | xargs rm -rf
 
+# generate bundle to verify installation
+php bin/make-bundle.php
+
+# generate beta expiration date
+EXPIRE=`date -v +45d +"%Y-%m-%d"`
+echo "Beta expiration date: $EXPIRE"
+echo $EXPIRE | base64 > resources/beta
+
 # move required files to dist
 echo "Moving required files to dist..."
 rm -rf dist
@@ -37,3 +45,19 @@ rm -rf dist/public/test
 # install all required composer packages for dev environment
 echo "Installing all required composer packages back for dev environment..."
 composer install --quiet
+
+# remove write permissions from all files
+find dist/resources -type f -exec chmod 444 {} +
+
+# Ensure this does not get shipped
+rm -f dist/resources/.bundle
+
+# Most recent version shipped. Would be nice to have the version bump automated.
+#git describe --tags `git rev-list --tags --max-count=1`
+
+VERSION=`jq -r '.version' composer.json`
+BUILD=`git rev-parse --short HEAD`
+
+echo "$VERSION ($BUILD)" > dist/version
+
+echo "Build for v$VERSION ($BUILD) is complete."

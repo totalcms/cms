@@ -22,3 +22,7 @@ config/env.php
 /tests/tcms-data
 public/assets
 /templates/totalform.twig
+/resources/.bundle
+/resources/beta
+/resources/bundle
+/version

@@ -6,6 +6,22 @@
 {% endset %}
 
 
+{% macro collectionHeader(collection, page) %}
+	<header>
+		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page }}</span></h1>
+		<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="Edit Collection">Edit Collection</a>
+		<a class="dash-button" href="collections/{{ collection }}/add" title="Add new object to collection">+ New Object</a>
+		<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
+		<nav popover id="collection-actions">
+			<ul>
+				<li class="factory"><a href="collections/{{ collection }}/factory">Factory</a></li>
+				<li class="import"><a href="collections/{{ collection }}/import">Import</a></li>
+				<li class="reindex"><a class="cms-quick-action" data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
+			</ul>
+		</nav>
+	</header>
+{% endmacro %}
+
 {% block dashcontent %}
 
 <aside class="dash-content-sidebar">
@@ -13,7 +29,7 @@
 		<input type="search" class="filter" placeholder="Filter collections" />
 	</header>
 
-	<nav class="links">
+	<nav class="links" id="collection-links">
 		<ul>
 			{% for collection in sortByKey(cms.collections()) %}
 
@@ -54,18 +70,7 @@
 	{% elseif url.id is empty %}
 
 		{# Collection Object Table #}
-		<header>
-			<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>objects</span></h1>
-			<a class="dash-button transparent" href="collections/{{ url.collection }}/edit" title="Edit Collection">Edit Collection</a>
-			<a class="dash-button" href="collections/{{ url.collection }}/add" title="Add new object to collection">+ New Object</a>
-			<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
-			<nav popover id="collection-actions">
-				<ul>
-					<li class="factory"><a href="collections/{{ url.collection }}/factory">Factory</a></li>
-					<li class="import"><a href="collections/{{ url.collection }}/import">Import</a></li>
-				</ul>
-			</nav>
-		</header>
+		{{ _self.collectionHeader(url.collection, "objects") }}
 
 		{% set objects = cms.objects(url.collection) %}
 		{% if objects|length > 0 %}
@@ -81,15 +86,23 @@
 	{% elseif url.id == "factory" %}
 
 		{# Factory Import into Collection #}
-		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>factory</span></h1>
+		{{ _self.collectionHeader(url.collection, "factory") }}
 
-		<p>Factory form goes here...</p>
-
+		<section>
+			{{ cms.form.factory(url.collection, {
+				refresh : false,
+				hidden  : false,
+			}) }}
+			<p style="margin-top:1rem">The factory rules that are defined in the schema for this
+			collection will be used to generate new objects.</p>
+			<p>In the future, we can add the ability to define custom factory rules here.</p>
+			<p>Make sure the check out the <a href="docs/factory">Factory Docs</a> to see all of the possibilities.</p>
+		</section>
 
 	{% elseif url.id == "import" %}
 
 		{# Import into Collection #}
-		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>import</span></h1>
+		{{ _self.collectionHeader(url.collection, "import") }}
 
 		<p>Import form goes here...</p>
 

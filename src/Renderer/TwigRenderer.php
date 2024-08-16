@@ -10,17 +10,9 @@ use TotalCMS\Domain\Twig\TwigEngine;
  */
 final class TwigRenderer
 {
-	private TwigEngine $twigEngine;
-
-	/**
-	 * The constructor.
-	 *
-	 * @param TwigEngine $twigEngine
-	 */
-	public function __construct(TwigEngine $twigEngine)
-	{
-		$this->twigEngine = $twigEngine;
-	}
+	public function __construct(
+		private TwigEngine $twigEngine
+	) {}
 
 	/**
 	 * Output rendered template.

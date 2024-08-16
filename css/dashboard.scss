@@ -118,7 +118,9 @@ body {
 		li {
 			--collection-icon : var(--icon-collections);
 
+			&.schema-blog-legacy,
 			&.schema-blog { --collection-icon : var(--icon-blog) }
+			&.schema-feed { --collection-icon : var(--icon-feed) }
 			&.schema-color { --collection-icon : var(--icon-paint-brush) }
 			&.schema-date { --collection-icon : var(--icon-date) }
 			&.schema-depot { --collection-icon : var(--icon-depot) }
@@ -134,7 +136,14 @@ body {
 			&.schema-url { --collection-icon : var(--icon-url) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
-			&.cache-cleaner { --collection-icon : var(--icon-clean) }
+			&.cache-cleaner { --collection-icon : var(--icon-clean-o) }
+			&.project-setup { --collection-icon : var(--icon-flag) }
+			&.macro-builder { --collection-icon : var(--icon-build) }
+			&.pretty-url-builder { --collection-icon : var(--icon-link) }
+			&.server-checker { --collection-icon : var(--icon-health) }
+		}
+		&.docs li {
+			--collection-icon : var(--icon-bookmark);
 		}
 		a {
 			display         : flex;
@@ -170,6 +179,10 @@ body {
 	}
 }
 
+#schema-links {
+	// Hide this legacy blog schema
+	.schema-blog-legacy { display: none;}
+}
 
 .dash-main-content {
 	height             : 100vh;
@@ -216,12 +229,16 @@ body {
 		max-width : 65ch;
 	}
 
-	h1,h2,h3,h4,h5,h6,p,ul,ol,pre {
+	h1,h2,h3,h4,h5,h6,p,ul,ol,pre,iframe,.dash-button {
 		margin-block-start: 1em;
 
 		&:first-child {
 			margin-top: 0;
 		}
+	}
+
+	h1,h2,h3 {
+		margin-block-start: 2em;
 	}
 
 	pre {
@@ -244,7 +261,15 @@ body {
 		border    : none;
 	}
 }
+.dash-content-section {
+	display       : grid;
+	gap           : 1rem;
+	align-content : start;
 
+	p, ul, ol {
+		max-width : 65ch;
+	}
+}
 .dash-button {
 	display          : inline-block;
 	padding          : 0.75rem 1rem;
@@ -255,6 +280,8 @@ body {
 	text-align       : center;
 	text-decoration  : none;
 	font-weight      : bold;
+	cursor           : pointer;
+	width            : max-content;
 
 	&.full {
 		display : block;
@@ -284,10 +311,10 @@ body {
 		background-color : oklch(var(--totalform-nearblack));
 	}
 }
-.collection-table {
+.admin-table {
 	display: none;
 }
-.collection-table-wrapper {
+.admin-table-wrapper {
 	font-size: 0.9em;
 
 	img, svg {
@@ -298,9 +325,11 @@ body {
 	img {
 		border-radius : var(--totalform-radius);
 	}
+
 	.gridjs-wrapper, table {
 		max-height : calc(100vh - 300px);
 	}
+
 	.gridjs-container {
 		height                : 100%;
 		display               : grid;
@@ -331,8 +360,89 @@ body {
 		}
 	}
 }
-
-.collection-table-wrapper,
+.server-checker {
+	.bundle-error {
+		display          : grid;
+		gap              : 1rem;
+		padding          : 1rem;
+		max-width        : 65ch;
+		background-color : oklch(var(--totalform-red) / 10%);
+		border: 1px solid oklch(var(--totalform-red) / 50%);
+		border-radius: var(--totalform-radius);
+	}
+	.error {
+		font-weight    : bold;
+		text-transform : uppercase;
+		color          : oklch(var(--totalform-red));
+	}
+	tr:has(.error) {
+		background-color : oklch(var(--totalform-red) / 10%) !important;
+	}
+	tr:has(.warning) {
+		background-color : oklch(var(--totalform-warning) / 10%) !important;
+	}
+	h2:not(:first-child) {
+		margin-top : 2rem;
+	}
+	td.gridjs-td {
+		padding     : 0 1rem;
+		white-space : wrap;
+	}
+	th.gridjs-th:first-child {
+		max-width : 200px !important;
+	}
+	.gridjs-wrapper, table {
+		max-height : none;
+	}
+	pre {
+		padding: 0.5rem 0;
+	}
+	.gridjs-tbody .gridjs-tr {
+		cursor : inherit;
+	}
+}
+.log-analyzer {
+	form,h2:not(:first-child) {
+		margin-top : 2rem;
+	}
+	h2 small {
+		font-weight  : 300;
+		font-size    : 55%;
+		padding-left : 0.5rem;
+	}
+	td.gridjs-td {
+		white-space : wrap;
+	}
+	th.gridjs-th:first-child {
+		max-width : 100px !important;
+	}
+	.gridjs-wrapper, table {
+		max-height : none;
+	}
+	.gridjs-tbody .gridjs-tr {
+		cursor : inherit;
+	}
+	.log-contents {
+		background-color : oklch(var(--totalform-nearwhite));
+		padding          : 1.5rem;
+		max-height       : 75vh;
+		overflow         : auto;
+		border: 2px inset oklch(var(--totalform-lightgray) / 50%);
+	}
+	.no-logs {
+		padding          : 1rem;
+		max-width        : 65ch;
+		background-color : oklch(var(--totalform-success) / 25%);
+		border: 1px solid oklch(var(--totalform-success) / 50%);
+		border-radius: var(--totalform-radius);
+	}
+	&:has(.no-logs) {
+		h2, form, .log-contents {
+			display : none;
+		}
+	}
+}
+.admin-table-wrapper,
 .dash-content-sidebar {
 
 	input {
@@ -387,6 +497,7 @@ body {
 
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
+		&.reindex { --action-icon : var(--icon-refresh) }
 	}
 	a {
 		display         : flex;

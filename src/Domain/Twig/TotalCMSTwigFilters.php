@@ -4,6 +4,8 @@ namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Property\Data\ColorData;
 use Twig\TwigFilter;
+use TotalCMS\Utils\CollectionRefiner;
+use TotalCMS\Utils\CollectionSorter;
 
 /**
  * Twig Functions for Total CMS.
@@ -19,6 +21,9 @@ final class TotalCMSTwigFilters
 		'trim',
 		'ucwords',
 		'lcfirst',
+		'html_entity_decode',
+		'urldecode',
+		'urlencode',
 	];
 
 	/** @var array<string> */
@@ -50,6 +55,9 @@ final class TotalCMSTwigFilters
 		'hue',
 		'adjustColor',
 		'obfuscate',
+		'filterCollection',
+		'sortCollection',
+		'paginate',
 	];
 
 	/** @return array<TwigFilter> */
@@ -333,6 +341,42 @@ final class TotalCMSTwigFilters
 
 		return $array;
 	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>> $rules
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public static function filterCollection(array $collection, array $rules): array
+	{
+		$refiner = new CollectionRefiner($collection);
+		return $refiner->filter($rules);
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 * @param array<array<string,mixed>> $rules
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public static function sortCollection(array $collection, array $rules): array
+	{
+		$sorter = new CollectionSorter($collection);
+		return $sorter->sortByRules($rules);
+	}
+
+	/**
+	 * @param array<int,mixed> $collection
+	 *
+	 * @return array<int,mixed>
+	 */
+	public static function paginate(array $collection, int $limit, int $page = 1): array
+	{
+		$offset = ($page - 1) * $limit;
+		return array_slice($collection, $offset, $limit);
+	}
+
 
 	// -------------------------
 	// Type Casting

@@ -14,29 +14,31 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class PreviewRouteMiddleware implements MiddlewareInterface
 {
-	/**
-	 * @SuppressWarnings(PHPMD.Superglobals)
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param RequestHandlerInterface $handler
-	 */
+	public function __construct(private string $api) {}
+
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		$queryParams = $request->getQueryParams();
+		$route = $this->getPreviewRoute($request);
 
-		// Check if the "route" query parameter is present
-		if (isset($queryParams['route'])) {
+		if (!empty($route)) {
 			// Update the request path to match the "route" query parameter
-			$routePath = '/' . ltrim($queryParams['route'], '/');
-			$uri       = $request->getUri()->withPath($routePath);
-			$request   = $request->withUri($uri);
-		}
-		if (isset($queryParams['datadir'])) {
-			$_SERVER['PREVIEW_TCMSDIR'] = $queryParams['datadir'];
+			$uri     = $request->getUri()->withPath($route);
+			$request = $request->withUri($uri);
 		}
 
 		$response = $handler->handle($request);
 
 		return $response;
+	}
+
+	private function getPreviewRoute(ServerRequestInterface $request): string
+	{
+		$url = $request->getUri()->getPath();
+		$api = $this->api ?: 'tcms/public';
+
+		$parts = explode($api, $url);
+		$route = $parts[1] ?? '';
+
+		return $route;
 	}
 }

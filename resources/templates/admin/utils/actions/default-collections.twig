@@ -1,0 +1,15 @@
+{# Skip blog-legacy schema #}
+{% set reservedSchemas = cms.reservedSchemas() | filterCollection([
+	{ property : "id", operator : "not-equal", value : "blog-legacy" },
+	{ property : "id", operator : "not-equal", value : "file" },
+	{ property : "id", operator : "not-equal", value : "depot" },
+]) %}
+
+<p>Creating default collections...</p>
+<ul>
+{% for schema in reservedSchemas %}
+	{% set collection = cms.collection(schema.id) %}
+	<li>Created... {{ collection.name }}</li>
+{% endfor %}
+</ul>
+<p>Done. Check out your <a href="collections">New Collections</a>.</p>

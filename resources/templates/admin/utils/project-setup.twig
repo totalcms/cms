@@ -1,0 +1,15 @@
+<h1>Project Setup Actions</h1>
+
+{% set action = getParams.action %}
+
+<section class="dash-content-section">
+	<h2>Default Collections</h2>
+
+	{% if action == "default-collections" %}
+		{% include "admin/utils/actions/default-collections.twig" %}
+	{% else %}
+		<p>This action will generate all of the default collections for you. This is useful when starting
+		a new project. If a collection already exists, it will not be touched.</p>
+		<a class="dash-button transparent" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
+	{% endif %}
+</section>

@@ -12,6 +12,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Utils\LogAnalyzer;
+use TotalCMS\Utils\ServerChecker;
 
 /**
  * Twig Adapter with Total CMS.
@@ -19,11 +21,15 @@ use TotalCMS\Utils\HTMLUtils;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 final class TotalCMSTwigAdapter
 {
 	public TotalFormFactory $form;
+	public ServerChecker $checker;
+	public LogAnalyzer $logger;
 	public string $api;
+	public string $dashboard;
 
 	public function __construct(
 		private Config $config,
@@ -34,9 +40,14 @@ final class TotalCMSTwigAdapter
 		private SchemaLister $schemaLister,
 		private SchemaFetcher $schemaFetcher,
 		private TotalFormFactory $totalFormFactory,
+		private ServerChecker $serverChecker,
+		private LogAnalyzer $logAnalyzer,
 	) {
-		$this->api  = $this->config->api;
-		$this->form = $this->totalFormFactory;
+		$this->api       = $this->config->api;
+		$this->dashboard = $this->api . '/admin';
+		$this->form      = $this->totalFormFactory;
+		$this->checker   = $this->serverChecker;
+		$this->logger    = $this->logAnalyzer;
 	}
 
 	public function config(string $key, ?string $setting): mixed
@@ -59,7 +70,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -68,7 +79,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -77,7 +88,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get schema definition
@@ -495,7 +506,7 @@ final class TotalCMSTwigAdapter
 			return null;
 		}
 
-		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn($image) => pathinfo($image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {

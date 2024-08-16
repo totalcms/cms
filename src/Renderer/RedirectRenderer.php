@@ -10,17 +10,10 @@ use Slim\Interfaces\RouteParserInterface;
  */
 final class RedirectRenderer
 {
-	private RouteParserInterface $routeParser;
 
-	/**
-	 * The constructor.
-	 *
-	 * @param RouteParserInterface $routeParser The route parser
-	 */
-	public function __construct(RouteParserInterface $routeParser)
-	{
-		$this->routeParser = $routeParser;
-	}
+	public function __construct(
+		private RouteParserInterface $routeParser
+	) {}
 
 	/**
 	 * Creates a redirect for the given url / route name.

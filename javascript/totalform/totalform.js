@@ -34,6 +34,10 @@ export default class TotalForm {
         this.form = this.setForm(formRef);
 		formRef.totalform = this;
 
+		if (formRef.dataset.disabled !== undefined) {
+			return false;
+		}
+
 		if (!formRef || !this.form) {
 			console.error("form not found");
 			return false;
@@ -292,7 +296,9 @@ export default class TotalForm {
     //-------------------------
     saveListener() {
 		// Prevent the default form submission
-		this.form.addEventListener("submit", event => event.preventDefault());
+		if (this.method.toUpperCase() !== "GET") {
+			this.form.addEventListener("submit", event => event.preventDefault());
+		}
     }
 
 	validate() {

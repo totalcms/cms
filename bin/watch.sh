@@ -1,12 +1,13 @@
 #!/bin/bash
 
 bin/build-assets.sh
+php bin/make-bundle.php
 
 echo "Watching..."
 
 ignore=("totalform.twig" "content.twig")
 
-fswatch -0 templates css javascript | while read -d "" file; do
+fswatch -0 templates css javascript src | while read -d "" file; do
     echo Detected Change on ${file}...
 
     for i in "${ignore[@]}"; do
@@ -17,5 +18,7 @@ fswatch -0 templates css javascript | while read -d "" file; do
     done
 
     bin/build-assets.sh
+    php bin/make-bundle.php
+
 	echo "Watching..."
 done

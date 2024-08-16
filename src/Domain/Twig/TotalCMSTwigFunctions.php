@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig;
 
 use Twig\TwigFunction;
+use TotalCMS\Utils\EmbedBuilder;
 
 /**
  * Twig Functions for Total CMS.
@@ -42,6 +43,8 @@ final class TotalCMSTwigFunctions
 		'istype',
 		'var_dump',
 		'print_r',
+		'json_pretty',
+		'embed',
 	];
 
 	/** @return array<TwigFunction> */
@@ -74,10 +77,10 @@ final class TotalCMSTwigFunctions
 		// this takes a normal array and converts it to an array of arrays with label and value keys
 		// the resulting array can be used for select options in a form
 		if (empty($value) || empty($label)) {
-			return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $data);
+			return array_map(fn($value): array => ['label' => $value, 'value' => $value], $data);
 		}
 
-		return array_map(fn ($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
+		return array_map(fn($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
 	}
 
 	public static function istype(mixed $variable, string $type): bool
@@ -136,6 +139,12 @@ final class TotalCMSTwigFunctions
 		return $array;
 	}
 
+	/** @param array<string,mixed> $options */
+	public static function embed(string $url, array $options = []): string
+	{
+		return EmbedBuilder::embed($url, $options);
+	}
+
 	// -------------------------
 	// Utilities
 	// -------------------------
@@ -155,5 +164,11 @@ final class TotalCMSTwigFunctions
 	public static function print_r(mixed $variable): string
 	{
 		return '<pre>' . (string)print_r($variable, true) . '</pre>';
+	}
+
+	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	public static function json_pretty(mixed $variable): string
+	{
+		return json_encode($variable, JSON_PRETTY_PRINT) ?: '';
 	}
 }

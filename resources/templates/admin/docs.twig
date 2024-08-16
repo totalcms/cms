@@ -39,12 +39,15 @@
 		<input type="search" class="filter" placeholder="Filter docs" />
 	</header>
 
-	<nav class="links">
+	<nav class="links docs">
 		{% for item in menu %}
 		<h3>{{ item.title }}</h3>
 		<ul>
 			{% for sub in item.sub %}
-			<li><a href="docs/{{ sub.path }}" {% if sub.target is defined %}target="{{ sub.target }}"{% endif %}>{{ sub.title }}</a></li>
+			<li><a {% if url.page == sub.path %}class="active"{% endif %}
+					href="docs/{{ sub.path }}"
+					{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
+				>{{ sub.title }}</a></li>
 			{% endfor %}
 		</ul>
 		{% endfor %}

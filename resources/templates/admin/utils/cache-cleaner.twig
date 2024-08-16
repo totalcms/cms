@@ -1,3 +1,12 @@
 <h1>Cache Cleaner</h1>
 
-<p>Use this tool to clear the cache for Total CMS.</p>
+<section class="dash-content-section">
+	<p>Clicking on the below button will clear all twig system cache
+	If you feel that you are ever not seeing the layouts and content
+	that you expect, you can use this tool to clear the cache.</p>
+
+	{{ cms.form.simple("/cache", "", {
+		method : "DELETE",
+		label  : "Clear Twig Cache",
+	}) }}
+</section>

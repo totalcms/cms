@@ -1,17 +1,18 @@
 import TotalFormManager from './totalform/totalform-manager';
 import TotalCMS from './totalcms';
-import FactoryForm from './totalform/factory';
+import SimpleForm from './totalform/simpleform';
 import Scrollable from './totalform/scrollable';
 import FilterList from './totalform/filter-list';
-import CollectionTable from './totalform/collection-table';
+import AdminTable from './totalform/admin-table';
+import QuickAction from './quickaction';
 
 globalThis.TotalCMS = TotalCMS;
 
 document.addEventListener("DOMContentLoaded", event => {
 	const manager = new TotalFormManager();
 
-	const factoryForms = Array.from(document.getElementsByClassName("factory-form"));
-	factoryForms.forEach(form => new FactoryForm(form));
+	const simpleForms = Array.from(document.getElementsByClassName("simple-form"));
+	simpleForms.forEach(form => new SimpleForm(form));
 
 	const scrollables = Array.from(document.getElementsByClassName("scrollable"));
 	scrollables.forEach(scrollable => new Scrollable(scrollable));
@@ -35,8 +36,13 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
-	const tables = Array.from(document.getElementsByClassName("collection-table"));
-	tables.forEach(table => new CollectionTable(table, {
-		limit : 25,
-	}));
+	const tables = Array.from(document.getElementsByClassName("admin-table"));
+	tables.forEach(table => new AdminTable(table));
+
+	const reindex = Array.from(document.getElementsByClassName("cms-quick-action"));
+	reindex.forEach(link => new QuickAction(link));
+
+	// This should be moved to a content.js file
+	const embeds = Array.from(document.getElementsByClassName("cms-video-embed"));
+	embeds.forEach(iframe => iframe.src = iframe.dataset.src);
 });

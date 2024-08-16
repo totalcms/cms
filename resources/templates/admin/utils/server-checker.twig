@@ -1,0 +1,84 @@
+<h1>Server Checker</h1>
+
+<section class="dash-content-section server-checker">
+
+	{% if not cms.checker.bundleCheck %}
+	<div class="bundle-error">
+		<h2>Total CMS Installation Integrity Failed</h2>
+		<p>Your Total CMS installation has been modified. For the safety of your website,
+		the CMS has been disabled. Please reinstall Total CMS. All disabled functionality will
+		be restored once the situation has been remedied.</p>
+	</div>
+	{% endif %}
+
+	<h2>Server Info</h2>
+	<table class="admin-table">
+		<thead>
+			<tr><th>Info</th><th>Value</th></tr>
+		</thead>
+		{% for key, value in cms.checker.serverInfo %}
+		<tr>
+			<td>{{ key }}</td>
+			<td>{{ value }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	<h2>Permissions Check</h2>
+	<table class="admin-table">
+		<thead>
+			<tr><th>Directory</th><th>Check</th></tr>
+		</thead>
+		{% for key, value in cms.checker.checkPermissions %}
+		<tr>
+			<td>{{ key }}</td>
+			<td>{{ value ? "Passed" : '<span class="error">Failed: Needs Write Permissions</span>' }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	<h2>Required Software Check</h2>
+	<table class="admin-table">
+		<thead>
+			<tr><th>Software</th><th>Check</th></tr>
+		</thead>
+		{% for key, value in cms.checker.checkRequiredSoftware %}
+		<tr>
+			<td>{{ key }}</td>
+			<td>{{ value ? "Installed" : '<span class="error">Not Installed</span>' }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	<h2>Optional Software Check</h2>
+	<table class="admin-table">
+		<thead>
+			<tr><th>Software</th><th>Check</th></tr>
+		</thead>
+		{% for key, value in cms.checker.checkOptionalSoftware %}
+		<tr>
+			<td>{{ key }}</td>
+			<td>{{ value ? "Installed" : '<span class="warning">Not Installed</span>' }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	<h2>Total CMS Configuration</h2>
+	<table class="admin-table">
+		<thead>
+			<tr><th>Config</th><th>Value</th></tr>
+		</thead>
+		{# Hide Sentry Config #}
+		{% for key, value in cms.checker.getConfig | filter((v, k) => k != "sentry") %}
+		<tr>
+			<td>{{ key }}</td>
+			{% if istype(value, "string") %}
+				<td>{{ value }}</td>
+			{% else %}
+				<td><pre>{{ json_pretty(value) | ltrim('{') | rtrim('}') | replace({"\n    ":"\n", '"':'', ',':'', '\\/':'/'})}}</pre></td>
+			{% endif %}
+		</tr>
+		{% endfor %}
+	</table>
+
+</section>

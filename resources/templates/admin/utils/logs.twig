@@ -1,3 +1,70 @@
 <h1>Log Analyzer</h1>
 
-<p>Use this tool to analyze the Total CMS log file.</p>
+<section class="dash-content-section log-analyzer">
+
+	<p>Total CMS has several different log files that it writes to depending on the task
+		being performed. This page allows you to view the contents of these log files and
+		analyze the errors that have been logged. You can select the log file you want to
+		view from the dropdown below.</p>
+
+	<p>Please note that not all errors are critical. Some errors are logged as a way to
+		track the progress of a task or to provide additional information about what is
+		happening.</p>
+
+	{% set logfiles = cms.logger.logfiles %}
+
+	{% if logfiles | length == 0 %}
+		<p class="no-logs">There are no log files available to view.
+		The developer of this app must be a stud! 😎</p>
+	{% endif %}
+
+	{% set activelog = getParams.logfile | default(logfiles | keys | last)%}
+
+	<form id="log-analyzer" class="totalform" data-disabled>
+		<div class="form-field select-field">
+			<label for="logfile">Select Logfile</label>
+			<select name="logfile" id="logfile">
+				{% for log,path in logfiles %}
+					<option value="{{ log }}" {% if activelog == log %}selected{% endif %}>{{ log }}</option>
+				{% endfor %}
+			</select>
+		</div>
+	</form>
+	<script>
+	document.getElementById('logfile').addEventListener('change',
+		e => document.getElementById('log-analyzer').submit());
+	</script>
+
+
+	{% set analysis = cms.logger.analyze(activelog) %}
+	{# {% set total = 0 %}
+	{% for error, value in analysis %}
+		{% set total = total + value.count %}
+	{% endfor %} #}
+
+	<h2>Log Analysis <small>Found {{ analysis | length }} Entries</small></h2>
+
+	<table class="admin-table" data-sort>
+		<thead>
+			<tr><th>Count</th><th>Logged Error</th></tr>
+		</thead>
+		{% for error, value in analysis %}
+		<tr>
+			<td>{{ value.count }}</td>
+			<td>{{ error }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	<h2>Log Contents</h2>
+	<div class="log-contents">
+<pre>
+{% for line in cms.logger.logfile(activelog) %}
+{{ line | trim | escape }}
+{% endfor %}
+</pre>
+	</div>
+
+
+</section>
+
