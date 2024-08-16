@@ -52,6 +52,9 @@ find dist/resources -type f -exec chmod 444 {} +
 # Ensure this does not get shipped
 rm -f dist/resources/.bundle
 
+# Most recent version shipped. Would be nice to have the version bump automated.
+#git describe --tags `git rev-list --tags --max-count=1`
+
 VERSION=`jq -r '.version' composer.json`
 BUILD=`git rev-parse --short HEAD`
 
