@@ -41,4 +41,8 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const reindex = Array.from(document.getElementsByClassName("cms-quick-action"));
 	reindex.forEach(link => new QuickAction(link));
+
+	// This should be moved to a content.js file
+	const embeds = Array.from(document.getElementsByClassName("cms-video-embed"));
+	embeds.forEach(iframe => iframe.src = iframe.dataset.src);
 });

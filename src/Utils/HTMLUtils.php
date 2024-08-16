@@ -60,10 +60,11 @@ class HTMLUtils
 	public static function iframe(string $url, string $class = ''): string
 	{
 		return self::element('iframe', '', [
-			'style'       => 'width:100%;height:100%',
-			'data-src'    => $url,
-			'frameborder' => '0',
-			'class'       => "cms-iframe $class",
+			'style'           => 'width:100%;height:100%',
+			'data-src'        => $url,
+			'frameborder'     => '0',
+			'allowfullscreen' => '',
+			'class'           => "cms-iframe $class",
 		]);
 	}
 

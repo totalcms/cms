@@ -2,9 +2,37 @@
 
 {% block dashcontent %}
 
-<main class="dash-main-content doc-content">
+{# style tag here is temp hack until the style structure can be rethought #}
+<main class="dash-main-content doc-content" style="width:100vw">
 	<h1>Welcome to Total CMS 3</h1>
-	<p>Ideas for this page...</p>
+	<p>
+	Total CMS 3 is a powerful content management system that allows you to create
+	custom collections and schemas for your projects. You can use Total CMS 3 to create blogs,
+	portfolios, galleries, and more. You can also use Total CMS 3 to create custom content
+	types for your projects.
+	</p>
+
+	<h2>Beta Testing Community</h2>
+	<p>
+	Total CMS 3 is currently in beta testing. We are looking for feedback from the community.
+	If you have any feedback, please post it in the
+	<a href="https://community.weavers.space/total-cms-3-beta">Total CMS Beta Group</a> on
+	the Weaver's Space Community.
+	</p>
+	<p><a class="dash-button" href="https://community.weavers.space/total-cms-3-beta">Total CMS Beta Group</a></p>
+
+
+	<h2>Getting Started</h2>
+	<p>
+	Here are some videos that have been recorded about the Total CMS 3 beta. These videos will help you
+	get started. You can also check out the
+	<a href="https://community.weavers.space/total-cms-3-beta">Total CMS Beta Group</a>
+	on the Weaver's Space Community for more information.
+	</p>
+
+	{{ embed('https://www.youtube.com/watch?v=jFvGecshJVk') }}
+
+	<h2>Ideas for this page...</h2>
 	<ul>
 		<li>Quick links to common tasks</li>
 		<li>Recent activity</li>
@@ -15,6 +43,7 @@
 		<li>Maybe a way to add your own custom dashboard pages</li>
 		<li>Got any more ideas?</li>
 	</ul>
+
 </main>
 
 {% endblock %}

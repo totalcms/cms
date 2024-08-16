@@ -15,3 +15,8 @@
 	background-color : oklch(var(--total-red) / 0.1);
 	border-radius    : 5px;
 }
+.cms-video-embed {
+	width        : 100% !important;
+	height       : auto !important;
+	aspect-ratio : 16 / 9;
+}
