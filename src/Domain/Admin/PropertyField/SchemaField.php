@@ -6,6 +6,7 @@ use TotalCMS\Domain\Admin\SchemaForm;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Utils\Faker\FakerExamples;
 
 class SchemaField extends PropertyField
 {
@@ -42,8 +43,7 @@ class SchemaField extends PropertyField
 		protected array $options      = [],
 		protected array $settings     = [],
 		protected array $extra        = [],
-	) {
-	}
+	) {}
 
 	protected function buildPropertyInfo(): string
 	{
@@ -59,8 +59,10 @@ class SchemaField extends PropertyField
 			'field'       => 'text',
 			'label'       => 'Factory',
 			'placeholder' => 'text(300)',
-			'help'        => 'The factory that will be used to generate the field form. See docs for more info.',
+			'help'        => 'The factory that will be used to generate the field form. See the datalist options for examples. See docs for more info.',
 			'value'       => $this->factory ?? '',
+			'settings'    => ['datalistOptions' => true],
+			'options'     => FakerExamples::FAKER_EXAMPLES,
 		]);
 		$content .= $this->form->field('default', [
 			'field'       => 'text',
@@ -128,7 +130,7 @@ class SchemaField extends PropertyField
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn($key) => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -140,6 +142,6 @@ class SchemaField extends PropertyField
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 }
