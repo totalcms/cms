@@ -15,8 +15,7 @@ class CollectionRefiner
 	 */
 	public function __construct(
 		private array $collection,
-	) {
-	}
+	) {}
 
 	/**
 	 * Filters the collection by the rules.
@@ -50,6 +49,18 @@ class CollectionRefiner
 	 */
 	public function filterByRule(array $collection, string $property, string $value, string $operator = 'equal'): array
 	{
+		// If rule is prepended by not-, then invert the result
+		$not = false;
+		if (self::starts($operator, 'not-')) {
+			$not      = true;
+			$operator = mb_substr($operator, 4);
+		}
+		// If value is prepended by !, then invert the result
+		if (self::starts($value, '!')) {
+			$not   = true;
+			$value = mb_substr($value, 1);
+		}
+
 		$reflection = new \ReflectionMethod(CollectionRefiner::class, "$operator");
 		$numParams  = $reflection->getNumberOfParameters();
 
@@ -58,23 +69,13 @@ class CollectionRefiner
 			return $collection;
 		}
 
-		return array_filter($collection, function ($record) use ($property, $value, $operator, $numParams) {
+		return array_filter($collection, function ($record)
+		use ($property, $value, $operator, $not, $numParams) {
+
 			$item = self::getPropertyValueForRecord($record, $property);
 
 			if ($item === null) {
 				return false;
-			}
-
-			// If rule is prepended by not-, then invert the result
-			$not = false;
-			if (self::starts($operator, 'not-')) {
-				$not      = true;
-				$operator = mb_substr($operator, 4);
-			}
-			// If value is prepended by !, then invert the result
-			if (self::starts($value, '!')) {
-				$not   = true;
-				$value = mb_substr($value, 1);
 			}
 
 			if (method_exists($this, $operator)) {
