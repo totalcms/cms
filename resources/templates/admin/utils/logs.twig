@@ -42,7 +42,7 @@
 		{% set total = total + value.count %}
 	{% endfor %} #}
 
-	<h2>Log Analysis <small>Found {{ analysis | length }} Errors</small></h2>
+	<h2>Log Analysis <small>Found {{ analysis | length }} Entries</small></h2>
 
 	<table class="admin-table" data-sort>
 		<thead>
@@ -60,7 +60,7 @@
 	<div class="log-contents">
 <pre>
 {% for line in cms.logger.logfile(activelog) %}
-{{ line | trim }}
+{{ line | trim | escape }}
 {% endfor %}
 </pre>
 	</div>

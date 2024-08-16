@@ -81,6 +81,6 @@ class LogAnalyzer
 		unset($parts[0]);
 		$error = implode(']', $parts);
 
-		return trim($error);
+		return strip_tags(trim($error));
 	}
 }
