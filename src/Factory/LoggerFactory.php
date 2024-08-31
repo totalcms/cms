@@ -37,6 +37,10 @@ final class LoggerFactory
 		$this->path  = (string)($settings['path'] ?? '');
 		$this->level = is_a($settings['level'], Level::class) ? $settings['level'] : Level::Debug;
 
+		if (!empty($this->path) && !is_dir($this->path)) {
+			mkdir($this->path, 0777, true);
+		}
+
 		// This can be used for testing to make the Factory testable
 		if (isset($settings['test'])) {
 			$this->testLogger = $settings['test'];
