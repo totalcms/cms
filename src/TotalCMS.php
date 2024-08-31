@@ -29,9 +29,13 @@ class TotalCMS
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
 
-		$this->buffer           = $this->container->get(BufferController::class);
-		$this->twigEngine       = $this->container->get(TwigEngine::class);
-		$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
+		try {
+			$this->buffer           = $this->container->get(BufferController::class);
+			$this->twigEngine       = $this->container->get(TwigEngine::class);
+			$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
+		} catch (\Throwable $th) {
+			$this->logger->error($th->getMessage(), ['exception' => $th]);
+		}
 	}
 
 	public function startBuffer(): void
