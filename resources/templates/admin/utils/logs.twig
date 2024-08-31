@@ -11,7 +11,7 @@
 		track the progress of a task or to provide additional information about what is
 		happening.</p>
 
-	{% set logfiles = cms.logger.logfiles %}
+	{% set logfiles = cms.logger.logfiles() %}
 
 	{% if logfiles | length == 0 %}
 		<p class="no-logs">There are no log files available to view.

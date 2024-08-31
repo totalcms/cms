@@ -7,27 +7,34 @@ use TotalCMS\Support\Config;
 class LogAnalyzer
 {
 	/** @var array<string,string> */
-	public array $logfiles = [];
-	public string $logdir;
+	private array  $logfiles = [];
+	public  string $logdir;
 
-	public function __construct(
-		private Config $config,
-	) {
-		$this->logdir   = $this->config->logger['path'];
-		$this->logfiles = $this->logfiles();
+	public function __construct(Config $config)
+	{
+		$this->logdir = $config->logger['path'];
 	}
 
 	/** @return array<string,string> */
-	private function logfiles(): array
+	public function logfiles(): array
 	{
-		$files = [];
-		$dir   = new \DirectoryIterator($this->logdir);
+		if (!empty($this->logfiles)) {
+			return $this->logfiles;
+		}
 
-		foreach ($dir as $file) {
-			if ($file->isFile() && $file->getExtension() === 'log') {
-				$files[$file->getFilename()] = $file->getPathname();
+		$files = [];
+
+		if (is_dir($this->logdir)) {
+			$dir = new \DirectoryIterator($this->logdir);
+
+			foreach ($dir as $file) {
+				if ($file->isFile() && $file->getExtension() === 'log') {
+					$files[$file->getFilename()] = $file->getPathname();
+				}
 			}
 		}
+
+		$this->logfiles = $files;
 
 		return $files;
 	}
@@ -35,7 +42,7 @@ class LogAnalyzer
 	/** @return array<string> */
 	public function logfile(string $logfile): array
 	{
-		if (!array_key_exists($logfile, $this->logfiles)) {
+		if (!array_key_exists($logfile, $this->logfiles())) {
 			return [];
 		}
 
