@@ -19,6 +19,7 @@
 			"type"        : "string",
 			"label"       : "Name",
 			"help"        : "The name of the collection.",
+			"minLength"   : 1,
 			"placeholder" : "My Objects",
 			"field"       : "text"
         },
