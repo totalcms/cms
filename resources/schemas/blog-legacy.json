@@ -18,7 +18,7 @@
 			"field"   : "checkbox",
 			"factory" : "boolean"
 		},
-		"archvied": {
+		"archived": {
 			"type"    : "boolean",
 			"label"   : "Archived",
 			"help"    : "Mark this post as a archived",

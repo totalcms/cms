@@ -58,7 +58,7 @@ abstract class TotalForm
 		],
 		'Array Fields' => [
 			'list',
-			'muiltiselect',
+			'multiselect',
 		],
 		'Special Fields' => [
 			'color',
@@ -87,7 +87,7 @@ abstract class TotalForm
 		'image',
 		'json',
 		'list',
-		'muiltiselect',
+		'multiselect',
 		'number',
 		'password',
 		'phone',

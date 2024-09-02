@@ -34,10 +34,10 @@ $settings['sentry'] = [
 		'traces_sample_rate' => 1.0,
 		// Set a sampling rate for profiling - this is relative to traces_sample_rate
 		'profiles_sample_rate' => 1.0,
-	],
-	'ignore_exceptions' => [
-		Slim\Exception\HttpNotFoundException::class,
-		Slim\Exception\HttpMethodNotAllowedException::class,
+		'ignore_exceptions' => [
+			Slim\Exception\HttpNotFoundException::class,
+			Slim\Exception\HttpMethodNotAllowedException::class,
+		],
 	],
 ];
 
@@ -78,7 +78,7 @@ $settings['error'] = [
 // Logger settings
 $settings['logger'] = [
 	'name'        => 'totalcms',
-	'path'        => realpath(__DIR__ . '/../logs'),
+	'path'        => __DIR__ . '/../logs',
 	'filename'    => 'totalcms.log',
 	'level'       => Monolog\Level::Info,
 	'maxFiles'    => 30,
