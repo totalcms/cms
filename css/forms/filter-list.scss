@@ -29,6 +29,7 @@
 	.list-content {
 		border        : 1px solid var(--admin-list-bg-alt);
 		border-radius : var(--totalform-radius);
+		overflow      : auto;
 
 		> * {
 			background-color : var(--admin-list-bg);
