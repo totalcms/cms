@@ -38,7 +38,7 @@ final class SchemaData
 		'string',
 		'number',
 		'boolean',
-		'array',
+		// 'array',
 		'object',
 		'color',
 		'date',
