@@ -30,7 +30,7 @@ abstract class TotalForm
 	public SchemaData $schemaData;
 
 	public const FIELDS_BY_TYPE = [
-		'Text Fields' => [
+		'String Fields' => [
 			'email',
 			'hidden',
 			'json',
@@ -56,7 +56,7 @@ abstract class TotalForm
 			'date',
 			'datetime',
 		],
-		'Array Fields' => [
+		'List Fields' => [
 			'list',
 			'multiselect',
 		],
@@ -332,7 +332,7 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -344,7 +344,7 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn($key) => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
