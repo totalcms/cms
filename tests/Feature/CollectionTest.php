@@ -12,7 +12,7 @@ beforeAll(function (): void {
 
 function collectionTestData(): array
 {
-	$json = file_get_contents(testData('new-collection.json'));
+	$json = file_get_contents(testData('new-text-collection.json'));
 
 	return json_decode($json, true);
 }
@@ -24,7 +24,12 @@ beforeEach(function (): void {
 it('saves a new collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
-	postJson('/collections', $collection)
+
+	// Remove the property data to ensure that the CMS generates it properly
+	$requestData = $collection;
+	unset($requestData['properties']);
+
+	postJson('/collections', $requestData)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($collection);

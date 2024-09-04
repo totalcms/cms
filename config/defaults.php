@@ -45,7 +45,7 @@ $settings['sentry'] = [
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
-$settings['domain'] = $_SERVER['HTTP_HOST'];
+$settings['domain'] = $_SERVER['HTTP_HOST'] ?? 'unknown';
 $settings['url']    = 'https://' . $settings['domain'];
 $settings['api']    = $settings['url'] . '/api';
 
