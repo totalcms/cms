@@ -30,7 +30,7 @@ abstract class TotalForm
 	public SchemaData $schemaData;
 
 	public const FIELDS_BY_TYPE = [
-		'String Fields' => [
+		'Text (String) Fields' => [
 			'email',
 			'hidden',
 			'json',
@@ -56,7 +56,7 @@ abstract class TotalForm
 			'date',
 			'datetime',
 		],
-		'List Fields' => [
+		'List (Array) Fields' => [
 			'list',
 			'multiselect',
 		],
