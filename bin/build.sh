@@ -55,7 +55,7 @@ rm -f dist/resources/.bundle
 # Most recent version shipped. Would be nice to have the version bump automated.
 #git describe --tags `git rev-list --tags --max-count=1`
 
-VERSION=`jq -r '.version' composer.json`
+VERSION=`git describe --tags $(git rev-list --tags --max-count=1)`
 BUILD=`git rev-parse --short HEAD`
 
 echo "$VERSION ($BUILD)" > dist/version
