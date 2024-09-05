@@ -5,6 +5,10 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
+/**
+ *  @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *  @SuppressWarnings(PHPMD.NumberOfChildren)
+ */
 class FormField
 {
 	protected string $defaultInputType = 'text';
@@ -125,7 +129,7 @@ class FormField
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
 
 		return $attributes;
 	}
@@ -198,9 +202,10 @@ class FormField
 		$properties = $this->form->propertiesForCollection([$labelProperty, $valueProperty], $collection);
 
 		// reformat the properties array to match the options array
-		return array_map(fn($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
+		return array_map(fn ($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
 	}
 
+	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */
 	protected function buildOptions(string $options = ''): string
 	{
 		if (isset($this->settings['propertyOptions']) && $this->settings['propertyOptions'] === true) {

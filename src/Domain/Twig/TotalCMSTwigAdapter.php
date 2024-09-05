@@ -22,6 +22,7 @@ use TotalCMS\Utils\ServerChecker;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 final class TotalCMSTwigAdapter
 {
@@ -70,7 +71,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -79,7 +80,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -88,7 +89,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get schema definition
@@ -506,7 +507,7 @@ final class TotalCMSTwigAdapter
 			return null;
 		}
 
-		$image = array_filter($gallery, fn($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
