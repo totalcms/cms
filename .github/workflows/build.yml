@@ -4,23 +4,23 @@ on: [ push, pull_request ]
 
 jobs:
   run:
-    runs-on: ${{ matrix.operating-system }}
-    strategy:
-      matrix:
-        operating-system: [ ubuntu-latest ]
-        php-versions: [ '8.2' ]
-    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
+    runs-on: ubuntu-latest
+    name: PHP 8.2 Test on ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-versions }}
-          extensions: mbstring, intl, zip
+          php-version: 8.2
+          extensions: mbstring, intl, zip, gd
+          tools: composer:v2
           coverage: none
+
+      - name: Install Yarn
+        run: npm install -g yarn
 
       - name: Check PHP version
         run: php -v
@@ -35,7 +35,7 @@ jobs:
         run: composer validate
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-progress --ignore-platform-req=php
+        run: composer build
 
       - name: Run test suite
         run: composer test:all
