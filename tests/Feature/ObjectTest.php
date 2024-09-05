@@ -8,6 +8,10 @@ use function Nekofar\Slim\Pest\postJson;
 use function Nekofar\Slim\Pest\put;
 use function Nekofar\Slim\Pest\putJson;
 
+beforeAll(function (): void {
+	recursiveDelete(cmsDataDir());
+});
+
 function blogTestData(): array
 {
 	$json = file_get_contents(testData('new-blogpost.json'));
@@ -16,6 +20,10 @@ function blogTestData(): array
 }
 
 beforeEach(function (): void {
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		// tests with assertBadRequest do not seem to clean up the session
+		session_destroy();
+	}
 	$this->setUpApp(bootstrap());
 });
 
