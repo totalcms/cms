@@ -10,20 +10,11 @@ use TotalCMS\Transformer\IndexTransformer;
 
 final class IndexGetAction
 {
-	private JsonRenderer $renderer;
-	private IndexReader $service;
 
-	/**
-	 * The constructor.
-	 *
-	 * @param JsonRenderer $renderer The renderer
-	 * @param IndexReader $service The service
-	 */
-	public function __construct(JsonRenderer $renderer, IndexReader $service)
-	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
-	}
+	public function __construct(
+		private JsonRenderer $renderer,
+		private IndexReader $service
+	) {}
 
 	/**
 	 * Action.

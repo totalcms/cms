@@ -30,7 +30,7 @@ final class IndexReader
 	{
 		$index = $this->storage->fetchIndex($collection);
 
-		if ($index instanceof IndexData) {
+		if (is_null($index)) {
 			// Build the index if it does not exist
 			$this->builder->buildIndex($collection);
 		}
