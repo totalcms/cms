@@ -9,9 +9,7 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
 final class ImageWorksImageFetchAction
 {
-	public function __construct(private ImageGenerator $imageGenerator)
-	{
-	}
+	public function __construct(private ImageGenerator $imageGenerator) {}
 
 	/**
 	 * Get image by property.

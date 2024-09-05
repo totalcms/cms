@@ -20,8 +20,7 @@ final class ImageGenerator
 	public function __construct(
 		private PropertyFetcher $propertyFetcher,
 		private GlideFactory $glideFactory
-	) {
-	}
+	) {}
 
 	/** @param array<string,mixed> $params */
 	public function generateImage(
@@ -70,11 +69,11 @@ final class ImageGenerator
 				$imageData = $galleryData->images[$randomKey];
 				break;
 			case 'featured':
-				usort($galleryData->images, fn ($a, $b) => $a['featured'] <=> $b['featured']);
+				usort($galleryData->images, fn($a, $b) => $a['featured'] <=> $b['featured']);
 				$imageData = array_shift($galleryData->images);
 				break;
 			default:
-				$imageData = array_filter($galleryData->images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
+				$imageData = array_filter($galleryData->images, fn($image) => pathinfo($image['name'])['filename'] === $filename);
 				$imageData = array_shift($imageData);
 		}
 
@@ -108,7 +107,7 @@ final class ImageGenerator
 	{
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
-		if (empty($params) || (count($params) === 1 && isset($params['fm']))) {
+		if (empty($params) || (count($params) === 1 && isset($params['fm']) && str_ends_with($params['fm'], $imageData->name))) {
 			return [];
 		}
 
