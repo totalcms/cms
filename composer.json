@@ -1,14 +1,13 @@
 {
   "name": "joeworkman/totalcms",
   "type": "project",
-  "version": "3.0.9",
   "description": "Total CMS",
   "keywords": [
     "total-cms",
     "dynamics",
     "cms"
   ],
-  "license": "Commercial",
+  "license": "proprietary",
   "repositories": [
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
