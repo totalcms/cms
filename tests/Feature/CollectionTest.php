@@ -19,6 +19,7 @@ function collectionTestData(): array
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
+		// tests with assertBadRequest do not seem to clean up the session
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());

@@ -7,13 +7,13 @@ beforeEach(function (): void {
 });
 
 it('redirects to current version', function (): void {
-	get('/docs')
+	get('/docs/api')
 		->assertStatus(302)
-		->assertHeader('Location', '/docs/v3');
+		->assertHeader('Location', '/docs/api/v3');
 });
 
 it('can see api docs homepage', function (): void {
-	get('/docs/v3')
+	get('/docs/api/v3')
 		->assertOk()
 		->assertSee('swagger-ui');
 });
