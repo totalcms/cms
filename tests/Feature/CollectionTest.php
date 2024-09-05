@@ -18,6 +18,9 @@ function collectionTestData(): array
 }
 
 beforeEach(function (): void {
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		session_destroy();
+	}
 	$this->setUpApp(bootstrap());
 });
 
@@ -34,13 +37,14 @@ it('saves a new collection', function (): void {
 		->assertJson()
 		->assertJsonFragment($collection);
 
-	$this->assertFileExists(__DIR__ . "/../tcms-data/{$id}/.meta.json");
+	$this->assertFileExists(metaPath($id));
 });
 
 it('does not save an existing collection', function (): void {
 	$collection = collectionTestData();
 	postJson('/collections', $collection)
 		->assertBadRequest()
+		->assertJson()
 		->assertSee('already exists');
 });
 
@@ -98,8 +102,7 @@ it('can fetch a schema for a collection', function (): void {
 it('can delete a collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
-	$filePath   = __DIR__ . "/../tcms-data/$id/.meta.json";
 
 	delete("/collections/$id")->assertOk();
-	expect($filePath)->not->toBeFile();
+	$this->assertFileDoesNotExist(metaPath($id));
 });
