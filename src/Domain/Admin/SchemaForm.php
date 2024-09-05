@@ -27,8 +27,8 @@ final class SchemaForm extends TotalForm
 	public function __construct(
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
-		public    string $api,
-		public    string $id          = '',
+		public string $api,
+		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
 		protected string $helpStyle   = '',
@@ -82,7 +82,7 @@ final class SchemaForm extends TotalForm
 	private function isReservedSchema(string $id): bool
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
-		$schemas = array_map(fn($schema) => $schema->id, $schemas);
+		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
 
 		return in_array($id, $schemas);
 	}

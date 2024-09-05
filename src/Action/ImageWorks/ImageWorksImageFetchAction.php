@@ -9,7 +9,9 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
 final class ImageWorksImageFetchAction
 {
-	public function __construct(private ImageGenerator $imageGenerator) {}
+	public function __construct(private ImageGenerator $imageGenerator)
+	{
+	}
 
 	/**
 	 * Get image by property.
@@ -25,7 +27,7 @@ final class ImageWorksImageFetchAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$collection  = $args['collection'] ?? 'image';
 		$id          = $args['id'];

@@ -12,7 +12,7 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminIndexAction
 {
 	public function __construct(
-		private TwigRenderer $twigRenderer
+		private TwigRenderer $twigRenderer,
 	) {
 	}
 
@@ -28,7 +28,7 @@ final class AdminIndexAction
 				'query'  => $request->getUri()->getQuery(),
 				'params' => $args,
 				'page'   => 'index',
-			]
+			],
 		]);
 	}
 }

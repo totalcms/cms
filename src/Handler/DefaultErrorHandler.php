@@ -32,7 +32,7 @@ final class DefaultErrorHandler
 	public function __construct(
 		JsonRenderer $renderer,
 		ResponseFactoryInterface $responseFactory,
-		LoggerFactory $loggerFactory
+		LoggerFactory $loggerFactory,
 	) {
 		$this->renderer        = $renderer;
 		$this->responseFactory = $responseFactory;
@@ -55,7 +55,7 @@ final class DefaultErrorHandler
 		ServerRequestInterface $request,
 		\Throwable $exception,
 		bool $displayErrorDetails,
-		bool $logErrors
+		bool $logErrors,
 	): ResponseInterface {
 		// Log error
 		if ($logErrors) {

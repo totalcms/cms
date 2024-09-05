@@ -30,7 +30,7 @@ final class SentryMiddleware implements MiddlewareInterface
 	 */
 	public function process(
 		ServerRequestInterface $request,
-		RequestHandlerInterface $handler
+		RequestHandlerInterface $handler,
 	): ResponseInterface {
 		if ($this->options['enable'] === false || !isset($this->options['init']['dsn'])) {
 			return $handler->handle($request);

@@ -10,11 +10,11 @@ use TotalCMS\Transformer\IndexTransformer;
 
 final class IndexGetAction
 {
-
 	public function __construct(
 		private JsonRenderer $renderer,
-		private IndexReader $service
-	) {}
+		private IndexReader $service,
+	) {
+	}
 
 	/**
 	 * Action.
@@ -28,7 +28,7 @@ final class IndexGetAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$index = $this->service->fetchIndex($args['collection']);
 

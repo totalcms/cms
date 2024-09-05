@@ -42,7 +42,7 @@ final class IndexRepository extends StorageRepository
 	{
 		$files = $this->filesystem->listFiles($collection);
 
-		return array_map(fn(string $path) => basename($path, StorageRepository::FILE_EXT), $files);
+		return array_map(fn (string $path) => basename($path, StorageRepository::FILE_EXT), $files);
 	}
 
 	/**

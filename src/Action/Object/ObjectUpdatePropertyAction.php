@@ -37,7 +37,7 @@ final class ObjectUpdatePropertyAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$data   = json_decode($request->getBody(), true);
 		$object = $this->service->updateObjectProperty($args['collection'], $args['id'], $args['property'], $data);

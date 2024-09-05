@@ -12,7 +12,7 @@ final class SchemaSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private SchemaSaver $service
+		private SchemaSaver $service,
 	) {
 	}
 

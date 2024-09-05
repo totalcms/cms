@@ -61,7 +61,6 @@ final class CollectionRepository extends StorageRepository
 		return $this->fetchAndDeserialize($metaFile, CollectionData::class);
 	}
 
-
 	public function deleteCollection(string $collection): bool
 	{
 		$metaFile = $this->buildMetaPath($collection);

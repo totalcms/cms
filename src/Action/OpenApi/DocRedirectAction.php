@@ -12,7 +12,7 @@ use TotalCMS\Renderer\RedirectRenderer;
 final class DocRedirectAction
 {
 	public function __construct(
-		private RedirectRenderer $redirectRenderer
+		private RedirectRenderer $redirectRenderer,
 	) {
 		$this->redirectRenderer = $redirectRenderer;
 	}

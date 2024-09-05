@@ -9,7 +9,7 @@ class DepotData extends PropertyData
 {
 	/** @param array<array<string,mixed>> $files */
 	public function __construct(
-		public array $files = []
+		public array $files = [],
 	) {
 	}
 

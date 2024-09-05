@@ -92,7 +92,7 @@ final class SchemaRepository extends StorageRepository
 
 		return array_filter($ids, function (string $id) {
 			// Exclude the schema and collection schemas
-			return ($id !== 'schema' && $id !== 'collection');
+			return $id !== 'schema' && $id !== 'collection';
 		});
 	}
 

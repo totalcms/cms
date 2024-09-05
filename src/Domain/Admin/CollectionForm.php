@@ -21,14 +21,13 @@ final class CollectionForm extends TotalForm
 	 * @param array<string,string> $newAction
 	 * @param array<string,string> $editAction
 	 * @param array<string,string> $deleteAction
-	 *
 	 */
 	public function __construct(
 		protected CollectionFetcher $collectionFetcher,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
-		public    string $id          = '',
+		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
 		protected string $helpStyle   = '',
@@ -70,6 +69,7 @@ final class CollectionForm extends TotalForm
 
 		if (is_null($collectionData)) {
 			$this->buildError = "Collection {$this->id} not found for TotalForm";
+
 			return;
 		}
 

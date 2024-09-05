@@ -14,7 +14,7 @@ final class CacheDeleteAction
 {
 	public function __construct(
 		private TwigCacheCleaner $twigCacheCleaner,
-		private JsonRenderer $renderer
+		private JsonRenderer $renderer,
 	) {
 	}
 

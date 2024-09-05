@@ -11,7 +11,7 @@ final class SchemaDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private SchemaRemover $remover
+		private SchemaRemover $remover,
 	) {
 	}
 

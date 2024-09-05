@@ -12,14 +12,15 @@ final class IndexBuildAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private IndexBuilder $service
-	) {}
+		private IndexBuilder $service,
+	) {
+	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$collection = $args['collection'];
 		$index      = $this->service->buildIndex($collection);

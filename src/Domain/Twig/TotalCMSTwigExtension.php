@@ -15,7 +15,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		private TotalCMSTwigAdapter $adapter,
 		private TotalCMSTwigPatterns $patterns,
 		private FakerFactory $faker,
-		private QRCodeTwigAdapter $generator
+		private QRCodeTwigAdapter $generator,
 	) {
 	}
 

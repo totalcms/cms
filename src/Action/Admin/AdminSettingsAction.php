@@ -12,7 +12,7 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminSettingsAction
 {
 	public function __construct(
-		private TwigRenderer $twigRenderer
+		private TwigRenderer $twigRenderer,
 	) {
 	}
 
@@ -22,14 +22,13 @@ final class AdminSettingsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
 			'url' => [
 				'path'   => $request->getUri()->getPath(),
 				'query'  => $request->getUri()->getQuery(),
 				'params' => $args,
 				'page'   => 'settings',
-			]
+			],
 		]);
 	}
 }

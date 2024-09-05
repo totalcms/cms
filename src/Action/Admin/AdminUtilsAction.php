@@ -12,7 +12,7 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminUtilsAction
 {
 	public function __construct(
-		private TwigRenderer $twigRenderer
+		private TwigRenderer $twigRenderer,
 	) {
 	}
 

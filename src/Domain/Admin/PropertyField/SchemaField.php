@@ -5,8 +5,8 @@ namespace TotalCMS\Domain\Admin\PropertyField;
 use TotalCMS\Domain\Admin\SchemaForm;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Utils\Faker\FakerExamples;
+use TotalCMS\Utils\HTMLUtils;
 
 class SchemaField extends PropertyField
 {
@@ -43,7 +43,8 @@ class SchemaField extends PropertyField
 		protected array $options      = [],
 		protected array $settings     = [],
 		protected array $extra        = [],
-	) {}
+	) {
+	}
 
 	protected function buildPropertyInfo(): string
 	{
@@ -130,7 +131,7 @@ class SchemaField extends PropertyField
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn($key) => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key) => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -142,6 +143,6 @@ class SchemaField extends PropertyField
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 }

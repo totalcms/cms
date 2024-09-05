@@ -3,7 +3,7 @@
 echo "Building bundle...\n";
 
 const BASEDIR = __DIR__ . '/../';
-$folders = [
+$folders      = [
 	'resources/schemas',
 	'src/Middleware',
 	'src/Domain',
@@ -15,9 +15,11 @@ foreach ($folders as $folder) {
 	$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(BASEDIR . $folder));
 	foreach ($files as $file) {
 		if ($file->isFile()) {
-			if ('.DS_Store' === $file->getFilename()) continue;
-			$filePath = $file->getPathname();
-			$key = str_replace(BASEDIR, '', $filePath);
+			if ('.DS_Store' === $file->getFilename()) {
+				continue;
+			}
+			$filePath     = $file->getPathname();
+			$key          = str_replace(BASEDIR, '', $filePath);
 			$bundle[$key] = hash_file('sha256', $filePath);
 		}
 	}

@@ -12,7 +12,7 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminCollectionAction
 {
 	public function __construct(
-		private TwigRenderer $twigRenderer
+		private TwigRenderer $twigRenderer,
 	) {
 	}
 
@@ -22,7 +22,6 @@ final class AdminCollectionAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		// /collections - index page
 		// /collections/new - collection create form
 		// /collections/{collection} - object list page
@@ -38,7 +37,7 @@ final class AdminCollectionAction
 				'page'       => 'collections',
 				'collection' => $args['collection'] ?? '',
 				'id'         => $args['id'] ?? '',
-			]
+			],
 		]);
 	}
 }

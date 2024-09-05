@@ -27,7 +27,7 @@ final class ImageWorksGalleryFetchDynamicAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$collection  = $args['collection'] ?? 'gallery';
 		$id          = $args['id'];

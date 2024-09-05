@@ -22,7 +22,7 @@ final class UrlImporter
 	public function __construct(
 		ObjectRepository $storage,
 		CakeValidationFactory $validationFactory,
-		LoggerFactory $loggerFactory
+		LoggerFactory $loggerFactory,
 	) {
 		$this->storage           = $storage;
 		$this->validationFactory = $validationFactory;

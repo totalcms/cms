@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Twig;
 
-use Twig\TwigFunction;
 use TotalCMS\Utils\EmbedBuilder;
+use Twig\TwigFunction;
 
 /**
  * Twig Functions for Total CMS.
@@ -77,10 +77,10 @@ final class TotalCMSTwigFunctions
 		// this takes a normal array and converts it to an array of arrays with label and value keys
 		// the resulting array can be used for select options in a form
 		if (empty($value) || empty($label)) {
-			return array_map(fn($value): array => ['label' => $value, 'value' => $value], $data);
+			return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $data);
 		}
 
-		return array_map(fn($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
+		return array_map(fn ($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
 	}
 
 	public static function istype(mixed $variable, string $type): bool

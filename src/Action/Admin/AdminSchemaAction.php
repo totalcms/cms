@@ -12,7 +12,7 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminSchemaAction
 {
 	public function __construct(
-		private TwigRenderer $twigRenderer
+		private TwigRenderer $twigRenderer,
 	) {
 	}
 
@@ -22,7 +22,6 @@ final class AdminSchemaAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		// /schemas - index page
 		// /schemas/{schema} - schema edit page
 		// /schemas/new - schema create form
@@ -34,7 +33,7 @@ final class AdminSchemaAction
 				'params' => $args,
 				'page'   => 'schemas',
 				'schema' => $args['schema'] ?? '',
-			]
+			],
 		]);
 	}
 }

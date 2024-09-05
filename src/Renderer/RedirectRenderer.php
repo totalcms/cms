@@ -10,10 +10,10 @@ use Slim\Interfaces\RouteParserInterface;
  */
 final class RedirectRenderer
 {
-
 	public function __construct(
-		private RouteParserInterface $routeParser
-	) {}
+		private RouteParserInterface $routeParser,
+	) {
+	}
 
 	/**
 	 * Creates a redirect for the given url / route name.
@@ -30,7 +30,7 @@ final class RedirectRenderer
 	public function redirect(
 		ResponseInterface $response,
 		string $destination,
-		array $queryParams = []
+		array $queryParams = [],
 	): ResponseInterface {
 		if ($queryParams) {
 			$destination = sprintf('%s?%s', $destination, \http_build_query($queryParams));
@@ -56,7 +56,7 @@ final class RedirectRenderer
 		ResponseInterface $response,
 		string $routeName,
 		array $data = [],
-		array $queryParams = []
+		array $queryParams = [],
 	): ResponseInterface {
 		return $this->redirect($response, $this->routeParser->urlFor($routeName, $data, $queryParams));
 	}

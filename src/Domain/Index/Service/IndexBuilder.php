@@ -15,8 +15,9 @@ final class IndexBuilder
 	public function __construct(
 		private IndexRepository $storage,
 		private ObjectFetcher $objectFetcher,
-		private CollectionSchemaFetcher $schemaFetcher
-	) {}
+		private CollectionSchemaFetcher $schemaFetcher,
+	) {
+	}
 
 	/**
 	 * Save Index data.
@@ -39,8 +40,8 @@ final class IndexBuilder
 				// The reject method is used to filter out properties that are not in the index
 				// The map method is used to transform the properties into an array
 				$summary = $object->properties
-					->reject(fn($value, $key) => !in_array($key, $indexProps, true))
-					->map(fn($property) => $property->transform());
+					->reject(fn ($value, $key) => !in_array($key, $indexProps, true))
+					->map(fn ($property) => $property->transform());
 				$summary->put('id', $id);
 				$index->objects->push($summary->toArray());
 			}

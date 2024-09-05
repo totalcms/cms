@@ -3,7 +3,6 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Admin\SimpleForm;
 
 /**
  * Factory Form Builder.

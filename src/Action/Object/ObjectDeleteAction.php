@@ -11,7 +11,7 @@ final class ObjectDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private ObjectRemover $remover
+		private ObjectRemover $remover,
 	) {
 	}
 
@@ -27,7 +27,7 @@ final class ObjectDeleteAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$deleted = $this->remover->deleteObject($args['collection'], $args['id']);
 

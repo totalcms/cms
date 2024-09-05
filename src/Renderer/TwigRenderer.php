@@ -11,8 +11,9 @@ use TotalCMS\Domain\Twig\TwigEngine;
 final class TwigRenderer
 {
 	public function __construct(
-		private TwigEngine $twigEngine
-	) {}
+		private TwigEngine $twigEngine,
+	) {
+	}
 
 	/**
 	 * Output rendered template.

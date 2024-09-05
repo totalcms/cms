@@ -30,7 +30,7 @@ final class ObjectExistsAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$exists = $this->objectFetcher->existsObject($args['collection'], $args['id']);
 

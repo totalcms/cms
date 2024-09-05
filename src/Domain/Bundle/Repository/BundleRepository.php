@@ -2,15 +2,15 @@
 
 namespace TotalCMS\Domain\Bundle\Repository;
 
-use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Domain\Bundle\Data\BundleData;
+use TotalCMS\Domain\Storage\StorageRepository;
 
 final class BundleRepository extends StorageRepository
 {
-	const RESOURCES   = __DIR__ . '/../../../../resources/';
-	const BUNDLE      = self::RESOURCES . 'bundle';
-	const LOCALBUNDLE = self::RESOURCES . '.bundle';
-	const VALIDITY    = 60 * 60;
+	public const RESOURCES   = __DIR__ . '/../../../../resources/';
+	public const BUNDLE      = self::RESOURCES . 'bundle';
+	public const LOCALBUNDLE = self::RESOURCES . '.bundle';
+	public const VALIDITY    = 60 * 60;
 
 	public function saveLocalBundle(BundleData $bundle): bool
 	{
@@ -19,6 +19,7 @@ final class BundleRepository extends StorageRepository
 		if (!$this->localBundleExists()) {
 			throw new \RuntimeException('Unable to save local bundle.');
 		}
+
 		return true;
 	}
 
@@ -51,12 +52,15 @@ final class BundleRepository extends StorageRepository
 	public function localBundleExists(): bool
 	{
 		$this->localValidity();
+
 		return file_exists(self::LOCALBUNDLE);
 	}
 
 	private function localValidity(): void
 	{
-		if (!file_exists(self::LOCALBUNDLE)) return;
+		if (!file_exists(self::LOCALBUNDLE)) {
+			return;
+		}
 
 		$time = time() - filemtime(self::LOCALBUNDLE);
 		if ($time > self::VALIDITY) {

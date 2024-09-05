@@ -30,8 +30,9 @@ final class BundleData
 	/** @param array<string,string> $data */
 	public static function fromArray(array $data): BundleData
 	{
-		$bundleData = new BundleData();
+		$bundleData         = new BundleData();
 		$bundleData->bundle = $data;
+
 		return $bundleData;
 	}
 }

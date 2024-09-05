@@ -31,7 +31,7 @@ final class SchemaFetchForCollectionAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($args['collection']);
 

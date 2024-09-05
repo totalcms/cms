@@ -19,15 +19,16 @@ final class ImageGenerator
 
 	public function __construct(
 		private PropertyFetcher $propertyFetcher,
-		private GlideFactory $glideFactory
-	) {}
+		private GlideFactory $glideFactory,
+	) {
+	}
 
 	/** @param array<string,mixed> $params */
 	public function generateImage(
 		string $collection,
 		string $id,
 		string $property,
-		array $params
+		array $params,
 	): ResponseInterface {
 		$imageData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
@@ -49,7 +50,7 @@ final class ImageGenerator
 		string $id,
 		string $property,
 		string $filename,
-		array $params
+		array $params,
 	): ResponseInterface {
 		$galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
 
@@ -69,11 +70,11 @@ final class ImageGenerator
 				$imageData = $galleryData->images[$randomKey];
 				break;
 			case 'featured':
-				usort($galleryData->images, fn($a, $b) => $a['featured'] <=> $b['featured']);
+				usort($galleryData->images, fn ($a, $b) => $a['featured'] <=> $b['featured']);
 				$imageData = array_shift($galleryData->images);
 				break;
 			default:
-				$imageData = array_filter($galleryData->images, fn($image) => pathinfo($image['name'])['filename'] === $filename);
+				$imageData = array_filter($galleryData->images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
 				$imageData = array_shift($imageData);
 		}
 

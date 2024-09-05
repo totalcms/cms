@@ -9,7 +9,7 @@ class GalleryData extends PropertyData
 {
 	/** @param array<array<string,mixed>> $images */
 	public function __construct(
-		public array $images = []
+		public array $images = [],
 	) {
 	}
 

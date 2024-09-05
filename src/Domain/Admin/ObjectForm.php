@@ -98,6 +98,7 @@ final class ObjectForm extends TotalForm
 
 		if (is_null($collectionData)) {
 			$this->buildError = "Collection {$this->collection} not found for TotalForm";
+
 			return;
 		}
 

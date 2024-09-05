@@ -31,7 +31,7 @@ final class SchemaFetchAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$schema = $this->schemaFetcher->fetchSchema($args['id']);
 
