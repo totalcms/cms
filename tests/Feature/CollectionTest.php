@@ -95,8 +95,11 @@ it('can fetch a schema for a collection', function (): void {
 		]);
 });
 
-it('cannot delete a collection by design', function (): void {
+it('can delete a collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
-	delete("/collections/$id")->assertMethodNotAllowed();
+	$filePath   = __DIR__ . "/../tcms-data/$id/.meta.json";
+
+	delete("/collections/$id")->assertOk();
+	expect($filePath)->not->toBeFile();
 });

@@ -9,6 +9,7 @@
 // Continuous integration environment
 $settings['env'] = 'test';
 
+$settings['root']     = dirname(__DIR__);
 $settings['docroot']  = $settings['root'];
 $settings['datadir']  = $settings['root'] . '/tests/tcms-data';
 $settings['cachedir'] = 'false';

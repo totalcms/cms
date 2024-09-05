@@ -1,5 +1,5 @@
 {
-    "id": "custom-text",
+    "id": "text",
     "schema": "text",
     "name": "Custom Text Collection",
     "description": "A collection to test",
