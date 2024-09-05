@@ -119,14 +119,13 @@
     "test:all": [
       "@lint",
       "@cs:check",
-      "@sniffer:check",
       "@stan",
       "@md",
       "@test",
       "@test:coverage"
     ],
     "test:build": [
-      "@sniffer:check",
+      "@cs:check",
       "@stan",
       "@test"
     ]
