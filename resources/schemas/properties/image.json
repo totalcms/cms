@@ -61,7 +61,7 @@
         "focalLength": {
           "type": "number"
         },
-		"iso": {
+		    "iso": {
           "type": "number"
         }
       }
