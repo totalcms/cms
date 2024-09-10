@@ -118,6 +118,7 @@ body {
 		li {
 			--collection-icon : var(--icon-collections);
 
+			&.schema-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,
 			&.schema-blog { --collection-icon : var(--icon-blog) }
 			&.schema-feed { --collection-icon : var(--icon-feed) }
