@@ -157,10 +157,10 @@ class FakerImageGD extends Base
 			// Draw a random rectangle with random color
 			$grayscale = rand(0, 255);
 			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
-			$x1        = rand(0, $width / 2);                                             // Random start x
-			$y1        = rand(0, $height / 2);                                            // Random start y
-			$x2        = $x1 + rand($width / 5, $width / 3);                              // Random end x
-			$y2        = $y1 + rand($height / 5, $height / 3);                            // Random end y
+			$x1        = rand(0, intval($width / 2));                                             // Random start x
+			$y1        = rand(0, intval($height / 2));                                            // Random start y
+			$x2        = $x1 + rand(intval($width / 5), intval($width / 3));                              // Random end x
+			$y2        = $y1 + rand(intval($height / 5), intval($height / 3));                            // Random end y
 
 			if ($color === false) {
 				$color = 1;
@@ -173,7 +173,7 @@ class FakerImageGD extends Base
 			// Draw a random rectangle with random color
 			$grayscale = rand(0, 255);
 			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
-			$cr        = rand($width / 15, $width / 5);                                   // Radius
+			$cr        = rand(intval($width / 15), intval($width / 5));                                   // Radius
 			$cx        = rand(0, $width);                                                 // Center x
 			$cy        = rand(0, $height);                                                // Center y
 			// $cx          = rand($width / 4, 3 * $width / 4); // Center x
