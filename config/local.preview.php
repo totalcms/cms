@@ -8,8 +8,6 @@ ini_set('display_errors', '1');
 
 $settings['env'] = 'preview';
 
-$settings['sentry']['enable'] = false;
-
 // This file can exist in order to set a preview domain for the preview environment
 $previewDomainFile = __DIR__ . '/preview-domain';
 
@@ -32,3 +30,4 @@ $settings['logger']['level']  = Monolog\Level::Debug;
 $settings['assets']['minify'] = 0;
 // $settings['locale']['cache']  = null;
 $settings['logger']['path'] = $settings['datadir'] . '/logs';
+$settings['sentry']['enable'] = false;
