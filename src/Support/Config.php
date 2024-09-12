@@ -21,6 +21,8 @@ final class Config
 	public array $error      = [];
 	/** @var array<string,mixed> */
 	public array $imageworks = [];
+	/** @var array<string,mixed> */
+	public array $auth = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
@@ -37,6 +39,7 @@ final class Config
 		$this->api        = $settings['api'];
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];
+		$this->auth       = $settings['auth'];
 	}
 
 	/** @return array<string,mixed> */

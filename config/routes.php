@@ -8,6 +8,7 @@ return function (App $app) {
 
 	(require __DIR__ . '/routes/admin.php')($app);
 	(require __DIR__ . '/routes/assets.php')($app);
+	(require __DIR__ . '/routes/auth.php')($app);
 	(require __DIR__ . '/routes/cache.php')($app);
 	(require __DIR__ . '/routes/collections.php')($app);
 	(require __DIR__ . '/routes/docs.php')($app);

@@ -135,4 +135,8 @@ $settings['imageworks'] = [
 //     \App\Console\SchemaDumpCommand::class,
 // ];
 
+$settings['auth'] = [
+	'collection' => 'auth',
+];
+
 return $settings;
