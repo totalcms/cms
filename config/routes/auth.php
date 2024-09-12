@@ -3,6 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Auth;
+use Odan\Session\Middleware\SessionStartMiddleware;
 
 return function (App $app) {
 	$app->group('/auth', function (RouteCollectorProxy $group) {

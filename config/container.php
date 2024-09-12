@@ -7,6 +7,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
 use Odan\Session\SessionInterface;
 use Odan\Session\SessionManagerInterface;
+use Odan\Session\Middleware\SessionStartMiddleware;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -63,14 +64,12 @@ return [
 		return AppFactory::create();
 	},
 
-	SessionManagerInterface::class => function (ContainerInterface $container) {
-		return $container->get(SessionInterface::class);
+	SessionStartMiddleware::class => function (ContainerInterface $container) {
+		return new SessionStartMiddleware($container->get(PhpSession::class));
 	},
 
-	SessionInterface::class => function (ContainerInterface $container) {
-		$options = $container->get(Config::class)->session;
-
-		return new PhpSession($options);
+	PhpSession::class => function (ContainerInterface $container) {
+		return new PhpSession($container->get(Config::class)->session);
 	},
 
 	ResponseFactoryInterface::class => function (ContainerInterface $container) {

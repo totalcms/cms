@@ -24,5 +24,5 @@ return function (App $app) {
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
-	})->add(SessionStartMiddleware::class);
+	});
 };

@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpUnauthorizedException;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Support\Config;
+use Odan\Session\SessionInterface;
 
 /**
  * Action.
@@ -25,7 +25,7 @@ final class AuthLoginAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$data = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 
 		if (!isset($data['email']) || !isset($data['password'])) {
 			throw new HttpUnauthorizedException($request, 'Email and password are required');

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use Odan\Session\PhpSession;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
@@ -9,6 +10,7 @@ use TotalCMS\Support\Config;
 final class LoginService
 {
 	public function __construct(
+		private PhpSession $session,
 		private IndexSearcher $searcher,
 		private ObjectFetcher $objectFetcher,
 		private LoginUpdateService $updateService,
@@ -43,7 +45,16 @@ final class LoginService
 		// Update the last login date of the user
 		$this->updateService->updateLoginDate($collection, $user['id']);
 
-		// TODO: update session data with user information
+		// Clear all flash messages
+		$flash = $this->session->getFlash();
+		$flash->clear();
+
+		$this->session->destroy();
+		$this->session->start();
+		$this->session->regenerateId();
+
+		$this->session->set('user', $user['id']);
+		$flash->add('success', 'Login successful');
 
 		return true;
 	}

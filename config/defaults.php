@@ -87,8 +87,17 @@ $settings['logger'] = [
 
 // Session
 $settings['session'] = [
-	'name'         => 'totalcms',
-	'cache_expire' => 0,
+	'name'                   => 'totalcms',
+	'cookie_samesite'        => 'Lax',
+	'cache_expire'           => 0,
+	'cookie_secure'          => true,
+	'cookie_httponly'        => true,
+	'cookie_lifetime'        => 0,
+	'gc_maxlifetime'         => 7200,
+	'use_trans_sid'          => false,
+	'use_only_cookies'       => true,
+	'sid_length'             => 64,
+	'sid_bits_per_character' => 6,
 ];
 
 // E-Mail settings
@@ -129,11 +138,6 @@ $settings['imageworks'] = [
 		],
 	],
 ];
-
-// Console commands
-// $settings['commands'] = [
-//     \App\Console\SchemaDumpCommand::class,
-// ];
 
 $settings['auth'] = [
 	'collection' => 'auth',
