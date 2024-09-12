@@ -17,6 +17,6 @@ final class LogoutService
 			session_unset();
 			session_destroy();
 		}
-		return session_status() === PHP_SESSION_ACTIVE;
+		return session_status() !== PHP_SESSION_ACTIVE;
 	}
 }
