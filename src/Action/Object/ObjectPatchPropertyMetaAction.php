@@ -39,7 +39,7 @@ final class ObjectPatchPropertyMetaAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$data   = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 		$object = $this->service->patchObjectPropertyMeta($args['collection'], $args['id'], $args['property'], $args['name'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

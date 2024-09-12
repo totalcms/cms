@@ -39,7 +39,7 @@ final class ObjectUpdatePropertyAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$data   = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 		$object = $this->service->updateObjectProperty($args['collection'], $args['id'], $args['property'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

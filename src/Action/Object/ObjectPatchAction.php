@@ -39,7 +39,7 @@ final class ObjectPatchAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$data   = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 		$object = $this->service->patchObject($args['collection'], $args['id'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

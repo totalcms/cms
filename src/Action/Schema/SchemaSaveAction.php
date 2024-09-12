@@ -13,8 +13,7 @@ final class SchemaSaveAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private SchemaSaver $service,
-	) {
-	}
+	) {}
 
 	/**
 	 * Invokable Action.
@@ -27,7 +26,7 @@ final class SchemaSaveAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 
 		return $this->renderer->jsonItem($response, $this->service->saveSchema($data), new SchemaMetaTransformer());
 	}

@@ -36,7 +36,7 @@ final class ObjectCloneAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 
 		$from = [
 			'id'         => $args['id'],
