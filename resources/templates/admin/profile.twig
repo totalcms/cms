@@ -1,0 +1,32 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+{% set user = cms.userData() %}
+
+<main class="dash-main-content">
+	<h1>Edit Profile</h1>
+	<section>
+		{% set form = cms.form.builder(user.collection, {
+			id          : user.id,
+			save        : "Save",
+			helpStyle   : 'label',
+			helpOnHover : true,
+		}) %}
+		{{ form.autoBuild() }}
+
+		{# TODO: Update form to use patch without form fields instead of just hiding them #}
+
+		<style>
+		.form-field:has([name="id"]),
+		.form-field:has([name="active"]),
+		.form-field:has([name="groups"]),
+		.form-field:has([name="expiration"]) {
+			display: none;
+		}
+		</style>
+
+	</section>
+</main>
+
+{% endblock %}

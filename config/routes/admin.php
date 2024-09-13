@@ -4,6 +4,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
+use TotalCMS\Action\Admin\AdminEditProfileAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
@@ -22,6 +23,7 @@ return function (App $app) {
 
 		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
+		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 	})->add(AuthMiddleware::class);

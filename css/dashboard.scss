@@ -98,8 +98,12 @@ body {
 .dash-content {
 	flex-grow             : 1;
 	display               : grid;
-	grid-template-columns : max-content auto;
+	grid-template-columns : auto;
 	align-items           : stretch;
+
+	&:has(.dash-content-sidebar) {
+		grid-template-columns : max-content auto;
+	}
 }
 
 
@@ -523,8 +527,9 @@ body {
 	li {
 		--action-icon : var(--icon-logo);
 
-		&.logout { --action-icon : var(--icon-logout) }
+		&.edit { --action-icon : var(--icon-edit) }
 		&.profile { --action-icon : var(--icon-user) }
+		&.logout { --action-icon : var(--icon-logout) }
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
 		&.reindex { --action-icon : var(--icon-refresh) }
