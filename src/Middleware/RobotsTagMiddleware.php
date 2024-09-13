@@ -24,6 +24,13 @@ final class RobotsTagMiddleware implements MiddlewareInterface
 	{
 		$response = $handler->handle($request);
 
-		return $response->withoutHeader('X-Robots-Tag');
+		$currentRoute = $request->getUri()->getPath();
+		if (str_starts_with($currentRoute, '/imageworks')) {
+			// allow indexing of images
+			return $response->withHeader('X-Robots-Tag', 'index, follow');
+		}
+
+		// Most CMS routes should not be indexed
+		return $response->withHeader('X-Robots-Tag', 'noindex, nofollow');
 	}
 }

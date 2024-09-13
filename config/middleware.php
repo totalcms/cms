@@ -12,6 +12,7 @@ use TotalCMS\Middleware\BundleMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
 use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
+use TotalCMS\Middleware\RobotsTagMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 
 return function (App $app) {
@@ -20,6 +21,7 @@ return function (App $app) {
 	$app->add(BundleMiddleware::class);
 	$app->add(SessionStartMiddleware::class);
 	$app->add(CorsMiddleware::class);
+	$app->add(RobotsTagMiddleware::class);
 	$app->add(LiteLicenseMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
 	$app->addRoutingMiddleware();
