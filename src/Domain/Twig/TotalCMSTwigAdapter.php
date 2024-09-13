@@ -31,6 +31,8 @@ final class TotalCMSTwigAdapter
 	public LogAnalyzer $logger;
 	public string $api;
 	public string $dashboard;
+	public string $login;
+	public string $logout;
 
 	public function __construct(
 		private Config $config,
@@ -46,6 +48,8 @@ final class TotalCMSTwigAdapter
 	) {
 		$this->api       = $this->config->api;
 		$this->dashboard = $this->api . '/admin';
+		$this->logout    = $this->api . '/logout';
+		$this->login     = $this->api . '/login';
 		$this->form      = $this->totalFormFactory;
 		$this->checker   = $this->serverChecker;
 		$this->logger    = $this->logAnalyzer;
@@ -71,7 +75,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -80,7 +84,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -89,7 +93,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get schema definition
@@ -507,7 +511,7 @@ final class TotalCMSTwigAdapter
 			return null;
 		}
 
-		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn($image) => pathinfo($image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
