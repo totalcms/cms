@@ -1,0 +1,44 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}Login to Total CMS{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="login-above">
+		{{ include('login-above.twig', ignore_missing = true) }}
+	</section>
+
+	<section class="login-welcome">
+		<h1>Welcome to Total CMS</h1>
+		<p>Please log in to continue.</p>
+	</section>
+
+	<section class="login-form">
+		<form class="totalform" method="post" action="{{ cms.api }}/login" data-disabled="true">
+			<div class="form-field email-field" data-type="email">
+				<label for="field-66e386299df7c">Email</label>
+				<div class="form-group">
+					<input type="email" id="field-66e386299df7c" name="email" placeholder="email@company.com" aria-describedby="help-66e386299df7c" required autofocus>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help cms-hide" id="help-66e386299df7c">Email address for the login</p>
+			</div>
+
+			<div class="form-field password-field" data-type="password">
+				<label for="field-66e386299dfa7">Password</label>
+				<div class="form-group">
+					<input type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="cms-hide help" id="help-66e386299dfa7">Password to login</p>
+			</div>
+
+			<button class="dash-button" type="submit">Sign in</button>
+		</form>
+	</section>
+
+	<section class="login-below">
+		{{ include('login-below.twig', ignore_missing = true) }}
+	</section>
+</main>
+{% endblock %}

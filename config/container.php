@@ -5,8 +5,6 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 use Middlewares\TrailingSlash;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
-use Odan\Session\SessionInterface;
-use Odan\Session\SessionManagerInterface;
 use Odan\Session\Middleware\SessionStartMiddleware;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;

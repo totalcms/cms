@@ -10,14 +10,14 @@ use TotalCMS\Support\Config;
 final class LoginService
 {
 	public function __construct(
-		private PhpSession $session,
 		private IndexSearcher $searcher,
 		private ObjectFetcher $objectFetcher,
 		private LoginUpdateService $updateService,
 		private Config $config,
 	) {}
 
-	public function authenticate(string $email, string $password, string $collection = ''): bool
+	/** @return array<string,mixed> */
+	public function authenticate(string $email, string $password, string $collection = ''): array
 	{
 		if (empty($collection)) {
 			$collection = $this->config->auth['collection'];
@@ -45,17 +45,6 @@ final class LoginService
 		// Update the last login date of the user
 		$this->updateService->updateLoginDate($collection, $user['id']);
 
-		// Clear all flash messages
-		$flash = $this->session->getFlash();
-		$flash->clear();
-
-		$this->session->destroy();
-		$this->session->start();
-		$this->session->regenerateId();
-
-		$this->session->set('user', $user['id']);
-		$flash->add('success', 'Login successful');
-
-		return true;
+		return $user;
 	}
 }

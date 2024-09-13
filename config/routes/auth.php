@@ -1,14 +1,10 @@
 <?php
 
 use Slim\App;
-use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Auth;
-use Odan\Session\Middleware\SessionStartMiddleware;
 
 return function (App $app) {
-	$app->group('/auth', function (RouteCollectorProxy $group) {
-		// User Authentication
-		$group->any('/logout', Auth\AuthLogoutAction::class)->setName('logout');
-		$group->post('[/{collection}]', Auth\AuthLoginAction::class)->setName('login');
-	});
+	$app->any('/logout', Auth\AuthLogoutAction::class)->setName('logout');
+	$app->get('/login[/{collection}]', Auth\AuthLoginAction::class)->setName('login');
+	$app->post('/login[/{collection}]', Auth\AuthLoginSubmitAction::class);
 };
