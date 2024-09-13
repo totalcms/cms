@@ -4,8 +4,8 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Middlewares\TrailingSlash;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Odan\Session\PhpSession;
 use Odan\Session\Middleware\SessionStartMiddleware;
+use Odan\Session\PhpSession;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -213,6 +213,7 @@ return [
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
 			$container->get(LogAnalyzer::class),
+			$container->get(PhpSession::class),
 		);
 	},
 

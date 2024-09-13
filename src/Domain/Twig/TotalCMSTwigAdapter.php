@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -45,6 +46,7 @@ final class TotalCMSTwigAdapter
 		private TotalFormFactory $totalFormFactory,
 		private ServerChecker $serverChecker,
 		private LogAnalyzer $logAnalyzer,
+		private PhpSession $session,
 	) {
 		$this->api       = $this->config->api;
 		$this->dashboard = $this->api . '/admin';
@@ -53,6 +55,22 @@ final class TotalCMSTwigAdapter
 		$this->form      = $this->totalFormFactory;
 		$this->checker   = $this->serverChecker;
 		$this->logger    = $this->logAnalyzer;
+	}
+
+	/** @return array<string,mixed> */
+	public function userData(): array
+	{
+		$user = $this->session->get('user');
+
+		if (empty($user)) {
+			return [];
+		}
+
+		$collection             = $this->config->auth['collection'];
+		$userData               = $this->objectFetcher->fetchObject($collection, $user)->toArray();
+		$userData['collection'] = $collection;
+
+		return $userData;
 	}
 
 	public function config(string $key, ?string $setting): mixed
@@ -75,7 +93,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -84,7 +102,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -93,7 +111,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get schema definition
@@ -511,7 +529,7 @@ final class TotalCMSTwigAdapter
 			return null;
 		}
 
-		$image = array_filter($gallery, fn($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
