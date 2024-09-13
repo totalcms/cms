@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use Odan\Session\PhpSession;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
@@ -13,6 +12,7 @@ final class LoginService
 		private IndexSearcher $searcher,
 		private ObjectFetcher $objectFetcher,
 		private LoginUpdateService $updateService,
+		private FirstLoginChecker $firstLoginChecker,
 		private Config $config,
 	) {}
 
@@ -20,6 +20,9 @@ final class LoginService
 	public function authenticate(string $email, string $password, string $collection = ''): array
 	{
 		if (empty($collection)) {
+			if ($this->firstLoginChecker->isNewInstallation()) {
+				$this->firstLoginChecker->createFirstUser($email, $password);
+			}
 			$collection = $this->config->auth['collection'];
 		}
 
