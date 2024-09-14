@@ -16,7 +16,12 @@ final class LoginService
 		private Config $config,
 	) {}
 
-	/** @return array<string,mixed> */
+	/**
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 *
+	 * @return array<string,mixed>
+	 */
 	public function authenticate(string $email, string $password, string $collection = ''): array
 	{
 		if (empty($collection)) {
@@ -31,7 +36,14 @@ final class LoginService
 		if (empty($users)) {
 			throw new \Exception('User not found');
 		}
-		$user = ($this->objectFetcher->fetchObject($collection, $users[0]['id']))->toArray();
+
+		$userId = $users[0]['id'];
+
+		if (!$this->objectFetcher->existsObject($collection, $userId)) {
+			throw new \Exception("User $userId does not exist");
+		}
+
+		$user = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
 
 		if (!isset($user['active']) || !$user['active']) {
 			throw new \Exception('User account is not active');

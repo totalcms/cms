@@ -66,7 +66,12 @@ final class TotalCMSTwigAdapter
 			return [];
 		}
 
-		$collection             = $this->config->auth['collection'];
+		$collection = $this->config->auth['collection'];
+
+		if (!$this->objectFetcher->existsObject($collection, $user)) {
+			return [];
+		}
+
 		$userData               = $this->objectFetcher->fetchObject($collection, $user)->toArray();
 		$userData['collection'] = $collection;
 
@@ -93,7 +98,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -102,7 +107,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -111,7 +116,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get schema definition
@@ -529,7 +534,7 @@ final class TotalCMSTwigAdapter
 			return null;
 		}
 
-		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn($image) => pathinfo($image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
