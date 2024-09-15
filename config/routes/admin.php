@@ -13,6 +13,8 @@ use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
 
 return function (App $app) {
+	$app->redirect('/', '/admin', 301);
+
 	$app->group('/admin', function (RouteCollectorProxy $group) {
 		// Display Admin Interface
 		$group->get('', AdminIndexAction::class)->setName('admin-index');
