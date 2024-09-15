@@ -66,7 +66,7 @@ final class GlideFactory
 			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
 			'defaults'               => $this->config->imageworks['defaults'],
 			'presets'                => $this->presets($imageData),
-			'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
+			'response'               => new PsrResponseFactory(new Response(), fn($stream) => new Stream($stream)),
 		]);
 
 		return $glide;
@@ -112,6 +112,16 @@ final class GlideFactory
 	{
 		[$size, $border, $method] = explode(',', $border);
 
+		$size = intval($size);
+
+		if (empty($border)) {
+			$border = 'ffffff';
+		}
+
+		if (empty($method)) {
+			$method = 'overlay';
+		}
+
 		$border = self::colorFromPalette($border, $imageColors);
 
 		return implode(',', [$size, $border, $method]);
@@ -122,8 +132,8 @@ final class GlideFactory
 	{
 		// This method is used to get the color from the palette if the color is a palette color
 		if (str_starts_with($color, self::PALETTE)) {
-			$index = (int)str_replace(self::PALETTE, '', $color);
-			$color = isset($imageColors[$index]) ? $imageColors[$index] : $imageColors[0];
+			$index = intval(str_replace(self::PALETTE, '', $color));
+			$color = $imageColors[$index] ?? $imageColors[0];
 		}
 
 		return str_replace('#', '', $color);
