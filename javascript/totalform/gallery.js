@@ -90,6 +90,12 @@ export default class GalleryField extends ImageField {
 	}
 
     getValue() {
+		if (!this.form.isEditMode()) {
+			// When saving a new object, save an empty gallery
+			// After the initial object saves, the image uploads
+			// will add the image data to the gallery
+			return [];
+		}
 		return this.preview.map(preview => preview.getValue());
     }
 
