@@ -227,6 +227,7 @@ return [
 			$container->get(TotalCMSTwigPatterns::class),
 			$container->get(FakerFactory::class),
 			$container->get(QRCodeTwigAdapter::class),
+			$container->get(PhpSession::class),
 		);
 	},
 

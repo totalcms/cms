@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use Odan\Session\PhpSession;
 use TotalCMS\Factory\FakerFactory;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
@@ -16,8 +17,8 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		private TotalCMSTwigPatterns $patterns,
 		private FakerFactory $faker,
 		private QRCodeTwigAdapter $generator,
-	) {
-	}
+		private PhpSession $session,
+	) {}
 
 	/**
 	 * @SuppressWarnings(PHPMD.Superglobals)
@@ -31,6 +32,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 			'postParams' => array_filter($_POST),
 			'patterns'   => $this->patterns,
 			'factory'    => $this->faker->createFaker(),
+			'flash'      => $this->session->getFlash(),
 		];
 	}
 
