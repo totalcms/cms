@@ -50,7 +50,8 @@ final class ObjectForm extends TotalForm
 				}
 			}
 
-			if (isset($this->objectData)) {
+			// if the value is not already set, try to get it from the object data
+			if (!isset($options['value']) && isset($this->objectData)) {
 				$value = $this->objectData->toArray()[$name] ?? '';
 				if (!empty($value)) {
 					$options['value'] = $value;
