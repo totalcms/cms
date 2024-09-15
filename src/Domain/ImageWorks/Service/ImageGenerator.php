@@ -20,8 +20,7 @@ final class ImageGenerator
 	public function __construct(
 		private PropertyFetcher $propertyFetcher,
 		private GlideFactory $glideFactory,
-	) {
-	}
+	) {}
 
 	/** @param array<string,mixed> $params */
 	public function generateImage(
@@ -58,6 +57,10 @@ final class ImageGenerator
 			throw new \UnexpectedValueException('Invalid gallery property found');
 		}
 
+		if (empty($galleryData->images)) {
+			throw new \UnexpectedValueException('Gallery has no images');
+		}
+
 		switch ($filename) {
 			case 'first':
 				$imageData = array_shift($galleryData->images);
@@ -70,11 +73,11 @@ final class ImageGenerator
 				$imageData = $galleryData->images[$randomKey];
 				break;
 			case 'featured':
-				usort($galleryData->images, fn ($a, $b) => $a['featured'] <=> $b['featured']);
+				usort($galleryData->images, fn($a, $b) => $a['featured'] <=> $b['featured']);
 				$imageData = array_shift($galleryData->images);
 				break;
 			default:
-				$imageData = array_filter($galleryData->images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
+				$imageData = array_filter($galleryData->images, fn($image) => pathinfo($image['name'])['filename'] === $filename);
 				$imageData = array_shift($imageData);
 		}
 
