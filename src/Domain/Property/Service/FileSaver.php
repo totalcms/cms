@@ -260,10 +260,14 @@ final class FileSaver
 	 */
 	private static function gatherColorData(string $imagepath): array
 	{
+		if (!extension_loaded('imagick') || !extension_loaded('gd')) {
+			return [];
+		}
 		// Getting the top 15 colors from the image then reduce to top 5
 		// This produces the best results after a lot of testing
 		/** @var array<string> $palette */
 		$palette = ColorThief::getPalette($imagepath, 15, 10, null, 'hex');
+
 		if (!is_array($palette) || count($palette) === 0) {
 			return [];
 		}
