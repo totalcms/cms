@@ -2,26 +2,18 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use TotalCMS\Domain\Index\Service\IndexSearcher;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
 
 final class LoginService
 {
 	public function __construct(
-		private IndexSearcher $searcher,
-		private ObjectFetcher $objectFetcher,
-		private LoginUpdateService $updateService,
+		private UserValidationService $validator,
+		private LastLoginUpdateService $updateService,
 		private FirstLoginChecker $firstLoginChecker,
 		private Config $config,
 	) {}
 
-	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
-	 *
-	 * @return array<string,mixed>
-	 */
+	/** @return array<string,mixed> */
 	public function authenticate(string $email, string $password, string $collection = ''): array
 	{
 		if (empty($collection)) {
@@ -31,19 +23,7 @@ final class LoginService
 			$collection = $this->config->auth['collection'];
 		}
 
-		$users = $this->searcher->searchByProperty($collection, 'email', $email);
-
-		if (empty($users)) {
-			throw new \Exception('User not found');
-		}
-
-		$userId = $users[0]['id'];
-
-		if (!$this->objectFetcher->existsObject($collection, $userId)) {
-			throw new \Exception("User $userId does not exist");
-		}
-
-		$user = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+		$user = $this->validator->validateUserByEmail($email, $collection);
 
 		if (!isset($user['active']) || !$user['active']) {
 			throw new \Exception('User account is not active');

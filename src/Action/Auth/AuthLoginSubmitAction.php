@@ -14,6 +14,8 @@ use Odan\Session\PhpSession;
  */
 final class AuthLoginSubmitAction
 {
+	const MAX_LOGIN_ATTEMPTS = 7;
+
 	public function __construct(
 		private PhpSession $session,
 		private LoginService $loginService,
@@ -34,7 +36,7 @@ final class AuthLoginSubmitAction
 		$attempts = $this->session->get('loginAttempts', 0);
 		$this->session->set('loginAttempts', $attempts + 1);
 
-		if ($attempts > 5) {
+		if ($attempts > self::MAX_LOGIN_ATTEMPTS) {
 			$flash->add('error', 'Too many login attempts');
 		}
 

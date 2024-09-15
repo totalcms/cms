@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
-final class LoginUpdateService
+final class LastLoginUpdateService
 {
 	public function __construct(
 		private ObjectSaver $objectSaver,
