@@ -451,6 +451,11 @@ export default class TotalForm {
 		this.droplets.forEach(field => field.droplet.autoProcessQueue());
     }
 
+	uploadComplete() {
+		if (this.isUnsaved()) return;
+		this.success();
+	}
+
 	changeState(newState, details = {}) {
 		this.state = newState;
 		if (newState) {

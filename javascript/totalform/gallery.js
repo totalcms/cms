@@ -87,6 +87,7 @@ export default class GalleryField extends ImageField {
 			acceptedFiles    : "image/*",
 			rules            : this.options.rules,
 		});
+		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}
 
     getValue() {
