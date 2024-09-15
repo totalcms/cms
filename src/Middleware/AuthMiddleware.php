@@ -3,6 +3,7 @@
 namespace TotalCMS\Middleware;
 
 use Odan\Session\PhpSession;
+use TotalCMS\Support\Config;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,11 +23,14 @@ final class AuthMiddleware implements MiddlewareInterface
 		private ResponseFactoryInterface $responseFactory,
 		private UserValidationService $userValidationService,
 		private PhpSession $session,
+		private Config $config,
 	) {}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		if ($this->session->get('user')) {
+		$this->trackSessionActivity();
+
+		if ($this->session->has('user')) {
 			try {
 				$user = $this->userValidationService->validateUserById($this->session->get('user'));
 				if ($user) {
@@ -49,5 +53,25 @@ final class AuthMiddleware implements MiddlewareInterface
 		return $this->responseFactory->createResponse()
 			->withStatus(302)
 			->withHeader('Location', $url);
+	}
+
+	private function trackSessionActivity(): void
+	{
+		$now  = time();
+		$last = $this->session->get('last_activity') ?? $now;
+		$max  = $this->config->session['gc_maxlifetime'];
+
+		$this->session->set('last_activity', $now);
+
+		if ($now - $last > $max / 4) {
+			// Regenerate session ID every 4th of the max session lifetime
+			$this->session->regenerateId();
+		}
+
+		if ($now - $last > $max) {
+			// Session has expired. Clear and destroy the session.
+			$this->session->clear();
+			$this->session->destroy();
+		}
 	}
 }
