@@ -31,7 +31,7 @@ final class FirstLoginChecker
 			'email'    => $email,
 			'password' => $password,
 			'active'   => true,
-			'groups'   => ['admin'],
+			'groups'   => [UserValidationService::ADMINGROUP],
 		]);
 	}
 }

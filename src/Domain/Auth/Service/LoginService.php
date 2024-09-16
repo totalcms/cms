@@ -8,7 +8,7 @@ use TotalCMS\Factory\LoggerFactory;
 
 final class LoginService
 {
-	const ACCESS_LOG = 'access.log';
+	const ACCESS_LOG = 'totalcms-access.log';
 
 	private LoggerInterface $logger;
 

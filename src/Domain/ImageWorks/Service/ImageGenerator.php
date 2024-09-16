@@ -20,8 +20,7 @@ final class ImageGenerator
 	public function __construct(
 		private PropertyFetcher $propertyFetcher,
 		private GlideFactory $glideFactory,
-	) {
-	}
+	) {}
 
 	/** @param array<string,mixed> $params */
 	public function generateImage(
@@ -108,9 +107,13 @@ final class ImageGenerator
 	 */
 	private function getImageByName(array $images, string $filename): array
 	{
-		$imageData = array_filter($images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
+		$imageData = array_filter($images, fn($image) => pathinfo($image['name'])['filename'] === $filename);
 
-		return $imageData[0];
+		if (empty($imageData)) {
+			return [];
+		}
+
+		return array_shift($imageData);
 	}
 
 	/**
@@ -132,7 +135,7 @@ final class ImageGenerator
 	 */
 	private function getFeaturedImage(array $images): array
 	{
-		$featured = array_filter($images, fn ($image) => $image['featured'] === true);
+		$featured = array_filter($images, fn($image) => $image['featured'] === true);
 		$count    = count($featured);
 		if ($count === 0) {
 			// if no featured images are found, return a random image
@@ -142,7 +145,7 @@ final class ImageGenerator
 			shuffle($featured);
 		}
 
-		return $featured[0];
+		return array_shift($featured);
 	}
 
 	/**

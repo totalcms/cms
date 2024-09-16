@@ -8,6 +8,8 @@ use TotalCMS\Support\Config;
 
 final class UserValidationService
 {
+	public const ADMINGROUP = 'admin';
+
 	public function __construct(
 		private IndexSearcher $searcher,
 		private ObjectFetcher $objectFetcher,
@@ -27,7 +29,7 @@ final class UserValidationService
 			throw new \Exception('User not found');
 		}
 
-		$userId = $users[0]['id'];
+		$userId = array_shift($users)['id'];
 
 		return $this->validateUserById($userId, $collection);
 	}
@@ -46,5 +48,20 @@ final class UserValidationService
 		$user = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
 
 		return $user;
+	}
+
+	/** @param array<string> $groups */
+	public function validateUserInGroups(string $userId, array $groups, string $collection = ''): bool
+	{
+		try {
+			$user = $this->validateUserById($userId, $collection);
+		} catch (\Exception $e) {
+			return false;
+		}
+		// Admin users are always allowed
+		$groups[] = self::ADMINGROUP;
+		$found = array_intersect($groups, $user['groups']);
+
+		return !empty($found);
 	}
 }

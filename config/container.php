@@ -22,12 +22,14 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -245,5 +247,17 @@ return [
 
 	TwigCacheCleaner::class => function (ContainerInterface $container) {
 		return new TwigCacheCleaner($container->get(Config::class));
+	},
+
+	IndexSearcher::class => function (ContainerInterface $container) {
+		return new IndexSearcher($container->get(IndexReader::class));
+	},
+
+	UserValidationService::class => function (ContainerInterface $container) {
+		return new UserValidationService(
+			$container->get(IndexSearcher::class),
+			$container->get(ObjectFetcher::class),
+			$container->get(Config::class),
+		);
 	},
 ];

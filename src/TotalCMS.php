@@ -3,12 +3,15 @@
 namespace TotalCMS;
 
 use DI\Container;
+use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 
 // ---------------------------------------------------------------------------------
 // Entry point for Total CMS PHP API
@@ -20,6 +23,9 @@ class TotalCMS
 	private TwigEngine $twigEngine;
 	private LoggerInterface $logger;
 	private TwigCacheCleaner $twigCacheCleaner;
+	private PhpSession $session;
+	private Config $config;
+	private UserValidationService $userValidator;
 
 	public function __construct()
 	{
@@ -33,9 +39,50 @@ class TotalCMS
 			$this->buffer           = $this->container->get(BufferController::class);
 			$this->twigEngine       = $this->container->get(TwigEngine::class);
 			$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
+			$this->session          = $this->container->get(PhpSession::class);
+			$this->config           = $this->container->get(Config::class);
+			$this->userValidator    = $this->container->get(UserValidationService::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
+		$this->session->start();
+	}
+
+	/**
+	 *  @SuppressWarnings(PHPMD.Superglobals)
+	 *
+	 * @param array<string> $groups
+	 */
+	public function restrictPageAccess(array $groups, string $collection = ''): void
+	{
+		if (!$this->userHasAccess($groups, $collection)) {
+			$this->session->set('requestOriginUrl', $_SERVER['REQUEST_URI']);
+			$this->redirectToLogin($collection);
+		}
+	}
+
+	/** @param array<string> $groups */
+	public function userHasAccess(array $groups, string $collection = ''): bool
+	{
+		if (!$this->session->has('user')) {
+			return false;
+		}
+
+		$userID = $this->session->get('user');
+		if ($this->userValidator->validateUserInGroups($userID, $groups, $collection)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private function redirectToLogin(string $collection = ''): void
+	{
+		$loginUrl = $this->config->api . '/login';
+		if (!empty($collection)) {
+			$loginUrl .= "/$collection";
+		}
+		header("Location: $loginUrl");
 	}
 
 	public function startBuffer(): void
