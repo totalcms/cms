@@ -51,9 +51,9 @@ class TotalCMS
 	/**
 	 *  @SuppressWarnings(PHPMD.Superglobals)
 	 *
-	 * @param array<string> $groups
+	 * @param string|array<string> $groups
 	 */
-	public function restrictPageAccess(array $groups, string $collection = ''): void
+	public function restrictPageAccess(array|string $groups = [], string $collection = ''): void
 	{
 		if (!$this->userHasAccess($groups, $collection)) {
 			$this->session->set('requestOriginUrl', $_SERVER['REQUEST_URI']);
@@ -61,16 +61,50 @@ class TotalCMS
 		}
 	}
 
-	/** @param array<string> $groups */
-	public function userHasAccess(array $groups, string $collection = ''): bool
+	/** @param string|array<string> $groups */
+	public function userHasAccess(array|string $groups, string $collection = ''): bool
+	{
+		if (empty($groups)) {
+			return $this->userLoggedIn($collection);
+		}
+
+		if (is_string($groups)) {
+			$groups = [$groups];
+		}
+
+		if (!$this->session->has('user')) {
+			return false;
+		}
+
+		try {
+			$userID = $this->session->get('user');
+			if ($this->userValidator->validateUserInGroups($userID, $groups, $collection)) {
+				return true;
+			}
+		} catch (\Throwable $th) {
+			// Current session user could be in a different user collection
+			$this->session->delete('user');
+			$this->logger->error($th->getMessage(), ['exception' => $th]);
+		}
+
+		return false;
+	}
+
+	public function userLoggedIn(string $collection = ''): bool
 	{
 		if (!$this->session->has('user')) {
 			return false;
 		}
 
-		$userID = $this->session->get('user');
-		if ($this->userValidator->validateUserInGroups($userID, $groups, $collection)) {
-			return true;
+		try {
+			$userID = $this->session->get('user');
+			if ($this->userValidator->validateUserById($userID, $collection)) {
+				return true;
+			}
+		} catch (\Throwable $th) {
+			// Current session user could be in a different user collection
+			$this->session->delete('user');
+			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
 
 		return false;

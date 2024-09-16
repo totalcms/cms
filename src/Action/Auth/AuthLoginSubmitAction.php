@@ -48,6 +48,10 @@ final class AuthLoginSubmitAction
 		$router = RouteContext::fromRequest($request)->getRouteParser();
 		$url    = $router->urlFor('login');
 
+		if (isset($args['collection'])) {
+			$url = $router->urlFor('login', ['collection' => $args['collection']]);
+		}
+
 		if ($flash->has('error')) {
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}

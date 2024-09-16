@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Twig;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -47,18 +48,26 @@ final class TotalCMSTwigAdapter
 		private ServerChecker $serverChecker,
 		private LogAnalyzer $logAnalyzer,
 		private PhpSession $session,
+		private UserValidationService $userValidator,
 	) {
 		$this->api       = $this->config->api;
 		$this->dashboard = $this->api . '/admin';
 		$this->logout    = $this->api . '/logout';
-		$this->login     = $this->api . '/login';
 		$this->form      = $this->totalFormFactory;
 		$this->checker   = $this->serverChecker;
 		$this->logger    = $this->logAnalyzer;
 	}
 
+	public function login(string $collection = ''): string
+	{
+		if (empty($collection)) {
+			return sprintf('%s/%s', $this->api, 'login');
+		}
+		return sprintf('%s/%s/%s', $this->api, 'login', $collection);
+	}
+
 	/** @return array<string,mixed> */
-	public function userData(): array
+	public function userData(string $collection = ''): array
 	{
 		$user = $this->session->get('user');
 
@@ -66,7 +75,9 @@ final class TotalCMSTwigAdapter
 			return [];
 		}
 
-		$collection = $this->config->auth['collection'];
+		if (empty($collection)) {
+			$collection = $this->config->auth['collection'];
+		}
 
 		if (!$this->objectFetcher->existsObject($collection, $user)) {
 			return [];
@@ -76,6 +87,49 @@ final class TotalCMSTwigAdapter
 		$userData['collection'] = $collection;
 
 		return $userData;
+	}
+
+	public function userLoggedIn(string $collection = ''): bool
+	{
+		if (!$this->session->has('user')) {
+			return false;
+		}
+
+		try {
+			$userID = $this->session->get('user');
+			if ($this->userValidator->validateUserById($userID, $collection)) {
+				return true;
+			}
+		} catch (\Throwable $th) {
+			// Current session user could be in a different user collection
+			$this->session->delete('user');
+		}
+
+		return false;
+	}
+
+	/** @param string|array<string> $groups */
+	public function userHasAccess(array|string $groups, string $collection = ''): bool
+	{
+		if (is_string($groups)) {
+			$groups = [$groups];
+		}
+
+		if (!$this->session->has('user')) {
+			return false;
+		}
+
+		try {
+			$userID = $this->session->get('user');
+			if ($this->userValidator->validateUserInGroups($userID, $groups, $collection)) {
+				return true;
+			}
+		} catch (\Throwable $th) {
+			// Current session user could be in a different user collection
+			$this->session->delete('user');
+		}
+
+		return false;
 	}
 
 	public function config(string $key, ?string $setting): mixed

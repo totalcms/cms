@@ -14,7 +14,11 @@
 	</section>
 
 	<section class="login-form">
-		<form class="totalform" method="post" action="{{ cms.api }}/login" data-disabled="true">
+		{% set action = cms.api ~ '/login' %}
+		{% if collection %}
+			{% set action = cms.api ~ '/login/' ~ collection %}
+		{% endif %}
+		<form class="totalform" method="post" action="{{ action }}" data-disabled="true">
 			<div class="form-field email-field" data-type="email">
 				<label for="field-66e386299df7c">Email</label>
 				<div class="form-group">

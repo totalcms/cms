@@ -216,6 +216,7 @@ return [
 			$container->get(ServerChecker::class),
 			$container->get(LogAnalyzer::class),
 			$container->get(PhpSession::class),
+			$container->get(UserValidationService::class),
 		);
 	},
 
