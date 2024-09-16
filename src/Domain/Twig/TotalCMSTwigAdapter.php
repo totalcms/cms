@@ -69,21 +69,19 @@ final class TotalCMSTwigAdapter
 	/** @return array<string,mixed> */
 	public function userData(string $collection = ''): array
 	{
-		$user = $this->session->get('user');
-
-		if (empty($user)) {
+		if (!$this->session->has('user')) {
 			return [];
 		}
 
-		if (empty($collection)) {
-			$collection = $this->config->auth['collection'];
-		}
-
-		if (!$this->objectFetcher->existsObject($collection, $user)) {
+		try {
+			$user = $this->session->get('user');
+			$userData = $this->userValidator->validateUserById($user, $collection);
+		} catch (\Throwable $th) {
+			// Current session user could be in a different user collection
+			$this->session->delete('user');
 			return [];
 		}
 
-		$userData               = $this->objectFetcher->fetchObject($collection, $user)->toArray();
 		$userData['collection'] = $collection;
 
 		return $userData;
@@ -96,8 +94,8 @@ final class TotalCMSTwigAdapter
 		}
 
 		try {
-			$userID = $this->session->get('user');
-			if ($this->userValidator->validateUserById($userID, $collection)) {
+			$user = $this->session->get('user');
+			if ($this->userValidator->validateUserById($user, $collection)) {
 				return true;
 			}
 		} catch (\Throwable $th) {

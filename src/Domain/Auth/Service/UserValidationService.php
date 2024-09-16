@@ -43,7 +43,7 @@ final class UserValidationService
 
 		if (!$this->objectFetcher->existsObject($collection, $userId)) {
 			// Admin users from default auth collection are always allowed
-			if (!empty($collection) && $this->validateUserInGroups($userId, self::ADMINGROUP)) {
+			if ($collection !== $this->config->auth['collection'] && $this->isSuperAdmin($userId)) {
 				return $this->validateUserById($userId);
 			}
 			throw new \Exception("User $userId does not exist");
@@ -71,5 +71,18 @@ final class UserValidationService
 		$found = array_intersect($groups, $user['groups']);
 
 		return !empty($found);
+	}
+
+	public function isSuperAdmin(string $userId): bool
+	{
+		$collection = $this->config->auth['collection'];
+
+		if ($this->objectFetcher->existsObject($collection, $userId)) {
+			$user = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+			if (in_array(self::ADMINGROUP, $user['groups'])) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

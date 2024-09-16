@@ -2,7 +2,7 @@
 
 include __DIR__ . '/_start.php';
 
-$totalcms->restrictPageAccess(collection: 'users');
+// $totalcms->restrictPageAccess(collection: 'users');
 
 ?>
 
@@ -13,7 +13,7 @@ $totalcms->restrictPageAccess(collection: 'users');
 <p>Hello {{ user.name }}</p>
 <a href="{{ cms.logout }}">Logout</a>
 {% else %}
-<a href="{{ cms.login(users) }}">Please Login</a>
+<a href="{{ cms.login('users') }}">Please Login</a>
 {% endif %}
 
 
