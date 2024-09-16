@@ -48,7 +48,7 @@ final class AuthMiddleware implements MiddlewareInterface
 
 		// User is not logged in. Redirect to login page.
 		$routeParser = RouteContext::fromRequest($request)->getRouteParser();
-		$url         = $routeParser->urlFor('login');
+		$url         = $this->config->api . $routeParser->urlFor('login');
 
 		return $this->responseFactory->createResponse()
 			->withStatus(302)
