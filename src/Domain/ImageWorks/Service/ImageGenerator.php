@@ -20,7 +20,8 @@ final class ImageGenerator
 	public function __construct(
 		private PropertyFetcher $propertyFetcher,
 		private GlideFactory $glideFactory,
-	) {}
+	) {
+	}
 
 	/** @param array<string,mixed> $params */
 	public function generateImage(
@@ -43,7 +44,11 @@ final class ImageGenerator
 		return $this->responseFromImageData($imageData);
 	}
 
-	/** @param array<string,mixed> $params */
+	/**
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 *
+	 * @param array<string,mixed> $params
+	 */
 	public function generateGalleryImage(
 		string $collection,
 		string $id,
@@ -69,25 +74,13 @@ final class ImageGenerator
 				$imageData = array_pop($galleryData->images);
 				break;
 			case 'random':
-				$randomKey = mt_rand(0, count($galleryData->images) - 1);
-				$imageData = $galleryData->images[$randomKey];
+				$imageData = $this->getRandomImage($galleryData->images);
 				break;
 			case 'featured':
-				$featured = array_filter($galleryData->images, fn($image) => $image['featured'] === true);
-				$count    = count($featured);
-				if ($count === 0) {
-					// if no featured images are found, return a random image
-					$randomKey = mt_rand(0, count($galleryData->images) - 1);
-					$imageData = $galleryData->images[$randomKey];
-					break;
-				} elseif ($count > 1) {
-					shuffle($featured);
-				}
-				$imageData = array_shift($featured);
+				$imageData = $this->getFeaturedImage($galleryData->images);
 				break;
 			default:
-				$imageData = array_filter($galleryData->images, fn($image) => pathinfo($image['name'])['filename'] === $filename);
-				$imageData = array_shift($imageData);
+				$imageData = $this->getImageByName($galleryData->images, $filename);
 		}
 
 		if (empty($imageData)) {
@@ -106,6 +99,50 @@ final class ImageGenerator
 		$this->params     = $this->cleanupParams($params, $imageData);
 
 		return $this->responseFromImageData($imageData);
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $images
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function getImageByName(array $images, string $filename): array
+	{
+		$imageData = array_filter($images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
+
+		return $imageData[0];
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $images
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function getRandomImage(array $images): array
+	{
+		$randomKey = mt_rand(0, count($images) - 1);
+
+		return $images[$randomKey];
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $images
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function getFeaturedImage(array $images): array
+	{
+		$featured = array_filter($images, fn ($image) => $image['featured'] === true);
+		$count    = count($featured);
+		if ($count === 0) {
+			// if no featured images are found, return a random image
+			return $this->getRandomImage($images);
+		}
+		if ($count > 1) {
+			shuffle($featured);
+		}
+
+		return $featured[0];
 	}
 
 	/**
