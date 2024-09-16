@@ -42,6 +42,10 @@ final class UserValidationService
 		}
 
 		if (!$this->objectFetcher->existsObject($collection, $userId)) {
+			// Admin users from default auth collection are always allowed
+			if (!empty($collection) && $this->validateUserInGroups($userId, self::ADMINGROUP)) {
+				return $this->validateUserById($userId);
+			}
 			throw new \Exception("User $userId does not exist");
 		}
 
@@ -50,9 +54,13 @@ final class UserValidationService
 		return $user;
 	}
 
-	/** @param array<string> $groups */
-	public function validateUserInGroups(string $userId, array $groups, string $collection = ''): bool
+	/** @param string|array<string> $groups */
+	public function validateUserInGroups(string $userId, string|array $groups, string $collection = ''): bool
 	{
+		if (is_string($groups)) {
+			$groups = [$groups];
+		}
+
 		try {
 			$user = $this->validateUserById($userId, $collection);
 		} catch (\Exception $e) {
