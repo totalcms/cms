@@ -73,8 +73,17 @@ final class ImageGenerator
 				$imageData = $galleryData->images[$randomKey];
 				break;
 			case 'featured':
-				usort($galleryData->images, fn($a, $b) => $a['featured'] <=> $b['featured']);
-				$imageData = array_shift($galleryData->images);
+				$featured = array_filter($galleryData->images, fn($image) => $image['featured'] === true);
+				$count    = count($featured);
+				if ($count === 0) {
+					// if no featured images are found, return a random image
+					$randomKey = mt_rand(0, count($galleryData->images) - 1);
+					$imageData = $galleryData->images[$randomKey];
+					break;
+				} elseif ($count > 1) {
+					shuffle($featured);
+				}
+				$imageData = array_shift($featured);
 				break;
 			default:
 				$imageData = array_filter($galleryData->images, fn($image) => pathinfo($image['name'])['filename'] === $filename);
