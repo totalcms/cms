@@ -24,14 +24,13 @@ final class UserValidationService
 		}
 
 		$users = $this->searcher->searchByProperty($collection, 'email', $email);
+		$first = $users->first();
 
-		if (empty($users)) {
+		if ($users->isEmpty() || is_null($first)) {
 			throw new \Exception('User not found');
 		}
 
-		$userId = array_shift($users)['id'];
-
-		return $this->validateUserById($userId, $collection);
+		return $this->validateUserById($first['id'], $collection);
 	}
 
 	/** @return array<string,mixed> */
