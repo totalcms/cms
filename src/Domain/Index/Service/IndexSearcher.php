@@ -8,7 +8,8 @@ final class IndexSearcher
 {
 	public function __construct(
 		private IndexReader $reader,
-	) {}
+	) {
+	}
 
 	/** @return Collection<int,array<string,mixed>> */
 	public function searchByProperty(string $collection, string $property, string $query): Collection
@@ -20,7 +21,7 @@ final class IndexSearcher
 		}
 
 		$objects = $index->objects->filter(function ($object) use ($property, $query) {
-			return stripos($object[$property], $query) !== false;
+			return self::searchProperty($object, $property, $query);
 		});
 
 		return $objects;
@@ -59,6 +60,7 @@ final class IndexSearcher
 			if ($matchOR) {
 				return self::filterOR($object, $queries);
 			}
+
 			return self::filterAND($object, $queries);
 		});
 
@@ -67,6 +69,7 @@ final class IndexSearcher
 			$results = $results->sort(function ($a, $b) use ($priorityFields, $queries) {
 				$priorityA = self::getPriorityScore($a, $priorityFields, $queries);
 				$priorityB = self::getPriorityScore($b, $priorityFields, $queries);
+
 				return $priorityA <=> $priorityB;
 			})->values(); // Reindex the sorted collection
 		}
@@ -75,41 +78,83 @@ final class IndexSearcher
 	}
 
 	/**
+	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
 	 */
 	private static function filterOR(array $object, array $queries): bool
 	{
 		foreach ($queries as $query) {
-			if (self::searchArray($object, $query)) {
-				return true;
+			if (self::matchPropertyQuery($query)) {
+				[$property, $searchTerm] = self::extractPropertyQuery($query);
+
+				if (self::searchProperty($object, $property, $searchTerm)) {
+					return true;
+				}
+			} else {
+				if (self::searchArray($object, $query)) {
+					return true;
+				}
 			}
 		}
+
 		return false;
 	}
 
 	/**
+	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
 	 */
 	private static function filterAND(array $object, array $queries): bool
 	{
 		foreach ($queries as $query) {
-			if (!self::searchArray($object, $query)) {
-				return false; // If any query does not match, exclude the object
+			if (self::matchPropertyQuery($query)) {
+				[$property, $searchTerm] = self::extractPropertyQuery($query);
+
+				if (!self::searchProperty($object, $property, $searchTerm)) {
+					return false; // If any query does not match, exclude the object
+				}
+			} else {
+				if (!self::searchArray($object, $query)) {
+					return false; // If any query does not match, exclude the object
+				}
 			}
 		}
+
 		return true; // All queries matched
+	}
+
+	private static function matchPropertyQuery(string $query): bool
+	{
+		return strpos($query, ':') !== false;
+	}
+
+	/** @return array<string> */
+	private static function extractPropertyQuery(string $query): array
+	{
+		return explode(':', $query, 2);
+	}
+
+	private static function searchValue(mixed $value, string $query): bool
+	{
+		if (is_scalar($value)) { // Checks if value is a string, int, float, or bool
+			return stripos((string)$value, $query) !== false;
+		}
+
+		return false;
 	}
 
 	/**
 	 * @SuppressWarnings(PHPMD.ElseExpression)
 	 *
-	 * @param array<mixed> $item
+	 * @param array<mixed> $object
 	 */
-	private static function searchArray(array $item, string $query): bool
+	private static function searchArray(array $object, string $query): bool
 	{
-		foreach ($item as $value) {
+		foreach ($object as $value) {
 			if (empty($value)) {
 				continue;
 			}
@@ -120,11 +165,22 @@ final class IndexSearcher
 				}
 			} else {
 				// Perform case-insensitive search for string values
-				if (stripos($value, $query) !== false) {
+				if (self::searchValue($value, $query)) {
 					return true;
 				}
 			}
 		}
+
+		return false;
+	}
+
+	/** @param array<mixed> $object */
+	private static function searchProperty(array $object, string $property, string $query): bool
+	{
+		if (array_key_exists($property, $object)) {
+			return self::searchValue($object[$property], $query);
+		}
+
 		return false;
 	}
 
@@ -144,33 +200,34 @@ final class IndexSearcher
 	}
 
 	/**
-	 * Function to get the priority score of an item based on the fields array
+	 * Function to get the priority score of an item based on the fields array.
 	 *
 	 * @SuppressWarnings(PHPMD.ElseExpression)
 	 *
-	 * @param array<mixed> $item
+	 * @param array<mixed> $object
 	 * @param array<string> $fields
 	 * @param array<string> $queries
 	 */
-	private static function getPriorityScore(array $item, array $fields, array $queries): int
+	private static function getPriorityScore(array $object, array $fields, array $queries): int
 	{
 		foreach ($fields as $index => $field) {
-			if (!array_key_exists($field, $item)) {
+			if (!array_key_exists($field, $object)) {
 				continue;
 			}
-			$value = $item[$field];
+			$value = $object[$field];
 			foreach ($queries as $query) {
 				if (is_array($value)) {
 					if (self::searchArray($value, $query)) {
 						return $index;
 					}
 				} else {
-					if (stripos($value, $query) !== false) {
+					if (self::searchValue($value, $query)) {
 						return $index;
 					}
 				}
 			}
 		}
+
 		return PHP_INT_MAX;
 	}
 }
