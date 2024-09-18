@@ -28,11 +28,11 @@ final class IndexSearcher
 	}
 
 	/**
-	 * @param array<string> $priorityFields
+	 * @param array<string> $priorityProperties
 	 *
 	 * @return Collection<int,array<string,mixed>>
 	 */
-	public function search(string $collection, string $query, array $priorityFields = []): Collection
+	public function search(string $collection, string $query, array $priorityProperties = []): Collection
 	{
 		$index = $this->reader->fetchIndex($collection);
 
@@ -64,11 +64,11 @@ final class IndexSearcher
 			return self::filterAND($object, $queries);
 		});
 
-		if (!empty($priorityFields)) {
+		if (!empty($priorityProperties)) {
 			// Sort the filtered collection by priority
-			$results = $results->sort(function ($a, $b) use ($priorityFields, $queries) {
-				$priorityA = self::getPriorityScore($a, $priorityFields, $queries);
-				$priorityB = self::getPriorityScore($b, $priorityFields, $queries);
+			$results = $results->sort(function ($a, $b) use ($priorityProperties, $queries) {
+				$priorityA = self::getPriorityScore($a, $priorityProperties, $queries);
+				$priorityB = self::getPriorityScore($b, $priorityProperties, $queries);
 
 				return $priorityA <=> $priorityB;
 			})->values(); // Reindex the sorted collection
@@ -200,21 +200,21 @@ final class IndexSearcher
 	}
 
 	/**
-	 * Function to get the priority score of an item based on the fields array.
+	 * Function to get the priority score of an item based on the properties array.
 	 *
 	 * @SuppressWarnings(PHPMD.ElseExpression)
 	 *
 	 * @param array<mixed> $object
-	 * @param array<string> $fields
+	 * @param array<string> $properties
 	 * @param array<string> $queries
 	 */
-	private static function getPriorityScore(array $object, array $fields, array $queries): int
+	private static function getPriorityScore(array $object, array $properties, array $queries): int
 	{
-		foreach ($fields as $index => $field) {
-			if (!array_key_exists($field, $object)) {
+		foreach ($properties as $index => $property) {
+			if (!array_key_exists($property, $object)) {
 				continue;
 			}
-			$value = $object[$field];
+			$value = $object[$property];
 			foreach ($queries as $query) {
 				if (is_array($value)) {
 					if (self::searchArray($value, $query)) {
