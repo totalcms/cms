@@ -9,6 +9,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -25,6 +26,7 @@ use TotalCMS\Utils\ServerChecker;
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
  */
 final class TotalCMSTwigAdapter
 {
@@ -38,7 +40,8 @@ final class TotalCMSTwigAdapter
 
 	public function __construct(
 		private Config $config,
-		private IndexReader $collectionReader,
+		private IndexReader $indexReader,
+		private IndexSearcher $indexSearcher,
 		private ObjectFetcher $objectFetcher,
 		private CollectionLister $collectionLister,
 		private CollectionFetcher $collectionFetcher,
@@ -63,6 +66,7 @@ final class TotalCMSTwigAdapter
 		if (empty($collection)) {
 			return sprintf('%s/%s', $this->api, 'login');
 		}
+
 		return sprintf('%s/%s/%s', $this->api, 'login', $collection);
 	}
 
@@ -74,11 +78,12 @@ final class TotalCMSTwigAdapter
 		}
 
 		try {
-			$user = $this->session->get('user');
+			$user     = $this->session->get('user');
 			$userData = $this->userValidator->validateUserById($user, $collection);
 		} catch (\Throwable $th) {
 			// Current session user could be in a different user collection
 			$this->session->delete('user');
+
 			return [];
 		}
 
@@ -150,7 +155,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -159,7 +164,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -168,7 +173,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get schema definition
@@ -225,13 +230,33 @@ final class TotalCMSTwigAdapter
 		return sprintf('%s?id=%s', $url, $id);
 	}
 
+	/**
+	 * @param array<string> $propertyPriorities
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function search(string $collection, string $query, array $propertyPriorities): array
+	{
+		try {
+			$results = $this->indexSearcher->search($collection, $query, $propertyPriorities);
+		} catch (\Exception $e) {
+			return [];
+		}
+
+		if ($results->isEmpty()) {
+			return [];
+		}
+
+		return $results->toArray();
+	}
+
 	// Get all objects from a collection
 	/** @return array<array<string,mixed>> */
 	public function objects(string $collection): array
 	{
 		// if there is an exception, return an empty array
 		try {
-			$collection = $this->collectionReader->fetchIndex($collection);
+			$collection = $this->indexReader->fetchIndex($collection);
 		} catch (\Exception $e) {
 			return [];
 		}
@@ -247,7 +272,7 @@ final class TotalCMSTwigAdapter
 	/** @return array<mixed> */
 	public function property(string $collection, string $property): array
 	{
-		$collection = $this->collectionReader->fetchIndex($collection);
+		$collection = $this->indexReader->fetchIndex($collection);
 
 		if ($collection === null) {
 			return [];
@@ -586,7 +611,7 @@ final class TotalCMSTwigAdapter
 			return null;
 		}
 
-		$image = array_filter($gallery, fn($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {

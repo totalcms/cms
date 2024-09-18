@@ -207,6 +207,7 @@ return [
 		return new TotalCMSTwigAdapter(
 			$container->get(Config::class),
 			$container->get(IndexReader::class),
+			$container->get(IndexSearcher::class),
 			$container->get(ObjectFetcher::class),
 			$container->get(CollectionLister::class),
 			$container->get(CollectionFetcher::class),
