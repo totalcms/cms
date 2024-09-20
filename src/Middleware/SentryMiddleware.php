@@ -10,10 +10,12 @@ use TotalCMS\Utils\Cipher;
 
 final class SentryMiddleware implements MiddlewareInterface
 {
-	const SALT = "s3ntryR0cks";
+	public const SALT = 's3ntryR0cks';
 
 	/** @param array<string,mixed> $options The sentry options */
-	public function __construct(private array $options) {}
+	public function __construct(private array $options)
+	{
+	}
 
 	public function process(
 		ServerRequestInterface $request,
@@ -23,12 +25,18 @@ final class SentryMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$this->options['init']['dsn'] = Cipher::deobfuscate($this->options['init']['dsn'], self::SALT);
+		self::initSentry($this->options);
+
+		return $handler->handle($request);
+	}
+
+	/** @param array<string,mixed> $options The sentry options */
+	public static function initSentry(array $options): void
+	{
+		$options['init']['dsn'] = Cipher::deobfuscate($options['init']['dsn'], self::SALT);
 
 		try {
-			\Sentry\init($this->options['init']);
-
-			return $handler->handle($request);
+			\Sentry\init($options['init']);
 		} catch (\Throwable $exception) {
 			\Sentry\captureException($exception);
 

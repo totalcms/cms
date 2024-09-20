@@ -4,7 +4,7 @@ use DI\Container;
 use Slim\App;
 use TotalCMS\Support\Config;
 
-/* Workaround for routes with a dot in local php server */
+// Workaround for routes with a dot in local php server
 if (php_sapi_name() == 'cli-server') {
 	$_SERVER['SCRIPT_NAME'] = basename($_SERVER['SCRIPT_FILENAME']);
 	$file                   = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -25,7 +25,7 @@ $container = new Container(require __DIR__ . '/container.php');
 // Sentry Logger
 $sentry = (array)$container->get(Config::class)->sentry;
 if ($sentry['enable'] === true) {
-	\Sentry\init($sentry['init']);
+	TotalCMS\Middleware\SentryMiddleware::initSentry($sentry);
 }
 
 // Create App instance
