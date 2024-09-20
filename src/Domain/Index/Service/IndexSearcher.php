@@ -28,11 +28,11 @@ final class IndexSearcher
 	}
 
 	/**
-	 * @param array<string> $priorityProperties
+	 * @param string|array<string> $priorityProperties
 	 *
 	 * @return Collection<int,array<string,mixed>>
 	 */
-	public function search(string $collection, string $query, array $priorityProperties = []): Collection
+	public function search(string $collection, string $query, string|array $priorityProperties = []): Collection
 	{
 		$index = $this->reader->fetchIndex($collection);
 
@@ -65,6 +65,10 @@ final class IndexSearcher
 		});
 
 		if (!empty($priorityProperties)) {
+			if (is_string($priorityProperties)) {
+				$priorityProperties = explode(',', $priorityProperties);
+			}
+			$priorityProperties = array_map('trim', $priorityProperties);
 			// Sort the filtered collection by priority
 			$results = $results->sort(function ($a, $b) use ($priorityProperties, $queries) {
 				$priorityA = self::getPriorityScore($a, $priorityProperties, $queries);
@@ -187,7 +191,7 @@ final class IndexSearcher
 	/** @return array<string> */
 	private static function splitQuery(string $query): array
 	{
-		$query = mb_strtolower($query);
+		$query = trim(mb_strtolower($query));
 		// Modified regex to capture terms without quotes
 		preg_match_all('/"([^"]+)"|(\S+)/', $query, $matches);
 

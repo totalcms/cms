@@ -354,6 +354,10 @@ final class TotalCMSTwigFilters
 	 */
 	public static function filterCollection(array $collection, array $rules): array
 	{
+		if (empty($rules)) {
+			return $collection;
+		}
+
 		$refiner = new CollectionRefiner($collection);
 
 		return $refiner->filter($rules);
@@ -367,6 +371,10 @@ final class TotalCMSTwigFilters
 	 */
 	public static function sortCollection(array $collection, array $rules): array
 	{
+		if (empty($rules)) {
+			return $collection;
+		}
+
 		$sorter = new CollectionSorter($collection);
 
 		return $sorter->sortByRules($rules);

@@ -231,11 +231,11 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * @param array<string> $propertyPriorities
+	 * @param string|array<string> $propertyPriorities
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function search(string $collection, string $query, array $propertyPriorities): array
+	public function search(string $collection, string $query, string|array $propertyPriorities): array
 	{
 		try {
 			$results = $this->indexSearcher->search($collection, $query, $propertyPriorities);
