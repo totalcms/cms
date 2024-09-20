@@ -16,10 +16,16 @@ use TotalCMS\Middleware\RobotsTagMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 
 return function (App $app) {
+	// Stacks internal PHP server
+	$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+	$preview = ($environment === 'preview' || PHP_SAPI === 'cli-server');
+
 	$app->addBodyParsingMiddleware();
 	$app->add(BetaMiddleware::class);
 	$app->add(BundleMiddleware::class);
-	$app->add(SessionStartMiddleware::class);
+	if (!$preview) {
+		$app->add(SessionStartMiddleware::class);
+	}
 	$app->add(CorsMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
 	$app->add(LiteLicenseMiddleware::class);
@@ -31,9 +37,7 @@ return function (App $app) {
 	$app->add(TrailingSlash::class);
 	$app->add(MethodOverrideMiddleware::class);
 
-	// Stacks internal PHP server
-	$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
-	if ($environment === 'preview' || PHP_SAPI === 'cli-server') {
+	if ($preview) {
 		$app->add(PreviewRouteMiddleware::class);
 	}
 };

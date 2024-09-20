@@ -28,6 +28,10 @@ final class AuthMiddleware implements MiddlewareInterface
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
+		if ($this->config->session['enable'] === false) {
+			return $handler->handle($request);
+		}
+
 		$this->trackSessionActivity();
 
 		if ($this->session->has('user')) {

@@ -31,3 +31,4 @@ $settings['assets']['minify'] = 0;
 // $settings['locale']['cache']  = null;
 $settings['logger']['path'] = $settings['datadir'] . '/logs';
 $settings['sentry']['enable'] = false;
+$settings['session']['enable'] = false;
