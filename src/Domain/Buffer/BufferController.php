@@ -34,6 +34,6 @@ class BufferController
 
 	public function isBuffering(): bool
 	{
-		return ob_get_level() > 0;
+		return ob_get_level() > 1;
 	}
 }
