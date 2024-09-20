@@ -28,6 +28,7 @@ final class FirstLoginChecker
 	{
 		$this->objectSaver->saveObject($this->collection, [
 			'id'       => 'admin',
+			'name'     => 'Admin',
 			'email'    => $email,
 			'password' => $password,
 			'active'   => true,
