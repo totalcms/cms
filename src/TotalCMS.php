@@ -45,6 +45,9 @@ class TotalCMS
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
+		if (!self::isPreview()) {
+			$this->session->start();
+		}
 	}
 
 	/**
@@ -171,5 +174,14 @@ class TotalCMS
 
 			return '';
 		}
+	}
+
+	/** @SuppressWarnings(PHPMD.Superglobals) */
+	public static function isPreview(): bool
+	{
+		// Stacks internal PHP server
+		$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+		$preview     = ($environment === 'preview' || PHP_SAPI === 'cli-server');
+		return $preview;
 	}
 }

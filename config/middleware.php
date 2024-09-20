@@ -7,6 +7,7 @@ use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Middleware\MethodOverrideMiddleware;
+use TotalCMS\TotalCMS;
 use TotalCMS\Middleware\BetaMiddleware;
 use TotalCMS\Middleware\BundleMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
@@ -16,10 +17,6 @@ use TotalCMS\Middleware\RobotsTagMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 
 return function (App $app) {
-	// Stacks internal PHP server
-	$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
-	$preview     = ($environment === 'preview' || PHP_SAPI === 'cli-server');
-
 	$app->addBodyParsingMiddleware();
 	$app->add(BetaMiddleware::class);
 	$app->add(BundleMiddleware::class);
@@ -35,7 +32,7 @@ return function (App $app) {
 	$app->add(TrailingSlash::class);
 	$app->add(MethodOverrideMiddleware::class);
 
-	if ($preview) {
+	if (TotalCMS::isPreview()) {
 		$app->add(PreviewRouteMiddleware::class);
 	}
 };
