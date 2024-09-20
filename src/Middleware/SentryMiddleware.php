@@ -6,28 +6,15 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TotalCMS\Utils\Cipher;
 
 final class SentryMiddleware implements MiddlewareInterface
 {
-	/**
-	 * The constructor.
-	 *
-	 * @param array<string,mixed> $options The sentry options
-	 */
-	public function __construct(private array $options)
-	{
-	}
+	const SALT = "s3ntryR0cks";
 
-	/**
-	 * Invoke middleware.
-	 *
-	 * @param ServerRequestInterface $request The request
-	 * @param RequestHandlerInterface $handler The handler
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return ResponseInterface The response
-	 */
+	/** @param array<string,mixed> $options The sentry options */
+	public function __construct(private array $options) {}
+
 	public function process(
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
@@ -35,6 +22,8 @@ final class SentryMiddleware implements MiddlewareInterface
 		if ($this->options['enable'] === false || !isset($this->options['init']['dsn'])) {
 			return $handler->handle($request);
 		}
+
+		$this->options['init']['dsn'] = Cipher::deobfuscate($this->options['init']['dsn'], self::SALT);
 
 		try {
 			\Sentry\init($this->options['init']);
