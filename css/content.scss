@@ -20,3 +20,16 @@
 	height       : auto !important;
 	aspect-ratio : 16 / 9;
 }
+.pagination {
+	display         : flex;
+	justify-content : end;
+	align-items     : center;
+	gap             : 1rem;
+
+	.pagination-pages {
+		margin          : 0;
+		display         : flex;
+		justify-content : center;
+		align-items     : center;
+	}
+}

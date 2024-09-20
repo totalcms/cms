@@ -17,6 +17,7 @@ use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Utils\LogAnalyzer;
 use TotalCMS\Utils\ServerChecker;
+use TotalCMS\Utils\PaginationGenerator;
 
 /**
  * Twig Adapter with Total CMS.
@@ -425,6 +426,32 @@ final class TotalCMSTwigAdapter
 		$files = $this->data($options['collection'], $id, $options['property']);
 
 		return is_array($files) ? $files : [];
+	}
+
+	/** @param array<string,string> $getParams */
+	public function paginationSimple(
+		int $totalObjects,
+		int $currentPage,
+		int $pageLimit,
+		string $pageKey     = 'p',
+		string $prevContent = 'Previous',
+		string $nextContent = 'Next',
+		array  $getParams   = [],
+	): string {
+		return PaginationGenerator::simplePagination(...func_get_args());
+	}
+
+	/** @param array<string,string> $getParams */
+	public function paginationFull(
+		int $totalObjects,
+		int $currentPage,
+		int $pageLimit,
+		string $pageKey     = 'p',
+		string $prevContent = 'Previous',
+		string $nextContent = 'Next',
+		array  $getParams   = [],
+	): string {
+		return PaginationGenerator::fullPagination(...func_get_args());
 	}
 
 	/**

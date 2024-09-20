@@ -28,6 +28,8 @@ final class TotalCMSTwigFilters
 		'html_entity_decode',
 		'urldecode',
 		'urlencode',
+		'ceil',
+		'floor',
 	];
 
 	/** @var array<string> */
