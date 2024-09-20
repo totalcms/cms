@@ -5,13 +5,13 @@ namespace TotalCMS;
 use DI\Container;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 
 // ---------------------------------------------------------------------------------
 // Entry point for Total CMS PHP API
@@ -45,7 +45,6 @@ class TotalCMS
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
-		$this->session->start();
 	}
 
 	/**

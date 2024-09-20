@@ -140,6 +140,7 @@ $settings['imageworks'] = [
 ];
 
 $settings['auth'] = [
+	'enable'     => true,
 	'collection' => 'auth',
 ];
 
