@@ -4,14 +4,21 @@
 
 {% block content %}
 <main class="login-layout admin-layout">
+
 	<section class="login-above">
-		{{ include('login-above.twig', ignore_missing = true) }}
+		{{ include([
+			'login-above.twig',
+			'login-above-default.twig'
+		], ignore_missing = true) }}
 	</section>
 
-	<section class="login-welcome">
-		<h1>Welcome to Total CMS</h1>
-		<p>Please log in to continue.</p>
-	</section>
+	{% set authCollection = cms.objects(cms.config('auth','collection')) %}
+	{% if authCollection is empty %}
+		<div class="cms-twig-info" role="alert" style="margin:0">
+			<h4>Setup First User Account</h4>
+			<p>The credentials that you type below will be used to create the first admin user.</p>
+		</div>
+	{% endif %}
 
 	<section class="login-form">
 		{% set action = cms.api ~ '/login' %}
