@@ -22,6 +22,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -217,7 +218,7 @@ return [
 			$container->get(ServerChecker::class),
 			$container->get(LogAnalyzer::class),
 			$container->get(PhpSession::class),
-			$container->get(UserValidationService::class),
+			$container->get(AccessManager::class),
 		);
 	},
 
@@ -260,6 +261,15 @@ return [
 			$container->get(IndexSearcher::class),
 			$container->get(ObjectFetcher::class),
 			$container->get(Config::class),
+		);
+	},
+
+	AccessManager::class => function (ContainerInterface $container) {
+		return new AccessManager(
+			$container->get(PhpSession::class),
+			$container->get(Config::class),
+			$container->get(UserValidationService::class),
+			$container->get(LoggerFactory::class),
 		);
 	},
 ];

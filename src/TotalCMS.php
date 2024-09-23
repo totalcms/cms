@@ -5,13 +5,12 @@ namespace TotalCMS;
 use DI\Container;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 
 // ---------------------------------------------------------------------------------
 // Entry point for Total CMS PHP API
@@ -24,8 +23,7 @@ class TotalCMS
 	private LoggerInterface $logger;
 	private TwigCacheCleaner $twigCacheCleaner;
 	private PhpSession $session;
-	private Config $config;
-	private UserValidationService $userValidator;
+	private AccessManager $access;
 
 	public function __construct()
 	{
@@ -40,8 +38,7 @@ class TotalCMS
 			$this->twigEngine       = $this->container->get(TwigEngine::class);
 			$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
 			$this->session          = $this->container->get(PhpSession::class);
-			$this->config           = $this->container->get(Config::class);
-			$this->userValidator    = $this->container->get(UserValidationService::class);
+			$this->access           = $this->container->get(AccessManager::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
@@ -50,75 +47,10 @@ class TotalCMS
 		}
 	}
 
-	/**
-	 *  @SuppressWarnings(PHPMD.Superglobals)
-	 *
-	 * @param string|array<string> $groups
-	 */
+	/** @param string|array<string> $groups */
 	public function restrictPageAccess(array|string $groups = [], string $collection = ''): void
 	{
-		if (!$this->userHasAccess($groups, $collection)) {
-			$this->session->set('requestOriginUrl', $_SERVER['REQUEST_URI']);
-			$this->redirectToLogin($collection);
-		}
-	}
-
-	/** @param string|array<string> $groups */
-	public function userHasAccess(array|string $groups, string $collection = ''): bool
-	{
-		if (empty($groups)) {
-			return $this->userLoggedIn($collection);
-		}
-
-		if (is_string($groups)) {
-			$groups = [$groups];
-		}
-
-		if (!$this->session->has('user')) {
-			return false;
-		}
-
-		try {
-			$userID = $this->session->get('user');
-			if ($this->userValidator->validateUserInGroups($userID, $groups, $collection)) {
-				return true;
-			}
-		} catch (\Throwable $th) {
-			// Current session user could be in a different user collection
-			$this->session->delete('user');
-			$this->logger->error($th->getMessage(), ['exception' => $th]);
-		}
-
-		return false;
-	}
-
-	public function userLoggedIn(string $collection = ''): bool
-	{
-		if (!$this->session->has('user')) {
-			return false;
-		}
-
-		try {
-			$userID = $this->session->get('user');
-			if ($this->userValidator->validateUserById($userID, $collection)) {
-				return true;
-			}
-		} catch (\Throwable $th) {
-			// Current session user could be in a different user collection
-			$this->session->delete('user');
-			$this->logger->error($th->getMessage(), ['exception' => $th]);
-		}
-
-		return false;
-	}
-
-	private function redirectToLogin(string $collection = ''): void
-	{
-		$loginUrl = $this->config->api . '/login';
-		if (!empty($collection)) {
-			$loginUrl .= "/$collection";
-		}
-		header("Location: $loginUrl");
+		$this->access->restrictPageAccess($groups, $collection);
 	}
 
 	public function startBuffer(): void
@@ -182,6 +114,7 @@ class TotalCMS
 		// Stacks internal PHP server
 		$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
 		$preview     = ($environment === 'preview' || PHP_SAPI === 'cli-server');
+
 		return $preview;
 	}
 }

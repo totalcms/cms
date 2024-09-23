@@ -140,8 +140,10 @@ $settings['imageworks'] = [
 ];
 
 $settings['auth'] = [
-	'enable'     => true,
-	'collection' => 'auth',
+	'enable'                => true,
+	'collection'            => 'auth',
+	'deniedTimeout'         => 7,
+	'deniedDefaultRedirect' => '/',
 ];
 
 return $settings;

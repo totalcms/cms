@@ -43,7 +43,7 @@
             </nav>
             <div class="user-profile" >
                 <button popovertarget="user-actions">
-                    {% set user = cms.userData() %}
+                    {% set user = cms.userData %}
                     <img src="{{ cms.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
                         alt="Profile Image for {{ user.name }}" onerror="this.style.display='none'">
                 </button>
