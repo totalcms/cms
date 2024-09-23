@@ -3,7 +3,6 @@
 namespace TotalCMS\Middleware;
 
 use Odan\Session\PhpSession;
-use TotalCMS\Support\Config;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -11,6 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Support\Config;
 
 /**
  * Auth middleware.
@@ -24,7 +24,8 @@ final class AuthMiddleware implements MiddlewareInterface
 		private UserValidationService $userValidationService,
 		private PhpSession $session,
 		private Config $config,
-	) {}
+	) {
+	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
@@ -34,9 +35,11 @@ final class AuthMiddleware implements MiddlewareInterface
 
 		$this->trackSessionActivity();
 
-		if ($this->session->has('user')) {
+		if ($this->session->has('user') && $this->session->has('collection')) {
 			try {
-				$user = $this->userValidationService->validateUserById($this->session->get('user'));
+				$userId     = $this->session->get('user');
+				$collection = $this->session->get('collection');
+				$user       = $this->userValidationService->validateUserById($userId, $collection);
 				if ($user) {
 					return $handler->handle($request);
 				}

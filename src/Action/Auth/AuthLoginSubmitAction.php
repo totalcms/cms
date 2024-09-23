@@ -2,24 +2,25 @@
 
 namespace TotalCMS\Action\Auth;
 
+use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpUnauthorizedException;
-use TotalCMS\Domain\Auth\Service\LoginService;
 use Slim\Routing\RouteContext;
-use Odan\Session\PhpSession;
+use TotalCMS\Domain\Auth\Service\LoginService;
 
 /**
  * Action.
  */
 final class AuthLoginSubmitAction
 {
-	const MAX_LOGIN_ATTEMPTS = 7;
+	public const MAX_LOGIN_ATTEMPTS = 7;
 
 	public function __construct(
 		private PhpSession $session,
 		private LoginService $loginService,
-	) {}
+	) {
+	}
 
 	/** @param array<string,string> $args The routing arguments */
 	public function __invoke(
@@ -75,6 +76,7 @@ final class AuthLoginSubmitAction
 			$this->session->regenerateId();
 
 			$this->session->set('user', $user['id']);
+			$this->session->set('collection', $collection);
 			$this->session->delete('loginAttempts');
 
 			$flash->add('success', 'Login successful');
