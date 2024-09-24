@@ -113,6 +113,16 @@ abstract class TotalForm
 		'options',
 	];
 
+	public const ATTRIBUTE_SETTINGS = [
+		'minlength',
+		'maxlength',
+		'pattern',
+		'min',
+		'max',
+		'step',
+		'size',
+	];
+
 	/**
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -335,6 +345,19 @@ abstract class TotalForm
 		// Since PHP will unknown named parameters
 		return array_filter($properties, fn($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
+
+	/**
+	 * @param array<string,mixed> $attributes
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterFieldAttributes(array $attributes): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($attributes, fn($key) => in_array($key, self::ATTRIBUTE_SETTINGS), ARRAY_FILTER_USE_KEY);
+	}
+
 
 	/**
 	 * @param array<string,mixed> $properties
