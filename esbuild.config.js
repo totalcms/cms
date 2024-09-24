@@ -9,6 +9,7 @@ esbuild.build({
     entryPoints : [
 		"javascript/admin.js",
 		"javascript/gallery.js",
+		"javascript/content.js",
 		"javascript/imageworks-builder.js",
 		"javascript/totalcms.js",
 		"javascript/swagger.js",

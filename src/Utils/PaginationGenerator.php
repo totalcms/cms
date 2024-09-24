@@ -32,9 +32,11 @@ class PaginationGenerator
 			'class' => 'pagination-next',
 		]);
 
+		$currentPage = HTMLUtils::element('span', strval($currentPage), ['class' => 'pagination-current', 'contenteditable' => 'plaintext-only']);
+		$totalPages = HTMLUtils::element('span', strval($totalPages), ['class' => 'pagination-total']);
 		$counters = HTMLUtils::element('span', "$currentPage / $totalPages", ['class' => 'pagination-counters']);
 
-		$pagination = HTMLUtils::element('nav', $prevLink . $counters . $nextLink, ['class' => 'pagination simple']);
+		$pagination = HTMLUtils::element('nav', $prevLink . $counters . $nextLink, ['class' => 'cms-pagination simple']);
 
 		return $pagination;
 	}
@@ -81,7 +83,7 @@ class PaginationGenerator
 
 		$pages = HTMLUtils::element('ul', $pages, ['class' => 'pagination-pages']);
 
-		$pagination = HTMLUtils::element('nav', $prevLink . $pages . $nextLink, ['class' => 'pagination full']);
+		$pagination = HTMLUtils::element('nav', $prevLink . $pages . $nextLink, ['class' => 'cms-pagination full']);
 
 		return $pagination;
 	}
