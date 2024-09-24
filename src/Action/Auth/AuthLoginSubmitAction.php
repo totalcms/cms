@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
+use TotalCMS\Support\Config;
 
 /**
  * Action.
@@ -19,8 +20,8 @@ final class AuthLoginSubmitAction
 	public function __construct(
 		private PhpSession $session,
 		private LoginService $loginService,
-	) {
-	}
+		private Config $config,
+	) {}
 
 	/** @param array<string,string> $args The routing arguments */
 	public function __invoke(
@@ -37,7 +38,9 @@ final class AuthLoginSubmitAction
 		$attempts = $this->session->get('loginAttempts', 0);
 		$this->session->set('loginAttempts', $attempts + 1);
 
-		if ($attempts > self::MAX_LOGIN_ATTEMPTS) {
+		$maxAttempts = $this->config->auth['maxAttempts'] ?? self::MAX_LOGIN_ATTEMPTS;
+
+		if ($attempts > $maxAttempts) {
 			$flash->add('error', 'Too many login attempts');
 		}
 
