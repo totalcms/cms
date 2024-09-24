@@ -24,12 +24,6 @@ final class AccessManager
 		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger();
 
 		$this->defaultAuthCollection = $this->config->auth['collection'];
-		$this->userID            = $this->session->get('user') ?? '';
-		$this->userCollection    = $this->session->get('collection') ?? '';
-
-		if (empty($this->userCollection)) {
-			$this->userCollection = $this->defaultAuthCollection;
-		}
 	}
 
 	/**
@@ -84,6 +78,9 @@ final class AccessManager
 			return false;
 		}
 
+		// Get the user data from the session. It was not available in the constructor
+		$this->getSessionData();
+
 		if ($this->isSuperAdmin()) {
 			return true;
 		}
@@ -114,6 +111,8 @@ final class AccessManager
 			return [];
 		}
 
+		$this->getSessionData();
+
 		try {
 			$userData = $this->userValidator->validateUserById($this->userID, $this->userCollection);
 		} catch (\Throwable $th) {
@@ -129,8 +128,24 @@ final class AccessManager
 
 	private function isSuperAdmin(): bool
 	{
+		$this->getSessionData();
+
 		return $this->userCollection === $this->defaultAuthCollection
 			&& $this->userValidator->isSuperAdmin($this->userID);
+	}
+
+	private function getSessionData(): void
+	{
+		if (!$this->sessionHasUser()) {
+			return;
+		}
+
+		$this->userID         = $this->session->get('user') ?? '';
+		$this->userCollection = $this->session->get('collection') ?? '';
+
+		if (empty($this->userCollection)) {
+			$this->userCollection = $this->defaultAuthCollection;
+		}
 	}
 
 	private function sessionHasUser(): bool

@@ -40,6 +40,10 @@ final class UserValidationService
 			$collection = $this->config->auth['collection'];
 		}
 
+		if (empty($userId)) {
+			throw new \InvalidArgumentException('No User ID provided');
+		}
+
 		if (!$this->objectFetcher->existsObject($collection, $userId)) {
 			// Admin users from default auth collection are always allowed
 			if ($collection !== $this->config->auth['collection'] && $this->isSuperAdmin($userId)) {
