@@ -113,6 +113,7 @@ abstract class TotalForm
 		'options',
 	];
 
+	// These are settings that can get passed to the FormField class
 	public const ATTRIBUTE_SETTINGS = [
 		'minlength',
 		'maxlength',
@@ -121,6 +122,9 @@ abstract class TotalForm
 		'max',
 		'step',
 		'size',
+		'readonly',
+		'disabled',
+		'class',
 	];
 
 	/**
