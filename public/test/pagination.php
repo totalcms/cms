@@ -19,6 +19,7 @@
 	{% endfor %}
 </div>
 
-{{ cms.paginationSimple(totalObjects, currentPage, pageLimit, 'p', 'Prev', 'Next', getParams) }}
+<!-- {{ cms.paginationSimple(totalObjects, currentPage, pageLimit, 'p', 'Prev', 'Next', getParams) }} -->
+{{ cms.paginationFull(totalObjects, currentPage, pageLimit, 'p', 'Prev', 'Next', getParams) }}
 
 <?php include __DIR__ . '/_end.php'; ?>
