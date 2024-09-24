@@ -56,3 +56,19 @@ json_decode(mixed $variable): array
 print_r(mixed $variable): string
 var_dump(mixed $variable): string
 ```
+
+### Filter and Sort Collections
+
+```
+{% set objects = cms.objects("blog") | filterCollection([
+	{
+		property : "image.size",
+		operator : "lt",
+		value    : getParams.size ?? ""
+	},
+]) | sortCollection([
+	{
+		shuffle  : true,
+	},
+]) %}
+```

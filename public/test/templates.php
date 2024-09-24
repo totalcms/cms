@@ -53,11 +53,11 @@ $totalcms->startBuffer(); // Start output buffering
 
     <?php
 
-	// Optional: Send page head asap to reduce TTFB (Time to First Byte)
-	echo $totalcms->processBufferMacros();
-$totalcms->startBuffer(); // Start output buffering again
+    // Optional: Send page head asap to reduce TTFB (Time to First Byte)
+    echo $totalcms->processBufferMacros();
+    $totalcms->startBuffer(); // Start output buffering again
 
-?>
+    ?>
     <!-- Twig Template Testing -->
 
     <!-- Get Collection -->
