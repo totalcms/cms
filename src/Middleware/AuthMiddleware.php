@@ -9,8 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Support\Config;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 
 /**
  * Auth middleware.
@@ -19,12 +19,15 @@ use TotalCMS\Support\Config;
  */
 final class AuthMiddleware implements MiddlewareInterface
 {
+	private string $defaultAuthCollection;
+
 	public function __construct(
 		private ResponseFactoryInterface $responseFactory,
-		private UserValidationService $userValidationService,
 		private PhpSession $session,
 		private Config $config,
+		private AccessManager $accessManager,
 	) {
+		$this->defaultAuthCollection = $this->config->auth['collection'];
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -35,32 +38,43 @@ final class AuthMiddleware implements MiddlewareInterface
 
 		$this->trackSessionActivity();
 
-		if ($this->session->has('user') && $this->session->has('collection')) {
-			try {
-				$userId     = $this->session->get('user');
-				$collection = $this->session->get('collection');
-				$user       = $this->userValidationService->validateUserById($userId, $collection);
-				if ($user) {
-					return $handler->handle($request);
-				}
-			} catch (\Exception $e) {
-				// User not found. Clear the session and regenerate the session ID.
-				$this->session->clear();
-				$this->session->regenerateId();
-			}
+		if (!$this->accessManager->sessionHasUser()) {
+			return $this->redirectToLogin($request);
 		}
 
+		// Require default auth collection
+		if (!$this->accessManager->userLoggedIn($this->defaultAuthCollection)) {
+			return $this->redirectToDenied($request);
+		}
+
+		return $handler->handle($request);
+	}
+
+	private function redirectToLogin(ServerRequestInterface $request): ResponseInterface
+	{
+		return $this->redirectToRoute($request, 'login');
+	}
+
+	private function redirectToDenied(ServerRequestInterface $request): ResponseInterface
+	{
+		return $this->redirectToRoute($request, 'denied');
+	}
+
+	private function redirectToRoute(ServerRequestInterface $request, string $route): ResponseInterface
+	{
 		// Set the current request URL in the session so we can send the user back to it after login
 		$this->session->set('requestOriginUrl', (string)$request->getUri());
+		$this->session->set('requestRefererUrl', (string)$request->getHeaderLine('referer'));
 
 		// User is not logged in. Redirect to login page.
 		$routeParser = RouteContext::fromRequest($request)->getRouteParser();
-		$url         = $routeParser->urlFor('login');
+		$url         = $routeParser->urlFor($route);
 
 		return $this->responseFactory->createResponse()
 			->withStatus(302)
 			->withHeader('Location', $url);
 	}
+
 
 	private function trackSessionActivity(): void
 	{

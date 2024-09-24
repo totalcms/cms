@@ -148,7 +148,7 @@ final class AccessManager
 		}
 	}
 
-	private function sessionHasUser(): bool
+	public function sessionHasUser(): bool
 	{
 		return $this->session->has('user') && $this->session->has('collection');
 	}
