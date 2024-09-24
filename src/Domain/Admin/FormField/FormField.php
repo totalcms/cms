@@ -73,7 +73,18 @@ class FormField
 		$input = $this->buildFormField();
 		$icon  = $this->icon ? HTMLUtils::element('div', '', ['class' => 'form-group-icon']) : '';
 
-		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
+		$group = $this->createFormGroup($input . $icon);
+
+		return $this->createFormField($group);
+	}
+
+	public function createFormGroup(string $content): string
+	{
+		return HTMLUtils::element('div', $content, ['class' => 'form-group']);
+	}
+
+	public function createFormField(string $content): string
+	{
 		$label = empty($this->label) ? '' : HTMLUtils::element('label', $this->label, [
 			'for' => "field-{$this->uuid}",
 		]);
@@ -93,7 +104,7 @@ class FormField
 			}
 		}
 
-		$formField = HTMLUtils::element('div', $label . $group . $help, $formFieldAtrributes);
+		$formField = HTMLUtils::element('div', $label . $content . $help, $formFieldAtrributes);
 
 		return $formField;
 	}
@@ -129,7 +140,7 @@ class FormField
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn($x) => !is_null($x));
 
 		return $attributes;
 	}
@@ -202,7 +213,7 @@ class FormField
 		$properties = $this->form->propertiesForCollection([$labelProperty, $valueProperty], $collection);
 
 		// reformat the properties array to match the options array
-		return array_map(fn ($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
+		return array_map(fn($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
 	}
 
 	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */

@@ -7,6 +7,7 @@ import Textarea from './textarea';
 import NumberField from './number';
 import ColorField from './color';
 import DateField from './date';
+import PasswordField from './password';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
 import ListField from './list';
@@ -215,7 +216,6 @@ export default class TotalForm {
 			case "hidden":
 			case "email":
 			case "phone":
-			case "password":
 				return new TotalField(field, options);
 
 			case "textarea":
@@ -243,6 +243,9 @@ export default class TotalForm {
 
             case "list":
                 return new ListField(field, options);
+
+			case "password":
+				return new PasswordField(field, options);
 
             case "range":
                 return new RangeSlider(field, options);

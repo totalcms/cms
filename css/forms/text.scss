@@ -83,6 +83,10 @@
 			opacity    : 1;
 		}
     }
+
+	.form-group + .form-group {
+		margin-top : 1rem;
+	}
 }
 
 //------------------------------
