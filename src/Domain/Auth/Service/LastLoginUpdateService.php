@@ -14,11 +14,11 @@ final class LastLoginUpdateService
 
 	public function updateLoginDate(string $collection, string $id): void
 	{
-		$count = intval((string)$this->propertyFetcher->fetchProperty($collection, $id, 'count'));
+		$loginCount = intval((string)$this->propertyFetcher->fetchProperty($collection, $id, 'loginCount'));
 
 		$this->objectSaver->patchObject($collection, $id, [
-			'lastlogin' => date('c'),
-			'count'     =>  $count + 1,
+			'lastlogin'  => date('c'),
+			'loginCount' => $loginCount + 1,
 		]);
 	}
 }

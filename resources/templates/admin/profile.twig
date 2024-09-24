@@ -18,11 +18,14 @@
 		{# TODO: Update form to use patch without form fields instead of just hiding them #}
 
 		<style>
-		.form-field:has([name="id"]),
-		.form-field:has([name="active"]),
-		.form-field:has([name="groups"]),
-		.form-field:has([name="expiration"]) {
-			display: none;
+		.form-field {
+			display:none;
+		}
+		.form-field:has([name="name"]),
+		.form-field:has([name="email"]),
+		.form-field:has([name="password"]),
+		.form-field:has([name="image"]) {
+			display: block;
 		}
 		</style>
 

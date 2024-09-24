@@ -11,6 +11,7 @@ final class LoginService
 	const ACCESS_LOG = 'totalcms-access.log';
 
 	private LoggerInterface $logger;
+	private string $account = '';
 
 	public function __construct(
 		private UserValidationService $validator,
@@ -37,20 +38,14 @@ final class LoginService
 		$user = $this->validator->validateUserByEmail($email, $collection);
 		$userId = $user['id'];
 
-		if (!isset($user['active']) || !$user['active']) {
-			$error = "User account $collection/$userId is not active";
-			$this->logger->error($error);
-			throw new \Exception($error);
-		}
+		$this->account = "$collection/$userId";
 
-		if (isset($user['expiration']) && strtotime($user['expiration']) > time()) {
-			$error = "User account $collection/$userId has expired";
-			$this->logger->error($error);
-			throw new \Exception($error);
-		}
+		$this->testUserActive($user);
+		$this->testUserExpiration($user);
+		$this->testUserMaxLoginCount($user);
 
 		if (!password_verify($password, $user['password'])) {
-			$error = "$collection/$userId: Invalid password";
+			$error = "{$this->account}: Invalid password";
 			$this->logger->error($error);
 			throw new \Exception($error);
 		}
@@ -58,8 +53,46 @@ final class LoginService
 		// Update the last login date of the user
 		$this->updateService->updateLoginDate($collection, $user['id']);
 
-		$this->logger->info("User $collection/$userId logged in");
+		$this->logger->info("User {$this->account} logged in");
 
 		return $user;
+	}
+
+	/** @param array<string,mixed> $user */
+	private function testUserActive(array $user): void
+	{
+		if (!isset($user['active']) || !$user['active']) {
+			$error = "User account {$this->account} is not active";
+			$this->logger->error($error);
+			throw new \Exception($error);
+		}
+	}
+
+	/** @param array<string,mixed> $user */
+	private function testUserExpiration(array $user): void
+	{
+		if (
+			isset($user['expiration'])
+			&& !empty($user['expiration'])
+			&& strtotime($user['expiration']) < time()
+		) {
+			$error = "User account {$this->account} has expired";
+			$this->logger->error($error);
+			throw new \Exception($error);
+		}
+	}
+
+	/** @param array<string,mixed> $user */
+	private function testUserMaxLoginCount(array $user): void
+	{
+		if (
+			isset($user['maxLoginCount'], $user['loginCount'])
+			&& $user['maxLoginCount'] > 0
+			&& $user['loginCount'] >= $user['maxLoginCount']
+		) {
+			$error = "User account {$this->account} has reached the maximum login count";
+			$this->logger->error($error);
+			throw new \Exception($error);
+		}
 	}
 }
