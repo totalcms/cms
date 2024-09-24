@@ -36,6 +36,7 @@ export default class DropletTestSet {
 
 	clearErrors() {
 		this.errors = [];
+        this.pass = true;
 	}
 
     errors() {
@@ -62,7 +63,7 @@ export default class DropletTestSet {
             this.minMax(file.size/1024 ,this.rules.size);
         }
         if (this.rules.count) {
-            this.rules.size.maxError = this.errorStrings.countMax;
+            this.rules.count.maxError = this.errorStrings.countMax;
 			this.rules.count.min = 0;
             this.minMax(count ,this.rules.count);
         }
@@ -104,9 +105,9 @@ export default class DropletTestSet {
     }
 
 	aspectRatio(ratio, width, height) {
-        if (ratio.match(/\d+:\d+/)) {
-            const fields = ratio.match(/(\d+):(\d+)/);
-            const ratioRule = fields[1]/field[2];
+        const fields = ratio.match(/(\d+):(\d+)/);
+        if (fields.length === 3) {
+            const ratioRule = fields[1]/fields[2];
             const ratio = width/height;
 
             if (ratio !== ratioRule) {

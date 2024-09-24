@@ -165,13 +165,15 @@ export default class Droplet {
         // This happens here because its the first time that we have access to file info
         if (this.testSet) {
 			const count = this.container.querySelectorAll(".dz-preview").length;
-            this.testSet.processRules(file, count);
-            if (!this.testSet.pass) {
+            if (!this.testSet.processRules(file, count)) {
                 file.rejectFile(this.testSet.errors);
 				this.displayTestSetErrors();
+            } else {
+                file.acceptFile();
             }
+        } else {
+            file.acceptFile();
         }
-        file.acceptFile();
 
         return setTimeout(((function() {
             return function() {
@@ -242,8 +244,11 @@ export default class Droplet {
     }
 
 	displayTestSetErrors() {
-		const errors = this.testSet.errors;
-		// TODO: Display errors
+        if (this.testSet.errors.length > 0) {
+            this.field.input.setCustomValidity(this.testSet.errors.join(" & "));
+            this.field.input.reportValidity();
+            this.testSet.clearErrors();
+        }
 	}
 
     //-----------------------------------------------------------------------
