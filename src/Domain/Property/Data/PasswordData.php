@@ -27,7 +27,7 @@ class PasswordData extends PropertyData
 		$info = password_get_info($password);
 
 		// Verify that this is a known hash
-		return is_string($info['algo']);
+		return !is_null($info['algo']);
 	}
 
 	public function transform(): string

@@ -12,7 +12,7 @@ final class ObjectDeletePropertyAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private ObjectSaver $service
+		private ObjectSaver $service,
 	) {
 		$this->renderer = $renderer;
 		$this->service  = $service;
@@ -30,7 +30,7 @@ final class ObjectDeletePropertyAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$object = $this->service->deleteObjectProperty($args['collection'], $args['id'], $args['property']);
 

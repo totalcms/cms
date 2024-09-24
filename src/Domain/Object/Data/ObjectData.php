@@ -2,12 +2,12 @@
 
 namespace TotalCMS\Domain\Object\Data;
 
-use Cocur\Slugify\Slugify;
 use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Data\SlugData;
 
 /**
  * Data collection object.
@@ -28,7 +28,7 @@ class ObjectData
 	/** @param array<string,mixed> $properties */
 	public function __construct(string $id, array $properties)
 	{
-		$this->id         = (new Slugify())->slugify($id);
+		$this->id         = SlugData::slugify($id);
 		$this->properties = new Collection($properties);
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 	}
@@ -39,7 +39,7 @@ class ObjectData
 		$base = ['id' => $this->id];
 
 		// Transform properties
-		$properties = $this->properties->map(fn ($property) => $property->transform());
+		$properties = $this->properties->map(fn($property) => $property->transform());
 
 		return array_merge($base, $properties->toArray());
 	}

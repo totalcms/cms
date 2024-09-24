@@ -91,7 +91,8 @@ export default class Identifier extends TotalField {
 		return this.container.classList.contains("locked") || this.input.hasAttribute("disabled");
 	}
 
-    slugify(id){
+    slugify(id) {
+		id = id.replace('@', '-at-').replace('.', '-');
         return slugify(id, { lower: true });
     }
 

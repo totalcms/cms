@@ -10,6 +10,7 @@ ini_set('display_errors', '1');
 $settings['env'] = 'dev';
 
 $settings['sentry']['enable'] = false;
+$settings['auth']['enable'] = false;
 
 $settings['docroot']   = $settings['root'];
 $settings['datadir']   = $settings['root'] . '/tcms-data';

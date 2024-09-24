@@ -5,6 +5,9 @@ use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\postJson;
 
 beforeEach(function (): void {
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		session_destroy();
+	}
 	$this->setUpApp(bootstrap());
 });
 
@@ -31,11 +34,11 @@ it('saves a new schema', function (): void {
 });
 
 it('cannot save a reserved schema', function (): void {
-	$reservedSchemas = glob(__DIR__ . '/../../schemas/*.json');
+	$reservedSchemas = glob(reservedSchemaPath() . '*.json');
 	expect($reservedSchemas)->toBeArray()->not->toBeEmpty();
 	foreach ($reservedSchemas as $schema) {
-		$id = basename($schema, '.json');
-		postJson('/schemas', ['id' => $id])
+		$json = file_get_contents($schema);
+		postJson('/schemas', json_decode($json, true))
 			->assertInternalServerError()
 			->assertSee('is reserved');
 	}

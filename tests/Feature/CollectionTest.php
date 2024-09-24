@@ -12,30 +12,40 @@ beforeAll(function (): void {
 
 function collectionTestData(): array
 {
-	$json = file_get_contents(testData('new-collection.json'));
+	$json = file_get_contents(testData('new-text-collection.json'));
 
 	return json_decode($json, true);
 }
 
 beforeEach(function (): void {
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		// tests with assertBadRequest do not seem to clean up the session
+		session_destroy();
+	}
 	$this->setUpApp(bootstrap());
 });
 
 it('saves a new collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
-	postJson('/collections', $collection)
+
+	// Remove the property data to ensure that the CMS generates it properly
+	$requestData = $collection;
+	unset($requestData['properties']);
+
+	postJson('/collections', $requestData)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($collection);
 
-	$this->assertFileExists(__DIR__ . "/../tcms-data/{$id}/.meta.json");
+	$this->assertFileExists(metaPath($id));
 });
 
 it('does not save an existing collection', function (): void {
 	$collection = collectionTestData();
 	postJson('/collections', $collection)
 		->assertBadRequest()
+		->assertJson()
 		->assertSee('already exists');
 });
 
@@ -90,8 +100,10 @@ it('can fetch a schema for a collection', function (): void {
 		]);
 });
 
-it('cannot delete a collection by design', function (): void {
+it('can delete a collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
-	delete("/collections/$id")->assertMethodNotAllowed();
+
+	delete("/collections/$id")->assertOk();
+	$this->assertFileDoesNotExist(metaPath($id));
 });

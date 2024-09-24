@@ -31,8 +31,7 @@ it('can upload an image', function (): void {
 	// ! https://github.com/nekofar/slim-test/pull/105
 });
 
-it('can update info for an image', function (): void {
-})->todo();
+it('can update info for an image', function (): void {})->todo();
 
 it('can get an image', function (): void {
 	get('/imageworks/image/myimage/image.jpg')
@@ -58,8 +57,7 @@ it('can resize an image', function (): void {
 	expect($imageWidth)->toBe($size);
 });
 
-it('can resize an image from gallery', function (): void {
-})->todo();
+it('can resize an image from gallery', function (): void {})->todo();
 
 it('can crop an image', function (): void {
 	$size = 300;
@@ -75,30 +73,22 @@ it('can crop an image', function (): void {
 	expect($imageHeight)->toBe($size);
 });
 
-it('can replace an image and clear its cache', function (): void {
-})->todo();
+it('can replace an image and clear its cache', function (): void {})->todo();
 
-it('can delete an image', function (): void {
-})->todo();
+it('can delete an image', function (): void {})->todo();
 
 // Gallery
-it('can upload an image to a gallery', function (): void {
-})->todo();
+it('can upload an image to a gallery', function (): void {})->todo();
 
-it('can delete an image from gallery', function (): void {
-})->todo();
+it('can delete an image from gallery', function (): void {})->todo();
 
-it('can update info for an image from gallery', function (): void {
-})->todo();
+it('can update info for an image from gallery', function (): void {})->todo();
 
-it('can clear cache for an image', function (): void {
-})->todo();
+it('can clear cache for an image', function (): void {})->todo();
 
-it('can crop an image from gallery', function (): void {
-})->todo();
+it('can crop an image from gallery', function (): void {})->todo();
 
-it('can clear cache for an image from gallery', function (): void {
-})->todo();
+it('can clear cache for an image from gallery', function (): void {})->todo();
 
 /*
 

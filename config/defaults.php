@@ -29,12 +29,12 @@ $settings = [];
 $settings['sentry'] = [
 	'enable' => true,
 	'init'   => [
-		'dsn' => 'https://775b3fb249ce601ef6af48ba67bc29f6@o4507455543312384.ingest.us.sentry.io/4507455545081856',
+		'dsn' => 'G0caBAFDfR9UXEYRAAgWQE1rUwZdQ0JWCEITH2YIAQpFRFENRksfZHAMX0ZDBFpBR0xmA1BaQUALWlobFzVVEB9dBkBABxcXJkIaRRocHFpBQk5mBVZeR0YDVkVKTGQ=',
 		// Specify a fixed sample rate
 		'traces_sample_rate' => 1.0,
 		// Set a sampling rate for profiling - this is relative to traces_sample_rate
 		'profiles_sample_rate' => 1.0,
-		'ignore_exceptions' => [
+		'ignore_exceptions'    => [
 			Slim\Exception\HttpNotFoundException::class,
 			Slim\Exception\HttpMethodNotAllowedException::class,
 		],
@@ -45,7 +45,7 @@ $settings['sentry'] = [
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
-$settings['domain'] = $_SERVER['HTTP_HOST'];
+$settings['domain'] = $_SERVER['HTTP_HOST'] ?? 'unknown';
 $settings['url']    = 'https://' . $settings['domain'];
 $settings['api']    = $settings['url'] . '/api';
 
@@ -87,8 +87,17 @@ $settings['logger'] = [
 
 // Session
 $settings['session'] = [
-	'name'         => 'totalcms',
-	'cache_expire' => 0,
+	'name'                   => 'totalcms',
+	'cookie_samesite'        => 'Lax',
+	'cache_expire'           => 0,
+	'cookie_secure'          => true,
+	'cookie_httponly'        => true,
+	'cookie_lifetime'        => 0,
+	'gc_maxlifetime'         => 7200,
+	'use_trans_sid'          => false,
+	'use_only_cookies'       => true,
+	'sid_length'             => 64,
+	'sid_bits_per_character' => 6,
 ];
 
 // E-Mail settings
@@ -130,9 +139,12 @@ $settings['imageworks'] = [
 	],
 ];
 
-// Console commands
-// $settings['commands'] = [
-//     \App\Console\SchemaDumpCommand::class,
-// ];
+$settings['auth'] = [
+	'enable'                => true,
+	'collection'            => 'auth',
+	'maxAttempts'           => 7,
+	'deniedTimeout'         => 7,
+	'deniedDefaultRedirect' => '/',
+];
 
 return $settings;

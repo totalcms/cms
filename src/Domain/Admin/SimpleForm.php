@@ -16,9 +16,10 @@ final class SimpleForm
 		private string $method = 'POST',
 		private string $label  = 'Submit',
 		private bool $refresh  = false,
-	) {}
+	) {
+	}
 
-	public function build(string $content = ""): string
+	public function build(string $content = ''): string
 	{
 		$button = HTMLUtils::button($this->label, [
 			'type'  => 'submit',

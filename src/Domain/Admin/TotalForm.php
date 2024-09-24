@@ -19,6 +19,7 @@ use TotalCMS\Utils\HTMLUtils;
  * Total Form Builder.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 abstract class TotalForm
 {
@@ -30,7 +31,7 @@ abstract class TotalForm
 	public SchemaData $schemaData;
 
 	public const FIELDS_BY_TYPE = [
-		'Text Fields' => [
+		'Text (String) Fields' => [
 			'email',
 			'hidden',
 			'json',
@@ -56,7 +57,7 @@ abstract class TotalForm
 			'date',
 			'datetime',
 		],
-		'Array Fields' => [
+		'List (Array) Fields' => [
 			'list',
 			'multiselect',
 		],
@@ -110,6 +111,20 @@ abstract class TotalForm
 		'placeholder',
 		'settings',
 		'options',
+	];
+
+	// These are settings that can get passed to the FormField class
+	public const ATTRIBUTE_SETTINGS = [
+		'minlength',
+		'maxlength',
+		'pattern',
+		'min',
+		'max',
+		'step',
+		'size',
+		'readonly',
+		'disabled',
+		'class',
 	];
 
 	/**
@@ -332,8 +347,21 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
+
+	/**
+	 * @param array<string,mixed> $attributes
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function filterFieldAttributes(array $attributes): array
+	{
+		// Remove any keys that are not needed for the field
+		// Since PHP will unknown named parameters
+		return array_filter($attributes, fn($key) => in_array($key, self::ATTRIBUTE_SETTINGS), ARRAY_FILTER_USE_KEY);
+	}
+
 
 	/**
 	 * @param array<string,mixed> $properties
@@ -344,7 +372,7 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn($key) => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**

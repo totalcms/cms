@@ -29,7 +29,7 @@ final class FactoryImporter
 		private IndexBuilder $indexBuilder,
 		private CollectionFetcher $collectionFetcher,
 		private SchemaFetcher $schemaFetcher,
-		private PropertyRepository $propertyRepository
+		private PropertyRepository $propertyRepository,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler('importer-factory.log')->createLogger();
 		$this->faker  = $this->fakerFactory->createFaker();

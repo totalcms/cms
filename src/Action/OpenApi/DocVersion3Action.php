@@ -12,7 +12,7 @@ use TotalCMS\Renderer\TemplateRenderer;
 final class DocVersion3Action
 {
 	public function __construct(
-		private TemplateRenderer $templateRenderer
+		private TemplateRenderer $templateRenderer,
 	) {
 	}
 

@@ -14,6 +14,7 @@ final class SchemaData
 	public const SCHEMA_PREFIX    = 'https://www.totalcms.co/schemas/';
 	public const SCHEMA_VERSION   = 'https://json-schema.org/draft/2020-12/schema';
 	public const RESERVED_SCHEMAS = [
+		'auth',
 		'blog-legacy',
 		'blog',
 		'color',
@@ -35,26 +36,26 @@ final class SchemaData
 		'url',
 	];
 	public const PROPERTY_TYPES = [
-		'string',
-		'number',
+		// 'array',
+		// 'object',
 		'boolean',
-		'array',
-		'object',
 		'color',
 		'date',
-		'time',
 		'deck',
+		'depot',
 		'email',
 		'file',
-		'image',
-		'url',
-		'depot',
 		'gallery',
+		'image',
 		'list',
+		'number',
 		'password',
 		'phone',
 		'slug',
+		'string',
 		'svg',
+		'time',
+		'url',
 	];
 	public const PROPERTY_TYPE_TO_REF = [
 		'color'    => 'https://www.totalcms.co/schemas/properties/color.json',

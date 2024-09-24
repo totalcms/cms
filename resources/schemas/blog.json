@@ -9,6 +9,7 @@
 			"type"    : "boolean",
 			"label"   : "Draft",
 			"help"    : "Mark this post as a draft",
+			"default" : false,
 			"field"   : "checkbox"
 		},
 		"featured": {
@@ -16,6 +17,7 @@
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
+			"default" : false,
 			"factory" : "boolean"
 		},
 		"id": {

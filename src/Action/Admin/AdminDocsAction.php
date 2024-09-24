@@ -13,7 +13,7 @@ use Webuni\FrontMatter\FrontMatterChain;
 final class AdminDocsAction
 {
 	public function __construct(
-		private TwigRenderer $twigRenderer
+		private TwigRenderer $twigRenderer,
 	) {
 	}
 

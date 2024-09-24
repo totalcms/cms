@@ -4,9 +4,8 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Middlewares\TrailingSlash;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Odan\Session\Middleware\SessionStartMiddleware;
 use Odan\Session\PhpSession;
-use Odan\Session\SessionInterface;
-use Odan\Session\SessionManagerInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -23,12 +22,15 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -63,14 +65,12 @@ return [
 		return AppFactory::create();
 	},
 
-	SessionManagerInterface::class => function (ContainerInterface $container) {
-		return $container->get(SessionInterface::class);
+	SessionStartMiddleware::class => function (ContainerInterface $container) {
+		return new SessionStartMiddleware($container->get(PhpSession::class));
 	},
 
-	SessionInterface::class => function (ContainerInterface $container) {
-		$options = $container->get(Config::class)->session;
-
-		return new PhpSession($options);
+	PhpSession::class => function (ContainerInterface $container) {
+		return new PhpSession($container->get(Config::class)->session);
 	},
 
 	ResponseFactoryInterface::class => function (ContainerInterface $container) {
@@ -208,6 +208,7 @@ return [
 		return new TotalCMSTwigAdapter(
 			$container->get(Config::class),
 			$container->get(IndexReader::class),
+			$container->get(IndexSearcher::class),
 			$container->get(ObjectFetcher::class),
 			$container->get(CollectionLister::class),
 			$container->get(CollectionFetcher::class),
@@ -216,6 +217,8 @@ return [
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
 			$container->get(LogAnalyzer::class),
+			$container->get(PhpSession::class),
+			$container->get(AccessManager::class),
 		);
 	},
 
@@ -229,6 +232,7 @@ return [
 			$container->get(TotalCMSTwigPatterns::class),
 			$container->get(FakerFactory::class),
 			$container->get(QRCodeTwigAdapter::class),
+			$container->get(PhpSession::class),
 		);
 	},
 
@@ -246,5 +250,26 @@ return [
 
 	TwigCacheCleaner::class => function (ContainerInterface $container) {
 		return new TwigCacheCleaner($container->get(Config::class));
+	},
+
+	IndexSearcher::class => function (ContainerInterface $container) {
+		return new IndexSearcher($container->get(IndexReader::class));
+	},
+
+	UserValidationService::class => function (ContainerInterface $container) {
+		return new UserValidationService(
+			$container->get(IndexSearcher::class),
+			$container->get(ObjectFetcher::class),
+			$container->get(Config::class),
+		);
+	},
+
+	AccessManager::class => function (ContainerInterface $container) {
+		return new AccessManager(
+			$container->get(PhpSession::class),
+			$container->get(Config::class),
+			$container->get(UserValidationService::class),
+			$container->get(LoggerFactory::class),
+		);
 	},
 ];

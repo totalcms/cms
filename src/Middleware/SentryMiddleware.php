@@ -6,40 +6,37 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TotalCMS\Utils\Cipher;
 
 final class SentryMiddleware implements MiddlewareInterface
 {
-	/**
-	 * The constructor.
-	 *
-	 * @param array<string,mixed> $options The sentry options
-	 */
+	public const SALT = 's3ntryR0cks';
+
+	/** @param array<string,mixed> $options The sentry options */
 	public function __construct(private array $options)
 	{
 	}
 
-	/**
-	 * Invoke middleware.
-	 *
-	 * @param ServerRequestInterface $request The request
-	 * @param RequestHandlerInterface $handler The handler
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return ResponseInterface The response
-	 */
 	public function process(
 		ServerRequestInterface $request,
-		RequestHandlerInterface $handler
+		RequestHandlerInterface $handler,
 	): ResponseInterface {
 		if ($this->options['enable'] === false || !isset($this->options['init']['dsn'])) {
 			return $handler->handle($request);
 		}
 
-		try {
-			\Sentry\init($this->options['init']);
+		self::initSentry($this->options);
 
-			return $handler->handle($request);
+		return $handler->handle($request);
+	}
+
+	/** @param array<string,mixed> $options The sentry options */
+	public static function initSentry(array $options): void
+	{
+		$options['init']['dsn'] = Cipher::deobfuscate($options['init']['dsn'], self::SALT);
+
+		try {
+			\Sentry\init($options['init']);
 		} catch (\Throwable $exception) {
 			\Sentry\captureException($exception);
 

@@ -20,15 +20,41 @@
     <div class="admin-dashboard">
         <aside class="dash-sidebar">
             <nav>
-            <ul class="menu">
-                <li class="menu-item"><a class="home" href="" title="Home">Home</a></li>
-                <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}"><a class="schemas" href="schemas" title="Schemas">Schemas</a></li>
-                <li class="menu-item{% if url.page == 'collections' %} active{% endif %}"><a class="collections" href="collections" title="Collections">Collections</a></li>
-                <li class="menu-item{% if url.page == 'docs' %} active{% endif %}"><a class="docs" href="docs" title="Docs">Docs</a></li>
-                <li class="menu-item{% if url.page == 'utils' %} active{% endif %}"><a class="utils" href="utils" title="Utils">Utils</a></li>
-                <li class="menu-item{% if url.page == 'settings' %} active{% endif %}"><a class="settings" href="settings" title="Settings">Settings</a></li>
-            </ul>
+                <ul class="menu">
+                    <li class="menu-item">
+                        <a class="home" href="" title="Home">Home</a>
+                    </li>
+                    <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
+                        <a class="schemas" href="schemas" title="Schemas">Schemas</a>
+                    </li>
+                    <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
+                        <a class="collections" href="collections" title="Collections">Collections</a>
+                    </li>
+                    <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
+                        <a class="docs" href="docs" title="Docs">Docs</a>
+                    </li>
+                    <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
+                        <a class="utils" href="utils" title="Utils">Utils</a>
+                    </li>
+                    <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
+                        <a class="settings" href="settings" title="Settings">Settings</a>
+                    </li>
+                </ul>
             </nav>
+            <div class="user-profile" >
+                <button popovertarget="user-actions">
+                    {% set user = cms.userData %}
+                    <img src="{{ cms.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
+                        alt="Profile Image for {{ user.name }}" onerror="this.style.display='none'">
+                </button>
+                <nav popover id="user-actions">
+                    <ul>
+                        <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ user.name }}</a></li>
+                        <li class="edit"><a href="profile">Edit Profile</a></li>
+                        <li class="logout"><a href="../logout">Logout</a></li>
+                    </ul>
+                </nav>
+            </div>
         </aside>
         <section class="dash-content">
 

@@ -1,18 +1,20 @@
 <?php
 
 use Middlewares\TrailingSlash;
+use Odan\Session\Middleware\SessionStartMiddleware;
 use Selective\BasePath\BasePathMiddleware;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Middleware\MethodOverrideMiddleware;
+use TotalCMS\TotalCMS;
+use TotalCMS\Middleware\BetaMiddleware;
+use TotalCMS\Middleware\BundleMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
 use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
+use TotalCMS\Middleware\RobotsTagMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
-use TotalCMS\Middleware\BetaMiddleware;
-use TotalCMS\Middleware\BundleMiddleware;
-use Odan\Session\Middleware\SessionStartMiddleware;
 
 return function (App $app) {
 	$app->addBodyParsingMiddleware();
@@ -20,6 +22,7 @@ return function (App $app) {
 	$app->add(BundleMiddleware::class);
 	$app->add(SessionStartMiddleware::class);
 	$app->add(CorsMiddleware::class);
+	$app->add(RobotsTagMiddleware::class);
 	$app->add(LiteLicenseMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
 	$app->addRoutingMiddleware();
@@ -29,9 +32,7 @@ return function (App $app) {
 	$app->add(TrailingSlash::class);
 	$app->add(MethodOverrideMiddleware::class);
 
-	// Stacks internal PHP server
-	$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
-	if ($environment === 'preview' || PHP_SAPI === 'cli-server') {
+	if (TotalCMS::isPreview()) {
 		$app->add(PreviewRouteMiddleware::class);
 	}
 };

@@ -5,6 +5,9 @@ namespace TotalCMS\Utils;
 /**
  * Collection Refiner
  * Filters a collection of items.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  */
 class CollectionRefiner
 {
@@ -15,7 +18,8 @@ class CollectionRefiner
 	 */
 	public function __construct(
 		private array $collection,
-	) {}
+	) {
+	}
 
 	/**
 	 * Filters the collection by the rules.
@@ -69,9 +73,7 @@ class CollectionRefiner
 			return $collection;
 		}
 
-		return array_filter($collection, function ($record)
-		use ($property, $value, $operator, $not, $numParams) {
-
+		return array_filter($collection, function ($record) use ($property, $value, $operator, $not, $numParams) {
 			$item = self::getPropertyValueForRecord($record, $property);
 
 			if ($item === null) {

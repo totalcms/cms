@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "uniqueItems": true,
+  "uniqueItems": false,
   "$id": "https://www.totalcms.co/schemas/properties/list.json",
   "examples": [
     [

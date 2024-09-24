@@ -12,7 +12,9 @@ body {
 }
 
 .dash-sidebar {
-	border-right : 1px solid oklch(var(--totalform-lightgray));
+	display       : grid;
+	align-content : space-between;
+	border-right  : 1px solid oklch(var(--totalform-lightgray));
 
 	.menu {
 		display         : grid;
@@ -68,12 +70,42 @@ body {
 	}
 }
 
+.user-profile {
+	display         : grid;
+	justify-content : center;
+	padding         : 1.5rem 0;
+	position        : relative;
+
+	img {
+		border-radius : 50%;
+	}
+	button {
+		border-radius       : 50%;
+		width               : 3rem;
+		aspect-ratio        : 1;
+		appearance          : none;
+		cursor              : pointer;
+		border              : none;
+		padding             : 0;
+		background-color    : transparent;
+		background-image    : var(--icon-profile);
+		background-repeat   : no-repeat;
+		background-position : center;
+		background-size     : 2rem;
+	}
+}
+
 .dash-content {
 	flex-grow             : 1;
 	display               : grid;
-	grid-template-columns : max-content auto;
+	grid-template-columns : auto;
 	align-items           : stretch;
+
+	&:has(.dash-content-sidebar) {
+		grid-template-columns : max-content auto;
+	}
 }
+
 
 .dash-content-sidebar {
 	display            : grid;
@@ -118,6 +150,7 @@ body {
 		li {
 			--collection-icon : var(--icon-collections);
 
+			&.schema-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,
 			&.schema-blog { --collection-icon : var(--icon-blog) }
 			&.schema-feed { --collection-icon : var(--icon-feed) }
@@ -474,12 +507,11 @@ body {
 	}
 }
 
+#user-actions,
 #collection-actions  {
 	// eventually this should move to the new CSS Anchor positioning
 	position         : absolute;
 	inset            : unset;
-	top              : 5rem;
-	right            : 2rem;
 	margin           : 1rem 0;
 	background-color : oklch(var(--totalform-white));
 	padding          : 0;
@@ -495,6 +527,9 @@ body {
 	li {
 		--action-icon : var(--icon-logo);
 
+		&.edit { --action-icon : var(--icon-edit) }
+		&.profile { --action-icon : var(--icon-user) }
+		&.logout { --action-icon : var(--icon-logout) }
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
 		&.reindex { --action-icon : var(--icon-refresh) }
@@ -527,4 +562,12 @@ body {
 			mask-position    : center;
 		}
 	}
+}
+#collection-actions {
+	top   : 5rem;
+	right : 2rem;
+}
+#user-actions {
+	bottom : 3rem;
+	left   : 4rem;
 }

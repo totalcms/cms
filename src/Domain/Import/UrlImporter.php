@@ -3,7 +3,6 @@
 namespace TotalCMS\Domain\Import;
 
 use Cake\Chronos\Chronos;
-use Cocur\Slugify\Slugify;
 use Embed\Embed;
 use League\Uri\Uri;
 use Psr\Log\LoggerInterface;
@@ -12,6 +11,7 @@ use Selective\Validation\Factory\CakeValidationFactory;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Domain\Property\Data\SlugData;
 
 final class UrlImporter
 {
@@ -22,7 +22,7 @@ final class UrlImporter
 	public function __construct(
 		ObjectRepository $storage,
 		CakeValidationFactory $validationFactory,
-		LoggerFactory $loggerFactory
+		LoggerFactory $loggerFactory,
 	) {
 		$this->storage           = $storage;
 		$this->validationFactory = $validationFactory;
@@ -40,8 +40,7 @@ final class UrlImporter
 			$embed = new Embed();
 			$info  = $embed->get($link);
 
-			$slugify = new Slugify();
-			$id      = $slugify->slugify($info->title ?? $link);
+			$id = SlugData::slugify($info->title ?? $link);
 
 			$uri    = Uri::createFromString($link);
 			$domain = $uri->getHost();

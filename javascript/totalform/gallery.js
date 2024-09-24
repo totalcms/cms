@@ -87,9 +87,16 @@ export default class GalleryField extends ImageField {
 			acceptedFiles    : "image/*",
 			rules            : this.options.rules,
 		});
+		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}
 
     getValue() {
+		if (!this.form.isEditMode()) {
+			// When saving a new object, save an empty gallery
+			// After the initial object saves, the image uploads
+			// will add the image data to the gallery
+			return [];
+		}
 		return this.preview.map(preview => preview.getValue());
     }
 

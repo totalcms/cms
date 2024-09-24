@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", event => {
 		if (Object.keys(data).length > 0) {
 			options = JSON.stringify(data);
 			options = options.replace(/"(\w+)"\s*:/g, '$1:').trim();
-			options = `, '${options}'`;
+			options = `, ${options}`;
 		}
 
 		let macro = `{{ cms.imagePath('${id}'${options}, {collection:'${collection}',property:'${property}'}) }}`;

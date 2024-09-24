@@ -5,35 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="robots" content="noindex, nofollow">
-	<title>Total CMS Admin</title>
+	<title>{% block title %}Total CMS{% endblock %}</title>
 
-    <style>
-    html {
-        box-sizing : border-box;
-        font-size  : 100%
-    }
-    *,
-    ::after,
-    ::before {
-        box-sizing : inherit
-    }
-    body {
-        font-family : ui-sans-serif, system-ui, -system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        -webkit-font-smoothing : antialiased;
-    }
-    .container {
-        max-width : 1000px;
-        margin    : 0 auto;
-    }
-    </style>
-
+    <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css"/>
 
 	{% block head %}{% endblock %}
 </head>
 <body>
-
     {% block content %}{% endblock %}
 
 	<script type="module" src="{{ cms.api }}/assets/admin.js"></script>

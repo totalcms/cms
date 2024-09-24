@@ -11,7 +11,7 @@ final class CollectionDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private CollectionRemover $remover
+		private CollectionRemover $remover,
 	) {
 	}
 
@@ -19,7 +19,7 @@ final class CollectionDeleteAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$deleted = $this->remover->deleteCollection($args['collection']);
 

@@ -185,3 +185,172 @@ patterns.phone.france
 patterns.phone.international
 patterns.passwordMinLength(int minLength = 8)
 ```
+
+## Field Settings
+
+
+### Image Validation
+
+```
+{{ cms.form.image("myimage", {},{
+	settings : {
+		rules : {
+			size : {min:0,max:300},
+		}
+	}
+}) }}
+```
+
+```
+height      : {min:500,max:1000 },
+width       : {min:500,max:1000},
+size        : {min:0,max:1000},
+count       : {max:10},
+orientation : 'landscape',
+aspectratio : '4:3',
+filetype    : ['image/jpeg'],
+filename    : ['image.jpg'],
+```
+
+### ID autogen
+
+```
+{
+	"autogen" : "${title}"
+}
+```
+
+special autogen vars
+
+* now
+* timestamp
+* uuid
+
+
+## Options Possibilities
+
+Example 1: Simple list of options
+
+```
+['Option 1', 'Option 2', 'Option 3']
+```
+
+Example 2: Options with values
+
+```
+[
+	['value' => '1', 'label' => 'Option 1'],
+	['value' => '2', 'label' => 'Option 2'],
+	['value' => '3', 'label' => 'Option 3']
+]
+```
+
+Example 3: Grouped options
+
+```
+{
+	'Group 1' => ['Option 1', 'Option 2'],
+	'Group 2' => ['Option 3', 'Option 4']
+}
+```
+
+Example 4: Grouped options with values
+
+```
+{
+	'Group 1' => [
+		['value' => '1', 'label' => 'Option 1'],
+		['value' => '2', 'label' => 'Option 2']
+	],
+	'Group 2' => [
+		['value' => '3', 'label' => 'Option 3'],
+		['value' => '4', 'label' => 'Option 4']
+	]
+}
+```
+
+### AutoBuild options via collection data
+
+```
+"settings": {
+	"propertyOptions" : true,
+	"relationalOptions" : {
+		"collection" : "mycollection",
+		"label"      : "name",
+		"value"      : "id"
+	}
+},
+```
+#### Property Options
+
+Get all value of a field and populate as select options or datalist
+
+```
+{
+	"propertyOptions" : true
+}
+```
+
+This has custom properties set in text collection
+
+```
+{{ cms.form.select("myselect2", {}, {
+	options : {
+		"1" : "One",
+		"2" : "Two",
+		"3" : "Three",
+	},
+}) }}
+```
+
+#### Relational Options
+
+The default value of the options is always the ID of the object
+
+```
+{
+  relationalOptions : {
+  	collection : "feed",
+  	label      : "title",
+  	value      : "id",
+  }
+}
+```
+
+List all of the objects from another collection
+
+```
+{{ cms.form.select("relational", {}, {
+	options : {
+		"1" : "One",
+		"2" : "Two",
+		"3" : "Three",
+	},
+	"settings": {
+		relationalOptions : {
+			collection : "feed",
+			label      : "title",
+		}
+	},
+}) }}
+```
+
+#### twig way
+
+```
+{% set options = [
+  {value:"dog",     label:"Dog"},
+  {value:"cat",     label:"Cat"},
+  {value:"hamster", label:"Hamster"},
+  {value:"parrot",  label:"Parrot"},
+  {value:"spider",  label:"Spider"},
+  {value:"goldfish",label:"Goldfish"},
+] %}
+
+{{ form.select('select', options) }}
+```
+
+## Smart Date Defaults
+
+* onCreate
+* onUpdate

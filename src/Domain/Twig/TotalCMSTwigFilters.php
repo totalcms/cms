@@ -3,12 +3,16 @@
 namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Property\Data\ColorData;
-use Twig\TwigFilter;
 use TotalCMS\Utils\CollectionRefiner;
 use TotalCMS\Utils\CollectionSorter;
+use Twig\TwigFilter;
 
 /**
  * Twig Functions for Total CMS.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  */
 final class TotalCMSTwigFilters
 {
@@ -24,6 +28,8 @@ final class TotalCMSTwigFilters
 		'html_entity_decode',
 		'urldecode',
 		'urlencode',
+		'ceil',
+		'floor',
 	];
 
 	/** @var array<string> */
@@ -350,7 +356,12 @@ final class TotalCMSTwigFilters
 	 */
 	public static function filterCollection(array $collection, array $rules): array
 	{
+		if (empty($rules)) {
+			return $collection;
+		}
+
 		$refiner = new CollectionRefiner($collection);
+
 		return $refiner->filter($rules);
 	}
 
@@ -362,7 +373,12 @@ final class TotalCMSTwigFilters
 	 */
 	public static function sortCollection(array $collection, array $rules): array
 	{
+		if (empty($rules)) {
+			return $collection;
+		}
+
 		$sorter = new CollectionSorter($collection);
+
 		return $sorter->sortByRules($rules);
 	}
 
@@ -374,9 +390,9 @@ final class TotalCMSTwigFilters
 	public static function paginate(array $collection, int $limit, int $page = 1): array
 	{
 		$offset = ($page - 1) * $limit;
+
 		return array_slice($collection, $offset, $limit);
 	}
-
 
 	// -------------------------
 	// Type Casting

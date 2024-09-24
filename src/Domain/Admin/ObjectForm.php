@@ -37,6 +37,9 @@ final class ObjectForm extends TotalForm
 		$options['form'] = $this;
 
 		$defaults = $this->fieldDefaults($name);
+		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
+
+		$defaults['required'] = $this->isRequired($name);
 
 		// Get the value from the object data if it exists
 		if (!empty($this->id)) {
@@ -50,7 +53,8 @@ final class ObjectForm extends TotalForm
 				}
 			}
 
-			if (isset($this->objectData)) {
+			// if the value is not already set, try to get it from the object data
+			if (!isset($options['value']) && isset($this->objectData)) {
 				$value = $this->objectData->toArray()[$name] ?? '';
 				if (!empty($value)) {
 					$options['value'] = $value;
@@ -73,6 +77,23 @@ final class ObjectForm extends TotalForm
 		$defaults = array_merge($schema, $collection);
 
 		return TotalForm::filterFieldProperties($defaults);
+	}
+
+	/** @return array<string,mixed> */
+	private function fieldAttributeSettings(string $property): array
+	{
+		// Get the schema and collection settings for a property
+		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
+		$collection = $this->collectionData->properties[$property]['settings'] ?? [];
+
+		$attributes = array_merge($schema, $collection);
+
+		return TotalForm::filterFieldAttributes($attributes);
+	}
+
+	private function isRequired(string $property): bool
+	{
+		return in_array($property, $this->schemaData->required);
 	}
 
 	/**
@@ -98,6 +119,7 @@ final class ObjectForm extends TotalForm
 
 		if (is_null($collectionData)) {
 			$this->buildError = "Collection {$this->collection} not found for TotalForm";
+
 			return;
 		}
 

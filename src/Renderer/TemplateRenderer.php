@@ -16,7 +16,7 @@ final class TemplateRenderer
 	 * @param PhpRenderer $phpRenderer The template engine
 	 */
 	public function __construct(
-		private PhpRenderer $phpRenderer
+		private PhpRenderer $phpRenderer,
 	) {
 	}
 

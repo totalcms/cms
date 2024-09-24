@@ -6,6 +6,10 @@ use function Nekofar\Slim\Pest\head;
 use function Nekofar\Slim\Pest\postJson;
 
 beforeEach(function (): void {
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		// tests with assertBadRequest do not seem to clean up the session
+		session_destroy();
+	}
 	$this->setUpApp(bootstrap());
 });
 
@@ -28,7 +32,7 @@ it('saves a new template', function (): void {
 });
 
 it('cannot save a built-in template', function (): void {
-	$id = 'form';
+	$id = 'admin-layout';
 
 	// ! I had to add a hack to the TemplateSaveAction to allow for testing.
 	postJson("/templates/{$id}", ['dummy data'])->assertBadRequest();
@@ -46,7 +50,7 @@ it('fetches a template', function (): void {
 });
 
 it('fetches a built-in template', function (): void {
-	$files = glob(__DIR__ . '/../../templates/*.twig');
+	$files = glob(reservedTemplatePath() . '*.twig');
 
 	foreach ($files as $file) {
 		$id     = basename($file, '.twig');

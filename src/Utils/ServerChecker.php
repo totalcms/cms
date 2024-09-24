@@ -31,7 +31,8 @@ class ServerChecker
 	public function __construct(
 		private BundleChecker $bundleChecker,
 		private Config $config,
-	) {}
+	) {
+	}
 
 	/**
 	 * @SuppressWarnings(PHPMD.Superglobals)
@@ -94,7 +95,7 @@ class ServerChecker
 		return array_filter([
 			'tcms-data' => is_writable($this->config->datadir),
 			// Don't check cache if it's disabled
-			'cache' => $this->config->cachedir !== "false" ? is_writable($this->config->cachedir) : null,
+			'cache' => $this->config->cachedir !== 'false' ? is_writable($this->config->cachedir) : null,
 			'logs'  => is_writable($this->config->logger['path']),
 			'tmp'   => is_writable($this->config->tmpdir),
 		]);

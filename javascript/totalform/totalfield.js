@@ -84,7 +84,10 @@ export default class TotalField {
 	isSubField() {
 		// Filter for determining if a field is a subproperty of another field
 		// Need to look at parentNode since closest also looks at self
-		return this.container.parentNode.closest(".form-field") ? true : false;
+		// Need to also look for cms-modal since droplets modify the DOM
+		// and looking for .form-field is not enough
+		return this.container.parentNode.closest(".form-field") ||
+			this.container.parentNode.closest(".cms-modal") ? true : false;
 	}
 
 	isDroplet() {

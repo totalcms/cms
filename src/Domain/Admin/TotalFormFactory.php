@@ -15,6 +15,8 @@ use TotalCMS\Support\Config;
  * Total Form Builder.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  *
  * This class is a factory for creating TotalForm objects.
  * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
@@ -36,7 +38,7 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function simple(string $route, string $content = "", array $options = []): string
+	public function simple(string $route, string $content = '', array $options = []): string
 	{
 		$options['api']   = $this->api;
 		$options['route'] = $route;

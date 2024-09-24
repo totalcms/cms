@@ -3,12 +3,14 @@
 namespace TotalCMS;
 
 use DI\Container;
+use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 
 // ---------------------------------------------------------------------------------
 // Entry point for Total CMS PHP API
@@ -20,6 +22,8 @@ class TotalCMS
 	private TwigEngine $twigEngine;
 	private LoggerInterface $logger;
 	private TwigCacheCleaner $twigCacheCleaner;
+	private PhpSession $session;
+	private AccessManager $access;
 
 	public function __construct()
 	{
@@ -33,9 +37,20 @@ class TotalCMS
 			$this->buffer           = $this->container->get(BufferController::class);
 			$this->twigEngine       = $this->container->get(TwigEngine::class);
 			$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
+			$this->session          = $this->container->get(PhpSession::class);
+			$this->access           = $this->container->get(AccessManager::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
+		if (!self::isPreview()) {
+			$this->session->start();
+		}
+	}
+
+	/** @param string|array<string> $groups */
+	public function restrictPageAccess(array|string $groups = [], string $collection = ''): void
+	{
+		$this->access->restrictPageAccess($groups, $collection);
 	}
 
 	public function startBuffer(): void
@@ -91,5 +106,15 @@ class TotalCMS
 
 			return '';
 		}
+	}
+
+	/** @SuppressWarnings(PHPMD.Superglobals) */
+	public static function isPreview(): bool
+	{
+		// Stacks internal PHP server
+		$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+		$preview     = ($environment === 'preview' || PHP_SAPI === 'cli-server');
+
+		return $preview;
 	}
 }

@@ -7,8 +7,8 @@ use TotalCMS\Support\Config;
 class LogAnalyzer
 {
 	/** @var array<string,string> */
-	private array  $logfiles = [];
-	public  string $logdir;
+	private array $logfiles = [];
+	public string $logdir;
 
 	public function __construct(Config $config)
 	{

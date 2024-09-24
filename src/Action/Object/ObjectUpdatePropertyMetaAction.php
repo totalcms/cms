@@ -37,9 +37,9 @@ final class ObjectUpdatePropertyMetaAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
-		$data   = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 		$object = $this->service->updateObjectPropertyMeta($args['collection'], $args['id'], $args['property'], $args['name'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

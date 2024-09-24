@@ -45,20 +45,9 @@ final class FileSaver
 		// TODO: split this class up into smaller classes for ImageSaver, FileSaver, etc.
 	}
 
-	/**
-	 * save a file to collection object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @return ObjectData
-	 */
 	public function saveFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
-		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		$type   = basename($schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+		$type = $this->getPropertyType($collection, $property);
 
 		$method = 'saveFileFor' . ucfirst($type);
 
@@ -69,37 +58,44 @@ final class FileSaver
 		return $this->$method($collection, $objectID, $property, $filePath);
 	}
 
-	/**
-	 * fetch property data.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 *
-	 * @return PropertyData
-	 */
+	private function getPropertyType(string $collection, string $property): string
+	{
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+
+		return basename($schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+	}
+
+	private function createPropertyObject(string $collection, string $property): PropertyData
+	{
+		$type = ucfirst($this->getPropertyType($collection, $property));
+		$class = "TotalCMS\\Domain\\Property\\Data\\{$type}Data";
+
+		if (!class_exists($class)) {
+			throw new \UnexpectedValueException("Invalid file type $type found for property $property in collection $collection");
+		}
+
+		$fileProperty = new $class();
+
+		if (!$fileProperty instanceof PropertyData) {
+			throw new \DomainException('Error creating property for object.');
+		}
+
+		return $fileProperty;
+	}
+
 	private function fetchProperty(string $collection, string $objectID, string $property): PropertyData
 	{
 		// Get the existing object property data
 		$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
 
 		if (!$fileProperty instanceof PropertyData) {
-			throw new \UnexpectedValueException('Invalid file property found');
+			return $this->createPropertyObject($collection, $property);
 		}
 
 		return $fileProperty;
 	}
 
-	/**
-	 * Update the object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param array<string,mixed> $data
-	 *
-	 * @return ObjectData
-	 */
+	/** @param array<string,mixed> $data */
 	private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
 	{
 		$propertyData = [$property => $data];
@@ -107,16 +103,6 @@ final class FileSaver
 		return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
 	}
 
-	/**
-	 * save a file to a file property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @return ObjectData
-	 */
 	public function saveFileForFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
@@ -135,16 +121,6 @@ final class FileSaver
 		return $this->updateObject($collection, $objectID, $property, $newData);
 	}
 
-	/**
-	 * save a file to depot property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @return ObjectData
-	 */
 	public function saveFileForDepot(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
@@ -159,16 +135,6 @@ final class FileSaver
 		return $this->updateObject($collection, $objectID, $property, $files);
 	}
 
-	/**
-	 * save a image to a file property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @return ObjectData
-	 */
 	public function saveFileForImage(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
@@ -196,7 +162,7 @@ final class FileSaver
 
 		// Only keep the data for alt, featrued, link, and tags
 		$keep         = ['alt', 'featured', 'link', 'tags'];
-		$existingData = array_filter($imageProp->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+		$existingData = array_filter($imageProp->transform(), fn($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
 
 		$fileData     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 		$exifData     = $this->gatherExifData($filePath);
@@ -212,16 +178,6 @@ final class FileSaver
 		return $this->updateObject($collection, $objectID, $property, $newImage);
 	}
 
-	/**
-	 * save a file to depot property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @return ObjectData
-	 */
 	public function saveFileForGallery(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
@@ -252,18 +208,18 @@ final class FileSaver
 	}
 
 	/**
-	 * get image color data.
-	 *
-	 * @param string $imagepath
-	 *
 	 * @return array<string,array<string>>
 	 */
 	private static function gatherColorData(string $imagepath): array
 	{
+		if (!extension_loaded('imagick') || !extension_loaded('gd')) {
+			return [];
+		}
 		// Getting the top 15 colors from the image then reduce to top 5
 		// This produces the best results after a lot of testing
 		/** @var array<string> $palette */
 		$palette = ColorThief::getPalette($imagepath, 15, 10, null, 'hex');
+
 		if (!is_array($palette) || count($palette) === 0) {
 			return [];
 		}
@@ -273,10 +229,6 @@ final class FileSaver
 	}
 
 	/**
-	 * get image basic data.
-	 *
-	 * @param string $imagepath
-	 *
 	 * @return array<string,string|int>
 	 */
 	private static function gatherBasicImageData(string $imagepath): array
@@ -319,10 +271,6 @@ final class FileSaver
 	}
 
 	/**
-	 * get image exif data.
-	 *
-	 * @param string $imagepath
-	 *
 	 * @return array<string,mixed>
 	 */
 	private function gatherExifData(string $imagepath): array
@@ -356,9 +304,9 @@ final class FileSaver
 			'title'       => $exif->getTitle(),
 			'date'        => $date,
 			// GPS Data
-			'longitude'   => self::floatOrNull($exif->getLongitude()),
-			'latitude'    => self::floatOrNull($exif->getLatitude()),
-			'altitude'    => self::floatOrNull($exif->getAltitude()),
+			'longitude' => $exif->getLongitude() === false ? null : strval($exif->getLongitude()),
+			'latitude'  => $exif->getLatitude() === false  ? null : strval($exif->getLatitude()),
+			'altitude'  => $exif->getAltitude() === false  ? null : strval($exif->getAltitude()),
 		];
 		// fitler out any null values
 		$data     = array_filter($data);

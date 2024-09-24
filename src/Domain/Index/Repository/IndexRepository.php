@@ -24,6 +24,10 @@ final class IndexRepository extends StorageRepository
 	{
 		$indexFile = $this->buildIndexPath($collection);
 
+		if (!$this->filesystem->fileExists($indexFile)) {
+			return null;
+		}
+
 		return $this->fetchAndDeserialize($indexFile, IndexData::class);
 	}
 

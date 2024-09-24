@@ -2,11 +2,14 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -14,6 +17,7 @@ use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Utils\LogAnalyzer;
 use TotalCMS\Utils\ServerChecker;
+use TotalCMS\Utils\PaginationGenerator;
 
 /**
  * Twig Adapter with Total CMS.
@@ -22,6 +26,8 @@ use TotalCMS\Utils\ServerChecker;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
  */
 final class TotalCMSTwigAdapter
 {
@@ -30,10 +36,13 @@ final class TotalCMSTwigAdapter
 	public LogAnalyzer $logger;
 	public string $api;
 	public string $dashboard;
+	public string $login;
+	public string $logout;
 
 	public function __construct(
 		private Config $config,
-		private IndexReader $collectionReader,
+		private IndexReader $indexReader,
+		private IndexSearcher $indexSearcher,
 		private ObjectFetcher $objectFetcher,
 		private CollectionLister $collectionLister,
 		private CollectionFetcher $collectionFetcher,
@@ -42,12 +51,49 @@ final class TotalCMSTwigAdapter
 		private TotalFormFactory $totalFormFactory,
 		private ServerChecker $serverChecker,
 		private LogAnalyzer $logAnalyzer,
+		private PhpSession $session,
+		private AccessManager $accessManager,
 	) {
 		$this->api       = $this->config->api;
 		$this->dashboard = $this->api . '/admin';
+		$this->logout    = $this->api . '/logout';
 		$this->form      = $this->totalFormFactory;
 		$this->checker   = $this->serverChecker;
 		$this->logger    = $this->logAnalyzer;
+	}
+
+	public function login(string $collection = ''): string
+	{
+		if (empty($collection)) {
+			return sprintf('%s/%s', $this->api, 'login');
+		}
+
+		return sprintf('%s/%s/%s', $this->api, 'login', $collection);
+	}
+
+	/** @return array<string,mixed> */
+	public function userData(): array
+	{
+		return $this->accessManager->userData();
+	}
+
+	public function userLoggedIn(string $collection = ''): bool
+	{
+		return $this->accessManager->userLoggedIn($collection);
+	}
+
+	/** @param string|array<string> $groups */
+	public function userHasAccess(array|string $groups, string $collection = ''): bool
+	{
+		return $this->accessManager->userHasAccess($groups, $collection);
+	}
+
+	public function sessionData(string $key): ?string
+	{
+		if ($this->session->has($key)) {
+			return $this->session->get($key);
+		}
+		return null;
 	}
 
 	public function config(string $key, ?string $setting): mixed
@@ -145,13 +191,33 @@ final class TotalCMSTwigAdapter
 		return sprintf('%s?id=%s', $url, $id);
 	}
 
+	/**
+	 * @param string|array<string> $propertyPriorities
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function search(string $collection, string $query, string|array $propertyPriorities): array
+	{
+		try {
+			$results = $this->indexSearcher->search($collection, $query, $propertyPriorities);
+		} catch (\Exception $e) {
+			return [];
+		}
+
+		if ($results->isEmpty()) {
+			return [];
+		}
+
+		return $results->toArray();
+	}
+
 	// Get all objects from a collection
 	/** @return array<array<string,mixed>> */
 	public function objects(string $collection): array
 	{
 		// if there is an exception, return an empty array
 		try {
-			$collection = $this->collectionReader->fetchIndex($collection);
+			$collection = $this->indexReader->fetchIndex($collection);
 		} catch (\Exception $e) {
 			return [];
 		}
@@ -167,7 +233,7 @@ final class TotalCMSTwigAdapter
 	/** @return array<mixed> */
 	public function property(string $collection, string $property): array
 	{
-		$collection = $this->collectionReader->fetchIndex($collection);
+		$collection = $this->indexReader->fetchIndex($collection);
 
 		if ($collection === null) {
 			return [];
@@ -316,6 +382,32 @@ final class TotalCMSTwigAdapter
 		$files = $this->data($options['collection'], $id, $options['property']);
 
 		return is_array($files) ? $files : [];
+	}
+
+	/** @param array<string,string> $getParams */
+	public function paginationSimple(
+		int $totalObjects,
+		int $currentPage,
+		int $pageLimit,
+		string $pageKey     = 'p',
+		string $prevContent = 'Previous',
+		string $nextContent = 'Next',
+		array  $getParams   = [],
+	): string {
+		return PaginationGenerator::simplePagination(...func_get_args());
+	}
+
+	/** @param array<string,string> $getParams */
+	public function paginationFull(
+		int $totalObjects,
+		int $currentPage,
+		int $pageLimit,
+		string $pageKey     = 'p',
+		string $prevContent = 'Previous',
+		string $nextContent = 'Next',
+		array  $getParams   = [],
+	): string {
+		return PaginationGenerator::fullPagination(...func_get_args());
 	}
 
 	/**

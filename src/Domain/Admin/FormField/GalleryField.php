@@ -36,7 +36,7 @@ final class GalleryField extends ImageField
 
 		$input = HTMLUtils::inlineElement('input', [
 			'id'   => 'field-' . $this->uuid,
-			'type' => 'hidden',
+			'type' => 'text',
 			'name' => $this->name,
 		]);
 		$overlay = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);

@@ -30,7 +30,7 @@ final class TemplateFetchAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$template = $this->templateFetcher->fetchTemplate($args['template']);
 

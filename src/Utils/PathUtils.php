@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Utils;
 
-use Cocur\Slugify\Slugify;
+use TotalCMS\Domain\Property\Data\SlugData;
 
 /**
  * Path Utilities.
@@ -11,7 +11,7 @@ class PathUtils
 {
 	public static function cleanString(string $string): string
 	{
-		return (new Slugify())->slugify($string);
+		return SlugData::slugify($string);
 	}
 
 	/**

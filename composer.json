@@ -1,14 +1,13 @@
 {
   "name": "joeworkman/totalcms",
   "type": "project",
-  "version": "3.0.8",
   "description": "Total CMS",
   "keywords": [
     "total-cms",
     "dynamics",
     "cms"
   ],
-  "license": "Commercial",
+  "license": "proprietary",
   "repositories": [
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
@@ -97,8 +96,8 @@
   },
   "scripts": {
     "esbuild": "yarn build",
-    "build": "artifact build --name=dynamics",
-    "cs:check": "php-cs-fixer fix --dry-run --format=txt --verbose --diff --config=.php-cs-fixer.php",
+    "build": "bin/build.sh",
+    "cs": "php-cs-fixer fix --dry-run --format=txt --verbose --diff --config=.php-cs-fixer.php",
     "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
     "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
     "stan": "phpstan analyse -c phpstan.neon --no-progress --ansi --memory-limit 1G",
@@ -111,22 +110,23 @@
     "test": "pest --display-notices --display-warnings --display-errors --display-deprecations",
     "test:coverage": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
+    "bundle": "php bin/make-bundle.php",
     "md": [
       "@md:src",
       "@md:config",
       "@md:tests"
     ],
-    "test:all": [
+    "test:format": [
       "@lint",
-      "@cs:check",
-      "@sniffer:check",
+      "@cs"
+    ],
+    "test:all": [
       "@stan",
       "@md",
       "@test",
       "@test:coverage"
     ],
     "test:build": [
-      "@sniffer:check",
       "@stan",
       "@test"
     ]

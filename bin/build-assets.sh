@@ -5,6 +5,7 @@
 # cat templates/content/* > templates/content.twig
 
 echo "Building frontend assets..."
+yarn install
 node esbuild.config.js
 
 if [ $? -ne 0 ]; then

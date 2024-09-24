@@ -16,7 +16,7 @@ final class ObjectSaver
 		private ObjectRepository $storage,
 		private PropertyRepository $propStorage,
 		private ObjectFactory $factory,
-		private IndexBuilder $indexBuilder
+		private IndexBuilder $indexBuilder,
 	) {
 		$this->storage      = $storage;
 		$this->factory      = $factory;

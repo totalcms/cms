@@ -27,7 +27,7 @@ final class ImageWorksImageFetchAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
 		$collection  = $args['collection'] ?? 'image';
 		$id          = $args['id'];

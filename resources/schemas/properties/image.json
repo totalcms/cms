@@ -32,13 +32,13 @@
           "type": "number"
         },
         "altitude": {
-          "type": "number"
+          "type": "string"
         },
         "longitude": {
-          "type": "number"
+          "type": "string"
         },
         "latitude": {
-          "type": "number"
+          "type": "string"
         },
         "title": {
           "type": "string"
@@ -61,7 +61,7 @@
         "focalLength": {
           "type": "number"
         },
-		"iso": {
+		    "iso": {
           "type": "number"
         }
       }

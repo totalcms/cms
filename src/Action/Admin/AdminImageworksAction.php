@@ -12,13 +12,13 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminImageworksAction
 {
 	public function __construct(
-		private TwigRenderer $twigRenderer
+		private TwigRenderer $twigRenderer,
 	) {
 	}
 
 	public function __invoke(
 		ServerRequestInterface $request,
-		ResponseInterface $response
+		ResponseInterface $response,
 	): ResponseInterface {
 		return $this->twigRenderer->template($response, 'admin/imageworks.twig');
 	}

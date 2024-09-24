@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Utils;
 
-use TotalCMS\Utils\HTMLUtils;
-
 class EmbedBuilder
 {
 	/** @param array<string,mixed> $options */
@@ -15,17 +13,18 @@ class EmbedBuilder
 		if (str_contains($url, 'youtube')) {
 			return self::youtube($url, $options);
 		}
+
 		return self::link($url);
 	}
 
 	/** @param array<string,mixed> $options */
 	public static function vimeo(string $url, array $options = []): string
 	{
-		$options = array_merge(array(
+		$options = array_merge([
 			'autoplay' => 0,
 			'loop'     => 0,
 			'vcolor'   => '33aaff',
-		), $options);
+		], $options);
 
 		if (str_contains($url, 'vimeo')) {
 			$path  = parse_url($url, PHP_URL_PATH);
@@ -47,11 +46,13 @@ class EmbedBuilder
 				'badge'    => 0,
 				'byline'   => 0,
 				'portrait' => 0,
-				'title'    => 0
+				'title'    => 0,
 			]);
 			$query = http_build_query($params, '', '&amp;');
-			return HTMLUtils::iframe("//player.vimeo.com/video/$videoId?$query", "cms-video-embed");
+
+			return HTMLUtils::iframe("//player.vimeo.com/video/$videoId?$query", 'cms-video-embed');
 		}
+
 		return self::link($url);
 	}
 
@@ -62,16 +63,15 @@ class EmbedBuilder
 	 * */
 	public static function youtube(string $url, array $options = []): string
 	{
-		$options = array_merge(array(
+		$options = array_merge([
 			'autoplay' => 0,
 			'loop'     => 0,
 			'ycolor'   => 'red',
 			'ytheme'   => 'dark',
-			'private'  => true
-		), $options);
+			'private'  => true,
+		], $options);
 
 		if (str_contains($url, 'youtube')) {
-
 			$queryString = parse_url($url, PHP_URL_QUERY);
 			parse_str((string)$queryString, $queryParams);
 			$videoId = is_string($queryParams['v']) ? $queryParams['v'] : '';
@@ -82,26 +82,28 @@ class EmbedBuilder
 
 			$query = [
 				'autoplay'       => $options['autoplay'],
-				'loop'    		 => $options['loop'],
-				'color'    		 => $options['ycolor'],
-				'theme'    		 => $options['ytheme'],
-				'origin'    	 => $_SERVER["HTTP_HOST"], // or $_SERVER["SERVER_NAME"]
+				'loop'    		     => $options['loop'],
+				'color'    		    => $options['ycolor'],
+				'theme'    		    => $options['ytheme'],
+				'origin'    	    => $_SERVER['HTTP_HOST'], // or $_SERVER["SERVER_NAME"]
 				'enablejsapi'    => 1,
 				'rel'            => 0,
-				'showinfo'       => 0
+				'showinfo'       => 0,
 			];
 
-			if ((strpos($url, 'list')  !== false)) {
+			if (strpos($url, 'list') !== false) {
 				// playlist
 				$query['listType'] = 'playlist';
-				$query['list'] = $videoId;
-				$videoId = '';
+				$query['list']     = $videoId;
+				$videoId           = '';
 			}
 			$httpQuery = http_build_query($query, '', '&amp;');
 
 			$domain = $options['private'] === true ? 'www.youtube-nocookie.com' : 'www.youtube.com';
-			return HTMLUtils::iframe("//$domain/embed/$videoId?$httpQuery", "cms-video-embed");
+
+			return HTMLUtils::iframe("//$domain/embed/$videoId?$httpQuery", 'cms-video-embed');
 		}
+
 		return self::link($url);
 	}
 

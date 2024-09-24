@@ -28,12 +28,12 @@ final class JsonRenderer
 	public function json(
 		ResponseInterface $response,
 		mixed $data = null,
-		int $options = 0
+		int $options = 0,
 	): ResponseInterface {
 		$json = json_encode($data, $options);
 
 		$response = $response->withHeader('Content-Type', 'application/json');
-		$response->getBody()->write((string) $json);
+		$response->getBody()->write((string)$json);
 
 		return $response;
 	}
@@ -53,7 +53,7 @@ final class JsonRenderer
 	public function jsonCollection(
 		ResponseInterface $response,
 		array $collection,
-		TransformerAbstract $transformer
+		TransformerAbstract $transformer,
 	): ResponseInterface {
 		$resource = new FractalCollection($collection, $transformer);
 
@@ -75,10 +75,10 @@ final class JsonRenderer
 	public function jsonItem(
 		ResponseInterface $response,
 		object $item,
-		TransformerAbstract $transformer
+		TransformerAbstract $transformer,
 	): ResponseInterface {
 		$resource = new FractalItem($item, $transformer);
-		$data = (new FractalManager())->createData($resource)->toArray();
+		$data     = (new FractalManager())->createData($resource)->toArray();
 
 		return $this->json($response, $data);
 	}

@@ -5,6 +5,10 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
+/**
+ *  @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *  @SuppressWarnings(PHPMD.NumberOfChildren)
+ */
 class FormField
 {
 	protected string $defaultInputType = 'text';
@@ -69,7 +73,18 @@ class FormField
 		$input = $this->buildFormField();
 		$icon  = $this->icon ? HTMLUtils::element('div', '', ['class' => 'form-group-icon']) : '';
 
-		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
+		$group = $this->createFormGroup($input . $icon);
+
+		return $this->createFormField($group);
+	}
+
+	public function createFormGroup(string $content): string
+	{
+		return HTMLUtils::element('div', $content, ['class' => 'form-group']);
+	}
+
+	public function createFormField(string $content): string
+	{
 		$label = empty($this->label) ? '' : HTMLUtils::element('label', $this->label, [
 			'for' => "field-{$this->uuid}",
 		]);
@@ -89,7 +104,7 @@ class FormField
 			}
 		}
 
-		$formField = HTMLUtils::element('div', $label . $group . $help, $formFieldAtrributes);
+		$formField = HTMLUtils::element('div', $label . $content . $help, $formFieldAtrributes);
 
 		return $formField;
 	}
@@ -201,6 +216,7 @@ class FormField
 		return array_map(fn($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
 	}
 
+	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */
 	protected function buildOptions(string $options = ''): string
 	{
 		if (isset($this->settings['propertyOptions']) && $this->settings['propertyOptions'] === true) {

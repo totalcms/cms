@@ -83,6 +83,16 @@ function schemaPath(string $id): string
 	return cmsDataDir() . ".schemas/$id.json";
 }
 
+function reservedSchemaPath(): string
+{
+	return __DIR__ . '/../resources/schemas/';
+}
+
+function reservedTemplatePath(): string
+{
+	return __DIR__ . '/../resources/templates/';
+}
+
 function indexPath(string $collection): string
 {
 	return cmsDataDir() . "$collection/.index.json";

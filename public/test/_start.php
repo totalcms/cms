@@ -49,6 +49,7 @@ $totalcms->startBuffer(); // Start output buffering
     </style>
     <link rel="stylesheet" href="{{ cms.api }}/assets/docs.css" />
     <link rel="stylesheet" href="{{ cms.api }}/assets/admin.css" />
+    <link rel="stylesheet" href="{{ cms.api }}/assets/content.css" />
 </head>
 
 <body>

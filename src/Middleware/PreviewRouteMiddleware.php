@@ -14,7 +14,9 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class PreviewRouteMiddleware implements MiddlewareInterface
 {
-	public function __construct(private string $api) {}
+	public function __construct(private string $api)
+	{
+	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{

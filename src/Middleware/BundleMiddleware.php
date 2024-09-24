@@ -16,7 +16,7 @@ use TotalCMS\Domain\Bundle\Service\BundleChecker;
 final class BundleMiddleware implements MiddlewareInterface
 {
 	public function __construct(
-		private BundleChecker $bundleChecker
+		private BundleChecker $bundleChecker,
 	) {
 	}
 

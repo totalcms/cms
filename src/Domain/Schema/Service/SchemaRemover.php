@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
@@ -13,8 +12,9 @@ final class SchemaRemover
 {
 	public function __construct(
 		private SchemaRepository $storage,
-		private CollectionLister $collectionLister
-	) {}
+		private CollectionLister $collectionLister,
+	) {
+	}
 
 	/**
 	 * delete a schema.
@@ -44,6 +44,7 @@ final class SchemaRemover
 				throw new \DomainException("Unable to delete schema ({$schemaId}). It is being used in collection '{$name}'", 1);
 			}
 		}
+
 		return false;
 	}
 }

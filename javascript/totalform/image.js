@@ -16,6 +16,17 @@ export default class ImageField extends TotalField {
 		this.setupDroplet();
     }
 
+	uploadComplete() {
+		// this is a hack to mark the field and form as saved
+		// When a new image finishes uploading, a preview is created
+		// and the field is marked as unsaved. This timeout is to give
+		// the preview time to be created before marking the field as saved
+		setTimeout(() => {
+			this.saved();
+			this.form.uploadComplete();
+		}, 1000);
+	}
+
 	apiUploadImage() {
 		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 		return this.api.buildApiQuery(api);
@@ -44,6 +55,7 @@ export default class ImageField extends TotalField {
 			acceptedFiles    : "image/*",
 			rules            : this.options.rules,
 		});
+		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}
 
 	autosave(force = false) {

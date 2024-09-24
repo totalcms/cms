@@ -16,7 +16,7 @@ final class CollectionSchemaFetcher
 
 	public function __construct(
 		SchemaRepository $storage,
-		CollectionFetcher $collectionService
+		CollectionFetcher $collectionService,
 	) {
 		$this->storage           = $storage;
 		$this->collectionService = $collectionService;

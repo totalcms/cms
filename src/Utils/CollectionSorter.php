@@ -51,7 +51,7 @@ class CollectionSorter
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	private function sortByRule(array $collection, array $rule): array
+	protected function sortByRule(array $collection, array $rule): array
 	{
 		if (isset($rule['shuffle']) && boolval($rule['shuffle']) === true) {
 			return $this->shuffle();
@@ -77,7 +77,7 @@ class CollectionSorter
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	private static function natsort(array $collection, string $property): array
+	protected static function natsort(array $collection, string $property): array
 	{
 		usort($collection, function ($a, $b) use ($property) {
 			$aValue = CollectionRefiner::getPropertyValueForRecord($a, $property);
@@ -104,7 +104,7 @@ class CollectionSorter
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	private static function sort(array $collection, string $property): array
+	protected static function sort(array $collection, string $property): array
 	{
 		usort($collection, function ($a, $b) use ($property) {
 			$aValue = CollectionRefiner::getPropertyValueForRecord($a, $property);

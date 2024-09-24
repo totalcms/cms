@@ -37,9 +37,9 @@ final class ObjectSaveAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
+		array $args,
 	): ResponseInterface {
-		$data   = json_decode($request->getBody(), true);
+		$data = (array)$request->getParsedBody();
 		$object = $this->service->saveObject($args['collection'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
