@@ -15,13 +15,14 @@ use TotalCMS\Support\Config;
  */
 final class AuthLoginSubmitAction
 {
-	public const MAX_LOGIN_ATTEMPTS = 7;
+	public const MAX_LOGIN_ATTEMPTS = 10;
 
 	public function __construct(
 		private PhpSession $session,
 		private LoginService $loginService,
 		private Config $config,
-	) {}
+	) {
+	}
 
 	/** @param array<string,string> $args The routing arguments */
 	public function __invoke(
@@ -44,7 +45,7 @@ final class AuthLoginSubmitAction
 			$flash->add('error', 'Too many login attempts');
 		}
 
-		if (!isset($data['email']) || !isset($data['password'])) {
+		if (!isset($data['email'], $data['password'])) {
 			// throw new HttpUnauthorizedException($request, 'Email and password are required');
 			$flash->add('error', 'Email and password are required');
 		}
@@ -71,7 +72,7 @@ final class AuthLoginSubmitAction
 			$flash->add('error', $e->getMessage());
 		}
 
-		if (isset($user) && isset($user['id'])) {
+		if (isset($user, $user['id'])) {
 			$url = $this->session->get('requestOriginUrl', $router->urlFor('admin-index'));
 
 			$this->session->destroy();

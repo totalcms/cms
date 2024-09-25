@@ -142,7 +142,7 @@ $settings['imageworks'] = [
 $settings['auth'] = [
 	'enable'                => true,
 	'collection'            => 'auth',
-	'maxAttempts'           => 7,
+	'maxAttempts'           => 10,
 	'deniedTimeout'         => 7,
 	'deniedDefaultRedirect' => '/',
 ];
