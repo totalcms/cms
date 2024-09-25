@@ -3,12 +3,12 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Support\Config;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class LoginService
 {
-	const ACCESS_LOG = 'totalcms-access.log';
+	public const ACCESS_LOG = 'totalcms-access.log';
 
 	private LoggerInterface $logger;
 	private string $account = '';
@@ -26,16 +26,18 @@ final class LoginService
 	/** @return array<string,mixed> */
 	public function authenticate(string $email, string $password, string $collection = ''): array
 	{
-		if (empty($collection)) {
+		if ($this->firstLoginChecker->isNewInstallation()) {
+			$this->logger->info('First login detected, creating first user');
+			$this->firstLoginChecker->createFirstUser($email, $password);
+			// for first login, force the user to login to the default auth collection
 			$collection = $this->config->auth['collection'];
-
-			if ($this->firstLoginChecker->isNewInstallation()) {
-				$this->logger->info('First login detected, creating first user');
-				$this->firstLoginChecker->createFirstUser($email, $password);
-			}
 		}
 
-		$user = $this->validator->validateUserByEmail($email, $collection);
+		if (empty($collection)) {
+			$collection = $this->config->auth['collection'];
+		}
+
+		$user   = $this->validator->validateUserByEmail($email, $collection);
 		$userId = $user['id'];
 
 		$this->account = "$collection/$userId";
