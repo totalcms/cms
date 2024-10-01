@@ -56,6 +56,8 @@ final class TotalCMSTwigFilters
 		'rgb',
 		'hsl',
 		'oklch',
+		'color',
+		'colour',
 		'lightness',
 		'chroma',
 		'hue',
@@ -177,6 +179,26 @@ final class TotalCMSTwigFilters
 	 *
 	 * @param ?array<string,mixed> $color
 	 */
+	public static function color(?array $color, int $alpha = 100, bool $wrap = true): string
+	{
+		return self::oklch($color, $alpha, $wrap);
+	}
+
+	/**
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 *
+	 * @param ?array<string,mixed> $color
+	 */
+	public static function colour(?array $color, int $alpha = 100, bool $wrap = true): string
+	{
+		return self::oklch($color, $alpha, $wrap);
+	}
+
+	/**
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 *
+	 * @param ?array<string,mixed> $color
+	 */
 	public static function oklch(?array $color, int $alpha = 100, bool $wrap = true): string
 	{
 		if ($color === null) {
@@ -186,8 +208,8 @@ final class TotalCMSTwigFilters
 		$oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
 
 		$color = $alpha === 100 ?
-			sprintf('oklch(%.3f%% %.3f %.3f)', $oklch['l'], $oklch['c'], $oklch['h']) :
-			sprintf('oklch(%.3f%% %.3f %.3f / %.2f)', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
+			sprintf('%.3f%% %.3f %.3f', $oklch['l'], $oklch['c'], $oklch['h']) :
+			sprintf('%.3f%% %.3f %.3f / %.2f', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
 
 		return $wrap ? sprintf('oklch(%s)', $color) : $color;
 	}
@@ -265,7 +287,7 @@ final class TotalCMSTwigFilters
 			} else {
 				$string = substr($string, 0, $length);
 			}
-			$string .= '&hellip';
+			$string .= '&hellip;';
 		}
 
 		return $string;
@@ -277,7 +299,7 @@ final class TotalCMSTwigFilters
 
 		if (count($words) > $length) {
 			$string = implode(' ', array_slice($words, 0, $length));
-			$string .= '&hellip';
+			$string .= '&hellip;';
 		}
 
 		return $string;

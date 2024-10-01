@@ -25,6 +25,8 @@ hex(array $color): string
 rgb(array $color, int $alpha = 100, bool $wrap = true): string
 hsl(array $color, int $alpha = 100, bool $wrap = true): string
 oklch(array $color, int $alpha = 100, bool $wrap = true): string
+color(array $color, int $alpha = 100, bool $wrap = true): string
+colour(array $color, int $alpha = 100, bool $wrap = true): string
 lightness(array $color, string $lightness): array
 chroma(array $color, string $chroma): array
 hue(array $color, string $hue): array
