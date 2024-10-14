@@ -34,7 +34,7 @@ final class FileSaveAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$files = $request->getUploadedFiles();
-		$file  = $files[$args['property']];
+		$file  = $files[$args['property']] ?? null;
 
 		if ($file === null) {
 			throw new \RuntimeException('No file found in request for property: '.$args['property']);
@@ -105,8 +105,8 @@ final class FileSaveAction
 		return $finalFilePath;
 	}
 
-	private function chunkName(string $originalFilename, int $chunkIndex): string
+	private function chunkName(string $filename, int $chunkIndex): string
 	{
-		return $this->config->tmpdir . '/' . $originalFilename . '.part' . $chunkIndex;
+		return $this->config->tmpdir . '/' . $filename . '.part' . $chunkIndex;
 	}
 }
