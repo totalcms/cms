@@ -33,13 +33,13 @@
       "$comment": "The filesize of the file in bytes",
       "type": "integer"
     },
-    "label": {
-      "type": "string",
-      "$comment": "A user defined label/comment about this file"
-    },
     "name": {
       "type": "string",
-      "$comment": "The name of the file including the extension"
+      "$comment": "The name of the file that will be used for the download"
+    },
+    "filename": {
+      "type": "string",
+      "$comment": "The name of the original file including the extension"
     },
     "uploadDate": {
       "$comment": "The date the file was uploaded",
