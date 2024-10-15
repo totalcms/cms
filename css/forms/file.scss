@@ -1,66 +1,62 @@
 //--------------------------------
 // Fieldset - File Field
 //--------------------------------
+.file-field {
 
-// form.totalform {
+	display: grid;
 
-// 	fieldset.file-box {
+	&.center {
+		justify-items : center;
+	}
 
-// 		.placeholder {
-// 			margin-bottom: 0;
-// 		}
+	> .form-group {
+		width : fit-content;
+	}
 
-// 		.total-preview {
-// 			display    : block;
-// 			min-height : 4em;
-// 			position   : relative;
-// 		}
+	.dz-preview {
+		min-width        : 200px;
+		background-color : oklch(var(--totalform-nearwhite));
 
-// 		img {
-// 			width     : 100% !important;
-// 			height    : auto;
-// 			max-width : 100%;
-// 			display   : block;
-// 			margin    : 0 auto;
+		&:hover {
+			.file-icon {
+				opacity: 0.5;
+			}
+		}
+	}
 
-// 			&.notfound {
-// 				display: none;
-// 			}
-// 		}
+	.not-found {
+		display : none;
+	}
 
-// 		.dz-overlay {
-// 			width      : 100%;
-// 			height     : 100%;
-// 			top        : 0;
-// 			left       : 0;
-// 			opacity    : 0.5;
-// 			position   : absolute;
-// 			display    : block;
-// 			text-align : center;
-// 		}
+	p.filename {
+		margin     : 0 1rem;
+		text-align : center;
+		font-size  : 0.85rem;
+	}
 
-// 		img {
-// 			width: 100%;
-// 		}
+	.actionbar {
+		padding               : 0.5rem 0;
+		bottom                : 0;
+		display               : grid;
+		gap                   : 1rem;
+		justify-items         : center;
+		align-content         : space-evenly;
+		grid-template-columns : repeat(3, 1fr);
 
-// 		.dz-preview {
-// 			&.empty {
-// 				border-style : none !important;
-// 				box-shadow   : none !important;
-// 			}
-// 		}
-// 	}
+		button {
+			margin : 0;
+		}
+	}
 
-// 	&.dz-drag-hover {
-// 		fieldset.file-box {
-// 			.dz-overlay {
-// 				opacity: 1.0;
-// 			}
-
-// 			img {
-// 				opacity: 0.5;
-// 			}
-// 		}
-// 	}
-// }
-
+	.file-icon {
+		height           : 64px;
+		width            : 64px;
+		margin           : 0.5rem auto;
+		background-color : oklch(var(--totalform-darkgray));
+		mask-position    : bottom center;
+		mask-image       : var(--icon-file-zip);
+		mask-repeat      : no-repeat;
+		mask-size        : 64px;
+		transition       : opacity 100ms;
+	}
+}
