@@ -69,6 +69,21 @@
 								</div>
 							</details>
 							<details class="cms-accordion ">
+								<summary>Protection</summary>
+								<div class="content">
+									<div class="form-field checkbox-field " data-type="checkbox">
+										<div class="form-group"><input id="field-670ea4e9cc34a" name="featured" type="checkbox" aria-describedby="help-670ea4e9cc34a"><label for="field-670ea4e9cc34a">Protected by Collection</label></div>
+										<p class="help" id="help-670ea4e9cc34a">Access group protection is set in the Collection.</p>
+									</div>
+									<div class="form-field password-field " data-type="password"><label for="field-670ea4e9cc39d">Password</label>
+										<div class="form-group"><input type="password" id="field-670ea4e9cc39d" name="password" placeholder="secret" aria-describedby="help-670ea4e9cc39d">
+											<div class="form-group-icon"></div>
+										</div>
+										<p class="help" id="help-670ea4e9cc39d">Require a password to download this file. This overrides all collection level access controls.</p>
+									</div>
+								</div>
+							</details>
+							<details class="cms-accordion ">
 								<summary>Meta (Readonly)</summary>
 								<div class="content">
 									<div class="form-field text-field " data-type="text"><label for="field-670ea4e9cc6b6">Filename</label>
