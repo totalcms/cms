@@ -14,16 +14,17 @@ class FileData extends PropertyData
 	public string $mime;
 	public string $label;
 	public string $name;
+	public string $filename;
 	public string $comments;
 	public int $size;
 
 	/** @param array<string,mixed> $file */
 	public function __construct(array $file = [])
 	{
-		$this->protected = $file['protected'] ?? false;
-		$this->label     = $file['label'] ?? '';
+		$this->protected = $file['protected'] ?? true;
+		$this->filename  = $file['filename'] ?? '';
+		$this->name      = $file['name'] ?? $this->filename;
 		$this->mime      = $file['mime'] ?? '';
-		$this->name      = $file['name'] ?? '';
 		$this->comments  = $file['comments'] ?? '';
 		$this->size      = $file['size'] ?? 0;
 		$this->tags      = new ListData($file['tags'] ?? []);
@@ -31,10 +32,6 @@ class FileData extends PropertyData
 
 		$uploadDate       = empty($file['uploadDate']) ? date('c') : $file['uploadDate'];
 		$this->uploadDate = new DateData($uploadDate);
-
-		if ($this->protected && empty($this->password->hash)) {
-			throw new \UnexpectedValueException('Password is required for protected file');
-		}
 	}
 
 	/** @return array<string,mixed> */
@@ -46,7 +43,7 @@ class FileData extends PropertyData
 			'uploadDate' => $this->uploadDate->transform(),
 			'protected'  => $this->protected,
 			'mime'       => $this->mime,
-			'label'      => $this->label,
+			'filename'   => $this->filename,
 			'name'       => $this->name,
 			'comments'   => $this->comments,
 			'size'       => $this->size,

@@ -106,8 +106,15 @@ final class FileSaver
 	public function saveFileForFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
-			// TODO: create object if it does not exist
-			throw new \UnexpectedValueException('Object does not exist');
+			try {
+				$this->objectSaver->saveObject($collection, [
+					'id'      => $objectID,
+					$property => $this->createPropertyObject($collection, $property)->transform(),
+				]);
+			} catch (\Exception $e) {
+				$msg = "Object $objectID does not exist in collection $collection to save file ($property) to.";
+				throw new \UnexpectedValueException($msg . $e->getMessage());
+			}
 		}
 
 		// Clean up existing files in the path. Only one file should exist
@@ -116,7 +123,11 @@ final class FileSaver
 		// Update the object with the new file data
 		$fileProperty = $this->fetchProperty($collection, $objectID, $property);
 		$fileInfo     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
-		$newData      = array_merge($fileProperty->transform(), $fileInfo);
+
+		// File object stores original filename as 'filename'
+		$fileInfo['filename'] = $fileInfo['name'];
+
+		$newData = array_merge($fileProperty->transform(), $fileInfo);
 
 		return $this->updateObject($collection, $objectID, $property, $newData);
 	}

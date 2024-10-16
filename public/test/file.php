@@ -2,7 +2,7 @@
 
 <h1>Total CMS File Form Demo</h1>
 
-{{ cms.form.image("myimage") }}
+{{ cms.form.image("noimage") }}
 
 {{ cms.form.file("myfile") }}
 

@@ -45,8 +45,10 @@ final class FileField extends FormField
 			$mimeClass = 'icon-' . $mime;
 		}
 
+		$notFound = empty($name) ? 'not-found' : '';
+
 		return <<<HTML
-		<div class="dz-preview dz-file-preview not-found">
+		<div class="dz-preview dz-file-preview {$notFound}">
 			<div class="actionbar">
 				<button type="button" class="edit" title="Edit File Info"></button>
 				<button type="button" class="links" title="Copy Download Link"></button>

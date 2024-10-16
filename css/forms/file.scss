@@ -10,7 +10,8 @@
 	}
 
 	> .form-group {
-		width : fit-content;
+		width     : fit-content;
+		min-width : 200px;
 	}
 
 	.dz-preview {
@@ -22,6 +23,10 @@
 				opacity: 0.5;
 			}
 		}
+	}
+
+	.total-preview {
+		min-height : 96px;
 	}
 
 	.not-found {
