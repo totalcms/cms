@@ -4,7 +4,9 @@
 
 {{ cms.form.image("myimage") }}
 
-<form class="totalform edit-mode" data-schema="file" data-collection="file" data-method="PUT" data-api="https://totalcms.test" data-route="/collections/file/myfile" data-id="myfile">
+{{ cms.form.file("myfile") }}
+
+<!-- <form class="totalform edit-mode" data-schema="file" data-collection="file" data-method="PUT" data-api="https://totalcms.test" data-route="/collections/file/myfile" data-id="myfile">
 	<div class="form-field hidden-field " data-type="hidden">
 		<div class="form-group"><input type="hidden" id="field-670ea4e9cc28d" name="id" required="" value="myimage"></div>
 	</div>
@@ -109,6 +111,6 @@
 		</div>
 		<p class="help" id="help-670ea4e9cc2ca">Drag and drop an file here.</p>
 	</div>
-</form>
+</form> -->
 
 <?php include __DIR__ . '/_end.php'; ?>

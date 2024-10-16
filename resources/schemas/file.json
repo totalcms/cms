@@ -15,7 +15,7 @@
 		"file": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/file.json",
 			"label" : "File",
-			"help"  : "Drag and drop a file here, or click to select a file to upload.",
+			"help"  : "Drag and drop a file here.",
 			"field" : "file"
 		}
 	},
