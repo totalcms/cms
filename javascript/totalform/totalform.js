@@ -20,8 +20,8 @@ import PropertiesField from './properties';
 import CustomPropertiesField from './customProperties';
 import SchemaPropertiesField from './schemaProperties';
 import JSONField from './json';
+import FileField from './file';
 
-// import ArrayDroplet from './droplet-array';
 // import Deck from './deck';
 // import MarkdownField from './markdown';
 
@@ -265,8 +265,9 @@ export default class TotalForm {
 			case "json":
 				return new JSONField(field,options);
 
+			case "file":
+				return new FileField(field,options);
 
-			// case "file":
 			// case "depot":
 			//     return this.initArrayDroplet(field,options);
 

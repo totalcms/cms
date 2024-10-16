@@ -103,6 +103,7 @@
 						</section>
 						<section><button type="button" class="button btn close">Close</button></section>
 					</dialog>
+					<template></template>
 				</div>
 			</div>
 		</div>
