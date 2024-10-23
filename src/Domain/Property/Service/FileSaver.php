@@ -105,7 +105,8 @@ final class FileSaver
 
 	public function saveFileForFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
-		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
+		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
+		if (!$objectExists) {
 			try {
 				$this->objectSaver->saveObject($collection, [
 					'id'      => $objectID,
@@ -121,11 +122,21 @@ final class FileSaver
 		$this->storage->deleteDirectory($collection, $objectID, $property);
 
 		// Update the object with the new file data
-		$fileProperty = $this->fetchProperty($collection, $objectID, $property);
-		$fileInfo     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+		$fileInfo = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 
 		// File object stores original filename as 'filename'
 		$fileInfo['filename'] = $fileInfo['name'];
+
+		if ($objectExists) {
+			// If the object existed before, we will keep the existing data
+			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
+			$keep         = ['name', 'comments', 'tags', 'protected', 'password'];
+			$existingData = array_filter($fileProperty->transform(), fn($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+			if (!empty($existingData["filename"])) {
+				// make sure that it's not an empty file property, filename would not be empty
+				$fileInfo = array_merge($fileInfo, $existingData);
+			}
+		}
 
 		$newData = array_merge($fileProperty->transform(), $fileInfo);
 

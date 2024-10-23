@@ -127,11 +127,11 @@ final class FileField extends FormField
 	/** @param array<string,mixed> $fileData */
 	private function protectionFields(array $fileData): string
 	{
-		$content = $this->form->field('protect', [
+		$content = $this->form->field('protected', [
 			'field'       => 'checkbox',
 			'label'       => 'Protected by Collection',
 			'help'        => 'Access group protection is set in the Collection.',
-			'value'       => $fileData['protect'] ?? false,
+			'value'       => $fileData['protected'] ?? false,
 		]);
 		$content .= $this->form->field('password', [
 			'field' => 'password',
