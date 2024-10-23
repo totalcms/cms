@@ -1,5 +1,6 @@
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
+import FileField from "./file";
 globalThis.Dropzone = Dropzone;
 
 //-----------------------------------------------
@@ -18,12 +19,13 @@ export default class Droplet {
         const defaults = {
 			autoProcessQueue  : false,
 			previewsContainer : this.container.querySelector(".total-preview"),
-			acceptedFiles     : null,
+			acceptedFiles     : null,                                             // accepts all files
 			paramName         : "file",
 			apiUrl            : "",
 			requestHeaders    : {},
 			rules             : {},
 			singleMode        : true,
+			chunking          : false,
         };
 		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
         this.options = Object.assign({}, defaults, options, dataOptions);
@@ -66,7 +68,10 @@ export default class Droplet {
 			forceFallback     : false,
 			addedfile         : disableFunction,
 			acceptedFiles     : this.options.acceptedFiles,
-			accept            : this.accept,
+			chunking          : this.options.chunking,
+			accept            : (file, done) => this.accept(file, done),
+            maxFilesize       : null, // disabled in favor of test sets
+            maxFiles          : null, // disabled in favor of test sets
         });
     }
 
@@ -113,11 +118,30 @@ export default class Droplet {
     }
 
     accept(file,done) {
-        // Create functions that get checked after the thumbnail method has access to the file data
-        // The dimensions and size of the image will not be known until the event_thumbnail() loads.
-        // This delays that execution until then.
+        // Add accepts and reject methods to the file object to validate with the test sets
         file.acceptFile = done;
         file.rejectFile = function(msg){ done(msg); };
+
+        if (!file.type.startsWith("image")) {
+            // If the file is not an image, process the tests
+            // Images will get processed after the thumbnail is generated in the event_thumbnail method
+            this.processTestSet(file);
+        }
+    }
+
+    processTestSet(file) {
+        // Process file rules
+        if (this.testSet) {
+			const count = this.container.querySelectorAll(".dz-preview").length;
+            if (!this.testSet.processRules(file, count)) {
+                file.rejectFile(this.testSet.errors);
+				this.displayTestSetErrors();
+            } else {
+                file.acceptFile();
+            }
+        } else {
+            file.acceptFile();
+        }
     }
 
     //-----------------------------------------------------------------------
@@ -155,22 +179,8 @@ export default class Droplet {
     event_thumbnail(file,data) {
         file.previewElement.classList.remove("dz-file-preview");
 
-        // Process file rules
         // This happens here because its the first time that we have access to file info
-        if (this.testSet) {
-			const count = this.container.querySelectorAll(".dz-preview").length;
-            if (!this.testSet.processRules(file, count)) {
-                file.rejectFile(this.testSet.errors);
-				this.displayTestSetErrors();
-            } else {
-                file.acceptFile();
-            }
-        } else {
-            file.acceptFile();
-        }
-
-        // If the file is not an image, data will be null
-        if (!data) return;
+        this.processTestSet(file);
 
         const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
         for (const thumb of thumbs) {

@@ -53,6 +53,7 @@ export default class FileField extends TotalField {
 			apiUrl           : this.apiUploadFile(),
 			autoProcessQueue : this.form.isEditMode(),
 			acceptedFiles    : null,
+			chunking         : true,
 			rules            : this.options.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
