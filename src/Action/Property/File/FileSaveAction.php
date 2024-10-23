@@ -42,8 +42,8 @@ final class FileSaveAction
 
 		// Get chunk information from the request
 		$body             = (array)$request->getParsedBody();
-		$chunkIndex       = intval($body['chunkIndex'] ?? 0);
-		$totalChunks      = intval($body['totalChunks'] ?? 1);
+		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
+		$totalChunks      = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
 		$originalFilename = $file->getClientFilename();
 		$chunkFilename    = $this->chunkName($originalFilename, $chunkIndex);
 
@@ -54,6 +54,8 @@ final class FileSaveAction
 
 		// Move the uploaded chunk to the temporary directory
 		$file->moveTo($chunkFilename);
+
+		// return $this->renderer->json($response, $body);
 
 		if ($chunkIndex !== $totalChunks - 1) {
 			// If not the last chunk, return a success response

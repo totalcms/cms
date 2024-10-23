@@ -69,6 +69,7 @@ export default class Droplet {
 			addedfile         : disableFunction,
 			acceptedFiles     : this.options.acceptedFiles,
 			chunking          : this.options.chunking,
+            chunkSize         : 5 * 1024 * 1024, // 5MB
 			accept            : (file, done) => this.accept(file, done),
             maxFilesize       : null, // disabled in favor of test sets
             maxFiles          : null, // disabled in favor of test sets
