@@ -74,8 +74,11 @@
 	&.icon-svg,
 	&.icon-webp,
 	&.icon-ico,
-	&.icon-ps,
+	&.icon-eps,
+	&.icon-psd,
 	&.icon-ai,
+	&.icon-afphoto,
+	&.icon-afdesign,
 	&.icon-tiff,
 	&.icon-bmp,
 	&.icon-heic,
@@ -95,7 +98,8 @@
 	&.icon-docx,
 	&.icon-odt,
 	&.icon-rtf,
-	&.icon-pages {
+	&.icon-pages,
+	&.icon-afpub {
 		--icon-file : var(--icon-file-doc);
 	}
 
