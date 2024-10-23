@@ -7,8 +7,6 @@ import FilePreview from "./file-preview";
 //-----------------------------------------------
 export default class FileField extends TotalField {
 
-	// TODO: this class and ImageField are very similar. They should be combined
-
     constructor(container, options) {
         super(container, options);
 
@@ -54,7 +52,7 @@ export default class FileField extends TotalField {
 			paramName        : this.property,
 			apiUrl           : this.apiUploadFile(),
 			autoProcessQueue : this.form.isEditMode(),
-			// acceptedFiles    : "image/*",
+			acceptedFiles    : null,
 			rules            : this.options.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
@@ -98,7 +96,8 @@ export default class FileField extends TotalField {
     }
 
 	fileAdded(file) {
-		// Do nothing
+		const notFound = this.previewContainer.querySelector(".not-found");
+		if (notFound) notFound.classList.remove("not-found");
 	}
 
 	fileUploaded(file, response) {

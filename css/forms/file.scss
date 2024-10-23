@@ -59,9 +59,105 @@
 		margin           : 0.5rem auto;
 		background-color : oklch(var(--totalform-darkgray));
 		mask-position    : bottom center;
-		mask-image       : var(--icon-file-zip);
+		mask-image       : var(--icon-file);
 		mask-repeat      : no-repeat;
 		mask-size        : 64px;
 		transition       : opacity 100ms;
+	}
+}
+
+.file-icon {
+	&.icon-jpeg,
+	&.icon-jpg,
+	&.icon-png,
+	&.icon-gif,
+	&.icon-svg,
+	&.icon-webp,
+	&.icon-ico,
+	&.icon-ps,
+	&.icon-ai,
+	&.icon-tiff,
+	&.icon-bmp,
+	&.icon-heic,
+	&.icon-heif,
+	&.icon-avif {
+		--icon-file : var(--icon-file-image);
+	}
+
+	&.icon-txt,
+	&.icon-md,
+	&.icon-markdown {
+		--icon-file : var(--icon-file-text);
+	}
+
+	&.icon-pdf,
+	&.icon-doc,
+	&.icon-docx,
+	&.icon-odt,
+	&.icon-rtf,
+	&.icon-pages {
+		--icon-file : var(--icon-file-doc);
+	}
+
+	&.icon-ppt,
+	&.icon-pptx,
+	&.icon-key,
+	&.icon-odp {
+		--icon-file : var(--icon-file-star);
+	}
+
+	&.icon-zip,
+	&.icon-rar,
+	&.icon-7z,
+	&.icon-tar,
+	&.icon-gz,
+	&.icon-bz2,
+	&.icon-dmg,
+	&.icon-pkg,
+	&.icon-iso {
+		--icon-file : var(--icon-file-zip);
+	}
+
+	&.icon-mp3,
+	&.icon-wav,
+	&.icon-aiff,
+	&.icon-flac,
+	&.icon-m4a,
+	&.icon-ogg,
+	&.icon-wma,
+	&.icon-aac,
+	&.icon-mid,
+	&.icon-midi {
+		--icon-file : var(--icon-file-audio);
+	}
+
+	&.icon-m4v,
+	&.icon-mp4,
+	&.icon-mov,
+	&.icon-avi,
+	&.icon-wmv,
+	&.icon-ogv,
+	&.icon-mkv,
+	&.icon-flv,
+	&.icon-mpg,
+	&.icon-webm,
+	&.icon-mpeg {
+		--icon-file : var(--icon-file-video);
+	}
+
+	&.icon-html,
+	&.icon-css,
+	&.icon-js,
+	&.icon-php,
+	&.icon-py {
+		--icon-file : var(--icon-file-code);
+	}
+
+	&.icon-xls,
+	&.icon-xlsx,
+	&.icon-csv,
+	&.icon-ods,
+	&.icon-numbers {
+		--icon-file : var(--icon-file-chart);
 	}
 }

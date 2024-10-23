@@ -18,7 +18,7 @@ export default class Droplet {
         const defaults = {
 			autoProcessQueue  : false,
 			previewsContainer : this.container.querySelector(".total-preview"),
-			acceptedFiles     : "image/*",
+			acceptedFiles     : null,
 			paramName         : "file",
 			apiUrl            : "",
 			requestHeaders    : {},
@@ -154,12 +154,6 @@ export default class Droplet {
     // When the thumbnail has been generated. Receives the dataUrl as second parameter.
     event_thumbnail(file,data) {
         file.previewElement.classList.remove("dz-file-preview");
-        const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
-
-        for (const thumb of thumbs) {
-            thumb.alt = file.name;
-            thumb.src = data;
-        }
 
         // Process file rules
         // This happens here because its the first time that we have access to file info
@@ -175,11 +169,14 @@ export default class Droplet {
             file.acceptFile();
         }
 
-        return setTimeout(((function() {
-            return function() {
-                return file.previewElement.classList.add("dz-image-preview");
-            };
-        })(this)),1);
+        // If the file is not an image, data will be null
+        if (!data) return;
+
+        const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
+        for (const thumb of thumbs) {
+            thumb.alt = file.name;
+            thumb.src = data;
+        }
     }
 
     // Gets called periodically whenever the file upload progress changes
@@ -258,7 +255,7 @@ export default class Droplet {
     // The user dragged a file onto the Dropzone
     event_dragenter(event) {
         const classesToRemove = ["dz-success", "dz-complete"];
-        const previews = Array.from(this.container.getElementsByClassName("image-preview"));
+        const previews = Array.from(this.dropzone.previewsContainer.children);
         if (previews.length > 0) {
 			previews.forEach(preview => preview.classList.remove(...classesToRemove));
         }
@@ -272,7 +269,6 @@ export default class Droplet {
 
     // The user dropped something onto the dropzone
     event_drop(event) {
-		// this.container.querySelector(".image-not-found")?.classList.remove("image-not-found");
         return this.container.classList.remove("dz-drag-hover");
     }
 }

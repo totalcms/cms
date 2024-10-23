@@ -24,10 +24,29 @@ export default class FilePreview {
 		this.editDialog = this.setupEditDialog();
 
 		this.setupActionBar();
+		this.updatePreview();
     }
 
 	isDepot() {
 		return this.type === "depot";
+	}
+
+	updatePreview() {
+		this.updateIcon();
+		this.updateLabel();
+	}
+
+	updateIcon() {
+		const icon = this.container.querySelector(".file-icon");
+		const mime = this.container.querySelector("[name=mime]").value.toLowerCase();
+		const ext  = mime.split("/")[1];
+		icon.className = `file-icon icon-${ext}`;
+	}
+
+	updateLabel() {
+		const label = this.container.querySelector(".filename");
+		const name  = this.container.querySelector("[name=name]").value;
+		label.textContent = name;
 	}
 
 	setupActionBar() {
@@ -170,5 +189,6 @@ export default class FilePreview {
 			// setting to saved state since this data comes from the server
 			field.totalfield.saved();
 		}
+		this.updatePreview();
     }
 }

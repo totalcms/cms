@@ -36,9 +36,9 @@ final class FileField extends FormField
 		return $input . $overlay . $preview . $template;
 	}
 
-	protected function filePreview(string $mime = "", string $name = ""): string
+	protected function filePreview(string $mime = '', string $name = ''): string
 	{
-		$mime      = str_replace('/', '-', $mime);
+		$mime      = strtolower(basename($mime));
 		$mimeClass = '';
 
 		if (!empty($mime)) {
