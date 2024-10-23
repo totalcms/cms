@@ -13,17 +13,7 @@ final class ImageWorksImageFetchAction
 	{
 	}
 
-	/**
-	 * Get image by property.
-	 *
-	 * @param ServerRequestInterface $request The request
-	 * @param ResponseInterface $response The response
-	 * @param array<string,string> $args The arguments
-	 *
-	 * @throws HttpNotFoundException
-	 *
-	 * @return ResponseInterface
-	 */
+	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,

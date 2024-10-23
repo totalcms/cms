@@ -103,6 +103,21 @@ final class PropertyRepository extends StorageRepository
 		];
 	}
 
+	public function fileExists(string $collection, string $objectID, string $property, string $filename): bool
+	{
+		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+
+		return $this->filesystem->fileExists($path);
+	}
+
+	/** @return resource */
+	public function streamFile(string $collection, string $objectID, string $property, string $filename)
+	{
+		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+
+		return $this->filesystem->readStream($path);
+	}
+
 	/**
 	 * Save an image to object property.
 	 *

@@ -83,13 +83,16 @@
 	&.icon-bmp,
 	&.icon-heic,
 	&.icon-heif,
-	&.icon-avif {
+	&.icon-avif,
+	&.icon-raw {
 		--icon-file : var(--icon-file-image);
 	}
 
 	&.icon-txt,
 	&.icon-md,
-	&.icon-markdown {
+	&.icon-markdown,
+	&.icon-mobi,
+	&.icon-epub {
 		--icon-file : var(--icon-file-text);
 	}
 
@@ -115,6 +118,7 @@
 	&.icon-7z,
 	&.icon-tar,
 	&.icon-gz,
+	&.icon-xz,
 	&.icon-bz2,
 	&.icon-dmg,
 	&.icon-pkg,
@@ -125,6 +129,7 @@
 	&.icon-mp3,
 	&.icon-wav,
 	&.icon-aiff,
+	&.icon-alac,
 	&.icon-flac,
 	&.icon-m4a,
 	&.icon-ogg,
@@ -153,7 +158,10 @@
 	&.icon-css,
 	&.icon-js,
 	&.icon-php,
-	&.icon-py {
+	&.icon-py,
+	&.icon-xml,
+	&.icon-json,
+	&.icon-yaml {
 		--icon-file : var(--icon-file-code);
 	}
 
