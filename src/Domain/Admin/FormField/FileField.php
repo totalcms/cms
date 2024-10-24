@@ -160,6 +160,13 @@ final class FileField extends FormField
 			'readonly' => true,
 			'value'    => $fileData['size'] ?? '',
 		]);
+		$content .= $this->form->field('count', [
+			'field'    => 'number',
+			'label'    => 'Download Count',
+			'icon'     => false,
+			'readonly' => true,
+			'value'    => $fileData['count'] ?? '',
+		]);
 		$content .= $this->form->field('mime', [
 			'field'    => 'text',
 			'label'    => 'MIME Type',

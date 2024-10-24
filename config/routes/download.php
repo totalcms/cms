@@ -8,6 +8,7 @@ return function (App $app) {
 	$app->group('/download', function (RouteCollectorProxy $group) {
 		// /products/total-cms/brochure -> download a pdf
 		$group->get('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file');
+		$group->post('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file-password');
 
 		// /collection/product/total-cms to get the json data of the
 

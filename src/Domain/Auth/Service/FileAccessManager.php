@@ -59,6 +59,10 @@ final class FileAccessManager
 			return false;
 		}
 
+		if ($this->isSuperAdmin()) {
+			return true;
+		}
+
 		if (empty($this->collection->groups)) {
 			// if the collection groups are empty, grant access
 			return true;
@@ -80,11 +84,22 @@ final class FileAccessManager
 
 	public function isPasswordProtected(): bool
 	{
-		return !empty($this->file->password);
+		return !empty($this->file->password->hash);
 	}
 
 	public function verfiyPassword(string $password): bool
 	{
+		if ($this->sessionHasUser() && $this->isSuperAdmin()) {
+			return true;
+		}
+
 		return password_verify($password, $this->file->password);
+	}
+
+	private function isSuperAdmin(): bool
+	{
+		$userID = $this->session->get('user') ?? '';
+
+		return !empty($userID) && $this->userValidator->isSuperAdmin($userID);
 	}
 }

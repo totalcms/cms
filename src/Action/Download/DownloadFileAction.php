@@ -6,10 +6,12 @@ use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
+use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\TwigRenderer;
-use TotalCMS\Domain\Auth\Service\FileAccessManager;
-use Slim\Routing\RouteContext;
+use TotalCMS\Utils\Cipher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 
 final class DownloadFileAction
 {
@@ -17,6 +19,7 @@ final class DownloadFileAction
 		private FileFetcher $fileFetcher,
 		private TwigRenderer $twigRenderer,
 		private FileAccessManager $accessManager,
+		private ObjectSaver $objectSaver,
 	) {
 	}
 
@@ -59,7 +62,11 @@ final class DownloadFileAction
 
 		$file     = $this->fileFetcher->fetchFile($collection, $id, $property);
 		$response = $response->withHeader('Content-Type', $file->mime)
-			->withHeader('Content-Disposition', "attachment; filename='{$file->name}'");
+			->withHeader('Content-Disposition', "attachment; filename={$file->name}");
+
+		// increment the download count
+		$file->count = $file->count + 1;
+		$this->objectSaver->updateObjectProperty($collection, $id, $property, $file->transform());
 
 		$stream = $this->fileFetcher->streamFile($collection, $id, $property);
 
@@ -73,10 +80,10 @@ final class DownloadFileAction
 
 		$password = null;
 
-		if ($postData['password']) {
+		if (isset($postData['password'])) {
 			$password = $postData['password'];
-		} elseif (isset($queryParams['password'])) {
-			$password = base64_decode($queryParams['password']);
+		} elseif (isset($queryParams['pwd'])) {
+			$password = Cipher::decrypt($queryParams['pwd']);
 		}
 
 		return $password;
@@ -93,6 +100,7 @@ final class DownloadFileAction
 	private function accessDenied(ResponseInterface $response): ResponseInterface
 	{
 		$response = $response->withStatus(403);
+
 		return $this->twigRenderer->template($response, 'admin/denied.twig');
 	}
 

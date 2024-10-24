@@ -17,6 +17,7 @@ class FileData extends PropertyData
 	public string $filename;
 	public string $comments;
 	public int $size;
+	public int $count;
 
 	/** @param array<string,mixed> $file */
 	public function __construct(array $file = [])
@@ -26,7 +27,8 @@ class FileData extends PropertyData
 		$this->name      = $file['name'] ?? $this->filename;
 		$this->mime      = $file['mime'] ?? '';
 		$this->comments  = $file['comments'] ?? '';
-		$this->size      = $file['size'] ?? 0;
+		$this->size      = intval($file['size'] ?? 0);
+		$this->count     = intval($file['count'] ?? 0);
 		$this->tags      = new ListData($file['tags'] ?? []);
 		$this->password  = new PasswordData($file['password'] ?? '');
 
@@ -47,6 +49,7 @@ class FileData extends PropertyData
 			'name'       => $this->name,
 			'comments'   => $this->comments,
 			'size'       => $this->size,
+			'count'      => $this->count,
 		];
 	}
 }
