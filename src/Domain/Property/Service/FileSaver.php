@@ -134,8 +134,17 @@ final class FileSaver
 			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
 			$keep         = ['name', 'comments', 'tags', 'protected', 'password'];
 			$existingData = array_filter($fileProperty->transform(), fn($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
-			if (!empty($existingData["filename"])) {
+			if (!empty($existingData["name"])) {
 				// make sure that it's not an empty file property, filename would not be empty
+
+				// Update the extension of the name if the new file has a different extension
+				$newExt      = pathinfo((string)$fileInfo['name'], PATHINFO_EXTENSION);
+				$existingExt = pathinfo((string)$existingData["name"], PATHINFO_EXTENSION);
+
+				if ($newExt !== $existingExt) {
+					$existingData["name"] = pathinfo($existingData["name"], PATHINFO_FILENAME) . '.' . $newExt;
+				}
+
 				$fileInfo = array_merge($fileInfo, $existingData);
 			}
 			$newData = array_merge($fileProperty->transform(), $fileInfo);
