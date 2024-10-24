@@ -22,6 +22,7 @@ export default class FilePreview {
 		this.fields = this.container.getElementsByClassName("form-field");
 
 		this.editDialog = this.setupEditDialog();
+		this.linkDialog = this.setupLinkDialog();
 
 		this.setupActionBar();
 		this.updatePreview();
@@ -55,48 +56,14 @@ export default class FilePreview {
 			event.preventDefault();
 			this.editDialog.open();
 		});
-		this.setupCopyLink();
-		this.setupCopyMacro();
-		this.setupDelete();
-		this.setupDownload();
-	}
-
-	setupCopyLink() {
 		const links = this.container.querySelector(".actionbar .links");
 		links.addEventListener("click", event => {
 			event.preventDefault();
-			console.log("TODO: Copy link to clipboard");
+			this.linkDialog.open();
 		});
+		this.setupDelete();
+		this.setupDownload();
 	}
-
-	setupCopyMacro() {
-		const macro = this.container.querySelector(".actionbar .macro");
-		macro.addEventListener("click", event => {
-			event.preventDefault();
-			console.log("TODO: Copy macro to clipboard");
-		});
-	}
-
-	// copyToClipboard(text) {
-	// 	const macroContent = document.getElementById("twig-macro");
-	// 	navigator.clipboard.writeText(macroContent.textContent).then(() => {
-	// 		setTimeout(() => {
-	// 			const originalText = copyMacroButton.textContent;
-	// 			copyMacroButton.style.width = `${copyMacroButton.offsetWidth}px`;
-	// 			copyMacroButton.classList.add("copied");
-	// 			copyMacroButton.textContent = "Copied!";
-
-	// 			setTimeout(() => {
-	// 				copyMacroButton.classList.remove("copied");
-	// 				copyMacroButton.textContent = originalText;
-	// 				copyMacroButton.style.width = "";
-	// 			}, 2000);
-	// 		}, 200);
-	// 	})
-	// 	.catch(err => {
-	// 		console.warn('Could not copy macro: ', err);
-	// 	});
-	// }
 
 	setupDownload() {
 		const downloadButton = this.container.querySelector(".actionbar .download");
@@ -110,6 +77,13 @@ export default class FilePreview {
 				}
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
+				// If the file is password protected, open the download in a new tab
+				// so the user can enter the password
+				if (this.isPasswordProtected()) {
+					window.open(downloadUrl, '_blank');
+					return;
+				}
+
 				const link = document.createElement('a');
 				link.href = downloadUrl;
 				link.download = this.getValue().name; // Suggest a filename for the downloaded file
@@ -120,13 +94,16 @@ export default class FilePreview {
 		}
 	}
 
+	isPasswordProtected() {
+		return this.container.querySelector("[name=password]").value !== "";
+	}
+
 	setupDelete() {
 		const deleteButton = this.container.querySelector(".actionbar .trash");
 		if (deleteButton) {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
-				if (confirm("Are you sure that you want to delete this image?")) {
-					// Delete the entire image object if it's an image schema
+				if (confirm("Are you sure that you want to delete this file?")) {
 					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					if (this.isDepot()) {
 						const name = this.getValue().filename;
@@ -138,6 +115,19 @@ export default class FilePreview {
 				}
 			});
 		}
+	}
+
+	setupLinkDialog() {
+		return new Dialog(this.container.querySelector(".file-links-dialog"), {
+			open  : null,
+			close : ".close",
+			onOpen : () => {
+				const iframe = this.linkDialog.dialog.querySelector("iframe");
+				if (!iframe.src) {
+					iframe.src = iframe.dataset.src;
+				}
+			},
+		});
 	}
 
 	setupEditDialog() {

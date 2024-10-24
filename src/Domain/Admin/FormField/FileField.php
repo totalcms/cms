@@ -25,8 +25,9 @@ final class FileField extends FormField
 		$name         = $fileData['name'] ?? $fileData['filename'] ?? '';
 		$filePreview  = $this->filePreview($mime, $name);
 		$fileDialog   = $this->fileDialog($fileData);
+		$linkDialog   = $this->linkDialog($fileData['filename'] ?? null);
 
-		$previewTemplate = HTMLUtils::element('div', $filePreview . $fileDialog, $previewAttrs);
+		$previewTemplate = HTMLUtils::element('div', $filePreview . $fileDialog . $linkDialog, $previewAttrs);
 
 		$input    = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
 		$overlay  = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
@@ -51,8 +52,7 @@ final class FileField extends FormField
 		<div class="dz-preview dz-file-preview {$notFound}">
 			<div class="actionbar">
 				<button type="button" class="edit" title="Edit File Info"></button>
-				<button type="button" class="links" title="Copy Download Link"></button>
-				<button type="button" class="macro" title="Copy Download Macro"></button>
+				<button type="button" class="links" title="Download Links"></button>
 				<button type="button" class="download" title="Download File"></button>
 				<button type="button" class="upload dz-clickable" title="Upload New File"></button>
 				<button type="button" class="trash" title="Delete File"></button>
@@ -68,6 +68,26 @@ final class FileField extends FormField
 			</div>
 		</div>
 		HTML;
+	}
+
+	protected function linkDialog(?string $filename = null): string
+	{
+		// Depot passes the name of the file
+		// The name should be null for an file field
+
+		$query = http_build_query([
+			'id'         => $this->form->id,
+			'collection' => $this->form->collection,
+			'property'   => $this->name,
+			'filename'   => $filename,
+		]);
+		// 	The cms.api may have a ? because of the Stacks Preview server
+		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
+
+		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/filelinks{$join}{$query}");
+		$dialog = HTMLUtils::dialog($iframe, 'file-links-dialog');
+
+		return $dialog;
 	}
 
 	/** @param array<string,mixed> $fileData */
