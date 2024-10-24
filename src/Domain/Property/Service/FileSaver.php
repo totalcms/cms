@@ -127,6 +127,8 @@ final class FileSaver
 		// File object stores original filename as 'filename'
 		$fileInfo['filename'] = $fileInfo['name'];
 
+		$newData = $fileInfo;
+
 		if ($objectExists) {
 			// If the object existed before, we will keep the existing data
 			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
@@ -136,9 +138,8 @@ final class FileSaver
 				// make sure that it's not an empty file property, filename would not be empty
 				$fileInfo = array_merge($fileInfo, $existingData);
 			}
+			$newData = array_merge($fileProperty->transform(), $fileInfo);
 		}
-
-		$newData = array_merge($fileProperty->transform(), $fileInfo);
 
 		return $this->updateObject($collection, $objectID, $property, $newData);
 	}
