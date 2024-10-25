@@ -1,0 +1,55 @@
+{% extends "admin-layout.twig" %}
+
+{% block head %}
+	<link rel="stylesheet" href="{{ cms.api }}/assets/imageworks-builder.css"/>
+{% endblock %}
+
+{% block content %}
+
+	{% set id         = getParams.id  %}
+	{% set collection = getParams.collection | default("image") %}
+	{% set property   = getParams.property | default("image") %}
+	{% set filename   = getParams.filename %}
+
+	<main class="admin-layout container">
+
+		<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}" data-filename="{{filename}}">
+			<h1>File Download Links</h1>
+			<div>
+				<h4>Download Link:</h4>
+
+				<pre id="twig-macro">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
+
+				<button type="button" id="copy-macro">Copy Link</button>
+			</div>
+			<div>
+				<h4>Macro:</h4>
+				<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+				<button type="button" id="copy-macro">Copy Macro</button>
+			</div>
+		</section>
+
+		<form class="totalform" method="post" data-disabled="true">
+			<div class="form-field password-field" data-type="password">
+				<label for="field-66e386299dfa7">Password</label>
+				<div class="form-group">
+					<input type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-66e386299dfa7">This password must match the password saved for this file</p>
+			</div>
+
+			<button class="dash-button" type="submit">Set Password on Links</button>
+			{% for message in flash.get('error') %}
+				<p class="cms-twig-error" role="alert">
+					{{ message }}
+				</p>
+			{% endfor %}
+		</form>
+
+	</main>
+{% endblock %}
+
+{% block bodyBelow %}
+	<script type="module" src="{{ cms.api }}/assets/imageworks-builder.js"></script>
+{% endblock %}

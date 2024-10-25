@@ -1,0 +1,133 @@
+body, h1,h2,h3,h4,h5,h6 {
+	margin  : 0;
+	padding : 0;
+}
+
+.container {
+	padding : 1.25rem;
+}
+
+.image-preview {
+	display : grid;
+	gap     : 1rem;
+
+	img {
+		border     : 10px solid oklch(var(--totalform-white));
+		box-shadow : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
+		max-width  : 100%;
+		height     : auto;
+		width      : auto;
+	}
+
+	button {
+		background-color : oklch(var(--totalform-accent));
+		color            : oklch(var(--totalform-white));
+		padding          : 1rem;
+		border           : none;
+		border-radius    : var(--totalform-radius);
+		font-size        : 1.1rem;
+		font-weight      : bold;
+		cursor           : pointer;
+		transition       : all 200ms ease-out;
+
+		&:hover {
+			filter: brightness(0.95);
+		}
+		&:active {
+			scale: 0.98;
+			filter: brightness(0.90);
+		}
+	}
+	#copy-macro {
+		border     : 1px solid oklch(var(--totalform-accent));
+		background : transparent;
+		color      : oklch(var(--totalform-accent));
+		padding    : 0.5rem 1rem;
+		font-size  : 0.8rem;
+
+		&.copied {
+			content: "Copied!";
+			background-color : oklch(var(--totalform-accent));
+			color      : oklch(var(--totalform-white));
+		}
+	}
+	#download-image {
+		display          : inline-block;
+		vertical-align   : middle;
+		width            : 1.5rem;
+		height           : 1.5rem;
+		background-color : oklch(var(--totalform-gray));
+		-webkit-mask     : var(--icon-download);
+		mask             : var(--icon-download);
+		opacity          : 0.5;
+		transition       : all 300ms ease-out;
+		margin-left      : 0.5rem;
+
+		&:hover {
+			opacity : 1;
+			scale   : 1.15;
+        }
+	}
+}
+
+.split-view {
+	display : grid;
+	gap     : 1rem;
+	grid-template-columns: auto min-content;
+}
+
+.image-info {
+	display : grid;
+	grid-template-rows: auto min-content;
+}
+
+pre#twig-macro {
+	background-color : oklch(var(--totalform-nearwhite));
+	padding          : 1rem 0.5rem;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : 5px;
+	max-width        : 300px;
+	overflow-x       : scroll;
+	margin-bottom    : 1rem;
+}
+.totalform {
+	margin-top : 1rem;
+	display    : grid;
+	gap        : 1rem;
+
+	details > div {
+		display    : grid;
+		gap        : 3rem;
+		grid-template-columns : 1fr 1fr;
+	}
+}
+
+#fit-modal .close {
+	position : absolute;
+	top      : 0;
+	right    : 0;
+}
+
+#dimensions {
+	font-weight: normal;
+}
+
+// If the modal is in an iframe, we need to make it full screen
+.in-iframe #fit-modal[open] {
+	transform  : none;
+	top        : 0;
+	left       : 0;
+	max-width  : none;
+	max-height : none;
+	height     : 100%;
+	width      : 100%;
+}
+
+.option-docs {
+	margin : 0;
+
+	dt {
+		font-weight : bold;
+		margin-top  : 1rem;
+	}
+}
