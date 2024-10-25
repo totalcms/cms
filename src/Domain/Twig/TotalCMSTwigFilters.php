@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Utils\Cipher;
 use TotalCMS\Utils\CollectionRefiner;
 use TotalCMS\Utils\CollectionSorter;
 use Twig\TwigFilter;
@@ -63,6 +64,9 @@ final class TotalCMSTwigFilters
 		'hue',
 		'adjustColor',
 		'obfuscate',
+		'deobfuscate',
+		'encrypt',
+		'decrypt',
 		'filterCollection',
 		'sortCollection',
 		'paginate',
@@ -100,14 +104,22 @@ final class TotalCMSTwigFilters
 
 	public static function obfuscate(string $string): string
 	{
-		$length = strlen($string);
-		$result = '';
+		return Cipher::obfuscate($string);
+	}
 
-		for ($i = 0; $i < $length; $i++) {
-			$result .= '&#' . ord($string[$i]) . ';';
-		}
+	public static function deobfuscate(string $string): string
+	{
+		return Cipher::deobfuscate($string);
+	}
 
-		return $result;
+	public static function encrypt(string $string): string
+	{
+		return Cipher::encrypt($string);
+	}
+
+	public static function decrypt(string $string): string
+	{
+		return Cipher::decrypt($string);
 	}
 
 	// -------------------------

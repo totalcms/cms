@@ -29,6 +29,6 @@ return function (App $app) {
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
-		$group->get('/filelinks', AdminFileLinksAction::class)->setName('filelinks');
+		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');
 	})->add(AuthMiddleware::class);
 };

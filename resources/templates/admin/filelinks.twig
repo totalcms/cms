@@ -1,39 +1,47 @@
 {% extends "admin-layout.twig" %}
 
 {% block head %}
-	<link rel="stylesheet" href="{{ cms.api }}/assets/imageworks-builder.css"/>
+	<link rel="stylesheet" href="{{ cms.api }}/assets/filelinks.css"/>
 {% endblock %}
 
 {% block content %}
 
 	{% set id         = getParams.id  %}
-	{% set collection = getParams.collection | default("image") %}
-	{% set property   = getParams.property | default("image") %}
+	{% set collection = getParams.collection | default("file") %}
+	{% set property   = getParams.property | default("file") %}
 	{% set filename   = getParams.filename %}
+	{% set password   = postParams.password %}
+
+	{% if password is not empty and not cms.verifyFilePassword(password, collection, id, property, filename) %}
+		{{ flash.add('error', 'Password is incorrect') }}
+		{% set password = "" %}
+	{% endif %}
 
 	<main class="admin-layout container">
 
-		<section class="image-preview" data-id="{{id}}" data-collection="{{collection}}" data-property="{{property}}" data-filename="{{filename}}">
-			<h1>File Download Links</h1>
-			<div>
-				<h4>Download Link:</h4>
+		<h1>File Download Links</h1>
 
-				<pre id="twig-macro">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
+		<section>
+			<h4>Download Link:</h4>
+			{% if password %}
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}?pwd={{password | encrypt}}</pre>
+			{% else %}
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
+			{% endif %}
+			<button type="button" id="copy-link">Copy Link</button>
+		</section>
 
-				<button type="button" id="copy-macro">Copy Link</button>
-			</div>
-			<div>
-				<h4>Macro:</h4>
-				<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
-				<button type="button" id="copy-macro">Copy Macro</button>
-			</div>
+		<section>
+			<h4>Macro:</h4>
+			<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+			<button type="button" id="copy-macro">Copy Macro</button>
 		</section>
 
 		<form class="totalform" method="post" data-disabled="true">
 			<div class="form-field password-field" data-type="password">
 				<label for="field-66e386299dfa7">Password</label>
 				<div class="form-group">
-					<input type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
+					<input type="password" id="field-66e386299dfa7" name="password" value="{{password}}" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
 					<div class="form-group-icon"></div>
 				</div>
 				<p class="help" id="help-66e386299dfa7">This password must match the password saved for this file</p>
@@ -51,5 +59,5 @@
 {% endblock %}
 
 {% block bodyBelow %}
-	<script type="module" src="{{ cms.api }}/assets/imageworks-builder.js"></script>
+	<script type="module" src="{{ cms.api }}/assets/filelinks.js"></script>
 {% endblock %}

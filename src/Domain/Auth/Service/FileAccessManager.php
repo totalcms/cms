@@ -96,6 +96,11 @@ final class FileAccessManager
 		return password_verify($password, $this->file->password);
 	}
 
+	public function verfiyPasswordOnly(string $password): bool
+	{
+		return password_verify($password, $this->file->password);
+	}
+
 	private function isSuperAdmin(): bool
 	{
 		$userID = $this->session->get('user') ?? '';

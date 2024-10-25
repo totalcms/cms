@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig;
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -53,6 +54,7 @@ final class TotalCMSTwigAdapter
 		private LogAnalyzer $logAnalyzer,
 		private PhpSession $session,
 		private AccessManager $accessManager,
+		private FileAccessManager $fileAccessManager,
 	) {
 		$this->api       = $this->config->api;
 		$this->dashboard = $this->api . '/admin';
@@ -94,6 +96,12 @@ final class TotalCMSTwigAdapter
 			return $this->session->get($key);
 		}
 		return null;
+	}
+
+	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $filename = ''): bool
+	{
+		$this->fileAccessManager->loadFile($collection, $id, $property);
+		return $this->fileAccessManager->verfiyPasswordOnly($password);
 	}
 
 	public function config(string $key, ?string $setting): mixed

@@ -23,6 +23,7 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -219,6 +220,7 @@ return [
 			$container->get(LogAnalyzer::class),
 			$container->get(PhpSession::class),
 			$container->get(AccessManager::class),
+			$container->get(FileAccessManager::class),
 		);
 	},
 
