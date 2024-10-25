@@ -31,29 +31,6 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
-	const copyMacroButton = document.getElementById("copy-macro");
-	copyMacroButton.addEventListener("click", event => {
-		event.preventDefault();
-		const macroContent = document.getElementById("twig-macro");
-		navigator.clipboard.writeText(macroContent.textContent).then(() => {
-			setTimeout(() => {
-				const originalText = copyMacroButton.textContent;
-				copyMacroButton.style.width = `${copyMacroButton.offsetWidth}px`;
-				copyMacroButton.classList.add("copied");
-				copyMacroButton.textContent = "Copied!";
-
-				setTimeout(() => {
-					copyMacroButton.classList.remove("copied");
-					copyMacroButton.textContent = originalText;
-					copyMacroButton.style.width = "";
-				}, 2000);
-			}, 200);
-		})
-		.catch(err => {
-			console.warn('Could not copy macro: ', err);
-		});
-	});
-
 	const generateTwigMacro = (data) => {
 		const id         = data.id;
 		const collection = data.collection;

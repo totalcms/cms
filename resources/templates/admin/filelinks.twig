@@ -28,13 +28,13 @@
 			{% else %}
 				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
 			{% endif %}
-			<button type="button" id="copy-link">Copy Link</button>
+			<button type="button" class="cms-clip-button" data-clip="#link-url">Copy Link</button>
 		</section>
 
 		<section>
 			<h4>Macro:</h4>
 			<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
-			<button type="button" id="copy-macro">Copy Macro</button>
+			<button type="button" class="cms-clip-button" data-clip="#twig-macro">Copy Macro</button>
 		</section>
 
 		<form class="totalform" method="post" data-disabled="true">

@@ -5,7 +5,7 @@ body, h1,h2,h3,h4,h5,h6 {
 
 .container {
 	display : grid;
-	gap     : 2rem;
+	gap     : 1.5rem;
 	padding : 1.25rem;
 
 	section {
@@ -22,7 +22,7 @@ body, h1,h2,h3,h4,h5,h6 {
 		font-weight      : bold;
 		cursor           : pointer;
 		transition       : all 200ms ease-out;
-		max-width        : fit-content;
+		width            : fit-content;
 
 		&:hover {
 			filter: brightness(0.95);
@@ -32,8 +32,7 @@ body, h1,h2,h3,h4,h5,h6 {
 			filter: brightness(0.90);
 		}
 	}
-	#copy-link,
-	#copy-macro {
+	.cms-clip-button {
 		border     : 1px solid oklch(var(--totalform-accent));
 		background : transparent;
 		color      : oklch(var(--totalform-accent));
@@ -57,7 +56,6 @@ pre#twig-macro {
 }
 
 .totalform {
-	margin-top : 1rem;
-	display    : grid;
-	gap        : 1rem;
+	display : grid;
+	gap     : 1rem;
 }
