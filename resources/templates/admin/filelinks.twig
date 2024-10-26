@@ -24,7 +24,7 @@
 		<section>
 			<h4>Download Link:</h4>
 			{% if password %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}?pwd={{password | encrypt}}</pre>
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}?pwd={{password | encrypt | urlencode}}</pre>
 			{% else %}
 				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
 			{% endif %}
