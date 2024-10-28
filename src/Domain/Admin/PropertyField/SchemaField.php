@@ -116,7 +116,7 @@ class SchemaField extends PropertyField
 		}
 
 		$field  = HTMLUtils::element('div', $input . $buttons . $dialog, [
-			'class' => "schema-field {$this->field}-field",
+			'class' => "schema-field {$this->field}-field {$this->type}-type",
 		]);
 
 		return $field;
