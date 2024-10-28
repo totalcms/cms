@@ -42,6 +42,7 @@
                 </ul>
             </nav>
             <div class="user-profile" >
+                {% if cms.userLoggedIn %}
                 <button popovertarget="user-actions">
                     {% set user = cms.userData %}
                     <img src="{{ cms.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
@@ -54,6 +55,7 @@
                         <li class="logout"><a href="../logout">Logout</a></li>
                     </ul>
                 </nav>
+                {% endif %}
             </div>
         </aside>
         <section class="dash-content">
