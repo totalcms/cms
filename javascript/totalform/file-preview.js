@@ -79,7 +79,7 @@ export default class FilePreview {
 
 				// If the file is password protected, open the download in a new tab
 				// so the user can enter the password
-				if (this.isPasswordProtected()) {
+				if (this.isPasswordProtected()|| this.isCollectionProtected()) {
 					window.open(downloadUrl, '_blank');
 					return;
 				}
@@ -92,6 +92,10 @@ export default class FilePreview {
 				document.body.removeChild(link); // Remove the anchor element from the body
 			});
 		}
+	}
+
+	isCollectionProtected() {
+		return this.container.querySelector("[name=protected]").checked;
 	}
 
 	isPasswordProtected() {

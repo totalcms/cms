@@ -3,16 +3,16 @@
 namespace TotalCMS\Action\Download;
 
 use Nyholm\Psr7\Stream;
+use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Utils\Cipher;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
-use Odan\Session\PhpSession;
 
 final class DownloadFileAction
 {
@@ -52,6 +52,7 @@ final class DownloadFileAction
 
 		if ($attempts > $maxAttempts) {
 			$flash->add('error', 'Too many download attempts');
+
 			return $this->accessDenied($response);
 		}
 
@@ -59,23 +60,23 @@ final class DownloadFileAction
 
 		if ($this->accessManager->isProtectedByGroups()) {
 			// check if the user is logged in and has access to the file
-			if (!$this->accessManager->sessionHasUser()) {
+			if ($this->accessManager->sessionHasUser() === false) {
 				return $this->redirectToLogin($request, $response);
 			}
-			if (!$this->accessManager->userHasAccess()) {
+			if ($this->accessManager->userHasAccess() === false) {
 				return $this->accessDenied($response);
 			}
 		}
 
 		if ($this->accessManager->isPasswordProtected()) {
-
 			$password = $this->passwordFromRequest($request);
 
 			if (is_null($password)) {
 				return $this->loadPasswordForm($response);
 			}
-			if (!$this->accessManager->verfiyPassword($password)) {
+			if ($this->accessManager->verfiyPassword($password) === false) {
 				$flash->add('error', 'Invalid password');
+
 				return $this->loadPasswordForm($response);
 			}
 		}
