@@ -17,8 +17,8 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Utils\LogAnalyzer;
-use TotalCMS\Utils\ServerChecker;
 use TotalCMS\Utils\PaginationGenerator;
+use TotalCMS\Utils\ServerChecker;
 
 /**
  * Twig Adapter with Total CMS.
@@ -95,12 +95,14 @@ final class TotalCMSTwigAdapter
 		if ($this->session->has($key)) {
 			return $this->session->get($key);
 		}
+
 		return null;
 	}
 
 	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $filename = ''): bool
 	{
 		$this->fileAccessManager->loadFile($collection, $id, $property);
+
 		return $this->fileAccessManager->verfiyPasswordOnly($password);
 	}
 
@@ -124,7 +126,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -133,7 +135,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -142,7 +144,7 @@ final class TotalCMSTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn($schema) => $schema->toArray(), $schemas);
+		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
 	// Get schema definition
@@ -262,6 +264,38 @@ final class TotalCMSTwigAdapter
 		}
 
 		return $object->toArray();
+	}
+
+	/** @param array<string,string> $options */
+	public function download(string $id, array $options = []): string
+	{
+		$collection = $options['collection'] ?? 'file';
+		$property   = $options['property'] ?? 'file';
+		$password   = $options['pwd'] ?? '';
+
+		$url = "{$this->api}/download/{$collection}/{$id}/{$property}";
+
+		if (!empty($password)) {
+			$url .= "?pwd={$password}";
+		}
+
+		return $url;
+	}
+
+	/** @param array<string,string> $options */
+	public function depotDownload(string $id, string $filename, array $options = []): string
+	{
+		$collection = $options['collection'] ?? 'file';
+		$property   = $options['property'] ?? 'file';
+		$password   = $options['pwd'] ?? '';
+
+		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$filename}";
+
+		if (!empty($password)) {
+			$url .= "?pwd={$password}";
+		}
+
+		return $url;
 	}
 
 	// Get an data property from an object
@@ -400,7 +434,7 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getParams   = [],
+		array $getParams   = [],
 	): string {
 		return PaginationGenerator::simplePagination(...func_get_args());
 	}
@@ -413,7 +447,7 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getParams   = [],
+		array $getParams   = [],
 	): string {
 		return PaginationGenerator::fullPagination(...func_get_args());
 	}
@@ -606,7 +640,7 @@ final class TotalCMSTwigAdapter
 			return null;
 		}
 
-		$image = array_filter($gallery, fn($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
