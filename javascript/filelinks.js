@@ -5,8 +5,13 @@ if (window.self !== window.top) {
 	document.body.classList.add('in-iframe');
 }
 
-const generateTwigMacro = (data) => {
-	const macroContent = document.getElementById("twig-macro");
-	macroContent.textContent = MacroBuilder.fileDownloadMacro(data);
+const macroContent = document.getElementById("twig-macro");
+const urlParams = new URLSearchParams(window.location.search);
+const data = {};
+for (const [key, value] of urlParams.entries()) {
+	data[key] = value;
 }
-generateTwigMacro(getFormData());
+if (macroContent.dataset.pwd) {
+	data.pwd = macroContent.dataset.pwd;
+}
+macroContent.textContent = MacroBuilder.download(data);

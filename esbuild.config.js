@@ -10,6 +10,7 @@ esbuild.build({
 		"javascript/admin.js",
 		"javascript/gallery.js",
 		"javascript/content.js",
+		"javascript/filelinks.js",
 		"javascript/imageworks-builder.js",
 		"javascript/totalcms.js",
 		"javascript/swagger.js",

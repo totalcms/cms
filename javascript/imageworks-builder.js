@@ -1,7 +1,6 @@
 import MacroBuilder from "./macro-builder";
 import Details from "./totalform/details";
 import Dialog from "./totalform/dialog";
-import MacroBuilder from "./macro-builder";
 
 if (window.self !== window.top) {
 	// The page is in an iframe
@@ -35,7 +34,11 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const generateTwigMacro = (data) => {
 		const macroContent = document.getElementById("twig-macro");
-		macroContent.textContent = MacroBuilder.imageMacro(data);
+		if (data.name?.length > 0) {
+			macroContent.textContent = MacroBuilder.galleryPath(data);
+			return;
+		}
+		macroContent.textContent = MacroBuilder.imagePath(data);
 	}
 
 	const filesize = document.getElementById('filesize');

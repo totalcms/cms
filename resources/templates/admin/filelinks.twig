@@ -17,6 +17,10 @@
 		{% set password = "" %}
 	{% endif %}
 
+	{% if password is not empty %}
+		{% set password = password | encrypt | urlencode %}
+	{% endif %}
+
 	<main class="admin-layout container">
 
 		<h1>File Download Links</h1>
@@ -24,7 +28,7 @@
 		<section>
 			<h4>Download Link:</h4>
 			{% if password %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}?pwd={{password | encrypt | urlencode}}</pre>
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}?pwd={{password}}</pre>
 			{% else %}
 				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
 			{% endif %}
@@ -33,7 +37,11 @@
 
 		<section>
 			<h4>Macro:</h4>
-			<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+			{% if password %}
+				<pre data-pwd="{{password}}" id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+			{% else %}
+				<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#twig-macro">Copy Macro</button>
 		</section>
 
@@ -41,7 +49,7 @@
 			<div class="form-field password-field" data-type="password">
 				<label for="field-66e386299dfa7">Password</label>
 				<div class="form-group">
-					<input type="password" id="field-66e386299dfa7" name="password" value="{{password}}" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
+					<input type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
 					<div class="form-group-icon"></div>
 				</div>
 				<p class="help" id="help-66e386299dfa7">This password must match the password saved for this file</p>
