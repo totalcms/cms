@@ -12,6 +12,7 @@ use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Utils\Cipher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use Odan\Session\PhpSession;
 
 final class DownloadFileAction
 {
@@ -20,8 +21,11 @@ final class DownloadFileAction
 		private TwigRenderer $twigRenderer,
 		private FileAccessManager $accessManager,
 		private ObjectSaver $objectSaver,
+		private PhpSession $session,
 	) {
 	}
+
+	public const MAX_ATTEMPTS = 10;
 
 	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(
@@ -37,6 +41,20 @@ final class DownloadFileAction
 			throw new HttpNotFoundException($request, 'File not found');
 		}
 
+		// Clear all flash messages
+		$flash = $this->session->getFlash();
+		$flash->clear();
+
+		$attempts = $this->session->get('downloadAttempts', 0);
+		$this->session->set('downloadAttempts', $attempts + 1);
+
+		$maxAttempts = self::MAX_ATTEMPTS;
+
+		if ($attempts > $maxAttempts) {
+			$flash->add('error', 'Too many download attempts');
+			return $this->accessDenied($response);
+		}
+
 		$this->accessManager->loadFile($collection, $id, $property);
 
 		if ($this->accessManager->isProtectedByGroups()) {
@@ -50,13 +68,15 @@ final class DownloadFileAction
 		}
 
 		if ($this->accessManager->isPasswordProtected()) {
+
 			$password = $this->passwordFromRequest($request);
 
 			if (is_null($password)) {
 				return $this->loadPasswordForm($response);
 			}
 			if (!$this->accessManager->verfiyPassword($password)) {
-				return $this->accessDenied($response);
+				$flash->add('error', 'Invalid password');
+				return $this->loadPasswordForm($response);
 			}
 		}
 
@@ -69,6 +89,8 @@ final class DownloadFileAction
 		$this->objectSaver->updateObjectProperty($collection, $id, $property, $file->transform());
 
 		$stream = $this->fileFetcher->streamFile($collection, $id, $property);
+
+		$this->session->delete('downloadAttempts');
 
 		return $response->withBody(Stream::create($stream));
 	}
