@@ -1,7 +1,6 @@
 {# Skip blog-legacy schema #}
 {% set reservedSchemas = cms.reservedSchemas() | filterCollection([
 	{ property : "id", operator : "not-equal", value : "blog-legacy" },
-	{ property : "id", operator : "not-equal", value : "file" },
 	{ property : "id", operator : "not-equal", value : "depot" },
 ]) %}
 
