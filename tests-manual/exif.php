@@ -4,21 +4,15 @@ error_reporting(E_ERROR);
 
 chdir(__DIR__);
 
-require_once '../../vendor/autoload.php';
+require_once '../vendor/autoload.php';
 
 use PHPExif\Reader\Reader;
+use PHPExif\Enum\ReaderType as ExifReaderType;
+use PHPExif\Exif;
+use PHPExif\Reader\Reader as ExifReader;
 
-// reader with Native adapter
-$reader = Reader::factory(Reader::TYPE_NATIVE);
-
-// reader with Exiftool adapter
-// $reader = \PHPExif\Reader\Reader::factory(\PHPExif\Reader\Reader::TYPE_EXIFTOOL);
-
-// reader with FFmpeg/FFprobe adapter
-// $reader = \PHPExif\Reader\Reader::factory(\PHPExif\Reader\Reader::TYPE_FFPROBE);
-
-// reader with Imagick adapter
-// $reader = \PHPExif\Reader\Reader::factory(\PHPExif\Reader\Reader::TYPE_IMAGICK);
+$readerType = extension_loaded('imagick') ? ExifReaderType::IMAGICK : ExifReaderType::NATIVE;
+$reader     = ExifReader::factory($readerType);
 
 $images = scandir('images');
 
@@ -43,9 +37,13 @@ foreach ($images as $image) {
         'date'        => $exif->getCreationDate(),
         // 'width'       => $exif->getWidth(),
         // 'height'      => $exif->getHeight(),
-        'longitude'   => $exif->getLongitude(),
-        'latitude'    => $exif->getLatitude(),
-        'altitude'    => $exif->getAltitude(),
+        'longitude' => $exif->getLongitude(),
+        'latitude'  => $exif->getLatitude(),
+        'altitude'  => $exif->getAltitude(),
+        'country'   => $exif->getCountry(),
+        'city'      => $exif->getCity(),
+        'state'     => $exif->getState(),
+        'sublocation'  => $exif->getSublocation(),
     ];
     echo "$image:" . PHP_EOL;
     print_r(array_filter($data));

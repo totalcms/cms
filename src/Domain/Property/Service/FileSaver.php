@@ -336,9 +336,13 @@ final class FileSaver
 			'title'       => $exif->getTitle(),
 			'date'        => $date,
 			// GPS Data
-			'longitude' => $exif->getLongitude() === false ? null : strval($exif->getLongitude()),
-			'latitude'  => $exif->getLatitude() === false  ? null : strval($exif->getLatitude()),
-			'altitude'  => $exif->getAltitude() === false  ? null : strval($exif->getAltitude()),
+			'longitude'   => $exif->getLongitude() === false ? null : strval($exif->getLongitude()),
+			'latitude'    => $exif->getLatitude() === false  ? null : strval($exif->getLatitude()),
+			'altitude'    => $exif->getAltitude() === false  ? null : strval($exif->getAltitude()),
+			'country'     => $exif->getCountry(),
+			'state'       => $exif->getState(),
+			'city'        => $exif->getCity(),
+			'sublocation' => $exif->getSublocation(),
 		];
 		// fitler out any null values
 		$data     = array_filter($data);
