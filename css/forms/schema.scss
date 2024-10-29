@@ -435,6 +435,10 @@
 }
 .styledtext-field {
 	--schema-icon : var(--icon-styledtext);
+
+	&.string-type:after {
+		display : none;
+	}
 }
 .svg-field {
 	--schema-icon : var(--icon-svg);
