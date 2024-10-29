@@ -281,6 +281,17 @@ Example 4: Grouped options with values
 	}
 },
 ```
+
+#### Sorting Options
+
+You can sort the options in all form inputs that support options or datalist with the following setting
+
+```
+{
+	"sortOptions" : true
+}
+```
+
 #### Property Options
 
 Get all value of a field and populate as select options or datalist

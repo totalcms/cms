@@ -16,7 +16,8 @@ export default class TotalField {
 
         // Define option defaults
         const defaults = {
-            form : null
+			form          : null,
+			"sortOptions" : false,
         };
         this.options = Object.assign({}, defaults, options);
         this.form = this.options.form;
@@ -35,7 +36,9 @@ export default class TotalField {
 		this.dispatcher = new TotalDispatcher(this.container);
 
 		this.changeListener();
-		this.sortOptions();
+		if (this.options.sortOptions) {
+			this.sortOptions();
+		}
     }
 
 	changeListener() {
