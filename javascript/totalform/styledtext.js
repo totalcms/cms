@@ -71,19 +71,7 @@ export default class StyledTextField extends TotalField {
     }
 
     initFroala() {
-		this.froala = new FroalaEditor(this.input, {
-			key                        : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
-			attribution                : false,
-			heightMin                  : 200,
-			heightMax                  : 800,
-			fontSizeDefaultSelection   : '1',
-            fontSizeUnit               : 'rem',
-			fontFamilyDefaultSelection : 'inherit',
-			toolbarButtons             : ['bold', 'italic', 'html'],
-			events                     : {
-				'contentChanged': () => this.changed()
-			}
-		});
+		this.froala = new FroalaEditor(this.input, this.options);
         // .on("froalaEditor.charCounter.exceeded", (e, editor) => this.charCountExceeded())
         // .on("froalaEditor.image.beforeUpload", (e, editor, images) => this.updateUploadURLs(editor))
         // .on("froalaEditor.file.beforeUpload",  (e, editor, files)  => this.updateUploadURLs(editor))
@@ -126,8 +114,10 @@ export default class StyledTextField extends TotalField {
 
     defaultConfig() {
         const toolbar = [
-            "bold", "italic", "|",
-            "insertLink", "insertImage"
+            "bold", "italic", "insertLink",
+            "|", "alignLeft", "alignCenter", "alignRight",
+            "|", "formatOL", "formatUL",
+            "|", "clearFormatting", "html",
         ];
         const colors = [
             "#61BD6D", "#1ABC9C", "#54ACD2",
@@ -180,24 +170,32 @@ export default class StyledTextField extends TotalField {
         const megabyte = 1024 * 1024;
         const height   = this.input.dataset.height > 0 ?  this.input.dataset.height : null;
         return {
-            keepFormatOnDelete : true,
-            charCounterCount   : false,
-            charCounterMax     : this.input.dataset.maxcount,
-            colorsText         : colors,
-            colorsBackground   : colors,
-            language           : this.api.options.locale,
-            linkAutoPrefix     : "https://",
-            toolbarInline      : false,
-            tooltips           : true,
-            shortcutsHint      : false,
-            fontSize           : fontSizes,
-            videoEditButtons   : videoEditButtons,
-            videoMaxSize       : megabyte * 1024,
-            fileMaxSize        : megabyte * 1024,
-            imageMaxSize       : megabyte * 5,
-            imageUploadParam   : "image",
-            fileUploadParam    : "file",
-            videoUploadParam   : "video",
+            key                        : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
+            attribution                : false,
+            height                     : height,
+            heightMin                  : 200,
+            heightMax                  : 800,
+            fontSizeDefaultSelection   : '1',
+            fontSizeUnit               : 'rem',
+            fontFamilyDefaultSelection : 'inherit',
+            keepFormatOnDelete         : true,
+            charCounterCount           : false,
+            charCounterMax             : this.input.dataset.maxcount,
+            colorsText                 : colors,
+            colorsBackground           : colors,
+            language                   : this.api.options.locale,
+            linkAutoPrefix             : "https://",
+            toolbarInline              : false,
+            tooltips                   : true,
+            shortcutsHint              : false,
+            fontSize                   : fontSizes,
+            videoEditButtons           : videoEditButtons,
+            videoMaxSize               : megabyte * 1024,
+            fileMaxSize                : megabyte * 1024,
+            imageMaxSize               : megabyte * 5,
+            imageUploadParam           : "image",
+            fileUploadParam            : "file",
+            videoUploadParam           : "video",
             // These URLs will need to be customized per instance since
             // The API URL will need the collection, id and property fields
             fileUploadURL         : this.uploadAPI("file"),
@@ -223,18 +221,19 @@ export default class StyledTextField extends TotalField {
             pastePlain             : true,
             placeholderText        : this.input.getAttribute("placeholder"),
             // requestHeaders         : {},
-            toolbarButtons         : toolbar,
-            toolbarButtonsMD       : toolbar,
-            toolbarButtonsSM       : toolbar,
-            toolbarButtonsXS       : toolbar,
-            toolbarSticky          : false,
-            quickInsertButtons     : false,
-            quickInsertTags        : quickInsertTags,
-            paragraphFormat        : paragraphFormat,
-            enter                  : FroalaEditor.ENTER_P,
-            htmlRemoveTags         : ["script"],
-            heightMax              : 1000,
-            height                 : height
+            toolbarButtons     : toolbar,
+            toolbarButtonsMD   : toolbar,
+            toolbarButtonsSM   : toolbar,
+            toolbarButtonsXS   : toolbar,
+            toolbarSticky      : false,
+            quickInsertButtons : false,
+            quickInsertTags    : quickInsertTags,
+            paragraphFormat    : paragraphFormat,
+            enter              : FroalaEditor.ENTER_P,
+            htmlRemoveTags     : ["script"],
+            events             : {
+				'contentChanged': () => this.changed()
+			}
         };
     }
 
