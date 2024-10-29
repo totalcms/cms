@@ -54,7 +54,8 @@ class ServerChecker
 			'Max Execution Time' => ini_get('max_execution_time'),
 			'Memory Limit'       => ini_get('memory_limit'),
 			'Timezone'           => date_default_timezone_get(),
-			'Locale'             => setlocale(LC_ALL, 0),
+			// @phpstan-ignore argument.type
+			'Locale' => setlocale(LC_ALL, 0),
 		];
 	}
 
