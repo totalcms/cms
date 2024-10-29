@@ -6,6 +6,11 @@
 error_reporting(0);
 ini_set('display_errors', '0');
 
+if (isset($_GET['debugstart'])) {
+	error_reporting(E_ALL);
+	ini_set('display_errors', '1');
+}
+
 // locale
 setlocale(LC_ALL, 'C.UTF-8', 'en_US.UTF-8', 'en_US');
 
@@ -29,7 +34,7 @@ $settings = [];
 $settings['sentry'] = [
 	'enable' => true,
 	'init'   => [
-		'dsn' => 'qV5oLHxq8qVhMOuqK43gPFl4b2hSckxHdEFZeVFNdlFiYnh3M0d5TWE0M1dtYjBvWnB6OGVtZ0d3R2hCVDM2OGtucVFMc1diNGVSNFRYRWRhTFRyUFZOY2Q1M0F1dHBRTk90dzVzY1JaL3F1N3hPZmVkZHBiUnh0cnJnTFY0SUE3SWM0L2dWOHlvYmtOc0FI',
+		'dsn' => 'G0caBAFDfR9UXEYRAAgWQE1rUwZdQ0JWCEITH2YIAQpFRFENRksfZHAMX0ZDBFpBR0xmA1BaQUALWlobFzVVEB9dBkBABxcXJkIaRRocHFpBQk5mBVZeR0YDVkVKTGQ=',
 		// Specify a fixed sample rate
 		'traces_sample_rate' => 1.0,
 		// Set a sampling rate for profiling - this is relative to traces_sample_rate
@@ -148,6 +153,7 @@ $settings['auth'] = [
 ];
 
 // https://www.php.net/manual/en/timezones.php
+// DateTimeZone::listIdentifiers()
 $settings['timezone'] = date_default_timezone_get();
 
 return $settings;
