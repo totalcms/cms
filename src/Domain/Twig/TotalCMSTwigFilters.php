@@ -291,6 +291,8 @@ final class TotalCMSTwigFilters
 	 */
 	public static function truncate(string $string, int $length, bool $keepWords = false): string
 	{
+		$string = strip_tags($string);
+
 		if (strlen($string) > $length) {
 			if ($keepWords) {
 				$string  = substr($string, 0, $length);
@@ -307,7 +309,9 @@ final class TotalCMSTwigFilters
 
 	public static function truncateWords(string $string, int $length): string
 	{
-		$words = explode(' ', $string);
+		$string = strip_tags($string);
+		$string = preg_replace('/\s+/', ' ', $string) ?? '';
+		$words  = explode(' ', $string);
 
 		if (count($words) > $length) {
 			$string = implode(' ', array_slice($words, 0, $length));
