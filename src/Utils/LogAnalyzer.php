@@ -34,6 +34,7 @@ class LogAnalyzer
 			}
 		}
 
+		ksort($files);
 		$this->logfiles = $files;
 
 		return $files;
