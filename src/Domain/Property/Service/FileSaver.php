@@ -105,18 +105,50 @@ final class FileSaver
 
 	public function saveFileForFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
 	{
-		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
-			// TODO: create object if it does not exist
-			throw new \UnexpectedValueException('Object does not exist');
+		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
+		if (!$objectExists) {
+			try {
+				$this->objectSaver->saveObject($collection, [
+					'id'      => $objectID,
+					$property => $this->createPropertyObject($collection, $property)->transform(),
+				]);
+			} catch (\Exception $e) {
+				$msg = "Object $objectID does not exist in collection $collection to save file ($property) to.";
+				throw new \UnexpectedValueException($msg . $e->getMessage());
+			}
 		}
 
 		// Clean up existing files in the path. Only one file should exist
 		$this->storage->deleteDirectory($collection, $objectID, $property);
 
 		// Update the object with the new file data
-		$fileProperty = $this->fetchProperty($collection, $objectID, $property);
-		$fileInfo     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
-		$newData      = array_merge($fileProperty->transform(), $fileInfo);
+		$fileInfo = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+
+		// File object stores original filename as 'filename'
+		$fileInfo['filename'] = $fileInfo['name'];
+
+		$newData = $fileInfo;
+
+		if ($objectExists) {
+			// If the object existed before, we will keep the existing data
+			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
+			$keep         = ['name', 'comments', 'tags', 'protected', 'password'];
+			$existingData = array_filter($fileProperty->transform(), fn($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+			if (!empty($existingData["name"])) {
+				// make sure that it's not an empty file property, filename would not be empty
+
+				// Update the extension of the name if the new file has a different extension
+				$newExt      = pathinfo((string)$fileInfo['name'], PATHINFO_EXTENSION);
+				$existingExt = pathinfo((string)$existingData["name"], PATHINFO_EXTENSION);
+
+				if ($newExt !== $existingExt) {
+					$existingData["name"] = pathinfo($existingData["name"], PATHINFO_FILENAME) . '.' . $newExt;
+				}
+
+				$fileInfo = array_merge($fileInfo, $existingData);
+			}
+			$newData = array_merge($fileProperty->transform(), $fileInfo);
+		}
 
 		return $this->updateObject($collection, $objectID, $property, $newData);
 	}
@@ -304,9 +336,13 @@ final class FileSaver
 			'title'       => $exif->getTitle(),
 			'date'        => $date,
 			// GPS Data
-			'longitude' => $exif->getLongitude() === false ? null : strval($exif->getLongitude()),
-			'latitude'  => $exif->getLatitude() === false  ? null : strval($exif->getLatitude()),
-			'altitude'  => $exif->getAltitude() === false  ? null : strval($exif->getAltitude()),
+			'longitude'   => $exif->getLongitude() === false ? null : strval($exif->getLongitude()),
+			'latitude'    => $exif->getLatitude() === false  ? null : strval($exif->getLatitude()),
+			'altitude'    => $exif->getAltitude() === false  ? null : strval($exif->getAltitude()),
+			'country'     => $exif->getCountry(),
+			'state'       => $exif->getState(),
+			'city'        => $exif->getCity(),
+			'sublocation' => $exif->getSublocation(),
 		];
 		// fitler out any null values
 		$data     = array_filter($data);

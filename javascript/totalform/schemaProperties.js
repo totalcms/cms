@@ -32,7 +32,7 @@ export default class SchemaPropertiesField extends PropertiesField {
 	}
 
     newField(field) {
-		new PropertyField(field);
+		new PropertyField(field, this.fieldClass);
 		this.initActionbar(field);
 		this.form.processFields();
 	}
@@ -44,7 +44,8 @@ export default class SchemaPropertiesField extends PropertiesField {
 
 		// Ensure properties are all lowercase
 		property?.addEventListener("change", () => {
-			property.value = slugify(property.value, { lower: true });
+			// Replace hyphens with underscores because it makes for nicer twig macros
+			property.value = slugify(property.value, { lower: true }).replace(/-/g, "_");
 		});
 
 		trash?.addEventListener("click", () => this.removeField(field));

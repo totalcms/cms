@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
+use TotalCMS\Support\Config;
+
 /**
  * Date property data.
  */
@@ -14,7 +16,7 @@ class DateData extends PropertyData
 
 	public function __construct(string $date)
 	{
-		$this->date = empty($date) ? '' : self::cleanDate($date);
+		$this->date   = empty($date) ? '' : self::cleanDate($date);
 	}
 
 	public static function defaultValue(mixed $value, mixed $default): mixed
@@ -32,9 +34,11 @@ class DateData extends PropertyData
 
 	private static function cleanDate(string $date = ''): string
 	{
-		// TODO: add timezone configuration support
+		$config = Config::init();
+		$timezone = new \DateTimeZone($config->timezone);
 
-		$date = new \DateTime($date);
+		$date = new \DateTime($date, $timezone);
+		$date->setTimezone($timezone);
 
 		return $date->format('c');
 	}

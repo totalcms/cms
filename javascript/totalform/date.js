@@ -7,6 +7,10 @@ export default class DateField extends TotalField {
 
 	getValue() {
 		if (this.input.value) {
+			if (this.type === 'date') {
+				// Convert to ISO format
+				return new Date(this.input.value).toISOString().split('T')[0];
+			}
 			// Convert to ISO format and remove milliseconds
 			return new Date(this.input.value).toISOString().replace(/\.\d{3}/, '');
 		}

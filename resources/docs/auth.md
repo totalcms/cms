@@ -14,3 +14,12 @@ This stack simply loads in the data for the currently logged in user. There are 
 
 SuperAdmin Access
 If a user is inside of the default auth collection and is added to the admin group, that user is essentially a superadmin and will be able to access everything, even if you are using a custom auth collection.
+
+## Customizing the login screen
+
+You can customize the login screen through adding the following templates into the CMS.
+
+* `login-above.twig` : Contents that will be added above the login form. This will replace the default content that
+already exists.
+* `login-below.twig` : Contents that will be added below the login form.
+

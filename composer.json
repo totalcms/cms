@@ -39,7 +39,7 @@
     "matthieumastadenis/couleur": "^0.1.2",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
-    "nyholm/psr7": "^1.4",
+    "nyholm/psr7": "^1.8",
     "nyholm/psr7-server": "^1.0",
     "odan/session": "^6.1",
     "opis/json-schema": "^2.3",

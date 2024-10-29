@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig;
 
 use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Utils\Cipher;
 use TotalCMS\Utils\CollectionRefiner;
 use TotalCMS\Utils\CollectionSorter;
 use Twig\TwigFilter;
@@ -56,11 +57,16 @@ final class TotalCMSTwigFilters
 		'rgb',
 		'hsl',
 		'oklch',
+		'color',
+		'colour',
 		'lightness',
 		'chroma',
 		'hue',
 		'adjustColor',
 		'obfuscate',
+		'deobfuscate',
+		'encrypt',
+		'decrypt',
 		'filterCollection',
 		'sortCollection',
 		'paginate',
@@ -98,14 +104,22 @@ final class TotalCMSTwigFilters
 
 	public static function obfuscate(string $string): string
 	{
-		$length = strlen($string);
-		$result = '';
+		return Cipher::obfuscate($string);
+	}
 
-		for ($i = 0; $i < $length; $i++) {
-			$result .= '&#' . ord($string[$i]) . ';';
-		}
+	public static function deobfuscate(string $string): string
+	{
+		return Cipher::deobfuscate($string);
+	}
 
-		return $result;
+	public static function encrypt(string $string): string
+	{
+		return Cipher::encrypt($string);
+	}
+
+	public static function decrypt(string $string): string
+	{
+		return Cipher::decrypt($string);
 	}
 
 	// -------------------------
@@ -177,6 +191,26 @@ final class TotalCMSTwigFilters
 	 *
 	 * @param ?array<string,mixed> $color
 	 */
+	public static function color(?array $color, int $alpha = 100, bool $wrap = true): string
+	{
+		return self::oklch($color, $alpha, $wrap);
+	}
+
+	/**
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 *
+	 * @param ?array<string,mixed> $color
+	 */
+	public static function colour(?array $color, int $alpha = 100, bool $wrap = true): string
+	{
+		return self::oklch($color, $alpha, $wrap);
+	}
+
+	/**
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 *
+	 * @param ?array<string,mixed> $color
+	 */
 	public static function oklch(?array $color, int $alpha = 100, bool $wrap = true): string
 	{
 		if ($color === null) {
@@ -186,8 +220,8 @@ final class TotalCMSTwigFilters
 		$oklch = $color['oklch'] ?? ['l' => 0, 'c' => 0, 'h' => 0];
 
 		$color = $alpha === 100 ?
-			sprintf('oklch(%.3f%% %.3f %.3f)', $oklch['l'], $oklch['c'], $oklch['h']) :
-			sprintf('oklch(%.3f%% %.3f %.3f / %.2f)', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
+			sprintf('%.3f%% %.3f %.3f', $oklch['l'], $oklch['c'], $oklch['h']) :
+			sprintf('%.3f%% %.3f %.3f / %.2f', $oklch['l'], $oklch['c'], $oklch['h'], $alpha / 100);
 
 		return $wrap ? sprintf('oklch(%s)', $color) : $color;
 	}
@@ -257,6 +291,8 @@ final class TotalCMSTwigFilters
 	 */
 	public static function truncate(string $string, int $length, bool $keepWords = false): string
 	{
+		$string = strip_tags($string);
+
 		if (strlen($string) > $length) {
 			if ($keepWords) {
 				$string  = substr($string, 0, $length);
@@ -265,7 +301,7 @@ final class TotalCMSTwigFilters
 			} else {
 				$string = substr($string, 0, $length);
 			}
-			$string .= '&hellip';
+			$string .= '&hellip;';
 		}
 
 		return $string;
@@ -273,11 +309,13 @@ final class TotalCMSTwigFilters
 
 	public static function truncateWords(string $string, int $length): string
 	{
-		$words = explode(' ', $string);
+		$string = strip_tags($string);
+		$string = preg_replace('/\s+/', ' ', $string) ?? '';
+		$words  = explode(' ', $string);
 
 		if (count($words) > $length) {
 			$string = implode(' ', array_slice($words, 0, $length));
-			$string .= '&hellip';
+			$string .= '&hellip;';
 		}
 
 		return $string;

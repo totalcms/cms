@@ -1,0 +1,61 @@
+body, h1,h2,h3,h4,h5,h6 {
+	margin  : 0;
+	padding : 0;
+}
+
+.container {
+	display : grid;
+	gap     : 1.5rem;
+	padding : 1.25rem;
+
+	section {
+		display : grid;
+		gap     : 0.5rem;
+	}
+	button {
+		background-color : oklch(var(--totalform-accent));
+		color            : oklch(var(--totalform-white));
+		padding          : 1rem;
+		border           : none;
+		border-radius    : var(--totalform-radius);
+		font-size        : 1.1rem;
+		font-weight      : bold;
+		cursor           : pointer;
+		transition       : all 200ms ease-out;
+		width            : fit-content;
+
+		&:hover {
+			filter: brightness(0.95);
+		}
+		&:active {
+			scale: 0.98;
+			filter: brightness(0.90);
+		}
+	}
+	.cms-clip-button {
+		border     : 1px solid oklch(var(--totalform-accent));
+		background : transparent;
+		color      : oklch(var(--totalform-accent));
+		padding    : 0.5rem 1rem;
+		font-size  : 0.8rem;
+
+		&.copied {
+			content: "Copied!";
+			background-color : oklch(var(--totalform-accent));
+			color      : oklch(var(--totalform-white));
+		}
+	}
+}
+pre#link-url,
+pre#twig-macro {
+	background-color : oklch(var(--totalform-nearwhite));
+	padding          : 1rem 0.5rem;
+	border           : 1px solid oklch(var(--totalform-border-color));
+	border-radius    : 5px;
+	overflow-x       : scroll;
+}
+
+.totalform {
+	display : grid;
+	gap     : 1rem;
+}

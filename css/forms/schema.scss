@@ -158,10 +158,12 @@
 }
 
 .schema-field {
-	--schema-icon : var(--icon-text);
+	--schema-icon      : var(--icon-question);
+	--schema-type-icon : var(--icon-question);
+
 	display               : inline-grid;
 	grid-template-columns : max-content auto max-content max-content;
-	padding               : 0.5rem 1rem;
+	padding               : 0.5rem 1rem 0.5rem 5rem;
 	gap                   : 0;
 	border-radius         : var(--totalform-radius);
 	background-color      : oklch(var(--totalform-nearwhite));
@@ -180,18 +182,27 @@
 		border-color : oklch(var(--totalform-error)) !important;
 	}
 
-	&:after {
+	&:before, &:after {
 		display          : block;
 		content          : " ";
 		transition       : background-color 200ms ease-in-out;
-		background-color : oklch(var(--totalform-icon-color));
 		width            : 1.1rem;
 		height           : 1.1rem;
+		background-color : oklch(var(--totalform-icon-color));
 		mask-image       : var(--schema-icon);
 		mask-repeat      : no-repeat;
 		position         : absolute;
 		top              : 50%;
-		translate        : 125% -50%;
+	}
+
+	&:before {
+		translate : 125% -50%;
+	}
+
+	&:after {
+		mask-image : var(--schema-type-icon);
+		translate  : 275% -50%;
+		opacity   : 0.5;
 	}
 
 	> input[type="text"] {
@@ -202,7 +213,7 @@
 		border-radius    : var(--totalform-radius);
 		background-color : oklch(var(--totalform-nearwhite));
 		box-shadow       : none;
-		text-indent      : 2rem;
+		text-indent      : 0.5rem;
 		transition       : background-color 200ms ease-in-out;
 
 		&:focus {
@@ -249,50 +260,162 @@
 	}
 }
 
+.boolean-type {
+	--schema-type-icon : var(--icon-checkbox);
+}
+.color-type {
+	--schema-type-icon : var(--icon-paint-roller);
+}
+.date-type {
+	--schema-type-icon : var(--icon-date);
+}
+.deck-type {
+	--schema-type-icon : var(--icon-deck);
+}
+.depot-type {
+	--schema-type-icon : var(--icon-depot);
+}
+.email-type {
+	--schema-type-icon : var(--icon-email);
+}
+.file-type {
+	--schema-type-icon : var(--icon-file);
+}
+.gallery-type {
+	--schema-type-icon : var(--icon-gallery);
+}
+.image-type {
+	--schema-type-icon : var(--icon-image);
+}
+.list-type {
+	--schema-type-icon : var(--icon-list);
+}
+.number-type {
+	--schema-type-icon : var(--icon-number);
+}
+.password-type {
+	--schema-type-icon : var(--icon-lock);
+}
+.phone-type {
+	--schema-type-icon : var(--icon-tel);
+}
+.slug-type {
+	--schema-type-icon : var(--icon-id);
+}
+.string-type {
+	--schema-type-icon : var(--icon-text);
+}
+.svg-type {
+	--schema-type-icon : var(--icon-svg);
+}
+.time-type {
+	--schema-type-icon : var(--icon-time);
+}
+.url-type {
+	--schema-type-icon : var(--icon-url);
+}
+
+
 .id-field {
 	--schema-icon : var(--icon-id);
+
+	&.slug-type:after {
+		display : none;
+	}
 }
 .text-field {
 	--schema-icon : var(--icon-text);
+
+	&.string-type:after {
+		display : none;
+	}
 }
 .time-field {
 	--schema-icon : var(--icon-time);
+
+	&.time-type:after {
+		display : none;
+	}
 }
 .url-field {
 	--schema-icon : var(--icon-url);
+
+	&.url-type:after {
+		display : none;
+	}
 }
 .hidden-field {
 	--schema-icon : var(--icon-hidden);
 }
 .email-field {
 	--schema-icon : var(--icon-email);
+
+	&.email-type:after {
+		display : none;
+	}
 }
 .phone-field {
 	--schema-icon : var(--icon-tel);
+
+	&.phone-type:after {
+		display : none;
+	}
 }
 .password-field {
 	--schema-icon : var(--icon-lock);
+
+	&.password-type:after {
+		display : none;
+	}
 }
 .textarea-field {
 	--schema-icon : var(--icon-text);
+
+	&.string-type:after {
+		display : none;
+	}
 }
 .checkbox-field {
 	--schema-icon : var(--icon-checkbox);
+
+	&.boolean-type:after {
+		display : none;
+	}
 }
 .toggle-field {
 	--schema-icon : var(--icon-toggle);
+
+	&.boolean-type:after {
+		display : none;
+	}
 }
 .number-field {
 	--schema-icon : var(--icon-number);
+
+	&.number-type:after {
+		display : none;
+	}
 }
 .color-field {
 	--schema-icon : var(--icon-paint-roller);
+
+	&.color-type:after {
+		display : none;
+	}
 }
 .date-field {
 	--schema-icon : var(--icon-date);
+
+	&.date-type:after {
+		display : none;
+	}
 }
 .datetime-field {
 	--schema-icon : var(--icon-date);
+
+	&.date-type:after {
+		display : none;
+	}
 }
 .select-field {
 	--schema-icon : var(--icon-select);
@@ -302,33 +425,65 @@
 }
 .list-field {
 	--schema-icon : var(--icon-list);
+
+	&.list-type:after {
+		display : none;
+	}
 }
 .range-field {
 	--schema-icon : var(--icon-range);
 }
 .styledtext-field {
 	--schema-icon : var(--icon-styledtext);
+
+	&.string-type:after {
+		display : none;
+	}
 }
 .svg-field {
 	--schema-icon : var(--icon-svg);
+
+	&.svg-type:after {
+		display : none;
+	}
 }
 .image-field {
 	--schema-icon : var(--icon-image);
+
+	&.image-type:after {
+		display : none;
+	}
 }
 .gallery-field {
 	--schema-icon : var(--icon-gallery);
+
+	&.gallery-type:after {
+		display : none;
+	}
 }
 .file-field {
 	--schema-icon : var(--icon-file);
+
+	&.file-type:after {
+		display : none;
+	}
 }
 .depot-field {
 	--schema-icon : var(--icon-depot);
+
+	&.depot-type:after {
+		display : none;
+	}
 }
 .radio-field {
 	--schema-icon : var(--icon-radio);
 }
 .deck-field {
 	--schema-icon : var(--icon-deck);
+
+	&.deck-type:after {
+		display : none;
+	}
 }
 .json-field {
 	--schema-icon : var(--icon-json);

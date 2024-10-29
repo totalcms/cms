@@ -1,0 +1,29 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}Download Authentication{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+
+	<section class="login-form">
+		<form class="totalform" method="post" data-disabled="true">
+			<div class="form-field password-field" data-type="password">
+				<label for="field-66e386299dfa7">Password</label>
+				<div class="form-group">
+					<input type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="cms-hide help" id="help-66e386299dfa7">Password to login</p>
+			</div>
+
+			<button class="dash-button" type="submit">Download</button>
+			{% for message in flash.get('error') %}
+				<p class="cms-twig-error" role="alert">
+					{{ message }}
+				</p>
+			{% endfor %}
+		</form>
+	</section>
+
+</main>
+{% endblock %}

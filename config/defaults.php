@@ -6,6 +6,11 @@
 error_reporting(0);
 ini_set('display_errors', '0');
 
+if (isset($_GET['debugstart'])) {
+	error_reporting(E_ALL);
+	ini_set('display_errors', '1');
+}
+
 // locale
 setlocale(LC_ALL, 'C.UTF-8', 'en_US.UTF-8', 'en_US');
 
@@ -146,5 +151,9 @@ $settings['auth'] = [
 	'deniedTimeout'         => 7,
 	'deniedDefaultRedirect' => '/',
 ];
+
+// https://www.php.net/manual/en/timezones.php
+// DateTimeZone::listIdentifiers()
+$settings['timezone'] = date_default_timezone_get();
 
 return $settings;

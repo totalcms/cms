@@ -60,6 +60,12 @@
 		&.trash {
 			mask-image : var(--icon-trash);
 		}
+		&.macro {
+			mask-image : var(--icon-macro);
+		}
+		&.protect {
+			mask-image : var(--icon-lock);
+		}
 		&.links {
 			mask-image : var(--icon-link);
 		}

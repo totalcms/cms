@@ -1,0 +1,71 @@
+{% extends "admin-layout.twig" %}
+
+{% block head %}
+	<link rel="stylesheet" href="{{ cms.api }}/assets/filelinks.css"/>
+{% endblock %}
+
+{% block content %}
+
+	{% set id         = getParams.id  %}
+	{% set collection = getParams.collection | default("file") %}
+	{% set property   = getParams.property | default("file") %}
+	{% set filename   = getParams.filename %}
+	{% set password   = postParams.password %}
+
+	{% if password is not empty and not cms.verifyFilePassword(password, collection, id, property, filename) %}
+		{{ flash.add('error', 'Password is incorrect') }}
+		{% set password = "" %}
+	{% endif %}
+
+	{% if password is not empty %}
+		{% set password = password | encrypt | urlencode %}
+	{% endif %}
+
+	<main class="admin-layout container">
+
+		<h1>File Download Links</h1>
+
+		<section>
+			<h4>Download Link:</h4>
+			{% if password %}
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}?pwd={{password}}</pre>
+			{% else %}
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
+			{% endif %}
+			<button type="button" class="cms-clip-button" data-clip="#link-url">Copy Link</button>
+		</section>
+
+		<section>
+			<h4>Macro:</h4>
+			{% if password %}
+				<pre data-pwd="{{password}}" id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+			{% else %}
+				<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+			{% endif %}
+			<button type="button" class="cms-clip-button" data-clip="#twig-macro">Copy Macro</button>
+		</section>
+
+		<form class="totalform" method="post" data-disabled="true">
+			<div class="form-field password-field" data-type="password">
+				<label for="field-66e386299dfa7">Password</label>
+				<div class="form-group">
+					<input autofocus type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-66e386299dfa7">This password must match the password saved for this file</p>
+			</div>
+
+			<button class="dash-button" type="submit">Set Password on Links</button>
+			{% for message in flash.get('error') %}
+				<p class="cms-twig-error" role="alert">
+					{{ message }}
+				</p>
+			{% endfor %}
+		</form>
+
+	</main>
+{% endblock %}
+
+{% block bodyBelow %}
+	<script type="module" src="{{ cms.api }}/assets/filelinks.js"></script>
+{% endblock %}

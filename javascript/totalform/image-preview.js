@@ -143,7 +143,6 @@ export default class ImagePreview {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
 				if (confirm("Are you sure that you want to delete this image?")) {
-					// Delete the entire image object if it's an image schema
 					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					if (this.isGallery()) {
 						const name = this.getValue().name;

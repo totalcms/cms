@@ -57,7 +57,7 @@ final class AdminDocsAction
 			'path'   => $request->getUri()->getPath(),
 			'query'  => $request->getUri()->getQuery(),
 			'params' => $args,
-			'page'   => $args['page'] ?? '',
+			'page'   => 'docs',
 		];
 
 		return $this->twigRenderer->template($response, 'admin/docs.twig', $data);

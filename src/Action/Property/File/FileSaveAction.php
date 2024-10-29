@@ -33,24 +33,43 @@ final class FileSaveAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		// TODO: file chunking
-
 		$files = $request->getUploadedFiles();
-		$file  = $files[$args['property']];
+		$file  = $files[$args['property']] ?? null;
 
-		// move the uploaded file to the tmp directory
-		// this is because saveFile expects a file path
-		$filepath = $this->config->tmpdir . '/' . $file->getClientFilename();
+		if ($file === null) {
+			throw new \RuntimeException('No file found in request for property: '.$args['property']);
+		}
+
+		// Get chunk information from the request
+		$body             = (array)$request->getParsedBody();
+		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
+		$totalChunks      = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
+		$originalFilename = $file->getClientFilename();
+		$chunkFilename    = $this->chunkName($originalFilename, $chunkIndex);
+
+		// Ensure the temporary directory exists
 		if (!file_exists($this->config->tmpdir)) {
 			mkdir($this->config->tmpdir, 0777, true);
 		}
-		$file->moveTo($filepath);
 
+		// Move the uploaded chunk to the temporary directory
+		$file->moveTo($chunkFilename);
+
+		// return $this->renderer->json($response, $body);
+
+		if ($chunkIndex !== $totalChunks - 1) {
+			// If not the last chunk, return a success response
+			return $this->renderer->json($response, ['status' => 'chunk received']);
+		}
+
+		$finalFilePath = $this->assembleChunks($originalFilename, $totalChunks);
+
+		// Save the assembled file
 		$object = $this->service->saveFile(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
-			$filepath,
+			$finalFilePath,
 		);
 
 		if (!$object instanceof ObjectData) {
@@ -58,5 +77,38 @@ final class FileSaveAction
 		}
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
+	}
+
+	private function assembleChunks(string $originalFilename, int $totalChunks): string
+	{
+		$finalFilePath = $this->config->tmpdir . '/' . $originalFilename;
+		$finalFile     = fopen($finalFilePath, 'wb');
+
+		if ($finalFile === false) {
+			throw new \RuntimeException('Unable to open final file for writing:'.$finalFilePath);
+		}
+
+		// Assemble the chunks
+		for ($i = 0; $i < $totalChunks; $i++) {
+			$chunkPath = $this->chunkName($originalFilename, $i);
+			$chunk     = fopen($chunkPath, 'rb');
+			if ($chunk === false) {
+				throw new \RuntimeException('Unable to open chunk file');
+			}
+			while ($data = fread($chunk, 8192)) {
+				fwrite($finalFile, $data);
+			}
+			fclose($chunk);
+			unlink($chunkPath); // Delete the chunk after appending
+		}
+
+		fclose($finalFile);
+
+		return $finalFilePath;
+	}
+
+	private function chunkName(string $filename, int $chunkIndex): string
+	{
+		return $this->config->tmpdir . '/' . $filename . '.part' . $chunkIndex;
 	}
 }

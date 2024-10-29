@@ -4,12 +4,12 @@ namespace TotalCMS\Utils;
 
 class Cipher
 {
-	const SALT = 'YTFiMmMzZDRlNWY2ZzdoOGk5ajA=';
+	public const SALT = 'YTFiMmMzZDRlNWY2ZzdoOGk5ajA=';
 
 	public static function obfuscate(string $string, string $key = self::SALT): string
 	{
 		$keyLength = strlen($key);
-		$output = '';
+		$output    = '';
 
 		for ($i = 0; $i < strlen($string); $i++) {
 			$output .= $string[$i] ^ $key[$i % $keyLength];
@@ -20,9 +20,9 @@ class Cipher
 
 	public static function deobfuscate(string $string, string $key = self::SALT): string
 	{
-		$string = base64_decode($string);
+		$string    = base64_decode($string);
 		$keyLength = strlen($key);
-		$output = '';
+		$output    = '';
 
 		for ($i = 0; $i < strlen($string); $i++) {
 			$output .= $string[$i] ^ $key[$i % $keyLength];
@@ -33,10 +33,10 @@ class Cipher
 
 	public static function encrypt(string $data, string $key = self::SALT): string
 	{
-		$cipher = "aes-256-cbc";  // Cipher algorithm
-		$ivlen = openssl_cipher_iv_length($cipher);
+		$cipher = 'aes-256-cbc';  // Cipher algorithm
+		$ivlen  = openssl_cipher_iv_length($cipher);
 		if ($ivlen === false) {
-			throw new \Exception("Failed to get IV length");
+			throw new \Exception('Failed to get IV length');
 		}
 		$iv = openssl_random_pseudo_bytes($ivlen);  // Generate a random IV
 
@@ -47,20 +47,21 @@ class Cipher
 
 	public static function decrypt(string $data, string $key = self::SALT): string
 	{
-		$cipher = "aes-256-cbc";
-		$data = base64_decode($data);
+		$cipher = 'aes-256-cbc';
+		$data   = base64_decode($data);
 
 		$ivlen = openssl_cipher_iv_length($cipher);
 		if ($ivlen === false) {
-			throw new \Exception("Failed to get IV length");
+			throw new \Exception('Failed to get IV length');
 		}
-		$iv = substr($data, 0, $ivlen);  // Extract the IV from the encoded string
+		$iv         = substr($data, 0, $ivlen);  // Extract the IV from the encoded string
 		$ciphertext = substr($data, $ivlen);
 
 		$decrypted = openssl_decrypt($ciphertext, $cipher, $key, 0, $iv);
 		if ($decrypted === false) {
-			throw new \Exception("Decryption failed");
+			throw new \Exception('Decryption failed');
 		}
+
 		return $decrypted;
 	}
 }

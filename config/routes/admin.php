@@ -6,6 +6,7 @@ use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
 use TotalCMS\Action\Admin\AdminEditProfileAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
+use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
@@ -28,5 +29,6 @@ return function (App $app) {
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
+		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');
 	})->add(AuthMiddleware::class);
 };

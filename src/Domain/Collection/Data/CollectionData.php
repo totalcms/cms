@@ -21,11 +21,14 @@ final class CollectionData
 
 	private Serializer $serializer;
 
-	public string $id;               // collection id
-	public string $name;             // collection name
-	public string $description;      // collection description
-	public string $schema;           // schema name
-	public string $url;              // collection url to object page minus the slug
+	public string $id;           // collection id
+	public string $name;         // collection name
+	public string $description;  // collection description
+	public string $schema;       // schema name
+	public string $url;          // collection url to object page minus the slug
+
+	/** @var array<string> */
+	public array $groups;        // access groups that can access this collection
 
 	/** @var array<string,mixed> */
 	public array $properties;        // Rules for fields defined in schemaToMetaProps
@@ -51,6 +54,7 @@ final class CollectionData
 			'description' => $this->description ?? "A collection of {$this->id} objects that conform to the {$this->schema} schema.",
 			'url'         => $this->url ?? '',
 			'properties'  => $this->properties ?? new \stdClass(),
+			'groups'      => $this->groups ?? [],
 		];
 
 		if (!empty($this->customProperties)) {

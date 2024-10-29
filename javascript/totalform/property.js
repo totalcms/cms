@@ -6,9 +6,10 @@ import Details from "./details";
 //-----------------------------------------------
 export default class PropertyField {
 
-    constructor(container) {
+    constructor(container, fieldClass) {
 		this.container = container;
 		this.container.totalfield = this;
+		this.fieldClass = fieldClass;
 
 		this.dialog = this.setupDialog();
     }
@@ -24,6 +25,7 @@ export default class PropertyField {
 			},
 			onClose : () => {
 				this.dialogOpened = false;
+				this.updateIcons();
 			}
 		});
 	}
@@ -32,6 +34,17 @@ export default class PropertyField {
 		// Close other details when one is opened
 		const details = Array.from(this.dialog.dialog.querySelectorAll("details"));
 		this.accordion = new Details(details);
+	}
+
+	updateIcons() {
+		const fieldIcon = this.container.querySelector("[name=field]");
+		const typeIcon  = this.container.querySelector("[name=type]");
+
+		let newclass = `${this.fieldClass} ${fieldIcon.value}-field`;
+		if (typeIcon) {
+			newclass += ` ${typeIcon.value}-type`;
+		}
+		this.container.className = newclass;
 	}
 
 	getName(){

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Utils\HTMLUtils;
 
@@ -298,7 +299,38 @@ class ImageField extends FormField
 	/** @param array<string,mixed> $imageData */
 	private function gpsFields(array $imageData): string
 	{
-		$content = $this->form->field('exif-longitude', [
+		$content = $this->form->field('exif-country', [
+			'field'       => 'text',
+			'label'       => 'Country',
+			'class'       => 'icon-gps',
+			'placeholder' => 'Country Not Found',
+			'value'       => $imageData['exif']['country'] ?? '',
+		]);
+		$content .= $this->form->field('exif-state', [
+			'field'       => 'text',
+			'label'       => 'State/Province',
+			'class'       => 'icon-gps',
+			'placeholder' => 'State or Province Not Found',
+			'value'       => $imageData['exif']['state'] ?? '',
+		]);
+		$content .= $this->form->field('exif-city', [
+			'field'       => 'text',
+			'label'       => 'City',
+			'class'       => 'icon-gps',
+			'placeholder' => 'City Not Found',
+			'value'       => $imageData['exif']['city'] ?? '',
+		]);
+		$content .= $this->form->field('exif-sublocation', [
+			'field'       => 'text',
+			'label'       => 'Sub-Location',
+			'class'       => 'icon-gps',
+			'placeholder' => 'Sub-Location Not Found',
+			'value'       => $imageData['exif']['sublocation'] ?? '',
+		]);
+
+		$content .= HTMLUtils::inlineElement('hr');
+
+		$content .= $this->form->field('exif-longitude', [
 			'field'       => 'text',
 			'label'       => 'Longitude',
 			'class'       => 'icon-gps',
@@ -320,7 +352,7 @@ class ImageField extends FormField
 			'value'       => $imageData['exif']['altitude'] ?? '',
 		]);
 
-		return HTMLUtils::details('EXIF - GPS', $content);
+		return HTMLUtils::details('EXIF - Location', $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
