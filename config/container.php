@@ -57,7 +57,7 @@ use TotalCMS\Utils\ServerChecker;
 return [
 	// Application settings
 	Config::class => function () {
-		return new Config(require __DIR__ . '/settings.php');
+		return Config::init();
 	},
 
 	App::class => function (ContainerInterface $container) {

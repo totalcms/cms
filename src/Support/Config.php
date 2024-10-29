@@ -11,6 +11,7 @@ final class Config
 	public string $domain    = '';
 	public string $api       = '';
 	public string $locale    = '';
+	public string $timezone  = '';
 	/** @var array<string,mixed> */
 	public array $session     = [];
 	/** @var array<string,mixed> */
@@ -40,11 +41,19 @@ final class Config
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];
 		$this->auth       = $settings['auth'];
+		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
+
+		date_default_timezone_set($this->timezone);
 	}
 
 	/** @return array<string,mixed> */
 	public function toArray(): array
 	{
 		return get_object_vars($this);
+	}
+
+	public static function init(): self
+	{
+		return new Config(require __DIR__ . '/../../config/settings.php');
 	}
 }

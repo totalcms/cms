@@ -147,4 +147,7 @@ $settings['auth'] = [
 	'deniedDefaultRedirect' => '/',
 ];
 
+// https://www.php.net/manual/en/timezones.php
+$settings['timezone'] = date_default_timezone_get();
+
 return $settings;
