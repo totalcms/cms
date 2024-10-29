@@ -32,7 +32,7 @@ export default class SchemaPropertiesField extends PropertiesField {
 	}
 
     newField(field) {
-		new PropertyField(field);
+		new PropertyField(field, this.fieldClass);
 		this.initActionbar(field);
 		this.form.processFields();
 	}

@@ -16,7 +16,7 @@ export default class PropertiesField extends TotalField {
 		// not storing this as an array so that it can be updated simply through the DOM
 		const propertyFields = this.container.getElementsByClassName(this.fieldClass);
 		for (const field of propertyFields) {
-			new PropertyField(field);
+			new PropertyField(field, this.fieldClass);
 		}
 		this.sortableProperties(propertyFields);
     }
