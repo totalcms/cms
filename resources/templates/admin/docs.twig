@@ -46,7 +46,7 @@
 		<h3>{{ item.title }}</h3>
 		<ul>
 			{% for sub in item.sub %}
-			<li><a {% if url.page == sub.path %}class="active"{% endif %}
+			<li><a {% if page == sub.path %}class="active"{% endif %}
 					href="docs/{{ sub.path }}"
 					{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
 				>{{ sub.title }}</a></li>

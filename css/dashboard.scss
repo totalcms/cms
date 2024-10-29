@@ -281,7 +281,7 @@ body {
 		overflow-x       : auto;
 
 		code {
-			font-family : 'Fira Code', 'Source Code Pro', 'Operator Mono', monospace;
+			font-family : 'Operator Mono', 'Source Code Pro', 'Fira Code',  monospace;
 		}
 	}
 	&:has(.docs-iframe) {
