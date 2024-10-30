@@ -213,7 +213,7 @@ class FormField
 		$properties = $this->form->propertiesForCollection([$labelProperty, $valueProperty], $collection);
 
 		// reformat the properties array to match the options array
-		return array_map(fn($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
+		return array_map(fn ($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
 	}
 
 	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */
@@ -226,7 +226,13 @@ class FormField
 			$this->options = array_merge($this->options, $this->buildRelationalOptions());
 		}
 		if (is_array($this->value) && !empty($this->value)) {
-			$this->options = array_merge($this->options, $this->value);
+			$this->options = array_merge($this->value, $this->options); // value is first to maintain order
+		}
+
+		if (!empty($this->options) && !self::isMultiDimensionalArray($this->options)) {
+			// Ensure that duplicate options are not created
+			// array_unique will not work with multi-dimensional arrays
+			$this->options = array_unique($this->options);
 		}
 
 		foreach ($this->options as $key => $option) {
@@ -239,6 +245,17 @@ class FormField
 		}
 
 		return $options;
+	}
+
+	/** @param array<mixed> $array */
+	protected static function isMultiDimensionalArray(array $array): bool
+	{
+		foreach ($array as $element) {
+			if (is_array($element)) {
+				return true; // The array is multidimensional
+			}
+		}
+		return false; // The array is not multidimensional
 	}
 
 	protected function buildDatalist(): string

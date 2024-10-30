@@ -1,16 +1,16 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "uniqueItems": false,
-  "$id": "https://www.totalcms.co/schemas/properties/list.json",
+  "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+  "$id"         : "https://www.totalcms.co/schemas/properties/list.json",
+  "type"        : "array",
+  "description" : "A simple list of strings useful for things like tags and categories",
+  "uniqueItems" : true,
+  "items"       : {
+    "type": "string"
+  },
   "examples": [
     [
       "tag1",
       "tag2"
     ]
-  ],
-  "type": "array",
-  "description": "A simple list of strings useful for things like tags and categories",
-  "items": {
-    "type": "string"
-  }
+  ]
 }

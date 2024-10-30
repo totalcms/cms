@@ -38,6 +38,8 @@ export default class TotalField {
 		this.changeListener();
 		if (this.options.sortOptions) {
 			this.sortOptions();
+		} else {
+			this.cleanupDuplicateOptions();
 		}
     }
 
