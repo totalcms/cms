@@ -39,8 +39,8 @@ export default class FilePreview {
 
 	updateIcon() {
 		const icon = this.container.querySelector(".file-icon");
-		const mime = this.container.querySelector("[name=mime]").value.toLowerCase();
-		const ext  = mime.split("/")[1];
+		const mime = this.container.querySelector("[name=name]").value.toLowerCase();
+		const ext  = mime.split(".").pop();
 		icon.className = `file-icon icon-${ext}`;
 	}
 
@@ -147,6 +147,7 @@ export default class FilePreview {
 			},
 			onClose : () => {
 				this.dialogOpened = false;
+				this.updateLabel();
 				this.totalfield.autosave();
 			}
 		});
