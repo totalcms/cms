@@ -176,8 +176,16 @@ final class ImageGenerator
 			$params['w'] = $imageData->width;
 		}
 
+		if (isset($params['w']) && $params['w'] == 0) {
+			unset($params['w']);
+		}
+
 		if (isset($params['h']) && $params['h'] > $imageData->height && $imageData->height > 0) {
 			$params['h'] = $imageData->height;
+		}
+
+		if (isset($params['h']) && $params['h'] == 0) {
+			unset($params['h']);
 		}
 
 		if (isset($params['fit'])) {
