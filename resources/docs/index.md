@@ -7,6 +7,10 @@ title: Total CMS 3 Docs
 Welcome to Total CMS 3! You will find all of the documentation for Total CMS here.
 These docs are a work-in-progress during the beta.
 
+### Total CMS 3 Beta 11 Overview
+
+<https://www.youtube.com/watch?v=jjGdyTniJT4>
+
 ### Total CMS 3 Beta 10 Overview
 
 <https://www.youtube.com/watch?v=cM50y4o2I9w>
