@@ -5,6 +5,10 @@
 {% block content %}
 <main class="login-layout admin-layout">
 
+	<section class="download-auth-above">
+		{{ include('download-auth-above.twig', ignore_missing = true) }}
+	</section>
+
 	<section class="login-form">
 		<form class="totalform" method="post" data-disabled="true">
 			<div class="form-field password-field" data-type="password">
@@ -23,6 +27,10 @@
 				</p>
 			{% endfor %}
 		</form>
+	</section>
+
+	<section class="download-auth-below">
+		{{ include('download-auth-below.twig', ignore_missing = true) }}
 	</section>
 
 </main>
