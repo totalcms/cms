@@ -21,9 +21,8 @@ final class FileField extends FormField
 		$fileData = is_array($this->value) ? $this->value : []; // File data is stored in the value field
 
 		$previewAttrs = ['class' => 'file-preview'];
-		$mime         = $fileData['mime'] ?? '';
 		$name         = $fileData['name'] ?? $fileData['filename'] ?? '';
-		$filePreview  = $this->filePreview($mime, $name);
+		$filePreview  = $this->filePreview($name);
 		$fileDialog   = $this->fileDialog($fileData);
 		$linkDialog   = $this->linkDialog($fileData['filename'] ?? null);
 
@@ -37,14 +36,10 @@ final class FileField extends FormField
 		return $input . $overlay . $preview . $template;
 	}
 
-	protected function filePreview(string $mime = '', string $name = ''): string
+	protected function filePreview(string $name = ''): string
 	{
-		$mime      = strtolower(basename($mime));
-		$mimeClass = '';
-
-		if (!empty($mime)) {
-			$mimeClass = 'icon-' . $mime;
-		}
+		$ext       = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+		$iconClass = 'icon-' . $ext;
 
 		$notFound = empty($name) ? 'not-found' : '';
 
@@ -58,7 +53,7 @@ final class FileField extends FormField
 				<button type="button" class="trash" title="Delete File"></button>
 			</div>
 
-			<div class="file-icon {$mimeClass}"></div>
+			<div class="file-icon {$iconClass}"></div>
 			<p class="filename">{$name}</p>
 
 			<div class="dz-progress">

@@ -20,9 +20,10 @@ document.addEventListener("DOMContentLoaded", event => {
 	const galleries = Array.from(document.getElementsByClassName('cms-gallery'));
 	galleries.forEach(gallery => {
 		lightGallery(gallery, {
-			plugins: [lgZoom, lgThumbnail],
-			licenseKey: '52B84B19-E338-4655-A3BF-DBF401D75F02',
-			speed: 500,
+			plugins           : [lgZoom, lgThumbnail],
+			licenseKey        : '52B84B19-E338-4655-A3BF-DBF401D75F02',
+			download          : false,
+			speed             : 500,
 		});
 	});
 });

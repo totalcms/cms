@@ -13,7 +13,7 @@ class ListData extends PropertyData
 		if (!self::verifyList($list)) {
 			throw new \InvalidArgumentException('List must be a list:' . json_encode($list));
 		}
-		$this->list = $list;
+		$this->list = array_unique($list);
 	}
 
 	/** @param array<string> $list */
