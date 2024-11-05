@@ -14,6 +14,14 @@ class DateField extends FormField
 	{
 		parent::init();
 
+		if ($this->default === 'onCreate' || $this->default === 'onUpdate') {
+			$this->readonly = true;
+
+			// if the default value was set as the value, we need to set it to now
+			if ($this->value === 'onCreate' || $this->value === 'onUpdate') {
+				$this->value = 'now';
+			}
+		}
 		if (!empty($this->value)) {
 			$config = Config::init();
 			$timezone = new \DateTimeZone($config->timezone);
@@ -22,9 +30,6 @@ class DateField extends FormField
 			$date->setTimezone($timezone);
 
 			$this->value = $date->format($this->dateFormat);
-		}
-		if ($this->default === 'onCreate' || $this->default === 'onUpdate') {
-			$this->readonly = true;
 		}
 	}
 }
