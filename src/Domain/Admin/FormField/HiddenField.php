@@ -13,5 +13,11 @@ final class HiddenField extends FormField
 		$this->icon  = false;
 		$this->label = '';
 		$this->help  = '';
+
+		// In Chrome, hidden fields should not be set to required
+		// they will not pass form validation by the browser
+		if (!empty($this->value)) {
+			$this->required = false;
+		}
 	}
 }
