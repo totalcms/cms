@@ -95,6 +95,15 @@ class QRGenerator
 	/** @param array<string,string> $data */
 	public function event(array $data): string
 	{
+		$data = array_map('htmlspecialchars', $data);
+		$data = array_merge([
+			'title'    => '',
+			'desc'     => '',
+			'location' => '',
+			'start'    => '',
+			'end'      => '',
+		], $data);
+
 		date_default_timezone_set('UTC');
 		$start = date("Ymd\THis\Z", intval(strtotime($data['start'])));
 		$end   = date("Ymd\THis\Z", intval(strtotime($data['end'])));
@@ -116,6 +125,21 @@ EVENT;
 	/** @param array<string,string> $data */
 	public function vcf(array $data): string
 	{
+		$data = array_map('htmlspecialchars', $data);
+		$data = array_merge([
+			'first'   => '',
+			'last'    => '',
+			'company' => '',
+			'street'  => '',
+			'city'    => '',
+			'state'   => '',
+			'zip'     => '',
+			'phone'   => '',
+			'mobile'  => '',
+			'email'   => '',
+			'website' => '',
+		], $data);
+
 		$vcard = <<<VCF
 BEGIN:VCARD
 VERSION:3.0

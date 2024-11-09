@@ -1,3 +1,4 @@
+@import "reset";
 @import "gridjs";
 
 body {
@@ -174,6 +175,7 @@ body {
 			&.macro-builder { --collection-icon : var(--icon-build) }
 			&.pretty-url-builder { --collection-icon : var(--icon-link) }
 			&.server-checker { --collection-icon : var(--icon-health) }
+			&.twig-playground { --collection-icon : var(--icon-twig-playground) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);

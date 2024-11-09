@@ -1,4 +1,3 @@
-@import "reset";
 @import "variables";
 
 //------------------------------
@@ -252,7 +251,7 @@ button.cms-add {
 @import "forms/checkbox";
 @import "forms/color";
 @import "forms/droplet";
-@import "forms/froala";
+@import "forms/styledtext";
 @import "forms/list";
 @import "forms/radio";
 @import "forms/set";
@@ -269,4 +268,3 @@ button.cms-add {
 @import "forms/login";
 @import "simpleform";
 @import "codemirror";
-@import "dashboard";

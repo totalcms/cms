@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Utils\HTMLUtils;
 
@@ -270,6 +269,7 @@ class ImageField extends FormField
 			'placeholder' => 'Focal Length Not Found',
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['focalLength'] ?? '',
+			'step'        => '0.1',
 		]);
 		$content .= $this->form->field('exif-aperture', [
 			'field'       => 'number',
@@ -277,6 +277,7 @@ class ImageField extends FormField
 			'placeholder' => 'Aperture Not Found',
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['aperture'] ?? '',
+			'step'        => '0.1',
 		]);
 		$content .= $this->form->field('exif-iso', [
 			'field'       => 'number',
@@ -284,6 +285,7 @@ class ImageField extends FormField
 			'placeholder' => 'ISO Not Found',
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['iso'] ?? '',
+			'step'        => '0.1',
 		]);
 		$content .= $this->form->field('exif-shutterSpeed', [
 			'field'       => 'text',

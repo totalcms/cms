@@ -39,6 +39,7 @@ final class TotalCMSTwigAdapter
 	public string $dashboard;
 	public string $login;
 	public string $logout;
+	public string $domain;
 
 	public function __construct(
 		private Config $config,
@@ -59,10 +60,17 @@ final class TotalCMSTwigAdapter
 		$this->api       = $this->config->api;
 		$this->dashboard = $this->api . '/admin';
 		$this->logout    = $this->api . '/logout';
+		$this->domain    = $this->getDomainName();
 		$this->form      = $this->totalFormFactory;
 		$this->checker   = $this->serverChecker;
 		$this->logger    = $this->logAnalyzer;
 	}
+
+	/** @SuppressWarnings(PHPMD.Superglobals) */
+	private function getDomainName(): string
+    {
+        return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+    }
 
 	public function login(string $collection = ''): string
 	{
