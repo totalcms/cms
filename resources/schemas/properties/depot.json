@@ -14,11 +14,8 @@
 			"type"     : "boolean"
 		},
 		"files" : {
-			"default" : [],
-			"type"    : "array",
-			"items"   : {
-			"$ref": "https://www.totalcms.co/schemas/properties/file.json"
-			}
+			"$comment" : "A folder of files",
+			"$ref"     : "https://www.totalcms.co/schemas/properties/folder.json"
 		}
 	},
 	"required" : [

@@ -1,0 +1,61 @@
+{
+    "$id"         : "https://www.totalcms.co/schemas/properties/folder.json",
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "description" : "A folder is a collection of files and other folders",
+    "type"        : "object",
+    "properties"  : {
+        "name": {
+            "type": "string",
+            "$comment": "The name of the folder"
+        },
+        "mime": {
+            "const": "folder"
+        },
+        "files": {
+            "default": [],
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "$ref": "https://www.totalcms.co/schemas/properties/file.json"
+                    },
+                    {
+                        "$ref": "https://www.totalcms.co/schemas/properties/folder.json"
+                    }
+                ]
+            }
+        }
+    },
+    "required": [
+        "mime",
+        "name",
+        "files"
+    ],
+    "examples": [
+        {
+            "name"  : "myfolder",
+            "mime"  : "folder",
+            "files" : [
+                {
+                    "name"  : "subfolder",
+                    "mime"  : "folder",
+                    "files" : []
+                },
+                {
+                    "name"       : "file.zip",
+                    "filename"   : "originalfile.zip",
+                    "uploadDate" : "2018-08-02T08:59:28+00:00",
+                    "password"   : "password",
+                    "protected"  : false,
+                    "mime"       : "application/zip",
+                    "size"       : 1234556,
+                    "comments"   : "This is My File",
+                    "tags"       : [
+                        "tag1",
+                        "tag2"
+                    ]
+                }
+            ]
+        }
+    ]
+}
