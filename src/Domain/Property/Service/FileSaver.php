@@ -45,7 +45,7 @@ final class FileSaver
 		// TODO: split this class up into smaller classes for ImageSaver, FileSaver, etc.
 	}
 
-	public function saveFile(string $collection, string $objectID, string $property, string $filePath): ObjectData
+	public function saveFile(string $collection, string $objectID, string $property, string $filePath, string $subpath = ''): ObjectData
 	{
 		$type = $this->getPropertyType($collection, $property);
 
@@ -53,6 +53,10 @@ final class FileSaver
 
 		if (!method_exists($this, $method)) {
 			throw new \UnexpectedValueException("Invalid file type $type found for property $property in collection $collection");
+		}
+
+		if (!empty($subpath)) {
+			return $this->$method($collection, $objectID, $property, $filePath, $subpath);
 		}
 
 		return $this->$method($collection, $objectID, $property, $filePath);
@@ -67,7 +71,7 @@ final class FileSaver
 
 	private function createPropertyObject(string $collection, string $property): PropertyData
 	{
-		$type = ucfirst($this->getPropertyType($collection, $property));
+		$type  = ucfirst($this->getPropertyType($collection, $property));
 		$class = "TotalCMS\\Domain\\Property\\Data\\{$type}Data";
 
 		if (!class_exists($class)) {
@@ -133,16 +137,16 @@ final class FileSaver
 			// If the object existed before, we will keep the existing data
 			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
 			$keep         = ['name', 'comments', 'tags', 'protected', 'password'];
-			$existingData = array_filter($fileProperty->transform(), fn($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
-			if (!empty($existingData["name"])) {
+			$existingData = array_filter($fileProperty->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+			if (!empty($existingData['name'])) {
 				// make sure that it's not an empty file property, filename would not be empty
 
 				// Update the extension of the name if the new file has a different extension
 				$newExt      = pathinfo((string)$fileInfo['name'], PATHINFO_EXTENSION);
-				$existingExt = pathinfo((string)$existingData["name"], PATHINFO_EXTENSION);
+				$existingExt = pathinfo((string)$existingData['name'], PATHINFO_EXTENSION);
 
 				if ($newExt !== $existingExt) {
-					$existingData["name"] = pathinfo($existingData["name"], PATHINFO_FILENAME) . '.' . $newExt;
+					$existingData['name'] = pathinfo($existingData['name'], PATHINFO_FILENAME) . '.' . $newExt;
 				}
 
 				$fileInfo = array_merge($fileInfo, $existingData);
@@ -153,7 +157,7 @@ final class FileSaver
 		return $this->updateObject($collection, $objectID, $property, $newData);
 	}
 
-	public function saveFileForDepot(string $collection, string $objectID, string $property, string $filePath): ObjectData
+	public function saveFileForDepot(string $collection, string $objectID, string $property, string $filePath, string $subpath = ''): ObjectData
 	{
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
 			// TODO: create object if it does not exist
@@ -161,7 +165,7 @@ final class FileSaver
 		}
 
 		$files    = $this->fetchProperty($collection, $objectID, $property)->transform();
-		$fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath);
+		$fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
 		$files[]  = (new FileData($fileinfo))->transform();
 
 		return $this->updateObject($collection, $objectID, $property, $files);
@@ -194,7 +198,7 @@ final class FileSaver
 
 		// Only keep the data for alt, featrued, link, and tags
 		$keep         = ['alt', 'featured', 'link', 'tags'];
-		$existingData = array_filter($imageProp->transform(), fn($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+		$existingData = array_filter($imageProp->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
 
 		$fileData     = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 		$exifData     = $this->gatherExifData($filePath);
@@ -337,8 +341,8 @@ final class FileSaver
 			'date'        => $date,
 			// GPS Data
 			'longitude'   => $exif->getLongitude() === false ? null : strval($exif->getLongitude()),
-			'latitude'    => $exif->getLatitude() === false  ? null : strval($exif->getLatitude()),
-			'altitude'    => $exif->getAltitude() === false  ? null : strval($exif->getAltitude()),
+			'latitude'    => $exif->getLatitude() === false ? null : strval($exif->getLatitude()),
+			'altitude'    => $exif->getAltitude() === false ? null : strval($exif->getAltitude()),
 			'country'     => $exif->getCountry(),
 			'state'       => $exif->getState(),
 			'city'        => $exif->getCity(),

@@ -36,8 +36,10 @@ final class FileSaveAction
 		$files = $request->getUploadedFiles();
 		$file  = $files[$args['property']] ?? null;
 
+		$path = $request->getQueryParams()['path'] ?? null;
+
 		if ($file === null) {
-			throw new \RuntimeException('No file found in request for property: '.$args['property']);
+			throw new \RuntimeException('No file found in request for property: ' . $args['property']);
 		}
 
 		// Get chunk information from the request
@@ -85,7 +87,7 @@ final class FileSaveAction
 		$finalFile     = fopen($finalFilePath, 'wb');
 
 		if ($finalFile === false) {
-			throw new \RuntimeException('Unable to open final file for writing:'.$finalFilePath);
+			throw new \RuntimeException('Unable to open final file for writing:' . $finalFilePath);
 		}
 
 		// Assemble the chunks
