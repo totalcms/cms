@@ -54,7 +54,7 @@
 			"type"    : "string",
 			"label"   : "Summary",
 			"help"    : "Blog Post summary",
-			"field"   : "textarea",
+			"field"   : "styledtext",
 			"factory" : "paragraph"
 		},
 		"media": {
