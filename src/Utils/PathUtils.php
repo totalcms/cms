@@ -21,6 +21,7 @@ class PathUtils
 	 * @param ?string $objectID
 	 * @param ?string $property
 	 * @param ?string $filename
+	 * @param ?string $subpath
 	 *
 	 * @return string
 	 */
@@ -29,6 +30,7 @@ class PathUtils
 		?string $objectID = null,
 		?string $property = null,
 		?string $filename = null,
+		?string $subpath = null,
 	): string {
 		$path = self::cleanString($collection);
 
@@ -38,7 +40,10 @@ class PathUtils
 		if (isset($property)) {
 			$path = sprintf('%s/%s', $path, self::cleanString($property));
 		}
-		if (isset($filename)) {
+		if (!empty($filename)) {
+			if (!empty($subpath)) {
+				$path = sprintf('%s/%s', $path, $subpath);
+			}
 			$path = sprintf('%s/%s', $path, $filename);
 		}
 

@@ -80,10 +80,10 @@ final class PropertyRepository extends StorageRepository
 	 *
 	 * @return array<string,string|int>
 	 */
-	public function saveFile(string $collection, string $objectID, string $property, string $filePath): array
+	public function saveFile(string $collection, string $objectID, string $property, string $filePath, ?string $subpath = null): array
 	{
 		$filename = basename($filePath);
-		$newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		// File already exists, rename it
 		if ($this->filesystem->fileExists($newpath)) {

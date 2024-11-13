@@ -12,18 +12,19 @@
 			"field"   : "id",
 			"factory" : "slug"
         },
-        "files": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/depot.json",
-			"label"   : "Files",
-			"help"    : "Drag and drop files here.",
-			"type"    : "depot"
+        "depot": {
+			"$ref"  : "https://www.totalcms.co/schemas/properties/depot.json",
+			"label" : "Files",
+			"help"  : "Drag and drop files here.",
+			"field" : "depot"
         }
     },
     "required": [
-        "id"
+        "id",
+        "depot"
     ],
     "index": [
         "id",
-        "files"
+        "depot"
     ]
 }

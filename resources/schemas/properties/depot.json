@@ -1,9 +1,9 @@
 {
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
 	"$id"         : "https://www.totalcms.co/schemas/properties/depot.json",
-	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
 	"description" : "Depot is an array of file objects",
-	"type"        : "object",
-	"properties"  : {
+    "type"        : "object",
+    "properties"  : {
 		"password": {
 			"$comment" : "If the file is set to be protected, what is the passphrase in order to access it",
 			"$ref"     : "https://www.totalcms.co/schemas/properties/password.json"
@@ -13,13 +13,23 @@
 			"$comment" : "Flag to enable group authentication on the file set in the collection",
 			"type"     : "boolean"
 		},
-		"files" : {
-			"$comment" : "A folder of files",
-			"$ref"     : "https://www.totalcms.co/schemas/properties/folder.json"
+        "files": {
+			"type"        : "array",
+			"description" : "Array of file objects",
+			"default"     : [],
+			"items"       : {
+				"anyOf": [
+					{
+						"$ref": "https://www.totalcms.co/schemas/properties/file.json"
+					},
+					{
+						"$ref": "https://www.totalcms.co/schemas/properties/folder.json"
+					}
+				]
+			}
 		}
-	},
-	"required" : [
-		"files",
-		"protected"
-	]
+    },
+    "required": [
+        "files"
+    ]
 }

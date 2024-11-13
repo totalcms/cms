@@ -45,7 +45,7 @@ final class FileSaver
 		// TODO: split this class up into smaller classes for ImageSaver, FileSaver, etc.
 	}
 
-	public function saveFile(string $collection, string $objectID, string $property, string $filePath, string $subpath = ''): ObjectData
+	public function saveFile(string $collection, string $objectID, string $property, string $filePath, ?string $subpath = null): ObjectData
 	{
 		$type = $this->getPropertyType($collection, $property);
 
@@ -55,7 +55,11 @@ final class FileSaver
 			throw new \UnexpectedValueException("Invalid file type $type found for property $property in collection $collection");
 		}
 
-		if (!empty($subpath)) {
+		$reflectMethod = new \ReflectionMethod(FileSaver::class, $method);
+		$parameters    = $reflectMethod->getParameters();
+
+		if (!empty($subpath) && isset($parameters[4]) && $parameters[4]->getName() === 'subpath') {
+			// The method supports the 5th argument for subpath
 			return $this->$method($collection, $objectID, $property, $filePath, $subpath);
 		}
 
@@ -159,9 +163,17 @@ final class FileSaver
 
 	public function saveFileForDepot(string $collection, string $objectID, string $property, string $filePath, string $subpath = ''): ObjectData
 	{
-		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
-			// TODO: create object if it does not exist
-			throw new \UnexpectedValueException('Object does not exist');
+		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
+		if (!$objectExists) {
+			try {
+				$this->objectSaver->saveObject($collection, [
+					'id'      => $objectID,
+					$property => $this->createPropertyObject($collection, $property)->transform(),
+				]);
+			} catch (\Exception $e) {
+				$msg = "Object $objectID does not exist in collection $collection to save depot file ($property) to.";
+				throw new \UnexpectedValueException($msg . $e->getMessage());
+			}
 		}
 
 		$files    = $this->fetchProperty($collection, $objectID, $property)->transform();

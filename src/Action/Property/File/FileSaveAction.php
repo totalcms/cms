@@ -36,7 +36,7 @@ final class FileSaveAction
 		$files = $request->getUploadedFiles();
 		$file  = $files[$args['property']] ?? null;
 
-		$path = $request->getQueryParams()['path'] ?? null;
+		$query = $request->getQueryParams();
 
 		if ($file === null) {
 			throw new \RuntimeException('No file found in request for property: ' . $args['property']);
@@ -72,6 +72,7 @@ final class FileSaveAction
 			$args['id'],
 			$args['property'],
 			$finalFilePath,
+			$query['path'] ?? null, // Optional path URL parameter
 		);
 
 		if (!$object instanceof ObjectData) {

@@ -7,15 +7,26 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class DepotData extends PropertyData
 {
-	/** @param array<array<string,mixed>> $files */
-	public function __construct(
-		public array $files = [],
-	) {
+	/** @var array<array<string,mixed>> */
+	public array $files;
+	public bool $protected;
+	public PasswordData $password;
+
+	/** @param array<string,mixed> $depot */
+	public function __construct(public array $depot = [])
+	{
+		$this->protected = $depot['protected'] ?? true;
+		$this->password  = new PasswordData($depot['password'] ?? '');
+		$this->files     = $depot['files'] ?? [];
 	}
 
-	/** @return array<array<string,mixed>> */
+	/** @return array<string,mixed> */
 	public function transform(): array
 	{
-		return $this->files;
+		return [
+			'password'   => $this->password->transform(),
+			'protected'  => $this->protected,
+			'files'      => $this->files,
+		];
 	}
 }
