@@ -10,15 +10,6 @@ use TotalCMS\Utils\PathUtils;
  */
 final class PropertyRepository extends StorageRepository
 {
-	/**
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 *
-	 * @throws \RuntimeException
-	 *
-	 * @return void
-	 */
 	public function deleteDirectory(string $collection, string $objectID, string $property): void
 	{
 		$path = PathUtils::buildPath($collection, $objectID, $property);
@@ -68,18 +59,7 @@ final class PropertyRepository extends StorageRepository
 		$this->deleteFileCache($collection, $objectID, $property, $filename);
 	}
 
-	/**
-	 * Save file to an object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @throws \RuntimeException
-	 *
-	 * @return array<string,string|int>
-	 */
+	/** @return array<string,string|int> */
 	public function saveFile(string $collection, string $objectID, string $property, string $filePath, ?string $subpath = null): array
 	{
 		$filename = basename($filePath);
@@ -88,7 +68,7 @@ final class PropertyRepository extends StorageRepository
 		// File already exists, rename it
 		if ($this->filesystem->fileExists($newpath)) {
 			$newname  = self::getUniqueFilename($filename);
-			$newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname);
+			$newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname, $subpath);
 		}
 
 		if (!$this->filesystem->import($filePath, $newpath)) {
@@ -118,18 +98,7 @@ final class PropertyRepository extends StorageRepository
 		return $this->filesystem->readStream($path);
 	}
 
-	/**
-	 * Save an image to object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @throws \RuntimeException
-	 *
-	 * @return array<string,string|int>
-	 */
+	/** @return array<string,string|int> */
 	public function saveImage(string $collection, string $objectID, string $property, string $filePath): array
 	{
 		$filename = basename($filePath);
@@ -144,7 +113,7 @@ final class PropertyRepository extends StorageRepository
 		[$width, $height] = $data;
 
 		if (!$this->filesystem->import($filePath, $newpath)) {
-			throw new \RuntimeException('File not saved');
+			throw new \RuntimeException('Image not saved');
 		}
 
 		// Update to be Image data

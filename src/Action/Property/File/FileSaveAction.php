@@ -5,7 +5,7 @@ namespace TotalCMS\Action\Property\File;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Property\Service\FileSaver;
+use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Transformer\ObjectMetaTransformer;
@@ -14,11 +14,11 @@ final class FileSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private FileSaver $service,
+		private SaverFactory $factory,
 		private Config $config,
 	) {
 		$this->renderer = $renderer;
-		$this->service  = $service;
+		$this->factory  = $factory;
 		$this->config   = $config;
 	}
 
@@ -67,7 +67,8 @@ final class FileSaveAction
 		$finalFilePath = $this->assembleChunks($originalFilename, $totalChunks);
 
 		// Save the assembled file
-		$object = $this->service->saveFile(
+		$saver  = $this->factory->generateSaverService($args['collection'], $args['property']);
+		$object = $saver->save(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
