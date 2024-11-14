@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Component\Depot;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
@@ -26,34 +27,14 @@ final class DepotSaver extends FileSaver
 		$newfile  = new FileData($fileinfo);
 		$depot    = $this->fetchProperty($collection, $objectID, $property);
 
-		$depot = self::appendFileToDepot($depot, $newfile, $subpath);
+		if (!$depot instanceof DepotData) {
+			throw new \RuntimeException('Expected instance of DepotData');
+		}
 
-		// $folder   = self::findOrCreateFolderByPath($depot, $subpath);
-		// $folder[] = (new FileData($fileinfo))->transform();
+		$depot = self::appendFileToDepot($depot, $newfile, $subpath);
 
 		return $this->updateObject($collection, $objectID, $property, $depot->transform());
 	}
-
-	// public function newFolder(
-	// 	string $collection,
-	// 	string $objectID,
-	// 	string $property,
-	// 	string $folderName,
-	// 	?string $subpath = null
-	// ): ObjectData
-	// {
-	// 	$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
-	// 	if (!$objectExists) {
-	// 		$this->createObject($collection, $objectID, $property);
-	// 	}
-
-	// 	$files = $this->fetchProperty($collection, $objectID, $property)->transform();
-
-	// 	$folder   = self::findOrCreateFolderByPath($files, $subpath);
-	// 	$folder[] = (new FolderData($folderName))->transform();
-
-	// 	return $this->updateObject($collection, $objectID, $property, $files);
-	// }
 
 	private static function appendFileToDepot(DepotData $depot, FileData $newfile, ?string $path) : DepotData
 	{
@@ -61,8 +42,6 @@ final class DepotSaver extends FileSaver
 		$folder       = self::findOrCreateFolderByPath($files, $path);
 		$folder[]     = $newfile;
 		$depot->files = $files;
-
-		// $depot->files[] = $newfile;
 		return $depot;
 	}
 
@@ -71,7 +50,7 @@ final class DepotSaver extends FileSaver
 	 *
 	 * @return array<FolderData|FileData>
 	 */
-	private static function findOrCreateFolderByPath(array &$files, ?string $path) : array
+	private static function &findOrCreateFolderByPath(array &$files, ?string $path) : array
 	{
 		 // If path is empty, return the top-level structure
 		 if (empty($path)) {
@@ -104,6 +83,10 @@ final class DepotSaver extends FileSaver
 		$files[] = $newFolder;
 		echo("Created new folder: " . $currentFolderName);
 
-		return self::findOrCreateFolderByPath($files, $currentFolderName);
+		$lastItem = $files[count($files) - 1];
+		if (!$lastItem instanceof FolderData) {
+			throw new \RuntimeException('Expected instance of FolderData');
+		}
+		return self::findOrCreateFolderByPath($lastItem->files, implode('/', $pathParts));
 	}
 }
