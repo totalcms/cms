@@ -43,17 +43,17 @@ final class FileRemover
 		return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
 	}
 
-	public function deleteFile(string $collection, string $objectID, string $property, string $filename): ObjectData
+	public function deleteFile(string $collection, string $objectID, string $property, string $name): ObjectData
 	{
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
 			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
 		}
 
-		$this->storage->deleteFile($collection, $objectID, $property, $filename);
+		$this->storage->deleteFile($collection, $objectID, $property, $name);
 
 		$files = $this->fetchProperty($collection, $objectID, $property)->transform();
 		foreach ($files as $key => $file) {
-			if ($file['name'] === $filename) {
+			if ($file['name'] === $name) {
 				unset($files[$key]);
 				break;
 			}

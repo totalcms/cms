@@ -107,7 +107,7 @@ final class TotalCMSTwigAdapter
 		return null;
 	}
 
-	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $filename = ''): bool
+	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $name = ''): bool
 	{
 		$this->fileAccessManager->loadFile($collection, $id, $property);
 
@@ -291,13 +291,13 @@ final class TotalCMSTwigAdapter
 	}
 
 	/** @param array<string,string> $options */
-	public function depotDownload(string $id, string $filename, array $options = []): string
+	public function depotDownload(string $id, string $name, array $options = []): string
 	{
 		$collection = $options['collection'] ?? 'file';
 		$property   = $options['property'] ?? 'file';
 		$password   = $options['pwd'] ?? '';
 
-		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$filename}";
+		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$name}";
 
 		if (!empty($password)) {
 			$url .= "?pwd={$password}";
@@ -609,23 +609,23 @@ final class TotalCMSTwigAdapter
 	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
 	 */
-	public function galleryImage(?string $id, ?string $filename, array $imageworks = [], array $options = []): string
+	public function galleryImage(?string $id, ?string $name, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		if (empty($id) || empty($filename)) {
+		if (empty($id) || empty($name)) {
 			return '';
 		}
 
-		$imagePath = $this->galleryPath($id, $filename, $imageworks, $options);
+		$imagePath = $this->galleryPath($id, $name, $imageworks, $options);
 		if (empty($imagePath)) {
 			return '';
 		}
 
-		$alt = $this->galleryAlt($id, $filename, $options);
+		$alt = $this->galleryAlt($id, $name, $options);
 
 		return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
 	}
@@ -772,14 +772,14 @@ final class TotalCMSTwigAdapter
 
 	// Get an alt tag for a gallery image
 	/** @param array<string,string> $options */
-	public function galleryAlt(string $id, string $filename, array $options = []): string
+	public function galleryAlt(string $id, string $name, array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		$image = $this->galleryImageData($id, $filename, $options);
+		$image = $this->galleryImageData($id, $name, $options);
 
 		if (!is_array($image) || !key_exists('alt', $image)) {
 			return '';

@@ -21,10 +21,10 @@ final class FileField extends FormField
 		$fileData = is_array($this->value) ? $this->value : []; // File data is stored in the value field
 
 		$previewAttrs = ['class' => 'file-preview'];
-		$name         = $fileData['name'] ?? $fileData['filename'] ?? '';
+		$name         = empty($fileData['download']) ? $fileData['name'] : $fileData['download'];
 		$filePreview  = $this->filePreview($name);
 		$fileDialog   = $this->fileDialog($fileData);
-		$linkDialog   = $this->linkDialog($fileData['filename'] ?? null);
+		$linkDialog   = $this->linkDialog($fileData['name'] ?? null);
 
 		$previewTemplate = HTMLUtils::element('div', $filePreview . $fileDialog . $linkDialog, $previewAttrs);
 
@@ -74,7 +74,7 @@ final class FileField extends FormField
 			'id'         => $this->form->id,
 			'collection' => $this->form->collection,
 			'property'   => $this->name,
-			'filename'   => $filename,
+			'name'       => $filename,
 		]);
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
@@ -116,11 +116,11 @@ final class FileField extends FormField
 	/** @param array<string,mixed> $fileData */
 	private function infoFields(array $fileData): string
 	{
-		$content = $this->form->field('name', [
+		$content = $this->form->field('download', [
 			'field' => 'text',
 			'label' => 'Download Name',
 			'help'  => 'The name of the file when it gets downloaded.',
-			'value' => $fileData['name'] ?? $fileData['filename'] ?? '',
+			'value' => $fileData['download'] ?? $fileData['name'] ?? '',
 		]);
 		$content .= $this->form->field('comments', [
 			'field'       => 'textarea',
@@ -161,12 +161,12 @@ final class FileField extends FormField
 	/** @param array<string,mixed> $fileData */
 	private function metaFields(array $fileData): string
 	{
-		$content = $this->form->field('filename', [
+		$content = $this->form->field('name', [
 			'field'    => 'text',
 			'label'    => 'Filename',
 			'icon'     => false,
 			'readonly' => true,
-			'value'    => $fileData['filename'] ?? '',
+			'value'    => $fileData['name'] ?? '',
 		]);
 		$content .= $this->form->field('size', [
 			'field'    => 'number',

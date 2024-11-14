@@ -42,30 +42,23 @@ class FileSaver
 		// Update the object with the new file data
 		$fileInfo = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 
-		// File object stores original filename as 'filename'
-		$fileInfo['filename'] = $fileInfo['name'];
-
 		$newData = $fileInfo;
 
 		if ($objectExists) {
 			// If the object existed before, we will keep the existing data
 			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
-			$keep         = ['name', 'comments', 'tags', 'protected', 'password'];
+			$keep         = ['download', 'comments', 'tags', 'protected', 'password'];
 			$existingData = array_filter($fileProperty->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
-			if (!empty($existingData['name'])) {
-				// make sure that it's not an empty file property, filename would not be empty
-
+			if (!empty($existingData['download'])) {
 				// Update the extension of the name if the new file has a different extension
 				$newExt      = pathinfo((string)$fileInfo['name'], PATHINFO_EXTENSION);
-				$existingExt = pathinfo((string)$existingData['name'], PATHINFO_EXTENSION);
+				$existingExt = pathinfo((string)$existingData['download'], PATHINFO_EXTENSION);
 
 				if ($newExt !== $existingExt) {
-					$existingData['name'] = pathinfo($existingData['name'], PATHINFO_FILENAME) . '.' . $newExt;
+					$existingData['download'] = pathinfo($existingData['download'], PATHINFO_FILENAME) . '.' . $newExt;
 				}
-
-				$fileInfo = array_merge($fileInfo, $existingData);
 			}
-			$newData = array_merge($fileProperty->transform(), $fileInfo);
+			$newData = array_merge($fileProperty->transform(), $fileInfo, $existingData);
 		}
 
 		$fileData = new FileData($newData);

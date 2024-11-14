@@ -23,11 +23,11 @@ final class FileFetcher
 	{
 		$file = $this->fetchFile($collection, $id, $property);
 
-		if (empty($file->filename)) {
+		if (empty($file->name)) {
 			return false;
 		}
 
-		return $this->storage->fileExists($collection, $id, $property, $file->filename);
+		return $this->storage->fileExists($collection, $id, $property, $file->name);
 	}
 
 	/** @return resource */
@@ -35,10 +35,10 @@ final class FileFetcher
 	{
 		$file = $this->fetchFile($collection, $id, $property);
 
-		if (empty($file->filename)) {
+		if (empty($file->name)) {
 			throw new \RuntimeException('File not found');
 		}
 
-		return $this->storage->streamFile($collection, $id, $property, $file->filename);
+		return $this->storage->streamFile($collection, $id, $property, $file->name);
 	}
 }

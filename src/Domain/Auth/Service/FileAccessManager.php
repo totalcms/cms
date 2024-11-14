@@ -35,7 +35,7 @@ final class FileAccessManager
 		$file = $this->fileFetcher->fetchFile($collection, $object, $property);
 		$collection = $this->collectionFetcher->fetchCollection($collection);
 
-		if (empty($file->filename) || is_null($collection)) {
+		if (!$file instanceof FileData || !$collection instanceof CollectionData) {
 			throw new \RuntimeException('Unable to load file');
 		}
 

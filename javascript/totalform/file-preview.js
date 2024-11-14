@@ -39,14 +39,14 @@ export default class FilePreview {
 
 	updateIcon() {
 		const icon = this.container.querySelector(".file-icon");
-		const mime = this.container.querySelector("[name=name]").value.toLowerCase();
+		const mime = this.container.querySelector("[name=download]").value.toLowerCase();
 		const ext  = mime.split(".").pop();
 		icon.className = `file-icon icon-${ext}`;
 	}
 
 	updateLabel() {
 		const label = this.container.querySelector(".filename");
-		const name  = this.container.querySelector("[name=name]").value;
+		const name  = this.container.querySelector("[name=download]").value;
 		label.textContent = name;
 	}
 
@@ -72,7 +72,7 @@ export default class FilePreview {
 				event.preventDefault();
 				let downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}`;
 				if (this.isDepot()) {
-					const name = this.getValue().filename;
+					const name = this.getValue().name;
 					downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
 				}
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
@@ -86,7 +86,7 @@ export default class FilePreview {
 
 				const link = document.createElement('a');
 				link.href = downloadUrl;
-				link.download = this.getValue().name; // Suggest a filename for the downloaded file
+				link.download = this.getValue().download; // Suggest a filename for the downloaded file
 				document.body.appendChild(link); // Append the anchor element to the body
 				link.click(); // Programmatically click the anchor element
 				document.body.removeChild(link); // Remove the anchor element from the body
@@ -110,7 +110,7 @@ export default class FilePreview {
 				if (confirm("Are you sure that you want to delete this file?")) {
 					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					if (this.isDepot()) {
-						const name = this.getValue().filename;
+						const name = this.getValue().name;
 						deleteApi  = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
 					}
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {

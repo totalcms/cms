@@ -10,37 +10,25 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectUpdatePropertyMetaAction
 {
-	private JsonRenderer $renderer;
-	private ObjectSaver $service;
+	public function __construct(
+		private JsonRenderer $renderer,
+		private ObjectSaver $service,
+	) {}
 
-	/**
-	 * The constructor.
-	 *
-	 * @param JsonRenderer $renderer The renderer
-	 * @param ObjectSaver $service Object save service
-	 */
-	public function __construct(JsonRenderer $renderer, ObjectSaver $service)
-	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
-	}
-
-	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
-	 */
+	/** @param array<string,string> $args */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$data = (array)$request->getParsedBody();
-		$object = $this->service->updateObjectPropertyMeta($args['collection'], $args['id'], $args['property'], $args['name'], $data);
+		$data   = (array)$request->getParsedBody();
+		$object = $this->service->updateObjectPropertyMeta(
+			$args['collection'],
+			$args['id'],
+			$args['property'],
+			$args['name'],
+			$data
+		);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}

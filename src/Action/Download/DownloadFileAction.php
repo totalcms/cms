@@ -83,7 +83,7 @@ final class DownloadFileAction
 
 		$file     = $this->fileFetcher->fetchFile($collection, $id, $property);
 		$response = $response->withHeader('Content-Type', $file->mime)
-			->withHeader('Content-Disposition', "attachment; filename={$file->name}");
+			->withHeader('Content-Disposition', "attachment; filename={$file->download}");
 
 		// increment the download count
 		$file->count = $file->count + 1;
