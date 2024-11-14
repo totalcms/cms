@@ -2,13 +2,10 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-/**
- * String type property data.
- */
 class DepotData extends PropertyData
 {
-	/** @var array<array<string,mixed>> */
-	public array $files;
+	/** @var array<FileData|FolderData> */
+	public array $files = [];
 	public bool $protected;
 	public PasswordData $password;
 
@@ -17,7 +14,7 @@ class DepotData extends PropertyData
 	{
 		$this->protected = $depot['protected'] ?? true;
 		$this->password  = new PasswordData($depot['password'] ?? '');
-		$this->files     = $depot['files'] ?? [];
+		$this->files     = FolderData::buildFolder($depot['files'] ?? []);
 	}
 
 	/** @return array<string,mixed> */
@@ -26,7 +23,7 @@ class DepotData extends PropertyData
 		return [
 			'password'   => $this->password->transform(),
 			'protected'  => $this->protected,
-			'files'      => $this->files,
+			'files'      => array_map(fn($file) => $file->transform(), $this->files),
 		];
 	}
 }

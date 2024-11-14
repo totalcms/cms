@@ -24,7 +24,6 @@
         "depot"
     ],
     "index": [
-        "id",
-        "depot"
+        "id"
     ]
 }
