@@ -6,6 +6,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
 class FileSaver
@@ -67,7 +68,9 @@ class FileSaver
 			$newData = array_merge($fileProperty->transform(), $fileInfo);
 		}
 
-		return $this->updateObject($collection, $objectID, $property, $newData);
+		$fileData = new FileData($newData);
+
+		return $this->updateObject($collection, $objectID, $property, $fileData);
 	}
 
 	protected function createObject(string $collection, string $objectID, string $property): void
@@ -113,10 +116,9 @@ class FileSaver
 		return $fileProperty;
 	}
 
-	/** @param array<string,mixed> $data */
-	protected function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
+	protected function updateObject(string $collection, string $objectID, string $property, PropertyData $data): ObjectData
 	{
-		$propertyData = [$property => $data];
+		$propertyData = [$property => $data->transform()];
 
 		return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
 	}

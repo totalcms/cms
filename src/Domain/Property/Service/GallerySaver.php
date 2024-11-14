@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Utils\ImageMetaReader;
 use TotalCMS\Utils\ImagePaletteGenerator;
@@ -24,14 +25,18 @@ final class GallerySaver extends FileSaver
 			$this->createObject($collection, $objectID, $property);
 		}
 
-		$images    = $this->fetchProperty($collection, $objectID, $property)->transform();
+		$gallery = $this->fetchProperty($collection, $objectID, $property);
+		if (!$gallery instanceof GalleryData) {
+			throw new \RuntimeException('Expected instance of GalleryData');
+		}
+
 		$fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 		$colorData = ['palette' => ImagePaletteGenerator::getPalette($filePath)];
 		$metaData  = ImageMetaReader::getMetaData($filePath);
 
 		$newImage = array_merge($fileData, $metaData, $colorData);
-		$images[] = (new ImageData($newImage))->transform();
+		$gallery->images[] = new ImageData($newImage);
 
-		return $this->updateObject($collection, $objectID, $property, $images);
+		return $this->updateObject($collection, $objectID, $property, $gallery);
 	}
 }

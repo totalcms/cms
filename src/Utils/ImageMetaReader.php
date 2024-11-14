@@ -96,7 +96,7 @@ class ImageMetaReader
 
 		return array_filter([
 			'exif'   => $data,
-			'tags'   => is_array($keywords) ? $keywords : [],
+			'tags'   => is_array($keywords) ? array_values($keywords) : [],
 			'alt'    => $data['title'] ?? $data['description'] ?? '',
 			'mime'   => $exif->getMimeType(),
 			'width'  => intval($exif->getWidth()),

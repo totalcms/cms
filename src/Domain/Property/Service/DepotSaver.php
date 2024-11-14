@@ -22,19 +22,19 @@ final class DepotSaver extends FileSaver
 			$this->createObject($collection, $objectID, $property);
 		}
 
-		$fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
-		$newfile  = new FileData($fileinfo);
-		$depot    = $this->fetchProperty($collection, $objectID, $property);
-
+		$depot = $this->fetchProperty($collection, $objectID, $property);
 		if (!$depot instanceof DepotData) {
 			throw new \RuntimeException('Expected instance of DepotData');
 		}
+
+		$fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
+		$newfile  = new FileData($fileinfo);
 
 		// Directly find or create the folder in the specified path and add the file
 		$folder = &self::findOrCreateFolderByPath($depot->files, $subpath);
 		$folder[] = $newfile;
 
-		return $this->updateObject($collection, $objectID, $property, $depot->transform());
+		return $this->updateObject($collection, $objectID, $property, $depot);
 	}
 
 	/**

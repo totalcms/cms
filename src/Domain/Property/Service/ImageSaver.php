@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Utils\ImageMetaReader;
 use TotalCMS\Utils\ImagePaletteGenerator;
+use TotalCMS\Domain\Property\Data\ImageData;
 
 final class ImageSaver extends FileSaver
 {
@@ -45,6 +46,6 @@ final class ImageSaver extends FileSaver
 			$newImage = array_merge($newImage, $existingData);
 		}
 
-		return $this->updateObject($collection, $objectID, $property, $newImage);
+		return $this->updateObject($collection, $objectID, $property, new ImageData($newImage));
 	}
 }
