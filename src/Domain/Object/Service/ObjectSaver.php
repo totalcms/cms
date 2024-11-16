@@ -6,10 +6,10 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Data\DepotData;
+use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Service\DepotPropertyUpdater;
 
-/**
- * Service.
- */
 final class ObjectSaver
 {
 	public function __construct(
@@ -98,7 +98,14 @@ final class ObjectSaver
 	}
 
 	/** @param array<string,mixed> $newData */
-	public function updateObjectPropertyMeta(string $collection, string $id, string $property, string $name, array $newData): ObjectData
+	public function updateObjectPropertyMeta(
+		string $collection,
+		string $id,
+		string $property,
+		string $name,
+		array $newData,
+		?string $subpath = null,
+	): ObjectData
 	{
 		$object = $this->storage->fetchObject($collection, $id);
 
@@ -113,6 +120,18 @@ final class ObjectSaver
 			throw new \UnexpectedValueException('Property is not an array');
 		}
 
+		if (!empty($subpath)) {
+			// Update a depot because they are different
+			$depot = new DepotData($propertyData);
+			$depotUpdater = new DepotPropertyUpdater($depot);
+			$depotUpdater->updateMeta($name, $newData, $subpath);
+
+			$objectData[$property] = $depot->transform();
+
+			return $this->updateObject($collection, $id, $objectData);
+		}
+
+		// Update a property for all other types
 		foreach ($propertyData as $index => $child) {
 			if ($child['name'] === $name) {
 				$propertyData[$index] = $newData;
@@ -165,7 +184,14 @@ final class ObjectSaver
 	}
 
 	/** @param array<string,mixed> $newData */
-	public function patchObjectPropertyMeta(string $collection, string $id, string $property, string $name, array $newData): ObjectData
+	public function patchObjectPropertyMeta(
+		string $collection,
+		string $id,
+		string $property,
+		string $name,
+		array $newData,
+		?string $subpath = null,
+	): ObjectData
 	{
 		$object = $this->storage->fetchObject($collection, $id);
 
@@ -173,12 +199,26 @@ final class ObjectSaver
 			throw new \UnexpectedValueException('Unable to locate object to update');
 		}
 
-		$objectData   = $object->toArray();
-		$propertyData = $objectData[$property];
+		$property = $object->properties->get($property);
 
-		if (!is_array($propertyData)) {
-			throw new \UnexpectedValueException('Property is not an array');
+		if (!$property instanceof PropertyData) {
+			throw new \UnexpectedValueException('Unable to locate object property to update');
 		}
+
+		if ($property instanceof DepotData) {
+			// Update a depot because they are different
+			$depotUpdater = new DepotPropertyUpdater($property);
+			$depotUpdater->updateMeta($name, $newData, $subpath);
+		}
+
+		$object = $object->properties->map(function($item) use ($property) {
+			if ($item->id === $property->id) {
+				$item = $property;
+			}
+			return $item;
+		});
+
+		return $this->updateObject($collection, $id, $object->toArray());
 
 		foreach ($propertyData as $index => $child) {
 			if ($child['name'] === $name) {
