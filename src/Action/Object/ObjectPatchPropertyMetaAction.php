@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Object;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
@@ -12,17 +12,14 @@ final class ObjectPatchPropertyMetaAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private ObjectSaver $service,
+		private ObjectPatcher $objectPatcher,
 	) {}
 
 	/** @param array<string,string> $args */
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-		array $args,
-	): ResponseInterface {
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
 		$data   = (array)$request->getParsedBody();
-		$object = $this->service->patchObjectPropertyMeta(
+		$object = $this->objectPatcher->patchObjectPropertyMeta(
 			$args['collection'],
 			$args['id'],
 			$args['property'],

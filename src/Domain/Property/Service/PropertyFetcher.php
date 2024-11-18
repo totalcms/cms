@@ -3,32 +3,25 @@
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\PropertyData;
 
-/**
- * Service.
- */
 final class PropertyFetcher
 {
-	private ObjectFetcher $objectFetcher;
-
-	public function __construct(ObjectFetcher $objectFetcher)
-	{
-		$this->objectFetcher = $objectFetcher;
+	public function __construct(
+		private ObjectFetcher $objectFetcher
+	){
 	}
 
-	/**
-	 * fetch a property from an object.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 *
-	 * @return mixed
-	 */
-	public function fetchProperty(string $collection, string $objectID, string $property)
+	public function fetchProperty(string $collection, string $objectID, string $property) : PropertyData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $objectID);
 
-		return $object->properties->get($property);
+		$propertyData = $object->properties->get($property);
+
+		if (!$propertyData instanceof PropertyData) {
+			throw new \UnexpectedValueException("Unable to locate object property $property");
+		}
+
+		return $propertyData;
 	}
 }

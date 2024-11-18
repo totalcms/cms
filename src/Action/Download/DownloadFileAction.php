@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Utils\Cipher;
@@ -20,7 +20,7 @@ final class DownloadFileAction
 		private FileFetcher $fileFetcher,
 		private TwigRenderer $twigRenderer,
 		private FileAccessManager $accessManager,
-		private ObjectSaver $objectSaver,
+		private ObjectUpdater $objectUpdater,
 		private PhpSession $session,
 	) {
 	}
@@ -87,7 +87,7 @@ final class DownloadFileAction
 
 		// increment the download count
 		$file->count = $file->count + 1;
-		$this->objectSaver->updateObjectProperty($collection, $id, $property, $file->transform());
+		$this->objectUpdater->updateObjectProperty($collection, $id, $property, $file->transform());
 
 		$stream = $this->fileFetcher->streamFile($collection, $id, $property);
 

@@ -65,8 +65,8 @@ export default class FileField extends TotalField {
 
 		if (!force && !this.isUnsaved()) return;
 
-		const patchApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		this.form.api.postAPI(patchApi, this.getValue(), "put").then(response => {
+		const updateApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+		this.form.api.postAPI(updateApi, this.getValue(), "put").then(response => {
 			console.log("File Meta Autosaved", response);
 			this.saved();
 		});

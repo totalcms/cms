@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Object;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
@@ -12,19 +12,16 @@ final class ObjectUpdatePropertyMetaAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private ObjectSaver $service,
+		private ObjectUpdater $objectUpdater,
 	) {}
 
 	/** @param array<string,string> $args */
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-		array $args,
-	): ResponseInterface {
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
 		$data  = (array)$request->getParsedBody();
 		$query = $request->getQueryParams();
 
-		$object = $this->service->updateObjectPropertyMeta(
+		$object = $this->objectUpdater->updateObjectPropertyMeta(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
