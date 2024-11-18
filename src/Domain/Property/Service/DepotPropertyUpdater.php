@@ -25,7 +25,7 @@ final class DepotPropertyUpdater
 	}
 
 	/** @param array<string,mixed> $newMeta */
-	public function &updateMeta(string $name, array $newMeta, ?string $subpath = null): DepotData
+	public function &patchMeta(string $name, array $newMeta, ?string $subpath = null): DepotData
 	{
 		// Directly find or create the folder in the specified path and add the file
 		$folder = &self::findOrCreateFolderByPath($this->depot->files, $subpath);

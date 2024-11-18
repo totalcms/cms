@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -15,6 +16,7 @@ final class SaverFactory
 		private PropertyFetcher $propFetcher,
 		private ObjectSaver $objectSaver,
 		private CollectionSchemaFetcher $schemaFetcher,
+		protected ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,
 	){}
 
@@ -31,6 +33,7 @@ final class SaverFactory
 			$this->storage,
 			$this->propFetcher,
 			$this->objectSaver,
+			$this->objectPatcher,
 			$this->objectFetcher
 		);
 

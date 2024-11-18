@@ -16,8 +16,6 @@ final class ObjectFactory
 		private CollectionSchemaFetcher $schemaFetcher,
 		private PropertyFactory $propertyFactory,
 	) {
-		$this->schemaFetcher   = $schemaFetcher;
-		$this->propertyFactory = $propertyFactory;
 	}
 
 	/**

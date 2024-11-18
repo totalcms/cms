@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -17,6 +18,7 @@ class FileSaver
 		protected PropertyRepository $storage,
 		protected PropertyFetcher $propFetcher,
 		protected ObjectSaver $objectSaver,
+		protected ObjectPatcher $objectPatcher,
 		protected ObjectFetcher $objectFetcher,
 	) {
 	}
@@ -113,6 +115,6 @@ class FileSaver
 	{
 		$propertyData = [$property => $data->transform()];
 
-		return $this->objectSaver->patchObject($collection, $objectID, $propertyData);
+		return $this->objectPatcher->patchObject($collection, $objectID, $propertyData);
 	}
 }
