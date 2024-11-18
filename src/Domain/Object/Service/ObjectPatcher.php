@@ -57,25 +57,26 @@ final class ObjectPatcher
 			throw new \UnexpectedValueException('Unable to locate object property to update');
 		}
 
+		$patch = $propertyData->transform();
+
 		if ($propertyData instanceof DepotData) {
 			// Update a depot because they are different - **this mutates $property**
 			$depotUpdater = new DepotPropertyUpdater($propertyData);
 			$depotUpdater->patchMeta($name, $newData, $subpath);
 
-			$propertyData = $propertyData->transform();
+			$patch = $propertyData->transform();
 		} else {
-			$propertyData = $propertyData->transform();
-
-			foreach ($propertyData as $index => $child) {
+			// Update a normal property
+			foreach ($patch as $index => $child) {
 				if ($child['name'] === $name) {
-					$propertyData[$index] = array_merge($child, $newData);
+					$patch[$index] = array_merge($child, $newData);
 					break;
 				}
 			}
 		}
 
 		$objectData            = $object->toArray();
-		$objectData[$property] = $propertyData;
+		$objectData[$property] = $patch;
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData);
 	}

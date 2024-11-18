@@ -19,12 +19,15 @@ final class ObjectPatchPropertyMetaAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$data   = (array)$request->getParsedBody();
+		$query  = $request->getQueryParams();
+
 		$object = $this->objectPatcher->patchObjectPropertyMeta(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
 			$args['name'],
-			$data
+			$data,
+			$query['path'] ?? null, // Optional path URL parameter
 		);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
