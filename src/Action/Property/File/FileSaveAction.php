@@ -17,9 +17,6 @@ final class FileSaveAction
 		private SaverFactory $factory,
 		private Config $config,
 	) {
-		$this->renderer = $renderer;
-		$this->factory  = $factory;
-		$this->config   = $config;
 	}
 
 	/**

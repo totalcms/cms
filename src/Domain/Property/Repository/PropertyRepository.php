@@ -10,9 +10,9 @@ use TotalCMS\Utils\PathUtils;
  */
 final class PropertyRepository extends StorageRepository
 {
-	public function deleteDirectory(string $collection, string $objectID, string $property): void
+	public function deleteDirectory(string $collection, string $objectID, string $property, ?string $name = null, ?string $subpath = null): void
 	{
-		$path = PathUtils::buildPath($collection, $objectID, $property);
+		$path = PathUtils::buildPath($collection, $objectID, $property, $name, $subpath);
 
 		try {
 			$this->filesystem->deleteDirectory($path);
@@ -47,9 +47,9 @@ final class PropertyRepository extends StorageRepository
 		return !$this->filesystem->fileExists($path);
 	}
 
-	public function deleteFile(string $collection, string $objectID, string $property, string $filename): void
+	public function deleteFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): void
 	{
-		$path = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		try {
 			$this->filesystem->delete($path);

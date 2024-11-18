@@ -8,22 +8,17 @@ use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-/**
- * Service.
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- */
-final class FileRemover
+class FileRemover
 {
 	public function __construct(
-		private PropertyRepository $storage,
-		private PropertyFetcher $propFetcher,
-		private ObjectPatcher $objectPatcher,
-		private ObjectFetcher $objectFetcher,
+		protected PropertyRepository $storage,
+		protected PropertyFetcher $propFetcher,
+		protected ObjectPatcher $objectPatcher,
+		protected ObjectFetcher $objectFetcher,
 	) {
 	}
 
-	private function fetchProperty(string $collection, string $objectID, string $property): PropertyData
+	protected function fetchProperty(string $collection, string $objectID, string $property): PropertyData
 	{
 		// Get the existing object property data
 		$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
@@ -36,14 +31,20 @@ final class FileRemover
 	}
 
 	/** @param array<array<string,mixed>> $data */
-	private function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
+	protected function updateObject(string $collection, string $objectID, string $property, array $data): ObjectData
 	{
 		$propertyData = [$property => $data];
 
 		return $this->objectPatcher->patchObject($collection, $objectID, $propertyData);
 	}
 
-	public function deleteFile(string $collection, string $objectID, string $property, string $name): ObjectData
+	public function deleteFile(
+		string $collection,
+		string $objectID,
+		string $property,
+		string $name,
+		?string $subpath = null
+	): ObjectData
 	{
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
 			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");

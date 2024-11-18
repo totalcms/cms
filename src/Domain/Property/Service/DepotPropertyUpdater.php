@@ -24,6 +24,19 @@ final class DepotPropertyUpdater
 		return $this->depot;
 	}
 
+	public function &deleteFile(string $name, ?string $subpath = null): DepotData
+	{
+		// Directly find or create the folder in the specified path and add the file
+		$folder = &self::findOrCreateFolderByPath($this->depot->files, $subpath);
+		foreach ($folder as $index => &$item) {
+			if ($item->name === $name) {
+				unset($folder[$index]);
+				break;
+			}
+		}
+		return $this->depot;
+	}
+
 	/** @param array<string,mixed> $newMeta */
 	public function &patchMeta(string $name, array $newMeta, ?string $subpath = null): DepotData
 	{
