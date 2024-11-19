@@ -22,7 +22,7 @@ final class PropertyFileClearCacheAction
 			$args['collection'],
 			$args['id'],
 			$args['property'],
-			$args['file']
+			$args['name']
 		);
 
 		if ($deleted === false) {

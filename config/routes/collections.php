@@ -48,8 +48,8 @@ return function (App $app) {
 		// Property File
 		$group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save');
 		$group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
-		$group->delete('/{collection}/{id}/{property}/{file}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
-		$group->delete('/{collection}/{id}/{property}/{file}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
-		$group->put('/{collection}/{id}/{property}/{file}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
+		$group->delete('/{collection}/{id}/{property}/{name}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
+		$group->delete('/{collection}/{id}/{property}/{name}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
+		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
 	});
 };

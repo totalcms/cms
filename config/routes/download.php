@@ -11,7 +11,7 @@ return function (App $app) {
 		$group->post('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file-password');
 
 		// Download a file from the depot
-		$group->get('/{collection}/{id}/{property}/{file}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot');
-		$group->post('/{collection}/{id}/{property}/{file}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot-password');
+		$group->get('/{collection}/{id}/{property}/{name}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot');
+		$group->post('/{collection}/{id}/{property}/{name}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot-password');
 	});
 };

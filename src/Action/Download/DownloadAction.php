@@ -42,7 +42,7 @@ abstract class DownloadAction
 		$this->collection = $args['collection'];
 		$this->id         = $args['id'];
 		$this->property   = $args['property'];
-		$this->name       = $args['file'] ?? '';
+		$this->name       = $args['name'] ?? '';
 
 		$query = $request->getQueryParams();
 		$this->subpath  = $query['path'] ?? null;

@@ -27,7 +27,7 @@ final class FileDeleteAction
 			$args['collection'],
 			$args['id'],
 			$args['property'],
-			$args['file'],
+			$args['name'],
 			$query['path'] ?? null, // Optional path URL parameter
 		);
 
