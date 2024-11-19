@@ -14,6 +14,6 @@ return function (App $app) {
 
 		// /products/total-cms/downloads/total-cms.3.0.zip
 		// folder of files
-		// !$group->get('/{collection}/{id}/{property}/{file}', Download\DownloadFileFromSetAction::class)->setName('download-file-from-set');
+		$group->get('/{collection}/{id}/{property}/{file}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot');
 	});
 };

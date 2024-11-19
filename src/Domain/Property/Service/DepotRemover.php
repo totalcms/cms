@@ -28,8 +28,8 @@ final class DepotRemover extends FileRemover
 		$this->storage->deleteFile($collection, $objectID, $property, $name, $subpath);
 
 		// Directly find or create the folder in the specified path and add the file
-		$depotUpdater = new DepotPropertyUpdater($depot);
-		$depotUpdater->deleteFile($name, $subpath);
+		$depotManager = new DepotPropertyManager($depot);
+		$depotManager->deleteFile($name, $subpath);
 
 		return $this->updateObject($collection, $objectID, $property, $depot->transform());
 	}

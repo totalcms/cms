@@ -6,7 +6,7 @@ use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\FolderData;
 
-final class DepotPropertyUpdater
+final class DepotPropertyManager
 {
 	public function __construct(public DepotData &$depot)
 	{
@@ -22,6 +22,18 @@ final class DepotPropertyUpdater
 		$folder[] = $newfile;
 
 		return $this->depot;
+	}
+
+	public function fetchFile(string $name, ?string $subpath = null): ?FileData
+	{
+		return self::findFileByName($this->depot->files, $name, $subpath);
+	}
+
+	public function fileExists(string $name, ?string $subpath = null): bool
+	{
+		$file = $this->fetchFile($name, $subpath);
+
+		return $file !== null;
 	}
 
 	public function &deleteFile(string $name, ?string $subpath = null): DepotData
@@ -99,5 +111,40 @@ final class DepotPropertyUpdater
 		}
 
 		return self::findOrCreateFolderByPath($lastItem->files, implode('/', $pathParts));
+	}
+
+	/** @param array<FolderData|FileData> $files */
+	private static function findFileByName(array $files, string $filename, ?string $subpath = null): ?FileData
+	{
+		// Locate the folder specified by $subpath if provided
+		if ($subpath) {
+			$folder = self::findOrCreateFolderByPath($files, $subpath);
+			return self::findFileByNameInFolder($folder, $filename);
+		}
+
+		// If no $subpath is provided, search at the top level
+		return self::findFileByNameInFolder($files, $filename);
+	}
+
+	/** @param array<FolderData|FileData> $files */
+	private static function findFileByNameInFolder(array $files, string $filename): ?FileData
+	{
+		foreach ($files as $item) {
+			if ($item instanceof FileData && $item->name === $filename) {
+				// File found, return it
+				return $item;
+			}
+
+			if ($item instanceof FolderData) {
+				// Recursively search within the folder
+				$found = self::findFileByNameInFolder($item->files, $filename);
+				if ($found !== null) {
+					return $found;
+				}
+			}
+		}
+
+		// File not found
+		return null;
 	}
 }

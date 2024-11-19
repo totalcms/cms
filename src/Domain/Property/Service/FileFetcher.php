@@ -16,14 +16,18 @@ final class FileFetcher
 	{
 		$file = $this->propFetcher->fetchProperty($collection, $id, $property);
 
-		return new FileData($file->transform());
+		if (!$file instanceof FileData) {
+			throw new \RuntimeException('Unable to reteive file data');
+		}
+
+		return $file;
 	}
 
 	public function fileExists(string $collection, string $id, string $property): bool
 	{
 		$file = $this->fetchFile($collection, $id, $property);
 
-		if (empty($file->name)) {
+		if (!$file instanceof FileData) {
 			return false;
 		}
 
@@ -35,8 +39,8 @@ final class FileFetcher
 	{
 		$file = $this->fetchFile($collection, $id, $property);
 
-		if (empty($file->name)) {
-			throw new \RuntimeException('File not found');
+		if (!$file instanceof FileData) {
+			throw new \RuntimeException('Unable to reteive file data');
 		}
 
 		return $this->storage->streamFile($collection, $id, $property, $file->name);

@@ -83,17 +83,17 @@ final class PropertyRepository extends StorageRepository
 		];
 	}
 
-	public function fileExists(string $collection, string $objectID, string $property, string $filename): bool
+	public function fileExists(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): bool
 	{
-		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		return $this->filesystem->fileExists($path);
 	}
 
 	/** @return resource */
-	public function streamFile(string $collection, string $objectID, string $property, string $filename)
+	public function streamFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null)
 	{
-		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		return $this->filesystem->readStream($path);
 	}
