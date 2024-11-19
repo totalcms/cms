@@ -5,9 +5,9 @@ namespace TotalCMS\Domain\Object\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\PropertyData;
-use TotalCMS\Domain\Property\Service\DepotPropertyUpdater;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 
 final class ObjectUpdater
 {
@@ -69,7 +69,7 @@ final class ObjectUpdater
 
 		if ($property instanceof DepotData) {
 			// Update a depot because they are different - **this mutates $property**
-			$depotUpdater = new DepotPropertyUpdater($property);
+			$depotUpdater = new DepotPropertyManager($property);
 			// There is no "update" meta API, so we just merge with existing data
 			$depotUpdater->patchMeta($name, $newData, $subpath);
 		}
