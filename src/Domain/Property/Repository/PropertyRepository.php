@@ -83,6 +83,20 @@ final class PropertyRepository extends StorageRepository
 		];
 	}
 
+	public function moveFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null, ?string $newpath = null): bool
+	{
+		$path    = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
+		$newpath = PathUtils::buildPath($collection, $objectID, $property, $filename, $newpath);
+
+		if ($this->filesystem->fileExists($newpath)) {
+			// $newname  = self::getUniqueFilename($filename);
+			// $newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname, $subpath);
+			throw new \RuntimeException('File already exists in destination');
+		}
+
+		return $this->filesystem->move($path, $newpath);
+	}
+
 	public function fileExists(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): bool
 	{
 		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);

@@ -4,37 +4,36 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Property\Service\RemoverFactory;
+use TotalCMS\Domain\Property\Service\DepotFileMover;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class FileMoveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private RemoverFactory $factory,
+		private DepotFileMover $mover,
 	) {
 	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
+		$body  = (array)$request->getParsedBody();
 		$query = $request->getQueryParams();
 
-		$remover  = $this->factory->generateRemoverService($args['collection'], $args['property']);
-		$object = $remover->deleteFile(
+		$moved = $this->mover->moveFile(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
 			$args['name'],
-			$query['path'] ?? null, // Optional path URL parameter
+			$query['path'] ?? '',
+			$body['destination'] ?? '',
 		);
 
-		if (!$object instanceof ObjectData) {
-			throw new \RuntimeException('Unable to collect object data from deleted file');
+		if ($moved === false) {
+			$response = $response->withStatus(500);
 		}
 
-		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
+		return $this->renderer->json($response, ['moved' => $moved]);
 	}
 }

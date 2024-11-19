@@ -24,7 +24,18 @@ final class DepotPropertyManager
 		return $this->depot;
 	}
 
-	public function fetchFile(string $name, ?string $subpath = null): ?FileData
+	public function &moveFile(string $name, string $subpath = null, string $destination): DepotData
+	{
+		$fileToMove   = self::findFileByName($this->depot->files, $name, $subpath);
+		$destFolder   = &self::findOrCreateFolderByPath($this->depot->files, $destination);
+		$destFolder[] = $fileToMove;
+
+		$this->deleteFile($name, $subpath);
+
+		return $this->depot;
+	}
+
+	public function &fetchFile(string $name, ?string $subpath = null): ?FileData
 	{
 		return self::findFileByName($this->depot->files, $name, $subpath);
 	}
