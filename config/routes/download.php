@@ -6,14 +6,12 @@ use TotalCMS\Action\Download;
 
 return function (App $app) {
 	$app->group('/download', function (RouteCollectorProxy $group) {
-		// /products/total-cms/brochure -> download a pdf
+		// Download a file
 		$group->get('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file');
 		$group->post('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file-password');
 
-		// /collection/product/total-cms to get the json data of the
-
-		// /products/total-cms/downloads/total-cms.3.0.zip
-		// folder of files
+		// Download a file from the depot
 		$group->get('/{collection}/{id}/{property}/{file}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot');
+		$group->post('/{collection}/{id}/{property}/{file}', Download\DownloadFileFromDepotAction::class)->setName('download-file-depot-password');
 	});
 };
