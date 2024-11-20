@@ -5,9 +5,11 @@
 }
 
 .depot-layout {
-	display    : flex;
-	border     : 10px solid oklch(var(--totalform-white));
-	box-shadow : 0 0 2px oklch(var(--totalform-black) / 0.5);
+	display          : flex;
+	background-color : oklch(var(--totalform-white));
+	border           : 10px solid oklch(var(--totalform-white));
+	// border-radius    : var(--totalform-radius);
+	box-shadow       : 0 0 2px oklch(var(--totalform-black) / 0.5);
 }
 .depot-preview {
 	display         : flex;
@@ -35,8 +37,8 @@
 		to bottom,
 		transparent 0,
 		transparent var(--depot-line-height),
-		oklch(var(--totalform-nearwhite)) var(--line-height),
-		oklch(var(--totalform-nearwhite)) calc(var(--line-height) * 2)
+		oklch(var(--totalform-nearwhite)) var(--depot-line-height),
+		oklch(var(--totalform-nearwhite)) calc(var(--depot-line-height) * 2)
 	);
 
 	ul.folder-contents {
