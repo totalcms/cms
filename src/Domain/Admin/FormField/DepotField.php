@@ -39,9 +39,9 @@ final class DepotField extends FormField
 					$this->buildFolder($file['files'] ?? []),
 					['class' => 'folder-contents']
 				);
-				$summary = HTMLUtils::element('summary', $file['name']);
+				$summary = HTMLUtils::element('summary', $file['name'], ['class' => 'folder']);
 				$details = HTMLUtils::element('details', $summary . $folderFiles);
-				$content .= HTMLUtils::element('li', $details, ['class' => 'folder']);
+				$content .= HTMLUtils::element('li', $details);
 				continue;
 			}
 			$content .= $this->buildFile($file);

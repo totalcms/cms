@@ -4,11 +4,31 @@
 	}
 }
 
-ul.depot-browser {
+.depot-layout {
+	display    : flex;
+	border     : 10px solid oklch(var(--totalform-white));
+	box-shadow : 0 0 2px oklch(var(--totalform-black) / 0.5);
+}
+.depot-preview {
+	display         : flex;
+	justify-content : center;
+	align-items     : center;
+	width           : 256px;
+	min-height      : 256px;
+	border          : 1px solid oklch(var(--totalform-lightgray));
+	border-left     : none;
+
+	svg * {
+		fill: oklch(var(--totalform-lightgray));
+	}
+}
+.depot-browser {
 	--line-height : 2rem;
 
+	border : 1px solid oklch(var(--totalform-lightgray));
+
 	list-style   : none;
-	padding-left : 0;
+	padding-left : 0.5rem;
 	width        : 100%;
 	cursor       : default;
 	background: repeating-linear-gradient(
