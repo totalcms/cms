@@ -23,7 +23,7 @@
 	}
 }
 .depot-browser {
-	--line-height : 2rem;
+	--depot-line-height : 2rem;
 
 	border : 1px solid oklch(var(--totalform-lightgray));
 
@@ -34,7 +34,7 @@
 	background: repeating-linear-gradient(
 		to bottom,
 		transparent 0,
-		transparent var(--line-height),
+		transparent var(--depot-line-height),
 		oklch(var(--totalform-nearwhite)) var(--line-height),
 		oklch(var(--totalform-nearwhite)) calc(var(--line-height) * 2)
 	);
@@ -45,7 +45,7 @@
 	}
 	li {
 		padding-left : 1rem;
-		line-height  : var(--line-height);
+		line-height  : var(--depot-line-height);
 	}
 	li:has(>details) {
 		padding-left:0;
