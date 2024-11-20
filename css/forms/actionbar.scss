@@ -51,6 +51,9 @@
 		&.edit {
 			mask-image : var(--icon-edit);
 		}
+		&.add-folder {
+			mask-image : var(--icon-folder-add);
+		}
 		&.featured {
 			mask-image : var(--icon-not-featured);
 		}
