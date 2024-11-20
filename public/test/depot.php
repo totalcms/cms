@@ -5,6 +5,7 @@
 <!-- {{ cms.form.depot("mydepot") }} -->
 
 <form class="totalform" style="margin-top:2rem">
+	<div class="depot-layout-container">
 	<div class="depot-layout">
 		<div class="depot-browser-wrapper">
 		<ul class="depot-browser">
@@ -143,14 +144,14 @@
 			</div> -->
 			<div class="file-preview">
 				<div class="file file-icon icon-zip">
-					<h4>BrazilHeart-small-673d36552320b.png</h4>
+					<h4>BrazilHeart.png</h4>
 				</div>
 				<div class="file-info">
 					<div>
 						<div class="info"><h6>Size</h6><span>3.5MB</span></div>
 						<div class="info"><h6>Date</h6><span>2024/11/22 02:30PM</span></div>
-						<div class="info"><h6>D.Name</h6><span>BrazilHeart-small-673d36552320b.png</span></div>
 						<div class="info"><h6>D.Count</h6><span>10</span></div>
+						<div class="info"><h6>D.Name</h6><span>BrazilHeart-small-673d36552320b.png</span></div>
 					</div>
 					<div>
 						<h6>Comments</h6>
@@ -175,6 +176,7 @@
 				<button type="button" class="trash" title="Delete File"></button>
 			</div>
 		</div>
+	</div>
 	</div>
 </form>
 
