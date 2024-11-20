@@ -24,8 +24,8 @@
 										<div class="file file-icon icon-png">BrazilHeart-small-673d365.png</div>
 										<div class="size">200KB</div>
 									</li>
-									<li>
-										<div class="file file-icon icon-zip">BrazilHeart-small.png</div>
+									<li class="selected">
+										<div class="file file-icon icon-zip">BrazilHeart.zip</div>
 										<div class="size">3.5MB</div>
 									</li>
 								</ul>
@@ -142,9 +142,29 @@
 				<div>another-folder</div>
 			</div> -->
 			<div class="file-preview">
-				<div class="file file-icon icon-zip"></div>
-				<div>BrazilHeart.zip - 3MB</div>
-				<div>2024/11/22 02:30PM</div>
+				<div class="file file-icon icon-zip">
+					<h4>BrazilHeart-small-673d36552320b.png</h4>
+				</div>
+				<div class="file-info">
+					<div>
+						<div class="info"><h6>Size</h6><span>3.5MB</span></div>
+						<div class="info"><h6>Date</h6><span>2024/11/22 02:30PM</span></div>
+						<div class="info"><h6>D.Name</h6><span>BrazilHeart-small-673d36552320b.png</span></div>
+						<div class="info"><h6>D.Count</h6><span>10</span></div>
+					</div>
+					<div>
+						<h6>Comments</h6>
+						<p>Some comments here</p>
+					</div>
+					<div>
+						<h6>Tags</h6>
+						<div class="tags">
+							<span>Tag1</span>
+							<span>Tag2</span>
+							<span>Tag3</span>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div class="actionbar">
 				<button type="button" class="edit" title="Edit File Info"></button>
