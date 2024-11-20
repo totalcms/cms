@@ -1,0 +1,36 @@
+.depot-field {
+	.form-group {
+		box-shadow : none;
+	}
+}
+
+ul.depot-browser {
+	--line-height : 2rem;
+
+	list-style   : none;
+	padding-left : 0;
+	width        : 100%;
+	cursor       : default;
+	background: repeating-linear-gradient(
+		to bottom,
+		transparent 0,
+		transparent var(--line-height),
+		oklch(var(--totalform-nearwhite)) var(--line-height),
+		oklch(var(--totalform-nearwhite)) calc(var(--line-height) * 2)
+	);
+
+	ul.folder-contents {
+		list-style   : none;
+		margin       : 0;
+	}
+	li {
+		padding-left : 1rem;
+		line-height  : var(--line-height);
+	}
+	li:has(>details) {
+		padding-left:0;
+	}
+	details > ul {
+		padding-left:1rem;
+	}
+}
