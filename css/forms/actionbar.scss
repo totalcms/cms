@@ -81,6 +81,15 @@
 				cursor : grabbing;
 			}
 		}
+
+		&[disabled] {
+			opacity : 0.2;
+			cursor  : not-allowed;
+
+			&:hover {
+				scale : 1;
+			}
+		}
     }
 
     // &.fill {

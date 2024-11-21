@@ -39,10 +39,10 @@
 		oklch(var(--totalform-nearwhite)) calc(var(--depot-line-height) * 2)
 	);
 
-	li.selected {
+	.selected {
 		position: relative;
 
-		&:before {
+		&:after {
 			content          : "";
 			position         : absolute;
 			top              : 0;
