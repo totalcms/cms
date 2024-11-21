@@ -19,6 +19,23 @@ export default class DepotField extends TotalField {
         this.initActionBar();
     }
 
+    getSelected() {
+        return this.browser.querySelector(".selected");
+    }
+
+    getPath(file) {
+        const folder = file.closest("details").querySelector(".folder");
+        return folder ? folder.dataset.path : "";
+    }
+
+    isCollectionProtected() {
+		return this.container.querySelector("[name=protected]")?.checked;
+	}
+
+	isPasswordProtected() {
+		return this.container.querySelector("[name=password]")?.value !== "";
+	}
+
     initActionBar() {
         this.actionbar.querySelector(".edit").addEventListener("click", this.actionEdit.bind(this));
         this.actionbar.querySelector(".links").addEventListener("click", this.actionLinks.bind(this));
@@ -29,7 +46,7 @@ export default class DepotField extends TotalField {
     }
 
     actionEdit() {
-        const selected = this.browser.querySelector(".selected");
+        const selected = this.getSelected();
         selected.classList.contains("folder") ? this.actionEditFolder(selected) : this.actionEditFile(selected);
     }
 
@@ -65,7 +82,7 @@ export default class DepotField extends TotalField {
     }
 
     actionLinks() {
-        const selected = this.browser.querySelector(".selected");
+        const selected = this.getSelected();
         const dialogNode = selected.querySelector(".file-links-dialog");
         const dialog = this.initLinksDialog(dialogNode);
         dialog.open();
@@ -83,7 +100,34 @@ export default class DepotField extends TotalField {
     }
 
     actionDownload() {
+        const selected = this.getSelected();
+        const name = this.getFileAttribute(selected, "name");
+        const path = this.getPath(selected);
+
+        if (!name) {
+            console.warn("No file selected");
+            return;
+        }
+
+        const options = path.length > 0 ? {path:path} : {};
+        const downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+        const downloadUrl = this.api.buildApiQuery(downloadApi, options);
+
+        // If the file is password protected, open the download in a new tab
+        // so the user can enter the password
+        if (this.isPasswordProtected()|| this.isCollectionProtected()) {
+            window.open(downloadUrl, '_blank');
+            return;
+        }
+
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = this.getValue().download; // Suggest a filename for the downloaded file
+        document.body.appendChild(link); // Append the anchor element to the body
+        link.click(); // Programmatically click the anchor element
+        document.body.removeChild(link); // Remove the anchor element from the body
     }
+
     actionAddFolder() {
     }
     actionTrash() {
@@ -206,7 +250,7 @@ export default class DepotField extends TotalField {
 
     getFileAttribute(file, attribute) {
         const field = file.querySelector(`[name=${attribute}]`).closest(".form-field");
-        return field.totalfield.getValue();
+        return field.totalfield ? field.totalfield.getValue() : null;
     }
 
     sprintf(format, ...args) {

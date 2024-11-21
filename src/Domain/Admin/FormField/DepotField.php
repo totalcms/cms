@@ -22,9 +22,10 @@ final class DepotField extends FormField
 	{
 		$depot = is_array($this->value) ? $this->value : []; // Depot data is stored in the value field
 
+		$input   = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
 		$browser = $this->buildLayout($depot['files'] ?? []);
 
-		return $browser;
+		return $input . $browser;
 	}
 
 	/** @param array<array<string,mixed>> $files */
@@ -58,7 +59,10 @@ final class DepotField extends FormField
 				$folderPath   = $path . $file['name'] . '/';
 				$buildFolder  = $this->buildFolder($file['files'] ?? [], $folderPath);
 				$folderFiles  = HTMLUtils::element('ul', $buildFolder, ['class' => 'folder-contents']);
-				$summary      = HTMLUtils::element('summary', $file['name'], ['class' => 'folder']);
+				$summary      = HTMLUtils::element('summary', $file['name'], [
+					'class'     => 'folder',
+					'data-path' => trim($folderPath, '/'),
+				]);
 				$dialog       = $this->folderDialog($file);
 				$details      = HTMLUtils::element('details', $summary . $dialog . $folderFiles);
 				$content     .= HTMLUtils::element('li', $details);
