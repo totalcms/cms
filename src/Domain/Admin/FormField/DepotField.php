@@ -48,14 +48,15 @@ final class DepotField extends FormField
 	}
 
 	/** @param array<array<string,mixed>> $files */
-	private function buildFolder(array $files): string
+	private function buildFolder(array $files, string $path = ''): string
 	{
 		$content = '';
 		$files   = self::sortFiles($files);
 
 		foreach ($files as $file) {
 			if ($file['mime'] === 'folder') {
-				$buildFolder  = $this->buildFolder($file['files'] ?? []);
+				$folderPath   = $path . $file['name'] . '/';
+				$buildFolder  = $this->buildFolder($file['files'] ?? [], $folderPath);
 				$folderFiles  = HTMLUtils::element('ul', $buildFolder, ['class' => 'folder-contents']);
 				$summary      = HTMLUtils::element('summary', $file['name'], ['class' => 'folder']);
 				$dialog       = $this->folderDialog($file);
@@ -63,14 +64,14 @@ final class DepotField extends FormField
 				$content     .= HTMLUtils::element('li', $details);
 				continue;
 			}
-			$content .= $this->buildFile($file);
+			$content .= $this->buildFile($file, $path);
 		}
 
 		return $content;
 	}
 
 	/** @param array<string,mixed> $file */
-	private function buildFile(array $file): string
+	private function buildFile(array $file, string $path = ''): string
 	{
 		// <li>
 		// <div class="file file-icon icon-png">BrazilHeart.png</div>
@@ -84,7 +85,7 @@ final class DepotField extends FormField
 		$fileName = HTMLUtils::element('div', $name, ['class' => "file file-icon icon-$ext"]);
 		$size     = HTMLUtils::element('div', $size, ['class' => 'size']);
 
-		$linkDialog = $this->linkDialog($name);
+		$linkDialog = $this->linkDialog($name, $path);
 		$fileDialog = $this->fileDialog($file);
 
 		$content = HTMLUtils::element('li', $fileName . $size . $linkDialog . $fileDialog);
@@ -149,14 +150,15 @@ final class DepotField extends FormField
 		HTML;
 	}
 
-	protected function linkDialog(string $filename): string
+	protected function linkDialog(string $filename, string $path = ''): string
 	{
-		$query = http_build_query([
+		$query = http_build_query(array_filter([
 			'id'         => $this->form->id,
 			'collection' => $this->form->collection,
 			'property'   => $this->name,
 			'name'       => $filename,
-		]);
+			'path'       => trim($path, '/'),
+		]));
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
 

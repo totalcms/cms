@@ -35,29 +35,26 @@ export default class DepotField extends TotalField {
 
     actionEditFile(file) {
         const dialogNode = file.querySelector(".file-edit-dialog");
-        const dialog = dialogNode.dialog || this.initEditDialog(dialogNode);
+        const dialog = this.initEditDialog(dialogNode);
         dialog.open();
     }
 
     actionEditFolder(folder) {
         const dialogNode = folder.parentNode.querySelector(".folder-edit-dialog");
-        const dialog = dialogNode.dialog || this.initEditDialog(dialogNode);
+        const dialog = this.initEditDialog(dialogNode);
         dialog.open();
     }
 
     initEditDialog(node) {
-		const details = Array.from(node.querySelectorAll("details"));
-        if (details.length > 0) {
-            const editAccordion = new Details(details);
-        }
-
         return new Dialog(node, {
             open  : null,
             close : ".close",
             onOpen : () => {
                 if (this.dialogOpened) return;
                 this.dialogOpened = true;
-                // this.setupEditAccordion();
+                // Setup Accordion
+                const details = Array.from(node.querySelectorAll("details"));
+                if (details.length > 0) new Details(details);
             },
             onClose : () => {
                 this.dialogOpened = false;
@@ -68,7 +65,23 @@ export default class DepotField extends TotalField {
     }
 
     actionLinks() {
+        const selected = this.browser.querySelector(".selected");
+        const dialogNode = selected.querySelector(".file-links-dialog");
+        const dialog = this.initLinksDialog(dialogNode);
+        dialog.open();
     }
+
+    initLinksDialog(node) {
+        return new Dialog(node, {
+			open  : null,
+			close : ".close",
+			onOpen : () => {
+				const iframe = node.querySelector("iframe");
+				if (!iframe.src) iframe.src = iframe.dataset.src;
+			},
+		});
+    }
+
     actionDownload() {
     }
     actionAddFolder() {
@@ -182,6 +195,12 @@ export default class DepotField extends TotalField {
     getFileAttribute(file, attribute) {
         const field = file.querySelector(`[name=${attribute}]`).closest(".form-field");
         return field.totalfield.getValue();
+    }
+
+    sprintf(format, ...args) {
+        return format.replace(/%(\d+)/g, (match, number) => {
+            return typeof args[number - 1] !== 'undefined' ? args[number - 1] : match;
+        });
     }
 
 	schema() {

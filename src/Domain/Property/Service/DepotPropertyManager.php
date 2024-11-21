@@ -35,7 +35,7 @@ final class DepotPropertyManager
 		return $this->depot;
 	}
 
-	public function &fetchFile(string $name, ?string $subpath = null): ?FileData
+	public function fetchFile(string $name, ?string $subpath = null): ?FileData
 	{
 		return self::findFileByName($this->depot->files, $name, $subpath);
 	}

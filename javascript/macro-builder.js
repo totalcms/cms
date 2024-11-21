@@ -26,7 +26,7 @@ export default class MacroBuilder {
 
 	static depotDownload(data)
 	{
-		data.name = data.filename;
+		delete data.filename;
 		return this.buildSetMacro("depotDownload", "depot", "depot", data);
 	}
 

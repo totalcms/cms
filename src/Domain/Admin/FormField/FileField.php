@@ -74,7 +74,7 @@ final class FileField extends FormField
 			'id'         => $this->form->id,
 			'collection' => $this->form->collection,
 			'property'   => $this->name,
-			'name'       => $filename,
+			// 'name'       => $filename,
 		]);
 		// 	The cms.api may have a ? because of the Stacks Preview server
 		$join = strpos($this->form->api, '?') !== false ? '&' : '?';

@@ -213,7 +213,12 @@
 		}
 	}
 }
-
+.cms-modal {
+	&.file-edit-dialog,
+	&.folder-edit-dialog {
+		height : fit-content;
+	}
+}
 @container depot (min-width: 640px) {
 	.depot-layout {
 		display: flex;

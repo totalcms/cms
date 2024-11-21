@@ -8,6 +8,8 @@ export default class Dialog  {
 			console.warn("Missing dialog element");
 			return;
 		}
+		if (dialog.dialog) return dialog.dialog;
+
         // Define option defaults
         const defaults = {
 			open       : null,

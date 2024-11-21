@@ -290,17 +290,33 @@ final class TotalCMSTwigAdapter
 		return $url;
 	}
 
-	/** @param array<string,string> $options */
-	public function depotDownload(string $id, string $name, array $options = []): string
+	/**
+	 * @param array<string,string> $fileOptions
+	 * @param array<string,string> $options
+	 */
+	public function depotDownload(string $id, string $name, array $fileOptions = [], array $options = []): string
 	{
-		$collection = $options['collection'] ?? 'file';
-		$property   = $options['property'] ?? 'file';
-		$password   = $options['pwd'] ?? '';
+		$collection = $options['collection'] ?? 'depot';
+		$property   = $options['property'] ?? 'depot';
+		$path       = $fileOptions['path'] ?? '';
+		$password   = $fileOptions['pwd'] ?? '';
+
+		// Add support for supplying the path via the name
+		if (str_contains($name, '/')) {
+			$pathinfo = pathinfo($name);
+			$path = $pathinfo['dirname'];
+			$name = $pathinfo['basename'];
+		}
 
 		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$name}";
 
-		if (!empty($password)) {
-			$url .= "?pwd={$password}";
+		$query = http_build_query(array_filter([
+			'path' => trim($path, '/'),
+			'pwd'  => $password,
+		]));
+
+		if (!empty($query)) {
+			$url .= "?$query";
 		}
 
 		return $url;
