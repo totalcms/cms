@@ -2,9 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use PHP_CodeSniffer\Generators\HTML;
-use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Utils\FileUtils;
+use TotalCMS\Utils\HTMLUtils;
 
 final class DepotField extends FormField
 {
@@ -65,7 +64,7 @@ final class DepotField extends FormField
 				]);
 				$dialog       = $this->folderDialog($file);
 				$details      = HTMLUtils::element('details', $summary . $dialog . $folderFiles);
-				$content     .= HTMLUtils::element('li', $details);
+				$content .= HTMLUtils::element('li', $details);
 				continue;
 			}
 			$content .= $this->buildFile($file, $path);
@@ -100,6 +99,7 @@ final class DepotField extends FormField
 	protected function depotPreview(): string
 	{
 		$previews = $this->folderPreview() . $this->filePreview() . $this->actionbar();
+
 		return HTMLUtils::element('div', $previews, ['class' => 'depot-preview']);
 	}
 

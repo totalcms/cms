@@ -24,7 +24,7 @@ export default class DepotField extends TotalField {
     }
 
     getPath(file) {
-        const folder = file.closest("details").querySelector(".folder");
+        const folder = file.closest("details")?.querySelector(".folder");
         return folder ? folder.dataset.path : "";
     }
 
@@ -130,6 +130,7 @@ export default class DepotField extends TotalField {
 
     actionAddFolder() {
     }
+
     actionTrash() {
     }
 
