@@ -87,6 +87,9 @@
 			margin-right     : 0.25rem;
 		}
 	}
+	details:has(.folder-contents .selected) > .folder:before {
+		background-color : oklch(var(--totalform-accent));
+	}
 	li {
 		padding-left : 1rem;
 		line-height  : var(--depot-line-height);
