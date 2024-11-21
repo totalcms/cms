@@ -1,6 +1,7 @@
 .depot-field {
-	.form-group {
+	> .form-group {
 		box-shadow : none;
+		display    : block;
 	}
 }
 
@@ -118,7 +119,7 @@
 		fill: oklch(var(--totalform-lightgray));
 	}
 
-	.folder-upload {
+	.folder-preview {
 		display       : grid;
 		align-content : center;
 		text-align    : center;
