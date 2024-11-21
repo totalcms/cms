@@ -86,10 +86,19 @@
 			mask-size        : 1rem;
 			margin-right     : 0.25rem;
 		}
+		&::marker {
+			color : oklch(var(--totalform-darkgray) / 0.7);
+		}
 	}
-	details:has(.folder-contents .selected) > .folder:before {
-		background-color : oklch(var(--totalform-accent));
+	details:has(.folder-contents .selected) > .folder {
+		&:before {
+			background-color : oklch(var(--totalform-accent));
+		}
+		// &::marker {
+		// 	color : oklch(var(--totalform-accent));
+		// }
 	}
+
 	li {
 		padding-left : 1rem;
 		line-height  : var(--depot-line-height);

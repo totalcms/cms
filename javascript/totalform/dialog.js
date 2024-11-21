@@ -26,6 +26,8 @@ export default class Dialog  {
 		if (this.options.openOnLoad) {
 			this.open();
 		}
+
+		dialog.dialog = this;
     }
 
     isDomNode(node){

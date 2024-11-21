@@ -1,3 +1,5 @@
+import Details from "./details";
+import Dialog from "./dialog";
 import TotalField from "./totalfield";
 
 //-----------------------------------------------
@@ -13,9 +15,65 @@ export default class DepotField extends TotalField {
         this.filePreview   = this.container.querySelector(".file-preview");
         this.actionbar     = this.container.querySelector(".actionbar");
 
-        this.form.processFields();
-
         this.initBrowser();
+        this.initActionBar();
+    }
+
+    initActionBar() {
+        this.actionbar.querySelector(".edit").addEventListener("click", this.actionEdit.bind(this));
+        this.actionbar.querySelector(".links").addEventListener("click", this.actionLinks.bind(this));
+        this.actionbar.querySelector(".download").addEventListener("click", this.actionDownload.bind(this));
+        // this.actionbar.querySelector(".upload").addEventListener("click", this.actionUpload.bind(this));
+        this.actionbar.querySelector(".add-folder").addEventListener("click", this.actionAddFolder.bind(this));
+        this.actionbar.querySelector(".trash").addEventListener("click", this.actionTrash.bind(this));
+    }
+
+    actionEdit() {
+        const selected = this.browser.querySelector(".selected");
+        selected.classList.contains("folder") ? this.actionEditFolder(selected) : this.actionEditFile(selected);
+    }
+
+    actionEditFile(file) {
+        const dialogNode = file.querySelector(".file-edit-dialog");
+        const dialog = dialogNode.dialog || this.initEditDialog(dialogNode);
+        dialog.open();
+    }
+
+    actionEditFolder(folder) {
+        const dialogNode = folder.parentNode.querySelector(".folder-edit-dialog");
+        const dialog = dialogNode.dialog || this.initEditDialog(dialogNode);
+        dialog.open();
+    }
+
+    initEditDialog(node) {
+		const details = Array.from(node.querySelectorAll("details"));
+        if (details.length > 0) {
+            const editAccordion = new Details(details);
+        }
+
+        return new Dialog(node, {
+            open  : null,
+            close : ".close",
+            onOpen : () => {
+                if (this.dialogOpened) return;
+                this.dialogOpened = true;
+                // this.setupEditAccordion();
+            },
+            onClose : () => {
+                this.dialogOpened = false;
+                // this.updateLabel();
+                // this.totalfield.autosave();
+            }
+        });
+    }
+
+    actionLinks() {
+    }
+    actionDownload() {
+    }
+    actionAddFolder() {
+    }
+    actionTrash() {
     }
 
     initBrowser() {
@@ -71,7 +129,7 @@ export default class DepotField extends TotalField {
         this.folderPreview.querySelector(".folder-name").textContent = folder.textContent;
         this.filePreview.classList.add("cms-hide");
         this.folderPreview.classList.remove("cms-hide");
-        this.enableActionBarButtons(["upload", "add-folder", "trash"]);
+        this.enableActionBarButtons(["upload", "add-folder", "trash", "edit"]);
     }
 
     updateFilePreview(file) {
