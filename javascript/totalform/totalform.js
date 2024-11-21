@@ -21,6 +21,7 @@ import CustomPropertiesField from './customProperties';
 import SchemaPropertiesField from './schemaProperties';
 import JSONField from './json';
 import FileField from './file';
+import DepotField from './depot';
 
 // import Deck from './deck';
 // import MarkdownField from './markdown';
@@ -268,8 +269,8 @@ export default class TotalForm {
 			case "file":
 				return new FileField(field,options);
 
-			// case "depot":
-			//     return this.initArrayDroplet(field,options);
+			case "depot":
+				return new DepotField(field,options);
 
 			// case "radio":
 			// 	return new RadioField(field, options);

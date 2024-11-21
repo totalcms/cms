@@ -112,7 +112,7 @@ final class DepotField extends FormField
 	{
 		return <<<HTML
 		<div class="file-preview cms-hide">
-			<div class="file file-icon icon-zip">
+			<div class="file file-icon">
 				<h4 class="file-name"></h4>
 			</div>
 			<div class="file-info">

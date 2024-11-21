@@ -27,7 +27,7 @@
 .depot-browser {
 	--depot-line-height : 2rem;
 	user-select         : none;
-	min-height          : 320px;
+	min-height          : 100%;
 	list-style          : none;
 	padding             : 0 0.5rem;
 	width               : 100%;
@@ -51,6 +51,7 @@
 			right            : -100%;
 			bottom           : 0;
 			background-color : oklch(var(--totalform-accent) / 0.2);
+			pointer-events   : none;
 		}
 	}
 	ul.folder-contents {
@@ -213,6 +214,9 @@
 		border-top-width   : 1px;
 		border-left        : none;
 
+		.file-preview {
+			margin : 2rem 0;
+		}
 		.file-preview .file-icon {
 			--icon-size : 5rem;
 		}
