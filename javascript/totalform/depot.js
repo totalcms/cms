@@ -142,7 +142,12 @@ export default class DepotField extends TotalField {
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
         if (path.length > 0) deleteApi += `?path=${path}`;
 
-        if (confirm(`Are you sure that you want to delete this ${type}?`)) {
+        let message = "Are you sure that you want to delete this file? This cannot be undone.";
+        if (type === "folder") {
+            message = "Are you sure that you want to delete this folder and all of its contents? This cannot be undone.";
+        }
+
+        if (confirm(message)) {
             this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
                 if (type === "folder") {
                     selected.closest("li").remove();
