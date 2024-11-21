@@ -1,12 +1,10 @@
 .depot-field {
+	container-type : inline-size;
+	container-name : depot;
+
 	.form-group {
 		box-shadow : none;
 	}
-}
-
-.depot-layout-container {
-	container-type   : inline-size;
-	container-name   : depot;
 }
 
 .depot-layout {
