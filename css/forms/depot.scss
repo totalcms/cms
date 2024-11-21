@@ -122,6 +122,7 @@
 		display       : grid;
 		align-content : center;
 		text-align    : center;
+		margin        : 1rem;
 	}
 	.file-preview {
 		display       : grid;
@@ -129,7 +130,7 @@
 		margin-top    : 1rem;
 
 
-		h4 {
+		.file-name {
 			margin: 0;
 		}
 
@@ -176,7 +177,7 @@
 			font-size : 0.8rem;
 			color     : oklch(var(--totalform-gray));
 		}
-		p {
+		.file-comments {
 			margin: 0;
 		}
 		.info {
@@ -192,7 +193,7 @@
 				max-width     : 100%;
 			}
 		}
-		.tags {
+		.file-tags {
 			display: flex;
 			gap: 0.5rem;
 		}
