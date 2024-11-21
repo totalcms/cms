@@ -23,7 +23,8 @@ export default class DepotField extends TotalField {
         return this.browser.querySelector(".selected");
     }
 
-    getPath(item) {
+    getPath() {
+        let item = this.getSelected();
         // If the item is a folder, get the path from the parent folder element
         if (item.classList.contains("folder")) item = item.parentNode.parentNode;
         const folder = item.closest("details")?.querySelector(".folder");
@@ -103,8 +104,8 @@ export default class DepotField extends TotalField {
 
     actionDownload() {
         const selected = this.getSelected();
-        const name = this.getFileAttribute(selected, "name");
-        const path = this.getPath(selected);
+        const name     = this.getFileAttribute(selected, "name");
+        const path     = this.getPath();
 
         if (!name) {
             console.warn("No file selected");
@@ -135,27 +136,41 @@ export default class DepotField extends TotalField {
 
     actionTrash() {
         const selected = this.getSelected();
-        const path     = this.getPath(selected);
         const type     = selected.classList.contains("folder") ? "folder" : "file";
-        const name     = type === "file" ? this.getFileAttribute(selected, "name") : selected.textContent;
+        return type === "file" ? this.trashFile(selected) : this.trashFolder(selected);
+    }
+
+    trashFile(file) {
+        const name = this.getFileAttribute(file, "name");
+        const path = this.getPath();
 
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
         if (path.length > 0) deleteApi += `?path=${path}`;
 
-        let message = "Are you sure that you want to delete this file? This cannot be undone.";
-        if (type === "folder") {
-            message = "Are you sure that you want to delete this folder and all of its contents? This cannot be undone.";
-        }
-
-        if (confirm(message)) {
+        if (confirm("Are you sure that you want to delete this file? This cannot be undone.")) {
             this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
-                if (type === "folder") {
-                    selected.closest("li").remove();
-                } else {
-                    selected.remove();
-                }
+                file.remove();
                 return this.resetPreview();
             });
+        }
+    }
+
+    trashFolder(folder) {
+        const name = folder.textContent;
+        const path = this.getPath();
+
+        let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
+        if (path.length > 0) deleteApi += `?path=${path}`;
+
+        const message = "Are you sure that you want to delete this folder and all of its contents?"
+            + `This cannot be undone. Type the folder name to confirm this action. "${name}"`;
+        if (prompt(message) === name) {
+            this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
+                folder.closest("li").remove();
+                return this.resetPreview();
+            });
+        } else {
+            alert("Folder name entered does not match. Deletion cancelled.");
         }
     }
 
