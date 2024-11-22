@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Action\Assets;
 
+use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
@@ -29,18 +30,17 @@ final class StaticPublicAssetsAction
 			throw new HttpNotFoundException($request, 'Asset not found');
 		}
 
-		$contents = file_get_contents($assetPath);
 		$filesize = filesize($assetPath);
 		$mimeType = MimeLookup::getMimeType($assetPath);
+		$stream   = fopen($assetPath, 'r');
 
-		if ($filesize === false || $contents === false) {
+		if ($filesize === false || $stream === false) {
 			throw new \RuntimeException('Failed to read asset file');
 		}
 
-		$response->getBody()->write($contents);
-
 		return $response
 			->withHeader('Content-Type', $mimeType)
-			->withHeader('Content-Length', (string)$filesize);
+			->withHeader('Content-Length', (string)$filesize)
+			->withBody(Stream::create($stream));
 	}
 }
