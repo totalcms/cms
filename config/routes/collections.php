@@ -47,6 +47,7 @@ return function (App $app) {
 
 		// Property File
 		$group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save');
+		$group->post('/{collection}/{id}/{property}/folder', Property\File\FolderSaveAction::class)->setName('property-folder-save');
 		$group->delete('/{collection}/{id}/{property}/cache', Property\PropertyClearCacheAction::class)->setName('property-clear-cache');
 		$group->delete('/{collection}/{id}/{property}/{name}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
 		$group->delete('/{collection}/{id}/{property}/{name}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');

@@ -24,6 +24,14 @@ final class DepotPropertyManager
 		return $this->depot;
 	}
 
+	public function &createFolder(string $path): DepotData
+	{
+		// Create the folder in the specified path
+		self::findOrCreateFolderByPath($this->depot->files, $path);
+
+		return $this->depot;
+	}
+
 	public function &moveFile(string $name, string $subpath = null, string $destination): DepotData
 	{
 		$fileToMove   = self::findFileByName($this->depot->files, $name, $subpath);
