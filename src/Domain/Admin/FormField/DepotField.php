@@ -21,10 +21,11 @@ final class DepotField extends FormField
 	{
 		$depot = is_array($this->value) ? $this->value : []; // Depot data is stored in the value field
 
-		$input   = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
-		$browser = $this->buildLayout($depot['files'] ?? []);
+		$input     = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
+		$browser   = $this->buildLayout($depot['files'] ?? []);
+		$addFolder = $this->addFolderDialog();
 
-		return $input . $browser;
+		return $input . $browser . $addFolder;
 	}
 
 	/** @param array<array<string,mixed>> $files */
@@ -152,6 +153,20 @@ final class DepotField extends FormField
 			<button type="button" class="trash" title="Delete File" disabled></button>
 		</div>
 		HTML;
+	}
+
+	protected function addFolderDialog(): string
+	{
+		$content = $this->form->field('addpath', [
+			'field' => 'text',
+			'label' => 'Folder path',
+			'help'  => 'The name and path to the folder that you want to create.',
+		]);
+		$button   = HTMLUtils::button('Add Folder');
+		$content .= HTMLUtils::element('section', $button);
+		$dialog   = HTMLUtils::dialog($content, 'folder-add-dialog');
+
+		return $dialog;
 	}
 
 	protected function linkDialog(string $filename, string $path = ''): string

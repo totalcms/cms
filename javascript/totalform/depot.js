@@ -25,8 +25,16 @@ export default class DepotField extends TotalField {
 
     getPath() {
         let item = this.getSelected();
+        if (!item) return "";
         // If the item is a folder, get the path from the parent folder element
         if (item.classList.contains("folder")) item = item.parentNode.parentNode;
+        const folder = item.closest("details")?.querySelector(".folder");
+        return folder ? folder.dataset.path : "";
+    }
+
+    getFullPath() {
+        let item = this.getSelected();
+        if (!item) return "";
         const folder = item.closest("details")?.querySelector(".folder");
         return folder ? folder.dataset.path : "";
     }
@@ -132,6 +140,11 @@ export default class DepotField extends TotalField {
     }
 
     actionAddFolder() {
+        const modal = this.container.querySelector(".folder-add-dialog");
+        const path = this.getFullPath();
+        modal.querySelector("[name=addpath]").value = path.length > 0 ? path+"/" : "";
+        const dialog = new Dialog(modal);
+        dialog.open();
     }
 
     actionTrash() {

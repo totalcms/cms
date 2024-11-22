@@ -214,6 +214,7 @@
 	}
 }
 .cms-modal {
+	&.folder-add-dialog,
 	&.file-edit-dialog,
 	&.folder-edit-dialog {
 		height : fit-content;
