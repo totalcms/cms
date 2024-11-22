@@ -68,8 +68,10 @@ export default class DepotField extends TotalField {
     }
 
     actionEditFolder(folder) {
-        const dialogNode = folder.parentNode.querySelector(".folder-edit-dialog");
-        const dialog = this.initEditDialog(dialogNode);
+        const dialogNode = this.container.querySelector(".folder-edit-dialog");
+        dialogNode.querySelector("[name=name]").value = folder.textContent;
+
+        const dialog = new Dialog(dialogNode);
         dialog.open();
     }
 
@@ -146,15 +148,24 @@ export default class DepotField extends TotalField {
 		const pathInput = modal.querySelector("[name=addpath]")
 		pathInput.value = path.length > 0 ? path+"/" : "";
 
+        const button = modal.querySelector("button");
+
 		const dialog = new Dialog(modal);
         dialog.open();
 
 		const addFolderApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/folder`;
 
-		modal.querySelector("button").addEventListener("click", () => {
+        pathInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                button.click();
+            }
+        });
+
+		button.addEventListener("click", () => {
 			const newFolder = pathInput.value;
             this.form.api.postAPI(addFolderApi, {path:newFolder}).then(response => {
-				this.addFolder(newFolder);
+				this.addFolderToBrowser(newFolder);
 				dialog.close();
             });
 		});
@@ -164,18 +175,27 @@ export default class DepotField extends TotalField {
 		const path = folder.split("/");
 		let currentPath = "";
 		path.forEach(dir => {
-			const lastPath = currentPath;
+            const lastPath = currentPath.slice(0, -1); // Remove trailing slash
 			currentPath += dir;
 
 			if (!this.browser.querySelector(`[data-path="${currentPath}"]`)) {
-				const folderNode = document.createElement("details");
-				folderNode.innerHTML = `<summary class="folder" data-path="${currentPath}">${dir}</summary>`;
-				this.browser.appendChild(folderNode);
+                const template = this.container.querySelector(".folder-template").content.cloneNode(true);
+                const folder   = template.querySelector(".folder");
+
+                folder.textContent  = dir;
+                folder.dataset.path = currentPath;
+
+                if (lastPath.length === 0) {
+                    this.browser.prepend(template);
+                } else {
+                    const parentFolder = this.browser.querySelector(`[data-path="${lastPath}"]`);
+                    parentFolder.parentNode.querySelector(".folder-contents").prepend(template);
+                }
+                this.initBrowser();
 			}
 
 			currentPath += "/";
-		}
-		);
+		});
 	}
 
     actionTrash() {
