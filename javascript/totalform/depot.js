@@ -142,10 +142,41 @@ export default class DepotField extends TotalField {
     actionAddFolder() {
         const modal = this.container.querySelector(".folder-add-dialog");
         const path = this.getFullPath();
-        modal.querySelector("[name=addpath]").value = path.length > 0 ? path+"/" : "";
-        const dialog = new Dialog(modal);
+
+		const pathInput = modal.querySelector("[name=addpath]")
+		pathInput.value = path.length > 0 ? path+"/" : "";
+
+		const dialog = new Dialog(modal);
         dialog.open();
+
+		const addFolderApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/folder`;
+
+		modal.querySelector("button").addEventListener("click", () => {
+			const newFolder = pathInput.value;
+            this.form.api.postAPI(addFolderApi, {path:newFolder}).then(response => {
+				this.addFolder(newFolder);
+				dialog.close();
+            });
+		});
     }
+
+	addFolderToBrowser(folder) {
+		const path = folder.split("/");
+		let currentPath = "";
+		path.forEach(dir => {
+			const lastPath = currentPath;
+			currentPath += dir;
+
+			if (!this.browser.querySelector(`[data-path="${currentPath}"]`)) {
+				const folderNode = document.createElement("details");
+				folderNode.innerHTML = `<summary class="folder" data-path="${currentPath}">${dir}</summary>`;
+				this.browser.appendChild(folderNode);
+			}
+
+			currentPath += "/";
+		}
+		);
+	}
 
     actionTrash() {
         const selected = this.getSelected();
