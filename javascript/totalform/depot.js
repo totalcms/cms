@@ -225,11 +225,11 @@ export default class DepotField extends TotalField {
                     const parentFolder = this.browser.querySelector(`[data-path="${lastPath}"]`);
                     parentFolder.parentNode.querySelector(".folder-contents").prepend(template);
                 }
-                this.initBrowser();
 			}
 
 			currentPath += "/";
 		});
+        this.initBrowser();
 	}
 
     actionTrash() {
