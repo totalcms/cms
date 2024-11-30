@@ -1,6 +1,7 @@
 import Details from "./details";
 import Dialog from "./dialog";
 import TotalField from "./totalfield";
+import Droplet from "./droplet";
 
 //-----------------------------------------------
 // Total CMS Depot Droplet
@@ -17,7 +18,40 @@ export default class DepotField extends TotalField {
 
         this.initBrowser();
         this.initActionBar();
+        this.setupDroplet();
     }
+
+    setupDroplet() {
+		this.droplet = new DepotDroplet(this, {
+			paramName        : this.property,
+			apiUrl           : this.apiUploadFile(),
+			autoProcessQueue : this.form.isEditMode(),
+			acceptedFiles    : null,
+			chunking         : true,
+			rules            : this.options.rules,
+		});
+		this.droplet.onQueueComplete(() => this.uploadComplete());
+	}
+
+    uploadComplete() {
+		// this is a hack to mark the field and form as saved
+		// When a new file finishes uploading, a preview is created
+		// and the field is marked as unsaved. This timeout is to give
+		// the preview time to be created before marking the field as saved
+		setTimeout(() => {
+			this.saved();
+			this.form.uploadComplete();
+		}, 1000);
+	}
+
+	apiUploadFile() {
+		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+		return this.api.buildApiQuery(api);
+    }
+
+	updateAPIUrl() {
+		this.droplet.updateUrl(this.apiUploadFile());
+	}
 
     getSelected() {
         return this.browser.querySelector(".selected");

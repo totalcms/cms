@@ -28,10 +28,6 @@ export default class FilePreview {
 		this.updatePreview();
     }
 
-	isDepot() {
-		return this.type === "depot";
-	}
-
 	updatePreview() {
 		this.updateIcon();
 		this.updateLabel();
@@ -70,11 +66,7 @@ export default class FilePreview {
 		if (downloadButton) {
 			downloadButton.addEventListener("click", event => {
 				event.preventDefault();
-				let downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}`;
-				if (this.isDepot()) {
-					const name = this.getValue().name;
-					downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-				}
+				const downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}`;
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
 				// If the file is password protected, open the download in a new tab
@@ -108,11 +100,7 @@ export default class FilePreview {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
 				if (confirm("Are you sure that you want to delete this file?")) {
-					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-					if (this.isDepot()) {
-						const name = this.getValue().name;
-						deleteApi  = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-					}
+					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 						this.container.remove();
 					});
