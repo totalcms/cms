@@ -1,3 +1,6 @@
+# Set the application environment
+SetEnv APP_ENV dev
+
 # Redirect to front controller
 RewriteEngine On
 # RewriteBase /
