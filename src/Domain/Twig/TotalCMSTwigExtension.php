@@ -20,9 +20,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		private PhpSession $session,
 	) {}
 
-	/**
-	 * @SuppressWarnings(PHPMD.Superglobals)
-	 */
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function getGlobals(): array
 	{
 		return [

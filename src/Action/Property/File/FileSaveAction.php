@@ -73,10 +73,6 @@ final class FileSaveAction
 			$query['path'] ?? null, // Optional path URL parameter
 		);
 
-		if (!$object instanceof ObjectData) {
-			throw new \RuntimeException('Unable to collect object data from saved file');
-		}
-
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}
 

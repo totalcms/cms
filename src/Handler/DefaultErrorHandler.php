@@ -147,7 +147,7 @@ final class DefaultErrorHandler
 	 * @param int $maxLength The max length of the error message
 	 * @param bool $backtrace
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @return string The full error message
 	 */

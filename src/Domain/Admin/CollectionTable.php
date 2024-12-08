@@ -114,7 +114,7 @@ final class CollectionTable
 		return HTMLUtils::element('div', $image . $badge, ['class' => 'gallery-preview']);
 	}
 
-	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */
+	/** @SuppressWarnings("PHPMD.CyclomaticComplexity") */
 	private function formatCellData(string $id, string $property, string $type, mixed $value): string
 	{
 		if (is_null($value) || $value === '') {

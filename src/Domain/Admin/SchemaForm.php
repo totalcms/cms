@@ -8,8 +8,6 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 
 /**
  * Total Form Builder.
- *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 final class SchemaForm extends TotalForm
 {
@@ -17,8 +15,8 @@ final class SchemaForm extends TotalForm
 	public SchemaData $schemaObjectData;
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
 	 * @param array<string,string> $newAction
 	 * @param array<string,string> $deleteAction

@@ -25,7 +25,7 @@ final class LoggerFactory
 	private array $handler = [];
 	private string $format = "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n";
 
-	private ?LoggerInterface $testLogger;
+	private ?LoggerInterface $testLogger = null;
 
 	/**
 	 * The constructor.
@@ -56,7 +56,7 @@ final class LoggerFactory
 	 */
 	public function createLogger(?string $name = null): LoggerInterface
 	{
-		if (isset($this->testLogger)) {
+		if (!is_null($this->testLogger)) {
 			return $this->testLogger;
 		}
 

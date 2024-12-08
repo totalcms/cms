@@ -9,7 +9,7 @@ class BooleanData extends PropertyData
 {
 	public bool $status;
 
-	/** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function __construct(bool $status = false)
 	{
 		$this->status = $status;

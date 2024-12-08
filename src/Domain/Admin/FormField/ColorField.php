@@ -7,7 +7,7 @@ final class ColorField extends FormField
 	protected string $defaultInputType = 'color';
 	protected string $defaultFieldType = 'color';
 
-	/** @SuppressWarnings(PHPMD.ElseExpression) */
+	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	public function init(): void
 	{
 		parent::init();

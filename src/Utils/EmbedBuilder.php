@@ -30,7 +30,7 @@ class EmbedBuilder
 			$path  = parse_url($url, PHP_URL_PATH);
 			$parts = explode('/', (string)$path);
 
-			if (!is_array($parts) || count($parts) < 2) {
+			if (count($parts) < 2) {
 				return self::link($url);
 			}
 
@@ -57,7 +57,7 @@ class EmbedBuilder
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.Superglobals)
+	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
 	 * @param array<string,mixed> $options
 	 * */
@@ -81,14 +81,14 @@ class EmbedBuilder
 			}
 
 			$query = [
-				'autoplay'       => $options['autoplay'],
-				'loop'    		     => $options['loop'],
-				'color'    		    => $options['ycolor'],
-				'theme'    		    => $options['ytheme'],
-				'origin'    	    => $_SERVER['HTTP_HOST'], // or $_SERVER["SERVER_NAME"]
-				'enablejsapi'    => 1,
-				'rel'            => 0,
-				'showinfo'       => 0,
+				'autoplay'    => $options['autoplay'],
+				'loop'        => $options['loop'],
+				'color'       => $options['ycolor'],
+				'theme'       => $options['ytheme'],
+				'origin'      => $_SERVER['HTTP_HOST'],   // or $_SERVER["SERVER_NAME"]
+				'enablejsapi' => 1,
+				'rel'         => 0,
+				'showinfo'    => 0,
 			];
 
 			if (strpos($url, 'list') !== false) {

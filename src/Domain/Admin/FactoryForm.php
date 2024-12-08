@@ -12,7 +12,7 @@ final class FactoryForm
 	private SimpleForm $simpleform;
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param array<string,string> $rules
 	 */

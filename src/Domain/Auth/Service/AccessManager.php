@@ -27,7 +27,7 @@ final class AccessManager
 	}
 
 	/**
-	 *  @SuppressWarnings(PHPMD.Superglobals)
+	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
 	 * @param string|array<string> $groups
 	 */

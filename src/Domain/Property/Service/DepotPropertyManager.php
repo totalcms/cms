@@ -8,12 +8,7 @@ use TotalCMS\Domain\Property\Data\FolderData;
 
 final class DepotPropertyManager
 {
-	public function __construct(public DepotData &$depot)
-	{
-		if (!$depot instanceof DepotData) {
-			throw new \RuntimeException('Expected instance of DepotData');
-		}
-	}
+	public function __construct(public DepotData &$depot) {}
 
 	public function &addFile(FileData $newfile, ?string $subpath = null): DepotData
 	{
@@ -32,7 +27,7 @@ final class DepotPropertyManager
 		return $this->depot;
 	}
 
-	public function &moveFile(string $name, string $subpath = null, string $destination): DepotData
+	public function &moveFile(string $name, string $subpath, string $destination): DepotData
 	{
 		$fileToMove   = self::findFileByName($this->depot->files, $name, $subpath);
 		$destFolder   = &self::findOrCreateFolderByPath($this->depot->files, $destination);

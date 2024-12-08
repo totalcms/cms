@@ -37,7 +37,7 @@ final class ObjectPatcher
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $newData
 	 */

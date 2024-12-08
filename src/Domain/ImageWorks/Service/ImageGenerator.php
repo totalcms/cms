@@ -44,11 +44,7 @@ final class ImageGenerator
 		return $this->responseFromImageData($imageData);
 	}
 
-	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 *
-	 * @param array<string,mixed> $params
-	 */
+	/** @param array<string,mixed> $params */
 	public function generateGalleryImage(
 		string $collection,
 		string $id,
@@ -85,10 +81,6 @@ final class ImageGenerator
 
 		if (empty($imageData)) {
 			throw new \UnexpectedValueException('Gallery Image not found');
-		}
-
-		if (!$imageData instanceof ImageData) {
-			throw new \UnexpectedValueException('Invalid image property found in gallery');
 		}
 
 		$this->collection = $collection;
@@ -142,8 +134,8 @@ final class ImageGenerator
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 *
 	 * @param array<string,mixed> $params
 	 *

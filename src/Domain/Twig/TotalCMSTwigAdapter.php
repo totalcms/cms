@@ -23,12 +23,12 @@ use TotalCMS\Utils\ServerChecker;
 /**
  * Twig Adapter with Total CMS.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.TooManyMethods)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
- * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyMethods")
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.ExcessiveParameterList")
+ * @SuppressWarnings("PHPMD.ExcessivePublicCount")
  */
 final class TotalCMSTwigAdapter
 {
@@ -66,7 +66,7 @@ final class TotalCMSTwigAdapter
 		$this->logger    = $this->logAnalyzer;
 	}
 
-	/** @SuppressWarnings(PHPMD.Superglobals) */
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function getDomainName(): string
     {
         return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
@@ -185,7 +185,7 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param array<string,bool> $options
 	 */
@@ -327,7 +327,7 @@ final class TotalCMSTwigAdapter
 	{
 		$object = $this->object($collection, $id);
 
-		if (is_array($object) && key_exists($property, $object)) {
+		if (key_exists($property, $object)) {
 			return $object[$property];
 		}
 
@@ -675,10 +675,7 @@ final class TotalCMSTwigAdapter
 		return null;
 	}
 
-	// Get the image path for gallery image
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 *
 	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
 	 */
@@ -699,8 +696,6 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 *
 	 * @param array<string,mixed> $image
 	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
@@ -722,7 +717,7 @@ final class TotalCMSTwigAdapter
 
 		// Process the image as regular filename
 		if (!in_array($name, $dynamicRoutes)) {
-			if (!is_array($image) || !key_exists('uploadDate', $image)) {
+			if (!key_exists('uploadDate', $image)) {
 				return '';
 			}
 

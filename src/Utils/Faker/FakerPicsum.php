@@ -18,7 +18,7 @@ class FakerPicsum extends Base
 	 * @param bool $gray
 	 * @param int $blur
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
 	public static function picsumUrl(int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
 	{
@@ -42,7 +42,7 @@ class FakerPicsum extends Base
 	 * @param bool $gray
 	 * @param int $blur
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
 	public static function picsum(?string $dir = null, int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
 	{
@@ -56,7 +56,7 @@ class FakerPicsum extends Base
 	 * @param int $blur
 	 * @param bool $randomize
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
 	private static function buildQueryString(bool $gray = false, int $blur = 0, bool $randomize = false): string
 	{

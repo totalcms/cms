@@ -104,10 +104,6 @@ class FileSaver
 		// Get the existing object property data
 		$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
 
-		if (!$fileProperty instanceof PropertyData) {
-			return $this->createPropertyObject($collection, $property);
-		}
-
 		return $fileProperty;
 	}
 

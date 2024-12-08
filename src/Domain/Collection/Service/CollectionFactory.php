@@ -63,7 +63,7 @@ final class CollectionFactory
 	{
 		$collection = $this->serializer->deserialize($json, CollectionData::class, 'json');
 
-		if (!$collection instanceof CollectionData || !$collection->isValid()) {
+		if (!$collection->isValid()) {
 			throw new \UnexpectedValueException('Invalid Collection data provided');
 		}
 

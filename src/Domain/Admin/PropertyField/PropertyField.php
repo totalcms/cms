@@ -8,9 +8,6 @@ use TotalCMS\Utils\HTMLUtils;
 class PropertyField
 {
 	/**
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */

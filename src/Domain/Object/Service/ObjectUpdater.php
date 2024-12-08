@@ -26,9 +26,6 @@ final class ObjectUpdater
 			$object = $this->factory->generateObject($collection, $object);
 		}
 
-		if (!$object instanceof ObjectData) {
-			throw new \UnexpectedValueException('Unable to locate object to update');
-		}
 		if ($object->id !== $id) {
 			throw new \UnexpectedValueException('Invalid Object data provided. Does not match object ID.', 1);
 		}

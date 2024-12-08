@@ -52,10 +52,6 @@ final class SchemaFactory
 	{
 		$schema = $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
 
-		if (!$schema instanceof SchemaData) {
-			throw new \UnexpectedValueException('Invalid Schema json provided');
-		}
-
 		return $schema;
 	}
 }

@@ -142,9 +142,6 @@ final class FactoryImporter
 			// ObjectSaver rebuilds the index after every save.
 			// We do that once after all objects are saved.
 			$object = $this->factory->generateObject($collection, $objectData);
-			if (!$object instanceof ObjectData) {
-				throw new \UnexpectedValueException('Invalid object data provided');
-			}
 			$this->storage->saveObject($collection, $object);
 			$this->logger->info(sprintf('Imported object: %s', $objectData['id']));
 			$this->logger->debug('Imported object', $objectData);

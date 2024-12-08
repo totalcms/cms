@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Twig;
 /**
  * Twig Adapter with Total CMS.
  *
- * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings("PHPMD.TooManyFields")
  */
 final class TotalCMSTwigPatterns
 {

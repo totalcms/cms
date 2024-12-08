@@ -53,9 +53,10 @@ class ImageMetaReader
 	{
 		$readerType = extension_loaded('imagick') ? ExifReaderType::IMAGICK : ExifReaderType::NATIVE;
 		$exifReader = ExifReader::factory($readerType);
-		$exif       = $exifReader->read($imagepath);
 
-		if (!$exif instanceof Exif) {
+		try {
+			$exif = $exifReader->read($imagepath);
+		} catch (\Exception $e) {
 			return self::getBasicImageData($imagepath);
 		}
 

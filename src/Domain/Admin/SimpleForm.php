@@ -9,7 +9,7 @@ use TotalCMS\Utils\HTMLUtils;
  */
 final class SimpleForm
 {
-	/** @SuppressWarnings(PHPMD.BooleanArgumentFlag) */
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function __construct(
 		private string $api,
 		private string $route,

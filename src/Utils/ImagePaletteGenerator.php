@@ -14,10 +14,10 @@ class ImagePaletteGenerator
 		}
 		// Getting the top 15 colors from the image then reduce to top 5
 		// This produces the best results after a lot of testing
-		/** @var array<string> $palette */
+		/** @var ?array<string> $palette */
 		$palette = ColorThief::getPalette($imagepath, 15, 10, null, 'hex');
 
-		if (!is_array($palette) || count($palette) === 0) {
+		if (is_null($palette) || count($palette) === 0) {
 			return [];
 		}
 		$palette = array_slice($palette, 0, 5);

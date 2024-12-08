@@ -27,10 +27,6 @@ final class FileFetcher
 	{
 		$file = $this->fetchFile($collection, $id, $property);
 
-		if (!$file instanceof FileData) {
-			return false;
-		}
-
 		return $this->storage->fileExists($collection, $id, $property, $file->name);
 	}
 
@@ -38,10 +34,6 @@ final class FileFetcher
 	public function streamFile(string $collection, string $id, string $property)
 	{
 		$file = $this->fetchFile($collection, $id, $property);
-
-		if (!$file instanceof FileData) {
-			throw new \RuntimeException('Unable to reteive file data');
-		}
 
 		return $this->storage->streamFile($collection, $id, $property, $file->name);
 	}

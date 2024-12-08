@@ -23,10 +23,6 @@ class FileRemover
 		// Get the existing object property data
 		$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
 
-		if (!$fileProperty instanceof PropertyData) {
-			throw new \UnexpectedValueException('Invalid file property found');
-		}
-
 		return $fileProperty;
 	}
 
