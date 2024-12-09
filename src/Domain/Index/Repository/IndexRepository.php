@@ -42,6 +42,10 @@ final class IndexRepository extends StorageRepository
 	{
 		$files = $this->filesystem->listFiles($collection);
 
+		// Filter for object json files
+		$files = array_filter($files, fn(string $path) => str_ends_with($path, StorageRepository::FILE_EXT));
+		$files = array_filter($files, fn(string $path) => str_starts_with($path, '.'));
+
 		return array_map(fn(string $path) => basename($path, StorageRepository::FILE_EXT), $files);
 	}
 
