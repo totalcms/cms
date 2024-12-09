@@ -15,6 +15,7 @@ class PropertyField
 		protected TotalForm $form,
 		protected string $property,
 		protected string $field       = 'text',
+		protected string $default     = '',
 		protected string $label       = '',
 		protected string $help        = '',
 		protected string $placeholder = '',
