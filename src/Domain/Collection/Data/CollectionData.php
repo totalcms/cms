@@ -53,7 +53,7 @@ final class CollectionData
 			'name'        => $this->name ?? ucfirst($this->id),
 			'description' => $this->description ?? "A collection of {$this->id} objects that conform to the {$this->schema} schema.",
 			'url'         => $this->url ?? '',
-			'properties'  => $this->properties ?? new \stdClass(),
+			'properties'  => empty($this->properties) ? new \stdClass() : $this->properties,
 			'groups'      => $this->groups ?? [],
 		];
 

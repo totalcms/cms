@@ -2,26 +2,19 @@
 
 namespace TotalCMS\Domain\Collection\Service;
 
-use Dynamics\Schema;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-/**
- * Service.
- */
 final class CollectionFactory
 {
 	private Serializer $serializer;
-	private SchemaFetcher $schemaFetcher;
 
-	public function __construct(SchemaFetcher $schemaFetcher)
+	public function __construct()
 	{
-		$this->schemaFetcher = $schemaFetcher;
-		$this->serializer    = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 	}
 
 	/**
@@ -39,12 +32,6 @@ final class CollectionFactory
 
 		if (!$collection instanceof CollectionData || !$collection->isValid()) {
 			throw new \UnexpectedValueException('Invalid Collection data provided');
-		}
-
-		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
-
-		if (empty($collection->properties)) {
-			$collection->properties = CollectionData::schemaToMetaProps($schema->properties);
 		}
 
 		return $collection;
@@ -65,12 +52,6 @@ final class CollectionFactory
 
 		if (!$collection->isValid()) {
 			throw new \UnexpectedValueException('Invalid Collection data provided');
-		}
-
-		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
-
-		if (empty($collection->properties)) {
-			$collection->properties = CollectionData::schemaToMetaProps($schema->properties);
 		}
 
 		return $collection;
@@ -94,12 +75,6 @@ final class CollectionFactory
 		$collection         = new CollectionData();
 		$collection->id     = $collectionId;
 		$collection->schema = $collectionId;
-
-		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
-
-		if (empty($collection->properties)) {
-			$collection->properties = CollectionData::schemaToMetaProps($schema->properties);
-		}
 
 		return $collection;
 	}

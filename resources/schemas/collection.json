@@ -88,7 +88,6 @@
     "required": [
         "id",
         "name",
-        "schema",
-		"properties"
+        "schema"
     ]
 }
