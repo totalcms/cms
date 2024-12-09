@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 
@@ -59,6 +60,15 @@ final class CollectionForm extends TotalForm
 		$this->formType   = 'collection';
 		$this->schema     = 'collection';
 		$this->schemaData = $this->schemaFetcher->fetchSchema($this->schema);
+	}
+
+	public function getCollectionSchema(): ?SchemaData
+	{
+		$schema = (string)$this->fields['schema']->getValue();
+		if (empty($schema)) {
+			return null;
+		}
+		return $this->schemaFetcher->fetchSchema($schema);
 	}
 
 	private function initCollectionData(): void

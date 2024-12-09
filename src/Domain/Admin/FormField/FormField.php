@@ -144,6 +144,11 @@ class FormField
 		return $attributes;
 	}
 
+	public function getValue(): mixed
+	{
+		return $this->value;
+	}
+
 	public function disable(): void
 	{
 		$this->disabled = true;

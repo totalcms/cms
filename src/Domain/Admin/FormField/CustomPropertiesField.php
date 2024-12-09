@@ -29,9 +29,9 @@ class CustomPropertiesField extends PropertiesField
 	protected function createPropertyField(string $objectID, array $properties): CustomPropertyField
 	{
 		return new CustomPropertyField(
-			object: $objectID,
-			form: $this->form,
-			properties: $properties
+			object     : $objectID,
+			form       : $this->form,
+			properties : $properties
 		);
 	}
 }

@@ -17,8 +17,14 @@ export default class PropertiesField extends TotalField {
 		const propertyFields = this.container.getElementsByClassName(this.fieldClass);
 		for (const field of propertyFields) {
 			new PropertyField(field, this.fieldClass);
+			this.initActionbar(field);
 		}
 		this.sortableProperties(propertyFields);
+
+		this.template  = this.container.querySelector("template");
+		this.addSelect = this.container.querySelector("select[name='addProperty']");
+
+		this.initAddProperty();
     }
 
 	sortableProperties(propertyFields) {
@@ -28,6 +34,63 @@ export default class PropertiesField extends TotalField {
 			animation  : 150,
 			ghostClass : 'drag-ghost',
 		});
+	}
+
+	initAddProperty() {
+		this.addSelect.addEventListener("change", () => {
+			const selectedOption = this.addSelect.selectedOptions[0];
+			const selectedValue  = this.addSelect.value;
+    		if (!selectedValue) return;
+
+			// Add the selected property to the list
+			const property = JSON.parse(selectedValue);
+			property.property = selectedOption.textContent;
+			this.addProperty(property);
+
+			// Remove the selected option from the select
+			selectedOption.remove();
+
+			// Set the placeholder option as selected
+			this.addSelect.value = "";
+			this.addSelect.childNodes[0].selected = true;
+		});
+	}
+
+	addProperty(property) {
+		console.log("Adding property", property);
+
+		const clone = this.template.content.cloneNode(true);
+		const parent = this.addSelect.parentNode;
+		parent.insertBefore(clone, this.addSelect);
+
+		const propertyField = Array.from(parent.getElementsByClassName(this.fieldClass)).pop();
+		console.log(propertyField, property);
+
+		propertyField.classList.remove('-field');
+		propertyField.classList.add(`${property.field}-field`);
+
+		propertyField.querySelector("label").innerHTML = property.property;
+		propertyField.querySelector("button.edit").setAttribute("title", `Edit ${property.property} property`);
+		propertyField.querySelector("button.trash").setAttribute("title", `Remove ${property.property} property`);
+
+		for (const key in property) {
+			const input = propertyField.querySelector(`[name='${key}']`);
+			const value = typeof property[key] === "object" ? JSON.stringify(property[key]) : property[key];
+			if (input) input.value = value;
+		}
+
+		new PropertyField(propertyField, this.fieldClass);
+		this.initActionbar(propertyField);
+		this.form.processFields();
+	}
+
+	initActionbar(field) {
+		const trash = field.querySelector("button.trash");
+		trash?.addEventListener("click", () => this.removeField(field));
+	}
+
+	removeField(field) {
+		field.remove();
 	}
 
 	isUnsaved() {
