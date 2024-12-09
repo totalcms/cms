@@ -101,8 +101,8 @@ $settings['session'] = [
 	'gc_maxlifetime'         => 7200,
 	'use_trans_sid'          => false,
 	'use_only_cookies'       => true,
-	'sid_length'             => 64,
-	'sid_bits_per_character' => 6,
+	// 'sid_length'             => 64,
+	// 'sid_bits_per_character' => 6,
 ];
 
 // E-Mail settings
