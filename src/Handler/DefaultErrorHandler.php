@@ -69,6 +69,9 @@ final class DefaultErrorHandler
 			);
 		}
 
+		// Integrate with Sentry
+		\Sentry\captureException($exception);
+
 		// Detect status code
 		$statusCode = $this->getHttpStatusCode($exception);
 
