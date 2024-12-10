@@ -384,6 +384,10 @@
 }
 .range-field {
 	--schema-icon : var(--icon-range);
+
+	&.number-type:after {
+		display : none;
+	}
 }
 .styledtext-field {
 	--schema-icon : var(--icon-styledtext);
