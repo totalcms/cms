@@ -7,9 +7,9 @@ import lgAutoplay from 'lightgallery/plugins/autoplay'
 // import lgComment from 'lightgallery/plugins/comment'
 import lgFullscreen from 'lightgallery/plugins/fullscreen'
 import lgHash from 'lightgallery/plugins/hash'
-import lgMediumZoom from 'lightgallery/plugins/mediumZoom'
 import lgPager from 'lightgallery/plugins/pager'
-import lgRelativeCaption from 'lightgallery/plugins/relativeCaption'
+// import lgMediumZoom from 'lightgallery/plugins/mediumZoom'
+// import lgRelativeCaption from 'lightgallery/plugins/relativeCaption'
 // import lgRotate from 'lightgallery/plugins/rotate'
 // import lgShare from 'lightgallery/plugins/share'
 // import lgVideo from 'lightgallery/plugins/video'
@@ -22,8 +22,8 @@ document.addEventListener("DOMContentLoaded", event => {
 		autoplay   : lgAutoplay,
 		fullscreen : lgFullscreen,
 		hash       : lgHash,
-		mediumZoom : lgMediumZoom,
 		pager      : lgPager,
+		// mediumZoom : lgMediumZoom,
 		// lgRelativeCaption : lgRelativeCaption,
 		// lgComment : lgComment,
 		// lgRotate : lgRotate,
