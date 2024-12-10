@@ -118,7 +118,7 @@ class PropertyField
 
 	public function template(): string
 	{
-		return HTMLUtils::element('template', $this->buildPropertyField());
+		return HTMLUtils::element('template', $this->buildPropertyField(), ['class' => 'property-template']);
 	}
 
 	public function build(): string

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\PropertyField;
 
+use TotalCMS\Domain\Admin\CollectionForm;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
@@ -28,28 +29,13 @@ class CustomPropertyField
 
 	public function template(): string
 	{
-		// This is the template for the custom properties
-		// It clears all values so that all inputs are blank
-		$content      = '';
-		$fields       = [];
-		$blankOptions = [
-			'label'       => '',
-			'help'        => '',
-			'placeholder' => '',
-			'options'     => [],
-			'settings'    => [],
-		];
-		$properties = $this->form->propertiesForSchema();
-		foreach ($properties as $property => $options) {
-			$options           = array_merge($options, $blankOptions);
-			$fields[$property] = $this->createPropertyField($property, $options);
-		}
-		foreach ($fields as $field) {
-			$content .= $field->build();
-		}
-		$content = self::accordion('', $content);
+		$templateProperty = new PropertyField(property : '', form : $this->form);
+		$content = $templateProperty->template();
 
-		return HTMLUtils::element('template', $content);
+		$content .= $this->createAddPropertyField();
+		$content  = self::accordion('', $content);
+
+		return HTMLUtils::element('template', $content, ['class' => 'custom-property-template']);
 	}
 
 	private static function accordion(string $title = '', string $content = ''): string
@@ -78,9 +64,58 @@ class CustomPropertyField
 		foreach ($this->fields as $field) {
 			$content .= $field->build();
 		}
-		$content = self::accordion($this->object, $content);
+		$content .= $this->createNewPropertyTemplate();
+		$content .= $this->createAddPropertyField(array_keys($this->properties));
+		$content  = self::accordion($this->object, $content);
 
 		return $content;
+	}
+
+	protected function createNewPropertyTemplate(): string
+	{
+		$templateProperty = new PropertyField(
+			property : '',
+			form     : $this->form
+		);
+		return $templateProperty->template();
+	}
+
+	/** @param array<string> $excludeProperties */
+	protected function createAddPropertyField(array $excludeProperties = []): string
+	{
+		if (!$this->form instanceof CollectionForm) {
+			return '';
+		}
+
+		$schema = $this->form->getCollectionSchema();
+
+		if (is_null($schema)) {
+			return '';
+		}
+
+		$schemaProperties = array_keys($schema->properties);
+		$propertiesToAdd  = array_diff($schemaProperties, $excludeProperties);
+
+		if (empty($propertiesToAdd)) {
+			return '';
+		}
+
+		$options = HTMLUtils::option('Override New Property', '', [
+			'class'    => 'placeholder',
+			'disabled' => 'disabled',
+			'selected' => 'selected',
+		]);
+
+		foreach ($propertiesToAdd as $property) {
+			$schemaProp = $this->form->filterFieldProperties($schema->properties[$property]);
+			$options .= HTMLUtils::option($property, '', [
+				'value' => (string)json_encode($schemaProp),
+			]);
+		}
+
+		$select = HTMLUtils::element('select', $options, ['name' => 'addProperty']);
+
+		return $select;
 	}
 
 	/** @param array<string,mixed> $options */

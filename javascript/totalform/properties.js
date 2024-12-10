@@ -21,7 +21,7 @@ export default class PropertiesField extends TotalField {
 		}
 		this.sortableProperties(propertyFields);
 
-		this.template  = this.container.querySelector("template");
+		this.template  = this.container.querySelector(".property-template");
 		this.addSelect = this.container.querySelector("select[name='addProperty']");
 
 		this.initAddProperty();
@@ -37,7 +37,7 @@ export default class PropertiesField extends TotalField {
 	}
 
 	initAddProperty() {
-		this.addSelect.addEventListener("change", () => {
+		this.addSelect?.addEventListener("change", () => {
 			const selectedOption = this.addSelect.selectedOptions[0];
 			const selectedValue  = this.addSelect.value;
     		if (!selectedValue) return;
@@ -53,6 +53,10 @@ export default class PropertiesField extends TotalField {
 			// Set the placeholder option as selected
 			this.addSelect.value = "";
 			this.addSelect.childNodes[0].selected = true;
+
+			if (this.addSelect.children.length === 1) {
+				this.addSelect.remove();
+			}
 		});
 	}
 
