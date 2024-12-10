@@ -11,7 +11,7 @@ export default class SchemaPropertiesField extends PropertiesField {
 		options.fieldClass = "schema-field";
         super(container, options);
 
-        this.template  = this.container.querySelector("template");
+        this.template  = this.container.querySelector(".schema-template");
         this.addButton = this.container.querySelector(".cms-add");
 		this.addButton?.addEventListener("click", this.addTemplate.bind(this));
     }
@@ -27,7 +27,8 @@ export default class SchemaPropertiesField extends PropertiesField {
 	}
 
     newField(field) {
-		new PropertyField(field, this.fieldClass);
+		const newField = new PropertyField(field, this.fieldClass);
+		newField.form = this.form;
 		this.initActionbar(field);
 		this.form.processFields();
 	}

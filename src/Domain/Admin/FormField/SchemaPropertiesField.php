@@ -35,7 +35,7 @@ class SchemaPropertiesField extends PropertiesField
 
 		if (!empty($this->properties)) {
 			$template = $this->createPropertyField('', []);
-			$content .= HTMLUtils::element('template', $template->build());
+			$content .= HTMLUtils::element('template', $template->build(), ['class' => 'schema-template']);
 		}
 
 		// Don't add the add property button if the form is reserved

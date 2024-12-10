@@ -21,7 +21,7 @@ export default class PropertiesField extends TotalField {
 		}
 		this.sortableProperties(propertyFields);
 
-		this.template  = this.container.querySelector(".property-template");
+		this.template  = this.container.querySelector("template");
 		this.addSelect = this.container.querySelector("select[name='addProperty']");
 
 		this.initAddProperty();
