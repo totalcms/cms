@@ -2,6 +2,9 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
+/**
+ *  @SuppressWarnings("PHPMD.NumberOfChildren")
+ */
 class PropertyData implements PropertyDataInterface
 {
 	public string $id;

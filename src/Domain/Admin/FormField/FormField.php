@@ -7,6 +7,7 @@ use TotalCMS\Utils\HTMLUtils;
 
 /**
  *  @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ *  @SuppressWarnings("PHPMD.NumberOfChildren")
  */
 class FormField
 {
@@ -139,7 +140,7 @@ class FormField
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
 
 		return $attributes;
 	}
@@ -218,6 +219,10 @@ class FormField
 		return array_map(fn ($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
 	}
 
+	/**
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 */
 	protected function buildOptions(string $options = ''): string
 	{
 		if (isset($this->settings['propertyOptions']) && $this->settings['propertyOptions'] === true) {
@@ -256,6 +261,7 @@ class FormField
 				return true; // The array is multidimensional
 			}
 		}
+
 		return false; // The array is not multidimensional
 	}
 
