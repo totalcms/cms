@@ -69,18 +69,18 @@ $zindex-backdrop: 1040;
 
 @import "lightgallery";
 
-// @import "lg-autoplay";
+@import "lg-autoplay";
+@import "lg-fullscreen";
+@import "lg-medium-zoom";
+@import "lg-pager";
+@import "lg-thumbnail";
+@import "lg-transitions";
+@import "lg-zoom";
 // @import "lg-comments";
-// @import "lg-fullscreen";
-// @import "lg-medium-zoom";
-// @import "lg-pager";
 // @import "lg-relative-caption";
 // @import "lg-rotate";
 // @import "lg-share";
-@import "lg-thumbnail";
-// @import "lg-transitions";
 // @import "lg-video";
-@import "lg-zoom";
 
 
 .cms-gallery {

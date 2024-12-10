@@ -606,6 +606,11 @@ final class TotalCMSTwigAdapter
 		$gallery = '';
 
 		$images = $this->data($options['collection'], $id, $options['property']);
+
+		// Don't add these to the gallery settings
+		unset($options['collection']);
+		unset($options['property']);
+
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
 				'src' => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
@@ -618,7 +623,10 @@ final class TotalCMSTwigAdapter
 			$gallery .= $link;
 		}
 
-		return HTMLUtils::element('div', $gallery, ['class' => 'cms-gallery']);
+		return HTMLUtils::element('div', $gallery, [
+			'class'         => 'cms-gallery',
+			'data-settings' => (string)json_encode($options),
+		]);
 	}
 
 	/**

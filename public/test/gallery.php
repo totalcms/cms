@@ -27,7 +27,11 @@ filename    : ['image.jpg'],
 
 <h3>Gallery Content</h3>
 
-{{ cms.gallery("mygallery") }}
+{{ cms.gallery("mygallery", { w:300 }, {}, {
+	plugins  : ["zoom", "thumbnail"],
+	download : false,
+	speed    : 500,
+}) }}
 
 <script type="module" src="{{ cms.api }}/assets/gallery.js"></script>
 <link rel="stylesheet" href="{{ cms.api }}/assets/gallery.css">
