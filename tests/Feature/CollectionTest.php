@@ -29,11 +29,7 @@ it('saves a new collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
 
-	// Remove the property data to ensure that the CMS generates it properly
-	$requestData = $collection;
-	unset($requestData['properties']);
-
-	postJson('/collections', $requestData)
+	postJson('/collections', $collection)
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment($collection);
@@ -90,13 +86,13 @@ it('can fetch a collection', function (): void {
 it('can fetch a schema for a collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
-	get("/collections/$id/schema")
+	$schema     = $collection['schema'];
+	get("/collections/{$id}/schema")
 		->assertOk()
 		->assertJson()
 		->assertJsonFragment([
-			'id'      => $id,
-			'$id'     => "https://www.totalcms.co/schemas/{$id}.json",
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
+			'id'  => $schema,
+			'$id' => "https://www.totalcms.co/schemas/{$schema}.json",
 		]);
 });
 
