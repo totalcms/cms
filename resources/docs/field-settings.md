@@ -86,3 +86,24 @@ object is created or updated.
 
 * onCreate
 * onUpdate
+
+## Styled Text
+
+Styled text supports [a lot of settings](https://froala.com/wysiwyg-editor/docs/options/).
+Here is an example.
+
+
+```json
+{
+  "toolbarButtons": [
+    ["bold", "italic", "underline", "strikeThrough", "subscript", "superscript"],
+    ["fontFamily", "fontSize", "textColor", "backgroundColor"],
+    ["inlineClass", "inlineStyle", "clearFormatting"]
+  ],
+  "paragraphStyles": {
+    "class1": "Class 1",
+    "class2": "Class 2"
+  },
+  "pastePlain" : true
+}
+```
