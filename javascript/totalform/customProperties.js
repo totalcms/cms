@@ -18,7 +18,7 @@ export default class CustomPropertiesField extends TotalField {
 		}
 		this.sortableObjects(objectFields);
 
-		this.template = this.container.querySelector("template");
+		this.template = this.container.querySelector(".custom-property-template");
 		this.addButton = this.container.querySelector(".cms-add");
 		this.addButton.addEventListener("click", this.addTemplate.bind(this));
     }
@@ -64,7 +64,8 @@ export default class CustomPropertiesField extends TotalField {
 	}
 
 	newField(field) {
-		new PropertiesField(field);
+		const propsField = new PropertiesField(field);
+		propsField.form = this.form;
 		this.initActionbar(field);
 		this.form.processFields();
 	}

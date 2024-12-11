@@ -14,9 +14,9 @@ use TotalCMS\Support\Config;
 /**
  * Total Form Builder.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyMethods")
  *
  * This class is a factory for creating TotalForm objects.
  * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
@@ -174,8 +174,8 @@ final class TotalFormFactory
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 *
 	 * @param array<string,mixed> $options
 	 */
@@ -373,6 +373,15 @@ final class TotalFormFactory
 	public function file(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		return $this->singleFieldFormBuilder($id, 'file', 'file', 'file', $formOptions, $fieldOptions);
+	}
+
+	/**
+	 * @param array<string,mixed> $formOptions
+	 * @param array<string,mixed> $fieldOptions
+	 */
+	public function depot(string $id, array $formOptions = [], array $fieldOptions = []): string
+	{
+		return $this->singleFieldFormBuilder($id, 'depot', 'depot', 'depot', $formOptions, $fieldOptions);
 	}
 
 	/**

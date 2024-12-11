@@ -28,10 +28,6 @@ export default class FilePreview {
 		this.updatePreview();
     }
 
-	isDepot() {
-		return this.type === "depot";
-	}
-
 	updatePreview() {
 		this.updateIcon();
 		this.updateLabel();
@@ -39,14 +35,14 @@ export default class FilePreview {
 
 	updateIcon() {
 		const icon = this.container.querySelector(".file-icon");
-		const mime = this.container.querySelector("[name=name]").value.toLowerCase();
+		const mime = this.container.querySelector("[name=download]").value.toLowerCase();
 		const ext  = mime.split(".").pop();
 		icon.className = `file-icon icon-${ext}`;
 	}
 
 	updateLabel() {
 		const label = this.container.querySelector(".filename");
-		const name  = this.container.querySelector("[name=name]").value;
+		const name  = this.container.querySelector("[name=download]").value;
 		label.textContent = name;
 	}
 
@@ -70,11 +66,7 @@ export default class FilePreview {
 		if (downloadButton) {
 			downloadButton.addEventListener("click", event => {
 				event.preventDefault();
-				let downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}`;
-				if (this.isDepot()) {
-					const name = this.getValue().filename;
-					downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-				}
+				const downloadApi = `/download/${this.form.collection}/${this.form.id}/${this.property}`;
 				const downloadUrl = this.api.buildApiQuery(downloadApi);
 
 				// If the file is password protected, open the download in a new tab
@@ -86,7 +78,7 @@ export default class FilePreview {
 
 				const link = document.createElement('a');
 				link.href = downloadUrl;
-				link.download = this.getValue().name; // Suggest a filename for the downloaded file
+				link.download = this.getValue().download; // Suggest a filename for the downloaded file
 				document.body.appendChild(link); // Append the anchor element to the body
 				link.click(); // Programmatically click the anchor element
 				document.body.removeChild(link); // Remove the anchor element from the body
@@ -108,11 +100,7 @@ export default class FilePreview {
 			deleteButton.addEventListener("click", event => {
 				event.preventDefault();
 				if (confirm("Are you sure that you want to delete this file?")) {
-					let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-					if (this.isDepot()) {
-						const name = this.getValue().filename;
-						deleteApi  = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
-					}
+					const deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
 					this.form.api.postAPI(deleteApi, "", "DELETE").then(response => {
 						this.container.remove();
 					});

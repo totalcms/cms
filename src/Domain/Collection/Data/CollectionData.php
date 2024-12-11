@@ -30,7 +30,7 @@ final class CollectionData
 	/** @var array<string> */
 	public array $groups;        // access groups that can access this collection
 
-	/** @var array<string,mixed> */
+	/** @var array<string,array<string,mixed>> */
 	public array $properties;        // Rules for fields defined in schemaToMetaProps
 
 	/** @var array<string,array<string,mixed>> */
@@ -47,15 +47,19 @@ final class CollectionData
 		if (!$this->isValid()) {
 			throw new \RuntimeException('CollectionData is not valid.');
 		}
+		$defaultDescription = "A collection of {$this->id} objects that conform to the {$this->schema} schema.";
 		$collection = [
 			'id'          => $this->id,
 			'schema'      => $this->schema,
 			'name'        => $this->name ?? ucfirst($this->id),
-			'description' => $this->description ?? "A collection of {$this->id} objects that conform to the {$this->schema} schema.",
+			'description' => empty($this->description) ? $defaultDescription : $this->description,
 			'url'         => $this->url ?? '',
-			'properties'  => $this->properties ?? new \stdClass(),
 			'groups'      => $this->groups ?? [],
 		];
+
+		if (!empty($this->properties)) {
+			$collection['properties'] = $this->properties;
+		}
 
 		if (!empty($this->customProperties)) {
 			$collection['customProperties'] = $this->customProperties;

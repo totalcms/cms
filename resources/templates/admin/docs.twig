@@ -1,6 +1,12 @@
 {% extends "admin-dashboard.twig" %}
 
 {% set menu = [ {
+	"title": "Dashboard",
+	"sub": [
+		{ "title": "Field Settings", "path": "field-settings" },
+		{ "title": "Field Options",  "path": "field-options" }
+	]
+},{
 	"title": "API",
 	"sub": [
 		{ "title": "REST API", 		"path": "rest-api" },

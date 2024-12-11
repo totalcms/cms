@@ -6,8 +6,8 @@ use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Utils\HTMLUtils;
 
 /**
- *  @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- *  @SuppressWarnings(PHPMD.NumberOfChildren)
+ *  @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ *  @SuppressWarnings("PHPMD.NumberOfChildren")
  */
 class FormField
 {
@@ -18,8 +18,8 @@ class FormField
 	protected bool $datalist = false;
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
 	 * @param array<mixed> $options - Options for select fields and datalists
@@ -110,8 +110,8 @@ class FormField
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 *
 	 * @return array<string,?string>
 	 */
@@ -140,9 +140,14 @@ class FormField
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
 
 		return $attributes;
+	}
+
+	public function getValue(): mixed
+	{
+		return $this->value;
 	}
 
 	public function disable(): void
@@ -180,7 +185,7 @@ class FormField
 		return HTMLUtils::option($option['label'], $this->value, $attributes);
 	}
 
-	/** @param array<string|array<string,string>> $options */
+	/** @param array<string>|array<int,array<string,string>> $options */
 	protected function buildOptionGroup(string $group, array $options): string
 	{
 		$groupOptions = '';
@@ -188,9 +193,7 @@ class FormField
 			if (is_string($option)) {
 				$option = $this->optionFromString($option);
 			}
-			if (is_array($option)) {
-				$groupOptions .= $this->buildOption($option);
-			}
+			$groupOptions .= $this->buildOption($option);
 		}
 
 		return HTMLUtils::element('optgroup', $groupOptions, ['label' => $group]);
@@ -216,7 +219,10 @@ class FormField
 		return array_map(fn ($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
 	}
 
-	/** @SuppressWarnings(PHPMD.CyclomaticComplexity) */
+	/**
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 */
 	protected function buildOptions(string $options = ''): string
 	{
 		if (isset($this->settings['propertyOptions']) && $this->settings['propertyOptions'] === true) {
@@ -255,6 +261,7 @@ class FormField
 				return true; // The array is multidimensional
 			}
 		}
+
 		return false; // The array is not multidimensional
 	}
 

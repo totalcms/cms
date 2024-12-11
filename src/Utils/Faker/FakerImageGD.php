@@ -11,19 +11,24 @@ use Faker\Provider\Lorem;
  */
 class FakerImageGD extends Base
 {
-	/** @return array<int> */
+	/** @return array<int<0,255>> */
 	private static function hex2rgb(string $hex): array
 	{
 		$rgb = str_split(ltrim($hex, '#'), 2);
 		$rgb = array_map('intval', array_map('hexdec', $rgb));
+		$rgb = array_map(fn($value) => max(0, min($value, 255)), $rgb);
+
+		if (count($rgb) !== 3) {
+			throw new \InvalidArgumentException('Invalid hex color value.');
+		}
 
 		return $rgb;
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param ?string $dir
 	 * @param int $width
@@ -54,6 +59,9 @@ class FakerImageGD extends Base
 			throw new \RuntimeException('GD is not available on this PHP installation. Impossible to generate image.');
 		}
 
+		if ($width <= 0 || $height <= 0) {
+			throw new \InvalidArgumentException('Width and height must be greater than 0.');
+		}
 		$image = imagecreate($width, $height);
 
 		if ($image === false) {
@@ -117,8 +125,8 @@ class FakerImageGD extends Base
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 *
 	 * @param ?string $dir
 	 * @param int $width
@@ -143,6 +151,9 @@ class FakerImageGD extends Base
 			throw new \RuntimeException('GD is not available on this PHP installation. Impossible to generate image.');
 		}
 
+		if ($width <= 0 || $height <= 0) {
+			throw new \InvalidArgumentException('Width and height must be greater than 0.');
+		}
 		$image = imagecreate($width, $height);
 
 		if ($image === false) {

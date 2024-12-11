@@ -14,7 +14,7 @@ class FileData extends PropertyData
 	public string $mime;
 	public string $label;
 	public string $name;
-	public string $filename;
+	public string $download;
 	public string $comments;
 	public int $size;
 	public int $count;
@@ -23,8 +23,8 @@ class FileData extends PropertyData
 	public function __construct(array $file = [])
 	{
 		$this->protected = $file['protected'] ?? true;
-		$this->filename  = $file['filename'] ?? '';
-		$this->name      = $file['name'] ?? $this->filename;
+		$this->name      = $file['name'] ?? '';
+		$this->download  = empty($file['download']) ? $this->name : $file['download'];
 		$this->mime      = $file['mime'] ?? '';
 		$this->comments  = $file['comments'] ?? '';
 		$this->size      = intval($file['size'] ?? 0);
@@ -45,7 +45,7 @@ class FileData extends PropertyData
 			'uploadDate' => $this->uploadDate->transform(),
 			'protected'  => $this->protected,
 			'mime'       => $this->mime,
-			'filename'   => $this->filename,
+			'download'   => $this->download,
 			'name'       => $this->name,
 			'comments'   => $this->comments,
 			'size'       => $this->size,

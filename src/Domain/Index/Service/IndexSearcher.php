@@ -82,7 +82,7 @@ final class IndexSearcher
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
@@ -107,7 +107,7 @@ final class IndexSearcher
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
@@ -152,7 +152,7 @@ final class IndexSearcher
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<mixed> $object
 	 */
@@ -206,7 +206,7 @@ final class IndexSearcher
 	/**
 	 * Function to get the priority score of an item based on the properties array.
 	 *
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<mixed> $object
 	 * @param array<string> $properties

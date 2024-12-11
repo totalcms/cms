@@ -10,18 +10,9 @@ use TotalCMS\Utils\PathUtils;
  */
 final class PropertyRepository extends StorageRepository
 {
-	/**
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 *
-	 * @throws \RuntimeException
-	 *
-	 * @return void
-	 */
-	public function deleteDirectory(string $collection, string $objectID, string $property): void
+	public function deleteDirectory(string $collection, string $objectID, string $property, ?string $name = null, ?string $subpath = null): void
 	{
-		$path = PathUtils::buildPath($collection, $objectID, $property);
+		$path = PathUtils::buildPath($collection, $objectID, $property, $name, $subpath);
 
 		try {
 			$this->filesystem->deleteDirectory($path);
@@ -56,9 +47,9 @@ final class PropertyRepository extends StorageRepository
 		return !$this->filesystem->fileExists($path);
 	}
 
-	public function deleteFile(string $collection, string $objectID, string $property, string $filename): void
+	public function deleteFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): void
 	{
-		$path = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		try {
 			$this->filesystem->delete($path);
@@ -68,27 +59,16 @@ final class PropertyRepository extends StorageRepository
 		$this->deleteFileCache($collection, $objectID, $property, $filename);
 	}
 
-	/**
-	 * Save file to an object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @throws \RuntimeException
-	 *
-	 * @return array<string,string|int>
-	 */
-	public function saveFile(string $collection, string $objectID, string $property, string $filePath): array
+	/** @return array<string,string|int> */
+	public function saveFile(string $collection, string $objectID, string $property, string $filePath, ?string $subpath = null): array
 	{
 		$filename = basename($filePath);
-		$newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		// File already exists, rename it
 		if ($this->filesystem->fileExists($newpath)) {
 			$newname  = self::getUniqueFilename($filename);
-			$newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname);
+			$newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname, $subpath);
 		}
 
 		if (!$this->filesystem->import($filePath, $newpath)) {
@@ -103,33 +83,36 @@ final class PropertyRepository extends StorageRepository
 		];
 	}
 
-	public function fileExists(string $collection, string $objectID, string $property, string $filename): bool
+	public function moveFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null, ?string $newpath = null): bool
 	{
-		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$path    = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
+		$newpath = PathUtils::buildPath($collection, $objectID, $property, $filename, $newpath);
+
+		if ($this->filesystem->fileExists($newpath)) {
+			// $newname  = self::getUniqueFilename($filename);
+			// $newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname, $subpath);
+			throw new \RuntimeException('File already exists in destination');
+		}
+
+		return $this->filesystem->move($path, $newpath);
+	}
+
+	public function fileExists(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): bool
+	{
+		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		return $this->filesystem->fileExists($path);
 	}
 
 	/** @return resource */
-	public function streamFile(string $collection, string $objectID, string $property, string $filename)
+	public function streamFile(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null)
 	{
-		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename);
+		$path  = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		return $this->filesystem->readStream($path);
 	}
 
-	/**
-	 * Save an image to object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectID
-	 * @param string $property
-	 * @param string $filePath
-	 *
-	 * @throws \RuntimeException
-	 *
-	 * @return array<string,string|int>
-	 */
+	/** @return array<string,string|int> */
 	public function saveImage(string $collection, string $objectID, string $property, string $filePath): array
 	{
 		$filename = basename($filePath);
@@ -144,7 +127,7 @@ final class PropertyRepository extends StorageRepository
 		[$width, $height] = $data;
 
 		if (!$this->filesystem->import($filePath, $newpath)) {
-			throw new \RuntimeException('File not saved');
+			throw new \RuntimeException('Image not saved');
 		}
 
 		// Update to be Image data

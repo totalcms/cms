@@ -23,8 +23,7 @@ class SchemaField extends PropertyField
 	];
 
 	/**
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
 	 * @param array<string,mixed> $extra - extra attributes for the field schema such as minItems, items, patternProperties, etc
@@ -108,11 +107,11 @@ class SchemaField extends PropertyField
 
 		$dialog  = $this->buildDialog();
 		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
-		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => 'Edit property']);
+		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$this->property} property"]);
 
 		if ($this->form instanceof SchemaForm && !$this->form->reserved) {
-			$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => 'Duplicate property']);
-			$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => 'Delete property']);
+			$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => "Duplicate {$this->property} property"]);
+			$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$this->property} property"]);
 		}
 
 		$field  = HTMLUtils::element('div', $input . $buttons . $dialog, [

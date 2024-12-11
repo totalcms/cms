@@ -23,12 +23,12 @@ use TotalCMS\Utils\ServerChecker;
 /**
  * Twig Adapter with Total CMS.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.TooManyMethods)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
- * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyMethods")
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.ExcessiveParameterList")
+ * @SuppressWarnings("PHPMD.ExcessivePublicCount")
  */
 final class TotalCMSTwigAdapter
 {
@@ -66,7 +66,7 @@ final class TotalCMSTwigAdapter
 		$this->logger    = $this->logAnalyzer;
 	}
 
-	/** @SuppressWarnings(PHPMD.Superglobals) */
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function getDomainName(): string
     {
         return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
@@ -107,7 +107,7 @@ final class TotalCMSTwigAdapter
 		return null;
 	}
 
-	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $filename = ''): bool
+	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $name = ''): bool
 	{
 		$this->fileAccessManager->loadFile($collection, $id, $property);
 
@@ -185,7 +185,7 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param array<string,bool> $options
 	 */
@@ -290,17 +290,33 @@ final class TotalCMSTwigAdapter
 		return $url;
 	}
 
-	/** @param array<string,string> $options */
-	public function depotDownload(string $id, string $filename, array $options = []): string
+	/**
+	 * @param array<string,string> $fileOptions
+	 * @param array<string,string> $options
+	 */
+	public function depotDownload(string $id, string $name, array $fileOptions = [], array $options = []): string
 	{
-		$collection = $options['collection'] ?? 'file';
-		$property   = $options['property'] ?? 'file';
-		$password   = $options['pwd'] ?? '';
+		$collection = $options['collection'] ?? 'depot';
+		$property   = $options['property'] ?? 'depot';
+		$path       = $fileOptions['path'] ?? '';
+		$password   = $fileOptions['pwd'] ?? '';
 
-		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$filename}";
+		// Add support for supplying the path via the name
+		if (str_contains($name, '/')) {
+			$pathinfo = pathinfo($name);
+			$path = $pathinfo['dirname'];
+			$name = $pathinfo['basename'];
+		}
 
-		if (!empty($password)) {
-			$url .= "?pwd={$password}";
+		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$name}";
+
+		$query = http_build_query(array_filter([
+			'path' => trim($path, '/'),
+			'pwd'  => $password,
+		]));
+
+		if (!empty($query)) {
+			$url .= "?$query";
 		}
 
 		return $url;
@@ -311,7 +327,7 @@ final class TotalCMSTwigAdapter
 	{
 		$object = $this->object($collection, $id);
 
-		if (is_array($object) && key_exists($property, $object)) {
+		if (key_exists($property, $object)) {
 			return $object[$property];
 		}
 
@@ -590,6 +606,11 @@ final class TotalCMSTwigAdapter
 		$gallery = '';
 
 		$images = $this->data($options['collection'], $id, $options['property']);
+
+		// Don't add these to the gallery settings
+		unset($options['collection']);
+		unset($options['property']);
+
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
 				'src' => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
@@ -602,30 +623,33 @@ final class TotalCMSTwigAdapter
 			$gallery .= $link;
 		}
 
-		return HTMLUtils::element('div', $gallery, ['class' => 'cms-gallery']);
+		return HTMLUtils::element('div', $gallery, [
+			'class'         => 'cms-gallery',
+			'data-settings' => (string)json_encode($options),
+		]);
 	}
 
 	/**
 	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
 	 */
-	public function galleryImage(?string $id, ?string $filename, array $imageworks = [], array $options = []): string
+	public function galleryImage(?string $id, ?string $name, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		if (empty($id) || empty($filename)) {
+		if (empty($id) || empty($name)) {
 			return '';
 		}
 
-		$imagePath = $this->galleryPath($id, $filename, $imageworks, $options);
+		$imagePath = $this->galleryPath($id, $name, $imageworks, $options);
 		if (empty($imagePath)) {
 			return '';
 		}
 
-		$alt = $this->galleryAlt($id, $filename, $options);
+		$alt = $this->galleryAlt($id, $name, $options);
 
 		return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
 	}
@@ -659,10 +683,7 @@ final class TotalCMSTwigAdapter
 		return null;
 	}
 
-	// Get the image path for gallery image
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 *
 	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
 	 */
@@ -683,8 +704,6 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 *
 	 * @param array<string,mixed> $image
 	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
@@ -706,7 +725,7 @@ final class TotalCMSTwigAdapter
 
 		// Process the image as regular filename
 		if (!in_array($name, $dynamicRoutes)) {
-			if (!is_array($image) || !key_exists('uploadDate', $image)) {
+			if (!key_exists('uploadDate', $image)) {
 				return '';
 			}
 
@@ -772,14 +791,14 @@ final class TotalCMSTwigAdapter
 
 	// Get an alt tag for a gallery image
 	/** @param array<string,string> $options */
-	public function galleryAlt(string $id, string $filename, array $options = []): string
+	public function galleryAlt(string $id, string $name, array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'gallery',
 			'property'   => 'gallery',
 		], $options);
 
-		$image = $this->galleryImageData($id, $filename, $options);
+		$image = $this->galleryImageData($id, $name, $options);
 
 		if (!is_array($image) || !key_exists('alt', $image)) {
 			return '';

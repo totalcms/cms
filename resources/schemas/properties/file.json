@@ -4,7 +4,7 @@
   "description" : "File object with supplemental data about the file",
   "type"        : "object",
   "properties"  : {
-    "name": {
+    "download": {
       "type"     : "string",
       "$comment" : "The name of the file that will be used for the download"
     },
@@ -26,7 +26,7 @@
       "$comment" : "Flag to enable group authentication on the file set in the collection",
       "type"     : "boolean"
     },
-    "filename": {
+    "name": {
       "type"     : "string",
       "$comment" : "The name of the original file including the extension"
     },
@@ -41,6 +41,7 @@
     },
     "count": {
       "minimum"  : 0,
+      "default"  : 0,
       "$comment" : "The number of times a file has been downloaded",
       "type"     : "integer"
     },
@@ -51,16 +52,14 @@
   },
   "required": [
     "mime",
-    "filename",
     "name",
     "size",
-    "tags",
     "uploadDate"
   ],
   "examples": [
     {
-      "name"       : "file.zip",
-      "filename"   : "originalfile.zip",
+      "name"       : "originalfile.zip",
+      "download"   : "file.zip",
       "uploadDate" : "2018-08-02T08:59:28+00:00",
       "password"   : "password",
       "protected"  : false,

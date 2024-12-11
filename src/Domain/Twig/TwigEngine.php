@@ -56,7 +56,12 @@ final class TwigEngine
 		try {
 			$string = $this->twig->render($templateName, $data);
 		} catch (\Exception $e) {
-			$string = sprintf('<p class="cms-twig-error render-error"><strong>Error rendering template</strong>: %s - %s</p>', $templateName, $e->getMessage());
+			$string = sprintf(
+				'<p class="cms-twig-error render-error"><strong>Error rendering template</strong>: %s - %s</p><pre class="cms-twig-traceback">%s</pre>',
+				$templateName,
+				$e->getMessage(),
+				$e->getPrevious(),
+			);
 		}
 
 		return $string;

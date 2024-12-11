@@ -2,20 +2,26 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-/**
- * String type property data.
- */
 class GalleryData extends PropertyData
 {
-	/** @param array<array<string,mixed>> $images */
-	public function __construct(
-		public array $images = [],
-	) {
+	/** @var array<ImageData> */
+	public array $images = [];
+
+	/** @param array<ImageData|array<string,mixed>> $images */
+	public function __construct(array $images = [])
+	{
+		$this->images = array_map(
+			fn ($image) => $image instanceof ImageData ? $image : new ImageData($image),
+			$images
+		);
 	}
 
 	/** @return array<array<string,mixed>> */
 	public function transform(): array
 	{
-		return $this->images;
+		return array_map(
+			fn (ImageData $image) => $image->transform(),
+			$this->images
+		);
 	}
 }

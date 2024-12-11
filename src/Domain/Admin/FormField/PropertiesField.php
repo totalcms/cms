@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use TotalCMS\Domain\Admin\CollectionForm;
 use TotalCMS\Domain\Admin\PropertyField\CustomPropertyField;
 use TotalCMS\Domain\Admin\PropertyField\PropertyField;
 use TotalCMS\Utils\HTMLUtils;
@@ -41,7 +42,57 @@ class PropertiesField extends FormField
 			$content .= $field->build();
 		}
 
+		$content .= $this->createAddPropertyField();
+		$content .= $this->createNewPropertyTemplate();
+
 		return $content;
+	}
+
+	protected function createAddPropertyField(): string
+	{
+		if (!$this->form instanceof CollectionForm) {
+			return '';
+		}
+
+		$schema = $this->form->getCollectionSchema();
+
+		if (is_null($schema)) {
+			return '';
+		}
+
+		$schemaProperties = array_keys($schema->properties);
+		$localProperties  = array_keys($this->properties);
+		$propertiesToAdd  = array_diff($schemaProperties, $localProperties);
+
+		if (empty($propertiesToAdd)) {
+			return '';
+		}
+
+		$options = HTMLUtils::option('Override New Property', '', [
+			'class'    => 'placeholder',
+			'disabled' => 'disabled',
+			'selected' => 'selected',
+		]);
+
+		foreach ($propertiesToAdd as $property) {
+			$schemaProp = $this->form->filterFieldProperties($schema->properties[$property]);
+			$options .= HTMLUtils::option($property, '', [
+				'value' => (string)json_encode($schemaProp),
+			]);
+		}
+
+		$select = HTMLUtils::element('select', $options, ['name' => 'addProperty']);
+
+		return $select;
+	}
+
+	protected function createNewPropertyTemplate(): string
+	{
+		$templateProperty = new PropertyField(
+			property : '',
+			form     : $this->form
+		);
+		return $templateProperty->template();
 	}
 
 	/** @param array<string,mixed> $options */

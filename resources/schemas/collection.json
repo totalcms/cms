@@ -69,8 +69,8 @@
 		},
 		"properties": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
-			"help"  : "Edit the form fields for the collection objects.",
-			"label" : "Property Form Fields",
+			"help"  : "Override schema property attributes for this collection.",
+			"label" : "Form Field Overrides",
 			"field" : "properties"
 		},
 		"customProperties": {
@@ -88,7 +88,6 @@
     "required": [
         "id",
         "name",
-        "schema",
-		"properties"
+        "schema"
     ]
 }

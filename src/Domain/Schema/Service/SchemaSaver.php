@@ -34,11 +34,8 @@ final class SchemaSaver
 			throw new \UnexpectedValueException('Schema ID does not match');
 		}
 
-		$schema = $this->storage->getSchema($schemaId);
-
-		if (!$schema instanceof SchemaData) {
-			throw new \UnexpectedValueException('Unable to locate schema to update');
-		}
+		// Make sure the schema exists
+		$this->storage->getSchema($schemaId);
 
 		return $this->saveSchema($schemaData);
 	}

@@ -7,9 +7,12 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
+use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Property\Service\PropertyFetcher;
 
 final class FileAccessManager
 {
@@ -17,25 +20,38 @@ final class FileAccessManager
 
 	private LoggerInterface $logger;
 
-	private FileData $file;
+	private FileData|DepotData $file;
 	private CollectionData $collection;
 
 	public function __construct(
 		private PhpSession $session,
 		private UserValidationService $userValidator,
 		private LoggerFactory $loggerFactory,
-		private FileFetcher $fileFetcher,
+		private PropertyFetcher $propertyFetcher,
 		private CollectionFetcher $collectionFetcher,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::DOWNLOAD_LOG)->createLogger();
 	}
 
-	public function loadFile(string $collection, string $object, string $property): void
+	public function loadDepotFile(string $collection, string $object, string $property, string $name, ?string $subpath = null): void
 	{
-		$file = $this->fileFetcher->fetchFile($collection, $object, $property);
+		$depot      = $this->propertyFetcher->fetchProperty($collection, $object, $property);
 		$collection = $this->collectionFetcher->fetchCollection($collection);
 
-		if (empty($file->filename) || is_null($collection)) {
+		if (!$depot instanceof DepotData || !$collection instanceof CollectionData) {
+			throw new \RuntimeException('Unable to load file from depot');
+		}
+
+		$this->file       = $depot;
+		$this->collection = $collection;
+	}
+
+	public function loadFile(string $collection, string $object, string $property): void
+	{
+		$file       = $this->propertyFetcher->fetchProperty($collection, $object, $property);
+		$collection = $this->collectionFetcher->fetchCollection($collection);
+
+		if (!$file instanceof FileData || !$collection instanceof CollectionData) {
 			throw new \RuntimeException('Unable to load file');
 		}
 
@@ -50,7 +66,8 @@ final class FileAccessManager
 
 	public function isProtectedByGroups(): bool
 	{
-		return $this->file->protected;
+		// if the file is protected and the collection has groups, then it is protected by groups
+		return $this->file->protected && !empty($this->collection->groups);
 	}
 
 	public function userHasAccess(): bool

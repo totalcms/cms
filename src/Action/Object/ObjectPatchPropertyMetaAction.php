@@ -4,43 +4,31 @@ namespace TotalCMS\Action\Object;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectPatchPropertyMetaAction
 {
-	private JsonRenderer $renderer;
-	private ObjectSaver $service;
+	public function __construct(
+		private JsonRenderer $renderer,
+		private ObjectPatcher $objectPatcher,
+	) {}
 
-	/**
-	 * The constructor.
-	 *
-	 * @param JsonRenderer $renderer The renderer
-	 * @param ObjectSaver $service Object save service
-	 */
-	public function __construct(JsonRenderer $renderer, ObjectSaver $service)
+	/** @param array<string,string> $args */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
-	}
+		$data   = (array)$request->getParsedBody();
+		$query  = $request->getQueryParams();
 
-	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-		array $args,
-	): ResponseInterface {
-		$data = (array)$request->getParsedBody();
-		$object = $this->service->patchObjectPropertyMeta($args['collection'], $args['id'], $args['property'], $args['name'], $data);
+		$object = $this->objectPatcher->patchObjectPropertyMeta(
+			$args['collection'],
+			$args['id'],
+			$args['property'],
+			$args['name'],
+			$data,
+			$query['path'] ?? null, // Optional path URL parameter
+		);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}

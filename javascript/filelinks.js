@@ -14,4 +14,4 @@ for (const [key, value] of urlParams.entries()) {
 if (macroContent.dataset.pwd) {
 	data.pwd = macroContent.dataset.pwd;
 }
-macroContent.textContent = MacroBuilder.download(data);
+macroContent.textContent = data.name ? MacroBuilder.depotDownload(data) : MacroBuilder.download(data);

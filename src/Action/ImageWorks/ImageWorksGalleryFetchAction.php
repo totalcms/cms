@@ -32,13 +32,13 @@ final class ImageWorksGalleryFetchAction
 		$collection  = $args['collection'] ?? 'gallery';
 		$id          = $args['id'];
 		$property    = $args['property'] ?? 'gallery';
-		$filename    = $args['filename'];
+		$name        = $args['name'];
 		$queryParams = $request->getQueryParams();
 
 		$queryParams['fm'] = $args['format'];
 
 		try {
-			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $filename, $queryParams);
+			$image = $this->imageGenerator->generateGalleryImage($collection, $id, $property, $name, $queryParams);
 		} catch (\Exception $e) {
 			throw new HttpNotFoundException($request, 'Image not found:' . $e->getMessage());
 		}

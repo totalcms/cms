@@ -4,43 +4,22 @@ namespace TotalCMS\Action\Object;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectUpdateAction
 {
-	private JsonRenderer $renderer;
-	private ObjectSaver $service;
+	public function __construct(
+		private JsonRenderer $renderer,
+		private ObjectUpdater $objectUpdater,
+	) {}
 
-	/**
-	 * The constructor.
-	 *
-	 * @param JsonRenderer $renderer The renderer
-	 * @param ObjectSaver $service Object save service
-	 */
-	public function __construct(JsonRenderer $renderer, ObjectSaver $service)
+	/** @param array<string,string> $args */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
-	}
-
-	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-		array $args,
-	): ResponseInterface {
 		$data = (array)$request->getParsedBody();
-		$object = $this->service->updateObject($args['collection'], $args['id'], $data);
+		$object = $this->objectUpdater->updateObject($args['collection'], $args['id'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}

@@ -149,7 +149,7 @@ final class TotalCMSTwigFunctions
 	// Utilities
 	// -------------------------
 
-	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	/** @SuppressWarnings("PHPMD.CamelCaseMethodName") */
 	public static function var_dump(mixed $variable): string
 	{
 		ob_start();
@@ -160,13 +160,13 @@ final class TotalCMSTwigFunctions
 		return "<pre>$content</pre>";
 	}
 
-	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	/** @SuppressWarnings("PHPMD.CamelCaseMethodName") */
 	public static function print_r(mixed $variable): string
 	{
 		return '<pre>' . (string)print_r($variable, true) . '</pre>';
 	}
 
-	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	/** @SuppressWarnings("PHPMD.CamelCaseMethodName") */
 	public static function json_pretty(mixed $variable): string
 	{
 		return json_encode($variable, JSON_PRETTY_PRINT) ?: '';

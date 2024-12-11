@@ -4,6 +4,8 @@
 export default class Details  {
 
     constructor(details, options = {}) {
+		if (details.details) return details.details;
+
         // Define option defaults
         const defaults = {
 			soloMode  : true,
@@ -19,6 +21,7 @@ export default class Details  {
 		if (this.options.openFirst) {
 			this.details[0].setAttribute('open', '');
 		}
+		this.details.details = this;
     }
 
 	isDomNode(node){

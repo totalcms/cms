@@ -44,16 +44,12 @@ final class ImageGenerator
 		return $this->responseFromImageData($imageData);
 	}
 
-	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 *
-	 * @param array<string,mixed> $params
-	 */
+	/** @param array<string,mixed> $params */
 	public function generateGalleryImage(
 		string $collection,
 		string $id,
 		string $property,
-		string $filename,
+		string $name,
 		array $params,
 	): ResponseInterface {
 		$galleryData = $this->propertyFetcher->fetchProperty($collection, $id, $property);
@@ -66,7 +62,7 @@ final class ImageGenerator
 			throw new \UnexpectedValueException('Gallery has no images');
 		}
 
-		switch ($filename) {
+		switch ($name) {
 			case 'first':
 				$imageData = array_shift($galleryData->images);
 				break;
@@ -80,17 +76,11 @@ final class ImageGenerator
 				$imageData = $this->getFeaturedImage($galleryData->images);
 				break;
 			default:
-				$imageData = $this->getImageByName($galleryData->images, $filename);
+				$imageData = $this->getImageByName($galleryData->images, $name);
 		}
 
 		if (empty($imageData)) {
 			throw new \UnexpectedValueException('Gallery Image not found');
-		}
-
-		$imageData = new ImageData($imageData);
-
-		if (!$imageData instanceof ImageData) {
-			throw new \UnexpectedValueException('Invalid image property found in gallery');
 		}
 
 		$this->collection = $collection;
@@ -101,28 +91,20 @@ final class ImageGenerator
 		return $this->responseFromImageData($imageData);
 	}
 
-	/**
-	 * @param array<array<string,mixed>> $images
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function getImageByName(array $images, string $filename): array
+	/** @param array<ImageData> $images */
+	private function getImageByName(array $images, string $name): ?ImageData
 	{
-		$imageData = array_filter($images, fn ($image) => pathinfo($image['name'])['filename'] === $filename);
+		$imageData = array_filter($images, fn ($image) => pathinfo($image->name)['filename'] === $name);
 
 		if (empty($imageData)) {
-			return [];
+			return null;
 		}
 
 		return array_shift($imageData);
 	}
 
-	/**
-	 * @param array<array<string,mixed>> $images
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function getRandomImage(array $images): array
+	/** @param array<ImageData> $images */
+	private function getRandomImage(array $images): ImageData
 	{
 		$count = count($images) - 1;
 
@@ -135,14 +117,10 @@ final class ImageGenerator
 		return $images[$randomKey];
 	}
 
-	/**
-	 * @param array<array<string,mixed>> $images
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function getFeaturedImage(array $images): array
+	/** @param array<ImageData> $images */
+	private function getFeaturedImage(array $images): ImageData
 	{
-		$featured = array_filter($images, fn ($image) => $image['featured'] === true);
+		$featured = array_filter($images, fn ($image) => $image->featured === true);
 		$count    = count($featured);
 		if ($count === 0) {
 			// if no featured images are found, return a random image
@@ -156,8 +134,8 @@ final class ImageGenerator
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 *
 	 * @param array<string,mixed> $params
 	 *

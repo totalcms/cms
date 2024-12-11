@@ -18,7 +18,7 @@ final class AdminDocsAction
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,string> $args The routing arguments
 	 */

@@ -11,9 +11,9 @@ use Twig\TwigFilter;
 /**
  * Twig Functions for Total CMS.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyMethods")
  */
 final class TotalCMSTwigFilters
 {
@@ -145,7 +145,7 @@ final class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param ?array<string,mixed> $color
 	 */
@@ -166,7 +166,7 @@ final class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param ?array<string,mixed> $color
 	 */
@@ -187,7 +187,7 @@ final class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param ?array<string,mixed> $color
 	 */
@@ -197,7 +197,7 @@ final class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param ?array<string,mixed> $color
 	 */
@@ -207,7 +207,7 @@ final class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param ?array<string,mixed> $color
 	 */
@@ -282,8 +282,8 @@ final class TotalCMSTwigFilters
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param string $string
 	 * @param int $length
@@ -473,13 +473,13 @@ final class TotalCMSTwigFilters
 	// Utilities
 	// -------------------------
 
-	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	/** @SuppressWarnings("PHPMD.CamelCaseMethodName") */
 	public static function var_dump(mixed $variable): string
 	{
 		return TotalCMSTwigFunctions::var_dump($variable);
 	}
 
-	/** @SuppressWarnings(PHPMD.CamelCaseMethodName) */
+	/** @SuppressWarnings("PHPMD.CamelCaseMethodName") */
 	public static function print_r(mixed $variable): string
 	{
 		return TotalCMSTwigFunctions::print_r($variable);

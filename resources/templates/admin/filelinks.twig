@@ -9,7 +9,8 @@
 	{% set id         = getParams.id  %}
 	{% set collection = getParams.collection | default("file") %}
 	{% set property   = getParams.property | default("file") %}
-	{% set filename   = getParams.filename %}
+	{% set filename   = getParams.name %}
+	{% set path       = getParams.path %}
 	{% set password   = postParams.password %}
 
 	{% if password is not empty and not cms.verifyFilePassword(password, collection, id, property, filename) %}
@@ -28,19 +29,19 @@
 		<section>
 			<h4>Download Link:</h4>
 			{% if password %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}?pwd={{password}}</pre>
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename}}{% endif %}?{% if path %}path={{path}}&{% endif %}pwd={{password}}</pre>
 			{% else %}
-				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}</pre>
+				<pre id="link-url">{{cms.api}}/download/{{collection}}/{{id}}/{{property}}{% if filename %}/{{filename}}{% if path %}?path={{path}}{% endif %}{% endif %}</pre>
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#link-url">Copy Link</button>
 		</section>
 
 		<section>
 			<h4>Macro:</h4>
-			{% if password %}
-				<pre data-pwd="{{password}}" id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+			{% if filename %}
+				<pre {% if password %}data-pwd="{{password}}"{% endif %} id="twig-macro">&#123;&#123; cms.depotDownload("{{id}}", "{{filename}}") &#125;&#125;</pre>
 			{% else %}
-				<pre id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+				<pre {% if password %}data-pwd="{{password}}"{% endif %} id="twig-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#twig-macro">Copy Macro</button>
 		</section>

@@ -12,7 +12,14 @@ class CustomPropertiesField extends PropertiesField
 
 	public function buildFormField(): string
 	{
-		$content  = parent::buildFormField();
+		$content = HTMLUtils::inlineElement('input', [
+			'type'  => 'hidden',
+			'name'  => $this->name,
+		]);
+
+		foreach ($this->properties as $field) {
+			$content .= $field->build();
+		}
 
 		$templateProperty = new CustomPropertyField(
 			object: '',
@@ -29,9 +36,9 @@ class CustomPropertiesField extends PropertiesField
 	protected function createPropertyField(string $objectID, array $properties): CustomPropertyField
 	{
 		return new CustomPropertyField(
-			object: $objectID,
-			form: $this->form,
-			properties: $properties
+			object     : $objectID,
+			form       : $this->form,
+			properties : $properties
 		);
 	}
 }

@@ -1,19 +1,19 @@
 {
-    "id": "text",
+    "id": "customtext",
     "schema": "text",
     "name": "Custom Text Collection",
     "description": "A collection to test",
     "url": "",
     "properties": {
-        "id": {
-            "label": "Text ID",
-            "help": "A unique ID for this text. No spaces or special characters.",
-            "field": "id"
-        },
-        "text": {
-            "label": "Text",
-            "help": "Edit the text here.",
-            "field": "textarea"
-        }
+      "id": {
+        "label": "Text ID",
+        "help": "A unique ID for this text. No spaces or special characters.",
+        "field": "id"
+      },
+      "text": {
+        "label": "Text",
+        "help": "Edit the text here.",
+        "field": "textarea"
+      }
     }
 }

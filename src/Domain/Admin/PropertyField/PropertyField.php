@@ -8,9 +8,6 @@ use TotalCMS\Utils\HTMLUtils;
 class PropertyField
 {
 	/**
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 *
 	 * @param array<string,mixed> $settings - JSON settings for the field added to data-options attribute
 	 * @param array<mixed> $options - Options for select fields and datalists
 	 */
@@ -18,6 +15,7 @@ class PropertyField
 		protected TotalForm $form,
 		protected string $property,
 		protected string $field       = 'text',
+		protected string $default     = '',
 		protected string $label       = '',
 		protected string $help        = '',
 		protected string $placeholder = '',
@@ -96,22 +94,35 @@ class PropertyField
 		return HTMLUtils::dialog($content, 'small');
 	}
 
-	public function build(): string
+	protected function buildPropertyField(string $property = "", string $field = ""): string
 	{
 		$inputAttributes = [
 			'type'         => 'hidden',
 			'name'         => 'property',
-			'value'        => $this->property,
+			'value'        => $property,
 		];
 
 		$dialog = $this->buildDialog();
-		// not using HTMLUtils::button because I don't want it to look like a button
-		$button = HTMLUtils::element('button', $this->property, ['type' => 'button']);
 		$input  = HTMLUtils::inlineElement('input', $inputAttributes);
-		$field  = HTMLUtils::element('div', $input . $button . $dialog, [
-			'class' => "property-field {$this->field}-field",
+		$label  = HTMLUtils::element('label', $property);
+
+		$buttons  = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$property} property"]);
+		$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$property} property"]);
+
+		$field = HTMLUtils::element('div', $input . $label . $buttons . $dialog, [
+			'class' => "property-field {$field}-field",
 		]);
 
 		return $field;
+	}
+
+	public function template(): string
+	{
+		return HTMLUtils::element('template', $this->buildPropertyField(), ['class' => 'property-template']);
+	}
+
+	public function build(): string
+	{
+		return $this->buildPropertyField($this->property, $this->field);
 	}
 }

@@ -6,8 +6,8 @@ namespace TotalCMS\Utils;
  * Collection Refiner
  * Filters a collection of items.
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyMethods")
  */
 class CollectionRefiner
 {
@@ -45,7 +45,7 @@ class CollectionRefiner
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 *
 	 * @param array<array<string,mixed>> $collection
 	 *
@@ -116,7 +116,7 @@ class CollectionRefiner
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $record
 	 */
@@ -227,25 +227,25 @@ class CollectionRefiner
 		return $haystack >= $needle;
 	}
 
-	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	/** @SuppressWarnings("PHPMD.ShortMethodName") */
 	protected static function lt(string $haystack, string $needle): bool
 	{
 		return self::less($haystack, $needle);
 	}
 
-	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	/** @SuppressWarnings("PHPMD.ShortMethodName") */
 	protected static function le(string $haystack, string $needle): bool
 	{
 		return self::lesseq($haystack, $needle);
 	}
 
-	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	/** @SuppressWarnings("PHPMD.ShortMethodName") */
 	protected static function gt(string $haystack, string $needle): bool
 	{
 		return self::greater($haystack, $needle);
 	}
 
-	/** @SuppressWarnings(PHPMD.ShortMethodName) */
+	/** @SuppressWarnings("PHPMD.ShortMethodName") */
 	protected static function ge(string $haystack, string $needle): bool
 	{
 		return self::greatereq($haystack, $needle);

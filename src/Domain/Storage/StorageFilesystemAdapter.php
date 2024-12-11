@@ -8,20 +8,17 @@ use League\Flysystem\StorageAttributes;
 /**
  * Filesystem.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
 final class StorageFilesystemAdapter implements StorageAdapterInterface
 {
-	private FilesystemOperator $filesystem;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param FilesystemOperator $filesystem The filesystem handler
 	 */
-	public function __construct(FilesystemOperator $filesystem)
+	public function __construct(private FilesystemOperator $filesystem)
 	{
-		$this->filesystem = $filesystem;
 	}
 
 	/**

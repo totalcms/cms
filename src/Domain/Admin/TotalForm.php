@@ -18,8 +18,8 @@ use TotalCMS\Utils\HTMLUtils;
 /**
  * Total Form Builder.
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
 abstract class TotalForm
 {
@@ -129,8 +129,8 @@ abstract class TotalForm
 	];
 
 	/**
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
 	 * @param array<string,string> $newAction
 	 * @param array<string,string> $editAction
@@ -165,7 +165,7 @@ abstract class TotalForm
 		$this->initClass();
 	}
 
-	/** @SuppressWarnings(PHPMD.Superglobals) */
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	protected function init(): void
 	{
 		if (empty($this->id) && isset($_GET['id'])) {

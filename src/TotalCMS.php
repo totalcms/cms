@@ -69,7 +69,7 @@ class TotalCMS
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.ElseExpression)
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<mixed> $data
 	 */
@@ -108,7 +108,7 @@ class TotalCMS
 		}
 	}
 
-	/** @SuppressWarnings(PHPMD.Superglobals) */
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public static function isPreview(): bool
 	{
 		// Stacks internal PHP server

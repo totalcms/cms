@@ -51,6 +51,9 @@
 		&.edit {
 			mask-image : var(--icon-edit);
 		}
+		&.add-folder {
+			mask-image : var(--icon-folder-add);
+		}
 		&.featured {
 			mask-image : var(--icon-not-featured);
 		}
@@ -76,6 +79,15 @@
 
 			&:active {
 				cursor : grabbing;
+			}
+		}
+
+		&[disabled] {
+			opacity : 0.2;
+			cursor  : not-allowed;
+
+			&:hover {
+				scale : 1;
 			}
 		}
     }

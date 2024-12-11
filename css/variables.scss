@@ -127,6 +127,10 @@
 
 	--icon-twig-playground : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg fill='black'%3E%3Cpath d='M10,9.331c1.443-.43,2.5-1.748,2.5-3.331v-.5h-1c-1.933,0-3.5,1.567-3.5,3.5v3.5' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3Cpath d='M14,15.5H2c-.828,0-1.5-.672-1.5-1.5V4.5L8,.5l7.5,3.999V14c0,.828-.672,1.5-1.5,1.5Z' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3Cpath d='M6,10.331c-1.443-.43-2.5-1.748-2.5-3.331v-.5h1c1.933,0,3.5,1.567,3.5,3.5v3.5' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/g%3E%3C/svg%3E");
 
+	--icon-folder      : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg fill='black'%3E%3Cpath d='M7.5,4.5l-2-3H.5V13A1.5,1.5,0,0,0,2,14.5H14A1.5,1.5,0,0,0,15.5,13V4.5Z' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3C/path%3E%3C/g%3E%3C/svg%3E");
+	--icon-folder-open : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg fill='black'%3E%3Cpolyline fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' points='12.5,4.5 12.5,2.5 5.5,2.5 4.5,0.5 0.5,0.5 0.5,11.5 '%3E%3C/polyline%3E %3Cpolygon fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' points='1.5,14.5 4.5,6.5 15.5,6.5 12.5,14.5 '%3E%3C/polygon%3E%3C/g%3E%3C/svg%3E");
+	--icon-folder-add  : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M56,58H8a5,5,0,0,1-5-5V6H24l6,10H61V53A5,5,0,0,1,56,58Z' fill='none' stroke='black' stroke-width='4'%3E%3C/path%3E%3Cline x1='32' y1='28' x2='32' y2='46' fill='none' stroke='black' stroke-width='4'%3E%3C/line%3E%3Cline x1='41' y1='37' x2='23' y2='37' fill='none' stroke='black' stroke-width='4'%3E%3C/line%3E%3C/g%3E%3C/svg%3E");
+
 	--totalform-accent-l : 60.45%;
 	--totalform-accent-c : 0.107;
 	--totalform-accent-h : 183.38;

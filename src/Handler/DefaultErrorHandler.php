@@ -69,6 +69,9 @@ final class DefaultErrorHandler
 			);
 		}
 
+		// Integrate with Sentry
+		\Sentry\captureException($exception);
+
 		// Detect status code
 		$statusCode = $this->getHttpStatusCode($exception);
 
@@ -147,7 +150,7 @@ final class DefaultErrorHandler
 	 * @param int $maxLength The max length of the error message
 	 * @param bool $backtrace
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @return string The full error message
 	 */

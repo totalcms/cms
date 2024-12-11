@@ -35,9 +35,9 @@ class ServerChecker
 	}
 
 	/**
-	 * @SuppressWarnings(PHPMD.Superglobals)
+	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
-	 * @return array<string,string>
+	 * @return array<string,mixed>
 	 * */
 	public function serverInfo(): array
 	{

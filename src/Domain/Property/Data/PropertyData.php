@@ -3,9 +3,7 @@
 namespace TotalCMS\Domain\Property\Data;
 
 /**
- * Property data.
- *
- * @SuppressWarnings(PHPMD.NumberOfChildren)
+ *  @SuppressWarnings("PHPMD.NumberOfChildren")
  */
 class PropertyData implements PropertyDataInterface
 {
