@@ -68,9 +68,9 @@ final class TotalCMSTwigAdapter
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function getDomainName(): string
-    {
-        return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
-    }
+	{
+		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+	}
 
 	public function login(string $collection = ''): string
 	{
@@ -304,8 +304,8 @@ final class TotalCMSTwigAdapter
 		// Add support for supplying the path via the name
 		if (str_contains($name, '/')) {
 			$pathinfo = pathinfo($name);
-			$path = $pathinfo['dirname'];
-			$name = $pathinfo['basename'];
+			$path     = $pathinfo['dirname'];
+			$name     = $pathinfo['basename'];
 		}
 
 		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$name}";
@@ -607,10 +607,6 @@ final class TotalCMSTwigAdapter
 
 		$images = $this->data($options['collection'], $id, $options['property']);
 
-		// Don't add these to the gallery settings
-		unset($options['collection']);
-		unset($options['property']);
-
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
 				'src' => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
@@ -622,6 +618,10 @@ final class TotalCMSTwigAdapter
 			]);
 			$gallery .= $link;
 		}
+
+		// Don't add these to the gallery settings
+		unset($options['collection']);
+		unset($options['property']);
 
 		return HTMLUtils::element('div', $gallery, [
 			'class'         => 'cms-gallery',
