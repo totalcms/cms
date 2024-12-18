@@ -214,7 +214,7 @@ export default class StyledTextField extends TotalField {
             imageResizeWithPercent : true,
             imageRoundPercent      : true,
             imageStyles            : imageStyles,
-            codeMirror             : true,
+            codeMirror             : window.CodeMirror,
             codeMirrorOptions      : codeMirrorOptions,
             alwaysVisible          : false,
             saveInterval           : 0,
