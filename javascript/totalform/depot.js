@@ -1,7 +1,7 @@
 import Details from "./details";
 import Dialog from "./dialog";
 import TotalField from "./totalfield";
-import Droplet from "./droplet";
+import DepotDroplet from "./droplet-depot";
 
 //-----------------------------------------------
 // Total CMS Depot Droplet
