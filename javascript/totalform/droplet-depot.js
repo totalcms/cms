@@ -6,7 +6,7 @@ globalThis.Dropzone = Dropzone;
 //-----------------------------------------------
 // Total CMS Depot Droplet
 //-----------------------------------------------
-export default class DepotDroplet extends Droplet
+export default class DepotDroplet
 {
 
     constructor(field, options = {}) {
@@ -14,7 +14,7 @@ export default class DepotDroplet extends Droplet
 		this.container = this.field.container;
 
 		// Using an embedded template for the preview instead of an extra API request
-		this.previewTemplate = this.container.querySelector("template").innerHTML;
+		this.previewTemplate = this.container.querySelector("template.file-template").innerHTML;
 
         // Define option defaults
         const defaults = {
@@ -83,7 +83,7 @@ export default class DepotDroplet extends Droplet
 
 		// File Events
 		this.dropzone.on("addedfile", file => this.event_addedfile(file));
-		this.dropzone.on("thumbnail", (file,data) => this.event_thumbnail(file,data));
+		// this.dropzone.on("thumbnail", (file,data) => this.event_thumbnail(file,data));
 		this.dropzone.on("uploadprogress", (file, progress, bytes) => this.event_uploadprogress(file, progress, bytes));
 		this.dropzone.on("error", (file, message) => this.event_error(file, message));
 		this.dropzone.on("sending", (file, xhr, formData) => this.event_sending(file, xhr, formData));
@@ -123,18 +123,13 @@ export default class DepotDroplet extends Droplet
         // Add accepts and reject methods to the file object to validate with the test sets
         file.acceptFile = done;
         file.rejectFile = function(msg){ done(msg); };
-
-        if (!file.type.startsWith("image")) {
-            // If the file is not an image, process the tests
-            // Images will get processed after the thumbnail is generated in the event_thumbnail method
-            this.processTestSet(file);
-        }
+        this.processTestSet(file);
     }
 
     processTestSet(file) {
         // Process file rules
         if (this.testSet) {
-			const count = this.container.querySelectorAll(".dz-preview").length;
+			const count = this.container.querySelectorAll(".file").length;
             if (!this.testSet.processRules(file, count)) {
                 file.rejectFile(this.testSet.errors);
 				this.displayTestSetErrors();
@@ -161,14 +156,30 @@ export default class DepotDroplet extends Droplet
 
     // When a file is added to the list
     event_addedfile(file) {
-        file.previewElement  = Dropzone.createElement(this.dropzone.options.previewTemplate.trim());
+        file.previewElement  = Dropzone.createElement(this.previewTemplate.trim());
         file.previewTemplate = file.previewElement;
 
         if (this.options.singleMode) {
 			// Remove preview for image
 			Array.from(this.dropzone.previewsContainer.children).forEach(node => node.remove());
         }
-        this.dropzone.previewsContainer.appendChild(file.previewElement);
+
+        let uploadFolder = this.container.querySelector(".depot-browser");
+
+        const selectedFolder = this.container.querySelector(".folder.selected");
+        if (selectedFolder) {
+            uploadFolder = selectedFolder.parentNode.querySelector(".folder-contents");
+        }
+
+        const name = file.previewElement.querySelector(".file");
+        const size = file.previewElement.querySelector(".size");
+        const ext  = file.name.split(".").pop().toLowerCase();
+
+        name.textContent = file.name;
+        size.textContent = this.field.bytesToString(file.size);
+        name.className   = `file file-icon icon-${ext}`;
+
+        uploadFolder.appendChild(file.previewElement);
 
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved

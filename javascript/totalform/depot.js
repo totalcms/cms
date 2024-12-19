@@ -21,6 +21,8 @@ export default class DepotField extends TotalField {
         this.setupDroplet();
     }
 
+    // TODO: Do not allow another folder to be selected while files are being uploaded
+
     setupDroplet() {
 		this.droplet = new DepotDroplet(this, {
 			paramName        : this.property,
@@ -28,10 +30,43 @@ export default class DepotField extends TotalField {
 			autoProcessQueue : this.form.isEditMode(),
 			acceptedFiles    : null,
 			chunking         : true,
+			singleMode       : false,
 			rules            : this.options.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}
+
+    fileAdded(file) {
+        this.form.processFields();
+        file.path = this.getPath();
+	}
+
+    fileUploaded(file, response) {
+		console.log("DepotField.fileUploaded()", file, response);
+
+        const path  = file.path ?? "";
+        let   files = response.data[this.property].files;
+
+        if (path.length > 0) {
+            const folders = path.split("/");
+            folders.forEach(folder => {
+                files = files.filter(f => f.name === folder).shift().files;
+            });
+        }
+        this.initBrowser();
+
+		const data = files.filter(f => f.mime !== 'folder').sort((a, b) => a.uploadDate < b.uploadDate ? 1 : -1).shift();
+        this.updateNewFileMeta(file, data);
+	}
+
+    updateNewFileMeta(file, data) {
+        file.previewElement.querySelector(".file").textContent = data.name;
+        file.previewElement.querySelector(".size").textContent = this.bytesToString(data.size);
+
+        for (const key in data) {
+            this.setFileAttribute(file.previewElement, key, data[key]);
+        }
+    }
 
     uploadComplete() {
 		// this is a hack to mark the field and form as saved
@@ -385,6 +420,14 @@ export default class DepotField extends TotalField {
             }
             button.disabled = !classes.some(cls => button.classList.contains(cls));
         });
+    }
+
+    setFileAttribute(file, attribute, value) {
+        const input = file.querySelector(`[name=${attribute}]`)
+        if (input) {
+            const field = input.closest(".form-field");
+            if (field.totalfield) field.totalfield.setValue(value);
+        }
     }
 
     getFileAttribute(file, attribute) {
