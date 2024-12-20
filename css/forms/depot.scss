@@ -134,10 +134,11 @@
 	}
 
 	.folder-preview {
-		display       : grid;
-		align-content : center;
-		text-align    : center;
-		margin        : 1rem;
+		display         : grid;
+		align-content   : center;
+		justify-content : center;
+		text-align      : center;
+		margin          : 1rem;
 	}
 	.file-preview {
 		display       : grid;
