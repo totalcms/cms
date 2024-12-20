@@ -25,7 +25,6 @@ export default class DepotDroplet
 			apiUrl            : "",
 			requestHeaders    : {},
 			rules             : {},
-			singleMode        : true,
 			chunking          : true,
         };
 		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
@@ -150,11 +149,6 @@ export default class DepotDroplet
 
         file.previewTemplate.classList.add("dz-processing");
 
-        if (this.options.singleMode) {
-			// Remove preview for image
-			Array.from(this.dropzone.previewsContainer.children).forEach(node => node.remove());
-        }
-
         let uploadFolder = this.container.querySelector(".depot-browser");
 
         const selectedFolder = this.container.querySelector(".folder.selected");
@@ -170,8 +164,19 @@ export default class DepotDroplet
         size.textContent = this.field.bytesToString(file.size);
         name.className   = `file file-icon icon-${ext}`;
 
-        // Add to the top of the folder
-        uploadFolder.insertBefore(file.previewElement, uploadFolder.firstChild);
+        // Add to the top of the file list. If there are folders, skip them
+        let firstFile = null;
+        for (let i = 0; i < uploadFolder.children.length; i++) {
+            if (uploadFolder.children[i].firstChild.tagName !== "DETAILS") {
+                firstFile = uploadFolder.children[i];
+                break;
+            }
+        }
+        if (firstFile) {
+            uploadFolder.insertBefore(file.previewElement, firstFile);
+        } else {
+            uploadFolder.appendChild(file.previewElement);
+        }
 
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved
