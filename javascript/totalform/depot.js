@@ -21,9 +21,6 @@ export default class DepotField extends TotalField {
         this.setupDroplet();
     }
 
-    // TODO: Do not allow another folder to be selected while files are being uploaded
-    // TODO: Click outside of the file list will deselect the file
-
     setupDroplet() {
 		this.droplet = new DepotDroplet(this, {
 			paramName        : this.property,
@@ -134,7 +131,6 @@ export default class DepotField extends TotalField {
         this.actionbar.querySelector(".edit").addEventListener("click", this.actionEdit.bind(this));
         this.actionbar.querySelector(".links").addEventListener("click", this.actionLinks.bind(this));
         this.actionbar.querySelector(".download").addEventListener("click", this.actionDownload.bind(this));
-        // this.actionbar.querySelector(".upload").addEventListener("click", this.actionUpload.bind(this));
         this.actionbar.querySelector(".add-folder").addEventListener("click", this.actionAddFolder.bind(this));
         this.actionbar.querySelector(".trash").addEventListener("click", this.actionTrash.bind(this));
     }

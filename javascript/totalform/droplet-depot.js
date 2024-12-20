@@ -85,7 +85,6 @@ export default class DepotDroplet
 		this.dropzone.on("addedfile", file => this.event_addedfile(file));
 		this.dropzone.on("uploadprogress", (file, progress, bytes) => this.event_uploadprogress(file, progress, bytes));
 		this.dropzone.on("error", (file, message) => this.event_error(file, message));
-		this.dropzone.on("sending", (file, xhr, formData) => this.event_sending(file, xhr, formData));
 		this.dropzone.on("success", (file, xhr, formData) => this.event_success(file, xhr, formData));
 
 		// Mouse Events
@@ -143,15 +142,6 @@ export default class DepotDroplet
     //-----------------------------------------------------------------------
     // File Event Methods
     //-----------------------------------------------------------------------
-
-    // Called just before the file is sent
-    event_sending(file,xhr,formData) {
-        // Add additional form data
-        // formData.append("filesize", file.size);
-        // formData.append("alt", file.size);
-        // formData.append("link", file.size);
-        // formData.append("colors", file.size);
-    }
 
     // When a file is added to the list
     event_addedfile(file) {
@@ -252,7 +242,7 @@ export default class DepotDroplet
             if (file.previewElement) {
                 file.previewElement.classList.remove("dz-processing");
                 file.previewElement.classList.add("dz-success");
-				file.previewElement.addEventListener("pointerover", () => {
+				file.previewElement.addEventListener("click", () => {
 					// remove the success class after the user hovers over the image
 					// this allows the actionbar to be interacted with
 					file.previewElement.classList.remove("dz-success","dz-complete");
@@ -281,12 +271,6 @@ export default class DepotDroplet
     // The user dragged a file onto the Dropzone
     event_dragenter(event) {
         this.field.updateAPIUrl();
-
-        // const classesToRemove = ["dz-success", "dz-complete"];
-        // const previews = Array.from(this.dropzone.previewsContainer.children);
-        // if (previews.length > 0) {
-		// 	previews.forEach(preview => preview.classList.remove(...classesToRemove));
-        // }
         this.container.classList.add("dz-drag-hover");
     }
 

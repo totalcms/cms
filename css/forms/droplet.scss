@@ -153,3 +153,11 @@
 		opacity : 0;
 	}
 }
+
+.depot-field {
+	.dz-success, .dz-error {
+		.dz-progress {
+			backdrop-filter: none;
+		}
+	}
+}
