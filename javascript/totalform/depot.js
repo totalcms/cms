@@ -322,12 +322,18 @@ export default class DepotField extends TotalField {
         this.folders = this.browser.querySelectorAll(".folder");
 
         this.files.forEach(file => {
+            if (file.clickListener) return;
             file.addEventListener("click", this.selectFile.bind(this));
             file.addEventListener("dblclick", this.selectAndEditFile.bind(this));
+            file.clickListener = true;
         });
         // Not adding dblclick event to folders because it was causing the browser to freeze up
         // Possibly too many click events? Need to investigate further
-        this.folders.forEach(folder => folder.addEventListener("click", this.selectFolder.bind(this)));
+        this.folders.forEach(folder => {
+            if (folder.clickListener) return;
+            folder.addEventListener("click", this.selectFolder.bind(this))
+            folder.clickListener = true;
+        });
     }
 
     selectAndEditFile(event) {
