@@ -68,7 +68,6 @@
 	left           : 0;
 	right          : 0;
 	bottom         : 0;
-	width          : 100%;
 	background     : oklch(var(--totalform-black) / 0.4);
 
 	// Fix for chrome bug:https://code.google.com/p/chromium/issues/detail?id=157218
@@ -155,6 +154,15 @@
 }
 
 .depot-field {
+	.dz-progress {
+		// This is a hack to make the progress bar fill in the depot field
+		// If we ever get past 4 folders deep, it will not go full width
+		left  : -2rem;
+		right : -2rem;
+	}
+	.dz-processing .dz-progress {
+		background: oklch(var(--totalform-black)/.2);
+	}
 	.dz-success, .dz-error {
 		.dz-progress {
 			backdrop-filter: none;

@@ -204,7 +204,7 @@ export default class DepotDroplet
                 }
                 else if (node.classList.contains("dz-upload-progress-label")) {
                     if (progress == 100) {
-                        results.push(node.innerHTML = "Processing...");
+                        results.push(node.innerHTML = "Uploading...");
                     }
                     else {
                         results.push(node.innerHTML = Math.round(progress) + "%");
