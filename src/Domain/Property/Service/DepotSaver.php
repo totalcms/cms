@@ -27,6 +27,9 @@ final class DepotSaver extends FileSaver
 
 		$fileinfo = $this->storage->saveFile($collection, $objectID, $property, $filePath, $subpath);
 
+		// Keep the downlaod name as the original file name in case the file was renamed
+		$fileinfo['download'] = basename($filePath);
+
 		// Directly find or create the folder in the specified path and add the file
 		$depotManager = new DepotPropertyManager($depot);
 		$depotManager->addFile(new FileData($fileinfo), $subpath);
