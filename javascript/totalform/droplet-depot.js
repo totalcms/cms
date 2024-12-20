@@ -148,6 +148,8 @@ export default class DepotDroplet
         file.previewElement  = Dropzone.createElement(this.previewTemplate.trim());
         file.previewTemplate = file.previewElement;
 
+        file.previewTemplate.classList.add("dz-processing");
+
         if (this.options.singleMode) {
 			// Remove preview for image
 			Array.from(this.dropzone.previewsContainer.children).forEach(node => node.remove());

@@ -164,4 +164,7 @@
 		position  : relative;
 		transform : none;
 	}
+	.depot-browser:has(.dz-processing) {
+		pointer-events: none;
+	}
 }
