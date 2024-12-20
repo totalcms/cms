@@ -95,11 +95,22 @@ export default class DepotField extends TotalField {
         return this.browser.querySelector(".selected");
     }
 
-    getPath() {
+    getParentPath() {
+        return this.getPath(true);
+    }
+
+    getPath(parent = false) {
         let item = this.getSelected();
         if (!item) return "";
-        // If the item is a folder, get the path from the parent folder element
-        if (item.classList.contains("folder")) item = item.parentNode.parentNode;
+
+
+        if (item.classList.contains("folder")) {
+            if (!parent) return item.dataset.path;
+
+            // If the item is a folder, get the path from the parent folder element
+            if (item.classList.contains("folder")) item = item.parentNode.parentNode;
+        }
+
         const folder = item.closest("details")?.querySelector(".folder");
         return folder ? folder.dataset.path : "";
     }
@@ -293,7 +304,7 @@ export default class DepotField extends TotalField {
 
     trashFolder(folder) {
         const name = folder.textContent;
-        const path = this.getPath();
+        const path = this.getParentPath();
 
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
         if (path.length > 0) deleteApi += `?path=${path}`;
@@ -376,6 +387,7 @@ export default class DepotField extends TotalField {
         this.filePreview.classList.add("cms-hide");
         this.folderPreview.classList.remove("cms-hide");
         this.enableActionBarButtons(["upload", "add-folder", "trash", "edit"]);
+        this.updateAPIUrl();
     }
 
     updateFilePreview(file) {

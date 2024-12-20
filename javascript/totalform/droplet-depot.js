@@ -178,7 +178,8 @@ export default class DepotDroplet
         size.textContent = this.field.bytesToString(file.size);
         name.className   = `file file-icon icon-${ext}`;
 
-        uploadFolder.appendChild(file.previewElement);
+        // Add to the top of the folder
+        uploadFolder.insertBefore(file.previewElement, uploadFolder.firstChild);
 
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved
@@ -279,21 +280,23 @@ export default class DepotDroplet
 
     // The user dragged a file onto the Dropzone
     event_dragenter(event) {
-        const classesToRemove = ["dz-success", "dz-complete"];
-        const previews = Array.from(this.dropzone.previewsContainer.children);
-        if (previews.length > 0) {
-			previews.forEach(preview => preview.classList.remove(...classesToRemove));
-        }
-        return this.container.classList.add("dz-drag-hover");
+        this.field.updateAPIUrl();
+
+        // const classesToRemove = ["dz-success", "dz-complete"];
+        // const previews = Array.from(this.dropzone.previewsContainer.children);
+        // if (previews.length > 0) {
+		// 	previews.forEach(preview => preview.classList.remove(...classesToRemove));
+        // }
+        this.container.classList.add("dz-drag-hover");
     }
 
     // The user dragged a file out of the Dropzone
     event_dragleave(event) {
-        return this.container.classList.remove("dz-drag-hover");
+        this.container.classList.remove("dz-drag-hover");
     }
 
     // The user dropped something onto the dropzone
     event_drop(event) {
-        return this.container.classList.remove("dz-drag-hover");
+        this.container.classList.remove("dz-drag-hover");
     }
 }
