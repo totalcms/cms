@@ -18,7 +18,23 @@ export default class DepotField extends TotalField {
 
         this.initBrowser();
         this.initActionBar();
+        this.setupProtectDialog();
         this.setupDroplet();
+    }
+
+    setupProtectDialog() {
+        return new Dialog(this.container.querySelector(".protection-dialog"), {
+            open  : this.container.querySelector("button.protect"),
+            close : ".close",
+            onOpen : () => {
+                if (this.dialogOpened) return;
+                this.dialogOpened = true;
+            },
+            onClose : () => {
+                this.dialogOpened = false;
+                // this.totalfield.autosave();
+            }
+        });
     }
 
     setupDroplet() {
@@ -490,9 +506,11 @@ export default class DepotField extends TotalField {
     }
 
     getValue() {
-		const depot = {
-            "password"  : "",
-            "protected" : true,
+		const password = this.container.querySelector("[name=password]").closest(".form-field");
+		const protect  = this.container.querySelector("[name=protected]").closest(".form-field");
+		const depot    = {
+            "password"  : password.totalfield.getValue(),
+            "protected" : protect.totalfield.getValue(),
             files       : this.getFolderData(this.browser),
         };
         return depot;

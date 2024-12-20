@@ -3,6 +3,30 @@
 		box-shadow : none;
 		display    : block;
 	}
+
+	button.protect {
+		position  : absolute;
+		right     : 0;
+		top       : 0;
+		translate : -50% 70%;
+		z-index   : 10;
+
+		appearance : none;
+		border     : none;
+		cursor     : pointer;
+
+		opacity          : 0.8;
+		background-color : oklch(var(--totalform-nearblack));
+		width            : 24px;
+		height           : 24px;
+		transition       : scale 300ms ease-in-out;
+		mask-image       : var(--icon-lock);
+
+		&:hover {
+			opacity : 1;
+			scale   : 1.15;
+		}
+	}
 }
 
 .depot-layout-container {
@@ -218,6 +242,7 @@
 .cms-modal {
 	&.folder-add-dialog,
 	&.file-edit-dialog,
+	&.protection-dialog,
 	&.folder-edit-dialog {
 		height : fit-content;
 	}

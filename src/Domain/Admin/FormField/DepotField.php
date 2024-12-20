@@ -21,25 +21,47 @@ final class DepotField extends FormField
 	{
 		$depot = is_array($this->value) ? $this->value : []; // Depot data is stored in the value field
 
-		$input          = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
-		$browser        = $this->buildLayout($depot['files'] ?? []);
-		$folderDialog   = $this->folderDialog();
-		$addFolder      = $this->addFolderDialog();
-		$fileTemplate   = $this->fileTemplate();
-		$folderTemplate = $this->folderTemplate();
+		$input            = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
+		$browser          = $this->buildLayout($depot['files'] ?? []);
+		$folderDialog     = $this->folderDialog();
+		$addFolder        = $this->addFolderDialog();
+		$fileTemplate     = $this->fileTemplate();
+		$folderTemplate   = $this->folderTemplate();
+		$protectionDialog = $this->protectionDialog($depot);
 
-		return $input . $browser . $addFolder . $folderDialog . $fileTemplate . $folderTemplate;
+		return $input . $browser . $addFolder . $folderDialog . $fileTemplate . $folderTemplate . $protectionDialog;
 	}
 
 	/** @param array<array<string,mixed>> $files */
 	private function buildLayout(array $files): string
 	{
-		$browser   = $this->buildBrowser($files);
-		$preview   = $this->depotPreview();
-		$layout    = HTMLUtils::element('div', $browser . $preview, ['class' => 'depot-layout']);
-		$container = HTMLUtils::element('div', $layout, ['class' => 'depot-layout-container']);
+		$browser    = $this->buildBrowser($files);
+		$preview    = $this->depotPreview();
+		$layout     = HTMLUtils::element('div', $browser . $preview, ['class' => 'depot-layout']);
+		$editButton = HTMLUtils::button('', ['class' => 'protect', 'title' => 'Edit Depot Protection']);
+		$container  = HTMLUtils::element('div', $editButton . $layout, ['class' => 'depot-layout-container']);
 
 		return $container;
+	}
+
+	/** @param array<string,mixed> $depot */
+	private function protectionDialog(array $depot): string
+	{
+		$content = $this->form->field('protected', [
+			'field'       => 'checkbox',
+			'label'       => 'Protected by Collection',
+			'help'        => 'Access group protection is set in the Collection.',
+			'value'       => $depot['protected'] ?? false,
+		]);
+		$content .= $this->form->field('password', [
+			'field' => 'password',
+			'label' => 'Password',
+			'help'  => 'Require a password to download files from this depot. This overrides all collection level access controls.',
+			'value' => $depot['password'] ?? '',
+		]);
+		$content .= $this->closeSection();
+
+		return HTMLUtils::dialog($content, 'protection-dialog');
 	}
 
 	/** @param array<array<string,mixed>> $files */
