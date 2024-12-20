@@ -22,6 +22,7 @@ export default class DepotField extends TotalField {
     }
 
     // TODO: Do not allow another folder to be selected while files are being uploaded
+    // TODO: Click outside of the file list will deselect the file
 
     setupDroplet() {
 		this.droplet = new DepotDroplet(this, {
@@ -80,8 +81,10 @@ export default class DepotField extends TotalField {
 	}
 
 	apiUploadFile() {
-		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		return this.api.buildApiQuery(api);
+        const api     = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+        const path    = this.getPath();
+        const options = path.length > 0 ? {path:path} : {};
+		return this.api.buildApiQuery(api, options);
     }
 
 	updateAPIUrl() {

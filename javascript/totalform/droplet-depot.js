@@ -83,7 +83,6 @@ export default class DepotDroplet
 
 		// File Events
 		this.dropzone.on("addedfile", file => this.event_addedfile(file));
-		// this.dropzone.on("thumbnail", (file,data) => this.event_thumbnail(file,data));
 		this.dropzone.on("uploadprogress", (file, progress, bytes) => this.event_uploadprogress(file, progress, bytes));
 		this.dropzone.on("error", (file, message) => this.event_error(file, message));
 		this.dropzone.on("sending", (file, xhr, formData) => this.event_sending(file, xhr, formData));
@@ -188,26 +187,19 @@ export default class DepotDroplet
 		this.field.fileAdded(file);
     }
 
-    // When the thumbnail has been generated. Receives the dataUrl as second parameter.
-    event_thumbnail(file,data) {
-        file.previewElement.classList.remove("dz-file-preview");
-
-        // This happens here because its the first time that we have access to file info
-        this.processTestSet(file);
-
-        const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
-        for (const thumb of thumbs) {
-            thumb.alt = file.name;
-            thumb.src = data;
-        }
-    }
-
     // Gets called periodically whenever the file upload progress changes
     event_uploadprogress(file, progress, bytes) {
         const results = [];
 
         if (file.previewElement) {
-            const nodes = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
+
+            let nodes = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
+            if (nodes.length == 0) {
+                const progress = this.createProgressBar();
+                file.previewElement.appendChild(progress);
+                nodes = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
+            }
+
             for (const node of nodes) {
                 if (node.nodeName === "PROGRESS") {
                     results.push(node.value = progress);
@@ -228,6 +220,16 @@ export default class DepotDroplet
         return results;
     }
 
+    createProgressBar() {
+        const progress = document.createElement("div");
+        progress.className = "dz-progress";
+        progress.innerHTML = `
+            <span class="dz-upload" data-dz-uploadprogress></span>
+            <span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
+            <div class="dz-status"></div>
+        `;
+        return progress;
+    }
     // When an error has occurred
     event_error(file, message) {
         if (typeof(message) === "object") message = message.message;
