@@ -167,7 +167,7 @@ export default class DepotDroplet
         // Add to the top of the file list. If there are folders, skip them
         let firstFile = null;
         for (let i = 0; i < uploadFolder.children.length; i++) {
-            if (uploadFolder.children[i].firstChild.tagName !== "DETAILS") {
+            if (!this.is_folder(uploadFolder.children[i])) {
                 firstFile = uploadFolder.children[i];
                 break;
             }
@@ -183,6 +183,10 @@ export default class DepotDroplet
 			this.field.changed();
         }
 		this.field.fileAdded(file);
+    }
+
+    is_folder(item) {
+        return item.firstChild.tagName === "DETAILS";
     }
 
     // Gets called periodically whenever the file upload progress changes

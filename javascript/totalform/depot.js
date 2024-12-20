@@ -458,6 +458,54 @@ export default class DepotField extends TotalField {
         });
     }
 
+    is_folder(item) {
+        return item.firstChild.tagName === "DETAILS";
+    }
+
+    getFileData(file)
+    {
+        const data = {};
+        for (const field of file.querySelectorAll(".form-field")) {
+            const name = field.querySelector("[name]").name;
+            data[name] = field.totalfield.getValue();
+        }
+        return data;
+    }
+
+    getFolderData(folder)
+    {
+        const files = [];
+        for (const item of folder.children) {
+            if (this.is_folder(item)) {
+                files.push({
+                    name : item.querySelector(".folder").textContent,
+                    mime : "folder",
+                    files: this.getFolderData(item.querySelector(".folder-contents"))
+                });
+                continue;
+            }
+            files.push(this.getFileData(item));
+        }
+        return files;
+    }
+
+    getValue() {
+		const depot = {
+            "password"  : "",
+            "protected" : true,
+            files       : this.getFolderData(this.browser),
+        };
+        return depot;
+    }
+
+    setValue(value) {
+		console.warn("DepotField.setValue() is not implemented", value);
+    }
+
+	clearValue() {
+		console.warn("DepotField.clearValue() is not implemented");
+	}
+
 	schema() {
         return {
             type     : "depot",
