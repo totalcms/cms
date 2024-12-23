@@ -16,8 +16,8 @@ export default class TotalField {
 
         // Define option defaults
         const defaults = {
-			form          : null,
-			"sortOptions" : false,
+			form        : null,
+			sortOptions : false,
         };
         this.options = Object.assign({}, defaults, options);
         this.form = this.options.form;
