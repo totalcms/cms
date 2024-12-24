@@ -5,7 +5,7 @@ namespace TotalCMS\Action\Froala;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class FroalaGetImagesAction
+final class FroalaDeleteFileAction
 {
 	/**
 	 * Action.
@@ -17,7 +17,7 @@ final class FroalaGetImagesAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$response->getBody()->write('FroalaGetImagesAction');
+		$response->getBody()->write('FroalaDeleteFileAction');
 
 		return $response;
 	}

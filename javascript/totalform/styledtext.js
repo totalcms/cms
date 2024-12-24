@@ -7,7 +7,7 @@ import "dompurify/dist/purify.min.js";
 
 import FroalaEditor from "froala-editor";
 import "froala-editor/js/plugins/align.min.js";
-// import "froala-editor/js/plugins/char_counter.min.js";
+import "froala-editor/js/plugins/char_counter.min.js";
 import "froala-editor/js/plugins/code_beautifier.min.js";
 import "froala-editor/js/plugins/code_view.min.js";
 import "froala-editor/js/plugins/colors.min.js";
@@ -18,17 +18,17 @@ import "froala-editor/js/plugins/draggable.min.js";
 import "froala-editor/js/plugins/entities.min.js";
 import "froala-editor/js/plugins/file.min.js";
 import "froala-editor/js/plugins/files_manager.min.js";
-// import "froala-editor/js/plugins/font_family.min.js";
-// import "froala-editor/js/plugins/font_size.min.js";
+import "froala-editor/js/plugins/font_family.min.js";
+import "froala-editor/js/plugins/font_size.min.js";
 // import "froala-editor/js/plugins/forms.min.js";
 import "froala-editor/js/plugins/fullscreen.min.js";
 // import "froala-editor/js/plugins/help.min.js";
 import "froala-editor/js/plugins/image.min.js";
-import "froala-editor/js/plugins/image_manager.min.js";
+// import "froala-editor/js/plugins/image_manager.min.js";
 import "froala-editor/js/plugins/inline_class.min.js";
 import "froala-editor/js/plugins/inline_style.min.js";
 import "froala-editor/js/plugins/line_breaker.min.js";
-// import "froala-editor/js/plugins/line_height.min.js";
+import "froala-editor/js/plugins/line_height.min.js";
 import "froala-editor/js/plugins/link.min.js";
 import "froala-editor/js/plugins/lists.min.js";
 // import "froala-editor/js/plugins/markdown.min.js";
@@ -203,7 +203,8 @@ export default class StyledTextField extends TotalField {
             imageUploadURL        : this.uploadAPI("image"),
             imageManagerLoadURL   : this.uploadAPI("image"),
             imageManagerDeleteURL : this.uploadAPI("image"),
-            imageUploadParams     : { w:2500, h:1000, fit:"max" },
+            // imageUploadParams     : { w:2500, h:1200, fit:"max" },
+            // imageInsertButtons    : ['imageBack', '|', 'imageUpload', 'imageByURL'],
             // videoUploadParams        : {},
             // fileUploadParams         : {},
             // imageManagerDeleteParams : {},
