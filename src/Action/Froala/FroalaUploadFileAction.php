@@ -52,10 +52,10 @@ final class FroalaUploadFileAction
 			$filepath
 		);
 
-		$link = $this->config->api . '/upload' . $path;
+		$link = $this->config->api . '/upload/' . $path;
 
 		if ($type === "image") {
-			$link = $this->config->api . '/imageworks/upload' . $path;
+			$link = $this->config->api . '/imageworks/upload/' . $path;
 		}
 
 		$query = $request->getQueryParams();

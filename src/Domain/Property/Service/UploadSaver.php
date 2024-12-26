@@ -18,8 +18,8 @@ class UploadSaver
 		string $filename,
 	): string {
 		// Save File
-		$this->storage->saveFile($collection, $objectID, $property, $filename);
+		$file = $this->storage->saveFile($collection, $objectID, $property, $filename);
 
-		return PathUtils::buildPath($collection, $objectID, $property, $filename);
+		return PathUtils::buildPath($collection, $objectID, $property, (string)$file['name']);
 	}
 }
