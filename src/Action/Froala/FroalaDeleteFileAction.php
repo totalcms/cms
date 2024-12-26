@@ -10,17 +10,17 @@ use TotalCMS\Renderer\JsonRenderer;
 final class FroalaDeleteFileAction
 {
 	public function __construct(
-		private JsonRenderer  $renderer,
+		private JsonRenderer $renderer,
 		private UploadRemover $uploadRemover,
-	){}
+	) {
+	}
 
 	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
-	): ResponseInterface
-	{
+		array $args,
+	): ResponseInterface {
 		$collection = $args['collection'];
 		$id         = $args['id'];
 		$property   = $args['property'];
@@ -28,6 +28,6 @@ final class FroalaDeleteFileAction
 
 		$status = $this->uploadRemover->deleteFile($collection, $id, $property, $name);
 
-		return $this->renderer->json($response, [ "deleted" => $status ]);
+		return $this->renderer->json($response, ['status' => !$status]);
 	}
 }
