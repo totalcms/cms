@@ -1,0 +1,19 @@
+<?php
+
+namespace TotalCMS\Domain\Property\Service;
+
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
+
+final class UploadRemover
+{
+	public function __construct(
+		private PropertyRepository $storage
+	){}
+
+	public function deleteFile(string $collection, string $id, string $property, string $name): bool
+	{
+		$this->storage->deleteFile($collection, $id, $property, $name);
+
+		return $this->storage->fileExists($collection, $id, $property, $name);
+	}
+}

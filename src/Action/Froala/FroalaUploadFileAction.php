@@ -7,7 +7,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
-use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class FroalaUploadFileAction
 {
@@ -21,23 +20,22 @@ final class FroalaUploadFileAction
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$query = $request->getQueryParams();
 		$files = $request->getUploadedFiles();
 
-		$path = null;
-		// possible file paths: image, video, file
+		$type = null;
+		// possible file types: image, video, file
 		if (key_exists('image', $files)) {
-			$path = 'image';
+			$type = 'image';
 		} elseif (key_exists('video', $files)) {
-			$path = 'video';
+			$type = 'video';
 		} elseif (key_exists('file', $files)) {
-			$path = 'file';
+			$type = 'file';
 		}
 
-		if ($path === null) {
+		if ($type === null) {
 			throw new \RuntimeException('No file found for upload');
 		}
-		$file = $files[$path];
+		$file = $files[$type];
 
 		// move the uploaded file to the tmp directory
 		// this is because saveFile expects a file path
@@ -47,14 +45,24 @@ final class FroalaUploadFileAction
 		}
 		$file->moveTo($filepath);
 
-		$object = $this->saver->save(
+		$path = $this->saver->save(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
-			$filepath,
-			$path
+			$filepath
 		);
 
-		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
+		$link = $this->config->api . '/upload' . $path;
+
+		if ($type === "image") {
+			$link = $this->config->api . '/imageworks/upload' . $path;
+		}
+
+		$query = $request->getQueryParams();
+		if (!empty($query)) {
+			$link .= '?' . http_build_query($query);
+		}
+
+		return $this->renderer->json($response, [ "link" => $link ]);
 	}
 }

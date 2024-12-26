@@ -2,23 +2,35 @@
 
 namespace TotalCMS\Action\Froala;
 
+use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Property\Service\UploadFetcher;
+use Slim\Exception\HttpNotFoundException;
 
 final class FroalaGetFileAction
 {
-	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-	{
-		$response->getBody()->write('FroalaGetFileAction');
+	public function __construct(
+		private UploadFetcher $uploadFetcher,
+	){}
 
-		return $response;
+	/** @param array<string,string> $args The arguments	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		$collection = $args['collection'];
+		$id         = $args['id'];
+		$property   = $args['property'];
+		$name       = $args['name'];
+
+		if (!$this->uploadFetcher->fileExists($collection, $id, $property, $name)) {
+			throw new HttpNotFoundException($request, 'File not found');
+		}
+
+		$mimeType = $this->uploadFetcher->mimeType($collection, $id, $property, $name);
+		$response = $response->withHeader('Content-Type', $mimeType);
+
+		$stream = $this->uploadFetcher->streamFile($collection, $id, $property, $name);
+
+		return $response->withBody(Stream::create($stream));
 	}
 }
