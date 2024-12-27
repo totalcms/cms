@@ -139,11 +139,11 @@ final class CollectionTable
 				return (string)count($value);
 
 			case 'date':
-				$date = new \DateTime($value);
 				$zone = new \DateTimeZone($this->config->timezone);
-				$date->setTimezone($zone);
+				$date = new \DateTime($value, $zone);
 
-				return $date->format('Y-m-d H:i');
+				// strip the time if it's 00:00
+				return trim(str_replace('00:00', '', $date->format('Y-m-d H:i')));
 
 			case 'image':
 				return $this->imagePreivew($id, $property, $value);
