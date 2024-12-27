@@ -1,9 +1,12 @@
 import TotalField from "./totalfield.js";
 
-import "codemirror/lib/codemirror.js";
-import "codemirror/mode/xml/xml.js";
-import "codemirror/mode/twig/twig.js";
+import CodeMirror from "codemirror";
+import "codemirror/mode/xml/xml";
+import "codemirror/mode/twig/twig";
 import DOMPurify from 'dompurify';
+
+window.CodeMirror = CodeMirror
+window.DOMPurify = DOMPurify
 
 import FroalaEditor from "froala-editor";
 import "froala-editor/js/plugins/align.min.js";
