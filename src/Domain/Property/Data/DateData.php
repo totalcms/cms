@@ -32,12 +32,12 @@ class DateData extends PropertyData
 		return self::cleanDate($value);
 	}
 
-	private static function cleanDate(string $date = ''): string
+	private static function cleanDate(string $date = 'now'): string
 	{
 		$config = Config::init();
 		$timezone = new \DateTimeZone($config->timezone);
 
-		$date = new \DateTime($date, $timezone);
+		$date = new \DateTime($date);
 		$date->setTimezone($timezone);
 
 		return $date->format('c');

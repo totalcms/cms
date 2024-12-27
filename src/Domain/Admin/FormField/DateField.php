@@ -21,6 +21,7 @@ class DateField extends FormField
 			if ($this->value === 'onCreate' || $this->value === 'onUpdate') {
 				$this->value = 'now';
 			}
+			$this->default = '';
 		}
 		if (!empty($this->value)) {
 			$config = Config::init();

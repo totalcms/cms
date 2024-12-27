@@ -27,4 +27,4 @@ $settings['logger']['level']  = Monolog\Level::Debug;
 $settings['assets']['minify'] = 0;
 // $settings['locale']['cache']  = null;
 
-$settings['timezone'] = 'America/Los_Angeles';
+$settings['timezone'] = 'America/Denver';
