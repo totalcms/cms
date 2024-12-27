@@ -58,9 +58,9 @@ final class FroalaUploadFileAction
 			$link = $this->config->api . '/imageworks/upload/' . $path;
 		}
 
-		$query = $request->getQueryParams();
-		if (!empty($query)) {
-			$link .= '?' . http_build_query($query);
+		$params = $request->getParsedBody();
+		if (!empty($params)) {
+			$link .= '?' . http_build_query($params);
 		}
 
 		return $this->renderer->json($response, [ "link" => $link ]);

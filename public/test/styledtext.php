@@ -9,10 +9,11 @@
 		imageUpload    : true,
 		videoUpload    : true,
 		toolbarButtons : [
-			['bold', 'italic', 'underline'],
+			['bold', 'italic', 'underline', 'html'],
 			["insertImage", "insertFile", "insertVideo"],
 		],
 		imageInsertButtons : ['imageBack', '|', 'imageUpload', 'imageByURL'],
+		imageUploadParams  : { w:300 },
 	},
 }) }}
 
