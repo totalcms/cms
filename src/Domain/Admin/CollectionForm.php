@@ -109,6 +109,11 @@ final class CollectionForm extends TotalForm
 		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
 		$ignore  = ['collection', 'schema'];
 
+		if (empty($this->id)) {
+			// Do not allow a new collection to be created with the blog-legacy schema
+			$ignore[] = 'blog-legacy';
+		}
+
 		return array_filter($schemas, fn ($schema) => !in_array($schema, $ignore));
 	}
 
