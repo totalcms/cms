@@ -86,36 +86,31 @@ export default class StyledTextField extends TotalField {
         return this.froala.html.get();
     }
 
-    uploadAPI(type) {
+    uploadAPI() {
         if (!this.form) return null;
         const collection = this.form.collection;
-        const id         = this.form.id;
+        const id         = this.form.getId() ?? '';
         const property   = this.property;
         return this.api.buildApiQuery(`/upload/${collection}/${id}/${property}`);
     }
 
-    updateUploadURLs(editor) {
-        // Cannot upload unless the form has an ID set
-        // if (!this.form.id) {
-        //     console.warn("Unable to upload. Could not find object ID.");
-        //     return false;
-        // }
-        // Update the Froala upload URL
-        // editor.opts.imageUploadURL = this.uploadAPI("image");
-        // editor.opts.fileUploadURL  = this.uploadAPI("file");
-        // editor.opts.videoUploadURL = this.uploadAPI("video");
+    updateUploadURLs() {
+        this.froala.opts.imageUploadURL = this.uploadAPI();
+        this.froala.opts.fileUploadURL  = this.uploadAPI();
+        this.froala.opts.videoUploadURL = this.uploadAPI();
     }
 
     charCountExceeded() {
         // $(this.input).closest("fieldset").find(".fr-counter").addClass("exceeded");
     }
 
-    deleteFileFromServer(file) {
+    deleteFileFromServer(url) {
+        if (!url) return;
         if (confirm("Do you want to also permanently delete this file from the server?")) {
             const collection = this.form.collection;
-            const id         = this.form.id;
+            const id         = this.form.getId();
             const property   = this.property;
-            const name       = file.split("/").pop();
+            const name       = url.split("?")[0].split("/").pop();
             const api        = `/upload/${collection}/${id}/${property}/${name}`;
             console.log("Deleting file from server", api);
             this.api.postAPI(api, {}, "DELETE");
@@ -124,10 +119,11 @@ export default class StyledTextField extends TotalField {
 
     defaultConfig() {
         const toolbar = [
-            "bold", "italic", "insertLink",
-            "|", "alignLeft", "alignCenter", "alignRight",
-            "|", "formatOL", "formatUL",
-            "|", "clearFormatting", "html",
+            ["bold", "italic", "insertLink",],
+            ["alignLeft", "alignCenter", "alignRight",],
+            ["formatOL", "formatUL",],
+            ["insertImage",],
+            ["clearFormatting", "html",],
         ];
         const colors = [
             "#61BD6D", "#1ABC9C", "#54ACD2",
@@ -223,6 +219,7 @@ export default class StyledTextField extends TotalField {
             imageResizeWithPercent : true,
             imageRoundPercent      : true,
             imageStyles            : imageStyles,
+            DOMPurify              : window.DOMPurify,
             codeMirror             : window.CodeMirror,
             codeMirrorOptions      : codeMirrorOptions,
             alwaysVisible          : false,
@@ -241,10 +238,11 @@ export default class StyledTextField extends TotalField {
             enter              : FroalaEditor.ENTER_P,
             htmlRemoveTags     : ["script"],
             events             : {
-                'contentChanged' : () => this.changed(),
-                'image.removed'  : img   => this.deleteFileFromServer(img.currentSrc),
-                'file.unlink'    : file  => this.deleteFileFromServer(file.href),
-                'video.removed'  : video => this.deleteFileFromServer(video.currentSrc),
+                'contentChanged'     : ()    => this.changed(),
+                'image.removed'      : img   => this.deleteFileFromServer(img[0].src),
+                'image.beforeUpload' : ()    => this.updateUploadURLs(),
+                'file.unlink'        : file  => this.deleteFileFromServer(file.href),
+                'video.removed'      : video => this.deleteFileFromServer(video[0].src),
 			}
         };
     }
