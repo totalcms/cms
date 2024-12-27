@@ -30,7 +30,7 @@ class DateField extends FormField
 			$date = new \DateTime($this->value, $timezone);
 			$date->setTimezone($timezone);
 
-			$this->value = $date->format($this->dateFormat);
+			$this->value = $date->format('c');
 		}
 	}
 }

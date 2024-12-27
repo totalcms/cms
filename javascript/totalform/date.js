@@ -5,6 +5,12 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 export default class DateField extends TotalField {
 
+    constructor(container, options) {
+        super(container, options);
+
+        this.setValue(this.input.getAttribute('value'));
+    }
+
 	getValue() {
 		if (this.input.value) {
 			if (this.type === 'date') {
@@ -20,7 +26,7 @@ export default class DateField extends TotalField {
 	setValue(value = "") {
 		if (value.length > 0) {
 			// Convert to ISO format and remove milliseconds
-			value = new Date(value||this.value).toISOString().slice(0, -5);
+			value = new Date(value||this.value).toISOString().slice(0, 16);
 			if (this.type === 'date') {
 				value = value.split('T')[0];
 			}
