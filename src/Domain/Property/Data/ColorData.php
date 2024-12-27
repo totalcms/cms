@@ -15,15 +15,20 @@ class ColorData extends PropertyData
 	/** @var array<string,float> */
 	public array $oklch;
 
-	/** @param string|array<string,mixed> $color */
-	public function __construct(string|array $color)
+	/**
+	 * @param string|array<string,mixed> $color
+	 * @param array<string,mixed> $settings
+	 */
+	public function __construct(string|array $color, array $settings = [])
 	{
+		$this->settings = $settings;
+
 		if (is_string($color)) {
 			$this->hex   = $color;
 			$this->oklch = self::hexToOklch($this->hex);
-
 			return;
 		}
+
 		$this->hex   = $color['hex'] ?? '#000000';
 		$this->oklch = $color['oklch'] ?? self::hexToOklch($this->hex);
 	}

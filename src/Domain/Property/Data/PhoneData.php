@@ -9,9 +9,11 @@ class PhoneData extends PropertyData
 {
 	public string $phone;
 
-	public function __construct(string $phone)
+	/** @param array<string,mixed> $settings */
+	public function __construct(string $phone, array $settings = [])
 	{
-		$this->phone = $phone;
+		$this->settings = $settings;
+		$this->phone    = $phone;
 	}
 
 	public function transform(): string

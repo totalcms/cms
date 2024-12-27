@@ -26,6 +26,9 @@ final class ObjectSaver
 			throw new \DomainException(sprintf('Object with id %s already exists in %s', $object->id, $collection));
 		}
 
+		// Run property actions before saving (ex: update date)
+		$object->properties = $object->properties->map(fn($property) => $property->actionsBeforeSave());
+
 		$this->storage->saveObject($collection, $object);
 
 		$this->indexBuilder->buildIndex($collection);

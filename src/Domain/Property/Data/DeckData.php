@@ -2,14 +2,20 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
+use Illuminate\Support\Arr;
+
 /**
  * String type property data.
  */
 class DeckData extends PropertyData
 {
-	/** @param array<string> $deck */
-	public function __construct(public array $deck = [])
+	/**
+	 * @param array<string> $deck
+	 * @param array<string,mixed> $settings
+	 */
+	public function __construct(public array $deck = [], array $settings = [])
 	{
+		$this->settings = $settings;
 		if (!self::verifyDeck($deck)) {
 			throw new \InvalidArgumentException('Deck must be a set of simple objects');
 		}

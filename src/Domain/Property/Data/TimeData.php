@@ -9,13 +9,15 @@ class TimeData extends PropertyData
 {
 	public string $time;
 
-	public function __construct(string $time = '')
+	/** @param array<string,mixed> $settings */
+	public function __construct(string $time = '', array $settings = [])
 	{
 		if (!empty($time) && !self::verifyTime($time)) {
-			throw new \InvalidArgumentException('Invalid SVG');
+			throw new \InvalidArgumentException('Invalid Time');
 		}
 
-		$this->time = $time;
+		$this->time     = $time;
+		$this->settings = $settings;
 	}
 
 	private static function verifyTime(string $time): bool

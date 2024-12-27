@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
+use PhpParser\Builder\Property;
 use TotalCMS\Support\Config;
 
 /**
@@ -14,22 +15,28 @@ class DateData extends PropertyData
 	public const CREATION_DATE = 'onCreate';
 	public const UPDATE_DATE   = 'onUpdate';
 
-	public function __construct(string $date)
+	/** @param array<string,mixed> $settings */
+	public function __construct(string $date, array $settings = [])
 	{
-		$this->date   = empty($date) ? '' : self::cleanDate($date);
+		$this->date = empty($date) ? '' : self::cleanDate($date);
+		$this->settings = $settings;
 	}
 
 	public static function defaultValue(mixed $value, mixed $default): mixed
 	{
-		if (isset($default)) {
-			if ((empty($value) || $value === self::CREATION_DATE) && $default === self::CREATION_DATE) {
-				$value = self::cleanDate();
-			} elseif ($default === self::UPDATE_DATE) {
-				$value = self::cleanDate();
-			}
-		}
-
 		return self::cleanDate($value);
+	}
+
+	public function actionsBeforeSave(): DateData
+	{
+		if (isset($this->settings[self::CREATION_DATE]) && $this->settings[self::CREATION_DATE] === true) {
+			if ((empty($this->date) || $this->date === self::CREATION_DATE)) {
+				$this->date = self::cleanDate();
+			}
+		} elseif (isset($this->settings[self::UPDATE_DATE]) && $this->settings[self::UPDATE_DATE] === true) {
+			$this->date = self::cleanDate();
+		}
+		return $this;
 	}
 
 	private static function cleanDate(string $date = 'now'): string
