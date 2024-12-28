@@ -39,8 +39,12 @@ class DateData extends PropertyData
 		return $this;
 	}
 
-	private static function cleanDate(string $date = 'now'): string
+	private static function cleanDate(?string $date = 'now'): string
 	{
+		if (empty($date)) {
+			$date = 'now';
+		}
+
 		$config   = Config::init();
 		$timezone = new \DateTimeZone($config->timezone);
 		$date     = new \DateTime($date, $timezone);
