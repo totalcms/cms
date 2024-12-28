@@ -10,8 +10,18 @@
 		videoUpload    : true,
 		toolbarButtons : [
 			['bold', 'italic', 'underline', 'html'],
-			["insertImage", "insertFile", "insertVideo"],
+			["insertLink", "insertImage", "insertFile", "insertVideo"],
+			['inlineClass', 'clearFormatting'],
 		],
+		inlineClasses: {
+			'button'                : 'Button',
+			'fr-class-code'         : 'Code',
+			'fr-class-highlighted'  : 'Highlighted',
+			'fr-class-transparency' : 'Transparent'
+		},
+		linkStyles: {
+    		button: 'Button',
+		},
 		imageInsertButtons : ['imageBack', '|', 'imageUpload', 'imageByURL'],
 		imageUploadParams  : { w:300 },
 	},
