@@ -105,8 +105,9 @@ export default class StyledTextField extends TotalField {
     }
 
     deleteFileFromServer(url) {
-        if (!url) return;
-        if (confirm("Do you want to also permanently delete this file from the server?")) {
+        if (this.options.confirmDelete !== true || !url) return;
+
+        if (confirm("Are you sure you want to delete this image?")) {
             const collection = this.form.collection;
             const id         = this.form.getId();
             const property   = this.property;
@@ -199,6 +200,9 @@ export default class StyledTextField extends TotalField {
             videoMaxSize       : megabyte * 1024,
             fileMaxSize        : megabyte * 1024,
             imageMaxSize       : megabyte * 5,
+            fileUpload         : true,
+            imageUpload        : true,
+            videoUpload        : true,
             imageUploadParam   : "image",
             fileUploadParam    : "file",
             videoUploadParam   : "video",
@@ -237,6 +241,7 @@ export default class StyledTextField extends TotalField {
             paragraphFormat    : paragraphFormat,
             enter              : FroalaEditor.ENTER_P,
             htmlRemoveTags     : ["script"],
+            confirmDelete      : true,
             events             : {
                 'contentChanged'     : ()    => this.changed(),
                 'image.removed'      : img   => this.deleteFileFromServer(img[0].src),

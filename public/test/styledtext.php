@@ -5,16 +5,12 @@
 {{ cms.form.styledtext('mytext', {}, {
 	label: 'Upload Testing',
 	settings : {
-		fileUpload     : true,
-		imageUpload    : true,
-		videoUpload    : true,
 		toolbarButtons : [
 			['bold', 'italic', 'underline', 'html'],
 			["insertLink", "insertImage", "insertFile", "insertVideo"],
 			['inlineClass', 'clearFormatting'],
 		],
 		inlineClasses: {
-			'button'                : 'Button',
 			'fr-class-code'         : 'Code',
 			'fr-class-highlighted'  : 'Highlighted',
 			'fr-class-transparency' : 'Transparent'
