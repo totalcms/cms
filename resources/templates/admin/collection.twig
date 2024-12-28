@@ -60,8 +60,8 @@
 		{{ cms.form.collection({
 			save        : "Save",
 			helpStyle   : 'label',
-			helpOnHover : true,
-			newAction : {
+			helpOnFocus : true,
+			newAction   : {
 				"action" : "redirect-object",
 				"link"   : "collections/{id}/edit"
 			},
@@ -111,11 +111,11 @@
 		{# Edit Collection #}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}"><span>{{ url.collection }}</span></a></h1>
 		{{ cms.form.collection({
-			id          : url.collection,
-			save        : "Save",
-			delete      : "Delete",
-			helpStyle   : 'label',
-			helpOnHover : true,
+			id           : url.collection,
+			save         : "Save",
+			delete       : "Delete",
+			helpStyle    : 'label',
+			helpOnFocus  : true,
 			deleteAction : {
 				"action" : "redirect",
 				"link"   : "collections"
@@ -132,8 +132,8 @@
 		{% set form = cms.form.builder(url.collection, {
 			save        : "Save",
 			helpStyle   : 'label',
-			helpOnHover : true,
-			newAction : {
+			helpOnFocus : true,
+			newAction   : {
 				"action" : "redirect-object",
 				"link"   : "collections/#{url.collection}/{id}"
 			},
@@ -145,11 +145,11 @@
 		{# Edit Object Form #}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>{{ url.id }}</span></h1>
 		{% set form = cms.form.builder(url.collection, {
-			id          : url.id,
-			save        : "Save",
-			delete      : "Delete",
-			helpStyle   : 'label',
-			helpOnHover : true,
+			id           : url.id,
+			save         : "Save",
+			delete       : "Delete",
+			helpStyle    : 'label',
+			helpOnFocus  : true,
 			deleteAction : {
 				"action" : "redirect",
 				"link"   : "collections/#{url.collection}"
