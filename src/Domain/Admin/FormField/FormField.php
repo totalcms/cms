@@ -62,8 +62,8 @@ class FormField
 			|| isset($this->settings['relationalOptions'])
 			|| isset($this->settings['datalistOptions']));
 
-		// Set a default value if one is not provided
-		if (empty($this->value) && !empty($this->default)) {
+		// Set a default value on new object forms if one is not provided
+		if (!$this->form->id && empty($this->value) && !empty($this->default)) {
 			$this->value = $this->default;
 		}
 	}

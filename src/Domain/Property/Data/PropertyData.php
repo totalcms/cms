@@ -14,7 +14,7 @@ class PropertyData implements PropertyDataInterface
 	/** @param array<string,mixed> $settings */
 	public function __construct(string $id, array $settings = [])
 	{
-		$this->id = $id;
+		$this->id       = $id;
 		$this->settings = $settings;
 	}
 
@@ -30,6 +30,8 @@ class PropertyData implements PropertyDataInterface
 
 	public function actionsBeforeSave(): PropertyData
 	{
+		// TODO: This should not be in the data classes. This should be a Service.
+
 		return $this;
 	}
 
