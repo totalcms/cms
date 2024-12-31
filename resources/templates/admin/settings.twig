@@ -8,7 +8,11 @@
 		<p>This form will manage and save global settings for Total CMS. These settings will be saved in a
 			<code>tcms.php</code> in the DOCUMENT_ROOT of the server.</p>
 
-		<form id="settings-form" class="totalform help-on-hover help-box" data-disabled action="{{cms.api}}/admin/settings" method="POST">
+		<form id="settings-form"
+			class="totalform help-on-hover help-box"
+			action="{{ cms.api }}/admin/settings"
+			method="POST"
+			data-disabled>
 
 			{# {{ var_dump(defaults) }} #}
 
@@ -67,7 +71,7 @@
 				</p>
 			</div>
 
-			<div class="form-field select-field">
+			<div class="form-field select-field" data-type="select">
 				<label for="timezone">Timezone</label>
 				<div class="form-group">
 					<select name="timezone" id="timezone" aria-describedby="help-timezone">
@@ -114,7 +118,7 @@
 				</p>
 			</div>
 
-			<button class="cms-save" type="submit">Save</button>
+			<button class="cms-button" type="submit">Save</button>
 		</form>
 
 	</main>

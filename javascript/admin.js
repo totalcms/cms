@@ -6,6 +6,7 @@ import FilterList from './totalform/filter-list';
 import AdminTable from './totalform/admin-table';
 import QuickAction from './quickaction';
 import ClipButton from './clipboard-button';
+import JSONField from './totalform/json';
 
 globalThis.TotalCMS = TotalCMS;
 
@@ -49,4 +50,12 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const copyButtons = Array.from(document.getElementsByClassName("cms-clip-button"));
 	copyButtons.forEach(button => new ClipButton(button));
+
+	const settingsForm = document.getElementById("settings-form");
+	if (settingsForm) {
+		const jsonField = new JSONField(settingsForm.querySelector(".json-field"));
+		settingsForm.addEventListener("submit", event => {
+			if (!jsonField.validate()) event.preventDefault();
+		});
+	}
 });

@@ -579,4 +579,7 @@ body {
 	.checkbox-field label {
 		font-size: 0.9em;
 	}
+	.cms-button:before {
+		mask-image : var(--icon-save);
+	}
 }
