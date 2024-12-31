@@ -33,8 +33,7 @@ final class AdminSettingsAction
 
 		if ($request->getMethod() === 'POST') {
 			$savedSettings = (array)$request->getParsedBody();
-			$savedSettings = array_filter($savedSettings, fn($value) => $value !== '');
-			$this->settingsSaver->save($savedSettings);
+			$savedSettings = $this->settingsSaver->save($savedSettings);
 		}
 
 		if (empty($savedSettings)) {

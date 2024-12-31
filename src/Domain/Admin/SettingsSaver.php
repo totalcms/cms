@@ -12,11 +12,15 @@ final class SettingsSaver
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
 	 * @param array<string,string> $settings
+	 *
+	 * @return array<string,mixed>
 	 */
-	public function save(array $settings): void
+	public function save(array $settings): array
 	{
 		$settings = array_filter($settings, fn($value) => $value !== '');
 		$settings['sentry'] = isset($settings['sentry']);
+
+		$returnSettings = $settings;
 
 		if (isset($settings['presets']) && is_string($settings['presets'])) {
 			$presets = json_decode($settings['presets'], true);
@@ -41,6 +45,8 @@ final class SettingsSaver
 
 		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
 		file_put_contents($configFile, $configContent);
+
+		return $returnSettings;
 	}
 }
 
