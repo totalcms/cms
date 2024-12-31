@@ -7,6 +7,8 @@ import AdminTable from './totalform/admin-table';
 import QuickAction from './quickaction';
 import ClipButton from './clipboard-button';
 import JSONField from './totalform/json';
+import SelectField from './totalform/select';
+import TotalField from './totalform/totalfield';
 
 globalThis.TotalCMS = TotalCMS;
 
@@ -53,7 +55,13 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const settingsForm = document.getElementById("settings-form");
 	if (settingsForm) {
-		const jsonField = new JSONField(settingsForm.querySelector(".json-field"));
+		const textFields = Array.from(settingsForm.querySelectorAll(".select-field"));
+		textFields.map(field => { new TotalField(field); });
+
+		const selectFields = Array.from(settingsForm.querySelectorAll(".select-field"));
+		selectFields.map(field => { new SelectField(field); });
+
+		const jsonField   = new JSONField(settingsForm.querySelector(".json-field"));
 		settingsForm.addEventListener("submit", event => {
 			if (!jsonField.validate()) event.preventDefault();
 		});
