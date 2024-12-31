@@ -75,6 +75,15 @@ export default class SVGField extends TotalField {
             'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'xmlns', 'y', 'y1',
             'y2', 'yChannelSelector', 'z', 'zoomAndPan',
         ];
+        const codeMirrorOptions = {
+            indentWithTabs : true,
+            lineNumbers    : true,
+            lineWrapping   : true,
+            readOnly       : false,
+            mode           : "text/html",
+            tabMode        : "indent",
+            tabSize        : 2
+        };
 		this.froala = new FroalaEditor(this.input, {
 			key                  : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
 			attribution          : false,
@@ -87,7 +96,9 @@ export default class SVGField extends TotalField {
 			htmlAllowedAttrs     : svgAttrs,
 			charCounterCount     : false,
 			htmlUntouched        : true,
-			events: {
+			codeMirror           : window.CodeMirror,
+			codeMirrorOptions    : codeMirrorOptions,
+			events               : {
 				'initialized': function() {
 					// TODO: Figure out how to enable CodeView without stealing focus
 					// Go into code editor if there is no SVG set

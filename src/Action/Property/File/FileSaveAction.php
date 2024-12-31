@@ -4,7 +4,6 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;

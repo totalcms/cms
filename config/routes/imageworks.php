@@ -3,7 +3,6 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\ImageWorks;
-use TotalCMS\Middleware\RobotsRemoveTagMiddleware;
 
 return function (App $app) {
 	$app->group('/imageworks', function (RouteCollectorProxy $group) {
@@ -12,5 +11,6 @@ return function (App $app) {
 		$group->get('/{id}/{name}.{format}', ImageWorks\ImageWorksGalleryFetchAction::class)->setName('gallery-image-fetch-short');
 		$group->get('/{collection}/{id}/{property}/{action:first|last|random|featured}', ImageWorks\ImageWorksGalleryFetchDynamicAction::class)->setName('gallery-image-fetch-dynamic');
 		$group->get('/{collection}/{id}/{property}/{name}.{format}', ImageWorks\ImageWorksGalleryFetchAction::class)->setName('gallery-image-fetch');
+		$group->get('/upload/{collection}/{id}/{property}/{name}', ImageWorks\ImageWorksUploadFetchAction::class)->setName('uploads-image-fetch');
 	});
 };

@@ -30,6 +30,9 @@ final class ObjectUpdater
 			throw new \UnexpectedValueException('Invalid Object data provided. Does not match object ID.', 1);
 		}
 
+		// Run property actions before saving (ex: update date)
+		$object->properties = $object->properties->map(fn($property) => $property->actionsBeforeSave());
+
 		$this->storage->saveObject($collection, $object);
 		$this->indexBuilder->buildIndex($collection);
 
@@ -40,6 +43,9 @@ final class ObjectUpdater
 	public function updateObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $id);
+
+		// Run property actions before saving (ex: update date)
+		$object->properties = $object->properties->map(fn($property) => $property->actionsBeforeSave());
 
 		$objectData            = $object->toArray();
 		$objectData[$property] = $newData;

@@ -8,6 +8,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Support\Config;
 
 /**
  * Total Table Builder.
@@ -19,6 +20,7 @@ final class CollectionTable
 	private array $objects;
 
 	public function __construct(
+		private Config $config,
 		private CollectionFetcher $collectionFetcher,
 		private SchemaFetcher $schemaFetcher,
 		private IndexReader $collectionReader,
@@ -137,7 +139,11 @@ final class CollectionTable
 				return (string)count($value);
 
 			case 'date':
-				return date('Y-m-d H:m', strtotime($value));
+				$zone = new \DateTimeZone($this->config->timezone);
+				$date = new \DateTime($value, $zone);
+
+				// strip the time if it's 00:00
+				return trim(str_replace('00:00', '', $date->format('Y-m-d H:i')));
 
 			case 'image':
 				return $this->imagePreivew($id, $property, $value);

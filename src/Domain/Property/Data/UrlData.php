@@ -9,9 +9,11 @@ class UrlData extends PropertyData
 {
 	public string $url;
 
-	public function __construct(string $url)
+	/** @param array<string,mixed> $settings */
+	public function __construct(string $url, array $settings = [])
 	{
-		$this->url = self::cleanUrl($url);
+		$this->url      = self::cleanUrl($url);
+		$this->settings = $settings;
 	}
 
 	private static function cleanUrl(string $url): string

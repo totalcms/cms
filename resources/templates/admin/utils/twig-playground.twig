@@ -1,4 +1,27 @@
 <h1>Twig Playground</h1>
 
-<p>Future home of a tool to help debug and play with twig. This will allow you to learn twig faster and
-run it against the data inside of the CMS.</p>
+<section class="dash-content-section">
+	<p>This will allow you to learn twig faster and run it against the data inside of the CMS.</p>
+
+	<form id="twig-playground"
+		class="totalform"
+		action="{{ cms.api }}/admin/utils/twig-playground"
+		method="POST"
+		data-disabled>
+
+		<div>
+			<label for="twig">Type your Twig Here</label>
+			<textarea name="twig" style="width: 100%; height: 200px;">{{ postParams.twig }}</textarea>
+		</div>
+		<button class="cms-button" type="submit">Render Twig</button>
+
+	</form>
+
+	{% if results %}
+	<section class="playground-results">
+		<h2>Results</h2>
+		{{ results }}
+	</section>
+	{% endif %}
+</section>
+

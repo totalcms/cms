@@ -19,6 +19,8 @@
 	border-radius    : 5px;
 	display          : grid;
 	gap              : 0.5rem;
+	word-wrap        : anywhere;
+	text-wrap        : wrap;
 }
 .cms-twig-info {
 	--alert-color : 65% 0.14 253.93;

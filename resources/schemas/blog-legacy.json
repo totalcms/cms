@@ -129,20 +129,6 @@
 			"label"   : "Gallery",
 			"help"    : "Gallery of images for this post",
 			"field"   : "gallery"
-		},
-		"updated": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"   : "Updated Date",
-			"help"    : "Blog Post updated date",
-			"field"   : "hidden",
-			"default" : "onUpdate"
-		},
-		"created": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"   : "Creation Date",
-			"help"    : "Blog Post creation date",
-			"field"   : "hidden",
-			"default" : "onCreate"
 		}
 	},
 	"required": [

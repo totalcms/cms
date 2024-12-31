@@ -81,11 +81,20 @@ list all of the objects from another collection.
 
 ## Smart Date Defaults
 
-Use the following values as a default value for a date field to auto-populate it when an
+Use the following settings can be used for a date field to auto-populate it when an
 object is created or updated.
 
-* onCreate
-* onUpdate
+```json
+{
+  "onUpdate" : true
+}
+```
+
+```json
+{
+  "onCreate" : true
+}
+```
 
 ## Styled Text
 
@@ -95,15 +104,21 @@ Here is an example.
 
 ```json
 {
-  "toolbarButtons": [
+  "toolbarButtons" : [
     ["bold", "italic", "underline", "strikeThrough", "subscript", "superscript"],
     ["fontFamily", "fontSize", "textColor", "backgroundColor"],
     ["inlineClass", "inlineStyle", "clearFormatting"]
   ],
-  "paragraphStyles": {
-    "class1": "Class 1",
-    "class2": "Class 2"
+  "inlineClasses" : {
+    "fr-class-code"         : "Code",
+    "fr-class-highlighted"  : "Highlighted",
+    "fr-class-transparency" : "Transparent"
   },
-  "pastePlain" : true
+  "linkStyles" : {
+    "button" : "Button",
+  },
+  "imageUploadParams" : { "w" : 300 },
+  "imageMaxSize"      : 1048576,
+  "pastePlain"        : true
 }
 ```

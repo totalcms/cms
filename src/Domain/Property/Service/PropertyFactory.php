@@ -34,7 +34,9 @@ final class PropertyFactory
 			$value = $className::defaultValue($value, $propertySchema['default']);
 		}
 
-		$property = null === $value ? new $className() : new $className($value);
+		$settings = $propertySchema['settings'] ?? [];
+
+		$property = null === $value ? new $className(settings: $settings) : new $className($value, $settings);
 
 		if (!$property instanceof PropertyData) {
 			throw new \DomainException('Error creating property for object.');

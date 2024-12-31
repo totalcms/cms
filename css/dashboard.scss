@@ -573,3 +573,25 @@ body {
 	bottom : 3rem;
 	left   : 4rem;
 }
+#settings-form {
+	margin-top: 2rem;
+
+	.checkbox-field label {
+		font-size: 0.9em;
+	}
+	.cms-button:before {
+		mask-image : var(--icon-save);
+	}
+}
+
+#twig-playground {
+	.cms-button:before {
+		mask-image : var(--icon-twig-playground);
+	}
+}
+
+.playground-results {
+	display            : grid;
+	gap                : 2rem;
+	margin-block-start : 2rem;
+}

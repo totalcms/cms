@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Support\Config;
+use TotalCMS\Domain\Property\Data\DateData;
 
 class DateField extends FormField
 {
@@ -14,14 +15,11 @@ class DateField extends FormField
 	{
 		parent::init();
 
-		if ($this->default === 'onCreate' || $this->default === 'onUpdate') {
-			$this->readonly = true;
-
-			// if the default value was set as the value, we need to set it to now
-			if ($this->value === 'onCreate' || $this->value === 'onUpdate') {
-				$this->value = 'now';
-			}
+		if ( (isset($this->settings[DateData::CREATION_DATE]) && $this->settings[DateData::CREATION_DATE] === true) ||
+			 (isset($this->settings[DateData::UPDATE_DATE]) && $this->settings[DateData::UPDATE_DATE] === true)) {
+				 $this->readonly = true;
 		}
+
 		if (!empty($this->value)) {
 			$config = Config::init();
 			$timezone = new \DateTimeZone($config->timezone);
@@ -29,7 +27,7 @@ class DateField extends FormField
 			$date = new \DateTime($this->value, $timezone);
 			$date->setTimezone($timezone);
 
-			$this->value = $date->format($this->dateFormat);
+			$this->value = $date->format('c');
 		}
 	}
 }

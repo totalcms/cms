@@ -81,6 +81,7 @@ final class TotalFormFactory
 	public function collectionTable(string $collection): string
 	{
 		$options = [
+			'config'            => $this->config,
 			'api'               => $this->api,
 			'collection'        => $collection,
 			'collectionFetcher' => $this->collectionFetcher,

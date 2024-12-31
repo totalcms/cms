@@ -14,12 +14,6 @@ if (isset($_GET['debugstart'])) {
 // locale
 setlocale(LC_ALL, 'C.UTF-8', 'en_US.UTF-8', 'en_US');
 
-// Timezone
-if (!ini_get('date.timezone')) {
-	// default to UTC timezone
-	date_default_timezone_set(DateTimeZone::listIdentifiers(DateTimeZone::UTC)[0]);
-}
-
 // JSON fix for saving float values
 ini_set('serialize_precision', '-1');
 

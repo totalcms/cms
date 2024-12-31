@@ -21,25 +21,47 @@ final class DepotField extends FormField
 	{
 		$depot = is_array($this->value) ? $this->value : []; // Depot data is stored in the value field
 
-		$input          = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
-		$browser        = $this->buildLayout($depot['files'] ?? []);
-		$folderDialog   = $this->folderDialog();
-		$addFolder      = $this->addFolderDialog();
-		$fileTemplate   = $this->fileTemplate();
-		$folderTemplate = $this->folderTemplate();
+		$input            = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
+		$browser          = $this->buildLayout($depot['files'] ?? []);
+		$folderDialog     = $this->folderDialog();
+		$addFolder        = $this->addFolderDialog();
+		$fileTemplate     = $this->fileTemplate();
+		$folderTemplate   = $this->folderTemplate();
+		$protectionDialog = $this->protectionDialog($depot);
 
-		return $input . $browser . $addFolder . $folderDialog . $fileTemplate . $folderTemplate;
+		return $input . $browser . $addFolder . $folderDialog . $fileTemplate . $folderTemplate . $protectionDialog;
 	}
 
 	/** @param array<array<string,mixed>> $files */
 	private function buildLayout(array $files): string
 	{
-		$browser   = $this->buildBrowser($files);
-		$preview   = $this->depotPreview();
-		$layout    = HTMLUtils::element('div', $browser . $preview, ['class' => 'depot-layout']);
-		$container = HTMLUtils::element('div', $layout, ['class' => 'depot-layout-container']);
+		$browser    = $this->buildBrowser($files);
+		$preview    = $this->depotPreview();
+		$layout     = HTMLUtils::element('div', $browser . $preview, ['class' => 'depot-layout']);
+		$editButton = HTMLUtils::button('', ['class' => 'protect', 'title' => 'Edit Depot Protection']);
+		$container  = HTMLUtils::element('div', $editButton . $layout, ['class' => 'depot-layout-container']);
 
 		return $container;
+	}
+
+	/** @param array<string,mixed> $depot */
+	private function protectionDialog(array $depot): string
+	{
+		$content = $this->form->field('protected', [
+			'field'       => 'checkbox',
+			'label'       => 'Protected by Collection',
+			'help'        => 'Access group protection is set in the Collection.',
+			'value'       => $depot['protected'] ?? false,
+		]);
+		$content .= $this->form->field('password', [
+			'field' => 'password',
+			'label' => 'Password',
+			'help'  => 'Require a password to download files from this depot. This overrides all collection level access controls.',
+			'value' => $depot['password'] ?? '',
+		]);
+		$content .= $this->closeSection();
+
+		return HTMLUtils::dialog($content, 'protection-dialog');
 	}
 
 	/** @param array<array<string,mixed>> $files */
@@ -77,7 +99,7 @@ final class DepotField extends FormField
 	}
 
 	/** @param array<string,mixed> $file */
-	private function buildFile(array $file, string $path = ''): string
+	private function buildFile(array $file = [], string $path = ''): string
 	{
 		// <li>
 		// <div class="file file-icon icon-png">BrazilHeart.png</div>
@@ -109,8 +131,8 @@ final class DepotField extends FormField
 	protected function folderPreview(): string
 	{
 		return <<<HTML
-		<div class="folder-preview">
-			<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 64 64"><g fill="#222222"><path d="M17,4H10a5.937,5.937,0,0,0-6,6v7a1,1,0,0,0,2,0V10a3.957,3.957,0,0,1,4-4h7a1,1,0,0,0,0-2Z" fill="#222222"></path><path d="M54,4H47a1,1,0,0,0,0,2h7a3.957,3.957,0,0,1,4,4v7a1,1,0,0,0,2,0V10A5.937,5.937,0,0,0,54,4Z" fill="#222222"></path><path d="M59,46a1,1,0,0,0-1,1v7a3.957,3.957,0,0,1-4,4H47a1,1,0,0,0,0,2h7a5.937,5.937,0,0,0,6-6V47A1,1,0,0,0,59,46Z" fill="#222222"></path><path d="M17,58H10a3.957,3.957,0,0,1-4-4V47a1,1,0,0,0-2,0v7a5.937,5.937,0,0,0,6,6h7a1,1,0,0,0,0-2Z" fill="#222222"></path><path d="M25,6H39a1,1,0,0,0,0-2H25a1,1,0,0,0,0,2Z" fill="#222222"></path><path d="M39,58H25a1,1,0,0,0,0,2H39a1,1,0,0,0,0-2Z" fill="#222222"></path><path d="M59,24a1,1,0,0,0-1,1V39a1,1,0,0,0,2,0V25A1,1,0,0,0,59,24Z" fill="#222222"></path><path d="M5,40a1,1,0,0,0,1-1V25a1,1,0,0,0-2,0V39A1,1,0,0,0,5,40Z" fill="#222222"></path><path d="M32.781,15.375a1.036,1.036,0,0,0-1.562,0l-12,15A1,1,0,0,0,20,32h9V46a3,3,0,0,0,6,0V32h9a1,1,0,0,0,.781-1.625Z" fill="#222222"></path></g></svg>
+		<div class="folder-preview dz-clickable">
+			<div class="dz-overlay"></div>
 			<h4 class="folder-name"></h4>
 		</div>
 		HTML;
@@ -128,8 +150,7 @@ final class DepotField extends FormField
 
 	protected function fileTemplate(): string
 	{
-		$file = HTMLUtils::element('li', '');
-		return HTMLUtils::element('template', $file, ['class' => 'file-template']);
+		return HTMLUtils::element('template', $this->buildFile(), ['class' => 'file-template']);
 	}
 
 	protected function filePreview(): string

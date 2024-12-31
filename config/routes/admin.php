@@ -24,9 +24,13 @@ return function (App $app) {
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection');
 		$group->get('/docs[/{page}]', AdminDocsAction::class)->setName('admin-docs');
 
-		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
-		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
+
+		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
+		$group->post('/utils/twig-playground', AdminUtilsAction::class)->setName('admin-utils-playground');
+
+		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
+		$group->post('/settings', AdminSettingsAction::class)->setName('admin-settings-save');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');

@@ -1,6 +1,8 @@
 //------------------------------
 // Styled Text Field
 //------------------------------
+@import "codemirror/lib/codemirror.css";
+
 @import "froala-editor/css/froala_editor.css";
 // @import "froala-editor/css/plugins/char_counter.css";
 @import "froala-editor/css/plugins/code_view.css";
@@ -27,7 +29,6 @@
 // @import "froala-editor/css/third_party/font_awesome.css";
 // @import "froala-editor/css/third_party/spell_checker.css";
 // @import "froala-editor/css/third_party/image_tui.css";
-
 
 .CodeMirror-scroll {
     height:auto;

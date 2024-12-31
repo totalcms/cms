@@ -146,6 +146,17 @@ final class PropertyRepository extends StorageRepository
 		$parts = pathinfo($filename);
 		$ext   = isset($parts['extension']) ? '.' . $parts['extension'] : '';
 
-		return sprintf('%s-%s%s', $parts['filename'], uniqid(), $ext);
+		// stripping last 5 characters from uniqid to make it shorter
+		// still unique enough for our purposes (1 in a million)
+		$unique = substr(uniqid(), -5);
+
+		return sprintf('%s-%s%s', $parts['filename'], $unique, $ext);
+	}
+
+	public function mimeType(string $collection, string $objectID, string $property, string $filename, ?string $subpath = null): string
+	{
+		$path = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
+
+		return $this->filesystem->mimeType($path);
 	}
 }

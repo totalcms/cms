@@ -160,6 +160,16 @@ export default class TotalForm {
 		this.form.dataset.id = id;
 	}
 
+	getId() {
+		if (this.isEditMode()) return this.id;
+
+		const idField = this.fields.filter(field => field.property === "id").shift();
+		if (idField) return idField.getValue();
+
+		console.warn("ID field not found");
+		return null;
+	}
+
     //-------------------------
     // Init Form
     //-------------------------

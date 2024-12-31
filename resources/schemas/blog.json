@@ -104,14 +104,14 @@
 			"label"   : "Updated Date",
 			"help"    : "Blog Post updated date",
 			"field"   : "hidden",
-			"default" : "onUpdate"
+			"settings": { "onUpdate" : true, "readonly": true }
 		},
 		"created": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"   : "Creation Date",
 			"help"    : "Blog Post creation date",
 			"field"   : "hidden",
-			"default" : "onCreate"
+			"settings": { "onCreate" : true, "readonly": true }
 		}
 	},
 	"required": [

@@ -214,4 +214,31 @@ final class ImageGenerator
 
 		return $glide->getImageResponse($imageData->name, $this->params);
 	}
+
+	/** @param array<string,mixed> $params */
+	public function generateUploadImage(
+		string $collection,
+		string $id,
+		string $property,
+		string $name,
+		array $params,
+	): ResponseInterface {
+		if (empty($params)) {
+			$path = PathUtils::buildPath($collection, $id, $property, $name);
+
+			// If no params are provided, return the original image
+			$response  = $this->glideFactory->originalImage($path);
+
+			return (new Response())
+				->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
+				->withBody($response['stream']);
+		}
+
+		$glide = $this->glideFactory->create(
+			source    : PathUtils::buildPath($collection, $id, $property),
+			imageData : new ImageData()
+		);
+
+		return $glide->getImageResponse($name, $params);
+	}
 }

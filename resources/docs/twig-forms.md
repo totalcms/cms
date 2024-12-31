@@ -360,8 +360,3 @@ List all of the objects from another collection
 
 {{ form.select('select', options) }}
 ```
-
-## Smart Date Defaults
-
-* onCreate
-* onUpdate

@@ -68,7 +68,6 @@
 	left           : 0;
 	right          : 0;
 	bottom         : 0;
-	width          : 100%;
 	background     : oklch(var(--totalform-black) / 0.4);
 
 	// Fix for chrome bug:https://code.google.com/p/chromium/issues/detail?id=157218
@@ -76,7 +75,7 @@
 	overflow: hidden;
 
 	.dz-upload {
-		background : oklch(var(--totalform-success));
+		background : oklch(var(--totalform-success) / 0.8);
 		position   : absolute;
 		top        : 0;
 		left       : 0;
@@ -151,5 +150,29 @@
 		padding : 0;
 		margin  : 0;
 		opacity : 0;
+	}
+}
+
+.depot-field {
+	.dz-progress {
+		// This is a hack to make the progress bar fill in the depot field
+		// If we ever get past 4 folders deep, it will not go full width
+		left  : -2rem;
+		right : -2rem;
+	}
+	.dz-processing .dz-progress {
+		background: oklch(var(--totalform-black)/.2);
+	}
+	.dz-success, .dz-error {
+		.dz-progress {
+			backdrop-filter: none;
+		}
+	}
+	.dz-overlay {
+		position  : relative;
+		transform : none;
+	}
+	.depot-browser:has(.dz-processing) {
+		pointer-events: none;
 	}
 }

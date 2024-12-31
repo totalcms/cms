@@ -4,3 +4,18 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [QSA,L]
+
+# Rules that can be added to .htaccess file in DOCUMENT_ROOT
+# RewriteEngine On
+
+# # Redirect all other requests to /rw_common/plugins/stacks/tcms/public
+# RewriteCond %{REQUEST_URI} ^/rw_common/plugins/stacks/tcms/
+# RewriteCond %{REQUEST_URI} !^/rw_common/plugins/stacks/tcms/public/
+# RewriteRule ^(.*)$ rw_common/plugins/stacks/tcms/public/$1 [L]
+
+# # Process requests through index.php if not a file or directory
+# RewriteCond %{REQUEST_URI} ^/rw_common/plugins/stacks/tcms/public/
+# RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-f
+# RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-d
+# RewriteRule ^rw_common/plugins/stacks/tcms/public/.*$ rw_common/plugins/stacks/tcms/public/index.php [QSA,L]
+

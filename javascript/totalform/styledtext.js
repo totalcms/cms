@@ -1,13 +1,16 @@
 import TotalField from "./totalfield.js";
 
-import "codemirror/lib/codemirror.js";
-import "codemirror/mode/xml/xml.js";
-import "codemirror/mode/twig/twig.js";
-import "dompurify/dist/purify.min.js";
+import CodeMirror from "codemirror";
+import "codemirror/mode/xml/xml";
+import "codemirror/mode/twig/twig";
+import DOMPurify from 'dompurify';
+
+window.CodeMirror = CodeMirror
+window.DOMPurify = DOMPurify
 
 import FroalaEditor from "froala-editor";
 import "froala-editor/js/plugins/align.min.js";
-// import "froala-editor/js/plugins/char_counter.min.js";
+import "froala-editor/js/plugins/char_counter.min.js";
 import "froala-editor/js/plugins/code_beautifier.min.js";
 import "froala-editor/js/plugins/code_view.min.js";
 import "froala-editor/js/plugins/colors.min.js";
@@ -18,17 +21,17 @@ import "froala-editor/js/plugins/draggable.min.js";
 import "froala-editor/js/plugins/entities.min.js";
 import "froala-editor/js/plugins/file.min.js";
 import "froala-editor/js/plugins/files_manager.min.js";
-// import "froala-editor/js/plugins/font_family.min.js";
-// import "froala-editor/js/plugins/font_size.min.js";
+import "froala-editor/js/plugins/font_family.min.js";
+import "froala-editor/js/plugins/font_size.min.js";
 // import "froala-editor/js/plugins/forms.min.js";
 import "froala-editor/js/plugins/fullscreen.min.js";
 // import "froala-editor/js/plugins/help.min.js";
 import "froala-editor/js/plugins/image.min.js";
-import "froala-editor/js/plugins/image_manager.min.js";
+// import "froala-editor/js/plugins/image_manager.min.js";
 import "froala-editor/js/plugins/inline_class.min.js";
 import "froala-editor/js/plugins/inline_style.min.js";
 import "froala-editor/js/plugins/line_breaker.min.js";
-// import "froala-editor/js/plugins/line_height.min.js";
+import "froala-editor/js/plugins/line_height.min.js";
 import "froala-editor/js/plugins/link.min.js";
 import "froala-editor/js/plugins/lists.min.js";
 // import "froala-editor/js/plugins/markdown.min.js";
@@ -61,22 +64,17 @@ import "froala-editor/js/plugins/video.min.js";
 //-----------------------------------------------
 export default class StyledTextField extends TotalField {
 
+    // TODO: if form ID changes, need to update upload URLs
+
     constructor(container, options) {
         super(container, options);
 
         // get final options... defaultConfig() -> global window.totalcms options -> options from arguments
         this.options = Object.assign({}, this.defaultConfig(), this.options);
 
-        this.initFroala();
+        this.froala = new FroalaEditor(this.input, this.options);
     }
 
-    initFroala() {
-		this.froala = new FroalaEditor(this.input, this.options);
-        // .on("froalaEditor.charCounter.exceeded", (e, editor) => this.charCountExceeded())
-        // .on("froalaEditor.image.beforeUpload", (e, editor, images) => this.updateUploadURLs(editor))
-        // .on("froalaEditor.file.beforeUpload",  (e, editor, files)  => this.updateUploadURLs(editor))
-        // .on("froalaEditor.video.beforeUpload", (e, editor, videos) => this.updateUploadURLs(editor));
-    }
 
     setValue(value) {
         this.input.value = value;
@@ -88,36 +86,45 @@ export default class StyledTextField extends TotalField {
         return this.froala.html.get();
     }
 
-    uploadAPI(type) {
-        // if (!this.form) return null;
-        // const collection = this.form.collection;
-        // const id         = this.form.id;
-        // const field      = this.input.name;
-        // return this.api.buildUrlQuery(`/upload/${collection}/${id}/${field}/${type}`);
+    uploadAPI() {
+        if (!this.form) return null;
+        const collection = this.form.collection;
+        const id         = this.form.getId() ?? '';
+        const property   = this.property;
+        return this.api.buildApiQuery(`/upload/${collection}/${id}/${property}`);
     }
 
-    updateUploadURLs(editor) {
-        // Cannot upload unless the form has an ID set
-        // if (!this.form.id) {
-        //     console.warn("Unable to upload. Could not find object ID.");
-        //     return false;
-        // }
-        // Update the Froala upload URL
-        // editor.opts.imageUploadURL = this.uploadAPI("image");
-        // editor.opts.fileUploadURL  = this.uploadAPI("file");
-        // editor.opts.videoUploadURL = this.uploadAPI("video");
+    updateUploadURLs() {
+        this.froala.opts.imageUploadURL = this.uploadAPI();
+        this.froala.opts.fileUploadURL  = this.uploadAPI();
+        this.froala.opts.videoUploadURL = this.uploadAPI();
     }
 
     charCountExceeded() {
         // $(this.input).closest("fieldset").find(".fr-counter").addClass("exceeded");
     }
 
+    deleteFileFromServer(url) {
+        if (this.options.confirmDelete !== true || !url) return;
+
+        if (confirm("Are you sure you want to delete this image?")) {
+            const collection = this.form.collection;
+            const id         = this.form.getId();
+            const property   = this.property;
+            const name       = url.split("?")[0].split("/").pop();
+            const api        = `/upload/${collection}/${id}/${property}/${name}`;
+            console.log("Deleting file from server", api);
+            this.api.postAPI(api, {}, "DELETE");
+        }
+    }
+
     defaultConfig() {
         const toolbar = [
-            "bold", "italic", "insertLink",
-            "|", "alignLeft", "alignCenter", "alignRight",
-            "|", "formatOL", "formatUL",
-            "|", "clearFormatting", "html",
+            ["bold", "italic", "insertLink",],
+            ["alignLeft", "alignCenter", "alignRight",],
+            ["formatOL", "formatUL",],
+            ["insertImage",],
+            ["clearFormatting", "html",],
         ];
         const colors = [
             "#61BD6D", "#1ABC9C", "#54ACD2",
@@ -178,43 +185,46 @@ export default class StyledTextField extends TotalField {
             // fontSizeDefaultSelection   : '1',
             // fontSizeUnit               : 'rem',
             // fontFamilyDefaultSelection : 'inherit',
-            keepFormatOnDelete         : true,
-            charCounterCount           : false,
-            charCounterMax             : this.input.dataset.maxcount,
-            colorsText                 : colors,
-            colorsBackground           : colors,
-            language                   : this.api.options.locale,
-            linkAutoPrefix             : "https://",
-            toolbarInline              : false,
-            tooltips                   : true,
-            shortcutsHint              : false,
-            fontSize                   : fontSizes,
-            videoEditButtons           : videoEditButtons,
-            videoMaxSize               : megabyte * 1024,
-            fileMaxSize                : megabyte * 1024,
-            imageMaxSize               : megabyte * 5,
-            imageUploadParam           : "image",
-            fileUploadParam            : "file",
-            videoUploadParam           : "video",
-            // These URLs will need to be customized per instance since
-            // The API URL will need the collection, id and property fields
-            fileUploadURL         : this.uploadAPI("file"),
-            videoUploadURL        : this.uploadAPI("video"),
-            imageUploadURL        : this.uploadAPI("image"),
-            imageManagerLoadURL   : this.uploadAPI("image"),
-            imageManagerDeleteURL : this.uploadAPI("image"),
-            imageUploadParams     : { w:2500, h:1000, fit:"max" },
+            keepFormatOnDelete : true,
+            charCounterCount   : false,
+            charCounterMax     : this.input.dataset.maxcount,
+            colorsText         : colors,
+            colorsBackground   : colors,
+            language           : this.api.options.locale,
+            linkAutoPrefix     : "https://",
+            toolbarInline      : false,
+            tooltips           : true,
+            shortcutsHint      : false,
+            fontSize           : fontSizes,
+            videoEditButtons   : videoEditButtons,
+            videoMaxSize       : megabyte * 1024,
+            fileMaxSize        : megabyte * 1024,
+            imageMaxSize       : megabyte * 5,
+            fileUpload         : true,
+            imageUpload        : true,
+            videoUpload        : true,
+            imageUploadParam   : "image",
+            fileUploadParam    : "file",
+            videoUploadParam   : "video",
+            fileUploadURL      : this.uploadAPI(),
+            videoUploadURL     : this.uploadAPI(),
+            imageUploadURL     : this.uploadAPI(),
+            imageUploadParams  : { w:1500 },
+            imageInsertButtons : ['imageBack', '|', 'imageUpload', 'imageByURL'],
             // videoUploadParams        : {},
             // fileUploadParams         : {},
+            // imageUploadMethod        : 'POST',
             // imageManagerDeleteParams : {},
             // imageManagerLoadMethod   : 'GET',
-            // imageUploadMethod        : 'POST',
+            // imageManagerLoadURL   : this.uploadAPI("image"),
+            // imageManagerDeleteURL : this.uploadAPI("image"),
             // imageManagerDeleteMethod : 'DELETE',
             imageDefaultWidth      : 0,
             imageResizeWithPercent : true,
             imageRoundPercent      : true,
             imageStyles            : imageStyles,
-            codeMirror             : true,
+            DOMPurify              : window.DOMPurify,
+            codeMirror             : window.CodeMirror,
             codeMirrorOptions      : codeMirrorOptions,
             alwaysVisible          : false,
             saveInterval           : 0,
@@ -231,8 +241,13 @@ export default class StyledTextField extends TotalField {
             paragraphFormat    : paragraphFormat,
             enter              : FroalaEditor.ENTER_P,
             htmlRemoveTags     : ["script"],
+            confirmDelete      : true,
             events             : {
-				'contentChanged': () => this.changed()
+                'contentChanged'     : ()    => this.changed(),
+                'image.removed'      : img   => this.deleteFileFromServer(img[0].src),
+                'image.beforeUpload' : ()    => this.updateUploadURLs(),
+                'file.unlink'        : file  => this.deleteFileFromServer(file.href),
+                'video.removed'      : video => this.deleteFileFromServer(video[0].src),
 			}
         };
     }

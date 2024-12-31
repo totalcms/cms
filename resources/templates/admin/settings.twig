@@ -2,9 +2,125 @@
 
 {% block dashcontent %}
 
-<main class="dash-main-content">
-	<h1>Total CMS Settings</h1>
-	<p>We will be able to set global settings for the CMS here.</p>
-</main>
+	<main class="dash-main-content doc-content">
+		<h1>Total CMS Settings</h1>
+
+		<p>This form will manage and save global settings for Total CMS. These settings will be saved in a
+			<code>tcms.php</code> in the DOCUMENT_ROOT of the server.</p>
+
+		<form id="settings-form"
+			class="totalform help-on-hover help-box"
+			action="{{ cms.api }}/admin/settings"
+			method="POST"
+			data-disabled>
+
+			{# {{ var_dump(settings) }} #}
+
+			<div class="form-field checkbox-field" data-type="checkbox">
+				<div class="form-group">
+					<input type="checkbox"
+						{% if settings.sentry is null %}
+							checked
+						{% else %}
+							{% if settings.sentry == true %}checked{% endif %}
+						{% endif %}
+						id="field-sentry"
+						name="sentry"
+						aria-describedby="help-sentry">
+					<label for="field-sentry">Share Application Errors with Developer?</label>
+				</div>
+				<p class="help" id="help-sentry">
+				In the case any critical errors happen in Total CMS, the details of the error will be shared with the
+				developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored.
+				Only there error and where the error occurred in the code will be shared. If disabled, errors will
+				only be logged locally on your server.
+				</p>
+			</div>
+
+			<div class="form-field text-field" data-type="text">
+				<label for="datadir">CMS Data Directory</label>
+				<div class="form-group">
+					<input type="text"
+						value="{{ settings.datadir }}"
+						id="datadir"
+						name="datadir"
+						aria-describedby="help-datadir"
+						placeholder="{{ defaults.datadir }}">
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-datadir">
+					The location where the CMS data will be saved on the server. The location must be writable by the server.
+					When not set, the default location will be used: <code>&lt;docroot&gt;/tcms-data</code>. Any existing
+					data that you might have will need to be manually migrated to the new location.
+				</p>
+			</div>
+
+			<div class="form-field text-field" data-type="text">
+				<label for="api">Custom API URL</label>
+				<div class="form-group">
+					<input type="text"
+						value="{{ settings.api }}"
+						id="api"
+						name="api"
+						aria-describedby="help-api"
+						placeholder="{{ defaults.api }}">
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-api">
+					If you have a custom installation of Total CMS, you can set the URL of the API endpoint here.
+				</p>
+			</div>
+
+			<div class="form-field select-field" data-type="select">
+				<label for="timezone">Timezone</label>
+				<div class="form-group">
+					<select name="timezone" id="timezone" aria-describedby="help-timezone">
+						<option class="placeholder" value="" disabled{% if settings.timezone is empty %} selected{% endif %}>{{ defaults.timezone }}</option>
+						{% for timezone in timezones %}
+						<option value="{{ timezone }}"{% if settings.timezone == timezone %} selected{% endif %}>{{ timezone }}</option>
+						{% endfor %}
+					</select>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-timezone">
+					The timezone that all dates in the CMS will be saved as. If not set, then the default tiemzone
+									that the server is configured with will be used.
+				</p>
+			</div>
+
+			<div class="form-field text-field" data-type="text">
+				<label for="watermarksGallery">Watermark Gallery</label>
+				<div class="form-group">
+					<input type="text"
+						value="{{ settings.watermarksGallery }}"
+						id="watermarksGallery"
+						name="watermarksGallery"
+						aria-describedby="help-watermarksGallery"
+						placeholder="{{ defaults.imageworks.watermarksGallery }}">
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-watermarksGallery">
+					The ID of the gallery where watermarks should be uploaded to. If not set, the default
+					<code>watermarks</code> ID will be used.
+				</p>
+			</div>
+
+			<div class="form-field json-field" data-type="json">
+				<label for="field-presets">Imageworks Presets</label>
+				<div class="form-group">
+					<textarea id="field-presets" name="presets" rows="12" aria-describedby="help-presets"
+					placeholder="{{ defaults.imageworks.presets | json_encode(constant('JSON_PRETTY_PRINT')) | e('html_attr') }}" >{% if settings.presets %}{{ settings.presets | json_encode(constant('JSON_PRETTY_PRINT')) }}{% endif %}</textarea>
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-presets">
+				JSON that defines presets that can be used for image generation. See the ImageWorks documentation
+				for details on all of the parameters that can be used.
+				</p>
+			</div>
+
+			<button class="cms-button" type="submit">Save</button>
+		</form>
+
+	</main>
 
 {% endblock %}

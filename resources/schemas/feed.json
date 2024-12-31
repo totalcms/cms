@@ -35,7 +35,7 @@
 			"help"    : "The date the post was created",
 			"field"   : "hidden",
 			"factory" : "iso8601",
-			"default" : "onCreate"
+			"settings": { "onCreate" : true, "readonly": true }
 		},
 		"updated": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
@@ -43,7 +43,7 @@
 			"help"    : "The date the post was updated",
 			"field"   : "hidden",
 			"factory" : "iso8601",
-			"default" : "onUpdate"
+			"settings": { "onUpdate" : true, "readonly": true }
 		},
 		"image": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",

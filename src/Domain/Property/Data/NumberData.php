@@ -9,9 +9,11 @@ class NumberData extends PropertyData
 {
 	public float $number;
 
-	public function __construct(mixed $number = 0)
+	/** @param array<string,mixed> $settings */
+	public function __construct(mixed $number = 0, array $settings = [])
 	{
-		$this->number = floatval($number);
+		$this->number   = floatval($number);
+		$this->settings = $settings;
 	}
 
 	public function transform(): float

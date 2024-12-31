@@ -1,7 +1,7 @@
 import Details from "./details";
 import Dialog from "./dialog";
 import TotalField from "./totalfield";
-import Droplet from "./droplet";
+import DepotDroplet from "./droplet-depot";
 
 //-----------------------------------------------
 // Total CMS Depot Droplet
@@ -18,7 +18,23 @@ export default class DepotField extends TotalField {
 
         this.initBrowser();
         this.initActionBar();
+        this.setupProtectDialog();
         this.setupDroplet();
+    }
+
+    setupProtectDialog() {
+        return new Dialog(this.container.querySelector(".protection-dialog"), {
+            open  : this.container.querySelector("button.protect"),
+            close : ".close",
+            onOpen : () => {
+                if (this.dialogOpened) return;
+                this.dialogOpened = true;
+            },
+            onClose : () => {
+                this.dialogOpened = false;
+                // this.totalfield.autosave();
+            }
+        });
     }
 
     setupDroplet() {
@@ -28,10 +44,43 @@ export default class DepotField extends TotalField {
 			autoProcessQueue : this.form.isEditMode(),
 			acceptedFiles    : null,
 			chunking         : true,
+			singleMode       : false,
 			rules            : this.options.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
 	}
+
+    fileAdded(file) {
+        this.form.processFields();
+        file.path = this.getPath();
+	}
+
+    fileUploaded(file, response) {
+		console.log("DepotField.fileUploaded()", file, response);
+
+        const path  = file.path ?? "";
+        let   files = response.data[this.property].files;
+
+        if (path.length > 0) {
+            const folders = path.split("/");
+            folders.forEach(folder => {
+                files = files.filter(f => f.name === folder).shift().files;
+            });
+        }
+        this.initBrowser();
+
+		const data = files.filter(f => f.mime !== 'folder').sort((a, b) => a.uploadDate < b.uploadDate ? 1 : -1).shift();
+        this.updateNewFileMeta(file, data);
+	}
+
+    updateNewFileMeta(file, data) {
+        file.previewElement.querySelector(".file").textContent = data.name;
+        file.previewElement.querySelector(".size").textContent = this.bytesToString(data.size);
+
+        for (const key in data) {
+            this.setFileAttribute(file.previewElement, key, data[key]);
+        }
+    }
 
     uploadComplete() {
 		// this is a hack to mark the field and form as saved
@@ -45,8 +94,10 @@ export default class DepotField extends TotalField {
 	}
 
 	apiUploadFile() {
-		const api = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
-		return this.api.buildApiQuery(api);
+        const api     = `/collections/${this.form.collection}/${this.form.id}/${this.property}`;
+        const path    = this.getPath();
+        const options = path.length > 0 ? {path:path} : {};
+		return this.api.buildApiQuery(api, options);
     }
 
 	updateAPIUrl() {
@@ -57,11 +108,22 @@ export default class DepotField extends TotalField {
         return this.browser.querySelector(".selected");
     }
 
-    getPath() {
+    getParentPath() {
+        return this.getPath(true);
+    }
+
+    getPath(parent = false) {
         let item = this.getSelected();
         if (!item) return "";
-        // If the item is a folder, get the path from the parent folder element
-        if (item.classList.contains("folder")) item = item.parentNode.parentNode;
+
+
+        if (item.classList.contains("folder")) {
+            if (!parent) return item.dataset.path;
+
+            // If the item is a folder, get the path from the parent folder element
+            if (item.classList.contains("folder")) item = item.parentNode.parentNode;
+        }
+
         const folder = item.closest("details")?.querySelector(".folder");
         return folder ? folder.dataset.path : "";
     }
@@ -85,7 +147,6 @@ export default class DepotField extends TotalField {
         this.actionbar.querySelector(".edit").addEventListener("click", this.actionEdit.bind(this));
         this.actionbar.querySelector(".links").addEventListener("click", this.actionLinks.bind(this));
         this.actionbar.querySelector(".download").addEventListener("click", this.actionDownload.bind(this));
-        // this.actionbar.querySelector(".upload").addEventListener("click", this.actionUpload.bind(this));
         this.actionbar.querySelector(".add-folder").addEventListener("click", this.actionAddFolder.bind(this));
         this.actionbar.querySelector(".trash").addEventListener("click", this.actionTrash.bind(this));
     }
@@ -255,7 +316,7 @@ export default class DepotField extends TotalField {
 
     trashFolder(folder) {
         const name = folder.textContent;
-        const path = this.getPath();
+        const path = this.getParentPath();
 
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
         if (path.length > 0) deleteApi += `?path=${path}`;
@@ -277,12 +338,18 @@ export default class DepotField extends TotalField {
         this.folders = this.browser.querySelectorAll(".folder");
 
         this.files.forEach(file => {
+            if (file.clickListener) return;
             file.addEventListener("click", this.selectFile.bind(this));
             file.addEventListener("dblclick", this.selectAndEditFile.bind(this));
+            file.clickListener = true;
         });
         // Not adding dblclick event to folders because it was causing the browser to freeze up
         // Possibly too many click events? Need to investigate further
-        this.folders.forEach(folder => folder.addEventListener("click", this.selectFolder.bind(this)));
+        this.folders.forEach(folder => {
+            if (folder.clickListener) return;
+            folder.addEventListener("click", this.selectFolder.bind(this))
+            folder.clickListener = true;
+        });
     }
 
     selectAndEditFile(event) {
@@ -338,6 +405,7 @@ export default class DepotField extends TotalField {
         this.filePreview.classList.add("cms-hide");
         this.folderPreview.classList.remove("cms-hide");
         this.enableActionBarButtons(["upload", "add-folder", "trash", "edit"]);
+        this.updateAPIUrl();
     }
 
     updateFilePreview(file) {
@@ -387,6 +455,14 @@ export default class DepotField extends TotalField {
         });
     }
 
+    setFileAttribute(file, attribute, value) {
+        const input = file.querySelector(`[name=${attribute}]`)
+        if (input) {
+            const field = input.closest(".form-field");
+            if (field.totalfield) field.totalfield.setValue(value);
+        }
+    }
+
     getFileAttribute(file, attribute) {
         const field = file.querySelector(`[name=${attribute}]`).closest(".form-field");
         return field.totalfield ? field.totalfield.getValue() : null;
@@ -397,6 +473,56 @@ export default class DepotField extends TotalField {
             return typeof args[number - 1] !== 'undefined' ? args[number - 1] : match;
         });
     }
+
+    is_folder(item) {
+        return item.firstChild.tagName === "DETAILS";
+    }
+
+    getFileData(file)
+    {
+        const data = {};
+        for (const field of file.querySelectorAll(".form-field")) {
+            const name = field.querySelector("[name]").name;
+            data[name] = field.totalfield.getValue();
+        }
+        return data;
+    }
+
+    getFolderData(folder)
+    {
+        const files = [];
+        for (const item of folder.children) {
+            if (this.is_folder(item)) {
+                files.push({
+                    name : item.querySelector(".folder").textContent,
+                    mime : "folder",
+                    files: this.getFolderData(item.querySelector(".folder-contents"))
+                });
+                continue;
+            }
+            files.push(this.getFileData(item));
+        }
+        return files;
+    }
+
+    getValue() {
+		const password = this.container.querySelector("[name=password]").closest(".form-field");
+		const protect  = this.container.querySelector("[name=protected]").closest(".form-field");
+		const depot    = {
+            "password"  : password.totalfield.getValue(),
+            "protected" : protect.totalfield.getValue(),
+            files       : this.getFolderData(this.browser),
+        };
+        return depot;
+    }
+
+    setValue(value) {
+		console.warn("DepotField.setValue() is not implemented", value);
+    }
+
+	clearValue() {
+		console.warn("DepotField.clearValue() is not implemented");
+	}
 
 	schema() {
         return {

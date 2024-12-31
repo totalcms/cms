@@ -6,7 +6,7 @@ globalThis.Dropzone = Dropzone;
 //-----------------------------------------------
 // Total CMS Depot Droplet
 //-----------------------------------------------
-export default class DepotDroplet extends Droplet
+export default class DepotDroplet
 {
 
     constructor(field, options = {}) {
@@ -14,7 +14,7 @@ export default class DepotDroplet extends Droplet
 		this.container = this.field.container;
 
 		// Using an embedded template for the preview instead of an extra API request
-		this.previewTemplate = this.container.querySelector("template").innerHTML;
+		this.previewTemplate = this.container.querySelector("template.file-template").innerHTML;
 
         // Define option defaults
         const defaults = {
@@ -25,7 +25,6 @@ export default class DepotDroplet extends Droplet
 			apiUrl            : "",
 			requestHeaders    : {},
 			rules             : {},
-			singleMode        : true,
 			chunking          : true,
         };
 		const dataOptions = this.container.dataset.options ? JSON.parse(this.container.dataset.options) : {};
@@ -83,10 +82,8 @@ export default class DepotDroplet extends Droplet
 
 		// File Events
 		this.dropzone.on("addedfile", file => this.event_addedfile(file));
-		this.dropzone.on("thumbnail", (file,data) => this.event_thumbnail(file,data));
 		this.dropzone.on("uploadprogress", (file, progress, bytes) => this.event_uploadprogress(file, progress, bytes));
 		this.dropzone.on("error", (file, message) => this.event_error(file, message));
-		this.dropzone.on("sending", (file, xhr, formData) => this.event_sending(file, xhr, formData));
 		this.dropzone.on("success", (file, xhr, formData) => this.event_success(file, xhr, formData));
 
 		// Mouse Events
@@ -123,18 +120,13 @@ export default class DepotDroplet extends Droplet
         // Add accepts and reject methods to the file object to validate with the test sets
         file.acceptFile = done;
         file.rejectFile = function(msg){ done(msg); };
-
-        if (!file.type.startsWith("image")) {
-            // If the file is not an image, process the tests
-            // Images will get processed after the thumbnail is generated in the event_thumbnail method
-            this.processTestSet(file);
-        }
+        this.processTestSet(file);
     }
 
     processTestSet(file) {
         // Process file rules
         if (this.testSet) {
-			const count = this.container.querySelectorAll(".dz-preview").length;
+			const count = this.container.querySelectorAll(".file").length;
             if (!this.testSet.processRules(file, count)) {
                 file.rejectFile(this.testSet.errors);
 				this.displayTestSetErrors();
@@ -150,25 +142,41 @@ export default class DepotDroplet extends Droplet
     // File Event Methods
     //-----------------------------------------------------------------------
 
-    // Called just before the file is sent
-    event_sending(file,xhr,formData) {
-        // Add additional form data
-        // formData.append("filesize", file.size);
-        // formData.append("alt", file.size);
-        // formData.append("link", file.size);
-        // formData.append("colors", file.size);
-    }
-
     // When a file is added to the list
     event_addedfile(file) {
-        file.previewElement  = Dropzone.createElement(this.dropzone.options.previewTemplate.trim());
+        file.previewElement  = Dropzone.createElement(this.previewTemplate.trim());
         file.previewTemplate = file.previewElement;
 
-        if (this.options.singleMode) {
-			// Remove preview for image
-			Array.from(this.dropzone.previewsContainer.children).forEach(node => node.remove());
+        file.previewTemplate.classList.add("dz-processing");
+
+        let uploadFolder = this.container.querySelector(".depot-browser");
+
+        const selectedFolder = this.container.querySelector(".folder.selected");
+        if (selectedFolder) {
+            uploadFolder = selectedFolder.parentNode.querySelector(".folder-contents");
         }
-        this.dropzone.previewsContainer.appendChild(file.previewElement);
+
+        const name = file.previewElement.querySelector(".file");
+        const size = file.previewElement.querySelector(".size");
+        const ext  = file.name.split(".").pop().toLowerCase();
+
+        name.textContent = file.name;
+        size.textContent = this.field.bytesToString(file.size);
+        name.className   = `file file-icon icon-${ext}`;
+
+        // Add to the top of the file list. If there are folders, skip them
+        let firstFile = null;
+        for (let i = 0; i < uploadFolder.children.length; i++) {
+            if (!this.is_folder(uploadFolder.children[i])) {
+                firstFile = uploadFolder.children[i];
+                break;
+            }
+        }
+        if (firstFile) {
+            uploadFolder.insertBefore(file.previewElement, firstFile);
+        } else {
+            uploadFolder.appendChild(file.previewElement);
+        }
 
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved
@@ -177,18 +185,8 @@ export default class DepotDroplet extends Droplet
 		this.field.fileAdded(file);
     }
 
-    // When the thumbnail has been generated. Receives the dataUrl as second parameter.
-    event_thumbnail(file,data) {
-        file.previewElement.classList.remove("dz-file-preview");
-
-        // This happens here because its the first time that we have access to file info
-        this.processTestSet(file);
-
-        const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
-        for (const thumb of thumbs) {
-            thumb.alt = file.name;
-            thumb.src = data;
-        }
+    is_folder(item) {
+        return item.firstChild.tagName === "DETAILS";
     }
 
     // Gets called periodically whenever the file upload progress changes
@@ -196,14 +194,21 @@ export default class DepotDroplet extends Droplet
         const results = [];
 
         if (file.previewElement) {
-            const nodes = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
+
+            let nodes = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
+            if (nodes.length == 0) {
+                const progress = this.createProgressBar();
+                file.previewElement.appendChild(progress);
+                nodes = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
+            }
+
             for (const node of nodes) {
                 if (node.nodeName === "PROGRESS") {
                     results.push(node.value = progress);
                 }
                 else if (node.classList.contains("dz-upload-progress-label")) {
                     if (progress == 100) {
-                        results.push(node.innerHTML = "Processing...");
+                        results.push(node.innerHTML = "Uploading...");
                     }
                     else {
                         results.push(node.innerHTML = Math.round(progress) + "%");
@@ -217,6 +222,16 @@ export default class DepotDroplet extends Droplet
         return results;
     }
 
+    createProgressBar() {
+        const progress = document.createElement("div");
+        progress.className = "dz-progress";
+        progress.innerHTML = `
+            <span class="dz-upload" data-dz-uploadprogress></span>
+            <span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>
+            <div class="dz-status"></div>
+        `;
+        return progress;
+    }
     // When an error has occurred
     event_error(file, message) {
         if (typeof(message) === "object") message = message.message;
@@ -238,7 +253,7 @@ export default class DepotDroplet extends Droplet
             if (file.previewElement) {
                 file.previewElement.classList.remove("dz-processing");
                 file.previewElement.classList.add("dz-success");
-				file.previewElement.addEventListener("pointerover", () => {
+				file.previewElement.addEventListener("click", () => {
 					// remove the success class after the user hovers over the image
 					// this allows the actionbar to be interacted with
 					file.previewElement.classList.remove("dz-success","dz-complete");
@@ -266,21 +281,17 @@ export default class DepotDroplet extends Droplet
 
     // The user dragged a file onto the Dropzone
     event_dragenter(event) {
-        const classesToRemove = ["dz-success", "dz-complete"];
-        const previews = Array.from(this.dropzone.previewsContainer.children);
-        if (previews.length > 0) {
-			previews.forEach(preview => preview.classList.remove(...classesToRemove));
-        }
-        return this.container.classList.add("dz-drag-hover");
+        this.field.updateAPIUrl();
+        this.container.classList.add("dz-drag-hover");
     }
 
     // The user dragged a file out of the Dropzone
     event_dragleave(event) {
-        return this.container.classList.remove("dz-drag-hover");
+        this.container.classList.remove("dz-drag-hover");
     }
 
     // The user dropped something onto the dropzone
     event_drop(event) {
-        return this.container.classList.remove("dz-drag-hover");
+        this.container.classList.remove("dz-drag-hover");
     }
 }
