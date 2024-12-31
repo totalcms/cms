@@ -583,3 +583,15 @@ body {
 		mask-image : var(--icon-save);
 	}
 }
+
+#twig-playground {
+	.cms-button:before {
+		mask-image : var(--icon-twig-playground);
+	}
+}
+
+.playground-results {
+	display            : grid;
+	gap                : 2rem;
+	margin-block-start : 2rem;
+}
