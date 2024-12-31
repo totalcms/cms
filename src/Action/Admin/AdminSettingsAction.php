@@ -28,20 +28,20 @@ final class AdminSettingsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		if ($request->getMethod() === 'POST') {
-			$saveSettings = (array)$request->getParsedBody();
-			$this->settingsSaver->save($saveSettings);
-			return $response
-				->withHeader('Location', $request->getUri()->getPath())
-				->withStatus(302);
-		}
-
+		$savedSettings = [];
 		$defaults = require __DIR__ . '/../../../config/settings.php';
 
-		$settings   = [];
-		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
-		if (file_exists($configFile)) {
-			$settings = require $configFile;
+		if ($request->getMethod() === 'POST') {
+			$savedSettings = (array)$request->getParsedBody();
+			$savedSettings = array_filter($savedSettings, fn($value) => $value !== '');
+			$this->settingsSaver->save($savedSettings);
+		}
+
+		if (empty($savedSettings)) {
+			$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+			if (file_exists($configFile)) {
+				$savedSettings = require $configFile;
+			}
 		}
 
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
@@ -52,7 +52,7 @@ final class AdminSettingsAction
 				'page'   => 'settings',
 			],
 			'timezones' => timezone_identifiers_list(),
-			'settings'  => $settings,
+			'settings'  => $savedSettings,
 			'defaults'  => $defaults,
 		]);
 	}

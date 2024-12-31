@@ -75,9 +75,9 @@
 				<label for="timezone">Timezone</label>
 				<div class="form-group">
 					<select name="timezone" id="timezone" aria-describedby="help-timezone">
-						<option class="placeholder" disabled {% if settings.timezone is empty %}selected{% endif %}>{{ defaults.timezone }}</option>
+						<option class="placeholder" value="" disabled{% if settings.timezone is empty %} selected{% endif %}>{{ defaults.timezone }}</option>
 						{% for timezone in timezones %}
-						<option value="{{ timezone }}" {% if settings.timezone == timezone %} selected {% endif %}>{{ timezone }}</option>
+						<option value="{{ timezone }}"{% if settings.timezone == timezone %} selected{% endif %}>{{ timezone }}</option>
 						{% endfor %}
 					</select>
 					<div class="form-group-icon"></div>

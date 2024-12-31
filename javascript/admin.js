@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const settingsForm = document.getElementById("settings-form");
 	if (settingsForm) {
-		const textFields = Array.from(settingsForm.querySelectorAll(".select-field"));
+		const textFields = Array.from(settingsForm.querySelectorAll(".text-field"));
 		textFields.map(field => { new TotalField(field); });
 
 		const selectFields = Array.from(settingsForm.querySelectorAll(".select-field"));
