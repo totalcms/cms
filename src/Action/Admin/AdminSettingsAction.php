@@ -16,12 +16,28 @@ final class AdminSettingsAction
 	) {
 	}
 
-	/** @param array<string,string> $args The routing arguments */
+	/**
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 *
+	 * @param array<string,string> $args The routing arguments
+	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
+
+		if ($request->getMethod() === 'POST') {
+			var_dump($request->getParsedBody());
+		}
+
+		$settings = [];
+
+		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+		if (file_exists($configFile)) {
+			$settings = require $configFile;
+		}
+
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
 			'url' => [
 				'path'   => $request->getUri()->getPath(),
@@ -29,6 +45,8 @@ final class AdminSettingsAction
 				'params' => $args,
 				'page'   => 'settings',
 			],
+			'timezones' => timezone_identifiers_list(),
+			'settings'  => $settings,
 		]);
 	}
 }
