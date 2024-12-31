@@ -3,13 +3,6 @@
 // Defaults
 $settings = require __DIR__ . '/defaults.php';
 
-// Overwrite default settings with environment specific local settings
-if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/tcms.php')) {
-	require $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
-} elseif (file_exists(__DIR__ . '/tcms.php')) {
-	require __DIR__ . '/tcms.php';
-}
-
 // Unit-test and integration environment (Travis CI)
 $environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
 if ($environment) {
@@ -18,6 +11,38 @@ if ($environment) {
 		require $envSettings;
 	}
 }
+
+// User defined settings
+if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/tcms.php')) {
+	$userSettings = require $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+
+	if (is_array($userSettings)) {
+		$userSettingsMap = [
+			'sentry'            => 'sentry/enable',
+			'presets'           => 'imageworks/presets',
+			'watermarksGallery' => 'imageworks/watermarksGallery',
+		];
+		foreach ($userSettings as $key => $value) {
+			if (isset($userSettingsMap[$key])) {
+				$keys = explode('/', $userSettingsMap[$key]);
+				$temp = &$settings;
+				// loop through the userSetting map and set the values in the main settings
+				foreach ($keys as $key) {
+					if (!isset($temp[$key])) {
+						$temp[$key] = [];
+					}
+					$temp = &$temp[$key];
+				}
+				$temp = $value;
+				continue;
+			}
+			$settings[$key] = $value;
+		}
+	}
+}
+// elseif (file_exists(__DIR__ . '/tcms.php')) {
+// 	require __DIR__ . '/tcms.php';
+// }
 
 // print_r($settings);
 

@@ -105,17 +105,7 @@
 				<label for="field-presets">Imageworks Presets</label>
 				<div class="form-group">
 					<textarea id="field-presets" name="presets" rows="12" aria-describedby="help-presets"
-					placeholder="{
-	&quot;small&quot; : {
-		&quot;w&quot; : 300,
-		&quot;h&quot; : 200
-	},
-	&quot;medium-crop&quot; : {
-		&quot;w&quot; : 600,
-		&quot;h&quot; : 600,
-		&quot;fit&quot; : &quot;crop-focalpoint&quot;
-	}
-}" >{% if settings.presets %}{{ settings.presets | json_encode(constant('JSON_PRETTY_PRINT')) }}{% endif %}</textarea>
+					placeholder="{{ defaults.imageworks.presets | json_encode(constant('JSON_PRETTY_PRINT')) | e('html_attr') }}" >{% if settings.presets %}{{ settings.presets | json_encode(constant('JSON_PRETTY_PRINT')) }}{% endif %}</textarea>
 					<div class="form-group-icon"></div>
 				</div>
 				<p class="help" id="help-presets">
