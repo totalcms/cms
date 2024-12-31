@@ -22,7 +22,7 @@ final class FileField extends FormField
 
 		$previewAttrs = ['class' => 'file-preview'];
 		$name         = empty($fileData['download']) ? $fileData['name'] : $fileData['download'];
-		$filePreview  = $this->filePreview($name);
+		$filePreview  = $this->filePreview($name ?? '');
 		$fileDialog   = $this->fileDialog($fileData);
 		$linkDialog   = $this->linkDialog($fileData['name'] ?? null);
 
