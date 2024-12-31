@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Admin\SettingsSaver;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -13,6 +14,7 @@ final class AdminSettingsAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private SettingsSaver $settingsSaver,
 	) {
 	}
 
@@ -26,19 +28,21 @@ final class AdminSettingsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		if ($request->getMethod() === 'POST') {
-			var_dump($request->getParsedBody());
+			$saveSettings = (array)$request->getParsedBody();
+			$this->settingsSaver->save($saveSettings);
+			return $response
+				->withHeader('Location', $request->getUri()->getPath())
+				->withStatus(302);
 		}
 
 		$defaults = require __DIR__ . '/../../../config/settings.php';
 
-		$settings = [];
+		$settings   = [];
 		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
 		if (file_exists($configFile)) {
 			$settings = require $configFile;
 		}
-
 
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
 			'url' => [
