@@ -31,12 +31,14 @@ final class AdminSettingsAction
 			var_dump($request->getParsedBody());
 		}
 
-		$settings = [];
+		$defaults = require __DIR__ . '/../../../config/settings.php';
 
+		$settings = [];
 		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
 		if (file_exists($configFile)) {
 			$settings = require $configFile;
 		}
+
 
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
 			'url' => [
@@ -47,6 +49,7 @@ final class AdminSettingsAction
 			],
 			'timezones' => timezone_identifiers_list(),
 			'settings'  => $settings,
+			'defaults'  => $defaults,
 		]);
 	}
 }

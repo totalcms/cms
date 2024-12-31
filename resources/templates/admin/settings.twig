@@ -10,7 +10,7 @@
 
 		<form id="settings-form" class="totalform help-on-hover help-box" data-disabled action="{{cms.api}}/admin/settings" method="POST">
 
-			{# {{ var_dump(settings) }} #}
+			{# {{ var_dump(defaults) }} #}
 
 			<div class="form-field checkbox-field" data-type="checkbox">
 				<div class="form-group">
@@ -41,7 +41,7 @@
 						id="datadir"
 						name="datadir"
 						aria-describedby="help-datadir"
-						placeholder="/var/www/tcms-data">
+						placeholder="{{ defaults.datadir }}">
 					<div class="form-group-icon"></div>
 				</div>
 				<p class="help" id="help-datadir">
@@ -59,7 +59,7 @@
 						id="api"
 						name="api"
 						aria-describedby="help-api"
-						placeholder="/api.php">
+						placeholder="{{ defaults.api }}">
 					<div class="form-group-icon"></div>
 				</div>
 				<p class="help" id="help-api">
@@ -71,7 +71,7 @@
 				<label for="timezone">Timezone</label>
 				<div class="form-group">
 					<select name="timezone" id="timezone" aria-describedby="help-timezone">
-						<option class="placeholder" disabled {% if settings.timezone is empty %}selected{% endif %}>Choose a Timezone</option>
+						<option class="placeholder" disabled {% if settings.timezone is empty %}selected{% endif %}>{{ defaults.timezone }}</option>
 						{% for timezone in timezones %}
 						<option value="{{ timezone }}" {% if settings.timezone == timezone %} selected {% endif %}>{{ timezone }}</option>
 						{% endfor %}
@@ -92,7 +92,7 @@
 						id="watermarksGallery"
 						name="watermarksGallery"
 						aria-describedby="help-watermarksGallery"
-						placeholder="watermarks">
+						placeholder="{{ defaults.imageworks.watermarksGallery }}">
 					<div class="form-group-icon"></div>
 				</div>
 				<p class="help" id="help-watermarksGallery">
