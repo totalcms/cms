@@ -40,9 +40,9 @@ if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/tcms.php')) {
 		}
 	}
 }
-// elseif (file_exists(__DIR__ . '/tcms.php')) {
-// 	require __DIR__ . '/tcms.php';
-// }
+if (file_exists(__DIR__ . '/tcms.php')) {
+	require __DIR__ . '/tcms.php';
+}
 
 // print_r($settings);
 
