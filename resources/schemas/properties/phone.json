@@ -3,7 +3,7 @@
 	"$id"     : "https://www.totalcms.co/schemas/properties/phone.json",
 	"anyOf"   : [
 		{
-			"pattern"     : "^\\+?([0-9 ]?){6,14}[0-9]$",
+			"pattern"     : "^\\+?([0-9 \\-\\(\\)]?){6,14}[0-9]$",
 			"description" : "International phone number in various formats or empty",
 			"type"        : "string",
 			"examples"    : [
