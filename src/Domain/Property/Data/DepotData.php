@@ -9,13 +9,9 @@ class DepotData extends PropertyData
 	public bool $protected;
 	public PasswordData $password;
 
-	/**
-	 * @param array<string,mixed> $depot
-	 * @param array<string,mixed> $settings
-	 */
-	public function __construct(public array $depot = [], array $settings = [])
+	/** @param array<string,mixed> $depot */
+	public function __construct(public array $depot = [], public array $settings = [])
 	{
-		$this->settings  = $settings;
 		$this->protected = $depot['protected'] ?? true;
 		$this->password  = new PasswordData($depot['password'] ?? '');
 		$this->files     = FolderData::buildFolder($depot['files'] ?? []);

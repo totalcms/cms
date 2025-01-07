@@ -9,15 +9,13 @@ class TimeData extends PropertyData
 {
 	public string $time;
 
-	/** @param array<string,mixed> $settings */
-	public function __construct(string $time = '', array $settings = [])
+	public function __construct(string $time = '', public array $settings = [])
 	{
 		if (!empty($time) && !self::verifyTime($time)) {
 			throw new \InvalidArgumentException('Invalid Time');
 		}
 
-		$this->time     = $time;
-		$this->settings = $settings;
+		$this->time = $time;
 	}
 
 	private static function verifyTime(string $time): bool

@@ -7,13 +7,8 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class PhoneData extends PropertyData
 {
-	public string $phone;
-
-	/** @param array<string,mixed> $settings */
-	public function __construct(string $phone, array $settings = [])
+	public function __construct(public string $phone, public array $settings = [])
 	{
-		$this->settings = $settings;
-		$this->phone    = $phone;
 	}
 
 	public function transform(): string

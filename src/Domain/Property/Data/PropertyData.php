@@ -7,15 +7,9 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class PropertyData implements PropertyDataInterface
 {
-	public string $id;
-	/** @var array<string,mixed> */
-	public array $settings;
-
 	/** @param array<string,mixed> $settings */
-	public function __construct(string $id, array $settings = [])
+	public function __construct(public string $id, public array $settings = [])
 	{
-		$this->id       = $id;
-		$this->settings = $settings;
 	}
 
 	/**

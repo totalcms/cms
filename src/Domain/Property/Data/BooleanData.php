@@ -9,15 +9,10 @@ class BooleanData extends PropertyData
 {
 	public bool $status;
 
-	/**
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 *
-	 * @param array<string,mixed> $settings
-	 */
-	public function __construct(bool $status = false, array $settings = [])
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function __construct(bool $status = false, public array $settings = [])
 	{
-		$this->status   = $status;
-		$this->settings = $settings;
+		$this->status = $status;
 	}
 
 	public function transform(): bool

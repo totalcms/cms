@@ -9,10 +9,8 @@ class PasswordData extends PropertyData
 {
 	public string $hash = '';
 
-	/** @param array<string,mixed> $settings */
-	public function __construct(string $password, array $settings = [])
+	public function __construct(string $password, public array $settings = [])
 	{
-		$this->settings = $settings;
 		if (!empty($password)) {
 			// Only set the hash if a password is defined
 			$this->hash = self::isPasswordHash($password) ? $password : self::hashPassword($password);

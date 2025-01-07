@@ -29,13 +29,9 @@ class ImageData extends PropertyData
 		'y' => 50,
 	];
 
-	/**
-	 * @param array<string,mixed> $file
-	 * @param array<string,mixed> $settings
-	 */
-	public function __construct(array $file = [], array $settings = [])
+	/** @param array<string,mixed> $file */
+	public function __construct(array $file = [], public array $settings = [])
 	{
-		$this->settings   = $settings;
 		$this->alt        = $file['alt'] ?? '';
 		$this->exif       = $file['exif'] ?? ['nodata' => ''];
 		$this->featured   = $file['featured'] ?? false;

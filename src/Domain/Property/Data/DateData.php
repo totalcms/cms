@@ -15,11 +15,9 @@ class DateData extends PropertyData
 	public const CREATION_DATE = 'onCreate';
 	public const UPDATE_DATE   = 'onUpdate';
 
-	/** @param array<string,mixed> $settings */
-	public function __construct(string $date, array $settings = [])
+	public function __construct(string $date, public array $settings = [])
 	{
 		$this->date = empty($date) ? '' : self::cleanDate($date);
-		$this->settings = $settings;
 	}
 
 	public static function defaultValue(mixed $value, mixed $default): mixed
