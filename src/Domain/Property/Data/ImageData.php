@@ -47,6 +47,11 @@ class ImageData extends PropertyData
 
 		$uploadDate       = empty($file['uploadDate']) ? date('c') : $file['uploadDate'];
 		$this->uploadDate = new DateData($uploadDate);
+
+		if (isset($this->exif['date'])) {
+			$date               = new DateData($this->exif['date']);
+			$this->exif['date'] = $date->transform();
+		}
 	}
 
 	/** @return array<string,mixed> */
