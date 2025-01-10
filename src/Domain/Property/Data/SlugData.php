@@ -14,11 +14,9 @@ class SlugData extends PropertyData
 
 	public string $slug;
 
-	/** @param array<string,mixed> $settings */
-	public function __construct(string $slug, array $settings = [])
+	public function __construct(string $slug, public array $settings = [])
 	{
-		$this->slug     = self::slugify($slug);
-		$this->settings = $settings;
+		$this->slug = self::slugify($slug);
 	}
 
 	static public function slugify(string $slug): string

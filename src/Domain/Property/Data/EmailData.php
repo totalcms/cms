@@ -9,11 +9,9 @@ class EmailData extends PropertyData
 {
 	public string $email;
 
-	/** @param array<string,mixed> $settings */
-	public function __construct(string $email, array $settings = [])
+	public function __construct(string $email, public array $settings = [])
 	{
-		$this->email    = self::cleanEmail($email);
-		$this->settings = $settings;
+		$this->email = self::cleanEmail($email);
 	}
 
 	private static function cleanEmail(string $email): string

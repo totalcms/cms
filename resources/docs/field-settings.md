@@ -117,8 +117,9 @@ Here is an example.
   "linkStyles" : {
     "button" : "Button",
   },
-  "imageUploadParams" : { "w" : 300 },
+  "imageUploadParams" : { "p" : "styledtext" },
   "imageMaxSize"      : 1048576,
+  "confirmDelete"     : false,
   "pastePlain"        : true
 }
 ```

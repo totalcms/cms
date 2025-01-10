@@ -19,13 +19,9 @@ class FileData extends PropertyData
 	public int $size;
 	public int $count;
 
-	/**
-	 * @param array<string,mixed> $file
-	 * @param array<string,mixed> $settings
-	 */
-	public function __construct(array $file = [], array $settings = [])
+	/** @param array<string,mixed> $file */
+	public function __construct(array $file = [], public array $settings = [])
 	{
-		$this->settings  = $settings;
 		$this->protected = $file['protected'] ?? true;
 		$this->name      = $file['name'] ?? '';
 		$this->download  = empty($file['download']) ? $this->name : $file['download'];
