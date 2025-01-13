@@ -133,9 +133,7 @@
 	},
 	"required": [
 		"id",
-		"title",
-		"updated",
-		"created"
+		"title"
 	],
 	"index": [
 		"id",
@@ -151,8 +149,6 @@
 		"categories",
 		"labels",
 		"tags",
-		"summary",
-		"updated",
-		"created"
+		"summary"
 	]
 }
