@@ -31,6 +31,7 @@ final class TotalCMSTwigFilters
 		'urlencode',
 		'ceil',
 		'floor',
+		'count',
 	];
 
 	/** @var array<string> */
