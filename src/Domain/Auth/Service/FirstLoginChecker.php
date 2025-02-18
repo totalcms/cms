@@ -2,10 +2,9 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
 
 final class FirstLoginChecker
@@ -32,6 +31,7 @@ final class FirstLoginChecker
 		if ($index === null) {
 			return true;
 		}
+
 		return $index->objects->isEmpty();
 	}
 
@@ -43,6 +43,7 @@ final class FirstLoginChecker
 			'email'    => $email,
 			'password' => $password,
 			'active'   => true,
+			'image'    => [],
 			'groups'   => [UserValidationService::ADMINGROUP],
 		]);
 	}
