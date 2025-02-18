@@ -1,5 +1,6 @@
 import MultiSelectField from "./multiselect";
 import Choices from "choices.js";
+import Sortable from 'sortablejs';
 
 //-----------------------------------------------
 // Total CMS List Field
@@ -23,8 +24,21 @@ export default class ListField extends MultiSelectField {
 			removeItemButton      : this.options.removeItemButton,
 			duplicateItemsAllowed : this.options.duplicateItemsAllowed,
 			addChoices            : this.options.addChoices,
+			callbackOnInit        : this.initSortable.bind(this),
 		});
     }
+
+	initSortable() {
+		const list = this.container.querySelector('.choices__list');
+		console.log('init sortable', list);
+
+		this.sortable = new Sortable(list, {
+			animation  : 150,
+			filter     : 'button',
+			draggable  : ".choices__item",
+			ghostClass : 'drag-ghost'
+		});
+	}
 
     schema() {
         return {
