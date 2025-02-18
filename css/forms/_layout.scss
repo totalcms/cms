@@ -1,0 +1,248 @@
+//------------------------------
+// Form Defaults
+//------------------------------
+.totalform {
+	display       : grid;
+	gap           : 1rem;
+	align-content : start;
+
+	&:not(:first-of-type) {
+		margin-top : 1rem;
+	}
+
+	input:focus,cms-save
+	textarea:focus,
+	input:focus + .form-group-icon,
+	textarea:focus + .form-group-icon {
+		outline      : 0;
+		border-color : oklch(var(--totalform-border-color));
+		box-shadow: inset 0 0 0 oklch(var(--totalform-shadow));
+	}
+
+    label {
+        display     : block;
+        margin      : 0;
+        font-size   : var(--totalform-label-size);
+        font-weight : 400;
+        line-height : 1.8;
+        color       : oklch(var(--totalform-label-color));
+        transition  : opacity 0.5s;
+        width       : max-content;
+    }
+
+	section {
+		display       : grid;
+		gap           : 1rem;
+		align-content : start;
+	}
+}
+
+.totalform:not(.edit-mode) {
+	.customProperties-field,
+	.properties-field {
+		display : none;
+	}
+}
+
+.form-field {
+	position : relative;
+	width    : 100%;
+
+	&:is(:visible):not(:first-of-type) {
+		margin-top : 1rem;
+	}
+
+    *,
+    *:after,
+    *:before {
+        box-sizing: border-box;
+    }
+
+	&.hide {
+		display : none;
+	}
+
+	&.unsaved {
+		--totalform-border-color : var(--totalform-changed);
+		--totalform-icon-bg      : var(--totalform-changed);
+		--totalform-icon-color   : var(--totalform-white);
+	}
+	&.error {
+		--totalform-border-color : var(--totalform-error);
+		--totalform-icon-bg      : var(--totalform-error);
+		--totalform-icon-color   : var(--totalform-white);
+	}
+	// fix for subfields getting over styled (image and gallery dialogs)
+	.form-field:not(.unsaved):not(.error) {
+		--totalform-border-color : var(--totalform-lightgray);
+		--totalform-icon-bg      : var(--totalform-nearwhite);
+		--totalform-icon-color   : var(--totalform-darkgray);
+	}
+	&.hidden-field {
+		display : none;
+	}
+}
+
+.cms-button,
+.cms-save,
+.cms-delete,
+.cms-add {
+	width  : fit-content;
+	cursor : pointer;
+}
+
+.totalform {
+	.cms-button,
+	.cms-save,
+	.cms-delete {
+		appearance       : none;
+		border-radius    : var(--totalform-radius);
+		background-color : oklch(var(--totalform-darkgray));
+		color            : oklch(var(--totalform-white));
+		padding          : 0.75rem 1rem;
+		margin           : 0;
+		border           : 2px solid oklch(var(--totalform-nearblack));
+		font-size        : 1rem;
+		display          : inline-flex;
+		align-items      : center;
+		transition       : scale 200ms ease-in-out;
+
+		&:hover {
+			scale : 1.03;
+		}
+		&:active {
+			scale : 0.97;
+		}
+		&:before {
+			content          : " ";
+			display          : inline-block;
+			width            : 1rem;
+			height           : 1rem;
+			background-color : oklch(var(--totalform-white));
+			margin-right     : 0.5rem;
+			mask-size        : 0.8rem;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+		}
+	}
+	.cms-save:before {
+		mask-image : var(--icon-save);
+	}
+	.cms-delete:before {
+		mask-image : var(--icon-trash-o);
+	}
+}
+
+button.cms-add {
+	width            : 3rem;
+	height           : 3rem;
+	border-radius    : 50%;
+	background-color : oklch(var(--totalform-accent) / 0.95);
+	color            : oklch(var(--totalform-white));
+	font-size        : 1.5rem;
+	box-shadow       : 0 1px 5px oklch(var(--totalform-black) / 0.5);
+	border           : 2px solid oklch(var(--totalform-white));
+	display          : grid;
+	align-content    : center;
+	justify-content  : center;
+	transition       : all 100ms ease-in-out;
+	margin           : 1rem auto 0 auto;
+	padding          : 0;
+
+	&:after {
+		content          : " ";
+		width            : 1.4rem;
+		height           : 1.4rem;
+		background-image : url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='%23F7F7F7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline fill='none' stroke='%23F7F7F7' stroke-width='2' x1='12' y1='2' x2='12' y2='22'%3E%3C/line%3E %3Cline fill='none' stroke='%23F7F7F7' stroke-width='2' x1='22' y1='12' x2='2' y2='12'%3E%3C/line%3E%3C/g%3E%3C/svg%3E");
+	}
+
+	&:hover {
+		background-color : oklch(var(--totalform-accent));
+	}
+
+	&:active {
+		transform  : scale(0.97);
+		box-shadow : 0 1px 2px oklch(var(--totalform-black) / 0.5);
+	}
+}
+
+.totalform:not(.edit-mode) .cms-delete {
+	display : none;
+}
+
+//------------------------------
+// Form Groups
+//------------------------------
+.form-group {
+	display       : flex;
+	position      : relative;
+	align-items   : stretch;
+	border-radius : var(--totalform-radius);
+	transition    : box-shadow 200ms ease-in-out;
+	box-shadow    : 0 0 0 oklch(var(--totalform-shadow));
+
+    &:has(:focus), &:has(.is-focused) {
+        box-shadow: 0 1px 2px oklch(var(--totalform-shadow));
+
+		&:has(.actionbar),
+		&:has([type=range]),
+		&:has([type=checkbox]),
+		&:has([type=radio]) {
+			box-shadow: none;
+		}
+    }
+}
+
+.form-group-icon {
+	width             : 3em;
+	border            : 1px solid oklch(var(--totalform-border-color));
+	border-left-width : 0;
+	border-radius     : 0 var(--totalform-radius) var(--totalform-radius) 0;
+	background-color  : oklch(var(--totalform-icon-bg));
+	transition        : background-color 200ms ease-in-out;
+	display           : grid;
+	align-items       : center;
+	justify-items     : center;
+
+	&:after {
+		display          : block;
+		content          : " ";
+		transition       : background-color 200ms ease-in-out;
+		background-color : oklch(var(--totalform-icon-color));
+		width            : 1.1rem;
+		height           : 1.1rem;
+		mask-image       : var(--icon-text);
+		mask-repeat      : no-repeat;
+	}
+}
+
+.form-group:has(>[readonly]) .form-group-icon {
+	background-color : oklch(var(--totalform-lightgray));
+}
+
+.form-columns {
+	display : grid;
+	gap     : 5rem;
+
+	&.col-2 {
+		grid-template-columns : 3fr 2fr;
+	}
+	section.center {
+		display       : grid;
+		justify-items : center;
+		align-content : start;
+		gap           : 1rem;
+	}
+}
+
+.totalform .form-inline-fields {
+	display         : flex;
+	flex-wrap       : wrap;
+	align-items     : center;
+	justify-content : flex-start;
+	gap             : 1.5rem;
+
+	& > .form-field {
+		margin : 0;
+	}
+}

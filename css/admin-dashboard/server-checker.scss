@@ -1,0 +1,41 @@
+.server-checker {
+	.bundle-error {
+		display          : grid;
+		gap              : 1rem;
+		padding          : 1rem;
+		max-width        : 65ch;
+		background-color : oklch(var(--totalform-red) / 10%);
+		border: 1px solid oklch(var(--totalform-red) / 50%);
+		border-radius: var(--totalform-radius);
+	}
+	.error {
+		font-weight    : bold;
+		text-transform : uppercase;
+		color          : oklch(var(--totalform-red));
+	}
+	tr:has(.error) {
+		background-color : oklch(var(--totalform-red) / 10%) !important;
+	}
+	tr:has(.warning) {
+		background-color : oklch(var(--totalform-warning) / 10%) !important;
+	}
+	h2:not(:first-child) {
+		margin-top : 2rem;
+	}
+	td.gridjs-td {
+		padding     : 0 1rem;
+		white-space : wrap;
+	}
+	th.gridjs-th:first-child {
+		max-width : 200px !important;
+	}
+	.gridjs-wrapper, table {
+		max-height : none;
+	}
+	pre {
+		padding: 0.5rem 0;
+	}
+	.gridjs-tbody .gridjs-tr {
+		cursor : inherit;
+	}
+}

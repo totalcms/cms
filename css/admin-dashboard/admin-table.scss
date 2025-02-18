@@ -1,0 +1,51 @@
+@use "gridjs";
+
+.admin-table {
+	display: none;
+}
+.admin-table-wrapper {
+	font-size: 0.9em;
+
+	img, svg {
+		display   : block;
+		max-width : 3rem;
+		height    : auto;
+	}
+	img {
+		border-radius : var(--totalform-radius);
+	}
+
+	.gridjs-wrapper, table {
+		max-height : calc(100vh - 300px);
+	}
+
+	.gridjs-container {
+		height                : 100%;
+		display               : grid;
+		grid-template-rows    : max-content auto max-content 0;
+		align-content         : stretch;
+	}
+	.color-preview {
+		height        : 100%;
+		text-indent   : -9999px;
+		border-radius : var(--totalform-radius);
+	}
+	.gallery-preview {
+		position : relative;
+		display  : inline-block;
+
+
+		.image-count {
+			position         : absolute;
+			display          : inline-block;
+			bottom           : 0;
+			right            : 0;
+			color            : oklch(var(--totalform-nearblack));
+			background-color : oklch(var(--totalform-white));
+			border-radius    : var(--totalform-radius) 0 var(--totalform-radius) 0;
+			padding          : 0.25rem;
+			font-size        : 0.65rem;
+			opacity          : 0.85;
+		}
+	}
+}
