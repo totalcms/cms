@@ -1,3 +1,5 @@
+@use 'lg-variables' as *;
+
 $backdrop-opacity: 1;
 $lg-toolbar-bg: linear-gradient(
     0deg,
@@ -67,20 +69,20 @@ $zindex-playbutton: 1080;
 $zindex-item: 1060;
 $zindex-backdrop: 1040;
 
-@import "lightgallery";
+@use "lightgallery";
 
-@import "lg-autoplay";
-@import "lg-fullscreen";
-// @import "lg-medium-zoom";
-@import "lg-pager";
-@import "lg-thumbnail";
-@import "lg-transitions";
-@import "lg-zoom";
-// @import "lg-comments";
-// @import "lg-relative-caption";
-// @import "lg-rotate";
-// @import "lg-share";
-// @import "lg-video";
+@use "lg-autoplay";
+@use "lg-fullscreen";
+// @use "lg-medium-zoom";
+@use "lg-pager";
+@use "lg-thumbnail";
+@use "lg-transitions";
+@use "lg-zoom";
+// @use "lg-comments";
+// @use "lg-relative-caption";
+// @use "lg-rotate";
+// @use "lg-share";
+// @use "lg-video";
 
 
 .cms-gallery {

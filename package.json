@@ -20,7 +20,7 @@
     "dompurify": "^3.0.2",
     "froala-editor": "^4.0.18",
     "gridjs": "^6.2.0",
-    "lightgallery": "^2.7.2",
+    "lightgallery": "^2.8.2",
     "slugify": "^1.6.6",
     "sortablejs": "^1.15.2",
     "swagger-ui-dist": "^5.1.0",
