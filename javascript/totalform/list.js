@@ -30,14 +30,32 @@ export default class ListField extends MultiSelectField {
 
 	initSortable() {
 		const list = this.container.querySelector('.choices__list');
-		console.log('init sortable', list);
 
 		this.sortable = new Sortable(list, {
 			animation  : 150,
-			filter     : 'button',
 			draggable  : ".choices__item",
-			ghostClass : 'drag-ghost'
+			ghostClass : 'drag-ghost',
+			onEnd      : this.syncChoices.bind(this)
 		});
+	}
+
+	syncChoices(event) {
+		const oldIndex = event.oldIndex;
+		const newIndex = event.newIndex;
+
+		if (oldIndex === newIndex) {
+			return;
+		}
+
+		const select = this.container.querySelector('select.choices__input');
+		const options = Array.from(select.options);
+		const movedOption = options.splice(oldIndex, 1)[0];
+		options.splice(newIndex, 0, movedOption);
+
+		select.innerHTML = '';
+		options.forEach(option => select.appendChild(option));
+
+		this.changed();
 	}
 
     schema() {
