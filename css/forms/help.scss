@@ -14,6 +14,10 @@
 	background-position : 0 center;
 	background-image    : var(--icon-help);
 	color               : oklch(var(--totalform-help-color));
+
+    &:empty {
+        display: none !important;
+    }
 }
 
 .check-field .help {
@@ -150,13 +154,13 @@
     transition: opacity var(--help-animation-timing);
 }
 
-.help-on-focus .form-field:has(input:focus) > .help,
-.help-on-hover .form-field:hover > .help {
+.help-on-focus .form-field:has(input:focus) > .help:not(:empty),
+.help-on-hover .form-field:hover > .help:not(:empty) {
     opacity: 1 !important;
 }
 
-.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):has(input:focus) > label,
-.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):hover > label {
+.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):has(input:focus):has(.help:not(:empty)) > label,
+.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):has(.help:not(:empty)):hover > label {
     opacity: 0;
 }
 
