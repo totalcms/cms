@@ -8,7 +8,9 @@ if (PHP_SAPI === 'cli-server') {
 	}
 }
 
-// Some host servers stored the redirected URI with public in the path. This is a workaround to fix the path.
-$_SERVER['REQUEST_URI'] = str_replace('tcms/public', 'tcms', $_SERVER['REQUEST_URI']);
+if ($_SERVER['APP_ENV'] != 'preview') {
+	// Some host servers stored the redirected URI with public in the path. This is a workaround to fix the path.
+	$_SERVER['REQUEST_URI'] = str_replace('tcms/public', 'tcms', $_SERVER['REQUEST_URI']);
+}
 
 (require __DIR__ . '/../config/bootstrap.php')->run();
