@@ -1,0 +1,32 @@
+// This files contains lightGallery and all plugins
+
+// Example For white theme
+// $lg-theme-color: #fff;
+// $lg-theme-highlight: #333;
+// $lg-thumb-bg: #fcfcfc;
+// $lg-next-prev-bg: rgba(0, 0, 0, 0.03);
+// $lg-next-prev-color: #444;
+// $lg-next-next-color: #444;
+// $lg-toolbar-icon-color: #555;
+// $lg-icon-color: #555;
+// $lg-next-prev-hover-color: #000;
+// $lg-toolbar-icon-hover-color: #000;
+// $lg-progress-bar-bg: #999;
+
+// Core variables and mixins
+@use 'lg-fonts';
+@use 'lg-theme-default';
+@use 'lg-thumbnail';
+@use 'lg-video';
+@use 'lg-autoplay';
+@use 'lg-zoom';
+@use 'lg-pager';
+@use 'lg-fullscreen';
+@use 'lg-share';
+@use 'lg-comments';
+@use 'lg-rotate';
+@use 'lg-medium-zoom';
+@use 'lg-relative-caption';
+
+// Core
+@use 'lightgallery-core';

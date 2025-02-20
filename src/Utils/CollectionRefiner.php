@@ -33,15 +33,67 @@ class CollectionRefiner
 		$filteredCollection = $this->collection;
 
 		foreach ($rules as $rule) {
-			$filteredCollection = $this->filterByRule(
-				collection: $filteredCollection,
-				property: $rule['property'],
-				value: $rule['value'],
-				operator: $rule['operator'],
-			);
+			$value = $rule['value'] ?? '';
+			if (is_string($value)) {
+				$filteredCollection = $this->filterByRule(
+					collection : $filteredCollection,
+					property   : $rule['property'],
+					value      : $value,
+					operator   : $rule['operator'],
+				);
+			}
+			if (is_array($value)) {
+				$filteredCollection = $this->filterByArrayRule(
+					collection : $filteredCollection,
+					property   : $rule['property'],
+					values     : $value,
+					operator   : $rule['operator'],
+				);
+			}
 		}
 
 		return $filteredCollection;
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 * @param array<string> $values
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function filterByArrayRule(array $collection, string $property, array $values = [], string $operator = 'equal'): array
+	{
+		$results = [];
+		foreach ($values as $value) {
+			$results = array_merge(
+				$results,
+				$this->filterByRule(
+					collection : $collection,
+					property   : $property,
+					value      : $value,
+					operator   : $operator,
+				),
+			);
+		}
+
+		return $results;
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function filterUnique(array $collection): array
+	{
+		$unique = [];
+		foreach ($collection as $item) {
+			if (!in_array($item, $unique, true)) {
+				$unique[] = $item;
+			}
+		}
+
+		return $unique;
 	}
 
 	/**
@@ -51,7 +103,7 @@ class CollectionRefiner
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function filterByRule(array $collection, string $property, string $value, string $operator = 'equal'): array
+	public function filterByRule(array $collection, string $property, string $value = '', string $operator = 'equal'): array
 	{
 		// If rule is prepended by not-, then invert the result
 		$not = false;

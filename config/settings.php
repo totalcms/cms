@@ -3,6 +3,12 @@
 // Defaults
 $settings = require __DIR__ . '/defaults.php';
 
+// This is used to keep stacks integration working
+// Make sure this always comes before the env settings though or preview may break
+if (file_exists(__DIR__ . '/tcms.php')) {
+	require __DIR__ . '/tcms.php';
+}
+
 // Unit-test and integration environment (Travis CI)
 $environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
 if ($environment) {
@@ -41,11 +47,7 @@ if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/tcms.php')) {
 	}
 }
 
-// This is used to keep stacks integration working
-if (file_exists(__DIR__ . '/tcms.php')) {
-	require __DIR__ . '/tcms.php';
-}
-
+// echo "<pre>";
 // print_r($settings);
-
+// echo "</pre>";
 return $settings;

@@ -39,6 +39,7 @@
 			"help"        : "A list of required properties.",
 			"field"       : "list",
 			"minItems"    : 1,
+			"settings" : { "addChoices" : false },
 			"items"       : {
 				"type" : "string"
 			}
@@ -49,6 +50,7 @@
 			"help"        : "A list of properties to index. These will be accessible in a Collection's Index.",
 			"field"       : "list",
 			"minItems" : 1,
+			"settings" : { "addChoices" : false },
 			"items"    : {
 				"type" : "string"
 			}

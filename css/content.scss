@@ -1,3 +1,4 @@
+@use "sass:meta";
 @import "froala-editor/css/froala_style.css";
 
 .cms-hide {
@@ -34,4 +35,4 @@ body>.cms-twig-error {
 	aspect-ratio : 16 / 9;
 }
 
-@import "pagination";
+@include meta.load-css("pagination");

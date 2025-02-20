@@ -219,8 +219,8 @@ export default class StyledTextField extends TotalField {
             // imageManagerLoadURL   : this.uploadAPI("image"),
             // imageManagerDeleteURL : this.uploadAPI("image"),
             // imageManagerDeleteMethod : 'DELETE',
-            imageDefaultWidth      : 0,
-            imageResizeWithPercent : true,
+            // imageDefaultWidth      : 0,
+            // imageResizeWithPercent : true, // BUG https://github.com/froala/wysiwyg-editor/issues/4205
             imageRoundPercent      : true,
             imageStyles            : imageStyles,
             DOMPurify              : window.DOMPurify,

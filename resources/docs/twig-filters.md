@@ -70,7 +70,10 @@ var_dump(mixed $variable): string
 	},
 ]) | sortCollection([
 	{
+		property : "title",
 		shuffle  : true,
+		natural  : false,
+		reverse  : false,
 	},
 ]) %}
 ```

@@ -10,7 +10,7 @@ use Cocur\Slugify\Slugify;
 class SlugData extends PropertyData
 {
 	// Regular expression for allowed characters in slug.
-	private const SLUGREGEX = '/([^A-Za-z0-9])+/';
+	private const SLUGREGEX = '/([^A-Za-z0-9_])+/';
 
 	public string $slug;
 
@@ -19,10 +19,11 @@ class SlugData extends PropertyData
 		$this->slug = self::slugify($slug);
 	}
 
-	static public function slugify(string $slug): string
+	public static function slugify(string $slug): string
 	{
 		$slugify = new Slugify(['regexp' => self::SLUGREGEX]);
-		$slugify->addRule("@", "-at-");
+		$slugify->addRule('@', '-at-');
+
 		return $slugify->slugify($slug);
 	}
 

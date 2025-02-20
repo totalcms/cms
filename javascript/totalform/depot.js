@@ -80,6 +80,7 @@ export default class DepotField extends TotalField {
         for (const key in data) {
             this.setFileAttribute(file.previewElement, key, data[key]);
         }
+        this.setFileLinksUrl(file.previewElement, data);
     }
 
     uploadComplete() {
@@ -453,6 +454,13 @@ export default class DepotField extends TotalField {
             }
             button.disabled = !classes.some(cls => button.classList.contains(cls));
         });
+    }
+
+    setFileLinksUrl(file, data) {
+        const frame = file.querySelector(".file-links-dialog iframe");
+        const url = new URL(frame.dataset.src);
+        url.searchParams.set("name", data.name);
+        frame.dataset.src = url.toString();
     }
 
     setFileAttribute(file, attribute, value) {

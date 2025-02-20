@@ -1,0 +1,116 @@
+.dash-button {
+	display          : inline-block;
+	padding          : 0.75rem 1rem;
+	border-radius    : var(--totalform-radius);
+	background-color : oklab(var(--totalform-nearblack));
+	color            : oklab(var(--totalform-white));
+	border           : 2px solid oklch(var(--totalform-nearblack));
+	text-align       : center;
+	text-decoration  : none;
+	font-weight      : bold;
+	cursor           : pointer;
+	width            : max-content;
+
+	&.full {
+		display : block;
+		width   : 100%;
+	}
+	&.transparent {
+		background-color : transparent;
+		color            : oklab(var(--totalform-nearblack));
+		border           : 2px solid oklch(var(--totalform-nearblack));
+	}
+}
+.dash-action-dots {
+	appearance       : none;
+	min-width        : 0.5rem;
+	height           : 3rem;
+	padding          : 0;
+	border           : none;
+	background-color : oklch(var(--totalform-gray));
+	mask-image       : var(--icon-dots);
+	mask-repeat      : no-repeat;
+	mask-position    : center;
+	mask-size        : 1.75rem;
+	cursor           : pointer;
+	transition       : background-color 200ms ease-in-out;
+
+	&:hover {
+		background-color : oklch(var(--totalform-nearblack));
+	}
+}
+
+#user-actions,
+#collection-actions  {
+	// eventually this should move to the new CSS Anchor positioning
+	position         : absolute;
+	inset            : unset;
+	margin           : 1rem 0;
+	background-color : oklch(var(--totalform-white));
+	padding          : 0;
+	border-radius    : var(--totalform-radius);
+	border           : none;
+	box-shadow       : 0 0 10px 2px oklch(var(--totalform-shadow));
+
+	ul {
+		list-style : none;
+		padding    : 0;
+		margin     : 0;
+	}
+	li {
+		--action-icon : var(--icon-logo);
+
+		&.edit { --action-icon : var(--icon-edit) }
+		&.profile { --action-icon : var(--icon-user) }
+		&.logout { --action-icon : var(--icon-logout) }
+		&.factory { --action-icon : var(--icon-factory) }
+		&.import { --action-icon : var(--icon-import) }
+		&.reindex { --action-icon : var(--icon-refresh) }
+	}
+	a {
+		display         : flex;
+		align-items     : center;
+		text-decoration : none;
+		color           : oklch(var(--totalform-text-color));
+		padding         : 0.75rem 1rem;
+		// border-radius   : var(--totalform-radius);
+		transition      : background-color 200ms ease-in-out;
+		min-width       : 200px;
+
+		&.active,
+		&:hover {
+			background-color : oklch(var(--totalform-nearwhite));
+		}
+
+		&:before {
+			content          : " ";
+			display          : inline-block;
+			width            : 1rem;
+			height           : 1rem;
+			background-color : oklch(var(--totalform-text-color));
+			mask-image       : var(--action-icon);
+			margin-right     : 0.5rem;
+			mask-size        : 0.8rem;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+		}
+	}
+}
+#collection-actions {
+	top   : 5rem;
+	right : 2rem;
+}
+#user-actions {
+	bottom : 3rem;
+	left   : 4rem;
+}
+#settings-form {
+	margin-top: 2rem;
+
+	.checkbox-field label {
+		font-size: 0.9em;
+	}
+	.cms-button:before {
+		mask-image : var(--icon-save);
+	}
+}

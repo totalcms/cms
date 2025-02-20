@@ -97,6 +97,7 @@ export default class MacroBuilder {
 		if (Object.keys(data).length > 0) {
 			options = JSON.stringify(data);
 			options = options.replace(/"(\w+)"\s*:/g, '$1:').trim();
+			options = options.replace(/\"/g, `'`); // swap double quotes for single quotes
 			options = `, ${options}`;
 		}
 
