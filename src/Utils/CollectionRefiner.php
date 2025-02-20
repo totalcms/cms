@@ -33,15 +33,65 @@ class CollectionRefiner
 		$filteredCollection = $this->collection;
 
 		foreach ($rules as $rule) {
-			$filteredCollection = $this->filterByRule(
-				collection: $filteredCollection,
-				property: $rule['property'],
-				value: $rule['value'],
-				operator: $rule['operator'],
-			);
+			if (is_string($rule['value'])) {
+				$filteredCollection = $this->filterByRule(
+					collection : $filteredCollection,
+					property   : $rule['property'],
+					value      : $rule['value'],
+					operator   : $rule['operator'],
+				);
+			}
+			if (is_array($rule['value'])) {
+				$filteredCollection = $this->filterByArrayRule(
+					collection : $filteredCollection,
+					property   : $rule['property'],
+					values     : $rule['value'],
+					operator   : $rule['operator'],
+				);
+			}
 		}
 
 		return $filteredCollection;
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 * @param array<string> $values
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function filterByArrayRule(array $collection, string $property, array $values, string $operator = 'equal'): array
+	{
+		$results = [];
+		foreach ($values as $value) {
+			$results = array_merge(
+				$results,
+				$this->filterByRule(
+					collection : $collection,
+					property   : $property,
+					value      : $value,
+					operator   : $operator,
+				),
+			);
+		}
+		return $results;
+	}
+
+	/**
+	 * @param array<array<string,mixed>> $collection
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function filterUnique(array $collection): array
+	{
+		$unique = [];
+		foreach ($collection as $item) {
+			if (!in_array($item, $unique, true)) {
+				$unique[] = $item;
+			}
+		}
+
+		return $unique;
 	}
 
 	/**
