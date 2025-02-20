@@ -496,9 +496,20 @@ final class TotalCMSTwigAdapter
 			return '';
 		}
 
-		$alt = $this->alt($id, $options);
+		$image = $this->data($options['collection'], $id, $options['property']);
 
-		return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
+		$html = HTMLUtils::inlineElement('img', [
+			'src'           => $imagePath,
+			'alt'           => $image['alt'],
+			'draggable'     => 'false',
+			'oncontextmenu' => 'return false;',
+		]);
+
+		if (!empty($image['link'])) {
+			$html = HTMLUtils::element('a', $html, ['href' => $image['link']]);
+		}
+
+		return $html;
 	}
 
 	// Get the image path for an image property
@@ -609,8 +620,11 @@ final class TotalCMSTwigAdapter
 
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
-				'src' => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
-				'alt' => $image['alt'],
+				'src'           => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
+				'alt'           => $image['alt'],
+				'loading'       => 'lazy',
+				'draggable'     => 'false',
+				'oncontextmenu' => 'return false;',
 			]);
 			$link = HTMLUtils::element('a', $img, [
 				'href'         => $this->galleryPath($id, $image['name'], $fullSettings, $options),
@@ -649,9 +663,22 @@ final class TotalCMSTwigAdapter
 			return '';
 		}
 
-		$alt = $this->galleryAlt($id, $name, $options);
+		$image = $this->galleryImageData($id, $name, $options);
+		$alt   = $image['alt'] ?? $this->galleryAlt($id, $name, $options);
+		$link  = $image['link'] ?? '';
 
-		return sprintf('<img src="%s" alt="%s" oncontextmenu="return false;" draggable="false" />', $imagePath, $alt);
+		$html = HTMLUtils::inlineElement('img', [
+			'src'           => $imagePath,
+			'alt'           => $alt,
+			'draggable'     => 'false',
+			'oncontextmenu' => 'return false;',
+		]);
+
+		if (!empty($link)) {
+			$html = HTMLUtils::element('a', $html, ['href' => $link]);
+		}
+
+		return $html;
 	}
 
 	// get an image object from inside a gallery by it's name
