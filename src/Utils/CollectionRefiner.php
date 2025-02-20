@@ -33,19 +33,20 @@ class CollectionRefiner
 		$filteredCollection = $this->collection;
 
 		foreach ($rules as $rule) {
-			if (is_string($rule['value'])) {
+			$value = $rule['value'] ?? '';
+			if (is_string($value)) {
 				$filteredCollection = $this->filterByRule(
 					collection : $filteredCollection,
 					property   : $rule['property'],
-					value      : $rule['value'],
+					value      : $value,
 					operator   : $rule['operator'],
 				);
 			}
-			if (is_array($rule['value'])) {
+			if (is_array($value)) {
 				$filteredCollection = $this->filterByArrayRule(
 					collection : $filteredCollection,
 					property   : $rule['property'],
-					values     : $rule['value'],
+					values     : $value,
 					operator   : $rule['operator'],
 				);
 			}
@@ -60,7 +61,7 @@ class CollectionRefiner
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function filterByArrayRule(array $collection, string $property, array $values, string $operator = 'equal'): array
+	public function filterByArrayRule(array $collection, string $property, array $values = [], string $operator = 'equal'): array
 	{
 		$results = [];
 		foreach ($values as $value) {
@@ -74,6 +75,7 @@ class CollectionRefiner
 				),
 			);
 		}
+
 		return $results;
 	}
 
@@ -101,7 +103,7 @@ class CollectionRefiner
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function filterByRule(array $collection, string $property, string $value, string $operator = 'equal'): array
+	public function filterByRule(array $collection, string $property, string $value = '', string $operator = 'equal'): array
 	{
 		// If rule is prepended by not-, then invert the result
 		$not = false;
