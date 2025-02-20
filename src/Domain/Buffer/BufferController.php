@@ -7,10 +7,12 @@ namespace TotalCMS\Domain\Buffer;
 // ---------------------------------------------------------------------------------
 class BufferController
 {
-	public function start(): bool
+
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function start(bool $force = false): bool
 	{
 		// Don't start a new buffer if one is already started
-		if ($this->isBuffering()) {
+		if ($force !== true && $this->isBuffering()) {
 			return true;
 		}
 
@@ -34,6 +36,6 @@ class BufferController
 
 	public function isBuffering(): bool
 	{
-		return ob_get_level() > 1;
+		return ob_get_level() > 0;
 	}
 }
