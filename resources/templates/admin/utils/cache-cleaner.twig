@@ -5,7 +5,11 @@
 	If you feel that you are ever not seeing the layouts and content
 	that you expect, you can use this tool to clear the cache.</p>
 
-	<p>Cache Dir Size: <strong>{{ cms.checker.cacheDirSize }}</strong></p>
+	<ul>
+		<li><strong>Cache Dir Size</strong>: {{ cms.checker.cacheDirSize }}</li>
+		<li><strong>Total Space</strong>: {{ cms.checker.totalspace }}</li>
+		<li><strong>Free Space</strong>: {{ cms.checker.freespace }}</li>
+	</ul>
 
 	{{ cms.form.simple("/cache", "", {
 		method : "DELETE",

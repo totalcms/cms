@@ -54,11 +54,21 @@ class ServerChecker
 			'Max Execution Time' => ini_get('max_execution_time'),
 			'Memory Limit'       => ini_get('memory_limit'),
 			'Timezone'           => date_default_timezone_get(),
-			'Total Space'        => $this->formatBytes(intval(disk_total_space('/'))),
-			'Free Space'         => $this->formatBytes(intval(disk_free_space('/'))),
+			'Total Space'        => $this->totalspace(),
+			'Free Space'         => $this->freespace(),
 			// @phpstan-ignore argument.type
 			'Locale' => setlocale(LC_ALL, 0),
 		];
+	}
+
+	public function totalspace(): string
+	{
+		return $this->formatBytes(intval(disk_total_space(__DIR__)));
+	}
+
+	public function freespace(): string
+	{
+		return $this->formatBytes(intval(disk_free_space(__DIR__)));
 	}
 
 	public function cacheDirSize(): string
