@@ -46,11 +46,11 @@
 
 {% block content %}
 
-	{% set id         = getParams.id  %}
-	{% set collection = getParams.collection | default("image") %}
-	{% set property   = getParams.property | default("image") %}
-	{% set name       = getParams.name %}
-	{% set values     = getParams %}
+	{% set id         = getData.id  %}
+	{% set collection = getData.collection | default("image") %}
+	{% set property   = getData.property | default("image") %}
+	{% set name       = getData.name %}
+	{% set values     = getData %}
 	{% set help       = {
 			p         : "Select a preset to apply a set of predefined options to the image. Any settings set" ~
 						"below will override values defined in the preset. New presets can be added in the CMS config.",

@@ -450,7 +450,7 @@ final class TotalCMSTwigAdapter
 		return is_array($files) ? $files : [];
 	}
 
-	/** @param array<string,string> $getParams */
+	/** @param array<string,string> $getData */
 	public function paginationSimple(
 		int $totalObjects,
 		int $currentPage,
@@ -458,12 +458,12 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array $getParams   = [],
+		array  $getData     = [],
 	): string {
 		return PaginationGenerator::simplePagination(...func_get_args());
 	}
 
-	/** @param array<string,string> $getParams */
+	/** @param array<string,string> $getData */
 	public function paginationFull(
 		int $totalObjects,
 		int $currentPage,
@@ -471,7 +471,7 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array $getParams   = [],
+		array  $getData     = [],
 	): string {
 		return PaginationGenerator::fullPagination(...func_get_args());
 	}

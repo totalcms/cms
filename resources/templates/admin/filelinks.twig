@@ -6,12 +6,12 @@
 
 {% block content %}
 
-	{% set id         = getParams.id  %}
-	{% set collection = getParams.collection | default("file") %}
-	{% set property   = getParams.property | default("file") %}
-	{% set filename   = getParams.name %}
-	{% set path       = getParams.path %}
-	{% set password   = postParams.password %}
+	{% set id         = getData.id  %}
+	{% set collection = getData.collection | default("file") %}
+	{% set property   = getData.property | default("file") %}
+	{% set filename   = getData.name %}
+	{% set path       = getData.path %}
+	{% set password   = postData.password %}
 
 	{% if password is not empty and not cms.verifyFilePassword(password, collection, id, property, filename) %}
 		{{ flash.add('error', 'Password is incorrect') }}

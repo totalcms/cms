@@ -7,5 +7,5 @@ You can get the values of any url paramater passed to a page.
 
 
 ```
-{{ getParams.paramName }}
+{{ getData.paramName }}
 ```
