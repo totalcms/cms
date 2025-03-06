@@ -5,12 +5,12 @@ namespace TotalCMS;
 use DI\Container;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Auth\Service\AccessManager;
 
 // ---------------------------------------------------------------------------------
 // Entry point for Total CMS PHP API
@@ -70,12 +70,13 @@ class TotalCMS
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @param array<mixed> $data
 	 */
-	public function processBufferMacros(array $data = []): string
+	public function processBufferMacros(array $data = [], bool $restartBuffer = false): string
 	{
-		$content = $this->buffer->end();
+		$content = $restartBuffer ? $this->buffer->get() : $this->buffer->end();
 
 		try {
 			return $this->twigEngine->renderString($content, $data);
