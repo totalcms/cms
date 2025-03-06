@@ -54,9 +54,34 @@ class ServerChecker
 			'Max Execution Time' => ini_get('max_execution_time'),
 			'Memory Limit'       => ini_get('memory_limit'),
 			'Timezone'           => date_default_timezone_get(),
+			'Total Space'        => $this->formatBytes(intval(disk_total_space('/'))),
+			'Free Space'         => $this->formatBytes(intval(disk_free_space('/'))),
 			// @phpstan-ignore argument.type
 			'Locale' => setlocale(LC_ALL, 0),
 		];
+	}
+
+	public function cacheDirSize(): string
+	{
+		$dir = $this->config->cachedir;
+		$size = 0;
+		if (file_exists($dir)) {
+			foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir)) as $file) {
+				$size += $file->getSize();
+			}
+		}
+		return $this->formatBytes($size);
+	}
+
+	private function formatBytes(int $bytes): string
+	{
+		$units = ['B', 'KB', 'MB', 'GB', 'TB'];
+		$unitCount = count($units);
+		for ($i = 0; $bytes >= 1024 && $i < $unitCount - 1; $i++) {
+			$bytes /= 1024;
+		}
+
+		return round($bytes, 2) . ' ' . $units[$i];
 	}
 
 	/** @return array<string,mixed> */

@@ -5,6 +5,8 @@
 	If you feel that you are ever not seeing the layouts and content
 	that you expect, you can use this tool to clear the cache.</p>
 
+	<p>Cache Dir Size: <strong>{{ cms.checker.cacheDirSize }}</strong></p>
+
 	{{ cms.form.simple("/cache", "", {
 		method : "DELETE",
 		label  : "Clear Twig Cache",

@@ -58,7 +58,7 @@ class LogAnalyzer
 			return $default;
 		}
 
-		return array_key_first($this->logfiles());
+		return array_key_first($this->logfiles()) ?? '';
 	}
 
 	/** @return array<string,array<string,mixed>> */
