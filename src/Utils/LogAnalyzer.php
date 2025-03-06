@@ -34,7 +34,7 @@ class LogAnalyzer
 			}
 		}
 
-		ksort($files);
+		krsort($files);
 		$this->logfiles = $files;
 
 		return $files;
@@ -48,6 +48,17 @@ class LogAnalyzer
 		}
 
 		return file($this->logfiles[$logfile]) ?: [];
+	}
+
+	public function defaultLogfile(): string
+	{
+		$default = sprintf('totalcms-%s.log', date('Y-m-d'));
+
+		if (array_key_exists($default, $this->logfiles())) {
+			return $default;
+		}
+
+		return array_key_first($this->logfiles());
 	}
 
 	/** @return array<string,array<string,mixed>> */
