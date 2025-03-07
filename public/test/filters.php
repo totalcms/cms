@@ -2,11 +2,14 @@
 
 <h1>Total CMS Filter Test</h1>
 
+{% set filterProp = "image.size" %}
+{% set filterValue = getData.size ?? 8000 %}
+
 {% set objects = cms.objects("blog") | filterCollection([
 		{
-			property : "image.size",
+			property : filterProp,
 			operator : "lt",
-			value    : 9000
+			value    : filterValue
 		},
 	]) | sortCollection([
 		{ property : "featured", reverse : true },
