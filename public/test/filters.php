@@ -5,8 +5,8 @@
 {% set objects = cms.objects("blog") | filterCollection([
 		{
 			property : "image.size",
-			operator : "gt",
-			value    : 2000
+			operator : "lt",
+			value    : 9000
 		},
 	]) | sortCollection([
 		{ property : "featured", reverse : true },
