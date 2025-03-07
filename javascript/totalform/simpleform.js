@@ -56,6 +56,10 @@ export default class SimpleForm {
 
 	success(response) {
 		this.toggleButton("success", "🥳");
+		if (this.form.totalform) {
+			this.form.totalform.changeState("success");
+			this.form.totalform.fields.forEach(field => field.saved());
+		}
 		if (this.refresh) {
 			window.location.reload();
 		}

@@ -10,6 +10,7 @@ use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
+use TotalCMS\Action\Admin\AdminSettingsSaveAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
 
@@ -30,7 +31,7 @@ return function (App $app) {
 		$group->post('/utils/twig-playground', AdminUtilsAction::class)->setName('admin-utils-playground');
 
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
-		$group->post('/settings', AdminSettingsAction::class)->setName('admin-settings-save');
+		$group->post('/settings', AdminSettingsSaveAction::class)->setName('admin-settings-save');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');

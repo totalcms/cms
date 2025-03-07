@@ -14,7 +14,6 @@ final class AdminSettingsAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
-		private SettingsSaver $settingsSaver,
 	) {
 	}
 
@@ -31,16 +30,9 @@ final class AdminSettingsAction
 		$savedSettings = [];
 		$defaults = require __DIR__ . '/../../../config/settings.php';
 
-		if ($request->getMethod() === 'POST') {
-			$savedSettings = (array)$request->getParsedBody();
-			$savedSettings = $this->settingsSaver->save($savedSettings);
-		}
-
-		if (empty($savedSettings)) {
-			$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
-			if (file_exists($configFile)) {
-				$savedSettings = require $configFile;
-			}
+		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+		if (file_exists($configFile)) {
+			$savedSettings = require $configFile;
 		}
 
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
