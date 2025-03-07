@@ -24,13 +24,14 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 	public function getGlobals(): array
 	{
 		return [
-			'cms'        => $this->adapter,
-			'qr'         => $this->generator,
-			'getParams'  => $_GET,
-			'postParams' => array_filter($_POST),
-			'patterns'   => $this->patterns,
-			'factory'    => $this->faker->createFaker(),
-			'flash'      => $this->session->getFlash(),
+			'cms'         => $this->adapter,
+			'qr'          => $this->generator,
+			'getData'     => $_GET,
+			'postData'    => array_filter($_POST),
+			'sessionData' => $_SESSION,
+			'patterns'    => $this->patterns,
+			'factory'     => $this->faker->createFaker(),
+			'flash'       => $this->session->getFlash(),
 		];
 	}
 

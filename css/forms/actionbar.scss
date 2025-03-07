@@ -32,6 +32,7 @@
 
 		opacity          : 0.8;
 		background-color : oklch(var(--actionbar-icon-color));
+		aspect-ratio     : 1/1;
 		width            : var(--actionbar-icon-size);
 		height           : var(--actionbar-icon-size);
 		transition       : scale 300ms ease-in-out;

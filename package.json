@@ -15,7 +15,7 @@
   "dependencies": {
     "@deltablot/dropzone": "^7.1.1",
     "awesomplete": "^1.1.5",
-    "choices.js": "^11.0.2",
+    "choices.js": "11.0.4",
     "codemirror": "^5.65.0",
     "dompurify": "^3.0.2",
     "froala-editor": "^4.0.18",

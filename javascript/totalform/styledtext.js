@@ -83,7 +83,9 @@ export default class StyledTextField extends TotalField {
     }
 
     getValue() {
-        return this.froala.html.get();
+        let content = this.froala.html.get();
+        content = content.replace(/\%253A/g, "%3A"); // fix for double encoding of colon
+        return content;
     }
 
     uploadAPI() {

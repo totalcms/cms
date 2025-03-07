@@ -4,10 +4,10 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
-use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
 class FileSaver
@@ -28,9 +28,8 @@ class FileSaver
 		string $objectID,
 		string $property,
 		string $filePath,
-		?string $subpath = null
-	): ObjectData
-	{
+		?string $subpath = null,
+	): ObjectData {
 		// $subpath argument is only supported in DepotSaver at this time
 
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
@@ -101,8 +100,12 @@ class FileSaver
 
 	protected function fetchProperty(string $collection, string $objectID, string $property): PropertyData
 	{
-		// Get the existing object property data
-		$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
+		try {
+			// Get the existing object property data
+			$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
+		} catch (\UnexpectedValueException $e) {
+			$fileProperty = $this->createPropertyObject($collection, $property);
+		}
 
 		return $fileProperty;
 	}

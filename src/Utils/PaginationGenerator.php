@@ -4,7 +4,7 @@ namespace TotalCMS\Utils;
 
 class PaginationGenerator
 {
-	/** @param array<string,string> $getParams */
+	/** @param array<string,string> $getData */
 	public static function simplePagination(
 		int $totalObjects,
 		int $currentPage,
@@ -12,7 +12,7 @@ class PaginationGenerator
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getParams   = [],
+		array  $getData     = [],
 	): string {
 		$totalPages = ceil($totalObjects / $pageLimit);
 
@@ -22,13 +22,13 @@ class PaginationGenerator
 
 		$prevPage = $currentPage == 1 ? $currentPage : $currentPage - 1;
 		$prevLink = HTMLUtils::element('a', $prevContent, [
-			'href'  => self::buildPageUrl($pageKey, $prevPage, $getParams),
+			'href'  => self::buildPageUrl($pageKey, $prevPage, $getData),
 			'class' => 'pagination-prev',
 		]);
 
 		$nextPage = $currentPage == $totalPages ? $currentPage : $currentPage + 1;
 		$nextLink = HTMLUtils::element('a', $nextContent, [
-			'href'  => self::buildPageUrl($pageKey, $nextPage, $getParams),
+			'href'  => self::buildPageUrl($pageKey, $nextPage, $getData),
 			'class' => 'pagination-next',
 		]);
 
@@ -44,7 +44,7 @@ class PaginationGenerator
 		return $pagination;
 	}
 
-	/** @param array<string,string> $getParams */
+	/** @param array<string,string> $getData */
 	public static function fullPagination(
 		int $totalObjects,
 		int $currentPage,
@@ -52,7 +52,7 @@ class PaginationGenerator
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getParams   = [],
+		array  $getData   = [],
 	): string {
 		$totalPages = ceil($totalObjects / $pageLimit);
 
@@ -62,13 +62,13 @@ class PaginationGenerator
 
 		$prevPage = $currentPage == 1 ? $currentPage : $currentPage - 1;
 		$prevLink = HTMLUtils::element('a', $prevContent, [
-			'href'  => self::buildPageUrl($pageKey, $prevPage, $getParams),
+			'href'  => self::buildPageUrl($pageKey, $prevPage, $getData),
 			'class' => 'pagination-prev',
 		]);
 
 		$nextPage = $currentPage == $totalPages ? $currentPage : $currentPage + 1;
 		$nextLink = HTMLUtils::element('a', $nextContent, [
-			'href'  => self::buildPageUrl($pageKey, $nextPage, $getParams),
+			'href'  => self::buildPageUrl($pageKey, $nextPage, $getData),
 			'class' => 'pagination-next',
 		]);
 
@@ -76,7 +76,7 @@ class PaginationGenerator
 
 		for ($i = 1; $i <= $totalPages; $i++) {
 			$link = HTMLUtils::element('a', strval($i), [
-				'href' =>  self::buildPageUrl($pageKey, $i, $getParams),
+				'href' =>  self::buildPageUrl($pageKey, $i, $getData),
 			]);
 			$page = HTMLUtils::element('li', $link, [
 				'class' => $i == $currentPage ? 'active' : '',
@@ -91,9 +91,9 @@ class PaginationGenerator
 		return $pagination;
 	}
 
-	/** @param array<string,string> $getParams */
-	private static function buildPageUrl(string $pageKey, int $page, array $getParams): string
+	/** @param array<string,string> $getData */
+	private static function buildPageUrl(string $pageKey, int $page, array $getData): string
 	{
-		return '?' . http_build_query(array_merge($getParams, [$pageKey => $page]));
+		return '?' . http_build_query(array_merge($getData, [$pageKey => $page]));
 	}
 }

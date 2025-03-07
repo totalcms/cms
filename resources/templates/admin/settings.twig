@@ -8,13 +8,9 @@
 		<p>This form will manage and save global settings for Total CMS. These settings will be saved in a
 			<code>tcms.php</code> in the DOCUMENT_ROOT of the server.</p>
 
-		<form id="settings-form"
-			class="totalform help-on-hover help-box"
-			action="{{ cms.api }}/admin/settings"
-			method="POST"
-			data-disabled>
+		{# {{ var_dump(settings) }} #}
 
-			{# {{ var_dump(settings) }} #}
+		{% set formfields %} {% apply raw %}
 
 			<div class="form-field checkbox-field" data-type="checkbox">
 				<div class="form-group">
@@ -118,8 +114,15 @@
 				</p>
 			</div>
 
-			<button class="cms-button" type="submit">Save</button>
-		</form>
+		{% endapply %} {% endset %}
+
+		<div id="settings-form">
+		{{ cms.form.simple("/admin/settings", formfields, {
+			method : "POST",
+			label  : "Save Settings",
+			class  : "help-on-hover help-box",
+		}) }}
+		</div>
 
 	</main>
 

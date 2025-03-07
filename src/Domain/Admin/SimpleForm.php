@@ -15,6 +15,7 @@ final class SimpleForm
 		private string $route,
 		private string $method = 'POST',
 		private string $label  = 'Submit',
+		private string $class  = '',
 		private bool $refresh  = false,
 	) {
 	}
@@ -28,7 +29,7 @@ final class SimpleForm
 		$buttonWrapper = HTMLUtils::element('div', $button, ['class' => 'form-inline-fields']);
 
 		$formAttrs = [
-			'class'        => 'simple-form totalform',
+			'class'        => 'simple-form totalform ' . $this->class,
 			'data-route'   => $this->route,
 			'data-method'  => $this->method,
 			'data-api'     => $this->api,

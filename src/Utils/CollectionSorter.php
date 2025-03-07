@@ -30,97 +30,54 @@ class CollectionSorter
 	}
 
 	/**
+	 * Sort a collection by multiple criteria.
+	 *
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 * I tried to refactor this into static methods, but it was not working
+	 *
 	 * @param array<array<string,mixed>> $rules
 	 *
 	 * @return array<array<string,mixed>>
 	 */
 	public function sortByRules(array $rules): array
 	{
-		$sortedCollection = $this->collection;
+		$collection = $this->collection;
 
-		foreach ($rules as $rule) {
-			$sortedCollection = $this->sortByRule($sortedCollection, $rule);
-		}
+		usort($collection, function ($a, $b) use ($rules) {
+			// reverse the rules so that the sort happens in logical order
+			foreach (array_reverse($rules) as $rule) {
+				if (isset($rule['shuffle']) && boolval($rule['shuffle']) === true) {
+					return rand(-1, 1); // Randomize order if shuffle is true
+				}
+				if (!isset($rule['property'])) {
+					continue;
+				}
+				$natsort = false;
+				if (isset($rule['natural']) && boolval($rule['natural']) === true) {
+					$natsort = true;
+				}
 
-		return $sortedCollection;
-	}
+				$property = $rule['property'];
+				$aValue   = CollectionRefiner::getPropertyValueForRecord($a, $property);
+				$bValue   = CollectionRefiner::getPropertyValueForRecord($b, $property);
 
-	/**
-	 * @param array<array<string,mixed>> $collection
-	 * @param array<string,mixed> $rule
-	 *
-	 * @return array<array<string,mixed>>
-	 */
-	protected function sortByRule(array $collection, array $rule): array
-	{
-		if (isset($rule['shuffle']) && boolval($rule['shuffle']) === true) {
-			return $this->shuffle();
-		}
-		if (!isset($rule['property'])) {
-			return $collection;
-		}
-		$operator = 'sort';
-		if (isset($rule['natural']) && boolval($rule['natural']) === true) {
-			$operator = 'natsort';
-		}
-		$collection = self::$operator($collection, strval($rule['property']));
+				$aExists = $aValue !== null;
+				$bExists = $bValue !== null;
 
-		if (isset($rule['reverse']) && boolval($rule['reverse']) === true) {
-			$collection = array_reverse($collection);
-		}
-
-		return $collection;
-	}
-
-	/**
-	 * @param array<array<string,mixed>> $collection
-	 *
-	 * @return array<array<string,mixed>>
-	 */
-	protected static function natsort(array $collection, string $property): array
-	{
-		usort($collection, function ($a, $b) use ($property) {
-			$aValue = CollectionRefiner::getPropertyValueForRecord($a, $property);
-			$bValue = CollectionRefiner::getPropertyValueForRecord($b, $property);
-
-			$aExists = $aValue !== null;
-			$bExists = $bValue !== null;
-			if ($aExists && $bExists) {
-				return strnatcasecmp($aValue, $bValue);
-			} elseif ($aExists) {
-				return -1; // prioritize $a
-			} elseif ($bExists) {
-				return 1; // prioritize $b
+				if ($aExists && $bExists) {
+					$comparison = $natsort ? strnatcasecmp($aValue, $bValue) : $aValue <=> $bValue;
+					if ($comparison !== 0) {
+						return isset($rule['reverse']) && $rule['reverse'] ? -$comparison : $comparison;
+					}
+				} elseif ($aExists) {
+					return isset($rule['reverse']) && $rule['reverse'] ? 1 : -1;
+				} elseif ($bExists) {
+					return isset($rule['reverse']) && $rule['reverse'] ? -1 : 1;
+				}
 			}
 
-			return 0; // Niether contain key
-		});
-
-		return $collection;
-	}
-
-	/**
-	 * @param array<array<string,mixed>> $collection
-	 *
-	 * @return array<array<string,mixed>>
-	 */
-	protected static function sort(array $collection, string $property): array
-	{
-		usort($collection, function ($a, $b) use ($property) {
-			$aValue = CollectionRefiner::getPropertyValueForRecord($a, $property);
-			$bValue = CollectionRefiner::getPropertyValueForRecord($b, $property);
-
-			$aExists = $aValue !== null;
-			$bExists = $bValue !== null;
-			if ($aExists && $bExists) {
-				return $aValue <=> $bValue;
-			} elseif ($aExists) {
-				return -1; // prioritize $a
-			} elseif ($bExists) {
-				return 1; // prioritize $b
-			}
-
-			return 0; // Niether contain key
+			return 0; // Neither contain key or all comparisons are equal
 		});
 
 		return $collection;

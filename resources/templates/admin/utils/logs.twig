@@ -18,7 +18,7 @@
 		The developer of this app must be a stud! 😎</p>
 	{% endif %}
 
-	{% set activelog = getParams.logfile | default(logfiles | keys | last)%}
+	{% set activelog = getData.logfile | default(cms.logger.defaultLogfile()) %}
 
 	<form id="log-analyzer" class="totalform" data-disabled>
 		<div class="form-field select-field">

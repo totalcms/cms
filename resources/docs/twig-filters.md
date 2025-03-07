@@ -66,7 +66,7 @@ var_dump(mixed $variable): string
 	{
 		property : "image.size",
 		operator : "lt",
-		value    : getParams.size ?? ""
+		value    : getData.size ?? ""
 	},
 ]) | sortCollection([
 	{

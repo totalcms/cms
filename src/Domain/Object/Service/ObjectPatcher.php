@@ -54,7 +54,7 @@ final class ObjectPatcher
 		$propertyData = $object->properties->get($property);
 
 		if (!$propertyData instanceof PropertyData) {
-			throw new \UnexpectedValueException('Unable to locate object property to update');
+			throw new \UnexpectedValueException('Unable to locate object property to patch');
 		}
 
 		$patch = $propertyData->transform();

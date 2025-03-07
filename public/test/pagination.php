@@ -2,7 +2,7 @@
 
 <h1>Total CMS Pagination Demo</h1>
 
-{% set currentPage = getParams.p ? getParams.p | int : 1 %}
+{% set currentPage = getData.p ? getData.p | int : 1 %}
 {% set posts = cms.objects('blog') %}
 {% set totalObjects = posts | length %}
 {% set pageLimit = 2 %}
@@ -19,7 +19,7 @@
 	{% endfor %}
 </div>
 
-<!-- {{ cms.paginationSimple(totalObjects, currentPage, pageLimit, 'p', 'Prev', 'Next', getParams) }} -->
-{{ cms.paginationFull(totalObjects, currentPage, pageLimit, 'p', 'Prev', 'Next', getParams) }}
+<!-- {{ cms.paginationSimple(totalObjects, currentPage, pageLimit, 'p', 'Prev', 'Next', getData) }} -->
+{{ cms.paginationFull(totalObjects, currentPage, pageLimit, 'p', 'Prev', 'Next', getData) }}
 
 <?php include __DIR__ . '/_end.php'; ?>

@@ -34,14 +34,6 @@ class CollectionRefiner
 
 		foreach ($rules as $rule) {
 			$value = $rule['value'] ?? '';
-			if (is_string($value)) {
-				$filteredCollection = $this->filterByRule(
-					collection : $filteredCollection,
-					property   : $rule['property'],
-					value      : $value,
-					operator   : $rule['operator'],
-				);
-			}
 			if (is_array($value)) {
 				$filteredCollection = $this->filterByArrayRule(
 					collection : $filteredCollection,
@@ -49,7 +41,15 @@ class CollectionRefiner
 					values     : $value,
 					operator   : $rule['operator'],
 				);
+				continue;
 			}
+
+			$filteredCollection = $this->filterByRule(
+				collection : $filteredCollection,
+				property   : $rule['property'],
+				value      : strval($value),
+				operator   : $rule['operator'],
+			);
 		}
 
 		return $filteredCollection;
