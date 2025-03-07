@@ -29,6 +29,53 @@ class CollectionSorter
 		return $collection;
 	}
 
+	 /**
+     * @param array<array<string,mixed>> $rules
+     *
+     * @return array<array<string,mixed>>
+     */
+    // public function sortByRules(array $rules): array
+    // {
+    //     return $this->multiSort($this->collection, $rules);
+    // }
+
+    /**
+     * Sort a collection by multiple criteria.
+     *
+     * @param array<array<string,mixed>> $collection
+     * @param array<array<string,mixed>> $rules
+     *
+     * @return array<array<string,mixed>>
+     */
+    // protected function multiSort(array $collection, array $rules): array
+    // {
+    //     usort($collection, function ($a, $b) use ($rules) {
+    //         foreach ($rules as $rule) {
+    //             $property = $rule['property'];
+    //             $aValue = CollectionRefiner::getPropertyValueForRecord($a, $property);
+    //             $bValue = CollectionRefiner::getPropertyValueForRecord($b, $property);
+
+    //             $aExists = $aValue !== null;
+    //             $bExists = $bValue !== null;
+
+    //             if ($aExists && $bExists) {
+    //                 $comparison = $aValue <=> $bValue;
+    //                 if ($comparison !== 0) {
+    //                     return isset($rule['reverse']) && $rule['reverse'] ? -$comparison : $comparison;
+    //                 }
+    //             } elseif ($aExists) {
+    //                 return isset($rule['reverse']) && $rule['reverse'] ? 1 : -1;
+    //             } elseif ($bExists) {
+    //                 return isset($rule['reverse']) && $rule['reverse'] ? -1 : 1;
+    //             }
+    //         }
+
+    //         return 0; // Neither contain key or all comparisons are equal
+    //     });
+
+    //     return $collection;
+    // }
+
 	/**
 	 * @param array<array<string,mixed>> $rules
 	 *
