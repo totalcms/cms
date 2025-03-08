@@ -437,7 +437,7 @@ export default class TotalForm {
     // Form States
     //-------------------------
 	isEditMode() {
-        return ("PUT" === this.method.toUpperCase() && this.form.classList.contains("edit-mode"));
+		return (["PUT", "PATCH"].includes(this.method.toUpperCase()) && this.form.classList.contains("edit-mode"));
     }
 
     editMode() {
@@ -446,8 +446,10 @@ export default class TotalForm {
 		}
 
 		// Set the method to PUT for editing existing objects
-		this.method = "PUT";
-		this.form.dataset.method = this.method;
+		if (this.form.dataset.method === "POST") {
+			this.method = "PUT";
+			this.form.dataset.method = this.method;
+		}
 		this.form.classList.add("edit-mode");
 
 		// The ID cannot be changed in edit form

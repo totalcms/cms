@@ -84,7 +84,7 @@ export default class StyledTextField extends TotalField {
 
     getValue() {
         let content = this.froala.html.get();
-        content = content.replace(/\%253A/g, "%3A"); // fix for double encoding of colon
+        content = content.replace(/\%25/g, "%"); // fix for double encoding of many characters such as colon
         return content;
     }
 
