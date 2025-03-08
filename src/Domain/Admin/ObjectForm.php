@@ -16,8 +16,10 @@ final class ObjectForm extends TotalForm
 		if (!empty($this->id) && $this->objectFetcher->existsObject($this->collection, $this->id)) {
 			// If the form is for editing an existing item, change the method to PUT
 			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
-			$this->method     = 'PATCH';
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
+			if ($this->method === 'POST') {
+				$this->method = 'PUT';
+			}
 		}
 
 		$this->initCollectionData();

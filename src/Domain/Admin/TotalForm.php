@@ -187,7 +187,7 @@ abstract class TotalForm
 		if (!empty($this->helpStyle)) {
 			$this->class .= " help-{$this->helpStyle}";
 		}
-		if ($this->method === 'PUT') {
+		if ($this->method !== 'POST') {
 			$this->class .= ' edit-mode';
 		}
 	}
