@@ -34,6 +34,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -192,6 +193,10 @@ return [
 
 	ObjectFetcher::class => function (ContainerInterface $container) {
 		return new ObjectFetcher($container->get(ObjectRepository::class));
+	},
+
+	PropertyFetcher::class => function (ContainerInterface $container) {
+		return new PropertyFetcher($container->get(ObjectFetcher::class));
 	},
 
 	TotalFormFactory::class => function (ContainerInterface $container) {
