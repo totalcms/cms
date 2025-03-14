@@ -5,6 +5,12 @@ namespace TotalCMS;
 use DI\Container;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
@@ -12,9 +18,12 @@ use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
 
-// ---------------------------------------------------------------------------------
-// Entry point for Total CMS PHP API
-// ---------------------------------------------------------------------------------
+/**
+ * Entry point for Total CMS PHP API
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ */
 class TotalCMS
 {
 	private BufferController $buffer;
@@ -47,11 +56,52 @@ class TotalCMS
 		}
 	}
 
+	// ---------------------------------------------------------------------------------
+	// Public methods to access Total CMS services
+	// ---------------------------------------------------------------------------------
+	public function collectionLister(): CollectionLister
+	{
+		return $this->container->get(CollectionLister::class);
+	}
+
+	public function collectionFetcher(): CollectionFetcher
+	{
+		return $this->container->get(CollectionFetcher::class);
+	}
+
+	public function indexReader(): IndexReader
+	{
+		return $this->container->get(IndexReader::class);
+	}
+
+	public function indexSearcher(): IndexSearcher
+	{
+		return $this->container->get(IndexSearcher::class);
+	}
+
+	public function objectFetcher(): ObjectFetcher
+	{
+		return $this->container->get(ObjectFetcher::class);
+	}
+
+	public function propertyFetcher(): PropertyFetcher
+	{
+		return $this->container->get(PropertyFetcher::class);
+	}
+
+	// ---------------------------------------------------------------------------------
+	// Public methods for page access
+	// ---------------------------------------------------------------------------------
+
 	/** @param string|array<string> $groups */
 	public function restrictPageAccess(array|string $groups = [], string $collection = ''): void
 	{
 		$this->access->restrictPageAccess($groups, $collection);
 	}
+
+	// ---------------------------------------------------------------------------------
+	// Public methods for buffer control and Twig rendering
+	// ---------------------------------------------------------------------------------
 
 	public function startBuffer(): void
 	{
