@@ -137,6 +137,7 @@ class FormField
 			'max'              => is_null($this->max) ? null : (string)$this->max,
 			'step'             => is_null($this->step) ? null : (string)$this->step,
 			'list'             => $this->datalist ? "datalist-{$this->uuid}" : null,
+			'autocomplete'     => 'new-password',
 		];
 
 		// Remove null values from the attributes array

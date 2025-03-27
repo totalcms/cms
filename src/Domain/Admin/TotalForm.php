@@ -120,6 +120,7 @@ abstract class TotalForm
 		'maxlength',
 		'pattern',
 		'min',
+		'rows',
 		'max',
 		'step',
 		'size',

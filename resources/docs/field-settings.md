@@ -123,3 +123,36 @@ Here is an example.
   "pastePlain"        : true
 }
 ```
+
+## All Text Input Fields (text, url, tel, phone, password, etc.)
+
+The following can be used on text fields to limit the number of characters.
+
+```json
+{
+  "maxlength" : 100,
+  "minlength" : 10,
+  "pattern"   : "/ab+c/",
+  "readonly"  : true,
+  "disabled"  : true,
+  "class"     : "custom-class"
+}
+```
+
+## Textarea
+
+```json
+{
+  "rows" : 10,
+}
+```
+
+## Numbers Fields
+
+```json
+{
+  "min"  : 1,
+  "max"  : 10,
+  "step" : 0.25,
+}
+```

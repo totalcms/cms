@@ -26,6 +26,7 @@ final class CollectionData
 	public string $description;  // collection description
 	public string $schema;       // schema name
 	public string $url;          // collection url to object page minus the slug
+	public string $category;     // collection category for grouping in the admin
 
 	/** @var array<string> */
 	public array $groups;        // access groups that can access this collection
@@ -54,6 +55,7 @@ final class CollectionData
 			'name'        => $this->name ?? ucfirst($this->id),
 			'description' => empty($this->description) ? $defaultDescription : $this->description,
 			'url'         => $this->url ?? '',
+			'category'    => $this->category ?? '',
 			'groups'      => $this->groups ?? [],
 		];
 

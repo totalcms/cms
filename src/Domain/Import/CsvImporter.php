@@ -5,29 +5,36 @@ namespace TotalCMS\Domain\Import;
 use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
 
 final class CsvImporter
 {
-	private ObjectRepository $storage;
 	private LoggerInterface $logger;
+	private string $collection;
 
-	public function __construct(ObjectRepository $storage, LoggerFactory $loggerFactory)
-	{
-		$this->storage = $storage;
-		$this->logger  = $loggerFactory
+	public function __construct(
+		private CollectionFetcher $collectionFetcher,
+		private ObjectFetcher $objectFetcher,
+		private ObjectImporter $objectImporter,
+		LoggerFactory $loggerFactory,
+	) {
+		$this->logger = $loggerFactory
 			->addFileHandler('csv_importer.log')
 			->createLogger();
 	}
 
-	public function import(string $collection, UploadedFileInterface $file): int
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function import(string $collection, UploadedFileInterface $file, bool $updateObject = false): int
 	{
-		// If your CSV document was created or is read on a Mac
-		if (!ini_get('auto_detect_line_endings')) {
-			ini_set('auto_detect_line_endings', '1');
+		if (!$this->collectionFetcher->collectionExists($collection)) {
+			$error = sprintf('Collection %s does not exist', $collection);
+			$this->logger->error($error);
+			throw new \InvalidArgumentException($error);
 		}
+		$this->collection = $collection;
 
 		$importCount = 0;
 
@@ -37,21 +44,13 @@ final class CsvImporter
 
 		foreach ($csv->getRecords() as $offset => $record) {
 			try {
-				if (
-					!isset($record['id'])
-					|| $this->storage->existsObject($collection, (string)$record['id'])
-				) {
-					$this->logger->info(sprintf('Skipping import of record at row %s', $offset));
+				$imported = $updateObject === true ?
+					$this->updateObject($offset, $record) :
+					$this->importNewObject($offset, $record);
 
-					continue;
+				if ($imported) {
+					$importCount++;
 				}
-
-				// Save the object but do not rebuild the index, we do that at the end
-				$this->storage->saveObject($collection, new ObjectData($record['id'], $record));
-				$this->logger->info(sprintf('Imported record: %s', $record['id']));
-				$this->logger->debug('Imported record', $record);
-
-				$importCount++;
 			} catch (\Exception $exception) {
 				$this->logger->error(
 					sprintf('Error importing record at row %s: %s', $offset, $exception->getMessage())
@@ -59,9 +58,40 @@ final class CsvImporter
 			}
 		}
 
-		// @todo Implement rebuildIndex
-		// $this->storage->rebuildIndex();
-
 		return $importCount;
+	}
+
+	/** @param array<string,mixed> $record */
+	public function importNewObject(int $offset, array $record): bool
+	{
+		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+			$this->logger->info(sprintf('Skipping import of record (%s) at row %s', $record['id'], $offset));
+
+			return false;
+		}
+
+		// Save the object but do not rebuild the index, we do that at the end
+		$this->objectImporter->importObject($this->collection, $record);
+		$this->logger->info(sprintf('Imported record: %s', $record['id']));
+		$this->logger->debug('Imported record', $record);
+
+		return true;
+	}
+
+	/** @param array<string,mixed> $record */
+	public function updateObject(int $offset, array $record): bool
+	{
+		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'], $offset));
+
+			return false;
+		}
+
+		// Save the object but do not rebuild the index, we do that at the end
+		$this->objectImporter->updateObject($this->collection, $record);
+		$this->logger->info(sprintf('Updated record: %s', $record['id']));
+		$this->logger->debug('Updated record', $record);
+
+		return true;
 	}
 }

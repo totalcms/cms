@@ -16,6 +16,7 @@
 			<ul>
 				<li class="factory"><a href="collections/{{ collection }}/factory">Factory</a></li>
 				<li class="import"><a href="collections/{{ collection }}/import">Import</a></li>
+				<li class="schema"><a href="schemas/{{ cms.collection(collection).schema }}">Edit Schema</a></li>
 				<li class="reindex"><a class="cms-quick-action" data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
 			</ul>
 		</nav>
@@ -30,17 +31,18 @@
 	</header>
 
 	<nav class="links" id="collection-links">
-		<ul>
-			{% for collection in sortByKey(cms.collections()) %}
-
-				<li class="schema-{{collection.schema}}">
-					<a {% if url.collection == collection.id %}class="active"{% endif %}
-						href="collections/{{ collection.id }}"
-						title="{{ collection.description }}">{{ collection.name }}</a>
-				</li>
-
+		{% for category, collections in cms.collectionsByCategory() %}
+			<h3>{{ category }}</h3>
+			{% for collection in sortByKey(collections) %}
+				<ul>
+					<li class="schema-{{collection.schema}}">
+						<a {% if url.collection == collection.id %}class="active"{% endif %}
+							href="collections/{{ collection.id }}"
+							title="{{ collection.description }}">{{ collection.name }}</a>
+					</li>
+				</ul>
 			{% endfor %}
-		</ul>
+		{% endfor %}
 	</nav>
 
 	<footer>
@@ -93,9 +95,8 @@
 				refresh : false,
 				hidden  : false,
 			}) }}
-			<p style="margin-top:1rem">The factory rules that are defined in the schema for this
+			<p style="margin-top:3rem">The factory rules that are defined in the schema for this
 			collection will be used to generate new objects.</p>
-			<p>In the future, we can add the ability to define custom factory rules here.</p>
 			<p>Make sure the check out the <a href="docs/factory">Factory Docs</a> to see all of the possibilities.</p>
 		</section>
 
@@ -104,7 +105,25 @@
 		{# Import into Collection #}
 		{{ _self.collectionHeader(url.collection, "import") }}
 
-		<p>Import form goes here...</p>
+		<section>
+			{{ cms.form.import(url.collection, {
+				input : 'csv'
+			}) }}
+			<p style="margin-top:3rem">Choose a CSV file where the first row contains the names of the object properties
+			that you will be adding to each object imported.</p>
+			<ul>
+			<li><strong>Update Existing Objects (OFF)</strong>: When disabled, only new objects will be created from the
+			CSV data. Any data for existing objects will be ignored.</li>
+			<li><strong>Update Existing Objects (ON)</strong>: When enabled, the data will only update existing objects in
+			the collection. You can provide as many or as little properties as you want to updates objects in the
+			collection.</li>
+			</ul>
+			<p><strong>This could take a long time.</strong> If you are importing a lot of data, especially with images
+			or large files, it is recommended to break up the data into smaller files and import them separately.
+			This depends greatly on your server settings for PHP max execution time. Total CMS does attempt
+			to disable any timeouts while performing an import.</p>
+		</section>
+
 
 	{% elseif url.id == "edit" %}
 

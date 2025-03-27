@@ -80,6 +80,7 @@ export default class SVGField extends TotalField {
             lineNumbers    : true,
             lineWrapping   : true,
             readOnly       : false,
+            autofocus      : false,
             mode           : "text/html",
             tabMode        : "indent",
             tabSize        : 2
@@ -96,14 +97,17 @@ export default class SVGField extends TotalField {
 			htmlAllowedAttrs     : svgAttrs,
 			charCounterCount     : false,
 			htmlUntouched        : true,
+            placeholderText      : "Enter Code View to add SVG content",
 			codeMirror           : window.CodeMirror,
 			codeMirrorOptions    : codeMirrorOptions,
+			quickInsertEnabled   : false,
+			wordCounterCount     : false,
 			events               : {
 				'initialized': function() {
-					// TODO: Figure out how to enable CodeView without stealing focus
-					// Go into code editor if there is no SVG set
+                    // Go into code editor if there is no SVG set
 					if (this.html.get().length === 0) {
-						// this.codeView.toggle();
+                        // TODO: Figure out how to enable CodeView without stealing focus
+                        // this.codeView.toggle();
 					}
 				},
 				'contentChanged': () => this.changed(),

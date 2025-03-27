@@ -62,6 +62,17 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function import(string $collection, array $options = []): string
+	{
+		$options['api']        = $this->api;
+		$options['collection'] = $collection;
+
+		$form = new ImportForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function schema(array $options = []): string
 	{
 		$options = array_merge([

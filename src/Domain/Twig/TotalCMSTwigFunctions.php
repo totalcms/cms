@@ -45,6 +45,8 @@ final class TotalCMSTwigFunctions
 		'print_r',
 		'json_pretty',
 		'embed',
+		'imageExists',
+		'fileExists',
 	];
 
 	/** @return array<TwigFunction> */
@@ -143,6 +145,22 @@ final class TotalCMSTwigFunctions
 	public static function embed(string $url, array $options = []): string
 	{
 		return EmbedBuilder::embed($url, $options);
+	}
+
+	/** @param array<string,mixed> $file */
+	public static function fileExists(array $file): bool
+	{
+		if (!isset($file['size'])) {
+			return false;
+		}
+
+		return $file['size'] !== 0;
+	}
+
+	/** @param array<string,mixed> $image */
+	public static function imageExists(array $image): bool
+	{
+		return self::fileExists($image);
 	}
 
 	// -------------------------

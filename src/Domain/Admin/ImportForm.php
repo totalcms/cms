@@ -1,0 +1,76 @@
+<?php
+
+namespace TotalCMS\Domain\Admin;
+
+use TotalCMS\Utils\HTMLUtils;
+
+/**
+ * Factory Form Builder.
+ */
+final class ImportForm
+{
+	private SimpleForm $simpleform;
+
+	public function __construct(
+		private string $api,
+		private string $collection,
+		private string $input = 'csv',
+		private string $label = 'Import into Collection',
+	) {
+		$this->simpleform = new SimpleForm(
+			api    : $this->api,
+			route  : "/import/{$this->collection}/{$this->input}",
+			method : 'POST',
+			label  : $this->label,
+			class  : 'import-form',
+		);
+	}
+
+	private function fileField(): string
+	{
+		$labelAttrs = [
+			'for' => $this->input,
+		];
+		$label = HTMLUtils::element('label', strtoupper($this->input). ' File', $labelAttrs);
+
+		$fileAttrs = [
+			'type' => 'file',
+			'name' => $this->input,
+			'id'   => $this->input,
+		];
+		$file = HTMLUtils::inlineElement('input', $fileAttrs);
+
+		return HTMLUtils::element('div', $label . $file);
+	}
+
+	private function updateField(): string
+	{
+		$labelAttrs = [
+			'for' => 'update',
+		];
+		$label = HTMLUtils::element('label', 'Update Existing Objects', $labelAttrs);
+
+		$checkAttrs = [
+			'type' => 'checkbox',
+			'name' => "update",
+			'id'   => "update",
+		];
+		$check = HTMLUtils::inlineElement('input', $checkAttrs);
+
+		return HTMLUtils::element('div', $check . $label, ['class' => 'checkbox-field']);
+	}
+
+
+	public function build(): string
+	{
+		$file = $this->fileField();
+		$update = $this->updateField();
+
+		return $this->simpleform->build($file . $update);
+	}
+
+	public function __toString()
+	{
+		return $this->build();
+	}
+}

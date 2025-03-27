@@ -32,6 +32,9 @@ final class ImportCsvAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
+		// CSV import can take a long time. Attempt to prevent timeouts.
+		set_time_limit(0);
+
 		$collection = $request->getAttribute('collection');
 
 		/** @var UploadedFileInterface[] $files */
@@ -41,7 +44,10 @@ final class ImportCsvAction
 			throw new HttpBadRequestException($request, 'Upload failed');
 		}
 
-		$importCount = $this->csvImporter->import($collection, $files['csv']);
+		$params = (array)$request->getParsedBody();
+		$updateObject = isset($params['update']) && $params['update'] === 'on';
+
+		$importCount = $this->csvImporter->import($collection, $files['csv'], $updateObject);
 
 		return $this->renderer->json(
 			$response,

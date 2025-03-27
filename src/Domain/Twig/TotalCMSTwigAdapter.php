@@ -171,6 +171,32 @@ final class TotalCMSTwigAdapter
 		return $this->collectionLister->listAllCollections();
 	}
 
+	/** @return array<string,list<object>> */
+	public function collectionsByCategory(): array
+	{
+		$collections = $this->collections();
+		$categories  = [];
+		foreach ($collections as $collection) {
+			$category = empty($collection->category) ? 'Collections' : trim(strval($collection->category));
+			if (!key_exists($category, $categories)) {
+				$categories[$category] = [];
+			}
+			$categories[$category][] = $collection;
+		}
+		// Sort the categories by key and move the Collections category to the bottom
+		uksort($categories, function ($a, $b) {
+			if ($a === 'Collections') {
+				return 1;
+			}
+			if ($b === 'Collections') {
+				return -1;
+			}
+			return strcmp($a, $b);
+		});
+
+		return $categories;
+	}
+
 	// Get collection meta data
 	/** @return array<string,mixed> */
 	public function collection(string $collection): array
@@ -532,7 +558,7 @@ final class TotalCMSTwigAdapter
 		$property   = $options['property'];
 
 		$image = $this->data($collection, $id, $property);
-		if (!is_array($image) || !key_exists('uploadDate', $image)) {
+		if (!is_array($image) || !key_exists('size', $image) || $image['size'] === 0) {
 			return '';
 		}
 

@@ -12,13 +12,17 @@ class TextareaField extends FormField
 	/** @return array<string,string> */
 	protected function formFieldAttributes(): array
 	{
+		if (isset($this->settings['rows'])) {
+			$this->rows = $this->settings['rows'];
+		}
+
 		$attributes = [
 			'id'               => "field-{$this->uuid}",
 			'name'             => $this->name,
 			'required'         => $this->required ? '' : null,
 			'disabled'         => $this->disabled ? '' : null,
 			'readonly'         => $this->readonly ? '' : null,
-			'rows'             => $this->rows > 0 ? strval($this->rows) : '3',
+			'rows'             => $this->rows > 0 ? strval($this->rows) : '8',
 			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
 		];

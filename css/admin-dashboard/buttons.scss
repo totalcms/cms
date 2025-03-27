@@ -66,6 +66,7 @@
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
 		&.reindex { --action-icon : var(--icon-refresh) }
+		&.schema { --action-icon : var(--icon-schema) }
 	}
 	a {
 		display         : flex;

@@ -214,6 +214,10 @@ body {
 			color : oklch(var(--totalform-darkgray));
 		}
 	}
+	p, ul, ol {
+		max-width : 65ch;
+		margin-top: 1rem;
+	}
 	form {
 		max-width : 800px;
 	}

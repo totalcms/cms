@@ -70,6 +70,12 @@
 			"field"   : "styledtext",
 			"factory" : "paragraph"
 		},
+		"extra": {
+			"type"    : "string",
+			"label"   : "Extra Content",
+			"help"    : "Extra content area for this post",
+			"field"   : "styledtext"
+		},
 		"categories": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"   : "Categories",

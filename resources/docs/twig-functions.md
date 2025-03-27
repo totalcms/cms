@@ -10,4 +10,6 @@ istype(mixed $variable, string $type): bool
 print_r(mixed $variable): string
 var_dump(mixed $variable): string
 json_decode(mixed $variable): array
+imageExists(image): bool
+fileExists(file): bool
 ```
