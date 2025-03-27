@@ -41,8 +41,10 @@ final class ImportCsvAction
 			throw new HttpBadRequestException($request, 'Upload failed');
 		}
 
-		// TODO: add an option that will use import for new objects vs update for existing objects
-		$importCount = $this->csvImporter->import($collection, $files['csv']);
+		$params = $request->getQueryParams();
+		$updateObject = isset($params['update']) && $params['update'] === 'true';
+
+		$importCount = $this->csvImporter->import($collection, $files['csv'], $updateObject);
 
 		return $this->renderer->json(
 			$response,

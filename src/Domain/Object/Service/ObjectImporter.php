@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Object\Service;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Service\DepotSaver;
 use TotalCMS\Domain\Property\Service\FileSaver;
@@ -37,6 +38,7 @@ final class ObjectImporter
 	public function __construct(
 		private CollectionSchemaFetcher $schemaFetcher,
 		private ObjectSaver $objectSaver,
+		private ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,
 		private ImageSaver $imageSaver,
 		private GallerySaver $gallerySaver,
@@ -45,9 +47,7 @@ final class ObjectImporter
 	) {
 	}
 
-	/**
-	 * @param array<string,mixed> $objectData
-	 */
+	/** @param array<string,mixed> $objectData */
 	public function importObject(string $collection, array $objectData): ObjectData
 	{
 		$this->collection = $collection;
@@ -61,7 +61,32 @@ final class ObjectImporter
 		$this->saveGalleries();
 		$this->saveDepots();
 
-		return $this->objectFetcher->fetchObject($collection, $object->id);
+		return $this->objectFetcher->fetchObject($collection, $this->objectID);
+	}
+
+	/** @param array<string,mixed> $objectData */
+	public function updateObject(string $collection, array $objectData): ObjectData
+	{
+		$this->collection = $collection;
+
+		$objectData = $this->saveRefPropsforLaterProcessing($objectData);
+
+		$this->objectID = $objectData['id'] ?? null;
+		if ($this->objectID === null) {
+			throw new \InvalidArgumentException('Object ID is required for updating');
+		}
+		if (!$this->objectFetcher->existsObject($collection, $this->objectID)) {
+			throw new \InvalidArgumentException('Object does not exist');
+		}
+
+		$this->objectPatcher->patchObject($collection, $this->objectID, $objectData);
+
+		$this->saveImages();
+		$this->saveFiles();
+		$this->saveGalleries();
+		$this->saveDepots();
+
+		return $this->objectFetcher->fetchObject($collection, $this->objectID);
 	}
 
 	/**

@@ -13,6 +13,7 @@ use TotalCMS\Factory\LoggerFactory;
 final class CsvImporter
 {
 	private LoggerInterface $logger;
+	private string $collection;
 
 	public function __construct(
 		private CollectionFetcher $collectionFetcher,
@@ -25,13 +26,15 @@ final class CsvImporter
 			->createLogger();
 	}
 
-	public function import(string $collection, UploadedFileInterface $file): int
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function import(string $collection, UploadedFileInterface $file, bool $updateObject = false): int
 	{
 		if (!$this->collectionFetcher->collectionExists($collection)) {
 			$error = sprintf('Collection %s does not exist', $collection);
 			$this->logger->error($error);
 			throw new \InvalidArgumentException($error);
 		}
+		$this->collection = $collection;
 
 		$importCount = 0;
 
@@ -41,17 +44,13 @@ final class CsvImporter
 
 		foreach ($csv->getRecords() as $offset => $record) {
 			try {
-				if (!isset($record['id']) || $this->objectFetcher->existsObject($collection, (string)$record['id'])) {
-					$this->logger->info(sprintf('Skipping import of record %s at row %s', $record['id'], $offset));
-					continue;
+				$imported = $updateObject === true ?
+					$this->updateObject($offset, $record) :
+					$this->importNewObject($offset, $record);
+
+				if ($imported) {
+					$importCount++;
 				}
-
-				// Save the object but do not rebuild the index, we do that at the end
-				$this->objectImporter->importObject($collection,  $record);
-				$this->logger->info(sprintf('Imported record: %s', $record['id']));
-				$this->logger->debug('Imported record', $record);
-
-				$importCount++;
 			} catch (\Exception $exception) {
 				$this->logger->error(
 					sprintf('Error importing record at row %s: %s', $offset, $exception->getMessage())
@@ -60,5 +59,39 @@ final class CsvImporter
 		}
 
 		return $importCount;
+	}
+
+	/** @param array<string,mixed> $record */
+	public function importNewObject(int $offset, array $record): bool
+	{
+		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+			$this->logger->info(sprintf('Skipping import of record (%s) at row %s', $record['id'], $offset));
+
+			return false;
+		}
+
+		// Save the object but do not rebuild the index, we do that at the end
+		$this->objectImporter->importObject($this->collection, $record);
+		$this->logger->info(sprintf('Imported record: %s', $record['id']));
+		$this->logger->debug('Imported record', $record);
+
+		return true;
+	}
+
+	/** @param array<string,mixed> $record */
+	public function updateObject(int $offset, array $record): bool
+	{
+		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'], $offset));
+
+			return false;
+		}
+
+		// Save the object but do not rebuild the index, we do that at the end
+		$this->objectImporter->updateObject($this->collection, $record);
+		$this->logger->info(sprintf('Updated record: %s', $record['id']));
+		$this->logger->debug('Updated record', $record);
+
+		return true;
 	}
 }
