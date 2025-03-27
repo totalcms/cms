@@ -5,19 +5,20 @@ namespace TotalCMS\Domain\Import;
 use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
 
 final class CsvImporter
 {
-	private ObjectRepository $storage;
 	private LoggerInterface $logger;
 
-	public function __construct(ObjectRepository $storage, LoggerFactory $loggerFactory)
-	{
-		$this->storage = $storage;
-		$this->logger  = $loggerFactory
+	public function __construct(
+		private ObjectFetcher $objectFetcher,
+		private ObjectImporter $objectImporter,
+		LoggerFactory $loggerFactory,
+	) {
+		$this->logger = $loggerFactory
 			->addFileHandler('csv_importer.log')
 			->createLogger();
 	}
@@ -37,17 +38,13 @@ final class CsvImporter
 
 		foreach ($csv->getRecords() as $offset => $record) {
 			try {
-				if (
-					!isset($record['id'])
-					|| $this->storage->existsObject($collection, (string)$record['id'])
-				) {
-					$this->logger->info(sprintf('Skipping import of record at row %s', $offset));
-
+				if (!isset($record['id']) || $this->objectFetcher->existsObject($collection, (string)$record['id'])) {
+					$this->logger->info(sprintf('Skipping import of record %s at row %s', $record['id'], $offset));
 					continue;
 				}
 
 				// Save the object but do not rebuild the index, we do that at the end
-				$this->storage->saveObject($collection, new ObjectData($record['id'], $record));
+				$this->objectImporter->importObject($collection,  $record);
 				$this->logger->info(sprintf('Imported record: %s', $record['id']));
 				$this->logger->debug('Imported record', $record);
 
@@ -58,9 +55,6 @@ final class CsvImporter
 				);
 			}
 		}
-
-		// @todo Implement rebuildIndex
-		// $this->storage->rebuildIndex();
 
 		return $importCount;
 	}
