@@ -116,19 +116,19 @@ final class ObjectImporter
 
 			switch ($property['$ref']) {
 				case SchemaData::PROPERTY_TYPE_TO_REF['image']:
-					$this->images[$name] = $objectData[$name];
+					$this->images[$name] = self::replacePathTemplates($objectData[$name]);
 					$objectData[$name]   = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['gallery']:
-					$this->galleries[$name] = $objectData[$name];
+					$this->galleries[$name] = self::replacePathTemplates($objectData[$name]);
 					$objectData[$name]      = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['file']:
-					$this->files[$name] = $objectData[$name];
+					$this->files[$name] = self::replacePathTemplates($objectData[$name]);
 					$objectData[$name]  = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['depot']:
-					$this->depots[$name] = $objectData[$name];
+					$this->depots[$name] = self::replacePathTemplates($objectData[$name]);
 					$objectData[$name]   = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['list']:
@@ -198,6 +198,13 @@ final class ObjectImporter
 				}
 			}
 		}
+	}
+
+	/** @SuppressWarnings("PHPMD.Superglobals") */
+	private static function replacePathTemplates(string $path = ""): string
+	{
+		$path = str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
+		return $path;
 	}
 
 	/** @return array<string> */
