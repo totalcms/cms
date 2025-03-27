@@ -18,10 +18,11 @@ final class ImportForm
 		private string $label = 'Import into Collection',
 	) {
 		$this->simpleform = new SimpleForm(
-			api: $this->api,
-			route: "/import/{$this->collection}/{$this->input}",
-			method: 'POST',
-			label: $this->label,
+			api    : $this->api,
+			route  : "/import/{$this->collection}/{$this->input}",
+			method : 'POST',
+			label  : $this->label,
+			class  : 'import-form',
 		);
 	}
 
