@@ -63,10 +63,16 @@
         },
 		"groups": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"   : "Groups",
+			"label"   : "Access Groups",
 			"help"    : "Access Groups to control access to the collection and it's files",
 			"field"   : "list"
 		},
+        "category": {
+			"type"  : "string",
+			"label" : "Category",
+			"help"  : "Add a category to organize the collections in the side panel",
+			"field" : "text"
+        },
 		"properties": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
 			"help"  : "Override schema property attributes for this collection.",
