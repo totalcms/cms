@@ -17,7 +17,7 @@ import "froala-editor/js/plugins/colors.min.js";
 // import "froala-editor/js/plugins/cryptojs.min.js";
 import "froala-editor/js/plugins/draggable.min.js";
 // import "froala-editor/js/plugins/edit_in_popup.min.js";
-// import "froala-editor/js/plugins/emoticons.min.js";
+import "froala-editor/js/plugins/emoticons.min.js";
 import "froala-editor/js/plugins/entities.min.js";
 import "froala-editor/js/plugins/file.min.js";
 import "froala-editor/js/plugins/files_manager.min.js";
@@ -41,17 +41,17 @@ import "froala-editor/js/plugins/paragraph_style.min.js";
 import "froala-editor/js/plugins/quick_insert.min.js";
 import "froala-editor/js/plugins/quote.min.js";
 // import "froala-editor/js/plugins/save.min.js";
-// import "froala-editor/js/plugins/special_characters.min.js";
+import "froala-editor/js/plugins/special_characters.min.js";
 import "froala-editor/js/plugins/table.min.js";
-import "froala-editor/js/plugins/track_changes.min.js";
+// import "froala-editor/js/plugins/track_changes.min.js";
 import "froala-editor/js/plugins/trim_video.min.js";
 import "froala-editor/js/plugins/url.min.js";
 import "froala-editor/js/plugins/video.min.js";
-// import "froala-editor/js/plugins/word_counter.min.js";
-// import "froala-editor/js/plugins/word_paste.min.js";
-// import "froala-editor/js/third_party/embedly.min.js";
+import "froala-editor/js/plugins/word_counter.min.js";
+import "froala-editor/js/plugins/word_paste.min.js";
+import "froala-editor/js/third_party/embedly.min.js";
 // import "froala-editor/js/third_party/font_awesome.min.js";
-// import "froala-editor/js/third_party/image_tui.min.js";
+import "froala-editor/js/third_party/image_tui.min.js";
 // import "froala-editor/js/third_party/showdown.min.js";
 // import "froala-editor/js/third_party/spell_checker.min.js";
 
@@ -242,6 +242,7 @@ export default class StyledTextField extends TotalField {
             quickInsertTags    : quickInsertTags,
             paragraphFormat    : paragraphFormat,
             enter              : FroalaEditor.ENTER_P,
+            wordCounterCount   : false,
             htmlRemoveTags     : ["script"],
             confirmDelete      : true,
             events             : {
