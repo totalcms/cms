@@ -32,6 +32,9 @@ final class ImportCsvAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
+		// CSV import can take a long time. Attempt to prevent timeouts.
+		set_time_limit(0);
+
 		$collection = $request->getAttribute('collection');
 
 		/** @var UploadedFileInterface[] $files */
