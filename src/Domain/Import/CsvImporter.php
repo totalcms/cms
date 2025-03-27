@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Import;
 use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
@@ -14,6 +15,7 @@ final class CsvImporter
 	private LoggerInterface $logger;
 
 	public function __construct(
+		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
 		private ObjectImporter $objectImporter,
 		LoggerFactory $loggerFactory,
@@ -25,9 +27,10 @@ final class CsvImporter
 
 	public function import(string $collection, UploadedFileInterface $file): int
 	{
-		// If your CSV document was created or is read on a Mac
-		if (!ini_get('auto_detect_line_endings')) {
-			ini_set('auto_detect_line_endings', '1');
+		if (!$this->collectionFetcher->collectionExists($collection)) {
+			$error = sprintf('Collection %s does not exist', $collection);
+			$this->logger->error($error);
+			throw new \InvalidArgumentException($error);
 		}
 
 		$importCount = 0;

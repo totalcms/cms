@@ -75,6 +75,13 @@ final class ObjectImporter
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
 
+		// Filter out properties that are not in the schema
+		$objectData = array_filter(
+			$objectData,
+			fn($value, $name) => isset($schema->properties[$name]),
+			ARRAY_FILTER_USE_BOTH
+		);
+
 		foreach ($schema->properties as $name => $property) {
 			// Skip properties that are not references or if the data is not set
 			if (!isset($property['$ref'], $objectData[$name])) {
