@@ -94,9 +94,8 @@
 				refresh : false,
 				hidden  : false,
 			}) }}
-			<p style="margin-top:1rem">The factory rules that are defined in the schema for this
+			<p style="margin-top:3rem">The factory rules that are defined in the schema for this
 			collection will be used to generate new objects.</p>
-			<p>In the future, we can add the ability to define custom factory rules here.</p>
 			<p>Make sure the check out the <a href="docs/factory">Factory Docs</a> to see all of the possibilities.</p>
 		</section>
 
@@ -105,7 +104,21 @@
 		{# Import into Collection #}
 		{{ _self.collectionHeader(url.collection, "import") }}
 
-		<p>Import form goes here...</p>
+		<section>
+			{{ cms.form.import(url.collection, {
+				input : 'csv'
+			}) }}
+			<p style="margin-top:3rem">Choose a CSV file where the first row contains the names of the object properties
+			that you will be adding to each object imported.</p>
+			<ul>
+			<li><strong>Update Existing Objects (OFF)</strong>: When disabled, only new objects will be created from the
+			CSV data. Any data for existing objects will be ignored.</li>
+			<li><strong>Update Existing Objects (ON)</strong>: When enabled, the data will only update existing objects in
+			the collection. You can provide as many or as little properties as you want to updates objects in the
+			collection.</li>
+			</ul>
+		</section>
+
 
 	{% elseif url.id == "edit" %}
 

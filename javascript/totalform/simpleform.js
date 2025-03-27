@@ -32,6 +32,7 @@ export default class SimpleForm {
     isDomNode(node){
         return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
     }
+
     setForm(formRef) {
         switch(typeof formRef) {
             case "string":
@@ -45,9 +46,20 @@ export default class SimpleForm {
         return null;
     }
 
+	hasFileField() {
+		return this.form.querySelector("input[type=file]");
+	}
+
 	send() {
 		this.button.classList.remove("success", "error");
 		this.button.classList.add("processing");
+
+		if (this.hasFileField()) {
+			this.api.postFileAPI(this.route, new FormData(this.form), this.method)
+				.then(response => this.success(response))
+				.catch(error => this.error(error));
+			return;
+		}
 
         this.api.postAPI(this.route, this.generateData(), this.method)
             .then(response => this.success(response))

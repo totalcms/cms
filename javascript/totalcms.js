@@ -119,6 +119,30 @@ export default class TotalCMS {
         });
     }
 
+    postFileAPI(api, data, method = "POST") {
+
+		let headers = {};
+		if (method !== "POST") headers["X-Http-Method-Override"] = method.toUpperCase();
+
+		// console.log(method, headers);
+
+        return fetch(this.buildApiQuery(api), {
+            method  : "POST",
+            mode    : this.options.cors ? "cors" : "same-origin",
+            headers : new Headers(headers),
+            body: data
+        }).then(response => {
+			if (!response.ok) {
+				return response.json().then(json => {
+					const error = new Error(json.error.message);
+					error.data = json;
+					throw error;
+				});
+			}
+			return response.json();
+        });
+    }
+
 	// Cached API fetch
 	fetchCachedAPI(api) {
         if (this.cache && sessionStorage.getItem(api)) {
