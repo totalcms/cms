@@ -20,6 +20,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  * It's main difference from ObjectSaver is that it will
  * import images, galleries, files and depots from local filesystem
  *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
 final class ObjectImporter
 {
