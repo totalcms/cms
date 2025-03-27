@@ -33,7 +33,7 @@
 	<nav class="links" id="collection-links">
 		{% for category, collections in cms.collectionsByCategory() %}
 			<h3>{{ category }}</h3>
-			{% for collection in collections %}
+			{% for collection in sortByKey(collections) %}
 				<ul>
 					<li class="schema-{{collection.schema}}">
 						<a {% if url.collection == collection.id %}class="active"{% endif %}

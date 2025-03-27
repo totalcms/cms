@@ -177,7 +177,7 @@ final class TotalCMSTwigAdapter
 		$collections = $this->collections();
 		$categories  = [];
 		foreach ($collections as $collection) {
-			$category = empty($collection->category) ? 'Collections' : strval($collection->category);
+			$category = empty($collection->category) ? 'Collections' : trim(strval($collection->category));
 			if (!key_exists($category, $categories)) {
 				$categories[$category] = [];
 			}
