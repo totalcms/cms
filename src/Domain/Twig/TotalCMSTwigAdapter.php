@@ -558,7 +558,7 @@ final class TotalCMSTwigAdapter
 		$property   = $options['property'];
 
 		$image = $this->data($collection, $id, $property);
-		if (!is_array($image) || !key_exists('uploadDate', $image)) {
+		if (!is_array($image) || !key_exists('size', $image) || $image['size'] === 0) {
 			return '';
 		}
 
