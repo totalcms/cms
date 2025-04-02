@@ -5,21 +5,21 @@ namespace TotalCMS;
 use DI\Container;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
-use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
 
 /**
- * Entry point for Total CMS PHP API
+ * Entry point for Total CMS PHP API.
  *
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
@@ -53,6 +53,22 @@ class TotalCMS
 		}
 		if (!self::isPreview()) {
 			$this->session->start();
+		}
+	}
+
+	/** @param array<string,mixed> $vars */
+	public function restoreSessionVariables(array $vars): void
+	{
+		if (!$this->session->isStarted()) {
+			return;
+		}
+		// Restore session variables
+		// Only set the variables if they are not already set
+		// This is to prevent overwriting existing session variables
+		foreach ($vars as $key => $value) {
+			if (!$this->session->has($key)) {
+				$this->session->set($key, $value);
+			}
 		}
 	}
 
