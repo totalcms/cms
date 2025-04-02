@@ -79,7 +79,7 @@ export default class TotalForm {
 			url: this.form.dataset.api,
 		});
 		this.route      = this.form.dataset.route;
-		this.method     = this.form.dataset.method||"PUT";
+		this.method     = "POST";
 		this.id         = this.form.dataset.id||"";
 		this.collection = this.form.dataset.collection;
 		this.schema     = this.form.dataset.schema;
@@ -445,11 +445,10 @@ export default class TotalForm {
 			return;
 		}
 
-		// Set the method to PUT for editing existing objects
-		if (this.form.dataset.method === "POST") {
-			this.method = "PUT";
-			this.form.dataset.method = this.method;
-		}
+		// Set the method to PUT or PATCH for editing existing objects
+		this.method = this.form.dataset.method||"PUT";
+		if (this.method.toUpperCase() === "POST") this.method = "PUT";
+
 		this.form.classList.add("edit-mode");
 
 		// The ID cannot be changed in edit form
