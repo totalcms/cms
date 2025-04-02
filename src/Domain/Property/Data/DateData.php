@@ -28,12 +28,13 @@ class DateData extends PropertyData
 	public function actionsBeforeSave(): DateData
 	{
 		if (isset($this->settings[self::CREATION_DATE]) && $this->settings[self::CREATION_DATE] === true) {
-			if ((empty($this->date) || $this->date === self::CREATION_DATE)) {
+			if (empty($this->date) || $this->date === self::CREATION_DATE) {
 				$this->date = self::cleanDate();
 			}
 		} elseif (isset($this->settings[self::UPDATE_DATE]) && $this->settings[self::UPDATE_DATE] === true) {
 			$this->date = self::cleanDate();
 		}
+
 		return $this;
 	}
 
@@ -41,6 +42,11 @@ class DateData extends PropertyData
 	{
 		if (empty($date)) {
 			$date = 'now';
+		}
+
+		// If the date is a timestamp, convert it to a formatted date string
+		if (is_numeric($date)) {
+			$date = date('Y-m-d H:i:s', intval($date));
 		}
 
 		$config   = Config::init();

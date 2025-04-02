@@ -114,6 +114,11 @@ export default class Identifier extends TotalField {
 		this.input.setCustomValidity("");
     }
 
+	updateNonIDProperty() {
+		this.valid = true;
+		this.form.unsaved();
+    }
+
 	validate() {
 		return this.valid;
 	}
@@ -125,6 +130,13 @@ export default class Identifier extends TotalField {
 
 		// Set the slugified value
 		this.setValue(id);
+
+		// If the property is not ID, do not check for existence
+		// This is for when you use and ID field on a non-ID property
+		if (this.property !== "id") {
+			this.updateNonIDProperty();
+			return;
+		}
 
 		let api = `/collections/${this.form.collection}/${id}`;
 

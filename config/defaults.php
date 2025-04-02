@@ -86,7 +86,7 @@ $settings['logger'] = [
 
 // Session
 $settings['session'] = [
-	'name'                   => 'totalcms',
+	'name'                   => null, // Setting this to null for conflict to other stacks. Otherwise use 'totalcms',
 	'cookie_samesite'        => 'Lax',
 	'cache_expire'           => 0,
 	'cookie_secure'          => true,

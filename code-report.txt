@@ -1,6 +1,6 @@
 
 File Counts:
-	php	: 312
+	php	: 313
 	js	: 52
 	scss	: 99
 	json	: 50
@@ -8,15 +8,15 @@ File Counts:
 	html	: 1
 	sh	: 7
 
-Total Files: 549
+Total Files: 550
 
 Code Line Counts:
-	php	: 18528
-	js	: 5254
+	php	: 18551
+	js	: 5265
 	scss	: 7993
-	json	: 3733
+	json	: 3732
 	twig	: 1550
 	html	: 1
 	sh	: 168
 
-Total Lines of Code: 37227
+Total Lines of Code: 37260
