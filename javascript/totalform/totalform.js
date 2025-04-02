@@ -460,8 +460,10 @@ export default class TotalForm {
 		}
 
 		// Update the API to the edit endpoint
-		this.route = `${this.route}/${this.id}`;
-		this.form.dataset.route = this.route;
+		if (!this.route.endsWith(this.id)) {
+			this.route = `${this.route}/${this.id}`;
+			this.form.dataset.route = this.route;
+		}
 
 		// Update the droplets to autoupload
 		this.droplets.forEach(field => field.droplet.autoProcessQueue());
