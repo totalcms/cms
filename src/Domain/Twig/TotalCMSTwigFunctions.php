@@ -147,9 +147,11 @@ final class TotalCMSTwigFunctions
 		return EmbedBuilder::embed($url, $options);
 	}
 
-	/** @param array<string,mixed> $file */
-	public static function fileExists(array $file): bool
+	public static function fileExists(mixed $file): bool
 	{
+		if (!is_array($file)) {
+			return false;
+		}
 		if (!isset($file['size'])) {
 			return false;
 		}
@@ -157,8 +159,7 @@ final class TotalCMSTwigFunctions
 		return $file['size'] !== 0;
 	}
 
-	/** @param array<string,mixed> $image */
-	public static function imageExists(array $image): bool
+	public static function imageExists(mixed $image): bool
 	{
 		return self::fileExists($image);
 	}
