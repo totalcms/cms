@@ -11,7 +11,6 @@ return function (App $app) {
 		// !$group->post('/{collection}/json', Import\ImportJsonAction::class)->setName('import-json');
 		// !$group->post('/{collection}/rss', Import\ImportRssAction::class)->setName('import-rss');
 		// !$group->post('/{collection}/url', Import\ImportUrlAction::class)->setName('import-url');
-		// !$group->post('/{collection}/yaml', Import\ImportYamlAction::class)->setName('import-yaml');
 		// !$group->post('/{collection}/wordpress', Import\ImportWordpressAction::class)->setName('import-wordpress');
 	});
 };
