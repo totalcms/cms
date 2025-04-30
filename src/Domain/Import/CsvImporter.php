@@ -6,6 +6,7 @@ use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
@@ -20,6 +21,7 @@ final class CsvImporter
 		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
 		private ObjectImporter $objectImporter,
+		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -84,6 +86,7 @@ final class CsvImporter
 			$this->logger->info(sprintf('Imported record: %s', $record['id']));
 		} else {
 			// Add job to queue
+			$this->jobQueuer->queueImport($this->collection, $record);
 			$this->logger->info(sprintf('Queued record for import: %s', $record['id']));
 		}
 		$this->logger->debug('Imported record', $record);
@@ -108,6 +111,7 @@ final class CsvImporter
 			$this->logger->info(sprintf('Updated record: %s', $record['id']));
 		} else {
 			// Add job to queue
+			$this->jobQueuer->queueUpdate($this->collection, $record);
 			$this->logger->info(sprintf('Queued record for update: %s', $record['id']));
 		}
 		$this->logger->debug('Updated record', $record);
