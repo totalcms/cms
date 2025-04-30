@@ -14,6 +14,7 @@ final class CsvImporter
 {
 	private LoggerInterface $logger;
 	private string $collection;
+	private bool $processNow = false;
 
 	public function __construct(
 		private CollectionFetcher $collectionFetcher,
@@ -24,6 +25,11 @@ final class CsvImporter
 		$this->logger = $loggerFactory
 			->addFileHandler('csv_importer.log')
 			->createLogger();
+	}
+
+	public function processNow(): void
+	{
+		$this->processNow = true;
 	}
 
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
@@ -61,35 +67,49 @@ final class CsvImporter
 		return $importCount;
 	}
 
-	/** @param array<string,mixed> $record */
+	/**
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 * @param array<string,mixed> $record
+	 */
 	public function importNewObject(int $offset, array $record): bool
 	{
 		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping import of record (%s) at row %s', $record['id'], $offset));
-
 			return false;
 		}
 
-		// Save the object but do not rebuild the index, we do that at the end
-		$this->objectImporter->importObject($this->collection, $record);
-		$this->logger->info(sprintf('Imported record: %s', $record['id']));
+		if ($this->processNow) {
+			// Save the object but do not rebuild the index, we do that at the end
+			$this->objectImporter->importObject($this->collection, $record);
+			$this->logger->info(sprintf('Imported record: %s', $record['id']));
+		} else {
+			// Add job to queue
+			$this->logger->info(sprintf('Queued record for import: %s', $record['id']));
+		}
 		$this->logger->debug('Imported record', $record);
 
 		return true;
 	}
 
-	/** @param array<string,mixed> $record */
+	/**
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 * @param array<string,mixed> $record
+	 */
 	public function updateObject(int $offset, array $record): bool
 	{
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'], $offset));
-
 			return false;
 		}
 
-		// Save the object but do not rebuild the index, we do that at the end
-		$this->objectImporter->updateObject($this->collection, $record);
-		$this->logger->info(sprintf('Updated record: %s', $record['id']));
+		if ($this->processNow) {
+			// Save the object but do not rebuild the index, we do that at the end
+			$this->objectImporter->updateObject($this->collection, $record);
+			$this->logger->info(sprintf('Updated record: %s', $record['id']));
+		} else {
+			// Add job to queue
+			$this->logger->info(sprintf('Queued record for update: %s', $record['id']));
+		}
 		$this->logger->debug('Updated record', $record);
 
 		return true;
