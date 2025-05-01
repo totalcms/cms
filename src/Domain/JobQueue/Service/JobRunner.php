@@ -73,7 +73,7 @@ final class JobRunner
 
 	private function processImportJob(JobData $job): void
 	{
-		$data = json_decode($job->payload);
+		$data = json_decode($job->payload, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$error = 'Invalid JSON payload: ' . json_last_error_msg();
 			$this->logger->error($error, $job->toArray());
@@ -89,7 +89,7 @@ final class JobRunner
 
 	private function processUpdateJob(JobData $job): void
 	{
-		$data = json_decode($job->payload);
+		$data = json_decode($job->payload, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$error = 'Invalid JSON payload: ' . json_last_error_msg();
 			$this->logger->error($error, $job->toArray());

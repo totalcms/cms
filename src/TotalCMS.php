@@ -44,8 +44,8 @@ class TotalCMS
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
 
+		// CLI mode, no need to start the session
 		if (PHP_SAPI === 'cli') {
-			// CLI mode, no need to start the session
 			return;
 		}
 

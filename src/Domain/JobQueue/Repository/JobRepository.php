@@ -11,8 +11,8 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 
 final class JobRepository
 {
-	private \PDO $db;
-	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue.db';
+	private PDO $db;
+	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue';
 
 	private const CREATE_TABLE_SQL = <<<SQL
 		CREATE TABLE jobqueue (
@@ -102,12 +102,11 @@ final class JobRepository
 		$job->status = $status;
 
 		$stmt = $this->db->prepare(self::UPDATE_JOB_SQL);
-		$stmt->bindValue(':id', $job->id, SQLITE3_INTEGER);
-		$stmt->bindValue(':status', $job->status, SQLITE3_TEXT);
-		$stmt->bindValue(':attempts', $job->attempts, SQLITE3_INTEGER);
-		$stmt->bindValue(':lastError', $job->lastError, SQLITE3_TEXT);
+		$stmt->bindValue(':id', $job->id);
+		$stmt->bindValue(':status', $job->status);
+		$stmt->bindValue(':attempts', $job->attempts);
+		$stmt->bindValue(':lastError', $job->lastError);
 		$stmt->execute();
-		$this->db->exec('COMMIT');
 
 		return $job;
 	}
@@ -115,6 +114,7 @@ final class JobRepository
 	public function fetchNextJob(): JobData
 	{
 		$stmt = $this->db->prepare(self::FETCH_NEXT_JOB_SQL);
+		$stmt->execute();
 
 		if (!$stmt) {
 			throw new RuntimeException('Failed to prepare query to fetch next job');
@@ -136,7 +136,7 @@ final class JobRepository
 	{
 		$stmt = $this->db->prepare(self::FETCH_NEXT_JOB_SQL);
 		$stmt->execute();
-		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
+		$record = $stmt->fetch(PDO::FETCH_ASSOC);
 
 		return !empty($record);
 	}
@@ -156,13 +156,9 @@ final class JobRepository
 	public function fetchJobById(int $id): JobData
 	{
 		$stmt = $this->db->prepare(self::SELECT_JOB_SQL);
-
-		if (!$stmt) {
-			throw new RuntimeException('Failed to prepare query to fetch job by ID');
-		}
-
-		$stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
+		$stmt->bindValue(':id', $id);
+		$stmt->execute();
+		$record = $stmt->fetch(PDO::FETCH_ASSOC);
 
 		if (!$record) {
 			throw new DomainException(sprintf('Job with ID %d not found', $id));
@@ -177,11 +173,10 @@ final class JobRepository
 			throw new DomainException(sprintf('Invalid job type %s', $type));
 		}
 		$stmt = $this->db->prepare(self::INSERT_JOB_SQL);
-		$stmt->bindValue(':type', $type, SQLITE3_TEXT);
-		$stmt->bindValue(':payload', $payload, SQLITE3_TEXT);
-		$stmt->bindValue(':collection', $collection, SQLITE3_TEXT);
+		$stmt->bindValue(':type', $type);
+		$stmt->bindValue(':payload', $payload);
+		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
-		$this->db->exec('COMMIT');
 
 		$id = $this->db->lastInsertId();
 		if (!$id) {

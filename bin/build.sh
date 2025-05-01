@@ -51,7 +51,7 @@ find dist/resources -type f -exec chmod 444 {} +
 
 # Ensure this does not get shipped
 rm -f dist/resources/.bundle
-rm -f dist/resources/jobqueue.db
+rm -f dist/resources/jobqueue
 rm -f dist/resources/bin/.processJobs
 
 # Most recent version shipped. Would be nice to have the version bump automated.
