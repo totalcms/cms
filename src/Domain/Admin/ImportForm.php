@@ -60,13 +60,30 @@ final class ImportForm
 		return HTMLUtils::element('div', $check . $label, ['class' => 'checkbox-field']);
 	}
 
+	private function queueField(): string
+	{
+		$labelAttrs = [
+			'for' => 'queue',
+		];
+		$label = HTMLUtils::element('label', 'Queue Jobs for Import', $labelAttrs);
+
+		$checkAttrs = [
+			'type' => 'checkbox',
+			'name' => "queue",
+			'id'   => "queue",
+		];
+		$check = HTMLUtils::inlineElement('input', $checkAttrs);
+
+		return HTMLUtils::element('div', $check . $label, ['class' => 'checkbox-field']);
+	}
 
 	public function build(): string
 	{
 		$file = $this->fileField();
 		$update = $this->updateField();
+		$queue = $this->queueField();
 
-		return $this->simpleform->build($file . $update);
+		return $this->simpleform->build($file . $update . $queue);
 	}
 
 	public function __toString()

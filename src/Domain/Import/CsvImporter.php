@@ -15,7 +15,7 @@ final class CsvImporter
 {
 	private LoggerInterface $logger;
 	private string $collection;
-	private bool $processNow = false;
+	private bool $queueJobs = false;
 
 	public function __construct(
 		private CollectionFetcher $collectionFetcher,
@@ -29,9 +29,9 @@ final class CsvImporter
 			->createLogger();
 	}
 
-	public function processNow(): void
+	public function queueJobs(): void
 	{
-		$this->processNow = true;
+		$this->queueJobs = true;
 	}
 
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
@@ -80,14 +80,14 @@ final class CsvImporter
 			return false;
 		}
 
-		if ($this->processNow) {
-			// Save the object but do not rebuild the index, we do that at the end
-			$this->objectImporter->importObject($this->collection, $record);
-			$this->logger->info(sprintf('Imported record: %s', $record['id']));
-		} else {
+		if ($this->queueJobs) {
 			// Add job to queue
 			$this->jobQueuer->queueImport($this->collection, $record);
 			$this->logger->info(sprintf('Queued record for import: %s', $record['id']));
+		} else {
+			// Save the object but do not rebuild the index, we do that at the end
+			$this->objectImporter->importObject($this->collection, $record);
+			$this->logger->info(sprintf('Imported record: %s', $record['id']));
 		}
 		$this->logger->debug('Imported record', $record);
 
@@ -105,14 +105,14 @@ final class CsvImporter
 			return false;
 		}
 
-		if ($this->processNow) {
-			// Save the object but do not rebuild the index, we do that at the end
-			$this->objectImporter->updateObject($this->collection, $record);
-			$this->logger->info(sprintf('Updated record: %s', $record['id']));
-		} else {
+		if ($this->queueJobs) {
 			// Add job to queue
 			$this->jobQueuer->queueUpdate($this->collection, $record);
 			$this->logger->info(sprintf('Queued record for update: %s', $record['id']));
+		} else {
+			// Save the object but do not rebuild the index, we do that at the end
+			$this->objectImporter->updateObject($this->collection, $record);
+			$this->logger->info(sprintf('Updated record: %s', $record['id']));
 		}
 		$this->logger->debug('Updated record', $record);
 
