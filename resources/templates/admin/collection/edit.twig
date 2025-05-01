@@ -1,0 +1,16 @@
+{# Edit Collection #}
+<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}"><span>{{ url.collection }}</span></a></h1>
+{{ cms.form.collection({
+	id           : url.collection,
+	save         : "Save",
+	delete       : "Delete",
+	helpStyle    : 'label',
+	helpOnFocus  : true,
+	deleteAction : {
+		"action" : "redirect",
+		"link"   : "collections"
+	},
+	editAction : {
+		"action" : "refresh",
+	},
+}) }}

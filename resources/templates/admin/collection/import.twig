@@ -1,0 +1,18 @@
+<section>
+	{{ cms.form.import(url.collection, {
+		input : 'csv'
+	}) }}
+	<p style="margin-top:3rem">Choose a CSV file where the first row contains the names of the object properties
+	that you will be adding to each object imported.</p>
+	<ul>
+	<li><strong>Update Existing Objects (OFF)</strong>: When disabled, only new objects will be created from the
+	CSV data. Any data for existing objects will be ignored.</li>
+	<li><strong>Update Existing Objects (ON)</strong>: When enabled, the data will only update existing objects in
+	the collection. You can provide as many or as little properties as you want to updates objects in the
+	collection.</li>
+	</ul>
+	<p><strong>This could take a long time.</strong> If you are importing a lot of data, especially with images
+	or large files, it is recommended to break up the data into smaller files and import them separately.
+	This depends greatly on your server settings for PHP max execution time. Total CMS does attempt
+	to disable any timeouts while performing an import.</p>
+</section>

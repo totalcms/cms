@@ -1,0 +1,12 @@
+{# New Collection Form #}
+<h1><a href="collections">collections</a> / <span>new</span></h1>
+
+{{ cms.form.collection({
+	save        : "Save",
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	newAction   : {
+		"action" : "redirect-object",
+		"link"   : "collections/{id}/edit"
+	},
+}) }}
