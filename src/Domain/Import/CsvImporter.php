@@ -34,6 +34,36 @@ final class CsvImporter
 		$this->queueJobs = true;
 	}
 
+	/**
+	 * Clean up CSV data by removing empty headers and rows with no data.
+	 *
+	 * @param Reader<array<string,string>> $csv
+	 * @return array<int, array<string, mixed>> Cleaned CSV records
+	 */
+	private function cleanCsvData(Reader $csv): array
+	{
+		$headers = $csv->getHeader(); // Get the headers
+		$records = $csv->getRecords(); // Get the records
+
+		// Filter out empty headers
+		$headers = array_filter($headers, function ($header) {
+			return !empty(trim($header));
+		});
+
+		$cleanedRecords = [];
+		foreach ($records as $record) {
+			// Remove columns with empty headers
+			$filteredRecord = array_intersect_key($record, array_flip($headers));
+
+			// Skip rows where all values are empty
+			if (array_filter($filteredRecord)) {
+				$cleanedRecords[] = $filteredRecord;
+			}
+		}
+
+		return $cleanedRecords;
+	}
+
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function import(string $collection, UploadedFileInterface $file, bool $updateObject = false): int
 	{
@@ -50,7 +80,9 @@ final class CsvImporter
 		$csv = Reader::createFromString((string)$file->getStream());
 		$csv->setHeaderOffset(0);
 
-		foreach ($csv->getRecords() as $offset => $record) {
+		$cleanedRecords = $this->cleanCsvData($csv);
+
+		foreach ($cleanedRecords as $offset => $record) {
 			try {
 				$imported = $updateObject === true ?
 					$this->updateObject($offset, $record) :
