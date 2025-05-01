@@ -107,7 +107,7 @@ final class JobRepository
 
 	public function hasPendingJobs(): bool
 	{
-		$stmt = $this->db->prepare('SELECT * FROM jobqueue WHERE status = "pending" LIMIT 1');
+		$stmt = $this->db->prepare("SELECT * FROM jobqueue WHERE status = 'pending' LIMIT 1");
 		$stmt->execute();
 		$record = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -171,13 +171,13 @@ final class JobRepository
 		$stmt  = $this->db->query('SELECT COUNT(*) as total FROM jobqueue');
 		$total = $stmt ? $stmt->fetchColumn() : 0;
 
-		$stmt    = $this->db->query('SELECT COUNT(*) as pending FROM jobqueue WHERE status = "pending"');
+		$stmt    = $this->db->query("SELECT COUNT(*) as pending FROM jobqueue WHERE status = 'pending'");
 		$pending = $stmt ? $stmt->fetchColumn() : 0;
 
-		$stmt   = $this->db->query('SELECT COUNT(*) as failed FROM jobqueue WHERE status = "failed"');
+		$stmt   = $this->db->query("SELECT COUNT(*) as failed FROM jobqueue WHERE status = 'failed'");
 		$failed = $stmt ? $stmt->fetchColumn() : 0;
 
-		$stmt       = $this->db->query('SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = "in_progress"');
+		$stmt       = $this->db->query("SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = 'in_progress'");
 		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
 
 		return [
@@ -196,17 +196,17 @@ final class JobRepository
 		$stmt->execute();
 		$total = $stmt ? $stmt->fetchColumn() : 0;
 
-		$stmt = $this->db->prepare('SELECT COUNT(*) as pending FROM jobqueue WHERE status = "pending" AND collection = :collection');
+		$stmt = $this->db->prepare("SELECT COUNT(*) as pending FROM jobqueue WHERE status = 'pending' AND collection = :collection");
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
 		$pending = $stmt ? $stmt->fetchColumn() : 0;
 
-		$stmt = $this->db->prepare('SELECT COUNT(*) as failed FROM jobqueue WHERE status = "failed" AND collection = :collection');
+		$stmt = $this->db->prepare("SELECT COUNT(*) as failed FROM jobqueue WHERE status = 'failed' AND collection = :collection");
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
 		$failed = $stmt ? $stmt->fetchColumn() : 0;
 
-		$stmt = $this->db->prepare('SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = "in_progress" AND collection = :collection');
+		$stmt = $this->db->prepare("SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = 'in_progress' AND collection = :collection");
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
 		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
