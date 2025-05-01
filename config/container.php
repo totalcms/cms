@@ -32,11 +32,8 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
-use TotalCMS\Domain\JobQueue\Service\JobRunner;
-use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -57,13 +54,6 @@ use TotalCMS\Support\Config;
 use TotalCMS\Utils\LogAnalyzer;
 use TotalCMS\Utils\QRGenerator;
 use TotalCMS\Utils\ServerChecker;
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
-use TotalCMS\Domain\Property\Service\ImageSaver;
-use TotalCMS\Domain\Property\Service\GallerySaver;
-use TotalCMS\Domain\Property\Service\DepotSaver;
-use TotalCMS\Domain\Property\Service\FileSaver;
-use TotalCMS\Domain\Object\Service\ObjectPatcher;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
 
 return [
 	// Application settings
@@ -286,28 +276,6 @@ return [
 			$container->get(PhpSession::class),
 			$container->get(Config::class),
 			$container->get(UserValidationService::class),
-			$container->get(LoggerFactory::class),
-		);
-	},
-
-	ObjectImporter::class => function (ContainerInterface $container) {
-		return new ObjectImporter(
-			$container->get(CollectionSchemaFetcher::class),
-			$container->get(ObjectSaver::class),
-			$container->get(ObjectPatcher::class),
-			$container->get(ObjectFetcher::class),
-			$container->get(ImageSaver::class),
-			$container->get(GallerySaver::class),
-			$container->get(FileSaver::class),
-			$container->get(DepotSaver::class),
-		);
-	},
-
-	JobRunner::class => function (ContainerInterface $container) {
-		return new JobRunner(
-			new JobRepository(),
-			$container->get(ObjectImporter::class),
-			$container->get(IndexBuilder::class),
 			$container->get(LoggerFactory::class),
 		);
 	},

@@ -42,7 +42,7 @@ final class JobRunner
 		$job = $this->jobRepository->fetchNextJob();
 		try {
 			$this->processJob($job);
-			$this->jobRepository->markDone($job);
+			$this->jobRepository->delete($job);
 			$this->logger->info('Job processed successfully', $job->toArray());
 		} catch (\Throwable $e) {
 			$this->jobRepository->markFailed($job, $e->getMessage());

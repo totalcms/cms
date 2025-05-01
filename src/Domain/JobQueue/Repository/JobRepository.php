@@ -3,10 +3,8 @@
 namespace TotalCMS\Domain\JobQueue\Repository;
 
 use PDO;
-use PDOException;
 use RuntimeException;
 use DomainException;
-use PHPUnit\Event\Runtime\PHP;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 
 final class JobRepository
@@ -14,60 +12,9 @@ final class JobRepository
 	private PDO $db;
 	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue';
 
-	private const CREATE_TABLE_SQL = <<<SQL
-		CREATE TABLE jobqueue (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			type TEXT NOT NULL,
-			payload TEXT NOT NULL,
-			collection TEXT NOT NULL,
-			status TEXT DEFAULT 'pending',
-			attempts INTEGER DEFAULT 0,
-			lastError TEXT DEFAULT NULL,
-			createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-	SQL;
-
-	private const UPDATE_JOB_SQL = <<<SQL
-		UPDATE jobqueue
-		SET status = :status,
-			updatedAt = CURRENT_TIMESTAMP,
-			attempts = :attempts,
-			lastError = :lastError
-		WHERE id = :id
-	SQL;
-
-	private const INSERT_JOB_SQL = <<<SQL
-		INSERT INTO jobqueue (type, payload, collection)
-		VALUES (:type, :payload, :collection)
-	SQL;
-
-	private const SELECT_JOB_SQL = <<<SQL
-		SELECT * FROM jobqueue
-		WHERE id = :id
-	SQL;
-
-	private const FETCH_NEXT_JOB_SQL = <<<SQL
-		SELECT * FROM jobqueue
-		WHERE status = 'pending'
-		ORDER BY id ASC
-		LIMIT 1
-	SQL;
-
 	public function __construct()
 	{
 		$this->db = $this->createDb();
-	}
-
-	public function isLocked(): bool
-	{
-		try {
-			$this->db->exec('BEGIN EXCLUSIVE TRANSACTION');
-			$this->db->exec('ROLLBACK');
-			return false;
-		} catch (PDOException $e) {
-			return true;
-		}
 	}
 
 	private function dbExists(): bool
@@ -81,7 +28,19 @@ final class JobRepository
 		$db     = new PDO('sqlite:' . self::DB_PATH);
 
 		if (!$exists) {
-			$db->exec(self::CREATE_TABLE_SQL);
+			$db->exec(<<<SQL
+				CREATE TABLE jobqueue (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					type TEXT NOT NULL,
+					payload TEXT NOT NULL,
+					collection TEXT NOT NULL,
+					status TEXT DEFAULT 'pending',
+					attempts INTEGER DEFAULT 0,
+					lastError TEXT DEFAULT NULL,
+					createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+					updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+				);
+			SQL);
 		}
 
 		return $db;
@@ -101,7 +60,15 @@ final class JobRepository
 		}
 		$job->status = $status;
 
-		$stmt = $this->db->prepare(self::UPDATE_JOB_SQL);
+		$sql = <<<SQL
+			UPDATE jobqueue
+			SET status = :status,
+				updatedAt = CURRENT_TIMESTAMP,
+				attempts = :attempts,
+				lastError = :lastError
+			WHERE id = :id
+		SQL;
+		$stmt = $this->db->prepare($sql);
 		$stmt->bindValue(':id', $job->id);
 		$stmt->bindValue(':status', $job->status);
 		$stmt->bindValue(':attempts', $job->attempts);
@@ -113,7 +80,13 @@ final class JobRepository
 
 	public function fetchNextJob(): JobData
 	{
-		$stmt = $this->db->prepare(self::FETCH_NEXT_JOB_SQL);
+		$sql = <<<SQL
+			SELECT * FROM jobqueue
+			WHERE status = 'pending'
+			ORDER BY id ASC
+			LIMIT 1
+		SQL;
+		$stmt = $this->db->prepare($sql);
 		$stmt->execute();
 
 		if (!$stmt) {
@@ -134,16 +107,18 @@ final class JobRepository
 
 	public function hasPendingJobs(): bool
 	{
-		$stmt = $this->db->prepare(self::FETCH_NEXT_JOB_SQL);
+		$stmt = $this->db->prepare('SELECT * FROM jobqueue WHERE status = "pending" LIMIT 1');
 		$stmt->execute();
 		$record = $stmt->fetch(PDO::FETCH_ASSOC);
 
 		return !empty($record);
 	}
 
-	public function markDone(JobData $job): JobData
+	public function delete(JobData $job): bool
 	{
-		return $this->updateJobStatus($job, JobData::STATUS_DONE);
+		$stmt = $this->db->prepare('DELETE FROM jobqueue WHERE id = :id');
+		$stmt->bindValue(':id', $job->id);
+		return $stmt->execute();
 	}
 
 	public function markFailed(JobData $job, string $error): JobData
@@ -155,7 +130,7 @@ final class JobRepository
 
 	public function fetchJobById(int $id): JobData
 	{
-		$stmt = $this->db->prepare(self::SELECT_JOB_SQL);
+		$stmt = $this->db->prepare('SELECT * FROM jobqueue WHERE id = :id');
 		$stmt->bindValue(':id', $id);
 		$stmt->execute();
 		$record = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -172,7 +147,11 @@ final class JobRepository
 		if (!in_array($type, JobData::TYPE_LIST)) {
 			throw new DomainException(sprintf('Invalid job type %s', $type));
 		}
-		$stmt = $this->db->prepare(self::INSERT_JOB_SQL);
+		$sql = <<<SQL
+			INSERT INTO jobqueue (type, payload, collection)
+			VALUES (:type, :payload, :collection)
+		SQL;
+		$stmt = $this->db->prepare($sql);
 		$stmt->bindValue(':type', $type);
 		$stmt->bindValue(':payload', $payload);
 		$stmt->bindValue(':collection', $collection);
@@ -184,5 +163,59 @@ final class JobRepository
 		}
 
 		return $this->fetchJobById(intval($id));
+	}
+
+	/** @return array<string,int>  */
+	public function queueStats(): array
+	{
+		$stmt  = $this->db->query('SELECT COUNT(*) as total FROM jobqueue');
+		$total = $stmt ? $stmt->fetchColumn() : 0;
+
+		$stmt    = $this->db->query('SELECT COUNT(*) as pending FROM jobqueue WHERE status = "pending"');
+		$pending = $stmt ? $stmt->fetchColumn() : 0;
+
+		$stmt   = $this->db->query('SELECT COUNT(*) as failed FROM jobqueue WHERE status = "failed"');
+		$failed = $stmt ? $stmt->fetchColumn() : 0;
+
+		$stmt       = $this->db->query('SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = "in_progress"');
+		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
+
+		return [
+			'pending'     => intval($pending),
+			'in_progress' => intval($inProgress),
+			'failed'      => intval($failed),
+			'total'       => intval($total),
+		];
+	}
+
+	/** @return array<string,int>  */
+	public function queueStatsForCollection(string $collection): array
+	{
+		$stmt = $this->db->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
+		$stmt->bindValue(':collection', $collection);
+		$stmt->execute();
+		$total = $stmt ? $stmt->fetchColumn() : 0;
+
+		$stmt = $this->db->prepare('SELECT COUNT(*) as pending FROM jobqueue WHERE status = "pending" AND collection = :collection');
+		$stmt->bindValue(':collection', $collection);
+		$stmt->execute();
+		$pending = $stmt ? $stmt->fetchColumn() : 0;
+
+		$stmt = $this->db->prepare('SELECT COUNT(*) as failed FROM jobqueue WHERE status = "failed" AND collection = :collection');
+		$stmt->bindValue(':collection', $collection);
+		$stmt->execute();
+		$failed = $stmt ? $stmt->fetchColumn() : 0;
+
+		$stmt = $this->db->prepare('SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = "in_progress" AND collection = :collection');
+		$stmt->bindValue(':collection', $collection);
+		$stmt->execute();
+		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
+
+		return [
+			'pending'     => intval($pending),
+			'in_progress' => intval($inProgress),
+			'failed'      => intval($failed),
+			'total'       => intval($total),
+		];
 	}
 }
