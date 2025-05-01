@@ -3,11 +3,15 @@
 namespace TotalCMS\Domain\JobQueue\Repository;
 
 use PDO;
+use PDOException;
+use RuntimeException;
+use DomainException;
+use PHPUnit\Event\Runtime\PHP;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 
 final class JobRepository
 {
-	private PDO $db;
+	private \PDO $db;
 	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue.db';
 
 	private const CREATE_TABLE_SQL = <<<SQL
@@ -55,6 +59,17 @@ final class JobRepository
 		$this->db = $this->createDb();
 	}
 
+	public function isLocked(): bool
+	{
+		try {
+			$this->db->exec('BEGIN EXCLUSIVE TRANSACTION');
+			$this->db->exec('ROLLBACK');
+			return false;
+		} catch (PDOException $e) {
+			return true;
+		}
+	}
+
 	private function dbExists(): bool
 	{
 		return file_exists(self::DB_PATH);
@@ -63,7 +78,7 @@ final class JobRepository
 	private function createDb(): PDO
 	{
 		$exists = $this->dbExists();
-		$db = new PDO('sqlite:' . self::DB_PATH);
+		$db     = new PDO('sqlite:' . self::DB_PATH);
 
 		if (!$exists) {
 			$db->exec(self::CREATE_TABLE_SQL);
@@ -75,23 +90,24 @@ final class JobRepository
 	private function markInProgress(JobData $job): JobData
 	{
 		$job->attempts++;
+
 		return $this->updateJobStatus($job, JobData::STATUS_IN_PROGRESS);
 	}
 
 	private function updateJobStatus(JobData $job, string $status): JobData
 	{
 		if (!in_array($status, JobData::STATUS_LIST)) {
-			throw new \DomainException(sprintf('Invalid job status %s', $status));
+			throw new DomainException(sprintf('Invalid job status %s', $status));
 		}
 		$job->status = $status;
 
 		$stmt = $this->db->prepare(self::UPDATE_JOB_SQL);
-    	$stmt->bindValue(':id', $job->id, SQLITE3_INTEGER);
-    	$stmt->bindValue(':status', $job->status, SQLITE3_TEXT);
+		$stmt->bindValue(':id', $job->id, SQLITE3_INTEGER);
+		$stmt->bindValue(':status', $job->status, SQLITE3_TEXT);
 		$stmt->bindValue(':attempts', $job->attempts, SQLITE3_INTEGER);
 		$stmt->bindValue(':lastError', $job->lastError, SQLITE3_TEXT);
-    	$stmt->execute();
-    	$this->db->exec('COMMIT');
+		$stmt->execute();
+		$this->db->exec('COMMIT');
 
 		return $job;
 	}
@@ -101,18 +117,28 @@ final class JobRepository
 		$stmt = $this->db->prepare(self::FETCH_NEXT_JOB_SQL);
 
 		if (!$stmt) {
-			throw new \RuntimeException('Failed to prepare query to fetch next job');
+			throw new RuntimeException('Failed to prepare query to fetch next job');
 		}
 		$record = $stmt->fetch(PDO::FETCH_ASSOC);
 
 		if (!$record) {
-			throw new \DomainException('No pending jobs found');
+			throw new DomainException('No pending jobs found');
 		}
 
 		$job = JobData::fromArray($record);
 
 		$job = $this->markInProgress($job);
+
 		return $job;
+	}
+
+	public function hasPendingJobs(): bool
+	{
+		$stmt = $this->db->prepare(self::FETCH_NEXT_JOB_SQL);
+		$stmt->execute();
+		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+		return !empty($record);
 	}
 
 	public function markDone(JobData $job): JobData
@@ -123,6 +149,7 @@ final class JobRepository
 	public function markFailed(JobData $job, string $error): JobData
 	{
 		$job->lastError = $error;
+
 		return $this->updateJobStatus($job, JobData::STATUS_FAILED);
 	}
 
@@ -131,14 +158,14 @@ final class JobRepository
 		$stmt = $this->db->prepare(self::SELECT_JOB_SQL);
 
 		if (!$stmt) {
-			throw new \RuntimeException('Failed to prepare query to fetch job by ID');
+			throw new RuntimeException('Failed to prepare query to fetch job by ID');
 		}
 
 		$stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-		$record = $stmt->fetch(PDO::FETCH_ASSOC);
+		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 		if (!$record) {
-			throw new \DomainException(sprintf('Job with ID %d not found', $id));
+			throw new DomainException(sprintf('Job with ID %d not found', $id));
 		}
 
 		return JobData::fromArray($record);
@@ -147,7 +174,7 @@ final class JobRepository
 	public function queueJob(string $type, string $collection, string $payload = ''): JobData
 	{
 		if (!in_array($type, JobData::TYPE_LIST)) {
-			throw new \DomainException(sprintf('Invalid job type %s', $type));
+			throw new DomainException(sprintf('Invalid job type %s', $type));
 		}
 		$stmt = $this->db->prepare(self::INSERT_JOB_SQL);
 		$stmt->bindValue(':type', $type, SQLITE3_TEXT);
@@ -158,8 +185,9 @@ final class JobRepository
 
 		$id = $this->db->lastInsertId();
 		if (!$id) {
-			throw new \DomainException('Failed to insert job into the queue');
+			throw new DomainException('Failed to insert job into the queue');
 		}
+
 		return $this->fetchJobById(intval($id));
 	}
 }

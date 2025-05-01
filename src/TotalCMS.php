@@ -3,6 +3,7 @@
 namespace TotalCMS;
 
 use DI\Container;
+use Illuminate\Contracts\Queue\Job;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
@@ -11,6 +12,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
@@ -41,6 +43,11 @@ class TotalCMS
 
 		$loggerFactory = $this->container->get(LoggerFactory::class);
 		$this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
+
+		if (PHP_SAPI === 'cli') {
+			// CLI mode, no need to start the session
+			return;
+		}
 
 		try {
 			$this->buffer           = $this->container->get(BufferController::class);
@@ -103,6 +110,11 @@ class TotalCMS
 	public function propertyFetcher(): PropertyFetcher
 	{
 		return $this->container->get(PropertyFetcher::class);
+	}
+
+	public function jobRunner(): JobRunner
+	{
+		return $this->container->get(JobRunner::class);
 	}
 
 	// ---------------------------------------------------------------------------------
