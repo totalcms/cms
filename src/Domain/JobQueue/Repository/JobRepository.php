@@ -218,4 +218,17 @@ final class JobRepository
 			'total'       => intval($total),
 		];
 	}
+
+	public function clearQueue(): bool
+	{
+		$stmt = $this->db->prepare('DELETE FROM jobqueue');
+		return $stmt->execute();
+	}
+
+	public function clearQueueForCollection(string $collection): bool
+	{
+		$stmt = $this->db->prepare('DELETE FROM jobqueue WHERE collection = :collection');
+		$stmt->bindValue(':collection', $collection);
+		return $stmt->execute();
+	}
 }
