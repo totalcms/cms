@@ -15,9 +15,7 @@ final class ObjectSaver
 	) {
 	}
 
-	/**
-	 * @param array<string,mixed> $objectData
-	 */
+	/** @param array<string,mixed> $objectData */
 	public function saveObject(string $collection, array $objectData): ObjectData
 	{
 		$object = $this->factory->generateObject($collection, $objectData);
@@ -31,7 +29,7 @@ final class ObjectSaver
 
 		$this->storage->saveObject($collection, $object);
 
-		$this->indexBuilder->buildIndex($collection);
+		$this->indexBuilder->smartBuildIndex($collection);
 
 		return $object;
 	}

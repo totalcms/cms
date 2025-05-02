@@ -105,6 +105,16 @@ final class JobRepository
 		return $job;
 	}
 
+	public function hasReindexQueuedFromCollection(string $collection): bool
+	{
+		$stmt = $this->db->prepare("SELECT * FROM jobqueue WHERE status = 'pending' and collection = :collection LIMIT 1");
+		$stmt->bindValue(':collection', $collection);
+		$stmt->execute();
+		$record = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		return !empty($record);
+	}
+
 	public function hasPendingJobs(): bool
 	{
 		$stmt = $this->db->prepare("SELECT * FROM jobqueue WHERE status = 'pending' LIMIT 1");

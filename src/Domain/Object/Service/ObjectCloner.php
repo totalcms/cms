@@ -46,7 +46,7 @@ final class ObjectCloner
 
 		$this->storage->saveObject($to['collection'], $object);
 
-		$this->indexBuilder->buildIndex($to['collection']);
+		$this->indexBuilder->smartBuildIndex($to['collection']);
 
 		return $object;
 	}

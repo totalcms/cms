@@ -36,8 +36,11 @@ final class JobQueuer
 		return $this->queueJob(JobData::TYPE_EXPORT, $collection, $data);
 	}
 
-	public function queueRebuildIndex(string $collection): JobData
+	public function queueBuildIndex(string $collection): void
 	{
-		return $this->queueJob(JobData::TYPE_REBUILD, $collection);
+		if ($this->jobRepository->hasReindexQueuedFromCollection($collection)) {
+			return;
+		}
+		$this->queueJob(JobData::TYPE_REBUILD, $collection);
 	}
 }
