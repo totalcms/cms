@@ -1,0 +1,17 @@
+table.jobqueue-stats {
+	border          : 1px solid oklch(var(--totalform-lightgray));
+	border-collapse : collapse;
+
+	td {
+		line-height : 1.4;
+		padding     : 0.25rem 0.5rem;
+		background  : none;
+
+		&:first-child {
+			padding-right : 2rem;
+		}
+	}
+	tr:nth-child(even) {
+		background-color : oklch(var(--totalform-lightgray) / 50%);
+	}
+}

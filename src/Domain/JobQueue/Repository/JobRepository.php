@@ -181,10 +181,10 @@ final class JobRepository
 		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
 
 		return [
-			'pending'     => intval($pending),
-			'in_progress' => intval($inProgress),
-			'failed'      => intval($failed),
-			'total'       => intval($total),
+			'Pending'     => intval($pending),
+			'In-Progress' => intval($inProgress),
+			'Failed'      => intval($failed),
+			'Total'       => intval($total),
 		];
 	}
 
@@ -212,10 +212,10 @@ final class JobRepository
 		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
 
 		return [
-			'pending'     => intval($pending),
-			'in_progress' => intval($inProgress),
-			'failed'      => intval($failed),
-			'total'       => intval($total),
+			'Pending'     => intval($pending),
+			'In-Progress' => intval($inProgress),
+			'Failed'      => intval($failed),
+			'Total'       => intval($total),
 		];
 	}
 

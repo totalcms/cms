@@ -1,18 +1,56 @@
-<section>
-	{{ cms.form.import(url.collection, {
-		input : 'csv'
-	}) }}
-	<p style="margin-top:3rem">Choose a CSV file where the first row contains the names of the object properties
-	that you will be adding to each object imported.</p>
-	<ul>
-	<li><strong>Update Existing Objects (OFF)</strong>: When disabled, only new objects will be created from the
-	CSV data. Any data for existing objects will be ignored.</li>
-	<li><strong>Update Existing Objects (ON)</strong>: When enabled, the data will only update existing objects in
-	the collection. You can provide as many or as little properties as you want to updates objects in the
-	collection.</li>
-	</ul>
-	<p><strong>This could take a long time.</strong> If you are importing a lot of data, especially with images
-	or large files, it is recommended to break up the data into smaller files and import them separately.
-	This depends greatly on your server settings for PHP max execution time. Total CMS does attempt
-	to disable any timeouts while performing an import.</p>
+<section style="display:grid;align-content:start;gap:3rem">
+
+	<section>
+		<h4 style="margin-bottom:1rem">Import Queue for this Collection</h4>
+		{{ cms.form.jobqueue({
+			collection : url.collection,
+		}) }}
+	</section>
+
+	<section>
+		<details class="cms-accordion">
+			<summary>CSV Import</summary>
+			<div class="content" style="margin-bottom:2rem">
+				<p>Choose a CSV file where the first row contains the names of the object properties
+				that you will be adding to each object imported.
+				<a href="/admin/docs/import">See Import Docs</a>.</p>
+
+				{{ cms.form.import(url.collection, {
+					input : 'csv'
+				}) }}
+			</div>
+		</details>
+
+		<details class="cms-accordion">
+			<summary>JSON Import</summary>
+			<div class="content" style="margin-bottom:2rem">
+				<p>Choose a JSON file the main stucture of the document should be an array of objects.
+				<a href="/admin/docs/import">See Import Docs</a>.</p>
+				{{ cms.form.import(url.collection, {
+					input : 'json'
+				}) }}
+			</div>
+		</details>
+
+		<details class="cms-accordion">
+			<summary>Manage Import Queue</summary>
+			<div class="content" style="margin-bottom:2rem">
+				<p>This will clear the all the pending import jobs for <em><u>just this collection</u></em>.
+				This will not delete any items that have already been imported.</p>
+
+				{{ cms.form.clearqueue({
+					collection : url.collection,
+					label      : 'Clear Import Queue',
+				}) }}
+			</div>
+		</details>
+	</section>
+
+	<script>
+	document.addEventListener("DOMContentLoaded", event => {
+		const details = Array.from(document.querySelectorAll("details"));
+		const accordion = new Details(details, {openFirst:true});
+	});
+	</script>
+
 </section>

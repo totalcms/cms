@@ -73,6 +73,24 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function jobqueue(array $options = []): string
+	{
+		$form = new JobQueueStats(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function clearqueue(array $options = []): string
+	{
+		$options['api'] = $this->api;
+
+		$form = new JobQueueForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function schema(array $options = []): string
 	{
 		$options = array_merge([

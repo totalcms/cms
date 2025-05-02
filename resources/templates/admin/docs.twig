@@ -3,18 +3,11 @@
 {% set menu = [ {
 	"title": "Dashboard",
 	"sub": [
+		{ "title": "Overview", "path": "dashboard" },
 		{ "title": "Field Settings", "path": "field-settings" },
-		{ "title": "Field Options",  "path": "field-options" }
-	]
-},{
-	"title": "API",
-	"sub": [
-		{ "title": "REST API", 		"path": "rest-api" },
-		{ "title": "OpenAPI Docs", 	"path": "api", },
-		{ "title": "PHP API", 		"path": "php-api" },
-		{ "title": "Import", 		"path": "import" },
-		{ "title": "Download", 		"path": "download" },
-		{ "title": "Templates",    	"path": "templates" },
+		{ "title": "Field Options",  "path": "field-options" },
+		{ "title": "Importing Data", "path": "import" },
+		{ "title": "Exporting Data", "path": "export" },
 	]
 },{
 	"title": "Twig Templates",
@@ -28,7 +21,16 @@
 		{ "title": "POST Data", 		"path": "twig-post-data" },
 		{ "title": "SESSION Data", 		"path": "twig-session-data" },
 		{ "title": "Factory", 			"path": "twig-factory" },
-		{ "title": "QR Codes", 			"path": "twig-qrcodes" }
+		{ "title": "QR Codes", 			"path": "twig-qrcodes" },
+	]
+},{
+	"title": "API",
+	"sub": [
+		{ "title": "REST API", 		"path": "rest-api" },
+		{ "title": "OpenAPI Docs", 	"path": "api", },
+		{ "title": "PHP API", 		"path": "php-api" },
+		{ "title": "Download", 		"path": "download" },
+		{ "title": "Templates",    	"path": "templates" },
 	]
 },{
 	"title": "Behind the Scenes",
