@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -15,6 +16,7 @@ use TotalCMS\Support\Config;
  */
 final class CollectionTable
 {
+	private CollectionData $collectionData;
 	private SchemaData $schemaData;
 	/** @var array<array<string,mixed>> */
 	private array $objects;
@@ -32,6 +34,7 @@ final class CollectionTable
 		if (is_null($collectionData)) {
 			throw new \RuntimeException("Collection {$this->collection} not found.");
 		}
+		$this->collectionData = $collectionData;
 
 		$this->schemaData = $this->schemaFetcher->fetchSchema($collectionData->schema);
 		$index            = $this->collectionReader->fetchIndex($this->collection);
@@ -171,10 +174,36 @@ final class CollectionTable
 		return strip_tags((string)$value);
 	}
 
+	/** @return array<array<string,mixed>> */
+	private function sortObjects(): array
+	{
+		$sortBy = $this->collectionData->sortBy ?? 'id';
+		$reverseSort = $this->collectionData->reverseSort ?? false;
+
+		$objects = $this->objects;
+
+		usort($objects, function ($a, $b) use ($sortBy, $reverseSort) {
+			$aValue = $a[$sortBy] ?? '';
+			$bValue = $b[$sortBy] ?? '';
+
+			if ($aValue === $bValue) {
+				return 0;
+			}
+
+			if ($reverseSort) {
+				return ($aValue < $bValue) ? 1 : -1;
+			}
+
+			return ($aValue < $bValue) ? -1 : 1;
+		});
+
+		return $objects;
+	}
+
 	private function buildTableBody(): string
 	{
 		$rows = '';
-		foreach ($this->objects as $object) {
+		foreach ($this->sortObjects() as $object) {
 			$cell = '';
 			// order the columns by the index in the schema
 			$properties = $this->schemaData->index;

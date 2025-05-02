@@ -73,6 +73,28 @@
 			"help"  : "Add a category to organize the collections in the side panel",
 			"field" : "text"
         },
+		"sortBy": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"       : "Sort By",
+			"help"        : "The default property to sort the collection by in the collection view.",
+			"field"       : "select",
+			"placeholder" : "Select a Property",
+			"options"     : [
+				"id"
+			]
+        },
+        "reverseSort": {
+			"type"  : "boolean",
+			"label" : "Reverse Sort",
+			"help"  : "Sort in reverse order",
+			"field" : "checkbox"
+        },
+        "queueRebuildOnSave": {
+			"type"  : "boolean",
+			"label" : "Queue Rebuild Index on Save",
+			"help"  : "When enabled, saving objects will no longer trigger a rebuild of the index. This is useful for large collections.",
+			"field" : "checkbox"
+        },
 		"properties": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
 			"help"  : "Override schema property attributes for this collection.",

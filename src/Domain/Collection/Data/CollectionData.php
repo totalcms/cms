@@ -21,12 +21,15 @@ final class CollectionData
 
 	private Serializer $serializer;
 
-	public string $id;           // collection id
-	public string $name;         // collection name
-	public string $description;  // collection description
-	public string $schema;       // schema name
-	public string $url;          // collection url to object page minus the slug
-	public string $category;     // collection category for grouping in the admin
+	public string $id;                // collection id
+	public string $name;              // collection name
+	public string $description;       // collection description
+	public string $schema;            // schema name
+	public string $url;               // collection url to object page minus the slug
+	public string $category;          // collection category for grouping in the admin
+	public string $sortBy;            // the property to sort the collection by
+	public bool $reverseSort;         // reverse the sort order
+	public bool $queueRebuildOnSave;  // queue a rebuild of the collection
 
 	/** @var array<string> */
 	public array $groups;        // access groups that can access this collection
@@ -50,13 +53,16 @@ final class CollectionData
 		}
 		$defaultDescription = "A collection of {$this->id} objects that conform to the {$this->schema} schema.";
 		$collection = [
-			'id'          => $this->id,
-			'schema'      => $this->schema,
-			'name'        => $this->name ?? ucfirst($this->id),
-			'description' => empty($this->description) ? $defaultDescription : $this->description,
-			'url'         => $this->url ?? '',
-			'category'    => $this->category ?? '',
-			'groups'      => $this->groups ?? [],
+			'id'                 => $this->id,
+			'schema'             => $this->schema,
+			'name'               => $this->name ?? ucfirst($this->id),
+			'description'        => empty($this->description) ? $defaultDescription : $this->description,
+			'url'                => $this->url ?? '',
+			'category'           => $this->category ?? '',
+			'groups'             => $this->groups ?? [],
+			'sortBy'             => $this->sortBy ?? 'id',
+			'reverseSort'        => $this->reverseSort ?? false,
+			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
 		];
 
 		if (!empty($this->properties)) {
