@@ -72,6 +72,9 @@ export default class SimpleForm {
 			this.form.totalform.changeState("success");
 			this.form.totalform.fields.forEach(field => field.saved());
 		}
+	}
+
+	refreshPage() {
 		if (this.refresh) {
 			window.location.reload();
 		}
@@ -94,7 +97,8 @@ export default class SimpleForm {
 				this.button.classList.remove(state);
 				this.button.textContent = originalText;
 				this.button.style.width = "";
-			}, 2000);
+				this.refreshPage();
+			}, 1500);
 		}, 200);
 	}
 

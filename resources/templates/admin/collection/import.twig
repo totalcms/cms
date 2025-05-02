@@ -1,7 +1,7 @@
 <section style="display:grid;align-content:start;gap:3rem">
 
 	<section>
-		<h4 style="margin-bottom:1rem">Import Queue for this Collection</h4>
+		<h4 style="margin-bottom:1rem">Import Queue for {{ url.collection | title }}</h4>
 		{{ cms.form.jobqueue({
 			collection : url.collection,
 		}) }}
@@ -9,7 +9,7 @@
 
 	<section>
 		<details class="cms-accordion">
-			<summary>CSV Import</summary>
+			<summary>CSV Import into {{ url.collection | title }}</summary>
 			<div class="content" style="margin-bottom:2rem">
 				<p>Choose a CSV file where the first row contains the names of the object properties
 				that you will be adding to each object imported.
@@ -22,9 +22,9 @@
 		</details>
 
 		<details class="cms-accordion">
-			<summary>JSON Import</summary>
+			<summary>JSON Import into {{ url.collection | title }}</summary>
 			<div class="content" style="margin-bottom:2rem">
-				<p>Choose a JSON file the main stucture of the document should be an array of objects.
+				<p>Choose a JSON file. The main stucture of the JSON document should be an array of objects.
 				<a href="/admin/docs/import">See Import Docs</a>.</p>
 				{{ cms.form.import(url.collection, {
 					input : 'json'
@@ -33,7 +33,7 @@
 		</details>
 
 		<details class="cms-accordion">
-			<summary>Manage Import Queue</summary>
+			<summary>Manage Import Queue for {{ url.collection | title }}</summary>
 			<div class="content" style="margin-bottom:2rem">
 				<p>This will clear the all the pending import jobs for <em><u>just this collection</u></em>.
 				This will not delete any items that have already been imported.</p>

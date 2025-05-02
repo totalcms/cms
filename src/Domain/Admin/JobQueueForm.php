@@ -18,11 +18,12 @@ final class JobQueueForm
 			: "/jobqueue/{$this->collection}";
 
 		$clearQueueForm = new SimpleForm(
-			api    : $this->api,
-			route  : $route,
-			method : 'DELETE',
-			label  : $this->label,
-			class  : 'jobqueue-clear-form',
+			api     : $this->api,
+			route   : $route,
+			method  : 'DELETE',
+			label   : $this->label,
+			class   : 'jobqueue-clear-form',
+			refresh : true,
 		);
 
 		return $clearQueueForm->build();

@@ -3,7 +3,7 @@
 //------------------------------
 .simple-form {
 	button {
-		transition-property : opacity color background-color;
+		transition-property : opacity, color, background-color;
 		transition-duration : 500ms;
 		opacity             : 1;
 	}
