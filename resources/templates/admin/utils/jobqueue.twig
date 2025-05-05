@@ -12,5 +12,16 @@
 		label      : 'Clear Import Queue',
 	}) }}
 
+	<section style="margin-top:3rem;padding-left:0" class="doc-content">
+		<h4 style="">Process Jobs Scheduled Job</h4>
+
+		<p>The following command should be the exact command that you will need to in order to process the job
+		queue in the background.</p>
+		<p><em>If there is no path to the PHP command, you may need to find out what that is
+		from your hosting company. Depending on your server, it may or may not need it.</em></p>
+
+		<pre><code>{{ cms.processJobQueueCommand() }}</code></pre>
+	</section>
+
 </section>
 

@@ -67,6 +67,22 @@ final class TotalCMSTwigAdapter
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
+	public function processJobQueueCommand(): string
+	{
+		// php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
+		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
+		$installDir = realpath(__DIR__ . '/../../..');
+		$docroot    = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
+		$command    = sprintf(
+			'%s %s/resources/bin/processJobs.php --docroot=%s',
+			$phpPath,
+			$installDir,
+			$docroot,
+		);
+		return $command;
+	}
+
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function getDomainName(): string
 	{
 		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
@@ -191,6 +207,7 @@ final class TotalCMSTwigAdapter
 			if ($b === 'Collections') {
 				return -1;
 			}
+
 			return strcmp($a, $b);
 		});
 
@@ -484,7 +501,7 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getData     = [],
+		array $getData     = [],
 	): string {
 		return PaginationGenerator::simplePagination(...func_get_args());
 	}
@@ -497,7 +514,7 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getData     = [],
+		array $getData     = [],
 	): string {
 		return PaginationGenerator::fullPagination(...func_get_args());
 	}
