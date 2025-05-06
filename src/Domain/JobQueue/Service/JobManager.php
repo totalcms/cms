@@ -11,15 +11,45 @@ final class JobManager
 	) {}
 
 	/** @return array<string,int>  */
-	public function queueStats(): array
+	public function queueByType(): array
 	{
-		return $this->jobRepository->queueStats();
+		return $this->jobRepository->queueByType();
 	}
 
 	/** @return array<string,int>  */
+	public function queueByTypeForCollection(string $collection): array
+	{
+		return $this->jobRepository->queueByTypeForCollection($collection);
+	}
+
+	/** @return array<string,int>  */
+	public function queueByStatus(): array
+	{
+		return $this->jobRepository->queueByStatus();
+	}
+
+	/** @return array<string,int>  */
+	public function queueByStatusForCollection(string $collection): array
+	{
+		return $this->jobRepository->queueByStatusForCollection($collection);
+	}
+
+	/** @return array<string,array<string,int>>  */
+	public function queueStats(): array
+	{
+		return [
+			'status' => $this->queueByStatus(),
+			'type' => $this->queueByType(),
+		];
+	}
+
+	/** @return array<string,array<string,int>>  */
 	public function queueStatsForCollection(string $collection): array
 	{
-		return $this->jobRepository->queueStatsForCollection($collection);
+		return [
+			'status' => $this->queueByStatusForCollection($collection),
+			'type' => $this->queueByTypeForCollection($collection),
+		];
 	}
 
 	public function clearQueue(): bool

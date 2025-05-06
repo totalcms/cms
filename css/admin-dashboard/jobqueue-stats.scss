@@ -8,10 +8,22 @@ table.jobqueue-stats {
 		background  : none;
 
 		&:first-child {
+			min-width   : 125px;
 			padding-right : 2rem;
 		}
 	}
 	tr:nth-child(even) {
 		background-color : oklch(var(--totalform-lightgray) / 50%);
+	}
+}
+
+.jobqueue-all-stats {
+	display : flex;
+	gap     : 3rem;
+}
+
+.jobqueue-stats-wrapper {
+	h4 {
+		margin-bottom : 0.75rem;
 	}
 }

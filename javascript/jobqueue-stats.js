@@ -27,14 +27,16 @@ export default class JobQueueStatsTable {
 
     updateQueueStats() {
         this.api.fetchAPI(this.route).then(data => {
-            for (const key in data) {
-                this.updateCount(key.toLowerCase(), data[key]);
+            for (const type in data) {
+                for (const status in data[type]) {
+                    this.updateCount(status.toLowerCase(), data[type][status]);
+                }
             }
         });
     }
 
     pendingCount() {
-        return parseInt(this.table.querySelector(".pending td:last-child").textContent) || 0;
+        return parseInt(document.querySelector(".jobqueue-stats .pending td:last-child")?.textContent) || 0;
     }
 
     updateCount(field, value) {

@@ -73,11 +73,33 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function jobqueue(array $options = []): string
+	public function jobqueueStats(array $options = []): string
 	{
-		$form = new JobQueueStats(...$options);
+		$stats = new JobQueueStats(...$options);
 
-		return $form->build();
+		return $stats->allStats();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueByStatus(array $options = []): string
+	{
+		$header = $options['header'] ?? null;
+		unset($options['header']);
+
+		$stats = new JobQueueStats(...$options);
+
+		return $stats->tableByStatus($header);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueByType(array $options = []): string
+	{
+		$header = $options['header'] ?? null;
+		unset($options['header']);
+
+		$stats = new JobQueueStats(...$options);
+
+		return $stats->tableByType($header);
 	}
 
 	/** @param array<string,mixed> $options */

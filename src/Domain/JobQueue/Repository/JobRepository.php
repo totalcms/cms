@@ -176,56 +176,95 @@ final class JobRepository
 	}
 
 	/** @return array<string,int>  */
-	public function queueStats(): array
+	public function queueByType(): array
+	{
+		$results = [];
+
+		foreach(JobData::TYPE_LIST as $type) {
+			$stmt = $this->db->prepare("SELECT COUNT(*) as type FROM jobqueue WHERE type = :type");
+			$stmt->bindValue(':type', $type);
+			$stmt->execute();
+			$results[ucfirst($type)] = $stmt ? intval($stmt->fetchColumn()) : 0;
+		}
+		ksort($results);
+
+		// $stmt  = $this->db->query('SELECT COUNT(*) as total FROM jobqueue');
+		// $total = $stmt ? intval($stmt->fetchColumn()) : 0;
+		// $results['Total'] = $total;
+
+		return $results;
+	}
+
+	/** @return array<string,int>  */
+	public function queueByStatus(): array
 	{
 		$stmt  = $this->db->query('SELECT COUNT(*) as total FROM jobqueue');
-		$total = $stmt ? $stmt->fetchColumn() : 0;
+		$total = $stmt ? intval($stmt->fetchColumn()) : 0;
 
-		$stmt    = $this->db->query("SELECT COUNT(*) as pending FROM jobqueue WHERE status = 'pending'");
-		$pending = $stmt ? $stmt->fetchColumn() : 0;
+		$results = [];
 
-		$stmt   = $this->db->query("SELECT COUNT(*) as failed FROM jobqueue WHERE status = 'failed'");
-		$failed = $stmt ? $stmt->fetchColumn() : 0;
+		foreach(JobData::STATUS_LIST as $status) {
+			$stmt = $this->db->prepare("SELECT COUNT(*) as status FROM jobqueue WHERE status = :status");
+			$stmt->bindValue(':status', $status);
+			$stmt->execute();
+			$results[$status] = $stmt ? intval($stmt->fetchColumn()) : 0;
+		}
 
-		$stmt       = $this->db->query("SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = 'in_progress'");
-		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
-
+		// I want these to be in a specific order
 		return [
-			'Pending'     => intval($pending),
-			'In-Progress' => intval($inProgress),
-			'Failed'      => intval($failed),
-			'Total'       => intval($total),
+			'Pending'     => $results[JobData::STATUS_PENDING] ?? 0,
+			'In-Progress' => $results[JobData::STATUS_IN_PROGRESS] ?? 0,
+			'Failed'      => $results[JobData::STATUS_FAILED] ?? 0,
+			'Total'       => $total,
 		];
 	}
 
 	/** @return array<string,int>  */
-	public function queueStatsForCollection(string $collection): array
+	public function queueByTypeForCollection(string $collection): array
+	{
+		$results = [];
+
+		foreach(JobData::TYPE_LIST as $type) {
+			$stmt = $this->db->prepare("SELECT COUNT(*) as type FROM jobqueue WHERE type = :type AND collection = :collection");
+			$stmt->bindValue(':type', $type);
+			$stmt->bindValue(':collection', $collection);
+			$stmt->execute();
+			$results[ucfirst($type)] = $stmt ? intval($stmt->fetchColumn()) : 0;
+		}
+		ksort($results);
+
+		// $stmt  = $this->db->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
+		// $stmt->bindValue(':collection', $collection);
+		// $total = $stmt ? intval($stmt->fetchColumn()) : 0;
+		// $results['Total'] = $total;
+
+		return $results;
+	}
+
+	/** @return array<string,int>  */
+	public function queueByStatusForCollection(string $collection): array
 	{
 		$stmt = $this->db->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
-		$total = $stmt ? $stmt->fetchColumn() : 0;
+		$total = $stmt ? intval($stmt->fetchColumn()) : 0;
 
-		$stmt = $this->db->prepare("SELECT COUNT(*) as pending FROM jobqueue WHERE status = 'pending' AND collection = :collection");
-		$stmt->bindValue(':collection', $collection);
-		$stmt->execute();
-		$pending = $stmt ? $stmt->fetchColumn() : 0;
+		$results = [];
 
-		$stmt = $this->db->prepare("SELECT COUNT(*) as failed FROM jobqueue WHERE status = 'failed' AND collection = :collection");
-		$stmt->bindValue(':collection', $collection);
-		$stmt->execute();
-		$failed = $stmt ? $stmt->fetchColumn() : 0;
+		foreach(JobData::STATUS_LIST as $status) {
+			$stmt = $this->db->prepare("SELECT COUNT(*) as status FROM jobqueue WHERE status = :status AND collection = :collection");
+			$stmt->bindValue(':status', $status);
+			$stmt->bindValue(':collection', $collection);
+			$stmt->execute();
+			$results[$status] = $stmt ? intval($stmt->fetchColumn()) : 0;
+		}
 
-		$stmt = $this->db->prepare("SELECT COUNT(*) as inProgress FROM jobqueue WHERE status = 'in_progress' AND collection = :collection");
-		$stmt->bindValue(':collection', $collection);
-		$stmt->execute();
-		$inProgress = $stmt ? $stmt->fetchColumn() : 0;
-
+		// I want these to be in a specific order
 		return [
-			'Pending'     => intval($pending),
-			'In-Progress' => intval($inProgress),
-			'Failed'      => intval($failed),
-			'Total'       => intval($total),
+			'Pending'     => $results[JobData::STATUS_PENDING] ?? 0,
+			'In-Progress' => $results[JobData::STATUS_IN_PROGRESS] ?? 0,
+			'Failed'      => $results[JobData::STATUS_FAILED] ?? 0,
+			'Total'       => $total,
 		];
 	}
 
