@@ -96,7 +96,7 @@ final class TotalCMSTwigAdapter
 
 	private function startPathForUrl(string $url): string
 	{
-		$path = parse_url($url, PHP_URL_PATH);
+		$path = strval(parse_url($url, PHP_URL_PATH));
 		$start = $path;
 
 		if (str_ends_with($path, 'php')) {
@@ -110,7 +110,7 @@ final class TotalCMSTwigAdapter
 
 	public function apacheRule(string $url, string $collection = "Collection"): string
 	{
-		$path = parse_url($url, PHP_URL_PATH);
+		$path = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
 		$snippet = <<<HTACCESS
@@ -126,7 +126,7 @@ HTACCESS;
 
 	public function nginxRule(string $url, string $collection = "Collection"): string
 	{
-		$path = parse_url($url, PHP_URL_PATH);
+		$path = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
 		$snippet = <<<NGINX

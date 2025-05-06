@@ -3,7 +3,6 @@
 namespace TotalCMS;
 
 use DI\Container;
-use Illuminate\Contracts\Queue\Job;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
@@ -19,7 +18,7 @@ use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
-
+use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 /**
  * Entry point for Total CMS PHP API.
  *
@@ -195,5 +194,29 @@ class TotalCMS
 		$preview     = ($environment === 'preview' || PHP_SAPI === 'cli-server');
 
 		return $preview;
+	}
+
+	/** @param array<string,string> $options */
+	public function sitemapForCollection(string $collection, string $dateProperty = 'date', array $options = []): string
+	{
+		$sitemapBuilder = $this->container->get(SitemapBuilder::class);
+		return $sitemapBuilder->buildSitemap($collection, $dateProperty, $options);
+	}
+
+	/**
+	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 * @param array<string,string> $options
+	 * */
+	public function outputSitemapForCollection(string $collection, string $dateProperty = 'date', array $options = []): void
+	{
+		$this->buffer->end();
+
+		// Output the sitemap
+		header('Content-Type: application/xml; charset=utf-8');
+		header('Cache-Control: public, max-age=86400');
+
+		echo $this->sitemapForCollection($collection, $dateProperty, $options);
+
+		exit(0);
 	}
 }
