@@ -15,8 +15,12 @@ use TotalCMS\Domain\Property\Data\SlugData;
 class ObjectData
 {
 	// Reserved names that cannot be used for objects
+	// these are used in that sub URLs in the admin dashboard
 	public const RESERVED_NAMES = [
 		'index',
+		'export',
+		'import',
+		'factory',
 		'id',
 	];
 

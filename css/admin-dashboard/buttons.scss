@@ -65,6 +65,7 @@
 		&.logout { --action-icon : var(--icon-logout) }
 		&.factory { --action-icon : var(--icon-factory) }
 		&.import { --action-icon : var(--icon-import) }
+		&.export { --action-icon : var(--icon-export) }
 		&.reindex { --action-icon : var(--icon-refresh) }
 		&.schema { --action-icon : var(--icon-schema) }
 	}

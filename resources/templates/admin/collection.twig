@@ -14,9 +14,10 @@
 		<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
 		<nav popover id="collection-actions">
 			<ul>
-				<li class="factory"><a href="collections/{{ collection }}/factory">Factory</a></li>
-				<li class="import"><a href="collections/{{ collection }}/import">Import</a></li>
 				<li class="schema"><a href="schemas/{{ cms.collection(collection).schema }}">Edit Schema</a></li>
+				<li class="export"><a href="collections/{{ collection }}/export">Export</a></li>
+				<li class="import"><a href="collections/{{ collection }}/import">Import</a></li>
+				<li class="factory"><a href="collections/{{ collection }}/factory">Factory</a></li>
 				<li class="reindex"><a class="cms-quick-action" data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
 			</ul>
 		</nav>
@@ -68,6 +69,10 @@
 	{% elseif url.id == "import" %}
 		{{ _self.collectionHeader(url.collection, "import") }}
 		{% include "admin/collection/import.twig" %}
+
+	{% elseif url.id == "export" %}
+		{{ _self.collectionHeader(url.collection, "export") }}
+		{% include "admin/collection/export.twig" %}
 
 	{% elseif url.id == "edit" %}
 		{% include "admin/collection/edit.twig" %}
