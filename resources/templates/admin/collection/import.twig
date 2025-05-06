@@ -1,9 +1,9 @@
 <section style="display:grid;align-content:start;gap:3rem">
 
-	<section>
-		{{ cms.form.jobqueueByStatus({
+	<section class="import-queue">
+		<h3 style="margin-bottom:1rem">Import Queue for {{ url.collection | title }}</h3>
+		{{ cms.form.jobqueueStats({
 			collection : url.collection,
-			header	 : 'Import Queue for ' ~ (url.collection | title),
 		}) }}
 	</section>
 
