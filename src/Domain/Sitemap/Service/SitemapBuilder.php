@@ -16,7 +16,7 @@ final class SitemapBuilder
 	}
 
 	/** @param array<string,string> $options */
-	public function buildSitemap(string $collection, string $dateProperty = 'date', array $options = []): string
+	public function buildSitemap(string $collection, array $options = []): string
 	{
 		$index = $this->indexReader->fetchIndex($collection);
 		if (is_null($index)) {
@@ -32,6 +32,9 @@ final class SitemapBuilder
 		}
 
 		$sitemap = new Sitemap();
+
+		$dateProperty = $options['date'] ?? 'date';
+		unset($options['date']);
 
 		foreach ($index->objects as $object) {
 			$url = $this->objectUrl($collectionData, $object['id']);

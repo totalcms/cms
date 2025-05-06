@@ -43,6 +43,11 @@
 				<pre></code>{{ cms.prettyUrl(postData.path) }}</code></pre>
 				</section>
 
+				{% if collectionData.url is empty %}
+				<p class="cms-error">The collection does not have a URL saved. Please save a URL to the collection
+				or else your links will not function throughout your website.</p>
+				{% endif %}
+
 				<section>
 				<h3>Rule for Apache</h3>
 				<p>Place this in your .htaccess file. If you already have enabled <code>RewriteEngine</code>

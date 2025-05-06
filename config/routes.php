@@ -20,4 +20,5 @@ return function (App $app) {
 	(require __DIR__ . '/routes/schemas.php')($app);
 	(require __DIR__ . '/routes/templates.php')($app);
 	(require __DIR__ . '/routes/upload.php')($app);
+	(require __DIR__ . '/routes/sitemap.php')($app);
 };

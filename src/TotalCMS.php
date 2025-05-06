@@ -197,17 +197,17 @@ class TotalCMS
 	}
 
 	/** @param array<string,string> $options */
-	public function sitemapForCollection(string $collection, string $dateProperty = 'date', array $options = []): string
+	public function sitemapForCollection(string $collection, array $options = []): string
 	{
 		$sitemapBuilder = $this->container->get(SitemapBuilder::class);
-		return $sitemapBuilder->buildSitemap($collection, $dateProperty, $options);
+		return $sitemapBuilder->buildSitemap($collection, $options);
 	}
 
 	/**
 	 * @SuppressWarnings("PHPMD.ExitExpression")
 	 * @param array<string,string> $options
 	 * */
-	public function outputSitemapForCollection(string $collection, string $dateProperty = 'date', array $options = []): void
+	public function outputSitemapForCollection(string $collection, array $options = []): void
 	{
 		$this->buffer->end();
 
@@ -215,7 +215,7 @@ class TotalCMS
 		header('Content-Type: application/xml; charset=utf-8');
 		header('Cache-Control: public, max-age=86400');
 
-		echo $this->sitemapForCollection($collection, $dateProperty, $options);
+		echo $this->sitemapForCollection($collection, $options);
 
 		exit(0);
 	}

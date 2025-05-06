@@ -58,8 +58,18 @@
 	</form>
 
 	{% set query = http_build_query(postData) %}
+	{% if str_starts_with(cms.api, "http") %}
+		{% set api = cms.api %}
+	{% else %}
+		{% set api = "https://" ~ cms.domain ~ cms.api %}
+	{% endif %}
 
 	<h3>Sitemap URL:</h3>
-	<pre><code>{{ cms.api }}/sitemap/{{ url.collection }}{% if query is not empty %}?{{ query }}{% endif %}</code></pre>
+	<pre><code>{{ api }}/sitemap/{{ url.collection }}{% if query is not empty %}?{{ query }}{% endif %}</code></pre>
+
+	{% if collection.url is empty %}
+	<p class="cms-error">The collection does not have a URL saved. Please add a URL to the collection
+	before submitting your sitemap to search engines.</p>
+	{% endif %}
 
 </section>
