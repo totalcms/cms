@@ -82,6 +82,62 @@ final class TotalCMSTwigAdapter
 		return $command;
 	}
 
+	public function prettyUrl(string $path): string
+	{
+		$url = 'https://' . $this->domain . $path;
+		if (str_ends_with($path, 'php')) {
+			$url = dirname($url);
+		}
+		if (!str_ends_with($url, '/')) {
+			$url .= '/';
+		}
+		return $url;
+	}
+
+	private function startPathForUrl(string $url): string
+	{
+		$path = parse_url($url, PHP_URL_PATH);
+		$start = $path;
+
+		if (str_ends_with($path, 'php')) {
+			$start = dirname($path) . '/';
+		}
+		if (!str_ends_with($start, '/')) {
+			$start .= '/';
+		}
+		return ltrim($start, '/');
+	}
+
+	public function apacheRule(string $url, string $collection = "Collection"): string
+	{
+		$path = parse_url($url, PHP_URL_PATH);
+		$start = $this->startPathForUrl($url);
+
+		$snippet = <<<HTACCESS
+# Total CMS Pretty URL Rewrites for $collection
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^$start([\w-]+)$ $path?id=$1 [L,QSA]
+HTACCESS;
+
+		return $snippet;
+	}
+
+	public function nginxRule(string $url, string $collection = "Collection"): string
+	{
+		$path = parse_url($url, PHP_URL_PATH);
+		$start = $this->startPathForUrl($url);
+
+		$snippet = <<<NGINX
+# Total CMS Pretty URL Rewrites for {$collection}
+rewrite ^/{$start}([\w-]+)/?\$ /{$path}?id=\$1 last;
+NGINX;
+
+		return $snippet;
+	}
+
+
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function getDomainName(): string
 	{

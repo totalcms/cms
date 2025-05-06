@@ -1,0 +1,12 @@
+#pretty-url-builder {
+	.cms-button:before {
+		mask-image : var(--icon-build);
+	}
+}
+
+.pretty-url-results {
+	display            : grid;
+	gap                : 3rem;
+	margin-block-start : 3rem;
+	padding-left       : 0;
+}

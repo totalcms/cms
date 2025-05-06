@@ -7,9 +7,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Domain\Twig\TwigEngine;
 
-/**
- * Action.
- */
 final class AdminUtilsAction
 {
 	public function __construct(
@@ -29,10 +26,17 @@ final class AdminUtilsAction
 		$results = "";
 
 		if ($request->getMethod() === 'POST') {
-			$page = 'twig-playground';
 			$post = (array)$request->getParsedBody();
-			if (isset($post['twig'])) {
-				$results = $this->twigEngine->renderString($post['twig']);
+
+			switch ($page) {
+				case 'twig-playground':
+					if (isset($post['twig'])) {
+						$results = $this->twigEngine->renderString($post['twig']);
+					}
+					break;
+				case 'pretty-url-builder':
+					// nothing to do yet
+					break;
 			}
 		}
 

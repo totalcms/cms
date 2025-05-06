@@ -28,7 +28,7 @@ return function (App $app) {
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
 		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
-		$group->post('/utils/twig-playground', AdminUtilsAction::class)->setName('admin-utils-playground');
+		$group->post('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils-post');
 
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
 		$group->post('/settings', AdminSettingsSaveAction::class)->setName('admin-settings-save');
