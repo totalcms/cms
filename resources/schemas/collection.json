@@ -61,6 +61,12 @@
 			"placeholder" : "https://www.example.com/objects/",
 			"field"       : "url"
         },
+        "prettyUrl": {
+			"type"  : "boolean",
+			"label" : "Pretty URL",
+			"help"  : "Use pretty URLs for linking building to objects in this collection.",
+			"field" : "checkbox"
+        },
 		"groups": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"   : "Access Groups",

@@ -68,6 +68,8 @@
 		&.export { --action-icon : var(--icon-export) }
 		&.reindex { --action-icon : var(--icon-refresh) }
 		&.schema { --action-icon : var(--icon-schema) }
+		&.feeds { --action-icon : var(--icon-rss) }
+		&.sitemap { --action-icon : var(--icon-sitemap) }
 	}
 	a {
 		display         : flex;

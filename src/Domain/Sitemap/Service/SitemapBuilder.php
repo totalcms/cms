@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Sitemap\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use \TotalCMS\Domain\Sitemap\Data\Sitemap;
 
@@ -33,7 +34,7 @@ final class SitemapBuilder
 		$sitemap = new Sitemap();
 
 		foreach ($index->objects as $object) {
-			$url = $this->objectUrl($collectionData->url, $object['id']);
+			$url = $this->objectUrl($collectionData, $object['id']);
 
 			if (!empty($object[$dateProperty])) {
 				$options['date'] = $object[$dateProperty];
@@ -46,12 +47,12 @@ final class SitemapBuilder
 		return $sitemap->toXML();
 	}
 
-	private function objectUrl(string $collectionUrl, string $id): string
+	private function objectUrl(CollectionData $collectionData, string $id): string
 	{
-		if (str_ends_with($collectionUrl, '/')) {
-			return sprintf('%s%s', $collectionUrl, $id);
+		if ($collectionData->prettyUrl) {
+			return sprintf('%s%s', $collectionData->url, $id);
 		}
 
-		return sprintf('%s?id=%s', $collectionUrl, $id);
+		return sprintf('%s?id=%s', $collectionData->url, $id);
 	}
 }

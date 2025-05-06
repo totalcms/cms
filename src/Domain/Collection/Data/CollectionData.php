@@ -21,15 +21,16 @@ final class CollectionData
 
 	private Serializer $serializer;
 
-	public string $id;                // collection id
-	public string $name;              // collection name
-	public string $description;       // collection description
-	public string $schema;            // schema name
-	public string $url;               // collection url to object page minus the slug
-	public string $category;          // collection category for grouping in the admin
-	public string $sortBy;            // the property to sort the collection by
-	public bool $reverseSort;         // reverse the sort order
-	public bool $queueRebuildOnSave;  // queue a rebuild of the collection
+	public string $id;                        // collection id
+	public string $name;                      // collection name
+	public string $description;               // collection description
+	public string $schema;                    // schema name
+	public string $url;                       // collection url to object page minus the slug
+	public string $category;                  // collection category for grouping in the admin
+	public string $sortBy = 'id';             // the property to sort the collection by
+	public bool $reverseSort = false;         // reverse the sort order
+	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
+	public bool $prettyUrl = false;           // use pretty URLs for the collection
 
 	/** @var array<string> */
 	public array $groups;        // access groups that can access this collection
@@ -62,6 +63,7 @@ final class CollectionData
 			'groups'             => $this->groups ?? [],
 			'sortBy'             => $this->sortBy ?? 'id',
 			'reverseSort'        => $this->reverseSort ?? false,
+			'prettyUrl'          => $this->prettyUrl ?? false,
 			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
 		];
 

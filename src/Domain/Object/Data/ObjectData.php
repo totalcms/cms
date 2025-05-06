@@ -18,9 +18,8 @@ class ObjectData
 	// these are used in that sub URLs in the admin dashboard
 	public const RESERVED_NAMES = [
 		'index',
-		'export',
-		'import',
-		'factory',
+		'add',
+		'edit',
 		'id',
 	];
 

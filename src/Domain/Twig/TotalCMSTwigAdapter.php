@@ -137,7 +137,6 @@ NGINX;
 		return $snippet;
 	}
 
-
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function getDomainName(): string
 	{
@@ -283,21 +282,12 @@ NGINX;
 		return $collection->toArray();
 	}
 
-	/**
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 *
-	 * @param array<string,bool> $options
-	 */
-	public function objectUrl(string $id, string $collection, array $options = []): string
+	public function objectUrl(string $collection, string $id): string
 	{
-		$options = array_merge([
-			'pretty' => false,
-		], $options);
-
 		$collection = $this->collection($collection);
 		$url        = $collection['url'] ?: '';
 
-		if ($options['pretty']) {
+		if ($collection['prettyUrl']) {
 			if (str_ends_with($url, '/')) {
 				return sprintf('%s%s', $url, $id);
 			}

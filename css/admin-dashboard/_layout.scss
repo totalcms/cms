@@ -257,16 +257,6 @@ body {
 		margin-block-start: 2em;
 	}
 
-	pre {
-		background-color : oklch(var(--totalform-nearwhite));
-		padding          : 1rem;
-		border-radius    : 5px;
-		overflow-x       : auto;
-
-		code {
-			font-family : 'Operator Mono', 'Source Code Pro', 'Fira Code',  monospace;
-		}
-	}
 	&:has(.docs-iframe) {
 		padding : 0;
 	}
@@ -287,3 +277,13 @@ body {
 	}
 }
 
+pre {
+	background-color : oklch(var(--totalform-nearwhite));
+	padding          : 1rem;
+	border-radius    : 5px;
+	overflow-x       : auto;
+
+	code {
+		font-family : 'Operator Mono', 'Source Code Pro', 'Fira Code',  monospace;
+	}
+}

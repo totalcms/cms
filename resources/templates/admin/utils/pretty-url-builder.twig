@@ -11,7 +11,6 @@
 		method="POST"
 		data-disabled>
 		<div>
-			{# TODO: collection select #}
 			<label for="collection">Collection</label>
 			<select name="collection" id="collection">
 				<option value="">Select a Collection</option>
@@ -38,14 +37,15 @@
 
 				<section>
 				<h3>Save this URL to the {{ collectionData.name }} Collection</h3>
-				<p>Edit the collection and save the following as the URL.
+				<p>Edit the collection and save the following as the URL and ensure the <code>Pretty URL</code>
+				checkbox is enabled.
 				<a href="/admin/collections/{{ postData.collection }}/edit" target="_blank">Edit Now ↗</a></p>
 				<pre></code>{{ cms.prettyUrl(postData.path) }}</code></pre>
 				</section>
 
 				<section>
 				<h3>Rule for Apache</h3>
-				<p>Place this in your .htaccess file. If you already have enabled the <code>RewriteEngine</code>
+				<p>Place this in your .htaccess file. If you already have enabled <code>RewriteEngine</code>
 				in your file, you do not need to include that line again.</p>
 				<pre></code>{{ cms.apacheRule(postData.path, collectionData.name) }}</code></pre>
 				</section>

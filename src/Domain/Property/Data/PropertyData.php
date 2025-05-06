@@ -40,4 +40,9 @@ class PropertyData implements PropertyDataInterface
 
 		return $value;
 	}
+
+	public function __toString(): string
+	{
+		return $this->id;
+	}
 }

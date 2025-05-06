@@ -5,9 +5,6 @@ namespace TotalCMS\Domain\Twig;
 use TotalCMS\Utils\EmbedBuilder;
 use Twig\TwigFunction;
 
-/**
- * Twig Functions for Total CMS.
- */
 final class TotalCMSTwigFunctions
 {
 	/** @var array<string> */
