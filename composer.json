@@ -55,6 +55,7 @@
     "symfony/polyfill-uuid": "^1.23",
     "symfony/property-access": "^7.1",
     "symfony/serializer": "^7.1",
+    "thepixeldeveloper/sitemap": "dev-master",
     "twig/cssinliner-extra": "^3.21",
     "twig/html-extra": "^3.21",
     "twig/intl-extra": "^3.21",
