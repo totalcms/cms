@@ -58,6 +58,7 @@ class ObjectData
 		$base = [$this->id];
 		$properties = $this->properties->map(fn($property) => strval($property));
 
+		/** @phpstan-ignore return.type */
 		return array_merge($base, $properties->toArray());
 	}
 }

@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig;
 use TotalCMS\Utils\EmbedBuilder;
 use Twig\TwigFunction;
 
+/** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
 final class TotalCMSTwigFunctions
 {
 	/** @var array<string> */
@@ -168,10 +169,9 @@ final class TotalCMSTwigFunctions
 		return EmbedBuilder::audio($url, $options);
 	}
 
-	/** @param array<string,mixed> $options */
-	public static function iframe(string $url, array $options = []): string
+	public static function iframe(string $url): string
 	{
-		return EmbedBuilder::iframe($url, $options);
+		return EmbedBuilder::iframe($url);
 	}
 
 	public static function fileExists(mixed $file): bool
