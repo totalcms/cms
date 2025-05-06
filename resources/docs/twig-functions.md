@@ -12,4 +12,10 @@ var_dump(mixed $variable): string
 json_decode(mixed $variable): array
 imageExists(image): bool
 fileExists(file): bool
+embed(url, array options)
+vimeo(url, array options)
+youtube(url, array options)
+audio(url, array attrs)
+video(url, array attrs)
+iframe(url)
 ```

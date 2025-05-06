@@ -13,8 +13,34 @@ class EmbedBuilder
 		if (str_contains($url, 'youtube')) {
 			return self::youtube($url, $options);
 		}
+		if (str_ends_with($url, 'mp4')) {
+			return self::video($url, $options);
+		}
+		if (str_ends_with($url, 'mp3')) {
+			return self::audio($url, $options);
+		}
 
-		return self::link($url);
+		return self::iframe($url);
+	}
+
+	/** @param array<string,mixed> $attrs */
+	public static function video(string $url, array $attrs = []): string
+	{
+		$attrs = array_merge([
+			'src' => $url,
+		], $attrs);
+
+		return HTMLUtils::element('video', '', $attrs);
+	}
+
+	/** @param array<string,mixed> $attrs */
+	public static function audio(string $url, array $attrs = []): string
+	{
+		$attrs = array_merge([
+			'src' => $url,
+		], $attrs);
+
+		return HTMLUtils::element('audio', '', $attrs);
 	}
 
 	/** @param array<string,mixed> $options */
@@ -105,6 +131,11 @@ class EmbedBuilder
 		}
 
 		return self::link($url);
+	}
+
+	public static function iframe(string $url): string
+	{
+		return HTMLUtils::iframe($url);
 	}
 
 	public static function link(string $url): string

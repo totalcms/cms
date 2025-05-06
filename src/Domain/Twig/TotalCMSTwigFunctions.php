@@ -147,6 +147,36 @@ final class TotalCMSTwigFunctions
 		return EmbedBuilder::embed($url, $options);
 	}
 
+	/** @param array<string,mixed> $options */
+	public static function youtube(string $url, array $options = []): string
+	{
+		return EmbedBuilder::youtube($url, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public static function vimeo(string $url, array $options = []): string
+	{
+		return EmbedBuilder::vimeo($url, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public static function video(string $url, array $options = []): string
+	{
+		return EmbedBuilder::video($url, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public static function audio(string $url, array $options = []): string
+	{
+		return EmbedBuilder::audio($url, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public static function iframe(string $url, array $options = []): string
+	{
+		return EmbedBuilder::iframe($url, $options);
+	}
+
 	public static function fileExists(mixed $file): bool
 	{
 		if (!is_array($file)) {
