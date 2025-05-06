@@ -161,6 +161,6 @@ class ColorData extends PropertyData
 
 	public function __toString(): string
 	{
-		return sprintf('oklch(%f%% %f% %f%)', $this->oklch['l'], $this->oklch['c'], $this->oklch['h']);
+		return sprintf('oklch(%0.3f%% %0.3f %0.3f)', $this->oklch['l'], $this->oklch['c'], $this->oklch['h']);
 	}
 }

@@ -48,4 +48,13 @@ class ObjectData
 	{
 		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
 	}
+
+	/** @return array<int,string> */
+	public function forCsv(): array
+	{
+		$base = [$this->id];
+		$properties = $this->properties->map(fn($property) => strval($property));
+
+		return array_merge($base, $properties->toArray());
+	}
 }

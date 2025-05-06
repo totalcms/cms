@@ -52,4 +52,9 @@ class FileData extends PropertyData
 			'count'      => $this->count,
 		];
 	}
+
+	public function __toString(): string
+	{
+		return json_encode($this->transform());
+	}
 }

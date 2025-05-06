@@ -26,4 +26,25 @@ final class ObjectExporter
 
 		return $objects;
 	}
+
+	/** @return array<array<int,string>> */
+	public function exportAllObjectsForCSv(string $collection): array
+	{
+		$objects   = [];
+		$objectIds = $this->storage->fetchObjectIds($collection);
+
+		$keys = [];
+
+		foreach ($objectIds as $id) {
+			$object = $this->objectFetcher->fetchObject($collection, $id);
+			if (empty($keys)) {
+				$keys = array_keys($object->toArray());
+				$objects[] = $keys;
+			}
+			$objects[] = $object->forCsv();
+		}
+
+		return $objects;
+	}
+
 }

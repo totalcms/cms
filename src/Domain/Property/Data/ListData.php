@@ -53,4 +53,9 @@ class ListData extends PropertyData
 	{
 		return $this->list;
 	}
+
+	public function __toString(): string
+	{
+		return implode(',', $this->list);
+	}
 }
