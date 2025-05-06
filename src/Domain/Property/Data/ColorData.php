@@ -19,13 +19,49 @@ class ColorData extends PropertyData
 	public function __construct(string|array $color, public array $settings = [])
 	{
 		if (is_string($color)) {
-			$this->hex   = $color;
+			$this->hex   = self::stringToHex($color);
 			$this->oklch = self::hexToOklch($this->hex);
 			return;
 		}
 
 		$this->hex   = $color['hex'] ?? '#000000';
 		$this->oklch = $color['oklch'] ?? self::hexToOklch($this->hex);
+	}
+
+	static private function stringToHex(string $color): string
+	{
+		if (preg_match('/^#?([a-f0-9]{3}|[a-f0-9]{6})$/i', $color)) {
+			return $color;
+		}
+		if (str_starts_with($color, 'rgb')) {
+			$rgb = preg_replace('/[^0-9,]/', '', $color);
+			$rgb = explode(',', $rgb);
+			$hex = sprintf('#%02x%02x%02x', ...$rgb);
+			return $hex;
+		}
+		if (str_starts_with($color, 'hsl')) {
+			$hsl = preg_replace('/[^0-9,]/', '', $color);
+			$hsl = explode(',', $hsl);
+			$rgb = ColorFactory::newRgb($hsl, ColorSpace::Hsl);
+			if ($rgb === null) {
+				return '#000000'; // black
+			}
+			$coordinates = $rgb->coordinates();
+			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
+			return $hex;
+		}
+		if (str_starts_with($color, 'oklch')) {
+			$oklch = preg_replace('/[^0-9,]/', '', $color);
+			$oklch = explode(',', $oklch);
+			$rgb   = ColorFactory::newRgb($oklch, ColorSpace::OkLch);
+			if ($rgb === null) {
+				return '#000000'; // black
+			}
+			$coordinates = $rgb->coordinates();
+			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
+			return $hex;
+		}
+		throw new \InvalidArgumentException('Invalid color format');
 	}
 
 	/** @param array<string,float> $oklch */

@@ -110,7 +110,7 @@ final class ObjectImporter
 
 		foreach ($schema->properties as $name => $property) {
 			// Skip properties that are not references or if the data is not set
-			if (!isset($property['$ref'], $objectData[$name])) {
+			if (!isset($property['$ref'], $objectData[$name]) || !is_string($objectData[$name])) {
 				continue;
 			}
 

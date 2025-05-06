@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Import;
 
-use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -11,7 +10,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
 
-final class CsvImporter
+final class JsonImporter
 {
 	private LoggerInterface $logger;
 	private string $collection;
@@ -34,36 +33,6 @@ final class CsvImporter
 		$this->queueJobs = true;
 	}
 
-	/**
-	 * Clean up CSV data by removing empty headers and rows with no data.
-	 *
-	 * @param Reader<array<string,string>> $csv
-	 * @return array<int, array<string, mixed>> Cleaned CSV records
-	 */
-	private function cleanCsvData(Reader $csv): array
-	{
-		$headers = $csv->getHeader(); // Get the headers
-		$records = $csv->getRecords(); // Get the records
-
-		// Filter out empty headers
-		$headers = array_filter($headers, function ($header) {
-			return !empty(trim($header));
-		});
-
-		$cleanedRecords = [];
-		foreach ($records as $record) {
-			// Remove columns with empty headers
-			$filteredRecord = array_intersect_key($record, array_flip($headers));
-
-			// Skip rows where all values are empty
-			if (array_filter($filteredRecord)) {
-				$cleanedRecords[] = $filteredRecord;
-			}
-		}
-
-		return $cleanedRecords;
-	}
-
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function import(string $collection, UploadedFileInterface $file, bool $updateObject = false): int
 	{
@@ -74,26 +43,28 @@ final class CsvImporter
 		}
 		$this->collection = $collection;
 
+		$records = json_decode((string)$file->getStream(), true);
+
+		if (!is_array($records) || !array_reduce($records, fn($carry, $item) => $carry && is_array($item), true)) {
+			$error = 'Invalid JSON structure for import: expected an array of records';
+			$this->logger->error($error);
+			throw new \InvalidArgumentException($error);
+		}
+
 		$importCount = 0;
 
-		// Take the uploaded file and update object with related data
-		$csv = Reader::createFromString((string)$file->getStream());
-		$csv->setHeaderOffset(0);
-
-		$cleanedRecords = $this->cleanCsvData($csv);
-
-		foreach ($cleanedRecords as $offset => $record) {
+		foreach ($records as $offset => $record) {
 			try {
 				$imported = $updateObject === true ?
-					$this->updateObject($offset, $record) :
-					$this->importNewObject($offset, $record);
+					$this->updateObject($record) :
+					$this->importNewObject($record);
 
 				if ($imported) {
 					$importCount++;
 				}
 			} catch (\Exception $exception) {
 				$this->logger->error(
-					sprintf('Error importing record at row %s: %s', $offset, $exception->getMessage())
+					sprintf('Error importing record #%s: %s', $offset, $exception->getMessage())
 				);
 			}
 		}
@@ -105,10 +76,10 @@ final class CsvImporter
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @param array<string,mixed> $record
 	 */
-	public function importNewObject(int $offset, array $record): bool
+	public function importNewObject(array $record): bool
 	{
 		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$this->logger->info(sprintf('Skipping import of record (%s) at row %s', $record['id'], $offset));
+			$this->logger->info(sprintf('Skipping import of record %s', $record['id']));
 			return false;
 		}
 
@@ -130,10 +101,10 @@ final class CsvImporter
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @param array<string,mixed> $record
 	 */
-	public function updateObject(int $offset, array $record): bool
+	public function updateObject(array $record): bool
 	{
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'], $offset));
+			$this->logger->info(sprintf('Skipping update of record %s', $record['id']));
 			return false;
 		}
 
