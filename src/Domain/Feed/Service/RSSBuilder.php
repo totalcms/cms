@@ -79,7 +79,7 @@ final class RSSBuilder
 		$item = $this->feed->createNewItem();
 		$item->setLink($url);
 		$item->setId($id);
-		$item->setDate(date(DATE_RSS, $date));
+		$item->setDate(date(DATE_RSS, strtotime($date)));
 		if ($title) $item->setTitle($title);
 		if ($author) $item->setAuthor($author);
 		if ($content) $item->setDescription($content);
@@ -101,8 +101,7 @@ final class RSSBuilder
 
 		$this->feed->setDate(time());
 		$this->feed->setChannelElement('generator', 'Total CMS');
-        if ($options['home'])
-			$this->feed->setLink($options['home']);
+		$this->feed->setLink($options['home']);
 		if ($options['rss'])
 			$this->feed->setSelfLink($options['rss']);
 		if ($options['image'])
