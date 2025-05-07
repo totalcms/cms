@@ -2,11 +2,9 @@
 
 namespace TotalCMS\Domain\Collection\Service;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 
-/**
- * Service.
- */
 final class CollectionLister
 {
 	private CollectionRepository $storage;
@@ -16,11 +14,7 @@ final class CollectionLister
 		$this->storage = $storage;
 	}
 
-	/**
-	 * List all collections.
-	 *
-	 * @return array<object>
-	 */
+	/** @return array<CollectionData> */
 	public function listAllCollections(): array
 	{
 		return $this->storage->listAllCollections();

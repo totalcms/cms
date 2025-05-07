@@ -4,17 +4,18 @@ namespace TotalCMS\Domain\Schema\Service;
 
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 
-/**
- * Service.
- */
 final class SchemaSaver
 {
-	private SchemaValidator $validator;
-	private SchemaRepository $storage;
-	private SchemaFactory $factory;
-
-	public function __construct(SchemaRepository $storage, SchemaFactory $factory, SchemaValidator $validator)
+	public function __construct(
+		private SchemaRepository $storage,
+		private SchemaFactory $factory,
+		private SchemaValidator $validator,
+		private IndexBuilder $indexBuilder,
+		private CollectionLister $collectionLister,
+	)
 	{
 		$this->storage   = $storage;
 		$this->factory   = $factory;
@@ -36,8 +37,11 @@ final class SchemaSaver
 
 		// Make sure the schema exists
 		$this->storage->getSchema($schemaId);
+		$schema = $this->saveSchema($schemaData);
 
-		return $this->saveSchema($schemaData);
+		$this->rebuildIndexforCollectionsWithSchema($schema->id);
+
+		return $schema;
 	}
 
 	/**
@@ -92,5 +96,16 @@ final class SchemaSaver
 		}
 
 		return $properties;
+	}
+
+	private function rebuildIndexforCollectionsWithSchema(string $schemaId): void
+	{
+		$collections = $this->collectionLister->listAllCollections();
+
+		foreach ($collections as $collection) {
+			if ($collection->schema === $schemaId) {
+				$this->indexBuilder->smartBuildIndex($collection->id);
+			}
+		}
 	}
 }
