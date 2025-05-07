@@ -15,7 +15,7 @@ final class RssBuilder
 		'content' => 'summary',
 		'media'   => 'media',
 		'author'  => 'author',
-		'date'    => 'date',
+		'date'    => 'updated',
 		'draft'   => 'draft',
 	];
 

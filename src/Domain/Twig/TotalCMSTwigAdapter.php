@@ -143,6 +143,44 @@ NGINX;
 		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 	}
 
+	/** @return array<string,string> */
+	public function languages(): array
+	{
+		return [
+			'Arabic'          => 'ar_SA',
+			'Bengali'         => 'bn_BD',
+			'Czech'           => 'cs_CZ',
+			'Dutch'           => 'nl_NL',
+			'English'         => 'en_US',
+			'French'          => 'fr_FR',
+			'German'          => 'de_DE',
+			'Greek'           => 'el_GR',
+			'Hebrew'          => 'he_IL',
+			'Hindi'           => 'hi_IN',
+			'Italian'         => 'it_IT',
+			'Japanese'        => 'ja_JP',
+			'Javanese'        => 'jv_ID',
+			'Korean'          => 'ko_KR',
+			'Malay'           => 'ms_MY',
+			'Mandarin'        => 'zh_CN',
+			'Persian (Farsi)' => 'fa_IR',
+			'Polish'          => 'pl_PL',
+			'Portuguese'      => 'pt_BR',
+			'Punjabi'         => 'pa_IN',
+			'Romanian'        => 'ro_RO',
+			'Russian'         => 'ru_RU',
+			'Spanish'         => 'es_ES',
+			'Swahili'         => 'sw_KE',
+			'Tamil'           => 'ta_IN',
+			'Tagalog'         => 'tl_PH',
+			'Thai'            => 'th_TH',
+			'Turkish'         => 'tr_TR',
+			'Ukrainian'       => 'uk_UA',
+			'Urdu'            => 'ur_PK',
+			'Vietnamese'      => 'vi_VN',
+		];
+	}
+
 	public function login(string $collection = ''): string
 	{
 		if (empty($collection)) {
