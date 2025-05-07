@@ -24,6 +24,13 @@ final class RssFeedAction
 		$collection = $args['collection'];
 		$params     = $request->getQueryParams();
 
+		// Allowed Parameters
+		// Feed MetaData: link image name description language
+		// Object Field Mapping: title content media author date draft
+
+		$params['rssurl'] = strval($request->getUri());
+
+		$this->rssBuilder->setFieldMap($params);
 		$xml = $this->rssBuilder->buildFeed($collection, $params);
 
 		return $this->xmlRenderer->xml($response, $xml);

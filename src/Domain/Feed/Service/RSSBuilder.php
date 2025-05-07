@@ -8,7 +8,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use FeedWriter\Item;
 use FeedWriter\RSS2;
 
-final class RSSBuilder
+final class RssBuilder
 {
 	const DEFAULT_FIELD_MAP = [
 		'title'   => 'title',
@@ -93,24 +93,27 @@ final class RSSBuilder
 	private function setupFeed(array $options): void
 	{
 		$options = array_merge([
-			'home'    => $this->homepage(),
-			'rss'     => false,
-			'image'   => false,
-			'title'   => false,
-			'summary' => false,
+			'link'        => $this->homepage(),
+			'rssurl'      => false,
+			'image'       => false,
+			'name'        => $this->domainName() . ' Feed',
+			'description' => false,
+			'language'    => false,
 		], $options);
 
 		$this->feed->setDate(time());
 		$this->feed->setChannelElement('generator', 'Total CMS');
-		$this->feed->setLink(strval($options['home']));
-		if ($options['rss'])
-			$this->feed->setSelfLink($options['rss']);
+		$this->feed->setLink(strval($options['link']));
+		if ($options['language'])
+			$this->feed->setChannelElement('language', $options['language']);
+		if ($options['rssurl'])
+			$this->feed->setSelfLink($options['rssurl']);
 		if ($options['image'])
-			$this->feed->setImage($options['image'], strval($options['title']), strval($options['home']));
-        if ($options['title'])
-			$this->feed->setTitle($options['title']);
-        if ($options['summary'])
-			$this->feed->setDescription($options['summary']);
+			$this->feed->setImage($options['image'], strval($options['name']), strval($options['link']));
+        if ($options['name'])
+			$this->feed->setTitle($options['name']);
+        if ($options['description'])
+			$this->feed->setDescription($options['description']);
 	}
 
 	private function mimeType(string $media): string
@@ -141,13 +144,18 @@ final class RSSBuilder
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
+	private function domainName(): string
+	{
+		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+	}
+
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function homepage(): string
 	{
-		$domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 		return sprintf(
 			'%s://%s',
 			$_SERVER['REQUEST_SCHEME'] ?? 'http',
-			$domain
+			$this->domainName(),
 		);
 	}
 }
