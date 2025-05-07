@@ -37,7 +37,7 @@
     "league/uri": "^7.4",
     "lychee-org/php-exif": "^1.0",
     "matthieumastadenis/couleur": "^0.1.2",
-    "mibe/feedwriter": "^1.1",
+    "mibe/feedwriter": "dev-master",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.8",

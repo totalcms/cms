@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd8e3cafcbe8fa70b98867d5f6a387b2",
+    "content-hash": "20eaa79a17bab8689625c5e0a153c206",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2747,21 +2747,22 @@
         },
         {
             "name": "mibe/feedwriter",
-            "version": "v1.1.2",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mibe/FeedWriter.git",
-                "reference": "b32ed2a68e612a1f6045d00d342df6928ecfecad"
+                "reference": "f838297f67dfb96ab69983000b404183b957b625"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mibe/FeedWriter/zipball/b32ed2a68e612a1f6045d00d342df6928ecfecad",
-                "reference": "b32ed2a68e612a1f6045d00d342df6928ecfecad",
+                "url": "https://api.github.com/repos/mibe/FeedWriter/zipball/f838297f67dfb96ab69983000b404183b957b625",
+                "reference": "f838297f67dfb96ab69983000b404183b957b625",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -2842,9 +2843,9 @@
             ],
             "support": {
                 "issues": "https://github.com/mibe/FeedWriter/issues",
-                "source": "https://github.com/mibe/FeedWriter/tree/v1.1.2"
+                "source": "https://github.com/mibe/FeedWriter/tree/master"
             },
-            "time": "2023-05-24T23:01:35+00:00"
+            "time": "2023-11-29T20:35:37+00:00"
         },
         {
             "name": "middlewares/trailing-slash",
@@ -14071,6 +14072,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "mibe/feedwriter": 20,
         "nekofar/pest-plugin-slim": 20,
         "nekofar/slim-test": 20,
         "thepixeldeveloper/sitemap": 20

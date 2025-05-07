@@ -54,7 +54,8 @@ final class RSSBuilder
 
 		$this->setupFeed($options);
 
-		foreach ($index->objects as $object) {
+		$objects = $index->objects->sortBy($this->fieldMap['date'] ?? 'date', SORT_REGULAR, true);
+		foreach ($objects as $object) {
 			$draft = $object[$this->fieldMap['draft']] ?? false;
 			if ($draft) continue;
 
@@ -92,7 +93,7 @@ final class RSSBuilder
 	private function setupFeed(array $options): void
 	{
 		$options = array_merge([
-			'home'    => false,
+			'home'    => $this->homepage(),
 			'rss'     => false,
 			'image'   => false,
 			'title'   => false,
@@ -101,7 +102,7 @@ final class RSSBuilder
 
 		$this->feed->setDate(time());
 		$this->feed->setChannelElement('generator', 'Total CMS');
-		$this->feed->setLink($options['home']);
+		$this->feed->setLink(strval($options['home']));
 		if ($options['rss'])
 			$this->feed->setSelfLink($options['rss']);
 		if ($options['image'])
@@ -137,5 +138,16 @@ final class RSSBuilder
 		}
 
 		return sprintf('%s?id=%s', $collectionData->url, $id);
+	}
+
+	/** @SuppressWarnings("PHPMD.Superglobals") */
+	private function homepage(): string
+	{
+		$domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+		return sprintf(
+			'%s://%s',
+			$_SERVER['REQUEST_SCHEME'] ?? 'http',
+			$domain
+		);
 	}
 }
