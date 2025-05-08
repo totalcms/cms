@@ -12,7 +12,7 @@ body, h1,h2,h3,h4,h5,h6 {
 	gap     : 1rem;
 
 	img {
-		border     : 10px solid oklch(var(--totalform-white));
+		border     : 10px solid oklch(var(--totalform-purewhite));
 		box-shadow : 0px 0px 2px oklch(var(--totalform-black) / 0.5);
 		max-width  : 100%;
 		height     : auto;
@@ -21,7 +21,7 @@ body, h1,h2,h3,h4,h5,h6 {
 
 	button {
 		background-color : oklch(var(--totalform-accent));
-		color            : oklch(var(--totalform-white));
+		color            : oklch(var(--totalform-purewhite));
 		padding          : 1rem;
 		border           : none;
 		border-radius    : var(--totalform-radius);
@@ -48,7 +48,7 @@ body, h1,h2,h3,h4,h5,h6 {
 		&.copied {
 			content: "Copied!";
 			background-color : oklch(var(--totalform-accent));
-			color      : oklch(var(--totalform-white));
+			color      : oklch(var(--totalform-purewhite));
 		}
 	}
 	#download-image {

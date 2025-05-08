@@ -12,10 +12,10 @@
 	}
 	button.success {
 		background-color : oklch(var(--totalform-success));
-		color            : oklch(var(--totalform-white));
+		color            : oklch(var(--totalform-purewhite));
 	}
 	button.error {
 		background-color : oklch(var(--totalform-error));
-		color            : oklch(var(--totalform-white));
+		color            : oklch(var(--totalform-purewhite));
 	}
 }

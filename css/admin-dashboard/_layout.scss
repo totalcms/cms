@@ -196,7 +196,7 @@ body {
 	height             : 100vh;
 	overflow           : hidden scroll;
 	padding            : 2rem;
-	background-color   : oklch(99% 0 0);
+	background-color   : oklch(var(--totalform-white));
 	display            : grid;
 	gap                : 2rem;
 	align-content      : stretch;

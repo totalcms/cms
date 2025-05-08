@@ -3,7 +3,7 @@
 	padding          : 0.75rem 1rem;
 	border-radius    : var(--totalform-radius);
 	background-color : oklab(var(--totalform-nearblack));
-	color            : oklab(var(--totalform-white));
+	color            : oklab(var(--totalform-purewhite));
 	border           : 2px solid oklch(var(--totalform-nearblack));
 	text-align       : center;
 	text-decoration  : none;
@@ -46,7 +46,7 @@
 	position         : absolute;
 	inset            : unset;
 	margin           : 1rem 0;
-	background-color : oklch(var(--totalform-white));
+	background-color : oklch(var(--totalform-purewhite));
 	padding          : 0;
 	border-radius    : var(--totalform-radius);
 	border           : none;

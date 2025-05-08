@@ -140,7 +140,8 @@
 	// --totalform-accent   : var(--totalform-accent-l) var(--totalform-accent-c) var(--totalform-accent-h);
 	--totalform-accent   : var(--totalform-blue);
 
-	--totalform-white      : 100% 0 0;
+	--totalform-purewhite  : 100% 0 0;
+	--totalform-white      : 99% 0 0;
 	--totalform-nearwhite  : 97% 0 0;
 	--totalform-lightgray  : 87% 0 0;
 	--totalform-mediumgray : 72% 0 0;
@@ -165,7 +166,7 @@
 	--totalform-label-color  : var(--totalform-darkgray);
 	--totalform-help-color   : var(--totalform-darkgray);
 	--totalform-text-color   : var(--totalform-nearblack);
-	--totalform-background   : var(--totalform-white);
+	--totalform-background   : var(--totalform-purewhite);
 	--totalform-icon-bg      : var(--totalform-nearwhite);
 	--totalform-icon-color   : var(--totalform-darkgray);
 	--totalform-shadow       : 14% 0 0 / 0.1;
@@ -185,7 +186,7 @@
 }
 
 .actionbar {
-	--actionbar-color: var(--totalform-white) / 0.6;
+	--actionbar-color: var(--totalform-purewhite) / 0.6;
 	--actionbar-icon-color: var(--totalform-nearblack);
 	--actionbar-icon-size: 24px;
 }

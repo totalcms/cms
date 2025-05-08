@@ -40,7 +40,7 @@
 		pointer-events : none;
 
 		&:hover {
-			background-color: oklch(99% 0 0) !important;
+			background-color: oklch(var(--totalform-white)) !important;
 		}
 		* {
 			display: none;
@@ -69,7 +69,7 @@
 			bottom           : 0;
 			right            : 0;
 			color            : oklch(var(--totalform-nearblack));
-			background-color : oklch(var(--totalform-white));
+			background-color : oklch(var(--totalform-purewhite));
 			border-radius    : var(--totalform-radius) 0 var(--totalform-radius) 0;
 			padding          : 0.25rem;
 			font-size        : 0.65rem;

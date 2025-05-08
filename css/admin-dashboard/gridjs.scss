@@ -51,7 +51,7 @@
 .gridjs-pagination .gridjs-pages button {
 	padding: 5px 14px;
 	border: 1px solid oklch(var(--totalform-lightgray));
-	background-color: oklch(var(--totalform-white));
+	background-color: oklch(var(--totalform-purewhite));
 	border-right: none;
 	outline: none;
 	-webkit-user-select: none;
@@ -75,14 +75,14 @@
 .gridjs-pagination .gridjs-pages button[disabled],
 .gridjs-pagination .gridjs-pages button:hover:disabled {
 	cursor: default;
-	background-color: oklch(var(--totalform-white));
+	background-color: oklch(var(--totalform-purewhite));
 	color: oklch(var(--totalform-gray));
 }
 
 .gridjs-pagination .gridjs-pages button.gridjs-spread {
 	cursor: default;
 	box-shadow: none;
-	background-color: oklch(var(--totalform-white));
+	background-color: oklch(var(--totalform-purewhite));
 }
 
 .gridjs-pagination .gridjs-pages button.gridjs-currentPage {
@@ -185,7 +185,7 @@ td.gridjs-message {
 }
 
 .gridjs-thead > .gridjs-tr th.gridjs-th{
-	background-color: oklch(99% 0 0);
+	background-color: oklch(var(--totalform-white));
 }
 
 th.gridjs-th {
@@ -241,7 +241,7 @@ th.gridjs-th:last-child {
 	border-bottom: 1px solid oklch(var(--totalform-lightgray) / 50%);
 
 	&:nth-child(odd) {
-		background-color: oklch(var(--totalform-white));
+		background-color: oklch(var(--totalform-purewhite));
 	}
 }
 

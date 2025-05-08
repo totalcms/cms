@@ -14,7 +14,7 @@
 
     &:after {
 		content            : "";
-		background-color   : oklch(var(--totalform-white));
+		background-color   : oklch(var(--totalform-purewhite));
 		mask-image         : var(--icon-blank);
 		position           : absolute;
 		display            : block;
@@ -71,7 +71,7 @@
 			width      : 100%;
 			font-size  : 1.2rem;
 			text-align : center;
-			color      : oklch(var(--totalform-white));
+			color      : oklch(var(--totalform-purewhite));
 			transition : all 500ms ease-in-out;
 		}
     }
