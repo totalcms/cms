@@ -70,7 +70,7 @@ nav[popover]  {
 		&.feeds { --action-icon : var(--icon-rss) }
 		&.sitemap { --action-icon : var(--icon-sitemap) }
 		&.link { --action-icon : var(--icon-link) }
-		&.delete { --action-icon : var(--icon-trash) }
+		&.delete { --action-icon : var(--icon-trash-o) }
 		&.clone { --action-icon : var(--icon-duplicate) }
 	}
 	a {
@@ -93,7 +93,7 @@ nav[popover]  {
 			display          : inline-block;
 			width            : 1rem;
 			height           : 1rem;
-			background-color : oklch(var(--totalform-text-color));
+			background-color : currentColor;
 			mask-image       : var(--action-icon);
 			margin-right     : 0.5rem;
 			mask-size        : 0.8rem;

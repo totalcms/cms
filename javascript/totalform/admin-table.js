@@ -1,3 +1,4 @@
+import QuickAction from '../quickaction';
 import { Grid, html } from "gridjs";
 // import { RowSelection } from "gridjs/plugins/selection";
 
@@ -33,9 +34,11 @@ export default class AdminTable {
 	gridReady() {
 		this.initCellListner();
 		this.initActionListner();
+		this.initQuickActionListner();
 	}
 
 	initActionListner() {
+		// Popovers
 		const buttons = this.wrapper.querySelectorAll("button[popovertarget]");
 		buttons.forEach(button => {
 			button.addEventListener("pointerdown", e => {
@@ -46,6 +49,22 @@ export default class AdminTable {
 				popover.style.left = `${rect.left + window.scrollX + offset}px`;
 			});
 		});
+		// Delete Objects
+		const deletes = this.wrapper.querySelectorAll(".delete>.cms-quick-action");
+		deletes.forEach(link => {
+			link.addEventListener("quickaction-success", e => {
+				const row = link.closest(".gridjs-tr");
+				row.remove();
+				this.grid.updateConfig({
+					data: this.grid.config.data.filter(item => item[0] !== data.id),
+				}).forceRender();
+			});
+		});
+	}
+
+	initQuickActionListner() {
+		const buttons = Array.from(this.wrapper.getElementsByClassName("cms-quick-action"));
+		buttons.forEach(link => new QuickAction(link));
 	}
 
 	initCellListner() {
