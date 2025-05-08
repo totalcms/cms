@@ -58,7 +58,7 @@ final class CollectionTable
 
 	private function buildTableHead(): string
 	{
-		$headings = HTMLUtils::element('th', '', ['class' => 'action']);
+		$headings = HTMLUtils::element('th', 'action-button', ['class' => 'action']);
 
 		// order the columns by the index in the schema
 		$properties = $this->schemaData->index;
@@ -205,7 +205,13 @@ final class CollectionTable
 	{
 		$rows = '';
 		foreach ($this->sortObjects() as $object) {
-			$cell = HTMLUtils::element('td', '...', ['class' => 'action']);
+			$button = HTMLUtils::element('button', '', [
+				'class'          => 'dash-action-dots',
+				'title'          => 'Object Actions',
+				'popovertarget'  => 'object-actions',
+				'data-object-id' => $object['id'],
+			]);
+			$cell = HTMLUtils::element('td', $button, ['class' => 'action']);
 			// order the columns by the index in the schema
 			$properties = $this->schemaData->index;
 			foreach ($properties as $property) {

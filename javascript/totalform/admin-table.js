@@ -32,8 +32,11 @@ export default class AdminTable {
 	}
 
 	initRowListner() {
-		this.grid.on('rowClick', e => {
-			const row = e.currentTarget;
+		this.grid.on('cellClick', e => {
+			const cell = e.currentTarget;
+			if (cell.querySelector("button,a")) return;
+
+			const row = cell.closest(".gridjs-tr");
 			const cells = Array.from(row.querySelectorAll("td"));
 			let id = '';
 			cells.forEach(cell => {

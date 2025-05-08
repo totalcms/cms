@@ -15,16 +15,30 @@
 		border-radius : var(--totalform-radius);
 	}
 
+	--action-button-size : 1.2rem;
+	.gridjs-tr td:first-child > span {
+		display : block;
+		height  : var(--action-button-size);
+	}
+	.dash-action-dots {
+		mask-size : var(--action-button-size);
+		height    : var(--action-button-size);
+	}
+
 	.gridjs-wrapper, table {
 		max-height : calc(100vh - 300px);
 	}
 
-	.gridjs-tr :first-child {
+	.gridjs-tr th:first-child,
+	.gridjs-tr td:first-child {
 		min-width : 2rem !important;
 		padding   : 14px 0 14px 14px;
+		cursor    : default;
 	}
 
 	.gridjs-th:first-child {
+		pointer-events : none;
+
 		&:hover {
 			background-color: oklch(99% 0 0) !important;
 		}
