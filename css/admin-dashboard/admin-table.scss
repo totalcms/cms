@@ -6,6 +6,11 @@
 .admin-table-wrapper {
 	font-size: 0.9em;
 
+	// Stop clicking to the form page when a popover is open
+	:has(:popover-open) td:not(:first-child) {
+		pointer-events : none;
+	}
+
 	img, svg {
 		display   : block;
 		max-width : 3rem;
@@ -17,8 +22,9 @@
 
 	--action-button-size : 1.2rem;
 	.gridjs-tr td:first-child > span {
-		display : block;
-		height  : var(--action-button-size);
+		display  : block;
+		height   : var(--action-button-size);
+		position : relative;
 	}
 	.dash-action-dots {
 		mask-size : var(--action-button-size);

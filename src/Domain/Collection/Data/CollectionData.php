@@ -106,4 +106,18 @@ final class CollectionData
 
 		return $schema;
 	}
+
+	public static function objectUrl(CollectionData $collectionData, string $id): string
+	{
+		if (empty($collectionData->url)) {
+			return '';
+		}
+
+		if ($collectionData->prettyUrl) {
+			$url = rtrim($collectionData->url, '/');
+			return sprintf('%s/%s', $url, $id);
+		}
+
+		return sprintf('%s?id=%s', $collectionData->url, $id);
+	}
 }

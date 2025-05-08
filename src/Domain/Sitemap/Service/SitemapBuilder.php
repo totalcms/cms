@@ -37,7 +37,7 @@ final class SitemapBuilder
 		unset($options['date']);
 
 		foreach ($index->objects as $object) {
-			$url = $this->objectUrl($collectionData, $object['id']);
+			$url = CollectionData::objectUrl($collectionData, $object['id']);
 
 			if (!empty($object[$dateProperty])) {
 				$options['date'] = $object[$dateProperty];
@@ -48,14 +48,5 @@ final class SitemapBuilder
 		}
 
 		return $sitemap->toXML();
-	}
-
-	private function objectUrl(CollectionData $collectionData, string $id): string
-	{
-		if ($collectionData->prettyUrl) {
-			return sprintf('%s%s', $collectionData->url, $id);
-		}
-
-		return sprintf('%s?id=%s', $collectionData->url, $id);
 	}
 }

@@ -69,7 +69,7 @@ final class RssBuilder
 	private function createItem(CollectionData $collection, array $object): Item
 	{
 		$id      = $object['id'];
-		$url     = $this->objectUrl($collection, $object['id']);
+		$url     = CollectionData::objectUrl($collection, $object['id']);
 		$title   = $object[$this->fieldMap['title']]   ?? false;
 		$author  = $object[$this->fieldMap['author']]  ?? false;
 		$content = $object[$this->fieldMap['content']] ?? false;
@@ -132,15 +132,6 @@ final class RssBuilder
 				return 'video/webm';
 		}
 		return 'application/octet-stream';
-	}
-
-	private function objectUrl(CollectionData $collectionData, string $id): string
-	{
-		if ($collectionData->prettyUrl) {
-			return sprintf('%s%s', $collectionData->url, $id);
-		}
-
-		return sprintf('%s?id=%s', $collectionData->url, $id);
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

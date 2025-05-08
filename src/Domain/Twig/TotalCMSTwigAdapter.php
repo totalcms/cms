@@ -6,6 +6,7 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -322,18 +323,12 @@ NGINX;
 
 	public function objectUrl(string $collection, string $id): string
 	{
-		$collection = $this->collection($collection);
-		$url        = $collection['url'] ?: '';
-
-		if ($collection['prettyUrl']) {
-			if (str_ends_with($url, '/')) {
-				return sprintf('%s%s', $url, $id);
-			}
-
-			return sprintf('%s/%s', $url, $id);
+		$collection = $this->collectionFetcher->fetchCollection($collection);
+		if ($collection === null) {
+			return '';
 		}
 
-		return sprintf('%s?id=%s', $url, $id);
+		return CollectionData::objectUrl($collection, $id);
 	}
 
 	/**

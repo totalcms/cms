@@ -40,8 +40,7 @@
 	}
 }
 
-#user-actions,
-#collection-actions  {
+nav[popover]  {
 	// eventually this should move to the new CSS Anchor positioning
 	position         : absolute;
 	inset            : unset;
@@ -70,6 +69,9 @@
 		&.schema { --action-icon : var(--icon-schema) }
 		&.feeds { --action-icon : var(--icon-rss) }
 		&.sitemap { --action-icon : var(--icon-sitemap) }
+		&.link { --action-icon : var(--icon-link) }
+		&.delete { --action-icon : var(--icon-trash) }
+		&.clone { --action-icon : var(--icon-duplicate) }
 	}
 	a {
 		display         : flex;

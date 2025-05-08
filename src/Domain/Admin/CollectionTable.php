@@ -201,16 +201,70 @@ final class CollectionTable
 		return $objects;
 	}
 
+	private function buildObjectActionButton(string $id): string
+	{
+		$link = "";
+		if (!empty($this->collectionData->url)) {
+			$link = HTMLUtils::element('a', 'Link to Webpage', [
+				'target' => '_blank',
+				'href'   => CollectionData::objectUrl($this->collectionData, $id),
+			]);
+			$link = HTMLUtils::element('li', $link, ['class' => 'link']);
+		}
+
+		$delete = HTMLUtils::element('a', 'Delete Object', [
+			'class'        => 'cms-quick-action',
+			'data-method'  => 'DELETE',
+			'data-confirm' => 'Are you sure you want to delete this object?',
+			'href'         => implode('/', [
+				$this->config->api,
+				'collections',
+				$this->collectionData->id,
+				$id,
+			])
+		]);
+		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
+
+		$clone = HTMLUtils::element('a', 'Duplicate Object', [
+			'class'         => 'cms-quick-action',
+			'data-method'   => 'POST',
+			'data-redirect' => implode('/', [
+				'admin',
+				'collections',
+				$this->collectionData->id,
+				$id,
+			]),
+			'href'          => implode('/', [
+				$this->config->api,
+				'collections',
+				$this->collectionData->id,
+				$id,
+				'clone',
+			])
+		]);
+		$clone = HTMLUtils::element('li', $clone, ['class' => 'clone']);
+
+		$actions = HTMLUtils::element('ul', $link . $clone . $delete);
+		$popover = HTMLUtils::element('nav', $actions, [
+			'popover' => '',
+			'class'   => 'object-action-popover',
+			'id'      => 'object-action-' . $id,
+		]);
+		$button = HTMLUtils::element('button', '', [
+			'class'          => 'dash-action-dots',
+			'title'          => 'Object Actions',
+			'popovertarget'  => 'object-action-' . $id,
+		]);
+
+		return $button . $popover;
+	}
+
 	private function buildTableBody(): string
 	{
 		$rows = '';
 		foreach ($this->sortObjects() as $object) {
-			$button = HTMLUtils::element('button', '', [
-				'class'          => 'dash-action-dots',
-				'title'          => 'Object Actions',
-				'popovertarget'  => 'object-actions',
-				'data-object-id' => $object['id'],
-			]);
+			$button = $this->buildObjectActionButton($object['id']);
+			// add the action button to the first column
 			$cell = HTMLUtils::element('td', $button, ['class' => 'action']);
 			// order the columns by the index in the schema
 			$properties = $this->schemaData->index;
