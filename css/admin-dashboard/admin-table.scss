@@ -19,6 +19,20 @@
 		max-height : calc(100vh - 300px);
 	}
 
+	.gridjs-tr :first-child {
+		min-width : 2rem !important;
+		padding   : 14px 0 14px 14px;
+	}
+
+	.gridjs-th:first-child {
+		&:hover {
+			background-color: oklch(99% 0 0) !important;
+		}
+		* {
+			display: none;
+		}
+	}
+
 	.gridjs-container {
 		height                : 100%;
 		display               : grid;

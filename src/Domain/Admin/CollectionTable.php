@@ -2,14 +2,14 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
-use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\HTMLUtils;
 
 /**
  * Total Table Builder.
@@ -58,7 +58,8 @@ final class CollectionTable
 
 	private function buildTableHead(): string
 	{
-		$headings   = '';
+		$headings = HTMLUtils::element('th', '', ['class' => 'action']);
+
 		// order the columns by the index in the schema
 		$properties = $this->schemaData->index;
 		foreach ($properties as $property) {
@@ -177,7 +178,7 @@ final class CollectionTable
 	/** @return array<array<string,mixed>> */
 	private function sortObjects(): array
 	{
-		$sortBy = $this->collectionData->sortBy ?? 'id';
+		$sortBy      = $this->collectionData->sortBy ?? 'id';
 		$reverseSort = $this->collectionData->reverseSort ?? false;
 
 		$objects = $this->objects;
@@ -204,7 +205,7 @@ final class CollectionTable
 	{
 		$rows = '';
 		foreach ($this->sortObjects() as $object) {
-			$cell = '';
+			$cell = HTMLUtils::element('td', '...', ['class' => 'action']);
 			// order the columns by the index in the schema
 			$properties = $this->schemaData->index;
 			foreach ($properties as $property) {
