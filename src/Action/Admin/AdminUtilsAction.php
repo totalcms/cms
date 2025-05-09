@@ -31,7 +31,11 @@ final class AdminUtilsAction
 			switch ($page) {
 				case 'twig-playground':
 					if (isset($post['twig'])) {
-						$results = $this->twigEngine->renderString($post['twig']);
+						try {
+							$results = $this->twigEngine->renderString($post['twig']);
+						} catch (\Throwable $e) {
+							$results = sprintf('<div class="error"><pre><code>%s</code></pre></div>', htmlspecialchars($e->getMessage()));
+						}
 					}
 					break;
 				case 'pretty-url-builder':
