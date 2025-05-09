@@ -7,6 +7,7 @@ use RuntimeException;
 use DomainException;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 
+/** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
 final class JobRepository
 {
 	private PDO $db;

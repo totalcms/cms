@@ -18,6 +18,7 @@ use TotalCMS\Support\Config;
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  * @SuppressWarnings("PHPMD.TooManyMethods")
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  *
  * This class is a factory for creating TotalForm objects.
  * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
