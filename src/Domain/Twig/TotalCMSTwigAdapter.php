@@ -85,7 +85,13 @@ final class TotalCMSTwigAdapter
 
 	public function prettyUrl(string $path): string
 	{
-		$url = 'https://' . $this->domain . $path;
+		$home = 'https://' . $this->domain;
+		$url  = $home . $path;
+
+		// just incase someone puts in the full url and not just the path
+		if (str_starts_with($path, $home)) {
+			$url = $path;
+		}
 		if (str_ends_with($path, 'php')) {
 			$url = dirname($url);
 		}
