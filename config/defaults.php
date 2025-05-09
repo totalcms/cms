@@ -80,7 +80,7 @@ $settings['logger'] = [
 	'path'        => __DIR__ . '/../logs',
 	'filename'    => 'totalcms.log',
 	'level'       => Monolog\Level::Info,
-	'maxFiles'    => 30,
+	'maxFiles'    => 10,
 	'permissions' => 0775,
 ];
 

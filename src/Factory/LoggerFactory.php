@@ -95,11 +95,10 @@ final class LoggerFactory
 	 *
 	 * @return self The logger factory
 	 */
-	public function addFileHandler(string $filename, int $maxFiles = 0, int $permissions = 0777, ?Level $level = null): self
+	public function addFileHandler(string $filename, int $maxFiles = 10, int $permissions = 0777, ?Level $level = null): self
 	{
 		$filename = sprintf('%s/%s', $this->path, $filename);
 		$level    = $level ?? $this->level;
-		/** @phpstan-ignore-next-line */
 		$rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level, true, $permissions);
 
 		// The last "true" here tells monolog to remove empty []'s

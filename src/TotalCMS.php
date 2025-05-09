@@ -14,11 +14,12 @@ use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
-use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
+
 /**
  * Entry point for Total CMS PHP API.
  *
@@ -41,7 +42,7 @@ class TotalCMS
 		$this->container = new Container(require __DIR__ . '/../config/container.php');
 
 		$loggerFactory = $this->container->get(LoggerFactory::class);
-		$this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
+		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
 
 		// CLI mode, no need to start the session
 		if (PHP_SAPI === 'cli') {
@@ -200,11 +201,13 @@ class TotalCMS
 	public function sitemapForCollection(string $collection, array $options = []): string
 	{
 		$sitemapBuilder = $this->container->get(SitemapBuilder::class);
+
 		return $sitemapBuilder->buildSitemap($collection, $options);
 	}
 
 	/**
 	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 *
 	 * @param array<string,string> $options
 	 * */
 	public function outputSitemapForCollection(string $collection, array $options = []): void
