@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Action\Export;
 
+use League\Csv\Writer;
 use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
-use League\Csv\Writer;
 
 final class ExportCsvAction
 {
@@ -19,9 +19,8 @@ final class ExportCsvAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
-	): ResponseInterface
-	{
+		array $args,
+	): ResponseInterface {
 		$collection = $args['collection'];
 		$objects    = $this->objectExporter->exportAllObjectsForCSv($collection);
 
@@ -30,7 +29,7 @@ final class ExportCsvAction
 		$csvData = $csv->toString();
 
 		$response = $response->withHeader('Content-Type', 'text/csv')
-			->withHeader('Content-Disposition', sprintf('attachment; filename="%s-export.csv"', $collection));
+			->withHeader('Content-Disposition', sprintf('attachment; filename="collection-%s.csv"', $collection));
 
 		return $response->withBody(Stream::create($csvData));
 	}

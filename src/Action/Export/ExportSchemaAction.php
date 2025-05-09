@@ -18,13 +18,12 @@ final class ExportSchemaAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
-	): ResponseInterface
-	{
+		array $args,
+	): ResponseInterface {
 		$schema = $this->schemaFetcher->fetchSchema($args['schema']);
 
 		$response = $response->withHeader('Content-Type', 'application/json')
-			->withHeader('Content-Disposition', sprintf('attachment; filename="%s.json"', $schema->id));
+			->withHeader('Content-Disposition', sprintf('attachment; filename="schema-%s.json"', $schema->id));
 
 		return $response->withBody(Stream::create($schema->toJson()));
 	}

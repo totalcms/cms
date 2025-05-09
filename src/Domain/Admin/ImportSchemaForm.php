@@ -10,12 +10,11 @@ final class ImportSchemaForm
 
 	public function __construct(
 		private string $api,
-		private string $schema,
 		private string $label = 'Import Schema',
 	) {
 		$this->simpleform = new SimpleForm(
 			api     : $this->api,
-			route   : "/import/schemas/{$this->schema}",
+			route   : "/import/schemas",
 			method  : 'POST',
 			label   : $this->label,
 			class   : 'import-form',

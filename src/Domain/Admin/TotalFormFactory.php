@@ -75,12 +75,11 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function importSchema(string $schema, array $options = []): string
+	public function importSchema(array $options = []): string
 	{
 		$options['api']    = $this->api;
-		$options['schema'] = $schema;
 
-		$form = new ImportCollectionForm(...$options);
+		$form = new ImportSchemaForm(...$options);
 
 		return $form->build();
 	}

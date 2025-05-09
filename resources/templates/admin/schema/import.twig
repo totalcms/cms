@@ -1,9 +1,8 @@
-<section style="display:grid;align-content:start;gap:3rem">
+<section style="display:grid;align-content:start;gap:1rem">
 
-	<div>
 		<h3>Import Schema</h3>
-		<p>Choose a schema JSON file to uplopad.</p>
-		{{ cms.form.importSchema(url.schema) }}
-	</div>
+		<p>Choose a schema JSON file to upload. This will only create new schemas that do not exist in the CMS.
+		You cannot use the import to update or modify existing schemas.</p>
+		{{ cms.form.importSchema() }}
 
 </section>

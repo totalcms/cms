@@ -18,20 +18,20 @@ final class ExportJsonAction
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
-	): ResponseInterface
-	{
+		array $args,
+	): ResponseInterface {
 		$collection = $args['collection'];
 		$objects    = $this->objectExporter->exportAllObjects($collection);
 
 		$response = $response->withHeader('Content-Type', 'application/json')
-			->withHeader('Content-Disposition', sprintf('attachment; filename="%s-export.json"', $collection));
+			->withHeader('Content-Disposition', sprintf('attachment; filename="collection-%s.json"', $collection));
 
 		$jsonData = json_encode($objects);
 
 		if ($jsonData === false) {
 			$response = $response->withStatus(500);
 			$response->getBody()->write('Failed to encode JSON');
+
 			return $response;
 		}
 
