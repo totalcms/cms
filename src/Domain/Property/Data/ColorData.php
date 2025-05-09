@@ -28,19 +28,21 @@ class ColorData extends PropertyData
 		$this->oklch = $color['oklch'] ?? self::hexToOklch($this->hex);
 	}
 
-	static private function stringToHex(string $color): string
+	static private function rgbToHex(string $color): ?string
 	{
-		if (preg_match('/^#?([a-f0-9]{3}|[a-f0-9]{6})$/i', $color)) {
-			return $color;
-		}
-		if (str_starts_with($color, 'rgb')) {
-			$rgb = preg_replace('/[^0-9,]/', '', $color);
+		$rgb = preg_replace('/[^0-9,]/', '', $color);
+		if (is_string($rgb)) {
 			$rgb = explode(',', $rgb);
 			$hex = sprintf('#%02x%02x%02x', ...$rgb);
 			return $hex;
 		}
-		if (str_starts_with($color, 'hsl')) {
-			$hsl = preg_replace('/[^0-9,]/', '', $color);
+		return null;
+	}
+
+	static private function hslToHex(string $color): ?string
+	{
+		$hsl = preg_replace('/[^0-9,]/', '', $color);
+		if (is_string($hsl)) {
 			$hsl = explode(',', $hsl);
 			$rgb = ColorFactory::newRgb($hsl, ColorSpace::Hsl);
 			if ($rgb === null) {
@@ -50,8 +52,13 @@ class ColorData extends PropertyData
 			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
 			return $hex;
 		}
-		if (str_starts_with($color, 'oklch')) {
-			$oklch = preg_replace('/[^0-9,]/', '', $color);
+		return null;
+	}
+
+	static private function oklchStringToHex(string $color): ?string
+	{
+		$oklch = preg_replace('/[^0-9,]/', '', $color);
+		if (is_string($oklch)) {
 			$oklch = explode(',', $oklch);
 			$rgb   = ColorFactory::newRgb($oklch, ColorSpace::OkLch);
 			if ($rgb === null) {
@@ -60,6 +67,32 @@ class ColorData extends PropertyData
 			$coordinates = $rgb->coordinates();
 			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
 			return $hex;
+		}
+		return null;
+	}
+
+	static private function stringToHex(string $color): string
+	{
+		if (preg_match('/^#?([a-f0-9]{3}|[a-f0-9]{6})$/i', $color)) {
+			return $color;
+		}
+		if (str_starts_with($color, 'rgb')) {
+			$hex = self::rgbToHex($color);
+			if ($hex !== null) {
+				return $hex;
+			}
+		}
+		if (str_starts_with($color, 'hsl')) {
+			$hex = self::hslToHex($color);
+			if ($hex !== null) {
+				return $hex;
+			}
+		}
+		if (str_starts_with($color, 'oklch')) {
+			$hex = self::oklchStringToHex($color);
+			if ($hex !== null) {
+				return $hex;
+			}
 		}
 		throw new \InvalidArgumentException('Invalid color format');
 	}

@@ -29,6 +29,10 @@ class DepotData extends PropertyData
 
 	public function __toString(): string
 	{
-		return json_encode($this->transform());
+		$json = json_encode($this->transform());
+		if ($json === false) {
+			return '';
+		}
+		return $json;
 	}
 }

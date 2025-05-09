@@ -72,13 +72,14 @@ final class ObjectImporter
 
 		$objectData = $this->saveRefPropsforLaterProcessing($objectData);
 
-		$this->objectID = $objectData['id'] ?? null;
-		if ($this->objectID === null) {
+		if (empty($objectData['id'])) {
 			throw new \InvalidArgumentException('Object ID is required for updating');
 		}
-		if (!$this->objectFetcher->existsObject($collection, $this->objectID)) {
+		if (!$this->objectFetcher->existsObject($collection, $objectData['id'])) {
 			throw new \InvalidArgumentException('Object does not exist');
 		}
+
+		$this->objectID = $objectData['id'];
 
 		$this->objectPatcher->patchObject($collection, $this->objectID, $objectData);
 
