@@ -8,7 +8,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 
-final class RSSBuilder
+final class RssBuilder
 {
 	public const DEFAULT_FIELD_MAP = [
 		'title'   => 'title',
