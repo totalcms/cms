@@ -14,6 +14,7 @@ final class ExportJsonAction
 	) {
 	}
 
+	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -27,6 +28,12 @@ final class ExportJsonAction
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s-export.json"', $collection));
 
 		$jsonData = json_encode($objects);
+
+		if ($jsonData === false) {
+			$response = $response->withStatus(500);
+			$response->getBody()->write('Failed to encode JSON');
+			return $response;
+		}
 
 		return $response->withBody(Stream::create($jsonData));
 	}

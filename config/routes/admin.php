@@ -21,7 +21,7 @@ return function (App $app) {
 		// Display Admin Interface
 		$group->get('', AdminIndexAction::class)->setName('admin-index');
 
-		$group->get('/schemas[/{schema}]', AdminSchemaAction::class)->setName('admin-schema');
+		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema');
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection');
 		$group->get('/docs[/{page}]', AdminDocsAction::class)->setName('admin-docs');
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post');

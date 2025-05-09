@@ -33,6 +33,7 @@ final class AdminSchemaAction
 				'params' => $args,
 				'page'   => 'schemas',
 				'schema' => $args['schema'] ?? '',
+				'id'     => $args['id'] ?? '',
 			],
 		]);
 	}

@@ -1,0 +1,11 @@
+<h1><a href="schemas">schemas</a> / <span>new</span></h1>
+
+{{ cms.form.schema({
+	save        : "Save",
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	newAction : {
+		"action" : "redirect-object",
+		"link"   : "schemas/"
+	},
+}) }}

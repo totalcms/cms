@@ -15,6 +15,7 @@ final class ExportCsvAction
 	) {
 	}
 
+	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,

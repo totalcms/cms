@@ -1,14 +1,14 @@
 <section style="display:grid;align-content:start;gap:3rem">
 
-	{% set jsonapi = cms.api ~ "/export/" ~ url.collection %}
-	{% set csvapi = cms.api ~ "/export/" ~ url.collection ~ "/csv" %}
+	{% set jsonapi = cms.api ~ "/export/collections/" ~ url.collection %}
+	{% set csvapi = cms.api ~ "/export/collections/" ~ url.collection ~ "/csv" %}
 
 	<div>
 		<h3>Export Collection to JSON Data</h3>
 		<p>Export the collection data in JSON format. This is useful for creating backups or
 		transferring data between systems. This data gives you the most true/rich data from the CMS.
 		While it will not contain images and files, it will contain all of their meta data.</p>
-		<p><a href="{{ cms.api }}/export/{{ url.collection }}" class="dash-button" download target="_blank">Export to JSON</a></p>
+		<p><a href="{{ jsonapi }}" class="dash-button" download target="_blank">Export to JSON</a></p>
 	</div>
 
 
@@ -17,7 +17,7 @@
 		<p>Export the collection data in CSV format. This is a great way to quickly edit certain types
 		of data in a spreadsheet. This data is not as rich as the JSON data, but it is easier to
 		manipulate in a spreadsheet.</p>
-		<p><a href="{{ cms.api }}/export/{{ url.collection }}/csv" class="dash-button" download target="_blank">Export to CSV</a></p>
+		<p><a href="{{ csvapi }}" class="dash-button" download target="_blank">Export to CSV</a></p>
 	</div>
 
 </section>
