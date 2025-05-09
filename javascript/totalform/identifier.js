@@ -120,7 +120,11 @@ export default class Identifier extends TotalField {
     }
 
 	validate() {
-		return this.valid;
+		if (this.valid && this.input.checkValidity()) {
+			return true;
+		}
+		this.error(this.input.validationMessage);
+		return false;
 	}
 
     validateIdExists() {

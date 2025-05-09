@@ -85,6 +85,7 @@ export default class TotalForm {
 		this.schema     = this.form.dataset.schema;
 		this.states     = ["unsaved","success","error","processing"];
 		this.state      = null;
+		this.validated  = false;
 
 		// Check if the form is a collection, schema or object
 		this.type = this.form.dataset.form || "object";
@@ -195,7 +196,7 @@ export default class TotalForm {
 				this.unsaved();
 				if (this.autosave) this.save();
 			});
-            field.addEventListener("field-error", e => this.error(e.detail.error));
+            field.addEventListener("field-error", e => this.error(e.detail.message));
         });
         this.fields = fieldObjects;
     }
@@ -317,8 +318,6 @@ export default class TotalForm {
     }
 
 	validate() {
-		if (this.id.length === 0) return false;
-
 		this.fields.forEach(field => field.validate());
 
 		if (this.form.checkValidity()) {
@@ -331,6 +330,7 @@ export default class TotalForm {
 
 	save() {
 		if (!this.validate()) return;
+		this.validated = true;
         this.processing();
         this.api.postAPI(this.route, this.generateData(), this.method)
             .then(response => this.afterSave(response))
@@ -519,6 +519,7 @@ export default class TotalForm {
     success() {
 		this.editMode();
 		this.changeState("success");
+		this.validated = false;
 		this.fields.forEach(field => field.saved());
     }
 

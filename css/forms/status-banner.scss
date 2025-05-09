@@ -12,6 +12,8 @@
 	background-color : transparent;
 	backdrop-filter  : blur(5px);
 
+	--totalform-formerror : "An error occurred. See the CMS logs for more details.";
+
     &:after {
 		content            : "";
 		background-color   : oklch(var(--totalform-purewhite));
@@ -63,7 +65,7 @@
         }
 
 		&:before {
-			content    : "An error occurred. See the CMS logs for more details.";
+			content    : var(--totalform-formerror);
 			position   : absolute;
 			display    : block;
 			bottom     : 1rem;
