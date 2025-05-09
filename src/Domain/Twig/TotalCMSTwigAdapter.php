@@ -83,6 +83,22 @@ final class TotalCMSTwigAdapter
 		return $command;
 	}
 
+	/**
+	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 *
+	 * @param array<mixed> $object
+	 */
+	public function redirectIfNotFound(array $object): void
+	{
+		if (empty($object)) {
+			$notfound = $this->config->notfound;
+			if (!empty($notfound)) {
+				header('Location: ' . $notfound);
+				exit;
+			}
+		}
+	}
+
 	public function prettyUrl(string $path): string
 	{
 		$home = 'https://' . $this->domain;

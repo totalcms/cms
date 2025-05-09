@@ -12,6 +12,7 @@ final class Config
 	public string $api       = '';
 	public string $locale    = '';
 	public string $timezone  = '';
+	public string $notfound  = '';
 	/** @var array<string,mixed> */
 	public array $session     = [];
 	/** @var array<string,mixed> */
@@ -41,6 +42,7 @@ final class Config
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];
 		$this->auth       = $settings['auth'];
+		$this->notfound	  = $settings['notfound'];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);
