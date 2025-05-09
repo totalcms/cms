@@ -52,13 +52,12 @@ class ObjectData
 		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
 	}
 
-	/** @return array<int,string> */
+	/** @return array<string> */
 	public function forCsv(): array
 	{
-		$base = [$this->id];
 		$properties = $this->properties->map(fn($property) => strval($property));
+		$properties["id"] = $this->id;
 
-		/** @phpstan-ignore return.type */
-		return array_merge($base, $properties->toArray());
+		return $properties->toArray();
 	}
 }
