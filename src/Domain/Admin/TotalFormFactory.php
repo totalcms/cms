@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -30,6 +31,7 @@ final class TotalFormFactory
 		private Config $config,
 		private ObjectFetcher $objectFetcher,
 		private CollectionFetcher $collectionFetcher,
+		private CollectionLister $collectionLister,
 		private IndexReader $collectionReader,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
@@ -133,11 +135,12 @@ final class TotalFormFactory
 	{
 		$options = [
 			'config'            => $this->config,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionLister'  => $this->collectionLister,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'collectionReader'  => $this->collectionReader,
 			'api'               => $this->api,
 			'collection'        => $collection,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'schemaFetcher'     => $this->schemaFetcher,
 		];
 
 		$table = new CollectionTable(...$options);

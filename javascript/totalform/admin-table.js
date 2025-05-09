@@ -32,9 +32,14 @@ export default class AdminTable {
 	}
 
 	gridReady() {
+		this.initCloneDialog();
 		this.initCellListner();
 		this.initActionListner();
 		this.initQuickActionListner();
+	}
+
+	initCloneDialog() {
+		this.dialog = new Dialog(document.querySelector(".dialog-clone-object"));
 	}
 
 	initActionListner() {
@@ -50,7 +55,7 @@ export default class AdminTable {
 			});
 		});
 		// Delete Objects
-		const deletes = this.wrapper.querySelectorAll(".delete>.cms-quick-action");
+		const deletes = this.wrapper.querySelectorAll(".delete>a");
 		deletes.forEach(link => {
 			link.addEventListener("quickaction-success", e => {
 				const row = link.closest(".gridjs-tr");
@@ -58,6 +63,16 @@ export default class AdminTable {
 				this.grid.updateConfig({
 					data: this.grid.config.data.filter(item => item[0] !== data.id),
 				}).forceRender();
+			});
+		});
+		const clones = this.wrapper.querySelectorAll(".clone>a");
+		clones.forEach(link => {
+			link.addEventListener("pointerdown", e => {
+				const row = link.closest(".gridjs-tr");
+				const id = row.querySelector("td[data-column-id='id']").innerText;
+				this.dialog.dialog.querySelector("input[name='id']").value = `${id}-copy`;
+				this.dialog.dialog.querySelector("form").simpleform.route = link.getAttribute("href");
+				this.dialog.open();
 			});
 		});
 	}

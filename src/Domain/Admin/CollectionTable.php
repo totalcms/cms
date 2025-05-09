@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -24,6 +25,7 @@ final class CollectionTable
 	public function __construct(
 		private Config $config,
 		private CollectionFetcher $collectionFetcher,
+		private CollectionLister $collectionLister,
 		private SchemaFetcher $schemaFetcher,
 		private IndexReader $collectionReader,
 		private string $api,
@@ -54,6 +56,41 @@ final class CollectionTable
 		}
 
 		return 'string';
+	}
+
+	private function buildCloneDialog(): string
+	{
+		$header = HTMLUtils::element('h3', 'Duplicate Object');
+
+		$collections = $this->collectionLister->listCollectionsWithSchema($this->schemaData->id);
+
+		$options = '';
+		foreach ($collections as $collection) {
+			$attrs = ['value' => $collection->id];
+			if ($collection->id === $this->collectionData->id) {
+				$attrs['selected'] = '';
+			}
+			$options .= HTMLUtils::element('option', $collection->name, $attrs);
+		}
+
+		$label = HTMLUtils::element('label', 'Clone into Collection', ['for'=>'clone-collection' ]);
+		$input = HTMLUtils::element('select', $options, ['id'=>'clone-collection', 'type'=>'text', 'name'=>'collection']);
+		$collectionField = HTMLUtils::element('div', $label . $input);
+
+		$label = HTMLUtils::element('label', 'New Object ID', ['for' => 'clone-id']);
+		$input = HTMLUtils::inlineElement('input', ['id'=>'clone-id', 'type'=>'text', 'name'=>'id']);
+		$idField = HTMLUtils::element('div', $label . $input);
+
+		$form = new SimpleForm(
+			api    : $this->api,
+			route  : '', // the route is set in the javascript
+			method : 'POST',
+			label  : 'Clone Object',
+			class  : 'clone-object-form',
+		);
+		$content = $form->build($header . $collectionField . $idField);
+
+		return HTMLUtils::dialog($content, 'dialog-clone-object small');
 	}
 
 	private function buildTableHead(): string
@@ -203,7 +240,7 @@ final class CollectionTable
 
 	private function buildObjectActionButton(string $id): string
 	{
-		$link = "";
+		$link = '';
 		if (!empty($this->collectionData->url)) {
 			$link = HTMLUtils::element('a', 'Link to Webpage', [
 				'target' => '_blank',
@@ -221,26 +258,17 @@ final class CollectionTable
 				'collections',
 				$this->collectionData->id,
 				$id,
-			])
+			]),
 		]);
 		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
 
 		$clone = HTMLUtils::element('a', 'Duplicate Object', [
-			'class'         => 'cms-quick-action',
-			'data-method'   => 'POST',
-			'data-redirect' => implode('/', [
-				'admin',
-				'collections',
-				$this->collectionData->id,
-				$id,
-			]),
-			'href'          => implode('/', [
-				$this->config->api,
-				'collections',
+			'href' => implode('/', [
+				'/collections',
 				$this->collectionData->id,
 				$id,
 				'clone',
-			])
+			]),
 		]);
 		$clone = HTMLUtils::element('li', $clone, ['class' => 'clone']);
 
@@ -290,12 +318,14 @@ final class CollectionTable
 	{
 		$table = $this->buildTableHead() . $this->buildTableBody();
 
-		return HTMLUtils::element('table', $table, [
+		$table = HTMLUtils::element('table', $table, [
 			'class'            => 'admin-table',
 			'data-limit'       => '25',
 			'data-search'      => 'true',
 			'data-sort'        => 'true',
 			'data-placeholder' => 'Filter Objects',
 		]);
+
+		return $table . $this->buildCloneDialog();
 	}
 }

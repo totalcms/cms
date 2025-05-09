@@ -19,4 +19,15 @@ final class CollectionLister
 	{
 		return $this->storage->listAllCollections();
 	}
+
+	/** @return array<CollectionData> */
+	public function listCollectionsWithSchema(string $schemaId): array
+	{
+		$collections = $this->storage->listAllCollections();
+
+		return array_filter($collections, function (CollectionData $collection) use ($schemaId) {
+			return $collection->schema === $schemaId;
+		});
+	}
+
 }
