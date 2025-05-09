@@ -82,11 +82,12 @@ final class CollectionTable
 		$idField = HTMLUtils::element('div', $label . $input);
 
 		$form = new SimpleForm(
-			api    : $this->api,
-			route  : '', // the route is set in the javascript
-			method : 'POST',
-			label  : 'Clone Object',
-			class  : 'clone-object-form',
+			api     : $this->api,
+			route   : '', // the route is set in the javascript
+			method  : 'POST',
+			label   : 'Clone Object',
+			class   : 'clone-object-form',
+			refresh : true,
 		);
 		$content = $form->build($header . $collectionField . $idField);
 

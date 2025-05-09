@@ -40,6 +40,10 @@ export default class AdminTable {
 
 	initCloneDialog() {
 		this.dialog = new Dialog(document.querySelector(".dialog-clone-object"));
+		// const form = this.dialog.dialog.querySelector("form");
+		// form.addEventListener("simpleform:success", e => {
+		// 	setTimeout(() => this.dialog.close(), 1000);
+		// });
 	}
 
 	initActionListner() {
