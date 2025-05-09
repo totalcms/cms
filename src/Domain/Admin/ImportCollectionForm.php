@@ -4,10 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Utils\HTMLUtils;
 
-/**
- * Factory Form Builder.
- */
-final class ImportForm
+final class ImportCollectionForm
 {
 	private SimpleForm $simpleform;
 
@@ -19,7 +16,7 @@ final class ImportForm
 	) {
 		$this->simpleform = new SimpleForm(
 			api     : $this->api,
-			route   : "/import/{$this->collection}/{$this->input}",
+			route   : "/import/collections/{$this->collection}/{$this->input}",
 			method  : 'POST',
 			label   : $this->label,
 			class   : 'import-form',

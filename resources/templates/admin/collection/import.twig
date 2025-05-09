@@ -15,7 +15,7 @@
 				that you will be adding to each object imported.
 				<a href="/admin/docs/import">See Import Docs</a>.</p>
 
-				{{ cms.form.import(url.collection, {
+				{{ cms.form.importCollection(url.collection, {
 					input : 'csv'
 				}) }}
 			</div>
@@ -26,7 +26,7 @@
 			<div class="content" style="margin-bottom:2rem">
 				<p>Choose a JSON file. The main stucture of the JSON document should be an array of objects.
 				<a href="/admin/docs/import">See Import Docs</a>.</p>
-				{{ cms.form.import(url.collection, {
+				{{ cms.form.importCollection(url.collection, {
 					input : 'json'
 				}) }}
 			</div>
