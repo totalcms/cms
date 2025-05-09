@@ -2,16 +2,17 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 
 final class ObjectExporter
 {
 	public function __construct(
 		private IndexRepository $storage,
 		private ObjectFetcher $objectFetcher,
-	){}
+		private CollectionSchemaFetcher $schemaFetcher,
+	) {
+	}
 
 	/** @return array<array<string,mixed>> */
 	public function exportAllObjects(string $collection): array
@@ -20,7 +21,7 @@ final class ObjectExporter
 		$objectIds = $this->storage->fetchObjectIds($collection);
 
 		foreach ($objectIds as $id) {
-			$object = $this->objectFetcher->fetchObject($collection, $id);
+			$object    = $this->objectFetcher->fetchObject($collection, $id);
 			$objects[] = $object->toArray();
 		}
 
@@ -30,21 +31,21 @@ final class ObjectExporter
 	/** @return array<array<int,string>> */
 	public function exportAllObjectsForCSv(string $collection): array
 	{
-		$objects   = [];
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$properties = array_keys($schema->properties);
+
+		$objects   = [$properties];
 		$objectIds = $this->storage->fetchObjectIds($collection);
 
-		$keys = [];
-
 		foreach ($objectIds as $id) {
-			$object = $this->objectFetcher->fetchObject($collection, $id);
-			if (empty($keys)) {
-				$keys = array_keys($object->toArray());
-				$objects[] = $keys;
+			$object = $this->objectFetcher->fetchObject($collection, $id)->forCsv();
+			$csv    = [];
+			foreach ($properties as $property) {
+				$csv[] = $object[$property] ?? '';
 			}
-			$objects[] = $object->forCsv();
+			$objects[] = $csv;
 		}
 
 		return $objects;
 	}
-
 }
