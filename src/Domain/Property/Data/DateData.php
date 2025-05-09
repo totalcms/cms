@@ -49,9 +49,13 @@ class DateData extends PropertyData
 			$date = date('Y-m-d H:i:s', intval($date));
 		}
 
-		$config   = Config::init();
-		$timezone = new \DateTimeZone($config->timezone);
-		$date     = new \DateTime($date, $timezone);
+		try {
+			$config   = Config::init();
+			$timezone = new \DateTimeZone($config->timezone);
+			$date     = new \DateTime($date, $timezone);
+		} catch (\Exception $e) {
+			return '';
+		}
 
 		return $date->format('c');
 	}

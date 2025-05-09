@@ -24,9 +24,7 @@ final class CsvImporter
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory
-			->addFileHandler('importer.log')
-			->createLogger();
+		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger();
 	}
 
 	public function queueJobs(): void
