@@ -3,8 +3,9 @@
 	<button class="dash-action-dots" title="Schema Actions" popovertarget="schema-actions"></button>
 	<nav popover id="schema-actions">
 		<ul>
-			<li class="export"><a href="schemas/{{ url.schema }}/-export">Export</a></li>
-			<li class="import"><a href="schemas/{{ url.schema }}/-import">Import</a></li>
+			{# <li class="export"><a href="schemas/{{ url.schema }}/-export">Export</a></li> #}
+			<li class="export"><a href="{{ cms.api }}/export/schemas/{{ url.schema }}" download target="_blank">Export</a></li>
+			<li class="import"><a href="schemas/-import">Import</a></li>
 		</ul>
 	</nav>
 </header>

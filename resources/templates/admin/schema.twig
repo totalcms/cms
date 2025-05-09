@@ -45,14 +45,18 @@
 <main class="dash-main-content">
 	{% if url.schema is empty %}
 
-		{% include "admin/schema/index.twig" %}
+		{% include "admin/schema/home.twig" %}
 
 	{% else %}
 		{% if url.schema == "new" %}
 
 			{% include "admin/schema/new.twig" %}
 
-		{% elseif url.id in ["-import", "-export"] %}
+		{% elseif url.schema == "-import" %}
+
+			{% include "admin/schema/import.twig" %}
+
+		{% elseif url.id in ["-export"] %}
 
 			{% set pageName = url.id | replace({"-":""}) %}
 			{% include "admin/schema/" ~ pageName ~ ".twig" %}
