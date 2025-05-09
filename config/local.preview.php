@@ -20,7 +20,11 @@ if (isset($_SERVER['DOMAIN']) && is_string($_SERVER['DOMAIN'])) {
 
 $settings['docroot']   = $settings['root'];
 $settings['cachedir']  = 'false';
-$settings['api']       = '/rw_common/plugins/stacks/tcms/public/index.php';
+$settings['api']       = '/site-assets/stacks/ws.tcms3.core/tcms/public/index.php';
+
+if (str_contains(__DIR__, 'rw_common')) {
+	$settings['api'] = '/rw_common/plugins/stacks/tcms/public/index.php';
+}
 
 $settings['error']['display_error_details'] = false;
 $settings['error']['log_errors']            = true;
