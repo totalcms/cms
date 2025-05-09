@@ -27,7 +27,7 @@
 		<button class="cms-button" type="submit">Generate Server Rules</button>
 	</form>
 
-	{% if postData.path %}
+	{% if postData.path and postData.collection %}
 
 		{% if str_ends_with(postData.path, 'php') %}
 			<div class="doc-content pretty-url-results">

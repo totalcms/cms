@@ -86,7 +86,15 @@
 		{% set api = "https://" ~ cms.domain ~ cms.api %}
 	{% endif %}
 
+	{% set rssurl = api ~ "/feed/rss/" ~ url.collection %}
+	{% if query is not empty %}
+		{% set rssurl = rssurl ~ "?" ~ query %}
+	{% endif %}
+
 	<h3>RSS URL:</h3>
-	<pre><code>{{ api }}/feed/rss/{{ url.collection }}{% if query is not empty %}?{{ query }}{% endif %}</code></pre>
+	<div>
+		<pre><code>{{ rssurl }}</code></pre>
+		<p style="margin-top:0;font-size:0.9em"><a href="{{ rssurl }}" target="_blank">Link to RSS ↗</a></p>
+	</div>
 
 </section>
