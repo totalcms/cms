@@ -2,15 +2,15 @@
 
 namespace TotalCMS\Domain\Feed\Service;
 
+use FeedWriter\Item;
+use FeedWriter\RSS2;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
-use FeedWriter\Item;
-use FeedWriter\RSS2;
 
-final class RssBuilder
+final class RSSBuilder
 {
-	const DEFAULT_FIELD_MAP = [
+	public const DEFAULT_FIELD_MAP = [
 		'title'   => 'title',
 		'content' => 'summary',
 		'media'   => 'media',
@@ -57,11 +57,14 @@ final class RssBuilder
 		$objects = $index->objects->sortBy($this->fieldMap['date'] ?? 'date', SORT_REGULAR, true);
 		foreach ($objects as $object) {
 			$draft = $object[$this->fieldMap['draft']] ?? false;
-			if ($draft) continue;
+			if ($draft) {
+				continue;
+			}
 
 			$item = $this->createItem($collectionData, $object);
-            $this->feed->addItem($item);
+			$this->feed->addItem($item);
 		}
+
 		return $this->feed->generateFeed();
 	}
 
@@ -70,21 +73,29 @@ final class RssBuilder
 	{
 		$id      = $object['id'];
 		$url     = CollectionData::objectUrl($collection, $object['id']);
-		$title   = $object[$this->fieldMap['title']]   ?? false;
-		$author  = $object[$this->fieldMap['author']]  ?? false;
+		$title   = $object[$this->fieldMap['title']] ?? false;
+		$author  = $object[$this->fieldMap['author']] ?? false;
 		$content = $object[$this->fieldMap['content']] ?? false;
-		$media   = $object[$this->fieldMap['media']]   ?? false;
-		$date    = $object[$this->fieldMap['date']]    ?? time();
+		$media   = $object[$this->fieldMap['media']] ?? false;
+		$date    = $object[$this->fieldMap['date']] ?? time();
 		$mime    = $this->mimeType($media);
 
 		$item = $this->feed->createNewItem();
 		$item->setLink($url);
-		$item->setId($id);
+		$item->setId($id, true);
 		$item->setDate(date(DATE_RSS, strtotime($date)));
-		if ($title) $item->setTitle($title);
-		if ($author) $item->setAuthor($author);
-		if ($content) $item->setDescription($content);
-		if ($media) $item->addEnclosure($media, 0, $mime);
+		if ($title) {
+			$item->setTitle($title);
+		}
+		if ($author) {
+			$item->setAuthor($author);
+		}
+		if ($content) {
+			$item->setDescription($content);
+		}
+		if ($media) {
+			$item->addEnclosure($media, 0, $mime);
+		}
 
 		return $item;
 	}
@@ -104,16 +115,21 @@ final class RssBuilder
 		$this->feed->setDate(time());
 		$this->feed->setChannelElement('generator', 'Total CMS');
 		$this->feed->setLink(strval($options['link']));
-		if ($options['language'])
+		if ($options['language']) {
 			$this->feed->setChannelElement('language', $options['language']);
-		if ($options['rssurl'])
+		}
+		if ($options['rssurl']) {
 			$this->feed->setSelfLink($options['rssurl']);
-		if ($options['image'])
+		}
+		if ($options['image']) {
 			$this->feed->setImage($options['image'], strval($options['name']), strval($options['link']));
-        if ($options['name'])
+		}
+		if ($options['name']) {
 			$this->feed->setTitle($options['name']);
-        if ($options['description'])
+		}
+		if ($options['description']) {
 			$this->feed->setDescription($options['description']);
+		}
 	}
 
 	private function mimeType(string $media): string
@@ -131,6 +147,7 @@ final class RssBuilder
 			case 'webm':
 				return 'video/webm';
 		}
+
 		return 'application/octet-stream';
 	}
 
