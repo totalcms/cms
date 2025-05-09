@@ -80,7 +80,7 @@
 			"field" : "text"
         },
 		"sortBy": {
-			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
+			"type"        : "string",
 			"label"       : "Sort By",
 			"help"        : "The default property to sort the collection by in the collection view.",
 			"field"       : "select",

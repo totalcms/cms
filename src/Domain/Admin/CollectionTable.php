@@ -12,9 +12,7 @@ use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\HTMLUtils;
 
-/**
- * Total Table Builder.
- */
+/** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
 final class CollectionTable
 {
 	private CollectionData $collectionData;
@@ -73,12 +71,12 @@ final class CollectionTable
 			$options .= HTMLUtils::element('option', $collection->name, $attrs);
 		}
 
-		$label = HTMLUtils::element('label', 'Clone into Collection', ['for'=>'clone-collection' ]);
-		$input = HTMLUtils::element('select', $options, ['id'=>'clone-collection', 'type'=>'text', 'name'=>'collection']);
+		$label           = HTMLUtils::element('label', 'Clone into Collection', ['for'=>'clone-collection']);
+		$input           = HTMLUtils::element('select', $options, ['id'=>'clone-collection', 'type'=>'text', 'name'=>'collection']);
 		$collectionField = HTMLUtils::element('div', $label . $input);
 
-		$label = HTMLUtils::element('label', 'New Object ID', ['for' => 'clone-id']);
-		$input = HTMLUtils::inlineElement('input', ['id'=>'clone-id', 'type'=>'text', 'name'=>'id']);
+		$label   = HTMLUtils::element('label', 'New Object ID', ['for' => 'clone-id']);
+		$input   = HTMLUtils::inlineElement('input', ['id'=>'clone-id', 'type'=>'text', 'name'=>'id']);
 		$idField = HTMLUtils::element('div', $label . $input);
 
 		$form = new SimpleForm(
