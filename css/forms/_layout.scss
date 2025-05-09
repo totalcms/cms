@@ -65,12 +65,12 @@
 	&.unsaved {
 		--totalform-border-color : var(--totalform-changed);
 		--totalform-icon-bg      : var(--totalform-changed);
-		--totalform-icon-color   : var(--totalform-white);
+		--totalform-icon-color   : var(--totalform-purewhite);
 	}
 	&.error {
 		--totalform-border-color : var(--totalform-error);
 		--totalform-icon-bg      : var(--totalform-error);
-		--totalform-icon-color   : var(--totalform-white);
+		--totalform-icon-color   : var(--totalform-purewhite);
 	}
 	// fix for subfields getting over styled (image and gallery dialogs)
 	.form-field:not(.unsaved):not(.error) {
@@ -98,7 +98,7 @@
 		appearance       : none;
 		border-radius    : var(--totalform-radius);
 		background-color : oklch(var(--totalform-darkgray));
-		color            : oklch(var(--totalform-white));
+		color            : oklch(var(--totalform-purewhite));
 		padding          : 0.75rem 1rem;
 		margin           : 0;
 		border           : 2px solid oklch(var(--totalform-nearblack));
@@ -118,7 +118,7 @@
 			display          : inline-block;
 			width            : 1rem;
 			height           : 1rem;
-			background-color : oklch(var(--totalform-white));
+			background-color : oklch(var(--totalform-purewhite));
 			margin-right     : 0.5rem;
 			mask-size        : 0.8rem;
 			mask-repeat      : no-repeat;
@@ -138,10 +138,10 @@ button.cms-add {
 	height           : 3rem;
 	border-radius    : 50%;
 	background-color : oklch(var(--totalform-accent) / 0.95);
-	color            : oklch(var(--totalform-white));
+	color            : oklch(var(--totalform-purewhite));
 	font-size        : 1.5rem;
 	box-shadow       : 0 1px 5px oklch(var(--totalform-black) / 0.5);
-	border           : 2px solid oklch(var(--totalform-white));
+	border           : 2px solid oklch(var(--totalform-purewhite));
 	display          : grid;
 	align-content    : center;
 	justify-content  : center;

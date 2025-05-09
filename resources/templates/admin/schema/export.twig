@@ -1,0 +1,12 @@
+<section style="display:grid;align-content:start;gap:3rem">
+
+	{% set jsonapi = cms.api ~ "/export/schemas/" ~ url.schema %}
+
+	<div>
+		<h3>Export Schema - {{ url.schema }}</h3>
+		<p>Export the schema definition. This is a great way to share your custom shemas with other
+		users.</p>
+		<p><a href="{{ jsonapi }}" class="dash-button" download target="_blank">Export Schema</a></p>
+	</div>
+
+</section>

@@ -1,1 +1,0 @@
-An export API will export all objects in a collection, not just the index data.

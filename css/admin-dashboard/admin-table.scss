@@ -6,6 +6,11 @@
 .admin-table-wrapper {
 	font-size: 0.9em;
 
+	// Stop clicking to the form page when a popover is open
+	:has(:popover-open) td:not(:first-child) {
+		pointer-events : none;
+	}
+
 	img, svg {
 		display   : block;
 		max-width : 3rem;
@@ -15,8 +20,38 @@
 		border-radius : var(--totalform-radius);
 	}
 
+	--action-button-size : 1.2rem;
+	.gridjs-tr td:first-child > span {
+		display  : block;
+		height   : var(--action-button-size);
+		position : relative;
+	}
+	.dash-action-dots {
+		mask-size : var(--action-button-size);
+		height    : var(--action-button-size);
+	}
+
 	.gridjs-wrapper, table {
 		max-height : calc(100vh - 300px);
+	}
+
+	.gridjs-tr th:first-child,
+	.gridjs-tr td:first-child {
+		min-width : 2rem !important;
+		padding   : 14px 0 14px 14px;
+		cursor    : default;
+	}
+
+	.gridjs-th:first-child {
+		pointer-events : none;
+		z-index        : 1;
+
+		&:hover {
+			background-color: oklch(var(--totalform-white)) !important;
+		}
+		* {
+			display: none;
+		}
 	}
 
 	.gridjs-container {
@@ -41,11 +76,14 @@
 			bottom           : 0;
 			right            : 0;
 			color            : oklch(var(--totalform-nearblack));
-			background-color : oklch(var(--totalform-white));
+			background-color : oklch(var(--totalform-purewhite));
 			border-radius    : var(--totalform-radius) 0 var(--totalform-radius) 0;
 			padding          : 0.25rem;
 			font-size        : 0.65rem;
 			opacity          : 0.85;
 		}
 	}
+}
+dialog.dialog-clone-object {
+	height : revert;
 }

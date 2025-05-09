@@ -1,0 +1,36 @@
+table.jobqueue-stats {
+	border          : 1px solid oklch(var(--totalform-lightgray));
+	border-collapse : collapse;
+
+	td {
+		line-height : 1.4;
+		padding     : 0.25rem 0.5rem;
+		background  : none;
+
+		&:first-child {
+			min-width   : 125px;
+			padding-right : 2rem;
+		}
+	}
+	tr:nth-child(even) {
+		background-color : oklch(var(--totalform-lightgray) / 50%);
+	}
+}
+
+.jobqueue-all-stats {
+	display : flex;
+	gap     : 3rem;
+}
+
+.jobqueue-stats-wrapper {
+	h4 {
+		margin-bottom : 0.75rem;
+	}
+}
+
+// On the Collection Import page
+.import-queue {
+	h4 {
+		font-weight: 400;
+	}
+}

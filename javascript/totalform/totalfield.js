@@ -121,13 +121,14 @@ export default class TotalField {
 	}
 
     changed() {
+		this.container.classList.remove("error");
+
 		if (this.isUnsaved()) return;
 
 		if (this.storedValue === this.getValue()) return;
 		this.storedValue = this.getValue();
 
 		this.container.classList.add("unsaved");
-		this.container.classList.remove("error");
 		if (this.isSubField()) {
 			this.dispatcher.dispatchEvent("subfield-change", { field: this });
 			return;

@@ -6,6 +6,7 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
@@ -67,9 +68,140 @@ final class TotalCMSTwigAdapter
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
+	public function processJobQueueCommand(): string
+	{
+		// php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
+		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
+		$installDir = realpath(__DIR__ . '/../../..');
+		$docroot    = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
+		$command    = sprintf(
+			'%s %s/resources/bin/processJobs.php --docroot=%s',
+			$phpPath,
+			$installDir,
+			$docroot,
+		);
+		return $command;
+	}
+
+	/**
+	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 *
+	 * @param array<mixed> $object
+	 */
+	public function redirectIfNotFound(array $object): void
+	{
+		if (empty($object)) {
+			$notfound = $this->config->notfound;
+			if (!empty($notfound)) {
+				header('Location: ' . $notfound);
+				exit;
+			}
+		}
+	}
+
+	public function prettyUrl(string $path): string
+	{
+		$home = 'https://' . $this->domain;
+		$url  = $home . $path;
+
+		// just incase someone puts in the full url and not just the path
+		if (str_starts_with($path, $home)) {
+			$url = $path;
+		}
+		if (str_ends_with($path, 'php')) {
+			$url = dirname($url);
+		}
+		if (!str_ends_with($url, '/')) {
+			$url .= '/';
+		}
+		return $url;
+	}
+
+	private function startPathForUrl(string $url): string
+	{
+		$path = strval(parse_url($url, PHP_URL_PATH));
+		$start = $path;
+
+		if (str_ends_with($path, 'php')) {
+			$start = dirname($path) . '/';
+		}
+		if (!str_ends_with($start, '/')) {
+			$start .= '/';
+		}
+		return ltrim($start, '/');
+	}
+
+	public function apacheRule(string $url, string $collection = "Collection"): string
+	{
+		$path = strval(parse_url($url, PHP_URL_PATH));
+		$start = $this->startPathForUrl($url);
+
+		$snippet = <<<HTACCESS
+# Total CMS Pretty URL Rewrites for $collection
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^$start([\w-]+)$ $path?id=$1 [L,QSA]
+HTACCESS;
+
+		return $snippet;
+	}
+
+	public function nginxRule(string $url, string $collection = "Collection"): string
+	{
+		$path = strval(parse_url($url, PHP_URL_PATH));
+		$start = $this->startPathForUrl($url);
+
+		$snippet = <<<NGINX
+# Total CMS Pretty URL Rewrites for {$collection}
+rewrite ^/{$start}([\w-]+)/?\$ /{$path}?id=\$1 last;
+NGINX;
+
+		return $snippet;
+	}
+
+	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function getDomainName(): string
 	{
 		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+	}
+
+	/** @return array<string,string> */
+	public function languages(): array
+	{
+		return [
+			'Arabic'          => 'ar_SA',
+			'Bengali'         => 'bn_BD',
+			'Czech'           => 'cs_CZ',
+			'Dutch'           => 'nl_NL',
+			'English'         => 'en_US',
+			'French'          => 'fr_FR',
+			'German'          => 'de_DE',
+			'Greek'           => 'el_GR',
+			'Hebrew'          => 'he_IL',
+			'Hindi'           => 'hi_IN',
+			'Italian'         => 'it_IT',
+			'Japanese'        => 'ja_JP',
+			'Javanese'        => 'jv_ID',
+			'Korean'          => 'ko_KR',
+			'Malay'           => 'ms_MY',
+			'Mandarin'        => 'zh_CN',
+			'Persian (Farsi)' => 'fa_IR',
+			'Polish'          => 'pl_PL',
+			'Portuguese'      => 'pt_BR',
+			'Punjabi'         => 'pa_IN',
+			'Romanian'        => 'ro_RO',
+			'Russian'         => 'ru_RU',
+			'Spanish'         => 'es_ES',
+			'Swahili'         => 'sw_KE',
+			'Tamil'           => 'ta_IN',
+			'Tagalog'         => 'tl_PH',
+			'Thai'            => 'th_TH',
+			'Turkish'         => 'tr_TR',
+			'Ukrainian'       => 'uk_UA',
+			'Urdu'            => 'ur_PK',
+			'Vietnamese'      => 'vi_VN',
+		];
 	}
 
 	public function login(string $collection = ''): string
@@ -191,6 +323,7 @@ final class TotalCMSTwigAdapter
 			if ($b === 'Collections') {
 				return -1;
 			}
+
 			return strcmp($a, $b);
 		});
 
@@ -210,29 +343,14 @@ final class TotalCMSTwigAdapter
 		return $collection->toArray();
 	}
 
-	/**
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 *
-	 * @param array<string,bool> $options
-	 */
-	public function objectUrl(string $id, string $collection, array $options = []): string
+	public function objectUrl(string $collection, string $id): string
 	{
-		$options = array_merge([
-			'pretty' => false,
-		], $options);
-
-		$collection = $this->collection($collection);
-		$url        = $collection['url'] ?: '';
-
-		if ($options['pretty']) {
-			if (str_ends_with($url, '/')) {
-				return sprintf('%s%s', $url, $id);
-			}
-
-			return sprintf('%s/%s', $url, $id);
+		$collection = $this->collectionFetcher->fetchCollection($collection);
+		if ($collection === null) {
+			return '';
 		}
 
-		return sprintf('%s?id=%s', $url, $id);
+		return CollectionData::objectUrl($collection, $id);
 	}
 
 	/**
@@ -484,7 +602,7 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getData     = [],
+		array $getData     = [],
 	): string {
 		return PaginationGenerator::simplePagination(...func_get_args());
 	}
@@ -497,7 +615,7 @@ final class TotalCMSTwigAdapter
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getData     = [],
+		array $getData     = [],
 	): string {
 		return PaginationGenerator::fullPagination(...func_get_args());
 	}

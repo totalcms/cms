@@ -95,6 +95,11 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 		return $this->filesystem->fileExists($location);
 	}
 
+	public function directoryExists(string $location): bool
+	{
+		return $this->filesystem->directoryExists($location);
+	}
+
 	/**
 	 * File mime type.
 	 *
@@ -163,6 +168,28 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 		$this->filesystem->move($old, $new);
 
 		return $this->filesystem->fileExists($new);
+	}
+
+	public function copyDirectory(string $sourceDir, string $targetDir): bool
+	{
+		$contents = $this->filesystem->listContents($sourceDir, true); // recursive = true
+
+		foreach ($contents as $item) {
+			$relativePath = ltrim(str_replace($sourceDir, '', $item->path()), '/');
+			$targetPath = rtrim($targetDir, '/') . '/' . $relativePath;
+
+			if ($item->isDir()) {
+				$this->filesystem->createDirectory($targetPath);
+			} elseif ($item->isFile()) {
+				$stream = $this->filesystem->readStream($item->path());
+				$this->filesystem->writeStream($targetPath, $stream);
+				if (is_resource($stream)) {
+					fclose($stream);
+				}
+			}
+		}
+
+		return $this->filesystem->directoryExists($targetDir);
 	}
 
 	/**

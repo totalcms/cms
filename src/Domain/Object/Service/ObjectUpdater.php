@@ -34,7 +34,7 @@ final class ObjectUpdater
 		$object->properties = $object->properties->map(fn($property) => $property->actionsBeforeSave());
 
 		$this->storage->saveObject($collection, $object);
-		$this->indexBuilder->buildIndex($collection);
+		$this->indexBuilder->smartBuildIndex($collection);
 
 		return $object;
 	}

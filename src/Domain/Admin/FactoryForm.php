@@ -27,7 +27,7 @@ final class FactoryForm
 	) {
 		$this->simpleform = new SimpleForm(
 			api: $this->api,
-			route: "/import/{$this->collection}/factory",
+			route: "/import/collections/{$this->collection}/factory",
 			method: 'POST',
 			label: $this->label,
 			refresh: $this->refresh

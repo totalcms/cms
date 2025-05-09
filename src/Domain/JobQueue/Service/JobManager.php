@@ -1,0 +1,64 @@
+<?php
+
+namespace TotalCMS\Domain\JobQueue\Service;
+
+use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+
+final class JobManager
+{
+	public function __construct(
+		private JobRepository $jobRepository,
+	) {}
+
+	/** @return array<string,int>  */
+	public function queueByType(): array
+	{
+		return $this->jobRepository->queueByType();
+	}
+
+	/** @return array<string,int>  */
+	public function queueByTypeForCollection(string $collection): array
+	{
+		return $this->jobRepository->queueByTypeForCollection($collection);
+	}
+
+	/** @return array<string,int>  */
+	public function queueByStatus(): array
+	{
+		return $this->jobRepository->queueByStatus();
+	}
+
+	/** @return array<string,int>  */
+	public function queueByStatusForCollection(string $collection): array
+	{
+		return $this->jobRepository->queueByStatusForCollection($collection);
+	}
+
+	/** @return array<string,array<string,int>>  */
+	public function queueStats(): array
+	{
+		return [
+			'status' => $this->queueByStatus(),
+			'type' => $this->queueByType(),
+		];
+	}
+
+	/** @return array<string,array<string,int>>  */
+	public function queueStatsForCollection(string $collection): array
+	{
+		return [
+			'status' => $this->queueByStatusForCollection($collection),
+			'type' => $this->queueByTypeForCollection($collection),
+		];
+	}
+
+	public function clearQueue(): bool
+	{
+		return $this->jobRepository->clearQueue();
+	}
+
+	public function clearQueueForCollection(string $collection): bool
+	{
+		return $this->jobRepository->clearQueueForCollection($collection);
+	}
+}

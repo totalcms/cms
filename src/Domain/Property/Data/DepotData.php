@@ -26,4 +26,13 @@ class DepotData extends PropertyData
 			'files'      => array_map(fn($file) => $file->transform(), $this->files),
 		];
 	}
+
+	public function __toString(): string
+	{
+		$json = json_encode($this->transform());
+		if ($json === false) {
+			return '';
+		}
+		return $json;
+	}
 }

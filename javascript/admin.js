@@ -6,6 +6,7 @@ import FilterList from './totalform/filter-list';
 import AdminTable from './totalform/admin-table';
 import QuickAction from './quickaction';
 import ClipButton from './clipboard-button';
+import JobQueueStatsTable from './jobqueue-stats';
 import JSONField from './totalform/json';
 import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
@@ -52,4 +53,7 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const copyButtons = Array.from(document.getElementsByClassName("cms-clip-button"));
 	copyButtons.forEach(button => new ClipButton(button));
+
+	const jobqueueStats = Array.from(document.getElementsByClassName("jobqueue-stats"));
+	jobqueueStats.forEach(table => new JobQueueStatsTable(table));
 });

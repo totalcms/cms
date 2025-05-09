@@ -5,9 +5,7 @@ namespace TotalCMS\Domain\Twig;
 use TotalCMS\Utils\EmbedBuilder;
 use Twig\TwigFunction;
 
-/**
- * Twig Functions for Total CMS.
- */
+/** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
 final class TotalCMSTwigFunctions
 {
 	/** @var array<string> */
@@ -147,9 +145,40 @@ final class TotalCMSTwigFunctions
 		return EmbedBuilder::embed($url, $options);
 	}
 
-	/** @param array<string,mixed> $file */
-	public static function fileExists(array $file): bool
+	/** @param array<string,mixed> $options */
+	public static function youtube(string $url, array $options = []): string
 	{
+		return EmbedBuilder::youtube($url, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public static function vimeo(string $url, array $options = []): string
+	{
+		return EmbedBuilder::vimeo($url, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public static function video(string $url, array $options = []): string
+	{
+		return EmbedBuilder::video($url, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public static function audio(string $url, array $options = []): string
+	{
+		return EmbedBuilder::audio($url, $options);
+	}
+
+	public static function iframe(string $url): string
+	{
+		return EmbedBuilder::iframe($url);
+	}
+
+	public static function fileExists(mixed $file): bool
+	{
+		if (!is_array($file)) {
+			return false;
+		}
 		if (!isset($file['size'])) {
 			return false;
 		}
@@ -157,8 +186,7 @@ final class TotalCMSTwigFunctions
 		return $file['size'] !== 0;
 	}
 
-	/** @param array<string,mixed> $image */
-	public static function imageExists(array $image): bool
+	public static function imageExists(mixed $image): bool
 	{
 		return self::fileExists($image);
 	}

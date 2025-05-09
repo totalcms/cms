@@ -4,10 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Utils\HTMLUtils;
 
-/**
- * Factory Form Builder.
- */
-final class ImportForm
+final class ImportCollectionForm
 {
 	private SimpleForm $simpleform;
 
@@ -18,11 +15,12 @@ final class ImportForm
 		private string $label = 'Import into Collection',
 	) {
 		$this->simpleform = new SimpleForm(
-			api    : $this->api,
-			route  : "/import/{$this->collection}/{$this->input}",
-			method : 'POST',
-			label  : $this->label,
-			class  : 'import-form',
+			api     : $this->api,
+			route   : "/import/collections/{$this->collection}/{$this->input}",
+			method  : 'POST',
+			label   : $this->label,
+			class   : 'import-form',
+			refresh : true,
 		);
 	}
 
@@ -60,13 +58,30 @@ final class ImportForm
 		return HTMLUtils::element('div', $check . $label, ['class' => 'checkbox-field']);
 	}
 
+	private function queueField(): string
+	{
+		$labelAttrs = [
+			'for' => 'queue',
+		];
+		$label = HTMLUtils::element('label', 'Queue Jobs for Import', $labelAttrs);
+
+		$checkAttrs = [
+			'type' => 'checkbox',
+			'name' => "queue",
+			'id'   => "queue",
+		];
+		$check = HTMLUtils::inlineElement('input', $checkAttrs);
+
+		return HTMLUtils::element('div', $check . $label, ['class' => 'checkbox-field']);
+	}
 
 	public function build(): string
 	{
 		$file = $this->fileField();
 		$update = $this->updateField();
+		$queue = $this->queueField();
 
-		return $this->simpleform->build($file . $update);
+		return $this->simpleform->build($file . $update . $queue);
 	}
 
 	public function __toString()

@@ -68,10 +68,14 @@ export default class SimpleForm {
 
 	success(response) {
 		this.toggleButton("success", "🥳");
+		this.dispatchSuccess(response);
 		if (this.form.totalform) {
 			this.form.totalform.changeState("success");
 			this.form.totalform.fields.forEach(field => field.saved());
 		}
+	}
+
+	refreshPage() {
 		if (this.refresh) {
 			window.location.reload();
 		}
@@ -94,8 +98,19 @@ export default class SimpleForm {
 				this.button.classList.remove(state);
 				this.button.textContent = originalText;
 				this.button.style.width = "";
-			}, 2000);
+				this.refreshPage();
+			}, 1500);
 		}, 200);
+	}
+
+	dispatchSuccess(response) {
+		const event = new CustomEvent("simpleform:success", {
+			detail: {
+				form: this.form,
+				data: response
+			}
+		});
+		this.form.dispatchEvent(event);
 	}
 
 	generateData() {

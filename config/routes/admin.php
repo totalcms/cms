@@ -21,14 +21,15 @@ return function (App $app) {
 		// Display Admin Interface
 		$group->get('', AdminIndexAction::class)->setName('admin-index');
 
-		$group->get('/schemas[/{schema}]', AdminSchemaAction::class)->setName('admin-schema');
+		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema');
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection');
 		$group->get('/docs[/{page}]', AdminDocsAction::class)->setName('admin-docs');
+		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post');
 
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
 		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
-		$group->post('/utils/twig-playground', AdminUtilsAction::class)->setName('admin-utils-playground');
+		$group->post('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils-post');
 
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
 		$group->post('/settings', AdminSettingsSaveAction::class)->setName('admin-settings-save');

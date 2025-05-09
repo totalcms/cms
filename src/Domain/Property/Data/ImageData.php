@@ -73,4 +73,13 @@ class ImageData extends PropertyData
 			'width'      => $this->width,
 		];
 	}
+
+	public function __toString(): string
+	{
+		$json = json_encode($this->transform());
+		if ($json === false) {
+			return '';
+		}
+		return $json;
+	}
 }

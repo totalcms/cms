@@ -1,0 +1,12 @@
+#rss-builder {
+	margin-bottom : 3rem;
+
+	.cms-button:before {
+		mask-image : var(--icon-rss);
+	}
+	.cms-field-mapping {
+		display               : grid;
+		gap                   : 0 1rem;
+		grid-template-columns : repeat(auto-fit, minmax(15rem, 1fr));
+	}
+}

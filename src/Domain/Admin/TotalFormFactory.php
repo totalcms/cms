@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -17,6 +18,7 @@ use TotalCMS\Support\Config;
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  * @SuppressWarnings("PHPMD.TooManyMethods")
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  *
  * This class is a factory for creating TotalForm objects.
  * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
@@ -30,6 +32,7 @@ final class TotalFormFactory
 		private Config $config,
 		private ObjectFetcher $objectFetcher,
 		private CollectionFetcher $collectionFetcher,
+		private CollectionLister $collectionLister,
 		private IndexReader $collectionReader,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
@@ -62,12 +65,62 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function import(string $collection, array $options = []): string
+	public function importCollection(string $collection, array $options = []): string
 	{
 		$options['api']        = $this->api;
 		$options['collection'] = $collection;
 
-		$form = new ImportForm(...$options);
+		$form = new ImportCollectionForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function importSchema(array $options = []): string
+	{
+		$options['api']    = $this->api;
+
+		$form = new ImportSchemaForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueStats(array $options = []): string
+	{
+		$stats = new JobQueueStats(...$options);
+
+		return $stats->allStats();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueByStatus(array $options = []): string
+	{
+		$header = $options['header'] ?? null;
+		unset($options['header']);
+
+		$stats = new JobQueueStats(...$options);
+
+		return $stats->tableByStatus($header);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueByType(array $options = []): string
+	{
+		$header = $options['header'] ?? null;
+		unset($options['header']);
+
+		$stats = new JobQueueStats(...$options);
+
+		return $stats->tableByType($header);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function clearqueue(array $options = []): string
+	{
+		$options['api'] = $this->api;
+
+		$form = new JobQueueForm(...$options);
 
 		return $form->build();
 	}
@@ -93,11 +146,12 @@ final class TotalFormFactory
 	{
 		$options = [
 			'config'            => $this->config,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionLister'  => $this->collectionLister,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'collectionReader'  => $this->collectionReader,
 			'api'               => $this->api,
 			'collection'        => $collection,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionReader'  => $this->collectionReader,
-			'schemaFetcher'     => $this->schemaFetcher,
 		];
 
 		$table = new CollectionTable(...$options);

@@ -3,7 +3,7 @@
 //--------------------------------
 details.cms-accordion {
 	padding    : 1rem 1rem 0;
-	transition : height 0.5s ease-in-out;
+	// transition : height 0.2s ease-out;
 	display    : grid;
 	gap        : 1rem;
 
@@ -23,12 +23,20 @@ details.cms-accordion {
 	}
 
 	> .content {
-		display : grid;
-		gap     : 1rem;
+		display    : grid;
+		gap        : 1rem;
+		opacity    : 0;
+		transition : all 0.2s ease-out;
+		height     : 0;
 	}
 
 	&[open] {
 		padding : 1rem;
+
+		> .content {
+			opacity : 1;
+			height  : auto
+		}
 
 		summary {
 			margin-bottom : 1rem;

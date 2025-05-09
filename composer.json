@@ -13,7 +13,7 @@
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
   ],
   "require": {
-    "php": ">=8.2",
+    "php": "^8.2",
     "bacon/bacon-qr-code": "^3.0",
     "cakephp/chronos": "^3.0",
     "cakephp/validation": "^5.0",
@@ -37,6 +37,7 @@
     "league/uri": "^7.4",
     "lychee-org/php-exif": "^1.0",
     "matthieumastadenis/couleur": "^0.1.2",
+    "mibe/feedwriter": "dev-master",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.8",
@@ -55,7 +56,11 @@
     "symfony/polyfill-uuid": "^1.23",
     "symfony/property-access": "^7.1",
     "symfony/serializer": "^7.1",
-    "twig/extra-bundle": "^3.6",
+    "thepixeldeveloper/sitemap": "dev-master",
+    "twig/cssinliner-extra": "^3.21",
+    "twig/html-extra": "^3.21",
+    "twig/markdown-extra": "^3.21",
+    "twig/string-extra": "^3.21",
     "twig/twig": "^3.10",
     "webuni/front-matter": "^2.0"
   },
@@ -82,6 +87,9 @@
     "sort-packages": true,
     "allow-plugins": {
       "pestphp/pest-plugin": true
+    },
+    "platform": {
+      "php": "8.2.0"
     }
   },
   "autoload": {

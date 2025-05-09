@@ -1,0 +1,11 @@
+{# Collection Object Table #}
+{% set objects = cms.objects(url.collection) %}
+{% if objects|length > 0 %}
+
+	{{ cms.form.collectionTable(url.collection) }}
+
+{% else %}
+
+	<p>No objects in this collection yet.</p>
+
+{% endif %}

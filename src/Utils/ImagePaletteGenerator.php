@@ -9,7 +9,7 @@ class ImagePaletteGenerator
 	/** @return array<string> */
 	public static function getPalette(string $imagepath): array
 	{
-		if (!extension_loaded('imagick') || !extension_loaded('gd')) {
+		if (!extension_loaded('imagick') && !extension_loaded('gd')) {
 			return [];
 		}
 		// Getting the top 15 colors from the image then reduce to top 5

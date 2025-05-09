@@ -3,7 +3,7 @@
 
 $settings['sentry']['enable'] = true;
 
-$settings['api']     = '/rw_common/plugins/stacks/tcms';
+$settings['api']     = '/site-assets/stacks/ws.tcms.core/tcms/';
 $settings['datadir'] = $settings['docroot'] . '/tcms-data';
 
 // https://www.php.net/manual/en/timezones.php

@@ -1,0 +1,12 @@
+{# New Object Form #}
+<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>new object</span></h1>
+{% set form = cms.form.builder(url.collection, {
+	save        : "Save",
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	newAction   : {
+		"action" : "redirect-object",
+		"link"   : "collections/#{url.collection}/{id}"
+	},
+}) %}
+{{ form.autoBuild() }}

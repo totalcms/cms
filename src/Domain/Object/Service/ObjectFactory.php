@@ -30,6 +30,10 @@ final class ObjectFactory
 	 */
 	public function generateObject(string $collection, array $objectData): ObjectData
 	{
+		if (!array_key_exists('id', $objectData)) {
+			throw new \UnexpectedValueException('Object data must contain an ID.');
+		}
+
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
 		$properties = $this->generateProperties($objectData, $schema);

@@ -15,8 +15,11 @@ use TotalCMS\Domain\Property\Data\SlugData;
 class ObjectData
 {
 	// Reserved names that cannot be used for objects
+	// these are used in that sub URLs in the admin dashboard
 	public const RESERVED_NAMES = [
 		'index',
+		'add',
+		'edit',
 		'id',
 	];
 
@@ -47,5 +50,14 @@ class ObjectData
 	public function toJson(): string
 	{
 		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+	}
+
+	/** @return array<string> */
+	public function forCsv(): array
+	{
+		$properties = $this->properties->map(fn($property) => strval($property));
+		$properties["id"] = $this->id;
+
+		return $properties->toArray();
 	}
 }

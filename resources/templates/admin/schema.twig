@@ -7,6 +7,8 @@
 		<input type="search" class="filter" placeholder="Filter schemas" />
 	</header>
 
+	</header>
+
 	<nav class="links" id="schema-links">
 		<h3>Custom Schemas</h3>
 		{% set customSchemas = sortByKey(cms.customSchemas()) %}
@@ -42,35 +44,27 @@
 
 <main class="dash-main-content">
 	{% if url.schema is empty %}
-		{% include "admin/schema-index.twig" %}
+
+		{% include "admin/schema/home.twig" %}
+
 	{% else %}
 		{% if url.schema == "new" %}
-			<h1><a href="schemas">schemas</a> / <span>new</span></h1>
-			{{ cms.form.schema({
-				save        : "Save",
-				helpStyle   : 'label',
-				helpOnFocus : true,
-				newAction : {
-					"action" : "redirect-object",
-					"link"   : "schemas/"
-				},
-			}) }}
+
+			{% include "admin/schema/new.twig" %}
+
+		{% elseif url.schema == "-import" %}
+
+			{% include "admin/schema/import.twig" %}
+
+		{% elseif url.id in ["-export"] %}
+
+			{% set pageName = url.id | replace({"-":""}) %}
+			{% include "admin/schema/" ~ pageName ~ ".twig" %}
+
 		{% else %}
-			<h1><a href="schemas">schemas</a> / <span>{{ url.schema }}</span></h1>
-			{{ cms.form.schema({
-				id          : url.schema,
-				save        : "Save",
-				delete      : "Delete",
-				helpStyle   : 'label',
-				helpOnFocus : true,
-				deleteAction : {
-					"action" : "redirect",
-					"link"   : "schemas"
-				},
-				editAction : {
-					"action" : "refresh",
-				},
-			}) }}
+
+			{% include "admin/schema/edit.twig" %}
+
 		{% endif %}
 	{% endif %}
 </main>

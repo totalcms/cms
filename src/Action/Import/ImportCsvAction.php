@@ -36,6 +36,7 @@ final class ImportCsvAction
 		set_time_limit(0);
 
 		$collection = $request->getAttribute('collection');
+		$params     = (array)$request->getParsedBody();
 
 		/** @var UploadedFileInterface[] $files */
 		$files = $request->getUploadedFiles();
@@ -44,8 +45,12 @@ final class ImportCsvAction
 			throw new HttpBadRequestException($request, 'Upload failed');
 		}
 
-		$params = (array)$request->getParsedBody();
-		$updateObject = isset($params['update']) && $params['update'] === 'on';
+		$updateObject = isset($params['update']) && !empty($params['update']);
+		$queueJobs    = isset($params['queue'])  && !empty($params['queue']);
+
+		if ($queueJobs) {
+			$this->csvImporter->queueJobs();
+		}
 
 		$importCount = $this->csvImporter->import($collection, $files['csv'], $updateObject);
 

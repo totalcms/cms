@@ -60,7 +60,7 @@ class SchemaField extends PropertyField
 			'label'       => 'Factory',
 			'placeholder' => 'text(300)',
 			'help'        => 'The factory that will be used to generate the field form. See the datalist options for examples. See docs for more info.',
-			'value'       => $this->factory ?? '',
+			'value'       => $this->factory,
 			'settings'    => ['datalistOptions' => true],
 			'options'     => FakerExamples::FAKER_EXAMPLES,
 		]);
@@ -69,7 +69,7 @@ class SchemaField extends PropertyField
 			'label'       => 'Default Value',
 			'placeholder' => '',
 			'help'        => 'The default value for this property when an object is saved without a value',
-			'value'       => $this->default ?? '',
+			'value'       => $this->default,
 		]);
 		$content .= $this->form->field('extra', [
 			'field'       => 'json',

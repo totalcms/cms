@@ -215,11 +215,11 @@ abstract class TotalForm
 			'class'           => "totalform {$this->class}",
 			'data-form'       => $this->formType,
 			'data-schema'     => $this->schema,
-			'data-collection' => $this->collection ?? null,
+			'data-collection' => empty($this->collection) ? null : $this->collection,
 			'data-method'     => $this->method,
 			'data-api'        => $this->api,
 			'data-route'      => $this->route,
-			'data-id'         => $this->id ?? null,
+			'data-id'         => empty($this->id) ? null : $this->id,
 		]);
 
 		$actions = [

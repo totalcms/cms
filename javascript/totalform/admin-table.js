@@ -1,3 +1,4 @@
+import QuickAction from '../quickaction';
 import { Grid, html } from "gridjs";
 // import { RowSelection } from "gridjs/plugins/selection";
 
@@ -28,12 +29,70 @@ export default class AdminTable {
 
 		this.grid = this.initGrid();
 		this.grid.render(this.wrapper);
-		this.initRowListner();
 	}
 
-	initRowListner() {
-		this.grid.on('rowClick', e => {
-			const row = e.currentTarget;
+	gridReady() {
+		this.initCloneDialog();
+		this.initCellListner();
+		this.initActionListner();
+		this.initQuickActionListner();
+	}
+
+	initCloneDialog() {
+		this.dialog = new Dialog(document.querySelector(".dialog-clone-object"));
+		// const form = this.dialog.dialog.querySelector("form");
+		// form.addEventListener("simpleform:success", e => {
+		// 	setTimeout(() => this.dialog.close(), 1000);
+		// });
+	}
+
+	initActionListner() {
+		// Popovers
+		const buttons = this.wrapper.querySelectorAll("button[popovertarget]");
+		buttons.forEach(button => {
+			button.addEventListener("pointerdown", e => {
+				const popover = button.parentNode.querySelector(".object-action-popover");
+				const rect = button.getBoundingClientRect();
+				const offset = 10;
+				popover.style.top = `${rect.top + window.scrollY - offset}px`;
+				popover.style.left = `${rect.left + window.scrollX + offset}px`;
+			});
+		});
+		// Delete Objects
+		const deletes = this.wrapper.querySelectorAll(".delete>a");
+		deletes.forEach(link => {
+			link.addEventListener("quickaction-success", e => {
+				const row = link.closest(".gridjs-tr");
+				row.remove();
+				this.grid.updateConfig({
+					data: this.grid.config.data.filter(item => item[0] !== data.id),
+				}).forceRender();
+			});
+		});
+		const clones = this.wrapper.querySelectorAll(".clone>a");
+		clones.forEach(link => {
+			link.addEventListener("pointerdown", e => {
+				const row = link.closest(".gridjs-tr");
+				const id = row.querySelector("td[data-column-id='id']").innerText;
+				this.dialog.dialog.querySelector("input[name='id']").value = `${id}-copy`;
+				this.dialog.dialog.querySelector("form").simpleform.route = link.getAttribute("href");
+				this.dialog.open();
+			});
+		});
+	}
+
+	initQuickActionListner() {
+		const buttons = Array.from(this.wrapper.getElementsByClassName("cms-quick-action"));
+		buttons.forEach(link => new QuickAction(link));
+	}
+
+	initCellListner() {
+		this.grid.on('cellClick', e => {
+			const cell = e.currentTarget;
+			// Ignore clicks on buttons and links
+			if (cell.querySelector("button,a")) return;
+
+			const row = cell.closest(".gridjs-tr");
 			const cells = Array.from(row.querySelectorAll("td"));
 			let id = '';
 			cells.forEach(cell => {
@@ -53,7 +112,7 @@ export default class AdminTable {
 	}
 
 	initGrid() {
-		return new Grid({
+		const grid = new Grid({
 			from        : this.table,
 			pagination  : this.pagination,
 			search      : this.options.search,
@@ -67,5 +126,15 @@ export default class AdminTable {
 				},
 			},
 		});
+
+		grid.config.store.subscribe((state, prevState) => {
+			if (prevState.status < state.status) {
+				if (prevState.status === 2 && state.status === 3) {
+					this.gridReady();
+				}
+			}
+		});
+
+		return grid;
 	}
 }

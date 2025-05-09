@@ -14,10 +14,13 @@
 		<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
 		<nav popover id="collection-actions">
 			<ul>
-				<li class="factory"><a href="collections/{{ collection }}/factory">Factory</a></li>
-				<li class="import"><a href="collections/{{ collection }}/import">Import</a></li>
 				<li class="schema"><a href="schemas/{{ cms.collection(collection).schema }}">Edit Schema</a></li>
-				<li class="reindex"><a class="cms-quick-action" data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
+				<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
+				<li class="import"><a href="collections/{{ collection }}/-import">Import</a></li>
+				<li class="factory"><a href="collections/{{ collection }}/-factory">Factory</a></li>
+				<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">Sitemap</a></li>
+				<li class="feeds"><a href="collections/{{ collection }}/-feeds">Feeds</a></li>
+				<li class="reindex"><a class="cms-quick-action" data-reload data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
 			</ul>
 		</nav>
 	</header>
@@ -52,129 +55,25 @@
 
 <main class="dash-main-content">
 	{% if url.collection is empty %}
-
-		{% include "admin/collection-index.twig" %}
+		{% include "admin/collection/home.twig" %}
 
 	{% elseif url.collection == "new" %}
-
-		{# New Collection Form #}
-		<h1><a href="collections">collections</a> / <span>new</span></h1>
-		{{ cms.form.collection({
-			save        : "Save",
-			helpStyle   : 'label',
-			helpOnFocus : true,
-			newAction   : {
-				"action" : "redirect-object",
-				"link"   : "collections/{id}/edit"
-			},
-		}) }}
+		{% include "admin/collection/new.twig" %}
 
 	{% elseif url.id is empty %}
-
-		{# Collection Object Table #}
 		{{ _self.collectionHeader(url.collection, "objects") }}
+		{% include "admin/collection/index.twig" %}
 
-		{% set objects = cms.objects(url.collection) %}
-		{% if objects|length > 0 %}
+	{% elseif url.id in ["add", "edit"] %}
+		{% include "admin/collection/" ~ url.id ~ ".twig" %}
 
-			{{ cms.form.collectionTable(url.collection) }}
-
-		{% else %}
-
-			<p>No objects in this collection yet.</p>
-
-		{% endif %}
-
-	{% elseif url.id == "factory" %}
-
-		{# Factory Import into Collection #}
-		{{ _self.collectionHeader(url.collection, "factory") }}
-
-		<section>
-			{{ cms.form.factory(url.collection, {
-				refresh : false,
-				hidden  : false,
-			}) }}
-			<p style="margin-top:3rem">The factory rules that are defined in the schema for this
-			collection will be used to generate new objects.</p>
-			<p>Make sure the check out the <a href="docs/factory">Factory Docs</a> to see all of the possibilities.</p>
-		</section>
-
-	{% elseif url.id == "import" %}
-
-		{# Import into Collection #}
-		{{ _self.collectionHeader(url.collection, "import") }}
-
-		<section>
-			{{ cms.form.import(url.collection, {
-				input : 'csv'
-			}) }}
-			<p style="margin-top:3rem">Choose a CSV file where the first row contains the names of the object properties
-			that you will be adding to each object imported.</p>
-			<ul>
-			<li><strong>Update Existing Objects (OFF)</strong>: When disabled, only new objects will be created from the
-			CSV data. Any data for existing objects will be ignored.</li>
-			<li><strong>Update Existing Objects (ON)</strong>: When enabled, the data will only update existing objects in
-			the collection. You can provide as many or as little properties as you want to updates objects in the
-			collection.</li>
-			</ul>
-			<p><strong>This could take a long time.</strong> If you are importing a lot of data, especially with images
-			or large files, it is recommended to break up the data into smaller files and import them separately.
-			This depends greatly on your server settings for PHP max execution time. Total CMS does attempt
-			to disable any timeouts while performing an import.</p>
-		</section>
-
-
-	{% elseif url.id == "edit" %}
-
-		{# Edit Collection #}
-		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}"><span>{{ url.collection }}</span></a></h1>
-		{{ cms.form.collection({
-			id           : url.collection,
-			save         : "Save",
-			delete       : "Delete",
-			helpStyle    : 'label',
-			helpOnFocus  : true,
-			deleteAction : {
-				"action" : "redirect",
-				"link"   : "collections"
-			},
-			editAction : {
-				"action" : "refresh",
-			},
-		}) }}
-
-	{% elseif url.id == "add" %}
-
-		{# New Object Form #}
-		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>new object</span></h1>
-		{% set form = cms.form.builder(url.collection, {
-			save        : "Save",
-			helpStyle   : 'label',
-			helpOnFocus : true,
-			newAction   : {
-				"action" : "redirect-object",
-				"link"   : "collections/#{url.collection}/{id}"
-			},
-		}) %}
-		{{ form.autoBuild() }}
+	{% elseif url.id in ["-factory", "-import", "-export", "-sitemap", "-feeds"] %}
+		{% set pageName = url.id | replace({"-":""}) %}
+		{{ _self.collectionHeader(url.collection, pageName) }}
+		{% include "admin/collection/" ~ pageName ~ ".twig" %}
 
 	{% else %}
-
-		{# Edit Object Form #}
-		<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>{{ url.id }}</span></h1>
-		{% set form = cms.form.builder(url.collection, {
-			id           : url.id,
-			save         : "Save",
-			delete       : "Delete",
-			helpStyle    : 'label',
-			helpOnFocus  : true,
-			deleteAction : {
-				"action" : "redirect",
-				"link"   : "collections/#{url.collection}"
-			},
-		}) %}
-		{{ form.autoBuild() }}
+		{% include "admin/collection/object.twig" %}
 
 	{% endif %}
 </main>

@@ -12,9 +12,11 @@
 	background-color : transparent;
 	backdrop-filter  : blur(5px);
 
+	--totalform-formerror : "An error occurred. See the CMS logs for more details.";
+
     &:after {
 		content            : "";
-		background-color   : oklch(var(--totalform-white));
+		background-color   : oklch(var(--totalform-purewhite));
 		mask-image         : var(--icon-blank);
 		position           : absolute;
 		display            : block;
@@ -63,7 +65,7 @@
         }
 
 		&:before {
-			content    : "An error occurred. See the CMS logs for more details.";
+			content    : var(--totalform-formerror);
 			position   : absolute;
 			display    : block;
 			bottom     : 1rem;
@@ -71,7 +73,7 @@
 			width      : 100%;
 			font-size  : 1.2rem;
 			text-align : center;
-			color      : oklch(var(--totalform-white));
+			color      : oklch(var(--totalform-purewhite));
 			transition : all 500ms ease-in-out;
 		}
     }

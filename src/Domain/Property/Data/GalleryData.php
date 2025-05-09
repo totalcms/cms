@@ -24,4 +24,13 @@ class GalleryData extends PropertyData
 			$this->images
 		);
 	}
+
+	public function __toString(): string
+	{
+		$json = json_encode($this->transform());
+		if ($json === false) {
+			return '';
+		}
+		return $json;
+	}
 }

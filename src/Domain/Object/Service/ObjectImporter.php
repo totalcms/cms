@@ -72,13 +72,14 @@ final class ObjectImporter
 
 		$objectData = $this->saveRefPropsforLaterProcessing($objectData);
 
-		$this->objectID = $objectData['id'] ?? null;
-		if ($this->objectID === null) {
+		if (empty($objectData['id'])) {
 			throw new \InvalidArgumentException('Object ID is required for updating');
 		}
-		if (!$this->objectFetcher->existsObject($collection, $this->objectID)) {
+		if (!$this->objectFetcher->existsObject($collection, $objectData['id'])) {
 			throw new \InvalidArgumentException('Object does not exist');
 		}
+
+		$this->objectID = $objectData['id'];
 
 		$this->objectPatcher->patchObject($collection, $this->objectID, $objectData);
 
@@ -110,7 +111,7 @@ final class ObjectImporter
 
 		foreach ($schema->properties as $name => $property) {
 			// Skip properties that are not references or if the data is not set
-			if (!isset($property['$ref'], $objectData[$name])) {
+			if (!isset($property['$ref'], $objectData[$name]) || !is_string($objectData[$name])) {
 				continue;
 			}
 

@@ -23,7 +23,7 @@ final class ObjectRemover
 		$status = $this->storage->deleteObject($collection, $id);
 
 		if ($status) {
-			$this->indexBuilder->buildIndex($collection);
+			$this->indexBuilder->smartBuildIndex($collection);
 		}
 
 		return $status;

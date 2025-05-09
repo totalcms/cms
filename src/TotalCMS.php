@@ -11,8 +11,10 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
@@ -40,7 +42,12 @@ class TotalCMS
 		$this->container = new Container(require __DIR__ . '/../config/container.php');
 
 		$loggerFactory = $this->container->get(LoggerFactory::class);
-		$this->logger  = $loggerFactory->addFileHandler('totalcms-twig.log')->createLogger('totalcms-twig');
+		$this->logger  = $loggerFactory->addFileHandler('twig.log')->createLogger('twig');
+
+		// CLI mode, no need to start the session
+		if (PHP_SAPI === 'cli') {
+			return;
+		}
 
 		try {
 			$this->buffer           = $this->container->get(BufferController::class);
@@ -103,6 +110,11 @@ class TotalCMS
 	public function propertyFetcher(): PropertyFetcher
 	{
 		return $this->container->get(PropertyFetcher::class);
+	}
+
+	public function jobRunner(): JobRunner
+	{
+		return $this->container->get(JobRunner::class);
 	}
 
 	// ---------------------------------------------------------------------------------
@@ -183,5 +195,31 @@ class TotalCMS
 		$preview     = ($environment === 'preview' || PHP_SAPI === 'cli-server');
 
 		return $preview;
+	}
+
+	/** @param array<string,string> $options */
+	public function sitemapForCollection(string $collection, array $options = []): string
+	{
+		$sitemapBuilder = $this->container->get(SitemapBuilder::class);
+
+		return $sitemapBuilder->buildSitemap($collection, $options);
+	}
+
+	/**
+	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 *
+	 * @param array<string,string> $options
+	 * */
+	public function outputSitemapForCollection(string $collection, array $options = []): void
+	{
+		$this->buffer->end();
+
+		// Output the sitemap
+		header('Content-Type: application/xml; charset=utf-8');
+		header('Cache-Control: public, max-age=86400');
+
+		echo $this->sitemapForCollection($collection, $options);
+
+		exit(0);
 	}
 }

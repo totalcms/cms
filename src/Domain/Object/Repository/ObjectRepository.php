@@ -11,25 +11,18 @@ use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\PathUtils;
 
-/**
- * Repository.
- */
 final class ObjectRepository extends StorageRepository
 {
 	private ObjectFactory $factory;
 	private SchemaValidator $validator;
 	private CollectionFetcher $collectionFetcher;
 
-	/**
-	 * The constructor.
-	 *
-	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
-	 * @param ObjectFactory $factory
-	 * @param SchemaValidator $validator
-	 * @param CollectionFetcher $collectionFetcher
-	 */
-	public function __construct(StorageAdapterInterface $filesystem, ObjectFactory $factory, SchemaValidator $validator, CollectionFetcher $collectionFetcher)
-	{
+	public function __construct(
+		StorageAdapterInterface $filesystem,
+		ObjectFactory $factory,
+		SchemaValidator $validator,
+		CollectionFetcher $collectionFetcher
+	) {
 		parent::__construct($filesystem);
 
 		$this->factory           = $factory;
@@ -79,8 +72,10 @@ final class ObjectRepository extends StorageRepository
 
 		if ($this->filesystem->fileExists($objectFile)) {
 			$contents = json_decode($this->filesystem->read($objectFile), true);
-			$object   = $this->factory->generateObject($collection, $contents);
-			return $object;
+			if (is_array($contents)) {
+				$object = $this->factory->generateObject($collection, $contents);
+				return $object;
+			}
 		}
 
 		return null;
@@ -94,6 +89,16 @@ final class ObjectRepository extends StorageRepository
 		$this->filesystem->deleteDirectory($filesPath);
 
 		return $this->filesystem->delete($objectFile);
+	}
+
+	public function copyObjectFiles(string $fromCollection, string $fromId, string $toCollection, string $toId): void
+	{
+		$fromPath = $this->buildObjectFilesPath($fromCollection, $fromId);
+		$toPath   = $this->buildObjectFilesPath($toCollection, $toId);
+
+		if ($this->filesystem->directoryExists($fromPath)) {
+			$this->filesystem->copyDirectory($fromPath, $toPath);
+		}
 	}
 
 	private function buildObjectFilesPath(string $collection, string $id): string

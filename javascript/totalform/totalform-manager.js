@@ -8,7 +8,7 @@ export default class TotalFormManager {
     // Constructors
     constructor() {
 		this.processingStart = Date.now();
-		this.processingLimit = 1500;
+		this.processingLimit = 1000;
 		this.unsavedCounter  = 0;
 
 		this.forms = this.findForms();
@@ -50,7 +50,9 @@ export default class TotalFormManager {
 
 	formListeners() {
 		this.forms.forEach(form => {
-			form.form.addEventListener("error", event => this.error(event.detail.error));
+			form.form.addEventListener("error", event => {
+				if (form.validated) this.error(event.detail.error);
+			});
 			form.form.addEventListener("success", () => this.success());
 		});
 		// Save on CMD/Ctrl+S
@@ -142,6 +144,9 @@ export default class TotalFormManager {
 	}
 
     error(error) {
+		if (error) {
+			this.statusBanner.style.setProperty('--totalform-formerror', `'${error}'`);
+		}
 		this.delayProcessing(() => {
 			this.bannerStatus("error");
 			this.statusBanner.addEventListener("click", () => {

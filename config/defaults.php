@@ -44,9 +44,10 @@ $settings['sentry'] = [
 $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
-$settings['domain'] = $_SERVER['HTTP_HOST'] ?? 'unknown';
-$settings['url']    = 'https://' . $settings['domain'];
-$settings['api']    = $settings['url'] . '/api';
+$settings['domain']   = $_SERVER['HTTP_HOST'] ?? 'unknown';
+$settings['url']      = 'https://' . $settings['domain'];
+$settings['api']      = $settings['url'] . '/api';
+$settings['notfound'] = '/404';
 
 // Path settings
 $settings['root']     = dirname(__DIR__);
@@ -80,7 +81,7 @@ $settings['logger'] = [
 	'path'        => __DIR__ . '/../logs',
 	'filename'    => 'totalcms.log',
 	'level'       => Monolog\Level::Info,
-	'maxFiles'    => 30,
+	'maxFiles'    => 10,
 	'permissions' => 0775,
 ];
 

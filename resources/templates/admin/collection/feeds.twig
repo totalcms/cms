@@ -1,0 +1,100 @@
+<section class="dash-content-section">
+
+	{#
+		TODO: eventually there will be more than RSS. Make each type of feed an accordion section.
+		TODO: the form will have a type parameter that will determine which type of feed is being generated.
+		TODO: open the accordion section for the type of feed that is being generated.
+	#}
+
+	<h2>RSS Builder for {{ url.collection }}</h2>
+	<p>The following will produce a URL that you can use for visitor to subscribe to an RSS feed of your collection.
+	All of the fields below are optional. If no field mappings are provided, then the mapping for a blog schema
+	will be used.</p>
+
+	{% set collection = cms.collection(url.collection) %}
+	{% set schema = cms.schema(collection.schema) %}
+
+	<form id="rss-builder"
+		class="totalform"
+		method="POST"
+		data-disabled>
+		<div>
+			<h4 style="margin-bottom:1rem">RSS Feed Settings</h4>
+
+			<input type="hidden" name="type" value="rss"/>
+
+			<label for="name">Feed Name</label>
+			<input type="text" name="name" value="{{ postData.name }}" placeholder="My {{ url.collection | humanize }} Feed"/>
+
+			<label for="language">Language</label>
+			<select name="language">
+				<option value="">Select a Language</option>
+				{% for lang, code in cms.languages %}
+					<option value="{{ code }}"
+						{% if postData.language == code %}selected{% endif %}>
+						{{ lang }}
+					</option>
+				{% endfor %}
+			</select>
+
+			<label for="link">Link to Website</label>
+			<input type="url" name="link" value="{{ postData.link }}" placeholder="https://{{ cms.domain }}"/>
+
+			<label for="image">Main Feed Image</label>
+			<input type="url" name="image" value="{{ postData.image }}" placeholder="https://{{ cms.domain }}/feed.jpg"/>
+
+			<label for="description">Feed Description</label>
+			<textarea name="description" rows="5" placeholder="A description of the feed">{{ postData.description }}</textarea>
+
+			<h4 style="margin:1rem 0">RSS Field to Property Mapping</h4>
+
+			<div class="cms-field-mapping">
+				<div>
+					<label for="title">Title</label>
+					<input type="text" name="title" value="{{ postData.title }}" placeholder="title"/>
+				</div>
+				<div>
+					<label for="date">Date</label>
+					<input type="text" name="date" value="{{ postData.date }}" placeholder="updated"/>
+				</div>
+				<div>
+					<label for="content">Content</label>
+					<input type="text" name="content" value="{{ postData.content }}" placeholder="summary"/>
+				</div>
+				<div>
+					<label for="author">Author</label>
+					<input type="text" name="author" value="{{ postData.author }}" placeholder="author"/>
+				</div>
+				<div>
+					<label for="media">Media</label>
+					<input type="text" name="media" value="{{ postData.media }}" placeholder="media"/>
+				</div>
+				<div>
+					<label for="draft">Draft</label>
+					<input type="text" name="draft" value="{{ postData.draft }}" placeholder="draft"/>
+				</div>
+			</div>
+
+		</div>
+		<button class="cms-button" type="submit">Generate RSS URL</button>
+	</form>
+
+	{% set query = http_build_query(postData | filter((v, k) => k != "type")) %}
+	{% if str_starts_with(cms.api, "http") %}
+		{% set api = cms.api %}
+	{% else %}
+		{% set api = "https://" ~ cms.domain ~ cms.api %}
+	{% endif %}
+
+	{% set rssurl = api ~ "/feed/rss/" ~ url.collection %}
+	{% if query is not empty %}
+		{% set rssurl = rssurl ~ "?" ~ query %}
+	{% endif %}
+
+	<h3>RSS URL:</h3>
+	<div>
+		<pre><code>{{ rssurl }}</code></pre>
+		<p style="margin-top:0;font-size:0.9em"><a href="{{ rssurl }}" target="_blank">Link to RSS ↗</a></p>
+	</div>
+
+</section>

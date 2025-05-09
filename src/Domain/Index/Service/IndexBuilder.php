@@ -6,26 +6,20 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 
-/**
- * Service.
- */
 final class IndexBuilder
 {
 	public function __construct(
 		private IndexRepository $storage,
 		private ObjectFetcher $objectFetcher,
 		private CollectionSchemaFetcher $schemaFetcher,
+		private CollectionFetcher $collectionFetcher,
+		private JobQueuer $jobQueuer,
 	) {
 	}
 
-	/**
-	 * Save Index data.
-	 *
-	 * @param string $collection The collection
-	 *
-	 * @return IndexData
-	 */
 	public function buildIndex(string $collection): IndexData
 	{
 		$objectIds  = $this->storage->fetchObjectIds($collection);
@@ -50,5 +44,22 @@ final class IndexBuilder
 		$this->storage->saveIndex($collection, $index);
 
 		return $index;
+	}
+
+	/** @SuppressWarnings("PHPMD.ElseExpression") */
+	public function smartBuildIndex(string $collection): void
+	{
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		if ($collectionData === null) {
+			throw new \DomainException(sprintf('Collection %s not found', $collection));
+		}
+		$queueReindex = $collectionData->queueRebuildOnSave ?? false;
+
+		// Queue the reindex if the collection is set to do so
+		if ($queueReindex) {
+			$this->jobQueuer->queueBuildIndex($collection);
+		} else {
+			$this->buildIndex($collection);
+		}
 	}
 }

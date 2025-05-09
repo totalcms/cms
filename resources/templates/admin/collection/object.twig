@@ -1,0 +1,14 @@
+{# Edit Object Form #}
+<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>{{ url.id }}</span></h1>
+{% set form = cms.form.builder(url.collection, {
+	id           : url.id,
+	save         : "Save",
+	delete       : "Delete",
+	helpStyle    : 'label',
+	helpOnFocus  : true,
+	deleteAction : {
+		"action" : "redirect",
+		"link"   : "collections/#{url.collection}"
+	},
+}) %}
+{{ form.autoBuild() }}

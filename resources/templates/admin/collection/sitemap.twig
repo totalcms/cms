@@ -1,0 +1,83 @@
+<section class="dash-content-section">
+
+	<h2>Sitemap Builder for {{ url.collection }}</h2>
+	<p>The following will produce a URL that you can use to submit to search engines or add to an existing
+	Sitemap Index. All of the fields below are optional. The provided date property will be unique for webpage
+	added to the sitemap. However, the frequency and priority fields will the same across all objects added.</p>
+
+	{% set collection = cms.collection(url.collection) %}
+	{% set schema = cms.schema(collection.schema) %}
+	{% set frequencies = {
+		"always"  : "Changes with every access (e.g., dynamic homepages)",
+		"hourly"  : "Updated every hour",
+		"daily"   : "Updated once a day",
+		"weekly"  : "Updated once a week",
+		"monthly" : "Updated once a month",
+		"yearly"  : "Updated once a year",
+		"never"   : "Archived or never-changing pages (e.g., legal notices)",
+	 } %}
+
+	<form id="sitemap-builder"
+		class="totalform"
+		method="POST"
+		data-disabled>
+		<div>
+			<label for="date">Indexed Property that contains Date for Sitemap</label>
+			<select name="date">
+				<option value="">Select a Property</option>
+				{% for property in schema.index %}
+					<option value="{{ property }}"
+						{% if postData.date == property %}selected{% endif %}>
+						{{ property }}
+					</option>
+				{% endfor %}
+			</select>
+			<label for="frequency">Change Frequency</label>
+			<select name="frequency">
+				<option value="">Select a Frequency</option>
+				{% for value, label in frequencies %}
+					<option value="{{ value }}"
+						{% if postData.frequency == value %}selected{% endif %}>
+						{{ label }}
+					</option>
+				{% endfor %}
+			</select>
+			<label for="priority">Priority</label>
+			<input type="number" step="0.1" min="0" max="1" name="priority" value="{{ postData.priority }}" placeholder="1.0"/>
+
+			<h4>Common examples of Sitemap Priority:</h4>
+			<ul>
+				<li>1.0 — Homepage or highly important pages</li>
+				<li>0.8 — Major category or product pages</li>
+				<li>0.5 — Standard content pages or blog posts</li>
+				<li>0.3 — Lower-priority pages like contact forms or TOS</li>
+				<li>0.1 — Obscure, rarely updated pages</li>
+			</ul>
+		</div>
+		<button class="cms-button" type="submit">Generate Sitemap URL</button>
+	</form>
+
+	{% set query = http_build_query(postData) %}
+	{% if str_starts_with(cms.api, "http") %}
+		{% set api = cms.api %}
+	{% else %}
+		{% set api = "https://" ~ cms.domain ~ cms.api %}
+	{% endif %}
+
+	{% set sitemapurl = api ~ "/sitemap/" ~ url.collection %}
+	{% if query is not empty %}
+		{% set sitemapurl = sitemapurl ~ "?" ~ query %}
+	{% endif %}
+
+	<h3>Sitemap URL:</h3>
+	<div>
+		<pre><code>{{ sitemapurl }}</code></pre>
+		<p style="margin-top:0;font-size:0.9em"><a href="{{ sitemapurl }}" target="_blank">Link to Sitemap ↗</a></p>
+	</div>
+
+	{% if collection.url is empty %}
+	<p class="cms-error">The collection does not have a URL saved. Please add a URL to the collection
+	before submitting your sitemap to search engines.</p>
+	{% endif %}
+
+</section>

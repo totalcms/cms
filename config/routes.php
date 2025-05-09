@@ -15,7 +15,11 @@ return function (App $app) {
 	(require __DIR__ . '/routes/download.php')($app);
 	(require __DIR__ . '/routes/imageworks.php')($app);
 	(require __DIR__ . '/routes/import.php')($app);
+	(require __DIR__ . '/routes/export.php')($app);
+	(require __DIR__ . '/routes/jobqueue.php')($app);
 	(require __DIR__ . '/routes/schemas.php')($app);
 	(require __DIR__ . '/routes/templates.php')($app);
 	(require __DIR__ . '/routes/upload.php')($app);
+	(require __DIR__ . '/routes/sitemap.php')($app);
+	(require __DIR__ . '/routes/feed.php')($app);
 };

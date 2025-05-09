@@ -2,19 +2,20 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
-use TotalCMS\Utils\HTMLUtils;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\HTMLUtils;
 
-/**
- * Total Table Builder.
- */
+/** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
 final class CollectionTable
 {
+	private CollectionData $collectionData;
 	private SchemaData $schemaData;
 	/** @var array<array<string,mixed>> */
 	private array $objects;
@@ -22,6 +23,7 @@ final class CollectionTable
 	public function __construct(
 		private Config $config,
 		private CollectionFetcher $collectionFetcher,
+		private CollectionLister $collectionLister,
 		private SchemaFetcher $schemaFetcher,
 		private IndexReader $collectionReader,
 		private string $api,
@@ -32,6 +34,7 @@ final class CollectionTable
 		if (is_null($collectionData)) {
 			throw new \RuntimeException("Collection {$this->collection} not found.");
 		}
+		$this->collectionData = $collectionData;
 
 		$this->schemaData = $this->schemaFetcher->fetchSchema($collectionData->schema);
 		$index            = $this->collectionReader->fetchIndex($this->collection);
@@ -53,9 +56,46 @@ final class CollectionTable
 		return 'string';
 	}
 
+	private function buildCloneDialog(): string
+	{
+		$header = HTMLUtils::element('h3', 'Duplicate Object');
+
+		$collections = $this->collectionLister->listCollectionsWithSchema($this->schemaData->id);
+
+		$options = '';
+		foreach ($collections as $collection) {
+			$attrs = ['value' => $collection->id];
+			if ($collection->id === $this->collectionData->id) {
+				$attrs['selected'] = '';
+			}
+			$options .= HTMLUtils::element('option', $collection->name, $attrs);
+		}
+
+		$label           = HTMLUtils::element('label', 'Clone into Collection', ['for'=>'clone-collection']);
+		$input           = HTMLUtils::element('select', $options, ['id'=>'clone-collection', 'type'=>'text', 'name'=>'collection']);
+		$collectionField = HTMLUtils::element('div', $label . $input);
+
+		$label   = HTMLUtils::element('label', 'New Object ID', ['for' => 'clone-id']);
+		$input   = HTMLUtils::inlineElement('input', ['id'=>'clone-id', 'type'=>'text', 'name'=>'id']);
+		$idField = HTMLUtils::element('div', $label . $input);
+
+		$form = new SimpleForm(
+			api     : $this->api,
+			route   : '', // the route is set in the javascript
+			method  : 'POST',
+			label   : 'Clone Object',
+			class   : 'clone-object-form',
+			refresh : true,
+		);
+		$content = $form->build($header . $collectionField . $idField);
+
+		return HTMLUtils::dialog($content, 'dialog-clone-object small');
+	}
+
 	private function buildTableHead(): string
 	{
-		$headings   = '';
+		$headings = HTMLUtils::element('th', 'action-button', ['class' => 'action']);
+
 		// order the columns by the index in the schema
 		$properties = $this->schemaData->index;
 		foreach ($properties as $property) {
@@ -171,11 +211,88 @@ final class CollectionTable
 		return strip_tags((string)$value);
 	}
 
+	/** @return array<array<string,mixed>> */
+	private function sortObjects(): array
+	{
+		$sortBy      = $this->collectionData->sortBy ?? 'id';
+		$reverseSort = $this->collectionData->reverseSort ?? false;
+
+		$objects = $this->objects;
+
+		usort($objects, function ($a, $b) use ($sortBy, $reverseSort) {
+			$aValue = $a[$sortBy] ?? '';
+			$bValue = $b[$sortBy] ?? '';
+
+			if ($aValue === $bValue) {
+				return 0;
+			}
+
+			if ($reverseSort) {
+				return ($aValue < $bValue) ? 1 : -1;
+			}
+
+			return ($aValue < $bValue) ? -1 : 1;
+		});
+
+		return $objects;
+	}
+
+	private function buildObjectActionButton(string $id): string
+	{
+		$link = '';
+		if (!empty($this->collectionData->url)) {
+			$link = HTMLUtils::element('a', 'Link to Webpage', [
+				'target' => '_blank',
+				'href'   => CollectionData::objectUrl($this->collectionData, $id),
+			]);
+			$link = HTMLUtils::element('li', $link, ['class' => 'link']);
+		}
+
+		$delete = HTMLUtils::element('a', 'Delete Object', [
+			'class'        => 'cms-quick-action',
+			'data-method'  => 'DELETE',
+			'data-confirm' => 'Are you sure you want to delete this object?',
+			'href'         => implode('/', [
+				$this->config->api,
+				'collections',
+				$this->collectionData->id,
+				$id,
+			]),
+		]);
+		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
+
+		$clone = HTMLUtils::element('a', 'Duplicate Object', [
+			'href' => implode('/', [
+				'/collections',
+				$this->collectionData->id,
+				$id,
+				'clone',
+			]),
+		]);
+		$clone = HTMLUtils::element('li', $clone, ['class' => 'clone']);
+
+		$actions = HTMLUtils::element('ul', $link . $clone . $delete);
+		$popover = HTMLUtils::element('nav', $actions, [
+			'popover' => '',
+			'class'   => 'object-action-popover',
+			'id'      => 'object-action-' . $id,
+		]);
+		$button = HTMLUtils::element('button', '', [
+			'class'          => 'dash-action-dots',
+			'title'          => 'Object Actions',
+			'popovertarget'  => 'object-action-' . $id,
+		]);
+
+		return $button . $popover;
+	}
+
 	private function buildTableBody(): string
 	{
 		$rows = '';
-		foreach ($this->objects as $object) {
-			$cell = '';
+		foreach ($this->sortObjects() as $object) {
+			$button = $this->buildObjectActionButton($object['id']);
+			// add the action button to the first column
+			$cell = HTMLUtils::element('td', $button, ['class' => 'action']);
 			// order the columns by the index in the schema
 			$properties = $this->schemaData->index;
 			foreach ($properties as $property) {
@@ -200,12 +317,14 @@ final class CollectionTable
 	{
 		$table = $this->buildTableHead() . $this->buildTableBody();
 
-		return HTMLUtils::element('table', $table, [
+		$table = HTMLUtils::element('table', $table, [
 			'class'            => 'admin-table',
 			'data-limit'       => '25',
 			'data-search'      => 'true',
 			'data-sort'        => 'true',
 			'data-placeholder' => 'Filter Objects',
 		]);
+
+		return $table . $this->buildCloneDialog();
 	}
 }

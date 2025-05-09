@@ -1,0 +1,14 @@
+#sitemap-builder {
+	margin-bottom: 3rem;
+
+	label, h4 {
+		margin-top: 1rem;
+
+	}
+	label:first-of-type {
+		margin-top: 0;
+	}
+	.cms-button:before {
+		mask-image : var(--icon-sitemap);
+	}
+}
