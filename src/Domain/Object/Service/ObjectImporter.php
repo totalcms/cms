@@ -2,19 +2,16 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectPatcher;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Service\DepotSaver;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\GallerySaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 
 /**
- * Collection Object Importer
+ * Collection Object Importer.
  *
  * Importing objects from external sources
  * It's main difference from ObjectSaver is that it will
@@ -24,13 +21,13 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  */
 final class ObjectImporter
 {
-	/** @var array<string,string> $images */
+	/** @var array<string,string> */
 	private array $images = [];
-	/** @var array<string,string> $galleries */
+	/** @var array<string,string> */
 	private array $galleries = [];
-	/** @var array<string,string> $files */
+	/** @var array<string,string> */
 	private array $files = [];
-	/** @var array<string,string> $depots */
+	/** @var array<string,string> */
 	private array $depots = [];
 
 	private string $collection;
@@ -93,19 +90,20 @@ final class ObjectImporter
 
 	/**
 	 * Extract images, galleries, files and depots from object data
-	 * These will get processed separately and files looked for in the local filesystem
+	 * These will get processed separately and files looked for in the local filesystem.
 	 *
 	 * @param array<string,mixed> $objectData
+	 *
 	 * @return array<string,mixed>
 	 */
-	private function saveRefPropsforLaterProcessing(array $objectData) : array
+	private function saveRefPropsforLaterProcessing(array $objectData): array
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
 
 		// Filter out properties that are not in the schema
 		$objectData = array_filter(
 			$objectData,
-			fn($value, $name) => isset($schema->properties[$name]),
+			fn ($value, $name) => isset($schema->properties[$name]),
 			ARRAY_FILTER_USE_BOTH
 		);
 
@@ -113,6 +111,21 @@ final class ObjectImporter
 			// Skip properties that are not references or if the data is not set
 			if (!isset($property['$ref'], $objectData[$name]) || !is_string($objectData[$name])) {
 				continue;
+			}
+
+			// Check if the property is a reference to an image, gallery, file or depot
+			// and if the data is a valid JSON string and decode the JSON string and continue
+			if (in_array($property['$ref'], [
+					SchemaData::PROPERTY_TYPE_TO_REF['image'],
+					SchemaData::PROPERTY_TYPE_TO_REF['gallery'],
+					SchemaData::PROPERTY_TYPE_TO_REF['file'],
+					SchemaData::PROPERTY_TYPE_TO_REF['depot'],
+				], true)
+			) {
+				if (self::isJson($objectData[$name])) {
+					$objectData[$name] = json_decode($objectData[$name], true);
+					continue;
+				}
 			}
 
 			switch ($property['$ref']) {
@@ -137,7 +150,16 @@ final class ObjectImporter
 					break;
 			}
 		}
+
 		return $objectData;
+	}
+
+	private static function isJson(string $data): bool
+	{
+		// Check if the data is valid JSON
+		json_decode($data);
+
+		return json_last_error() === JSON_ERROR_NONE;
 	}
 
 	private function saveImages(): void
@@ -202,9 +224,10 @@ final class ObjectImporter
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
-	private static function replacePathTemplates(string $path = ""): string
+	private static function replacePathTemplates(string $path = ''): string
 	{
 		$path = str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
+
 		return $path;
 	}
 
@@ -213,6 +236,7 @@ final class ObjectImporter
 	{
 		$list = explode(',', $list);
 		$list = array_map('trim', $list);
+
 		return array_filter($list);
 	}
 }
