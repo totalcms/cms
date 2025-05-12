@@ -9,7 +9,7 @@ class NumberData extends PropertyData
 {
 	public float $number;
 
-	public function __construct(mixed $number = 0, public array $settings = [])
+	public function __construct(string|int|float $number = 0, public array $settings = [])
 	{
 		$this->number = floatval($number);
 	}
