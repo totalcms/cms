@@ -501,14 +501,25 @@ NGINX;
 	}
 
 	/** @param array<string,string> $options */
-	public function color(string $id, array $options = []): string
+	public function color(string $id, array $options = []): array
 	{
 		$options = array_merge([
 			'collection' => 'color',
 			'property'   => 'color',
 		], $options);
 
-		return $this->data($options['collection'], $id, $options['property']);
+		$color = $this->data($options['collection'], $id, $options['property']);
+
+		if (!is_array($color)) {
+			return [];
+		}
+		return $color;
+	}
+
+	/** @param array<string,string> $options */
+	public function colour(string $id, array $options = []): array
+	{
+		return $this->color($id, $options);
 	}
 
 	/** @param array<string,string> $options */
