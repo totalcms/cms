@@ -10,8 +10,8 @@ use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
-use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Domain\Property\Data\SlugData;
+use TotalCMS\Factory\LoggerFactory;
 
 final class UrlImporter
 {

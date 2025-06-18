@@ -3,8 +3,8 @@
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -18,7 +18,8 @@ final class SaverFactory
 		private CollectionSchemaFetcher $schemaFetcher,
 		protected ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,
-	){}
+	) {
+	}
 
 	public function generateSaverService(string $collection, string $property): FileSaver
 	{

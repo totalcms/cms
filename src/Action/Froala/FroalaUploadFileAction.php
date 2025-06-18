@@ -54,7 +54,7 @@ final class FroalaUploadFileAction
 
 		$link = $this->config->api . '/upload/' . $path;
 
-		if ($type === "image") {
+		if ($type === 'image') {
 			$link = $this->config->api . '/imageworks/upload/' . $path;
 		}
 
@@ -63,6 +63,6 @@ final class FroalaUploadFileAction
 			$link .= '?' . http_build_query($params);
 		}
 
-		return $this->renderer->json($response, [ "link" => $link ]);
+		return $this->renderer->json($response, ['link' => $link]);
 	}
 }

@@ -9,8 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Support\Config;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Support\Config;
 
 /**
  * Auth middleware.
@@ -74,7 +74,6 @@ final class AuthMiddleware implements MiddlewareInterface
 			->withStatus(302)
 			->withHeader('Location', $url);
 	}
-
 
 	private function trackSessionActivity(): void
 	{

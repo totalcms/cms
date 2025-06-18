@@ -45,7 +45,7 @@ final class JsonImporter
 
 		$records = json_decode((string)$file->getStream(), true);
 
-		if (!is_array($records) || !array_reduce($records, fn($carry, $item) => $carry && is_array($item), true)) {
+		if (!is_array($records) || !array_reduce($records, fn ($carry, $item) => $carry && is_array($item), true)) {
 			$error = 'Invalid JSON structure for import: expected an array of records';
 			$this->logger->error($error);
 			throw new \InvalidArgumentException($error);
@@ -74,12 +74,14 @@ final class JsonImporter
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function importNewObject(array $record): bool
 	{
 		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping import of record %s', $record['id']));
+
 			return false;
 		}
 
@@ -99,12 +101,14 @@ final class JsonImporter
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function updateObject(array $record): bool
 	{
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record %s', $record['id']));
+
 			return false;
 		}
 

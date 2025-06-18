@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Domain\Sitemap\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
-use \TotalCMS\Domain\Sitemap\Data\Sitemap;
+use TotalCMS\Domain\Sitemap\Data\Sitemap;
 
 final class SitemapBuilder
 {

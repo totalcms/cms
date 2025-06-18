@@ -80,6 +80,7 @@ final class TotalCMSTwigAdapter
 			$installDir,
 			$docroot,
 		);
+
 		return $command;
 	}
 
@@ -114,12 +115,13 @@ final class TotalCMSTwigAdapter
 		if (!str_ends_with($url, '/')) {
 			$url .= '/';
 		}
+
 		return $url;
 	}
 
 	private function startPathForUrl(string $url): string
 	{
-		$path = strval(parse_url($url, PHP_URL_PATH));
+		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $path;
 
 		if (str_ends_with($path, 'php')) {
@@ -128,12 +130,13 @@ final class TotalCMSTwigAdapter
 		if (!str_ends_with($start, '/')) {
 			$start .= '/';
 		}
+
 		return ltrim($start, '/');
 	}
 
-	public function apacheRule(string $url, string $collection = "Collection"): string
+	public function apacheRule(string $url, string $collection = 'Collection'): string
 	{
-		$path = strval(parse_url($url, PHP_URL_PATH));
+		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
 		$snippet = <<<HTACCESS
@@ -147,9 +150,9 @@ HTACCESS;
 		return $snippet;
 	}
 
-	public function nginxRule(string $url, string $collection = "Collection"): string
+	public function nginxRule(string $url, string $collection = 'Collection'): string
 	{
-		$path = strval(parse_url($url, PHP_URL_PATH));
+		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
 		$snippet = <<<NGINX
@@ -513,6 +516,7 @@ NGINX;
 		if (!is_array($color)) {
 			return [];
 		}
+
 		return $color;
 	}
 

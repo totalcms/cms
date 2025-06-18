@@ -13,12 +13,13 @@ final class ObjectPatchAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectPatcher $objectPatcher,
-	) {}
+	) {
+	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = (array)$request->getParsedBody();
+		$data   = (array)$request->getParsedBody();
 		$object = $this->objectPatcher->patchObject($args['collection'], $args['id'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

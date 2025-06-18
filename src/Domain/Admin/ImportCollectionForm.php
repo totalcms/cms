@@ -29,7 +29,7 @@ final class ImportCollectionForm
 		$labelAttrs = [
 			'for' => $this->input,
 		];
-		$label = HTMLUtils::element('label', strtoupper($this->input). ' File', $labelAttrs);
+		$label = HTMLUtils::element('label', strtoupper($this->input) . ' File', $labelAttrs);
 
 		$fileAttrs = [
 			'type' => 'file',
@@ -50,8 +50,8 @@ final class ImportCollectionForm
 
 		$checkAttrs = [
 			'type' => 'checkbox',
-			'name' => "update",
-			'id'   => "update",
+			'name' => 'update',
+			'id'   => 'update',
 		];
 		$check = HTMLUtils::inlineElement('input', $checkAttrs);
 
@@ -67,8 +67,8 @@ final class ImportCollectionForm
 
 		$checkAttrs = [
 			'type' => 'checkbox',
-			'name' => "queue",
-			'id'   => "queue",
+			'name' => 'queue',
+			'id'   => 'queue',
 		];
 		$check = HTMLUtils::inlineElement('input', $checkAttrs);
 
@@ -77,9 +77,9 @@ final class ImportCollectionForm
 
 	public function build(): string
 	{
-		$file = $this->fileField();
+		$file   = $this->fileField();
 		$update = $this->updateField();
-		$queue = $this->queueField();
+		$queue  = $this->queueField();
 
 		return $this->simpleform->build($file . $update . $queue);
 	}

@@ -73,19 +73,20 @@ class ServerChecker
 
 	public function cacheDirSize(): string
 	{
-		$dir = $this->config->cachedir;
+		$dir  = $this->config->cachedir;
 		$size = 0;
 		if (file_exists($dir)) {
 			foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir)) as $file) {
 				$size += $file->getSize();
 			}
 		}
+
 		return $this->formatBytes($size);
 	}
 
 	private function formatBytes(int $bytes): string
 	{
-		$units = ['B', 'KB', 'MB', 'GB', 'TB'];
+		$units     = ['B', 'KB', 'MB', 'GB', 'TB'];
 		$unitCount = count($units);
 		for ($i = 0; $bytes >= 1024 && $i < $unitCount - 1; $i++) {
 			$bytes /= 1024;

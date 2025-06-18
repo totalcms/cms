@@ -18,6 +18,7 @@ final class Sitemap
 	public function newLocation(string $url, array $options = []): SitemapLocation
 	{
 		$location = new SitemapLocation($url, $options);
+
 		return $location;
 	}
 
@@ -33,14 +34,15 @@ final class Sitemap
 		$this->addLocation($location);
 	}
 
-	public function toXML() : string
+	public function toXML(): string
 	{
 		$driver = new XmlWriterDriver();
 		$this->urlset->accept($driver);
+
 		return $driver->output();
 	}
 
-	public function __toString() :string
+	public function __toString(): string
 	{
 		return $this->toXML();
 	}

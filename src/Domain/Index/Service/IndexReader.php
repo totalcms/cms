@@ -12,8 +12,9 @@ final class IndexReader
 {
 	public function __construct(
 		private IndexRepository $storage,
-		private IndexBuilder $builder
-	) {}
+		private IndexBuilder $builder,
+	) {
+	}
 
 	public function fetchIndex(string $collection): ?IndexData
 	{

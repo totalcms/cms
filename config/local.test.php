@@ -20,4 +20,4 @@ $settings['error']['log_errors']            = true;
 
 $settings['logger']['level']  = Monolog\Level::Debug;
 $settings['sentry']['enable'] = false;
-$settings['auth']['enable'] = false;
+$settings['auth']['enable']   = false;

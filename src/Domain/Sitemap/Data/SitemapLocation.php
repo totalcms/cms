@@ -32,7 +32,7 @@ final class SitemapLocation
 		}
 	}
 
-	public function location() : URL
+	public function location(): Url
 	{
 		return $this->location;
 	}

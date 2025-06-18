@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\Buffer;
 // ---------------------------------------------------------------------------------
 class BufferController
 {
-
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function start(bool $force = false): bool
 	{

@@ -3,7 +3,6 @@
 namespace TotalCMS\Utils;
 
 use PHPExif\Enum\ReaderType as ExifReaderType;
-use PHPExif\Exif;
 use PHPExif\Reader\Reader as ExifReader;
 
 class ImageMetaReader

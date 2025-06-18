@@ -5,14 +5,15 @@ namespace TotalCMS\Action\Froala;
 use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Property\Service\UploadFetcher;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Property\Service\UploadFetcher;
 
 final class FroalaGetFileAction
 {
 	public function __construct(
 		private UploadFetcher $uploadFetcher,
-	){}
+	) {
+	}
 
 	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface

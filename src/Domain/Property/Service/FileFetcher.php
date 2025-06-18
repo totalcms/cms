@@ -9,8 +9,9 @@ final class FileFetcher
 {
 	public function __construct(
 		private PropertyRepository $storage,
-		private PropertyFetcher $propFetcher
-	) {}
+		private PropertyFetcher $propFetcher,
+	) {
+	}
 
 	public function fetchFile(string $collection, string $id, string $property): FileData
 	{

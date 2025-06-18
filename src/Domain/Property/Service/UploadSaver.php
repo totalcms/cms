@@ -8,8 +8,9 @@ use TotalCMS\Utils\PathUtils;
 class UploadSaver
 {
 	public function __construct(
-		private PropertyRepository $storage
-	){}
+		private PropertyRepository $storage,
+	) {
+	}
 
 	public function save(
 		string $collection,

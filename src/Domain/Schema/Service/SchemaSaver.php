@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
 
 final class SchemaSaver
 {
@@ -15,8 +15,7 @@ final class SchemaSaver
 		private SchemaValidator $validator,
 		private IndexBuilder $indexBuilder,
 		private CollectionLister $collectionLister,
-	)
-	{
+	) {
 		$this->storage   = $storage;
 		$this->factory   = $factory;
 		$this->validator = $validator;

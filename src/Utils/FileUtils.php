@@ -4,7 +4,6 @@ namespace TotalCMS\Utils;
 
 class FileUtils
 {
-
 	public static function fileSizeString(int $size): string
 	{
 		$units = ['B', 'KB', 'MB', 'GB', 'TB'];

@@ -17,7 +17,7 @@ final class SettingsSaver
 	 */
 	public function save(array $settings): array
 	{
-		$settings = array_filter($settings, fn($value) => $value !== '');
+		$settings           = array_filter($settings, fn ($value) => $value !== '');
 		$settings['sentry'] = isset($settings['sentry']);
 
 		$returnSettings = $settings;
@@ -33,8 +33,8 @@ final class SettingsSaver
 		foreach ($settings as $key => $value) {
 			if (is_array($value)) {
 				$arrayString = var_export($value, true);
-				$arrayString = str_replace("array (", "[", $arrayString);
-				$arrayString = str_replace(")", "]", $arrayString);
+				$arrayString = str_replace('array (', '[', $arrayString);
+				$arrayString = str_replace(')', ']', $arrayString);
 
 				$configContent .= "\"$key\" => $arrayString,\n";
 				continue;

@@ -8,11 +8,11 @@ use TotalCMS\Domain\Property\Data\PropertyData;
 final class PropertyFetcher
 {
 	public function __construct(
-		private ObjectFetcher $objectFetcher
-	){
+		private ObjectFetcher $objectFetcher,
+	) {
 	}
 
-	public function fetchProperty(string $collection, string $objectID, string $property) : PropertyData
+	public function fetchProperty(string $collection, string $objectID, string $property): PropertyData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $objectID);
 

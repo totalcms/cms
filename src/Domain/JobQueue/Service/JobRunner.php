@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Domain\JobQueue\Service;
 
+use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
-use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 
 final class JobRunner
@@ -18,7 +18,7 @@ final class JobRunner
 		private ObjectImporter $objectImporter,
 		private IndexBuilder $indexBuilder,
 		LoggerFactory $loggerFactory,
-	){
+	) {
 		$this->logger = $loggerFactory
 		->addFileHandler('jobs.log')
 		->createLogger();
@@ -77,6 +77,7 @@ final class JobRunner
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$error = 'Invalid JSON payload: ' . json_last_error_msg();
 			$this->logger->error($error, $job->toArray());
+
 			return;
 		}
 		$this->objectImporter->importObject($job->collection, $data);
@@ -93,6 +94,7 @@ final class JobRunner
 		if (json_last_error() !== JSON_ERROR_NONE) {
 			$error = 'Invalid JSON payload: ' . json_last_error_msg();
 			$this->logger->error($error, $job->toArray());
+
 			return;
 		}
 		$this->objectImporter->updateObject($job->collection, $data);

@@ -66,7 +66,7 @@ final class GlideFactory
 			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
 			'defaults'               => $this->config->imageworks['defaults'],
 			'presets'                => $this->presets($imageData),
-			'response'               => new PsrResponseFactory(new Response(), fn($stream) => new Stream($stream)),
+			'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
 		]);
 
 		return $glide;

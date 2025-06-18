@@ -3,9 +3,9 @@
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Utils\ImageMetaReader;
 use TotalCMS\Utils\ImagePaletteGenerator;
-use TotalCMS\Domain\Property\Data\ImageData;
 
 final class ImageSaver extends FileSaver
 {
@@ -16,9 +16,8 @@ final class ImageSaver extends FileSaver
 		string $objectID,
 		string $property,
 		string $filePath,
-		?string $subpath = null
-	): ObjectData
-	{
+		?string $subpath = null,
+	): ObjectData {
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);

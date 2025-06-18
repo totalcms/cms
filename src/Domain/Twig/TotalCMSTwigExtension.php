@@ -18,7 +18,8 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		private FakerFactory $faker,
 		private QRCodeTwigAdapter $generator,
 		private PhpSession $session,
-	) {}
+	) {
+	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	public function getGlobals(): array

@@ -42,7 +42,7 @@ class ObjectData
 		$base = ['id' => $this->id];
 
 		// Transform properties
-		$properties = $this->properties->map(fn($property) => $property->transform());
+		$properties = $this->properties->map(fn ($property) => $property->transform());
 
 		return array_merge($base, $properties->toArray());
 	}
@@ -55,8 +55,8 @@ class ObjectData
 	/** @return array<string> */
 	public function forCsv(): array
 	{
-		$properties = $this->properties->map(fn($property) => strval($property));
-		$properties["id"] = $this->id;
+		$properties       = $this->properties->map(fn ($property) => strval($property));
+		$properties['id'] = $this->id;
 
 		return $properties->toArray();
 	}

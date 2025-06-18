@@ -36,6 +36,7 @@ final class CsvImporter
 	 * Clean up CSV data by removing empty headers and rows with no data.
 	 *
 	 * @param Reader<array<string,string>> $csv
+	 *
 	 * @return array<int, array<string, mixed>> Cleaned CSV records
 	 */
 	private function cleanCsvData(Reader $csv): array
@@ -101,12 +102,14 @@ final class CsvImporter
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function importNewObject(int $offset, array $record): bool
 	{
 		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping import of record (%s) at row %s', $record['id'], $offset));
+
 			return false;
 		}
 
@@ -126,12 +129,14 @@ final class CsvImporter
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function updateObject(int $offset, array $record): bool
 	{
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'], $offset));
+
 			return false;
 		}
 

@@ -17,9 +17,8 @@ final class GallerySaver extends FileSaver
 		string $objectID,
 		string $property,
 		string $filePath,
-		?string $subpath = null
-	): ObjectData
-	{
+		?string $subpath = null,
+	): ObjectData {
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);
@@ -34,7 +33,7 @@ final class GallerySaver extends FileSaver
 		$colorData = ['palette' => ImagePaletteGenerator::getPalette($filePath)];
 		$metaData  = ImageMetaReader::getMetaData($filePath);
 
-		$newImage = array_merge($fileData, $metaData, $colorData);
+		$newImage          = array_merge($fileData, $metaData, $colorData);
 		$gallery->images[] = new ImageData($newImage);
 
 		return $this->updateObject($collection, $objectID, $property, $gallery);

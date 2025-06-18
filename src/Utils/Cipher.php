@@ -3,7 +3,7 @@
 namespace TotalCMS\Utils;
 
 /**
- * Cipher utility for obfuscation and encryption in Total CMS
+ * Cipher utility for obfuscation and encryption in Total CMS.
  *
  * IMPORTANT: This class provides two different types of data protection:
  *
@@ -25,7 +25,7 @@ class Cipher
 	public const SALT = 'YTFiMmMzZDRlNWY2ZzdoOGk5ajA=';
 
 	/**
-	 * Obfuscate string data for hiding from casual viewing
+	 * Obfuscate string data for hiding from casual viewing.
 	 *
 	 * NOTE: This is NOT encryption! Use encrypt() for security-sensitive data.
 	 * This method provides deterministic obfuscation suitable for:
@@ -35,6 +35,7 @@ class Cipher
 	 *
 	 * @param string $string Data to obfuscate
 	 * @param string $key Obfuscation key (defaults to class SALT)
+	 *
 	 * @return string URL-safe base64 encoded obfuscated data
 	 */
 	public static function obfuscate(string $string, string $key = self::SALT): string
@@ -45,7 +46,7 @@ class Cipher
 		// Apply character-position-dependent obfuscation
 		$output = '';
 		for ($i = 0; $i < strlen($string); $i++) {
-			$char = ord($string[$i]);
+			$char    = ord($string[$i]);
 			$keyByte = ord($derivedKey[$i % strlen($derivedKey)]);
 
 			// Apply position-dependent transformation
@@ -61,16 +62,17 @@ class Cipher
 	}
 
 	/**
-	 * Deobfuscate string data previously obfuscated with obfuscate()
+	 * Deobfuscate string data previously obfuscated with obfuscate().
 	 *
 	 * @param string $string Base64 encoded obfuscated data
 	 * @param string $key Obfuscation key (must match key used for obfuscation)
+	 *
 	 * @return string Original data
 	 */
 	public static function deobfuscate(string $string, string $key = self::SALT): string
 	{
 		// Restore padding and decode from URL-safe base64
-		$padded = str_pad(strtr($string, '-_', '+/'), strlen($string) % 4, '=', STR_PAD_RIGHT);
+		$padded  = str_pad(strtr($string, '-_', '+/'), strlen($string) % 4, '=', STR_PAD_RIGHT);
 		$decoded = base64_decode($padded, true);
 
 		if ($decoded === false) {
@@ -86,7 +88,7 @@ class Cipher
 		// Reverse character-position-dependent obfuscation
 		$output = '';
 		for ($i = 0; $i < strlen($unscrambled); $i++) {
-			$char = ord($unscrambled[$i]);
+			$char    = ord($unscrambled[$i]);
 			$keyByte = ord($derivedKey[$i % strlen($derivedKey)]);
 
 			// Reverse position-dependent transformation
@@ -98,13 +100,13 @@ class Cipher
 	}
 
 	/**
-	 * Derive a better obfuscation key from the salt
+	 * Derive a better obfuscation key from the salt.
 	 */
 	private static function deriveObfuscationKey(string $salt, int $length): string
 	{
 		// Use a simple but effective key derivation
 		$decoded = base64_decode($salt) ?: $salt;
-		$key = hash('sha256', $decoded . 'TotalCMS_Obfuscation_v2', true);
+		$key     = hash('sha256', $decoded . 'TotalCMS_Obfuscation_v2', true);
 
 		// Extend key to required length
 		while (strlen($key) < $length) {
@@ -115,12 +117,12 @@ class Cipher
 	}
 
 	/**
-	 * Simple deterministic string scrambling based on key
+	 * Simple deterministic string scrambling based on key.
 	 */
 	private static function scrambleString(string $input, string $key): string
 	{
 		$keyHash = crc32($key) & 0xFF;
-		$output = '';
+		$output  = '';
 
 		for ($i = 0; $i < strlen($input); $i++) {
 			$scrambleIndex = ($i + $keyHash) % strlen($input);
@@ -131,15 +133,15 @@ class Cipher
 	}
 
 	/**
-	 * Reverse the string scrambling
+	 * Reverse the string scrambling.
 	 */
 	private static function unscrambleString(string $input, string $key): string
 	{
 		$keyHash = crc32($key) & 0xFF;
-		$output = str_repeat("\0", strlen($input));
+		$output  = str_repeat("\0", strlen($input));
 
 		for ($i = 0; $i < strlen($input); $i++) {
-			$originalIndex = ($i + $keyHash) % strlen($input);
+			$originalIndex          = ($i + $keyHash) % strlen($input);
 			$output[$originalIndex] = $input[$i];
 		}
 
@@ -148,15 +150,17 @@ class Cipher
 
 	/**
 	 * Create context-specific obfuscation key
-	 * Useful for different subsystems that need separate obfuscation contexts
+	 * Useful for different subsystems that need separate obfuscation contexts.
 	 *
 	 * @param string $context Context identifier (e.g., 'sentry', 'downloads', 'config')
 	 * @param string $baseSalt Base salt to derive from (defaults to class SALT)
+	 *
 	 * @return string Context-specific salt for use with obfuscate/deobfuscate
 	 */
 	public static function contextKey(string $context, string $baseSalt = self::SALT): string
 	{
 		$contextHash = hash('sha256', $baseSalt . $context . 'TotalCMS_Context', true);
+
 		return base64_encode($contextHash);
 	}
 

@@ -39,9 +39,8 @@ class FileRemover
 		string $objectID,
 		string $property,
 		string $name,
-		?string $subpath = null
-	): ObjectData
-	{
+		?string $subpath = null,
+	): ObjectData {
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
 			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
 		}

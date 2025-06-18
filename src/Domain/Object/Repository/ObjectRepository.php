@@ -7,7 +7,6 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
-use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\PathUtils;
 
@@ -21,7 +20,7 @@ final class ObjectRepository extends StorageRepository
 		StorageAdapterInterface $filesystem,
 		ObjectFactory $factory,
 		SchemaValidator $validator,
-		CollectionFetcher $collectionFetcher
+		CollectionFetcher $collectionFetcher,
 	) {
 		parent::__construct($filesystem);
 
@@ -74,6 +73,7 @@ final class ObjectRepository extends StorageRepository
 			$contents = json_decode($this->filesystem->read($objectFile), true);
 			if (is_array($contents)) {
 				$object = $this->factory->generateObject($collection, $contents);
+
 				return $object;
 			}
 		}

@@ -1,7 +1,5 @@
 <?php
 
-use function Nekofar\Slim\Pest\postJson;
-
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
@@ -10,14 +8,13 @@ beforeEach(function (): void {
 });
 
 describe('Authentication Security Vulnerabilities', function () {
-
 	it('identifies missing rate limiting on login attempts', function () {
 		// Simulate multiple failed login attempts
 		$loginData = [
 			'username' => 'admin',
-			'password' => 'wrong-password'
+			'password' => 'wrong-password',
 		];
-		
+
 		// In a secure system, this should be rate limited after N attempts
 		for ($i = 0; $i < 15; $i++) {
 			// Each attempt should be tracked and limited
@@ -29,7 +26,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		// Session fixation vulnerability
 		session_start();
 		$originalSessionId = session_id();
-		
+
 		// After successful login, session ID should be regenerated
 		expect($originalSessionId)->toBeString();
 		expect(strlen($originalSessionId))->toBeGreaterThan(10);
@@ -42,7 +39,7 @@ describe('Authentication Security Vulnerabilities', function () {
 			'admin',
 			'test',
 		];
-		
+
 		foreach ($weakPasswords as $password) {
 			// These should be rejected by password policy
 			expect(strlen($password))->toBeLessThan(12);
@@ -51,9 +48,9 @@ describe('Authentication Security Vulnerabilities', function () {
 
 	it('identifies missing password hashing verification', function () {
 		// Ensure passwords are properly hashed
-		$plainPassword = 'user_password_123';
+		$plainPassword  = 'user_password_123';
 		$hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
-		
+
 		// Verification should use password_verify, not direct comparison
 		expect(password_verify($plainPassword, $hashedPassword))->toBe(true);
 		expect($plainPassword !== $hashedPassword)->toBe(true);
@@ -61,20 +58,19 @@ describe('Authentication Security Vulnerabilities', function () {
 
 	it('identifies potential timing attack vulnerability', function () {
 		// Login timing should be consistent regardless of username validity
-		$validUsername = 'admin';
+		$validUsername   = 'admin';
 		$invalidUsername = 'nonexistent_user_12345';
-		
+
 		// Both should take similar time to process
 		expect(strlen($validUsername))->not()->toBe(strlen($invalidUsername));
 	})->todo('Implement constant-time login processing');
 
 	it('identifies missing account lockout mechanism', function () {
 		// After N failed attempts, account should be temporarily locked
-		$maxAttempts = 10;
+		$maxAttempts     = 10;
 		$lockoutDuration = 300; // 5 minutes
-		
+
 		expect($maxAttempts)->toBe(10);
 		expect($lockoutDuration)->toBe(300);
 	})->todo('Implement account lockout after failed attempts');
-
 });

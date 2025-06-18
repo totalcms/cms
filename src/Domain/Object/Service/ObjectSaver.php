@@ -25,7 +25,7 @@ final class ObjectSaver
 		}
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn($property) => $property->actionsBeforeSave());
+		$object->properties = $object->properties->map(fn ($property) => $property->actionsBeforeSave());
 
 		$this->storage->saveObject($collection, $object);
 

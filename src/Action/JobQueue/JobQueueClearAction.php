@@ -4,8 +4,8 @@ namespace TotalCMS\Action\JobQueue;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Renderer\JsonRenderer;
 
 final class JobQueueClearAction
 {
@@ -21,7 +21,6 @@ final class JobQueueClearAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		$cleared = $this->manager->clearQueue();
 
 		if ($cleared === false) {

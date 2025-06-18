@@ -17,7 +17,7 @@ final class ImportJsonAction
 	public function __construct(JsonImporter $jsonImporter, JsonRenderer $renderer)
 	{
 		$this->jsonImporter = $jsonImporter;
-		$this->renderer    = $renderer;
+		$this->renderer     = $renderer;
 	}
 
 	/**
@@ -43,7 +43,7 @@ final class ImportJsonAction
 		}
 
 		$updateObject = isset($params['update']) && !empty($params['update']);
-		$queueJobs    = isset($params['queue'])  && !empty($params['queue']);
+		$queueJobs    = isset($params['queue']) && !empty($params['queue']);
 
 		if ($queueJobs) {
 			$this->jsonImporter->queueJobs();

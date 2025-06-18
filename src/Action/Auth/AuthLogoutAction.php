@@ -10,13 +10,15 @@ final class AuthLogoutAction
 {
 	public function __construct(
 		private LogoutService $logoutService,
-	) {}
+	) {
+	}
 
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 	): ResponseInterface {
 		$this->logoutService->logout();
+
 		return $response->withStatus(302)->withHeader('Location', '/');
 	}
 }

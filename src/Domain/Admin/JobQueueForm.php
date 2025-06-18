@@ -6,15 +6,15 @@ final class JobQueueForm
 {
 	public function __construct(
 		private string $api,
-		private string $collection = "",
-		private string $label = "Clear Job Queue",
-	){
+		private string $collection = '',
+		private string $label = 'Clear Job Queue',
+	) {
 	}
 
 	private function clearQueueForm(): string
 	{
 		$route = empty($this->collection)
-			? "/jobqueue"
+			? '/jobqueue'
 			: "/jobqueue/{$this->collection}";
 
 		$clearQueueForm = new SimpleForm(

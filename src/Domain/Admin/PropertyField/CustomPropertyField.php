@@ -30,7 +30,7 @@ class CustomPropertyField
 	public function template(): string
 	{
 		$templateProperty = new PropertyField(property : '', form : $this->form);
-		$content = $templateProperty->template();
+		$content          = $templateProperty->template();
 
 		$content .= $this->createAddPropertyField();
 		$content  = self::accordion('', $content);
@@ -77,6 +77,7 @@ class CustomPropertyField
 			property : '',
 			form     : $this->form
 		);
+
 		return $templateProperty->template();
 	}
 

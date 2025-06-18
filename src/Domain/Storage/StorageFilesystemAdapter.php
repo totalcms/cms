@@ -176,7 +176,7 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 
 		foreach ($contents as $item) {
 			$relativePath = ltrim(str_replace($sourceDir, '', $item->path()), '/');
-			$targetPath = rtrim($targetDir, '/') . '/' . $relativePath;
+			$targetPath   = rtrim($targetDir, '/') . '/' . $relativePath;
 
 			if ($item->isDir()) {
 				$this->filesystem->createDirectory($targetPath);

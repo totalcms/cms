@@ -46,7 +46,7 @@ final class ImportCsvAction
 		}
 
 		$updateObject = isset($params['update']) && !empty($params['update']);
-		$queueJobs    = isset($params['queue'])  && !empty($params['queue']);
+		$queueJobs    = isset($params['queue']) && !empty($params['queue']);
 
 		if ($queueJobs) {
 			$this->csvImporter->queueJobs();

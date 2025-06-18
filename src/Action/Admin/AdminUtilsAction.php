@@ -4,8 +4,8 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Renderer\TwigRenderer;
 
 final class AdminUtilsAction
 {
@@ -21,9 +21,8 @@ final class AdminUtilsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		$page    = $args['page'] ?? 'index';
-		$results = "";
+		$results = '';
 
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();

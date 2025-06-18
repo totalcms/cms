@@ -13,7 +13,8 @@ final class SchemaSaveAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private SchemaSaver $service,
-	) {}
+	) {
+	}
 
 	/**
 	 * Invokable Action.

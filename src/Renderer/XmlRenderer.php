@@ -8,7 +8,7 @@ final class XmlRenderer
 {
 	public function xml(
 		ResponseInterface $response,
-		string $xml = "",
+		string $xml = '',
 	): ResponseInterface {
 		$response = $response->withHeader('Content-Type', 'application/xml');
 		$response->getBody()->write($xml);

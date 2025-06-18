@@ -10,7 +10,8 @@ final class AuthDeniedAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
-	) {}
+	) {
+	}
 
 	/** @param array<string,string> $args The routing arguments */
 	public function __invoke(
@@ -19,6 +20,7 @@ final class AuthDeniedAction
 		array $args,
 	): ResponseInterface {
 		$response = $response->withStatus(403);
+
 		return $this->twigRenderer->template($response, 'admin/denied.twig', $args);
 	}
 }

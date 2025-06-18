@@ -7,8 +7,9 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 final class UploadFetcher
 {
 	public function __construct(
-		private PropertyRepository $storage
-	){}
+		private PropertyRepository $storage,
+	) {
+	}
 
 	public function fileExists(string $collection, string $id, string $property, string $name): bool
 	{

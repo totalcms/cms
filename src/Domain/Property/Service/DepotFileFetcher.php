@@ -10,8 +10,9 @@ final class DepotFileFetcher
 {
 	public function __construct(
 		private PropertyRepository $storage,
-		private PropertyFetcher $propFetcher
-	) {}
+		private PropertyFetcher $propFetcher,
+	) {
+	}
 
 	public function fetchFile(string $collection, string $id, string $property, string $name, ?string $subpath = null): FileData
 	{
@@ -22,7 +23,7 @@ final class DepotFileFetcher
 		}
 
 		$depotManager = new DepotPropertyManager($depot);
-		$file = $depotManager->fetchFile($name, $subpath);
+		$file         = $depotManager->fetchFile($name, $subpath);
 
 		if (!$file instanceof FileData) {
 			throw new \RuntimeException('Unable to reteive file data');

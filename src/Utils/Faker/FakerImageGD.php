@@ -16,7 +16,7 @@ class FakerImageGD extends Base
 	{
 		$rgb = str_split(ltrim($hex, '#'), 2);
 		$rgb = array_map('intval', array_map('hexdec', $rgb));
-		$rgb = array_map(fn($value) => max(0, min($value, 255)), $rgb);
+		$rgb = array_map(fn ($value) => max(0, min($value, 255)), $rgb);
 
 		if (count($rgb) !== 3) {
 			throw new \InvalidArgumentException('Invalid hex color value.');

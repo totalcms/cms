@@ -2,19 +2,21 @@
 
 namespace TotalCMS\Domain\JobQueue\Service;
 
-use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Data\JobData;
+use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 
 final class JobQueuer
 {
 	public function __construct(
 		private JobRepository $jobRepository,
-	) {}
+	) {
+	}
 
 	/** @param array<mixed> $data */
 	public function queueJob(string $type, string $collection, array $data = []): JobData
 	{
 		$payload = json_encode($data, JSON_THROW_ON_ERROR);
+
 		return $this->jobRepository->queueJob($type, $collection, $payload);
 	}
 

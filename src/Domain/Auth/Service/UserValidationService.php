@@ -14,7 +14,8 @@ final class UserValidationService
 		private IndexSearcher $searcher,
 		private ObjectFetcher $objectFetcher,
 		private Config $config,
-	) {}
+	) {
+	}
 
 	/** @return array<string,mixed> */
 	public function validateUserByEmail(string $email, string $collection = ''): array
@@ -71,7 +72,7 @@ final class UserValidationService
 		}
 		// Admin users are always allowed
 		$groups[] = self::ADMINGROUP;
-		$found = array_intersect($groups, $user['groups']);
+		$found    = array_intersect($groups, $user['groups']);
 
 		return !empty($found);
 	}
@@ -86,6 +87,7 @@ final class UserValidationService
 				return true;
 			}
 		}
+
 		return false;
 	}
 }

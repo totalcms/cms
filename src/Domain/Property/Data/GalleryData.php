@@ -31,6 +31,7 @@ class GalleryData extends PropertyData
 		if ($json === false) {
 			return '';
 		}
+
 		return $json;
 	}
 }

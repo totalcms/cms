@@ -4,7 +4,6 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Admin\SettingsSaver;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -28,7 +27,7 @@ final class AdminSettingsAction
 		array $args,
 	): ResponseInterface {
 		$savedSettings = [];
-		$defaults = require __DIR__ . '/../../../config/settings.php';
+		$defaults      = require __DIR__ . '/../../../config/settings.php';
 
 		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
 		if (file_exists($configFile)) {

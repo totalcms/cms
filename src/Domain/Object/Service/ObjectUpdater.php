@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\PropertyData;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 
 final class ObjectUpdater
@@ -31,7 +31,7 @@ final class ObjectUpdater
 		}
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn($property) => $property->actionsBeforeSave());
+		$object->properties = $object->properties->map(fn ($property) => $property->actionsBeforeSave());
 
 		$this->storage->saveObject($collection, $object);
 		$this->indexBuilder->smartBuildIndex($collection);
@@ -45,7 +45,7 @@ final class ObjectUpdater
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn($property) => $property->actionsBeforeSave());
+		$object->properties = $object->properties->map(fn ($property) => $property->actionsBeforeSave());
 
 		$objectData            = $object->toArray();
 		$objectData[$property] = $newData;
@@ -81,6 +81,7 @@ final class ObjectUpdater
 			if ($item->id === $property->id) {
 				$item = $property;
 			}
+
 			return $item;
 		});
 

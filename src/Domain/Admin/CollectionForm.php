@@ -68,6 +68,7 @@ final class CollectionForm extends TotalForm
 		if (empty($schema)) {
 			return null;
 		}
+
 		return $this->schemaFetcher->fetchSchema($schema);
 	}
 
@@ -100,9 +101,9 @@ final class CollectionForm extends TotalForm
 		}
 		$sortField = $this->fields['sortBy'];
 		if (isset($this->collectionData) && $sortField instanceof SelectField) {
-			$schema = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+			$schema     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
 			$properties = $schema->properties ?? [];
-			$options = count($properties) > 0 ? array_keys($properties) : ['id'];
+			$options    = count($properties) > 0 ? array_keys($properties) : ['id'];
 			$sortField->setOptions($options);
 		}
 

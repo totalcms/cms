@@ -96,7 +96,7 @@ class PropertyField
 		return HTMLUtils::dialog($content, 'small');
 	}
 
-	protected function buildPropertyField(string $property = "", string $field = ""): string
+	protected function buildPropertyField(string $property = '', string $field = ''): string
 	{
 		$inputAttributes = [
 			'type'         => 'hidden',

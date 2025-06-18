@@ -6,13 +6,13 @@ use Nyholm\Psr7\Stream;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Utils\Cipher;
-use TotalCMS\Domain\Property\Data\FileData;
-use Slim\Exception\HttpNotFoundException;
 
 abstract class DownloadAction
 {
@@ -30,9 +30,13 @@ abstract class DownloadAction
 	protected const MAX_ATTEMPTS = 10;
 
 	abstract protected function fileExists(): bool;
+
 	abstract protected function loadFile(): void;
+
 	abstract protected function fetchFile(): FileData;
+
 	abstract protected function incrementCount(FileData $file): void;
+
 	/** @return resource */
 	abstract protected function streamFile();
 
@@ -44,7 +48,7 @@ abstract class DownloadAction
 		$this->property   = $args['property'];
 		$this->name       = $args['name'] ?? '';
 
-		$query = $request->getQueryParams();
+		$query          = $request->getQueryParams();
 		$this->subpath  = $query['path'] ?? null;
 
 		if (!$this->fileExists()) {

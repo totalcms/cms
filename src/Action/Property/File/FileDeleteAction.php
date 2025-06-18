@@ -4,7 +4,6 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\RemoverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
@@ -23,7 +22,7 @@ final class FileDeleteAction
 		$query = $request->getQueryParams();
 
 		$remover  = $this->factory->generateRemoverService($args['collection'], $args['property']);
-		$object = $remover->deleteFile(
+		$object   = $remover->deleteFile(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
