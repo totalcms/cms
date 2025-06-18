@@ -16,6 +16,7 @@ export default class ListField extends MultiSelectField {
 			removeItemButton      : true,
 			duplicateItemsAllowed : false,
 			addChoices            : true,
+			maxItemCount          : -1,
 		};
 		this.options = Object.assign({}, this.options, defaults, options);
 
@@ -24,6 +25,7 @@ export default class ListField extends MultiSelectField {
 			removeItemButton      : this.options.removeItemButton,
 			duplicateItemsAllowed : this.options.duplicateItemsAllowed,
 			addChoices            : this.options.addChoices,
+			maxItemCount          : this.options.maxItemCount,
 			callbackOnInit        : this.initSortable.bind(this),
 		});
     }
