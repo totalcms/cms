@@ -39,6 +39,8 @@ final class TotalCMSTwigFilters
 		'charcount',
 		'wordcount',
 		'readtime',
+		'digitsOnly',
+		'formatPhone',
 		'humanize',
 		'titleize',
 		'truncate',
@@ -71,6 +73,7 @@ final class TotalCMSTwigFilters
 		'filterCollection',
 		'sortCollection',
 		'paginate',
+		'svgToSymbol',
 	];
 
 	/** @return array<TwigFilter> */
@@ -93,6 +96,11 @@ final class TotalCMSTwigFilters
 	// -------------------------
 	// Text Manipulation
 	// -------------------------
+	public static function digitsOnly(string $text): string
+	{
+		return (string)preg_replace('/\D/', '', $text);
+	}
+
 	public static function humanize(string $slug, string $sep = '-'): string
 	{
 		return ucfirst(str_replace($sep, ' ', $slug));
@@ -121,6 +129,94 @@ final class TotalCMSTwigFilters
 	public static function decrypt(string $string): string
 	{
 		return Cipher::decrypt($string);
+	}
+
+	public static function svgToSymbol(string $svg, string $symbolId): string
+	{
+		// 1. Pull out the opening <svg> tag (including viewBox)...
+		if (!preg_match('#<svg\b([^>]*)viewBox="([^"]+)"([^>]*)>#i', $svg, $m)) {
+			// throw new \InvalidArgumentException("SVG must include a viewBox");
+			return $svg; // Return the original SVG if no viewBox is found
+		}
+		$viewBox = $m[2];
+
+		// 2. Grab everything between <svg…> and </svg>
+		$inner = (string)preg_replace('#^.*<svg\b[^>]*>\\s*#si', '', (string)preg_replace('#</svg>.*$#si', '', $svg));
+
+		// 3. Build the symbol + wrapper
+		return <<<SVG
+		<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+			<symbol id="{$symbolId}" viewBox="{$viewBox}">
+				{$inner}
+			</symbol>
+		</svg>
+		SVG;
+	}
+
+	// -------------------------
+	// Phone number formatting
+	// -------------------------
+	public static function formatPhone(string $string, string $countryCode = 'US'): string
+	{
+		$phone = self::digitsOnly($string);
+
+		if ($countryCode === 'GB' and str_starts_with($phone, '07')) {
+			$countryCode = 'GBM'; // Use 'GBM' for mobile numbers in Great Britain
+		}
+
+		$formats = [
+			'US' => [
+				'regex' => '/(\d{3})(\d{3})(\d{4})/',
+				'format' => '($1) $2-$3',
+			],
+			'CA' => [
+				'regex' => '/(\d{3})(\d{3})(\d{4})/',
+				'format' => '($1) $2-$3',
+			],
+			'GB' => [
+				'regex' => '/(\d{3})(\d{4})(\d{4})/',
+				'format' => '($1) $2 $3',
+			],
+			'GBM' => [
+				'regex' => '/(\d{5})(\d{6})/',
+				'format' => '$1 $2',
+			],
+			'MX' => [
+				'regex' => '/(\d{2,3})(\d{4})(\d{4})/',
+				'format' => '$1 $2 $3',
+			],
+			'AU' => [
+				'regex' => '/(\d{4})(\d{3})(\d{3})/',
+				'format' => '$1 $2 $3',
+			],
+			'FR' => [
+				'regex' => '/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/',
+				'format' => '$1 $2 $3 $4 $5',
+			],
+			'DE' => [
+				'regex' => '/(\d{3})(\d{3})(\d{4})/',
+				'format' => '$1 $2 $3',
+			],
+			'IT' => [
+				'regex' => '/(\d{3})(\d{3})(\d{4})/',
+				'format' => '$1 $2 $3',
+			],
+			'ES' => [
+				'regex' => '/(\d{3})(\d{3})(\d{3})/',
+				'format' => '$1 $2 $3',
+			],
+		];
+		$format = $formats[$countryCode] ?? null;
+		if ($format === null) {
+			return $phone; // Return the original phone number if no format is found
+		}
+		$phone = preg_replace($format['regex'], $format['format'], $phone);
+		if ($phone === null) {
+			return ''; // Return an empty string if the regex replacement fails
+		}
+		$phone = trim($phone); // Trim any extra spaces
+
+		return $phone;
 	}
 
 	// -------------------------

@@ -15,6 +15,9 @@ truncateWords(string $string, int $length): string
 charcount(string $text): int
 wordcount(string $text): int
 readtime(string $text, int $wpm = 180): float
+digitsOnly(string $text): string
+formatPhone(string $string, string $countryCode = 'US'): string
+svgToSymbol(string $svg, string $symbolId): string
 ```
 
 ### Colors
