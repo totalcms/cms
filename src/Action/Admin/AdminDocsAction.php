@@ -29,6 +29,20 @@ final class AdminDocsAction
 	): ResponseInterface {
 		$page = $args['page'] ?? 'index';
 
+		// Prevent path traversal attacks by sanitizing the page parameter
+		$page = basename($page); // Remove any directory components
+		$page = preg_replace('/[^a-zA-Z0-9_-]/', '', $page); // Allow only safe characters
+
+		// Validate that the requested documentation page exists
+		$docsDir = __DIR__ . "/../../../resources/docs";
+		$htmlFile = "{$docsDir}/{$page}.html";
+		$markdownFile = "{$docsDir}/{$page}.md";
+		
+		// If neither file exists, default to index
+		if (!file_exists($htmlFile) && !file_exists($markdownFile)) {
+			$page = 'index';
+		}
+
 		$data = [];
 
 		$htmlFile     = __DIR__ . "/../../../resources/docs/{$page}.html";

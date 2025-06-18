@@ -24,7 +24,26 @@ final class StaticPublicAssetsAction
 			throw new \UnexpectedValueException('Missing asset argument');
 		}
 
-		$assetPath = __DIR__ . '/../../../public/assets/' . $args['asset'];
+		// Prevent path traversal attacks by validating the asset path
+		$asset = $args['asset'];
+
+		// Remove any directory traversal sequences
+		$asset = str_replace(['../', '..\\', '\\'], '', $asset);
+
+		// Ensure the asset path contains only safe characters and forward slashes
+		if (!preg_match('/^[a-zA-Z0-9._\/-]+$/', $asset)) {
+			throw new HttpNotFoundException($request, 'Invalid asset path');
+		}
+
+		$assetPath = __DIR__ . '/../../../public/assets/' . $asset;
+
+		// Ensure the resolved path is within the assets directory
+		$assetsDir    = realpath(__DIR__ . '/../../../public/assets');
+		$resolvedPath = realpath($assetPath);
+
+		if ($resolvedPath === false || $assetsDir === false || strpos($resolvedPath, $assetsDir) !== 0) {
+			throw new HttpNotFoundException($request, 'Asset not found');
+		}
 
 		if (!file_exists($assetPath)) {
 			throw new HttpNotFoundException($request, 'Asset not found');
