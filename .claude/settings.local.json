@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(composer show:*)",
+      "Bash(php:*)",
+      "Bash(composer test:*)",
+      "Bash(./vendor/bin/pest:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(rg:*)",
+      "Bash(composer run:*)"
+    ],
+    "deny": []
+  }
+}
