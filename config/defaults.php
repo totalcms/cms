@@ -28,7 +28,7 @@ $settings = [];
 $settings['sentry'] = [
 	'enable' => true,
 	'init'   => [
-		'dsn' => 'G0caBAFDfR9UXEYRAAgWQE1rUwZdQ0JWCEITH2YIAQpFRFENRksfZHAMX0ZDBFpBR0xmA1BaQUALWlobFzVVEB9dBkBABxcXJkIaRRocHFpBQk5mBVZeR0YDVkVKTGQ=',
+		'dsn' => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
 		// Specify a fixed sample rate
 		'traces_sample_rate' => 1.0,
 		// Set a sampling rate for profiling - this is relative to traces_sample_rate
