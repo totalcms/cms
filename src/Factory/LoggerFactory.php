@@ -97,8 +97,8 @@ final class LoggerFactory
 	 */
 	public function addFileHandler(string $filename, int $maxFiles = 10, int $permissions = 0777, ?Level $level = null): self
 	{
-		$filename = sprintf('%s/%s', $this->path, $filename);
-		$level    = $level ?? $this->level;
+		$filename            = sprintf('%s/%s', $this->path, $filename);
+		$level               = $level ?? $this->level;
 		$rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level, true, $permissions);
 
 		// The last "true" here tells monolog to remove empty []'s
@@ -120,7 +120,6 @@ final class LoggerFactory
 	 */
 	public function addConsoleHandler(?Level $level = null): self
 	{
-		/** @phpstan-ignore-next-line */
 		$streamHandler = new StreamHandler('php://output', $level ?? $this->level);
 		$lineFormatter = new LineFormatter($this->format, null, true, true, true);
 		$lineFormatter->indentStacktraces('    ');

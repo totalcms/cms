@@ -19,10 +19,10 @@ foreach ($folders as $folder) {
 				continue;
 			}
 			$filePath     = $file->getPathname();
-			$key          = str_replace(BASEDIR, '', $filePath);
+			$key          = (string)str_replace(BASEDIR, '', $filePath);
 			$bundle[$key] = hash_file('sha256', $filePath);
 		}
 	}
 }
 
-file_put_contents($bundleFile, base64_encode(json_encode($bundle)));
+file_put_contents($bundleFile, base64_encode((string)json_encode($bundle)));
