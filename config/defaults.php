@@ -147,6 +147,11 @@ $settings['auth'] = [
 	'deniedDefaultRedirect' => '/',
 ];
 
+$settings['htmlpurify'] = [
+	'remove_empty' => false,
+	'cache_path'   => $settings['cachedir'] . '/htmlpurifier',
+];
+
 // https://www.php.net/manual/en/timezones.php
 // DateTimeZone::listIdentifiers()
 $settings['timezone'] = date_default_timezone_get();

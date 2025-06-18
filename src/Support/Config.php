@@ -25,6 +25,8 @@ final class Config
 	public array $imageworks = [];
 	/** @var array<string,mixed> */
 	public array $auth = [];
+	/** @var array<string,mixed> */
+	public array $htmlpurify = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
@@ -42,7 +44,8 @@ final class Config
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];
 		$this->auth       = $settings['auth'];
-		$this->notfound	  = $settings['notfound'];
+		$this->notfound   = $settings['notfound'];
+		$this->htmlpurify = $settings['htmlpurify'] ?? [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);

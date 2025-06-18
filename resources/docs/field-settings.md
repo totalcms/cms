@@ -156,3 +156,25 @@ The following can be used on text fields to limit the number of characters.
   "step" : 0.25,
 }
 ```
+
+## Purifying HTML in Text
+
+Default all text will be scanned for HTML and sanitized to help prevent from XSS attacks.
+You can disable this by setting the following.
+
+```json
+{
+  "htmlpurify" : false
+}
+```
+
+## Lists
+
+```json
+{
+  "removeItemButton"      : true,
+  "duplicateItemsAllowed" : false,
+  "addChoices"            : true,
+  "maxItemCount"          : -1,
+}
+```
