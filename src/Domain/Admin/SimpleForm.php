@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Utils\CSRFTokenManager;
 use TotalCMS\Utils\HTMLUtils;
 
 /**
@@ -17,11 +18,18 @@ final class SimpleForm
 		private string $label  = 'Submit',
 		private string $class  = '',
 		private bool $refresh  = false,
+		private ?CSRFTokenManager $csrfManager = null,
 	) {
 	}
 
 	public function build(string $content = ''): string
 	{
+		// Add CSRF token if manager is available and method requires protection
+		$csrfField = '';
+		if ($this->csrfManager && in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+			$csrfField = $this->csrfManager->getTokenField();
+		}
+
 		$button = HTMLUtils::button($this->label, [
 			'type'  => 'submit',
 			'class' => 'dash-button',
@@ -35,7 +43,7 @@ final class SimpleForm
 			'data-api'     => $this->api,
 			'data-refresh' => $this->refresh ? 'true' : 'false',
 		];
-		$form = HTMLUtils::element('form', $content . $buttonWrapper, $formAttrs);
+		$form = HTMLUtils::element('form', $csrfField . $content . $buttonWrapper, $formAttrs);
 
 		return $form;
 	}

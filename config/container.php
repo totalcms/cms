@@ -48,9 +48,12 @@ use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
+use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\Cipher;
+use TotalCMS\Utils\CSRFTokenManager;
 use TotalCMS\Utils\FileUploadValidator;
 use TotalCMS\Utils\LogAnalyzer;
 use TotalCMS\Utils\QRGenerator;
@@ -209,6 +212,7 @@ return [
 			$container->get(IndexReader::class),
 			$container->get(SchemaFetcher::class),
 			$container->get(SchemaLister::class),
+			$container->get(CSRFTokenManager::class),
 		);
 	},
 
@@ -242,6 +246,7 @@ return [
 			$container->get(FakerFactory::class),
 			$container->get(QRCodeTwigAdapter::class),
 			$container->get(PhpSession::class),
+			$container->get(CSRFTokenManager::class),
 		);
 	},
 
@@ -255,6 +260,22 @@ return [
 
 	FileUploadValidator::class => function (ContainerInterface $container) {
 		return new FileUploadValidator();
+	},
+
+	Cipher::class => function (ContainerInterface $container) {
+		return new Cipher();
+	},
+
+	CSRFTokenManager::class => function (ContainerInterface $container) {
+		return new CSRFTokenManager(
+			$container->get(Cipher::class)
+		);
+	},
+
+	CSRFProtectionMiddleware::class => function (ContainerInterface $container) {
+		return new CSRFProtectionMiddleware(
+			$container->get(CSRFTokenManager::class)
+		);
 	},
 
 	TwigEngine::class => function (ContainerInterface $container) {

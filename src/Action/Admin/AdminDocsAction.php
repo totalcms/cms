@@ -34,10 +34,10 @@ final class AdminDocsAction
 		$page = preg_replace('/[^a-zA-Z0-9_-]/', '', $page); // Allow only safe characters
 
 		// Validate that the requested documentation page exists
-		$docsDir = __DIR__ . "/../../../resources/docs";
-		$htmlFile = "{$docsDir}/{$page}.html";
+		$docsDir      = __DIR__ . '/../../../resources/docs';
+		$htmlFile     = "{$docsDir}/{$page}.html";
 		$markdownFile = "{$docsDir}/{$page}.md";
-		
+
 		// If neither file exists, default to index
 		if (!file_exists($htmlFile) && !file_exists($markdownFile)) {
 			$page = 'index';

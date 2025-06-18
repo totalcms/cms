@@ -11,6 +11,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -36,6 +37,7 @@ final class TotalFormFactory
 		private IndexReader $collectionReader,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
+		private CSRFTokenManager $csrfManager,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -43,8 +45,9 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function simple(string $route, string $content = '', array $options = []): string
 	{
-		$options['api']   = $this->api;
-		$options['route'] = $route;
+		$options['api']         = $this->api;
+		$options['route']       = $route;
+		$options['csrfManager'] = $this->csrfManager;
 
 		// options: method, label, refresh
 

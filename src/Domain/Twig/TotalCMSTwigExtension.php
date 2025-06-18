@@ -4,8 +4,10 @@ namespace TotalCMS\Domain\Twig;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Factory\FakerFactory;
+use TotalCMS\Utils\CSRFTokenManager;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
+use Twig\TwigFunction;
 
 /**
  * Twig Integration with Total CMS.
@@ -18,6 +20,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		private FakerFactory $faker,
 		private QRCodeTwigAdapter $generator,
 		private PhpSession $session,
+		private CSRFTokenManager $csrfManager,
 	) {
 	}
 
@@ -38,7 +41,18 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 
 	public function getFunctions(): array
 	{
-		return TotalCMSTwigFunctions::getFunctions();
+		$functions = TotalCMSTwigFunctions::getFunctions();
+
+		// Add CSRF token functions
+		$functions[] = new TwigFunction('csrf_token', function () {
+			return $this->csrfManager->getToken();
+		});
+
+		$functions[] = new TwigFunction('csrf_field', function () {
+			return $this->csrfManager->getTokenField();
+		}, ['is_safe' => ['html']]);
+
+		return $functions;
 	}
 
 	public function getFilters()
