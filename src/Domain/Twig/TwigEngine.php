@@ -7,9 +7,12 @@ use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Html\HtmlExtension;
+use Twig\Extra\Markdown\DefaultMarkdown;
 use Twig\Extra\Markdown\MarkdownExtension;
+use Twig\Extra\Markdown\MarkdownRuntime;
 use Twig\Extra\String\StringExtension;
 use Twig\Loader\FilesystemLoader as TwigFilesystemLoader;
+use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
 /**
  * Twig template processor.
@@ -45,6 +48,17 @@ final class TwigEngine
 		// $this->twig->addExtension(new IntlExtension());
 		$this->twig->addExtension(new HtmlExtension());
 		$this->twig->addExtension(new MarkdownExtension());
+
+		$this->twig->addRuntimeLoader(new class implements RuntimeLoaderInterface {
+			public function load(string $class)
+			{
+				if (MarkdownRuntime::class === $class) {
+					return new MarkdownRuntime(new DefaultMarkdown());
+				}
+
+				return null;
+			}
+		});
 
 		if ($debug) {
 			$this->twig->addExtension(new DebugExtension());
