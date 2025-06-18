@@ -29,6 +29,7 @@ export default class AdminTable {
 
 		this.grid = this.initGrid();
 		this.grid.render(this.wrapper);
+		this.table.admintable = this;
 	}
 
 	gridReady() {
