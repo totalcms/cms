@@ -8,8 +8,9 @@ export default class Details  {
 
         // Define option defaults
         const defaults = {
-			soloMode  : true,
-			openFirst : true,
+			soloMode     : true,
+			openFirst    : true,
+			scrollOffset : 16
         };
         this.options = Object.assign({}, defaults, options);
 
@@ -42,6 +43,20 @@ export default class Details  {
 		return details;
 	}
 
+	ensureVisible(detail) {
+		// give the browser a moment to render the 'open' change
+		setTimeout(() => {
+			const rect   = detail.getBoundingClientRect();
+			const offset = this.options.scrollOffset;
+			if (rect.top < offset || rect.top > window.innerHeight - offset) {
+				detail.scrollIntoView({
+					behavior : 'smooth',
+					block    : 'start'
+				});
+			}
+		}, 100);
+	}
+
 	soloMode() {
 		// Close other details when one is opened
 		this.details.forEach(detail => {
@@ -49,6 +64,7 @@ export default class Details  {
 				if (detail.open) {
 					const siblings = Array.from(detail.parentNode.children).filter((d) => d !== detail);
 					siblings.forEach((sibling) => sibling.removeAttribute('open'));
+					this.ensureVisible(detail);
 				}
 			});
 		});
