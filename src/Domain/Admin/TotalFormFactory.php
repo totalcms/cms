@@ -88,6 +88,8 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueStats(array $options = []): string
 	{
+		$options['api'] = $this->api;
+
 		$stats = new JobQueueStats(...$options);
 
 		return $stats->allStats();
@@ -96,6 +98,8 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueByStatus(array $options = []): string
 	{
+		$options['api'] = $this->api;
+
 		$header = $options['header'] ?? null;
 		unset($options['header']);
 
@@ -107,6 +111,8 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueByType(array $options = []): string
 	{
+		$options['api'] = $this->api;
+
 		$header = $options['header'] ?? null;
 		unset($options['header']);
 
