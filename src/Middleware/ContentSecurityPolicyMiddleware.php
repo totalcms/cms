@@ -10,7 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * Content Security Policy middleware for XSS protection.
  * Adds CSP headers to prevent inline scripts and unsafe content execution.
- * 
+ *
  * Applies strict CSP to all requests since Total CMS only serves admin/API routes.
  */
 final class ContentSecurityPolicyMiddleware implements MiddlewareInterface

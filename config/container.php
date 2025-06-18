@@ -51,6 +51,7 @@ use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\FileUploadValidator;
 use TotalCMS\Utils\LogAnalyzer;
 use TotalCMS\Utils\QRGenerator;
 use TotalCMS\Utils\ServerChecker;
@@ -250,6 +251,10 @@ return [
 
 	QRGenerator::class => function (ContainerInterface $container) {
 		return new QRGenerator();
+	},
+
+	FileUploadValidator::class => function (ContainerInterface $container) {
+		return new FileUploadValidator();
 	},
 
 	TwigEngine::class => function (ContainerInterface $container) {

@@ -1,0 +1,38 @@
+# Total CMS Upload Security Configuration
+# Copy this file to your tcms-data directory as .htaccess
+
+# Prevent execution of scripts in upload directories
+<Files "*">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Allow only safe file types to be served directly
+<FilesMatch "\.(jpe?g|png|gif|webp|bmp|svg|ico|pdf|txt|mp4|avi|mov|webm|mp3|wav|ogg|zip|tar|gz)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Additional security headers for allowed files
+<FilesMatch "\.(jpe?g|png|gif|webp|bmp|svg|ico)$">
+    Header set X-Content-Type-Options nosniff
+    Header set Content-Security-Policy "default-src 'none'"
+</FilesMatch>
+
+# Block dangerous file extensions
+<FilesMatch "\.(php|php3|php4|php5|phtml|asp|aspx|jsp|pl|py|cgi|sh|exe|bat|com|scr|vbs|js)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Block access to hidden files and directories
+<FilesMatch "^\.">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Prevent directory browsing
+Options -Indexes
+
+# Disable server signature
+ServerSignature Off
