@@ -329,7 +329,10 @@ export default class TotalForm {
 	}
 
 	save() {
-		if (!this.validate()) return;
+		if (!this.validate()) {
+			this.validated = false;
+			return;
+		}
 		this.validated = true;
         this.processing();
         this.api.postAPI(this.route, this.generateData(), this.method)
@@ -509,6 +512,7 @@ export default class TotalForm {
 
     error(error) {
 		this.changeState("error", {error:error});
+		this.validated = false;
         console.error("Form Error", error);
     }
 
