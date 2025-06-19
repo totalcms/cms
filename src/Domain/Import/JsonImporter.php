@@ -25,9 +25,7 @@ final class JsonImporter
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory
-			->addFileHandler('importer.log')
-			->createLogger();
+		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('json-importer');
 	}
 
 	public function queueJobs(): void

@@ -31,7 +31,7 @@ final class FactoryImporter
 		private SchemaFetcher $schemaFetcher,
 		private PropertyRepository $propertyRepository,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler('factory.log')->createLogger();
+		$this->logger = $this->loggerFactory->addFileHandler('factory.log')->createLogger('factory');
 		$this->faker  = $this->fakerFactory->createFaker();
 	}
 

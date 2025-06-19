@@ -24,9 +24,7 @@ final class UrlImporter
 		private IndexBuilder $indexBuilder,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory
-			->addFileHandler('importer.log')
-			->createLogger();
+		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('url-importer');
 	}
 
 	/** @param array<string,mixed> $properties */
