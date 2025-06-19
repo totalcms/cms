@@ -11,8 +11,9 @@ class ImagePaletteGenerator
 	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 * @SuppressWarnings("PHPMD.ErrorControlOperator")
 	 *
-	 * @return array<string>
 	 * @throws \RuntimeException
+	 *
+	 * @return array<string>
 	 */
 	public static function getPalette(string $imagepath): array
 	{
@@ -57,6 +58,7 @@ class ImagePaletteGenerator
 		}
 
 		$palette = array_slice($palette, 0, 5);
+
 		return $palette;
 	}
 }

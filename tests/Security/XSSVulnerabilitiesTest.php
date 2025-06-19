@@ -1,21 +1,20 @@
 <?php
 
 use TotalCMS\Utils\HTMLSanitizer;
-use TotalCMS\Domain\Twig\TwigEngine;
 
 describe('XSS Vulnerabilities', function () {
 	it('identifies disabled Twig autoescaping', function () {
 		// Test that HTML sanitizer exists and works
 		$sanitizer = new HTMLSanitizer();
 		expect($sanitizer)->toBeInstanceOf(HTMLSanitizer::class);
-		
+
 		// Test XSS payload sanitization
 		$xssPayload = '<script>alert("XSS")</script>';
-		$sanitized = $sanitizer->sanitizeRichContent($xssPayload);
-		
+		$sanitized  = $sanitizer->sanitizeRichContent($xssPayload);
+
 		expect($sanitized)->not()->toContain('<script>');
 		expect($sanitized)->not()->toContain('alert("XSS")');
-		
+
 		// Test common XSS vectors
 		$xssVectors = [
 			'<img src="x" onerror="alert(\'XSS\')">',
@@ -33,7 +32,7 @@ describe('XSS Vulnerabilities', function () {
 
 	it('identifies missing input sanitization', function () {
 		$sanitizer = new HTMLSanitizer();
-		
+
 		// Form inputs that could contain XSS
 		$userInputs = [
 			'username'    => '<script>alert("XSS")</script>',
@@ -43,12 +42,12 @@ describe('XSS Vulnerabilities', function () {
 
 		foreach ($userInputs as $field => $input) {
 			$sanitized = $sanitizer->sanitizeRichContent($input);
-			
+
 			// Verify dangerous content is removed
 			expect($sanitized)->not()->toContain('<script>');
 			expect($sanitized)->not()->toContain('onerror=');
 			expect($sanitized)->not()->toContain('alert');
-			
+
 			// Verify safe content is preserved
 			if ($field === 'email') {
 				expect($sanitized)->toContain('test@example.com');
@@ -70,7 +69,7 @@ describe('XSS Vulnerabilities', function () {
 			expect($pattern)->toBeString();
 			expect(strlen($pattern))->toBeGreaterThan(3);
 		}
-		
+
 		// Test safe alternatives
 		$safeAlternatives = [
 			'textContent',
@@ -78,7 +77,7 @@ describe('XSS Vulnerabilities', function () {
 			'JSON.parse',
 			'requestAnimationFrame',
 		];
-		
+
 		foreach ($safeAlternatives as $safe) {
 			expect($safe)->toBeString();
 			expect($safe)->not()->toContain('eval');
@@ -98,7 +97,7 @@ describe('XSS Vulnerabilities', function () {
 			expect($directive)->toContain('self');
 			expect($directive)->not()->toContain('unsafe-eval');
 		}
-		
+
 		// Test that CSP would block inline scripts
 		$inlineScript = "<script>alert('XSS')</script>";
 		$blockedByCSP = !str_contains($cspDirectives[1], 'unsafe-inline');
@@ -107,7 +106,7 @@ describe('XSS Vulnerabilities', function () {
 
 	it('identifies unsafe URL parameters processing', function () {
 		$sanitizer = new HTMLSanitizer();
-		
+
 		// URL parameters that could be reflected without escaping
 		$urlParams = [
 			'search'   => '<script>alert("XSS")</script>',
@@ -117,7 +116,7 @@ describe('XSS Vulnerabilities', function () {
 
 		foreach ($urlParams as $param => $value) {
 			$sanitized = $sanitizer->sanitizeRichContent($value);
-			
+
 			// These should be escaped/sanitized before reflecting in response
 			expect($sanitized)->not()->toContain('<script>');
 			expect($sanitized)->not()->toContain('onerror=');

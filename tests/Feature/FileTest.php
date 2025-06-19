@@ -21,19 +21,19 @@ describe('File Operations', function () {
 	beforeEach(function (): void {
 		// Create test collection for file operations
 		$collection = [
-			'id' => 'file-test',
-			'name' => 'File Test Collection',
+			'id'     => 'file-test',
+			'name'   => 'File Test Collection',
 			'schema' => 'gallery',
 		];
-		
+
 		postJson('/collections', $collection);
-		
+
 		// Create test object
 		$object = [
-			'id' => 'test-file-object',
+			'id'    => 'test-file-object',
 			'title' => 'Test File Object',
 		];
-		
+
 		postJson('/collections/file-test', $object);
 	});
 
@@ -64,7 +64,7 @@ describe('File Operations', function () {
 	it('can download a password protected file', function (): void {
 		// Test password protected file download
 		$response = post('/files/file-test/test-file-object/test-property/test-file.txt', [
-			'password' => 'test-password'
+			'password' => 'test-password',
 		]);
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 404]); // Protected file endpoint exists
 	});
@@ -72,7 +72,7 @@ describe('File Operations', function () {
 	it('can download a password protected file from depot', function (): void {
 		// Test password protected depot file download
 		$response = post('/depot/file-test/test-file-object/test-property/test-file.txt', [
-			'password' => 'test-password'
+			'password' => 'test-password',
 		]);
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 404]); // Protected depot endpoint exists
 	});
@@ -92,10 +92,10 @@ describe('File Operations', function () {
 	it('can update info for a file', function (): void {
 		// Test file metadata update
 		$updateData = [
-			'alt' => 'Updated alt text',
+			'alt'     => 'Updated alt text',
 			'caption' => 'Updated caption',
 		];
-		
+
 		$response = put('/api/collections/file-test/test-file-object/files/test-property/info', $updateData);
 		expect($response->getStatusCode())->toBeIn([200, 404, 405]); // Update info endpoint exists
 	});
@@ -103,10 +103,10 @@ describe('File Operations', function () {
 	it('can update info for a file from depot', function (): void {
 		// Test depot file metadata update
 		$updateData = [
-			'alt' => 'Updated depot alt text',
+			'alt'     => 'Updated depot alt text',
 			'caption' => 'Updated depot caption',
 		];
-		
+
 		$response = put('/api/collections/file-test/test-file-object/depot/test-property/info', $updateData);
 		expect($response->getStatusCode())->toBeIn([200, 404, 405]); // Update depot info endpoint exists
 	});

@@ -10,21 +10,21 @@ beforeEach(function (): void {
 describe('Authentication Security Vulnerabilities', function () {
 	it('identifies missing rate limiting on login attempts', function () {
 		// Test rate limiting logic
-		$maxAttempts = 5;
-		$timeWindow = 900; // 15 minutes
+		$maxAttempts     = 5;
+		$timeWindow      = 900; // 15 minutes
 		$currentAttempts = 0;
-		
+
 		// Simulate failed login attempts
 		for ($i = 0; $i < 10; $i++) {
 			$currentAttempts++;
-			
+
 			// After max attempts, further attempts should be blocked
 			if ($currentAttempts > $maxAttempts) {
 				expect($currentAttempts)->toBeGreaterThan($maxAttempts);
 				break;
 			}
 		}
-		
+
 		// Verify rate limiting parameters are reasonable
 		expect($maxAttempts)->toBeBetween(3, 10);
 		expect($timeWindow)->toBeGreaterThan(300); // At least 5 minutes
@@ -34,7 +34,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		// Test session regeneration logic
 		session_start();
 		$originalSessionId = session_id();
-		
+
 		// Simulate session regeneration
 		session_regenerate_id(true);
 		$newSessionId = session_id();
@@ -44,7 +44,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		expect($newSessionId)->toBeString();
 		expect($originalSessionId)->not()->toBe($newSessionId);
 		expect(strlen($newSessionId))->toBeGreaterThan(10);
-		
+
 		session_destroy();
 	});
 
@@ -68,23 +68,23 @@ describe('Authentication Security Vulnerabilities', function () {
 
 		foreach ($weakPasswords as $password) {
 			// Validate password strength criteria
-			$hasUpper = preg_match('/[A-Z]/', $password);
-			$hasLower = preg_match('/[a-z]/', $password);
-			$hasNumber = preg_match('/[0-9]/', $password);
-			$hasSpecial = preg_match('/[^A-Za-z0-9]/', $password);
+			$hasUpper     = preg_match('/[A-Z]/', $password);
+			$hasLower     = preg_match('/[a-z]/', $password);
+			$hasNumber    = preg_match('/[0-9]/', $password);
+			$hasSpecial   = preg_match('/[^A-Za-z0-9]/', $password);
 			$isLongEnough = strlen($password) >= 12;
-			
+
 			$isStrong = $hasUpper && $hasLower && $hasNumber && $hasSpecial && $isLongEnough;
 			expect($isStrong)->toBeFalse();
 		}
 
 		foreach ($strongPasswords as $password) {
-			$hasUpper = preg_match('/[A-Z]/', $password);
-			$hasLower = preg_match('/[a-z]/', $password);
-			$hasNumber = preg_match('/[0-9]/', $password);
-			$hasSpecial = preg_match('/[^A-Za-z0-9]/', $password);
+			$hasUpper     = preg_match('/[A-Z]/', $password);
+			$hasLower     = preg_match('/[a-z]/', $password);
+			$hasNumber    = preg_match('/[0-9]/', $password);
+			$hasSpecial   = preg_match('/[^A-Za-z0-9]/', $password);
 			$isLongEnough = strlen($password) >= 12;
-			
+
 			$isStrong = $hasUpper && $hasLower && $hasNumber && $hasSpecial && $isLongEnough;
 			expect($isStrong)->toBeTrue();
 		}
@@ -104,13 +104,13 @@ describe('Authentication Security Vulnerabilities', function () {
 		// Test timing attack mitigation
 		$validUsername   = 'admin';
 		$invalidUsername = 'nonexistent_user_12345';
-		$dummyHash = password_hash('dummy_password', PASSWORD_DEFAULT);
+		$dummyHash       = password_hash('dummy_password', PASSWORD_DEFAULT);
 
 		// Both valid and invalid usernames should perform hash verification
 		// to prevent timing attacks
 		$startTime = microtime(true);
 		password_verify('test_password', $dummyHash);
-		$endTime = microtime(true);
+		$endTime  = microtime(true);
 		$hashTime = $endTime - $startTime;
 
 		// Hash verification should take measurable time
@@ -121,10 +121,10 @@ describe('Authentication Security Vulnerabilities', function () {
 
 	it('identifies missing account lockout mechanism', function () {
 		// Test account lockout logic
-		$maxAttempts = 5;
+		$maxAttempts     = 5;
 		$lockoutDuration = 900; // 15 minutes
-		$currentTime = time();
-		
+		$currentTime     = time();
+
 		// Simulate failed login tracking
 		$failedAttempts = [
 			['timestamp' => $currentTime - 100, 'ip' => '192.168.1.100'],
@@ -133,7 +133,7 @@ describe('Authentication Security Vulnerabilities', function () {
 			['timestamp' => $currentTime - 400, 'ip' => '192.168.1.100'],
 			['timestamp' => $currentTime - 500, 'ip' => '192.168.1.100'],
 		];
-		
+
 		// Count recent failed attempts within lockout window
 		$recentAttempts = 0;
 		foreach ($failedAttempts as $attempt) {
@@ -141,7 +141,7 @@ describe('Authentication Security Vulnerabilities', function () {
 				$recentAttempts++;
 			}
 		}
-		
+
 		// Should be locked out after max attempts
 		$isLockedOut = $recentAttempts >= $maxAttempts;
 		expect($isLockedOut)->toBeTrue();
