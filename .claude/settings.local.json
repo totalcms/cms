@@ -9,7 +9,12 @@
       "Bash(grep:*)",
       "Bash(rm:*)",
       "Bash(rg:*)",
-      "Bash(composer run:*)"
+      "Bash(composer run:*)",
+      "Bash(composer require:*)",
+      "Bash(composer update:*)",
+      "Bash(git checkout:*)",
+      "Bash(ls:*)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }

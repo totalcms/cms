@@ -121,6 +121,24 @@ ESBuild handles modern JavaScript/CSS bundling with code splitting. Configuratio
 - **Modern PHP**: Strict typing, PSR standards, and PHP 8.2+ features throughout
 - **Asset Processing**: Images processed with intervention/image, supports various formats
 
+## Security Architecture
+
+### Session Management
+- **Primary Pattern**: Use `Odan\Session\PhpSession` for all session operations instead of direct `$_SESSION` access
+- **CSRF Protection**: `CSRFTokenManager` uses PhpSession for token storage and validation
+- **Container Configuration**: PhpSession is properly configured in `config/container.php` with session config
+
+### HTML Sanitization
+- **HTMLSanitizer**: Located in `src/Utils/HTMLSanitizer.php`, handles XSS prevention
+- **Usage**: All `preg_replace()` calls must be cast to `(string)` for PHPStan Level 8 compliance
+- **Configuration**: Supports different sanitization levels (rich content vs strict content)
+
+### CSRF Protection
+- **CSRFTokenManager**: Uses PhpSession, generates cryptographically secure tokens
+- **CSRFProtectionMiddleware**: Validates tokens from POST data, headers, or query parameters
+- **Token Sources**: POST data > X-CSRF-Token header > query parameters (in priority order)
+- **Integration**: Both classes are configured in container and work together seamlessly
+
 ## Code Style & Conventions
 
 ### Naming Conventions
@@ -141,3 +159,27 @@ ESBuild handles modern JavaScript/CSS bundling with code splitting. Configuratio
 - Business logic validation in services (not handlers)
 - Comprehensive error handling with meaningful exception messages
 - Return arrays or data objects, not HTTP responses
+
+### PHPStan Level 8 Compliance
+- **Type Safety**: All methods must have explicit return types
+- **Null Handling**: Use proper null checks and casting, especially for `preg_replace()` which can return null
+- **Array Types**: Use specific array type hints like `@param array<string,mixed> $data`
+- **Property Annotations**: Use `@phpstan-ignore-next-line` sparingly for edge cases
+- **Testing**: Always run `composer run stan` after making changes to maintain Level 8 compliance
+
+## Recent Architecture Changes (2025-06-19)
+
+### CSRF Token Management Migration
+- **Change**: Migrated CSRFTokenManager from direct `$_SESSION` access to `Odan\Session\PhpSession`
+- **Reason**: Better abstraction, cleaner dependency injection, consistent with Total CMS patterns
+- **Files Updated**:
+  - `src/Utils/CSRFTokenManager.php` - Constructor now takes PhpSession
+  - `config/container.php` - Updated CSRFTokenManager factory to inject PhpSession
+  - `tests/Security/CSRFTokenManagerTest.php` - Updated to use PhpSession in tests
+  - `tests/Security/CSRFProtectionMiddlewareTest.php` - Updated test setup for PhpSession
+
+### PHPStan Level 8 Fixes
+- **HTMLSanitizer**: Fixed type annotations, cast all `preg_replace()` calls to `(string)`
+- **StringData**: Fixed HTMLSanitizer instantiation (no constructor parameters)
+- **FileUploadValidator**: Fixed null handling and unnecessary null coalescing operators
+- **All Security Classes**: Added proper type annotations and null safety checks
