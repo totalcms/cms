@@ -17,10 +17,11 @@ export default class Identifier extends TotalField {
 
 		this.valid = false;
 
-		if (this.form.isEditMode()) {
-			// The ID cannot be changed in edit mode
+		// Check if we're editing an existing item (form has an ID)
+		if (this.form.id && this.form.id.length > 0) {
+			// The ID cannot be changed when editing
 			this.disable();
-			this.valid = false;
+			this.valid = true; // ID is valid in edit mode since it can't be changed
 		}
 		if (this.getValue() === "" && this.options.autogen) {
 			this.setValue(this.autogenId());
