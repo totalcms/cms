@@ -9,9 +9,13 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Traits\LoggerAwareTrait;
 
 class FileSaver
 {
+	use LoggerAwareTrait;
+
 	public string $type = 'file';
 
 	public function __construct(
@@ -20,6 +24,7 @@ class FileSaver
 		protected ObjectSaver $objectSaver,
 		protected ObjectPatcher $objectPatcher,
 		protected ObjectFetcher $objectFetcher,
+		protected LoggerFactory $loggerFactory,
 	) {
 	}
 
@@ -61,6 +66,11 @@ class FileSaver
 			}
 			$newData = array_merge($fileProperty->transform(), $fileInfo, $existingData);
 		}
+
+		// if ($objectExists) {
+		// 	// If the object existed before, we will keep the existing data
+		// 	$newImage = array_merge($newData, $existingData);
+		// }
 
 		$fileData = new FileData($newData);
 

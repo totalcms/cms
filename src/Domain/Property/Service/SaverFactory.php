@@ -8,6 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Factory\LoggerFactory;
 
 final class SaverFactory
 {
@@ -18,6 +19,7 @@ final class SaverFactory
 		private CollectionSchemaFetcher $schemaFetcher,
 		protected ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,
+		protected LoggerFactory $loggerFactory,
 	) {
 	}
 
@@ -35,7 +37,8 @@ final class SaverFactory
 			$this->propFetcher,
 			$this->objectSaver,
 			$this->objectPatcher,
-			$this->objectFetcher
+			$this->objectFetcher,
+			$this->loggerFactory,
 		);
 
 		if (!$saver instanceof FileSaver) {

@@ -14,7 +14,8 @@
       "Bash(composer update:*)",
       "Bash(git checkout:*)",
       "Bash(ls:*)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }
