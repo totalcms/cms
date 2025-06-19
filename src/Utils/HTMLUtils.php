@@ -43,11 +43,14 @@ class HTMLUtils
 		return $element;
 	}
 
-	public static function details(string $title, string $content, string $class = ''): string
+	/** @param array<string,?string> $attributes */
+	public static function details(string $title, string $content, string $class = '', array $attributes = []): string
 	{
+		$attributes['class'] = "cms-accordion $class";
+
 		$summary = self::element('summary', $title);
 		$content = self::element('div', $content, ['class' => 'content']);
-		$details = self::element('details', $summary . $content, ['class' => "cms-accordion $class"]);
+		$details = self::element('details', $summary . $content, $attributes);
 
 		return $details;
 	}

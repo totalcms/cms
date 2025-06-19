@@ -24,18 +24,22 @@ class PropertyField
 	) {
 	}
 
-	protected function buildFormInfo(): string
+	protected function topFieldInfo(): string
 	{
-		$formInfo = $this->form->field('field', [
+		return $this->form->field('field', [
 			'field'       => 'select',
-			'label'       => 'Field Type',
+			'label'       => 'Type of Form Field',
 			'placeholder' => 'Select a field type',
 			'help'        => 'The type form field that this field will use',
 			'value'       => $this->field,
 			// 'disabled'    => ($this->property === 'id'), // Disable field type for id property
 			'options'     => TotalForm::FIELDS_BY_TYPE,
 		]);
-		$formInfo .= $this->form->field('label', [
+	}
+
+	protected function buildFormInfo(): string
+	{
+		$formInfo = $this->form->field('label', [
 			'field'       => 'text',
 			'label'       => 'Label',
 			'placeholder' => 'Enter a label',
@@ -58,7 +62,7 @@ class PropertyField
 			'value'       => $this->help,
 		]);
 
-		return HTMLUtils::details('Form Info', $formInfo);
+		return HTMLUtils::details('Form Info', $formInfo, '', ['open' => '']);
 	}
 
 	protected function buildSettingsOptions(): string
@@ -69,7 +73,7 @@ class PropertyField
 			'placeholder' => '{ "key": "value" }',
 			'help'        => 'The settings for this field in valid JSON format',
 			'value'       => empty($this->settings) ? '' : json_encode($this->settings, JSON_PRETTY_PRINT),
-			'rows'        => 7,
+			'rows'        => 10,
 		]);
 		$settings .= $this->form->field('options', [
 			'field'       => 'json',
@@ -77,7 +81,7 @@ class PropertyField
 			'placeholder' => '[ "option1", "option2", "option3" ]',
 			'help'        => 'The options for select fields and datalists in valid JSON format.',
 			'value'       => empty($this->options) ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
-			'rows'        => 7,
+			'rows'        => 10,
 		]);
 
 		return HTMLUtils::details('Settings &amp; Options', $settings);
@@ -85,6 +89,7 @@ class PropertyField
 
 	protected function buildDialog(string $content = ''): string
 	{
+		$content .= $this->topFieldInfo();
 		$content .= $this->buildFormInfo();
 		$content .= $this->buildSettingsOptions();
 

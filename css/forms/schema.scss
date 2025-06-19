@@ -201,6 +201,10 @@
 
 	dialog {
 		grid-template-rows: auto min-content;
+
+		details:first-of-type {
+			margin-top : 1rem;
+		}
 	}
 }
 

@@ -45,17 +45,23 @@ class SchemaField extends PropertyField
 	) {
 	}
 
-	protected function buildPropertyInfo(): string
+	protected function topFieldInfo(): string
 	{
 		$content = $this->form->field('type', [
 			'field'       => 'select',
-			'label'       => 'Type',
+			'label'       => 'Type of Data',
 			'placeholder' => 'Select a data type',
-			'help'        => 'The data type of the property',
+			'help'        => 'The data type of the property will store in the CMS',
 			'value'       => $this->type,
 			'options'     => SchemaData::PROPERTY_TYPES,
 		]);
-		$content .= $this->form->field('factory', [
+		$content .= parent::topFieldInfo();
+		return $content;
+	}
+
+	protected function buildPropertyInfo(): string
+	{
+		$content = $this->form->field('factory', [
 			'field'       => 'text',
 			'label'       => 'Factory',
 			'placeholder' => 'text(300)',
@@ -75,6 +81,7 @@ class SchemaField extends PropertyField
 			'field'       => 'json',
 			'label'       => 'Extra Schema Definitions',
 			'placeholder' => '{ "key": "value" }',
+			'settings'    => ['rows' => 3],
 			'help'        => 'Extra schema definitions for this property in valid JSON format',
 			'value'       => empty($this->extra) ? '' : json_encode($this->extra, JSON_PRETTY_PRINT),
 		]);
@@ -84,9 +91,17 @@ class SchemaField extends PropertyField
 
 	protected function buildDialog(string $content = ''): string
 	{
-		$content = $this->buildPropertyInfo();
+		$content .= $this->topFieldInfo();
+		$content .= $this->buildFormInfo();
+		$content .= $this->buildSettingsOptions();
+		$content .= $this->buildPropertyInfo();
 
-		return parent::buildDialog($content);
+		$close = HTMLUtils::button('Close', ['class' => 'close']);
+
+		$content  = HTMLUtils::scroller($content);
+		$content .= HTMLUtils::element('section', $close);
+
+		return HTMLUtils::dialog($content, 'small');
 	}
 
 	public function build(): string
