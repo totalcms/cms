@@ -3,112 +3,52 @@
 namespace TotalCMS\Utils;
 
 /**
- * Configuration for HTML sanitization settings.
- * Allows users to customize which HTML tags and attributes are allowed.
+ * Configuration constants for HTML sanitization.
  */
 final class HTMLSanitizerConfig
 {
-	/**
-	 * Default allowed HTML tags and attributes for rich content.
-	 * Limited to HTMLPurifier-supported tags for maximum compatibility.
-	 */
-	public const DEFAULT_ALLOWED_TAGS =
-		'p,br,strong,b,em,i,u,strike,del,a[href|title|target|rel],' .
-		'ul,ol,li,h1,h2,h3,h4,h5,h6,blockquote,code,pre,hr,' .
-		'div[class|id|style],span[class|id|style],' .
-		'img[src|alt|title|width|height|class|style],' .
-		'table,thead,tbody,tfoot,tr,td[colspan|rowspan|class],th[colspan|rowspan|class],caption,' .
-		'iframe[src|width|height|frameborder],' .
-		'abbr[title],cite,q[cite],small,sub,sup,var,kbd,samp';
-
-	/**
-	 * Default allowed CSS properties.
-	 */
-	public const DEFAULT_ALLOWED_CSS =
-		'color,background-color,background-image,background-position,background-repeat,background-size,' .
-		'font-size,font-weight,font-family,font-style,line-height,letter-spacing,' .
-		'text-align,text-decoration,text-indent,text-transform,' .
-		'margin,margin-top,margin-right,margin-bottom,margin-left,' .
-		'padding,padding-top,padding-right,padding-bottom,padding-left,' .
-		'border,border-top,border-right,border-bottom,border-left,' .
-		'border-color,border-style,border-width,border-radius,' .
-		'width,height,max-width,max-height,min-width,min-height,' .
-		'display,position,top,right,bottom,left,float,clear,' .
-		'opacity,z-index,overflow,vertical-align';
-
-	/**
-	 * Safe iframe domains for embeds.
-	 */
-	public const DEFAULT_SAFE_IFRAME_DOMAINS = [
-		'www.youtube.com/embed/',
-		'player.vimeo.com/video/',
-		'www.dailymotion.com/embed/',
-		'player.twitch.tv/',
-		'codepen.io/embed/',
-		'jsfiddle.net/embedded/',
-		'slides.com/',
-		'docs.google.com/',
-		'drive.google.com/',
-		'maps.google.com/embed/',
-		'www.google.com/maps/embed/',
+	public const RICH_CONTENT_ALLOWED_TAGS = [
+		'p', 'br', 'hr', 'strong', 'b', 'em', 'i', 'u', 's', 'small', 'mark', 'del', 'ins', 'sub', 'sup',
+		'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'a', 'img', 'figure', 'figcaption',
+		'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
+		'blockquote', 'cite', 'q', 'code', 'pre', 'kbd', 'samp', 'var',
+		'div', 'span', 'section', 'article', 'aside', 'header', 'footer', 'main', 'nav',
+		'audio', 'video', 'source', 'track', 'fieldset', 'legend', 'label',
+		'abbr', 'acronym', 'address', 'time', 'details', 'summary',
 	];
 
-	/**
-	 * Strict mode allowed tags (for user comments, etc.).
-	 */
-	public const STRICT_ALLOWED_TAGS = 'p,br,strong,b,em,i,a[href|title],ul,ol,li,blockquote,code';
+	public const STRICT_CONTENT_ALLOWED_TAGS = [
+		'p', 'br', 'strong', 'b', 'em', 'i', 'a', 'ul', 'ol', 'li', 'code',
+	];
 
-	/**
-	 * Get HTML sanitization configuration from Total CMS config or use defaults.
-	 *
-	 * @param array<string,mixed> $config Configuration array
-	 *
-	 * @return array<string,mixed> HTMLPurifier configuration array
-	 */
-	public static function getConfig(array $config = []): array
-	{
-		return [
-			'allowed_tags'        => $config['html_sanitizer']['allowed_tags'] ?? self::DEFAULT_ALLOWED_TAGS,
-			'allowed_css'         => $config['html_sanitizer']['allowed_css'] ?? self::DEFAULT_ALLOWED_CSS,
-			'safe_iframe_domains' => $config['html_sanitizer']['safe_iframe_domains'] ?? self::DEFAULT_SAFE_IFRAME_DOMAINS,
-			'auto_paragraph'      => $config['html_sanitizer']['auto_paragraph'] ?? false,
-			'remove_empty'        => $config['html_sanitizer']['remove_empty'] ?? false,
-			'cache_path'          => $config['html_sanitizer']['cache_path'] ?? sys_get_temp_dir(),
-		];
-	}
+	public const ALLOWED_CSS_PROPERTIES = [
+		'color', 'font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration',
+		'text-align', 'text-transform', 'line-height', 'letter-spacing',
+		'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+		'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+		'width', 'height', 'max-width', 'max-height', 'min-width', 'min-height',
+		'display', 'float', 'clear', 'position', 'top', 'right', 'bottom', 'left',
+		'z-index', 'overflow', 'overflow-x', 'overflow-y',
+		'background', 'background-color', 'background-image', 'background-repeat',
+		'background-position', 'background-size',
+		'border', 'border-top', 'border-right', 'border-bottom', 'border-left',
+		'border-width', 'border-style', 'border-color', 'border-radius',
+		'list-style', 'list-style-type', 'list-style-position', 'list-style-image',
+		'border-collapse', 'border-spacing', 'caption-side', 'empty-cells', 'table-layout',
+		'opacity', 'visibility', 'white-space', 'word-wrap', 'word-break',
+	];
 
-	/**
-	 * Get strict mode configuration for high-security contexts.
-	 *
-	 * @param array<string,mixed> $config Configuration array
-	 *
-	 * @return array<string,mixed> HTMLPurifier configuration array
-	 */
-	public static function getStrictConfig(array $config = []): array
-	{
-		return [
-			'allowed_tags'        => $config['html_sanitizer']['strict_allowed_tags'] ?? self::STRICT_ALLOWED_TAGS,
-			'allowed_css'         => '',
-			'safe_iframe_domains' => [],
-			'auto_paragraph'      => true,
-			'remove_empty'        => true,
-			'cache_path'          => $config['html_sanitizer']['cache_path'] ?? sys_get_temp_dir(),
-		];
-	}
+	public const ALLOWED_IFRAME_DOMAINS = [
+		'www.youtube.com', 'youtube.com', 'player.vimeo.com', 'vimeo.com',
+		'www.dailymotion.com', 'dailymotion.com', 'embed.ted.com', 'www.ted.com',
+		'codepen.io', 'jsfiddle.net', 'github.com', 'gist.github.com',
+	];
 
-	/**
-	 * Build HTMLPurifier regex for safe iframe domains.
-	 *
-	 * @param array<string> $domains List of safe iframe domains
-	 */
-	public static function buildIframeRegex(array $domains): string
-	{
-		if (empty($domains)) {
-			return '';
-		}
-
-		$escaped = array_map(fn ($domain) => preg_quote($domain, '%'), $domains);
-
-		return '%^(https?:)?//(' . implode('|', $escaped) . ')%';
-	}
+	public const DANGEROUS_MIME_TYPES = [
+		'application/x-php', 'application/x-httpd-php', 'application/php', 'application/x-sh',
+		'application/x-csh', 'text/x-php', 'text/x-shellscript', 'application/x-executable',
+		'application/x-msdownload', 'application/x-msdos-program', 'application/x-ms-dos-executable',
+		'application/x-winexe', 'application/x-javascript', 'text/javascript',
+		'application/javascript', 'text/vbscript', 'application/x-vbscript',
+	];
 }

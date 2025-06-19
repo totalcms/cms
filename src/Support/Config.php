@@ -26,7 +26,7 @@ final class Config
 	/** @var array<string,mixed> */
 	public array $auth = [];
 	/** @var array<string,mixed> */
-	public array $htmlpurify = [];
+	public array $htmlclean = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
@@ -45,7 +45,7 @@ final class Config
 		$this->session    = $settings['session'];
 		$this->auth       = $settings['auth'];
 		$this->notfound   = $settings['notfound'];
-		$this->htmlpurify = $settings['htmlpurify'] ?? [];
+		$this->htmlclean = $settings['htmlclean'] ?? [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);

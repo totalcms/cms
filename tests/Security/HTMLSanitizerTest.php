@@ -181,8 +181,8 @@ final class HTMLSanitizerTest extends TestCase
 		$this->assertStringContainsString('Nested without closing', $result);
 		$this->assertStringContainsString('Bold', $result);
 		
-		// Note: Our simple sanitizer doesn't auto-close tags like HTMLPurifier would
-		// In production, HTMLPurifier would properly close the <p> tag
+		// Note: Our simple sanitizer doesn't auto-close tags like more complex sanitizers would
+		// For production use with malformed HTML, consider additional HTML validation
 	}
 
 	public function testSQLInjectionAttempts(): void

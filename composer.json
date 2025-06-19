@@ -22,7 +22,6 @@
     "enshrined/svg-sanitize": "^0.21.0",
     "erusev/parsedown": "^1.7",
     "erusev/parsedown-extra": "^0.8.1",
-    "ezyang/htmlpurifier": "^4.18",
     "fakerphp/faker": "^1.23",
     "fig/http-message-util": "^1.1",
     "froala/wysiwyg-editor-php-sdk": "^4.5",

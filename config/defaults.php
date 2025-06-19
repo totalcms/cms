@@ -147,9 +147,11 @@ $settings['auth'] = [
 	'deniedDefaultRedirect' => '/',
 ];
 
-$settings['htmlpurify'] = [
-	'remove_empty' => false,
-	'cache_path'   => $settings['cachedir'] . '/htmlpurifier',
+$settings['htmlclean'] = [
+	// 'allowed_tags' => ['p', 'strong', 'em'],
+	// 'allowed_css_properties' => [],
+	// 'allowed_iframe_domains' => ['www.youtube.com']
+	'enabled' => true,  // Set to false to disable HTML sanitization globally
 ];
 
 // https://www.php.net/manual/en/timezones.php

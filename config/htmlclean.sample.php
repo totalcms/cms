@@ -1,28 +1,28 @@
 <?php
 
 /**
- * HTML Sanitizer Configuration Sample.
+ * HTML Cleaning Configuration Sample.
  *
- * Copy this file to html-sanitizer.php and customize the settings below
+ * Copy this file to htmlclean.php and customize the settings below
  * to control which HTML tags and attributes are allowed in your content.
  *
  * This configuration provides XSS protection while allowing rich content.
  *
  * IMPORTANT: HTML sanitization is ENABLED BY DEFAULT for security.
- * To disable it globally, set 'htmlpurify' => false in your config.
- * To disable per-field, use ['htmlpurify' => false] in field settings.
+ * To disable it globally, set 'htmlclean' => ['enabled' => false] in your config.
+ * To disable per-field, use ['htmlclean' => false] in field settings.
  */
 
 return [
-	'html_sanitizer' => [
+	'htmlclean' => [
 		/**
 		 * Allowed HTML tags and attributes for rich content fields.
 		 *
 		 * Format: 'tag[attr1|attr2],tag2[attr1|attr2]'
 		 *
-		 * Note: Limited to HTMLPurifier-supported tags. Modern HTML5 elements
-		 * like video, audio, picture, figure are not natively supported and
-		 * will be stripped out during sanitization.
+		 * Note: Total CMS supports modern HTML5 elements including
+		 * video, audio, picture, figure, section, article, and more.
+		 * Configure allowed_tags below to control which elements are preserved.
 		 *
 		 * For media content, consider using iframe embeds from trusted sources
 		 * or implement a custom media handling system outside of HTML sanitization.
@@ -134,11 +134,9 @@ return [
 		'remove_empty'   => false,      // Remove empty tags like <p></p>
 
 		/**
-		 * Cache path for HTMLPurifier.
-		 *
-		 * Leave as null to use system temp directory
+		 * Enable/disable HTML sanitization globally.
 		 */
-		'cache_path' => null,
+		'enabled' => true,
 	],
 ];
 
@@ -154,23 +152,24 @@ return [
  * For strict security (comments, untrusted content):
  * 'allowed_tags' => 'p,br,strong,b,em,i,a[href|title]'
  *
- * IMPORTANT: HTML5 Media Element Limitations
- * ==========================================
- * HTMLPurifier does not natively support HTML5 elements like:
+ * HTML5 Media Element Support
+ * ===========================
+ * Total CMS's HTML sanitizer supports modern HTML5 elements including:
  * - <video>, <audio>, <source>, <track>
  * - <picture>, <figure>, <figcaption>
  * - <article>, <section>, <header>, <footer>
  * - <details>, <summary>, <mark>, <time>
  *
- * These elements will be stripped during sanitization. For media content:
+ * These elements are preserved during sanitization when included in allowed_tags.
+ * For additional security with media content:
  *
- * 1. Use iframe embeds from trusted sources (YouTube, Vimeo, etc.)
- * 2. Store media files separately and reference them via custom shortcodes
- * 3. Implement a custom media gallery system outside of HTML sanitization
- * 4. Consider disabling sanitization for trusted admin users (not recommended)
+ * 1. Use iframe embeds from trusted domains (configured above)
+ * 2. Enable file upload validation for media files
+ * 3. Consider Content Security Policy headers
+ * 4. For untrusted content, use strict mode sanitization
  *
- * If you absolutely need HTML5 elements, you would need to:
- * - Extend HTMLPurifier with custom element definitions
- * - Use a different sanitization library
- * - Implement selective sanitization based on user trust levels
+ * Configuration options:
+ * - Set 'htmlclean' => ['enabled' => false] to disable globally
+ * - Use per-field ['htmlclean' => false] to disable selectively
+ * - Customize allowed_tags, allowed_css_properties, and allowed_iframe_domains
  */

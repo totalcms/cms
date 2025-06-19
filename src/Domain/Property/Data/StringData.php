@@ -12,9 +12,13 @@ class StringData extends PropertyData
 	public function __construct(public string $text = '', public array $settings = [])
 	{
 		// Sanitize HTML content unless explicitly disabled
-		if ($this->containsHTML() && ($this->settings['htmlpurify'] ?? true) !== false) {
+		$config        = Config::init();
+		$globalEnabled = $config->htmlclean['enabled'] ?? true;
+		$fieldEnabled  = $this->settings['htmlclean'] ?? true;
+
+		if ($this->containsHTML() && $globalEnabled && $fieldEnabled !== false) {
 			// Use HTML sanitizer to clean the text
-			$this->text = $this->getSanitizer()->sanitizeRichContent($this->text);
+			$this->text = $this->getSanitizer()->sanitizeRichContent($this->text, $config->htmlclean);
 		}
 	}
 
@@ -37,16 +41,8 @@ class StringData extends PropertyData
 	private function getSanitizer(): HTMLSanitizer
 	{
 		if (self::$sanitizer === null) {
-			$config   = Config::init();
-			$settings = $config->htmlpurify;
-
-			if (is_array($this->settings['htmlpurify'] ?? null)) {
-				// Merge with Total CMS settings if available
-				$settings = array_merge($settings, $this->settings['htmlpurify']);
-			}
-
-			// For now, use default configuration
-			self::$sanitizer = new HTMLSanitizer($settings);
+			// Create sanitizer instance (no constructor parameters needed)
+			self::$sanitizer = new HTMLSanitizer();
 		}
 
 		return self::$sanitizer;
