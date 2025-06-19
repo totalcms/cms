@@ -45,6 +45,7 @@ final class TotalCMSTwigFunctions
 		'embed',
 		'imageExists',
 		'fileExists',
+		'svgSymbol',
 	];
 
 	/** @return array<TwigFunction> */
@@ -189,6 +190,11 @@ final class TotalCMSTwigFunctions
 	public static function imageExists(mixed $image): bool
 	{
 		return self::fileExists($image);
+	}
+
+	public static function svgSymbol(string $id): string
+	{
+		return '<svg><use href="#' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '"></use></svg>';
 	}
 
 	// -------------------------
