@@ -503,7 +503,10 @@ NGINX;
 		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	/** @param array<string,string> $options */
+	/**
+	 * @param array<string,string> $options
+	 * @return array<string,mixed>
+	 */
 	public function color(string $id, array $options = []): array
 	{
 		$options = array_merge([
@@ -520,7 +523,10 @@ NGINX;
 		return $color;
 	}
 
-	/** @param array<string,string> $options */
+	/**
+	 * @param array<string,string> $options
+	 * @return array<string,mixed>
+	 */
 	public function colour(string $id, array $options = []): array
 	{
 		return $this->color($id, $options);

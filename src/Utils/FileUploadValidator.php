@@ -97,7 +97,7 @@ final class FileUploadValidator
 		if ($file->getSize() > $maxSize) {
 			$errors[] = sprintf(
 				'File size (%s) exceeds maximum allowed size (%s)',
-				$this->formatBytes($file->getSize()),
+				$this->formatBytes($file->getSize() ?? 0),
 				$this->formatBytes($maxSize)
 			);
 		}
@@ -181,11 +181,11 @@ final class FileUploadValidator
 		$filename = basename($filename);
 
 		// Remove or replace dangerous characters
-		$filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
+		$filename = (string) preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
 
 		// Prevent hidden files and multiple dots
-		$filename = preg_replace('/^\.+/', '', $filename);
-		$filename = preg_replace('/\.{2,}/', '.', $filename);
+		$filename = (string) preg_replace('/^\.+/', '', $filename);
+		$filename = (string) preg_replace('/\.{2,}/', '.', $filename);
 
 		// Ensure filename is not empty after sanitization
 		if (empty($filename)) {
@@ -215,7 +215,7 @@ final class FileUploadValidator
 				'max_size'           => self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file'],
 				'max_size_formatted' => $this->formatBytes(self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file']),
 				'extensions'         => $extensions,
-				'mime_types'         => self::ALLOWED_MIME_TYPES[$category] ?? [],
+				'mime_types'         => self::ALLOWED_MIME_TYPES[$category],
 			];
 		}
 

@@ -83,11 +83,7 @@ final class CSRFProtectionMiddleware implements MiddlewareInterface
 			$postData = (array)$postData;
 		}
 
-		return $this->csrfManager->validateFromRequest(
-			is_array($postData) ? $postData : [],
-			$flatHeaders,
-			$queryData
-		);
+		return $this->csrfManager->validateFromRequest($postData, $flatHeaders, $queryData);
 	}
 
 	/**
@@ -95,6 +91,7 @@ final class CSRFProtectionMiddleware implements MiddlewareInterface
 	 */
 	private function isExemptRoute(string $uri): bool
 	{
+		/** @phpstan-ignore-next-line */
 		foreach (self::EXEMPT_ROUTES as $exemptPattern) {
 			// Simple wildcard matching for now
 			$pattern = str_replace('*', '.*', preg_quote($exemptPattern, '/'));
