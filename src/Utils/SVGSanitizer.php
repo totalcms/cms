@@ -89,7 +89,8 @@ final class SVGSanitizer
 
 			// Configure sanitizer for security
 			self::$sanitizer->removeRemoteReferences(true);
-			self::$sanitizer->minify(false); // Keep readable for debugging
+			self::$sanitizer->minify(true); // Keep readable for debugging
+			self::$sanitizer->removeXMLTag(true); // Remove XML declaration to match schema pattern
 		}
 
 		return self::$sanitizer;
