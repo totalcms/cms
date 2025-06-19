@@ -55,7 +55,7 @@ return [
 		 *
 		 * Only applies to elements that allow the 'style' attribute above
 		 */
-		'allowed_css' =>
+		'allowed_css_properties' =>
 			// Colors and backgrounds
 			'color,background-color,background-image,background-position,' .
 			'background-repeat,background-size,background-attachment,' .
@@ -87,7 +87,7 @@ return [
 		 * Only iframes from these domains will be allowed
 		 * Add your trusted embed providers here
 		 */
-		'safe_iframe_domains' => [
+		'allowed_iframe_domains' => [
 			// Video platforms
 			'www.youtube.com/embed/',
 			'www.youtube-nocookie.com/embed/',
@@ -119,19 +119,6 @@ return [
 			// Add your custom domains here
 			// 'your-trusted-domain.com/embed/',
 		],
-
-		/**
-		 * Strict mode allowed tags (for user comments, untrusted content).
-		 *
-		 * Much more restrictive - only basic formatting allowed
-		 */
-		'strict_allowed_tags' => 'p,br,strong,b,em,i,a[href|title],ul,ol,li,blockquote,code',
-
-		/**
-		 * Formatting options.
-		 */
-		'auto_paragraph' => false,    // Automatically wrap content in <p> tags
-		'remove_empty'   => false,      // Remove empty tags like <p></p>
 
 		/**
 		 * Enable/disable HTML sanitization globally.
