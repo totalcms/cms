@@ -53,11 +53,24 @@ export default class SchemaPropertiesField extends PropertiesField {
 	}
 
 	duplicateField(field) {
+		// Get all select values before cloning
+		const selects = field.querySelectorAll('select');
+		const selectValues = Array.from(selects).map(select => select.value);
+
 		const clone = field.cloneNode(true);
 		const parent = field.parentNode;
 		parent.insertBefore(clone, field.nextSibling);
 
 		const newField = field.nextSibling;
+		
+		// Restore select values after cloning
+		const clonedSelects = newField.querySelectorAll('select');
+		clonedSelects.forEach((select, index) => {
+			if (selectValues[index]) {
+				select.value = selectValues[index];
+			}
+		});
+
 		newField.querySelector("input").focus();
 		this.newField(newField);
 	}
