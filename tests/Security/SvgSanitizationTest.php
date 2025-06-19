@@ -4,11 +4,13 @@ namespace Tests\Security;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\SvgData;
+use TotalCMS\Utils\SVGSanitizer;
 
 /**
  * Test SVG Sanitization Security
  * 
  * @covers \TotalCMS\Domain\Property\Data\SvgData
+ * @covers \TotalCMS\Utils\SVGSanitizer
  */
 final class SvgSanitizationTest extends TestCase
 {
@@ -290,5 +292,62 @@ final class SvgSanitizationTest extends TestCase
 		// Let's just verify the SVG structure is preserved but check what actually happens
 		$this->assertStringContainsString('<svg', $result);
 		// The sanitizer behavior may vary - let's see what it actually does
+	}
+
+	// Direct SVGSanitizer tests
+	public function testSVGSanitizerSanitizeMethod(): void
+	{
+		$maliciousSvg = '<svg><script>alert("XSS")</script><circle cx="50" cy="50" r="40" /></svg>';
+		
+		$result = SVGSanitizer::sanitize($maliciousSvg);
+		
+		$this->assertStringNotContainsString('<script', $result);
+		$this->assertStringNotContainsString('alert', $result);
+		$this->assertStringContainsString('<circle', $result);
+	}
+
+	public function testSVGSanitizerIsValidSvgMethod(): void
+	{
+		$validSvg = '<svg><circle cx="50" cy="50" r="40" /></svg>';
+		$invalidSvg = '<div>Not SVG</div>';
+		$malformedSvg = '<svg><circle cx="50" cy="50" r="40"</svg>';
+		
+		$this->assertTrue(SVGSanitizer::isValidSvg($validSvg));
+		$this->assertFalse(SVGSanitizer::isValidSvg($invalidSvg));
+		$this->assertFalse(SVGSanitizer::isValidSvg($malformedSvg));
+		$this->assertFalse(SVGSanitizer::isValidSvg(''));
+	}
+
+	public function testSVGSanitizerSanitizeAndValidateMethod(): void
+	{
+		$validSvg = '<svg><circle cx="50" cy="50" r="40" /></svg>';
+		$maliciousSvg = '<svg><script>alert("XSS")</script><circle cx="50" cy="50" r="40" /></svg>';
+		
+		$result = SVGSanitizer::sanitizeAndValidate($validSvg);
+		$this->assertStringContainsString('<circle', $result);
+		
+		$result = SVGSanitizer::sanitizeAndValidate($maliciousSvg);
+		$this->assertStringNotContainsString('<script', $result);
+		$this->assertStringContainsString('<circle', $result);
+	}
+
+	public function testSVGSanitizerThrowsOnInvalidContent(): void
+	{
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Invalid SVG content after sanitization');
+		
+		SVGSanitizer::sanitizeAndValidate('<div>Not SVG</div>');
+	}
+
+	public function testSVGSanitizerAlwaysSanitizes(): void
+	{
+		$maliciousSvg = '<svg><script>alert("XSS")</script><circle cx="50" cy="50" r="40" /></svg>';
+		
+		$result = SVGSanitizer::sanitize($maliciousSvg);
+		
+		// SVGSanitizer always sanitizes - script tags should be removed
+		$this->assertStringNotContainsString('<script', $result);
+		$this->assertStringNotContainsString('alert("XSS")', $result);
+		$this->assertStringContainsString('<circle', $result);
 	}
 }
