@@ -52,6 +52,7 @@
 			"label"       : "Description",
 			"help"        : "A decription of the collection.",
 			"placeholder" : "About your collection.",
+			"settings"    : {"rows" : 3},
 			"field"       : "textarea"
         },
         "url": {
