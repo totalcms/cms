@@ -317,13 +317,19 @@ final class CollectionTable
 	{
 		$table = $this->buildTableHead() . $this->buildTableBody();
 
-		$table = HTMLUtils::element('table', $table, [
+		$attributes = [
 			'class'            => 'admin-table',
-			'data-limit'       => '25',
 			'data-search'      => 'true',
 			'data-sort'        => 'true',
 			'data-placeholder' => 'Filter Objects',
-		]);
+		];
+
+		$pagination = $this->config->dashboard['pagination'] ?? null;
+		if (!empty($pagination) && $pagination > 0) {
+			$attributes['data-limit'] = (string)$pagination;
+		}
+
+		$table = HTMLUtils::element('table', $table, $attributes);
 
 		return $table . $this->buildCloneDialog();
 	}

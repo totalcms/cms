@@ -27,11 +27,14 @@ final class Config
 	public array $auth = [];
 	/** @var array<string,mixed> */
 	public array $htmlclean = [];
+	/** @var array<string,mixed> */
+	public array $dashboard = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
 	{
 		$this->template   = $settings['template'];
+		$this->dashboard  = $settings['dashboard'];
 		$this->datadir    = $settings['datadir'];
 		$this->tmpdir     = $settings['tmpdir'];
 		$this->cachedir   = $settings['cachedir'];

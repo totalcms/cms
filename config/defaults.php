@@ -154,6 +154,10 @@ $settings['htmlclean'] = [
 	'enabled' => true,  // Set to false to disable HTML sanitization globally
 ];
 
+$settings['dashboard'] = [
+	'pagination' => 50, // Default pagination for dashboard tables
+];
+
 // https://www.php.net/manual/en/timezones.php
 // DateTimeZone::listIdentifiers()
 $settings['timezone'] = date_default_timezone_get();

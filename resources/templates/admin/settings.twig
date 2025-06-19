@@ -84,6 +84,23 @@
 				</p>
 			</div>
 
+			<div class="form-field number-field" data-type="number">
+				<label for="api">Dashboard Table Pagination</label>
+				<div class="form-group">
+					<input type="number"
+						value="{{ settings.dashboard.pagination }}"
+						id="pagination"
+						name="pagination"
+						aria-describedby="help-pagination"
+						placeholder="{{ defaults.dashboard.pagination }}">
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-pagination">
+					The number of items to display per page in the dashboard table. Set the value to <code>0</code>
+					to disable pagination. When set to <code>0</code>, all items will be displayed on a single page.
+				</p>
+			</div>
+
 			<div class="form-field select-field" data-type="select">
 				<label for="timezone">Timezone</label>
 				<div class="form-group">
@@ -96,8 +113,8 @@
 					<div class="form-group-icon"></div>
 				</div>
 				<p class="help" id="help-timezone">
-					The timezone that all dates in the CMS will be saved as. If not set, then the default tiemzone
-									that the server is configured with will be used.
+					The timezone that all dates in the CMS will be saved as. If not set, then the default timezone
+					that the server is configured with will be used.
 				</p>
 			</div>
 

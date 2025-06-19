@@ -17,6 +17,8 @@ final class SettingsSaver
 	 */
 	public function save(array $settings): array
 	{
+		unset($settings['csrf_token'], $settings['csrf_token_name']);
+
 		$settings           = array_filter($settings, fn ($value) => $value !== '');
 		$settings['sentry'] = isset($settings['sentry']);
 
@@ -27,6 +29,13 @@ final class SettingsSaver
 			if (json_last_error() === JSON_ERROR_NONE) {
 				$settings['presets'] = $presets;
 			}
+		}
+
+		if (isset($settings['pagination'])) {
+			$settings['dashboard'] = [
+				'pagination' => (int)$settings['pagination'],
+			];
+			unset($settings['pagination']);
 		}
 
 		$configContent = "<?php\n\nreturn [\n";
