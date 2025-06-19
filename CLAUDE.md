@@ -139,6 +139,13 @@ ESBuild handles modern JavaScript/CSS bundling with code splitting. Configuratio
 - **Token Sources**: POST data > X-CSRF-Token header > query parameters (in priority order)
 - **Integration**: Both classes are configured in container and work together seamlessly
 
+### SVG Sanitization
+- **SvgData**: Property data class that automatically sanitizes SVG content using `enshrined/svg-sanitize`
+- **Security Features**: Removes script tags, event handlers, foreign objects, and blocks remote references
+- **Validation**: Verifies content is valid SVG after sanitization, throws exception if invalid
+- **Configuration**: Sanitizer configured with `removeRemoteReferences(true)` for security
+- **User Control**: Sanitization can be disabled via `svgclean` setting (`['svgclean' => false]`), enabled by default
+
 ## Code Style & Conventions
 
 ### Naming Conventions
@@ -183,3 +190,12 @@ ESBuild handles modern JavaScript/CSS bundling with code splitting. Configuratio
 - **StringData**: Fixed HTMLSanitizer instantiation (no constructor parameters)
 - **FileUploadValidator**: Fixed null handling and unnecessary null coalescing operators
 - **All Security Classes**: Added proper type annotations and null safety checks
+
+### SVG Sanitization Implementation (2025-06-19)
+- **Change**: Added comprehensive SVG sanitization to SvgData using `enshrined/svg-sanitize`
+- **Security**: Automatically removes XSS vectors like script tags, event handlers, foreign objects
+- **Integration**: Seamless integration in constructor - all SVG content is sanitized before validation
+- **Files Updated**:
+  - `src/Domain/Property/Data/SvgData.php` - Added sanitization with security configuration
+  - `tests/Security/SvgSanitizationTest.php` - Comprehensive test suite for SVG security
+- **Configuration**: Sanitizer configured to block remote references and preserve readability
