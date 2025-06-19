@@ -31,6 +31,7 @@
 			"label"       : "Description",
 			"help"        : "A decription of the schema.",
 			"placeholder" : "About your schema.",
+			"settings"    : { "rows" : 3 },
 			"field"       : "textarea"
 		},
 		"required": {
