@@ -44,7 +44,9 @@ export default class Identifier extends TotalField {
 				// Skip reserved names
 				if (reservedNames.includes(name)) return;
 				// Only listen to the fields that are used in the autogen string
-				this.form.form.querySelector(`[name=${name}]`).addEventListener("change", e => {
+				const field = this.form.form.querySelector(`[name=${name}]`);
+				if (!field) return; // Skip if the field does not exist
+				field.addEventListener("change", e => {
 					if (this.isLocked()) return;
 					this.setValue(this.autogenId());
 					this.validateIdExists();
