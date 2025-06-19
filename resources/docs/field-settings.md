@@ -188,5 +188,6 @@ You can disable this by setting the following.
   "duplicateItemsAllowed" : false,
   "addChoices"            : true,
   "maxItemCount"          : -1,
+  "asString"              : false
 }
 ```

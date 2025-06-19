@@ -12,6 +12,7 @@ export default class ListField extends MultiSelectField {
 
 		// Define option defaults
 		const defaults = {
+			asString              : false,
 			allowHTML             : true,
 			removeItemButton      : true,
 			duplicateItemsAllowed : false,
@@ -26,6 +27,7 @@ export default class ListField extends MultiSelectField {
 			duplicateItemsAllowed : this.options.duplicateItemsAllowed,
 			addChoices            : this.options.addChoices,
 			maxItemCount          : this.options.maxItemCount,
+			renderSelectedChoices : 'always',
 			callbackOnInit        : this.initSortable.bind(this),
 		});
     }
@@ -59,6 +61,15 @@ export default class ListField extends MultiSelectField {
 
 		this.changed();
 	}
+
+	getValue() {
+		const value = super.getValue();
+
+		if (this.options.asString) {
+			return value.join(',');
+		}
+		return value;
+    }
 
     schema() {
         return {

@@ -232,7 +232,7 @@ class FormField
 		if (isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->options, $this->buildRelationalOptions());
 		}
-		if (is_array($this->value) && !empty($this->value)) {
+		if (is_array($this->value) && !empty($this->value) && !isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->value, $this->options); // value is first to maintain order
 		}
 
