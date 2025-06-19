@@ -112,8 +112,14 @@ final class CsvImporter
 	 */
 	public function importNewObject(int $offset, array $record): bool
 	{
-		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$this->logger->info(sprintf('Skipping import of record (%s) at row %s', $record['id'], $offset));
+		if (!isset($record['id'])) {
+			$this->logger->warning('Skipping import of record without ID');
+
+			return false;
+		}
+		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
+			$this->logger->warning($error);
 
 			return false;
 		}
