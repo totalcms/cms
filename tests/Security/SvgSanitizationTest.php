@@ -2,16 +2,16 @@
 
 namespace Tests\Security;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\SvgData;
 use TotalCMS\Utils\SVGSanitizer;
 
 /**
  * Test SVG Sanitization Security.
- *
- * @covers \TotalCMS\Domain\Property\Data\SvgData
- * @covers \TotalCMS\Utils\SVGSanitizer
  */
+#[CoversClass(SvgData::class)]
+#[CoversClass(SVGSanitizer::class)]
 final class SvgSanitizationTest extends TestCase
 {
 	public function testSanitizesValidSvgContent(): void

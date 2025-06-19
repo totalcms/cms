@@ -3,14 +3,14 @@
 namespace Tests\Security;
 
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Utils\CSRFTokenManager;
 
 /**
  * Test CSRF Token Manager functionality.
- *
- * @covers \TotalCMS\Utils\CSRFTokenManager
  */
+#[CoversClass(CSRFTokenManager::class)]
 final class CSRFTokenManagerTest extends TestCase
 {
 	private CSRFTokenManager $csrfManager;

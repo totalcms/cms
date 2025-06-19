@@ -2,6 +2,7 @@
 
 namespace Tests\Security;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -10,9 +11,8 @@ use TotalCMS\Middleware\ContentSecurityPolicyMiddleware;
 
 /**
  * Test Content Security Policy Middleware.
- *
- * @covers \TotalCMS\Middleware\ContentSecurityPolicyMiddleware
  */
+#[CoversClass(ContentSecurityPolicyMiddleware::class)]
 final class ContentSecurityPolicyMiddlewareTest extends TestCase
 {
 	private ContentSecurityPolicyMiddleware $middleware;

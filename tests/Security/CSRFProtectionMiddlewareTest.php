@@ -3,6 +3,7 @@
 namespace Tests\Security;
 
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,9 +15,8 @@ use TotalCMS\Utils\CSRFTokenManager;
 
 /**
  * Test CSRF Protection Middleware.
- *
- * @covers \TotalCMS\Middleware\CSRFProtectionMiddleware
  */
+#[CoversClass(CSRFProtectionMiddleware::class)]
 final class CSRFProtectionMiddlewareTest extends TestCase
 {
 	private CSRFProtectionMiddleware $middleware;

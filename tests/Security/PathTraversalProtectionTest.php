@@ -2,6 +2,7 @@
 
 namespace Tests\Security;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,10 +14,9 @@ use TotalCMS\Renderer\TwigRenderer;
 
 /**
  * Test Path Traversal Protection in various actions.
- *
- * @covers \TotalCMS\Action\Admin\AdminDocsAction
- * @covers \TotalCMS\Action\Assets\StaticPublicAssetsAction
  */
+#[CoversClass(AdminDocsAction::class)]
+#[CoversClass(StaticPublicAssetsAction::class)]
 final class PathTraversalProtectionTest extends TestCase
 {
 	private ServerRequestInterface $request;

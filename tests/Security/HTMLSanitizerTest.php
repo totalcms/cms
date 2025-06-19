@@ -2,16 +2,16 @@
 
 namespace Tests\Security;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Utils\HTMLSanitizer;
 use TotalCMS\Utils\HTMLSanitizerConfig;
 
 /**
  * Test HTML Sanitization Security.
- *
- * @covers \TotalCMS\Utils\HTMLSanitizer
- * @covers \TotalCMS\Utils\HTMLSanitizerConfig
  */
+#[CoversClass(HTMLSanitizer::class)]
+#[CoversClass(HTMLSanitizerConfig::class)]
 final class HTMLSanitizerTest extends TestCase
 {
 	protected function setUp(): void
