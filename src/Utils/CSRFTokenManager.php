@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Utils;
 
+use Odan\Session\PhpSession;
+
 /**
  * CSRF Token Manager for generating and validating anti-forgery tokens.
  *
@@ -15,9 +17,8 @@ final class CSRFTokenManager
 	private const TOKEN_LIFETIME = 3600; // 1 hour
 
 	public function __construct(
-		private Cipher $cipher,
+		private PhpSession $session,
 	) {
-		// Cipher available for future token encryption features if needed
 	}
 
 	/**
@@ -25,7 +26,7 @@ final class CSRFTokenManager
 	 */
 	public function generateToken(): string
 	{
-		if (session_status() !== PHP_SESSION_ACTIVE) {
+		if (!$this->session->isStarted()) {
 			throw new \RuntimeException('Session must be active to generate CSRF token');
 		}
 
@@ -33,10 +34,10 @@ final class CSRFTokenManager
 		$token = bin2hex(random_bytes(self::TOKEN_LENGTH));
 
 		// Store token with timestamp in session
-		$_SESSION[self::SESSION_KEY] = [
+		$this->session->set(self::SESSION_KEY, [
 			'token'      => $token,
 			'created_at' => time(),
-		];
+		]);
 
 		return $token;
 	}
@@ -46,7 +47,7 @@ final class CSRFTokenManager
 	 */
 	public function getToken(): string
 	{
-		if (session_status() !== PHP_SESSION_ACTIVE) {
+		if (!$this->session->isStarted()) {
 			throw new \RuntimeException('Session must be active to get CSRF token');
 		}
 
@@ -55,7 +56,8 @@ final class CSRFTokenManager
 			return $this->generateToken();
 		}
 
-		return $_SESSION[self::SESSION_KEY]['token'];
+		$sessionData = $this->session->get(self::SESSION_KEY);
+		return $sessionData['token'];
 	}
 
 	/**
@@ -63,20 +65,20 @@ final class CSRFTokenManager
 	 */
 	public function validateToken(string $submittedToken): bool
 	{
-		if (session_status() !== PHP_SESSION_ACTIVE) {
+		if (!$this->session->isStarted()) {
 			return false;
 		}
 
 		// Check if we have a session token
-		if (!isset($_SESSION[self::SESSION_KEY])) {
+		if (!$this->session->has(self::SESSION_KEY)) {
 			return false;
 		}
 
-		$sessionData = $_SESSION[self::SESSION_KEY];
+		$sessionData = $this->session->get(self::SESSION_KEY);
 
 		// Check token expiration
 		if ((time() - $sessionData['created_at']) > self::TOKEN_LIFETIME) {
-			unset($_SESSION[self::SESSION_KEY]);
+			$this->session->delete(self::SESSION_KEY);
 
 			return false;
 		}
@@ -90,8 +92,8 @@ final class CSRFTokenManager
 	 */
 	public function clearToken(): void
 	{
-		if (session_status() === PHP_SESSION_ACTIVE) {
-			unset($_SESSION[self::SESSION_KEY]);
+		if ($this->session->isStarted()) {
+			$this->session->delete(self::SESSION_KEY);
 		}
 	}
 
@@ -125,11 +127,11 @@ final class CSRFTokenManager
 	 */
 	private function hasValidToken(): bool
 	{
-		if (!isset($_SESSION[self::SESSION_KEY])) {
+		if (!$this->session->has(self::SESSION_KEY)) {
 			return false;
 		}
 
-		$sessionData = $_SESSION[self::SESSION_KEY];
+		$sessionData = $this->session->get(self::SESSION_KEY);
 
 		// Check required fields
 		if (!isset($sessionData['token'], $sessionData['created_at'])) {

@@ -268,7 +268,7 @@ return [
 
 	CSRFTokenManager::class => function (ContainerInterface $container) {
 		return new CSRFTokenManager(
-			$container->get(Cipher::class)
+			$container->get(PhpSession::class)
 		);
 	},
 

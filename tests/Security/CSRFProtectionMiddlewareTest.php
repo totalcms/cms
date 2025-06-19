@@ -2,6 +2,7 @@
 
 namespace Tests\Security;
 
+use Odan\Session\PhpSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,7 +10,6 @@ use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
-use TotalCMS\Utils\Cipher;
 use TotalCMS\Utils\CSRFTokenManager;
 
 /**
@@ -21,6 +21,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 {
 	private CSRFProtectionMiddleware $middleware;
 	private CSRFTokenManager $csrfManager;
+	private PhpSession $session;
 	private ServerRequestInterface $request;
 	private RequestHandlerInterface $handler;
 	private ResponseInterface $response;
@@ -29,16 +30,14 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 	{
 		parent::setUp();
 		
-		// Start session for testing
-		if (session_status() !== PHP_SESSION_ACTIVE) {
-			session_start();
-		}
+		// Create PhpSession instance for testing
+		$this->session = new PhpSession();
+		$this->session->start();
 		
 		// Clear any existing CSRF data
-		unset($_SESSION['csrf_token']);
+		$this->session->delete('csrf_token');
 		
-		$cipher = new Cipher();
-		$this->csrfManager = new CSRFTokenManager($cipher);
+		$this->csrfManager = new CSRFTokenManager($this->session);
 		$this->middleware = new CSRFProtectionMiddleware($this->csrfManager);
 		
 		// Create mocks
@@ -55,8 +54,9 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 	protected function tearDown(): void
 	{
 		// Clean up session data
-		if (isset($_SESSION['csrf_token'])) {
-			unset($_SESSION['csrf_token']);
+		if ($this->session->isStarted()) {
+			$this->session->delete('csrf_token');
+			$this->session->destroy();
 		}
 		
 		parent::tearDown();
