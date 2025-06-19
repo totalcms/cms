@@ -62,6 +62,25 @@ export default class TotalFormManager {
 				this.saveAllUnsavedForms();
 			}
         });
+		// Prevent Enter key from submitting forms
+		document.addEventListener("keydown", (event) => {
+			if (event.key === "Enter") {
+				const target = event.target;
+				const form = target.closest("form");
+				
+				// Only prevent Enter on forms with totalform or simple-form classes
+				if (form && (form.classList.contains("totalform") || form.classList.contains("simple-form"))) {
+					// Allow Enter in textareas and certain input types
+					if (target.tagName === "TEXTAREA" || 
+						target.type === "search" || 
+						target.classList.contains("allow-enter")) {
+						return;
+					}
+					
+					event.preventDefault();
+				}
+			}
+        });
 	}
 
     registerButtons() {
