@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Import;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -20,6 +21,7 @@ final class JsonImporter
 		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
 		private ObjectImporter $objectImporter,
+		private IndexBuilder $indexBuilder,
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
@@ -68,6 +70,9 @@ final class JsonImporter
 				);
 			}
 		}
+
+		// Rebuild index
+		$this->indexBuilder->buildIndex($collection);
 
 		return $importCount;
 	}

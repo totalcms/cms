@@ -5,29 +5,27 @@ namespace TotalCMS\Domain\Import;
 use Cake\Chronos\Chronos;
 use Embed\Embed;
 use League\Uri\Uri;
-use Psr\Log\LoggerInterface;
 use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LoggerFactory;
+use Psr\Log\LoggerInterface;
 
 final class UrlImporter
 {
-	private ObjectRepository $storage;
 	private LoggerInterface $logger;
-	private CakeValidationFactory $validationFactory;
 
 	public function __construct(
-		ObjectRepository $storage,
-		CakeValidationFactory $validationFactory,
+		private ObjectRepository $storage,
+		private CakeValidationFactory $validationFactory,
+		private IndexBuilder $indexBuilder,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->storage           = $storage;
-		$this->validationFactory = $validationFactory;
-		$this->logger            = $loggerFactory
-			->addFileHandler('url_importer.log')
+		$this->logger = $loggerFactory
+			->addFileHandler('importer.log')
 			->createLogger();
 	}
 
@@ -61,6 +59,9 @@ final class UrlImporter
 
 			$this->storage->saveObject($collection, new ObjectData($record['id'], $record));
 			// @todo Add logic that will download the image and save it to the post
+
+			// Rebuild index
+			$this->indexBuilder->buildIndex($collection);
 		} catch (\Exception $exception) {
 			$this->logger->error(
 				sprintf('Error importing URL: %s', $exception->getMessage())
