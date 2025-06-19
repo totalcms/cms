@@ -32,6 +32,7 @@ final class JobQueueStats
 		$table = HTMLUtils::element('table', $rows, [
 			'class'           => 'jobqueue-stats jobqueue-by-type cms-colors',
 			'data-collection' => $this->collection,
+			'data-api'        => $this->api,
 		]);
 
 		$header  = HTMLUtils::element('h4', $header);

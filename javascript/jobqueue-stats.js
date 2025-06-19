@@ -6,7 +6,7 @@ export default class JobQueueStatsTable {
     constructor(table) {
         this.table = table;
         this.api   = new TotalCMS({
-			url: this.table.dataset.api,
+			url: this.table.dataset.api || "",
 		});
         this.route = "/jobqueue/stats";
 
