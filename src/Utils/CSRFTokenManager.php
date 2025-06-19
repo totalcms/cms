@@ -57,6 +57,7 @@ final class CSRFTokenManager
 		}
 
 		$sessionData = $this->session->get(self::SESSION_KEY);
+
 		return $sessionData['token'];
 	}
 

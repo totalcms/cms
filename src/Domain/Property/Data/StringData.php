@@ -12,7 +12,7 @@ class StringData extends PropertyData
 		// Sanitize HTML content unless explicitly disabled
 		$config        = Config::init();
 		$globalEnabled = $config->htmlclean['enabled'] ?? true;
-		$fieldEnabled  = $this->settings['htmlclean']  ?? true;
+		$fieldEnabled  = $this->settings['htmlclean'] ?? true;
 
 		if ($this->containsHTML() && $globalEnabled && $fieldEnabled !== false) {
 			// Use HTML sanitizer to clean the text

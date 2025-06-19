@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Import;
 use Cake\Chronos\Chronos;
 use Embed\Embed;
 use League\Uri\Uri;
+use Psr\Log\LoggerInterface;
 use Selective\Validation\Exception\ValidationException;
 use Selective\Validation\Factory\CakeValidationFactory;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -12,7 +13,6 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LoggerFactory;
-use Psr\Log\LoggerInterface;
 
 final class UrlImporter
 {

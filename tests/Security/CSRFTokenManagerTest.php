@@ -7,8 +7,8 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Utils\CSRFTokenManager;
 
 /**
- * Test CSRF Token Manager functionality
- * 
+ * Test CSRF Token Manager functionality.
+ *
  * @covers \TotalCMS\Utils\CSRFTokenManager
  */
 final class CSRFTokenManagerTest extends TestCase
@@ -19,14 +19,14 @@ final class CSRFTokenManagerTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		
+
 		// Create PhpSession instance for testing
 		$this->session = new PhpSession();
 		$this->session->start();
-		
+
 		// Clear any existing CSRF data
 		$this->session->delete('csrf_token');
-		
+
 		$this->csrfManager = new CSRFTokenManager($this->session);
 	}
 
@@ -37,14 +37,14 @@ final class CSRFTokenManagerTest extends TestCase
 			$this->session->delete('csrf_token');
 			$this->session->destroy();
 		}
-		
+
 		parent::tearDown();
 	}
 
 	public function testGenerateTokenCreatesValidToken(): void
 	{
 		$token = $this->csrfManager->generateToken();
-		
+
 		$this->assertIsString($token);
 		$this->assertEquals(64, strlen($token)); // 32 bytes = 64 hex chars
 		$this->assertMatchesRegularExpression('/^[a-f0-9]+$/', $token);
@@ -53,7 +53,7 @@ final class CSRFTokenManagerTest extends TestCase
 	public function testGenerateTokenStoresInSession(): void
 	{
 		$token = $this->csrfManager->generateToken();
-		
+
 		$this->assertTrue($this->session->has('csrf_token'));
 		$sessionData = $this->session->get('csrf_token');
 		$this->assertArrayHasKey('token', $sessionData);
@@ -65,14 +65,14 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		$token1 = $this->csrfManager->generateToken();
 		$token2 = $this->csrfManager->getToken();
-		
+
 		$this->assertEquals($token1, $token2);
 	}
 
 	public function testGetTokenGeneratesNewTokenIfNoneExists(): void
 	{
 		$token = $this->csrfManager->getToken();
-		
+
 		$this->assertIsString($token);
 		$this->assertEquals(64, strlen($token));
 		$this->assertTrue($this->session->has('csrf_token'));
@@ -80,9 +80,9 @@ final class CSRFTokenManagerTest extends TestCase
 
 	public function testValidateTokenWithValidToken(): void
 	{
-		$token = $this->csrfManager->generateToken();
+		$token   = $this->csrfManager->generateToken();
 		$isValid = $this->csrfManager->validateToken($token);
-		
+
 		$this->assertTrue($isValid);
 	}
 
@@ -90,7 +90,7 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		$this->csrfManager->generateToken();
 		$isValid = $this->csrfManager->validateToken('invalid_token');
-		
+
 		$this->assertFalse($isValid);
 	}
 
@@ -98,7 +98,7 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		$this->csrfManager->generateToken();
 		$isValid = $this->csrfManager->validateToken('');
-		
+
 		$this->assertFalse($isValid);
 	}
 
@@ -106,21 +106,21 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		// Don't generate a token first
 		$isValid = $this->csrfManager->validateToken('some_token');
-		
+
 		$this->assertFalse($isValid);
 	}
 
 	public function testValidateTokenWithExpiredToken(): void
 	{
 		$token = $this->csrfManager->generateToken();
-		
+
 		// Manually set the token as expired
-		$expiredData = $this->session->get('csrf_token');
+		$expiredData               = $this->session->get('csrf_token');
 		$expiredData['created_at'] = time() - 7200; // 2 hours ago
 		$this->session->set('csrf_token', $expiredData);
-		
+
 		$isValid = $this->csrfManager->validateToken($token);
-		
+
 		$this->assertFalse($isValid);
 		$this->assertFalse($this->session->has('csrf_token')); // Should be cleaned up
 	}
@@ -129,7 +129,7 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		$this->csrfManager->generateToken();
 		$this->assertTrue($this->session->has('csrf_token'));
-		
+
 		$this->csrfManager->clearToken();
 		$this->assertFalse($this->session->has('csrf_token'));
 	}
@@ -137,7 +137,7 @@ final class CSRFTokenManagerTest extends TestCase
 	public function testGetTokenFieldReturnsValidHTML(): void
 	{
 		$html = $this->csrfManager->getTokenField();
-		
+
 		$this->assertStringContainsString('<input type="hidden"', $html);
 		$this->assertStringContainsString('name="csrf_token"', $html);
 		$this->assertStringContainsString('value="', $html);
@@ -147,7 +147,7 @@ final class CSRFTokenManagerTest extends TestCase
 	public function testGetTokenForAjaxReturnsCorrectStructure(): void
 	{
 		$ajaxData = $this->csrfManager->getTokenForAjax();
-		
+
 		$this->assertIsArray($ajaxData);
 		$this->assertArrayHasKey('name', $ajaxData);
 		$this->assertArrayHasKey('value', $ajaxData);
@@ -160,7 +160,7 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		$token1 = $this->csrfManager->generateToken();
 		$token2 = $this->csrfManager->regenerateToken();
-		
+
 		$this->assertNotEquals($token1, $token2);
 		$sessionData = $this->session->get('csrf_token');
 		$this->assertEquals($token2, $sessionData['token']);
@@ -174,39 +174,39 @@ final class CSRFTokenManagerTest extends TestCase
 
 	public function testValidateFromRequestWithPostData(): void
 	{
-		$token = $this->csrfManager->generateToken();
+		$token    = $this->csrfManager->generateToken();
 		$postData = ['csrf_token' => $token];
-		
+
 		$isValid = $this->csrfManager->validateFromRequest($postData);
 		$this->assertTrue($isValid);
 	}
 
 	public function testValidateFromRequestWithHeader(): void
 	{
-		$token = $this->csrfManager->generateToken();
+		$token   = $this->csrfManager->generateToken();
 		$headers = ['X-CSRF-Token' => $token];
-		
+
 		$isValid = $this->csrfManager->validateFromRequest([], $headers);
 		$this->assertTrue($isValid);
 	}
 
 	public function testValidateFromRequestWithQueryData(): void
 	{
-		$token = $this->csrfManager->generateToken();
+		$token     = $this->csrfManager->generateToken();
 		$queryData = ['csrf_token' => $token];
-		
+
 		$isValid = $this->csrfManager->validateFromRequest([], [], $queryData);
 		$this->assertTrue($isValid);
 	}
 
 	public function testValidateFromRequestPrioritizesPostOverHeader(): void
 	{
-		$validToken = $this->csrfManager->generateToken();
+		$validToken   = $this->csrfManager->generateToken();
 		$invalidToken = 'invalid_token';
-		
+
 		$postData = ['csrf_token' => $validToken];
-		$headers = ['X-CSRF-Token' => $invalidToken];
-		
+		$headers  = ['X-CSRF-Token' => $invalidToken];
+
 		$isValid = $this->csrfManager->validateFromRequest($postData, $headers);
 		$this->assertTrue($isValid);
 	}
@@ -214,7 +214,7 @@ final class CSRFTokenManagerTest extends TestCase
 	public function testValidateFromRequestWithNoValidToken(): void
 	{
 		$this->csrfManager->generateToken();
-		
+
 		$isValid = $this->csrfManager->validateFromRequest([], [], []);
 		$this->assertFalse($isValid);
 	}
@@ -226,7 +226,7 @@ final class CSRFTokenManagerTest extends TestCase
 			$this->csrfManager->clearToken();
 			$tokens[] = $this->csrfManager->generateToken();
 		}
-		
+
 		$uniqueTokens = array_unique($tokens);
 		$this->assertEquals(count($tokens), count($uniqueTokens), 'All tokens should be unique');
 	}
@@ -235,10 +235,10 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		// Destroy session
 		session_destroy();
-		
+
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('Session must be active to generate CSRF token');
-		
+
 		$this->csrfManager->generateToken();
 	}
 
@@ -246,10 +246,10 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		// Destroy session
 		session_destroy();
-		
+
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('Session must be active to get CSRF token');
-		
+
 		$this->csrfManager->getToken();
 	}
 
@@ -257,10 +257,10 @@ final class CSRFTokenManagerTest extends TestCase
 	{
 		// Create token first
 		$token = $this->csrfManager->generateToken();
-		
+
 		// Destroy session
 		session_destroy();
-		
+
 		$isValid = $this->csrfManager->validateToken($token);
 		$this->assertFalse($isValid);
 	}

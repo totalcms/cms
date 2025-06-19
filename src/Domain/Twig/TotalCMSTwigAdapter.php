@@ -505,6 +505,7 @@ NGINX;
 
 	/**
 	 * @param array<string,string> $options
+	 *
 	 * @return array<string,mixed>
 	 */
 	public function color(string $id, array $options = []): array
@@ -525,6 +526,7 @@ NGINX;
 
 	/**
 	 * @param array<string,string> $options
+	 *
 	 * @return array<string,mixed>
 	 */
 	public function colour(string $id, array $options = []): array

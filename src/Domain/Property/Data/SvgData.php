@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use TotalCMS\Support\Config;
 use TotalCMS\Utils\SVGSanitizer;
 
 /**

@@ -45,7 +45,7 @@ final class Config
 		$this->session    = $settings['session'];
 		$this->auth       = $settings['auth'];
 		$this->notfound   = $settings['notfound'];
-		$this->htmlclean = $settings['htmlclean'] ?? [];
+		$this->htmlclean  = $settings['htmlclean'] ?? [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);

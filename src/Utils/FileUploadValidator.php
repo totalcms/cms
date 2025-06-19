@@ -181,11 +181,11 @@ final class FileUploadValidator
 		$filename = basename($filename);
 
 		// Remove or replace dangerous characters
-		$filename = (string) preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
+		$filename = (string)preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
 
 		// Prevent hidden files and multiple dots
-		$filename = (string) preg_replace('/^\.+/', '', $filename);
-		$filename = (string) preg_replace('/\.{2,}/', '.', $filename);
+		$filename = (string)preg_replace('/^\.+/', '', $filename);
+		$filename = (string)preg_replace('/\.{2,}/', '.', $filename);
 
 		// Ensure filename is not empty after sanitization
 		if (empty($filename)) {

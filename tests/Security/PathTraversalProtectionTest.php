@@ -12,8 +12,8 @@ use TotalCMS\Action\Assets\StaticPublicAssetsAction;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
- * Test Path Traversal Protection in various actions
- * 
+ * Test Path Traversal Protection in various actions.
+ *
  * @covers \TotalCMS\Action\Admin\AdminDocsAction
  * @covers \TotalCMS\Action\Assets\StaticPublicAssetsAction
  */
@@ -26,18 +26,18 @@ final class PathTraversalProtectionTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		
-		$this->request = $this->createMock(ServerRequestInterface::class);
+
+		$this->request  = $this->createMock(ServerRequestInterface::class);
 		$this->response = $this->createMock(ResponseInterface::class);
-		$this->uri = $this->createMock(UriInterface::class);
-		
+		$this->uri      = $this->createMock(UriInterface::class);
+
 		$this->request->method('getUri')->willReturn($this->uri);
 		$this->uri->method('getPath')->willReturn('/test');
 		$this->uri->method('getQuery')->willReturn('');
 	}
 
 	/**
-	 * Test AdminDocsAction path traversal protection
+	 * Test AdminDocsAction path traversal protection.
 	 */
 	public function testAdminDocsActionBlocksPathTraversal(): void
 	{
@@ -48,12 +48,12 @@ final class PathTraversalProtectionTest extends TestCase
 			'../../../../var/log/auth.log',
 			'../../../config/database.php',
 		];
-		
+
 		foreach ($pathTraversalAttempts as $maliciousPage) {
 			// Test the sanitization logic that AdminDocsAction uses
 			$sanitized = basename($maliciousPage);
 			$sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '', $sanitized);
-			
+
 			// Should either be empty (default to index) or sanitized filename
 			$this->assertTrue(
 				empty($sanitized) || !str_contains($sanitized, '..'),
@@ -65,12 +65,12 @@ final class PathTraversalProtectionTest extends TestCase
 	public function testAdminDocsActionAllowsLegitimatePages(): void
 	{
 		$legitimatePages = ['api', 'setup', 'configuration', 'templates'];
-		
+
 		foreach ($legitimatePages as $page) {
 			// Test the sanitization logic preserves legitimate pages
 			$sanitized = basename($page);
 			$sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '', $sanitized);
-			
+
 			$this->assertEquals($page, $sanitized, "Legitimate page should not be changed: $page");
 		}
 	}
@@ -84,12 +84,12 @@ final class PathTraversalProtectionTest extends TestCase
 			'page|whoami',
 			'page;rm -rf /',
 		];
-		
+
 		foreach ($maliciousInputs as $maliciousPage) {
 			// Test the sanitization removes dangerous characters
 			$sanitized = basename($maliciousPage);
 			$sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '', $sanitized);
-			
+
 			$this->assertStringNotContainsString('<script>', $sanitized);
 			$this->assertStringNotContainsString('?', $sanitized);
 			$this->assertStringNotContainsString('&', $sanitized);
@@ -99,17 +99,17 @@ final class PathTraversalProtectionTest extends TestCase
 	}
 
 	/**
-	 * Test StaticPublicAssetsAction path traversal protection
+	 * Test StaticPublicAssetsAction path traversal protection.
 	 */
 	public function testStaticAssetsActionBlocksPathTraversal(): void
 	{
 		// Create a temporary assets directory for testing
 		$tempDir = sys_get_temp_dir() . '/totalcms_test_assets_' . uniqid();
 		mkdir($tempDir, 0755, true);
-		
+
 		try {
 			$action = new StaticPublicAssetsAction();
-			
+
 			$pathTraversalAttempts = [
 				'../../../etc/passwd',
 				'..\\..\\..\\windows\\system32\\config\\sam',
@@ -117,10 +117,10 @@ final class PathTraversalProtectionTest extends TestCase
 				'../../../config/database.php',
 				'..%2F..%2F..%2Fetc%2Fpasswd', // URL encoded
 			];
-			
+
 			foreach ($pathTraversalAttempts as $maliciousAsset) {
 				$args = ['asset' => $maliciousAsset];
-				
+
 				$this->expectException(HttpNotFoundException::class);
 				$action($this->request, $this->response, $args);
 			}
@@ -135,7 +135,7 @@ final class PathTraversalProtectionTest extends TestCase
 	public function testStaticAssetsActionBlocksInvalidCharacters(): void
 	{
 		$action = new StaticPublicAssetsAction();
-		
+
 		$invalidAssets = [
 			'asset<script>alert(1)</script>.js',
 			'asset|whoami.css',
@@ -143,13 +143,13 @@ final class PathTraversalProtectionTest extends TestCase
 			'asset`command`.jpg',
 			'asset$(command).gif',
 		];
-		
+
 		foreach ($invalidAssets as $invalidAsset) {
 			$args = ['asset' => $invalidAsset];
-			
+
 			$this->expectException(HttpNotFoundException::class);
 			$this->expectExceptionMessage('Invalid asset path');
-			
+
 			$action($this->request, $this->response, $args);
 		}
 	}
@@ -159,7 +159,7 @@ final class PathTraversalProtectionTest extends TestCase
 		// We can't easily test successful asset serving without setting up the full directory structure,
 		// but we can test that valid asset paths pass the validation steps
 		$action = new StaticPublicAssetsAction();
-		
+
 		$legitimateAssets = [
 			'css/style.css',
 			'js/app.js',
@@ -168,10 +168,10 @@ final class PathTraversalProtectionTest extends TestCase
 			'icons/favicon.ico',
 			'subfolder/file.txt',
 		];
-		
+
 		foreach ($legitimateAssets as $asset) {
 			$args = ['asset' => $asset];
-			
+
 			// These should fail with "Asset not found" (404) rather than "Invalid asset path" (403)
 			// This proves the path validation passed
 			try {
@@ -185,24 +185,24 @@ final class PathTraversalProtectionTest extends TestCase
 	}
 
 	/**
-	 * Test basename() function behavior for security
+	 * Test basename() function behavior for security.
 	 */
 	public function testBasenameSecurityBehavior(): void
 	{
 		$testCases = [
-			'../../../etc/passwd' => 'passwd',
-			'/var/log/auth.log' => 'auth.log',
+			'../../../etc/passwd'             => 'passwd',
+			'/var/log/auth.log'               => 'auth.log',
 			'../../../../config/database.php' => 'database.php',
-			'normal-file.txt' => 'normal-file.txt',
-			'..%2F..%2F..%2Fetc%2Fpasswd' => '..%2F..%2F..%2Fetc%2Fpasswd', // URL encoding not decoded by basename
+			'normal-file.txt'                 => 'normal-file.txt',
+			'..%2F..%2F..%2Fetc%2Fpasswd'     => '..%2F..%2F..%2Fetc%2Fpasswd', // URL encoding not decoded by basename
 		];
-		
+
 		// Windows path behavior is platform-specific, so test Unix paths only
 		foreach ($testCases as $input => $expected) {
 			$result = basename($input);
 			$this->assertEquals($expected, $result, "basename('$input') should return '$expected'");
 		}
-		
+
 		// Test Windows-style paths separately with platform detection
 		if (DIRECTORY_SEPARATOR === '\\') {
 			$windowsResult = basename('..\\..\\..\\windows\\system32\\config\\sam');
@@ -211,39 +211,38 @@ final class PathTraversalProtectionTest extends TestCase
 	}
 
 	/**
-	 * Test realpath() security validation
+	 * Test realpath() security validation.
 	 */
 	public function testRealpathSecurityValidation(): void
 	{
 		// Create a test directory structure
-		$tempDir = sys_get_temp_dir() . '/totalcms_security_test_' . uniqid();
-		$assetsDir = $tempDir . '/assets';
+		$tempDir       = sys_get_temp_dir() . '/totalcms_security_test_' . uniqid();
+		$assetsDir     = $tempDir . '/assets';
 		$restrictedDir = $tempDir . '/restricted';
-		
+
 		mkdir($assetsDir, 0755, true);
 		mkdir($restrictedDir, 0755, true);
-		
+
 		// Create test files
 		file_put_contents($assetsDir . '/test.txt', 'safe content');
 		file_put_contents($restrictedDir . '/secret.txt', 'restricted content');
-		
+
 		try {
 			// Test that valid paths within assets directory are allowed
-			$validPath = $assetsDir . '/test.txt';
+			$validPath     = $assetsDir . '/test.txt';
 			$resolvedValid = realpath($validPath);
 			$this->assertStringStartsWith(realpath($assetsDir), $resolvedValid);
-			
+
 			// Test that paths outside assets directory would be blocked
-			$invalidPath = $assetsDir . '/../restricted/secret.txt';
+			$invalidPath     = $assetsDir . '/../restricted/secret.txt';
 			$resolvedInvalid = realpath($invalidPath);
 			$this->assertStringStartsWith(realpath($restrictedDir), $resolvedInvalid);
 			$this->assertThat($resolvedInvalid, $this->logicalNot($this->stringStartsWith(realpath($assetsDir))));
-			
+
 			// Test non-existent paths
-			$nonExistentPath = $assetsDir . '/nonexistent.txt';
+			$nonExistentPath     = $assetsDir . '/nonexistent.txt';
 			$resolvedNonExistent = realpath($nonExistentPath);
 			$this->assertFalse($resolvedNonExistent);
-			
 		} finally {
 			// Clean up
 			unlink($assetsDir . '/test.txt');
@@ -255,19 +254,19 @@ final class PathTraversalProtectionTest extends TestCase
 	}
 
 	/**
-	 * Test character filtering for security
+	 * Test character filtering for security.
 	 */
 	public function testCharacterFiltering(): void
 	{
 		$testCases = [
-			'normal-file_123.txt' => 'normal-file_123.txt', // Should remain unchanged
+			'normal-file_123.txt'           => 'normal-file_123.txt', // Should remain unchanged
 			'file<script>alert(1)</script>' => 'file_script_alert_1___script_', // Dangerous chars replaced
-			'file|whoami' => 'file_whoami', // Pipe replaced
-			'file;rm -rf /' => 'file_rm_-rf__', // Semicolon and spaces replaced
-			'file`command`' => 'file_command_', // Backticks replaced
-			'file$(command)' => 'file__command_', // Dollar and parens replaced
+			'file|whoami'                   => 'file_whoami', // Pipe replaced
+			'file;rm -rf /'                 => 'file_rm_-rf__', // Semicolon and spaces replaced
+			'file`command`'                 => 'file_command_', // Backticks replaced
+			'file$(command)'                => 'file__command_', // Dollar and parens replaced
 		];
-		
+
 		foreach ($testCases as $input => $expected) {
 			$result = preg_replace('/[^a-zA-Z0-9._-]/', '_', $input);
 			$this->assertEquals($expected, $result, "Character filtering for '$input' failed");
@@ -275,20 +274,20 @@ final class PathTraversalProtectionTest extends TestCase
 	}
 
 	/**
-	 * Test that default page fallback works
+	 * Test that default page fallback works.
 	 */
 	public function testDefaultPageFallback(): void
 	{
 		// Test that empty/null page defaults to 'index'
-		$page = null;
+		$page      = null;
 		$defaulted = $page ?? 'index';
-		
-		$this->assertEquals('index', $defaulted, "Should default to index when page is null");
-		
+
+		$this->assertEquals('index', $defaulted, 'Should default to index when page is null');
+
 		// Test with empty string
-		$page = '';
+		$page      = '';
 		$defaulted = $page ?: 'index';
-		
-		$this->assertEquals('index', $defaulted, "Should default to index when page is empty");
+
+		$this->assertEquals('index', $defaulted, 'Should default to index when page is empty');
 	}
 }

@@ -57,6 +57,7 @@ final class HTMLSanitizer
 		$html = (string)preg_replace('/\s*on\w+\s*=\s*"[^"]*"/i', '', $html);
 		$html = (string)preg_replace('/\s*on\w+\s*=\s*\'[^\']*\'/i', '', $html);
 		$html = (string)preg_replace('/\s*on\w+\s*=\s*[^"\'\s>]+/i', '', $html);
+
 		return $html;
 	}
 
@@ -65,6 +66,7 @@ final class HTMLSanitizer
 		$html = (string)preg_replace('/javascript:/i', '', $html);
 		$html = (string)preg_replace('/vbscript:/i', '', $html);
 		$html = (string)preg_replace('/data:text\/html/i', '', $html);
+
 		return $html;
 	}
 
@@ -80,6 +82,7 @@ final class HTMLSanitizer
 			$html = (string)preg_replace("/<{$tag}[^>]*>.*?<\/{$tag}>/is", '', $html);
 			$html = (string)preg_replace("/<{$tag}[^>]*\/?>/i", '', $html);
 		}
+
 		return $html;
 	}
 
