@@ -74,6 +74,7 @@ final class TotalCMSTwigFilters
 		'sortCollection',
 		'paginate',
 		'svgToSymbol',
+		'markdown',
 	];
 
 	/** @return array<TwigFilter> */
@@ -580,5 +581,26 @@ final class TotalCMSTwigFilters
 	public static function print_r(mixed $variable): string
 	{
 		return TotalCMSTwigFunctions::print_r($variable);
+	}
+
+	// -------------------------
+	// Markdown Aliases
+	// -------------------------
+
+	public static function markdown(mixed $value): string
+	{
+		// This method serves as an alias for the built-in markdown_to_html filter
+		// Uses the same ParsedownMarkdown implementation as the native filter
+		if (!is_string($value)) {
+			$value = (string)$value;
+		}
+		
+		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension
+		static $markdown = null;
+		if ($markdown === null) {
+			$markdown = new \TotalCMS\Domain\Twig\ParsedownMarkdown();
+		}
+		
+		return $markdown->convert($value);
 	}
 }
