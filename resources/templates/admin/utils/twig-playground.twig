@@ -64,11 +64,19 @@
 	margin-bottom: 1rem;
 }
 
-.CodeMirror {
-	height     : 40vh;
-	max-height : 600px;
+.editor-container .CodeMirror {
+	min-height : 200px;
 	border     : 1px solid #ddd;
 	font-size  : 14px;
+}
+
+.editor-container .CodeMirror-scroll {
+	overflow: visible !important;
+}
+
+.editor-container .CodeMirror-scrollbar-filler,
+.editor-container .CodeMirror-gutter-filler {
+	display: none;
 }
 
 .playground-results {
@@ -86,8 +94,16 @@
 
 .html-output-editor .CodeMirror {
 	height: auto;
-	max-height: 400px;
 	min-height: 100px;
+}
+
+.html-output-editor .CodeMirror-scroll {
+	overflow: visible !important;
+}
+
+.html-output-editor .CodeMirror-scrollbar-filler,
+.html-output-editor .CodeMirror-gutter-filler {
+	display: none;
 }
 
 /* Original syntax highlighting for Twig editor */
@@ -140,7 +156,24 @@ document.addEventListener('DOMContentLoaded', function() {
 		matchBrackets: true,
 		indentUnit: 2,
 		tabSize: 2,
-		autofocus: true
+		autofocus: true,
+		viewportMargin: Infinity // This makes it auto-expand
+	});
+	
+	// Function to resize editor to content
+	function resizeEditor() {
+		const lineHeight = editor.defaultTextHeight();
+		const lineCount = Math.max(editor.lineCount(), 10); // Minimum 10 lines
+		const totalHeight = (lineCount * lineHeight) + 20; // Add some padding
+		editor.setSize(null, totalHeight);
+	}
+	
+	// Initial resize
+	resizeEditor();
+	
+	// Resize on content change
+	editor.on('changes', function() {
+		setTimeout(resizeEditor, 0);
 	});
 
 	// Load saved content from localStorage
@@ -211,7 +244,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		
 		// Add custom class and size
 		outputContainer.classList.add('html-output-editor');
-		outputEditor.setSize(null, 'auto');
+		
+		// Set height to content height to avoid scrollbars
+		const lineHeight = outputEditor.defaultTextHeight();
+		const lineCount = outputEditor.lineCount();
+		const totalHeight = (lineCount * lineHeight) + 40; // Add some padding
+		
+		outputEditor.setSize(null, totalHeight);
 		
 		// Force refresh after a moment
 		setTimeout(() => {
