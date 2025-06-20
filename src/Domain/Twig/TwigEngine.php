@@ -7,9 +7,7 @@ use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Html\HtmlExtension;
-use League\CommonMark\CommonMarkConverter;
 use Twig\Extra\Markdown\MarkdownExtension;
-use Twig\Extra\Markdown\MarkdownInterface;
 use Twig\Extra\Markdown\MarkdownRuntime;
 use Twig\Extra\String\StringExtension;
 use Twig\Loader\FilesystemLoader as TwigFilesystemLoader;
@@ -54,23 +52,7 @@ final class TwigEngine
 			public function load(string $class)
 			{
 				if (MarkdownRuntime::class === $class) {
-					// Create a CommonMark converter with the desired configuration
-					$converter = new CommonMarkConverter([
-						'html_input' => 'strip',
-						'allow_unsafe_links' => false,
-					]);
-					
-					// Wrap it in an anonymous class that implements MarkdownInterface
-					$markdown = new class($converter) implements MarkdownInterface {
-						public function __construct(private CommonMarkConverter $converter) {}
-						
-						public function convert(string $body): string
-						{
-							return $this->converter->convert($body)->getContent();
-						}
-					};
-					
-					return new MarkdownRuntime($markdown);
+					return new MarkdownRuntime(new ParsedownMarkdown());
 				}
 
 				return null;
