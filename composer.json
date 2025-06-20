@@ -31,6 +31,7 @@
     "illuminate/collections": "^11.45",
     "khanzadimahdi/uploadmanager": "^1.0",
     "ksubileau/color-thief-php": "^2.0",
+    "league/commonmark": "^2.7",
     "league/csv": "^9.6",
     "league/flysystem": "^3.2",
     "league/fractal": "^0.20.1",
