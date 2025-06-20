@@ -23,7 +23,7 @@
 
 		<div class="result-section">
 			<h3>HTML</h3>
-			<pre class="raw-html"><code>{{ results|escape }}</code></pre>
+			<textarea id="html-output" style="display: none;">{{ results }}</textarea>
 		</div>
 
 		<div class="result-section">
@@ -39,6 +39,7 @@
 <!-- CodeMirror CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldgutter.min.css">
 
 <!-- CodeMirror JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
@@ -50,6 +51,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closebrackets.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/mode/multiplex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/xml-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closetag.min.js"></script>
+
+<!-- JS Beautifier for code formatting -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify-html.min.js"></script>
 
 <style>
 .editor-container {
@@ -76,21 +84,38 @@
 	color: #333;
 }
 
-.raw-html {
-	background-color: #f4f4f4;
-	padding: 1rem;
-	border-radius: 4px;
-	overflow-x: auto;
-	border: 1px solid #ddd;
+.html-output-editor .CodeMirror {
+	height: auto;
+	max-height: 400px;
+	min-height: 100px;
 }
 
-.raw-html code {
-	display: block;
-	white-space: pre;
-	font-family: 'Courier New', Courier, monospace;
-	font-size: 13px;
-	line-height: 1.5;
-}
+/* Original syntax highlighting for Twig editor */
+.CodeMirror .cm-tag { color: #170; font-weight: bold; }
+.CodeMirror .cm-attribute { color: #00c; }
+.CodeMirror .cm-string { color: #a11; }
+.CodeMirror .cm-comment { color: #a70; }
+.CodeMirror .cm-keyword { color: #708; }
+.CodeMirror .cm-atom { color: #219; }
+.CodeMirror .cm-number { color: #164; }
+.CodeMirror .cm-bracket { color: #997; }
+.CodeMirror .cm-variable { color: #05a; }
+.CodeMirror .cm-variable-2 { color: #085; }
+.CodeMirror .cm-variable-3 { color: #085; }
+.CodeMirror .cm-property { color: #05a; }
+.CodeMirror .cm-operator { color: #a2a; }
+.CodeMirror .cm-meta { color: #555; }
+.CodeMirror .cm-qualifier { color: #555; }
+.CodeMirror .cm-builtin { color: #30a; }
+.CodeMirror .cm-link { color: #762; }
+
+/* Enhanced colors ONLY for HTML output editor */
+.html-output-editor .cm-tag { color: #e34c26; font-weight: bold; } /* HTML5 orange */
+.html-output-editor .cm-attribute { color: #0066cc; }
+.html-output-editor .cm-string { color: #008000; } /* Bright green */
+.html-output-editor .cm-bracket { color: #e34c26; } /* Match tag color */
+.html-output-editor .cm-comment { color: #999; font-style: italic; }
+.html-output-editor .cm-error { color: #f00; }
 
 .rendered-output {
 	border: 1px solid #ddd;
@@ -144,6 +169,61 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.requestSubmit();
 		}
 	});
+	
+	// Initialize HTML output editor if results exist
+	const htmlOutput = document.getElementById('html-output');
+	if (htmlOutput) {
+		// Format the HTML
+		const formattedHtml = html_beautify(htmlOutput.value, {
+			indent_size: 2,
+			indent_char: ' ',
+			max_preserve_newlines: 1,
+			preserve_newlines: true,
+			indent_inner_html: true,
+			wrap_line_length: 80,
+			wrap_attributes: 'auto',
+			unformatted: ['code', 'pre', 'script', 'style']
+		});
+		
+		// Replace the textarea with a div for manual highlighting
+		const outputContainer = document.createElement('div');
+		outputContainer.className = 'html-output-container';
+		htmlOutput.parentElement.replaceChild(outputContainer, htmlOutput);
+		
+		// Debug: Check if xml mode is available
+		console.log('Available CodeMirror modes:', CodeMirror.modes);
+		console.log('XML mode loaded:', 'xml' in CodeMirror.modes);
+		
+		// Create CodeMirror directly on the div
+		const outputEditor = CodeMirror(outputContainer, {
+			value: formattedHtml,
+			mode: {name: "xml", htmlMode: true},
+			theme: 'default',
+			lineNumbers: true,
+			lineWrapping: true,
+			readOnly: true,
+			foldGutter: true,
+			gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+			matchBrackets: true,
+			matchTags: {bothTags: true},
+			autoCloseTags: true
+		});
+		
+		// Add custom class and size
+		outputContainer.classList.add('html-output-editor');
+		outputEditor.setSize(null, 'auto');
+		
+		// Force refresh after a moment
+		setTimeout(() => {
+			outputEditor.refresh();
+			
+			// If still no highlighting, try setting mode again
+			if (!outputEditor.getMode().name || outputEditor.getMode().name === 'null') {
+				console.warn('HTML highlighting failed, trying alternative approach');
+				outputEditor.setOption('mode', 'text/html');
+			}
+		}, 100);
+	}
 });
 </script>
 
