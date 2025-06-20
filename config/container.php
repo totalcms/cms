@@ -34,12 +34,15 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
+use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Twig\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
@@ -57,6 +60,7 @@ use TotalCMS\Utils\Cipher;
 use TotalCMS\Utils\CSRFTokenManager;
 use TotalCMS\Utils\FileUploadValidator;
 use TotalCMS\Utils\LogAnalyzer;
+use TotalCMS\Utils\BarcodeGenerator;
 use TotalCMS\Utils\QRGenerator;
 use TotalCMS\Utils\ServerChecker;
 
@@ -204,6 +208,14 @@ return [
 		return new PropertyFetcher($container->get(ObjectFetcher::class));
 	},
 
+	PropertyDataProcessorInterface::class => function (ContainerInterface $container) {
+		return new PropertyDataProcessor();
+	},
+
+	PropertyDataProcessor::class => function (ContainerInterface $container) {
+		return $container->get(PropertyDataProcessorInterface::class);
+	},
+
 	TotalFormFactory::class => function (ContainerInterface $container) {
 		return new TotalFormFactory(
 			$container->get(Config::class),
@@ -247,6 +259,7 @@ return [
 			$container->get(TotalCMSTwigPatterns::class),
 			$container->get(FakerFactory::class),
 			$container->get(QRCodeTwigAdapter::class),
+			$container->get(BarcodeTwigAdapter::class),
 			$container->get(PhpSession::class),
 			$container->get(CSRFTokenManager::class),
 		);
@@ -258,6 +271,14 @@ return [
 
 	QRGenerator::class => function (ContainerInterface $container) {
 		return new QRGenerator();
+	},
+
+	BarcodeGenerator::class => function (ContainerInterface $container) {
+		return new BarcodeGenerator();
+	},
+
+	BarcodeTwigAdapter::class => function (ContainerInterface $container) {
+		return new BarcodeTwigAdapter($container->get(BarcodeGenerator::class));
 	},
 
 	FileUploadValidator::class => function (ContainerInterface $container) {
