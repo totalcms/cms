@@ -97,7 +97,7 @@ bin/codecount.sh
 The CMS uses 13 built-in collection types (blog, image, gallery, etc.) with schema-driven object structure. Collections are stored as JSON files in `/tcms-data/`.
 
 ### Twig Integration
-Extensive Twig templating with custom filters and functions in `src/Domain/Twig/`. The TwigEngine provides template rendering with caching.
+Extensive Twig templating with custom filters and functions in `src/Domain/Twig/`. The TwigEngine provides template rendering with caching and markdown processing via ParsedownExtra.
 
 ### Admin Interface
 Form builder with 20+ field types, data tables with filtering/sorting, and job queue management. JavaScript components are in `/javascript/totalform/`.
@@ -199,3 +199,51 @@ ESBuild handles modern JavaScript/CSS bundling with code splitting. Configuratio
   - `src/Domain/Property/Data/SvgData.php` - Added sanitization with security configuration
   - `tests/Security/SvgSanitizationTest.php` - Comprehensive test suite for SVG security
 - **Configuration**: Sanitizer configured to block remote references and preserve readability
+
+## Frontend JavaScript Architecture (2025-06-20)
+
+### TotalForm System
+- **Location**: `/javascript/totalform/` - Modular JavaScript form system with field-specific components
+- **Pattern**: Each field type has its own JS class (identifier.js, list.js, etc.) extending base functionality
+- **Integration**: Fields are initialized automatically, with edit mode detection for pre-populated forms
+- **Key Components**:
+  - `identifier.js` - Handles slug generation with custom slugify configuration
+  - `list.js` - Integrates with Choices.js for select/multiselect functionality
+  - Form validation with disabled field handling
+  - Data serialization for form duplication and AJAX submissions
+
+### Choices.js Integration
+- **Library**: Used extensively for enhanced select/multiselect fields in admin interface
+- **Configuration**: Custom initialization with `selectedValues()` method for proper label display
+- **Data Flow**: PHP FormField classes generate proper option structures, JS handles presentation
+- **MaxItemCount**: Special handling to prevent notification popups on page load when limits reached
+
+### CodeMirror Integration
+- **Usage**: Syntax highlighting for Twig playground and HTML output display
+- **Configuration**: Auto-expanding editors using `viewportMargin: Infinity` for seamless UX
+- **Modes**: Twig, HTML/XML modes with custom color schemes for better readability
+- **Features**: localStorage persistence, keyboard shortcuts, automatic formatting
+
+### Schema Management Frontend
+- **Duplication**: JavaScript-based schema duplication using form data serialization
+- **Pattern**: Capture current form state, POST to new schema endpoint with JSON-encoded data
+- **Integration**: Works with TotalForm system to extract all field values including complex nested data
+
+## Twig Markdown Integration (2025-06-20)
+
+### ParsedownExtra Integration
+- **Implementation**: `src/Domain/Twig/ParsedownMarkdown.php` - Adapter implementing `MarkdownInterface`
+- **Configuration**: ParsedownExtra with safe mode enabled and breaks enabled for security
+- **TwigEngine Setup**: Runtime loader provides ParsedownMarkdown instance to MarkdownRuntime
+- **Usage**: Twig `|markdown` filter processes content through ParsedownExtra instead of CommonMark
+- **Dependencies**: `erusev/parsedown-extra` package provides enhanced markdown capabilities
+
+### Twig Playground Enhancement
+- **Location**: `resources/templates/admin/utils/twig-playground.twig`
+- **Features**: 
+  - CodeMirror syntax highlighting for both Twig input and HTML output
+  - Auto-expanding editors without scrollbars using `viewportMargin: Infinity`
+  - localStorage persistence for Twig code between sessions
+  - Keyboard shortcuts (Ctrl/Cmd+Enter) for quick template rendering
+  - HTML beautification with proper syntax highlighting using HTML5 orange colors
+- **JavaScript Integration**: Seamless integration with CodeMirror modes and localStorage API
