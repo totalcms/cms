@@ -25,20 +25,7 @@ class DateData extends PropertyData
 		return self::cleanDate($value);
 	}
 
-	public function actionsBeforeSave(): DateData
-	{
-		if (isset($this->settings[self::CREATION_DATE]) && $this->settings[self::CREATION_DATE] === true) {
-			if (empty($this->date) || $this->date === self::CREATION_DATE) {
-				$this->date = self::cleanDate();
-			}
-		} elseif (isset($this->settings[self::UPDATE_DATE]) && $this->settings[self::UPDATE_DATE] === true) {
-			$this->date = self::cleanDate();
-		}
-
-		return $this;
-	}
-
-	private static function cleanDate(?string $date = 'now'): string
+	public static function cleanDate(?string $date = 'now'): string
 	{
 		if (empty($date)) {
 			$date = 'now';

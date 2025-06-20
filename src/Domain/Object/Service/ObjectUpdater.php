@@ -8,6 +8,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
+use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 
 final class ObjectUpdater
 {
@@ -16,6 +17,7 @@ final class ObjectUpdater
 		private ObjectRepository $storage,
 		private ObjectFactory $factory,
 		private IndexBuilder $indexBuilder,
+		private PropertyDataProcessorInterface $propertyProcessor,
 	) {
 	}
 
@@ -31,7 +33,7 @@ final class ObjectUpdater
 		}
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn ($property) => $property->actionsBeforeSave());
+		$object->properties = $object->properties->map(fn ($property) => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
 		$this->indexBuilder->smartBuildIndex($collection);
@@ -45,7 +47,7 @@ final class ObjectUpdater
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn ($property) => $property->actionsBeforeSave());
+		$object->properties = $object->properties->map(fn ($property) => $this->propertyProcessor->processBeforeSave($property));
 
 		$objectData            = $object->toArray();
 		$objectData[$property] = $newData;

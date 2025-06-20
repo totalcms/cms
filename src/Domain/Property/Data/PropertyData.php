@@ -22,13 +22,6 @@ class PropertyData implements PropertyDataInterface
 		return null;
 	}
 
-	public function actionsBeforeSave(): PropertyData
-	{
-		// TODO: This should not be in the data classes. This should be a Service.
-
-		return $this;
-	}
-
 	public static function defaultValue(mixed $value, mixed $default): mixed
 	{
 		if (isset($default)) {
