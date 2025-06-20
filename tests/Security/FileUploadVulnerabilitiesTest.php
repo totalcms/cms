@@ -119,7 +119,7 @@ describe('File Upload Security Vulnerabilities', function () {
 		$validPngContent  = $pngHeader . str_repeat('valid_image_data', 100);
 
 		// Malicious content disguised as images
-		$maliciousJpegWithPHP   = $jpegHeader . '<?php system($_GET["cmd"]); ?>';
+		$maliciousJpegWithPHP   = $jpegHeader . '<?php system(\$_GET["cmd"]); ?>';
 		$maliciousPngWithScript = $pngHeader . '<script>alert("XSS")</script>';
 
 		// Test header detection
