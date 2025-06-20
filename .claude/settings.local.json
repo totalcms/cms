@@ -15,7 +15,9 @@
       "Bash(git checkout:*)",
       "Bash(ls:*)",
       "Bash(touch:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(composer validate:*)",
+      "Bash(./phpDocumentor.phar:*)"
     ],
     "deny": []
   }
