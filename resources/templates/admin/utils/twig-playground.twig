@@ -22,16 +22,17 @@
 		<h2>Results</h2>
 
 		<div class="result-section">
-			<h3>HTML</h3>
-			<textarea id="html-output" style="display: none;">{{ results }}</textarea>
-		</div>
-
-		<div class="result-section">
 			<h3>Rendered HTML</h3>
 			<div class="rendered-output">
 				{{ results|raw }}
 			</div>
 		</div>
+
+		<div class="result-section">
+			<h3>HTML</h3>
+			<textarea id="html-output" style="display: none;">{{ results }}</textarea>
+		</div>
+
 	</section>
 	{% endif %}
 </section>
@@ -159,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		autofocus: true,
 		viewportMargin: Infinity // This makes it auto-expand
 	});
-	
+
 	// Function to resize editor to content
 	function resizeEditor() {
 		const lineHeight = editor.defaultTextHeight();
@@ -167,10 +168,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		const totalHeight = (lineCount * lineHeight) + 20; // Add some padding
 		editor.setSize(null, totalHeight);
 	}
-	
+
 	// Initial resize
 	resizeEditor();
-	
+
 	// Resize on content change
 	editor.on('changes', function() {
 		setTimeout(resizeEditor, 0);
@@ -202,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.requestSubmit();
 		}
 	});
-	
+
 	// Initialize HTML output editor if results exist
 	const htmlOutput = document.getElementById('html-output');
 	if (htmlOutput) {
@@ -217,16 +218,16 @@ document.addEventListener('DOMContentLoaded', function() {
 			wrap_attributes: 'auto',
 			unformatted: ['code', 'pre', 'script', 'style']
 		});
-		
+
 		// Replace the textarea with a div for manual highlighting
 		const outputContainer = document.createElement('div');
 		outputContainer.className = 'html-output-container';
 		htmlOutput.parentElement.replaceChild(outputContainer, htmlOutput);
-		
+
 		// Debug: Check if xml mode is available
 		console.log('Available CodeMirror modes:', CodeMirror.modes);
 		console.log('XML mode loaded:', 'xml' in CodeMirror.modes);
-		
+
 		// Create CodeMirror directly on the div
 		const outputEditor = CodeMirror(outputContainer, {
 			value: formattedHtml,
@@ -241,21 +242,21 @@ document.addEventListener('DOMContentLoaded', function() {
 			matchTags: {bothTags: true},
 			autoCloseTags: true
 		});
-		
+
 		// Add custom class and size
 		outputContainer.classList.add('html-output-editor');
-		
+
 		// Set height to content height to avoid scrollbars
 		const lineHeight = outputEditor.defaultTextHeight();
 		const lineCount = outputEditor.lineCount();
 		const totalHeight = (lineCount * lineHeight) + 40; // Add some padding
-		
+
 		outputEditor.setSize(null, totalHeight);
-		
+
 		// Force refresh after a moment
 		setTimeout(() => {
 			outputEditor.refresh();
-			
+
 			// If still no highlighting, try setting mode again
 			if (!outputEditor.getMode().name || outputEditor.getMode().name === 'null') {
 				console.warn('HTML highlighting failed, trying alternative approach');

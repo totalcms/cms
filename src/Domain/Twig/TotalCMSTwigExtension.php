@@ -19,6 +19,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		private TotalCMSTwigPatterns $patterns,
 		private FakerFactory $faker,
 		private QRCodeTwigAdapter $generator,
+		private BarcodeTwigAdapter $barcode,
 		private PhpSession $session,
 		private CSRFTokenManager $csrfManager,
 	) {
@@ -30,6 +31,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		return [
 			'cms'         => $this->adapter,
 			'qr'          => $this->generator,
+			'barcode'     => $this->barcode,
 			'getData'     => $_GET,
 			'postData'    => array_filter($_POST),
 			'sessionData' => $_SESSION,
