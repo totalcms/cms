@@ -9,9 +9,9 @@
 		method="POST"
 		data-disabled>
 
-		<div>
+		<div class="editor-container">
 			<label for="twig">Type your Twig Here</label>
-			<textarea name="twig" style="width: 100%; height: 200px;">{{ postData.twig }}</textarea>
+			<textarea id="twig-editor" name="twig">{{ postData.twig }}</textarea>
 		</div>
 		<button class="cms-button" type="submit">Render Twig</button>
 
@@ -20,8 +20,130 @@
 	{% if results %}
 	<section class="playground-results">
 		<h2>Results</h2>
-		{{ results }}
+
+		<div class="result-section">
+			<h3>HTML</h3>
+			<pre class="raw-html"><code>{{ results|escape }}</code></pre>
+		</div>
+
+		<div class="result-section">
+			<h3>Rendered HTML</h3>
+			<div class="rendered-output">
+				{{ results|raw }}
+			</div>
+		</div>
 	</section>
 	{% endif %}
 </section>
+
+<!-- CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/monokai.min.css">
+
+<!-- CodeMirror JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/twig/twig.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/mode/multiplex.min.js"></script>
+
+<style>
+.editor-container {
+	margin-bottom: 1rem;
+}
+
+.CodeMirror {
+	height     : 40vh;
+	max-height : 600px;
+	border     : 1px solid #ddd;
+	font-size  : 14px;
+}
+
+.playground-results {
+	margin-top: 2rem;
+}
+
+.result-section {
+	margin-bottom: 2rem;
+}
+
+.result-section h3 {
+	margin-bottom: 0.5rem;
+	color: #333;
+}
+
+.raw-html {
+	background-color: #f4f4f4;
+	padding: 1rem;
+	border-radius: 4px;
+	overflow-x: auto;
+	border: 1px solid #ddd;
+}
+
+.raw-html code {
+	display: block;
+	white-space: pre;
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.rendered-output {
+	border: 1px solid #ddd;
+	padding: 1rem;
+	background-color: #fff;
+	border-radius: 4px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const textarea = document.getElementById('twig-editor');
+	const localStorageKey = 'twig-playground-code';
+
+	// Initialize CodeMirror
+	const editor = CodeMirror.fromTextArea(textarea, {
+		mode: 'twig',
+		theme: 'default',
+		lineNumbers: true,
+		lineWrapping: true,
+		autoCloseBrackets: true,
+		matchBrackets: true,
+		indentUnit: 2,
+		tabSize: 2,
+		autofocus: true
+	});
+
+	// Load saved content from localStorage
+	const savedContent = localStorage.getItem(localStorageKey);
+	if (savedContent && !textarea.value) {
+		editor.setValue(savedContent);
+	}
+
+	// Save content to localStorage on change
+	editor.on('change', function() {
+		localStorage.setItem(localStorageKey, editor.getValue());
+	});
+
+	// Update the textarea before form submission
+	const form = document.getElementById('twig-playground');
+	form.addEventListener('submit', function() {
+		textarea.value = editor.getValue();
+	});
+
+	// Optional: Add keyboard shortcut for running (Ctrl/Cmd + Enter)
+	editor.setOption('extraKeys', {
+		'Ctrl-Enter': function() {
+			form.requestSubmit();
+		},
+		'Cmd-Enter': function() {
+			form.requestSubmit();
+		}
+	});
+});
+</script>
 
