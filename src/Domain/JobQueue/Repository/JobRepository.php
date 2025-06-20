@@ -281,4 +281,40 @@ final class JobRepository
 
 		return $stmt->execute();
 	}
+
+	/**
+	 * Fetch all failed jobs.
+	 * 
+	 * @return array<JobData>
+	 */
+	public function fetchFailedJobs(): array
+	{
+		$sql = <<<SQL
+			SELECT * FROM jobqueue
+			WHERE status = :status
+			ORDER BY id ASC
+		SQL;
+		$stmt = $this->db->prepare($sql);
+		$stmt->bindValue(':status', JobData::STATUS_FAILED);
+		$stmt->execute();
+
+		$jobs = [];
+		while ($record = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$jobs[] = JobData::fromArray($record);
+		}
+
+		return $jobs;
+	}
+
+	/**
+	 * Reset a job's status to pending for retry.
+	 */
+	public function resetJobStatus(JobData $job): JobData
+	{
+		$job->status = JobData::STATUS_PENDING;
+		$job->lastError = '';
+		// Keep the attempt count to prevent infinite retries
+		
+		return $this->updateJobStatus($job, JobData::STATUS_PENDING);
+	}
 }
