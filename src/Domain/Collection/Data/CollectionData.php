@@ -27,6 +27,8 @@ final class CollectionData
 	public string $schema;                    // schema name
 	public string $url;                       // collection url to object page minus the slug
 	public string $category;                  // collection category for grouping in the admin
+	public string $labelPlural;              // custom plural label for collection items
+	public string $labelSingular;            // custom singular label for collection items
 	public string $sortBy           = 'id';             // the property to sort the collection by
 	public bool $reverseSort        = false;         // reverse the sort order
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
@@ -60,6 +62,8 @@ final class CollectionData
 			'description'        => empty($this->description) ? $defaultDescription : $this->description,
 			'url'                => $this->url ?? '',
 			'category'           => $this->category ?? '',
+			'labelPlural'        => $this->labelPlural ?? '',
+			'labelSingular'      => $this->labelSingular ?? '',
 			'groups'             => $this->groups ?? [],
 			'sortBy'             => $this->sortBy ?? 'id',
 			'reverseSort'        => $this->reverseSort ?? false,

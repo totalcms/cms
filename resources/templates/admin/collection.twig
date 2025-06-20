@@ -8,9 +8,10 @@
 
 {% macro collectionHeader(collection, page) %}
 	<header>
-		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page }}</span></h1>
+		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page | lower }}</span></h1>
 		<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="Edit Collection">Edit Collection</a>
-		<a class="dash-button" href="collections/{{ collection }}/add" title="Add new object to collection">+ New Object</a>
+		{% set labelSingular = cms.collection(collection).labelSingular|default('object') %}
+		<a class="dash-button" href="collections/{{ collection }}/add" title="Add new {{ labelSingular | lower }} to collection">+ New {{ labelSingular|title }}</a>
 		<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
 		<nav popover id="collection-actions">
 			<ul>
@@ -61,7 +62,8 @@
 		{% include "admin/collection/new.twig" %}
 
 	{% elseif url.id is empty %}
-		{{ _self.collectionHeader(url.collection, "objects") }}
+		{% set labelPlural = cms.collection(url.collection).labelPlural|default('objects') %}
+		{{ _self.collectionHeader(url.collection, labelPlural) }}
 		{% include "admin/collection/index.twig" %}
 
 	{% elseif url.id in ["add", "edit"] %}
