@@ -10,6 +10,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\CSRFTokenManager;
 
@@ -37,6 +38,7 @@ final class TotalFormFactory
 		private IndexReader $collectionReader,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
+		private SchemaFactory $schemaFactory,
 		private CSRFTokenManager $csrfManager,
 	) {
 		$this->api = $this->config->api;
@@ -144,6 +146,7 @@ final class TotalFormFactory
 			'api'           => $this->api,
 			'schemaFetcher' => $this->schemaFetcher,
 			'schemaLister'  => $this->schemaLister,
+			'schemaFactory' => $this->schemaFactory,
 		]);
 
 		$form = new SchemaForm(...$options);

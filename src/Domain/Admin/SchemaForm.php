@@ -3,8 +3,10 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 
 /**
  * Total Form Builder.
@@ -21,12 +23,14 @@ final class SchemaForm extends TotalForm
 	 * @param array<string,string> $newAction
 	 * @param array<string,string> $deleteAction
 	 * @param array<string,string> $editAction
+	 * @param array<string,mixed>  $data
 	 */
 	public function __construct(
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
-		public string $api,
-		public string $id          = '',
+		protected SchemaFactory $schemaFactory,
+		public    string $api,
+		public    string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
 		protected string $helpStyle   = '',
@@ -35,9 +39,10 @@ final class SchemaForm extends TotalForm
 		protected array $editAction   = [],
 		protected array $deleteAction = [],
 		protected array $newAction    = [],
-		protected bool $autosave    = false,
-		protected bool $helpOnHover = false,
-		protected bool $helpOnFocus = false,
+		protected array $data         = [],
+		protected bool $autosave      = false,
+		protected bool $helpOnHover   = false,
+		protected bool $helpOnFocus   = false,
 	) {
 		$this->init();
 		$this->initClass();
@@ -56,6 +61,16 @@ final class SchemaForm extends TotalForm
 			// This is the actual schema object data
 			$this->schemaObjectData = $this->schemaFetcher->fetchSchema($this->id);
 		}
+		// Duplicate Schema
+		if (empty($this->id) && !empty($this->data)) {
+			// Convert property types to refs for the properties field
+			$this->data['properties'] = SchemaSaver::propertyTypeToRef($this->data['properties']);
+			$this->schemaObjectData   = $this->schemaFactory->generateSchema($this->data);
+			$this->reserved           = false;
+			// If the schema is being duplicated, we do not want to keep the ID
+			$this->schemaObjectData->id = '';
+		}
+
 		$this->formType   = 'schema';
 		$this->schema     = 'schema';
 		// This is the schema for a schema object

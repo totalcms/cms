@@ -37,6 +37,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\QRCodeTwigAdapter;
@@ -212,6 +213,7 @@ return [
 			$container->get(IndexReader::class),
 			$container->get(SchemaFetcher::class),
 			$container->get(SchemaLister::class),
+			$container->get(SchemaFactory::class),
 			$container->get(CSRFTokenManager::class),
 		);
 	},
