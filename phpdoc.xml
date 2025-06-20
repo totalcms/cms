@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdocumentor
+    configVersion="3"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://www.phpdoc.org"
+    xsi:schemaLocation="https://www.phpdoc.org https://raw.githubusercontent.com/phpDocumentor/phpDocumentor/master/data/xsd/phpdoc.xsd"
+>
+    <title>Total CMS API Documentation</title>
+    <description>Complete API documentation for Total CMS - A modern flat-file content management system</description>
+    
+    <paths>
+        <output>docs/api</output>
+        <cache>cache/phpdoc</cache>
+    </paths>
+    
+    <version number="3.0.0">
+        <folder>docs/api</folder>
+        <api>
+            <source dsn=".">
+                <path>src</path>
+            </source>
+            <ignore>
+                <path>vendor</path>
+                <path>tests</path>
+                <path>tcms-data</path>
+                <path>cache</path>
+                <path>docs</path>
+                <path>node_modules</path>
+            </ignore>
+            <extensions>
+                <extension>php</extension>
+            </extensions>
+            <visibility>public</visibility>
+            <visibility>protected</visibility>
+            <default-package-name>TotalCMS</default-package-name>
+        </api>
+        <guide>
+            <source dsn=".">
+                <path>README.md</path>
+                <path>ARCHITECTURE.md</path>
+                <path>CONTRIBUTING.md</path>
+            </source>
+        </guide>
+    </version>
+    
+    <setting name="graphs.enabled" value="true"/>
+    <setting name="graphs.format" value="svg"/>
+    <template name="default"/>
+</phpdocumentor>
