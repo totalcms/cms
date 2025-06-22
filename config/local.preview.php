@@ -3,8 +3,8 @@
 // Stacks Preview Environment
 // echo "Stacks Preview Environment\n";
 
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
+// error_reporting(E_ALL);
+// ini_set('display_errors', '1');
 
 $settings['env'] = 'preview';
 
