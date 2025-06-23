@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>My News Feed</title>
+<link>https://fu.joeworkman.net/cms-data/blog/myblog/myblog.rss</link>
+<atom:link href="https://fu.joeworkman.net/cms-data/blog/myblog/myblog.rss" rel="self" type="application/rss+xml"></atom:link>
+<description><![CDATA[My news feed with important updates]]></description>
+<item>
+<title>Blog Post 2</title>
+<link>blog-post-2</link>
+<description><![CDATA[<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<img src="https://fu.joeworkman.net/cms-data/gallery/blog/myblog/blog-post-2/adobestock_527273218.jpg" alt=""/>]]></description>
+<guid isPermaLink="false">blog-post-2</guid>
+<pubDate>Sun, 22 Jun 2025 15:04:10 +0000</pubDate>
+</item>
+</channel>
+</rss>

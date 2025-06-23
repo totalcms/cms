@@ -13,3 +13,61 @@
 		<a class="dash-button transparent" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
 	{% endif %}
 </section>
+
+{% if totalcms1DetectionData is defined and totalcms1DetectionData %}
+	{% set cmsDataPath = totalcms1DetectionData.path %}
+	{% set cmsDataSource = totalcms1DetectionData.source %}
+{% endif %}
+
+{% if cmsDataPath %}
+<section class="dash-content-section">
+	<h2>Total CMS 1 Import</h2>
+
+	{% if action == "totalcms-one-import" %}
+		<div id="import-status">
+			<p>Starting Total CMS 1 import...</p>
+		</div>
+		<script>
+			(async function() {
+				try {
+					const response = await fetch('/import/totalcms-one', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-CSRF-Token': '{{ csrf_token() }}'
+						},
+						body: JSON.stringify({
+							path: '{{ cmsDataPath }}'
+						})
+					});
+					const data = await response.json();
+					const statusEl = document.getElementById('import-status');
+					
+					if (data.success) {
+						statusEl.innerHTML = `<div class="message success">${data.message}</div>`;
+					} else {
+						statusEl.innerHTML = `<div class="message error">${data.message}</div>`;
+					}
+				} catch (error) {
+					document.getElementById('import-status').innerHTML = 
+						`<div class="message error">Import failed: ${error.message}</div>`;
+				}
+			})();
+		</script>
+	{% else %}
+		<p>We have detected a Total CMS 1 installation at <code>{{ cmsDataPath }}</code>
+		{% if cmsDataSource == 'test' %}
+			<span class="badge warning">Test Data</span>
+		{% endif %}
+		</p>
+		<p>This action will import all of your Total CMS 1 data including:</p>
+		<ul>
+			<li>Blog posts with images and galleries</li>
+			<li>Dates, Depots, Feeds, Files</li>
+			<li>Galleries, Images, Texts, and Videos</li>
+		</ul>
+		<p><strong>Note:</strong> All items will be queued for import via the job queue system. You can monitor progress in the Job Queue section.</p>
+		<a class="dash-button transparent" href="utils/project-setup?action=totalcms-one-import">Import Total CMS 1 Data</a>
+	{% endif %}
+</section>
+{% endif %}

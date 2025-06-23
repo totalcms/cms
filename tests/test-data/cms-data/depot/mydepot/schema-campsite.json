@@ -1,0 +1,134 @@
+{
+    "$schema": "https:\/\/json-schema.org\/draft\/2020-12\/schema",
+    "$id": "https:\/\/www.totalcms.co\/schemas\/campsite.json",
+    "type": "object",
+    "id": "campsite",
+    "description": "The schema used for a campsite",
+    "properties": {
+        "id": {
+            "field": "id",
+            "label": "ID",
+            "placeholder": "Enter a unique identifier",
+            "help": "The unique identifier",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/slug.json"
+        },
+        "name": {
+            "type": "string",
+            "field": "text"
+        },
+        "owners": {
+            "type": "string",
+            "field": "text"
+        },
+        "owner": {
+            "type": "string",
+            "field": "select"
+        },
+        "website": {
+            "field": "url",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/url.json"
+        },
+        "address": {
+            "type": "string",
+            "field": "text"
+        },
+        "address2": {
+            "type": "string",
+            "field": "text"
+        },
+        "town": {
+            "type": "string",
+            "field": "text"
+        },
+        "county": {
+            "type": "string",
+            "field": "select"
+        },
+        "postcode": {
+            "type": "string",
+            "field": "text"
+        },
+        "country": {
+            "type": "string",
+            "field": "select"
+        },
+        "region": {
+            "type": "string",
+            "field": "select"
+        },
+        "date_certified": {
+            "field": "date",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/date.json"
+        },
+        "calendar": {
+            "field": "url",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/url.json"
+        },
+        "types": {
+            "field": "list",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/list.json"
+        },
+        "features": {
+            "field": "list",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/list.json"
+        },
+        "special": {
+            "field": "list",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/list.json"
+        },
+        "about": {
+            "type": "string",
+            "field": "styledtext"
+        },
+        "open_from": {
+            "type": "string",
+            "field": "select"
+        },
+        "open_to": {
+            "type": "string",
+            "field": "text"
+        },
+        "slogan": {
+            "type": "string",
+            "field": "textarea"
+        },
+        "summary": {
+            "type": "string",
+            "field": "textarea"
+        },
+        "image": {
+            "field": "image",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/image.json"
+        },
+        "gallery": {
+            "field": "gallery",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/gallery.json"
+        },
+        "video": {
+            "field": "url",
+            "$ref": "https:\/\/www.totalcms.co\/schemas\/properties\/url.json"
+        },
+        "pitches": {
+            "type": "number",
+            "field": "number"
+        },
+        "google_place_id": {
+            "type": "string",
+            "field": "text"
+        }
+    },
+    "required": [
+        "id",
+        "name"
+    ],
+    "index": [
+        "id",
+        "name",
+        "image",
+        "region",
+        "types",
+        "features",
+        "special",
+        "summary"
+    ]
+}

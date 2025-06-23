@@ -26,8 +26,12 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Import\TotalCmsOneImporter;
+use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -326,6 +330,16 @@ return [
 			$container->get(PhpSession::class),
 			$container->get(Config::class),
 			$container->get(UserValidationService::class),
+			$container->get(LoggerFactory::class),
+		);
+	},
+
+	TotalCmsOneImporter::class => function (ContainerInterface $container) {
+		return new TotalCmsOneImporter(
+			$container->get(CollectionFetcher::class),
+			$container->get(CollectionFactory::class),
+			$container->get(CollectionRepository::class),
+			$container->get(JobQueuer::class),
 			$container->get(LoggerFactory::class),
 		);
 	},

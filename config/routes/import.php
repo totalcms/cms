@@ -12,5 +12,6 @@ return function (App $app) {
 		// ! $group->post('/{collection}/wordpress', Import\ImportWordpressAction::class)->setName('import-wordpress');
 
 		$group->post('/schemas', Import\ImportSchemaAction::class)->setName('import-schema');
+		$group->post('/totalcms-one', Import\ImportTotalCmsOneAction::class)->setName('import-totalcms-one');
 	});
 };

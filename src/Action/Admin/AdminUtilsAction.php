@@ -43,6 +43,12 @@ final class AdminUtilsAction
 			}
 		}
 
+		// Detect Total CMS 1 data for project-setup page
+		$totalcms1DetectionData = null;
+		if ($page === 'project-setup') {
+			$totalcms1DetectionData = $this->detectTotalCms1Data();
+		}
+
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
 			'page' => $page,
 			'url'  => [
@@ -52,6 +58,35 @@ final class AdminUtilsAction
 				'page'   => 'utils',
 			],
 			'results' => $results,
+			'totalcms1DetectionData' => $totalcms1DetectionData,
 		]);
+	}
+
+	/** @return array<string,string>|null */
+	private function detectTotalCms1Data(): ?array
+	{
+		// Check production location first
+		$documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+		$productionPath = $documentRoot . '/cms-data';
+		
+		if (is_dir($productionPath)) {
+			return [
+				'path' => $productionPath,
+				'source' => 'production'
+			];
+		}
+
+		// Check test data location
+		$testPath = __DIR__ . '/../../../tests/test-data/cms-data';
+		$testPath = realpath($testPath);
+		
+		if ($testPath && is_dir($testPath)) {
+			return [
+				'path' => $testPath,
+				'source' => 'test'
+			];
+		}
+
+		return null;
 	}
 }
