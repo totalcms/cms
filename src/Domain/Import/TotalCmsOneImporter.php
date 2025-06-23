@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Import;
 
+use PhpParser\Node\Expr\PostDec;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
@@ -41,13 +42,13 @@ final class TotalCmsOneImporter
 		// Import each data type in order
 		$this->importBlogs();
 		$this->importDates();
-		$this->importDepots();
 		$this->importFeeds();
-		$this->importFiles();
 		$this->importGalleries();
 		$this->importImages();
 		$this->importTexts();
 		$this->importVideos();
+		$this->importFiles();
+		$this->importDepots();
 
 		$this->logger->info(sprintf('Total CMS 1 import completed. Total items imported: %d', $this->importCount));
 
@@ -73,25 +74,11 @@ final class TotalCmsOneImporter
 
 			// Create collection if it doesn't exist
 			if (!$this->collectionFetcher->collectionExists($blogId)) {
-				$this->createCollection($blogId, 'blog-legacy', 'Blog: ' . $blogId);
+				$this->createCollection($blogId, 'blog-legacy', ucfirst($blogId));
 			}
 
-			// Check for .posturl file to set collection URL
-			$posturlFile = $blogDir . '/' . $blogId . '.posturl';
-			if (file_exists($posturlFile)) {
-				$url = trim((string)file_get_contents($posturlFile));
-				if ($url) {
-					$collection = $this->collectionFetcher->fetchCollection($blogId);
-					if ($collection !== null) {
-						$collectionData = $collection->toArray();
-						$collectionData['url'] = $url;
-						$collectionData['prettyUrl'] = !str_contains($url, '?permalink=');
-						
-						$updatedCollection = $this->collectionFactory->generateCollection($collectionData);
-						$this->collectionRepository->saveCollection($updatedCollection);
-					}
-				}
-			}
+			// Set blog URL if .posturl file exists
+			$this->setBlogURL($blogDir, $blogId);
 
 			// Import blog posts
 			$blogPosts = glob($blogDir . '/*.cms');
@@ -105,6 +92,30 @@ final class TotalCmsOneImporter
 		}
 	}
 
+	private function setBlogURL(string $blogDir, string $blogId): void
+	{
+		// Check for .posturl file to set collection URL
+		$posturlFile = $blogDir . '/' . $blogId . '.posturl';
+		if (file_exists($posturlFile)) {
+			$url = trim((string)file_get_contents($posturlFile));
+			if ($url) {
+				$collection = $this->collectionFetcher->fetchCollection($blogId);
+				if ($collection !== null) {
+					$collectionData = $collection->toArray();
+					$collectionData['url'] = $url;
+					$collectionData['prettyUrl'] = !str_contains($url, '?permalink=');
+
+					$updatedCollection = $this->collectionFactory->generateCollection($collectionData);
+					$this->collectionRepository->saveCollection($updatedCollection);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 */
 	private function importBlogPost(string $collectionId, string $postFile): void
 	{
 		try {
@@ -120,6 +131,8 @@ final class TotalCmsOneImporter
 				unset($postData['permalink']);
 			}
 
+			$postId = $postData['id'] ?? basename($postFile, '.cms');
+
 			// Convert timestamp to ISO8601
 			if (isset($postData['timestamp'])) {
 				$postData['date'] = date('c', (int)$postData['timestamp']);
@@ -128,21 +141,24 @@ final class TotalCmsOneImporter
 
 			// Clear image and gallery fields as they will be reprocessed
 			if (isset($postData['image'])) {
-				$blogDir = dirname($postFile);
-				$imageDir = $blogDir . '/' . $postData['id'] . '/image';
-				if (is_dir($imageDir)) {
-					$postData['image'] = $imageDir;
+				unset($postData['image']);
+				$blogDir  = dirname($postFile);
+				$imageJpg = $blogDir . '/' . $postData['id'] . '/image/' . $postId . '.jpg';
+				$imagePng = $blogDir . '/' . $postData['id'] . '/image/' . $postId . '.png';
+				if (file_exists($imageJpg)) {
+					$postData['image'] = $imageJpg;
+				} elseif (file_exists($imagePng)) {
+					$postData['image'] = $imagePng;
 				} else {
-					unset($postData['image']);
+					$this->logger->warning(sprintf('No image found for blog post %s', $postId));
 				}
 			}
 
 			if (isset($postData['gallery'])) {
-				$galleryDir = $this->cmsDataPath . '/gallery/blog/' . $collectionId . '/' . $postData['id'];
+				unset($postData['gallery']);
+				$galleryDir = $this->cmsDataPath . '/gallery/blog/' . $collectionId . '/' . $postId;
 				if (is_dir($galleryDir)) {
 					$postData['gallery'] = $galleryDir;
-				} else {
-					unset($postData['gallery']);
 				}
 			}
 
@@ -178,14 +194,14 @@ final class TotalCmsOneImporter
 			try {
 				$id = basename($dateFile, '.cms');
 				$timestamp = trim((string)file_get_contents($dateFile));
-				
+
 				if (!is_numeric($timestamp)) {
 					$this->logger->error(sprintf('Invalid timestamp in date file: %s', $dateFile));
 					continue;
 				}
 
 				$data = [
-					'id' => $id,
+					'id'   => $id,
 					'date' => date('c', (int)$timestamp)
 				];
 
@@ -219,9 +235,9 @@ final class TotalCmsOneImporter
 
 		foreach ($depotDirs as $depotDir) {
 			$id = basename($depotDir);
-			
+
 			$data = [
-				'id' => $id,
+				'id'    => $id,
 				'depot' => $depotDir
 			];
 
@@ -250,7 +266,7 @@ final class TotalCmsOneImporter
 
 			// Create collection if it doesn't exist
 			if (!$this->collectionFetcher->collectionExists($feedId)) {
-				$this->createCollection($feedId, 'feed', 'Feed: ' . $feedId);
+				$this->createCollection($feedId, 'feed', ucfirst($feedId));
 			}
 
 			// Import feed items
@@ -263,15 +279,15 @@ final class TotalCmsOneImporter
 				try {
 					$id = basename($feedFile, '.cms');
 					$content = file_get_contents($feedFile);
-					
+
 					$data = [
-						'id' => $id,
-						'title' => $id,
+						'id'      => $id,
+						'title'   => $id,
 						'content' => $content
 					];
 
 					// Check for image
-					$imageFile = $this->cmsDataPath . '/gallery/feed-' . $id . '/feed-' . $id . '.jpg';
+					$imageFile = $this->cmsDataPath . '/gallery/feed-' . $feedId . '/feed-' . $id . '.jpg';
 					if (file_exists($imageFile)) {
 						$data['image'] = $imageFile;
 					}
@@ -307,10 +323,10 @@ final class TotalCmsOneImporter
 
 		foreach ($files as $file) {
 			if (is_file($file)) {
-				$id = basename($file);
-				
+				$id = pathinfo($file, PATHINFO_FILENAME);
+
 				$data = [
-					'id' => $id,
+					'id'   => $id,
 					'file' => $file
 				];
 
@@ -341,14 +357,14 @@ final class TotalCmsOneImporter
 
 		foreach ($galleryDirs as $galleryDir) {
 			$dirName = basename($galleryDir);
-			
+
 			// Skip blog and feed galleries
 			if ($dirName === 'blog' || str_starts_with($dirName, 'feed-')) {
 				continue;
 			}
 
 			$data = [
-				'id' => $dirName,
+				'id'      => $dirName,
 				'gallery' => $galleryDir
 			];
 
@@ -379,14 +395,14 @@ final class TotalCmsOneImporter
 		foreach ($images as $image) {
 			if (is_file($image) && !str_ends_with($image, '.cms')) {
 				$filename = pathinfo($image, PATHINFO_FILENAME);
-				
+
 				// Skip thumbnail and square versions
 				if (str_ends_with($filename, '-th') || str_ends_with($filename, '-sq')) {
 					continue;
 				}
 
 				$data = [
-					'id' => $filename,
+					'id'    => $filename,
 					'image' => $image
 				];
 
@@ -417,11 +433,11 @@ final class TotalCmsOneImporter
 
 		foreach ($textFiles as $textFile) {
 			try {
-				$id = basename($textFile, '.cms');
+				$id      = basename($textFile, '.cms');
 				$content = file_get_contents($textFile);
-				
+
 				$data = [
-					'id' => $id,
+					'id'   => $id,
 					'text' => $content
 				];
 
@@ -455,11 +471,11 @@ final class TotalCmsOneImporter
 
 		foreach ($videoFiles as $videoFile) {
 			try {
-				$id = basename($videoFile, '.cms');
+				$id  = basename($videoFile, '.cms');
 				$url = trim((string)file_get_contents($videoFile));
-				
+
 				$data = [
-					'id' => $id,
+					'id'  => $id,
 					'url' => $url
 				];
 
@@ -477,14 +493,14 @@ final class TotalCmsOneImporter
 	{
 		try {
 			$collectionData = [
-				'id' => $id,
+				'id'     => $id,
 				'schema' => $schema,
-				'name' => $name
+				'name'   => $name
 			];
 
 			$collection = $this->collectionFactory->generateCollection($collectionData);
 			$this->collectionRepository->saveCollection($collection);
-			
+
 			$this->logger->info(sprintf('Created collection: %s with schema: %s', $id, $schema));
 		} catch (\Exception $e) {
 			$this->logger->error(sprintf('Error creating collection %s: %s', $id, $e->getMessage()));
