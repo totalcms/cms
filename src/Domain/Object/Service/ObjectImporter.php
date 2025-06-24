@@ -179,7 +179,17 @@ final class ObjectImporter
 		foreach ($this->images as $property => $path) {
 			if (file_exists($path)) {
 				$this->imageSaver->save($this->collection, $this->objectID, $property, $path);
-				$this->saveImageAlt($property, $path);
+
+				// Check for alt text file and update the image item if found
+				$altContent = $this->getImageAltText($path);
+				if (!empty($altContent)) {
+					$this->objectPatcher->patchObjectProperty(
+						$this->collection,
+						$this->objectID,
+						$property,
+						['alt' => $altContent]
+					);
+				}
 			}
 		}
 	}
@@ -188,7 +198,7 @@ final class ObjectImporter
 	{
 		$dir      = dirname($imagePath);
 		$filename = pathinfo($imagePath, PATHINFO_FILENAME);
-		$altExts  = ['cms', 'txt'];
+		$altExts  = ['cms', 'txt']; // cms extension is used for Total CMS 1.x
 		// If the image has an alternative text file, save it as well
 		foreach ($altExts as $ext) {
 			$altPath = $dir . '/' . $filename . '.' . $ext;
@@ -197,19 +207,6 @@ final class ObjectImporter
 			}
 		}
 		return false;
-	}
-
-	private function saveImageAlt(string $property, string $imagePath): void
-	{
-		$altContent = $this->getImageAltText($imagePath);
-		if (!empty($altContent)) {
-			$this->objectPatcher->patchObjectProperty(
-				$this->collection,
-				$this->objectID,
-				$property,
-				['alt' => $altContent]
-			);
-		}
 	}
 
 	private function saveFiles(): void
@@ -240,7 +237,22 @@ final class ObjectImporter
 					if (!@is_array(getimagesize($fileInfo->getPathname()))) {
 						continue;
 					}
-					$this->gallerySaver->save($this->collection, $this->objectID, $property, $fileInfo->getPathname());
+					$imagePath = $fileInfo->getPathname();
+					$this->gallerySaver->save($this->collection, $this->objectID, $property, $imagePath);
+
+					// Check for alt text file and update the gallery item if found
+					$altContent = $this->getImageAltText($imagePath);
+					if (!empty($altContent)) {
+						// Get the filename to use as the identifier for the gallery item
+						$filename = $fileInfo->getFilename();
+						$this->objectPatcher->patchObjectPropertyMeta(
+							$this->collection,
+							$this->objectID,
+							$property,
+							$filename,
+							['alt' => $altContent]
+						);
+					}
 				}
 			}
 		}
