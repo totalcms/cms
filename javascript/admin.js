@@ -56,4 +56,10 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const jobqueueStats = Array.from(document.getElementsByClassName("jobqueue-stats"));
 	jobqueueStats.forEach(table => new JobQueueStatsTable(table));
+
+	const externalLinks = Array.from(document.querySelectorAll('a[title="external"]'));
+	externalLinks.forEach(link => {
+		link.target = '_blank';
+		link.removeAttribute('title');
+	});
 });

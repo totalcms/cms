@@ -98,7 +98,7 @@ object is created or updated.
 
 ## Styled Text
 
-Styled text supports [a lot of settings](https://froala.com/wysiwyg-editor/docs/options/).
+Styled text supports [a lot of settings](https://froala.com/wysiwyg-editor/docs/options/ "external").
 Here is an example.
 
 
