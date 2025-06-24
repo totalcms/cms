@@ -85,6 +85,123 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
+	 * Get pending jobs info for display.
+	 * 
+	 * @return string
+	 */
+	public function jobQueuePendingInfo(): string
+	{
+		$jobManager = new \TotalCMS\Domain\JobQueue\Service\JobManager(
+			new \TotalCMS\Domain\JobQueue\Repository\JobRepository()
+		);
+		
+		$pendingJobs = $jobManager->getPendingJobs();
+		
+		if (empty($pendingJobs)) {
+			return '';
+		}
+		
+		$rows = '';
+		foreach ($pendingJobs as $job) {
+			$payload = json_decode($job->payload, true);
+			$objectId = $payload['id'] ?? 'N/A';
+			
+			$rows .= sprintf(
+				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+				htmlspecialchars($job->type),
+				htmlspecialchars($job->collection),
+				htmlspecialchars($objectId),
+				htmlspecialchars($job->createdAt)
+			);
+		}
+		
+		$table = sprintf(
+			'<section class="jobqueue-preview-section">
+				<h3>Pending Jobs</h3>
+				<div class="jobqueue-table-wrapper">
+					<table class="jobqueue-preview pending-jobs cms-colors">
+						<thead>
+							<tr>
+								<th>Type</th>
+								<th>Collection</th>
+								<th>Object ID</th>
+								<th>Created</th>
+							</tr>
+						</thead>
+						<tbody>%s</tbody>
+					</table>
+				</div>
+			</section>',
+			$rows
+		);
+		
+		return $table;
+	}
+
+	/**
+	 * Get failed jobs info for display.
+	 * 
+	 * @return string
+	 */
+	public function jobQueueFailedInfo(): string
+	{
+		$jobManager = new \TotalCMS\Domain\JobQueue\Service\JobManager(
+			new \TotalCMS\Domain\JobQueue\Repository\JobRepository()
+		);
+		
+		$failedJobs = $jobManager->getFailedJobs();
+		
+		if (empty($failedJobs)) {
+			return '';
+		}
+		
+		$rows = '';
+		foreach ($failedJobs as $job) {
+			$payload = json_decode($job->payload, true);
+			$objectId = $payload['id'] ?? 'N/A';
+			
+			// Truncate error message for display
+			$errorSnippet = $job->lastError;
+			if (strlen($errorSnippet) > 100) {
+				$errorSnippet = substr($errorSnippet, 0, 100) . '...';
+			}
+			
+			$rows .= sprintf(
+				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td title="%s">%s</td></tr>',
+				htmlspecialchars($job->type),
+				htmlspecialchars($job->collection),
+				htmlspecialchars($objectId),
+				htmlspecialchars(strval($job->attempts)),
+				htmlspecialchars($job->lastError),
+				htmlspecialchars($errorSnippet)
+			);
+		}
+		
+		$table = sprintf(
+			'<section class="jobqueue-preview-section">
+				<h3>Failed Jobs</h3>
+				<div class="jobqueue-table-wrapper">
+					<table class="jobqueue-preview failed-jobs cms-colors">
+						<thead>
+							<tr>
+								<th>Type</th>
+								<th>Collection</th>
+								<th>Object ID</th>
+								<th>Attempts</th>
+								<th>Error</th>
+							</tr>
+						</thead>
+						<tbody>%s</tbody>
+					</table>
+				</div>
+			</section>',
+			$rows
+		);
+		
+		return $table;
+	}
+
+	/**
 	 * @SuppressWarnings("PHPMD.ExitExpression")
 	 *
 	 * @param array<mixed> $object

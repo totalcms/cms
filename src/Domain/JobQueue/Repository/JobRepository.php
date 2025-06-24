@@ -283,19 +283,61 @@ final class JobRepository
 	}
 
 	/**
-	 * Fetch all failed jobs.
+	 * Fetch all pending jobs.
 	 * 
+	 * @param int|null $limit
 	 * @return array<JobData>
 	 */
-	public function fetchFailedJobs(): array
+	public function fetchPendingJobs(?int $limit = null): array
 	{
 		$sql = <<<SQL
 			SELECT * FROM jobqueue
 			WHERE status = :status
-			ORDER BY id ASC
+			ORDER BY id DESC
 		SQL;
+		
+		if ($limit !== null) {
+			$sql .= ' LIMIT :limit';
+		}
+		
+		$stmt = $this->db->prepare($sql);
+		$stmt->bindValue(':status', JobData::STATUS_PENDING);
+		if ($limit !== null) {
+			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+		}
+		$stmt->execute();
+
+		$jobs = [];
+		while ($record = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$jobs[] = JobData::fromArray($record);
+		}
+
+		return $jobs;
+	}
+
+	/**
+	 * Fetch all failed jobs.
+	 * 
+	 * @param int|null $limit
+	 * @return array<JobData>
+	 */
+	public function fetchFailedJobs(?int $limit = null): array
+	{
+		$sql = <<<SQL
+			SELECT * FROM jobqueue
+			WHERE status = :status
+			ORDER BY id DESC
+		SQL;
+		
+		if ($limit !== null) {
+			$sql .= ' LIMIT :limit';
+		}
+		
 		$stmt = $this->db->prepare($sql);
 		$stmt->bindValue(':status', JobData::STATUS_FAILED);
+		if ($limit !== null) {
+			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+		}
 		$stmt->execute();
 
 		$jobs = [];

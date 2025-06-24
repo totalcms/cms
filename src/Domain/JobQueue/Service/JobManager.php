@@ -62,4 +62,22 @@ final class JobManager
 	{
 		return $this->jobRepository->clearQueueForCollection($collection);
 	}
+
+	/**
+	 * @param int|null $limit
+	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
+	 */
+	public function getPendingJobs(?int $limit = null): array
+	{
+		return $this->jobRepository->fetchPendingJobs($limit);
+	}
+
+	/**
+	 * @param int|null $limit
+	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
+	 */
+	public function getFailedJobs(?int $limit = null): array
+	{
+		return $this->jobRepository->fetchFailedJobs($limit);
+	}
 }

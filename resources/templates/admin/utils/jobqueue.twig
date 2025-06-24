@@ -23,5 +23,63 @@
 		<pre><code>{{ cms.processJobQueueCommand() }}</code></pre>
 	</section>
 
+	{{ cms.jobQueuePendingInfo() }}
+	{{ cms.jobQueueFailedInfo() }}
+
 </section>
+
+<style>
+.jobqueue-table-wrapper {
+	max-height: 400px;
+	overflow-y: auto;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+.jobqueue-preview {
+	width: 100%;
+	font-size: 0.9em;
+	border-collapse: collapse;
+}
+
+.jobqueue-preview thead {
+	position: sticky;
+	top: 0;
+	background: var(--color-bg, #fff);
+	z-index: 10;
+}
+
+.jobqueue-preview th,
+.jobqueue-preview td {
+	padding: 0.5rem;
+	text-align: left;
+	border-bottom: 1px solid #eee;
+}
+
+.jobqueue-preview th {
+	font-weight: 600;
+	border-bottom: 1px solid #ddd;
+}
+
+.jobqueue-preview.pending-jobs tbody tr:hover {
+	background-color: rgba(0, 150, 0, 0.05);
+}
+
+.jobqueue-preview.failed-jobs tbody tr:hover {
+	background-color: rgba(255, 0, 0, 0.05);
+}
+
+.jobqueue-preview-section {
+	margin-top: 2rem;
+}
+
+.jobqueue-preview-section:first-of-type {
+	margin-top: 3rem;
+}
+
+.jobqueue-preview-section h3 {
+	margin-top: 0;
+	margin-bottom: 1rem;
+}
+</style>
 
