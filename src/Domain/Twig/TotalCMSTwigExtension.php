@@ -29,15 +29,20 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 	public function getGlobals(): array
 	{
 		return [
+			// Core adapter - keep as main global
 			'cms'         => $this->adapter,
-			'qr'          => $this->generator,
-			'barcode'     => $this->barcode,
+			
+			// Lightweight globals - direct access
 			'getData'     => $_GET,
 			'postData'    => array_filter($_POST),
 			'sessionData' => $_SESSION,
 			'patterns'    => $this->patterns,
-			'factory'     => $this->faker->createFaker(),
-			'flash'       => $this->session->getFlash(),
+			
+			// Heavy objects - use lazy loading proxies
+			'qr'          => new LazyTwigGlobal(fn() => $this->generator),
+			'barcode'     => new LazyTwigGlobal(fn() => $this->barcode),
+			'factory'     => new LazyTwigGlobal(fn() => $this->faker->createFaker()),
+			'flash'       => new LazyTwigGlobal(fn() => $this->session->getFlash()),
 		];
 	}
 
