@@ -598,7 +598,7 @@ final class TotalCMSTwigFilters
 		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension
 		static $markdown = null;
 		if ($markdown === null) {
-			$markdown = new \TotalCMS\Domain\Twig\ParsedownMarkdown();
+			$markdown = new ParsedownMarkdown();
 		}
 		
 		return $markdown->convert($value);

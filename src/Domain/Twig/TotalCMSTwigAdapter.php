@@ -12,6 +12,8 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -91,8 +93,8 @@ final class TotalCMSTwigAdapter
 	 */
 	public function jobQueuePendingInfo(): string
 	{
-		$jobManager = new \TotalCMS\Domain\JobQueue\Service\JobManager(
-			new \TotalCMS\Domain\JobQueue\Repository\JobRepository()
+		$jobManager = new JobManager(
+			new JobRepository()
 		);
 		
 		$pendingJobs = $jobManager->getPendingJobs();
@@ -145,8 +147,8 @@ final class TotalCMSTwigAdapter
 	 */
 	public function jobQueueFailedInfo(): string
 	{
-		$jobManager = new \TotalCMS\Domain\JobQueue\Service\JobManager(
-			new \TotalCMS\Domain\JobQueue\Repository\JobRepository()
+		$jobManager = new JobManager(
+			new JobRepository()
 		);
 		
 		$failedJobs = $jobManager->getFailedJobs();
