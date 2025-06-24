@@ -211,6 +211,12 @@ abstract class TotalForm
 
 	public function build(string $content = ''): string
 	{
+		$formgrid = null;
+		if (!empty($this->schemaData->formgrid)) {
+			$this->class .= ' formgrid';
+			$formgrid = $this->schemaData->formGridToCss();
+		}
+
 		$attributes = array_filter([
 			'class'           => "totalform {$this->class}",
 			'data-form'       => $this->formType,
@@ -220,6 +226,7 @@ abstract class TotalForm
 			'data-api'        => $this->api,
 			'data-route'      => $this->route,
 			'data-id'         => empty($this->id) ? null : $this->id,
+			'style'           => empty($formgrid) ? null : $formgrid,
 		]);
 
 		$actions = [
@@ -241,7 +248,10 @@ abstract class TotalForm
 		if (!empty($this->save) || !empty($this->delete)) {
 			$save     = $this->saveButton();
 			$delete   = $this->deleteButton();
-			$content .= HTMLUtils::element('div', $save . $delete, ['class' => 'form-inline-fields']);
+			$content .= HTMLUtils::element('div', $save . $delete, [
+				'class' => 'form-inline-fields',
+				// 'style' => 'grid-area: buttons;',
+			]);
 		}
 
 		return HTMLUtils::element('form', $content, $attributes);

@@ -35,6 +35,11 @@
 		gap           : 1rem;
 		align-content : start;
 	}
+
+	&:not(.formgrid) > *,
+	dialog .form-field {
+		grid-area: unset !important;
+	}
 }
 
 .totalform:not(.edit-mode) {
