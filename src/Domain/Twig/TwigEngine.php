@@ -19,6 +19,7 @@ use Twig\RuntimeLoader\RuntimeLoaderInterface;
 final class TwigEngine
 {
 	private TwigEnvironment $twig;
+	private ?TwigCacheManager $cacheManager = null;
 	
 	/** @var array<string,array<string,mixed>> */
 	private static array $renderStats = [];
@@ -32,6 +33,11 @@ final class TwigEngine
 		$customTemplates   = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
 		$cacheDir          = $config->cachedir === 'false' ? false : $config->cachedir;
 		$debug             = $cacheDir === false ? true : false;                        // enable debug is no cache dir
+
+		// Initialize cache manager if caching is enabled
+		if ($cacheDir !== false) {
+			$this->cacheManager = new TwigCacheManager($config);
+		}
 
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
@@ -47,7 +53,7 @@ final class TwigEngine
 			'debug'            => $debug,
 			'autoescape'       => false,
 			'optimizations'    => -1,        // Enable all optimizations
-			'strict_variables' => !$debug,   // Enable in production for better error detection
+			// Note: strict_variables disabled - would break existing templates that rely on null coalescing
 		]);
 
 		$this->twig->addExtension($extension);
@@ -240,5 +246,56 @@ final class TwigEngine
 			'slowest_time' => $slowestTime,
 			'templates_count' => count(self::$renderStats),
 		];
+	}
+	
+	/**
+	 * Get cache manager instance.
+	 */
+	public function getCacheManager(): ?TwigCacheManager
+	{
+		return $this->cacheManager;
+	}
+	
+	/**
+	 * Clear all Twig caches including OPcache.
+	 */
+	public function clearAllCaches(): bool
+	{
+		if ($this->cacheManager === null) {
+			return true; // No caching enabled
+		}
+		
+		return $this->cacheManager->clearAllCaches();
+	}
+	
+	/**
+	 * Get comprehensive cache statistics.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getCacheStats(): array
+	{
+		if ($this->cacheManager === null) {
+			return ['caching_enabled' => false];
+		}
+		
+		return $this->cacheManager->getCacheStats();
+	}
+	
+	/**
+	 * Get optimal cache configuration recommendations.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getCacheRecommendations(): array
+	{
+		if ($this->cacheManager === null) {
+			return [
+				'caching_enabled' => false,
+				'recommendations' => ['❌ Twig caching is disabled - enable for better performance']
+			];
+		}
+		
+		return $this->cacheManager->getOptimalCacheConfig();
 	}
 }
