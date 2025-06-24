@@ -51,7 +51,14 @@ document.addEventListener("DOMContentLoaded", event => {
 				const lastVisible = allItems[maxVisible - 1];
 				const viewAllIndicator = document.createElement('div');
 				viewAllIndicator.className = 'gallery-view-all';
-				viewAllIndicator.innerHTML = `+${allItems.length - maxVisible} more`;
+				
+				// Get custom text pattern or use default
+				const viewAllText = gallery.dataset.viewAllText || '+{count} more';
+				const remainingCount = allItems.length - maxVisible;
+				
+				// Replace {count} placeholder with actual count
+				viewAllIndicator.innerHTML = viewAllText.replace('{count}', remainingCount);
+				
 				lastVisible.appendChild(viewAllIndicator);
 			}
 		}

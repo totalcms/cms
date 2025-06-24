@@ -923,11 +923,17 @@ NGINX;
 		unset($options['collection']);
 		unset($options['property']);
 
-		// Extract maxVisible before encoding settings
+		// Extract maxVisible and viewAllText before encoding settings
 		$maxVisible = 0;
 		if (isset($options['maxVisible']) && $options['maxVisible'] > 0) {
 			$maxVisible = (int)$options['maxVisible'];
 			unset($options['maxVisible']);
+		}
+		
+		$viewAllText = null;
+		if (isset($options['viewAllText'])) {
+			$viewAllText = $options['viewAllText'];
+			unset($options['viewAllText']);
 		}
 
 		$attributes = [
@@ -938,6 +944,9 @@ NGINX;
 		// Add max-visible attribute if provided
 		if ($maxVisible > 0) {
 			$attributes['data-max-visible'] = (string)$maxVisible;
+			if ($viewAllText !== null) {
+				$attributes['data-view-all-text'] = htmlspecialchars($viewAllText);
+			}
 		}
 
 		return HTMLUtils::element('div', $gallery, $attributes);
