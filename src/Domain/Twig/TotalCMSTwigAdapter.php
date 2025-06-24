@@ -88,7 +88,7 @@ final class TotalCMSTwigAdapter
 
 	/**
 	 * Get pending jobs info for display.
-	 * 
+	 *
 	 * @return string
 	 */
 	public function jobQueuePendingInfo(): string
@@ -96,18 +96,18 @@ final class TotalCMSTwigAdapter
 		$jobManager = new JobManager(
 			new JobRepository()
 		);
-		
+
 		$pendingJobs = $jobManager->getPendingJobs();
-		
+
 		if (empty($pendingJobs)) {
 			return '';
 		}
-		
+
 		$rows = '';
 		foreach ($pendingJobs as $job) {
 			$payload = json_decode($job->payload, true);
 			$objectId = $payload['id'] ?? 'N/A';
-			
+
 			$rows .= sprintf(
 				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
 				htmlspecialchars($job->type),
@@ -116,7 +116,7 @@ final class TotalCMSTwigAdapter
 				htmlspecialchars($job->createdAt)
 			);
 		}
-		
+
 		$table = sprintf(
 			'<section class="jobqueue-preview-section">
 				<h3>Pending Jobs</h3>
@@ -136,13 +136,13 @@ final class TotalCMSTwigAdapter
 			</section>',
 			$rows
 		);
-		
+
 		return $table;
 	}
 
 	/**
 	 * Get failed jobs info for display.
-	 * 
+	 *
 	 * @return string
 	 */
 	public function jobQueueFailedInfo(): string
@@ -150,24 +150,24 @@ final class TotalCMSTwigAdapter
 		$jobManager = new JobManager(
 			new JobRepository()
 		);
-		
+
 		$failedJobs = $jobManager->getFailedJobs();
-		
+
 		if (empty($failedJobs)) {
 			return '';
 		}
-		
+
 		$rows = '';
 		foreach ($failedJobs as $job) {
 			$payload = json_decode($job->payload, true);
 			$objectId = $payload['id'] ?? 'N/A';
-			
+
 			// Truncate error message for display
 			$errorSnippet = $job->lastError;
 			if (strlen($errorSnippet) > 100) {
 				$errorSnippet = substr($errorSnippet, 0, 100) . '...';
 			}
-			
+
 			$rows .= sprintf(
 				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td title="%s">%s</td></tr>',
 				htmlspecialchars($job->type),
@@ -178,7 +178,7 @@ final class TotalCMSTwigAdapter
 				htmlspecialchars($errorSnippet)
 			);
 		}
-		
+
 		$table = sprintf(
 			'<section class="jobqueue-preview-section">
 				<h3>Failed Jobs</h3>
@@ -199,7 +199,7 @@ final class TotalCMSTwigAdapter
 			</section>',
 			$rows
 		);
-		
+
 		return $table;
 	}
 
@@ -923,10 +923,24 @@ NGINX;
 		unset($options['collection']);
 		unset($options['property']);
 
-		return HTMLUtils::element('div', $gallery, [
+		// Extract maxVisible before encoding settings
+		$maxVisible = 0;
+		if (isset($options['maxVisible']) && $options['maxVisible'] > 0) {
+			$maxVisible = (int)$options['maxVisible'];
+			unset($options['maxVisible']);
+		}
+
+		$attributes = [
 			'class'         => 'cms-gallery',
 			'data-settings' => (string)json_encode($options),
-		]);
+		];
+
+		// Add max-visible attribute if provided
+		if ($maxVisible > 0) {
+			$attributes['data-max-visible'] = (string)$maxVisible;
+		}
+
+		return HTMLUtils::element('div', $gallery, $attributes);
 	}
 
 	/**
