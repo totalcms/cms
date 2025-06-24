@@ -36,5 +36,10 @@ body>.cms-twig-error {
 	height       : auto !important;
 	aspect-ratio : 16 / 9;
 }
+.cms-image {
+	max-width : 100%;
+	height    : auto;
+	width     : auto;
+}
 
 @include meta.load-css("pagination");
