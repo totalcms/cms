@@ -363,6 +363,34 @@ Checks if a file exists.
 </ul>
 ```
 
+### `svgSymbol(id): string`
+Creates an SVG element that references a symbol defined in an SVG sprite.
+
+```twig
+{# Basic icon usage #}
+{{ svgSymbol('icon-home') }}
+{# Outputs: <svg><use href="#icon-home"></use></svg> #}
+
+{# Navigation with icons #}
+<nav class="main-nav">
+    <a href="/">{{ svgSymbol('icon-home') }} Home</a>
+    <a href="/about">{{ svgSymbol('icon-info') }} About</a>
+    <a href="/contact">{{ svgSymbol('icon-mail') }} Contact</a>
+</nav>
+```
+
+**SVG Sprite Setup:**
+To use this function, define your SVG symbols in a sprite:
+
+```html
+<!-- Place this in your template, typically hidden. -->
+<!-- Use the svgSymbol filter as well. -->
+<svg style="display: none;">
+	{{ cms.svg('home') | svgToSymbol('icon-home') }}
+	{{ cms.svg('mail') | svgToSymbol('icon-mail') }}
+</svg>
+```
+
 ## Media Embedding Functions
 
 ### `embed(url, array options)`
