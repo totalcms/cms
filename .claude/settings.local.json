@@ -17,7 +17,8 @@
       "Bash(touch:*)",
       "Bash(mkdir:*)",
       "Bash(composer validate:*)",
-      "Bash(./phpDocumentor.phar:*)"
+      "Bash(./phpDocumentor.phar:*)",
+      "Bash(composer:*)"
     ],
     "deny": []
   }
