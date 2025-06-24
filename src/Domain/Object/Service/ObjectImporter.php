@@ -50,6 +50,12 @@ final class ObjectImporter
 	{
 		$this->collection = $collection;
 
+		// Reset property arrays for each import
+		$this->images    = [];
+		$this->galleries = [];
+		$this->files     = [];
+		$this->depots    = [];
+
 		$objectData = $this->saveRefPropsforLaterProcessing($objectData);
 		$object     = $this->objectSaver->saveObject($collection, $objectData);
 
@@ -66,6 +72,12 @@ final class ObjectImporter
 	public function updateObject(string $collection, array $objectData): ObjectData
 	{
 		$this->collection = $collection;
+
+		// Reset property arrays for each update
+		$this->images    = [];
+		$this->galleries = [];
+		$this->files     = [];
+		$this->depots    = [];
 
 		$objectData = $this->saveRefPropsforLaterProcessing($objectData);
 
@@ -167,7 +179,36 @@ final class ObjectImporter
 		foreach ($this->images as $property => $path) {
 			if (file_exists($path)) {
 				$this->imageSaver->save($this->collection, $this->objectID, $property, $path);
+				$this->saveImageAlt($property, $path);
 			}
+		}
+	}
+
+	private function getImageAltText(string $imagePath): string|false
+	{
+		$dir      = dirname($imagePath);
+		$filename = pathinfo($imagePath, PATHINFO_FILENAME);
+		$altExts  = ['cms', 'txt'];
+		// If the image has an alternative text file, save it as well
+		foreach ($altExts as $ext) {
+			$altPath = $dir . '/' . $filename . '.' . $ext;
+			if (file_exists($altPath)) {
+				return file_get_contents($altPath);
+			}
+		}
+		return false;
+	}
+
+	private function saveImageAlt(string $property, string $imagePath): void
+	{
+		$altContent = $this->getImageAltText($imagePath);
+		if (!empty($altContent)) {
+			$this->objectPatcher->patchObjectProperty(
+				$this->collection,
+				$this->objectID,
+				$property,
+				['alt' => $altContent]
+			);
 		}
 	}
 
