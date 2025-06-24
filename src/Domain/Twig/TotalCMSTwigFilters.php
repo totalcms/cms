@@ -498,7 +498,7 @@ final class TotalCMSTwigFilters
 
 		$refiner = new CollectionRefiner($collection);
 
-		return $refiner->filter($rules);
+		return $refiner->filterUnique($refiner->filter($rules));
 	}
 
 	/**
@@ -594,13 +594,13 @@ final class TotalCMSTwigFilters
 		if (!is_string($value)) {
 			$value = (string)$value;
 		}
-		
+
 		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension
 		static $markdown = null;
 		if ($markdown === null) {
 			$markdown = new ParsedownMarkdown();
 		}
-		
+
 		return $markdown->convert($value);
 	}
 }
