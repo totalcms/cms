@@ -2,17 +2,14 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use Psr\Log\LoggerInterface;
 use Odan\Session\PhpSession;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Service\FileFetcher;
-use TotalCMS\Domain\Property\Service\DepotFileFetcher;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Factory\LoggerFactory;
 
 final class FileAccessManager
 {

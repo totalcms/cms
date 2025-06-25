@@ -9,7 +9,7 @@ class JobData
 	public string $payload;
 	public string $status;
 	public string $collection;
-	public int    $attempts;
+	public int $attempts;
 	public string $createdAt;
 	public string $updatedAt;
 	public string $lastError;
@@ -51,9 +51,9 @@ class JobData
 	}
 
 	/** @param array<string,string> $data */
-	static public function fromArray(array $data): self
+	public static function fromArray(array $data): self
 	{
-		$instance = new self();
+		$instance             = new self();
 		$instance->id         = $data['id'] ?? '';
 		$instance->type       = $data['type'] ?? '';
 		$instance->payload    = $data['payload'] ?? '';

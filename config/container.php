@@ -26,31 +26,51 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
+use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Twig\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
-use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Cache\Service\FilesystemService;
+use TotalCMS\Domain\Cache\Service\OPcacheService;
+use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\BarcodeGenerator;
+use TotalCMS\Utils\Cipher;
+use TotalCMS\Utils\CSRFTokenManager;
+use TotalCMS\Utils\FileUploadValidator;
 use TotalCMS\Utils\LogAnalyzer;
 use TotalCMS\Utils\QRGenerator;
 use TotalCMS\Utils\ServerChecker;
@@ -166,6 +186,15 @@ return [
 		return $errorMiddleware;
 	},
 
+	DefaultErrorHandler::class => function (ContainerInterface $container) {
+		return new DefaultErrorHandler(
+			$container->get(JsonRenderer::class),
+			$container->get(ResponseFactoryInterface::class),
+			$container->get(LoggerFactory::class),
+			$container->get(OPcacheService::class)
+		);
+	},
+
 	PhpRenderer::class => function (ContainerInterface $container) {
 		return new PhpRenderer($container->get(Config::class)->template);
 	},
@@ -199,6 +228,14 @@ return [
 		return new PropertyFetcher($container->get(ObjectFetcher::class));
 	},
 
+	PropertyDataProcessorInterface::class => function (ContainerInterface $container) {
+		return new PropertyDataProcessor();
+	},
+
+	PropertyDataProcessor::class => function (ContainerInterface $container) {
+		return $container->get(PropertyDataProcessorInterface::class);
+	},
+
 	TotalFormFactory::class => function (ContainerInterface $container) {
 		return new TotalFormFactory(
 			$container->get(Config::class),
@@ -208,6 +245,8 @@ return [
 			$container->get(IndexReader::class),
 			$container->get(SchemaFetcher::class),
 			$container->get(SchemaLister::class),
+			$container->get(SchemaFactory::class),
+			$container->get(CSRFTokenManager::class),
 		);
 	},
 
@@ -223,10 +262,12 @@ return [
 			$container->get(SchemaFetcher::class),
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
+			$container->get(CacheManager::class),
 			$container->get(LogAnalyzer::class),
 			$container->get(PhpSession::class),
 			$container->get(AccessManager::class),
 			$container->get(FileAccessManager::class),
+			$container->get(ImageCacheService::class),
 		);
 	},
 
@@ -240,7 +281,9 @@ return [
 			$container->get(TotalCMSTwigPatterns::class),
 			$container->get(FakerFactory::class),
 			$container->get(QRCodeTwigAdapter::class),
+			$container->get(BarcodeTwigAdapter::class),
 			$container->get(PhpSession::class),
+			$container->get(CSRFTokenManager::class),
 		);
 	},
 
@@ -252,12 +295,80 @@ return [
 		return new QRGenerator();
 	},
 
-	TwigEngine::class => function (ContainerInterface $container) {
-		return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
+	BarcodeGenerator::class => function (ContainerInterface $container) {
+		return new BarcodeGenerator();
 	},
 
-	TwigCacheCleaner::class => function (ContainerInterface $container) {
-		return new TwigCacheCleaner($container->get(Config::class));
+	BarcodeTwigAdapter::class => function (ContainerInterface $container) {
+		return new BarcodeTwigAdapter($container->get(BarcodeGenerator::class));
+	},
+
+	FileUploadValidator::class => function (ContainerInterface $container) {
+		return new FileUploadValidator();
+	},
+
+	Cipher::class => function (ContainerInterface $container) {
+		return new Cipher();
+	},
+
+	CSRFTokenManager::class => function (ContainerInterface $container) {
+		return new CSRFTokenManager(
+			$container->get(PhpSession::class)
+		);
+	},
+
+	CSRFProtectionMiddleware::class => function (ContainerInterface $container) {
+		return new CSRFProtectionMiddleware(
+			$container->get(CSRFTokenManager::class)
+		);
+	},
+
+	TwigEngine::class => function (ContainerInterface $container) {
+		return new TwigEngine(
+			$container->get(Config::class), 
+			$container->get(TotalCMSTwigExtension::class),
+			$container->get(CacheManager::class)
+		);
+	},
+
+	// Cache Services
+	FilesystemService::class => function (ContainerInterface $container) {
+		return new FilesystemService($container->get(Config::class));
+	},
+
+	OPcacheService::class => function (ContainerInterface $container) {
+		return new OPcacheService();
+	},
+
+	RedisService::class => function (ContainerInterface $container) {
+		return new RedisService($container->get(Config::class));
+	},
+
+	MemcachedService::class => function (ContainerInterface $container) {
+		return new MemcachedService($container->get(Config::class));
+	},
+
+	CacheManager::class => function (ContainerInterface $container) {
+		return new CacheManager(
+			$container->get(FilesystemService::class),
+			$container->get(OPcacheService::class),
+			$container->get(RedisService::class),
+			$container->get(MemcachedService::class)
+		);
+	},
+
+	SchemaRepository::class => function (ContainerInterface $container) {
+		return new SchemaRepository(
+			$container->get(StorageAdapterInterface::class),
+			$container->get(SchemaFactory::class),
+			$container->get(CacheManager::class)
+		);
+	},
+
+	ImageCacheService::class => function (ContainerInterface $container) {
+		return new ImageCacheService(
+			$container->get(Config::class)
+		);
 	},
 
 	IndexSearcher::class => function (ContainerInterface $container) {
@@ -277,6 +388,16 @@ return [
 			$container->get(PhpSession::class),
 			$container->get(Config::class),
 			$container->get(UserValidationService::class),
+			$container->get(LoggerFactory::class),
+		);
+	},
+
+	TotalCmsOneImporter::class => function (ContainerInterface $container) {
+		return new TotalCmsOneImporter(
+			$container->get(CollectionFetcher::class),
+			$container->get(CollectionFactory::class),
+			$container->get(CollectionRepository::class),
+			$container->get(JobQueuer::class),
 			$container->get(LoggerFactory::class),
 		);
 	},

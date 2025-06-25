@@ -1,0 +1,163 @@
+<?php
+
+namespace TotalCMS\Domain\Cache\Service;
+
+use TotalCMS\Support\Config;
+use Memcached;
+
+/**
+ * Memcached cache service.
+ */
+final class MemcachedService implements CacheInterface
+{
+	private bool $enabled;
+	private string $host;
+	private int $port;
+	private ?Memcached $memcached = null;
+
+	public function __construct(
+		Config $config
+	) {
+		$cache = $config->cache ?? [];
+		$memcachedConfig = $cache['memcached'] ?? [];
+		$this->enabled = $memcachedConfig['enabled'] ?? true;
+		$this->host = $memcachedConfig['host'] ?? '127.0.0.1';
+		$this->port = $memcachedConfig['port'] ?? 11211;
+	}
+
+	public function isAvailable(): bool
+	{
+		if (!$this->enabled || !extension_loaded('memcached') || !class_exists('Memcached')) {
+			return false;
+		}
+
+		try {
+			$memcached = $this->getConnection();
+			$memcached->set('test_key', 'test_value', 1);
+			return $memcached->get('test_key') === 'test_value';
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	public function get(string $key): mixed
+	{
+		if (!$this->isAvailable()) {
+			return null;
+		}
+
+		try {
+			$memcached = $this->getConnection();
+			$value = $memcached->get($key);
+			return $value !== false ? $value : null;
+		} catch (\Exception $e) {
+			return null;
+		}
+	}
+
+	public function set(string $key, mixed $value, int $ttl = 0): bool
+	{
+		if (!$this->isAvailable()) {
+			return false;
+		}
+
+		try {
+			$memcached = $this->getConnection();
+			return $memcached->set($key, $value, $ttl);
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	public function delete(string $key): bool
+	{
+		if (!$this->isAvailable()) {
+			return false;
+		}
+
+		try {
+			$memcached = $this->getConnection();
+			return $memcached->delete($key);
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	public function clear(): bool
+	{
+		if (!$this->isAvailable()) {
+			return false;
+		}
+
+		try {
+			$memcached = $this->getConnection();
+			return $memcached->flush();
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	public function getStats(): array
+	{
+		if (!$this->isAvailable()) {
+			return [
+				'available' => false,
+				'enabled' => $this->enabled,
+				'host' => $this->host,
+				'port' => $this->port,
+			];
+		}
+
+		try {
+			$memcached = $this->getConnection();
+			$stats = $memcached->getStats();
+			$serverStats = reset($stats);
+
+			$hits = (int)($serverStats['get_hits'] ?? 0);
+			$misses = (int)($serverStats['get_misses'] ?? 0);
+			$total = $hits + $misses;
+
+			return [
+				'available' => true,
+				'enabled' => $this->enabled,
+				'host' => $this->host,
+				'port' => $this->port,
+				'memory_usage' => isset($serverStats['bytes'])
+					? round($serverStats['bytes'] / 1024 / 1024, 2) . 'MB'
+					: 'Unknown',
+				'hit_rate' => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
+				'items' => $serverStats['curr_items'] ?? 0,
+			];
+		} catch (\Exception $e) {
+			return [
+				'available' => false,
+				'enabled' => $this->enabled,
+				'error' => $e->getMessage(),
+			];
+		}
+	}
+
+	public function getName(): string
+	{
+		return 'Memcached';
+	}
+
+	public function getRecommendations(): array
+	{
+		if (!$this->isAvailable()) {
+			return ['⚠️ Memcached not available - can be used for distributed caching'];
+		}
+
+		return ['✅ Memcached is available for template metadata caching'];
+	}
+
+	private function getConnection(): Memcached
+	{
+		if ($this->memcached === null) {
+			$this->memcached = new Memcached();
+			$this->memcached->addServer($this->host, $this->port);
+		}
+
+		return $this->memcached;
+	}
+}

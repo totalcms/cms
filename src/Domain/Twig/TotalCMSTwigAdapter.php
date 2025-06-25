@@ -6,12 +6,16 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -35,6 +39,8 @@ final class TotalCMSTwigAdapter
 {
 	public TotalFormFactory $form;
 	public ServerChecker $checker;
+	public CacheManager $cacheManager;
+	public ImageCacheService $imageCacheService;
 	public LogAnalyzer $logger;
 	public string $api;
 	public string $dashboard;
@@ -53,18 +59,22 @@ final class TotalCMSTwigAdapter
 		private SchemaFetcher $schemaFetcher,
 		private TotalFormFactory $totalFormFactory,
 		private ServerChecker $serverChecker,
+		private CacheManager $cacheManagerService,
 		private LogAnalyzer $logAnalyzer,
 		private PhpSession $session,
 		private AccessManager $accessManager,
 		private FileAccessManager $fileAccessManager,
+		private ImageCacheService $imageCacheServiceInstance,
 	) {
-		$this->api       = $this->config->api;
-		$this->dashboard = $this->api . '/admin';
-		$this->logout    = $this->api . '/logout';
-		$this->domain    = $this->getDomainName();
-		$this->form      = $this->totalFormFactory;
-		$this->checker   = $this->serverChecker;
-		$this->logger    = $this->logAnalyzer;
+		$this->api          = $this->config->api;
+		$this->dashboard    = $this->api . '/admin';
+		$this->logout       = $this->api . '/logout';
+		$this->domain       = $this->getDomainName();
+		$this->form         = $this->totalFormFactory;
+		$this->checker      = $this->serverChecker;
+		$this->cacheManager = $this->cacheManagerService;
+		$this->imageCacheService = $this->imageCacheServiceInstance;
+		$this->logger       = $this->logAnalyzer;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -80,7 +90,125 @@ final class TotalCMSTwigAdapter
 			$installDir,
 			$docroot,
 		);
+
 		return $command;
+	}
+
+	/**
+	 * Get pending jobs info for display.
+	 *
+	 * @return string
+	 */
+	public function jobQueuePendingInfo(): string
+	{
+		$jobManager = new JobManager(
+			new JobRepository()
+		);
+
+		$pendingJobs = $jobManager->getPendingJobs();
+
+		if (empty($pendingJobs)) {
+			return '';
+		}
+
+		$rows = '';
+		foreach ($pendingJobs as $job) {
+			$payload  = json_decode($job->payload, true);
+			$objectId = $payload['id'] ?? 'N/A';
+
+			$rows .= sprintf(
+				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+				htmlspecialchars($job->type),
+				htmlspecialchars($job->collection),
+				htmlspecialchars($objectId),
+				htmlspecialchars($job->createdAt)
+			);
+		}
+
+		$table = sprintf(
+			'<section class="jobqueue-preview-section">
+				<h3>Pending Jobs</h3>
+				<div class="jobqueue-table-wrapper">
+					<table class="jobqueue-preview pending-jobs cms-colors">
+						<thead>
+							<tr>
+								<th>Type</th>
+								<th>Collection</th>
+								<th>Object ID</th>
+								<th>Created</th>
+							</tr>
+						</thead>
+						<tbody>%s</tbody>
+					</table>
+				</div>
+			</section>',
+			$rows
+		);
+
+		return $table;
+	}
+
+	/**
+	 * Get failed jobs info for display.
+	 *
+	 * @return string
+	 */
+	public function jobQueueFailedInfo(): string
+	{
+		$jobManager = new JobManager(
+			new JobRepository()
+		);
+
+		$failedJobs = $jobManager->getFailedJobs();
+
+		if (empty($failedJobs)) {
+			return '';
+		}
+
+		$rows = '';
+		foreach ($failedJobs as $job) {
+			$payload  = json_decode($job->payload, true);
+			$objectId = $payload['id'] ?? 'N/A';
+
+			// Truncate error message for display
+			$errorSnippet = $job->lastError;
+			if (strlen($errorSnippet) > 100) {
+				$errorSnippet = substr($errorSnippet, 0, 100) . '...';
+			}
+
+			$rows .= sprintf(
+				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td title="%s">%s</td></tr>',
+				htmlspecialchars($job->type),
+				htmlspecialchars($job->collection),
+				htmlspecialchars($objectId),
+				htmlspecialchars(strval($job->attempts)),
+				htmlspecialchars($job->lastError),
+				htmlspecialchars($errorSnippet)
+			);
+		}
+
+		$table = sprintf(
+			'<section class="jobqueue-preview-section">
+				<h3>Failed Jobs</h3>
+				<div class="jobqueue-table-wrapper">
+					<table class="jobqueue-preview failed-jobs cms-colors">
+						<thead>
+							<tr>
+								<th>Type</th>
+								<th>Collection</th>
+								<th>Object ID</th>
+								<th>Attempts</th>
+								<th>Error</th>
+							</tr>
+						</thead>
+						<tbody>%s</tbody>
+					</table>
+				</div>
+			</section>',
+			$rows
+		);
+
+		return $table;
 	}
 
 	/**
@@ -114,12 +242,13 @@ final class TotalCMSTwigAdapter
 		if (!str_ends_with($url, '/')) {
 			$url .= '/';
 		}
+
 		return $url;
 	}
 
 	private function startPathForUrl(string $url): string
 	{
-		$path = strval(parse_url($url, PHP_URL_PATH));
+		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $path;
 
 		if (str_ends_with($path, 'php')) {
@@ -128,12 +257,13 @@ final class TotalCMSTwigAdapter
 		if (!str_ends_with($start, '/')) {
 			$start .= '/';
 		}
+
 		return ltrim($start, '/');
 	}
 
-	public function apacheRule(string $url, string $collection = "Collection"): string
+	public function apacheRule(string $url, string $collection = 'Collection'): string
 	{
-		$path = strval(parse_url($url, PHP_URL_PATH));
+		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
 		$snippet = <<<HTACCESS
@@ -147,9 +277,9 @@ HTACCESS;
 		return $snippet;
 	}
 
-	public function nginxRule(string $url, string $collection = "Collection"): string
+	public function nginxRule(string $url, string $collection = 'Collection'): string
 	{
-		$path = strval(parse_url($url, PHP_URL_PATH));
+		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
 		$snippet = <<<NGINX
@@ -292,6 +422,14 @@ NGINX;
 	public function schema(string $schema): array
 	{
 		$schema = $this->schemaFetcher->fetchSchema($schema);
+
+		return $schema->toArray();
+	}
+
+	/** @return array<string,mixed> */
+	public function schemaForCollection(string $collection): array
+	{
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
 		return $schema->toArray();
 	}
@@ -500,15 +638,35 @@ NGINX;
 		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	/** @param array<string,string> $options */
-	public function color(string $id, array $options = []): string
+	/**
+	 * @param array<string,string> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function color(string $id, array $options = []): array
 	{
 		$options = array_merge([
 			'collection' => 'color',
 			'property'   => 'color',
 		], $options);
 
-		return $this->data($options['collection'], $id, $options['property']);
+		$color = $this->data($options['collection'], $id, $options['property']);
+
+		if (!is_array($color)) {
+			return [];
+		}
+
+		return $color;
+	}
+
+	/**
+	 * @param array<string,string> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function colour(string $id, array $options = []): array
+	{
+		return $this->color($id, $options);
 	}
 
 	/** @param array<string,string> $options */
@@ -781,10 +939,33 @@ NGINX;
 		unset($options['collection']);
 		unset($options['property']);
 
-		return HTMLUtils::element('div', $gallery, [
+		// Extract maxVisible and viewAllText before encoding settings
+		$maxVisible = 0;
+		if (isset($options['maxVisible']) && $options['maxVisible'] > 0) {
+			$maxVisible = (int)$options['maxVisible'];
+			unset($options['maxVisible']);
+		}
+
+		$viewAllText = null;
+		if (isset($options['viewAllText'])) {
+			$viewAllText = $options['viewAllText'];
+			unset($options['viewAllText']);
+		}
+
+		$attributes = [
 			'class'         => 'cms-gallery',
 			'data-settings' => (string)json_encode($options),
-		]);
+		];
+
+		// Add max-visible attribute if provided
+		if ($maxVisible > 0) {
+			$attributes['data-max-visible'] = (string)$maxVisible;
+			if ($viewAllText !== null) {
+				$attributes['data-view-all-text'] = htmlspecialchars($viewAllText);
+			}
+		}
+
+		return HTMLUtils::element('div', $gallery, $attributes);
 	}
 
 	/**

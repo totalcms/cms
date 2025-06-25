@@ -14,7 +14,7 @@ final class ImportSchemaForm
 	) {
 		$this->simpleform = new SimpleForm(
 			api     : $this->api,
-			route   : "/import/schemas",
+			route   : '/import/schemas',
 			method  : 'POST',
 			label   : $this->label,
 			class   : 'import-form',

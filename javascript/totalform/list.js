@@ -12,19 +12,32 @@ export default class ListField extends MultiSelectField {
 
 		// Define option defaults
 		const defaults = {
+			asString              : false,
 			allowHTML             : true,
 			removeItemButton      : true,
 			duplicateItemsAllowed : false,
 			addChoices            : true,
+			maxItemCount          : -1,
 		};
 		this.options = Object.assign({}, this.options, defaults, options);
+
+		// Temporarily set maxItemCount to -1 to prevent initial notification
+		const tempMaxItemCount = this.options.maxItemCount;
+		const showNotification = this.options.maxItemCount > 0 && this.getValue().length >= this.options.maxItemCount;
 
 		this.choices = new Choices(this.input, {
 			allowHTML             : this.options.allowHTML,
 			removeItemButton      : this.options.removeItemButton,
 			duplicateItemsAllowed : this.options.duplicateItemsAllowed,
 			addChoices            : this.options.addChoices,
-			callbackOnInit        : this.initSortable.bind(this),
+			maxItemCount          : showNotification ? -1 : this.options.maxItemCount,
+			callbackOnInit        : () => {
+				this.initSortable();
+				// Restore the actual maxItemCount after initialization
+				if (showNotification) {
+					setTimeout(() => {this.choices.config.maxItemCount = tempMaxItemCount}, 0);
+				}
+			},
 		});
     }
 
@@ -57,6 +70,15 @@ export default class ListField extends MultiSelectField {
 
 		this.changed();
 	}
+
+	getValue() {
+		const value = super.getValue();
+
+		if (this.options.asString) {
+			return value.join(',');
+		}
+		return value;
+    }
 
     schema() {
         return {

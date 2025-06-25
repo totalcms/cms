@@ -10,6 +10,7 @@ import JobQueueStatsTable from './jobqueue-stats';
 import JSONField from './totalform/json';
 import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
+import initExternalLinks from './external-links';
 
 globalThis.TotalCMS = TotalCMS;
 
@@ -56,4 +57,6 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const jobqueueStats = Array.from(document.getElementsByClassName("jobqueue-stats"));
 	jobqueueStats.forEach(table => new JobQueueStatsTable(table));
+
+	initExternalLinks();
 });

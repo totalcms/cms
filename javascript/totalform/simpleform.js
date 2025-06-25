@@ -19,14 +19,22 @@ export default class SimpleForm {
 		this.route   = this.form.dataset.route;
 		this.api     = new TotalCMS({ url: this.form.dataset.api});
 		this.refresh = this.form.dataset.refresh === "true";
+		this.ajax    = this.form.dataset.ajax    === "true";
+		this.button  = this.form.querySelector("button");
 
-		this.form.addEventListener("submit", event => event.preventDefault());
-
-		this.button = this.form.querySelector("button");
-		this.button.addEventListener("click", event => {
-			event.preventDefault();
-			this.send();
-		});
+		if (this.ajax) {
+			this.form.addEventListener("submit", event => event.preventDefault());
+			this.button.addEventListener("click", event => {
+				event.preventDefault();
+				this.send();
+			});
+		} else {
+			this.form.method = this.method;
+			this.form.action = this.route;
+			this.button.addEventListener("click", event => {
+				this.form.submit();
+			});
+		}
     }
 
     isDomNode(node){

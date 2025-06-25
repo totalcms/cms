@@ -6,6 +6,7 @@ use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -21,10 +22,11 @@ final class CsvImporter
 		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
 		private ObjectImporter $objectImporter,
+		private IndexBuilder $indexBuilder,
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger();
+		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('csv-importer');
 	}
 
 	public function queueJobs(): void
@@ -36,6 +38,7 @@ final class CsvImporter
 	 * Clean up CSV data by removing empty headers and rows with no data.
 	 *
 	 * @param Reader<array<string,string>> $csv
+	 *
 	 * @return array<int, array<string, mixed>> Cleaned CSV records
 	 */
 	private function cleanCsvData(Reader $csv): array
@@ -50,8 +53,11 @@ final class CsvImporter
 
 		$cleanedRecords = [];
 		foreach ($records as $record) {
+			// Trim all values in the record
+			$trimmedRecord = array_map('trim', $record);
+
 			// Remove columns with empty headers
-			$filteredRecord = array_intersect_key($record, array_flip($headers));
+			$filteredRecord = array_intersect_key($trimmedRecord, array_flip($headers));
 
 			// Skip rows where all values are empty
 			if (array_filter($filteredRecord)) {
@@ -96,17 +102,28 @@ final class CsvImporter
 			}
 		}
 
+		// Rebuild index
+		$this->indexBuilder->buildIndex($collection);
+
 		return $importCount;
 	}
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function importNewObject(int $offset, array $record): bool
 	{
-		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$this->logger->info(sprintf('Skipping import of record (%s) at row %s', $record['id'], $offset));
+		if (!isset($record['id'])) {
+			$this->logger->warning('Skipping import of record without ID');
+
+			return false;
+		}
+		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
+			$this->logger->warning($error);
+
 			return false;
 		}
 
@@ -126,12 +143,14 @@ final class CsvImporter
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function updateObject(int $offset, array $record): bool
 	{
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'], $offset));
+
 			return false;
 		}
 

@@ -2,15 +2,12 @@
 
 namespace TotalCMS\Domain\JobQueue\Repository;
 
-use PDO;
-use RuntimeException;
-use DomainException;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
 final class JobRepository
 {
-	private PDO $db;
+	private \PDO $db;
 	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue';
 
 	public function __construct()
@@ -23,10 +20,10 @@ final class JobRepository
 		return file_exists(self::DB_PATH);
 	}
 
-	private function createDb(): PDO
+	private function createDb(): \PDO
 	{
 		$exists = $this->dbExists();
-		$db     = new PDO('sqlite:' . self::DB_PATH);
+		$db     = new \PDO('sqlite:' . self::DB_PATH);
 
 		if (!$exists) {
 			$db->exec(<<<SQL
@@ -57,7 +54,7 @@ final class JobRepository
 	private function updateJobStatus(JobData $job, string $status): JobData
 	{
 		if (!in_array($status, JobData::STATUS_LIST)) {
-			throw new DomainException(sprintf('Invalid job status %s', $status));
+			throw new \DomainException(sprintf('Invalid job status %s', $status));
 		}
 		$job->status = $status;
 
@@ -91,12 +88,12 @@ final class JobRepository
 		$stmt->execute();
 
 		if (!$stmt) {
-			throw new RuntimeException('Failed to prepare query to fetch next job');
+			throw new \RuntimeException('Failed to prepare query to fetch next job');
 		}
-		$record = $stmt->fetch(PDO::FETCH_ASSOC);
+		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 		if (!$record) {
-			throw new DomainException('No pending jobs found');
+			throw new \DomainException('No pending jobs found');
 		}
 
 		$job = JobData::fromArray($record);
@@ -111,7 +108,7 @@ final class JobRepository
 		$stmt = $this->db->prepare("SELECT * FROM jobqueue WHERE status = 'pending' and collection = :collection LIMIT 1");
 		$stmt->bindValue(':collection', $collection);
 		$stmt->execute();
-		$record = $stmt->fetch(PDO::FETCH_ASSOC);
+		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 		return !empty($record);
 	}
@@ -120,7 +117,7 @@ final class JobRepository
 	{
 		$stmt = $this->db->prepare("SELECT * FROM jobqueue WHERE status = 'pending' LIMIT 1");
 		$stmt->execute();
-		$record = $stmt->fetch(PDO::FETCH_ASSOC);
+		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 		return !empty($record);
 	}
@@ -129,6 +126,7 @@ final class JobRepository
 	{
 		$stmt = $this->db->prepare('DELETE FROM jobqueue WHERE id = :id');
 		$stmt->bindValue(':id', $job->id);
+
 		return $stmt->execute();
 	}
 
@@ -144,10 +142,10 @@ final class JobRepository
 		$stmt = $this->db->prepare('SELECT * FROM jobqueue WHERE id = :id');
 		$stmt->bindValue(':id', $id);
 		$stmt->execute();
-		$record = $stmt->fetch(PDO::FETCH_ASSOC);
+		$record = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 		if (!$record) {
-			throw new DomainException(sprintf('Job with ID %d not found', $id));
+			throw new \DomainException(sprintf('Job with ID %d not found', $id));
 		}
 
 		return JobData::fromArray($record);
@@ -156,7 +154,7 @@ final class JobRepository
 	public function queueJob(string $type, string $collection, string $payload = ''): JobData
 	{
 		if (!in_array($type, JobData::TYPE_LIST)) {
-			throw new DomainException(sprintf('Invalid job type %s', $type));
+			throw new \DomainException(sprintf('Invalid job type %s', $type));
 		}
 		$sql = <<<SQL
 			INSERT INTO jobqueue (type, payload, collection)
@@ -170,7 +168,7 @@ final class JobRepository
 
 		$id = $this->db->lastInsertId();
 		if (!$id) {
-			throw new DomainException('Failed to insert job into the queue');
+			throw new \DomainException('Failed to insert job into the queue');
 		}
 
 		return $this->fetchJobById(intval($id));
@@ -181,8 +179,8 @@ final class JobRepository
 	{
 		$results = [];
 
-		foreach(JobData::TYPE_LIST as $type) {
-			$stmt = $this->db->prepare("SELECT COUNT(*) as type FROM jobqueue WHERE type = :type");
+		foreach (JobData::TYPE_LIST as $type) {
+			$stmt = $this->db->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type');
 			$stmt->bindValue(':type', $type);
 			$stmt->execute();
 			$results[ucfirst($type)] = $stmt ? intval($stmt->fetchColumn()) : 0;
@@ -204,8 +202,8 @@ final class JobRepository
 
 		$results = [];
 
-		foreach(JobData::STATUS_LIST as $status) {
-			$stmt = $this->db->prepare("SELECT COUNT(*) as status FROM jobqueue WHERE status = :status");
+		foreach (JobData::STATUS_LIST as $status) {
+			$stmt = $this->db->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status');
 			$stmt->bindValue(':status', $status);
 			$stmt->execute();
 			$results[$status] = $stmt ? intval($stmt->fetchColumn()) : 0;
@@ -225,8 +223,8 @@ final class JobRepository
 	{
 		$results = [];
 
-		foreach(JobData::TYPE_LIST as $type) {
-			$stmt = $this->db->prepare("SELECT COUNT(*) as type FROM jobqueue WHERE type = :type AND collection = :collection");
+		foreach (JobData::TYPE_LIST as $type) {
+			$stmt = $this->db->prepare('SELECT COUNT(*) as type FROM jobqueue WHERE type = :type AND collection = :collection');
 			$stmt->bindValue(':type', $type);
 			$stmt->bindValue(':collection', $collection);
 			$stmt->execute();
@@ -252,8 +250,8 @@ final class JobRepository
 
 		$results = [];
 
-		foreach(JobData::STATUS_LIST as $status) {
-			$stmt = $this->db->prepare("SELECT COUNT(*) as status FROM jobqueue WHERE status = :status AND collection = :collection");
+		foreach (JobData::STATUS_LIST as $status) {
+			$stmt = $this->db->prepare('SELECT COUNT(*) as status FROM jobqueue WHERE status = :status AND collection = :collection');
 			$stmt->bindValue(':status', $status);
 			$stmt->bindValue(':collection', $collection);
 			$stmt->execute();
@@ -272,6 +270,7 @@ final class JobRepository
 	public function clearQueue(): bool
 	{
 		$stmt = $this->db->prepare('DELETE FROM jobqueue');
+
 		return $stmt->execute();
 	}
 
@@ -279,6 +278,85 @@ final class JobRepository
 	{
 		$stmt = $this->db->prepare('DELETE FROM jobqueue WHERE collection = :collection');
 		$stmt->bindValue(':collection', $collection);
+
 		return $stmt->execute();
+	}
+
+	/**
+	 * Fetch all pending jobs.
+	 * 
+	 * @param int|null $limit
+	 * @return array<JobData>
+	 */
+	public function fetchPendingJobs(?int $limit = null): array
+	{
+		$sql = <<<SQL
+			SELECT * FROM jobqueue
+			WHERE status = :status
+			ORDER BY id DESC
+		SQL;
+		
+		if ($limit !== null) {
+			$sql .= ' LIMIT :limit';
+		}
+		
+		$stmt = $this->db->prepare($sql);
+		$stmt->bindValue(':status', JobData::STATUS_PENDING);
+		if ($limit !== null) {
+			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+		}
+		$stmt->execute();
+
+		$jobs = [];
+		while ($record = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$jobs[] = JobData::fromArray($record);
+		}
+
+		return $jobs;
+	}
+
+	/**
+	 * Fetch all failed jobs.
+	 * 
+	 * @param int|null $limit
+	 * @return array<JobData>
+	 */
+	public function fetchFailedJobs(?int $limit = null): array
+	{
+		$sql = <<<SQL
+			SELECT * FROM jobqueue
+			WHERE status = :status
+			ORDER BY id DESC
+		SQL;
+		
+		if ($limit !== null) {
+			$sql .= ' LIMIT :limit';
+		}
+		
+		$stmt = $this->db->prepare($sql);
+		$stmt->bindValue(':status', JobData::STATUS_FAILED);
+		if ($limit !== null) {
+			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+		}
+		$stmt->execute();
+
+		$jobs = [];
+		while ($record = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$jobs[] = JobData::fromArray($record);
+		}
+
+		return $jobs;
+	}
+
+	/**
+	 * Reset a job's status to pending for retry.
+	 */
+	public function resetJobStatus(JobData $job): JobData
+	{
+		$job->status = JobData::STATUS_PENDING;
+		$job->lastError = '';
+		// Keep the attempt count to prevent infinite retries
+		
+		return $this->updateJobStatus($job, JobData::STATUS_PENDING);
 	}
 }

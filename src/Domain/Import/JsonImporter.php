@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Import;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -20,12 +21,11 @@ final class JsonImporter
 		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
 		private ObjectImporter $objectImporter,
+		private IndexBuilder $indexBuilder,
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory
-			->addFileHandler('importer.log')
-			->createLogger();
+		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('json-importer');
 	}
 
 	public function queueJobs(): void
@@ -45,7 +45,7 @@ final class JsonImporter
 
 		$records = json_decode((string)$file->getStream(), true);
 
-		if (!is_array($records) || !array_reduce($records, fn($carry, $item) => $carry && is_array($item), true)) {
+		if (!is_array($records) || !array_reduce($records, fn ($carry, $item) => $carry && is_array($item), true)) {
 			$error = 'Invalid JSON structure for import: expected an array of records';
 			$this->logger->error($error);
 			throw new \InvalidArgumentException($error);
@@ -69,17 +69,28 @@ final class JsonImporter
 			}
 		}
 
+		// Rebuild index
+		$this->indexBuilder->buildIndex($collection);
+
 		return $importCount;
 	}
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function importNewObject(array $record): bool
 	{
-		if (!isset($record['id']) || $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$this->logger->info(sprintf('Skipping import of record %s', $record['id']));
+		if (!isset($record['id'])) {
+			$this->logger->warning('Skipping import of record without ID');
+
+			return false;
+		}
+		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
+			$this->logger->warning($error);
+
 			return false;
 		}
 
@@ -99,12 +110,14 @@ final class JsonImporter
 
 	/**
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @param array<string,mixed> $record
 	 */
 	public function updateObject(array $record): bool
 	{
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record %s', $record['id']));
+
 			return false;
 		}
 

@@ -44,7 +44,7 @@ class FolderData extends PropertyData
 		return [
 			'name'  => $this->name,
 			'mime'  => 'folder',
-			'files' => array_map(fn($file) => $file->transform(), $this->files),
+			'files' => array_map(fn ($file) => $file->transform(), $this->files),
 		];
 	}
 }

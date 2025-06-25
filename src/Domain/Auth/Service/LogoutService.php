@@ -19,11 +19,12 @@ final class LogoutService
 
 	public function logout(): bool
 	{
-		$user = $this->session->get('user') ?? "unknown";
+		$user = $this->session->get('user') ?? 'unknown';
 		$this->logger->info("User $user logged out");
 
 		$this->session->clear();
 		$this->session->destroy();
+
 		return self::destroySession();
 	}
 
@@ -34,6 +35,7 @@ final class LogoutService
 			session_unset();
 			session_destroy();
 		}
+
 		return session_status() !== PHP_SESSION_ACTIVE;
 	}
 }

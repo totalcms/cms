@@ -21,6 +21,7 @@ class ColorData extends PropertyData
 		if (is_string($color)) {
 			$this->hex   = self::stringToHex($color);
 			$this->oklch = self::hexToOklch($this->hex);
+
 			return;
 		}
 
@@ -28,18 +29,20 @@ class ColorData extends PropertyData
 		$this->oklch = $color['oklch'] ?? self::hexToOklch($this->hex);
 	}
 
-	static private function rgbToHex(string $color): ?string
+	private static function rgbToHex(string $color): ?string
 	{
 		$rgb = preg_replace('/[^0-9,]/', '', $color);
 		if (is_string($rgb)) {
 			$rgb = explode(',', $rgb);
 			$hex = sprintf('#%02x%02x%02x', ...$rgb);
+
 			return $hex;
 		}
+
 		return null;
 	}
 
-	static private function hslToHex(string $color): ?string
+	private static function hslToHex(string $color): ?string
 	{
 		$hsl = preg_replace('/[^0-9,]/', '', $color);
 		if (is_string($hsl)) {
@@ -50,12 +53,14 @@ class ColorData extends PropertyData
 			}
 			$coordinates = $rgb->coordinates();
 			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
+
 			return $hex;
 		}
+
 		return null;
 	}
 
-	static private function oklchStringToHex(string $color): ?string
+	private static function oklchStringToHex(string $color): ?string
 	{
 		$oklch = preg_replace('/[^0-9,]/', '', $color);
 		if (is_string($oklch)) {
@@ -66,12 +71,14 @@ class ColorData extends PropertyData
 			}
 			$coordinates = $rgb->coordinates();
 			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
+
 			return $hex;
 		}
+
 		return null;
 	}
 
-	static private function stringToHex(string $color): string
+	private static function stringToHex(string $color): string
 	{
 		if (preg_match('/^#?([a-f0-9]{3}|[a-f0-9]{6})$/i', $color)) {
 			return $color;

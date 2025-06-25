@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use Psr\Log\LoggerInterface;
 use Odan\Session\PhpSession;
-use TotalCMS\Support\Config;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class AccessManager
 {
@@ -38,6 +38,7 @@ final class AccessManager
 
 		if (!$this->sessionHasUser()) {
 			$this->redirectToLogin($collection);
+
 			return;
 		}
 

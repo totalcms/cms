@@ -39,6 +39,7 @@ interface StorageAdapterInterface
 	 * @return bool True if exists
 	 */
 	public function fileExists(string $location): bool;
+
 	public function directoryExists(string $location): bool;
 
 	/**
@@ -88,6 +89,7 @@ interface StorageAdapterInterface
 	 * @return bool
 	 */
 	public function move(string $old, string $new): bool;
+
 	public function copyDirectory(string $old, string $new): bool;
 
 	/**

@@ -1,4 +1,0 @@
-#!/bin/zsh
-composer install
-rm -r ../cms-data/*
-vendor/bin/phpunit -c phpunit.xml --coverage-html ../phpunit-reports --exclude-group delete

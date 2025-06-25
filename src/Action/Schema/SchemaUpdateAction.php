@@ -13,7 +13,8 @@ final class SchemaUpdateAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private SchemaSaver $service,
-	) {}
+	) {
+	}
 
 	/**
 	 * Invokable Action.
@@ -26,7 +27,7 @@ final class SchemaUpdateAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = (array)$request->getParsedBody();
+		$data   = (array)$request->getParsedBody();
 		$schema = $this->service->updateSchema($args['id'], $data);
 
 		return $this->renderer->jsonItem($response, $schema, new SchemaMetaTransformer());

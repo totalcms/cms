@@ -17,9 +17,8 @@ final class GallerySaver extends FileSaver
 		string $objectID,
 		string $property,
 		string $filePath,
-		?string $subpath = null
-	): ObjectData
-	{
+		?string $subpath = null,
+	): ObjectData {
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);
@@ -31,10 +30,26 @@ final class GallerySaver extends FileSaver
 		}
 
 		$fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
-		$colorData = ['palette' => ImagePaletteGenerator::getPalette($filePath)];
+
+		// Safely generate color palette - never let this break the upload
+		try {
+			$colorData = ['palette' => ImagePaletteGenerator::getPalette($filePath)];
+		} catch (\RuntimeException $e) {
+			// Log palette generation failures
+			$this->getLogger()->warning('Palette generation failed', [
+				'collection' => $collection,
+				'objectID'   => $objectID,
+				'property'   => $property,
+				'file'       => $filePath,
+				'error'      => $e->getMessage(),
+			]);
+			// Continue with empty palette - upload should not fail
+			$colorData = ['palette' => []];
+		}
+
 		$metaData  = ImageMetaReader::getMetaData($filePath);
 
-		$newImage = array_merge($fileData, $metaData, $colorData);
+		$newImage          = array_merge($fileData, $metaData, $colorData);
 		$gallery->images[] = new ImageData($newImage);
 
 		return $this->updateObject($collection, $objectID, $property, $gallery);

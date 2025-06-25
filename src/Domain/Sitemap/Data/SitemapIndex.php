@@ -27,14 +27,15 @@ final class SitemapIndex
 		$this->index->add($sitemap);
 	}
 
-	public function toXML() :string
+	public function toXML(): string
 	{
 		$driver = new XmlWriterDriver();
 		$this->index->accept($driver);
+
 		return $driver->output();
 	}
 
-	public function __toString() :string
+	public function __toString(): string
 	{
 		return $this->toXML();
 	}

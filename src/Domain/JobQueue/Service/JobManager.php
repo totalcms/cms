@@ -8,7 +8,8 @@ final class JobManager
 {
 	public function __construct(
 		private JobRepository $jobRepository,
-	) {}
+	) {
+	}
 
 	/** @return array<string,int>  */
 	public function queueByType(): array
@@ -39,7 +40,7 @@ final class JobManager
 	{
 		return [
 			'status' => $this->queueByStatus(),
-			'type' => $this->queueByType(),
+			'type'   => $this->queueByType(),
 		];
 	}
 
@@ -48,7 +49,7 @@ final class JobManager
 	{
 		return [
 			'status' => $this->queueByStatusForCollection($collection),
-			'type' => $this->queueByTypeForCollection($collection),
+			'type'   => $this->queueByTypeForCollection($collection),
 		];
 	}
 
@@ -60,5 +61,23 @@ final class JobManager
 	public function clearQueueForCollection(string $collection): bool
 	{
 		return $this->jobRepository->clearQueueForCollection($collection);
+	}
+
+	/**
+	 * @param int|null $limit
+	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
+	 */
+	public function getPendingJobs(?int $limit = null): array
+	{
+		return $this->jobRepository->fetchPendingJobs($limit);
+	}
+
+	/**
+	 * @param int|null $limit
+	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
+	 */
+	public function getFailedJobs(?int $limit = null): array
+	{
+		return $this->jobRepository->fetchFailedJobs($limit);
 	}
 }

@@ -27,10 +27,12 @@ final class CollectionData
 	public string $schema;                    // schema name
 	public string $url;                       // collection url to object page minus the slug
 	public string $category;                  // collection category for grouping in the admin
-	public string $sortBy = 'id';             // the property to sort the collection by
-	public bool $reverseSort = false;         // reverse the sort order
+	public string $labelPlural;              // custom plural label for collection items
+	public string $labelSingular;            // custom singular label for collection items
+	public string $sortBy           = 'id';             // the property to sort the collection by
+	public bool $reverseSort        = false;         // reverse the sort order
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
-	public bool $prettyUrl = false;           // use pretty URLs for the collection
+	public bool $prettyUrl          = false;           // use pretty URLs for the collection
 
 	/** @var array<string> */
 	public array $groups;        // access groups that can access this collection
@@ -53,13 +55,15 @@ final class CollectionData
 			throw new \RuntimeException('CollectionData is not valid.');
 		}
 		$defaultDescription = "A collection of {$this->id} objects that conform to the {$this->schema} schema.";
-		$collection = [
+		$collection         = [
 			'id'                 => $this->id,
 			'schema'             => $this->schema,
 			'name'               => $this->name ?? ucfirst($this->id),
 			'description'        => empty($this->description) ? $defaultDescription : $this->description,
 			'url'                => $this->url ?? '',
 			'category'           => $this->category ?? '',
+			'labelPlural'        => $this->labelPlural ?? '',
+			'labelSingular'      => $this->labelSingular ?? '',
 			'groups'             => $this->groups ?? [],
 			'sortBy'             => $this->sortBy ?? 'id',
 			'reverseSort'        => $this->reverseSort ?? false,
@@ -115,6 +119,7 @@ final class CollectionData
 
 		if ($collectionData->prettyUrl) {
 			$url = rtrim($collectionData->url, '/');
+
 			return sprintf('%s/%s', $url, $id);
 		}
 

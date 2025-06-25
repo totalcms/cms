@@ -7,7 +7,6 @@ use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Middleware\MethodOverrideMiddleware;
-use TotalCMS\TotalCMS;
 use TotalCMS\Middleware\BetaMiddleware;
 use TotalCMS\Middleware\BundleMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
@@ -15,6 +14,7 @@ use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\RobotsTagMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
+use TotalCMS\TotalCMS;
 
 return function (App $app) {
 	$app->addBodyParsingMiddleware();

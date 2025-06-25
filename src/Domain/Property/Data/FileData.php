@@ -59,6 +59,7 @@ class FileData extends PropertyData
 		if ($json === false) {
 			return '';
 		}
+
 		return $json;
 	}
 }

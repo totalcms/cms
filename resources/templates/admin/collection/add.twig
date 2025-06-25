@@ -1,5 +1,6 @@
 {# New Object Form #}
-<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>new object</span></h1>
+{% set labelSingular = cms.collection(url.collection).labelSingular|default('object') %}
+<h1><a href="collections">collections</a> / <a href="collections/{{ url.collection }}">{{ url.collection }}</a> / <span>new {{ labelSingular }}</span></h1>
 {% set form = cms.form.builder(url.collection, {
 	save        : "Save",
 	helpStyle   : 'label',

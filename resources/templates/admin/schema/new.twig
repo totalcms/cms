@@ -1,11 +1,24 @@
-<h1><a href="schemas">schemas</a> / <span>new</span></h1>
+<h1><a href="schemas">schemas</a> / <span>new{% if duplicateData %} (duplicate){% endif %}</span></h1>
 
-{{ cms.form.schema({
-	save        : "Save",
-	helpStyle   : 'label',
-	helpOnFocus : true,
-	newAction : {
-		"action" : "redirect-object",
-		"link"   : "schemas/"
-	},
-}) }}
+{% if duplicateData %}
+	{{ cms.form.schema({
+		save        : "Save",
+		helpStyle   : 'label',
+		helpOnFocus : true,
+		newAction : {
+			"action" : "redirect-object",
+			"link"   : "schemas/"
+		},
+		data : duplicateData,
+	}) }}
+{% else %}
+	{{ cms.form.schema({
+		save        : "Save",
+		helpStyle   : 'label',
+		helpOnFocus : true,
+		newAction : {
+			"action" : "redirect-object",
+			"link"   : "schemas/"
+		},
+	}) }}
+{% endif %}

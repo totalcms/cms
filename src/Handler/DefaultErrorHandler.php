@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpException;
+use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -17,10 +18,9 @@ use TotalCMS\Renderer\JsonRenderer;
 final class DefaultErrorHandler
 {
 	private JsonRenderer $renderer;
-
 	private ResponseFactoryInterface $responseFactory;
-
 	private LoggerInterface $logger;
+	private OPcacheService $opcacheService;
 
 	/**
 	 * The constructor.
@@ -28,14 +28,17 @@ final class DefaultErrorHandler
 	 * @param JsonRenderer $renderer The renderer
 	 * @param ResponseFactoryInterface $responseFactory The response factory
 	 * @param LoggerFactory $loggerFactory The logger factory
+	 * @param OPcacheService $opcacheService The OPcache service
 	 */
 	public function __construct(
 		JsonRenderer $renderer,
 		ResponseFactoryInterface $responseFactory,
 		LoggerFactory $loggerFactory,
+		OPcacheService $opcacheService,
 	) {
 		$this->renderer        = $renderer;
 		$this->responseFactory = $responseFactory;
+		$this->opcacheService  = $opcacheService;
 		$this->logger          = $loggerFactory
 			->addFileHandler('totalcms.log')
 			->createLogger('totalcms');
@@ -57,6 +60,12 @@ final class DefaultErrorHandler
 		bool $displayErrorDetails,
 		bool $logErrors,
 	): ResponseInterface {
+		// Clear OPcache to prevent cached errors from persisting
+		// This ensures that after fixing code errors, the fixes take effect immediately
+		if ($this->opcacheService->isAvailable()) {
+			$this->opcacheService->clear();
+		}
+
 		// Log error
 		if ($logErrors) {
 			$this->logger->error(

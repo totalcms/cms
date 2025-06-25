@@ -98,7 +98,7 @@ object is created or updated.
 
 ## Styled Text
 
-Styled text supports [a lot of settings](https://froala.com/wysiwyg-editor/docs/options/).
+Styled text supports [a lot of settings](https://froala.com/wysiwyg-editor/docs/options/ "external").
 Here is an example.
 
 
@@ -107,7 +107,8 @@ Here is an example.
   "toolbarButtons" : [
     ["bold", "italic", "underline", "strikeThrough", "subscript", "superscript"],
     ["fontFamily", "fontSize", "textColor", "backgroundColor"],
-    ["inlineClass", "inlineStyle", "clearFormatting"]
+    ["inlineClass", "inlineStyle", "clearFormatting"],
+    ["html"]
   ],
   "inlineClasses" : {
     "fr-class-code"         : "Code",
@@ -154,5 +155,40 @@ The following can be used on text fields to limit the number of characters.
   "min"  : 1,
   "max"  : 10,
   "step" : 0.25,
+}
+```
+
+## Purifying HTML in Text
+
+Default all text will be scanned for HTML and sanitized to help prevent from XSS attacks.
+You can disable this by setting the following.
+
+```json
+{
+  "htmlclean" : false
+}
+```
+
+## SVG
+
+Default all svgs will be sanitized to help prevent from XSS attacks.
+You can disable this by setting the following.
+
+```json
+{
+  "svgclean" : false
+}
+```
+
+
+## Lists
+
+```json
+{
+  "removeItemButton"      : true,
+  "duplicateItemsAllowed" : false,
+  "addChoices"            : true,
+  "maxItemCount"          : -1,
+  "asString"              : false
 }
 ```

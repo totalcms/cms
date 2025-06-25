@@ -53,12 +53,39 @@
 	<h2>Optional Software Check</h2>
 	<table class="admin-table">
 		<thead>
-			<tr><th>Software</th><th>Check</th></tr>
+			<tr>
+				<th>Extension</th>
+				<th>Status</th>
+				<th>Description</th>
+				<th>Recommended For</th>
+				<th>Performance Impact</th>
+			</tr>
 		</thead>
-		{% for key, value in cms.checker.checkOptionalSoftware %}
+		{% for extension, details in cms.checker.getOptionalSoftwareDetails %}
 		<tr>
-			<td>{{ key }}</td>
-			<td>{{ value ? "Installed" : '<span class="warning">Not Installed</span>' }}</td>
+			<td><strong>{{ extension | upper }}</strong></td>
+			<td>
+				{% if details.available %}
+					<span class="success">✅ Installed</span>
+				{% else %}
+					<span class="warning">⚠️ Not Installed</span>
+				{% endif %}
+			</td>
+			<td>{{ details.description }}</td>
+			<td>
+				{% if extension == 'opcache' %}
+					<strong style="color: #d63031;">{{ details.recommendation }}</strong>
+				{% else %}
+					{{ details.recommendation }}
+				{% endif %}
+			</td>
+			<td>
+				{% if extension == 'opcache' %}
+					<strong style="color: #00b894;">{{ details.performance_impact }}</strong>
+				{% else %}
+					{{ details.performance_impact }}
+				{% endif %}
+			</td>
 		</tr>
 		{% endfor %}
 	</table>

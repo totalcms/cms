@@ -12,15 +12,15 @@ final class SitemapFactoryAction
 	public function __construct(
 		private XmlRenderer $xmlRenderer,
 		private SitemapBuilder $sitemapBuilder,
-	){}
+	) {
+	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		array $args
-	): ResponseInterface
-	{
+		array $args,
+	): ResponseInterface {
 		$collection = $args['collection'];
 		$params     = $request->getQueryParams();
 

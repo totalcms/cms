@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Object\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
  * Service.
@@ -13,7 +13,7 @@ use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
 final class ObjectFactory
 {
 	public function __construct(
-		private CollectionSchemaFetcher $schemaFetcher,
+		private SchemaFetcher $schemaFetcher,
 		private PropertyFactory $propertyFactory,
 	) {
 	}

@@ -13,12 +13,13 @@ final class ObjectUpdatePropertyAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectUpdater $objectUpdater,
-	) {}
+	) {
+	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = (array)$request->getParsedBody();
+		$data   = (array)$request->getParsedBody();
 		$object = $this->objectUpdater->updateObjectProperty($args['collection'], $args['id'], $args['property'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

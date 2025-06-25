@@ -1,8 +1,8 @@
 <h1>Project Setup Actions</h1>
 
-{% set action = getData.action %}
-
 <section class="dash-content-section">
+
+{% set action = getData.action %}
 	<h2>Default Collections</h2>
 
 	{% if action == "default-collections" %}
@@ -12,4 +12,57 @@
 		a new project. If a collection already exists, it will not be touched.</p>
 		<a class="dash-button transparent" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
 	{% endif %}
-</section>
+
+{% if totalcms1DetectionData is defined and totalcms1DetectionData %}
+	{% set cmsDataPath = totalcms1DetectionData.path %}
+	{% set cmsDataSource = totalcms1DetectionData.source %}
+{% endif %}
+
+{% if cmsDataPath %}
+	<h2 style="margin-top:3rem;">Total CMS v1 Data Import</h2>
+
+	{% if action == "totalcms-one-import" %}
+		<div id="import-status">
+			<p>Starting Total CMS 1 import...</p>
+		</div>
+		<p>All items will be queued for import via the job queue system. You can monitor progress in the
+			<a href="utils/jobqueue">Job Queue Manager</a>.</p>
+		<script>
+			(async function() {
+				try {
+					const response = await fetch('/import/totalcms-one', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-CSRF-Token': '{{ csrf_token() }}'
+						},
+						body: JSON.stringify({
+							path: '{{ cmsDataPath }}'
+						})
+					});
+					const data = await response.json();
+					const statusEl = document.getElementById('import-status');
+
+					if (data.success) {
+						statusEl.innerHTML = `<div class="message success">${data.message}</div>`;
+					} else {
+						statusEl.innerHTML = `<div class="message error">${data.message}</div>`;
+					}
+				} catch (error) {
+					document.getElementById('import-status').innerHTML =
+						`<div class="message error">Import failed: ${error.message}</div>`;
+				}
+			})();
+		</script>
+	{% else %}
+		<p>We have detected a Total CMS 1 installation at: <code>{{ cmsDataPath }}</code></p>
+		<p>This action will import all of your Total CMS 1 data including:</p>
+		<ul>
+			<li>Blog posts with images and galleries</li>
+			<li>Dates, Depots, Feeds, Files</li>
+			<li>Galleries, Images, Texts, and Videos</li>
+		</ul>
+		<p><strong>Note:</strong> All items will be queued for import via the job queue system. You can monitor progress in the Job Queue section.</p>
+		<a class="dash-button transparent" href="utils/project-setup?action=totalcms-one-import">Import Total CMS 1 Data</a>
+	{% endif %}
+{% endif %}

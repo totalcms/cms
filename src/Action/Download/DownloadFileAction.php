@@ -5,9 +5,9 @@ namespace TotalCMS\Action\Download;
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\TwigRenderer;
-use TotalCMS\Domain\Property\Data\FileData;
 
 final class DownloadFileAction extends DownloadAction
 {

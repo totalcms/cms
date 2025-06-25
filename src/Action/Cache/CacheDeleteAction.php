@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Cache;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Twig\TwigCacheCleaner;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -13,14 +13,14 @@ use TotalCMS\Renderer\JsonRenderer;
 final class CacheDeleteAction
 {
 	public function __construct(
-		private TwigCacheCleaner $twigCacheCleaner,
+		private CacheManager $cacheManager,
 		private JsonRenderer $renderer,
 	) {
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$deleted = $this->twigCacheCleaner->deleteCache();
+		$deleted = $this->cacheManager->clearAllCaches();
 
 		if ($deleted === false) {
 			$response = $response->withStatus(500);

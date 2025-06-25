@@ -96,6 +96,7 @@ class FormField
 		$formFieldAtrributes = [
 			'class'     => "form-field {$this->field}-field {$this->class}",
 			'data-type' => $this->field,
+			'style' => "grid-area: {$this->name};",
 		];
 		if (!empty($this->settings)) {
 			$json = json_encode($this->settings);
@@ -206,18 +207,43 @@ class FormField
 		return $this->form->propertyListForCollection($this->name);
 	}
 
-	/** @return array<array<string,string>> */
+	/**
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @return array<array<string,string>>
+	 */
 	protected function buildRelationalOptions(): array
 	{
 		$settings      = $this->settings['relationalOptions'];
-		$labelProperty = $settings['label'] ?? 'id';
-		$valueProperty = $settings['value'] ?? 'id';
+		$labelJoin     = $settings['join'] ?? ' ';
+		$labelProperty = trim($settings['label'] ?? 'id');
+		$valueProperty = trim($settings['value'] ?? 'id');
 		$collection    = $settings['collection'] ?? '';
 
-		$properties = $this->form->propertiesForCollection([$labelProperty, $valueProperty], $collection);
+		if (empty($collection)) {
+			return []; // No collection specified, return empty array
+		}
 
-		// reformat the properties array to match the options array
-		return array_map(fn ($o) => ['value' => $o[$valueProperty], 'label' => $o[$labelProperty]], $properties);
+		// Split label property by spaces to support multiple properties
+		$labelProperties = explode($labelJoin, $labelProperty);
+
+		// Combine label properties with value property for fetching
+		$propertiesToFetch = array_unique(array_merge($labelProperties, [$valueProperty]));
+
+		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection);
+
+		// Build the label from multiple properties if specified
+		return array_map(function ($o) use ($valueProperty, $labelProperties, $labelJoin) {
+			// If multiple label properties, concatenate them with spaces
+			if (count($labelProperties) > 1) {
+				$labelParts = array_map(fn ($prop) => $o[$prop] ?? '', $labelProperties);
+				$label      = implode($labelJoin, array_filter($labelParts)); // Filter out empty values
+			} else {
+				$label = $o[$labelProperties[0]] ?? '';
+			}
+
+			return ['value' => $o[$valueProperty], 'label' => $label];
+		}, $properties);
 	}
 
 	/**
@@ -232,7 +258,7 @@ class FormField
 		if (isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->options, $this->buildRelationalOptions());
 		}
-		if (is_array($this->value) && !empty($this->value)) {
+		if (is_array($this->value) && !empty($this->value) && !isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->value, $this->options); // value is first to maintain order
 		}
 

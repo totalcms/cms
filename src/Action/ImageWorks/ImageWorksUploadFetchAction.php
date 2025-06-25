@@ -10,8 +10,9 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 final class ImageWorksUploadFetchAction
 {
 	public function __construct(
-		private ImageGenerator $imageGenerator
-	){}
+		private ImageGenerator $imageGenerator,
+	) {
+	}
 
 	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(

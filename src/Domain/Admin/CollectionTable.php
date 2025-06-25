@@ -58,7 +58,8 @@ final class CollectionTable
 
 	private function buildCloneDialog(): string
 	{
-		$header = HTMLUtils::element('h3', 'Duplicate Object');
+		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
+		$header = HTMLUtils::element('h3', 'Duplicate ' . $labelSingular);
 
 		$collections = $this->collectionLister->listCollectionsWithSchema($this->schemaData->id);
 
@@ -75,7 +76,7 @@ final class CollectionTable
 		$input           = HTMLUtils::element('select', $options, ['id'=>'clone-collection', 'type'=>'text', 'name'=>'collection']);
 		$collectionField = HTMLUtils::element('div', $label . $input);
 
-		$label   = HTMLUtils::element('label', 'New Object ID', ['for' => 'clone-id']);
+		$label   = HTMLUtils::element('label', 'New ' . $labelSingular . ' ID', ['for' => 'clone-id']);
 		$input   = HTMLUtils::inlineElement('input', ['id'=>'clone-id', 'type'=>'text', 'name'=>'id']);
 		$idField = HTMLUtils::element('div', $label . $input);
 
@@ -83,7 +84,7 @@ final class CollectionTable
 			api     : $this->api,
 			route   : '', // the route is set in the javascript
 			method  : 'POST',
-			label   : 'Clone Object',
+			label   : 'Clone ' . $labelSingular,
 			class   : 'clone-object-form',
 			refresh : true,
 		);
@@ -248,10 +249,11 @@ final class CollectionTable
 			$link = HTMLUtils::element('li', $link, ['class' => 'link']);
 		}
 
-		$delete = HTMLUtils::element('a', 'Delete Object', [
+		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
+		$delete = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
 			'class'        => 'cms-quick-action',
 			'data-method'  => 'DELETE',
-			'data-confirm' => 'Are you sure you want to delete this object?',
+			'data-confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
 			'href'         => implode('/', [
 				$this->config->api,
 				'collections',
@@ -261,7 +263,7 @@ final class CollectionTable
 		]);
 		$delete = HTMLUtils::element('li', $delete, ['class' => 'delete']);
 
-		$clone = HTMLUtils::element('a', 'Duplicate Object', [
+		$clone = HTMLUtils::element('a', 'Duplicate ' . $labelSingular, [
 			'href' => implode('/', [
 				'/collections',
 				$this->collectionData->id,
@@ -279,7 +281,7 @@ final class CollectionTable
 		]);
 		$button = HTMLUtils::element('button', '', [
 			'class'          => 'dash-action-dots',
-			'title'          => 'Object Actions',
+			'title'          => $labelSingular . ' Actions',
 			'popovertarget'  => 'object-action-' . $id,
 		]);
 
@@ -317,13 +319,20 @@ final class CollectionTable
 	{
 		$table = $this->buildTableHead() . $this->buildTableBody();
 
-		$table = HTMLUtils::element('table', $table, [
+		$labelPlural = $this->collectionData->labelPlural ?? 'Objects';
+		$attributes = [
 			'class'            => 'admin-table',
-			'data-limit'       => '25',
 			'data-search'      => 'true',
 			'data-sort'        => 'true',
-			'data-placeholder' => 'Filter Objects',
-		]);
+			'data-placeholder' => 'Filter ' . $labelPlural,
+		];
+
+		$pagination = $this->config->dashboard['pagination'] ?? null;
+		if (!empty($pagination) && $pagination > 0) {
+			$attributes['data-limit'] = (string)$pagination;
+		}
+
+		$table = HTMLUtils::element('table', $table, $attributes);
 
 		return $table . $this->buildCloneDialog();
 	}

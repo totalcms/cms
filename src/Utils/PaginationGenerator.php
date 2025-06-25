@@ -12,7 +12,7 @@ class PaginationGenerator
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getData     = [],
+		array $getData     = [],
 	): string {
 		$totalPages = ceil($totalObjects / $pageLimit);
 
@@ -33,8 +33,8 @@ class PaginationGenerator
 		]);
 
 		$currentPage = HTMLUtils::element('span', strval($currentPage), ['class' => 'pagination-current', 'contenteditable' => 'plaintext-only']);
-		$totalPages = HTMLUtils::element('span', strval($totalPages), ['class' => 'pagination-total']);
-		$counters = HTMLUtils::element('span', "$currentPage / $totalPages", ['class' => 'pagination-counters']);
+		$totalPages  = HTMLUtils::element('span', strval($totalPages), ['class' => 'pagination-total']);
+		$counters    = HTMLUtils::element('span', "$currentPage / $totalPages", ['class' => 'pagination-counters']);
 
 		$pagination = HTMLUtils::element('nav', $prevLink . $counters . $nextLink, [
 			'class'         => 'cms-pagination simple',
@@ -52,7 +52,7 @@ class PaginationGenerator
 		string $pageKey     = 'p',
 		string $prevContent = 'Previous',
 		string $nextContent = 'Next',
-		array  $getData   = [],
+		array $getData   = [],
 	): string {
 		$totalPages = ceil($totalObjects / $pageLimit);
 
@@ -76,7 +76,7 @@ class PaginationGenerator
 
 		for ($i = 1; $i <= $totalPages; $i++) {
 			$link = HTMLUtils::element('a', strval($i), [
-				'href' =>  self::buildPageUrl($pageKey, $i, $getData),
+				'href' => self::buildPageUrl($pageKey, $i, $getData),
 			]);
 			$page = HTMLUtils::element('li', $link, [
 				'class' => $i == $currentPage ? 'active' : '',

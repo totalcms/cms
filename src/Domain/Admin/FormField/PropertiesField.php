@@ -92,6 +92,7 @@ class PropertiesField extends FormField
 			property : '',
 			form     : $this->form
 		);
+
 		return $templateProperty->template();
 	}
 

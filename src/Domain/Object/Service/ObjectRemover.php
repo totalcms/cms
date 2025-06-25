@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
@@ -14,8 +14,8 @@ final class ObjectRemover
 		private ObjectRepository $storage,
 		private ObjectFetcher $objectFetcher,
 		private ObjectUpdater $objectUpdater,
-		private IndexBuilder $indexBuilder
-	){
+		private IndexBuilder $indexBuilder,
+	) {
 	}
 
 	public function deleteObject(string $collection, string $id): bool

@@ -17,7 +17,7 @@ final class PasswordField extends FormField
 
 		// Confirm Password Input
 		$attributes['name'] .= '-confirm';
-		$attributes['id']   .= "-confirm";
+		$attributes['id'] .= '-confirm';
 		$confirmInput = HTMLUtils::inlineElement('input', $attributes);
 
 		$icon = $this->icon ? HTMLUtils::element('div', '', ['class' => 'form-group-icon']) : '';

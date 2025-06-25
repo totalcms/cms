@@ -13,12 +13,13 @@ final class ObjectPatchPropertyAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectPatcher $objectPatcher,
-	) {}
+	) {
+	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = (array)$request->getParsedBody();
+		$data   = (array)$request->getParsedBody();
 		$object = $this->objectPatcher->patchObjectProperty(
 			$args['collection'],
 			$args['id'],

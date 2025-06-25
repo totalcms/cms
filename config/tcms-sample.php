@@ -1,4 +1,5 @@
 <?php
+
 // Sample configuration file for /tcms.php
 
 $settings['sentry']['enable'] = true;
@@ -10,7 +11,7 @@ $settings['datadir'] = $settings['docroot'] . '/tcms-data';
 $settings['timezone'] = 'America/Denver';
 
 $settings['imageworks']['watermarksGallery'] = 'watermarks';
-$settings['imageworks']['presets'] = [
+$settings['imageworks']['presets']           = [
 	'small' => [
 		'w'   => 300,
 		'h'   => 200,

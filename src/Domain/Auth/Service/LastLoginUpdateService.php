@@ -10,7 +10,8 @@ final class LastLoginUpdateService
 	public function __construct(
 		private ObjectPatcher $objectPatcher,
 		private PropertyFetcher $propertyFetcher,
-	) {}
+	) {
+	}
 
 	public function updateLoginDate(string $collection, string $id): void
 	{

@@ -4,6 +4,8 @@ namespace TotalCMS;
 
 use DI\Container;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Buffer\BufferController;
@@ -15,7 +17,7 @@ use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
-use TotalCMS\Domain\Twig\TwigCacheCleaner;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
@@ -32,7 +34,7 @@ class TotalCMS
 	private Container $container;
 	private TwigEngine $twigEngine;
 	private LoggerInterface $logger;
-	private TwigCacheCleaner $twigCacheCleaner;
+	private CacheManager $cacheManager;
 	private PhpSession $session;
 	private AccessManager $access;
 
@@ -50,11 +52,11 @@ class TotalCMS
 		}
 
 		try {
-			$this->buffer           = $this->container->get(BufferController::class);
-			$this->twigEngine       = $this->container->get(TwigEngine::class);
-			$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
-			$this->session          = $this->container->get(PhpSession::class);
-			$this->access           = $this->container->get(AccessManager::class);
+			$this->buffer       = $this->container->get(BufferController::class);
+			$this->twigEngine   = $this->container->get(TwigEngine::class);
+			$this->cacheManager = $this->container->get(CacheManager::class);
+			$this->session      = $this->container->get(PhpSession::class);
+			$this->access       = $this->container->get(AccessManager::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
@@ -143,7 +145,7 @@ class TotalCMS
 
 	public function clearCache(): void
 	{
-		$this->twigCacheCleaner->deleteCache();
+		$this->cacheManager->clearAllCaches();
 	}
 
 	/**
@@ -206,6 +208,27 @@ class TotalCMS
 	}
 
 	/**
+	 * Create a PSR-7 response for sitemap output.
+	 *
+	 * @param array<string,string> $options
+	 */
+	public function createSitemapResponse(string $collection, array $options = []): ResponseInterface
+	{
+		$responseFactory = $this->container->get(ResponseFactoryInterface::class);
+		$content         = $this->sitemapForCollection($collection, $options);
+
+		$response = $responseFactory->createResponse(200);
+		$response->getBody()->write($content);
+
+		return $response
+			->withHeader('Content-Type', 'application/xml; charset=utf-8')
+			->withHeader('Cache-Control', 'public, max-age=86400');
+	}
+
+	/**
+	 * @deprecated Use createSitemapResponse() instead. This method may be removed in future versions.
+	 * The exit is here because this object is used in the CLI context, where the response is not returned.
+	 *
 	 * @SuppressWarnings("PHPMD.ExitExpression")
 	 *
 	 * @param array<string,string> $options

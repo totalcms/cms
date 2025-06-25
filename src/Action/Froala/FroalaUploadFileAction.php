@@ -7,6 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\FileUploadValidator;
 
 final class FroalaUploadFileAction
 {
@@ -14,6 +15,7 @@ final class FroalaUploadFileAction
 		private JsonRenderer $renderer,
 		private UploadSaver $saver,
 		private Config $config,
+		private FileUploadValidator $validator,
 	) {
 	}
 
@@ -33,17 +35,42 @@ final class FroalaUploadFileAction
 		}
 
 		if ($type === null) {
-			throw new \RuntimeException('No file found for upload');
+			return $this->renderer->json($response, ['error' => 'No file found for upload'], 400);
 		}
 		$file = $files[$type];
 
-		// move the uploaded file to the tmp directory
-		// this is because saveFile expects a file path
-		$filepath = $this->config->tmpdir . '/' . $file->getClientFilename();
-		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0777, true);
+		// Validate uploaded file security
+		$validation = $this->validator->validateFile($file, $type);
+		if (!$validation['valid']) {
+			return $this->renderer->json($response, [
+				'error'   => 'File upload validation failed',
+				'details' => $validation['errors'],
+			], 400);
 		}
+
+		// Use sanitized filename
+		$sanitizedFilename = $validation['sanitized_filename'];
+
+		// Ensure temp directory exists with secure permissions
+		if (!file_exists($this->config->tmpdir)) {
+			mkdir($this->config->tmpdir, 0700, true);
+		}
+
+		// Use sanitized filename for temporary storage
+		$filepath = $this->config->tmpdir . '/' . $sanitizedFilename;
 		$file->moveTo($filepath);
+
+		// Validate MIME type against actual file content
+		$mimeValidation = $this->validator->validateMimeTypeFromFile($filepath, $type);
+		if (!$mimeValidation['valid']) {
+			// Clean up invalid file
+			unlink($filepath);
+
+			return $this->renderer->json($response, [
+				'error'   => 'File content validation failed',
+				'details' => $mimeValidation['errors'],
+			], 400);
+		}
 
 		$path = $this->saver->save(
 			$args['collection'],
@@ -54,7 +81,7 @@ final class FroalaUploadFileAction
 
 		$link = $this->config->api . '/upload/' . $path;
 
-		if ($type === "image") {
+		if ($type === 'image') {
 			$link = $this->config->api . '/imageworks/upload/' . $path;
 		}
 
@@ -63,6 +90,6 @@ final class FroalaUploadFileAction
 			$link .= '?' . http_build_query($params);
 		}
 
-		return $this->renderer->json($response, [ "link" => $link ]);
+		return $this->renderer->json($response, ['link' => $link]);
 	}
 }

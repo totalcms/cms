@@ -12,6 +12,7 @@ esbuild.build({
 		"javascript/content.js",
 		"javascript/filelinks.js",
 		"javascript/imageworks-builder.js",
+		"javascript/image-batcher.js",
 		"javascript/totalcms.js",
 		"javascript/swagger.js",
 	],

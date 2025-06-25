@@ -9,5 +9,3 @@ $totalcms->outputSitemapForCollection('blog', [
 ]);
 
 include __DIR__ . '/_end.php';
-
-?>

@@ -23,7 +23,7 @@ class DepotData extends PropertyData
 		return [
 			'password'   => $this->password->transform(),
 			'protected'  => $this->protected,
-			'files'      => array_map(fn($file) => $file->transform(), $this->files),
+			'files'      => array_map(fn ($file) => $file->transform(), $this->files),
 		];
 	}
 
@@ -33,6 +33,7 @@ class DepotData extends PropertyData
 		if ($json === false) {
 			return '';
 		}
+
 		return $json;
 	}
 }

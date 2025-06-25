@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
+use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -10,7 +11,9 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -36,6 +39,8 @@ final class TotalFormFactory
 		private IndexReader $collectionReader,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
+		private SchemaFactory $schemaFactory,
+		private CSRFTokenManager $csrfManager,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -43,8 +48,9 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function simple(string $route, string $content = '', array $options = []): string
 	{
-		$options['api']   = $this->api;
-		$options['route'] = $route;
+		$options['api']         = $this->api;
+		$options['route']       = $route;
+		$options['csrfManager'] = $this->csrfManager;
 
 		// options: method, label, refresh
 
@@ -88,6 +94,8 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueStats(array $options = []): string
 	{
+		$options['api'] = $this->api;
+
 		$stats = new JobQueueStats(...$options);
 
 		return $stats->allStats();
@@ -96,6 +104,8 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueByStatus(array $options = []): string
 	{
+		$options['api'] = $this->api;
+
 		$header = $options['header'] ?? null;
 		unset($options['header']);
 
@@ -107,6 +117,8 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function jobqueueByType(array $options = []): string
 	{
+		$options['api'] = $this->api;
+
 		$header = $options['header'] ?? null;
 		unset($options['header']);
 
@@ -135,6 +147,7 @@ final class TotalFormFactory
 			'api'           => $this->api,
 			'schemaFetcher' => $this->schemaFetcher,
 			'schemaLister'  => $this->schemaLister,
+			'schemaFactory' => $this->schemaFactory,
 		]);
 
 		$form = new SchemaForm(...$options);
@@ -531,5 +544,44 @@ final class TotalFormFactory
 	public function url(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		return $this->singleFieldFormBuilder($id, 'url', 'url', 'url', $formOptions, $fieldOptions);
+	}
+
+	private function dummyForm(): TotalForm
+	{
+		// This is a dummy form to satisfy the type hinting in the field method.
+		// It will not be used, but it is required to create a FormField instance.
+		return new ObjectForm(
+			collection        : 'text',
+			api               : $this->api,
+			collectionFetcher : $this->collectionFetcher,
+			collectionReader  : $this->collectionReader,
+			objectFetcher     : $this->objectFetcher,
+			schemaFetcher     : $this->schemaFetcher,
+			schemaLister      : $this->schemaLister,
+		);
+	}
+
+	/**
+	 * Generate a single field HTML for a given collection, object, and property.
+	 * This allows you to create individual form fields without building a full form.
+	 *
+	 * @param array<string,mixed> $options Field options to override defaults
+	 *
+	 * @return string The rendered field HTML
+	 */
+	public function field(string $type, string $name, array $options = []): string
+	{
+		$options = array_merge([
+			'form' => $this->dummyForm(),
+			'name' => $name,
+		], $options);
+		$field = new FormField(...$options);
+
+		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
+		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
+			$field = new $typeClass(...$options);
+		}
+
+		return $field->build();
 	}
 }

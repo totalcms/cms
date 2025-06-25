@@ -5,8 +5,8 @@ use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
 use TotalCMS\Action\Admin\AdminEditProfileAction;
-use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminFileLinksAction;
+use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
@@ -22,6 +22,7 @@ return function (App $app) {
 		$group->get('', AdminIndexAction::class)->setName('admin-index');
 
 		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema');
+		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate');
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection');
 		$group->get('/docs[/{page}]', AdminDocsAction::class)->setName('admin-docs');
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post');

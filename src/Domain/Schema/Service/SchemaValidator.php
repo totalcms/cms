@@ -13,11 +13,11 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
  */
 final class SchemaValidator
 {
-	private SchemaFetcher $fetcher;
+	private SchemaRepository $schemaRepository;
 
-	public function __construct(SchemaFetcher $fetcher)
+	public function __construct(SchemaRepository $schemaRepository)
 	{
-		$this->fetcher = $fetcher;
+		$this->schemaRepository = $schemaRepository;
 	}
 
 	/**
@@ -32,7 +32,7 @@ final class SchemaValidator
 	 */
 	public function validateSchema(array $object, string $schemaType = 'schema'): bool
 	{
-		$schema     = $this->fetcher->fetchSchema($schemaType);
+		$schema     = $this->schemaRepository->getSchema($schemaType);
 		$schemaJSON = $schema->toJson();
 
 		$validator = new Validator();

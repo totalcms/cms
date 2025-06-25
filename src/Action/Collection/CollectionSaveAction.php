@@ -16,8 +16,9 @@ final class CollectionSaveAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$data = (array)$request->getParsedBody();
+		$data       = (array)$request->getParsedBody();
 		$collection = $this->service->saveCollection($data);
+
 		return $this->renderer->jsonItem($response, $collection, new CollectionMetaTransformer());
 	}
 }

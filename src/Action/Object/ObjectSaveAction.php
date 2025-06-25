@@ -39,7 +39,7 @@ final class ObjectSaveAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$data = (array)$request->getParsedBody();
+		$data   = (array)$request->getParsedBody();
 		$object = $this->service->saveObject($args['collection'], $data);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

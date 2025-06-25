@@ -4,8 +4,8 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Renderer\TwigRenderer;
 
 final class AdminUtilsAction
 {
@@ -21,9 +21,8 @@ final class AdminUtilsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		$page    = $args['page'] ?? 'index';
-		$results = "";
+		$results = '';
 
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();
@@ -41,7 +40,16 @@ final class AdminUtilsAction
 				case 'pretty-url-builder':
 					// nothing to do yet
 					break;
+				case 'image-batcher':
+					// Handle image batcher form submissions - steps are processed via POST data
+					break;
 			}
+		}
+
+		// Detect Total CMS 1 data for project-setup page
+		$totalcms1DetectionData = null;
+		if ($page === 'project-setup') {
+			$totalcms1DetectionData = $this->detectTotalCms1Data();
 		}
 
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
@@ -53,6 +61,36 @@ final class AdminUtilsAction
 				'page'   => 'utils',
 			],
 			'results' => $results,
+			'totalcms1DetectionData' => $totalcms1DetectionData,
+			'postData' => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
+	}
+
+	/** @return array<string,string>|null */
+	private function detectTotalCms1Data(): ?array
+	{
+		// Check production location first
+		$documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+		$productionPath = $documentRoot . '/cms-data';
+		
+		if (is_dir($productionPath)) {
+			return [
+				'path' => $productionPath,
+				'source' => 'production'
+			];
+		}
+
+		// Check test data location
+		$testPath = __DIR__ . '/../../../tests/test-data/cms-data';
+		$testPath = realpath($testPath);
+		
+		if ($testPath && is_dir($testPath)) {
+			return [
+				'path' => $testPath,
+				'source' => 'test'
+			];
+		}
+
+		return null;
 	}
 }

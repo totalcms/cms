@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(composer show:*)",
+      "Bash(php:*)",
+      "Bash(composer test:*)",
+      "Bash(./vendor/bin/pest:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(rg:*)",
+      "Bash(composer run:*)",
+      "Bash(composer require:*)",
+      "Bash(composer update:*)",
+      "Bash(git checkout:*)",
+      "Bash(ls:*)",
+      "Bash(touch:*)",
+      "Bash(mkdir:*)",
+      "Bash(composer validate:*)",
+      "Bash(./phpDocumentor.phar:*)",
+      "Bash(composer:*)",
+      "Bash(cp:*)"
+    ],
+    "deny": []
+  }
+}

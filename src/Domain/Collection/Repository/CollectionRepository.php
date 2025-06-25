@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Collection\Repository;
 
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -19,6 +20,7 @@ final class CollectionRepository extends StorageRepository
 	private const META_FILE = '.meta.json';
 	private CollectionFactory $factory;
 	private SchemaValidator $validator;
+	private CacheManager $cacheManager;
 
 	/**
 	 * The constructor.
@@ -26,13 +28,19 @@ final class CollectionRepository extends StorageRepository
 	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
 	 * @param CollectionFactory $factory
 	 * @param SchemaValidator $validator
+	 * @param CacheManager $cacheManager
 	 */
-	public function __construct(StorageAdapterInterface $filesystem, CollectionFactory $factory, SchemaValidator $validator)
-	{
+	public function __construct(
+		StorageAdapterInterface $filesystem, 
+		CollectionFactory $factory, 
+		SchemaValidator $validator,
+		CacheManager $cacheManager
+	) {
 		parent::__construct($filesystem);
 
-		$this->factory   = $factory;
-		$this->validator = $validator;
+		$this->factory      = $factory;
+		$this->validator    = $validator;
+		$this->cacheManager = $cacheManager;
 	}
 
 	/**
@@ -42,6 +50,21 @@ final class CollectionRepository extends StorageRepository
 	 */
 	public function listAllCollections(): array
 	{
+		// Try cache first (Redis preferred for fast access)
+		$cached = $this->cacheManager->getComputedData('collections_list');
+		
+		if ($cached !== null && is_array($cached)) {
+			// Convert cached data back to CollectionData objects
+			$collections = [];
+			foreach ($cached as $collectionArray) {
+				if (is_array($collectionArray)) {
+					$collections[] = $this->factory->generateCollection($collectionArray);
+				}
+			}
+			return $collections;
+		}
+
+		// Cache miss - fetch from filesystem
 		$collections = [];
 		foreach ($this->filesystem->listDirectories('') as $id) {
 			$collection = $this->fetchCollection($id);
@@ -50,6 +73,10 @@ final class CollectionRepository extends StorageRepository
 			}
 			$collections[] = $collection;
 		}
+
+		// Cache the collections as arrays for 15 minutes (collections don't change often)
+		$collectionsArray = array_map(fn($collection) => $collection->toArray(), $collections);
+		$this->cacheManager->storeComputedData('collections_list', $collectionsArray, 900);
 
 		return $collections;
 	}

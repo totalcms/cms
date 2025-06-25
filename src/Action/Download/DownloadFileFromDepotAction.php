@@ -5,12 +5,12 @@ namespace TotalCMS\Action\Download;
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
-use TotalCMS\Domain\Property\Service\DepotFileFetcher;
-use TotalCMS\Renderer\TwigRenderer;
-use TotalCMS\Domain\Property\Service\DepotPropertyManager;
-use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Service\DepotFileFetcher;
+use TotalCMS\Domain\Property\Service\DepotPropertyManager;
+use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Renderer\TwigRenderer;
 
 final class DownloadFileFromDepotAction extends DownloadAction
 {

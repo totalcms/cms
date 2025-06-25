@@ -3,14 +3,14 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Index\Repository\IndexRepository;
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class ObjectExporter
 {
 	public function __construct(
 		private IndexRepository $storage,
 		private ObjectFetcher $objectFetcher,
-		private CollectionSchemaFetcher $schemaFetcher,
+		private SchemaFetcher $schemaFetcher,
 	) {
 	}
 

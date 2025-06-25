@@ -37,6 +37,7 @@ class ListData extends PropertyData
 	{
 		if (!array_is_list($list)) {
 			print_r($list);
+
 			return false;
 		}
 		foreach ($list as $item) {

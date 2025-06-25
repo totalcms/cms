@@ -17,10 +17,11 @@ export default class Identifier extends TotalField {
 
 		this.valid = false;
 
-		if (this.form.isEditMode()) {
-			// The ID cannot be changed in edit mode
+		// Check if we're editing an existing item (form has an ID)
+		if (this.form.id && this.form.id.length > 0) {
+			// The ID cannot be changed when editing
 			this.disable();
-			this.valid = false;
+			this.valid = true; // ID is valid in edit mode since it can't be changed
 		}
 		if (this.getValue() === "" && this.options.autogen) {
 			this.setValue(this.autogenId());
@@ -44,7 +45,9 @@ export default class Identifier extends TotalField {
 				// Skip reserved names
 				if (reservedNames.includes(name)) return;
 				// Only listen to the fields that are used in the autogen string
-				this.form.form.querySelector(`[name=${name}]`).addEventListener("change", e => {
+				const field = this.form.form.querySelector(`[name=${name}]`);
+				if (!field) return; // Skip if the field does not exist
+				field.addEventListener("change", e => {
 					if (this.isLocked()) return;
 					this.setValue(this.autogenId());
 					this.validateIdExists();
@@ -93,7 +96,14 @@ export default class Identifier extends TotalField {
 
     slugify(id) {
 		id = id.replace('@', '-at-').replace('.', '-');
-        return slugify(id, { lower: true });
+        return slugify(id, {
+			replacement : '-', // replace spaces with replacement character, defaults to `-`
+			remove      : /[*+~.()'"!:@]/g, // remove characters that match regex, defaults to `undefined`
+			lower       : true, // convert to lower case, defaults to `false`
+			strict      : false, // strip special characters except replacement, defaults to `false`
+			trim        : true, // trim leading and trailing replacement chars, defaults to `true`
+			// locale      : 'vi', // language code of the locale to use
+		});
     }
 
     idExists() {

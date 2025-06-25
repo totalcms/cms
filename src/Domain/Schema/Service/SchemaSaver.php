@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use TotalCMS\Domain\Index\Service\IndexBuilder;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
 
 final class SchemaSaver
 {
@@ -15,8 +15,7 @@ final class SchemaSaver
 		private SchemaValidator $validator,
 		private IndexBuilder $indexBuilder,
 		private CollectionLister $collectionLister,
-	)
-	{
+	) {
 		$this->storage   = $storage;
 		$this->factory   = $factory;
 		$this->validator = $validator;
@@ -55,7 +54,7 @@ final class SchemaSaver
 	 */
 	public function saveSchema(array $schemaData): SchemaData
 	{
-		$schemaData['properties'] = $this->propertyTypeToRef($schemaData['properties']);
+		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schema                   = $this->factory->generateSchema($schemaData);
 
 		if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, $this->storage->reservedSchemasIds())) {
@@ -85,7 +84,7 @@ final class SchemaSaver
 	 *
 	 * @return array<string,array<string,mixed>>
 	 */
-	private function propertyTypeToRef(array $properties): array
+	public static function propertyTypeToRef(array $properties): array
 	{
 		// Convert property types to $ref when possible
 		foreach ($properties as $key => $options) {

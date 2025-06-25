@@ -28,7 +28,7 @@ $settings = [];
 $settings['sentry'] = [
 	'enable' => true,
 	'init'   => [
-		'dsn' => 'G0caBAFDfR9UXEYRAAgWQE1rUwZdQ0JWCEITH2YIAQpFRFENRksfZHAMX0ZDBFpBR0xmA1BaQUALWlobFzVVEB9dBkBABxcXJkIaRRocHFpBQk5mBVZeR0YDVkVKTGQ=',
+		'dsn' => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
 		// Specify a fixed sample rate
 		'traces_sample_rate' => 1.0,
 		// Set a sampling rate for profiling - this is relative to traces_sample_rate
@@ -55,7 +55,29 @@ $settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/resources/templates';
 $settings['schemas']  = $settings['root'] . '/resources/schemas';
-$settings['cachedir'] = $settings['root'] . '/cache';
+
+$settings['debug'] = false; // Set to true for development
+
+// Cache configuration
+$settings['cache'] = [
+	'filesystem' => [
+		'enabled'   => true,
+		'directory' => $settings['root'] . '/cache',
+	],
+	'redis' => [
+		'enabled' => true,
+		'host' => '127.0.0.1',
+		'port' => 6379,
+		'timeout' => 1,
+		'password' => null,
+		'database' => 0,
+	],
+	'memcached' => [
+		'enabled' => true,
+		'host' => '127.0.0.1',
+		'port' => 11211,
+	],
+];
 
 // Clean up trailing slashes in DOCUMENT_ROOT
 $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
@@ -145,6 +167,17 @@ $settings['auth'] = [
 	'maxAttempts'           => 10,
 	'deniedTimeout'         => 7,
 	'deniedDefaultRedirect' => '/',
+];
+
+$settings['htmlclean'] = [
+	// 'allowed_tags' => ['p', 'strong', 'em'],
+	// 'allowed_css_properties' => [],
+	// 'allowed_iframe_domains' => ['www.youtube.com']
+	'enabled' => true,  // Set to false to disable HTML sanitization globally
+];
+
+$settings['dashboard'] = [
+	'pagination' => 50, // Default pagination for dashboard tables
 ];
 
 // https://www.php.net/manual/en/timezones.php

@@ -16,6 +16,7 @@ details.cms-accordion {
 		padding          : 1rem;
 		background-color : oklch(var(--totalform-nearwhite));
 		cursor           : pointer;
+		user-select      : none;
 
 		// &::marker {
 		// 	content : "▶";
@@ -38,9 +39,9 @@ details.cms-accordion {
 			height  : auto
 		}
 
-		summary {
-			margin-bottom : 1rem;
-		}
+		// summary {
+		// 	margin-bottom : 1rem;
+		// }
 	}
 }
 

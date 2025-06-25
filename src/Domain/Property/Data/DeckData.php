@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use Illuminate\Support\Arr;
-
 /**
  * String type property data.
  */

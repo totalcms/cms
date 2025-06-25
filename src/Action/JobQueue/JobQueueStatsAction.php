@@ -4,8 +4,8 @@ namespace TotalCMS\Action\JobQueue;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Renderer\JsonRenderer;
 
 final class JobQueueStatsAction
 {
@@ -21,7 +21,6 @@ final class JobQueueStatsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		$stats = $this->manager->queueStats();
 
 		return $this->renderer->json($response, $stats);

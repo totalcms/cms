@@ -1,11 +1,19 @@
-# Docs for form twig macros
+# Total CMS Forms Documentation
 
+Total CMS provides a comprehensive form building system accessible through the `cms.form` object in Twig templates. All form methods are available through the TotalFormFactory class.
 
-## Importing Form Macros
+## Accessing Form Methods
 
+All form functionality in Total CMS is accessed through the `cms.form` object:
+
+```twig
+{# Access form methods through cms.form #}
+{{ cms.form.blog() }}
+{{ cms.form.text('my-text-id') }}
+{{ cms.form.builder('mycollection').build() }}
 ```
-{% import "totalform.twig" as form %}
-```
+
+**Note:** The old method of importing form macros (`{% import "totalform.twig" as form %}`) is deprecated. Always use `cms.form` for accessing form functionality.
 
 ## Default Field Arguments
 
@@ -31,9 +39,10 @@ options     = options array added to form-field data-options attribute
 minlength   = minimum length of the field
 ```
 
-```
-{{ form.text(property, {
-	class       : "class",
+```twig
+{# Example of using field options #}
+{{ cms.form.text('my-text-id', {}, {
+	class       : "custom-class",
 	value       : "Set Value",
 	label       : "Text Label",
 	default     : "Default Value",
@@ -48,121 +57,175 @@ minlength   = minimum length of the field
 }) }}
 ```
 
-
 ## Premade Collection Forms
 
-```
-{{ form.blogForm() }}
-{{ form.checkboxForm(id, args = {}, collection = "toggle") }}
-{{ form.colorForm(id, args = {}, collection = "color") }}
-{{ form.dateForm(id, args = {}, collection = "date") }}
-{{ form.datetimeForm(id, args = {}, collection = "date") }}
-{{ form.emailForm(id, args = {}, collection = "email") }}
-{{ form.imageForm(id, args = {}, collection = "image") }}
-{{ form.numberForm(id, args = {}, collection = "number") }}
-{{ form.rangesliderForm(id, args = {}, collection = "number") }}
-{{ form.selectForm(id, options = [], args = {}, collection = "text") }}
-{{ form.styledtextForm(id, args = {}, collection = "styledtext") }}
-{{ form.svgForm(id, args = {}, collection = "svg") }}
-{{ form.textForm(id, args = {}, collection = "text") }}
-{{ form.textareaForm(id, args = {}, collection = "text",) }}
-{{ form.toggleForm(id, args = {}, collection = "toggle") }}
-{{ form.urlForm(id, args = {}, collection = "url") }}
+Total CMS provides ready-to-use forms for standard collection types:
+
+```twig
+{# Blog form with all fields #}
+{{ cms.form.blog() }}
+
+{# Single field forms #}
+{{ cms.form.checkbox(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.color(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.date(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.datetime(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.email(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.image(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.number(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.range(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.select(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.styledtext(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.svg(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.text(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.textarea(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.toggle(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.url(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.file(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.depot(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.gallery(id, formOptions = {}, fieldOptions = {}) }}
+
+{# Feed form #}
+{{ cms.form.feed() }}
 ```
 
-## Custom Forms
+## Custom Forms with Form Builder
 
-### Form Wrappers
+The form builder provides the most flexibility for creating custom forms:
 
-```
-{{ form.start(collection, args = {}) }}
-{{ form.end(button = false) }}
-```
+### Basic Form Builder Usage
 
-### Buttons
+```twig
+{# Create a form builder instance #}
+{% set form = cms.form.builder('mycollection') %}
 
-```
-{{ form.saveButton(label = "Save") }}
-{{ form.deleteButton(label = "Delete") }}
-```
+{# Add fields to the form #}
+{% set form = form.addField('title') %}
+{% set form = form.addField('content', {field: 'styledtext'}) %}
+{% set form = form.addField('date') %}
 
-### Fields
-
-```
-{{ form.checkbox(property, args = {}) }}
-{{ form.color(property, args = {}) }}
-{{ form.date(property, args = {}) }}
-{{ form.datetime(property, args = {}) }}
-{{ form.deck(property, value) }}
-{{ form.depot(property, value) }}
-{{ form.file(property, value) }}
-{{ form.gallery(property, value) }}
-{{ form.hidden(property, args = {}) }}
-{{ form.id(property = "id", args = {}) }}
-{{ form.image(property, args = {}) }}
-{{ form.input(property, args = {}) }}
-{{ form.list(property, options, args = {}) }}
-{{ form.markdown(property, args = {}) }}
-{{ form.multiselect(property, options = [], args = {}) }}
-{{ form.number(property, args = {}) }}
-{{ form.password(property, args = {}) }}
-{{ form.radio(property, options = [], args = {}) }}
-{{ form.rangeslider(property, args = {}) }}
-{{ form.select(property, options = [], args = {}) }}
-{{ form.styledtext(property, args = {}) }}
-{{ form.svg(property, args = {}) }}
-{{ form.textarea(property, args = {}) }}
-{{ form.time(property, args = {}) }}
-{{ form.toggle(property, args = {}) }}
+{# Build and render the form #}
+{{ form.build() }}
 ```
 
+### Advanced Form Builder Example
+
+```twig
+{# Create a complex form with custom layout #}
+{% set form = cms.form.builder('products', {
+    id: 'my-product-id',
+    hideID: false,
+    save: 'Save Product',
+    delete: 'Delete Product'
+}) %}
+
+{# Build form content in columns #}
+{% set col1 = form.field('id') %}
+{% set col1 = col1 ~ form.field('name') %}
+{% set col1 = col1 ~ form.field('description', {field: 'styledtext'}) %}
+{% set col1 = col1 ~ form.field('price', {field: 'number'}) %}
+
+{% set col2 = form.field('category', {field: 'select'}) %}
+{% set col2 = col2 ~ form.field('tags', {field: 'list'}) %}
+{% set col2 = col2 ~ form.field('featured', {field: 'toggle'}) %}
+{% set col2 = col2 ~ form.field('image') %}
+
+{# Create two-column layout #}
+{% set layout = form.layout2Columns(col1, col2) %}
+
+{# Build form with custom layout #}
+{{ form.build(layout) }}
 ```
-{{ form.textForm(property, {
-	helpOnHover : true,
-	helpOnFocus : true,
-	helpStyle   : "label", // default, label, tooltip, box
-	class       : "string",
-	value       : "string",
-	default     : "string",
-	label       : "string",
-	placeholder : "string",
-	help        : "string",
-	pattern     : "string",
-	icon        : true,
-	required    : true,
-	readonly    : true,
-	disabled    : true,
-	minlength   : 10,
+
+### Form Buttons
+
+```twig
+{# Standalone buttons #}
+{{ cms.form.save('Save Changes') }}
+{{ cms.form.delete('Remove Item') }}
+```
+
+### Simple Forms
+
+For basic form submission without full object management:
+
+```twig
+{# Create a simple form that posts to a route #}
+{{ cms.form.simple('/api/contact', '<input name="email" type="email" required>', {
+    method: 'POST',
+    label: 'Send Message',
+    refresh: true
 }) }}
-{{ form.phone(property, args = {}) }}
-{{ form.email(property, args = {}) }}
-{{ form.url(property, args = {}) }}
+```
+
+## Form Options
+
+### Blog Form Options
+
+```twig
+{{ cms.form.blog({
+    collection: 'blog',
+    save: 'Save Post',
+    delete: 'Delete Post',
+    fields: {
+        date: true,
+        summary: true,
+        content: true,
+        author: true,
+        tags: true,
+        featured: true,
+        draft: true,
+        image: true,
+        categories: false,
+        extra: false,
+        extra2: false,
+        media: false,
+        genre: false,
+        labels: false,
+        archived: false,
+        gallery: false
+    }
+}) }}
 ```
 
 
 ## Form Patterns
 
+Total CMS provides built-in validation patterns that can be used in form fields:
+
+```twig
+{# Using patterns in form fields #}
+{{ cms.form.text('my-field', {}, {
+    pattern: patterns.email,
+    help: 'Please enter a valid email address'
+}) }}
 ```
-paterns.alphaNumeric
-paterns.notBlank
-paterns.passwordUpperLowerNumber
-paterns.date
-paterns.time
-paterns.dateTime
-paterns.integer
-paterns.decimal
-paterns.hex
-paterns.ipv4
-paterns.ipv6
-paterns.domain
-paterns.slug
-paterns.uuid
-paterns.macAddress
-paterns.creditCard
-paterns.isbn
-paterns.currency
-paterns.latitudeLongitude
-paterns.html
+
+### Available Patterns
+
+```
+patterns.alphaNumeric          # Letters and numbers only
+patterns.notBlank              # Cannot be empty
+patterns.passwordUpperLowerNumber  # Must contain uppercase, lowercase, and number
+patterns.date                  # Date format
+patterns.time                  # Time format
+patterns.dateTime              # Date and time format
+patterns.integer               # Whole numbers only
+patterns.decimal               # Decimal numbers
+patterns.hex                   # Hexadecimal values
+patterns.ipv4                  # IPv4 address
+patterns.ipv6                  # IPv6 address
+patterns.domain                # Domain name
+patterns.slug                  # URL-friendly slug
+patterns.uuid                  # UUID format
+patterns.macAddress            # MAC address
+patterns.creditCard            # Credit card number
+patterns.isbn                  # ISBN number
+patterns.currency              # Currency format
+patterns.latitudeLongitude     # Coordinates
+patterns.html                  # HTML content
+
+# Post code patterns by country
 patterns.postCode.australia
 patterns.postCode.austria
 patterns.postCode.belgium
@@ -179,11 +242,15 @@ patterns.postCode.spain
 patterns.postCode.sweden
 patterns.postCode.uk
 patterns.postCode.usa
+
+# Phone patterns
 patterns.phone.usa
 patterns.phone.uk
 patterns.phone.france
 patterns.phone.international
-patterns.passwordMinLength(int minLength = 8)
+
+# Dynamic patterns
+patterns.passwordMinLength(8)  # Minimum password length
 ```
 
 ## Field Settings
@@ -191,172 +258,241 @@ patterns.passwordMinLength(int minLength = 8)
 
 ### Image Validation
 
-```
-{{ cms.form.image("myimage", {},{
-	settings : {
-		rules : {
-			size : {min:0,max:300},
-		}
-	}
+```twig
+{{ cms.form.image("myimage", {}, {
+    settings: {
+        rules: {
+            size: {min: 0, max: 300},        # File size in KB
+            height: {min: 500, max: 1000},   # Height in pixels
+            width: {min: 500, max: 1000},    # Width in pixels
+            count: {max: 10},                # Max number of images
+            orientation: 'landscape',         # 'landscape', 'portrait', or 'square'
+            aspectratio: '4:3',              # Aspect ratio
+            filetype: ['image/jpeg', 'image/png'],  # Allowed MIME types
+            filename: ['image.jpg']          # Specific filename requirements
+        }
+    }
 }) }}
 ```
 
-```
-height      : {min:500,max:1000 },
-width       : {min:500,max:1000},
-size        : {min:0,max:1000},
-count       : {max:10},
-orientation : 'landscape',
-aspectratio : '4:3',
-filetype    : ['image/jpeg'],
-filename    : ['image.jpg'],
-```
+### ID Auto-generation
 
-### ID autogen
+Configure automatic ID generation based on other field values:
 
-```
+```json
 {
-	"autogen" : "${title}"
+    "autogen": "${title}"           // Generate from title field
 }
 ```
 
-special autogen vars
+#### Special autogen variables:
 
-* now
-* timestamp
-* uuid
+* `now` - Current date/time
+* `timestamp` - Unix timestamp
+* `uuid` - Unique identifier
 
-
-## Options Possibilities
-
-Example 1: Simple list of options
-
+```json
+{
+    "autogen": "${title}-${now}"    // Example: "my-post-2024-01-15"
+}
 ```
+
+## Options for Select/List Fields
+
+### Example 1: Simple list of options
+
+```php
 ['Option 1', 'Option 2', 'Option 3']
 ```
 
-Example 2: Options with values
+### Example 2: Options with values
 
-```
+```php
 [
-	['value' => '1', 'label' => 'Option 1'],
-	['value' => '2', 'label' => 'Option 2'],
-	['value' => '3', 'label' => 'Option 3']
+    ['value' => '1', 'label' => 'Option 1'],
+    ['value' => '2', 'label' => 'Option 2'],
+    ['value' => '3', 'label' => 'Option 3']
 ]
 ```
 
-Example 3: Grouped options
+### Example 3: Grouped options
 
-```
-{
-	'Group 1' => ['Option 1', 'Option 2'],
-	'Group 2' => ['Option 3', 'Option 4']
-}
-```
-
-Example 4: Grouped options with values
-
-```
-{
-	'Group 1' => [
-		['value' => '1', 'label' => 'Option 1'],
-		['value' => '2', 'label' => 'Option 2']
-	],
-	'Group 2' => [
-		['value' => '3', 'label' => 'Option 3'],
-		['value' => '4', 'label' => 'Option 4']
-	]
-}
+```php
+[
+    'Group 1' => ['Option 1', 'Option 2'],
+    'Group 2' => ['Option 3', 'Option 4']
+]
 ```
 
-### AutoBuild options via collection data
+### Example 4: Grouped options with values
 
+```php
+[
+    'Group 1' => [
+        ['value' => '1', 'label' => 'Option 1'],
+        ['value' => '2', 'label' => 'Option 2']
+    ],
+    'Group 2' => [
+        ['value' => '3', 'label' => 'Option 3'],
+        ['value' => '4', 'label' => 'Option 4']
+    ]
+]
 ```
+
+### Dynamic Options
+
+#### AutoBuild Options via Collection Data
+
+```json
 "settings": {
-	"propertyOptions" : true,
-	"relationalOptions" : {
-		"collection" : "mycollection",
-		"label"      : "name",
-		"value"      : "id"
-	}
-},
+    "propertyOptions": true,
+    "relationalOptions": {
+        "collection": "mycollection",
+        "label": "name",
+        "value": "id"
+    }
+}
 ```
 
 #### Sorting Options
 
-You can sort the options in all form inputs that support options or datalist with the following setting
+Sort options alphabetically in select/list fields:
 
-```
+```json
 {
-	"sortOptions" : true
+    "sortOptions": true
 }
 ```
 
 #### Property Options
 
-Get all value of a field and populate as select options or datalist
+Populate options from all unique values of a property:
 
-```
+```json
 {
-	"propertyOptions" : true
+    "propertyOptions": true
 }
 ```
 
-This has custom properties set in text collection
+Example with custom options:
 
-```
-{{ cms.form.select("myselect2", {}, {
-	options : {
-		"1" : "One",
-		"2" : "Two",
-		"3" : "Three",
-	},
+```twig
+{{ cms.form.select("myselect", {}, {
+    options: {
+        "1": "One",
+        "2": "Two",
+        "3": "Three"
+    }
 }) }}
 ```
 
 #### Relational Options
 
-The default value of the options is always the ID of the object
+Populate options from another collection:
 
-```
+```json
 {
-  relationalOptions : {
-  	collection : "feed",
-  	label      : "title",
-  	value      : "id",
-  }
+    "relationalOptions": {
+        "collection": "categories",
+        "label": "title",
+        "value": "id"
+    }
 }
 ```
 
-List all of the objects from another collection
+Complete example:
 
-```
-{{ cms.form.select("relational", {}, {
-	options : {
-		"1" : "One",
-		"2" : "Two",
-		"3" : "Three",
-	},
-	"settings": {
-		relationalOptions : {
-			collection : "feed",
-			label      : "title",
-		}
-	},
+```twig
+{{ cms.form.select("category", {}, {
+    settings: {
+        relationalOptions: {
+            collection: "categories",
+            label: "title"
+        }
+    }
 }) }}
 ```
 
-#### twig way
+#### Using Options in Twig
 
-```
+```twig
 {% set options = [
-  {value:"dog",     label:"Dog"},
-  {value:"cat",     label:"Cat"},
-  {value:"hamster", label:"Hamster"},
-  {value:"parrot",  label:"Parrot"},
-  {value:"spider",  label:"Spider"},
-  {value:"goldfish",label:"Goldfish"},
+    {value: "dog",     label: "Dog"},
+    {value: "cat",     label: "Cat"},
+    {value: "hamster", label: "Hamster"},
+    {value: "parrot",  label: "Parrot"},
+    {value: "spider",  label: "Spider"},
+    {value: "goldfish", label: "Goldfish"}
 ] %}
 
-{{ form.select('select', options) }}
+{# Use with form builder #}
+{% set form = cms.form.builder('pets') %}
+{{ form.field('pet', {
+    field: 'select',
+    options: options
+}) }}
+```
+
+## Specialized Form Methods
+
+### Schema Forms
+
+```twig
+{# Create/edit schema forms #}
+{{ cms.form.schema({
+    id: 'my-schema-id'  # Optional: for editing existing schema
+}) }}
+```
+
+### Collection Forms
+
+```twig
+{# Create/edit collection forms #}
+{{ cms.form.collection({
+    id: 'my-collection-id'  # Optional: for editing existing collection
+}) }}
+```
+
+### Collection Data Table
+
+```twig
+{# Display collection data in a table #}
+{{ cms.form.collectionTable('blog') }}
+```
+
+### Import Forms
+
+```twig
+{# Import data into a collection #}
+{{ cms.form.importCollection('blog') }}
+
+{# Import schema #}
+{{ cms.form.importSchema() }}
+```
+
+### Job Queue Management
+
+```twig
+{# Display job queue statistics #}
+{{ cms.form.jobqueueStats() }}
+
+{# Job queue by status #}
+{{ cms.form.jobqueueByStatus({
+    header: 'Queue Status'
+}) }}
+
+{# Job queue by type #}
+{{ cms.form.jobqueueByType({
+    header: 'Queue Types'
+}) }}
+
+{# Clear queue form #}
+{{ cms.form.clearqueue() }}
+```
+
+### Factory Forms
+
+```twig
+{# Factory form for bulk object creation #}
+{{ cms.form.factory('blog') }}
 ```

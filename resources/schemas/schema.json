@@ -31,6 +31,15 @@
 			"label"       : "Description",
 			"help"        : "A decription of the schema.",
 			"placeholder" : "About your schema.",
+			"settings"    : { "rows" : 2 },
+			"field"       : "textarea"
+		},
+		"formgrid": {
+			"type"        : "string",
+			"label"       : "Form Grid Layout",
+			"help"        : "A text based grid layout for the form. This is used to create a grid layout for the form fields.",
+			"placeholder" : "id id id\naddress city state",
+			"settings"    : { "rows" : 5 },
 			"field"       : "textarea"
 		},
 		"required": {

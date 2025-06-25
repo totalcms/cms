@@ -13,7 +13,8 @@ final class ObjectUpdatePropertyMetaAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectUpdater $objectUpdater,
-	) {}
+	) {
+	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface

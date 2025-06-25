@@ -80,6 +80,7 @@ class ImageData extends PropertyData
 		if ($json === false) {
 			return '';
 		}
+
 		return $json;
 	}
 }

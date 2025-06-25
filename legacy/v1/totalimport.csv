@@ -1,4 +1,0 @@
-permalink,timestamp,title,summary,content,categories,labels,tags,featured,draft,archvied,author,genre,extra,extra2,media
-test,12/31/2019,"Testing Import","This is a summary","This is my content",category,"label1, label2","tag1, tag2",false,true,false,"Joe Workman",post,"Extra Content","More Extra Content",https://www.youtube.com/watch?v=P2RDijZUopQ
-my-post,07/04/2021,"My Blog Post","My summary","<p style=""text-align: left;"">This is HTML content.</p>
-<p style=""text-align: left;"">This needs to be properly escaped for it to work in a CSV file.</p>",category,"label2, label3",tag3,true,false,false,"Joe Workman",post,Extra,,

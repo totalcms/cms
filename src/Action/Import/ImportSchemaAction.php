@@ -13,15 +13,14 @@ final class ImportSchemaAction
 {
 	public function __construct(
 		private SchemaSaver $schemaSaver,
-		private JsonRenderer $renderer
+		private JsonRenderer $renderer,
 	) {
 	}
 
 	public function __invoke(
 		ServerRequestInterface $request,
-		ResponseInterface $response
-	): ResponseInterface
-	{
+		ResponseInterface $response,
+	): ResponseInterface {
 		/** @var UploadedFileInterface[] $files */
 		$files = $request->getUploadedFiles();
 

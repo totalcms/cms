@@ -70,7 +70,9 @@ class LogAnalyzer
 		$lastError = '';
 
 		foreach ($lines as $line) {
-			if (str_starts_with($line, '[')) {
+			if (str_contains($line, '.INFO:') || str_contains($line, '.DEBUG:')) {
+				continue;
+			} elseif (str_starts_with($line, '[')) {
 				$error     = $this->parseError($line);
 				$lastError = $error;
 

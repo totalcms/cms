@@ -2,7 +2,9 @@
 
 namespace TotalCMS\Domain\Index\Repository;
 
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Utils\PathUtils;
 
@@ -12,6 +14,15 @@ use TotalCMS\Utils\PathUtils;
 final class IndexRepository extends StorageRepository
 {
 	private const INDEX_FILE = '.index.json';
+	private CacheManager $cacheManager;
+
+	public function __construct(
+		StorageAdapterInterface $filesystem,
+		CacheManager $cacheManager
+	) {
+		parent::__construct($filesystem);
+		$this->cacheManager = $cacheManager;
+	}
 
 	/**
 	 * get the index.
@@ -22,13 +33,34 @@ final class IndexRepository extends StorageRepository
 	 */
 	public function fetchIndex(string $collection): ?IndexData
 	{
+		// Try cache first (Redis preferred for fast index access)
+		$cacheKey = "index_data:{$collection}";
+		$cached = $this->cacheManager->getComputedData($cacheKey);
+		
+		if ($cached !== null && is_array($cached)) {
+			// Reconstruct IndexData from cached array of objects
+			try {
+				return new IndexData($cached);
+			} catch (\Exception $e) {
+				// Cache contains invalid data, fall through to filesystem
+			}
+		}
+
+		// Cache miss - fetch from filesystem
 		$indexFile = $this->buildIndexPath($collection);
 
 		if (!$this->filesystem->fileExists($indexFile)) {
 			return null;
 		}
 
-		return $this->fetchAndDeserialize($indexFile, IndexData::class);
+		$indexData = $this->fetchAndDeserialize($indexFile, IndexData::class);
+		
+		// Cache the index objects array for 30 minutes (indexes change when objects are added/removed)
+		if ($indexData !== null) {
+			$this->cacheManager->storeComputedData($cacheKey, $indexData->objects->toArray(), 1800);
+		}
+
+		return $indexData;
 	}
 
 	/**
@@ -40,12 +72,26 @@ final class IndexRepository extends StorageRepository
 	 */
 	public function fetchObjectIds(string $collection): array
 	{
+		// Try cache first (Redis preferred for fast access)
+		$cacheKey = "object_ids:{$collection}";
+		$cached = $this->cacheManager->getComputedData($cacheKey);
+		
+		if ($cached !== null && is_array($cached)) {
+			return $cached;
+		}
+
+		// Cache miss - scan filesystem (expensive!)
 		$files = $this->filesystem->listFiles($collection);
 
 		// Filter for object json files
-		$files = array_filter($files, fn(string $path) => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
+		$files = array_filter($files, fn (string $path) => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
 
-		return array_map(fn(string $path) => basename($path, StorageRepository::FILE_EXT), $files);
+		$objectIds = array_map(fn (string $path) => basename($path, StorageRepository::FILE_EXT), $files);
+		
+		// Cache object IDs for 15 minutes (changes when objects are added/removed)
+		$this->cacheManager->storeComputedData($cacheKey, $objectIds, 900);
+
+		return $objectIds;
 	}
 
 	/**
@@ -62,6 +108,21 @@ final class IndexRepository extends StorageRepository
 		$indexJSON  = $this->serializer->serialize($index, 'json'); // no pretty print on purpose
 
 		$this->filesystem->write($indexFile, $indexJSON);
+
+		// Invalidate cached index data when saved
+		$this->invalidateIndexCache($collection);
+	}
+
+	/**
+	 * Invalidate index-related caches for a collection.
+	 */
+	private function invalidateIndexCache(string $collection): void
+	{
+		// Clear index data cache
+		$this->cacheManager->storeComputedData("index_data:{$collection}", null, 1);
+		
+		// Clear object IDs cache (index changes usually mean object list changed)
+		$this->cacheManager->storeComputedData("object_ids:{$collection}", null, 1);
 	}
 
 	private function buildIndexPath(string $collection): string

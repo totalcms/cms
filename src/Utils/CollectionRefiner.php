@@ -11,6 +11,12 @@ namespace TotalCMS\Utils;
  */
 class CollectionRefiner
 {
+	/** @var array<string,bool> */
+	private static array $methodCache = [];
+	
+	/** @var array<string,int> */
+	private static array $paramCountCache = [];
+	
 	/**
 	 * Constructor.
 	 *
@@ -30,9 +36,19 @@ class CollectionRefiner
 	 */
 	public function filter(array $rules): array
 	{
+		// Early exit for common cases
+		if (empty($rules) || empty($this->collection)) {
+			return $this->collection;
+		}
+		
 		$filteredCollection = $this->collection;
 
 		foreach ($rules as $rule) {
+			// Early exit if nothing left to filter
+			if (empty($filteredCollection)) {
+				return [];
+			}
+			
 			$value = $rule['value'] ?? '';
 			if (is_array($value)) {
 				$filteredCollection = $this->filterByArrayRule(
@@ -63,17 +79,26 @@ class CollectionRefiner
 	 */
 	public function filterByArrayRule(array $collection, string $property, array $values = [], string $operator = 'equal'): array
 	{
+		// Use array to track unique items instead of array_merge
 		$results = [];
+		$seen = [];
+		
 		foreach ($values as $value) {
-			$results = array_merge(
-				$results,
-				$this->filterByRule(
-					collection : $collection,
-					property   : $property,
-					value      : $value,
-					operator   : $operator,
-				),
+			$filtered = $this->filterByRule(
+				collection : $collection,
+				property   : $property,
+				value      : strval($value),
+				operator   : $operator,
 			);
+			
+			foreach ($filtered as $item) {
+				// Use ID if available, otherwise serialize
+				$key = isset($item['id']) ? $item['id'] : serialize($item);
+				if (!isset($seen[$key])) {
+					$results[] = $item;
+					$seen[$key] = true;
+				}
+			}
 		}
 
 		return $results;
@@ -87,9 +112,14 @@ class CollectionRefiner
 	public function filterUnique(array $collection): array
 	{
 		$unique = [];
+		$seen = [];
+		
 		foreach ($collection as $item) {
-			if (!in_array($item, $unique, true)) {
+			// Use ID if available, otherwise serialize
+			$key = isset($item['id']) ? $item['id'] : serialize($item);
+			if (!isset($seen[$key])) {
 				$unique[] = $item;
+				$seen[$key] = true;
 			}
 		}
 
@@ -117,22 +147,34 @@ class CollectionRefiner
 			$value = mb_substr($value, 1);
 		}
 
-		$reflection = new \ReflectionMethod(CollectionRefiner::class, "$operator");
-		$numParams  = $reflection->getNumberOfParameters();
+		// Cache reflection results to avoid repeated reflection calls
+		if (!isset(self::$paramCountCache[$operator])) {
+			if (method_exists($this, $operator)) {
+				$reflection = new \ReflectionMethod(CollectionRefiner::class, $operator);
+				self::$paramCountCache[$operator] = $reflection->getNumberOfParameters();
+				self::$methodCache[$operator] = true;
+			} else {
+				self::$methodCache[$operator] = false;
+				self::$paramCountCache[$operator] = 2; // Default for fallback
+			}
+		}
+		
+		$numParams = self::$paramCountCache[$operator];
+		$methodExists = self::$methodCache[$operator];
 
 		// If operator requires a value and it's empty, return all records
 		if ($numParams === 2 && $value === '') {
 			return $collection;
 		}
 
-		return array_filter($collection, function ($record) use ($property, $value, $operator, $not, $numParams) {
+		return array_filter($collection, function ($record) use ($property, $value, $operator, $not, $numParams, $methodExists) {
 			$item = self::getPropertyValueForRecord($record, $property);
 
 			if ($item === null) {
 				return false;
 			}
 
-			if (method_exists($this, $operator)) {
+			if ($methodExists) {
 				if (is_array($item)) {
 					$found = self::filterArrayByRule($item, $value, $operator);
 
@@ -174,19 +216,26 @@ class CollectionRefiner
 	 */
 	public static function getPropertyValueForRecord(array $record, string $property): mixed
 	{
-		if (array_key_exists($property, $record)) {
+		// Fast path for direct properties (most common case)
+		if (isset($record[$property])) {
 			return $record[$property];
 		}
+		
+		// Only do complex parsing if needed
+		if (!str_contains($property, '.')) {
+			return null;
+		}
 
+		// Handle nested properties
 		$properties = explode('.', $property);
 		$value      = $record;
-		foreach ($properties as $property) {
-			if (is_array($value) && array_key_exists($property, $value)) {
-				$value = $value[$property];
+		foreach ($properties as $prop) {
+			if (is_array($value) && array_key_exists($prop, $value)) {
+				$value = $value[$prop];
 
 				if (is_array($value) && self::isIndexedArray($value)) {
 					// Set $value to the first item in the array
-					$value = $value[0];
+					$value = $value[0] ?? null;
 				}
 			} else {
 				return null;
@@ -199,20 +248,20 @@ class CollectionRefiner
 	/** @param array<int,mixed> $items */
 	protected static function filterArrayByRule(array $items, mixed $value, string $operator): bool
 	{
-		$found = false;
+		// Use array_filter for better performance and early exit
 		foreach ($items as $item) {
 			if (self::$operator($item, $value)) {
-				$found = true;
-				break;
+				return true;
 			}
 		}
-
-		return $found;
+		
+		return false;
 	}
 
 	protected static function equal(mixed $haystack, mixed $needle): bool
 	{
-		return $haystack === $needle;
+		// Use loose comparison to handle string/number conversions
+		return $haystack == $needle;
 	}
 
 	protected static function contains(string $haystack, string $needle): bool
@@ -244,19 +293,26 @@ class CollectionRefiner
 
 	protected static function containsCaseInsensitive(string $haystack, string $needle): bool
 	{
-		return mb_strpos(mb_strtolower($haystack), mb_strtolower($needle)) !== false;
+		// Use mb_stripos for better performance
+		return mb_stripos($haystack, $needle) !== false;
 	}
 
 	protected static function startsCaseInsensitive(string $haystack, string $needle): bool
 	{
-		return mb_strpos(mb_strtolower($haystack), mb_strtolower($needle)) === 0;
+		// Use mb_stripos for better performance
+		return mb_stripos($haystack, $needle) === 0;
 	}
 
 	protected static function endsCaseInsensitive(string $haystack, string $needle): bool
 	{
 		$length = mb_strlen($needle);
-
-		return $length > 0 ? mb_substr(mb_strtolower($haystack), -$length) === mb_strtolower($needle) : true;
+		
+		if ($length === 0) {
+			return true;
+		}
+		
+		// More efficient case-insensitive comparison
+		return mb_strtolower(mb_substr($haystack, -$length)) === mb_strtolower($needle);
 	}
 
 	protected static function less(string $haystack, string $needle): bool

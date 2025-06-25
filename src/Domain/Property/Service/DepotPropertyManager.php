@@ -8,7 +8,9 @@ use TotalCMS\Domain\Property\Data\FolderData;
 
 final class DepotPropertyManager
 {
-	public function __construct(public DepotData &$depot) {}
+	public function __construct(public DepotData &$depot)
+	{
+	}
 
 	public function &addFile(FileData $newfile, ?string $subpath = null): DepotData
 	{
@@ -60,6 +62,7 @@ final class DepotPropertyManager
 				break;
 			}
 		}
+
 		return $this->depot;
 	}
 
@@ -78,6 +81,7 @@ final class DepotPropertyManager
 				break;
 			}
 		}
+
 		return $this->depot;
 	}
 
@@ -133,6 +137,7 @@ final class DepotPropertyManager
 		// Locate the folder specified by $subpath if provided
 		if ($subpath) {
 			$folder = self::findOrCreateFolderByPath($files, $subpath);
+
 			return self::findFileByNameInFolder($folder, $filename);
 		}
 

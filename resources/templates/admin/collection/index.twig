@@ -6,6 +6,7 @@
 
 {% else %}
 
-	<p>No objects in this collection yet.</p>
+	{% set labelPlural = cms.collection(url.collection).labelPlural|default('objects') %}
+	<p>No {{ labelPlural }} in this collection yet.</p>
 
 {% endif %}

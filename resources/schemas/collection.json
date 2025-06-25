@@ -52,6 +52,7 @@
 			"label"       : "Description",
 			"help"        : "A decription of the collection.",
 			"placeholder" : "About your collection.",
+			"settings"    : {"rows" : 3},
 			"field"       : "textarea"
         },
         "url": {
@@ -78,6 +79,20 @@
 			"label" : "Category",
 			"help"  : "Add a category to organize the collections in the side panel",
 			"field" : "text"
+        },
+        "labelPlural": {
+			"type"        : "string",
+			"label"       : "Plural Label",
+			"help"        : "Custom plural term for collection items (e.g. 'posts', 'articles'). Defaults to 'objects' if not set.",
+			"placeholder" : "objects",
+			"field"       : "text"
+        },
+        "labelSingular": {
+			"type"        : "string",
+			"label"       : "Singular Label",
+			"help"        : "Custom singular term for collection items (e.g. 'post', 'article'). Defaults to 'object' if not set.",
+			"placeholder" : "object",
+			"field"       : "text"
         },
 		"sortBy": {
 			"type"        : "string",

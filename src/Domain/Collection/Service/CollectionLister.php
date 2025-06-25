@@ -29,5 +29,4 @@ final class CollectionLister
 			return $collection->schema === $schemaId;
 		});
 	}
-
 }

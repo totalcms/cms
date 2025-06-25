@@ -4,35 +4,42 @@ namespace TotalCMS\Support;
 
 final class Config
 {
-	public string $template  = '';
-	public string $datadir   = '';
-	public string $cachedir  = '';
-	public string $tmpdir    = '';
-	public string $domain    = '';
-	public string $api       = '';
-	public string $locale    = '';
-	public string $timezone  = '';
-	public string $notfound  = '';
+	public string $template = '';
+	public string $datadir  = '';
+	public string $tmpdir   = '';
+	public string $domain   = '';
+	public string $api      = '';
+	public string $locale   = '';
+	public string $timezone = '';
+	public string $notfound = '';
+	public bool $debug      = false;
 	/** @var array<string,mixed> */
-	public array $session     = [];
+	public array $cache = [];
 	/** @var array<string,mixed> */
-	public array $logger     = [];
+	public array $session = [];
 	/** @var array<string,mixed> */
-	public array $sentry     = [];
+	public array $logger = [];
 	/** @var array<string,mixed> */
-	public array $error      = [];
+	public array $sentry = [];
+	/** @var array<string,mixed> */
+	public array $error = [];
 	/** @var array<string,mixed> */
 	public array $imageworks = [];
 	/** @var array<string,mixed> */
 	public array $auth = [];
+	/** @var array<string,mixed> */
+	public array $htmlclean = [];
+	/** @var array<string,mixed> */
+	public array $dashboard = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
 	{
 		$this->template   = $settings['template'];
+		$this->dashboard  = $settings['dashboard'];
 		$this->datadir    = $settings['datadir'];
 		$this->tmpdir     = $settings['tmpdir'];
-		$this->cachedir   = $settings['cachedir'];
+		$this->cache      = $settings['cache'];
 		$this->logger     = $settings['logger'];
 		$this->sentry     = $settings['sentry'];
 		$this->error      = $settings['error'];
@@ -42,7 +49,9 @@ final class Config
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];
 		$this->auth       = $settings['auth'];
-		$this->notfound	  = $settings['notfound'];
+		$this->debug      = $settings['debug'];
+		$this->notfound   = $settings['notfound'];
+		$this->htmlclean  = $settings['htmlclean'] ?? [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);
