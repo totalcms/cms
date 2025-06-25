@@ -29,20 +29,12 @@ final class CollectionImageCacheDeleteAction
 			]);
 		}
 
-		// Get cache stats before clearing
-		$statsBefore = $this->cacheManager->getCollectionImageCacheStats($collection);
-
-		if (!$statsBefore['exists']) {
-			return $this->renderer->json($response->withStatus(404), [
-				'error' => 'Collection not found'
-			]);
-		}
-
-		$deleted = $this->cacheManager->clearCollectionImageCache($collection);
-
-		if ($deleted === false) {
+		try {
+			$statsBefore = $this->cacheManager->getCollectionImageCacheStats($collection);
+			$deleted     = $this->cacheManager->clearCollectionImageCache($collection);
+		} catch (\RuntimeException $e) {
 			return $this->renderer->json($response->withStatus(500), [
-				'error' => 'Failed to clear collection image cache'
+				'error' => 'Failed to clear collection image cache: ' . $e->getMessage()
 			]);
 		}
 

@@ -7,6 +7,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
+use TotalCMS\Support\Config;
 
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
@@ -27,6 +28,7 @@ final class CacheManager
 		private OPcacheService $opcacheService,
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
+		private Config $config,
 	) {
 		// Initialize cache services and version
 		$this->cacheServices = [
@@ -525,36 +527,46 @@ final class CacheManager
 	/**
 	 * Clear all image cache files for a specific collection.
 	 * This clears all .cache directories within the collection folder.
+	 *
+	 * @throws \RuntimeException if collection doesn't exist or cache clearing fails
 	 */
 	public function clearCollectionImageCache(string $collection): bool
 	{
-		// Only filesystem service can clear image cache files
-		if (!$this->filesystemService->isAvailable()) {
-			return false;
-		}
+		// Get the collection path from config
+		$collectionPath = $this->config->datadir . '/' . $collection;
 
-		// Get the storage adapter to access collection files
-		$cacheDir = $this->filesystemService->getCachDir();
-		$collectionPath = $cacheDir . '/../tcms-data/' . $collection;
-		
 		if (!is_dir($collectionPath)) {
-			return false; // Collection doesn't exist
+			throw new \RuntimeException("Collection directory does not exist: {$collectionPath}");
 		}
 
-		$success = true;
-		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($collectionPath, \RecursiveDirectoryIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::SELF_FIRST
-		);
+		// First, collect all .cache directories to avoid iterator issues during deletion
+		$cacheDirectories = [];
 
-		foreach ($iterator as $file) {
-			if ($file->isDir() && $file->getFilename() === '.cache') {
-				$cachePath = $file->getPathname();
-				$success = $success && $this->removeDirectory($cachePath);
+		try {
+			$iterator = new \RecursiveIteratorIterator(
+				new \RecursiveDirectoryIterator($collectionPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+				\RecursiveIteratorIterator::SELF_FIRST
+			);
+
+			foreach ($iterator as $file) {
+				if ($file->isDir() && $file->getFilename() === '.cache') {
+					$cacheDirectories[] = $file->getPathname();
+				}
+			}
+		} catch (\Exception $e) {
+			throw new \RuntimeException("Failed to scan collection directory: " . $e->getMessage());
+		}
+
+		// Now remove all found cache directories
+		$cachesCleared = 0;
+		foreach ($cacheDirectories as $cachePath) {
+			if (is_dir($cachePath)) {
+				$this->removeDirectory($cachePath);
+				$cachesCleared++;
 			}
 		}
 
-		return $success;
+		return true;
 	}
 
 	/**
@@ -564,23 +576,19 @@ final class CacheManager
 	 */
 	public function getCollectionImageCacheStats(string $collection): array
 	{
-		$cacheDir = $this->filesystemService->getCachDir();
-		$collectionPath = $cacheDir . '/../tcms-data/' . $collection;
-		
+		$collectionPath = $this->config->datadir . '/' . $collection;
+
 		$stats = [
-			'collection' => $collection,
+			'collection'        => $collection,
 			'cache_directories' => 0,
-			'cached_files' => 0,
-			'total_size_bytes' => 0,
-			'exists' => false,
+			'cached_files'      => 0,
+			'total_size_bytes'  => 0,
 		];
 
 		if (!is_dir($collectionPath)) {
-			return $stats;
+			throw new \RuntimeException("Collection directory does not exist: {$collectionPath}");
 		}
 
-		$stats['exists'] = true;
-		
 		$iterator = new \RecursiveIteratorIterator(
 			new \RecursiveDirectoryIterator($collectionPath, \RecursiveDirectoryIterator::SKIP_DOTS),
 			\RecursiveIteratorIterator::SELF_FIRST
@@ -589,12 +597,12 @@ final class CacheManager
 		foreach ($iterator as $file) {
 			if ($file->isDir() && $file->getFilename() === '.cache') {
 				$stats['cache_directories']++;
-				
+
 				// Count files and size in this cache directory
 				$cacheIterator = new \RecursiveIteratorIterator(
 					new \RecursiveDirectoryIterator($file->getPathname(), \RecursiveDirectoryIterator::SKIP_DOTS)
 				);
-				
+
 				foreach ($cacheIterator as $cacheFile) {
 					if ($cacheFile->isFile()) {
 						$stats['cached_files']++;
@@ -605,17 +613,19 @@ final class CacheManager
 		}
 
 		$stats['total_size_mb'] = round($stats['total_size_bytes'] / 1024 / 1024, 2);
-		
+
 		return $stats;
 	}
 
 	/**
 	 * Recursively remove a directory and all its contents.
+	 *
+	 * @throws \RuntimeException if directory removal fails
 	 */
-	private function removeDirectory(string $path): bool
+	private function removeDirectory(string $path): void
 	{
 		if (!is_dir($path)) {
-			return true;
+			return;
 		}
 
 		$files = new \RecursiveIteratorIterator(
@@ -624,10 +634,21 @@ final class CacheManager
 		);
 
 		foreach ($files as $file) {
-			$file->isDir() ? rmdir($file->getRealPath()) : unlink($file->getRealPath());
+			$realPath = $file->getRealPath();
+			if ($file->isDir()) {
+				if (!rmdir($realPath)) {
+					throw new \RuntimeException("Failed to remove directory: {$realPath}");
+				}
+			} else {
+				if (!unlink($realPath)) {
+					throw new \RuntimeException("Failed to remove file: {$realPath}");
+				}
+			}
 		}
 
-		return rmdir($path);
+		if (!rmdir($path)) {
+			throw new \RuntimeException("Failed to remove root directory: {$path}");
+		}
 	}
 
 	/**

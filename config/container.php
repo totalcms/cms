@@ -351,7 +351,8 @@ return [
 			$container->get(FilesystemService::class),
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
-			$container->get(MemcachedService::class)
+			$container->get(MemcachedService::class),
+			$container->get(Config::class)
 		);
 	},
 
