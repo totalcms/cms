@@ -19,7 +19,6 @@ if (isset($_SERVER['DOMAIN']) && is_string($_SERVER['DOMAIN'])) {
 }
 
 $settings['docroot']   = $settings['root'];
-$settings['cachedir']  = 'false';
 $settings['api']       = '/site-assets/stacks/ws.tcms3.core/tcms/public/index.php';
 
 if (str_contains(__DIR__, 'rw_common')) {
@@ -36,3 +35,18 @@ $settings['assets']['minify'] = 0;
 $settings['logger']['path']   = $settings['datadir'] . '/logs';
 $settings['sentry']['enable'] = false;
 $settings['auth']['enable']   = false;
+
+$settings['cache'] = [
+	'filesystem' => [
+		'enabled'   => false,
+	],
+	'opcache' => [
+		'enabled' => false,
+	],
+	'redis' => [
+		'enabled' => false,
+	],
+	'memcached' => [
+		'enabled' => false,
+	],
+];

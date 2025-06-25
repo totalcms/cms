@@ -55,7 +55,30 @@ $settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/resources/templates';
 $settings['schemas']  = $settings['root'] . '/resources/schemas';
-$settings['cachedir'] = $settings['root'] . '/cache';
+
+// Cache configuration
+$settings['cache'] = [
+	'filesystem' => [
+		'enabled'   => true,
+		'directory' => $settings['root'] . '/cache',
+	],
+	'opcache' => [
+		'enabled' => true,
+	],
+	'redis' => [
+		'enabled' => true,
+		'host' => '127.0.0.1',
+		'port' => 6379,
+		'timeout' => 1,
+		'password' => null,
+		'database' => 0,
+	],
+	'memcached' => [
+		'enabled' => true,
+		'host' => '127.0.0.1',
+		'port' => 11211,
+	],
+];
 
 // Clean up trailing slashes in DOCUMENT_ROOT
 $settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);

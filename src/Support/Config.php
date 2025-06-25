@@ -6,7 +6,6 @@ final class Config
 {
 	public string $template  = '';
 	public string $datadir   = '';
-	public string $cachedir  = '';
 	public string $tmpdir    = '';
 	public string $domain    = '';
 	public string $api       = '';
@@ -14,13 +13,15 @@ final class Config
 	public string $timezone  = '';
 	public string $notfound  = '';
 	/** @var array<string,mixed> */
-	public array $session     = [];
+	public array $cache = [];
 	/** @var array<string,mixed> */
-	public array $logger     = [];
+	public array $session = [];
 	/** @var array<string,mixed> */
-	public array $sentry     = [];
+	public array $logger = [];
 	/** @var array<string,mixed> */
-	public array $error      = [];
+	public array $sentry = [];
+	/** @var array<string,mixed> */
+	public array $error = [];
 	/** @var array<string,mixed> */
 	public array $imageworks = [];
 	/** @var array<string,mixed> */
@@ -37,7 +38,7 @@ final class Config
 		$this->dashboard  = $settings['dashboard'];
 		$this->datadir    = $settings['datadir'];
 		$this->tmpdir     = $settings['tmpdir'];
-		$this->cachedir   = $settings['cachedir'];
+		$this->cache      = $settings['cache'];
 		$this->logger     = $settings['logger'];
 		$this->sentry     = $settings['sentry'];
 		$this->error      = $settings['error'];

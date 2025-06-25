@@ -14,7 +14,6 @@ $settings['auth']['enable']   = false;
 
 $settings['docroot']   = $settings['root'];
 $settings['datadir']   = $settings['root'] . '/tcms-data';
-$settings['cachedir']  = 'false';
 $settings['domain']    = 'totalcms.test';
 $settings['url']       = 'https://totalcms.test';
 $settings['api']       = 'https://totalcms.test';
@@ -28,3 +27,18 @@ $settings['assets']['minify'] = 0;
 // $settings['locale']['cache']  = null;
 
 $settings['timezone'] = 'America/Los_Angeles';
+
+$settings['cache'] = [
+	'filesystem' => [
+		'enabled'   => false,
+	],
+	'opcache' => [
+		'enabled' => false,
+	],
+	'redis' => [
+		'enabled' => false,
+	],
+	'memcached' => [
+		'enabled' => false,
+	],
+];
