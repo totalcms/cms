@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Schema\Repository;
 
 use Dynamics\Schema;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -18,17 +19,20 @@ final class SchemaRepository extends StorageRepository
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
 	private SchemaFactory $factory;
+	private CacheManager $cacheManager;
 
 	/**
 	 * The constructor.
 	 *
 	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
 	 * @param SchemaFactory $factory
+	 * @param CacheManager $cacheManager
 	 */
-	public function __construct(StorageAdapterInterface $filesystem, SchemaFactory $factory)
+	public function __construct(StorageAdapterInterface $filesystem, SchemaFactory $factory, CacheManager $cacheManager)
 	{
 		parent::__construct($filesystem);
 		$this->factory = $factory;
+		$this->cacheManager = $cacheManager;
 	}
 
 	/**
@@ -60,6 +64,28 @@ final class SchemaRepository extends StorageRepository
 	 */
 	public function listReservedSchemas(): array
 	{
+		// Try cache first (reserved schemas never change during runtime)
+		$cacheKey = "reserved_schemas_list";
+		$cached = $this->cacheManager->getComputedData($cacheKey);
+		
+		if ($cached !== null && is_array($cached)) {
+			// Convert cached data back to SchemaData objects
+			$schemas = [];
+			foreach ($cached as $schemaArray) {
+				if (is_array($schemaArray)) {
+					try {
+						$schemas[] = $this->factory->generateSchema($schemaArray);
+					} catch (\Exception $e) {
+						// Skip invalid cached schema, will be refreshed below
+					}
+				}
+			}
+			if (!empty($schemas)) {
+				return $schemas;
+			}
+		}
+
+		// Cache miss - load all reserved schemas
 		$ids     = $this->reservedSchemasIds();
 		$schemas = [];
 
@@ -69,6 +95,10 @@ final class SchemaRepository extends StorageRepository
 				$schemas[] = $schema;
 			}
 		}
+
+		// Cache the schemas as arrays for 1 hour (reserved schemas never change)
+		$schemasArray = array_map(fn($schema) => $schema->toArray(), $schemas);
+		$this->cacheManager->storeComputedData($cacheKey, $schemasArray, 3600);
 
 		return $schemas;
 	}
@@ -80,6 +110,15 @@ final class SchemaRepository extends StorageRepository
 	 */
 	public function reservedSchemasIds(): array
 	{
+		// Try cache first (reserved schemas never change during runtime)
+		$cacheKey = "reserved_schema_ids";
+		$cached = $this->cacheManager->getComputedData($cacheKey);
+		
+		if ($cached !== null && is_array($cached)) {
+			return $cached;
+		}
+
+		// Cache miss - expensive glob() operation
 		$files = glob(self::DEFAULT_SCHEMA_DIR . '*' . self::FILE_EXT);
 
 		if ($files === false) {
@@ -90,10 +129,15 @@ final class SchemaRepository extends StorageRepository
 			return basename($file, self::FILE_EXT);
 		}, $files);
 
-		return array_filter($ids, function (string $id) {
+		$filteredIds = array_filter($ids, function (string $id) {
 			// Exclude the schema and collection schemas
 			return $id !== 'schema' && $id !== 'collection';
 		});
+
+		// Cache for 1 hour (reserved schema IDs never change)
+		$this->cacheManager->storeComputedData($cacheKey, $filteredIds, 3600);
+
+		return $filteredIds;
 	}
 
 	/**
@@ -105,6 +149,19 @@ final class SchemaRepository extends StorageRepository
 	 */
 	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
+		// Try cache first (Redis preferred, long TTL since default schemas never change)
+		$cacheKey = "default_schema:{$id}";
+		$cached = $this->cacheManager->getComputedData($cacheKey);
+		
+		if ($cached !== null && is_array($cached)) {
+			try {
+				return $this->factory->generateSchema($cached);
+			} catch (\Exception $e) {
+				// Cache contains invalid data, fall through to filesystem
+			}
+		}
+
+		// Cache miss - load from filesystem
 		$schemaFile = self::DEFAULT_SCHEMA_DIR . $id . self::FILE_EXT;
 		$contents   = null;
 
@@ -118,7 +175,14 @@ final class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		return $this->factory->generateSchemaFromJson($contents);
+		$schema = $this->factory->generateSchemaFromJson($contents);
+		
+		// Cache default schema for 1 hour (they never change during runtime)
+		if ($schema !== null) {
+			$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 3600);
+		}
+
+		return $schema;
 	}
 
 	/**
@@ -130,9 +194,28 @@ final class SchemaRepository extends StorageRepository
 	 */
 	public function fetchCustomSchema(string $id): ?SchemaData
 	{
-		$schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
+		// Try cache first (Redis preferred, medium TTL since custom schemas change rarely)
+		$cacheKey = "custom_schema:{$id}";
+		$cached = $this->cacheManager->getComputedData($cacheKey);
+		
+		if ($cached !== null && is_array($cached)) {
+			try {
+				return $this->factory->generateSchema($cached);
+			} catch (\Exception $e) {
+				// Cache contains invalid data, fall through to filesystem
+			}
+		}
 
-		return $this->fetchAndDeserialize($schemaFile, SchemaData::class);
+		// Cache miss - load from filesystem
+		$schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
+		$schema = $this->fetchAndDeserialize($schemaFile, SchemaData::class);
+		
+		// Cache custom schema for 30 minutes (changes rarely but can be modified by users)
+		if ($schema !== null) {
+			$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 1800);
+		}
+
+		return $schema;
 	}
 
 	/**
@@ -189,12 +272,31 @@ final class SchemaRepository extends StorageRepository
 		}
 
 		$this->filesystem->write($schemaFile, $schemaJSON);
+
+		// Invalidate cached custom schema when saved
+		$this->invalidateCustomSchemaCache($schema->id);
 	}
 
 	public function deleteSchema(string $id): bool
 	{
 		$schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
 
-		return $this->filesystem->delete($schemaFile);
+		$result = $this->filesystem->delete($schemaFile);
+
+		// Invalidate cached custom schema when deleted
+		if ($result) {
+			$this->invalidateCustomSchemaCache($id);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Invalidate schema-related caches for a custom schema.
+	 */
+	private function invalidateCustomSchemaCache(string $id): void
+	{
+		// Clear custom schema cache
+		$this->cacheManager->storeComputedData("custom_schema:{$id}", null, 1);
 	}
 }

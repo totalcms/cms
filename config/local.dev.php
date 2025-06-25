@@ -30,14 +30,14 @@ $settings['timezone'] = 'America/Los_Angeles';
 
 $settings['debug'] = true;
 
-$settings['cache'] = [
-	'filesystem' => [
-		'enabled'   => false,
-	],
-	'redis' => [
-		'enabled' => false,
-	],
-	'memcached' => [
-		'enabled' => false,
-	],
-];
+// $settings['cache'] = [
+// 	'filesystem' => [
+// 		'enabled'   => false,
+// 	],
+// 	'redis' => [
+// 		'enabled' => false,
+// 	],
+// 	'memcached' => [
+// 		'enabled' => false,
+// 	],
+// ];

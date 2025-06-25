@@ -41,6 +41,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -351,6 +352,14 @@ return [
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class)
+		);
+	},
+
+	SchemaRepository::class => function (ContainerInterface $container) {
+		return new SchemaRepository(
+			$container->get(StorageAdapterInterface::class),
+			$container->get(SchemaFactory::class),
+			$container->get(CacheManager::class)
 		);
 	},
 
