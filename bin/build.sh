@@ -41,6 +41,7 @@ cp -r config public resources src vendor autoload.php .htaccess dist
 
 # remove all public dev/test files
 rm -rf dist/public/test
+rm -rf dist/public/false
 
 # install all required composer packages for dev environment
 echo "Installing all required composer packages back for dev environment..."
