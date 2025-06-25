@@ -117,6 +117,40 @@ final class ImageCacheService
 	}
 
 	/**
+	 * Get image cache statistics for all collections.
+	 * 
+	 * @return array<array<string,mixed>> Array of collection cache statistics
+	 */
+	public function getAllCollectionImageCacheStats(): array
+	{
+		$datadir = $this->config->datadir;
+		$results = [];
+
+		if (!is_dir($datadir)) {
+			return $results;
+		}
+
+		// Get all collection directories
+		$collections = array_filter(
+			scandir($datadir) ?: [],
+			fn($item) => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
+		);
+
+		foreach ($collections as $collection) {
+			$stats = $this->getCollectionImageCacheStats($collection);
+			// Only include collections that have cached files
+			if ($stats['exists'] && $stats['cached_files'] > 0) {
+				$results[] = $stats;
+			}
+		}
+
+		// Sort by collection name
+		usort($results, fn($a, $b) => strcmp($a['collection'], $b['collection']));
+
+		return $results;
+	}
+
+	/**
 	 * Clear image cache for all collections.
 	 * 
 	 * @return array<string,mixed> Summary of clearing operation

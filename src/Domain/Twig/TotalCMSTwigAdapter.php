@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
@@ -39,6 +40,7 @@ final class TotalCMSTwigAdapter
 	public TotalFormFactory $form;
 	public ServerChecker $checker;
 	public CacheManager $cacheManager;
+	public ImageCacheService $imageCacheService;
 	public LogAnalyzer $logger;
 	public string $api;
 	public string $dashboard;
@@ -62,6 +64,7 @@ final class TotalCMSTwigAdapter
 		private PhpSession $session,
 		private AccessManager $accessManager,
 		private FileAccessManager $fileAccessManager,
+		private ImageCacheService $imageCacheServiceInstance,
 	) {
 		$this->api          = $this->config->api;
 		$this->dashboard    = $this->api . '/admin';
@@ -70,6 +73,7 @@ final class TotalCMSTwigAdapter
 		$this->form         = $this->totalFormFactory;
 		$this->checker      = $this->serverChecker;
 		$this->cacheManager = $this->cacheManagerService;
+		$this->imageCacheService = $this->imageCacheServiceInstance;
 		$this->logger       = $this->logAnalyzer;
 	}
 

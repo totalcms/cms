@@ -19,10 +19,35 @@
 	{% endset %}
 
 	{{ cms.form.simple("/cache/images", formfields, {
-		method : "DELETE",
-		label  : "Clear Collection Image Cache",
+		method  : "DELETE",
+		label   : "Clear Collection Image Cache",
+		refresh : true,
 	}) }}
 
+	{% set imageCacheStats = cms.imageCacheService.getAllCollectionImageCacheStats() %}
+	{% if imageCacheStats|length > 0 %}
+		<h3 style="margin-top:2rem">Image Cache Statistics</h3>
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>Collection</th>
+					<th>Cached Files</th>
+					<th>Total Size</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for stats in imageCacheStats %}
+				<tr>
+					<td><strong>{{ stats.collection }}</strong></td>
+					<td>{{ stats.cached_files }}</td>
+					<td>{{ stats.total_size_mb }} MB</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p style="margin-top:2rem"><em>No image cache data found in any collections.</em></p>
+	{% endif %}
 
 	<h2 style="margin-top:3rem">Clear Content Cache</h2>
 

@@ -267,6 +267,7 @@ return [
 			$container->get(PhpSession::class),
 			$container->get(AccessManager::class),
 			$container->get(FileAccessManager::class),
+			$container->get(ImageCacheService::class),
 		);
 	},
 
