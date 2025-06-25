@@ -14,7 +14,7 @@ $settings['auth']['enable']   = false;
 
 $settings['docroot']   = $settings['root'];
 $settings['datadir']   = $settings['root'] . '/tcms-data';
-$settings['cachedir']  = false;
+$settings['cachedir']  = 'false';
 $settings['domain']    = 'totalcms.test';
 $settings['url']       = 'https://totalcms.test';
 $settings['api']       = 'https://totalcms.test';

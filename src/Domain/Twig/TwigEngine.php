@@ -27,15 +27,17 @@ final class TwigEngine
 	/** @var bool Enable performance monitoring (disabled by default) */
 	private static bool $monitoringEnabled = false;
 
-	public function __construct(Config $config, TotalCMSTwigExtension $extension)
+	public function __construct(Config $config, TotalCMSTwigExtension $extension, ?TwigCacheManager $cacheManager = null)
 	{
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		$customTemplates   = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
 		$cacheDir          = $config->cachedir === 'false' ? false : $config->cachedir;
 		$debug             = $cacheDir === false ? true : false;                        // enable debug is no cache dir
 
-		// Initialize cache manager if caching is enabled
-		if ($cacheDir !== false) {
+		// Use injected cache manager or create one if needed
+		if ($cacheManager !== null) {
+			$this->cacheManager = $cacheManager;
+		} elseif ($cacheDir !== false) {
 			$this->cacheManager = new TwigCacheManager($config);
 		}
 

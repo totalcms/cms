@@ -37,6 +37,7 @@ final class TotalCMSTwigAdapter
 {
 	public TotalFormFactory $form;
 	public ServerChecker $checker;
+	public TwigCacheManager $cacheManager;
 	public LogAnalyzer $logger;
 	public string $api;
 	public string $dashboard;
@@ -55,18 +56,20 @@ final class TotalCMSTwigAdapter
 		private SchemaFetcher $schemaFetcher,
 		private TotalFormFactory $totalFormFactory,
 		private ServerChecker $serverChecker,
+		private TwigCacheManager $twigCacheManager,
 		private LogAnalyzer $logAnalyzer,
 		private PhpSession $session,
 		private AccessManager $accessManager,
 		private FileAccessManager $fileAccessManager,
 	) {
-		$this->api       = $this->config->api;
-		$this->dashboard = $this->api . '/admin';
-		$this->logout    = $this->api . '/logout';
-		$this->domain    = $this->getDomainName();
-		$this->form      = $this->totalFormFactory;
-		$this->checker   = $this->serverChecker;
-		$this->logger    = $this->logAnalyzer;
+		$this->api          = $this->config->api;
+		$this->dashboard    = $this->api . '/admin';
+		$this->logout       = $this->api . '/logout';
+		$this->domain       = $this->getDomainName();
+		$this->form         = $this->totalFormFactory;
+		$this->checker      = $this->serverChecker;
+		$this->cacheManager = $this->twigCacheManager;
+		$this->logger       = $this->logAnalyzer;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -105,7 +108,7 @@ final class TotalCMSTwigAdapter
 
 		$rows = '';
 		foreach ($pendingJobs as $job) {
-			$payload = json_decode($job->payload, true);
+			$payload  = json_decode($job->payload, true);
 			$objectId = $payload['id'] ?? 'N/A';
 
 			$rows .= sprintf(
@@ -159,7 +162,7 @@ final class TotalCMSTwigAdapter
 
 		$rows = '';
 		foreach ($failedJobs as $job) {
-			$payload = json_decode($job->payload, true);
+			$payload  = json_decode($job->payload, true);
 			$objectId = $payload['id'] ?? 'N/A';
 
 			// Truncate error message for display
@@ -929,7 +932,7 @@ NGINX;
 			$maxVisible = (int)$options['maxVisible'];
 			unset($options['maxVisible']);
 		}
-		
+
 		$viewAllText = null;
 		if (isset($options['viewAllText'])) {
 			$viewAllText = $options['viewAllText'];

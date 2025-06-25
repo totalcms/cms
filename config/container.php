@@ -31,19 +31,19 @@ use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
-use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\BarcodeTwigAdapter;
@@ -61,11 +61,11 @@ use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Support\Config;
+use TotalCMS\Utils\BarcodeGenerator;
 use TotalCMS\Utils\Cipher;
 use TotalCMS\Utils\CSRFTokenManager;
 use TotalCMS\Utils\FileUploadValidator;
 use TotalCMS\Utils\LogAnalyzer;
-use TotalCMS\Utils\BarcodeGenerator;
 use TotalCMS\Utils\QRGenerator;
 use TotalCMS\Utils\ServerChecker;
 
@@ -247,6 +247,7 @@ return [
 			$container->get(SchemaFetcher::class),
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
+			$container->get(TwigCacheManager::class),
 			$container->get(LogAnalyzer::class),
 			$container->get(PhpSession::class),
 			$container->get(AccessManager::class),
@@ -307,7 +308,11 @@ return [
 	},
 
 	TwigEngine::class => function (ContainerInterface $container) {
-		return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
+		return new TwigEngine(
+			$container->get(Config::class), 
+			$container->get(TotalCMSTwigExtension::class),
+			$container->get(TwigCacheManager::class)
+		);
 	},
 
 	TwigCacheManager::class => function (ContainerInterface $container) {
