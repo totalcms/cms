@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
@@ -11,7 +11,7 @@ final class SchemaFetcher
 
 	public function __construct(
 		private SchemaRepository $storage,
-		private CollectionFetcher $collectionService,
+		private CollectionRepository $collectionRepository,
 	){}
 
 	public function fetchSchema(string $id): SchemaData
@@ -26,12 +26,12 @@ final class SchemaFetcher
 
 	public function fetchSchemaForCollection(string $collection): SchemaData
 	{
-		$collection = $this->collectionService->fetchCollection($collection);
+		$collectionData = $this->collectionRepository->fetchCollection($collection);
 
-		if ($collection === null) {
+		if ($collectionData === null) {
 			throw new \UnexpectedValueException('Collection for Schema not found: ' . $collection);
 		}
 
-		return $this->storage->getSchema($collection->schema);
+		return $this->storage->getSchema($collectionData->schema);
 	}
 }
