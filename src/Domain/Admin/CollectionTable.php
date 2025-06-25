@@ -38,7 +38,7 @@ final class CollectionTable
 
 		$this->schemaData = $this->schemaFetcher->fetchSchema($collectionData->schema);
 		$index            = $this->collectionReader->fetchIndex($this->collection);
-		$this->objects    = is_null($index) ? [] : $index->objects->toArray();
+		$this->objects    = $index->objects->toArray();
 	}
 
 	private function getPropertyType(string $property): string

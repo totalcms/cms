@@ -32,10 +32,6 @@ final class IndexGetAction
 	): ResponseInterface {
 		$index = $this->service->fetchIndex($args['collection']);
 
-		if ($index === null) {
-			return $this->renderer->json($response, []);
-		}
-
 		return $this->renderer->jsonItem($response, $index, new IndexTransformer());
 	}
 }

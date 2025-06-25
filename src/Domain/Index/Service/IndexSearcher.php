@@ -16,10 +16,6 @@ final class IndexSearcher
 	{
 		$index = $this->reader->fetchIndex($collection);
 
-		if (is_null($index)) {
-			return collect([]);
-		}
-
 		$objects = $index->objects->filter(function ($object) use ($property, $query) {
 			return self::searchProperty($object, $property, $query);
 		});
@@ -36,7 +32,7 @@ final class IndexSearcher
 	{
 		$index = $this->reader->fetchIndex($collection);
 
-		if (is_null($index) || empty($query)) {
+		if (empty($query)) {
 			return collect([]);
 		}
 

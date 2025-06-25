@@ -522,10 +522,6 @@ NGINX;
 			return [];
 		}
 
-		if ($collection === null) {
-			return [];
-		}
-
 		return $collection->objects->toArray();
 	}
 
@@ -534,10 +530,6 @@ NGINX;
 	public function property(string $collection, string $property): array
 	{
 		$collection = $this->indexReader->fetchIndex($collection);
-
-		if ($collection === null) {
-			return [];
-		}
 
 		return $collection->objects->pluck($property)->flatten()->unique()->toArray();
 	}

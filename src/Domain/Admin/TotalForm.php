@@ -283,10 +283,6 @@ abstract class TotalForm
 
 		$collection = $this->collectionReader->fetchIndex($collection);
 
-		if ($collection === null) {
-			return [];
-		}
-
 		// array_filter removes any empty values
 		return array_filter($collection->objects->pluck($property)->flatten()->unique()->toArray());
 	}
@@ -303,10 +299,6 @@ abstract class TotalForm
 		}
 
 		$collection = $this->collectionReader->fetchIndex($collection);
-
-		if ($collection === null) {
-			return [];
-		}
 
 		$filteredArray = $collection->objects->map(function ($item) use ($properties) {
 			return collect($item)->only($properties)->toArray();

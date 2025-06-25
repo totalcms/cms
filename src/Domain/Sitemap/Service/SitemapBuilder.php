@@ -19,9 +19,6 @@ final class SitemapBuilder
 	public function buildSitemap(string $collection, array $options = []): string
 	{
 		$index = $this->indexReader->fetchIndex($collection);
-		if (is_null($index)) {
-			throw new \Exception('Index not found for collection: ' . $collection);
-		}
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		if (is_null($collectionData)) {
