@@ -4,13 +4,7 @@
 	<p>This tool manages all cache systems in Total CMS. Clearing cache will remove cached templates,
 	compiled code, and other temporary data to ensure you see the latest changes.</p>
 
-	<h2>Cache Management</h2>
-
-	<p><strong>Clear All Caches</strong> will clear filesystem cache, OPcache, Redis, and Memcached (if available).</p>
-	{{ cms.form.simple("/cache", "", {
-		method : "DELETE",
-		label  : "Clear All Caches",
-	}) }}
+	<h2>Clear Collection Image Cache</h2>
 
 	<p><strong>Clear Collection Image Cache</strong> will remove all cached images (.cache directories)
 		for a specific collection.</p>
@@ -28,7 +22,14 @@
 		label  : "Clear Collection Image Cache",
 	}) }}
 
-	<div id="collection-cache-result" class="cache-result" style="display: none;"></div>
+
+	<h2 style="margin-top:3rem">Clear Content Cache</h2>
+
+	<p><strong>Clear Content Caches</strong> will clear filesystem cache, OPcache, Redis, and Memcached (if available).</p>
+	{{ cms.form.simple("/cache", "", {
+		method : "DELETE",
+		label  : "Clear Content Caches",
+	}) }}
 
 	{% set cacheStats = cms.cacheManager.getCacheStats() %}
 	{% set cacheConfig = cms.cacheManager.getOptimalCacheConfig() %}
@@ -40,7 +41,7 @@
 			<p><strong>Note:</strong> OPcache may still be active for PHP bytecode acceleration.</p>
 		</div>
 	{% else %}
-		<h2 style="margin-top:2rem">Available Cache Systems</h2>
+		<h3 style="margin-top:2rem">Available Cache Systems</h3>
 		<table class="admin-table">
 			<thead>
 				<tr>
@@ -103,7 +104,7 @@
 		</table>
 
 		{% if cacheConfig.recommendations|length > 0 %}
-		<h2>Performance Recommendations</h2>
+		<h3>Performance Recommendations</h3>
 		<div class="recommendations">
 			{% for recommendation in cacheConfig.recommendations %}
 				<div class="recommendation-item">
@@ -113,7 +114,7 @@
 		</div>
 		{% endif %}
 
-		<h2>System Information</h2>
+		<h3>System Information</h3>
 		<ul>
 			<li><strong>Cache Version</strong>: {{ cacheStats.cache_version }}</li>
 			<li><strong>Cache Dir Size</strong>: {{ cms.checker.cacheDirSize }}</li>
