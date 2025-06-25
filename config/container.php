@@ -52,6 +52,7 @@ use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
+use TotalCMS\Domain\Twig\TwigCacheManager;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
@@ -309,8 +310,12 @@ return [
 		return new TwigEngine($container->get(Config::class), $container->get(TotalCMSTwigExtension::class));
 	},
 
+	TwigCacheManager::class => function (ContainerInterface $container) {
+		return new TwigCacheManager($container->get(Config::class));
+	},
+
 	TwigCacheCleaner::class => function (ContainerInterface $container) {
-		return new TwigCacheCleaner($container->get(Config::class));
+		return new TwigCacheCleaner($container->get(TwigCacheManager::class));
 	},
 
 	IndexSearcher::class => function (ContainerInterface $container) {
