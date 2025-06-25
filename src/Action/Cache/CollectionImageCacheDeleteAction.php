@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Cache;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -13,7 +13,7 @@ use TotalCMS\Renderer\JsonRenderer;
 final class CollectionImageCacheDeleteAction
 {
 	public function __construct(
-		private CacheManager $cacheManager,
+		private ImageCacheService $imageCacheService,
 		private JsonRenderer $renderer,
 	) {
 	}
@@ -30,8 +30,8 @@ final class CollectionImageCacheDeleteAction
 		}
 
 		try {
-			$statsBefore = $this->cacheManager->getCollectionImageCacheStats($collection);
-			$deleted     = $this->cacheManager->clearCollectionImageCache($collection);
+			$statsBefore = $this->imageCacheService->getCollectionImageCacheStats($collection);
+			$deleted     = $this->imageCacheService->clearCollectionImageCache($collection);
 		} catch (\RuntimeException $e) {
 			return $this->renderer->json($response->withStatus(500), [
 				'error' => 'Failed to clear collection image cache: ' . $e->getMessage()
@@ -39,7 +39,7 @@ final class CollectionImageCacheDeleteAction
 		}
 
 		// Get stats after clearing to show what was removed
-		$statsAfter = $this->cacheManager->getCollectionImageCacheStats($collection);
+		$statsAfter = $this->imageCacheService->getCollectionImageCacheStats($collection);
 
 		return $this->renderer->json($response, [
 			'deleted' => $deleted,

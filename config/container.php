@@ -32,6 +32,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
@@ -351,8 +352,7 @@ return [
 			$container->get(FilesystemService::class),
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
-			$container->get(MemcachedService::class),
-			$container->get(Config::class)
+			$container->get(MemcachedService::class)
 		);
 	},
 
@@ -361,6 +361,12 @@ return [
 			$container->get(StorageAdapterInterface::class),
 			$container->get(SchemaFactory::class),
 			$container->get(CacheManager::class)
+		);
+	},
+
+	ImageCacheService::class => function (ContainerInterface $container) {
+		return new ImageCacheService(
+			$container->get(Config::class)
 		);
 	},
 
