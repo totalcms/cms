@@ -21,17 +21,17 @@ $settings['logger']['level']  = Monolog\Level::Debug;
 $settings['sentry']['enable'] = false;
 $settings['auth']['enable']   = false;
 
-$settings['cache'] = [
-	'filesystem' => [
-		'enabled'   => false,
-	],
-	'opcache' => [
-		'enabled' => false,
-	],
-	'redis' => [
-		'enabled' => false,
-	],
-	'memcached' => [
-		'enabled' => false,
-	],
-];
+// $settings['cache'] = [
+// 	'filesystem' => [
+// 		'enabled'   => false,
+// 	],
+// 	'opcache' => [
+// 		'enabled' => false,
+// 	],
+// 	'redis' => [
+// 		'enabled' => false,
+// 	],
+// 	'memcached' => [
+// 		'enabled' => false,
+// 	],
+// ];

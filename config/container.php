@@ -54,6 +54,10 @@ use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\TwigCacheCleaner;
 use TotalCMS\Domain\Twig\TwigCacheManager;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Cache\Service\FilesystemService;
+use TotalCMS\Domain\Cache\Service\OPcacheService;
+use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -315,8 +319,30 @@ return [
 		);
 	},
 
+	// Cache Services
+	FilesystemService::class => function (ContainerInterface $container) {
+		return new FilesystemService($container->get(Config::class));
+	},
+
+	OPcacheService::class => function (ContainerInterface $container) {
+		return new OPcacheService($container->get(Config::class));
+	},
+
+	RedisService::class => function (ContainerInterface $container) {
+		return new RedisService($container->get(Config::class));
+	},
+
+	MemcachedService::class => function (ContainerInterface $container) {
+		return new MemcachedService($container->get(Config::class));
+	},
+
 	TwigCacheManager::class => function (ContainerInterface $container) {
-		return new TwigCacheManager($container->get(Config::class));
+		return new TwigCacheManager(
+			$container->get(FilesystemService::class),
+			$container->get(OPcacheService::class),
+			$container->get(RedisService::class),
+			$container->get(MemcachedService::class)
+		);
 	},
 
 	TwigCacheCleaner::class => function (ContainerInterface $container) {

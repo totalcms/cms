@@ -79,7 +79,9 @@ class ServerChecker
 
 	public function cacheDirSize(): string
 	{
-		$dir  = $this->config->cachedir;
+		$cache = $this->config->cache ?? [];
+		$filesystemConfig = $cache['filesystem'] ?? [];
+		$dir = $filesystemConfig['directory'] ?? '';
 		$size = 0;
 		if (file_exists($dir)) {
 			foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir)) as $file) {
@@ -281,13 +283,29 @@ class ServerChecker
 		return $cacheInfo;
 	}
 
+	/**
+	 * Get cache directory writability status.
+	 */
+	private function getCacheWritable(): ?bool
+	{
+		$cache = $this->config->cache ?? [];
+		$filesystemConfig = $cache['filesystem'] ?? [];
+		$cacheDir = $filesystemConfig['directory'] ?? '';
+		
+		if ($cacheDir === 'false' || empty($cacheDir)) {
+			return null; // Cache is disabled
+		}
+		
+		return is_writable($cacheDir);
+	}
+
 	/** @return array<string,bool> */
 	public function checkPermissions(): array
 	{
 		return array_filter([
 			'tcms-data' => is_writable($this->config->datadir),
 			// Don't check cache if it's disabled
-			'cache' => $this->config->cachedir !== 'false' ? is_writable($this->config->cachedir) : null,
+			'cache' => $this->getCacheWritable(),
 			'logs'  => is_writable($this->config->logger['path']),
 			'tmp'   => is_writable($this->config->tmpdir),
 		]);

@@ -16,93 +16,93 @@
 	{% set cacheConfig = cms.cacheManager.getOptimalCacheConfig() %}
 
 	{% if not cacheStats.cache_enabled %}
-	<div class="cache-disabled-notice">
-		<h2>⚠️ Cache Status: Disabled (Development Mode)</h2>
-		<p>Twig template caching is currently disabled. This is normal for development but should be enabled in production for better performance.</p>
-		<p><strong>Note:</strong> OPcache may still be active for PHP bytecode acceleration.</p>
-	</div>
-	{% endif %}
+		<div class="cache-disabled-notice">
+			<h2>⚠️ Cache Status: Disabled (Development Mode)</h2>
+			<p>Twig template caching is currently disabled. This is normal for development but should be enabled in production for better performance.</p>
+			<p><strong>Note:</strong> OPcache may still be active for PHP bytecode acceleration.</p>
+		</div>
+	{% else %}
+		<h2 style="margin-top:2rem">Available Cache Systems</h2>
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>Cache Type</th>
+					<th>Status</th>
+					<th>Performance Data</th>
+					<th>Details</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for backend, name in cacheStats.available_backends %}
+				<tr>
+					<td><strong>{{ name }}</strong></td>
+					<td>
+						{% if backend in cacheStats|keys %}
+							<span class="success">✅ Active</span>
+						{% else %}
+							<span class="warning">⚠️ Available</span>
+						{% endif %}
+					</td>
+					<td>
+						{% if backend == 'filesystem' and cacheStats.filesystem.exists %}
+							{{ cacheStats.filesystem.size_mb }} MB ({{ cacheStats.filesystem.files }} files)
+						{% elseif backend == 'opcache' and cacheStats.opcache.available %}
+							{% if cacheStats.opcache.hit_rate > 0 %}
+								{{ cacheStats.opcache.hit_rate }}% hit rate
+							{% else %}
+								Enabled, warming up
+							{% endif %}
+						{% elseif backend == 'redis' and cacheStats.redis.available %}
+							{% if cacheStats.redis.hit_rate > 0 %}
+								{{ cacheStats.redis.hit_rate }}% hit rate, {{ cacheStats.redis.memory_usage }}
+							{% else %}
+								Connected, no metrics yet
+							{% endif %}
+						{% elseif backend == 'memcached' and cacheStats.memcached.available %}
+							{% if cacheStats.memcached.hit_rate > 0 %}
+								{{ cacheStats.memcached.hit_rate }}% hit rate, {{ cacheStats.memcached.memory_usage }}
+							{% else %}
+								Connected, no metrics yet
+							{% endif %}
+						{% else %}
+							-
+						{% endif %}
+					</td>
+					<td>
+						{% if backend == 'filesystem' %}
+							Twig compiled templates and metadata
+						{% elseif backend == 'opcache' %}
+							PHP bytecode cache (2-5x performance boost)
+						{% elseif backend == 'redis' %}
+							High-speed in-memory cache for template metadata
+						{% elseif backend == 'memcached' %}
+							Distributed memory cache for template data
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
 
-	<h2 style="margin-top:2rem">Available Cache Systems</h2>
-	<table class="admin-table">
-		<thead>
-			<tr>
-				<th>Cache Type</th>
-				<th>Status</th>
-				<th>Performance Data</th>
-				<th>Details</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for backend, name in cacheStats.available_backends %}
-			<tr>
-				<td><strong>{{ name }}</strong></td>
-				<td>
-					{% if backend in cacheStats|keys %}
-						<span class="success">✅ Active</span>
-					{% else %}
-						<span class="warning">⚠️ Available</span>
-					{% endif %}
-				</td>
-				<td>
-					{% if backend == 'filesystem' and cacheStats.filesystem.exists %}
-						{{ cacheStats.filesystem.size_mb }} MB ({{ cacheStats.filesystem.files }} files)
-					{% elseif backend == 'opcache' and cacheStats.opcache.available %}
-						{% if cacheStats.opcache.hit_rate > 0 %}
-							{{ cacheStats.opcache.hit_rate }}% hit rate
-						{% else %}
-							Enabled, warming up
-						{% endif %}
-					{% elseif backend == 'redis' and cacheStats.redis.available %}
-						{% if cacheStats.redis.hit_rate > 0 %}
-							{{ cacheStats.redis.hit_rate }}% hit rate, {{ cacheStats.redis.memory_usage }}
-						{% else %}
-							Connected, no metrics yet
-						{% endif %}
-					{% elseif backend == 'memcached' and cacheStats.memcached.available %}
-						{% if cacheStats.memcached.hit_rate > 0 %}
-							{{ cacheStats.memcached.hit_rate }}% hit rate, {{ cacheStats.memcached.memory_usage }}
-						{% else %}
-							Connected, no metrics yet
-						{% endif %}
-					{% else %}
-						-
-					{% endif %}
-				</td>
-				<td>
-					{% if backend == 'filesystem' %}
-						Twig compiled templates and metadata
-					{% elseif backend == 'opcache' %}
-						PHP bytecode cache (2-5x performance boost)
-					{% elseif backend == 'redis' %}
-						High-speed in-memory cache for template metadata
-					{% elseif backend == 'memcached' %}
-						Distributed memory cache for template data
-					{% endif %}
-				</td>
-			</tr>
+		{% if cacheConfig.recommendations|length > 0 %}
+		<h2>Performance Recommendations</h2>
+		<div class="recommendations">
+			{% for recommendation in cacheConfig.recommendations %}
+				<div class="recommendation-item">
+					{{ recommendation|raw }}
+				</div>
 			{% endfor %}
-		</tbody>
-	</table>
+		</div>
+		{% endif %}
 
-	{% if cacheConfig.recommendations|length > 0 %}
-	<h2>Performance Recommendations</h2>
-	<div class="recommendations">
-		{% for recommendation in cacheConfig.recommendations %}
-			<div class="recommendation-item">
-				{{ recommendation|raw }}
-			</div>
-		{% endfor %}
-	</div>
+		<h2>System Information</h2>
+		<ul>
+			<li><strong>Cache Version</strong>: {{ cacheStats.cache_version }}</li>
+			<li><strong>Cache Dir Size</strong>: {{ cms.checker.cacheDirSize }}</li>
+			<li><strong>Total Space</strong>: {{ cms.checker.totalspace }}</li>
+			<li><strong>Free Space</strong>: {{ cms.checker.freespace }}</li>
+		</ul>
 	{% endif %}
-
-	<h2>System Information</h2>
-	<ul>
-		<li><strong>Cache Version</strong>: {{ cacheStats.cache_version }}</li>
-		<li><strong>Cache Dir Size</strong>: {{ cms.checker.cacheDirSize }}</li>
-		<li><strong>Total Space</strong>: {{ cms.checker.totalspace }}</li>
-		<li><strong>Free Space</strong>: {{ cms.checker.freespace }}</li>
-	</ul>
 
 </section>
 

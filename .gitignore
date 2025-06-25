@@ -27,4 +27,4 @@ public/assets
 /resources/bundle
 /version
 /resources/jobqueue
-/public/false/.cache_version
+.cache_version

@@ -20,26 +20,29 @@ final class TwigEngine
 {
 	private TwigEnvironment $twig;
 	private ?TwigCacheManager $cacheManager = null;
-	
+
 	/** @var array<string,array<string,mixed>> */
 	private static array $renderStats = [];
-	
+
 	/** @var bool Enable performance monitoring (disabled by default) */
 	private static bool $monitoringEnabled = false;
 
-	public function __construct(Config $config, TotalCMSTwigExtension $extension, ?TwigCacheManager $cacheManager = null)
-	{
+	public function __construct(
+		Config $config,
+		TotalCMSTwigExtension $extension,
+		?TwigCacheManager $cacheManager = null,
+	) {
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		$customTemplates   = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
-		$cacheDir          = $config->cachedir === 'false' ? false : $config->cachedir;
-		$debug             = $cacheDir === false ? true : false;                        // enable debug is no cache dir
 
-		// Use injected cache manager or create one if needed
-		if ($cacheManager !== null) {
-			$this->cacheManager = $cacheManager;
-		} elseif ($cacheDir !== false) {
-			$this->cacheManager = new TwigCacheManager($config);
-		}
+		$cache             = $config->cache ?? [];
+		$filesystemConfig  = $cache['filesystem'] ?? [];
+		$cacheDirectory    = $filesystemConfig['directory'] ?? '';
+		$cacheDir          = $filesystemConfig['enabled'] ? $cacheDirectory : false;
+		$debug             = ($cacheDir === false);
+
+		// Use injected cache manager - should always be provided via DI
+		$this->cacheManager = $cacheManager;
 
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
@@ -78,12 +81,6 @@ final class TwigEngine
 		if ($debug) {
 			$this->twig->addExtension(new DebugExtension());
 		}
-
-		// !BUG: this is not working: https://github.com/twigphp/Twig/issues/4113
-		// $this->twig->getRuntime(EscaperRuntime::class)->setSafeClasses([
-		// 	TotalForm::class           => ['html'],
-		// 	TotalCMSTwigAdapter::class => ['html'],
-		// ]);
 	}
 
 	/** @param array<mixed> $data */
@@ -92,20 +89,20 @@ final class TwigEngine
 		// Only track performance if monitoring is enabled
 		$startTime = self::$monitoringEnabled ? microtime(true) : 0;
 		$startMemory = self::$monitoringEnabled ? memory_get_usage(true) : 0;
-		
+
 		try {
 			$string = $this->twig->render($templateName, $data);
-			
+
 			// Record performance stats only if enabled
 			if (self::$monitoringEnabled) {
 				$this->recordStats($templateName, $startTime, $startMemory, true);
 			}
-			
+
 		} catch (\Exception $e) {
 			if (self::$monitoringEnabled) {
 				$this->recordStats($templateName, $startTime, $startMemory, false);
 			}
-			
+
 			$string = sprintf(
 				'<p class="cms-twig-error render-error"><strong>Error rendering template</strong>: %s - %s</p><pre class="cms-twig-traceback">%s</pre>',
 				$templateName,
@@ -128,7 +125,7 @@ final class TwigEngine
 			throw $e->getPrevious() ?? $e;
 		}
 	}
-	
+
 	/**
 	 * Record performance statistics for template rendering.
 	 * Only called when monitoring is enabled.
@@ -137,7 +134,7 @@ final class TwigEngine
 	{
 		$renderTime = microtime(true) - $startTime;
 		$memoryUsed = memory_get_usage(true) - $startMemory;
-		
+
 		// Initialize stats array if not exists (faster than isset check)
 		if (!array_key_exists($templateName, self::$renderStats)) {
 			self::$renderStats[$templateName] = [
@@ -149,13 +146,13 @@ final class TwigEngine
 				'errors' => 0,
 			];
 		}
-		
+
 		// Use reference for performance
 		$stats = &self::$renderStats[$templateName];
 		$stats['count']++;
 		$stats['total_time'] += $renderTime;
 		$stats['total_memory'] += $memoryUsed;
-		
+
 		// Only update max values if current is larger (avoid unnecessary max() calls)
 		if ($renderTime > $stats['max_time']) {
 			$stats['max_time'] = $renderTime;
@@ -163,12 +160,12 @@ final class TwigEngine
 		if ($memoryUsed > $stats['max_memory']) {
 			$stats['max_memory'] = $memoryUsed;
 		}
-		
+
 		if (!$success) {
 			$stats['errors']++;
 		}
 	}
-	
+
 	/**
 	 * Enable performance monitoring.
 	 */
@@ -176,7 +173,7 @@ final class TwigEngine
 	{
 		self::$monitoringEnabled = true;
 	}
-	
+
 	/**
 	 * Disable performance monitoring.
 	 */
@@ -184,7 +181,7 @@ final class TwigEngine
 	{
 		self::$monitoringEnabled = false;
 	}
-	
+
 	/**
 	 * Check if monitoring is enabled.
 	 */
@@ -192,7 +189,7 @@ final class TwigEngine
 	{
 		return self::$monitoringEnabled;
 	}
-	
+
 	/**
 	 * Get rendering performance statistics.
 	 *
@@ -202,7 +199,7 @@ final class TwigEngine
 	{
 		return self::$renderStats;
 	}
-	
+
 	/**
 	 * Clear rendering statistics.
 	 */
@@ -210,7 +207,7 @@ final class TwigEngine
 	{
 		self::$renderStats = [];
 	}
-	
+
 	/**
 	 * Get summary statistics for all templates.
 	 *
@@ -224,19 +221,19 @@ final class TwigEngine
 		$totalErrors = 0;
 		$slowestTemplate = '';
 		$slowestTime = 0.0;
-		
+
 		foreach (self::$renderStats as $template => $stats) {
 			$totalTime += $stats['total_time'];
 			$totalMemory += $stats['total_memory'];
 			$totalCount += $stats['count'];
 			$totalErrors += $stats['errors'];
-			
+
 			if ($stats['max_time'] > $slowestTime) {
 				$slowestTime = $stats['max_time'];
 				$slowestTemplate = $template;
 			}
 		}
-		
+
 		return [
 			'total_renders' => $totalCount,
 			'total_time' => $totalTime,
@@ -249,7 +246,7 @@ final class TwigEngine
 			'templates_count' => count(self::$renderStats),
 		];
 	}
-	
+
 	/**
 	 * Get cache manager instance.
 	 */
@@ -257,7 +254,7 @@ final class TwigEngine
 	{
 		return $this->cacheManager;
 	}
-	
+
 	/**
 	 * Clear all Twig caches including OPcache.
 	 */
@@ -266,10 +263,10 @@ final class TwigEngine
 		if ($this->cacheManager === null) {
 			return true; // No caching enabled
 		}
-		
+
 		return $this->cacheManager->clearAllCaches();
 	}
-	
+
 	/**
 	 * Get comprehensive cache statistics.
 	 *
@@ -280,10 +277,10 @@ final class TwigEngine
 		if ($this->cacheManager === null) {
 			return ['caching_enabled' => false];
 		}
-		
+
 		return $this->cacheManager->getCacheStats();
 	}
-	
+
 	/**
 	 * Get optimal cache configuration recommendations.
 	 *
@@ -297,7 +294,7 @@ final class TwigEngine
 				'recommendations' => ['❌ Twig caching is disabled - enable for better performance']
 			];
 		}
-		
+
 		return $this->cacheManager->getOptimalCacheConfig();
 	}
 }
