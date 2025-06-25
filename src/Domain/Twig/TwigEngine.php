@@ -29,32 +29,28 @@ final class TwigEngine
 		CacheManager $cacheManager,
 	) {
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
-		$customTemplates   = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
-
-		$cache             = $config->cache ?? [];
-		$filesystemConfig  = $cache['filesystem'] ?? [];
-		$cacheDirectory    = $filesystemConfig['directory'] ?? '';
-		$cacheDir          = $filesystemConfig['enabled'] ? $cacheDirectory : false;
-		$debug             = ($cacheDir === false);
-
-		$this->cacheManager = $cacheManager;
-
 		if (!file_exists($internalTemplates)) {
 			throw new \DomainException("Internal templates directory not found: $internalTemplates");
 		}
 		$paths = [$internalTemplates];
+
+		$customTemplates  = $config->datadir . '/' . TemplateRepository::CUSTOM_TEMPLATE_DIR;
 		if (file_exists($customTemplates)) {
 			$paths[] = $customTemplates;
 		}
 
+		$this->cacheManager = $cacheManager;
+		$filesystemConfig   = $config->cache['filesystem'];
+		$cacheDir           = $filesystemConfig['enabled'] ? $filesystemConfig['directory'] : false;
+
 		$loader     = new TwigFilesystemLoader($paths);
 		$this->twig = new TwigEnvironment($loader, [
-			'cache'            => $cacheDir,
-			'debug'            => $debug,
+			'cache'            => $config->debug ? false : $cacheDir,
+			'debug'            => $config->debug,
+			'auto_reload'      => $config->debug,   // Auto-reload in dev, disabled in production
 			'autoescape'       => false,
-			'optimizations'    => -1,          // Enable all optimizations
+			'optimizations'    => -1,               // Enable all optimizations
 			'strict_variables' => false,
-			'auto_reload'      => $debug,      // Auto-reload in dev, disabled in production
 			'use_yield'        => false,
 		]);
 
@@ -74,7 +70,7 @@ final class TwigEngine
 			}
 		});
 
-		if ($debug) {
+		if ($config->debug) {
 			$this->twig->addExtension(new DebugExtension());
 		}
 	}

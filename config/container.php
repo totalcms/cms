@@ -60,6 +60,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
+use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
@@ -181,6 +182,15 @@ return [
 		$errorMiddleware->setDefaultErrorHandler($container->get(DefaultErrorHandler::class));
 
 		return $errorMiddleware;
+	},
+
+	DefaultErrorHandler::class => function (ContainerInterface $container) {
+		return new DefaultErrorHandler(
+			$container->get(JsonRenderer::class),
+			$container->get(ResponseFactoryInterface::class),
+			$container->get(LoggerFactory::class),
+			$container->get(OPcacheService::class)
+		);
 	},
 
 	PhpRenderer::class => function (ContainerInterface $container) {

@@ -28,12 +28,11 @@ $settings['assets']['minify'] = 0;
 
 $settings['timezone'] = 'America/Los_Angeles';
 
+$settings['debug'] = true;
+
 $settings['cache'] = [
 	'filesystem' => [
 		'enabled'   => false,
-	],
-	'opcache' => [
-		'enabled' => false,
 	],
 	'redis' => [
 		'enabled' => false,

@@ -56,6 +56,8 @@ $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/resources/templates';
 $settings['schemas']  = $settings['root'] . '/resources/schemas';
 
+$settings['debug'] = false; // Set to true for development
+
 // Cache configuration
 $settings['cache'] = [
 	'filesystem' => [
