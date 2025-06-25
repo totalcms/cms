@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
+use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -543,5 +544,44 @@ final class TotalFormFactory
 	public function url(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		return $this->singleFieldFormBuilder($id, 'url', 'url', 'url', $formOptions, $fieldOptions);
+	}
+
+	private function dummyForm(): TotalForm
+	{
+		// This is a dummy form to satisfy the type hinting in the field method.
+		// It will not be used, but it is required to create a FormField instance.
+		return new ObjectForm(
+			collection        : 'text',
+			api               : $this->api,
+			collectionFetcher : $this->collectionFetcher,
+			collectionReader  : $this->collectionReader,
+			objectFetcher     : $this->objectFetcher,
+			schemaFetcher     : $this->schemaFetcher,
+			schemaLister      : $this->schemaLister,
+		);
+	}
+
+	/**
+	 * Generate a single field HTML for a given collection, object, and property.
+	 * This allows you to create individual form fields without building a full form.
+	 *
+	 * @param array<string,mixed> $options Field options to override defaults
+	 *
+	 * @return string The rendered field HTML
+	 */
+	public function field(string $type, string $name, array $options = []): string
+	{
+		$options = array_merge([
+			'form' => $this->dummyForm(),
+			'name' => $name,
+		], $options);
+		$field = new FormField(...$options);
+
+		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($type) . 'Field';
+		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {
+			$field = new $typeClass(...$options);
+		}
+
+		return $field->build();
 	}
 }

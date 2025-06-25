@@ -12,6 +12,24 @@
 		label  : "Clear All Caches",
 	}) }}
 
+	<p><strong>Clear Collection Image Cache</strong> will remove all cached images (.cache directories)
+		for a specific collection.</p>
+
+	{% set formfields %}
+		{{ cms.form.field("select", "collection", {
+			placeholder : "Select a Collection",
+			label       : "Collection",
+			options     : cms.collections() | map(c => { value : c.id, label : c.name } ) | sortBy("label"),
+		}) }}
+	{% endset %}
+
+	{{ cms.form.simple("/cache/images", formfields, {
+		method : "DELETE",
+		label  : "Clear Collection Image Cache",
+	}) }}
+
+	<div id="collection-cache-result" class="cache-result" style="display: none;"></div>
+
 	{% set cacheStats = cms.cacheManager.getCacheStats() %}
 	{% set cacheConfig = cms.cacheManager.getOptimalCacheConfig() %}
 

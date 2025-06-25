@@ -523,6 +523,114 @@ final class CacheManager
 	}
 
 	/**
+	 * Clear all image cache files for a specific collection.
+	 * This clears all .cache directories within the collection folder.
+	 */
+	public function clearCollectionImageCache(string $collection): bool
+	{
+		// Only filesystem service can clear image cache files
+		if (!$this->filesystemService->isAvailable()) {
+			return false;
+		}
+
+		// Get the storage adapter to access collection files
+		$cacheDir = $this->filesystemService->getCachDir();
+		$collectionPath = $cacheDir . '/../tcms-data/' . $collection;
+		
+		if (!is_dir($collectionPath)) {
+			return false; // Collection doesn't exist
+		}
+
+		$success = true;
+		$iterator = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($collectionPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::SELF_FIRST
+		);
+
+		foreach ($iterator as $file) {
+			if ($file->isDir() && $file->getFilename() === '.cache') {
+				$cachePath = $file->getPathname();
+				$success = $success && $this->removeDirectory($cachePath);
+			}
+		}
+
+		return $success;
+	}
+
+	/**
+	 * Get image cache statistics for a collection.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getCollectionImageCacheStats(string $collection): array
+	{
+		$cacheDir = $this->filesystemService->getCachDir();
+		$collectionPath = $cacheDir . '/../tcms-data/' . $collection;
+		
+		$stats = [
+			'collection' => $collection,
+			'cache_directories' => 0,
+			'cached_files' => 0,
+			'total_size_bytes' => 0,
+			'exists' => false,
+		];
+
+		if (!is_dir($collectionPath)) {
+			return $stats;
+		}
+
+		$stats['exists'] = true;
+		
+		$iterator = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($collectionPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::SELF_FIRST
+		);
+
+		foreach ($iterator as $file) {
+			if ($file->isDir() && $file->getFilename() === '.cache') {
+				$stats['cache_directories']++;
+				
+				// Count files and size in this cache directory
+				$cacheIterator = new \RecursiveIteratorIterator(
+					new \RecursiveDirectoryIterator($file->getPathname(), \RecursiveDirectoryIterator::SKIP_DOTS)
+				);
+				
+				foreach ($cacheIterator as $cacheFile) {
+					if ($cacheFile->isFile()) {
+						$stats['cached_files']++;
+						$stats['total_size_bytes'] += $cacheFile->getSize();
+					}
+				}
+			}
+		}
+
+		$stats['total_size_mb'] = round($stats['total_size_bytes'] / 1024 / 1024, 2);
+		
+		return $stats;
+	}
+
+	/**
+	 * Recursively remove a directory and all its contents.
+	 */
+	private function removeDirectory(string $path): bool
+	{
+		if (!is_dir($path)) {
+			return true;
+		}
+
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ($files as $file) {
+			$file->isDir() ? rmdir($file->getRealPath()) : unlink($file->getRealPath());
+		}
+
+		return rmdir($path);
+	}
+
+	/**
 	 * Check if any cache service is available.
 	 */
 	private function hasAnyCacheService(): bool

@@ -178,9 +178,7 @@ final class SchemaRepository extends StorageRepository
 		$schema = $this->factory->generateSchemaFromJson($contents);
 		
 		// Cache default schema for 1 hour (they never change during runtime)
-		if ($schema !== null) {
-			$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 3600);
-		}
+		$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 3600);
 
 		return $schema;
 	}

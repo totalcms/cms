@@ -45,6 +45,7 @@ final class TotalCMSTwigFilters
 		'titleize',
 		'truncate',
 		'truncateWords',
+		'sortBy',
 		'ksort',
 		'krsort',
 		'shuffle',
@@ -448,6 +449,25 @@ final class TotalCMSTwigFilters
 	// -------------------------
 	// Array Manipulation
 	// -------------------------
+	/**
+	 * @param array<mixed> $array
+	 *
+	 * @return array<mixed>
+	 */
+	public static function sortBy(array $array, string $key): array
+	{
+		if (empty($array) || empty($key)) {
+			return $array;
+		}
+		usort($array, function ($a, $b) use ($key) {
+			if (!isset($a[$key]) || !isset($b[$key])) {
+				return 0; // If key doesn't exist, consider them equal
+			}
+			return $a[$key] <=> $b[$key];
+		});
+		return $array;
+	}
+
 	/**
 	 * @param array<mixed> $array
 	 *
