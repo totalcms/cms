@@ -7,14 +7,14 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class IndexBuilder
 {
 	public function __construct(
 		private IndexRepository $storage,
 		private ObjectFetcher $objectFetcher,
-		private CollectionSchemaFetcher $schemaFetcher,
+		private SchemaFetcher $schemaFetcher,
 		private CollectionFetcher $collectionFetcher,
 		private JobQueuer $jobQueuer,
 	) {

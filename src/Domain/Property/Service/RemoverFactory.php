@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 
 final class RemoverFactory
@@ -15,7 +15,7 @@ final class RemoverFactory
 		private PropertyFetcher $propFetcher,
 		private ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,
-		private CollectionSchemaFetcher $schemaFetcher,
+		private SchemaFetcher $schemaFetcher,
 	) {
 	}
 

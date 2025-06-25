@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\GallerySaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
  * Collection Object Importer.
@@ -34,7 +34,7 @@ final class ObjectImporter
 	private string $objectID;
 
 	public function __construct(
-		private CollectionSchemaFetcher $schemaFetcher,
+		private SchemaFetcher $schemaFetcher,
 		private ObjectSaver $objectSaver,
 		private ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,

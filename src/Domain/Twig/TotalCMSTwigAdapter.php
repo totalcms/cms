@@ -426,6 +426,14 @@ NGINX;
 		return $schema->toArray();
 	}
 
+	/** @return array<string,mixed> */
+	public function schemaForCollection(string $collection): array
+	{
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+
+		return $schema->toArray();
+	}
+
 	// Get all collections
 	/** @return array<object> */
 	public function collections(): array

@@ -6,7 +6,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
-use TotalCMS\Domain\Schema\Service\CollectionSchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -16,7 +16,7 @@ final class SaverFactory
 		private PropertyRepository $storage,
 		private PropertyFetcher $propFetcher,
 		private ObjectSaver $objectSaver,
-		private CollectionSchemaFetcher $schemaFetcher,
+		private SchemaFetcher $schemaFetcher,
 		protected ObjectPatcher $objectPatcher,
 		private ObjectFetcher $objectFetcher,
 		protected LoggerFactory $loggerFactory,
