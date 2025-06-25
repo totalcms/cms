@@ -18,6 +18,7 @@ final class SimpleForm
 		private string $label  = 'Submit',
 		private string $class  = '',
 		private bool $refresh  = false,
+		private bool $ajax     = true,
 		private ?CSRFTokenManager $csrfManager = null,
 	) {
 	}
@@ -42,6 +43,7 @@ final class SimpleForm
 			'data-method'  => $this->method,
 			'data-api'     => $this->api,
 			'data-refresh' => $this->refresh ? 'true' : 'false',
+			'data-ajax'    => $this->ajax ? 'true' : 'false',
 		];
 		$form = HTMLUtils::element('form', $csrfField . $content . $buttonWrapper, $formAttrs);
 
