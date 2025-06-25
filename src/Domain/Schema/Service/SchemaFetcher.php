@@ -8,11 +8,11 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 final class SchemaFetcher
 {
-
 	public function __construct(
 		private SchemaRepository $storage,
 		private CollectionRepository $collectionRepository,
-	){}
+	) {
+	}
 
 	public function fetchSchema(string $id): SchemaData
 	{

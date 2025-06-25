@@ -4,9 +4,9 @@ namespace Tests\Unit\Property;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\ListData;
-use TotalCMS\Domain\Property\Data\DateData;
 
 #[CoversClass(ImageData::class)]
 final class ImageDataTest extends TestCase
@@ -14,22 +14,22 @@ final class ImageDataTest extends TestCase
 	public function testCreatesImageDataWithAllProperties(): void
 	{
 		$imageData = [
-			'name' => 'photo.jpg',
-			'alt' => 'Beautiful sunset photo',
-			'mime' => 'image/jpeg',
-			'size' => 2048576,
-			'width' => 1920,
-			'height' => 1080,
-			'featured' => true,
-			'link' => 'https://example.com/photo',
-			'tags' => ['sunset', 'nature', 'photography'],
-			'palette' => ['#FF5733', '#C70039', '#900C3F'],
+			'name'       => 'photo.jpg',
+			'alt'        => 'Beautiful sunset photo',
+			'mime'       => 'image/jpeg',
+			'size'       => 2048576,
+			'width'      => 1920,
+			'height'     => 1080,
+			'featured'   => true,
+			'link'       => 'https://example.com/photo',
+			'tags'       => ['sunset', 'nature', 'photography'],
+			'palette'    => ['#FF5733', '#C70039', '#900C3F'],
 			'focalpoint' => ['x' => 30, 'y' => 70],
-			'exif' => [
+			'exif'       => [
 				'camera' => 'Canon EOS R5',
-				'lens' => 'RF 24-70mm F2.8',
-				'iso' => 100,
-				'date' => '2023-01-15T10:30:00+00:00',
+				'lens'   => 'RF 24-70mm F2.8',
+				'iso'    => 100,
+				'date'   => '2023-01-15T10:30:00+00:00',
 			],
 			'uploadDate' => '2023-01-16T09:00:00+00:00',
 		];
@@ -73,7 +73,7 @@ final class ImageDataTest extends TestCase
 	public function testUsesDefaultFocalpointWhenNotProvided(): void
 	{
 		$data = new ImageData();
-		
+
 		$this->assertSame(['x' => 50, 'y' => 50], $data->focalpoint);
 	}
 
@@ -166,13 +166,13 @@ final class ImageDataTest extends TestCase
 	{
 		$exifData = [
 			'camera' => 'Canon EOS R5',
-			'lens' => 'RF 24-70mm F2.8',
-			'iso' => 100,
-			'date' => '2023-01-15T10:30:00+00:00',
+			'lens'   => 'RF 24-70mm F2.8',
+			'iso'    => 100,
+			'date'   => '2023-01-15T10:30:00+00:00',
 		];
 
 		$data = new ImageData(['exif' => $exifData]);
-		
+
 		$this->assertSame('Canon EOS R5', $data->exif['camera']);
 		$this->assertSame('RF 24-70mm F2.8', $data->exif['lens']);
 		$this->assertSame(100, $data->exif['iso']);
@@ -181,13 +181,13 @@ final class ImageDataTest extends TestCase
 	public function testHandlesMaliciousExifData(): void
 	{
 		$maliciousExif = [
-			'camera' => '<script>alert("camera")</script>',
+			'camera'      => '<script>alert("camera")</script>',
 			'description' => '"; DROP TABLE images; --',
-			'software' => 'javascript:void(0)',
+			'software'    => 'javascript:void(0)',
 		];
 
 		$data = new ImageData(['exif' => $maliciousExif]);
-		
+
 		foreach ($maliciousExif as $key => $value) {
 			$this->assertSame($value, $data->exif[$key]);
 		}
@@ -196,15 +196,15 @@ final class ImageDataTest extends TestCase
 	public function testTransformsToArrayCorrectly(): void
 	{
 		$imageData = [
-			'name' => 'test.jpg',
-			'alt' => 'Test image',
-			'width' => 800,
-			'height' => 600,
+			'name'     => 'test.jpg',
+			'alt'      => 'Test image',
+			'width'    => 800,
+			'height'   => 600,
 			'featured' => true,
-			'tags' => ['test'],
+			'tags'     => ['test'],
 		];
 
-		$data = new ImageData($imageData);
+		$data        = new ImageData($imageData);
 		$transformed = $data->transform();
 
 		$this->assertIsArray($transformed);
@@ -228,7 +228,7 @@ final class ImageDataTest extends TestCase
 		$this->assertIsString($json);
 		$this->assertStringContainsString('"name":"test.jpg"', $json);
 		$this->assertStringContainsString('"alt":"Test"', $json);
-		
+
 		$decoded = json_decode($json, true);
 		$this->assertIsArray($decoded);
 		$this->assertSame('test.jpg', $decoded['name']);
@@ -238,22 +238,22 @@ final class ImageDataTest extends TestCase
 	{
 		$tags = ['nature', 'landscape', 'photography'];
 		$data = new ImageData(['tags' => $tags]);
-		
+
 		$this->assertSame($tags, $data->tags->list);
 	}
 
 	public function testHandlesExtremelyLargeFileSizes(): void
 	{
 		$largeSize = PHP_INT_MAX;
-		$data = new ImageData(['size' => $largeSize]);
+		$data      = new ImageData(['size' => $largeSize]);
 		$this->assertSame($largeSize, $data->size);
 	}
 
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['quality' => 85, 'format' => 'webp'];
-		$data = new ImageData([], $settings);
-		
+		$data     = new ImageData([], $settings);
+
 		$this->assertSame($settings, $data->settings);
 	}
 
@@ -275,9 +275,9 @@ final class ImageDataTest extends TestCase
 
 	public function testCalculatesAspectRatioCorrectly(): void
 	{
-		$data = new ImageData(['width' => 1920, 'height' => 1080]);
+		$data        = new ImageData(['width' => 1920, 'height' => 1080]);
 		$aspectRatio = $data->width / $data->height;
-		
-		$this->assertEqualsWithDelta(16/9, $aspectRatio, 0.01);
+
+		$this->assertEqualsWithDelta(16 / 9, $aspectRatio, 0.01);
 	}
 }

@@ -13,7 +13,7 @@ final class FilesystemService implements CacheInterface
 	private string $cacheDir;
 
 	public function __construct(
-		Config $config
+		Config $config,
 	) {
 		$filesystemConfig = $config->cache['filesystem'] ?? [];
 		$this->enabled    = $filesystemConfig['enabled'] ?? true;
@@ -88,6 +88,7 @@ final class FilesystemService implements CacheInterface
 			} catch (\Exception $e) {
 				// Ignore unlink failures for expired files
 			}
+
 			return null;
 		}
 
@@ -101,11 +102,11 @@ final class FilesystemService implements CacheInterface
 		}
 
 		$filePath = $this->getFilePath($key);
-		$expires = $ttl > 0 ? time() + $ttl : 0;
+		$expires  = $ttl > 0 ? time() + $ttl : 0;
 
 		$data = [
 			'expires' => $expires,
-			'value' => $value,
+			'value'   => $value,
 		];
 
 		try {
@@ -147,12 +148,12 @@ final class FilesystemService implements CacheInterface
 		if (!$this->isAvailable()) {
 			return [
 				'available' => false,
-				'enabled' => $this->enabled,
+				'enabled'   => $this->enabled,
 				'directory' => $this->cacheDir,
 			];
 		}
 
-		$size = 0;
+		$size  = 0;
 		$files = 0;
 
 		$iterator = new \RecursiveIteratorIterator(
@@ -168,11 +169,11 @@ final class FilesystemService implements CacheInterface
 
 		return [
 			'available' => true,
-			'enabled' => $this->enabled,
+			'enabled'   => $this->enabled,
 			'directory' => $this->cacheDir,
-			'size' => $size,
-			'files' => $files,
-			'size_mb' => round($size / 1024 / 1024, 2),
+			'size'      => $size,
+			'files'     => $files,
+			'size_mb'   => round($size / 1024 / 1024, 2),
 		];
 	}
 
@@ -192,9 +193,9 @@ final class FilesystemService implements CacheInterface
 
 	private function getFilePath(string $key): string
 	{
-		$hash = hash('sha256', $key);
+		$hash   = hash('sha256', $key);
 		$subDir = substr($hash, 0, 2);
-		$dir = $this->cacheDir . '/' . $subDir;
+		$dir    = $this->cacheDir . '/' . $subDir;
 
 		if (!is_dir($dir)) {
 			try {

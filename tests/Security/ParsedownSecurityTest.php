@@ -2,10 +2,10 @@
 
 namespace Tests\Security;
 
+use ParsedownExtra;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Twig\ParsedownMarkdown;
-use ParsedownExtra;
 
 #[CoversClass(ParsedownMarkdown::class)]
 final class ParsedownSecurityTest extends TestCase
@@ -32,7 +32,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($xssAttempts as $malicious) {
 			$result = $this->parsedown->convert($malicious);
-			
+
 			$this->assertIsString($result);
 			// In safe mode, HTML should be escaped, so dangerous tags become harmless text
 			$this->assertStringNotContainsString('<script>', $result);
@@ -57,7 +57,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($dangerousAttributes as $malicious) {
 			$result = $this->parsedown->convert($malicious);
-			
+
 			$this->assertIsString($result);
 			// In safe mode, HTML is escaped so dangerous attributes become text
 			$this->assertStringContainsString('&lt;', $result);
@@ -80,7 +80,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($htmlContent as $html) {
 			$result = $this->parsedown->convert($html);
-			
+
 			$this->assertIsString($result);
 			// In safe mode, HTML should be escaped or stripped
 			$this->assertStringNotContainsString('<div>', $result);
@@ -101,7 +101,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($dangerousLinks as $malicious) {
 			$result = $this->parsedown->convert($malicious);
-			
+
 			$this->assertIsString($result);
 			// ParsedownExtra in safe mode may still process links but they should be safe
 			// Raw HTML should be escaped
@@ -124,7 +124,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($codeBlocks as $code) {
 			$result = $this->parsedown->convert($code);
-			
+
 			$this->assertIsString($result);
 			$this->assertStringContainsString('<code>', $result);
 			// Code should be properly escaped within code blocks
@@ -143,7 +143,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($entityTests as $entities) {
 			$result = $this->parsedown->convert($entities);
-			
+
 			$this->assertIsString($result);
 			// Should not decode into executable script tags
 			$this->assertStringNotContainsString('<script>alert', $result);
@@ -155,13 +155,13 @@ final class ParsedownSecurityTest extends TestCase
 		$unicodeAttacks = [
 			"\u003Cscript\u003Ealert(1)\u003C/script\u003E",
 			"\uFF1Cscript\uFF1Ealert(1)\uFF1C/script\uFF1E",
-			"＜script＞alert(1)＜/script＞",
-			"〈script〉alert(1)〈/script〉",
+			'＜script＞alert(1)＜/script＞',
+			'〈script〉alert(1)〈/script〉',
 		];
 
 		foreach ($unicodeAttacks as $unicode) {
 			$result = $this->parsedown->convert($unicode);
-			
+
 			$this->assertIsString($result);
 			// Unicode attacks should be treated as text, not executed
 			// The content may still be present but should not be dangerous HTML
@@ -179,7 +179,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($maliciousTables as $table) {
 			$result = $this->parsedown->convert($table);
-			
+
 			$this->assertIsString($result);
 			$this->assertStringContainsString('<table>', $result);
 			$this->assertStringNotContainsString('<script>', $result);
@@ -200,7 +200,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($breakTests as $content) {
 			$result = $this->parsedown->convert($content);
-			
+
 			$this->assertIsString($result);
 			$this->assertStringContainsString('<br', $result);
 			$this->assertStringNotContainsString('<script>', $result);
@@ -222,7 +222,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($extensionTests as $content) {
 			$result = $this->parsedown->convert($content);
-			
+
 			$this->assertIsString($result);
 			$this->assertStringNotContainsString('<script>alert', $result);
 			// Extensions should not create dangerous executable content
@@ -234,11 +234,11 @@ final class ParsedownSecurityTest extends TestCase
 	{
 		// Test with very large input to ensure no DoS
 		$largeContent = str_repeat("# Header\n\nParagraph text with **bold** and *italic* content.\n\n", 1000);
-		
-		$start = microtime(true);
+
+		$start  = microtime(true);
 		$result = $this->parsedown->convert($largeContent);
-		$time = microtime(true) - $start;
-		
+		$time   = microtime(true) - $start;
+
 		$this->assertIsString($result);
 		$this->assertLessThan(2.0, $time); // Should complete in reasonable time
 		$this->assertStringContainsString('<h1>', $result);
@@ -249,9 +249,9 @@ final class ParsedownSecurityTest extends TestCase
 	public function testBinaryContentHandling(): void
 	{
 		$binaryContent = "Text with binary: \x00\x01\x02\xFF\xFE\xFD";
-		
+
 		$result = $this->parsedown->convert($binaryContent);
-		
+
 		$this->assertIsString($result);
 		// Should handle binary content gracefully
 	}
@@ -268,7 +268,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($nestedAttacks as $content) {
 			$result = $this->parsedown->convert($content);
-			
+
 			$this->assertIsString($result);
 			$this->assertStringNotContainsString('<script>', $result);
 			// HTML should be escaped where present
@@ -296,7 +296,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($validMarkdown as $content) {
 			$result = $this->parsedown->convert($content);
-			
+
 			$this->assertIsString($result);
 			$this->assertNotEmpty($result);
 			// Should produce valid HTML
@@ -314,11 +314,11 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($emptyInputs as $input) {
 			$result = $this->parsedown->convert($input);
-			
+
 			$this->assertIsString($result);
 			// Should handle empty input gracefully
 		}
-		
+
 		// Test null separately since it requires type conversion
 		$result = $this->parsedown->convert('');
 		$this->assertIsString($result);
@@ -336,7 +336,7 @@ final class ParsedownSecurityTest extends TestCase
 
 		foreach ($specialChars as $content) {
 			$result = $this->parsedown->convert($content);
-			
+
 			$this->assertIsString($result);
 			// Check that dangerous characters are escaped
 			if (str_contains($content, '<')) {

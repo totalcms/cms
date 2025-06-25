@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Cache\Service;
 
-use TotalCMS\Support\Config;
 use Redis;
+use TotalCMS\Support\Config;
 
 /**
  * Redis cache service.
@@ -16,10 +16,10 @@ final class RedisService implements CacheInterface
 	private int $timeout;
 	private ?string $password;
 	private int $database;
-	private ?Redis $redis = null;
+	private ?\Redis $redis = null;
 
 	public function __construct(
-		Config $config
+		Config $config,
 	) {
 		$cache          = $config->cache ?? [];
 		$redisConfig    = $cache['redis'] ?? [];
@@ -40,6 +40,7 @@ final class RedisService implements CacheInterface
 		try {
 			$redis = $this->getConnection();
 			$redis->ping();
+
 			return true;
 		} catch (\Exception $e) {
 			return false;
@@ -55,6 +56,7 @@ final class RedisService implements CacheInterface
 		try {
 			$redis = $this->getConnection();
 			$value = $redis->get($key);
+
 			return $value !== false ? unserialize($value) : null;
 		} catch (\Exception $e) {
 			return null;
@@ -68,7 +70,7 @@ final class RedisService implements CacheInterface
 		}
 
 		try {
-			$redis = $this->getConnection();
+			$redis      = $this->getConnection();
 			$serialized = serialize($value);
 
 			if ($ttl > 0) {
@@ -88,8 +90,9 @@ final class RedisService implements CacheInterface
 		}
 
 		try {
-			$redis = $this->getConnection();
+			$redis  = $this->getConnection();
 			$result = $redis->del($key);
+
 			return is_int($result) && $result > 0;
 		} catch (\Exception $e) {
 			return false;
@@ -104,6 +107,7 @@ final class RedisService implements CacheInterface
 
 		try {
 			$redis = $this->getConnection();
+
 			return $redis->flushDB();
 		} catch (\Exception $e) {
 			return false;
@@ -115,35 +119,35 @@ final class RedisService implements CacheInterface
 		if (!$this->isAvailable()) {
 			return [
 				'available' => false,
-				'enabled' => $this->enabled,
-				'host' => $this->host,
-				'port' => $this->port,
+				'enabled'   => $this->enabled,
+				'host'      => $this->host,
+				'port'      => $this->port,
 			];
 		}
 
 		try {
 			$redis = $this->getConnection();
-			$info = $redis->info();
+			$info  = $redis->info();
 
-			$hits = (int)($info['keyspace_hits'] ?? 0);
+			$hits   = (int)($info['keyspace_hits'] ?? 0);
 			$misses = (int)($info['keyspace_misses'] ?? 0);
-			$total = $hits + $misses;
+			$total  = $hits + $misses;
 
 			return [
-				'available' => true,
-				'enabled' => $this->enabled,
-				'host' => $this->host,
-				'port' => $this->port,
-				'memory_usage' => $info['used_memory_human'] ?? 'Unknown',
+				'available'         => true,
+				'enabled'           => $this->enabled,
+				'host'              => $this->host,
+				'port'              => $this->port,
+				'memory_usage'      => $info['used_memory_human'] ?? 'Unknown',
 				'connected_clients' => $info['connected_clients'] ?? 0,
-				'hit_rate' => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
-				'keys' => $redis->dbSize(),
+				'hit_rate'          => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
+				'keys'              => $redis->dbSize(),
 			];
 		} catch (\Exception $e) {
 			return [
 				'available' => false,
-				'enabled' => $this->enabled,
-				'error' => $e->getMessage(),
+				'enabled'   => $this->enabled,
+				'error'     => $e->getMessage(),
 			];
 		}
 	}
@@ -162,10 +166,10 @@ final class RedisService implements CacheInterface
 		return ['✅ Redis is available for template metadata caching'];
 	}
 
-	private function getConnection(): Redis
+	private function getConnection(): \Redis
 	{
 		if ($this->redis === null) {
-			$this->redis = new Redis();
+			$this->redis = new \Redis();
 			$this->redis->connect($this->host, $this->port, $this->timeout);
 
 			if ($this->password !== null) {

@@ -59,7 +59,7 @@ final class CollectionTable
 	private function buildCloneDialog(): string
 	{
 		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
-		$header = HTMLUtils::element('h3', 'Duplicate ' . $labelSingular);
+		$header        = HTMLUtils::element('h3', 'Duplicate ' . $labelSingular);
 
 		$collections = $this->collectionLister->listCollectionsWithSchema($this->schemaData->id);
 
@@ -250,7 +250,7 @@ final class CollectionTable
 		}
 
 		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
-		$delete = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
+		$delete        = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
 			'class'        => 'cms-quick-action',
 			'data-method'  => 'DELETE',
 			'data-confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
@@ -320,7 +320,7 @@ final class CollectionTable
 		$table = $this->buildTableHead() . $this->buildTableBody();
 
 		$labelPlural = $this->collectionData->labelPlural ?? 'Objects';
-		$attributes = [
+		$attributes  = [
 			'class'            => 'admin-table',
 			'data-search'      => 'true',
 			'data-sort'        => 'true',

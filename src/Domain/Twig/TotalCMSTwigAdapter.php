@@ -66,15 +66,15 @@ final class TotalCMSTwigAdapter
 		private FileAccessManager $fileAccessManager,
 		private ImageCacheService $imageCacheServiceInstance,
 	) {
-		$this->api          = $this->config->api;
-		$this->dashboard    = $this->api . '/admin';
-		$this->logout       = $this->api . '/logout';
-		$this->domain       = $this->getDomainName();
-		$this->form         = $this->totalFormFactory;
-		$this->checker      = $this->serverChecker;
-		$this->cacheManager = $this->cacheManagerService;
+		$this->api               = $this->config->api;
+		$this->dashboard         = $this->api . '/admin';
+		$this->logout            = $this->api . '/logout';
+		$this->domain            = $this->getDomainName();
+		$this->form              = $this->totalFormFactory;
+		$this->checker           = $this->serverChecker;
+		$this->cacheManager      = $this->cacheManagerService;
 		$this->imageCacheService = $this->imageCacheServiceInstance;
-		$this->logger       = $this->logAnalyzer;
+		$this->logger            = $this->logAnalyzer;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

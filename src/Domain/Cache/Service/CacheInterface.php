@@ -16,6 +16,7 @@ interface CacheInterface
 	 * Get a value from the cache.
 	 *
 	 * @param string $key The cache key
+	 *
 	 * @return mixed The cached value or null if not found
 	 */
 	public function get(string $key): mixed;
@@ -26,6 +27,7 @@ interface CacheInterface
 	 * @param string $key The cache key
 	 * @param mixed $value The value to cache
 	 * @param int $ttl Time to live in seconds (0 = forever)
+	 *
 	 * @return bool True on success
 	 */
 	public function set(string $key, mixed $value, int $ttl = 0): bool;
@@ -34,6 +36,7 @@ interface CacheInterface
 	 * Delete a value from the cache.
 	 *
 	 * @param string $key The cache key
+	 *
 	 * @return bool True on success
 	 */
 	public function delete(string $key): bool;

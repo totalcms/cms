@@ -4,8 +4,8 @@ namespace Tests\Unit\Property;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Property\Data\FolderData;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\FolderData;
 
 #[CoversClass(FolderData::class)]
 final class FolderDataTest extends TestCase
@@ -52,8 +52,8 @@ final class FolderDataTest extends TestCase
 				'size' => 100,
 			],
 			[
-				'name' => 'subfolder',
-				'mime' => 'folder',
+				'name'  => 'subfolder',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'nested_file.doc',
@@ -61,8 +61,8 @@ final class FolderDataTest extends TestCase
 						'size' => 2000,
 					],
 					[
-						'name' => 'deep_folder',
-						'mime' => 'folder',
+						'name'  => 'deep_folder',
+						'mime'  => 'folder',
 						'files' => [
 							[
 								'name' => 'deep_file.pdf',
@@ -79,21 +79,21 @@ final class FolderDataTest extends TestCase
 
 		$this->assertSame('root', $folder->name);
 		$this->assertCount(2, $folder->files);
-		
+
 		// First item should be a file
 		$this->assertInstanceOf(FileData::class, $folder->files[0]);
 		$this->assertSame('file1.txt', $folder->files[0]->name);
-		
+
 		// Second item should be a folder
 		$this->assertInstanceOf(FolderData::class, $folder->files[1]);
 		$subfolder = $folder->files[1];
 		$this->assertSame('subfolder', $subfolder->name);
 		$this->assertCount(2, $subfolder->files);
-		
+
 		// Check nested structure
 		$this->assertInstanceOf(FileData::class, $subfolder->files[0]);
 		$this->assertInstanceOf(FolderData::class, $subfolder->files[1]);
-		
+
 		$deepFolder = $subfolder->files[1];
 		$this->assertSame('deep_folder', $deepFolder->name);
 		$this->assertCount(1, $deepFolder->files);
@@ -110,8 +110,8 @@ final class FolderDataTest extends TestCase
 				'size' => 200,
 			],
 			[
-				'name' => 'images',
-				'mime' => 'folder',
+				'name'  => 'images',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'photo.jpg',
@@ -145,8 +145,8 @@ final class FolderDataTest extends TestCase
 				// Missing 'mime' key
 			],
 			[
-				'name' => 'valid_folder',
-				'mime' => 'folder',
+				'name'  => 'valid_folder',
+				'mime'  => 'folder',
 				'files' => [],
 			],
 			[
@@ -175,7 +175,7 @@ final class FolderDataTest extends TestCase
 			],
 		];
 
-		$folder = new FolderData('transform_folder', $files);
+		$folder      = new FolderData('transform_folder', $files);
 		$transformed = $folder->transform();
 
 		$this->assertIsArray($transformed);
@@ -187,7 +187,7 @@ final class FolderDataTest extends TestCase
 		$this->assertSame('folder', $transformed['mime']);
 		$this->assertIsArray($transformed['files']);
 		$this->assertCount(1, $transformed['files']);
-		
+
 		// Check that nested files are also transformed
 		$this->assertIsArray($transformed['files'][0]);
 		$this->assertSame('transform_test.txt', $transformed['files'][0]['name']);
@@ -224,8 +224,8 @@ final class FolderDataTest extends TestCase
 				'size' => 500,
 			],
 			[
-				'name' => 'dangerous_folder',
-				'mime' => 'folder',
+				'name'  => 'dangerous_folder',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'malicious.exe',
@@ -247,7 +247,7 @@ final class FolderDataTest extends TestCase
 	public function testHandlesLargeFolderStructures(): void
 	{
 		$largeStructure = [];
-		
+
 		// Create 200 files
 		for ($i = 0; $i < 200; $i++) {
 			$largeStructure[] = [
@@ -269,8 +269,8 @@ final class FolderDataTest extends TestCase
 			}
 
 			$largeStructure[] = [
-				'name' => "folder_{$f}",
-				'mime' => 'folder',
+				'name'  => "folder_{$f}",
+				'mime'  => 'folder',
 				'files' => $nestedFiles,
 			];
 		}
@@ -278,7 +278,7 @@ final class FolderDataTest extends TestCase
 		$folder = new FolderData('large_folder', $largeStructure);
 
 		$this->assertCount(220, $folder->files); // 200 files + 20 folders
-		
+
 		// Verify folder structure
 		$folderCount = 0;
 		foreach ($folder->files as $item) {
@@ -340,9 +340,9 @@ final class FolderDataTest extends TestCase
 			];
 		}
 
-		$start = microtime(true);
+		$start      = microtime(true);
 		$builtFiles = FolderData::buildFolder($largeFileList);
-		$time = microtime(true) - $start;
+		$time       = microtime(true) - $start;
 
 		$this->assertLessThan(0.1, $time); // Should complete in under 100ms
 		$this->assertCount(500, $builtFiles);
@@ -354,14 +354,14 @@ final class FolderDataTest extends TestCase
 	{
 		$files = [
 			[
-				'name' => 'structure_test.txt',
-				'mime' => 'text/plain',
-				'size' => 1000,
+				'name'     => 'structure_test.txt',
+				'mime'     => 'text/plain',
+				'size'     => 1000,
 				'comments' => 'Test file for structure preservation',
 			],
 			[
-				'name' => 'nested_structure',
-				'mime' => 'folder',
+				'name'  => 'nested_structure',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'inner.pdf',
@@ -372,7 +372,7 @@ final class FolderDataTest extends TestCase
 			],
 		];
 
-		$folder = new FolderData('structure_folder', $files);
+		$folder      = new FolderData('structure_folder', $files);
 		$transformed = $folder->transform();
 
 		$this->assertSame('structure_folder', $transformed['name']);

@@ -16,16 +16,16 @@ final class DepotDataTest extends TestCase
 	{
 		$depotConfig = [
 			'protected' => true,
-			'password' => 'secret123',
-			'files' => [
+			'password'  => 'secret123',
+			'files'     => [
 				[
 					'name' => 'document.pdf',
 					'mime' => 'application/pdf',
 					'size' => 1024000,
 				],
 				[
-					'name' => 'images',
-					'mime' => 'folder',
+					'name'  => 'images',
+					'mime'  => 'folder',
 					'files' => [
 						[
 							'name' => 'photo.jpg',
@@ -70,8 +70,8 @@ final class DepotDataTest extends TestCase
 				],
 				// Folder with nested structure
 				[
-					'name' => 'documents',
-					'mime' => 'folder',
+					'name'  => 'documents',
+					'mime'  => 'folder',
 					'files' => [
 						[
 							'name' => 'report.docx',
@@ -79,8 +79,8 @@ final class DepotDataTest extends TestCase
 							'size' => 512000,
 						],
 						[
-							'name' => 'archived',
-							'mime' => 'folder',
+							'name'  => 'archived',
+							'mime'  => 'folder',
 							'files' => [
 								[
 									'name' => 'old_report.doc',
@@ -119,8 +119,8 @@ final class DepotDataTest extends TestCase
 	{
 		$depotConfig = [
 			'protected' => false,
-			'password' => 'test123',
-			'files' => [
+			'password'  => 'test123',
+			'files'     => [
 				[
 					'name' => 'test.txt',
 					'mime' => 'text/plain',
@@ -129,7 +129,7 @@ final class DepotDataTest extends TestCase
 			],
 		];
 
-		$depot = new DepotData($depotConfig);
+		$depot       = new DepotData($depotConfig);
 		$transformed = $depot->transform();
 
 		$this->assertIsArray($transformed);
@@ -147,7 +147,7 @@ final class DepotDataTest extends TestCase
 	{
 		$depotConfig = [
 			'protected' => true,
-			'files' => [
+			'files'     => [
 				[
 					'name' => 'serialize_test.txt',
 					'mime' => 'text/plain',
@@ -157,7 +157,7 @@ final class DepotDataTest extends TestCase
 		];
 
 		$depot = new DepotData($depotConfig);
-		$json = (string)$depot;
+		$json  = (string)$depot;
 
 		$this->assertIsString($json);
 		$this->assertStringContainsString('"protected":true', $json);
@@ -183,8 +183,8 @@ final class DepotDataTest extends TestCase
 				'size' => 500,
 			],
 			[
-				'name' => 'evil_folder',
-				'mime' => 'folder',
+				'name'  => 'evil_folder',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => '..\\..\\..\\windows\\system32\\hosts',
@@ -283,7 +283,7 @@ final class DepotDataTest extends TestCase
 	public function testHandlesLargeFileStructures(): void
 	{
 		$largeStructure = [];
-		
+
 		// Create 100 files and 10 folders with nested content
 		for ($i = 0; $i < 100; $i++) {
 			$largeStructure[] = [
@@ -304,8 +304,8 @@ final class DepotDataTest extends TestCase
 			}
 
 			$largeStructure[] = [
-				'name' => "folder_{$f}",
-				'mime' => 'folder',
+				'name'  => "folder_{$f}",
+				'mime'  => 'folder',
 				'files' => $folderFiles,
 			];
 		}
@@ -313,7 +313,7 @@ final class DepotDataTest extends TestCase
 		$depot = new DepotData(['files' => $largeStructure]);
 
 		$this->assertCount(110, $depot->files); // 100 files + 10 folders
-		
+
 		// Check that folders contain correct number of files
 		$folderCount = 0;
 		foreach ($depot->files as $item) {
@@ -328,7 +328,7 @@ final class DepotDataTest extends TestCase
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['maxSize' => 1048576, 'allowedTypes' => ['pdf', 'txt']];
-		$depot = new DepotData([], $settings);
+		$depot    = new DepotData([], $settings);
 
 		$this->assertSame($settings, $depot->settings);
 	}
@@ -353,8 +353,8 @@ final class DepotDataTest extends TestCase
 				'size' => 500,
 			],
 			[
-				'name' => 'フォルダ', // Japanese folder
-				'mime' => 'folder',
+				'name'  => 'フォルダ', // Japanese folder
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'ファイル.doc',
@@ -393,8 +393,8 @@ final class DepotDataTest extends TestCase
 	{
 		$depot = new DepotData([
 			'protected' => true,
-			'password' => 'test',
-			'files' => [
+			'password'  => 'test',
+			'files'     => [
 				[
 					'name' => 'test.txt',
 					'mime' => 'text/plain',

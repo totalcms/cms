@@ -89,14 +89,14 @@ final class StringDataTest extends TestCase
 	public function testRespectsHtmlcleanFieldSettingWhenDisabled(): void
 	{
 		$dangerousHTML = '<script>alert("xss")</script>Hello';
-		$data = new StringData($dangerousHTML, ['htmlclean' => false]);
+		$data          = new StringData($dangerousHTML, ['htmlclean' => false]);
 		$this->assertSame($dangerousHTML, $data->text);
 	}
 
 	public function testSkipsSanitizationForPlainText(): void
 	{
 		$plainText = 'Hello World';
-		$data = new StringData($plainText);
+		$data      = new StringData($plainText);
 		$this->assertSame($plainText, $data->text);
 	}
 
@@ -180,7 +180,7 @@ final class StringDataTest extends TestCase
 	public function testHandlesVeryLongContent(): void
 	{
 		$longContent = str_repeat('<p>Safe content</p>', 1000);
-		$data = new StringData($longContent);
+		$data        = new StringData($longContent);
 		$this->assertTrue($data->containsHTML());
 		$this->assertSame(1000, substr_count($data->text, '<p>'));
 	}

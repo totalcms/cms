@@ -206,6 +206,7 @@ final class ObjectImporter
 				return file_get_contents($altPath);
 			}
 		}
+
 		return false;
 	}
 

@@ -5,7 +5,6 @@ namespace Tests\Unit\Property;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\EmailData;
-use InvalidArgumentException;
 
 #[CoversClass(EmailData::class)]
 final class EmailDataTest extends TestCase
@@ -63,7 +62,7 @@ final class EmailDataTest extends TestCase
 			$data = new EmailData('user%40example.com');
 			// This might be sanitized to user@example.com or remain as is
 			$this->assertStringContainsString('example.com', $data->email);
-		} catch (InvalidArgumentException $e) {
+		} catch (\InvalidArgumentException $e) {
 			// PHP might reject this as invalid
 			$this->assertSame('Invalid email', $e->getMessage());
 		}
@@ -71,28 +70,28 @@ final class EmailDataTest extends TestCase
 
 	public function testRejectsEmailsWithoutAtSymbol(): void
 	{
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid email');
 		new EmailData('userexample.com');
 	}
 
 	public function testRejectsEmailsWithMultipleAtSymbols(): void
 	{
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid email');
 		new EmailData('user@@example.com');
 	}
 
 	public function testRejectsEmailsWithoutDomain(): void
 	{
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid email');
 		new EmailData('user@');
 	}
 
 	public function testRejectsEmailsWithoutLocalPart(): void
 	{
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid email');
 		new EmailData('@example.com');
 	}
@@ -109,7 +108,7 @@ final class EmailDataTest extends TestCase
 		];
 
 		foreach ($invalidEmails as $email) {
-			$this->expectException(InvalidArgumentException::class);
+			$this->expectException(\InvalidArgumentException::class);
 			$this->expectExceptionMessage('Invalid email');
 			new EmailData($email);
 		}
@@ -127,7 +126,7 @@ final class EmailDataTest extends TestCase
 				$data = new EmailData($email);
 				// If accepted, the sanitized version should not contain spaces
 				$this->assertStringNotContainsString(' ', $data->email);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				$this->assertSame('Invalid email', $e->getMessage());
 			}
 		}
@@ -151,7 +150,7 @@ final class EmailDataTest extends TestCase
 		];
 
 		foreach ($dangerousEmails as $email) {
-			$this->expectException(InvalidArgumentException::class);
+			$this->expectException(\InvalidArgumentException::class);
 			$this->expectExceptionMessage('Invalid email');
 			new EmailData($email);
 		}
@@ -171,7 +170,7 @@ final class EmailDataTest extends TestCase
 				// If accepted, dangerous parts should be sanitized
 				$this->assertStringNotContainsString('<script>', $data->email);
 				$this->assertStringNotContainsString('javascript:', $data->email);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				$this->assertSame('Invalid email', $e->getMessage());
 			}
 		}
@@ -186,7 +185,7 @@ final class EmailDataTest extends TestCase
 		];
 
 		foreach ($sqlEmails as $email) {
-			$this->expectException(InvalidArgumentException::class);
+			$this->expectException(\InvalidArgumentException::class);
 			$this->expectExceptionMessage('Invalid email');
 			new EmailData($email);
 		}
@@ -195,10 +194,10 @@ final class EmailDataTest extends TestCase
 	public function testHandlesVeryLongEmailAddresses(): void
 	{
 		// RFC 5321 limits local part to 64 chars and domain to 253 chars
-		$longLocal = str_repeat('a', 64);
+		$longLocal   = str_repeat('a', 64);
 		$validDomain = 'example.com';
-		$email = $longLocal . '@' . $validDomain;
-		
+		$email       = $longLocal . '@' . $validDomain;
+
 		$data = new EmailData($email);
 		$this->assertSame($email, $data->email);
 	}
@@ -207,9 +206,9 @@ final class EmailDataTest extends TestCase
 	{
 		// Over the RFC limit
 		$tooLongLocal = str_repeat('a', 65);
-		$email = $tooLongLocal . '@example.com';
-		
-		$this->expectException(InvalidArgumentException::class);
+		$email        = $tooLongLocal . '@example.com';
+
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid email');
 		new EmailData($email);
 	}
@@ -226,7 +225,7 @@ final class EmailDataTest extends TestCase
 			try {
 				$data = new EmailData($email);
 				$this->assertStringContainsString('@', $data->email);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				// Some special formats might not be supported by PHP's filter
 				$this->assertSame('Invalid email', $e->getMessage());
 			}
@@ -246,7 +245,7 @@ final class EmailDataTest extends TestCase
 				$data = new EmailData($email);
 				// If accepted, should contain @ symbol
 				$this->assertStringContainsString('@', $data->email);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				$this->assertSame('Invalid email', $e->getMessage());
 			}
 		}
@@ -255,7 +254,7 @@ final class EmailDataTest extends TestCase
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['some' => 'setting'];
-		$data = new EmailData('user@example.com', $settings);
+		$data     = new EmailData('user@example.com', $settings);
 		$this->assertSame($settings, $data->settings);
 	}
 
@@ -268,7 +267,7 @@ final class EmailDataTest extends TestCase
 	public function testTransformReturnsStringRepresentation(): void
 	{
 		$email = 'user@example.com';
-		$data = new EmailData($email);
+		$data  = new EmailData($email);
 		$this->assertSame($email, $data->transform());
 		$this->assertIsString($data->transform());
 	}
@@ -276,14 +275,14 @@ final class EmailDataTest extends TestCase
 	public function testToStringReturnsEmailString(): void
 	{
 		$email = 'user@example.com';
-		$data = new EmailData($email);
+		$data  = new EmailData($email);
 		$this->assertSame($email, (string)$data);
 	}
 
 	public function testBothMethodsReturnSameValue(): void
 	{
 		$email = 'user@example.com';
-		$data = new EmailData($email);
+		$data  = new EmailData($email);
 		$this->assertSame($data->transform(), (string)$data);
 	}
 }

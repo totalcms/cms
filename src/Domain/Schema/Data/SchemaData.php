@@ -145,7 +145,7 @@ final class SchemaData
 
 			// Validate grid area names (CSS identifier rules)
 			$normalized = (string)preg_replace('/\s+/', ' ', $trimmed);
-			$columns = explode(' ', $normalized);
+			$columns    = explode(' ', $normalized);
 
 			// Validate each area name
 			foreach ($columns as $area) {
@@ -156,12 +156,12 @@ final class SchemaData
 			}
 
 			// Escape area names for CSS
-			$escapedAreas = array_map(function($area) {
+			$escapedAreas = array_map(function ($area) {
 				return htmlspecialchars($area, ENT_QUOTES, 'UTF-8');
 			}, $columns);
 
 			$quotedLines[] = "'" . implode(' ', $escapedAreas) . "'";
-			$columnCount = max($columnCount, count($columns));
+			$columnCount   = max($columnCount, count($columns));
 		}
 
 		// Return empty string if no valid lines
@@ -171,6 +171,7 @@ final class SchemaData
 
 		// Return the formatted CSS
 		$areas = implode("\n\t\t\t", $quotedLines);
+
 		return <<<CSS
 		grid-template-areas:
 			$areas;

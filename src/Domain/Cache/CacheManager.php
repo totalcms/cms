@@ -4,9 +4,9 @@ namespace TotalCMS\Domain\Cache;
 
 use TotalCMS\Domain\Cache\Service\CacheInterface;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
+use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
-use TotalCMS\Domain\Cache\Service\MemcachedService;
 
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
@@ -41,7 +41,7 @@ final class CacheManager
 
 	/**
 	 * Store collection index data (fast access needed, can be large).
-	 * Priority: Redis > Memcached > Filesystem
+	 * Priority: Redis > Memcached > Filesystem.
 	 *
 	 * @param array<string,mixed> $index
 	 */
@@ -97,6 +97,7 @@ final class CacheManager
 				if ($this->redisService->isAvailable()) {
 					$this->redisService->set($key, $result, 3600);
 				}
+
 				return $result;
 			}
 		}
@@ -111,6 +112,7 @@ final class CacheManager
 				} elseif ($this->memcachedService->isAvailable()) {
 					$this->memcachedService->set($key, $result, 3600);
 				}
+
 				return $result;
 			}
 		}
@@ -120,13 +122,13 @@ final class CacheManager
 
 	/**
 	 * Store API response data (fast access, medium TTL).
-	 * Priority: Redis > Memcached > Filesystem
+	 * Priority: Redis > Memcached > Filesystem.
 	 *
 	 * @param array<string,mixed> $params
 	 */
 	public function storeApiResponse(string $endpoint, array $params, mixed $response, int $ttl = 900): bool
 	{
-		$key = "api_response:" . md5($endpoint . serialize($params));
+		$key = 'api_response:' . md5($endpoint . serialize($params));
 
 		if ($this->redisService->isAvailable()) {
 			return $this->redisService->set($key, $response, $ttl);
@@ -147,7 +149,7 @@ final class CacheManager
 	 */
 	public function getApiResponse(string $endpoint, array $params): mixed
 	{
-		$key = "api_response:" . md5($endpoint . serialize($params));
+		$key = 'api_response:' . md5($endpoint . serialize($params));
 
 		if ($this->redisService->isAvailable()) {
 			return $this->redisService->get($key);
@@ -162,7 +164,7 @@ final class CacheManager
 
 	/**
 	 * Store computed/expensive operations (can be large, longer TTL).
-	 * Priority: Filesystem > Redis > Memcached
+	 * Priority: Filesystem > Redis > Memcached.
 	 */
 	public function storeComputedData(string $key, mixed $data, int $ttl = 7200): bool
 	{
@@ -226,6 +228,7 @@ final class CacheManager
 				} elseif ($this->memcachedService->isAvailable()) {
 					$this->memcachedService->set($cacheKey, $result, 1800);
 				}
+
 				return $result;
 			}
 		}
@@ -235,7 +238,7 @@ final class CacheManager
 
 	/**
 	 * Store session data (fast access, Redis preferred for distributed systems).
-	 * Priority: Redis > Memcached (Filesystem not suitable for sessions)
+	 * Priority: Redis > Memcached (Filesystem not suitable for sessions).
 	 *
 	 * @param array<string,mixed> $data
 	 */
@@ -277,12 +280,13 @@ final class CacheManager
 
 	/**
 	 * Store template compilation results (large files, should persist).
-	 * Priority: Filesystem only (OPcache handles the compiled PHP automatically)
+	 * Priority: Filesystem only (OPcache handles the compiled PHP automatically).
 	 */
 	public function storeCompiledTemplate(string $templateName, string $compiledCode): bool
 	{
 		if ($this->filesystemService->isAvailable()) {
 			$key = "template:{$templateName}";
+
 			return $this->filesystemService->set($key, $compiledCode, 0); // No TTL for templates
 		}
 
@@ -315,9 +319,9 @@ final class CacheManager
 	{
 		return [
 			'filesystem' => $this->filesystemService->getStats(),
-			'opcache' => $this->opcacheService->getStats(),
-			'redis' => $this->redisService->getStats(),
-			'memcached' => $this->memcachedService->getStats(),
+			'opcache'    => $this->opcacheService->getStats(),
+			'redis'      => $this->redisService->getStats(),
+			'memcached'  => $this->memcachedService->getStats(),
 		];
 	}
 
@@ -339,7 +343,7 @@ final class CacheManager
 	private function buildRecommendations(): array
 	{
 		$recommendations = [];
-		$services = $this->getServiceAvailability();
+		$services        = $this->getServiceAvailability();
 
 		$this->addCriticalRecommendations($recommendations, $services);
 		$this->addOptimizationRecommendations($recommendations, $services);
@@ -356,11 +360,11 @@ final class CacheManager
 	private function getServiceAvailability(): array
 	{
 		return [
-			'opcache' => $this->opcacheService->isAvailable(),
-			'memory' => $this->redisService->isAvailable() || $this->memcachedService->isAvailable(),
+			'opcache'    => $this->opcacheService->isAvailable(),
+			'memory'     => $this->redisService->isAvailable() || $this->memcachedService->isAvailable(),
 			'filesystem' => $this->filesystemService->isAvailable(),
-			'redis' => $this->redisService->isAvailable(),
-			'memcached' => $this->memcachedService->isAvailable(),
+			'redis'      => $this->redisService->isAvailable(),
+			'memcached'  => $this->memcachedService->isAvailable(),
 		];
 	}
 
@@ -427,6 +431,7 @@ final class CacheManager
 
 		if (file_exists($this->versionFile)) {
 			$content = file_get_contents($this->versionFile);
+
 			return $content !== false ? $content : self::NO_CACHE;
 		}
 
@@ -490,7 +495,7 @@ final class CacheManager
 
 		foreach ($this->cacheServices as $key => $service) {
 			$serviceStats = $service->getStats();
-			$stats[$key] = $serviceStats;
+			$stats[$key]  = $serviceStats;
 
 			if ($serviceStats['available'] ?? false) {
 				$stats['available_backends'][$key] = $service->getName();
@@ -532,6 +537,7 @@ final class CacheManager
 				return true;
 			}
 		}
+
 		return false;
 	}
 }

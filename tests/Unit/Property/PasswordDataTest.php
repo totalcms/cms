@@ -12,8 +12,8 @@ final class PasswordDataTest extends TestCase
 	public function testHashesPlainTextPasswords(): void
 	{
 		$password = 'plainTextPassword123';
-		$data = new PasswordData($password);
-		
+		$data     = new PasswordData($password);
+
 		$this->assertNotSame($password, $data->hash);
 		$this->assertStringStartsWith('$2y$', $data->hash); // Default bcrypt format
 		$this->assertSame(60, strlen($data->hash)); // Standard bcrypt hash length
@@ -23,8 +23,8 @@ final class PasswordDataTest extends TestCase
 	{
 		// Create a known hash
 		$originalPassword = 'testPassword123';
-		$existingHash = password_hash($originalPassword, PASSWORD_DEFAULT);
-		
+		$existingHash     = password_hash($originalPassword, PASSWORD_DEFAULT);
+
 		$data = new PasswordData($existingHash);
 		$this->assertSame($existingHash, $data->hash);
 	}
@@ -32,12 +32,12 @@ final class PasswordDataTest extends TestCase
 	public function testGeneratesDifferentHashesForSamePassword(): void
 	{
 		$password = 'samePassword123';
-		$data1 = new PasswordData($password);
-		$data2 = new PasswordData($password);
-		
+		$data1    = new PasswordData($password);
+		$data2    = new PasswordData($password);
+
 		// Hashes should be different due to salt
 		$this->assertNotSame($data1->hash, $data2->hash);
-		
+
 		// But both should verify against the original password
 		$this->assertTrue(password_verify($password, $data1->hash));
 		$this->assertTrue(password_verify($password, $data2->hash));
@@ -66,7 +66,7 @@ final class PasswordDataTest extends TestCase
 	{
 		// Create a real bcrypt hash to test with
 		$realHash = password_hash('testpassword', PASSWORD_DEFAULT);
-		$data = new PasswordData($realHash);
+		$data     = new PasswordData($realHash);
 		$this->assertSame($realHash, $data->hash);
 	}
 
@@ -74,9 +74,9 @@ final class PasswordDataTest extends TestCase
 	{
 		// Test if argon2 is available
 		if (defined('PASSWORD_ARGON2I')) {
-			$password = 'testPassword';
+			$password  = 'testPassword';
 			$argonHash = password_hash($password, PASSWORD_ARGON2I);
-			$data = new PasswordData($argonHash);
+			$data      = new PasswordData($argonHash);
 			$this->assertSame($argonHash, $data->hash);
 		} else {
 			$this->assertTrue(true); // Skip if argon2 not available
@@ -125,7 +125,7 @@ final class PasswordDataTest extends TestCase
 	{
 		$data = new PasswordData('testPassword');
 		$info = password_get_info($data->hash);
-		
+
 		// Should use a secure algorithm (bcrypt, argon2, etc.)
 		$this->assertNotNull($info['algo']);
 		$this->assertContains($info['algoName'], ['bcrypt', 'argon2i', 'argon2id']);
@@ -134,20 +134,20 @@ final class PasswordDataTest extends TestCase
 	public function testProducesHashesResistantToTimingAttacks(): void
 	{
 		$password = 'testPassword123';
-		$data = new PasswordData($password);
-		
+		$data     = new PasswordData($password);
+
 		// Test that verification is consistent
-		$start1 = microtime(true);
+		$start1  = microtime(true);
 		$result1 = password_verify($password, $data->hash);
-		$time1 = microtime(true) - $start1;
-		
-		$start2 = microtime(true);
+		$time1   = microtime(true) - $start1;
+
+		$start2  = microtime(true);
 		$result2 = password_verify('wrongPassword', $data->hash);
-		$time2 = microtime(true) - $start2;
-		
+		$time2   = microtime(true) - $start2;
+
 		$this->assertTrue($result1);
 		$this->assertFalse($result2);
-		
+
 		// Times should be similar (within reasonable bounds)
 		$timeDiff = abs($time1 - $time2);
 		$this->assertLessThan(0.1, $timeDiff); // 100ms tolerance
@@ -156,10 +156,10 @@ final class PasswordDataTest extends TestCase
 	public function testGeneratesSufficientlyComplexHashes(): void
 	{
 		$data = new PasswordData('simple');
-		
+
 		// Hash should be long enough
 		$this->assertGreaterThanOrEqual(50, strlen($data->hash));
-		
+
 		// Should contain various character types
 		$this->assertMatchesRegularExpression('/[A-Za-z]/', $data->hash); // Letters
 		$this->assertMatchesRegularExpression('/[0-9]/', $data->hash); // Numbers
@@ -195,7 +195,7 @@ final class PasswordDataTest extends TestCase
 
 		$hashes = [];
 		foreach ($passwords as $password) {
-			$data = new PasswordData($password);
+			$data     = new PasswordData($password);
 			$hashes[] = $data->hash;
 		}
 
@@ -206,8 +206,8 @@ final class PasswordDataTest extends TestCase
 	public function testHandlesVeryLongPasswords(): void
 	{
 		$longPassword = str_repeat('a', 1000);
-		$data = new PasswordData($longPassword);
-		
+		$data         = new PasswordData($longPassword);
+
 		$this->assertNotSame($longPassword, $data->hash);
 		$this->assertTrue(password_verify($longPassword, $data->hash));
 	}
@@ -216,8 +216,8 @@ final class PasswordDataTest extends TestCase
 	{
 		// Test binary data without null bytes (bcrypt doesn't support null bytes)
 		$binaryPassword = "\x01\x02\xFF\xFE";
-		$data = new PasswordData($binaryPassword);
-		
+		$data           = new PasswordData($binaryPassword);
+
 		$this->assertNotSame($binaryPassword, $data->hash);
 		$this->assertTrue(password_verify($binaryPassword, $data->hash));
 	}
@@ -241,7 +241,7 @@ final class PasswordDataTest extends TestCase
 	public function testHandlesPasswordsWithNullBytes(): void
 	{
 		$passwordWithNull = "password\x00hidden";
-		
+
 		// bcrypt will throw ValueError for null bytes
 		$this->expectException(\ValueError::class);
 		$this->expectExceptionMessage('Bcrypt password must not contain null character');
@@ -251,7 +251,7 @@ final class PasswordDataTest extends TestCase
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['some' => 'setting'];
-		$data = new PasswordData('password', $settings);
+		$data     = new PasswordData('password', $settings);
 		$this->assertSame($settings, $data->settings);
 	}
 
@@ -283,8 +283,8 @@ final class PasswordDataTest extends TestCase
 	public function testNeverExposesPlainTextPassword(): void
 	{
 		$plainPassword = 'secretPassword123';
-		$data = new PasswordData($plainPassword);
-		
+		$data          = new PasswordData($plainPassword);
+
 		$this->assertNotSame($plainPassword, $data->transform());
 		$this->assertNotSame($plainPassword, (string)$data);
 		$this->assertNotSame($plainPassword, $data->hash);
@@ -294,7 +294,7 @@ final class PasswordDataTest extends TestCase
 	{
 		$data = new PasswordData('test');
 		$info = password_get_info($data->hash);
-		
+
 		// Should use whatever PHP's current default is
 		$this->assertSame(PASSWORD_DEFAULT, $info['algo']);
 	}
@@ -303,12 +303,12 @@ final class PasswordDataTest extends TestCase
 	{
 		// Test that a valid bcrypt hash is preserved
 		$validHash = password_hash('oldpassword', PASSWORD_DEFAULT);
-		$data = new PasswordData($validHash);
+		$data      = new PasswordData($validHash);
 		$this->assertSame($validHash, $data->hash);
 
 		// Test that invalid hash formats get rehashed
 		$invalidHash = '$2y$10$example.hash.from.older.version';
-		$data = new PasswordData($invalidHash);
+		$data        = new PasswordData($invalidHash);
 		$this->assertNotSame($invalidHash, $data->hash);
 		$this->assertStringStartsWith('$2y$', $data->hash);
 	}
@@ -333,8 +333,8 @@ final class PasswordDataTest extends TestCase
 	public function testProvidesSecureStorageRegardlessOfPasswordStrength(): void
 	{
 		$weakPassword = '123';
-		$data = new PasswordData($weakPassword);
-		
+		$data         = new PasswordData($weakPassword);
+
 		// Even weak passwords should get strong hashes
 		$this->assertGreaterThanOrEqual(50, strlen($data->hash));
 		$this->assertStringStartsWith('$2y$', $data->hash);

@@ -16,6 +16,7 @@ use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
 /**
  * Twig template processor.
+ *
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
 final class TwigEngine

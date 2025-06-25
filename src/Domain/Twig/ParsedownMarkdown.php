@@ -2,21 +2,20 @@
 
 namespace TotalCMS\Domain\Twig;
 
-use ParsedownExtra;
 use Twig\Extra\Markdown\MarkdownInterface;
 
 /**
  * Parsedown adapter for Twig Markdown extension.
- * Based on the CommonMark integration pattern from https://github.com/twigphp/Twig/pull/3737
+ * Based on the CommonMark integration pattern from https://github.com/twigphp/Twig/pull/3737.
  */
 final class ParsedownMarkdown implements MarkdownInterface
 {
-	private ParsedownExtra $parsedown;
+	private \ParsedownExtra $parsedown;
 
 	public function __construct()
 	{
-		$this->parsedown = new ParsedownExtra();
-		
+		$this->parsedown = new \ParsedownExtra();
+
 		// Configure Parsedown for safety
 		$this->parsedown->setSafeMode(true);
 		$this->parsedown->setBreaksEnabled(true);

@@ -34,6 +34,7 @@ final class OPcacheService implements CacheInterface
 		if (file_exists($key)) {
 			return opcache_invalidate($key, true);
 		}
+
 		return false;
 	}
 
@@ -58,11 +59,11 @@ final class OPcacheService implements CacheInterface
 		}
 
 		return [
-			'available' => true,
+			'available'       => true,
 			'opcache_enabled' => $status['opcache_enabled'] ?? false,
-			'cache_full' => $status['cache_full'] ?? false,
-			'memory_usage' => $status['memory_usage'] ?? [],
-			'hit_rate' => isset($status['opcache_statistics']['opcache_hit_rate'])
+			'cache_full'      => $status['cache_full'] ?? false,
+			'memory_usage'    => $status['memory_usage'] ?? [],
+			'hit_rate'        => isset($status['opcache_statistics']['opcache_hit_rate'])
 				? round($status['opcache_statistics']['opcache_hit_rate'], 2)
 				: 0,
 			'scripts_cached' => $status['opcache_statistics']['num_cached_scripts'] ?? 0,
@@ -81,7 +82,7 @@ final class OPcacheService implements CacheInterface
 			return ['❌ OPcache not available - consider enabling for 2-5x performance improvement'];
 		}
 
-		$stats = $this->getStats();
+		$stats           = $this->getStats();
 		$recommendations = [];
 
 		if (($stats['available'] ?? false) && ($stats['opcache_enabled'] ?? false)) {

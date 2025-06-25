@@ -13,10 +13,10 @@ class CollectionRefiner
 {
 	/** @var array<string,bool> */
 	private static array $methodCache = [];
-	
+
 	/** @var array<string,int> */
 	private static array $paramCountCache = [];
-	
+
 	/**
 	 * Constructor.
 	 *
@@ -40,7 +40,7 @@ class CollectionRefiner
 		if (empty($rules) || empty($this->collection)) {
 			return $this->collection;
 		}
-		
+
 		$filteredCollection = $this->collection;
 
 		foreach ($rules as $rule) {
@@ -48,7 +48,7 @@ class CollectionRefiner
 			if (empty($filteredCollection)) {
 				return [];
 			}
-			
+
 			$value = $rule['value'] ?? '';
 			if (is_array($value)) {
 				$filteredCollection = $this->filterByArrayRule(
@@ -81,8 +81,8 @@ class CollectionRefiner
 	{
 		// Use array to track unique items instead of array_merge
 		$results = [];
-		$seen = [];
-		
+		$seen    = [];
+
 		foreach ($values as $value) {
 			$filtered = $this->filterByRule(
 				collection : $collection,
@@ -90,12 +90,12 @@ class CollectionRefiner
 				value      : strval($value),
 				operator   : $operator,
 			);
-			
+
 			foreach ($filtered as $item) {
 				// Use ID if available, otherwise serialize
 				$key = isset($item['id']) ? $item['id'] : serialize($item);
 				if (!isset($seen[$key])) {
-					$results[] = $item;
+					$results[]  = $item;
 					$seen[$key] = true;
 				}
 			}
@@ -112,13 +112,13 @@ class CollectionRefiner
 	public function filterUnique(array $collection): array
 	{
 		$unique = [];
-		$seen = [];
-		
+		$seen   = [];
+
 		foreach ($collection as $item) {
 			// Use ID if available, otherwise serialize
 			$key = isset($item['id']) ? $item['id'] : serialize($item);
 			if (!isset($seen[$key])) {
-				$unique[] = $item;
+				$unique[]   = $item;
 				$seen[$key] = true;
 			}
 		}
@@ -150,16 +150,16 @@ class CollectionRefiner
 		// Cache reflection results to avoid repeated reflection calls
 		if (!isset(self::$paramCountCache[$operator])) {
 			if (method_exists($this, $operator)) {
-				$reflection = new \ReflectionMethod(CollectionRefiner::class, $operator);
+				$reflection                       = new \ReflectionMethod(CollectionRefiner::class, $operator);
 				self::$paramCountCache[$operator] = $reflection->getNumberOfParameters();
-				self::$methodCache[$operator] = true;
+				self::$methodCache[$operator]     = true;
 			} else {
-				self::$methodCache[$operator] = false;
+				self::$methodCache[$operator]     = false;
 				self::$paramCountCache[$operator] = 2; // Default for fallback
 			}
 		}
-		
-		$numParams = self::$paramCountCache[$operator];
+
+		$numParams    = self::$paramCountCache[$operator];
 		$methodExists = self::$methodCache[$operator];
 
 		// If operator requires a value and it's empty, return all records
@@ -220,7 +220,7 @@ class CollectionRefiner
 		if (isset($record[$property])) {
 			return $record[$property];
 		}
-		
+
 		// Only do complex parsing if needed
 		if (!str_contains($property, '.')) {
 			return null;
@@ -254,7 +254,7 @@ class CollectionRefiner
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -306,11 +306,11 @@ class CollectionRefiner
 	protected static function endsCaseInsensitive(string $haystack, string $needle): bool
 	{
 		$length = mb_strlen($needle);
-		
+
 		if ($length === 0) {
 			return true;
 		}
-		
+
 		// More efficient case-insensitive comparison
 		return mb_strtolower(mb_substr($haystack, -$length)) === mb_strtolower($needle);
 	}

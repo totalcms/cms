@@ -20,11 +20,11 @@ final class TwigFunctionCache
 	public static function remember(string $key, callable $function, array $args = []): mixed
 	{
 		$cacheKey = self::generateCacheKey($key, $args);
-		
+
 		if (!isset(self::$cache[$cacheKey])) {
 			self::$cache[$cacheKey] = $function(...$args);
 		}
-		
+
 		return self::$cache[$cacheKey];
 	}
 
@@ -36,6 +36,7 @@ final class TwigFunctionCache
 	public static function has(string $key, array $args = []): bool
 	{
 		$cacheKey = self::generateCacheKey($key, $args);
+
 		return isset(self::$cache[$cacheKey]);
 	}
 
@@ -68,7 +69,7 @@ final class TwigFunctionCache
 	public static function getStats(): array
 	{
 		return [
-			'count' => count(self::$cache),
+			'count'  => count(self::$cache),
 			'memory' => strlen(serialize(self::$cache)),
 		];
 	}
@@ -83,7 +84,7 @@ final class TwigFunctionCache
 		if (empty($args)) {
 			return $key;
 		}
-		
+
 		// Use a short hash for efficiency
 		return $key . ':' . md5(serialize($args));
 	}
