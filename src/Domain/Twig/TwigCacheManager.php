@@ -72,6 +72,11 @@ final class TwigCacheManager
 	 */
 	private function getCacheVersion(): string
 	{
+		// Don't create version files when caching is disabled
+		if ($this->config->cachedir === 'false' || $this->config->cachedir === false) {
+			return 'dev-no-cache';
+		}
+		
 		$versionFile = $this->config->cachedir . '/.cache_version';
 		
 		if (file_exists($versionFile)) {
@@ -90,6 +95,12 @@ final class TwigCacheManager
 	 */
 	private function setCacheVersion(string $version): void
 	{
+		// Don't create version files when caching is disabled
+		if ($this->config->cachedir === 'false' || $this->config->cachedir === false) {
+			$this->cacheVersion = $version;
+			return;
+		}
+		
 		$versionFile = $this->config->cachedir . '/.cache_version';
 		
 		if (!is_dir($this->config->cachedir)) {
@@ -105,6 +116,21 @@ final class TwigCacheManager
 	 */
 	public function clearAllCaches(): bool
 	{
+		// When caching is disabled, only clear OPcache if available
+		if ($this->config->cachedir === 'false' || $this->config->cachedir === false) {
+			$success = true;
+			
+			// Still clear OPcache in dev mode to ensure fresh PHP compilation
+			if (isset($this->availableBackends['opcache'])) {
+				$success = $success && $this->clearOPcache();
+			}
+			
+			// Update cache version (but don't write to file)
+			$this->setCacheVersion(date('Y-m-d-H-i-s') . '-' . uniqid());
+			
+			return $success;
+		}
+		
 		// Clear file system cache
 		$success = $this->clearFileSystemCache();
 		
