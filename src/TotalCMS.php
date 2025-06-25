@@ -17,7 +17,7 @@ use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
-use TotalCMS\Domain\Twig\TwigCacheCleaner;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Twig\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
@@ -34,7 +34,7 @@ class TotalCMS
 	private Container $container;
 	private TwigEngine $twigEngine;
 	private LoggerInterface $logger;
-	private TwigCacheCleaner $twigCacheCleaner;
+	private CacheManager $cacheManager;
 	private PhpSession $session;
 	private AccessManager $access;
 
@@ -52,11 +52,11 @@ class TotalCMS
 		}
 
 		try {
-			$this->buffer           = $this->container->get(BufferController::class);
-			$this->twigEngine       = $this->container->get(TwigEngine::class);
-			$this->twigCacheCleaner = $this->container->get(TwigCacheCleaner::class);
-			$this->session          = $this->container->get(PhpSession::class);
-			$this->access           = $this->container->get(AccessManager::class);
+			$this->buffer       = $this->container->get(BufferController::class);
+			$this->twigEngine   = $this->container->get(TwigEngine::class);
+			$this->cacheManager = $this->container->get(CacheManager::class);
+			$this->session      = $this->container->get(PhpSession::class);
+			$this->access       = $this->container->get(AccessManager::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
@@ -145,7 +145,7 @@ class TotalCMS
 
 	public function clearCache(): void
 	{
-		$this->twigCacheCleaner->deleteCache();
+		$this->cacheManager->clearAllCaches();
 	}
 
 	/**

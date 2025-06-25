@@ -6,6 +6,7 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -37,7 +38,7 @@ final class TotalCMSTwigAdapter
 {
 	public TotalFormFactory $form;
 	public ServerChecker $checker;
-	public TwigCacheManager $cacheManager;
+	public CacheManager $cacheManager;
 	public LogAnalyzer $logger;
 	public string $api;
 	public string $dashboard;
@@ -56,7 +57,7 @@ final class TotalCMSTwigAdapter
 		private SchemaFetcher $schemaFetcher,
 		private TotalFormFactory $totalFormFactory,
 		private ServerChecker $serverChecker,
-		private TwigCacheManager $twigCacheManager,
+		private CacheManager $cacheManagerService,
 		private LogAnalyzer $logAnalyzer,
 		private PhpSession $session,
 		private AccessManager $accessManager,
@@ -68,7 +69,7 @@ final class TotalCMSTwigAdapter
 		$this->domain       = $this->getDomainName();
 		$this->form         = $this->totalFormFactory;
 		$this->checker      = $this->serverChecker;
-		$this->cacheManager = $this->twigCacheManager;
+		$this->cacheManager = $this->cacheManagerService;
 		$this->logger       = $this->logAnalyzer;
 	}
 

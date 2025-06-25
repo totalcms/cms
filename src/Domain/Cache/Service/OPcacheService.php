@@ -2,28 +2,17 @@
 
 namespace TotalCMS\Domain\Cache\Service;
 
-use TotalCMS\Support\Config;
-
 /**
  * OPcache service for bytecode caching.
+ * OPcache is controlled by PHP configuration (php.ini), not application config.
  */
 final class OPcacheService implements CacheInterface
 {
-	private bool $enabled;
-
-	public function __construct(
-		Config $config
-	) {
-		$cache = $config->cache ?? [];
-		$this->enabled = $cache['opcache']['enabled'] ?? true;
-	}
+	// No configuration needed - OPcache runs automatically when enabled in PHP
 
 	public function isAvailable(): bool
 	{
-		if (!$this->enabled) {
-			return false;
-		}
-
+		// Check if OPcache is actually enabled and working in PHP
 		return function_exists('opcache_get_status') && opcache_get_status() !== false;
 	}
 
@@ -60,17 +49,16 @@ final class OPcacheService implements CacheInterface
 	public function getStats(): array
 	{
 		if (!$this->isAvailable()) {
-			return ['available' => false, 'enabled' => $this->enabled];
+			return ['available' => false];
 		}
 
 		$status = opcache_get_status(false);
 		if ($status === false) {
-			return ['available' => false, 'enabled' => $this->enabled];
+			return ['available' => false];
 		}
 
 		return [
 			'available' => true,
-			'enabled' => $this->enabled,
 			'opcache_enabled' => $status['opcache_enabled'] ?? false,
 			'cache_full' => $status['cache_full'] ?? false,
 			'memory_usage' => $status['memory_usage'] ?? [],

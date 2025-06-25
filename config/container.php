@@ -51,9 +51,8 @@ use TotalCMS\Domain\Twig\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
-use TotalCMS\Domain\Twig\TwigCacheCleaner;
-use TotalCMS\Domain\Twig\TwigCacheManager;
 use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
@@ -251,7 +250,7 @@ return [
 			$container->get(SchemaFetcher::class),
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
-			$container->get(TwigCacheManager::class),
+			$container->get(CacheManager::class),
 			$container->get(LogAnalyzer::class),
 			$container->get(PhpSession::class),
 			$container->get(AccessManager::class),
@@ -315,7 +314,7 @@ return [
 		return new TwigEngine(
 			$container->get(Config::class), 
 			$container->get(TotalCMSTwigExtension::class),
-			$container->get(TwigCacheManager::class)
+			$container->get(CacheManager::class)
 		);
 	},
 
@@ -325,7 +324,7 @@ return [
 	},
 
 	OPcacheService::class => function (ContainerInterface $container) {
-		return new OPcacheService($container->get(Config::class));
+		return new OPcacheService();
 	},
 
 	RedisService::class => function (ContainerInterface $container) {
@@ -336,17 +335,13 @@ return [
 		return new MemcachedService($container->get(Config::class));
 	},
 
-	TwigCacheManager::class => function (ContainerInterface $container) {
-		return new TwigCacheManager(
+	CacheManager::class => function (ContainerInterface $container) {
+		return new CacheManager(
 			$container->get(FilesystemService::class),
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class)
 		);
-	},
-
-	TwigCacheCleaner::class => function (ContainerInterface $container) {
-		return new TwigCacheCleaner($container->get(TwigCacheManager::class));
 	},
 
 	IndexSearcher::class => function (ContainerInterface $container) {
