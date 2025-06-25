@@ -40,6 +40,9 @@ final class AdminUtilsAction
 				case 'pretty-url-builder':
 					// nothing to do yet
 					break;
+				case 'image-batcher':
+					// Handle image batcher form submissions - steps are processed via POST data
+					break;
 			}
 		}
 
@@ -59,6 +62,7 @@ final class AdminUtilsAction
 			],
 			'results' => $results,
 			'totalcms1DetectionData' => $totalcms1DetectionData,
+			'postData' => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
 
