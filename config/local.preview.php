@@ -40,9 +40,6 @@ $settings['cache'] = [
 	'filesystem' => [
 		'enabled'   => false,
 	],
-	'opcache' => [
-		'enabled' => false,
-	],
 	'redis' => [
 		'enabled' => false,
 	],

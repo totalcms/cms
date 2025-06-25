@@ -64,9 +64,6 @@ $settings['cache'] = [
 		'enabled'   => true,
 		'directory' => $settings['root'] . '/cache',
 	],
-	'opcache' => [
-		'enabled' => true,
-	],
 	'redis' => [
 		'enabled' => true,
 		'host' => '127.0.0.1',

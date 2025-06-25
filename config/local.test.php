@@ -25,9 +25,6 @@ $settings['auth']['enable']   = false;
 // 	'filesystem' => [
 // 		'enabled'   => false,
 // 	],
-// 	'opcache' => [
-// 		'enabled' => false,
-// 	],
 // 	'redis' => [
 // 		'enabled' => false,
 // 	],
