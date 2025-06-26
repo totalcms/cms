@@ -218,4 +218,3 @@ echo "  4. Push to repository: git push && git push --tags"
 echo "  5. Create release on GitHub with changelog"
 echo "  6. Deploy to production"
 echo
-print_info "Bundle location: public/totalcms-bundle-$NEW_VERSION.zip"
