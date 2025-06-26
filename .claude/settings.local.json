@@ -21,7 +21,8 @@
       "Bash(composer:*)",
       "Bash(cp:*)",
       "Bash(bin/code-report.sh:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(git log:*)"
     ],
     "deny": []
   }
