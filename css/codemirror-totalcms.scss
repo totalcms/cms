@@ -20,20 +20,20 @@
 @import 'codemirror/addon/display/fullscreen.css';
 
 .totalcms-editor {
-	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
-	margin-bottom: 1rem;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	overflow      : hidden;
+	box-shadow    : 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
+	margin-bottom : 1rem;
 
 	&.CodeMirror {
-		height: auto;
-		min-height: 200px;
-		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 16px;
-		line-height: 1.5;
-		border: none;
-		border-radius: var(--totalform-radius);
+		height        : auto;
+		min-height    : 200px;
+		font-family   : 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+		font-size     : 14px;
+		line-height   : 1.5;
+		border        : none;
+		border-radius : var(--totalform-radius);
 
 		.CodeMirror-scroll {
 			min-height: 200px;
@@ -67,7 +67,7 @@
 		}
 
 		.CodeMirror-foldgutter {
-			width: 16px;
+			width: 14px;
 
 			.CodeMirror-foldgutter-open,
 			.CodeMirror-foldgutter-folded {
@@ -720,7 +720,7 @@
 		height: auto;
 		min-height: 200px;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 16px;
+		font-size: 14px;
 		line-height: 1.5;
 		border: none;
 		border-radius: var(--totalform-radius);
@@ -778,6 +778,10 @@
 // Editor container with title and actions
 .editor-container {
 	margin-bottom: 2rem;
+
+	.CodeMirror {
+		font-size : 14px;
+	}
 
 	.editor-header {
 		display: flex;
@@ -841,7 +845,7 @@
 // Responsive adjustments
 @media (max-width: 768px) {
 	.totalcms-editor .CodeMirror {
-		font-size: 13px;
+		font-size: 14px;
 	}
 
 	.editor-container .editor-header {
@@ -870,7 +874,7 @@
 		height: auto;
 		min-height: 200px;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 13px;
+		font-size: 14px;
 		line-height: 1.5;
 		border: none;
 		border-radius: var(--totalform-radius);
@@ -959,7 +963,7 @@
 		border: none;
 		border-radius: 0;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 16px;
+		font-size: 14px;
 		line-height: 1.4;
 		height: auto;
 		min-height: 200px;

@@ -13,7 +13,6 @@ esbuild.build({
 		"javascript/filelinks.js",
 		"javascript/imageworks-builder.js",
 		"javascript/image-batcher.js",
-		"javascript/codemirror-bundle.js",
 		"javascript/totalcms.js",
 		"javascript/swagger.js",
 	],

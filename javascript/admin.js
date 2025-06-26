@@ -11,6 +11,7 @@ import JSONField from './totalform/json';
 import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
 import initExternalLinks from './external-links';
+import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
 globalThis.TotalCMS = TotalCMS;
 
