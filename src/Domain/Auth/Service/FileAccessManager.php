@@ -27,7 +27,7 @@ final class FileAccessManager
 		private PropertyFetcher $propertyFetcher,
 		private CollectionFetcher $collectionFetcher,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(self::DOWNLOAD_LOG)->createLogger();
+		$this->logger = $this->loggerFactory->addFileHandler(self::DOWNLOAD_LOG)->createLogger('fileaccess');
 	}
 
 	public function loadDepotFile(string $collection, string $object, string $property, string $name, ?string $subpath = null): void

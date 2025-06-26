@@ -20,7 +20,7 @@ final class LoginService
 		private LoggerFactory $loggerFactory,
 		private Config $config,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(self::ACCESS_LOG)->createLogger();
+		$this->logger = $this->loggerFactory->addFileHandler(self::ACCESS_LOG)->createLogger('login');
 	}
 
 	/** @return array<string,mixed> */

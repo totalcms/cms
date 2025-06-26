@@ -21,7 +21,7 @@ final class AccessManager
 		private UserValidationService $userValidator,
 		private LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger();
+		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('access');
 
 		$this->defaultAuthCollection = $this->config->auth['collection'];
 	}

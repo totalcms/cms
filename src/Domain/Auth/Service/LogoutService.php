@@ -14,7 +14,7 @@ final class LogoutService
 		private PhpSession $session,
 		private LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger();
+		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('logout');
 	}
 
 	public function logout(): bool
