@@ -148,6 +148,17 @@ bin/codecount.sh
 - **Code Reports**: Only run `bin/code-report.sh` when creating new builds, not during development sessions
 - **Change Tracking**: Keep git diffs clean by focusing on specific files being worked on
 
+### CSS Styling Guidelines
+- **Use Design System Variables**: Always use CSS variables from `/css/variables.scss` instead of hardcoding colors or values
+- **Variable Format**: Use `oklch(var(--totalform-*))` for colors to ensure consistency with the design system
+- **Common Variables**:
+  - Border color: `oklch(var(--totalform-border-color))`
+  - Background colors: `oklch(var(--totalform-nearwhite))`, `oklch(var(--totalform-icon-bg))`
+  - Text colors: `oklch(var(--totalform-darkgray))`, `oklch(var(--totalform-text-color))`
+  - Accent colors: `oklch(var(--totalform-accent))`, `oklch(var(--totalform-success))`
+  - Border radius: `var(--totalform-radius)`
+- **Avoid**: Custom colors, hardcoded values, non-existent variables
+
 ## Frontend JavaScript
 - **TotalForm System**: Modular form system in `/javascript/totalform/` with field-specific components
 - **Choices.js**: Enhanced select/multiselect fields with custom initialization

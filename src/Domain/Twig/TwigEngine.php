@@ -7,6 +7,7 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
 use Twig\Extension\DebugExtension;
+use Twig\Extension\StringLoaderExtension;
 use Twig\Extra\Html\HtmlExtension;
 use Twig\Extra\Markdown\MarkdownExtension;
 use Twig\Extra\Markdown\MarkdownRuntime;
@@ -57,6 +58,7 @@ final class TwigEngine
 
 		$this->twig->addExtension($extension);
 		$this->twig->addExtension(new StringExtension());
+		$this->twig->addExtension(new StringLoaderExtension());
 		$this->twig->addExtension(new HtmlExtension());
 		$this->twig->addExtension(new MarkdownExtension());
 
