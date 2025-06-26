@@ -1,5 +1,3 @@
 @use "sass:meta";
 @use "variables";
 @use "forms";
-
-@include meta.load-css("codemirror");

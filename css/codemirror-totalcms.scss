@@ -1,0 +1,597 @@
+/**
+ * TotalCMS CodeMirror Enhancements
+ * Custom styling for CodeMirror editors in TotalCMS
+ * Includes styles for Twig Playground and StyledText code view
+ */
+
+// Import CSS variables for consistent styling
+@use 'variables';
+
+// Import base CodeMirror CSS
+@import 'codemirror/lib/codemirror.css';
+
+// Import themes we use
+@import 'codemirror/theme/elegant.css';     // Light theme - for Twig editor and general use
+@import 'codemirror/theme/monokai.css';     // Dark theme - saved for future dark mode
+
+// Import necessary addons
+@import 'codemirror/addon/fold/foldgutter.css';
+@import 'codemirror/addon/dialog/dialog.css';
+@import 'codemirror/addon/display/fullscreen.css';
+
+.totalcms-editor {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
+	margin-bottom: 1rem;
+
+	&.CodeMirror {
+		height: auto;
+		min-height: 200px;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+		font-size: 14px;
+		line-height: 1.5;
+		border: none;
+		border-radius: var(--totalform-radius);
+
+		.CodeMirror-scroll {
+			min-height: 200px;
+		}
+
+		.CodeMirror-placeholder {
+			color: oklch(var(--totalform-gray)) !important;
+			font-style: italic;
+		}
+
+		.CodeMirror-activeline-background {
+			background: oklch(var(--totalform-accent) / 0.1) !important;
+		}
+
+		.CodeMirror-selected {
+			background: oklch(var(--totalform-accent) / 0.2) !important;
+		}
+
+		.CodeMirror-focused .CodeMirror-selected {
+			background: oklch(var(--totalform-accent) / 0.3) !important;
+		}
+
+		.CodeMirror-gutters {
+			background-color: oklch(var(--totalform-nearwhite));
+			border-right: 1px solid oklch(var(--totalform-border-color));
+		}
+
+		.CodeMirror-linenumber {
+			color: oklch(var(--totalform-gray));
+			padding: 0 8px;
+		}
+
+		.CodeMirror-foldgutter {
+			width: 16px;
+
+			.CodeMirror-foldgutter-open,
+			.CodeMirror-foldgutter-folded {
+				cursor: pointer;
+				color: oklch(var(--totalform-gray));
+
+				&:hover {
+					color: oklch(var(--totalform-accent));
+				}
+			}
+		}
+
+		.CodeMirror-cursor {
+			border-left-color: oklch(var(--totalform-accent));
+		}
+
+		// Fullscreen mode enhancements
+		&.CodeMirror-fullscreen {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			height: auto;
+			z-index: 9999;
+			background: white;
+			border-radius: 0;
+		}
+	}
+
+	// Search dialog styling
+	.CodeMirror-dialog {
+		background: oklch(var(--totalform-purewhite));
+		border: 1px solid oklch(var(--totalform-border-color));
+		border-radius: var(--totalform-radius);
+		box-shadow: 0 4px 12px oklch(var(--totalform-shadow-color) / 0.15);
+		padding: 1rem;
+
+		input {
+			border: 1px solid oklch(var(--totalform-border-color));
+			border-radius: var(--totalform-radius);
+			padding: 0.5rem;
+			font-family: inherit;
+
+			&:focus {
+				outline: none;
+				border-color: oklch(var(--totalform-accent));
+				box-shadow: 0 0 0 2px oklch(var(--totalform-accent) / 0.2);
+			}
+		}
+	}
+}
+
+// Twig editor specific styling - Light theme for dashboard consistency
+.twig-editor {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
+	margin-bottom: 1rem;
+
+	&.CodeMirror {
+		background-color: oklch(var(--totalform-purewhite));
+		color: oklch(var(--totalform-nearblack));
+
+		// Twig delimiters {{ }} {% %} {# #}
+		.cm-tag {
+			color: #0000ff; // Classic blue for delimiters
+			font-weight: bold;
+		}
+
+		// Twig variables and properties
+		.cm-variable {
+			color: #001080; // Dark blue for variables
+		}
+
+		.cm-variable-2 {
+			color: #267f99; // Teal for object properties
+		}
+
+		.cm-variable-3 {
+			color: #a31515; // Burgundy for special variables
+		}
+
+		// Strings and values
+		.cm-string {
+			color: #a31515; // Burgundy for strings - warm and readable
+		}
+
+		.cm-number {
+			color: #098658; // Green for numbers
+		}
+
+		// Twig keywords (if, for, set, etc.)
+		.cm-keyword {
+			color: #0000ff; // Blue for keywords - matches delimiters
+			font-weight: bold;
+		}
+
+		// Twig filters and functions
+		.cm-builtin {
+			color: #795e26; // Brown for built-in functions
+		}
+
+		.cm-atom {
+			color: #0000ff; // Blue for atoms (true, false, null)
+		}
+
+		// Operators and punctuation
+		.cm-operator {
+			color: #000000; // Black for operators - subtle
+		}
+
+		.cm-bracket {
+			color: #000000; // Black for brackets and parentheses
+		}
+
+		// Comments
+		.cm-comment {
+			color: #008000; // Green for comments - classic
+			font-style: italic;
+		}
+
+		// Properties and attributes
+		.cm-property {
+			color: #6f42c1; // Purple for properties
+		}
+
+		// Meta information
+		.cm-meta {
+			color: #005cc5; // Blue for meta
+		}
+
+		// Qualifiers
+		.cm-qualifier {
+			color: #24292e; // Dark gray for qualifiers
+		}
+
+		// Error highlighting
+		.cm-error {
+			background-color: #ffeef0;
+			color: #d73a49;
+			border-bottom: 1px wavy #d73a49;
+		}
+
+		// Special Twig-specific enhancements
+		.cm-twig-delimiter {
+			color: #d73a49;
+			font-weight: bold;
+		}
+
+		.cm-twig-variable {
+			color: #6f42c1;
+			font-weight: 500;
+		}
+
+		.cm-twig-filter {
+			color: #005cc5;
+		}
+
+		.cm-twig-function {
+			color: #e36209;
+			font-weight: 500;
+		}
+	}
+}
+
+/*
+   Future Dark Mode Colors (save for later):
+   Delimiters/Keywords: #f92672 (magenta)
+   Variables: #a6e22e (bright green)
+   Properties: #66d9ef (cyan)
+   Strings: #e6db74 (yellow)
+   Numbers: #ae81ff (purple)
+   Comments: #75715e (muted green)
+*/
+
+// HTML output editor styling
+.html-output-editor {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
+	margin-bottom: 1rem;
+
+	&.CodeMirror {
+		height: auto;
+		min-height: 200px;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+		font-size: 14px;
+		line-height: 1.5;
+		border: none;
+		border-radius: var(--totalform-radius);
+		background-color: oklch(var(--totalform-nearwhite));
+
+		.CodeMirror-scroll {
+			min-height: 200px;
+		}
+
+		.CodeMirror-placeholder {
+			color: oklch(var(--totalform-gray)) !important;
+			font-style: italic;
+		}
+
+		.CodeMirror-activeline-background {
+			background: oklch(var(--totalform-accent) / 0.1) !important;
+		}
+
+		.CodeMirror-selected {
+			background: oklch(var(--totalform-accent) / 0.2) !important;
+		}
+
+		.CodeMirror-focused .CodeMirror-selected {
+			background: oklch(var(--totalform-accent) / 0.3) !important;
+		}
+
+		.CodeMirror-gutters {
+			background-color: oklch(var(--totalform-nearwhite));
+			border-right: 1px solid oklch(var(--totalform-border-color));
+		}
+
+		.CodeMirror-linenumber {
+			color: oklch(var(--totalform-gray));
+			padding: 0 8px;
+		}
+
+		.CodeMirror-cursor {
+			border-left-color: oklch(var(--totalform-accent));
+		}
+
+		.cm-tag {
+			color: #569cd6; // HTML tags
+		}
+
+		.cm-attribute {
+			color: #9cdcfe; // HTML attributes
+		}
+
+		.cm-string {
+			color: #ce9178; // Attribute values
+		}
+	}
+}
+
+// Editor container with title and actions
+.editor-container {
+	margin-bottom: 2rem;
+
+	.editor-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.75rem 1rem;
+		background: oklch(var(--totalform-nearwhite));
+		border: 1px solid oklch(var(--totalform-border-color));
+		border-bottom: none;
+		border-top-left-radius: var(--totalform-radius);
+		border-top-right-radius: var(--totalform-radius);
+
+		.editor-title {
+			font-weight: 600;
+			color: oklch(var(--totalform-nearblack));
+			margin: 0;
+		}
+
+		.editor-actions {
+			display: flex;
+			gap: 0.5rem;
+
+			button {
+				padding: 0.25rem 0.5rem;
+				font-size: 0.875rem;
+				border: 1px solid oklch(var(--totalform-border-color));
+				border-radius: var(--totalform-radius);
+				background: oklch(var(--totalform-purewhite));
+				color: oklch(var(--totalform-nearblack));
+				cursor: pointer;
+				transition: all 0.2s ease;
+
+				&:hover {
+					background: oklch(var(--totalform-accent));
+					color: oklch(var(--totalform-purewhite));
+					border-color: oklch(var(--totalform-accent));
+				}
+
+				&:disabled {
+					opacity: 0.5;
+					cursor: not-allowed;
+
+					&:hover {
+						background: oklch(var(--totalform-purewhite));
+						color: oklch(var(--totalform-nearblack));
+						border-color: oklch(var(--totalform-border-color));
+					}
+				}
+			}
+		}
+	}
+
+	.totalcms-editor {
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
+		border-top: none;
+		margin-bottom: 0;
+	}
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+	.totalcms-editor .CodeMirror {
+		font-size: 13px;
+	}
+
+	.editor-container .editor-header {
+		flex-direction: column;
+		gap: 0.5rem;
+		align-items: flex-start;
+
+		.editor-actions {
+			align-self: stretch;
+			justify-content: flex-end;
+		}
+	}
+}
+
+// Documentation code blocks
+.documentation-code-block {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
+	margin-bottom: 1rem;
+	position: relative;
+	margin: 1rem 0;
+
+	.CodeMirror {
+		height: auto;
+		min-height: 200px;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+		font-size: 13px;
+		line-height: 1.5;
+		border: none;
+		border-radius: var(--totalform-radius);
+
+		.CodeMirror-scroll {
+			min-height: 200px;
+		}
+
+		.CodeMirror-placeholder {
+			color: oklch(var(--totalform-gray)) !important;
+			font-style: italic;
+		}
+
+		.CodeMirror-activeline-background {
+			background: oklch(var(--totalform-accent) / 0.1) !important;
+		}
+
+		.CodeMirror-selected {
+			background: oklch(var(--totalform-accent) / 0.2) !important;
+		}
+
+		.CodeMirror-focused .CodeMirror-selected {
+			background: oklch(var(--totalform-accent) / 0.3) !important;
+		}
+
+		.CodeMirror-gutters {
+			background-color: oklch(var(--totalform-nearwhite));
+			border-right: 1px solid oklch(var(--totalform-border-color));
+		}
+
+		.CodeMirror-linenumber {
+			color: oklch(var(--totalform-gray));
+			padding: 0 8px;
+		}
+
+		.CodeMirror-cursor {
+			border-left-color: oklch(var(--totalform-accent));
+		}
+	}
+
+	.code-language-label {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.75rem;
+		background: oklch(var(--totalform-darkgray));
+		color: oklch(var(--totalform-purewhite));
+		padding: 0.25rem 0.5rem;
+		border-radius: var(--totalform-radius);
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		z-index: 10;
+		pointer-events: none;
+	}
+}
+
+// Print styles
+@media print {
+	.totalcms-editor {
+		border: 1px solid #000;
+		border-radius: 0;
+		box-shadow: none;
+
+		.CodeMirror {
+			border-radius: 0;
+		}
+
+		.CodeMirror-gutters {
+			background: white;
+			border-right: 1px solid #000;
+		}
+
+		.editor-actions {
+			display: none;
+		}
+	}
+
+	.documentation-code-block .code-language-label {
+		display: none;
+	}
+}
+
+// StyledText (Froala) Code View Integration
+.fr-code-view {
+	.CodeMirror {
+		border: none;
+		border-radius: 0;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+		font-size: 14px;
+		line-height: 1.4;
+		height: auto;
+		min-height: 200px;
+
+		.CodeMirror-scroll {
+			min-height: 200px;
+		}
+
+		.CodeMirror-gutters {
+			background-color: oklch(var(--totalform-nearwhite));
+			border-right: 1px solid oklch(var(--totalform-border-color));
+		}
+
+		.CodeMirror-linenumber {
+			color: oklch(var(--totalform-gray));
+			padding: 0 8px;
+		}
+
+		.CodeMirror-cursor {
+			border-left-color: oklch(var(--totalform-accent));
+		}
+
+		.CodeMirror-selected {
+			background: oklch(var(--totalform-accent) / 0.2);
+		}
+
+		.CodeMirror-activeline-background {
+			background: oklch(var(--totalform-accent) / 0.1);
+		}
+
+		// HTML/XML syntax highlighting for StyledText
+		.cm-tag {
+			color: #e34c26; // HTML5 orange
+			font-weight: bold;
+		}
+
+		.cm-attribute {
+			color: #0066cc; // Blue for attributes
+		}
+
+		.cm-string {
+			color: #008000; // Green for strings
+		}
+
+		.cm-bracket {
+			color: #e34c26; // Match tag color
+		}
+
+		.cm-comment {
+			color: #999;
+			font-style: italic;
+		}
+
+		.cm-error {
+			color: #f00;
+		}
+
+		// Twig syntax highlighting when mixed in StyledText
+		&.cm-s-twig {
+			.cm-tag {
+				color: #f92672; // Magenta for Twig delimiters
+			}
+
+			.cm-variable {
+				color: #a6e22e; // Green for variables
+			}
+
+			.cm-variable-2 {
+				color: #66d9ef; // Cyan for properties
+			}
+
+			.cm-keyword {
+				color: #f92672; // Magenta for keywords
+			}
+
+			.cm-string {
+				color: #e6db74; // Yellow for strings
+			}
+
+			.cm-number {
+				color: #ae81ff; // Purple for numbers
+			}
+
+			.cm-comment {
+				color: #75715e; // Muted green for comments
+			}
+		}
+	}
+}
+
+// Froala editor integration adjustments
+.fr-element {
+	// When CodeMirror is active inside Froala
+	.CodeMirror {
+		background-color: oklch(var(--totalform-purewhite));
+		color: oklch(var(--totalform-nearblack));
+	}
+}

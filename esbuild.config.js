@@ -13,6 +13,7 @@ esbuild.build({
 		"javascript/filelinks.js",
 		"javascript/imageworks-builder.js",
 		"javascript/image-batcher.js",
+		"javascript/codemirror-bundle.js",
 		"javascript/totalcms.js",
 		"javascript/swagger.js",
 	],
@@ -68,6 +69,8 @@ esbuild.build({
             loadPaths: [
                 "node_modules/froala-editor/css/",
                 "node_modules/codemirror/lib/",
+                "node_modules/codemirror/theme/",
+                "node_modules/codemirror/addon/",
                 "node_modules/dropzone/src/",
 				// "node_modules/lightgallery/scss/",
 				"css/lightgallery/",

@@ -37,49 +37,12 @@
 	{% endif %}
 </section>
 
-<!-- CodeMirror CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/monokai.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldgutter.min.css">
-
-<!-- CodeMirror JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/twig/twig.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closebrackets.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/mode/multiplex.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldgutter.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/xml-fold.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closetag.min.js"></script>
-
-<!-- JS Beautifier for code formatting -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.9/beautify-html.min.js"></script>
+<!-- TotalCMS CodeMirror Bundle - Local Assets -->
+<link rel="stylesheet" href="{{ cms.api }}/assets/codemirror-totalcms.css">
+<script type="module" src="{{ cms.api }}/assets/codemirror-bundle.js"></script>
 
 <style>
-.editor-container {
-	margin-bottom: 1rem;
-}
-
-.editor-container .CodeMirror {
-	min-height : 200px;
-	border     : 1px solid #ddd;
-	font-size  : 14px;
-}
-
-.editor-container .CodeMirror-scroll {
-	overflow: visible !important;
-}
-
-.editor-container .CodeMirror-scrollbar-filler,
-.editor-container .CodeMirror-gutter-filler {
-	display: none;
-}
-
+/* Playground-specific styling */
 .playground-results {
 	margin-top: 2rem;
 }
@@ -90,7 +53,17 @@
 
 .result-section h3 {
 	margin-bottom: 0.5rem;
-	color: #333;
+	color: oklch(var(--totalform-nearblack));
+}
+
+/* Auto-resize functionality for editors */
+.editor-container .CodeMirror-scroll {
+	overflow: visible !important;
+}
+
+.editor-container .CodeMirror-scrollbar-filler,
+.editor-container .CodeMirror-gutter-filler {
+	display: none;
 }
 
 .html-output-editor .CodeMirror {
@@ -107,59 +80,53 @@
 	display: none;
 }
 
-/* Original syntax highlighting for Twig editor */
-.CodeMirror .cm-tag { color: #170; font-weight: bold; }
-.CodeMirror .cm-attribute { color: #00c; }
-.CodeMirror .cm-string { color: #a11; }
-.CodeMirror .cm-comment { color: #a70; }
-.CodeMirror .cm-keyword { color: #708; }
-.CodeMirror .cm-atom { color: #219; }
-.CodeMirror .cm-number { color: #164; }
-.CodeMirror .cm-bracket { color: #997; }
-.CodeMirror .cm-variable { color: #05a; }
-.CodeMirror .cm-variable-2 { color: #085; }
-.CodeMirror .cm-variable-3 { color: #085; }
-.CodeMirror .cm-property { color: #05a; }
-.CodeMirror .cm-operator { color: #a2a; }
-.CodeMirror .cm-meta { color: #555; }
-.CodeMirror .cm-qualifier { color: #555; }
-.CodeMirror .cm-builtin { color: #30a; }
-.CodeMirror .cm-link { color: #762; }
-
-/* Enhanced colors ONLY for HTML output editor */
-.html-output-editor .cm-tag { color: #e34c26; font-weight: bold; } /* HTML5 orange */
-.html-output-editor .cm-attribute { color: #0066cc; }
-.html-output-editor .cm-string { color: #008000; } /* Bright green */
-.html-output-editor .cm-bracket { color: #e34c26; } /* Match tag color */
-.html-output-editor .cm-comment { color: #999; font-style: italic; }
-.html-output-editor .cm-error { color: #f00; }
-
 .rendered-output {
-	border: 1px solid #ddd;
+	border: 1px solid oklch(var(--totalform-border-color));
 	padding: 1rem;
-	background-color: #fff;
-	border-radius: 4px;
+	background-color: oklch(var(--totalform-purewhite));
+	border-radius: var(--totalform-radius);
 }
+
+/* These classes are applied automatically by the JavaScript */
 </style>
 
-<script>
+<script type="module">
+// Wait for TotalCMSCodeMirror to be available
 document.addEventListener('DOMContentLoaded', function() {
+	// Small delay to ensure the module is loaded
+	setTimeout(initializeTwigPlayground, 100);
+});
+
+function initializeTwigPlayground() {
+	if (!window.TotalCMSCodeMirror) {
+		console.warn('TotalCMSCodeMirror not loaded yet, retrying...');
+		setTimeout(initializeTwigPlayground, 100);
+		return;
+	}
+
 	const textarea = document.getElementById('twig-editor');
 	const localStorageKey = 'twig-playground-code';
+	const form = document.getElementById('twig-playground');
 
-	// Initialize CodeMirror
-	const editor = CodeMirror.fromTextArea(textarea, {
-		mode: 'twig',
-		theme: 'default',
-		lineNumbers: true,
-		lineWrapping: true,
-		autoCloseBrackets: true,
-		matchBrackets: true,
+	// Create Twig editor using our new API
+	const editor = TotalCMSCodeMirror.createTwigEditor(textarea, {
+		theme: 'elegant',
+		autofocus: true,
+		viewportMargin: Infinity, // Auto-expand
 		indentUnit: 2,
 		tabSize: 2,
-		autofocus: true,
-		viewportMargin: Infinity // This makes it auto-expand
+		extraKeys: {
+			'Ctrl-Enter': function() {
+				form.requestSubmit();
+			},
+			'Cmd-Enter': function() {
+				form.requestSubmit();
+			}
+		}
 	});
+
+	// Add the twig-editor class to the CodeMirror wrapper for custom styling
+	editor.getWrapperElement().classList.add('twig-editor');
 
 	// Function to resize editor to content
 	function resizeEditor() {
@@ -178,92 +145,62 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 
 	// Load saved content from localStorage
-	const savedContent = localStorage.getItem(localStorageKey);
+	const savedContent = TotalCMSCodeMirror.loadFromStorage(localStorageKey);
 	if (savedContent && !textarea.value) {
 		editor.setValue(savedContent);
 	}
 
 	// Save content to localStorage on change
 	editor.on('change', function() {
-		localStorage.setItem(localStorageKey, editor.getValue());
+		TotalCMSCodeMirror.saveToStorage(localStorageKey, editor.getValue());
 	});
 
 	// Update the textarea before form submission
-	const form = document.getElementById('twig-playground');
 	form.addEventListener('submit', function() {
 		textarea.value = editor.getValue();
 	});
 
-	// Optional: Add keyboard shortcut for running (Ctrl/Cmd + Enter)
-	editor.setOption('extraKeys', {
-		'Ctrl-Enter': function() {
-			form.requestSubmit();
-		},
-		'Cmd-Enter': function() {
-			form.requestSubmit();
-		}
-	});
-
 	// Initialize HTML output editor if results exist
 	const htmlOutput = document.getElementById('html-output');
-	if (htmlOutput) {
-		// Format the HTML
-		const formattedHtml = html_beautify(htmlOutput.value, {
-			indent_size: 2,
-			indent_char: ' ',
-			max_preserve_newlines: 1,
-			preserve_newlines: true,
-			indent_inner_html: true,
-			wrap_line_length: 80,
-			wrap_attributes: 'auto',
-			unformatted: ['code', 'pre', 'script', 'style']
-		});
+	if (htmlOutput && htmlOutput.value.trim()) {
+		// Format the HTML using our bundled beautifier
+		const formattedHtml = TotalCMSCodeMirror.formatHtml(htmlOutput.value);
 
-		// Replace the textarea with a div for manual highlighting
+		// Replace the textarea with a div for the editor
 		const outputContainer = document.createElement('div');
 		outputContainer.className = 'html-output-container';
 		htmlOutput.parentElement.replaceChild(outputContainer, htmlOutput);
 
-		// Debug: Check if xml mode is available
-		console.log('Available CodeMirror modes:', CodeMirror.modes);
-		console.log('XML mode loaded:', 'xml' in CodeMirror.modes);
-
-		// Create CodeMirror directly on the div
-		const outputEditor = CodeMirror(outputContainer, {
+		// Create HTML output editor using our new API
+		const outputEditor = window.CodeMirror(outputContainer, {
 			value: formattedHtml,
-			mode: {name: "xml", htmlMode: true},
-			theme: 'default',
+			mode: 'htmlmixed',
+			theme: 'elegant',
 			lineNumbers: true,
 			lineWrapping: true,
 			readOnly: true,
 			foldGutter: true,
 			gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
 			matchBrackets: true,
-			matchTags: {bothTags: true},
 			autoCloseTags: true
 		});
 
-		// Add custom class and size
+		// Add custom classes
 		outputContainer.classList.add('html-output-editor');
+		outputEditor.getWrapperElement().classList.add('html-output-editor');
 
 		// Set height to content height to avoid scrollbars
 		const lineHeight = outputEditor.defaultTextHeight();
 		const lineCount = outputEditor.lineCount();
-		const totalHeight = (lineCount * lineHeight) + 40; // Add some padding
+		const totalHeight = Math.max((lineCount * lineHeight) + 40, 200); // Minimum height
 
 		outputEditor.setSize(null, totalHeight);
 
 		// Force refresh after a moment
 		setTimeout(() => {
 			outputEditor.refresh();
-
-			// If still no highlighting, try setting mode again
-			if (!outputEditor.getMode().name || outputEditor.getMode().name === 'null') {
-				console.warn('HTML highlighting failed, trying alternative approach');
-				outputEditor.setOption('mode', 'text/html');
-			}
 		}, 100);
 	}
-});
+}
 </script>
 

@@ -162,7 +162,10 @@ bin/codecount.sh
 ## Frontend JavaScript
 - **TotalForm System**: Modular form system in `/javascript/totalform/` with field-specific components
 - **Choices.js**: Enhanced select/multiselect fields with custom initialization
-- **CodeMirror**: Syntax highlighting for Twig playground with localStorage persistence
+- **CodeMirror Bundle**: Complete local syntax highlighting solution with Twig, HTML, CSS, JS, PHP, Markdown support
+- **TotalCMSCodeMirror**: Custom API for creating editors with light theme (elegant) matching dashboard design
+- **Syntax Highlighting**: GitHub-inspired light theme colors, dark theme saved for future dark mode
+- **Documentation Highlighting**: Auto-syntax highlighting for code blocks in documentation
 
 ## Performance & Caching
 
