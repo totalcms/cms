@@ -59,9 +59,9 @@ fi
 
 print_success "All prerequisites are installed"
 
-# Get current version from version file
-if [ -f "version" ]; then
-    CURRENT_VERSION=$(head -n 1 version | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*$/\1/')
+# Get current version from version.txt file
+if [ -f "version.txt" ]; then
+    CURRENT_VERSION=$(head -n 1 version.txt | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*$/\1/')
 else
     CURRENT_VERSION="unknown"
 fi
@@ -157,9 +157,9 @@ if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     print_info "Updating version to $NEW_VERSION..."
     # Get current git commit hash
     GIT_HASH=$(git rev-parse --short HEAD)
-    # Update version in version file
-    echo "$NEW_VERSION ($GIT_HASH)" > version
-	cp version dist
+    # Update version in version.txt file
+    echo "$NEW_VERSION ($GIT_HASH)" > version.txt
+	cp version.txt dist/version
     print_success "Version updated to $NEW_VERSION ($GIT_HASH)"
 fi
 

@@ -943,7 +943,7 @@ d8bd02f4fb1d2c3a60ddc4b3c090a8442f37390c9c0ca4540c785925f6f231a9  ./dist/vendor/
 ddff4514eae526004566ea1a52951b2248e7740fe9cf7941a8b7b4d1e19e4c3f  ./dist/vendor/composer/autoload_real.php
 eb4929baf229033b37c443ae0c381d92349e556e69f6db7bac9abe80efa23e92  ./dist/vendor/composer/autoload_files.php
 21f4ba19e7859cb3f85b8b1680c970ee25d972546c1606dcae0e7e5f43f626f0  ./dist/vendor/composer/InstalledVersions.php
-14b3bd265939d99b670469ae498f759825afcb651da4131e30f9154d060cf302  ./dist/vendor/composer/installed.php
+4bac88d9fa4cdf5f03f5ed4567e722bce726aea5261ac7e1c76fd4c1e8643e97  ./dist/vendor/composer/installed.php
 cc8ce77a73e0aeb29f86967661c4e09f662998ab0af6c7bb6094c347216625e8  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelper.php
 986cfaff3ec755cfe7e933534d98f387a62d32d41a065262c1d12a02526ef7b6  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/Module.php
 35925311f8f49dd55f750dbf87481d928315a26cc10950aac2dde65763b60a02  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelperFactory.php
