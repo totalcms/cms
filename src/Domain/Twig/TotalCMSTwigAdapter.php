@@ -35,7 +35,6 @@ use TotalCMS\Utils\ServerChecker;
  * @SuppressWarnings("PHPMD.ExcessiveParameterList")
  * @SuppressWarnings("PHPMD.ExcessivePublicCount")
  * @SuppressWarnings("PHPMD.ExcessiveClassLength")
- *
  */
 final class TotalCMSTwigAdapter
 {

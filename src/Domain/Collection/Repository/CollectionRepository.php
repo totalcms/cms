@@ -47,6 +47,7 @@ final class CollectionRepository extends StorageRepository
 	 * List all Collections.
 	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @return array<CollectionData>
 	 */
 	public function listAllCollections(): array

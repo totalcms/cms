@@ -29,12 +29,12 @@ final class CacheReporter
 	public function getUsageStats(): array
 	{
 		return [
-			'redis_available'     => $this->redisService->isAvailable(),
-			'memcached_available' => $this->memcachedService->isAvailable(),
+			'redis_available'      => $this->redisService->isAvailable(),
+			'memcached_available'  => $this->memcachedService->isAvailable(),
 			'filesystem_available' => $this->filesystemService->isAvailable(),
-			'opcache_available'   => $this->opcacheService->isAvailable(),
-			'preferred_backend'   => $this->getPreferredBackend(),
-			'cache_directory'     => $this->filesystemService->getCachDir(),
+			'opcache_available'    => $this->opcacheService->isAvailable(),
+			'preferred_backend'    => $this->getPreferredBackend(),
+			'cache_directory'      => $this->filesystemService->getCachDir(),
 		];
 	}
 
@@ -46,7 +46,7 @@ final class CacheReporter
 	public function getStrategicRecommendations(): array
 	{
 		$recommendations = [];
-		$services = [
+		$services        = [
 			'redis'      => $this->redisService->isAvailable(),
 			'memcached'  => $this->memcachedService->isAvailable(),
 			'filesystem' => $this->filesystemService->isAvailable(),
@@ -191,7 +191,7 @@ final class CacheReporter
 	 */
 	private function getRecommendedStrategy(): string
 	{
-		$hasMemory = $this->redisService->isAvailable() || $this->memcachedService->isAvailable();
+		$hasMemory     = $this->redisService->isAvailable() || $this->memcachedService->isAvailable();
 		$hasFilesystem = $this->filesystemService->isAvailable();
 
 		if ($hasMemory && $hasFilesystem) {

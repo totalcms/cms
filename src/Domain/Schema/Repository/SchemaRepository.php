@@ -105,6 +105,7 @@ final class SchemaRepository extends StorageRepository
 	 * List reserved Schema IDs.
 	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @return array<string>
 	 */
 	public function reservedSchemasIds(): array
@@ -307,6 +308,7 @@ final class SchemaRepository extends StorageRepository
 	 * Convert cached schema arrays back to SchemaData objects.
 	 *
 	 * @param array<array<string,mixed>> $cachedSchemas
+	 *
 	 * @return array<SchemaData>
 	 */
 	private function hydrateSchemasFromCache(array $cachedSchemas): array
@@ -319,6 +321,7 @@ final class SchemaRepository extends StorageRepository
 				// Skip invalid cached schema, will be refreshed from source
 			}
 		}
+
 		return $schemas;
 	}
 }

@@ -26,6 +26,7 @@ final class FirstLoginChecker
 		try {
 			$this->collectionFetcher->fetchCollection($this->collection);
 			$index = $this->indexReader->fetchIndex($this->collection);
+
 			return $index->objects->isEmpty();
 		} catch (\Exception $e) {
 			// If collection doesn't exist and can't be created, it's a new installation

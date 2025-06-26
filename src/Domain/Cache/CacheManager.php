@@ -14,11 +14,11 @@ use TotalCMS\Domain\Cache\Service\RedisService;
 final class CacheManager
 {
 	// Cache key prefixes
-	public const PREFIX_COMPUTED = 'computed';
-	public const PREFIX_COLLECTION = 'collection';
+	public const PREFIX_COMPUTED     = 'computed';
+	public const PREFIX_COLLECTION   = 'collection';
 	public const PREFIX_API_RESPONSE = 'api_response';
-	public const PREFIX_SESSION = 'session';
-	public const PREFIX_TEMPLATE = 'template';
+	public const PREFIX_SESSION      = 'session';
+	public const PREFIX_TEMPLATE     = 'template';
 
 	// Array of all cache types for clearByType functionality
 	public const CACHE_TYPES = [
@@ -30,16 +30,16 @@ final class CacheManager
 	];
 
 	// Cache TTL constants for different data types
-	public const DEFAULT_TTL = 3600;              // 1 hour - default TTL for most data
-	public const TTL_COLLECTIONS_LIST = 900;      // 15 minutes - collections don't change often
-	public const TTL_INDEX_DATA = 1800;           // 30 minutes - indexes change when objects are added/removed
-	public const TTL_OBJECT_IDS = 900;            // 15 minutes - changes when objects are added/removed
-	public const TTL_OBJECT_DATA = 3600;          // 1 hour - individual objects change infrequently
-	public const TTL_RESERVED_SCHEMAS = 3600;     // 1 hour - reserved schemas never change
+	public const DEFAULT_TTL             = 3600;              // 1 hour - default TTL for most data
+	public const TTL_COLLECTIONS_LIST    = 900;      // 15 minutes - collections don't change often
+	public const TTL_INDEX_DATA          = 1800;           // 30 minutes - indexes change when objects are added/removed
+	public const TTL_OBJECT_IDS          = 900;            // 15 minutes - changes when objects are added/removed
+	public const TTL_OBJECT_DATA         = 3600;          // 1 hour - individual objects change infrequently
+	public const TTL_RESERVED_SCHEMAS    = 3600;     // 1 hour - reserved schemas never change
 	public const TTL_RESERVED_SCHEMA_IDS = 3600;  // 1 hour - reserved schema IDs never change
-	public const TTL_CUSTOM_SCHEMA = 7200;        // 2 hours - custom schemas change infrequently
-	public const TTL_API_RESPONSE = 900;          // 15 minutes - API responses can be cached briefly
-	public const TTL_SESSION_DATA = 1440;         // 24 minutes - session timeout buffer
+	public const TTL_CUSTOM_SCHEMA       = 7200;        // 2 hours - custom schemas change infrequently
+	public const TTL_API_RESPONSE        = 900;          // 15 minutes - API responses can be cached briefly
+	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer
 
 	private string $versionFile = '.cache_version';
 
@@ -71,6 +71,7 @@ final class CacheManager
 	public function storeCollectionIndex(string $collectionName, array $index, int $ttl = self::TTL_INDEX_DATA): bool
 	{
 		$key = self::PREFIX_COLLECTION . ":{$collectionName}";
+
 		return $this->storeData($key, $index, $ttl);
 	}
 
@@ -98,6 +99,7 @@ final class CacheManager
 	public function storeApiResponse(string $endpoint, array $params, mixed $response, int $ttl = self::TTL_API_RESPONSE): bool
 	{
 		$key = self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params));
+
 		return $this->storeData($key, $response, $ttl);
 	}
 
@@ -109,6 +111,7 @@ final class CacheManager
 	public function getApiResponse(string $endpoint, array $params): mixed
 	{
 		$key = self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params));
+
 		return $this->getData($key);
 	}
 
@@ -116,6 +119,7 @@ final class CacheManager
 	public function storeComputedData(string $key, mixed $data, int $ttl = self::TTL_CUSTOM_SCHEMA): bool
 	{
 		$cacheKey = self::PREFIX_COMPUTED . ":{$key}";
+
 		return $this->storeData($cacheKey, $data, $ttl);
 	}
 
@@ -183,9 +187,8 @@ final class CacheManager
 			$success &= $this->filesystemService->delete($key);
 		}
 
-		return (bool) $success;
+		return (bool)$success;
 	}
-
 
 	/**
 	 * Retrieve computed data with cache warming.
@@ -220,6 +223,7 @@ final class CacheManager
 	public function storeSessionData(string $sessionId, array $data, int $ttl = self::TTL_SESSION_DATA): bool
 	{
 		$key = self::PREFIX_SESSION . ":{$sessionId}";
+
 		return $this->storeData($key, $data, $ttl);
 	}
 
@@ -252,6 +256,7 @@ final class CacheManager
 	 * Clear all cache entries of a specific type.
 	 *
 	 * @param string $type Cache type prefix (use CACHE_TYPES constants)
+	 *
 	 * @return bool Success status
 	 */
 	public function clearByType(string $type): bool
@@ -279,7 +284,7 @@ final class CacheManager
 			$success &= $this->clearByPattern($this->filesystemService, $pattern);
 		}
 
-		return (bool) $success;
+		return (bool)$success;
 	}
 
 	/**
@@ -294,9 +299,6 @@ final class CacheManager
 		// TODO: Implement proper pattern-based clearing in each cache service
 		return $service->clear();
 	}
-
-
-
 
 	/**
 	 * Set a new cache version (invalidates all caches).
@@ -332,6 +334,4 @@ final class CacheManager
 
 		return $success;
 	}
-
-
 }
