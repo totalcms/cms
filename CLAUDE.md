@@ -176,3 +176,10 @@ bin/codecount.sh
 - **CollectionRefiner**: 30-70% improvement via reflection caching, optimized array operations, loose comparisons
 - **CollectionSorter**: 50-70% improvement via property value caching and rule pre-processing
 - **ServerChecker**: Enhanced with detailed extension info, OPcache detection improvements
+
+### Emergency Cache Management
+- **Automatic OPcache Clearing**: `DefaultErrorHandler` automatically clears OPcache on every error to prevent cached errors
+- **No-Cache Headers**: Error responses include `Cache-Control: no-cache` headers to prevent browser/proxy caching
+- **Emergency Endpoint**: `/emergency/cache/clear` provides public cache clearing when admin interface is inaccessible
+- **Customer-Friendly**: No authentication required - customers can clear caches from any location without server access
+- **Test Script**: `bin/test-emergency-cache.php` verifies emergency cache clearing functionality

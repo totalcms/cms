@@ -10,6 +10,7 @@ return function (App $app) {
 	(require __DIR__ . '/routes/assets.php')($app);
 	(require __DIR__ . '/routes/auth.php')($app);
 	(require __DIR__ . '/routes/cache.php')($app);
+	(require __DIR__ . '/routes/emergency.php')($app);
 	(require __DIR__ . '/routes/collections.php')($app);
 	(require __DIR__ . '/routes/docs.php')($app);
 	(require __DIR__ . '/routes/download.php')($app);
