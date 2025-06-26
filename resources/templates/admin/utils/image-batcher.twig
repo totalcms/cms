@@ -29,8 +29,6 @@
 		}
 		.wizard-actions {
 			margin-top: 2rem;
-			/* padding-top: 1rem; */
-			border-top: 1px solid oklch(var(--totalform-border-color));
 		}
 		.batch-preview {
 			display: grid;
@@ -259,18 +257,17 @@
 			<div class="batch-preview" id="batch-preview"></div>
 
 			<div class="wizard-actions">
-				<button type="button" id="restart-batch" class="button secondary" style="display: none;">Start New Batch</button>
-				<button type="button" id="download-all" class="button primary" style="display: none;">Download All Processed Images</button>
+				<button type="button" id="restart-batch" class="button dash-button" style="display: none;">Start New Batch</button>
 			</div>
 		</section>
 
 		<script>
 		// Store the batch processing data
 		window.batchData = {
-			collection: '{{ selectedCollection }}',
-			property: '{{ selectedProperty }}',
-			imageworksMacro: {{ imageworksMacro | json_encode | raw }},
-			apiUrl: '{{ cms.api }}'
+			collection : '{{ selectedCollection }}',
+			property   : '{{ selectedProperty }}',
+			example    : document.getElementById('macro-example').src,
+			apiUrl     : '{{ cms.api }}'
 		};
 		</script>
 		<script type="module" src="{{ cms.api }}/assets/image-batcher.js"></script>

@@ -44,14 +44,17 @@ class ImageBatcher {
 		try {
 			// Fetch collection data to get all items
 			const response = await fetch(`${this.batchData.apiUrl}/collections/${this.batchData.collection}/index`);
-			const collectionData = await response.json();
 
-			if (!collectionData.data) {
-				throw new Error('Failed to load collection data');
+			if (!response.ok) {
+				throw new Error(`Failed to fetch collection: ${response.statusText}`);
 			}
 
+			const responseData = await response.json();
+			console.log('API Response:', responseData); // Debug log
+			const collectionData = responseData.data.objects;
+
 			// Extract images from the collection based on property type
-			this.images = this.extractImages(collectionData.data);
+			this.images = this.extractImages(collectionData);
 
 			if (this.images.length === 0) {
 				this.updateProgress(100, 'No images found in this collection property.');
@@ -69,10 +72,25 @@ class ImageBatcher {
 	extractImages(collectionData) {
 		const images = [];
 
+		// Ensure collectionData is an array
+		if (!Array.isArray(collectionData)) {
+			console.error('Collection data is not an array:', collectionData);
+			return images;
+		}
+
 		for (const object of collectionData) {
+			// Skip if object doesn't have an id
+			if (!object || !object.id) {
+				console.warn('Skipping object without id:', object);
+				continue;
+			}
+
 			const propertyValue = object[this.batchData.property];
 
-			if (!propertyValue) continue;
+			if (!propertyValue) {
+				console.log(`No ${this.batchData.property} property found in object ${object.id}`);
+				continue;
+			}
 
 			// Handle different property types
 			if (Array.isArray(propertyValue)) {
@@ -97,7 +115,7 @@ class ImageBatcher {
 				// Styled text or other string property containing images
 				// We would need to parse the content to find image references
 				// For now, skip styled text processing
-				console.log('Styled text processing not yet implemented');
+				console.log(`Styled text processing not yet implemented for object ${object.id}`);
 			}
 		}
 
@@ -134,8 +152,6 @@ class ImageBatcher {
 			container.className = 'batch-item';
 			container.innerHTML = `
 				<div class="loading">Processing...</div>
-				<h4>${image.name}</h4>
-				<p>Collection: ${image.id}</p>
 			`;
 			container.id = `batch-item-${i}`;
 			this.batchPreview.appendChild(container);
@@ -158,8 +174,6 @@ class ImageBatcher {
 			if (container) {
 				container.innerHTML = `
 					<img src="${imageUrl}" alt="${image.name}" loading="lazy">
-					<h4>${image.name}</h4>
-					<p>Collection: ${image.id}</p>
 					<small>✓ Processed</small>
 				`;
 			}
@@ -180,8 +194,6 @@ class ImageBatcher {
 			if (container) {
 				container.innerHTML = `
 					<div class="error">Failed to process</div>
-					<h4>${image.name}</h4>
-					<p>Collection: ${image.id}</p>
 					<small>❌ Error: ${error.message}</small>
 				`;
 			}
@@ -189,10 +201,23 @@ class ImageBatcher {
 	}
 
 	generateImageUrl(image) {
-		const baseUrl = `${this.batchData.apiUrl}/image/${image.id}/${this.batchData.property}`;
+		// Parse the example URL to extract ImageWorks parameters
+		const exampleUrl = new URL(this.batchData.example);
+		const imageworksParams = new URLSearchParams(exampleUrl.search);
+
+		const extension = imageworksParams.get('fm') || image.name.split('.').pop();
+
+		// Build the base URL for this specific image
+		const baseUrl = `${this.batchData.apiUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}.${extension}`;
 		const params = new URLSearchParams();
 
-		// Add collection parameter
+		// First, copy ALL ImageWorks parameters from the example URL
+		// These are the processing parameters (w, h, fit, q, fm, etc.)
+		for (const [key, value] of imageworksParams) {
+			params.set(key, value);
+		}
+
+		// Then override/add the specific parameters for this image
 		params.set('collection', this.batchData.collection);
 
 		// If it's a gallery image, add the name parameter
@@ -200,50 +225,7 @@ class ImageBatcher {
 			params.set('name', image.name);
 		}
 
-		// Extract ImageWorks parameters from the macro
-		const imageworksParams = this.extractParametersFromMacro(this.batchData.imageworksMacro);
-		
-		// Add all ImageWorks parameters
-		for (const [key, value] of Object.entries(imageworksParams)) {
-			if (value !== null && value !== undefined && value !== '') {
-				params.set(key, value);
-			}
-		}
-
 		return `${baseUrl}?${params.toString()}`;
-	}
-
-	extractParametersFromMacro(macro) {
-		const params = {};
-		
-		if (!macro) return params;
-
-		try {
-			// Extract the parameters object from the macro
-			// Look for patterns like {w:600, h:400, fm:'jpg'} or {w:600,h:400,fm:'jpg'}
-			const paramMatch = macro.match(/\{([^}]+)\}/);
-			
-			if (paramMatch) {
-				const paramString = paramMatch[1];
-				
-				// Split by commas and parse each parameter
-				const paramPairs = paramString.split(',');
-				
-				for (const pair of paramPairs) {
-					const [key, value] = pair.split(':').map(s => s.trim());
-					
-					if (key && value) {
-						// Remove quotes from string values
-						const cleanValue = value.replace(/^['"]|['"]$/g, '');
-						params[key] = cleanValue;
-					}
-				}
-			}
-		} catch (error) {
-			console.error('Error parsing ImageWorks macro:', error);
-		}
-
-		return params;
 	}
 
 	updateProgress(percent, text) {
