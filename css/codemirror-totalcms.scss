@@ -29,7 +29,6 @@
 	&.CodeMirror {
 		height        : auto;
 		min-height    : 200px;
-		font-family   : 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		font-size     : 14px;
 		line-height   : 1.5;
 		border        : none;
@@ -599,7 +598,7 @@
 		// Twig delimiters {{ }} {% %} {# #}
 		.cm-tag {
 			color: var(--twig-delimiter);
-			font-weight: bold;
+			font-weight: 600;
 		}
 
 		// Twig variables and properties
@@ -627,7 +626,7 @@
 		// Twig keywords (if, for, set, etc.)
 		.cm-keyword {
 			color: var(--twig-keyword);
-			font-weight: bold;
+			font-weight: 600;
 		}
 
 		// Twig filters and functions
@@ -679,7 +678,7 @@
 		// Special Twig-specific enhancements
 		.cm-twig-delimiter {
 			color: var(--twig-delimiter);
-			font-weight: bold;
+			font-weight: 600;
 		}
 
 		.cm-twig-variable {
@@ -997,7 +996,7 @@
 		// HTML/XML syntax highlighting for StyledText
 		.cm-tag {
 			color: #e34c26; // HTML5 orange
-			font-weight: bold;
+			font-weight: 600;
 		}
 
 		.cm-attribute {
@@ -1061,4 +1060,12 @@
 		background-color: oklch(var(--totalform-purewhite));
 		color: oklch(var(--totalform-nearblack));
 	}
+}
+
+.fr-code-view .CodeMirror, .CodeMirror {
+	font-family : 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.fr-code-view .CodeMirror .cm-tag {
+	font-weight: 600;
 }

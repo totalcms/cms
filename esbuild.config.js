@@ -45,6 +45,7 @@ esbuild.build({
     outdir      : 'public/assets',
     external    : [
 		"gallery/*",
+		"fonts/*",
     ],
 	loader: {
 		".woff2" : "file",
