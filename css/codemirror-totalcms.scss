@@ -143,7 +143,28 @@
 	--twig-error-color: #C82829;
 }
 
-// Theme 1: GitHub Light (Default)
+// Theme 1: CodeMirror Default (available as optional theme)
+.twig-theme-codemirror-default {
+	--twig-delimiter: #170; // cm-tag - dark green for delimiters
+	--twig-variable: inherit; // cm-variable - default text color (black)
+	--twig-variable-2: #05a; // cm-variable-2 - blue for object properties
+	--twig-variable-3: #085; // cm-variable-3 - dark green for special vars
+	--twig-string: #a11; // cm-string - dark red for strings
+	--twig-number: #164; // cm-number - dark blue for numbers
+	--twig-keyword: #708; // cm-keyword - purple for keywords
+	--twig-builtin: #30a; // cm-builtin - blue for built-in functions
+	--twig-atom: #219; // cm-atom - blue for atoms (true, false, null)
+	--twig-operator: inherit; // cm-operator - default text color
+	--twig-bracket: #997; // cm-bracket - brown for brackets
+	--twig-comment: #a50; // cm-comment - orange for comments
+	--twig-property: inherit; // cm-property - default text color
+	--twig-meta: #555; // cm-meta - gray for meta
+	--twig-qualifier: #555; // cm-qualifier - gray for qualifiers
+	--twig-error-bg: #ffebee;
+	--twig-error-color: #f00;
+}
+
+// Theme 2: GitHub Light
 .twig-theme-github {
 	--twig-delimiter: #d73a49;
 	--twig-variable: #6f42c1;
