@@ -152,7 +152,16 @@ else
     fi
 fi
 
-# Update version if changed
+print_info "Installing PHP dependencies for release..."
+composer install --no-dev --optimize-autoloader
+print_success "PHP dependencies installed"
+
+# Build assets
+print_info "Building production assets..."
+composer run build
+print_success "Assets built"
+
+# Update version if changed (after build to prevent overwriting)
 print_info "Comparing versions: '$NEW_VERSION' vs '$CURRENT_VERSION'"
 if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     print_info "Updating version to $NEW_VERSION..."
@@ -165,15 +174,6 @@ if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
 else
     print_info "Version unchanged ($CURRENT_VERSION)"
 fi
-
-print_info "Installing PHP dependencies for release..."
-composer install --no-dev --optimize-autoloader
-print_success "PHP dependencies installed"
-
-# Build assets
-print_info "Building production assets..."
-composer run build
-print_success "Assets built"
 
 # Dump autoloader for production
 print_info "Optimizing composer autoloader..."

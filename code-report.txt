@@ -19,6 +19,6 @@ Code Line Counts:
 	json    : 3858
 	twig    : 2784
 	html    : 1
-	sh      : 392
+	sh      : 395
 
-Total Lines of Code: 58257
+Total Lines of Code: 58260
