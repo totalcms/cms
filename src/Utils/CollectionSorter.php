@@ -145,11 +145,13 @@ class CollectionSorter
 	private function extractPropertyValues(array $rules): void
 	{
 		foreach ($rules as $rule) {
-			$property                       = $rule['property'];
+			$property = (string)$rule['property'];
+
 			$this->propertyCache[$property] = [];
 
 			foreach ($this->collection as $item) {
-				$itemId                                  = $this->getItemId($item);
+				$itemId = $this->getItemId($item);
+
 				$this->propertyCache[$property][$itemId] = CollectionRefiner::getPropertyValueForRecord($item, $property);
 			}
 		}
