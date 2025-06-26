@@ -106,6 +106,28 @@ print_success "JavaScript dependencies installed"
 # Run quality checks
 print_info "Running quality checks..."
 
+print_info "Running code style fixer..."
+if composer run cs:fix; then
+    print_success "Code style fixed"
+    
+    # Check if cs:fix made any changes
+    if [ -n "$(git status --porcelain)" ]; then
+        print_warning "Code style fixer made changes:"
+        git status --short
+        read -p "Do you want to commit these changes? (Y/n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+            git add .
+            git commit -m "Fix code style for release preparation"
+            print_success "Code style changes committed"
+        else
+            print_warning "Code style changes not committed - they will be included in release"
+        fi
+    fi
+else
+    print_warning "Code style fixer had issues"
+fi
+
 print_info "Running PHPStan..."
 if composer run stan; then
     print_success "PHPStan passed"
