@@ -41,15 +41,21 @@ final class FroalaUploadFileAction
 
 		// Validate uploaded file security
 		$validation = $this->validator->validateFile($file, $type);
-		if (!$validation['valid']) {
-			return $this->renderer->json($response, [
-				'error'   => 'File upload validation failed',
-				'details' => $validation['errors'],
-			], 400);
-		}
-
+		
 		// Use sanitized filename
 		$sanitizedFilename = $validation['sanitized_filename'];
+		
+		// Filter out filename safety errors - we'll use the sanitized version
+		$criticalErrors = array_filter($validation['errors'], function($error) {
+			return $error !== 'Filename contains unsafe characters';
+		});
+		
+		if (!empty($criticalErrors)) {
+			return $this->renderer->json($response, [
+				'error'   => 'File upload validation failed',
+				'details' => $criticalErrors,
+			], 400);
+		}
 
 		// Ensure temp directory exists with secure permissions
 		if (!file_exists($this->config->tmpdir)) {
