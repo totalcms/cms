@@ -15,6 +15,17 @@ final class CacheManager
 {
 	private const NO_CACHE = 'dev-no-cache';
 
+	// Cache TTL constants for different data types
+	public const TTL_COLLECTIONS_LIST = 900;      // 15 minutes - collections don't change often
+	public const TTL_INDEX_DATA = 1800;           // 30 minutes - indexes change when objects are added/removed
+	public const TTL_OBJECT_IDS = 900;            // 15 minutes - changes when objects are added/removed
+	public const TTL_OBJECT_DATA = 3600;          // 1 hour - individual objects change infrequently
+	public const TTL_RESERVED_SCHEMAS = 3600;     // 1 hour - reserved schemas never change
+	public const TTL_RESERVED_SCHEMA_IDS = 3600;  // 1 hour - reserved schema IDs never change
+	public const TTL_CUSTOM_SCHEMA = 7200;        // 2 hours - custom schemas change infrequently
+	public const TTL_API_RESPONSE = 900;          // 15 minutes - API responses can be cached briefly
+	public const TTL_SESSION_DATA = 1440;         // 24 minutes - session timeout buffer
+
 	/** @var string Current cache version for invalidation */
 	private string $cacheVersion;
 	private string $versionFile = '.cache_version';
@@ -45,7 +56,7 @@ final class CacheManager
 	 *
 	 * @param array<string,mixed> $index
 	 */
-	public function storeCollectionIndex(string $collectionName, array $index, int $ttl = 3600): bool
+	public function storeCollectionIndex(string $collectionName, array $index, int $ttl = self::TTL_INDEX_DATA): bool
 	{
 		$key = "collection_index:{$collectionName}";
 
@@ -95,7 +106,7 @@ final class CacheManager
 			if ($result !== null) {
 				// Populate Redis with the data for next time
 				if ($this->redisService->isAvailable()) {
-					$this->redisService->set($key, $result, 3600);
+					$this->redisService->set($key, $result, self::TTL_INDEX_DATA);
 				}
 
 				return $result;
@@ -108,9 +119,9 @@ final class CacheManager
 			if ($result !== null) {
 				// Populate memory caches for next time
 				if ($this->redisService->isAvailable()) {
-					$this->redisService->set($key, $result, 3600);
+					$this->redisService->set($key, $result, self::TTL_INDEX_DATA);
 				} elseif ($this->memcachedService->isAvailable()) {
-					$this->memcachedService->set($key, $result, 3600);
+					$this->memcachedService->set($key, $result, self::TTL_INDEX_DATA);
 				}
 
 				return $result;
@@ -126,7 +137,7 @@ final class CacheManager
 	 *
 	 * @param array<string,mixed> $params
 	 */
-	public function storeApiResponse(string $endpoint, array $params, mixed $response, int $ttl = 900): bool
+	public function storeApiResponse(string $endpoint, array $params, mixed $response, int $ttl = self::TTL_API_RESPONSE): bool
 	{
 		$key = 'api_response:' . md5($endpoint . serialize($params));
 
@@ -166,7 +177,7 @@ final class CacheManager
 	 * Store computed/expensive operations (can be large, longer TTL).
 	 * Priority: Redis > Memcached > Filesystem (avoids filesystem I/O when memory cache available).
 	 */
-	public function storeComputedData(string $key, mixed $data, int $ttl = 7200): bool
+	public function storeComputedData(string $key, mixed $data, int $ttl = self::TTL_CUSTOM_SCHEMA): bool
 	{
 		$cacheKey = "computed:{$key}";
 
@@ -215,9 +226,9 @@ final class CacheManager
 			if ($result !== null) {
 				// Warm memory caches
 				if ($this->redisService->isAvailable()) {
-					$this->redisService->set($cacheKey, $result, 1800);
+					$this->redisService->set($cacheKey, $result, self::TTL_INDEX_DATA);
 				} elseif ($this->memcachedService->isAvailable()) {
-					$this->memcachedService->set($cacheKey, $result, 1800);
+					$this->memcachedService->set($cacheKey, $result, self::TTL_INDEX_DATA);
 				}
 
 				return $result;
@@ -252,12 +263,36 @@ final class CacheManager
 	}
 
 	/**
+	 * Clear collection index cache from all backends.
+	 */
+	public function clearCollectionIndex(string $collectionName): bool
+	{
+		$key = "collection_index:{$collectionName}";
+		$success = true;
+
+		// Delete from all available cache backends
+		if ($this->redisService->isAvailable()) {
+			$success &= $this->redisService->delete($key);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$success &= $this->memcachedService->delete($key);
+		}
+
+		if ($this->filesystemService->isAvailable()) {
+			$success &= $this->filesystemService->delete($key);
+		}
+
+		return (bool) $success;
+	}
+
+	/**
 	 * Store session data (fast access, Redis preferred for distributed systems).
 	 * Priority: Redis > Memcached (Filesystem not suitable for sessions).
 	 *
 	 * @param array<string,mixed> $data
 	 */
-	public function storeSessionData(string $sessionId, array $data, int $ttl = 1440): bool
+	public function storeSessionData(string $sessionId, array $data, int $ttl = self::TTL_SESSION_DATA): bool
 	{
 		$key = "session:{$sessionId}";
 

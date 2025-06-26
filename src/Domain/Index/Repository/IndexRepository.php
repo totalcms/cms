@@ -64,7 +64,7 @@ final class IndexRepository extends StorageRepository
 				$this->cacheManager->clearComputedData($cacheKey);
 			} else {
 				// Cache non-empty indexes
-				$this->cacheManager->storeComputedData($cacheKey, $indexData->objects->toArray(), 1800);
+				$this->cacheManager->storeComputedData($cacheKey, $indexData->objects->toArray(), CacheManager::TTL_INDEX_DATA);
 			}
 		}
 
@@ -103,7 +103,7 @@ final class IndexRepository extends StorageRepository
 			$this->cacheManager->clearComputedData($cacheKey);
 		} else {
 			// Cache object IDs for 15 minutes (changes when objects are added/removed)
-			$this->cacheManager->storeComputedData($cacheKey, $objectIds, 900);
+			$this->cacheManager->storeComputedData($cacheKey, $objectIds, CacheManager::TTL_OBJECT_IDS);
 		}
 
 		return $objectIds;

@@ -95,7 +95,7 @@ final class SchemaRepository extends StorageRepository
 		} else {
 			// Cache non-empty schemas
 			$schemasArray = array_map(fn ($schema) => $schema->toArray(), $schemas);
-			$this->cacheManager->storeComputedData($cacheKey, $schemasArray, 3600);
+			$this->cacheManager->storeComputedData($cacheKey, $schemasArray, CacheManager::TTL_RESERVED_SCHEMAS);
 		}
 
 		return $schemas;
@@ -139,7 +139,7 @@ final class SchemaRepository extends StorageRepository
 			$this->cacheManager->clearComputedData($cacheKey);
 		} else {
 			// Cache non-empty filtered IDs
-			$this->cacheManager->storeComputedData($cacheKey, $filteredIds, 3600);
+			$this->cacheManager->storeComputedData($cacheKey, $filteredIds, CacheManager::TTL_RESERVED_SCHEMA_IDS);
 		}
 
 		return $filteredIds;
@@ -183,7 +183,7 @@ final class SchemaRepository extends StorageRepository
 		$schema = $this->factory->generateSchemaFromJson($contents);
 
 		// Cache default schema for 1 hour (they never change during runtime)
-		$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 3600);
+		$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
 
 		return $schema;
 	}
