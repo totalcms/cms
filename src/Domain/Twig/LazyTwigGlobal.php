@@ -9,10 +9,10 @@ namespace TotalCMS\Domain\Twig;
 final class LazyTwigGlobal
 {
 	private mixed $instance = null;
-	private bool $loaded = false;
+	private bool $loaded    = false;
 
 	public function __construct(
-		private \Closure $factory
+		private \Closure $factory,
 	) {
 	}
 
@@ -59,6 +59,7 @@ final class LazyTwigGlobal
 		if (method_exists($instance, '__toString')) {
 			return (string)$instance;
 		}
+
 		return get_class($instance) . '@' . spl_object_hash($instance);
 	}
 
@@ -69,7 +70,7 @@ final class LazyTwigGlobal
 	{
 		if (!$this->loaded) {
 			$this->instance = ($this->factory)();
-			$this->loaded = true;
+			$this->loaded   = true;
 		}
 
 		return $this->instance;

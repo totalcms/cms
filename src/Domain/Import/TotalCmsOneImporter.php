@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Import;
 
-use PhpParser\Node\Expr\PostDec;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
@@ -60,6 +59,7 @@ final class TotalCmsOneImporter
 		$blogPath = $this->cmsDataPath . '/blog';
 		if (!is_dir($blogPath)) {
 			$this->logger->info('No blog folder found, skipping blog import');
+
 			return;
 		}
 
@@ -101,8 +101,8 @@ final class TotalCmsOneImporter
 			if ($url) {
 				$collection = $this->collectionFetcher->fetchCollection($blogId);
 				if ($collection !== null) {
-					$collectionData = $collection->toArray();
-					$collectionData['url'] = $url;
+					$collectionData              = $collection->toArray();
+					$collectionData['url']       = $url;
 					$collectionData['prettyUrl'] = !str_contains($url, '?permalink=');
 
 					$updatedCollection = $this->collectionFactory->generateCollection($collectionData);
@@ -122,6 +122,7 @@ final class TotalCmsOneImporter
 			$postData = json_decode((string)file_get_contents($postFile), true);
 			if (!is_array($postData)) {
 				$this->logger->error(sprintf('Invalid blog post data in file: %s', $postFile));
+
 				return;
 			}
 
@@ -166,7 +167,6 @@ final class TotalCmsOneImporter
 			$this->jobQueuer->queueImport($collectionId, $postData);
 			$this->importCount++;
 			$this->logger->info(sprintf('Queued blog post import: %s/%s', $collectionId, $postData['id']));
-
 		} catch (\Exception $e) {
 			$this->logger->error(sprintf('Error importing blog post %s: %s', $postFile, $e->getMessage()));
 		}
@@ -177,6 +177,7 @@ final class TotalCmsOneImporter
 		$datePath = $this->cmsDataPath . '/date';
 		if (!is_dir($datePath)) {
 			$this->logger->info('No date folder found, skipping date import');
+
 			return;
 		}
 
@@ -192,7 +193,7 @@ final class TotalCmsOneImporter
 
 		foreach ($dateFiles as $dateFile) {
 			try {
-				$id = basename($dateFile, '.cms');
+				$id        = basename($dateFile, '.cms');
 				$timestamp = trim((string)file_get_contents($dateFile));
 
 				if (!is_numeric($timestamp)) {
@@ -202,13 +203,12 @@ final class TotalCmsOneImporter
 
 				$data = [
 					'id'   => $id,
-					'date' => date('c', (int)$timestamp)
+					'date' => date('c', (int)$timestamp),
 				];
 
 				$this->jobQueuer->queueImport('date', $data);
 				$this->importCount++;
 				$this->logger->info(sprintf('Queued date import: %s', $id));
-
 			} catch (\Exception $e) {
 				$this->logger->error(sprintf('Error importing date %s: %s', $dateFile, $e->getMessage()));
 			}
@@ -220,6 +220,7 @@ final class TotalCmsOneImporter
 		$depotPath = $this->cmsDataPath . '/depot';
 		if (!is_dir($depotPath)) {
 			$this->logger->info('No depot folder found, skipping depot import');
+
 			return;
 		}
 
@@ -238,7 +239,7 @@ final class TotalCmsOneImporter
 
 			$data = [
 				'id'    => $id,
-				'depot' => $depotDir
+				'depot' => $depotDir,
 			];
 
 			$this->jobQueuer->queueImport('depot', $data);
@@ -252,6 +253,7 @@ final class TotalCmsOneImporter
 		$feedPath = $this->cmsDataPath . '/feed';
 		if (!is_dir($feedPath)) {
 			$this->logger->info('No feed folder found, skipping feed import');
+
 			return;
 		}
 
@@ -277,13 +279,13 @@ final class TotalCmsOneImporter
 
 			foreach ($feedFiles as $feedFile) {
 				try {
-					$id = basename($feedFile, '.cms');
+					$id      = basename($feedFile, '.cms');
 					$content = file_get_contents($feedFile);
 
 					$data = [
 						'id'      => $id,
 						'title'   => $id,
-						'content' => $content
+						'content' => $content,
 					];
 
 					// Check for image
@@ -295,7 +297,6 @@ final class TotalCmsOneImporter
 					$this->jobQueuer->queueImport($feedId, $data);
 					$this->importCount++;
 					$this->logger->info(sprintf('Queued feed item import: %s/%s', $feedId, $id));
-
 				} catch (\Exception $e) {
 					$this->logger->error(sprintf('Error importing feed item %s: %s', $feedFile, $e->getMessage()));
 				}
@@ -308,6 +309,7 @@ final class TotalCmsOneImporter
 		$filePath = $this->cmsDataPath . '/file';
 		if (!is_dir($filePath)) {
 			$this->logger->info('No file folder found, skipping file import');
+
 			return;
 		}
 
@@ -327,7 +329,7 @@ final class TotalCmsOneImporter
 
 				$data = [
 					'id'   => $id,
-					'file' => $file
+					'file' => $file,
 				];
 
 				$this->jobQueuer->queueImport('file', $data);
@@ -342,6 +344,7 @@ final class TotalCmsOneImporter
 		$galleryPath = $this->cmsDataPath . '/gallery';
 		if (!is_dir($galleryPath)) {
 			$this->logger->info('No gallery folder found, skipping gallery import');
+
 			return;
 		}
 
@@ -365,7 +368,7 @@ final class TotalCmsOneImporter
 
 			$data = [
 				'id'      => $dirName,
-				'gallery' => $galleryDir
+				'gallery' => $galleryDir,
 			];
 
 			$this->jobQueuer->queueImport('gallery', $data);
@@ -379,6 +382,7 @@ final class TotalCmsOneImporter
 		$imagePath = $this->cmsDataPath . '/image';
 		if (!is_dir($imagePath)) {
 			$this->logger->info('No image folder found, skipping image import');
+
 			return;
 		}
 
@@ -403,7 +407,7 @@ final class TotalCmsOneImporter
 
 				$data = [
 					'id'    => $filename,
-					'image' => $image
+					'image' => $image,
 				];
 
 				$this->jobQueuer->queueImport('image', $data);
@@ -418,6 +422,7 @@ final class TotalCmsOneImporter
 		$textPath = $this->cmsDataPath . '/text';
 		if (!is_dir($textPath)) {
 			$this->logger->info('No text folder found, skipping text import');
+
 			return;
 		}
 
@@ -438,13 +443,12 @@ final class TotalCmsOneImporter
 
 				$data = [
 					'id'   => $id,
-					'text' => $content
+					'text' => $content,
 				];
 
 				$this->jobQueuer->queueImport('text', $data);
 				$this->importCount++;
 				$this->logger->info(sprintf('Queued text import: %s', $id));
-
 			} catch (\Exception $e) {
 				$this->logger->error(sprintf('Error importing text %s: %s', $textFile, $e->getMessage()));
 			}
@@ -456,6 +460,7 @@ final class TotalCmsOneImporter
 		$videoPath = $this->cmsDataPath . '/video';
 		if (!is_dir($videoPath)) {
 			$this->logger->info('No video folder found, skipping video import');
+
 			return;
 		}
 
@@ -476,13 +481,12 @@ final class TotalCmsOneImporter
 
 				$data = [
 					'id'  => $id,
-					'url' => $url
+					'url' => $url,
 				];
 
 				$this->jobQueuer->queueImport('url', $data);
 				$this->importCount++;
 				$this->logger->info(sprintf('Queued video/url import: %s', $id));
-
 			} catch (\Exception $e) {
 				$this->logger->error(sprintf('Error importing video %s: %s', $videoFile, $e->getMessage()));
 			}
@@ -495,7 +499,7 @@ final class TotalCmsOneImporter
 			$collectionData = [
 				'id'     => $id,
 				'schema' => $schema,
-				'name'   => $name
+				'name'   => $name,
 			];
 
 			$collection = $this->collectionFactory->generateCollection($collectionData);

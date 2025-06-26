@@ -60,9 +60,9 @@ final class AdminUtilsAction
 				'params' => $args,
 				'page'   => 'utils',
 			],
-			'results' => $results,
+			'results'                => $results,
 			'totalcms1DetectionData' => $totalcms1DetectionData,
-			'postData' => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
+			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
 
@@ -70,24 +70,24 @@ final class AdminUtilsAction
 	private function detectTotalCms1Data(): ?array
 	{
 		// Check production location first
-		$documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+		$documentRoot   = $_SERVER['DOCUMENT_ROOT'] ?? '';
 		$productionPath = $documentRoot . '/cms-data';
-		
+
 		if (is_dir($productionPath)) {
 			return [
-				'path' => $productionPath,
-				'source' => 'production'
+				'path'   => $productionPath,
+				'source' => 'production',
 			];
 		}
 
 		// Check test data location
 		$testPath = __DIR__ . '/../../../tests/test-data/cms-data';
 		$testPath = realpath($testPath);
-		
+
 		if ($testPath && is_dir($testPath)) {
 			return [
-				'path' => $testPath,
-				'source' => 'test'
+				'path'   => $testPath,
+				'source' => 'test',
 			];
 		}
 

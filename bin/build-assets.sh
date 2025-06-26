@@ -7,6 +7,7 @@
 echo "Building frontend assets..."
 yarn install
 node esbuild.config.js
+cp -r resources/fonts public/assets/fonts
 
 if [ $? -ne 0 ]; then
     echo "Failed to build frontend assets."

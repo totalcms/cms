@@ -2,10 +2,13 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Cache\CacheManager;
+
 final class SettingsSaver
 {
-	public function __construct()
-	{
+	public function __construct(
+		private CacheManager $cacheManager,
+	) {
 	}
 
 	/**
@@ -54,6 +57,9 @@ final class SettingsSaver
 
 		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
 		file_put_contents($configFile, $configContent);
+
+		// Clear all caches after settings are saved
+		$this->cacheManager->clearAllCaches();
 
 		return $returnSettings;
 	}

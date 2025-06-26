@@ -19,7 +19,9 @@
       "Bash(composer validate:*)",
       "Bash(./phpDocumentor.phar:*)",
       "Bash(composer:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(bin/code-report.sh:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": []
   }

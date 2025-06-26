@@ -65,6 +65,7 @@ final class JobManager
 
 	/**
 	 * @param int|null $limit
+	 *
 	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
 	 */
 	public function getPendingJobs(?int $limit = null): array
@@ -74,6 +75,7 @@ final class JobManager
 
 	/**
 	 * @param int|null $limit
+	 *
 	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
 	 */
 	public function getFailedJobs(?int $limit = null): array

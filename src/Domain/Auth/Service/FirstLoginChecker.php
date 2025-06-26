@@ -28,9 +28,6 @@ final class FirstLoginChecker
 		}
 
 		$index = $this->indexReader->fetchIndex($this->collection);
-		if ($index === null) {
-			return true;
-		}
 
 		return $index->objects->isEmpty();
 	}

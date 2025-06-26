@@ -26,13 +26,18 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
+use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Cache\Service\FilesystemService;
+use TotalCMS\Domain\Cache\Service\MemcachedService;
+use TotalCMS\Domain\Cache\Service\OPcacheService;
+use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
-use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
@@ -54,18 +59,13 @@ use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Twig\TwigEngine;
-use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Cache\Service\FilesystemService;
-use TotalCMS\Domain\Cache\Service\OPcacheService;
-use TotalCMS\Domain\Cache\Service\RedisService;
-use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Factory\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
-use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
+use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Utils\BarcodeGenerator;
 use TotalCMS\Utils\Cipher;
@@ -325,7 +325,7 @@ return [
 
 	TwigEngine::class => function (ContainerInterface $container) {
 		return new TwigEngine(
-			$container->get(Config::class), 
+			$container->get(Config::class),
 			$container->get(TotalCMSTwigExtension::class),
 			$container->get(CacheManager::class)
 		);

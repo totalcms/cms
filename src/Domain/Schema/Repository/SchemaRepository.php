@@ -31,7 +31,7 @@ final class SchemaRepository extends StorageRepository
 	public function __construct(StorageAdapterInterface $filesystem, SchemaFactory $factory, CacheManager $cacheManager)
 	{
 		parent::__construct($filesystem);
-		$this->factory = $factory;
+		$this->factory      = $factory;
 		$this->cacheManager = $cacheManager;
 	}
 
@@ -65,9 +65,9 @@ final class SchemaRepository extends StorageRepository
 	public function listReservedSchemas(): array
 	{
 		// Try cache first (reserved schemas never change during runtime)
-		$cacheKey = "reserved_schemas_list";
-		$cached = $this->cacheManager->getComputedData($cacheKey);
-		
+		$cacheKey = 'reserved_schemas_list';
+		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
 		if ($cached !== null && is_array($cached)) {
 			// Convert cached data back to SchemaData objects
 			$schemas = [];
@@ -97,7 +97,7 @@ final class SchemaRepository extends StorageRepository
 		}
 
 		// Cache the schemas as arrays for 1 hour (reserved schemas never change)
-		$schemasArray = array_map(fn($schema) => $schema->toArray(), $schemas);
+		$schemasArray = array_map(fn ($schema) => $schema->toArray(), $schemas);
 		$this->cacheManager->storeComputedData($cacheKey, $schemasArray, 3600);
 
 		return $schemas;
@@ -111,9 +111,9 @@ final class SchemaRepository extends StorageRepository
 	public function reservedSchemasIds(): array
 	{
 		// Try cache first (reserved schemas never change during runtime)
-		$cacheKey = "reserved_schema_ids";
-		$cached = $this->cacheManager->getComputedData($cacheKey);
-		
+		$cacheKey = 'reserved_schema_ids';
+		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
 		if ($cached !== null && is_array($cached)) {
 			return $cached;
 		}
@@ -151,8 +151,8 @@ final class SchemaRepository extends StorageRepository
 	{
 		// Try cache first (Redis preferred, long TTL since default schemas never change)
 		$cacheKey = "default_schema:{$id}";
-		$cached = $this->cacheManager->getComputedData($cacheKey);
-		
+		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
 		if ($cached !== null && is_array($cached)) {
 			try {
 				return $this->factory->generateSchema($cached);
@@ -176,7 +176,7 @@ final class SchemaRepository extends StorageRepository
 		}
 
 		$schema = $this->factory->generateSchemaFromJson($contents);
-		
+
 		// Cache default schema for 1 hour (they never change during runtime)
 		$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 3600);
 
@@ -194,8 +194,8 @@ final class SchemaRepository extends StorageRepository
 	{
 		// Try cache first (Redis preferred, medium TTL since custom schemas change rarely)
 		$cacheKey = "custom_schema:{$id}";
-		$cached = $this->cacheManager->getComputedData($cacheKey);
-		
+		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
 		if ($cached !== null && is_array($cached)) {
 			try {
 				return $this->factory->generateSchema($cached);
@@ -206,8 +206,8 @@ final class SchemaRepository extends StorageRepository
 
 		// Cache miss - load from filesystem
 		$schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
-		$schema = $this->fetchAndDeserialize($schemaFile, SchemaData::class);
-		
+		$schema     = $this->fetchAndDeserialize($schemaFile, SchemaData::class);
+
 		// Cache custom schema for 30 minutes (changes rarely but can be modified by users)
 		if ($schema !== null) {
 			$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 1800);

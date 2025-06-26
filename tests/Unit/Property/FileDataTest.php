@@ -4,10 +4,10 @@ namespace Tests\Unit\Property;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\ListData;
 use TotalCMS\Domain\Property\Data\PasswordData;
-use TotalCMS\Domain\Property\Data\DateData;
 
 #[CoversClass(FileData::class)]
 final class FileDataTest extends TestCase
@@ -15,16 +15,16 @@ final class FileDataTest extends TestCase
 	public function testCreatesFileDataWithAllProperties(): void
 	{
 		$fileData = [
-			'name' => 'document.pdf',
-			'download' => 'My Document.pdf',
-			'mime' => 'application/pdf',
-			'size' => 1024768,
-			'comments' => 'Important document',
-			'protected' => false,
-			'tags' => ['document', 'important'],
-			'password' => 'secret123',
+			'name'       => 'document.pdf',
+			'download'   => 'My Document.pdf',
+			'mime'       => 'application/pdf',
+			'size'       => 1024768,
+			'comments'   => 'Important document',
+			'protected'  => false,
+			'tags'       => ['document', 'important'],
+			'password'   => 'secret123',
 			'uploadDate' => '2023-01-15T10:30:00+00:00',
-			'count' => 5,
+			'count'      => 5,
 		];
 
 		$data = new FileData($fileData);
@@ -59,7 +59,7 @@ final class FileDataTest extends TestCase
 	public function testSetsDownloadNameSameAsFilenameWhenNotProvided(): void
 	{
 		$fileData = ['name' => 'test.txt'];
-		$data = new FileData($fileData);
+		$data     = new FileData($fileData);
 
 		$this->assertSame('test.txt', $data->name);
 		$this->assertSame('test.txt', $data->download);
@@ -128,18 +128,18 @@ final class FileDataTest extends TestCase
 	public function testTransformsToArrayCorrectly(): void
 	{
 		$fileData = [
-			'name' => 'test.txt',
-			'download' => 'Test File.txt',
-			'mime' => 'text/plain',
-			'size' => 1024,
-			'comments' => 'Test comments',
+			'name'      => 'test.txt',
+			'download'  => 'Test File.txt',
+			'mime'      => 'text/plain',
+			'size'      => 1024,
+			'comments'  => 'Test comments',
 			'protected' => true,
-			'tags' => ['test', 'file'],
-			'password' => 'secret',
-			'count' => 3,
+			'tags'      => ['test', 'file'],
+			'password'  => 'secret',
+			'count'     => 3,
 		];
 
-		$data = new FileData($fileData);
+		$data        = new FileData($fileData);
 		$transformed = $data->transform();
 
 		$this->assertIsArray($transformed);
@@ -162,7 +162,7 @@ final class FileDataTest extends TestCase
 
 		$this->assertIsString($json);
 		$this->assertStringContainsString('"name":"test.txt"', $json);
-		
+
 		$decoded = json_decode($json, true);
 		$this->assertIsArray($decoded);
 		$this->assertSame('test.txt', $decoded['name']);
@@ -171,7 +171,7 @@ final class FileDataTest extends TestCase
 	public function testCreatesPasswordHashWhenProvided(): void
 	{
 		$data = new FileData(['password' => 'secret123']);
-		
+
 		$this->assertNotSame('secret123', $data->password->hash);
 		$this->assertNotEmpty($data->password->hash);
 		$this->assertTrue(password_verify('secret123', $data->password->hash));
@@ -181,7 +181,7 @@ final class FileDataTest extends TestCase
 	{
 		$tags = ['document', 'important', 'work'];
 		$data = new FileData(['tags' => $tags]);
-		
+
 		$this->assertSame($tags, $data->tags->list);
 	}
 
@@ -194,7 +194,7 @@ final class FileDataTest extends TestCase
 		];
 
 		$data = new FileData(['tags' => $maliciousTags]);
-		
+
 		// Tags are stored as strings, sanitization should happen at display
 		$this->assertSame($maliciousTags, $data->tags->list);
 	}
@@ -202,16 +202,16 @@ final class FileDataTest extends TestCase
 	public function testHandlesExtremelyLongFilenames(): void
 	{
 		$longName = str_repeat('a', 1000) . '.txt';
-		$data = new FileData(['name' => $longName]);
-		
+		$data     = new FileData(['name' => $longName]);
+
 		$this->assertSame($longName, $data->name);
 	}
 
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['validation' => 'strict', 'maxSize' => 1048576];
-		$data = new FileData([], $settings);
-		
+		$data     = new FileData([], $settings);
+
 		$this->assertSame($settings, $data->settings);
 	}
 

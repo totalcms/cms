@@ -56,6 +56,7 @@ class SchemaField extends PropertyField
 			'options'     => SchemaData::PROPERTY_TYPES,
 		]);
 		$content .= parent::topFieldInfo();
+
 		return $content;
 	}
 

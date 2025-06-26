@@ -31,10 +31,10 @@ final class CollectionRepository extends StorageRepository
 	 * @param CacheManager $cacheManager
 	 */
 	public function __construct(
-		StorageAdapterInterface $filesystem, 
-		CollectionFactory $factory, 
+		StorageAdapterInterface $filesystem,
+		CollectionFactory $factory,
 		SchemaValidator $validator,
-		CacheManager $cacheManager
+		CacheManager $cacheManager,
 	) {
 		parent::__construct($filesystem);
 
@@ -52,7 +52,7 @@ final class CollectionRepository extends StorageRepository
 	{
 		// Try cache first (Redis preferred for fast access)
 		$cached = $this->cacheManager->getComputedData('collections_list');
-		
+
 		if ($cached !== null && is_array($cached)) {
 			// Convert cached data back to CollectionData objects
 			$collections = [];
@@ -61,6 +61,7 @@ final class CollectionRepository extends StorageRepository
 					$collections[] = $this->factory->generateCollection($collectionArray);
 				}
 			}
+
 			return $collections;
 		}
 
@@ -75,7 +76,7 @@ final class CollectionRepository extends StorageRepository
 		}
 
 		// Cache the collections as arrays for 15 minutes (collections don't change often)
-		$collectionsArray = array_map(fn($collection) => $collection->toArray(), $collections);
+		$collectionsArray = array_map(fn ($collection) => $collection->toArray(), $collections);
 		$this->cacheManager->storeComputedData('collections_list', $collectionsArray, 900);
 
 		return $collections;

@@ -18,31 +18,33 @@ final class CollectionZipper
 	 * Create a zip file of a collection's data folder.
 	 *
 	 * @param string $collection The collection name
-	 * @return string The path to the created zip file
+	 *
 	 * @throws \RuntimeException If zip creation fails
+	 *
+	 * @return string The path to the created zip file
 	 */
 	public function createCollectionZip(string $collection): string
 	{
 		$collectionPath = $this->config->datadir . DIRECTORY_SEPARATOR . $collection;
-		
+
 		if (!is_dir($collectionPath)) {
 			throw new \RuntimeException(sprintf('Collection directory not found: %s', $collectionPath));
 		}
 
 		// Create temporary zip file
 		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'collection-' . $collection . '-' . time() . '.zip';
-		
-		$zip = new \ZipArchive();
+
+		$zip    = new \ZipArchive();
 		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-		
+
 		if ($result !== true) {
 			throw new \RuntimeException(sprintf('Failed to create zip file: %s (Error code: %d)', $tempZipPath, $result));
 		}
 
 		$this->addDirectoryToZip($zip, $collectionPath, $collection);
-		
+
 		$zip->close();
-		
+
 		return $tempZipPath;
 	}
 
@@ -61,16 +63,16 @@ final class CollectionZipper
 		);
 
 		foreach ($iterator as $file) {
-			$filePath = $file->getRealPath();
+			$filePath     = $file->getRealPath();
 			$relativePath = substr($filePath, strlen($realPath) + 1);
-			
+
 			// Skip .cache directories and their contents
 			if (str_contains($relativePath, '.cache')) {
 				continue;
 			}
-			
+
 			$zipFilePath = $zipPath . DIRECTORY_SEPARATOR . $relativePath;
-			
+
 			if ($file->isDir()) {
 				$zip->addEmptyDir($zipFilePath);
 			} elseif ($file->isFile()) {
@@ -83,6 +85,7 @@ final class CollectionZipper
 	 * Get the filename for the zip download.
 	 *
 	 * @param string $collection
+	 *
 	 * @return string
 	 */
 	public function getZipFilename(string $collection): string

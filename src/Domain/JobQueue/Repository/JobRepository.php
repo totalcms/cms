@@ -284,8 +284,9 @@ final class JobRepository
 
 	/**
 	 * Fetch all pending jobs.
-	 * 
+	 *
 	 * @param int|null $limit
+	 *
 	 * @return array<JobData>
 	 */
 	public function fetchPendingJobs(?int $limit = null): array
@@ -295,11 +296,11 @@ final class JobRepository
 			WHERE status = :status
 			ORDER BY id DESC
 		SQL;
-		
+
 		if ($limit !== null) {
 			$sql .= ' LIMIT :limit';
 		}
-		
+
 		$stmt = $this->db->prepare($sql);
 		$stmt->bindValue(':status', JobData::STATUS_PENDING);
 		if ($limit !== null) {
@@ -317,8 +318,9 @@ final class JobRepository
 
 	/**
 	 * Fetch all failed jobs.
-	 * 
+	 *
 	 * @param int|null $limit
+	 *
 	 * @return array<JobData>
 	 */
 	public function fetchFailedJobs(?int $limit = null): array
@@ -328,11 +330,11 @@ final class JobRepository
 			WHERE status = :status
 			ORDER BY id DESC
 		SQL;
-		
+
 		if ($limit !== null) {
 			$sql .= ' LIMIT :limit';
 		}
-		
+
 		$stmt = $this->db->prepare($sql);
 		$stmt->bindValue(':status', JobData::STATUS_FAILED);
 		if ($limit !== null) {
@@ -353,10 +355,10 @@ final class JobRepository
 	 */
 	public function resetJobStatus(JobData $job): JobData
 	{
-		$job->status = JobData::STATUS_PENDING;
+		$job->status    = JobData::STATUS_PENDING;
 		$job->lastError = '';
 		// Keep the attempt count to prevent infinite retries
-		
+
 		return $this->updateJobStatus($job, JobData::STATUS_PENDING);
 	}
 }

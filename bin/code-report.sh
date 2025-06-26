@@ -12,6 +12,7 @@ folders=(
 
 types=(
 	"php"
+	"tests"
 	"js"
 	"scss"
 	"json"
@@ -33,15 +34,27 @@ for type in "${types[@]}"; do
 
 	count=0
 
-	for folder in "${folders[@]}"; do
-		php_files=$(find "$folder" -type f -name "*.$type")
-		for file in $php_files; do
+	if [ "$type" = "tests" ]; then
+		# Only look in tests folder for tests
+		files=$(find "tests" -type f -name "*.php" 2>/dev/null)
+		for file in $files; do
 			((count++))
 			((total++))
 		done
-	done
+	else
+		# Look in all folders except tests for regular types
+		for folder in "${folders[@]}"; do
+			if [ "$folder" != "tests" ]; then
+				files=$(find "$folder" -type f -name "*.$type" 2>/dev/null)
+				for file in $files; do
+					((count++))
+					((total++))
+				done
+			fi
+		done
+	fi
 
-	echo "	$type	: $count"
+	printf "\t%-8s: %s\n" "$type" "$count"
 
 done
 echo "
@@ -55,16 +68,29 @@ for type in "${types[@]}"; do
 
 	count=0
 
-	for folder in "${folders[@]}"; do
-		php_files=$(find "$folder" -type f -name "*.$type")
-		for file in $php_files; do
+	if [ "$type" = "tests" ]; then
+		# Only look in tests folder for tests
+		files=$(find "tests" -type f -name "*.php" 2>/dev/null)
+		for file in $files; do
 			lines=$(filter_lines "$file" | wc -l)
 			((count+=$lines))
 			((total+=$lines))
 		done
-	done
+	else
+		# Look in all folders except tests for regular types
+		for folder in "${folders[@]}"; do
+			if [ "$folder" != "tests" ]; then
+				files=$(find "$folder" -type f -name "*.$type" 2>/dev/null)
+				for file in $files; do
+					lines=$(filter_lines "$file" | wc -l)
+					((count+=$lines))
+					((total+=$lines))
+				done
+			fi
+		done
+	fi
 
-	echo "	$type	: $count"
+	printf "\t%-8s: %s\n" "$type" "$count"
 
 done
 echo "

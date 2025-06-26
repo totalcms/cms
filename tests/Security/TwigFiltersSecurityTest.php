@@ -4,12 +4,11 @@ namespace Tests\Security;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Twig\TwigEngine;
-use TotalCMS\Domain\Twig\ParsedownMarkdown;
 use TotalCMS\Domain\Twig\MarkdownRuntime;
+use TotalCMS\Domain\Twig\TwigEngine;
 use Twig\Environment;
-use Twig\Loader\ArrayLoader;
 use Twig\Error\SyntaxError;
+use Twig\Loader\ArrayLoader;
 
 #[CoversClass(TwigEngine::class)]
 #[CoversClass(MarkdownRuntime::class)]
@@ -20,9 +19,9 @@ final class TwigFiltersSecurityTest extends TestCase
 	protected function setUp(): void
 	{
 		// Create minimal Twig environment for security testing
-		$loader = new ArrayLoader([]);
+		$loader     = new ArrayLoader([]);
 		$this->twig = new Environment($loader, [
-			'autoescape' => 'html',
+			'autoescape'       => 'html',
 			'strict_variables' => false,
 		]);
 	}
@@ -42,14 +41,14 @@ final class TwigFiltersSecurityTest extends TestCase
 		foreach ($dangerousInputs as $input) {
 			try {
 				$template = '{{ content|slugify }}';
-				$result = $this->twig->createTemplate($template)->render(['content' => $input]);
-				
+				$result   = $this->twig->createTemplate($template)->render(['content' => $input]);
+
 				// Slugified output should be safe
 				$this->assertIsString($result);
 				$this->assertStringNotContainsString('<script>', $result);
 				$this->assertStringNotContainsString('javascript:', $result);
 				$this->assertStringNotContainsString('DROP TABLE', $result);
-				
+
 				// Should be URL-safe characters only
 				$this->assertMatchesRegularExpression('/^[a-z0-9\-]*$/', $result);
 			} catch (\Exception $e) {
@@ -62,11 +61,11 @@ final class TwigFiltersSecurityTest extends TestCase
 	public function testTruncateFilterSecurity(): void
 	{
 		$dangerousContent = '<script>alert("xss")</script>This is a long text that should be truncated';
-		
+
 		try {
 			$template = '{{ content|truncate(20) }}';
-			$result = $this->twig->createTemplate($template)->render(['content' => $dangerousContent]);
-			
+			$result   = $this->twig->createTemplate($template)->render(['content' => $dangerousContent]);
+
 			$this->assertIsString($result);
 			$this->assertLessThanOrEqual(23, strlen($result)); // 20 chars + "..."
 			// Should preserve HTML escaping
@@ -91,8 +90,8 @@ final class TwigFiltersSecurityTest extends TestCase
 		foreach ($maliciousFormats as $format) {
 			try {
 				$template = '{{ date|date_format("' . addslashes($format) . '") }}';
-				$result = $this->twig->createTemplate($template)->render(['date' => new \DateTime()]);
-				
+				$result   = $this->twig->createTemplate($template)->render(['date' => new \DateTime()]);
+
 				$this->assertIsString($result);
 				$this->assertStringNotContainsString('system(', $result);
 				$this->assertStringNotContainsString('<script>', $result);
@@ -106,11 +105,11 @@ final class TwigFiltersSecurityTest extends TestCase
 	public function testNl2brFilterSecurity(): void
 	{
 		$dangerousContent = "Line 1<script>alert('xss')</script>\nLine 2\r\nLine 3";
-		
+
 		try {
 			$template = '{{ content|nl2br }}';
-			$result = $this->twig->createTemplate($template)->render(['content' => $dangerousContent]);
-			
+			$result   = $this->twig->createTemplate($template)->render(['content' => $dangerousContent]);
+
 			$this->assertIsString($result);
 			$this->assertStringContainsString('<br', $result);
 			// Should preserve HTML escaping
@@ -133,9 +132,9 @@ final class TwigFiltersSecurityTest extends TestCase
 		foreach ($dangerousChains as $template) {
 			try {
 				$result = $this->twig->createTemplate($template)->render([
-					'content' => '<script>alert("xss")</script>Test Content'
+					'content' => '<script>alert("xss")</script>Test Content',
 				]);
-				
+
 				$this->assertIsString($result);
 				// When using |raw, the content is unescaped - this is expected behavior
 				// but should be handled carefully at the template level
@@ -159,7 +158,7 @@ final class TwigFiltersSecurityTest extends TestCase
 				$template = '{{ content|' . $filterCall . ' }}';
 				$this->twig->createTemplate($template)->render(['content' => 'test']);
 				$this->fail("Template should have thrown an exception: {$template}");
-			} catch (SecurityError | SyntaxError $e) {
+			} catch (SecurityError|SyntaxError $e) {
 				$this->assertInstanceOf(\Exception::class, $e);
 			}
 		}
@@ -178,8 +177,8 @@ final class TwigFiltersSecurityTest extends TestCase
 		foreach ($unsafeParams as $param) {
 			try {
 				$template = '{{ content|default("' . addslashes($param) . '") }}';
-				$result = $this->twig->createTemplate($template)->render(['content' => null]);
-				
+				$result   = $this->twig->createTemplate($template)->render(['content' => null]);
+
 				$this->assertIsString($result);
 				// Default filter should return the parameter value as-is, but it should be escaped at output
 			} catch (\Exception $e) {
@@ -201,7 +200,7 @@ final class TwigFiltersSecurityTest extends TestCase
 			try {
 				$this->twig->createTemplate($template)->render([]);
 				$this->fail("Template should have thrown an exception: {$template}");
-			} catch (SecurityError | SyntaxError $e) {
+			} catch (SecurityError|SyntaxError $e) {
 				$this->assertInstanceOf(\Exception::class, $e);
 			}
 		}
@@ -211,7 +210,7 @@ final class TwigFiltersSecurityTest extends TestCase
 	{
 		// Test built-in Twig filters with dangerous content
 		$dangerousContent = '<script>alert("xss")</script>';
-		$safeFilters = [
+		$safeFilters      = [
 			'upper',
 			'lower',
 			'title',
@@ -226,8 +225,8 @@ final class TwigFiltersSecurityTest extends TestCase
 
 		foreach ($safeFilters as $filter) {
 			$template = '{{ content|' . $filter . ' }}';
-			$result = $this->twig->createTemplate($template)->render(['content' => $dangerousContent]);
-			
+			$result   = $this->twig->createTemplate($template)->render(['content' => $dangerousContent]);
+
 			$this->assertIsString($result);
 			// These filters should not introduce XSS
 			if ($filter !== 'length') { // length returns integer
@@ -239,13 +238,13 @@ final class TwigFiltersSecurityTest extends TestCase
 	public function testFilterWithBinaryContent(): void
 	{
 		$binaryContent = "\x00\x01\x02\xFF\xFE\xFD";
-		$filters = ['upper', 'lower', 'trim', 'length'];
-		
+		$filters       = ['upper', 'lower', 'trim', 'length'];
+
 		foreach ($filters as $filter) {
 			try {
 				$template = '{{ content|' . $filter . ' }}';
-				$result = $this->twig->createTemplate($template)->render(['content' => $binaryContent]);
-				
+				$result   = $this->twig->createTemplate($template)->render(['content' => $binaryContent]);
+
 				$this->assertIsString($result);
 			} catch (\Exception $e) {
 				// Some filters might not handle binary content well, that's acceptable
@@ -257,12 +256,12 @@ final class TwigFiltersSecurityTest extends TestCase
 	public function testFilterWithUnicodeContent(): void
 	{
 		$unicodeContent = '世界 🌍 café Русский φάκελος';
-		$filters = ['upper', 'lower', 'title', 'length', 'trim'];
-		
+		$filters        = ['upper', 'lower', 'title', 'length', 'trim'];
+
 		foreach ($filters as $filter) {
 			$template = '{{ content|' . $filter . ' }}';
-			$result = $this->twig->createTemplate($template)->render(['content' => $unicodeContent]);
-			
+			$result   = $this->twig->createTemplate($template)->render(['content' => $unicodeContent]);
+
 			$this->assertIsString($result);
 			// Unicode should be handled correctly
 		}
@@ -271,15 +270,15 @@ final class TwigFiltersSecurityTest extends TestCase
 	public function testFilterPerformanceSecurity(): void
 	{
 		// Test that filters don't cause performance issues with large inputs
-		$largeContent = str_repeat('A', 100000);
+		$largeContent       = str_repeat('A', 100000);
 		$performanceFilters = ['upper', 'lower', 'trim', 'length'];
-		
+
 		foreach ($performanceFilters as $filter) {
-			$start = microtime(true);
+			$start    = microtime(true);
 			$template = '{{ content|' . $filter . ' }}';
-			$result = $this->twig->createTemplate($template)->render(['content' => $largeContent]);
-			$time = microtime(true) - $start;
-			
+			$result   = $this->twig->createTemplate($template)->render(['content' => $largeContent]);
+			$time     = microtime(true) - $start;
+
 			$this->assertLessThan(1.0, $time); // Should complete in under 1 second
 			$this->assertIsString($result);
 		}
@@ -292,18 +291,18 @@ final class TwigFiltersSecurityTest extends TestCase
 			'javascript:void(0)',
 			'../../etc/passwd',
 		];
-		
+
 		$arrayFilters = ['join', 'first', 'last', 'length'];
-		
+
 		foreach ($arrayFilters as $filter) {
 			if ($filter === 'join') {
 				$template = '{{ content|' . $filter . '(",") }}';
 			} else {
 				$template = '{{ content|' . $filter . ' }}';
 			}
-			
+
 			$result = $this->twig->createTemplate($template)->render(['content' => $dangerousArray]);
-			
+
 			$this->assertIsString($result);
 			if ($filter !== 'length') {
 				// Content should be escaped unless using raw filter
@@ -315,16 +314,16 @@ final class TwigFiltersSecurityTest extends TestCase
 	public function testFilterNullSafety(): void
 	{
 		$nullSafeFilters = ['default', 'length'];
-		
+
 		foreach ($nullSafeFilters as $filter) {
 			if ($filter === 'default') {
 				$template = '{{ content|' . $filter . '("fallback") }}';
 			} else {
 				$template = '{{ content|' . $filter . ' }}';
 			}
-			
+
 			$result = $this->twig->createTemplate($template)->render(['content' => null]);
-			
+
 			$this->assertIsString($result);
 		}
 	}
@@ -339,10 +338,10 @@ final class TwigFiltersSecurityTest extends TestCase
 
 		foreach ($recursiveFilters as $template) {
 			try {
-				$start = microtime(true);
+				$start  = microtime(true);
 				$result = $this->twig->createTemplate($template)->render(['content' => str_repeat('A', 1000)]);
-				$time = microtime(true) - $start;
-				
+				$time   = microtime(true) - $start;
+
 				$this->assertLessThan(2.0, $time); // Should not take too long
 				$this->assertIsString($result);
 			} catch (\Exception $e) {

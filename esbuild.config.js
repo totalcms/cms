@@ -45,6 +45,7 @@ esbuild.build({
     outdir      : 'public/assets',
     external    : [
 		"gallery/*",
+		"fonts/*",
     ],
 	loader: {
 		".woff2" : "file",
@@ -68,6 +69,8 @@ esbuild.build({
             loadPaths: [
                 "node_modules/froala-editor/css/",
                 "node_modules/codemirror/lib/",
+                "node_modules/codemirror/theme/",
+                "node_modules/codemirror/addon/",
                 "node_modules/dropzone/src/",
 				// "node_modules/lightgallery/scss/",
 				"css/lightgallery/",

@@ -463,8 +463,10 @@ final class TotalCMSTwigFilters
 			if (!isset($a[$key]) || !isset($b[$key])) {
 				return 0; // If key doesn't exist, consider them equal
 			}
+
 			return $a[$key] <=> $b[$key];
 		});
+
 		return $array;
 	}
 

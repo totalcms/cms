@@ -77,8 +77,8 @@ final class ObjectRepository extends StorageRepository
 	{
 		// Try cache first (Redis preferred for fast object access)
 		$cacheKey = "object:{$collection}:{$id}";
-		$cached = $this->cacheManager->getComputedData($cacheKey);
-		
+		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
 		if ($cached !== null && is_array($cached)) {
 			// Return cached object (data is stored as array for serialization)
 			return $this->factory->generateObject($collection, $cached);
@@ -92,8 +92,9 @@ final class ObjectRepository extends StorageRepository
 			if (is_array($contents)) {
 				// Cache the raw data (not the ObjectData instance) for 1 hour
 				$this->cacheManager->storeComputedData($cacheKey, $contents, 3600);
-				
+
 				$object = $this->factory->generateObject($collection, $contents);
+
 				return $object;
 			}
 		}
@@ -126,7 +127,7 @@ final class ObjectRepository extends StorageRepository
 		// Remove the specific object from cache
 		// Note: CacheManager doesn't have delete method yet, but we can store null with short TTL
 		$this->cacheManager->storeComputedData($objectCacheKey, null, 1);
-		
+
 		// Also invalidate collection index cache (objects list has changed)
 		$this->cacheManager->storeCollectionIndex($collection, [], 1);
 	}

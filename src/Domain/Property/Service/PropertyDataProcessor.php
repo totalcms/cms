@@ -7,7 +7,7 @@ use TotalCMS\Domain\Property\Data\PropertyData;
 
 /**
  * Service for processing property data before save operations.
- * 
+ *
  * This service handles business logic that was previously embedded
  * in property data classes, improving separation of concerns.
  */
@@ -22,15 +22,15 @@ final class PropertyDataProcessor implements PropertyDataProcessorInterface
 		if ($property instanceof DateData) {
 			return $this->processDateData($property);
 		}
-		
+
 		// Add other property type processing here as needed
 		// if ($property instanceof OtherDataType) {
 		//     return $this->processOtherDataType($property);
 		// }
-		
+
 		return $property;
 	}
-	
+
 	/**
 	 * Process DateData before save operations.
 	 */
@@ -43,7 +43,7 @@ final class PropertyDataProcessor implements PropertyDataProcessorInterface
 		} elseif (isset($dateData->settings[DateData::UPDATE_DATE]) && $dateData->settings[DateData::UPDATE_DATE] === true) {
 			$dateData->date = DateData::cleanDate();
 		}
-		
+
 		return $dateData;
 	}
 }

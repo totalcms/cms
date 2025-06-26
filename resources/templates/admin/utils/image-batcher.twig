@@ -6,31 +6,29 @@
 		.wizard-steps {
 			display: flex;
 			margin-bottom: 2rem;
-			border-bottom: 1px solid var(--border-color);
+			border-bottom: 1px solid oklch(var(--totalform-border-color));
 		}
 		.wizard-step {
 			flex: 1;
 			padding: 1rem;
 			text-align: center;
-			background: var(--bg-secondary);
-			border-right: 1px solid var(--border-color);
-			color: var(--text-muted);
+			background: oklch(var(--totalform-nearwhite));
+			border-right: 1px solid oklch(var(--totalform-border-color));
+			color: oklch(var(--totalform-darkgray));
 		}
 		.wizard-step:last-child {
 			border-right: none;
 		}
 		.wizard-step.active {
-			background: var(--accent-color);
-			color: white;
+			background: oklch(var(--totalform-darkgray));
+			color: oklch(var(--totalform-purewhite));
 		}
 		.wizard-step.completed {
-			background: var(--success-color);
-			color: white;
+			background: oklch(var(--totalform-lightgray));
+			color: oklch(var(--totalform-nearblack));
 		}
 		.wizard-actions {
 			margin-top: 2rem;
-			/* padding-top: 1rem; */
-			border-top: 1px solid var(--border-color);
 		}
 		.batch-preview {
 			display: grid;
@@ -39,44 +37,50 @@
 			margin-top: 2rem;
 		}
 		.batch-item {
-			border: 1px solid var(--border-color);
-			border-radius: 4px;
+			border: 1px solid oklch(var(--totalform-border-color));
+			border-radius: var(--totalform-radius);
 			padding: 1rem;
 			text-align: center;
 		}
 		.batch-item img {
 			max-width: 100%;
 			height: auto;
-			border-radius: 4px;
+			border-radius: var(--totalform-radius);
 		}
 		.progress-bar {
 			width: 100%;
 			height: 20px;
-			background: var(--bg-secondary);
+			background: oklch(var(--totalform-nearwhite));
 			border-radius: 10px;
 			overflow: hidden;
 			margin: 1rem 0;
 		}
 		.progress-fill {
 			height: 100%;
-			background: var(--accent-color);
+			background: oklch(var(--totalform-accent));
 			width: 0%;
 			transition: width 0.3s ease;
 		}
 		.macro-example, .macro-display {
-			background: var(--bg-secondary);
-			border: 1px solid var(--border-color);
-			border-radius: 4px;
-			padding: 1rem;
+			background: oklch(var(--totalform-nearwhite));
+			border: 1px solid oklch(var(--totalform-border-color));
+			border-radius: var(--totalform-radius);
+			padding: 1rem 0;
 			margin: 1rem 0;
 		}
 		.macro-example code, .macro-display code {
 			display: block;
-			background: var(--bg-tertiary);
+			background: oklch(var(--totalform-icon-bg));
 			padding: 0.5rem;
-			border-radius: 3px;
+			border-radius: var(--totalform-radius);
 			font-family: monospace;
 			word-break: break-all;
+		}
+		#macro-example {
+			max-width     : 100%;
+			height        : auto;
+			margin-top    : 1rem;
+			border-radius : var(--totalform-radius);
 		}
 	</style>
 {% endblock %}
@@ -122,16 +126,16 @@
 	<!-- Wizard Steps Indicator -->
 	<div class="wizard-steps">
 		<div class="wizard-step {{ currentStep == 1 ? 'active' : (currentStep > 1 ? 'completed' : '') }}">
-			<strong>1. Select Collection</strong>
+			<strong>1. Collection</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 2 ? 'active' : (currentStep > 2 ? 'completed' : '') }}">
-			<strong>2. Select Property</strong>
+			<strong>2. Property</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 3 ? 'active' : (currentStep > 3 ? 'completed' : '') }}">
-			<strong>3. Configure ImageWorks</strong>
+			<strong>3. ImageWorks</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 4 ? 'active' : '' }}">
-			<strong>4. Batch Process</strong>
+			<strong>4. Batch</strong>
 		</div>
 	</div>
 
@@ -214,11 +218,11 @@
 				{{ cms.form.field("hidden", "step", { value: "process" }) }}
 
 				{{ cms.form.field("textarea", "imageworks_macro", {
-					label: "ImageWorks Macro",
-					help: "Paste your ImageWorks macro here. The parameters will be extracted and applied to all images.",
-					value: postData.imageworks_macro ?? "{{ cms.imagePath('example', {w:400, h:400, fit:'crop'}) }}",
-					rows: 4,
-					class: "no-change-listener",
+					label : "ImageWorks Macro",
+					help  : "Paste your ImageWorks macro here.",
+					value : postData.imageworks_macro ?? "{{ cms.imagePath('example', {w:400, h:400, fit:'crop'}) }}",
+					rows  : 4,
+					class : "no-change-listener",
 				}) }}
 			{% endset %}
 
@@ -238,9 +242,10 @@
 			<p>Processing images in <strong>{{ selectedCollection }}.{{ selectedProperty }}</strong> with the following ImageWorks macro:</p>
 
 			<div class="macro-display">
-				<h4>Using Macro:</h4>
 				<code>{{ imageworksMacro }}</code>
 			</div>
+
+			<img src="{{ include(template_from_string(imageworksMacro)) }}" alt="Macro Example" id="macro-example">
 
 			<div class="progress-container">
 				<div class="progress-bar">
@@ -249,23 +254,20 @@
 				<p id="progress-text">Preparing batch process...</p>
 			</div>
 
-			<div class="batch-preview" id="batch-preview">
-				<!-- Images will be loaded here via JavaScript -->
-			</div>
+			<div class="batch-preview" id="batch-preview"></div>
 
 			<div class="wizard-actions">
-				<button type="button" id="restart-batch" class="button secondary" style="display: none;">Start New Batch</button>
-				<button type="button" id="download-all" class="button primary" style="display: none;">Download All Processed Images</button>
+				<button type="button" id="restart-batch" class="button dash-button" style="display: none;">Start New Batch</button>
 			</div>
 		</section>
 
 		<script>
 		// Store the batch processing data
 		window.batchData = {
-			collection: '{{ selectedCollection }}',
-			property: '{{ selectedProperty }}',
-			imageworksMacro: {{ imageworksMacro | json_encode | raw }},
-			apiUrl: '{{ cms.api }}'
+			collection : '{{ selectedCollection }}',
+			property   : '{{ selectedProperty }}',
+			example    : document.getElementById('macro-example').src,
+			apiUrl     : '{{ cms.api }}'
 		};
 		</script>
 		<script type="module" src="{{ cms.api }}/assets/image-batcher.js"></script>

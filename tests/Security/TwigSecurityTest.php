@@ -5,10 +5,8 @@ namespace Tests\Security;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Twig\TwigEngine;
-use TotalCMS\Domain\Twig\ParsedownMarkdown;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
-use Twig\Error\SyntaxError;
 
 #[CoversClass(TwigEngine::class)]
 final class TwigSecurityTest extends TestCase
@@ -18,9 +16,9 @@ final class TwigSecurityTest extends TestCase
 	protected function setUp(): void
 	{
 		// Create minimal Twig environment for security testing
-		$loader = new ArrayLoader([]);
+		$loader     = new ArrayLoader([]);
 		$this->twig = new Environment($loader, [
-			'autoescape' => 'html',
+			'autoescape'       => 'html',
 			'strict_variables' => false, // Allow undefined variables for testing
 		]);
 	}
@@ -49,18 +47,19 @@ final class TwigSecurityTest extends TestCase
 		// Test _context separately since it returns an array and causes conversion warning
 		try {
 			// Suppress the expected warning for this specific test
-			set_error_handler(function($errno, $errstr) {
+			set_error_handler(function ($errno, $errstr) {
 				if (strpos($errstr, 'Array to string conversion') !== false) {
 					return true; // Suppress this specific warning
 				}
+
 				return false; // Let other errors through
 			});
-			
+
 			$result = $this->twig->createTemplate('{{ _context }}')->render([]);
-			
+
 			// Restore error handler
 			restore_error_handler();
-			
+
 			// The result should be 'Array' (the string representation of an array)
 			$this->assertSame('Array', $result);
 		} catch (\Exception $e) {
@@ -140,7 +139,7 @@ final class TwigSecurityTest extends TestCase
 
 	public function testPreventsTemplateInjectionThroughVariables(): void
 	{
-		$template = '{{ user_input }}';
+		$template        = '{{ user_input }}';
 		$dangerousInputs = [
 			'{{ _self }}',
 			'{{ attribute(_self, "env") }}',
@@ -185,8 +184,8 @@ final class TwigSecurityTest extends TestCase
 
 		foreach ($safeTemplates as $template) {
 			$result = $this->twig->createTemplate($template)->render([
-				'name' => 'Test User',
-				'user' => ['name' => 'John'],
+				'name'  => 'Test User',
+				'user'  => ['name' => 'John'],
 				'items' => [['title' => 'Item 1'], ['title' => 'Item 2']],
 			]);
 			$this->assertIsString($result);
@@ -196,10 +195,10 @@ final class TwigSecurityTest extends TestCase
 	public function testEscapingIsByDefault(): void
 	{
 		$template = 'Hello {{ name }}!';
-		$result = $this->twig->createTemplate($template)->render([
-			'name' => '<script>alert("xss")</script>'
+		$result   = $this->twig->createTemplate($template)->render([
+			'name' => '<script>alert("xss")</script>',
 		]);
-		
+
 		// Output should be escaped by default
 		$this->assertStringContainsString('&lt;script&gt;', $result);
 		$this->assertStringNotContainsString('<script>', $result);
@@ -208,8 +207,8 @@ final class TwigSecurityTest extends TestCase
 	public function testBinaryContentHandling(): void
 	{
 		$binaryContent = "\x00\x01\x02\xFF\xFE\xFD";
-		$template = '{{ content }}';
-		
+		$template      = '{{ content }}';
+
 		$result = $this->twig->createTemplate($template)->render(['content' => $binaryContent]);
 		$this->assertIsString($result);
 		// Binary content should be handled safely

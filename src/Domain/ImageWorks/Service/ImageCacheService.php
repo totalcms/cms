@@ -18,7 +18,7 @@ final class ImageCacheService
 	/**
 	 * Clear all image cache files for a specific collection.
 	 * This clears all .cache directories within the collection folder.
-	 * 
+	 *
 	 * @throws \RuntimeException if collection doesn't exist or cache clearing fails
 	 */
 	public function clearCollectionImageCache(string $collection): bool
@@ -32,7 +32,7 @@ final class ImageCacheService
 
 		// First, collect all .cache directories to avoid iterator issues during deletion
 		$cacheDirectories = [];
-		
+
 		try {
 			$iterator = new \RecursiveIteratorIterator(
 				new \RecursiveDirectoryIterator($collectionPath, \RecursiveDirectoryIterator::SKIP_DOTS),
@@ -45,7 +45,7 @@ final class ImageCacheService
 				}
 			}
 		} catch (\Exception $e) {
-			throw new \RuntimeException("Failed to scan collection directory: " . $e->getMessage());
+			throw new \RuntimeException('Failed to scan collection directory: ' . $e->getMessage());
 		}
 
 		// Now remove all found cache directories
@@ -118,7 +118,7 @@ final class ImageCacheService
 
 	/**
 	 * Get image cache statistics for all collections.
-	 * 
+	 *
 	 * @return array<array<string,mixed>> Array of collection cache statistics
 	 */
 	public function getAllCollectionImageCacheStats(): array
@@ -133,7 +133,7 @@ final class ImageCacheService
 		// Get all collection directories
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn($item) => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
+			fn ($item) => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
 		);
 
 		foreach ($collections as $collection) {
@@ -145,23 +145,23 @@ final class ImageCacheService
 		}
 
 		// Sort by collection name
-		usort($results, fn($a, $b) => strcmp($a['collection'], $b['collection']));
+		usort($results, fn ($a, $b) => strcmp($a['collection'], $b['collection']));
 
 		return $results;
 	}
 
 	/**
 	 * Clear image cache for all collections.
-	 * 
+	 *
 	 * @return array<string,mixed> Summary of clearing operation
 	 */
 	public function clearAllCollectionImageCaches(): array
 	{
 		$datadir = $this->config->datadir;
 		$results = [
-			'collections_processed' => 0,
+			'collections_processed'     => 0,
 			'cache_directories_cleared' => 0,
-			'errors' => [],
+			'errors'                    => [],
 		];
 
 		if (!is_dir($datadir)) {
@@ -171,7 +171,7 @@ final class ImageCacheService
 		// Get all collection directories
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn($item) => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
+			fn ($item) => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
 		);
 
 		foreach ($collections as $collection) {
@@ -188,7 +188,7 @@ final class ImageCacheService
 
 	/**
 	 * Recursively remove a directory and all its contents.
-	 * 
+	 *
 	 * @throws \RuntimeException if directory removal fails
 	 */
 	private function removeDirectory(string $path): void

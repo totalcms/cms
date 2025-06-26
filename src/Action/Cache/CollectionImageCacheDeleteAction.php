@@ -25,7 +25,7 @@ final class CollectionImageCacheDeleteAction
 
 		if (empty($collection)) {
 			return $this->renderer->json($response->withStatus(400), [
-				'error' => 'Collection parameter is required'
+				'error' => 'Collection parameter is required',
 			]);
 		}
 
@@ -34,7 +34,7 @@ final class CollectionImageCacheDeleteAction
 			$deleted     = $this->imageCacheService->clearCollectionImageCache($collection);
 		} catch (\RuntimeException $e) {
 			return $this->renderer->json($response->withStatus(500), [
-				'error' => 'Failed to clear collection image cache: ' . $e->getMessage()
+				'error' => 'Failed to clear collection image cache: ' . $e->getMessage(),
 			]);
 		}
 
@@ -42,14 +42,14 @@ final class CollectionImageCacheDeleteAction
 		$statsAfter = $this->imageCacheService->getCollectionImageCacheStats($collection);
 
 		return $this->renderer->json($response, [
-			'deleted' => $deleted,
+			'deleted'    => $deleted,
 			'collection' => $collection,
-			'stats' => [
-				'before' => $statsBefore,
-				'after' => $statsAfter,
+			'stats'      => [
+				'before'        => $statsBefore,
+				'after'         => $statsAfter,
 				'files_removed' => $statsBefore['cached_files'],
 				'size_freed_mb' => $statsBefore['total_size_mb'],
-			]
+			],
 		]);
 	}
 }

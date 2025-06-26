@@ -5,7 +5,6 @@ namespace Tests\Unit\Property;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\DeckData;
-use InvalidArgumentException;
 
 #[CoversClass(DeckData::class)]
 final class DeckDataTest extends TestCase
@@ -49,7 +48,7 @@ final class DeckDataTest extends TestCase
 			'card2' => ['name' => 'Card 2'],
 		];
 
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Deck must be a set of simple objects');
 		new DeckData($invalidDeck);
 	}
@@ -62,7 +61,7 @@ final class DeckDataTest extends TestCase
 			['name' => 'Card 2'],
 		];
 
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Deck must be a set of simple objects');
 		new DeckData($invalidDeck);
 	}
@@ -73,7 +72,7 @@ final class DeckDataTest extends TestCase
 			['name' => 'Card 1', 'nested' => ['invalid' => 'structure']],
 		];
 
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Deck must be a set of simple objects');
 		new DeckData($invalidDeck);
 	}
@@ -84,7 +83,7 @@ final class DeckDataTest extends TestCase
 			['name' => 'Card 1', 'object' => (object)['invalid' => 'structure']],
 		];
 
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Deck must be a set of simple objects');
 		new DeckData($invalidDeck);
 	}
@@ -110,10 +109,10 @@ final class DeckDataTest extends TestCase
 		$largeDeck = [];
 		for ($i = 0; $i < 1000; $i++) {
 			$largeDeck[] = [
-				'id' => $i,
-				'name' => "Item {$i}",
-				'category' => "category_" . ($i % 10),
-				'active' => ($i % 2 === 0),
+				'id'       => $i,
+				'name'     => "Item {$i}",
+				'category' => 'category_' . ($i % 10),
+				'active'   => ($i % 2 === 0),
 			];
 		}
 
@@ -126,12 +125,12 @@ final class DeckDataTest extends TestCase
 	{
 		$deck = [
 			[
-				'string' => 'text',
-				'integer' => 42,
-				'float' => 3.14,
-				'boolean_true' => true,
+				'string'        => 'text',
+				'integer'       => 42,
+				'float'         => 3.14,
+				'boolean_true'  => true,
 				'boolean_false' => false,
-			]
+			],
 		];
 
 		$data = new DeckData($deck);
@@ -142,12 +141,12 @@ final class DeckDataTest extends TestCase
 	{
 		$deckWithNull = [
 			[
-				'string' => 'text',
+				'string'     => 'text',
 				'null_value' => null, // null is not scalar
-			]
+			],
 		];
 
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Deck must be a set of simple objects');
 		new DeckData($deckWithNull);
 	}
@@ -169,8 +168,8 @@ final class DeckDataTest extends TestCase
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['validation' => 'strict', 'maxItems' => 100];
-		$deck = [['name' => 'Test']];
-		
+		$deck     = [['name' => 'Test']];
+
 		$data = new DeckData($deck, $settings);
 		$this->assertSame($settings, $data->settings);
 	}
@@ -198,11 +197,11 @@ final class DeckDataTest extends TestCase
 	{
 		// Test that validation doesn't cause performance issues
 		$largeDeck = array_fill(0, 100, ['name' => 'Test', 'id' => 1]);
-		
+
 		$start = microtime(true);
-		$data = new DeckData($largeDeck);
-		$time = microtime(true) - $start;
-		
+		$data  = new DeckData($largeDeck);
+		$time  = microtime(true) - $start;
+
 		$this->assertLessThan(0.1, $time); // Should complete in under 100ms
 		$this->assertCount(100, $data->deck);
 	}

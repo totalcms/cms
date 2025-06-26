@@ -87,7 +87,7 @@ final class DefaultErrorHandler
 		// Error message
 		$errorMessage = $this->getErrorMessage($exception, $statusCode, true);
 
-		// Render response
+		// Render response with no-cache headers to prevent browser caching of errors
 		$response = $this->responseFactory->createResponse();
 		$response = $this->renderer->json($response, [
 			'error' => [
@@ -95,7 +95,15 @@ final class DefaultErrorHandler
 			],
 		]);
 
-		return $response->withStatus($statusCode);
+		// Add no-cache headers for error responses to prevent browser/proxy caching
+		$response = $response
+			->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+			->withHeader('Pragma', 'no-cache')
+			->withHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT')
+			->withHeader('X-OPcache-Cleared', 'true')
+			->withStatus($statusCode);
+
+		return $response;
 	}
 
 	/**

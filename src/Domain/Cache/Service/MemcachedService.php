@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Cache\Service;
 
-use TotalCMS\Support\Config;
 use Memcached;
+use TotalCMS\Support\Config;
 
 /**
  * Memcached cache service.
@@ -13,16 +13,16 @@ final class MemcachedService implements CacheInterface
 	private bool $enabled;
 	private string $host;
 	private int $port;
-	private ?Memcached $memcached = null;
+	private ?\Memcached $memcached = null;
 
 	public function __construct(
-		Config $config
+		Config $config,
 	) {
-		$cache = $config->cache ?? [];
+		$cache           = $config->cache ?? [];
 		$memcachedConfig = $cache['memcached'] ?? [];
-		$this->enabled = $memcachedConfig['enabled'] ?? true;
-		$this->host = $memcachedConfig['host'] ?? '127.0.0.1';
-		$this->port = $memcachedConfig['port'] ?? 11211;
+		$this->enabled   = $memcachedConfig['enabled'] ?? true;
+		$this->host      = $memcachedConfig['host'] ?? '127.0.0.1';
+		$this->port      = $memcachedConfig['port'] ?? 11211;
 	}
 
 	public function isAvailable(): bool
@@ -34,6 +34,7 @@ final class MemcachedService implements CacheInterface
 		try {
 			$memcached = $this->getConnection();
 			$memcached->set('test_key', 'test_value', 1);
+
 			return $memcached->get('test_key') === 'test_value';
 		} catch (\Exception $e) {
 			return false;
@@ -48,7 +49,8 @@ final class MemcachedService implements CacheInterface
 
 		try {
 			$memcached = $this->getConnection();
-			$value = $memcached->get($key);
+			$value     = $memcached->get($key);
+
 			return $value !== false ? $value : null;
 		} catch (\Exception $e) {
 			return null;
@@ -63,6 +65,7 @@ final class MemcachedService implements CacheInterface
 
 		try {
 			$memcached = $this->getConnection();
+
 			return $memcached->set($key, $value, $ttl);
 		} catch (\Exception $e) {
 			return false;
@@ -77,6 +80,7 @@ final class MemcachedService implements CacheInterface
 
 		try {
 			$memcached = $this->getConnection();
+
 			return $memcached->delete($key);
 		} catch (\Exception $e) {
 			return false;
@@ -91,6 +95,7 @@ final class MemcachedService implements CacheInterface
 
 		try {
 			$memcached = $this->getConnection();
+
 			return $memcached->flush();
 		} catch (\Exception $e) {
 			return false;
@@ -102,37 +107,37 @@ final class MemcachedService implements CacheInterface
 		if (!$this->isAvailable()) {
 			return [
 				'available' => false,
-				'enabled' => $this->enabled,
-				'host' => $this->host,
-				'port' => $this->port,
+				'enabled'   => $this->enabled,
+				'host'      => $this->host,
+				'port'      => $this->port,
 			];
 		}
 
 		try {
-			$memcached = $this->getConnection();
-			$stats = $memcached->getStats();
+			$memcached   = $this->getConnection();
+			$stats       = $memcached->getStats();
 			$serverStats = reset($stats);
 
-			$hits = (int)($serverStats['get_hits'] ?? 0);
+			$hits   = (int)($serverStats['get_hits'] ?? 0);
 			$misses = (int)($serverStats['get_misses'] ?? 0);
-			$total = $hits + $misses;
+			$total  = $hits + $misses;
 
 			return [
-				'available' => true,
-				'enabled' => $this->enabled,
-				'host' => $this->host,
-				'port' => $this->port,
+				'available'    => true,
+				'enabled'      => $this->enabled,
+				'host'         => $this->host,
+				'port'         => $this->port,
 				'memory_usage' => isset($serverStats['bytes'])
 					? round($serverStats['bytes'] / 1024 / 1024, 2) . 'MB'
 					: 'Unknown',
 				'hit_rate' => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
-				'items' => $serverStats['curr_items'] ?? 0,
+				'items'    => $serverStats['curr_items'] ?? 0,
 			];
 		} catch (\Exception $e) {
 			return [
 				'available' => false,
-				'enabled' => $this->enabled,
-				'error' => $e->getMessage(),
+				'enabled'   => $this->enabled,
+				'error'     => $e->getMessage(),
 			];
 		}
 	}
@@ -151,10 +156,10 @@ final class MemcachedService implements CacheInterface
 		return ['✅ Memcached is available for template metadata caching'];
 	}
 
-	private function getConnection(): Memcached
+	private function getConnection(): \Memcached
 	{
 		if ($this->memcached === null) {
-			$this->memcached = new Memcached();
+			$this->memcached = new \Memcached();
 			$this->memcached->addServer($this->host, $this->port);
 		}
 

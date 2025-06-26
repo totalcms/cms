@@ -96,7 +96,7 @@ class FormField
 		$formFieldAtrributes = [
 			'class'     => "form-field {$this->field}-field {$this->class}",
 			'data-type' => $this->field,
-			'style' => "grid-area: {$this->name};",
+			'style'     => "grid-area: {$this->name};",
 		];
 		if (!empty($this->settings)) {
 			$json = json_encode($this->settings);

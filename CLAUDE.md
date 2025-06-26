@@ -148,10 +148,24 @@ bin/codecount.sh
 - **Code Reports**: Only run `bin/code-report.sh` when creating new builds, not during development sessions
 - **Change Tracking**: Keep git diffs clean by focusing on specific files being worked on
 
+### CSS Styling Guidelines
+- **Use Design System Variables**: Always use CSS variables from `/css/variables.scss` instead of hardcoding colors or values
+- **Variable Format**: Use `oklch(var(--totalform-*))` for colors to ensure consistency with the design system
+- **Common Variables**:
+  - Border color: `oklch(var(--totalform-border-color))`
+  - Background colors: `oklch(var(--totalform-nearwhite))`, `oklch(var(--totalform-icon-bg))`
+  - Text colors: `oklch(var(--totalform-darkgray))`, `oklch(var(--totalform-text-color))`
+  - Accent colors: `oklch(var(--totalform-accent))`, `oklch(var(--totalform-success))`
+  - Border radius: `var(--totalform-radius)`
+- **Avoid**: Custom colors, hardcoded values, non-existent variables
+
 ## Frontend JavaScript
 - **TotalForm System**: Modular form system in `/javascript/totalform/` with field-specific components
 - **Choices.js**: Enhanced select/multiselect fields with custom initialization
-- **CodeMirror**: Syntax highlighting for Twig playground with localStorage persistence
+- **CodeMirror Bundle**: Complete local syntax highlighting solution with Twig, HTML, CSS, JS, PHP, Markdown support
+- **TotalCMSCodeMirror**: Custom API for creating editors with light theme (elegant) matching dashboard design
+- **Syntax Highlighting**: GitHub-inspired light theme colors, dark theme saved for future dark mode
+- **Documentation Highlighting**: Auto-syntax highlighting for code blocks in documentation
 
 ## Performance & Caching
 
@@ -165,3 +179,10 @@ bin/codecount.sh
 - **CollectionRefiner**: 30-70% improvement via reflection caching, optimized array operations, loose comparisons
 - **CollectionSorter**: 50-70% improvement via property value caching and rule pre-processing
 - **ServerChecker**: Enhanced with detailed extension info, OPcache detection improvements
+
+### Emergency Cache Management
+- **Automatic OPcache Clearing**: `DefaultErrorHandler` automatically clears OPcache on every error to prevent cached errors
+- **No-Cache Headers**: Error responses include `Cache-Control: no-cache` headers to prevent browser/proxy caching
+- **Emergency Endpoint**: `/emergency/cache/clear` provides public cache clearing when admin interface is inaccessible
+- **Customer-Friendly**: No authentication required - customers can clear caches from any location without server access
+- **Test Script**: `bin/test-emergency-cache.php` verifies emergency cache clearing functionality

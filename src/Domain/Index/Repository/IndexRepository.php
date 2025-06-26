@@ -18,7 +18,7 @@ final class IndexRepository extends StorageRepository
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		CacheManager $cacheManager
+		CacheManager $cacheManager,
 	) {
 		parent::__construct($filesystem);
 		$this->cacheManager = $cacheManager;
@@ -35,8 +35,8 @@ final class IndexRepository extends StorageRepository
 	{
 		// Try cache first (Redis preferred for fast index access)
 		$cacheKey = "index_data:{$collection}";
-		$cached = $this->cacheManager->getComputedData($cacheKey);
-		
+		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
 		if ($cached !== null && is_array($cached)) {
 			// Reconstruct IndexData from cached array of objects
 			try {
@@ -54,7 +54,7 @@ final class IndexRepository extends StorageRepository
 		}
 
 		$indexData = $this->fetchAndDeserialize($indexFile, IndexData::class);
-		
+
 		// Cache the index objects array for 30 minutes (indexes change when objects are added/removed)
 		if ($indexData !== null) {
 			$this->cacheManager->storeComputedData($cacheKey, $indexData->objects->toArray(), 1800);
@@ -74,8 +74,8 @@ final class IndexRepository extends StorageRepository
 	{
 		// Try cache first (Redis preferred for fast access)
 		$cacheKey = "object_ids:{$collection}";
-		$cached = $this->cacheManager->getComputedData($cacheKey);
-		
+		$cached   = $this->cacheManager->getComputedData($cacheKey);
+
 		if ($cached !== null && is_array($cached)) {
 			return $cached;
 		}
@@ -87,7 +87,7 @@ final class IndexRepository extends StorageRepository
 		$files = array_filter($files, fn (string $path) => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
 
 		$objectIds = array_map(fn (string $path) => basename($path, StorageRepository::FILE_EXT), $files);
-		
+
 		// Cache object IDs for 15 minutes (changes when objects are added/removed)
 		$this->cacheManager->storeComputedData($cacheKey, $objectIds, 900);
 
@@ -120,7 +120,7 @@ final class IndexRepository extends StorageRepository
 	{
 		// Clear index data cache
 		$this->cacheManager->storeComputedData("index_data:{$collection}", null, 1);
-		
+
 		// Clear object IDs cache (index changes usually mean object list changed)
 		$this->cacheManager->storeComputedData("object_ids:{$collection}", null, 1);
 	}

@@ -121,44 +121,21 @@ export default class StyledTextField extends TotalField {
     }
 
     defaultConfig() {
-        const toolbar = [
-            ["bold", "italic", "insertLink",],
-            ["alignLeft", "alignCenter", "alignRight",],
-            ["formatOL", "formatUL",],
-            ["insertImage",],
-            ["clearFormatting", "html",],
-        ];
-        const colors = [
-            "#61BD6D", "#1ABC9C", "#54ACD2",
-            "#2C82C9", "#9365B8", "#475577",
-            "#CCCCCC", "#41A85F", "#00A885",
-            "#3D8EB9", "#2969B0", "#553982",
-            "#28324E", "#000000", "#F7DA64",
-            "#FBA026", "#EB6B56", "#E25041",
-            "#A38F84", "#EFEFEF", "#FFFFFF",
-            "#FAC51C", "#F37934", "#D14841",
-            "#B8312F", "#7C706B", "#D1D5D8",
-            "REMOVE"
-        ];
-        const fontSizes = [
-            "8", "9", "10", "11", "12", "14",
-            "18", "24", "30", "36", "48",
-            "60", "72", "96"
-        ];
-        const videoEditButtons = [
-            "videoReplace", "videoRemove", "|",
-            "videoDisplay", "videoAlign"
-        ];
-        const quickInsertTags = [
-            "image", "video", "table",
-            "ul", "ol", "hr"
-        ];
-        const imageStyles = {
-            "fr-rounded"    : "Rounded",
-            "fr-bordered"   : "Bordered",
-            "fr-shadow"     : "Shadow",
-            "fr-full-width" : "Full Width"
-        };
+        const toolbar = {
+			moreText: { buttons: [
+				'bold', 'italic', 'underline',
+			] },
+			moreParagraph: { buttons: [
+				'formatUL', 'formatOL', 'paragraphFormat', 'alignLeft', 'alignCenter', 'alignRight', 'alignJustify'
+			]},
+			moreRich: { buttons: [
+				'insertLink', 'insertImage'
+			] },
+			moreMisc: { buttons: [
+				'undo', 'redo', 'clearFormatting', 'html',
+			], align: 'right', buttonsVisible: 4 }
+		};
+        const quickInsertTags = ["image", "video", "table", "ul", "ol", "hr"];
         const codeMirrorOptions = {
             indentWithTabs : true,
             lineNumbers    : true,
@@ -170,7 +147,6 @@ export default class StyledTextField extends TotalField {
         };
         const paragraphFormat = {
             N   : "Normal",
-            H1  : "Heading 1",
             H2  : "Heading 2",
             H3  : "Heading 3",
             H4  : "Heading 4",
@@ -190,15 +166,15 @@ export default class StyledTextField extends TotalField {
             keepFormatOnDelete : true,
             charCounterCount   : false,
             charCounterMax     : this.input.dataset.maxcount,
-            colorsText         : colors,
-            colorsBackground   : colors,
+            // colorsText         : colors,
+            // colorsBackground   : colors,
             language           : this.api.options.locale,
             linkAutoPrefix     : "https://",
             toolbarInline      : false,
             tooltips           : true,
             shortcutsHint      : false,
-            fontSize           : fontSizes,
-            videoEditButtons   : videoEditButtons,
+            // fontSize           : fontSizes,
+            // videoEditButtons   : videoEditButtons,
             videoMaxSize       : megabyte * 1024,
             fileMaxSize        : megabyte * 1024,
             imageMaxSize       : megabyte * 5,
@@ -224,7 +200,7 @@ export default class StyledTextField extends TotalField {
             // imageDefaultWidth      : 0,
             // imageResizeWithPercent : true, // BUG https://github.com/froala/wysiwyg-editor/issues/4205
             imageRoundPercent      : true,
-            imageStyles            : imageStyles,
+            // imageStyles            : imageStyles,
             DOMPurify              : window.DOMPurify,
             codeMirror             : window.CodeMirror,
             codeMirrorOptions      : codeMirrorOptions,

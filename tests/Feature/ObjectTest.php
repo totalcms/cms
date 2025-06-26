@@ -76,30 +76,13 @@ it('add an object to the collection index', function (): void {
 		]);
 });
 
-it('can automativally rebuild the collection index', function (): void {
-	$collection = 'blog';
-
-	$index = indexPath($collection);
-	unlink($index);
-
-	$post = blogTestData();
-	$id   = $post['id'];
-
-	get("/collections/{$collection}/index")
-		->assertOk()
-		->assertJson()
-		->assertJsonFragment([
-			'id' => $id,
-		]);
-
-	$this->assertFileExists($index);
-});
-
 it('can rebuild the collection index from api', function (): void {
 	$collection = 'blog';
 
 	$index = indexPath($collection);
-	unlink($index);
+	if (file_exists($index)) {
+		unlink($index);
+	}
 
 	$post = blogTestData();
 	$id   = $post['id'];
@@ -125,6 +108,44 @@ it('does not create an object if one exists', function (): void {
 	postJson("/collections/{$collection}", $post)
 		->assertBadRequest()
 		->assertSee('already exists');
+});
+
+it('can automatically rebuild the collection index', function (): void {
+	$collection = 'blog';
+
+	// Ensure the collection exists
+	get("/collections/{$collection}")
+		->assertOk()
+		->assertJson()
+		->assertJsonFragment([
+			'id' => $collection,
+		]);
+
+	// Ensure an object exists in the collection (use existing object from previous test)
+	$post = blogTestData();
+	$id   = $post['id'];
+
+	// Verify the object exists before testing index rebuild
+	$objectFile = objectPath($collection, $id);
+	if (!file_exists($objectFile)) {
+		// Object doesn't exist, create it
+		postJson("/collections/{$collection}", $post)
+			->assertOk();
+	}
+
+	$index = indexPath($collection);
+	if (file_exists($index)) {
+		unlink($index);
+	}
+
+	get("/collections/{$collection}/index")
+		->assertOk()
+		->assertJson()
+		->assertJsonFragment([
+			'id' => $id,
+		]);
+
+	$this->assertFileExists($index);
 });
 
 it('knows if an object exists', function (): void {

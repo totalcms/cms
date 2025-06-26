@@ -5,7 +5,6 @@ namespace Tests\Unit\Property;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\UrlData;
-use InvalidArgumentException;
 
 #[CoversClass(UrlData::class)]
 final class UrlDataTest extends TestCase
@@ -60,7 +59,7 @@ final class UrlDataTest extends TestCase
 			try {
 				$data = new UrlData($url);
 				$this->assertSame($url, $data->url);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				// Some schemes might not be supported by PHP's filter
 				$this->assertSame('Invalid URL', $e->getMessage());
 			}
@@ -86,7 +85,7 @@ final class UrlDataTest extends TestCase
 			try {
 				$data = new UrlData($url);
 				$this->assertSame($url, $data->url);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				$this->assertSame('Invalid URL', $e->getMessage());
 			}
 		}
@@ -115,14 +114,14 @@ final class UrlDataTest extends TestCase
 
 	public function testRejectsUrlsWithoutScheme(): void
 	{
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid URL');
 		new UrlData('example.com');
 	}
 
 	public function testRejectsWwwUrlsWithoutScheme(): void
 	{
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid URL');
 		new UrlData('www.example.com');
 	}
@@ -142,7 +141,7 @@ final class UrlDataTest extends TestCase
 		];
 
 		foreach ($invalidUrls as $url) {
-			$this->expectException(InvalidArgumentException::class);
+			$this->expectException(\InvalidArgumentException::class);
 			$this->expectExceptionMessage('Invalid URL');
 			new UrlData($url);
 		}
@@ -158,7 +157,7 @@ final class UrlDataTest extends TestCase
 		];
 
 		foreach ($invalidUrls as $url) {
-			$this->expectException(InvalidArgumentException::class);
+			$this->expectException(\InvalidArgumentException::class);
 			$this->expectExceptionMessage('Invalid URL');
 			new UrlData($url);
 		}
@@ -170,7 +169,7 @@ final class UrlDataTest extends TestCase
 		try {
 			new UrlData('://example.com');
 			$this->fail('Expected InvalidArgumentException for URL without scheme');
-		} catch (InvalidArgumentException $e) {
+		} catch (\InvalidArgumentException $e) {
 			$this->assertSame('Invalid URL', $e->getMessage());
 		}
 
@@ -181,7 +180,7 @@ final class UrlDataTest extends TestCase
 				$data = new UrlData($url);
 				// If it passes, just verify it's a string
 				$this->assertIsString($data->url);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				$this->assertSame('Invalid URL', $e->getMessage());
 			}
 		}
@@ -205,7 +204,7 @@ final class UrlDataTest extends TestCase
 		];
 
 		foreach ($dangerousUrls as $url) {
-			$this->expectException(InvalidArgumentException::class);
+			$this->expectException(\InvalidArgumentException::class);
 			$this->expectExceptionMessage('Invalid URL');
 			new UrlData($url);
 		}
@@ -226,7 +225,7 @@ final class UrlDataTest extends TestCase
 				$data = new UrlData($url);
 				// If accepted, ensure it's the sanitized version
 				$this->assertStringNotContainsString('<script>', $data->url);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				$this->assertSame('Invalid URL', $e->getMessage());
 			}
 		}
@@ -240,7 +239,7 @@ final class UrlDataTest extends TestCase
 		];
 
 		foreach ($vbscriptUrls as $url) {
-			$this->expectException(InvalidArgumentException::class);
+			$this->expectException(\InvalidArgumentException::class);
 			$this->expectExceptionMessage('Invalid URL');
 			new UrlData($url);
 		}
@@ -259,7 +258,7 @@ final class UrlDataTest extends TestCase
 			try {
 				$data = new UrlData($url);
 				$this->assertStringStartsWith('file://', $data->url);
-			} catch (InvalidArgumentException $e) {
+			} catch (\InvalidArgumentException $e) {
 				$this->assertSame('Invalid URL', $e->getMessage());
 			}
 		}
@@ -284,12 +283,12 @@ final class UrlDataTest extends TestCase
 	{
 		// Create a URL at the practical limit
 		$longPath = str_repeat('a', 2000);
-		$url = 'https://example.com/' . $longPath;
-		
+		$url      = 'https://example.com/' . $longPath;
+
 		try {
 			$data = new UrlData($url);
 			$this->assertStringContainsString('example.com', $data->url);
-		} catch (InvalidArgumentException $e) {
+		} catch (\InvalidArgumentException $e) {
 			// Very long URLs might be rejected
 			$this->assertSame('Invalid URL', $e->getMessage());
 		}
@@ -355,7 +354,7 @@ final class UrlDataTest extends TestCase
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['some' => 'setting'];
-		$data = new UrlData('https://example.com', $settings);
+		$data     = new UrlData('https://example.com', $settings);
 		$this->assertSame($settings, $data->settings);
 	}
 
@@ -367,7 +366,7 @@ final class UrlDataTest extends TestCase
 
 	public function testTransformReturnsStringRepresentation(): void
 	{
-		$url = 'https://example.com';
+		$url  = 'https://example.com';
 		$data = new UrlData($url);
 		$this->assertSame($url, $data->transform());
 		$this->assertIsString($data->transform());
@@ -375,23 +374,23 @@ final class UrlDataTest extends TestCase
 
 	public function testToStringReturnsUrlString(): void
 	{
-		$url = 'https://example.com';
+		$url  = 'https://example.com';
 		$data = new UrlData($url);
 		$this->assertSame($url, (string)$data);
 	}
 
 	public function testBothMethodsReturnSameValue(): void
 	{
-		$url = 'https://example.com';
+		$url  = 'https://example.com';
 		$data = new UrlData($url);
 		$this->assertSame($data->transform(), (string)$data);
 	}
 
 	public function testHandlesSecureVsInsecureProtocols(): void
 	{
-		$secureUrl = new UrlData('https://example.com');
+		$secureUrl   = new UrlData('https://example.com');
 		$insecureUrl = new UrlData('http://example.com');
-		
+
 		$this->assertStringStartsWith('https://', $secureUrl->url);
 		$this->assertStringStartsWith('http://', $insecureUrl->url);
 	}
@@ -403,7 +402,7 @@ final class UrlDataTest extends TestCase
 			$data = new UrlData($mixedCaseUrl);
 			// PHP normalizes case, so just check it's a valid URL
 			$this->assertStringContainsString('://', $data->url);
-		} catch (InvalidArgumentException $e) {
+		} catch (\InvalidArgumentException $e) {
 			$this->assertSame('Invalid URL', $e->getMessage());
 		}
 	}

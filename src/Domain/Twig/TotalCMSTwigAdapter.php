@@ -66,15 +66,15 @@ final class TotalCMSTwigAdapter
 		private FileAccessManager $fileAccessManager,
 		private ImageCacheService $imageCacheServiceInstance,
 	) {
-		$this->api          = $this->config->api;
-		$this->dashboard    = $this->api . '/admin';
-		$this->logout       = $this->api . '/logout';
-		$this->domain       = $this->getDomainName();
-		$this->form         = $this->totalFormFactory;
-		$this->checker      = $this->serverChecker;
-		$this->cacheManager = $this->cacheManagerService;
+		$this->api               = $this->config->api;
+		$this->dashboard         = $this->api . '/admin';
+		$this->logout            = $this->api . '/logout';
+		$this->domain            = $this->getDomainName();
+		$this->form              = $this->totalFormFactory;
+		$this->checker           = $this->serverChecker;
+		$this->cacheManager      = $this->cacheManagerService;
 		$this->imageCacheService = $this->imageCacheServiceInstance;
-		$this->logger       = $this->logAnalyzer;
+		$this->logger            = $this->logAnalyzer;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -522,10 +522,6 @@ NGINX;
 			return [];
 		}
 
-		if ($collection === null) {
-			return [];
-		}
-
 		return $collection->objects->toArray();
 	}
 
@@ -534,10 +530,6 @@ NGINX;
 	public function property(string $collection, string $property): array
 	{
 		$collection = $this->indexReader->fetchIndex($collection);
-
-		if ($collection === null) {
-			return [];
-		}
 
 		return $collection->objects->pluck($property)->flatten()->unique()->toArray();
 	}

@@ -18,7 +18,7 @@ final class GalleryDataTest extends TestCase
 		];
 
 		$gallery = new GalleryData($images);
-		
+
 		$this->assertCount(2, $gallery->images);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[0]);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[1]);
@@ -34,7 +34,7 @@ final class GalleryDataTest extends TestCase
 		];
 
 		$gallery = new GalleryData($imageArrays);
-		
+
 		$this->assertCount(2, $gallery->images);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[0]);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[1]);
@@ -51,7 +51,7 @@ final class GalleryDataTest extends TestCase
 		];
 
 		$gallery = new GalleryData($mixedImages);
-		
+
 		$this->assertCount(2, $gallery->images);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[0]);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[1]);
@@ -62,7 +62,7 @@ final class GalleryDataTest extends TestCase
 	public function testCreatesEmptyGallery(): void
 	{
 		$gallery = new GalleryData();
-		
+
 		$this->assertCount(0, $gallery->images);
 		$this->assertSame([], $gallery->images);
 	}
@@ -74,12 +74,12 @@ final class GalleryDataTest extends TestCase
 			['name' => 'test2.png', 'alt' => 'Test 2', 'width' => 1024, 'height' => 768],
 		];
 
-		$gallery = new GalleryData($imageData);
+		$gallery     = new GalleryData($imageData);
 		$transformed = $gallery->transform();
-		
+
 		$this->assertIsArray($transformed);
 		$this->assertCount(2, $transformed);
-		
+
 		// Each item should be a transformed ImageData
 		$this->assertIsArray($transformed[0]);
 		$this->assertIsArray($transformed[1]);
@@ -95,12 +95,12 @@ final class GalleryDataTest extends TestCase
 		];
 
 		$gallery = new GalleryData($imageData);
-		$json = (string)$gallery;
-		
+		$json    = (string)$gallery;
+
 		$this->assertIsString($json);
 		$this->assertStringContainsString('"name":"serialize.jpg"', $json);
 		$this->assertStringContainsString('"alt":"Serialization test"', $json);
-		
+
 		$decoded = json_decode($json, true);
 		$this->assertIsArray($decoded);
 		$this->assertCount(1, $decoded);
@@ -111,18 +111,18 @@ final class GalleryDataTest extends TestCase
 		$dangerousImages = [
 			[
 				'name' => '<script>alert("xss")</script>.jpg',
-				'alt' => 'javascript:void(0)',
+				'alt'  => 'javascript:void(0)',
 				'link' => 'data:text/html,<script>alert(1)</script>',
 			],
 			[
 				'name' => '../../etc/passwd.png',
-				'alt' => '"; DROP TABLE images; --',
+				'alt'  => '"; DROP TABLE images; --',
 				'mime' => 'text/html',
 			],
 		];
 
 		$gallery = new GalleryData($dangerousImages);
-		
+
 		$this->assertCount(2, $gallery->images);
 		// Images are stored as-is in ImageData, sanitization happens at display
 		$this->assertStringContainsString('<script>', $gallery->images[0]->name);
@@ -134,15 +134,15 @@ final class GalleryDataTest extends TestCase
 		$largeImageSet = [];
 		for ($i = 0; $i < 500; $i++) {
 			$largeImageSet[] = [
-				'name' => "image_{$i}.jpg",
-				'alt' => "Image number {$i}",
-				'width' => 800 + ($i % 200),
+				'name'   => "image_{$i}.jpg",
+				'alt'    => "Image number {$i}",
+				'width'  => 800 + ($i % 200),
 				'height' => 600 + ($i % 150),
 			];
 		}
 
 		$gallery = new GalleryData($largeImageSet);
-		
+
 		$this->assertCount(500, $gallery->images);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[0]);
 		$this->assertInstanceOf(ImageData::class, $gallery->images[499]);
@@ -161,7 +161,7 @@ final class GalleryDataTest extends TestCase
 		];
 
 		$gallery = new GalleryData($variousImages);
-		
+
 		$this->assertCount(5, $gallery->images);
 		$this->assertSame('image/jpeg', $gallery->images[0]->mime);
 		$this->assertSame('image/png', $gallery->images[1]->mime);
@@ -172,28 +172,28 @@ final class GalleryDataTest extends TestCase
 	{
 		$complexImages = [
 			[
-				'name' => 'professional.jpg',
-				'alt' => 'Professional photography',
-				'width' => 3840,
-				'height' => 2160,
+				'name'     => 'professional.jpg',
+				'alt'      => 'Professional photography',
+				'width'    => 3840,
+				'height'   => 2160,
 				'featured' => true,
-				'tags' => ['professional', 'portrait', 'studio'],
-				'exif' => [
-					'camera' => 'Canon EOS R5',
-					'lens' => 'RF 85mm F1.2L',
-					'iso' => 200,
+				'tags'     => ['professional', 'portrait', 'studio'],
+				'exif'     => [
+					'camera'   => 'Canon EOS R5',
+					'lens'     => 'RF 85mm F1.2L',
+					'iso'      => 200,
 					'aperture' => 'f/2.8',
 				],
 				'focalpoint' => ['x' => 30, 'y' => 70],
-				'palette' => ['#2C3E50', '#E74C3C', '#F39C12'],
+				'palette'    => ['#2C3E50', '#E74C3C', '#F39C12'],
 			],
 		];
 
 		$gallery = new GalleryData($complexImages);
-		
+
 		$this->assertCount(1, $gallery->images);
 		$image = $gallery->images[0];
-		
+
 		$this->assertSame('professional.jpg', $image->name);
 		$this->assertSame(3840, $image->width);
 		$this->assertTrue($image->featured);
@@ -205,8 +205,8 @@ final class GalleryDataTest extends TestCase
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['maxImages' => 50, 'allowedFormats' => ['jpg', 'png']];
-		$images = [['name' => 'test.jpg']];
-		
+		$images   = [['name' => 'test.jpg']];
+
 		$gallery = new GalleryData($images, $settings);
 		$this->assertSame($settings, $gallery->settings);
 	}
@@ -222,13 +222,13 @@ final class GalleryDataTest extends TestCase
 		$unicodeImages = [
 			[
 				'name' => 'φωτογραφία.jpg', // Greek
-				'alt' => '美しい写真', // Japanese
+				'alt'  => '美しい写真', // Japanese
 				'tags' => ['фотография', '照片'], // Russian, Chinese
 			],
 		];
 
 		$gallery = new GalleryData($unicodeImages);
-		
+
 		$this->assertCount(1, $gallery->images);
 		$this->assertStringContainsString('φωτογραφία', $gallery->images[0]->name);
 		$this->assertStringContainsString('美しい写真', $gallery->images[0]->alt);
@@ -239,18 +239,18 @@ final class GalleryDataTest extends TestCase
 	{
 		$originalData = [
 			[
-				'name' => 'structure_test.jpg',
-				'alt' => 'Structure preservation test',
-				'width' => 1200,
+				'name'   => 'structure_test.jpg',
+				'alt'    => 'Structure preservation test',
+				'width'  => 1200,
 				'height' => 800,
-				'tags' => ['test', 'structure'],
-				'exif' => ['camera' => 'Test Camera'],
+				'tags'   => ['test', 'structure'],
+				'exif'   => ['camera' => 'Test Camera'],
 			],
 		];
 
-		$gallery = new GalleryData($originalData);
+		$gallery     = new GalleryData($originalData);
 		$transformed = $gallery->transform();
-		
+
 		$this->assertIsArray($transformed[0]);
 		$this->assertArrayHasKey('name', $transformed[0]);
 		$this->assertArrayHasKey('alt', $transformed[0]);
@@ -258,7 +258,7 @@ final class GalleryDataTest extends TestCase
 		$this->assertArrayHasKey('height', $transformed[0]);
 		$this->assertArrayHasKey('tags', $transformed[0]);
 		$this->assertArrayHasKey('exif', $transformed[0]);
-		
+
 		$this->assertSame('structure_test.jpg', $transformed[0]['name']);
 		$this->assertSame(1200, $transformed[0]['width']);
 		$this->assertIsArray($transformed[0]['tags']);
@@ -269,7 +269,7 @@ final class GalleryDataTest extends TestCase
 	{
 		// Create gallery with valid data
 		$gallery = new GalleryData([['name' => 'valid.jpg']]);
-		
+
 		// Normal serialization should work
 		$json = (string)$gallery;
 		$this->assertIsString($json);

@@ -11,8 +11,9 @@ interface PropertyDataProcessorInterface
 {
 	/**
 	 * Process property data before save operations.
-	 * 
+	 *
 	 * @param PropertyData $property The property data to process
+	 *
 	 * @return PropertyData The processed property data
 	 */
 	public function processBeforeSave(PropertyData $property): PropertyData;

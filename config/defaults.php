@@ -65,17 +65,17 @@ $settings['cache'] = [
 		'directory' => $settings['root'] . '/cache',
 	],
 	'redis' => [
-		'enabled' => true,
-		'host' => '127.0.0.1',
-		'port' => 6379,
-		'timeout' => 1,
+		'enabled'  => true,
+		'host'     => '127.0.0.1',
+		'port'     => 6379,
+		'timeout'  => 1,
 		'password' => null,
 		'database' => 0,
 	],
 	'memcached' => [
 		'enabled' => true,
-		'host' => '127.0.0.1',
-		'port' => 11211,
+		'host'    => '127.0.0.1',
+		'port'    => 11211,
 	],
 ];
 
