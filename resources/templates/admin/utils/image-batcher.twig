@@ -24,8 +24,8 @@
 			color: oklch(var(--totalform-purewhite));
 		}
 		.wizard-step.completed {
-			background: oklch(var(--totalform-gray));
-			color: oklch(var(--totalform-purewhite));
+			background: oklch(var(--totalform-lightgray));
+			color: oklch(var(--totalform-nearblack));
 		}
 		.wizard-actions {
 			margin-top: 2rem;
@@ -126,16 +126,16 @@
 	<!-- Wizard Steps Indicator -->
 	<div class="wizard-steps">
 		<div class="wizard-step {{ currentStep == 1 ? 'active' : (currentStep > 1 ? 'completed' : '') }}">
-			<strong>1. Select Collection</strong>
+			<strong>1. Collection</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 2 ? 'active' : (currentStep > 2 ? 'completed' : '') }}">
-			<strong>2. Select Property</strong>
+			<strong>2. Property</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 3 ? 'active' : (currentStep > 3 ? 'completed' : '') }}">
-			<strong>3. Configure ImageWorks</strong>
+			<strong>3. ImageWorks</strong>
 		</div>
 		<div class="wizard-step {{ currentStep == 4 ? 'active' : '' }}">
-			<strong>4. Batch Process</strong>
+			<strong>4. Batch</strong>
 		</div>
 	</div>
 
