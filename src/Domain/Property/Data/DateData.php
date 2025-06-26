@@ -32,7 +32,7 @@ class DateData extends PropertyData
 		}
 
 		try {
-			$config = Config::init();
+			$config   = Config::init();
 			$timezone = new \DateTimeZone($config->timezone);
 
 			// Use Chronos for smart date parsing with natural language support

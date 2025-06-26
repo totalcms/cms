@@ -269,10 +269,10 @@ final class CacheReporter
 	private function isCacheEnabled(): bool
 	{
 		// Check if at least one cache backend is available
-		return $this->filesystemService->isAvailable() ||
-			   $this->opcacheService->isAvailable() ||
-			   $this->redisService->isAvailable() ||
-			   $this->memcachedService->isAvailable();
+		return $this->filesystemService->isAvailable()
+			   || $this->opcacheService->isAvailable()
+			   || $this->redisService->isAvailable()
+			   || $this->memcachedService->isAvailable();
 	}
 
 	/**
