@@ -132,8 +132,16 @@ function initializeTwigPlayground() {
 		editor.setSize(null, totalHeight);
 	}
 
-	// Initial resize
-	resizeEditor();
+	// Ensure editor has proper height after full initialization
+	setTimeout(() => {
+		resizeEditor();
+		// Also ensure minimum height via CSS if lineHeight calculation fails
+		const wrapper = editor.getWrapperElement();
+		const currentHeight = wrapper.offsetHeight;
+		if (currentHeight < 250) { // Fallback minimum height
+			editor.setSize(null, 250);
+		}
+	}, 100);
 
 	// Resize on content change
 	editor.on('changes', function() {
@@ -144,6 +152,10 @@ function initializeTwigPlayground() {
 	const savedContent = TotalCMSCodeMirror.loadFromStorage(localStorageKey);
 	if (savedContent && !textarea.value) {
 		editor.setValue(savedContent);
+	} else if (!textarea.value || textarea.value.trim() === '') {
+		// If empty, add 9 empty lines to show line numbers 1-10
+		editor.setValue('\n\n\n\n\n\n\n\n\n');
+		editor.setCursor(0, 0); // Position cursor at start
 	}
 
 	// Save content to localStorage on change

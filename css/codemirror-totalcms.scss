@@ -28,14 +28,14 @@
 
 	&.CodeMirror {
 		height        : auto;
-		min-height    : 200px;
+		min-height    : 250px; // Increased for better visibility (10+ lines)
 		font-size     : 14px;
 		line-height   : 1.5;
 		border        : none;
 		border-radius : var(--totalform-radius);
 
 		.CodeMirror-scroll {
-			min-height: 200px;
+			min-height: 250px; // Increased to match container
 		}
 
 		.CodeMirror-placeholder {
