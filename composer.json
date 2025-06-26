@@ -15,7 +15,7 @@
   "require": {
     "php": "^8.2",
     "bacon/bacon-qr-code": "^3.0",
-    "cakephp/chronos": "^3.0",
+    "cakephp/chronos": "^3.1",
     "cakephp/validation": "^5.0",
     "cocur/slugify": "^4.0",
     "embed/embed": "^4.3",
