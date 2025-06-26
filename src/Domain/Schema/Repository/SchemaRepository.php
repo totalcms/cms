@@ -60,6 +60,8 @@ final class SchemaRepository extends StorageRepository
 	/**
 	 * List reserved Schemas.
 	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @return array<SchemaData>
 	 */
 	public function listReservedSchemas(): array
@@ -69,17 +71,7 @@ final class SchemaRepository extends StorageRepository
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
-			// Convert cached data back to SchemaData objects
-			$schemas = [];
-			foreach ($cached as $schemaArray) {
-				if (is_array($schemaArray)) {
-					try {
-						$schemas[] = $this->factory->generateSchema($schemaArray);
-					} catch (\Exception $e) {
-						// Skip invalid cached schema, will be refreshed below
-					}
-				}
-			}
+			$schemas = $this->hydrateSchemasFromCache($cached);
 			if (!empty($schemas)) {
 				return $schemas;
 			}
@@ -97,8 +89,14 @@ final class SchemaRepository extends StorageRepository
 		}
 
 		// Cache the schemas as arrays for 1 hour (reserved schemas never change)
-		$schemasArray = array_map(fn ($schema) => $schema->toArray(), $schemas);
-		$this->cacheManager->storeComputedData($cacheKey, $schemasArray, 3600);
+		if (empty($schemas)) {
+			// Clear cache if no schemas to prevent serving stale data
+			$this->cacheManager->clearComputedData($cacheKey);
+		} else {
+			// Cache non-empty schemas
+			$schemasArray = array_map(fn ($schema) => $schema->toArray(), $schemas);
+			$this->cacheManager->storeComputedData($cacheKey, $schemasArray, 3600);
+		}
 
 		return $schemas;
 	}
@@ -106,6 +104,7 @@ final class SchemaRepository extends StorageRepository
 	/**
 	 * List reserved Schema IDs.
 	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @return array<string>
 	 */
 	public function reservedSchemasIds(): array
@@ -135,7 +134,13 @@ final class SchemaRepository extends StorageRepository
 		});
 
 		// Cache for 1 hour (reserved schema IDs never change)
-		$this->cacheManager->storeComputedData($cacheKey, $filteredIds, 3600);
+		if (empty($filteredIds)) {
+			// Clear cache if no filtered IDs to prevent serving stale data
+			$this->cacheManager->clearComputedData($cacheKey);
+		} else {
+			// Cache non-empty filtered IDs
+			$this->cacheManager->storeComputedData($cacheKey, $filteredIds, 3600);
+		}
 
 		return $filteredIds;
 	}
@@ -296,5 +301,24 @@ final class SchemaRepository extends StorageRepository
 	{
 		// Clear custom schema cache
 		$this->cacheManager->storeComputedData("custom_schema:{$id}", null, 1);
+	}
+
+	/**
+	 * Convert cached schema arrays back to SchemaData objects.
+	 *
+	 * @param array<array<string,mixed>> $cachedSchemas
+	 * @return array<SchemaData>
+	 */
+	private function hydrateSchemasFromCache(array $cachedSchemas): array
+	{
+		$schemas = [];
+		foreach ($cachedSchemas as $schemaArray) {
+			try {
+				$schemas[] = $this->factory->generateSchema($schemaArray);
+			} catch (\Exception $e) {
+				// Skip invalid cached schema, will be refreshed from source
+			}
+		}
+		return $schemas;
 	}
 }

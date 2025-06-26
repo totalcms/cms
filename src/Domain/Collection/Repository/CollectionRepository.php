@@ -46,6 +46,7 @@ final class CollectionRepository extends StorageRepository
 	/**
 	 * List all Collections.
 	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @return array<CollectionData>
 	 */
 	public function listAllCollections(): array
@@ -75,9 +76,14 @@ final class CollectionRepository extends StorageRepository
 			$collections[] = $collection;
 		}
 
-		// Cache the collections as arrays for 15 minutes (collections don't change often)
-		$collectionsArray = array_map(fn ($collection) => $collection->toArray(), $collections);
-		$this->cacheManager->storeComputedData('collections_list', $collectionsArray, 900);
+		if (empty($collections)) {
+			// Clear cache if no collections to prevent serving stale data
+			$this->cacheManager->clearComputedData('collections_list');
+		} else {
+			// Cache the collections as arrays for 15 minutes (collections don't change often)
+			$collectionsArray = array_map(fn ($collection) => $collection->toArray(), $collections);
+			$this->cacheManager->storeComputedData('collections_list', $collectionsArray, 900);
+		}
 
 		return $collections;
 	}

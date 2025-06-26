@@ -164,33 +164,24 @@ final class CacheManager
 
 	/**
 	 * Store computed/expensive operations (can be large, longer TTL).
-	 * Priority: Filesystem > Redis > Memcached.
+	 * Priority: Redis > Memcached > Filesystem (avoids filesystem I/O when memory cache available).
 	 */
 	public function storeComputedData(string $key, mixed $data, int $ttl = 7200): bool
 	{
 		$cacheKey = "computed:{$key}";
 
-		// Filesystem first for computed data (often large and should persist)
-		if ($this->filesystemService->isAvailable()) {
-			$success = $this->filesystemService->set($cacheKey, $data, $ttl);
-
-			// Also store in memory cache for faster access (shorter TTL)
-			if ($this->redisService->isAvailable()) {
-				$this->redisService->set($cacheKey, $data, min($ttl, 1800)); // Max 30 min in memory
-			} elseif ($this->memcachedService->isAvailable()) {
-				$this->memcachedService->set($cacheKey, $data, min($ttl, 1800));
-			}
-
-			return $success;
-		}
-
-		// Fallback to memory caches
+		// Priority: Redis > Memcached > Filesystem (single cache layer only)
 		if ($this->redisService->isAvailable()) {
 			return $this->redisService->set($cacheKey, $data, $ttl);
 		}
 
 		if ($this->memcachedService->isAvailable()) {
 			return $this->memcachedService->set($cacheKey, $data, $ttl);
+		}
+
+		// Fallback to filesystem cache only if no memory caches available
+		if ($this->filesystemService->isAvailable()) {
+			return $this->filesystemService->set($cacheKey, $data, $ttl);
 		}
 
 		return false;
@@ -234,6 +225,30 @@ final class CacheManager
 		}
 
 		return null;
+	}
+
+	/**
+	 * Delete computed data from all cache backends.
+	 */
+	public function clearComputedData(string $key): bool
+	{
+		$cacheKey = "computed:{$key}";
+		$success = true;
+
+		// Delete from all available cache backends
+		if ($this->redisService->isAvailable()) {
+			$success &= $this->redisService->delete($cacheKey);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$success &= $this->memcachedService->delete($cacheKey);
+		}
+
+		if ($this->filesystemService->isAvailable()) {
+			$success &= $this->filesystemService->delete($cacheKey);
+		}
+
+		return (bool) $success;
 	}
 
 	/**
