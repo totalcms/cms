@@ -63,6 +63,7 @@ BUILD=`git rev-parse --short HEAD`
 
 bin/code-report.sh > code-report.txt
 
-echo "$VERSION ($BUILD)" > dist/version
+echo "$VERSION ($BUILD)" > version
+cp version dist
 
 echo "Build for v$VERSION ($BUILD) is complete."
