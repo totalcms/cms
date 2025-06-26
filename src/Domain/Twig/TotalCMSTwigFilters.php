@@ -2,7 +2,9 @@
 
 namespace TotalCMS\Domain\Twig;
 
+use Cake\Chronos\Chronos;
 use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Support\Config;
 use TotalCMS\Utils\Cipher;
 use TotalCMS\Utils\CollectionRefiner;
 use TotalCMS\Utils\CollectionSorter;
@@ -76,6 +78,18 @@ final class TotalCMSTwigFilters
 		'paginate',
 		'svgToSymbol',
 		'markdown',
+		'dateRelative',
+		'dateFormat',
+		'dateAdd',
+		'dateSubtract',
+		'dateDiff',
+		'dateStartOf',
+		'dateEndOf',
+		'dateIsWeekend',
+		'dateIsWeekday',
+		'dateIsPast',
+		'dateIsFuture',
+		'dateIsToday',
 	];
 
 	/** @return array<TwigFilter> */
@@ -624,5 +638,209 @@ final class TotalCMSTwigFilters
 		}
 
 		return $markdown->convert($value);
+	}
+
+	// -------------------------
+	// Date Manipulation (Chronos)
+	// -------------------------
+
+	/**
+	 * Parse a date and return a Chronos instance with timezone support
+	 */
+	private static function parseDate(mixed $date): Chronos
+	{
+		$config = Config::init();
+		$timezone = new \DateTimeZone($config->timezone);
+
+		if ($date instanceof Chronos) {
+			return $date->setTimezone($timezone);
+		}
+
+		return Chronos::parse((string)$date, $timezone);
+	}
+
+	/**
+	 * Get relative date string (e.g., "2 days ago", "in 3 weeks")
+	 */
+	public static function dateRelative(mixed $date): string
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return $chronos->diffForHumans();
+		} catch (\Exception $e) {
+			return (string)$date;
+		}
+	}
+
+	/**
+	 * Format date with custom format string
+	 */
+	public static function dateFormat(mixed $date, string $format = 'Y-m-d H:i:s'): string
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return $chronos->format($format);
+		} catch (\Exception $e) {
+			return (string)$date;
+		}
+	}
+
+	/**
+	 * Add time to date (e.g., "+1 day", "+2 weeks", "+3 months")
+	 */
+	public static function dateAdd(mixed $date, string $interval): string
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return $chronos->modify($interval)->format('c');
+		} catch (\Exception $e) {
+			return (string)$date;
+		}
+	}
+
+	/**
+	 * Subtract time from date (e.g., "-1 day", "-2 weeks", "-3 months")
+	 */
+	public static function dateSubtract(mixed $date, string $interval): string
+	{
+		try {
+			$chronos = self::parseDate($date);
+			// If interval doesn't start with -, add it
+			if (!str_starts_with($interval, '-')) {
+				$interval = '-' . $interval;
+			}
+			return $chronos->modify($interval)->format('c');
+		} catch (\Exception $e) {
+			return (string)$date;
+		}
+	}
+
+	/**
+	 * Get difference between two dates in human readable format
+	 */
+	public static function dateDiff(mixed $date1, mixed $date2): string
+	{
+		try {
+			$chronos1 = self::parseDate($date1);
+			$chronos2 = self::parseDate($date2);
+			return $chronos1->diffForHumans($chronos2);
+		} catch (\Exception $e) {
+			return '';
+		}
+	}
+
+	/**
+	 * Get start of period (e.g., "day", "week", "month", "year")
+	 */
+	public static function dateStartOf(mixed $date, string $unit = 'day'): string
+	{
+		try {
+			$chronos = self::parseDate($date);
+			
+			switch ($unit) {
+				case 'day':
+					return $chronos->startOfDay()->format('c');
+				case 'week':
+					return $chronos->startOfWeek()->format('c');
+				case 'month':
+					return $chronos->startOfMonth()->format('c');
+				case 'year':
+					return $chronos->startOfYear()->format('c');
+				default:
+					return $chronos->format('c');
+			}
+		} catch (\Exception $e) {
+			return (string)$date;
+		}
+	}
+
+	/**
+	 * Get end of period (e.g., "day", "week", "month", "year")
+	 */
+	public static function dateEndOf(mixed $date, string $unit = 'day'): string
+	{
+		try {
+			$chronos = self::parseDate($date);
+			
+			switch ($unit) {
+				case 'day':
+					return $chronos->endOfDay()->format('c');
+				case 'week':
+					return $chronos->endOfWeek()->format('c');
+				case 'month':
+					return $chronos->endOfMonth()->format('c');
+				case 'year':
+					return $chronos->endOfYear()->format('c');
+				default:
+					return $chronos->format('c');
+			}
+		} catch (\Exception $e) {
+			return (string)$date;
+		}
+	}
+
+	/**
+	 * Check if date is a weekend
+	 */
+	public static function dateIsWeekend(mixed $date): bool
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return $chronos->isWeekend();
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Check if date is a weekday
+	 */
+	public static function dateIsWeekday(mixed $date): bool
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return !$chronos->isWeekend();
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Check if date is in the past
+	 */
+	public static function dateIsPast(mixed $date): bool
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return $chronos->isPast();
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Check if date is in the future
+	 */
+	public static function dateIsFuture(mixed $date): bool
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return $chronos->isFuture();
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Check if date is today
+	 */
+	public static function dateIsToday(mixed $date): bool
+	{
+		try {
+			$chronos = self::parseDate($date);
+			return $chronos->isToday();
+		} catch (\Exception $e) {
+			return false;
+		}
 	}
 }

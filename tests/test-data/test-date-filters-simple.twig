@@ -1,0 +1,116 @@
+{# Simple practical examples of the new date filters #}
+
+<h1>Blog Post Example</h1>
+
+{% set article = {
+    title: "New Features in Total CMS",
+    created_at: "-5 days",
+    updated_at: "yesterday",
+    publish_date: "+2 days"
+} %}
+
+<article>
+    <h2>{{ article.title }}</h2>
+    
+    <div class="meta">
+        <p>Created {{ article.created_at|dateRelative }}</p>
+        <p>Last updated {{ article.updated_at|dateRelative }}</p>
+        
+        {% if article.publish_date|dateIsFuture %}
+            <p class="scheduled">⏰ Scheduled for {{ article.publish_date|dateFormat('F j, Y') }}</p>
+        {% elseif article.publish_date|dateIsToday %}
+            <p class="published">🎉 Published today!</p>
+        {% else %}
+            <p class="published">✅ Published on {{ article.publish_date|dateFormat('F j, Y') }}</p>
+        {% endif %}
+    </div>
+</article>
+
+<hr>
+
+<h1>Event Calendar Example</h1>
+
+{% set events = [
+    { name: "Team Meeting", date: "tomorrow 2:00 PM" },
+    { name: "Project Deadline", date: "+1 week" },
+    { name: "Company Picnic", date: "next saturday" },
+    { name: "Quarterly Review", date: "first day of next month" }
+] %}
+
+<div class="events">
+    {% for event in events %}
+        <div class="event {% if event.date|dateIsToday %}today{% elseif event.date|dateIsWeekend %}weekend{% endif %}">
+            <h3>{{ event.name }}</h3>
+            <p>
+                📅 {{ event.date|dateFormat('l, F j') }}
+                <small>({{ event.date|dateRelative }})</small>
+            </p>
+            
+            {% if event.date|dateIsToday %}
+                <span class="badge">Today!</span>
+            {% elseif event.date|dateDiff("now")|slice(0, 2) == "in" %}
+                <span class="badge">Upcoming</span>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<hr>
+
+<h1>Task Deadline Example</h1>
+
+{% set deadline = "+3 days 5:00 PM" %}
+
+<div class="task">
+    <h3>Complete Project Documentation</h3>
+    
+    <p>Deadline: {{ deadline|dateFormat('F j, Y \\a\\t g:i A') }}</p>
+    
+    {% if deadline|dateIsPast %}
+        <div class="alert alert-danger">⚠️ Overdue!</div>
+    {% elseif deadline|dateIsToday %}
+        <div class="alert alert-warning">⏰ Due today!</div>
+    {% elseif deadline|dateAdd('-1 day')|dateIsToday %}
+        <div class="alert alert-info">📢 Due tomorrow!</div>
+    {% else %}
+        <div class="alert alert-success">✅ Due {{ deadline|dateRelative }}</div>
+    {% endif %}
+    
+    <p>Days remaining: {{ "now"|dateDiff(deadline)|replace({'in ': '', ' from now': ''}) }}</p>
+</div>
+
+<hr>
+
+<h1>Business Hours Check</h1>
+
+{% set now = "now" %}
+{% set openTime = now|dateStartOf('day')|dateAdd('+9 hours') %}
+{% set closeTime = now|dateStartOf('day')|dateAdd('+17 hours') %}
+
+<div class="hours">
+    <h3>Store Hours</h3>
+    <p>Open: {{ openTime|dateFormat('g:i A') }} - {{ closeTime|dateFormat('g:i A') }}</p>
+    
+    {% if now|dateIsWeekend %}
+        <p class="closed">🚫 Closed on weekends</p>
+    {% elseif now >= openTime and now <= closeTime %}
+        <p class="open">✅ Currently Open</p>
+    {% else %}
+        <p class="closed">🚫 Currently Closed</p>
+    {% endif %}
+</div>
+
+<hr>
+
+<h1>Age Calculator</h1>
+
+{% set birthdate = "1990-06-15" %}
+
+<div class="age">
+    <p>Birthdate: {{ birthdate|dateFormat('F j, Y') }}</p>
+    <p>Age: {{ birthdate|dateDiff("now")|replace({' ago': ''}) }}</p>
+    
+    {% if birthdate|dateFormat('m-d') == "now"|dateFormat('m-d') %}
+        <p>🎉 Happy Birthday!</p>
+    {% endif %}
+</div>
