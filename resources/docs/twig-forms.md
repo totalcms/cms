@@ -23,7 +23,7 @@ type        = type of the input
 class       = classes added to the field
 value       = value of the field
 label       = label of the field
-default     = default value of the field if object is not set or value is empty
+default     = default value of the field if object is not set or value is empty (date fields support natural language)
 placeholder = placeholder of the field
 help        = help text of the field
 icon        = show icon
@@ -68,7 +68,7 @@ Total CMS provides ready-to-use forms for standard collection types:
 {# Single field forms #}
 {{ cms.form.checkbox(id, formOptions = {}, fieldOptions = {}) }}
 {{ cms.form.color(id, formOptions = {}, fieldOptions = {}) }}
-{{ cms.form.date(id, formOptions = {}, fieldOptions = {}) }}
+{{ cms.form.date(id, formOptions = {}, fieldOptions = {}) }}  {# Supports natural language defaults #}
 {{ cms.form.datetime(id, formOptions = {}, fieldOptions = {}) }}
 {{ cms.form.email(id, formOptions = {}, fieldOptions = {}) }}
 {{ cms.form.image(id, formOptions = {}, fieldOptions = {}) }}
@@ -273,6 +273,146 @@ patterns.passwordMinLength(8)  # Minimum password length
         }
     }
 }) }}
+```
+
+### Date Field Natural Language Defaults
+
+Date fields now support natural language default values powered by CakePHP Chronos. This makes it easy to set smart defaults without complex date calculations.
+
+#### Using Natural Language Defaults in Forms
+
+```twig
+{# Basic date field with tomorrow as default #}
+{{ cms.form.date('event-date', {}, {
+    default: 'tomorrow',
+    label: 'Event Date'
+}) }}
+
+{# Date field with relative default #}
+{{ cms.form.date('deadline', {}, {
+    default: '+1 week',
+    label: 'Project Deadline'
+}) }}
+
+{# Using with form builder #}
+{% set form = cms.form.builder('tasks') %}
+{{ form.field('due_date', {
+    field: 'date',
+    default: 'next friday',
+    label: 'Due Date'
+}) }}
+```
+
+#### Supported Natural Language Formats
+
+```twig
+{# Relative dates #}
+default: 'now'              {# Current date/time #}
+default: 'today'            {# Today at midnight #}
+default: 'tomorrow'         {# Tomorrow #}
+default: 'yesterday'        {# Yesterday #}
+
+{# Relative intervals #}
+default: '+1 day'           {# 1 day from now #}
+default: '+2 weeks'         {# 2 weeks from now #}
+default: '+3 months'        {# 3 months from now #}
+default: '+1 year'          {# 1 year from now #}
+default: '-7 days'          {# 7 days ago #}
+default: '-1 month'         {# 1 month ago #}
+
+{# Natural language #}
+default: 'next monday'      {# Next Monday #}
+default: 'last friday'      {# Last Friday #}
+default: 'first day of this month'
+default: 'last day of this month'
+default: 'first day of next month'
+default: 'next saturday 2:00 PM'
+```
+
+#### Schema Definition Examples
+
+When defining date fields in schemas, you can use natural language defaults:
+
+```json
+{
+    "type": "date",
+    "label": "Event Date",
+    "default": "tomorrow"
+}
+
+{
+    "type": "date",
+    "label": "Deadline",
+    "default": "+30 days"
+}
+
+{
+    "type": "date",
+    "label": "Review Date",
+    "default": "first day of next month"
+}
+```
+
+#### Practical Examples
+
+```twig
+{# Event creation form with smart defaults #}
+{% set form = cms.form.builder('events') %}
+
+{{ form.field('start_date', {
+    field: 'date',
+    default: 'next saturday',
+    label: 'Event Start Date'
+}) }}
+
+{{ form.field('registration_deadline', {
+    field: 'date',
+    default: '-1 week',  {# 1 week before event #}
+    label: 'Registration Deadline',
+    help: 'Default is 1 week before event'
+}) }}
+
+{{ form.field('early_bird_deadline', {
+    field: 'date',
+    default: '-2 weeks',  {# 2 weeks before event #}
+    label: 'Early Bird Deadline'
+}) }}
+
+{# Task management with dynamic defaults #}
+{{ cms.form.date('task-due', {}, {
+    default: '+3 days',
+    label: 'Task Due Date',
+    help: 'Default is 3 days from today'
+}) }}
+
+{# Subscription renewal #}
+{{ cms.form.date('renewal-date', {}, {
+    default: '+1 year',
+    label: 'Renewal Date',
+    help: 'Annual subscription renewal'
+}) }}
+```
+
+#### Date Fields with onCreate/onUpdate Settings
+
+Date fields can also be configured to automatically update:
+
+```json
+{
+    "type": "date",
+    "label": "Created Date",
+    "settings": {
+        "onCreate": true  // Automatically set to current date when object is created
+    }
+}
+
+{
+    "type": "date", 
+    "label": "Last Modified",
+    "settings": {
+        "onUpdate": true  // Automatically update to current date when object is modified
+    }
+}
 ```
 
 ### ID Auto-generation
