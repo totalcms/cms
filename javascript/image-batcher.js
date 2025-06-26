@@ -208,8 +208,13 @@ class ImageBatcher {
 		const extension = imageworksParams.get('fm') || image.name.split('.').pop();
 
 		// Build the base URL for this specific image
-		const baseUrl = `${this.batchData.apiUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}.${extension}`;
+		let baseUrl = `${this.batchData.apiUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}.${extension}`;
 		const params = new URLSearchParams();
+
+		if (image.type === 'gallery') {
+			const basename = image.name.split('.').slice(0, -1).join('.');
+			baseUrl = `${this.batchData.apiUrl}/imageworks/${this.batchData.collection}/${image.id}/${this.batchData.property}/${basename}.${extension}`;
+		}
 
 		// First, copy ALL ImageWorks parameters from the example URL
 		// These are the processing parameters (w, h, fit, q, fm, etc.)
