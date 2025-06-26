@@ -153,6 +153,7 @@ else
 fi
 
 # Update version if changed
+print_info "Comparing versions: '$NEW_VERSION' vs '$CURRENT_VERSION'"
 if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     print_info "Updating version to $NEW_VERSION..."
     # Get current git commit hash
@@ -161,6 +162,8 @@ if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
     echo "$NEW_VERSION ($GIT_HASH)" > version.txt
 	cp version.txt dist/version
     print_success "Version updated to $NEW_VERSION ($GIT_HASH)"
+else
+    print_info "Version unchanged ($CURRENT_VERSION)"
 fi
 
 print_info "Installing PHP dependencies for release..."
