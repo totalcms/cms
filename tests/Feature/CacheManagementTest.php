@@ -238,10 +238,20 @@ describe('Cache Reporter', function () {
 		
 		$stats = $cacheReporter->getCacheStats();
 		expect($stats)->toBeArray();
-		expect($stats)->toHaveKeys(['timestamp', 'services']);
+		expect($stats)->toHaveKeys(['timestamp', 'cache_enabled', 'cache_version', 'available_backends', 'services']);
 		
 		// Should have timestamp
 		expect($stats['timestamp'])->toBeInt();
+		
+		// Should have cache enabled status
+		expect($stats['cache_enabled'])->toBeIn([true, false]);
+		
+		// Should have cache version
+		expect($stats['cache_version'])->toBeString();
+		
+		// Should have available backends
+		expect($stats['available_backends'])->toBeArray();
+		expect($stats['available_backends'])->toHaveKeys(['filesystem', 'opcache', 'redis', 'memcached']);
 		
 		// Services should be an array
 		expect($stats['services'])->toBeArray();

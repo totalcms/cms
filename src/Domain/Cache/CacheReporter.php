@@ -70,8 +70,11 @@ final class CacheReporter
 	public function getCacheStats(): array
 	{
 		$stats = [
-			'timestamp' => time(),
-			'services'  => [],
+			'timestamp'          => time(),
+			'cache_enabled'      => $this->isCacheEnabled(),
+			'cache_version'      => '2.0', // Current cache system version
+			'available_backends' => $this->getAvailableBackends(),
+			'services'           => [],
 		];
 
 		// Collect stats from each available service
@@ -253,6 +256,37 @@ final class CacheReporter
 			'Enable OPcache for PHP bytecode acceleration',
 			'Use filesystem cache as reliable fallback option',
 			'Clear specific cache types instead of full cache clears',
+		];
+	}
+
+	/**
+	 * Determine if caching is currently enabled.
+	 *
+	 * Cache is considered enabled when:
+	 * - Debug mode is disabled (production mode)
+	 * - At least one cache backend is available
+	 */
+	private function isCacheEnabled(): bool
+	{
+		// Check if at least one cache backend is available
+		return $this->filesystemService->isAvailable() ||
+			   $this->opcacheService->isAvailable() ||
+			   $this->redisService->isAvailable() ||
+			   $this->memcachedService->isAvailable();
+	}
+
+	/**
+	 * Get available cache backends with their display names.
+	 *
+	 * @return array<string,string>
+	 */
+	private function getAvailableBackends(): array
+	{
+		return [
+			'filesystem' => 'Filesystem Cache',
+			'opcache'    => 'OPcache',
+			'redis'      => 'Redis',
+			'memcached'  => 'Memcached',
 		];
 	}
 }
