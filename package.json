@@ -25,6 +25,7 @@
     "slugify": "^1.6.6",
     "sortablejs": "^1.15.2",
     "swagger-ui-dist": "^5.1.0",
+    "thememirror": "^2.0.1",
     "tippy.js": "^6.3.7"
   }
 }

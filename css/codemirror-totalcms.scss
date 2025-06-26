@@ -30,7 +30,7 @@
 		height: auto;
 		min-height: 200px;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 14px;
+		font-size: 16px;
 		line-height: 1.5;
 		border: none;
 		border-radius: var(--totalform-radius);
@@ -121,7 +121,449 @@
 	}
 }
 
-// Twig editor specific styling - Light theme for dashboard consistency
+// Twig Theme CSS Variables
+// Default theme: Tomorrow (beautiful and readable)
+:root {
+	--twig-delimiter: #8959A8; // keywords in purple
+	--twig-variable: #C82829; // variableName, propertyName in red
+	--twig-variable-2: #4271AE; // functions, definitions in blue
+	--twig-variable-3: #C99E00; // className, typeName in yellow
+	--twig-string: #718C00; // strings in green
+	--twig-number: #F5871F; // numbers in orange
+	--twig-keyword: #8959A8; // keywords in purple
+	--twig-builtin: #4271AE; // built-in functions in blue
+	--twig-atom: #F5871F; // atoms (true, false, null) in orange
+	--twig-operator: #3E999F; // operators in teal
+	--twig-bracket: #4D4D4C; // brackets in dark gray
+	--twig-comment: #8E908C; // comments in gray
+	--twig-property: #C82829; // properties in red
+	--twig-meta: #8959A8; // meta in purple
+	--twig-qualifier: #4D4D4C; // qualifiers in dark gray
+	--twig-error-bg: #FFF2CC;
+	--twig-error-color: #C82829;
+}
+
+// Theme 1: GitHub Light (Default)
+.twig-theme-github {
+	--twig-delimiter: #d73a49;
+	--twig-variable: #6f42c1;
+	--twig-variable-2: #005cc5;
+	--twig-variable-3: #e36209;
+	--twig-string: #032f62;
+	--twig-number: #005cc5;
+	--twig-keyword: #d73a49;
+	--twig-builtin: #6f42c1;
+	--twig-atom: #005cc5;
+	--twig-operator: #d73a49;
+	--twig-bracket: #24292e;
+	--twig-comment: #6a737d;
+	--twig-property: #6f42c1;
+	--twig-meta: #005cc5;
+	--twig-qualifier: #24292e;
+	--twig-error-bg: #ffeef0;
+	--twig-error-color: #d73a49;
+}
+
+// Theme 2: VS Code Light
+.twig-theme-vscode {
+	--twig-delimiter: #0000ff;
+	--twig-variable: #001080;
+	--twig-variable-2: #267f99;
+	--twig-variable-3: #a31515;
+	--twig-string: #a31515;
+	--twig-number: #098658;
+	--twig-keyword: #0000ff;
+	--twig-builtin: #795e26;
+	--twig-atom: #0000ff;
+	--twig-operator: #000000;
+	--twig-bracket: #000000;
+	--twig-comment: #008000;
+	--twig-property: #001080;
+	--twig-meta: #0000ff;
+	--twig-qualifier: #000000;
+	--twig-error-bg: #ffebee;
+	--twig-error-color: #c62828;
+}
+
+// Theme 3: Atom One Light
+.twig-theme-atom {
+	--twig-delimiter: #a626a4;
+	--twig-variable: #e45649;
+	--twig-variable-2: #0184bc;
+	--twig-variable-3: #c18401;
+	--twig-string: #50a14f;
+	--twig-number: #986801;
+	--twig-keyword: #a626a4;
+	--twig-builtin: #4078f2;
+	--twig-atom: #a626a4;
+	--twig-operator: #383a42;
+	--twig-bracket: #383a42;
+	--twig-comment: #a0a1a7;
+	--twig-property: #e45649;
+	--twig-meta: #a626a4;
+	--twig-qualifier: #383a42;
+	--twig-error-bg: #ffeaa7;
+	--twig-error-color: #d63031;
+}
+
+// Theme 4: IntelliJ Light
+.twig-theme-intellij {
+	--twig-delimiter: #000080;
+	--twig-variable: #871094;
+	--twig-variable-2: #0033b3;
+	--twig-variable-3: #067d17;
+	--twig-string: #008000;
+	--twig-number: #0000ff;
+	--twig-keyword: #000080;
+	--twig-builtin: #8a2be2;
+	--twig-atom: #000080;
+	--twig-operator: #000000;
+	--twig-bracket: #000000;
+	--twig-comment: #808080;
+	--twig-property: #871094;
+	--twig-meta: #000080;
+	--twig-qualifier: #000000;
+	--twig-error-bg: #ffcdd2;
+	--twig-error-color: #b71c1c;
+}
+
+// Theme 5: Espresso (from thememirror)
+.twig-theme-espresso {
+	--twig-delimiter: #2F6F9F; // keywords, operators, tagName
+	--twig-variable: #000000; // variableName (default foreground with bold)
+	--twig-variable-2: #4F9FD0; // attributeName
+	--twig-variable-3: #4F9FD0; // property names
+	--twig-string: #CF4F5F; // string, className
+	--twig-number: #CF4F5F; // number (bold)
+	--twig-keyword: #2F6F9F; // keyword (bold)
+	--twig-builtin: #2F6F9F; // built-in functions
+	--twig-atom: #CF4F5F; // atoms/booleans
+	--twig-operator: #2F6F9F; // operators
+	--twig-bracket: #000000; // brackets
+	--twig-comment: #AAAAAA; // comments
+	--twig-property: #4F9FD0; // properties
+	--twig-meta: #2F6F9F; // meta
+	--twig-qualifier: #000000; // qualifiers
+	--twig-error-bg: #FFE5E5;
+	--twig-error-color: #CF4F5F;
+}
+
+// Theme 6: Tomorrow (from thememirror)
+.twig-theme-tomorrow {
+	--twig-delimiter: #8959A8; // keywords in purple
+	--twig-variable: #C82829; // variableName, propertyName in red
+	--twig-variable-2: #4271AE; // functions, definitions in blue
+	--twig-variable-3: #C99E00; // className, typeName in yellow
+	--twig-string: #718C00; // strings in green
+	--twig-number: #F5871F; // numbers in orange
+	--twig-keyword: #8959A8; // keywords in purple
+	--twig-builtin: #4271AE; // built-in functions in blue
+	--twig-atom: #F5871F; // atoms (true, false, null) in orange
+	--twig-operator: #3E999F; // operators in teal
+	--twig-bracket: #4D4D4C; // brackets in dark gray
+	--twig-comment: #8E908C; // comments in gray
+	--twig-property: #C82829; // properties in red
+	--twig-meta: #8959A8; // meta in purple
+	--twig-qualifier: #4D4D4C; // qualifiers in dark gray
+	--twig-error-bg: #FFF2CC;
+	--twig-error-color: #C82829;
+}
+
+// Theme 7: Amy (Dark theme from thememirror)
+.twig-theme-amy {
+	--twig-delimiter: #60B0FF; // keywords
+	--twig-variable: #008080; // variableName
+	--twig-variable-2: #50A0A0; // properties
+	--twig-variable-3: #70E080; // className
+	--twig-string: #999999; // strings
+	--twig-number: #7090B0; // numbers
+	--twig-keyword: #60B0FF; // keywords
+	--twig-builtin: #B0FFF0; // definition keywords
+	--twig-atom: #8080A0; // bool, null
+	--twig-operator: #A0A0FF; // operators
+	--twig-bracket: #805080; // punctuation
+	--twig-comment: #404080; // comments
+	--twig-property: #50A0A0; // properties
+	--twig-meta: #009090; // tagName
+	--twig-qualifier: #D0D0FF; // default
+	--twig-error-bg: #400040;
+	--twig-error-color: #FF8080;
+}
+
+// Theme 8: Ayu Light (from thememirror)
+.twig-theme-ayu-light {
+	--twig-delimiter: #fa8d3e; // keywords
+	--twig-variable: #5c6166; // variables
+	--twig-variable-2: #5c6166; // properties
+	--twig-variable-3: #5c6166; // misc
+	--twig-string: #86b300; // strings
+	--twig-number: #ffaa33; // numbers
+	--twig-keyword: #fa8d3e; // keywords
+	--twig-builtin: #fa8d3e; // built-ins
+	--twig-atom: #ffaa33; // atoms
+	--twig-operator: #ed9366; // operators
+	--twig-bracket: #5c6166; // brackets
+	--twig-comment: #787b8099; // comments (with transparency)
+	--twig-property: #5c6166; // properties
+	--twig-meta: #fa8d3e; // meta
+	--twig-qualifier: #5c6166; // qualifiers
+	--twig-error-bg: #fff4e5;
+	--twig-error-color: #fa8d3e;
+}
+
+// Theme 9: Barf (Dark theme from thememirror)
+.twig-theme-barf {
+	--twig-delimiter: #697A8E; // keywords
+	--twig-variable: #708E67; // variables
+	--twig-variable-2: #708E67; // properties
+	--twig-variable-3: #708E67; // misc
+	--twig-string: #5C81B3; // strings
+	--twig-number: #C1E1B8; // numbers
+	--twig-keyword: #697A8E; // keywords
+	--twig-builtin: #697A8E; // built-ins
+	--twig-atom: #C1E1B8; // atoms
+	--twig-operator: #697A8E; // operators
+	--twig-bracket: #5C81B3; // brackets
+	--twig-comment: #6E6E6E; // comments
+	--twig-property: #708E67; // properties
+	--twig-meta: #697A8E; // meta
+	--twig-qualifier: #708E67; // qualifiers
+	--twig-error-bg: #3a3a3a;
+	--twig-error-color: #C1E1B8;
+}
+
+// Theme 10: Bespin (Dark theme from thememirror)
+.twig-theme-bespin {
+	--twig-delimiter: #5EA6EA; // keywords
+	--twig-variable: #7587A6; // variables
+	--twig-variable-2: #7587A6; // properties
+	--twig-variable-3: #7587A6; // misc
+	--twig-string: #54BE0D; // strings
+	--twig-number: #CF6A4C; // numbers
+	--twig-keyword: #5EA6EA; // keywords
+	--twig-builtin: #5EA6EA; // built-ins
+	--twig-atom: #CF6A4C; // atoms
+	--twig-operator: #5EA6EA; // operators
+	--twig-bracket: #EDEF7D; // brackets
+	--twig-comment: #666666; // comments
+	--twig-property: #7587A6; // properties
+	--twig-meta: #5EA6EA; // meta
+	--twig-qualifier: #7587A6; // qualifiers
+	--twig-error-bg: #2a2a2a;
+	--twig-error-color: #CF6A4C;
+}
+
+// Theme 11: Birds of Paradise (Dark theme from thememirror)
+.twig-theme-birds-of-paradise {
+	--twig-delimiter: #EF5D32; // keywords
+	--twig-variable: #7DAF9C; // variables
+	--twig-variable-2: #7DAF9C; // properties
+	--twig-variable-3: #7DAF9C; // misc
+	--twig-string: #D9D762; // strings
+	--twig-number: #6C99BB; // numbers
+	--twig-keyword: #EF5D32; // keywords
+	--twig-builtin: #EF5D32; // built-ins
+	--twig-atom: #6C99BB; // atoms
+	--twig-operator: #EF5D32; // operators
+	--twig-bracket: #EFCB43; // brackets
+	--twig-comment: #6B4E32; // comments
+	--twig-property: #7DAF9C; // properties
+	--twig-meta: #EF5D32; // meta
+	--twig-qualifier: #7DAF9C; // qualifiers
+	--twig-error-bg: #3a2a1a;
+	--twig-error-color: #EF5D32;
+}
+
+// Theme 12: Boys and Girls (Dark theme from thememirror)
+.twig-theme-boys-and-girls {
+	--twig-delimiter: #E62286; // based on available colors
+	--twig-variable: #E62286; // variables (bold)
+	--twig-variable-2: #E62286; // properties
+	--twig-variable-3: #E62286; // misc
+	--twig-string: #00D8FF; // strings
+	--twig-number: #E62286; // numbers
+	--twig-keyword: #E62286; // keywords
+	--twig-builtin: #E62286; // built-ins
+	--twig-atom: #E62286; // atoms
+	--twig-operator: #E62286; // operators
+	--twig-bracket: #00D8FF; // brackets
+	--twig-comment: #404040; // comments
+	--twig-property: #E62286; // properties
+	--twig-meta: #E62286; // meta
+	--twig-qualifier: #E62286; // qualifiers
+	--twig-error-bg: #2a1a2a;
+	--twig-error-color: #E62286;
+}
+
+// Theme 13: Clouds (Light theme from thememirror)
+.twig-theme-clouds {
+	--twig-delimiter: #AF956F; // keywords
+	--twig-variable: #606060; // default based on bracket color
+	--twig-variable-2: #606060; // properties
+	--twig-variable-3: #606060; // misc
+	--twig-string: #5D90CD; // strings
+	--twig-number: #46A609; // numbers
+	--twig-keyword: #AF956F; // keywords
+	--twig-builtin: #AF956F; // built-ins
+	--twig-atom: #46A609; // atoms
+	--twig-operator: #AF956F; // operators
+	--twig-bracket: #606060; // brackets
+	--twig-comment: #BCC8BA; // comments
+	--twig-property: #606060; // properties
+	--twig-meta: #AF956F; // meta
+	--twig-qualifier: #606060; // qualifiers
+	--twig-error-bg: #f5f5f5;
+	--twig-error-color: #AF956F;
+}
+
+// Theme 14: Cobalt (Dark theme from thememirror)
+.twig-theme-cobalt {
+	--twig-delimiter: #FF9D00; // keywords
+	--twig-variable: #CCCCCC; // variables
+	--twig-variable-2: #CCCCCC; // properties
+	--twig-variable-3: #CCCCCC; // misc
+	--twig-string: #3AD900; // strings
+	--twig-number: #FF628C; // numbers
+	--twig-keyword: #FF9D00; // keywords
+	--twig-builtin: #FF9D00; // built-ins
+	--twig-atom: #FF628C; // atoms
+	--twig-operator: #FF9D00; // operators
+	--twig-bracket: #EDEF7D; // brackets
+	--twig-comment: #0088FF; // comments
+	--twig-property: #CCCCCC; // properties
+	--twig-meta: #FF9D00; // meta
+	--twig-qualifier: #CCCCCC; // qualifiers
+	--twig-error-bg: #1a1a3a;
+	--twig-error-color: #FF628C;
+}
+
+// Theme 15: Cool Glow (Dark theme from thememirror)
+.twig-theme-cool-glow {
+	--twig-delimiter: #2BF1DC; // keywords
+	--twig-variable: #B683CA; // variables
+	--twig-variable-2: #B683CA; // properties
+	--twig-variable-3: #B683CA; // misc
+	--twig-string: #8DFF8E; // strings
+	--twig-number: #62E9BD; // numbers
+	--twig-keyword: #2BF1DC; // keywords
+	--twig-builtin: #2BF1DC; // built-ins
+	--twig-atom: #62E9BD; // atoms
+	--twig-operator: #2BF1DC; // operators
+	--twig-bracket: #60A4F1; // brackets
+	--twig-comment: #AEAEAE; // comments
+	--twig-property: #B683CA; // properties
+	--twig-meta: #2BF1DC; // meta
+	--twig-qualifier: #B683CA; // qualifiers
+	--twig-error-bg: #0a2a2a;
+	--twig-error-color: #2BF1DC;
+}
+
+// Theme 16: Dracula (Dark theme from thememirror)
+.twig-theme-dracula {
+	--twig-delimiter: #ff79c6; // keywords
+	--twig-variable: #f8f8f2; // default foreground
+	--twig-variable-2: #f8f8f2; // properties
+	--twig-variable-3: #f8f8f2; // misc
+	--twig-string: #f1fa8c; // strings
+	--twig-number: #bd93f9; // numbers
+	--twig-keyword: #ff79c6; // keywords
+	--twig-builtin: #ff79c6; // built-ins
+	--twig-atom: #bd93f9; // atoms
+	--twig-operator: #ff79c6; // operators
+	--twig-bracket: #f1fa8c; // brackets
+	--twig-comment: #6272a4; // comments
+	--twig-property: #f8f8f2; // properties
+	--twig-meta: #ff79c6; // meta
+	--twig-qualifier: #f8f8f2; // qualifiers
+	--twig-error-bg: #44475a;
+	--twig-error-color: #ff5555;
+}
+
+// Theme 17: Noctis Lilac (Light theme from thememirror)
+.twig-theme-noctis-lilac {
+	--twig-delimiter: #ff5792; // keywords
+	--twig-variable: #fa8900; // variables
+	--twig-variable-2: #fa8900; // properties
+	--twig-variable-3: #fa8900; // misc
+	--twig-string: #00b368; // strings
+	--twig-number: #5842ff; // numbers
+	--twig-keyword: #ff5792; // keywords
+	--twig-builtin: #ff5792; // built-ins
+	--twig-atom: #5842ff; // atoms
+	--twig-operator: #ff5792; // operators
+	--twig-bracket: #0431fa; // brackets
+	--twig-comment: #9995b7; // comments
+	--twig-property: #fa8900; // properties
+	--twig-meta: #ff5792; // meta
+	--twig-qualifier: #fa8900; // qualifiers
+	--twig-error-bg: #fef0f5;
+	--twig-error-color: #ff5792;
+}
+
+// Theme 18: Rose Pine Dawn (Light theme from thememirror)
+.twig-theme-rose-pine-dawn {
+	--twig-delimiter: #286983; // keywords
+	--twig-variable: #d7827e; // variables
+	--twig-variable-2: #d7827e; // properties
+	--twig-variable-3: #d7827e; // misc
+	--twig-string: #ea9d34; // strings
+	--twig-number: #d7827e; // numbers
+	--twig-keyword: #286983; // keywords
+	--twig-builtin: #286983; // built-ins
+	--twig-atom: #d7827e; // atoms
+	--twig-operator: #286983; // operators
+	--twig-bracket: #797593; // brackets
+	--twig-comment: #9893a5; // comments
+	--twig-property: #d7827e; // properties
+	--twig-meta: #286983; // meta
+	--twig-qualifier: #d7827e; // qualifiers
+	--twig-error-bg: #fdf6e3;
+	--twig-error-color: #d7827e;
+}
+
+// Theme 19: Smoothy (Light theme from thememirror)
+.twig-theme-smoothy {
+	--twig-delimiter: #D8B229; // keywords
+	--twig-variable: #77ACB0; // variables
+	--twig-variable-2: #77ACB0; // properties
+	--twig-variable-3: #77ACB0; // misc
+	--twig-string: #704D3D; // strings
+	--twig-number: #E66C29; // numbers
+	--twig-keyword: #D8B229; // keywords
+	--twig-builtin: #D8B229; // built-ins
+	--twig-atom: #E66C29; // atoms
+	--twig-operator: #4EA44E; // operators
+	--twig-bracket: #77ACB0; // brackets
+	--twig-comment: #CFCFCF; // comments
+	--twig-property: #77ACB0; // properties
+	--twig-meta: #D8B229; // meta
+	--twig-qualifier: #77ACB0; // qualifiers
+	--twig-error-bg: #fff8f0;
+	--twig-error-color: #E66C29;
+}
+
+// Theme 20: Solarized Light (Light theme from thememirror)
+.twig-theme-solarized-light {
+	--twig-delimiter: #859900; // keywords
+	--twig-variable: #268BD2; // variables
+	--twig-variable-2: #268BD2; // properties
+	--twig-variable-3: #268BD2; // misc
+	--twig-string: #2AA198; // strings
+	--twig-number: #D33682; // numbers
+	--twig-keyword: #859900; // keywords
+	--twig-builtin: #859900; // built-ins
+	--twig-atom: #D33682; // atoms
+	--twig-operator: #859900; // operators
+	--twig-bracket: #859900; // brackets
+	--twig-comment: #93A1A1; // comments
+	--twig-property: #268BD2; // properties
+	--twig-meta: #859900; // meta
+	--twig-qualifier: #268BD2; // qualifiers
+	--twig-error-bg: #fdf6e3;
+	--twig-error-color: #D33682;
+}
+
+// Twig editor specific styling - Uses CSS variables for theming
 .twig-editor {
 	border: 1px solid oklch(var(--totalform-border-color));
 	border-radius: var(--totalform-radius);
@@ -135,101 +577,101 @@
 
 		// Twig delimiters {{ }} {% %} {# #}
 		.cm-tag {
-			color: #0000ff; // Classic blue for delimiters
+			color: var(--twig-delimiter);
 			font-weight: bold;
 		}
 
 		// Twig variables and properties
 		.cm-variable {
-			color: #001080; // Dark blue for variables
+			color: var(--twig-variable);
 		}
 
 		.cm-variable-2 {
-			color: #267f99; // Teal for object properties
+			color: var(--twig-variable-2);
 		}
 
 		.cm-variable-3 {
-			color: #a31515; // Burgundy for special variables
+			color: var(--twig-variable-3);
 		}
 
 		// Strings and values
 		.cm-string {
-			color: #a31515; // Burgundy for strings - warm and readable
+			color: var(--twig-string);
 		}
 
 		.cm-number {
-			color: #098658; // Green for numbers
+			color: var(--twig-number);
 		}
 
 		// Twig keywords (if, for, set, etc.)
 		.cm-keyword {
-			color: #0000ff; // Blue for keywords - matches delimiters
+			color: var(--twig-keyword);
 			font-weight: bold;
 		}
 
 		// Twig filters and functions
 		.cm-builtin {
-			color: #795e26; // Brown for built-in functions
+			color: var(--twig-builtin);
 		}
 
 		.cm-atom {
-			color: #0000ff; // Blue for atoms (true, false, null)
+			color: var(--twig-atom);
 		}
 
 		// Operators and punctuation
 		.cm-operator {
-			color: #000000; // Black for operators - subtle
+			color: var(--twig-operator);
 		}
 
 		.cm-bracket {
-			color: #000000; // Black for brackets and parentheses
+			color: var(--twig-bracket);
 		}
 
 		// Comments
 		.cm-comment {
-			color: #008000; // Green for comments - classic
+			color: var(--twig-comment);
 			font-style: italic;
 		}
 
 		// Properties and attributes
 		.cm-property {
-			color: #6f42c1; // Purple for properties
+			color: var(--twig-property);
 		}
 
 		// Meta information
 		.cm-meta {
-			color: #005cc5; // Blue for meta
+			color: var(--twig-meta);
 		}
 
 		// Qualifiers
 		.cm-qualifier {
-			color: #24292e; // Dark gray for qualifiers
+			color: var(--twig-qualifier);
 		}
 
 		// Error highlighting
 		.cm-error {
-			background-color: #ffeef0;
-			color: #d73a49;
-			border-bottom: 1px wavy #d73a49;
+			background-color: var(--twig-error-bg);
+			color: var(--twig-error-color);
+			border-bottom: 1px wavy var(--twig-error-color);
 		}
 
 		// Special Twig-specific enhancements
 		.cm-twig-delimiter {
-			color: #d73a49;
+			color: var(--twig-delimiter);
 			font-weight: bold;
 		}
 
 		.cm-twig-variable {
-			color: #6f42c1;
+			color: var(--twig-variable);
 			font-weight: 500;
 		}
 
 		.cm-twig-filter {
-			color: #005cc5;
+			color: var(--twig-builtin);
 		}
 
 		.cm-twig-function {
-			color: #e36209;
+			color: var(--twig-builtin);
 			font-weight: 500;
 		}
 	}
@@ -257,7 +699,7 @@
 		height: auto;
 		min-height: 200px;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 14px;
+		font-size: 16px;
 		line-height: 1.5;
 		border: none;
 		border-radius: var(--totalform-radius);
@@ -496,7 +938,7 @@
 		border: none;
 		border-radius: 0;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 14px;
+		font-size: 16px;
 		line-height: 1.4;
 		height: auto;
 		min-height: 200px;

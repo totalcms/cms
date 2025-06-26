@@ -15,10 +15,10 @@ Code Line Counts:
 	php     : 25112
 	tests   : 10860
 	js      : 6096
-	scss    : 8729
+	scss    : 9149
 	json    : 3858
 	twig    : 2788
 	html    : 1
 	sh      : 193
 
-Total Lines of Code: 57637
+Total Lines of Code: 58057
