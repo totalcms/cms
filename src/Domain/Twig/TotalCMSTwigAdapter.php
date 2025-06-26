@@ -6,7 +6,7 @@ use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
-use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -34,14 +34,11 @@ use TotalCMS\Utils\ServerChecker;
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  * @SuppressWarnings("PHPMD.ExcessiveParameterList")
  * @SuppressWarnings("PHPMD.ExcessivePublicCount")
+ * @SuppressWarnings("PHPMD.ExcessiveClassLength")
+ *
  */
 final class TotalCMSTwigAdapter
 {
-	public TotalFormFactory $form;
-	public ServerChecker $checker;
-	public CacheManager $cacheManager;
-	public ImageCacheService $imageCacheService;
-	public LogAnalyzer $logger;
 	public string $api;
 	public string $dashboard;
 	public string $login;
@@ -57,24 +54,19 @@ final class TotalCMSTwigAdapter
 		private CollectionFetcher $collectionFetcher,
 		private SchemaLister $schemaLister,
 		private SchemaFetcher $schemaFetcher,
-		private TotalFormFactory $totalFormFactory,
-		private ServerChecker $serverChecker,
-		private CacheManager $cacheManagerService,
-		private LogAnalyzer $logAnalyzer,
+		public TotalFormFactory $form,
+		public ServerChecker $checker,
+		public CacheReporter $cacheReporter,
+		public LogAnalyzer $logger,
 		private PhpSession $session,
 		private AccessManager $accessManager,
 		private FileAccessManager $fileAccessManager,
-		private ImageCacheService $imageCacheServiceInstance,
+		public ImageCacheService $imageCacheService,
 	) {
 		$this->api               = $this->config->api;
 		$this->dashboard         = $this->api . '/admin';
 		$this->logout            = $this->api . '/logout';
 		$this->domain            = $this->getDomainName();
-		$this->form              = $this->totalFormFactory;
-		$this->checker           = $this->serverChecker;
-		$this->cacheManager      = $this->cacheManagerService;
-		$this->imageCacheService = $this->imageCacheServiceInstance;
-		$this->logger            = $this->logAnalyzer;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

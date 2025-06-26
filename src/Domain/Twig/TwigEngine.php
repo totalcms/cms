@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Twig;
 
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
@@ -23,12 +22,10 @@ use Twig\RuntimeLoader\RuntimeLoaderInterface;
 final class TwigEngine
 {
 	private TwigEnvironment $twig;
-	private CacheManager $cacheManager;
 
 	public function __construct(
 		Config $config,
 		TotalCMSTwigExtension $extension,
-		CacheManager $cacheManager,
 	) {
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		if (!file_exists($internalTemplates)) {
@@ -41,7 +38,6 @@ final class TwigEngine
 			$paths[] = $customTemplates;
 		}
 
-		$this->cacheManager = $cacheManager;
 		$filesystemConfig   = $config->cache['filesystem'];
 		$cacheDir           = $filesystemConfig['enabled'] ? $filesystemConfig['directory'] : false;
 
@@ -103,41 +99,5 @@ final class TwigEngine
 		} catch (\Exception $e) {
 			throw $e->getPrevious() ?? $e;
 		}
-	}
-
-	/**
-	 * Get cache manager instance.
-	 */
-	public function getCacheManager(): CacheManager
-	{
-		return $this->cacheManager;
-	}
-
-	/**
-	 * Clear all caches including OPcache.
-	 */
-	public function clearAllCaches(): bool
-	{
-		return $this->cacheManager->clearAllCaches();
-	}
-
-	/**
-	 * Get comprehensive cache statistics.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function getCacheStats(): array
-	{
-		return $this->cacheManager->getCacheStats();
-	}
-
-	/**
-	 * Get optimal cache configuration recommendations.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function getCacheRecommendations(): array
-	{
-		return $this->cacheManager->getOptimalCacheConfig();
 	}
 }

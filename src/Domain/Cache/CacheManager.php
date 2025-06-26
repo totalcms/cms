@@ -13,8 +13,6 @@ use TotalCMS\Domain\Cache\Service\RedisService;
  */
 final class CacheManager
 {
-	private const NO_CACHE = 'dev-no-cache';
-
 	// Cache key prefixes
 	public const PREFIX_COMPUTED = 'computed';
 	public const PREFIX_COLLECTION = 'collection';
@@ -43,8 +41,6 @@ final class CacheManager
 	public const TTL_API_RESPONSE = 900;          // 15 minutes - API responses can be cached briefly
 	public const TTL_SESSION_DATA = 1440;         // 24 minutes - session timeout buffer
 
-	/** @var string Current cache version for invalidation */
-	private string $cacheVersion;
 	private string $versionFile = '.cache_version';
 
 	/** @var array<string,CacheInterface> Available cache services */
@@ -63,7 +59,6 @@ final class CacheManager
 			'redis'      => $this->redisService,
 			'memcached'  => $this->memcachedService,
 		];
-		$this->cacheVersion = $this->getCacheVersion();
 		$this->versionFile  = $this->filesystemService->getCachDir() . '/' . $this->versionFile;
 	}
 
@@ -300,141 +295,14 @@ final class CacheManager
 		return $service->clear();
 	}
 
-	/**
-	 * Get cache statistics across all services.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function getUsageStats(): array
-	{
-		return [
-			'filesystem' => $this->filesystemService->getStats(),
-			'opcache'    => $this->opcacheService->getStats(),
-			'redis'      => $this->redisService->getStats(),
-			'memcached'  => $this->memcachedService->getStats(),
-		];
-	}
 
-	/**
-	 * Get recommended cache configuration based on usage patterns.
-	 *
-	 * @return array<string>
-	 */
-	public function getStrategicRecommendations(): array
-	{
-		return $this->buildRecommendations();
-	}
 
-	/**
-	 * Build cache recommendations based on available services.
-	 *
-	 * @return array<string>
-	 */
-	private function buildRecommendations(): array
-	{
-		$recommendations = [];
-		$services        = $this->getServiceAvailability();
-
-		$this->addCriticalRecommendations($recommendations, $services);
-		$this->addOptimizationRecommendations($recommendations, $services);
-		$this->addStatusRecommendations($recommendations, $services);
-
-		return $recommendations;
-	}
-
-	/**
-	 * Get availability status for all cache services.
-	 *
-	 * @return array<string,bool>
-	 */
-	private function getServiceAvailability(): array
-	{
-		return [
-			'opcache'    => $this->opcacheService->isAvailable(),
-			'memory'     => $this->redisService->isAvailable() || $this->memcachedService->isAvailable(),
-			'filesystem' => $this->filesystemService->isAvailable(),
-			'redis'      => $this->redisService->isAvailable(),
-			'memcached'  => $this->memcachedService->isAvailable(),
-		];
-	}
-
-	/**
-	 * Add critical recommendations.
-	 *
-	 * @param array<string> $recommendations
-	 * @param array<string,bool> $services
-	 */
-	private function addCriticalRecommendations(array &$recommendations, array $services): void
-	{
-		if (!$services['opcache']) {
-			$recommendations[] = '🚨 CRITICAL: Enable OPcache for 2-5x performance improvement';
-		}
-	}
-
-	/**
-	 * Add optimization recommendations.
-	 *
-	 * @param array<string> $recommendations
-	 * @param array<string,bool> $services
-	 */
-	private function addOptimizationRecommendations(array &$recommendations, array $services): void
-	{
-		if (!$services['memory']) {
-			$recommendations[] = '⚡ HIGH: Enable Redis or Memcached for fast API/session caching';
-		}
-
-		if (!$services['filesystem']) {
-			$recommendations[] = '💾 MEDIUM: Enable filesystem cache for persistent template storage';
-		}
-
-		if ($services['redis'] && $services['memcached']) {
-			$recommendations[] = '💡 TIP: You have both Redis and Memcached - consider disabling one to reduce complexity';
-		}
-	}
-
-	/**
-	 * Add status recommendations.
-	 *
-	 * @param array<string> $recommendations
-	 * @param array<string,bool> $services
-	 */
-	private function addStatusRecommendations(array &$recommendations, array $services): void
-	{
-		if ($services['memory'] && $services['filesystem'] && $services['opcache']) {
-			$recommendations[] = '✅ EXCELLENT: You have optimal multi-tier cache setup';
-		}
-	}
-
-	/**
-	 * Get the current cache version for invalidation.
-	 */
-	private function getCacheVersion(): string
-	{
-		// Don't create version files when filesystem cache is not available
-		if (!$this->filesystemService->isAvailable()) {
-			return self::NO_CACHE;
-		}
-
-		if (file_exists($this->versionFile)) {
-			$content = file_get_contents($this->versionFile);
-
-			return $content !== false ? $content : self::NO_CACHE;
-		}
-
-		// Generate new version
-		$version = date('Y-m-d-H-i-s') . '-' . uniqid();
-		$this->setCacheVersion($version);
-
-		return $version;
-	}
 
 	/**
 	 * Set a new cache version (invalidates all caches).
 	 */
 	private function setCacheVersion(string $version): void
 	{
-		$this->cacheVersion = $version;
-
 		// Don't create version files when filesystem cache is not available
 		if (!$this->filesystemService->isAvailable()) {
 			return;
@@ -465,65 +333,5 @@ final class CacheManager
 		return $success;
 	}
 
-	/**
-	 * Get cache statistics and health information.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function getCacheStats(): array
-	{
-		/** @var array<string,mixed> $stats */
-		$stats = [
-			'cache_enabled'      => $this->hasAnyCacheService(),
-			'available_backends' => [],
-			'cache_version'      => $this->cacheVersion,
-		];
 
-		foreach ($this->cacheServices as $key => $service) {
-			$serviceStats = $service->getStats();
-			$stats[$key]  = $serviceStats;
-
-			if ($serviceStats['available'] ?? false) {
-				$stats['available_backends'][$key] = $service->getName();
-			}
-		}
-
-		return $stats;
-	}
-
-	/**
-	 * Get optimal cache configuration recommendations.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function getOptimalCacheConfig(): array
-	{
-		$config = [
-			'cache_dir'       => $this->filesystemService->getCachDir(),
-			'recommendations' => [],
-		];
-
-		foreach ($this->cacheServices as $service) {
-			$config['recommendations'] = array_merge(
-				$config['recommendations'],
-				$service->getRecommendations()
-			);
-		}
-
-		return $config;
-	}
-
-	/**
-	 * Check if any cache service is available.
-	 */
-	private function hasAnyCacheService(): bool
-	{
-		foreach ($this->cacheServices as $service) {
-			if ($service->isAvailable()) {
-				return true;
-			}
-		}
-
-		return false;
-	}
 }
