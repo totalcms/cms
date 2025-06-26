@@ -96,7 +96,7 @@ print_success "Build artifacts cleaned"
 
 # Install dependencies
 print_info "Installing PHP dependencies..."
-composer install --no-dev --optimize-autoloader
+composer install
 print_success "PHP dependencies installed"
 
 print_info "Installing JavaScript dependencies..."
@@ -109,7 +109,7 @@ print_info "Running quality checks..."
 print_info "Running code style fixer..."
 if composer run cs:fix; then
     print_success "Code style fixed"
-    
+
     # Check if cs:fix made any changes
     if [ -n "$(git status --porcelain)" ]; then
         print_warning "Code style fixer made changes:"
@@ -162,6 +162,10 @@ if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
 	cp version dist
     print_success "Version updated to $NEW_VERSION ($GIT_HASH)"
 fi
+
+print_info "Installing PHP dependencies for release..."
+composer install --no-dev --optimize-autoloader
+print_success "PHP dependencies installed"
 
 # Build assets
 print_info "Building production assets..."
