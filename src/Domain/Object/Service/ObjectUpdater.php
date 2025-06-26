@@ -36,7 +36,9 @@ final class ObjectUpdater
 		$object->properties = $object->properties->map(fn ($property) => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
-		$this->indexBuilder->smartBuildIndex($collection);
+		
+		// Pass the updated object for immediate index update when queueRebuildOnSave is enabled
+		$this->indexBuilder->smartBuildIndex($collection, $object);
 
 		return $object;
 	}

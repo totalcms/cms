@@ -48,7 +48,8 @@ final class ObjectCloner
 
 		$this->storage->copyObjectFiles($from['collection'], $from['id'], $to['collection'], $to['id']);
 
-		$this->indexBuilder->smartBuildIndex($to['collection']);
+		// Pass the cloned object for immediate index append when queueRebuildOnSave is enabled
+		$this->indexBuilder->smartBuildIndex($to['collection'], $object);
 
 		return $object;
 	}
