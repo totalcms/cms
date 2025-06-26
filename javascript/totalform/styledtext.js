@@ -123,7 +123,7 @@ export default class StyledTextField extends TotalField {
     defaultConfig() {
         const toolbar = {
 			moreText: { buttons: [
-				'bold', 'italic', 'underline', 'clearFormatting'
+				'bold', 'italic', 'underline',
 			] },
 			moreParagraph: { buttons: [
 				'formatUL', 'formatOL', 'paragraphFormat', 'alignLeft', 'alignCenter', 'alignRight', 'alignJustify'
@@ -132,8 +132,8 @@ export default class StyledTextField extends TotalField {
 				'insertLink', 'insertImage'
 			] },
 			moreMisc: { buttons: [
-				'undo', 'redo', 'html'
-			], align: 'right' }
+				'undo', 'redo', 'clearFormatting', 'html',
+			], align: 'right', buttonsVisible: 4 }
 		};
         const quickInsertTags = ["image", "video", "table", "ul", "ol", "hr"];
         const codeMirrorOptions = {
