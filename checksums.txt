@@ -46,11 +46,11 @@ c51b04cca3dc9b6d0265c085f1ed7c7522ea659035795632774fe0d1e6ff7e0d  ./dist/public/
 f040dab53b2c4729d986ae489f253be50d48071a2de68e086de4818c8a3cb1c5  ./dist/public/assets/dashboard.css
 cbd4c8b91b018a0d3dd4fdaea6f5962ecc4eef6d7ed1a31b6c4b10040478fe76  ./dist/public/assets/gallery.css
 9384cbd088a44251e6e704b46082689d551a120928f965bb45f49b3dbda3243d  ./dist/public/assets/chunk-J4YRRFAZ.js
-a60d7b27a5d097270c6c154ce5b624dee3763ed306eaaab476ee0979fc020ac7  ./dist/public/assets/codemirror-totalcms.css
+7b7c3e4d474deac7b81df3abe7c1bf30c3facc12ec9ee2049402e0ae8e1a065e  ./dist/public/assets/codemirror-totalcms.css
 b93605d1ce061194a46ee74e724bbe3c9ac356960ee1fb61c79e1f6495e3dcf9  ./dist/public/assets/pagination.css
 0dd98af52c040d3252414c1fb86b290fd8c13b495060553c86457abde4222387  ./dist/public/assets/gallery.js
 08287e0209df6be9ecfbda2a4c9bb0c79b0191e398d454e0338e85b2c3ae3801  ./dist/public/assets/totalcms.js
-da81cba113110d17f750566cf176dd5c937f0fd22c85f6f1620464e58492ab49  ./dist/public/assets/admin.css
+ef7e50a0cfd70b6fd9f929beee47ed8a58f381faea52e0fc4341eab8adcde2b2  ./dist/public/assets/admin.css
 3a1b4986f071edddcd5f1e0ce7a89df62b377e871311a3ca7061cc473fe1563c  ./dist/public/assets/swagger.css
 91a1362acf78c8566068d62668aa3bac542bc6f96b4aac8011cde216f5ec734d  ./dist/public/assets/imageworks-builder.css
 a0d9cfd6ab83af9911afbd126c720e3f2677b124199b6d8f6ef54729124524c5  ./dist/public/assets/chunk-JADL7MHT.js
@@ -943,7 +943,7 @@ d8bd02f4fb1d2c3a60ddc4b3c090a8442f37390c9c0ca4540c785925f6f231a9  ./dist/vendor/
 ddff4514eae526004566ea1a52951b2248e7740fe9cf7941a8b7b4d1e19e4c3f  ./dist/vendor/composer/autoload_real.php
 eb4929baf229033b37c443ae0c381d92349e556e69f6db7bac9abe80efa23e92  ./dist/vendor/composer/autoload_files.php
 21f4ba19e7859cb3f85b8b1680c970ee25d972546c1606dcae0e7e5f43f626f0  ./dist/vendor/composer/InstalledVersions.php
-76e91928387ecf75a67c6b2bb46650a25dfefe3595f556a0678ab1ad395078f0  ./dist/vendor/composer/installed.php
+21ab82c9719a85a4534f5be39a8dc1d41fd94c06542ffe8ce0e231df446bafca  ./dist/vendor/composer/installed.php
 cc8ce77a73e0aeb29f86967661c4e09f662998ab0af6c7bb6094c347216625e8  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelper.php
 986cfaff3ec755cfe7e933534d98f387a62d32d41a065262c1d12a02526ef7b6  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/Module.php
 35925311f8f49dd55f750dbf87481d928315a26cc10950aac2dde65763b60a02  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelperFactory.php
@@ -4925,11 +4925,11 @@ c51b04cca3dc9b6d0265c085f1ed7c7522ea659035795632774fe0d1e6ff7e0d  ./public/asset
 f040dab53b2c4729d986ae489f253be50d48071a2de68e086de4818c8a3cb1c5  ./public/assets/dashboard.css
 cbd4c8b91b018a0d3dd4fdaea6f5962ecc4eef6d7ed1a31b6c4b10040478fe76  ./public/assets/gallery.css
 9384cbd088a44251e6e704b46082689d551a120928f965bb45f49b3dbda3243d  ./public/assets/chunk-J4YRRFAZ.js
-a60d7b27a5d097270c6c154ce5b624dee3763ed306eaaab476ee0979fc020ac7  ./public/assets/codemirror-totalcms.css
+7b7c3e4d474deac7b81df3abe7c1bf30c3facc12ec9ee2049402e0ae8e1a065e  ./public/assets/codemirror-totalcms.css
 b93605d1ce061194a46ee74e724bbe3c9ac356960ee1fb61c79e1f6495e3dcf9  ./public/assets/pagination.css
 0dd98af52c040d3252414c1fb86b290fd8c13b495060553c86457abde4222387  ./public/assets/gallery.js
 08287e0209df6be9ecfbda2a4c9bb0c79b0191e398d454e0338e85b2c3ae3801  ./public/assets/totalcms.js
-da81cba113110d17f750566cf176dd5c937f0fd22c85f6f1620464e58492ab49  ./public/assets/admin.css
+ef7e50a0cfd70b6fd9f929beee47ed8a58f381faea52e0fc4341eab8adcde2b2  ./public/assets/admin.css
 3a1b4986f071edddcd5f1e0ce7a89df62b377e871311a3ca7061cc473fe1563c  ./public/assets/swagger.css
 91a1362acf78c8566068d62668aa3bac542bc6f96b4aac8011cde216f5ec734d  ./public/assets/imageworks-builder.css
 a0d9cfd6ab83af9911afbd126c720e3f2677b124199b6d8f6ef54729124524c5  ./public/assets/chunk-JADL7MHT.js
