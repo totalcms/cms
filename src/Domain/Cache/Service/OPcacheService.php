@@ -16,6 +16,16 @@ final class OPcacheService implements CacheInterface
 		return function_exists('opcache_get_status') && opcache_get_status() !== false;
 	}
 
+	public function isInstalled(): bool
+	{
+		return function_exists('opcache_get_status');
+	}
+
+	public function isActive(): bool
+	{
+		return $this->isAvailable();
+	}
+
 	public function get(string $key): mixed
 	{
 		// OPcache doesn't support key-value storage

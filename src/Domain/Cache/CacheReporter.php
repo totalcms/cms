@@ -74,6 +74,7 @@ final class CacheReporter
 			'cache_enabled'      => $this->isCacheEnabled(),
 			'cache_version'      => '2.0', // Current cache system version
 			'available_backends' => $this->getAvailableBackends(),
+			'backend_status'     => $this->getBackendStatus(),
 			'services'           => [],
 		];
 
@@ -288,5 +289,38 @@ final class CacheReporter
 			'redis'      => 'Redis',
 			'memcached'  => 'Memcached',
 		];
+	}
+
+	/**
+	 * Get 3-state status for each cache backend.
+	 *
+	 * @return array<string,string>
+	 */
+	private function getBackendStatus(): array
+	{
+		return [
+			'filesystem' => $this->getServiceStatus($this->filesystemService),
+			'opcache'    => $this->getServiceStatus($this->opcacheService),
+			'redis'      => $this->getServiceStatus($this->redisService),
+			'memcached'  => $this->getServiceStatus($this->memcachedService),
+		];
+	}
+
+	/**
+	 * Get status for a specific cache service.
+	 *
+	 * @param FilesystemService|OPcacheService|RedisService|MemcachedService $service
+	 */
+	private function getServiceStatus(mixed $service): string
+	{
+		if (!$service->isInstalled()) {
+			return 'not_installed';
+		}
+
+		if ($service->isActive()) {
+			return 'active';
+		}
+
+		return 'available';
 	}
 }

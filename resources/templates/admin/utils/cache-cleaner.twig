@@ -82,10 +82,13 @@
 				<tr>
 					<td><strong>{{ name }}</strong></td>
 					<td>
-						{% if backend in cacheStats.services|keys %}
+						{% set status = cacheStats.backend_status[backend] %}
+						{% if status == 'active' %}
 							<span class="success">✅ Active</span>
+						{% elseif status == 'available' %}
+							<span class="warning">⚠️ Available (Installed but not enabled)</span>
 						{% else %}
-							<span class="warning">⚠️ Available</span>
+							<span class="error">❌ Not Installed</span>
 						{% endif %}
 					</td>
 					<td>
@@ -191,6 +194,11 @@
 
 .warning {
 	/* color: #ffc107; */
+	font-weight: bold;
+}
+
+.error {
+	color: #dc3545;
 	font-weight: bold;
 }
 </style>

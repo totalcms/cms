@@ -31,6 +31,17 @@ final class FilesystemService implements CacheInterface
 		return $this->createCacheDir();
 	}
 
+	public function isInstalled(): bool
+	{
+		// Filesystem is always available in PHP
+		return true;
+	}
+
+	public function isActive(): bool
+	{
+		return $this->enabled && $this->isAvailable();
+	}
+
 	private function createCacheDir(): bool
 	{
 		if (empty($this->cacheDir)) {
