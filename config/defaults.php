@@ -170,10 +170,37 @@ $settings['auth'] = [
 ];
 
 $settings['htmlclean'] = [
-	// 'allowed_tags' => ['p', 'strong', 'em'],
-	// 'allowed_css_properties' => [],
-	// 'allowed_iframe_domains' => ['www.youtube.com']
 	'enabled' => true,  // Set to false to disable HTML sanitization globally
+	'allowed_css_properties' => [
+		'color',
+		'background-color',
+		'font-size',
+		'font-weight',
+		'font-style',
+		'font-family',
+		'text-align',
+		'text-decoration',
+		'margin',
+		'margin-left',
+		'margin-right',
+		'margin-top',
+		'margin-bottom',
+		'padding',
+		'padding-left',
+		'padding-right',
+		'padding-top',
+		'padding-bottom',
+		'border',
+		'line-height',
+		'list-style-type',
+		'width',
+		'height',
+		'max-width',
+		'max-height',
+		'display',
+	],
+	// 'allowed_tags' => ['p', 'strong', 'em'],
+	// 'allowed_iframe_domains' => ['www.youtube.com']
 ];
 
 $settings['dashboard'] = [
