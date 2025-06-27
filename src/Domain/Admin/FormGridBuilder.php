@@ -15,75 +15,41 @@ final class FormGridBuilder
 	private const HEADER_REGEX = '/^---(.+?)---$/';
 	private const DIVIDER      = '---';
 
-	public function __construct(
-		private string $formgrid = '',
-	) {
+	/** @var array<string> */
+	private array $lines = [];
+
+	public function __construct(private string $formgrid = '') {
+		$this->lines = $this->cleanupFormGrid();
 	}
 
-	private function getColumnCount(): int
+
+
+	public function toCssGridAreas(): string
 	{
-		// Split the grid into lines and normalize line endings
-		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
-		if ($lines === false) {
-			return 0;
-		}
-
-		$maxColumns = 0;
-
-		foreach ($lines as $line) {
-			$line = trim($line);
-			if (empty($line)) {
-				continue; // Skip empty lines
-			}
-
-			// Count columns in the current line
-			$columns = preg_split('/\s+/', $line);
-			if ($columns === false) {
-				continue; // Skip invalid lines
-			}
-
-			$maxColumns = max($maxColumns, count($columns));
-		}
-
-		return $maxColumns;
-	}
-
-	public function toCss(): string
-	{
-		// Return empty string if no grid is defined
-		if (empty($this->formgrid)) {
-			return '';
-		}
-
-		// Split the grid into lines and normalize line endings
-		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
-		if ($lines === false) {
-			return '';
-		}
-
-		$columnCount    = 1;
+		$gridLines      = [];
 		$sectionCounter = 0;
-		$quotedLines    = [];
+		$columnCount    = $this->getColumnCount();
 
-		foreach ($lines as $line) {
-			$line = trim($line);
+		// Generates extra "." columns for headers and dividers
+		// to ensure they span the same number of columns as the grid.
+		$extraColumns = "";
+		for ($i = 1; $i < $columnCount; $i++) {
+			$extraColumns .= " .";
+		}
 
-			// Skip empty lines
-			if (empty($line)) {
+		foreach ($this->lines as $line) {
+
+			// Process dividers: ---
+			if (self::DIVIDER === $line) {
+				$sectionCounter++;
+				$gridLines[] = "'section-divider-$sectionCounter $extraColumns'";
 				continue;
 			}
 
 			// Process section headers: ---Title---
 			if (preg_match(self::HEADER_REGEX, $line)) {
 				$sectionCounter++;
-				$quotedLines[] = "'section-header-$sectionCounter . .'";
-				continue;
-			}
-
-			// Process dividers: ---
-			if ($line === self::DIVIDER) {
-				$sectionCounter++;
-				$quotedLines[] = "'section-divider-$sectionCounter . .'";
+				$gridLines[] = "'section-header-$sectionCounter $extraColumns'";
 				continue;
 			}
 
@@ -104,17 +70,17 @@ final class FormGridBuilder
 				return htmlspecialchars($area, ENT_QUOTES, 'UTF-8');
 			}, $columns);
 
-			$quotedLines[] = "'" . implode(' ', $escapedAreas) . "'";
+			$gridLines[] = "'" . implode(' ', $escapedAreas) . "'";
 			$columnCount   = max($columnCount, count($columns));
 		}
 
 		// Return empty string if no valid lines
-		if (empty($quotedLines)) {
+		if (empty($gridLines)) {
 			return '';
 		}
 
 		// Return the formatted CSS
-		$areas = implode("\n\t\t\t", $quotedLines);
+		$areas = implode("\n", $gridLines);
 
 		return <<<CSS
 		grid-template-areas:
@@ -124,52 +90,73 @@ final class FormGridBuilder
 	}
 
 	/**
+	 * Build HTML for section headers and dividers.
+	 */
+	public function buildGridSectionHtml(): string
+	{
+		$sections = $this->getSections();
+		$content  = '';
+
+		foreach ($sections as $section) {
+			switch ($section['type']) {
+				case 'header':
+					$content .= $this->buildHeaderHtml($section['title'], $section['area']);
+					break;
+
+				case 'divider':
+					$content .= $this->buildDividerHtml($section['area']);
+					break;
+			}
+		}
+
+		return $content;
+	}
+
+	private function buildDividerHtml(string $gridArea): string
+	{
+		return HTMLUtils::inlineElement('hr', [
+			'class' => 'form-grid-section-divider',
+			'style' => "grid-area: $gridArea;"
+		]);
+	}
+
+	private function buildHeaderHtml(string $title, string $gridArea): string
+	{
+		return HTMLUtils::element('h3', htmlspecialchars($title, ENT_QUOTES, 'UTF-8'), [
+			'class' => 'form-grid-section-header',
+			'style' => "grid-area: $gridArea;"
+		]);
+	}
+
+	/**
 	 * Get section metadata for rendering section headers and dividers.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	public function getSections(): array
+	private function getSections(): array
 	{
-		// Return empty array if no grid is defined
-		if (empty($this->formgrid)) {
-			return [];
-		}
-
-		// Split the grid into lines and normalize line endings
-		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
-		if ($lines === false) {
-			return [];
-		}
-
 		$sections       = [];
 		$sectionCounter = 0;
 
-		foreach ($lines as $line) {
-			$trimmed = trim($line);
-			// Skip empty lines
-			if (empty($trimmed)) {
-				continue;
-			}
+		foreach ($this->lines as $line) {
 
-			// Process section headers: ---Title---
-			if (preg_match('/^---(.+?)---$/', $trimmed, $matches)) {
+			// Process dividers: ---
+			if (self::DIVIDER === $line) {
 				$sectionCounter++;
 				$sections[] = [
-					'type'      => 'header',
-					'title'     => trim($matches[1]),
-					'id'        => 'section-header-' . $sectionCounter,
-					'grid_area' => 'section-header-' . $sectionCounter,
+					'type' => 'divider',
+					'area' => 'section-divider-' . $sectionCounter,
 				];
 				continue;
 			}
 
-			// Process dividers: ---
-			if ($trimmed === '---') {
+			// Process section headers: ---Title---
+			if (preg_match(self::HEADER_REGEX, $line, $matches)) {
 				$sectionCounter++;
 				$sections[] = [
-					'type'      => 'divider',
-					'id'        => 'section-divider-' . $sectionCounter,
-					'grid_area' => 'section-divider-' . $sectionCounter,
+					'type'  => 'header',
+					'title' => trim($matches[1]),
+					'area'  => 'section-header-' . $sectionCounter,
 				];
 				continue;
 			}
@@ -178,58 +165,28 @@ final class FormGridBuilder
 		return $sections;
 	}
 
-	/**
-	 * Build HTML for section headers and dividers.
-	 */
-	public function buildSectionHtml(): string
+	/** @return array<string> */
+	private function cleanupFormGrid(): array
 	{
-		$sections = $this->getSections();
-		if (empty($sections)) {
-			return '';
-		}
+		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
+		$lines = $lines === false ? [] : array_map('trim', $lines);
+		$lines = array_filter($lines, function ($line) {
+			return !empty($line); // Filter out empty lines
+		});
 
-		$content = '';
-		foreach ($sections as $section) {
-			if ($section['type'] === 'header') {
-				$content .= HTMLUtils::element(
-					'div',
-					HTMLUtils::element('h3', htmlspecialchars($section['title'], ENT_QUOTES, 'UTF-8')),
-					[
-						'class' => 'form-grid-section-header',
-						'style' => 'grid-area: ' . $section['grid_area'] . ';',
-						'id'    => $section['id'],
-					]
-				);
-			} elseif ($section['type'] === 'divider') {
-				$content .= HTMLUtils::element(
-					'div',
-					'',
-					[
-						'class' => 'form-grid-section-divider',
-						'style' => 'grid-area: ' . $section['grid_area'] . ';',
-						'id'    => $section['id'],
-					]
-				);
-			}
-		}
-
-		return $content;
+		return $lines;
 	}
 
-	/**
-	 * Check if the formgrid has any content.
-	 */
-	public function hasContent(): bool
+	private function getColumnCount(): int
 	{
-		return !empty(trim($this->formgrid));
-	}
+		$maxColumns = 0;
 
-	/**
-	 * Check if the formgrid contains sections (headers or dividers).
-	 */
-	public function hasSections(): bool
-	{
-		return !empty($this->getSections());
+		foreach ($this->lines as $line) {
+			// Count columns in the current line
+			$columns    = preg_split('/\s+/', $line) ?: [];
+			$maxColumns = max($maxColumns, count($columns));
+		}
+		return $maxColumns;
 	}
 
 	/**
