@@ -214,7 +214,8 @@ abstract class TotalForm
 		$formgrid = null;
 		if (!empty($this->schemaData->formgrid)) {
 			$this->class .= ' formgrid';
-			$formgrid = $this->schemaData->formGridToCss();
+			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
+			$formgrid = $gridBuilder->toCss();
 		}
 
 		$attributes = array_filter([
@@ -335,12 +336,20 @@ abstract class TotalForm
 		}
 
 		$content = '';
+		
+		// If using formgrid, inject section headers and dividers
+		if (!empty($this->schemaData->formgrid)) {
+			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
+			$content .= $gridBuilder->buildSectionHtml();
+		}
+
 		foreach ($this->fields as $field) {
 			$content .= $field->build();
 		}
 
 		return $content;
 	}
+
 
 	/**
 	 * @param array<string,mixed> $properties

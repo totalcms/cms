@@ -45,6 +45,37 @@
 		// Make sure the the buttons stay at the bottom of the form
 		grid-column: 1/-1;
 	}
+
+	// Form grid section styling
+	.form-grid-section-header {
+		grid-column: 1 / -1; // Span full width
+		margin: 2rem 0 1rem 0;
+		padding: 0;
+		border-bottom: 2px solid oklch(var(--totalform-lightgray));
+		
+		h3 {
+			margin: 0 0 0.5rem 0;
+			padding: 0;
+			font-size: 1.1rem;
+			font-weight: 600;
+			color: oklch(var(--totalform-label-color));
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+
+		// First section header has no top margin
+		&:first-of-type {
+			margin-top: 0;
+		}
+	}
+
+	.form-grid-section-divider {
+		grid-column: 1 / -1; // Span full width
+		height: 1px;
+		background-color: oklch(var(--totalform-lightgray));
+		margin: 1.5rem 0;
+		border: none;
+	}
 }
 
 .totalform:not(.edit-mode) {
