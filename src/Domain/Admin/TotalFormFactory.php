@@ -225,6 +225,9 @@ final class TotalFormFactory
 			'id'         => $id,
 		], $formOptions);
 
+		$class                = $formOptions['class'] ?? ' custom-layout';
+		$formOptions['class'] = $class;
+
 		$collection = $formOptions['collection'];
 		unset($formOptions['collection']);
 
@@ -266,6 +269,9 @@ final class TotalFormFactory
 			'delete'     => 'Delete',
 			'fields'     => [],
 		], $options);
+
+		$class            = $options['class'] ?? ' custom-layout';
+		$options['class'] = $class;
 
 		$fields = array_merge([
 			'date'       => true,
@@ -409,6 +415,9 @@ final class TotalFormFactory
 			'save'       => 'Save',
 			'delete'     => 'Delete',
 		], $options);
+
+		$class            = $options['class'] ?? ' custom-layout';
+		$options['class'] = $class;
 
 		$form = $this->builder($options['collection'], $options);
 
