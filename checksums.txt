@@ -50,7 +50,7 @@ cbd4c8b91b018a0d3dd4fdaea6f5962ecc4eef6d7ed1a31b6c4b10040478fe76  ./dist/public/
 b93605d1ce061194a46ee74e724bbe3c9ac356960ee1fb61c79e1f6495e3dcf9  ./dist/public/assets/pagination.css
 0dd98af52c040d3252414c1fb86b290fd8c13b495060553c86457abde4222387  ./dist/public/assets/gallery.js
 08287e0209df6be9ecfbda2a4c9bb0c79b0191e398d454e0338e85b2c3ae3801  ./dist/public/assets/totalcms.js
-8c4fe1c645da6a1382254c16500d0b217e9a68975c7f7f558e7e63aa896e84ee  ./dist/public/assets/admin.css
+4ee6e774d518f3fcd4dc49e25f558eafcb8533043cfa92df38b399733b8d74dd  ./dist/public/assets/admin.css
 3a1b4986f071edddcd5f1e0ce7a89df62b377e871311a3ca7061cc473fe1563c  ./dist/public/assets/swagger.css
 91a1362acf78c8566068d62668aa3bac542bc6f96b4aac8011cde216f5ec734d  ./dist/public/assets/imageworks-builder.css
 a0d9cfd6ab83af9911afbd126c720e3f2677b124199b6d8f6ef54729124524c5  ./dist/public/assets/chunk-JADL7MHT.js
@@ -943,7 +943,7 @@ b12f16b275a1d628cf4a8f7337f1864b0ab8330ef0494bda0d3e9a2bc5cc24ef  ./dist/vendor/
 971ac336532e94edd8b66d6ab1b7ecb7be89f98e57786a19aac7611bbc3c179a  ./dist/vendor/composer/autoload_real.php
 eb4929baf229033b37c443ae0c381d92349e556e69f6db7bac9abe80efa23e92  ./dist/vendor/composer/autoload_files.php
 21f4ba19e7859cb3f85b8b1680c970ee25d972546c1606dcae0e7e5f43f626f0  ./dist/vendor/composer/InstalledVersions.php
-09d94ca83f5b0444728995285bf7f7e067472ef9e81b27f3650896361fca2bde  ./dist/vendor/composer/installed.php
+b041847e727be932a4973fd53c876ab6e9f753fe8e261ffa6ecf2e4f8754f057  ./dist/vendor/composer/installed.php
 cc8ce77a73e0aeb29f86967661c4e09f662998ab0af6c7bb6094c347216625e8  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelper.php
 986cfaff3ec755cfe7e933534d98f387a62d32d41a065262c1d12a02526ef7b6  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/Module.php
 35925311f8f49dd55f750dbf87481d928315a26cc10950aac2dde65763b60a02  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelperFactory.php
@@ -4735,7 +4735,7 @@ c2237340f7e89581876fd1ab9eb7b20ec5c86574ab566160060b75ee46849c1e  ./dist/src/Dom
 4d1d8da62457dd3873d4c60b57775a0cee1ba53ff286057d06f86f649a5f6199  ./dist/src/Domain/Admin/FactoryForm.php
 256c6bb3d1f502a84c0d91b98675e0f3b8e32175824af5cc137f5cf41db8b549  ./dist/src/Domain/Admin/ImportCollectionForm.php
 8cd7dcdf7f105b4cb34b564daacd0796d04c9c53b29fd020ee9723fd188df832  ./dist/src/Domain/Admin/CollectionForm.php
-e0d6de0eb06ae143263f23d124a60bd5dc414741bc59940a9774d72118317e8a  ./dist/src/Domain/Admin/TotalFormFactory.php
+8f022571075afd524fc2835be7b3794bd003fccf1dbf6bf5266876943a97bcbc  ./dist/src/Domain/Admin/TotalFormFactory.php
 4bd564d749d241b9f30b6304fb73ff464604d80a7bdca7bf77040e213e49a828  ./dist/src/Domain/Admin/JobQueueStats.php
 57c7b536a543940f6a6cdd29ac7cd9cbac7728057339ba2b12199bc1510989b1  ./dist/src/Domain/Admin/SimpleForm.php
 bdb3db1b1e54043c8abd3e0888875ccfeaa266a77f07305ff366cc967506564b  ./dist/src/Domain/Admin/FormGridBuilder.php
@@ -4939,7 +4939,7 @@ cbd4c8b91b018a0d3dd4fdaea6f5962ecc4eef6d7ed1a31b6c4b10040478fe76  ./public/asset
 b93605d1ce061194a46ee74e724bbe3c9ac356960ee1fb61c79e1f6495e3dcf9  ./public/assets/pagination.css
 0dd98af52c040d3252414c1fb86b290fd8c13b495060553c86457abde4222387  ./public/assets/gallery.js
 08287e0209df6be9ecfbda2a4c9bb0c79b0191e398d454e0338e85b2c3ae3801  ./public/assets/totalcms.js
-8c4fe1c645da6a1382254c16500d0b217e9a68975c7f7f558e7e63aa896e84ee  ./public/assets/admin.css
+4ee6e774d518f3fcd4dc49e25f558eafcb8533043cfa92df38b399733b8d74dd  ./public/assets/admin.css
 3a1b4986f071edddcd5f1e0ce7a89df62b377e871311a3ca7061cc473fe1563c  ./public/assets/swagger.css
 91a1362acf78c8566068d62668aa3bac542bc6f96b4aac8011cde216f5ec734d  ./public/assets/imageworks-builder.css
 a0d9cfd6ab83af9911afbd126c720e3f2677b124199b6d8f6ef54729124524c5  ./public/assets/chunk-JADL7MHT.js
@@ -5277,7 +5277,7 @@ c2237340f7e89581876fd1ab9eb7b20ec5c86574ab566160060b75ee46849c1e  ./src/Domain/A
 4d1d8da62457dd3873d4c60b57775a0cee1ba53ff286057d06f86f649a5f6199  ./src/Domain/Admin/FactoryForm.php
 256c6bb3d1f502a84c0d91b98675e0f3b8e32175824af5cc137f5cf41db8b549  ./src/Domain/Admin/ImportCollectionForm.php
 8cd7dcdf7f105b4cb34b564daacd0796d04c9c53b29fd020ee9723fd188df832  ./src/Domain/Admin/CollectionForm.php
-e0d6de0eb06ae143263f23d124a60bd5dc414741bc59940a9774d72118317e8a  ./src/Domain/Admin/TotalFormFactory.php
+8f022571075afd524fc2835be7b3794bd003fccf1dbf6bf5266876943a97bcbc  ./src/Domain/Admin/TotalFormFactory.php
 4bd564d749d241b9f30b6304fb73ff464604d80a7bdca7bf77040e213e49a828  ./src/Domain/Admin/JobQueueStats.php
 57c7b536a543940f6a6cdd29ac7cd9cbac7728057339ba2b12199bc1510989b1  ./src/Domain/Admin/SimpleForm.php
 bdb3db1b1e54043c8abd3e0888875ccfeaa266a77f07305ff366cc967506564b  ./src/Domain/Admin/FormGridBuilder.php
