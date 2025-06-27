@@ -349,7 +349,6 @@ abstract class TotalForm
 		return $content;
 	}
 
-
 	/**
 	 * @param array<string,mixed> $properties
 	 *

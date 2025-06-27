@@ -170,7 +170,7 @@ $settings['auth'] = [
 ];
 
 $settings['htmlclean'] = [
-	'enabled' => true,  // Set to false to disable HTML sanitization globally
+	'enabled'                => true,  // Set to false to disable HTML sanitization globally
 	'allowed_css_properties' => [
 		'color',
 		'background-color',

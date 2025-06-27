@@ -18,11 +18,10 @@ final class FormGridBuilder
 	/** @var array<string> */
 	private array $lines = [];
 
-	public function __construct(private string $formgrid = '') {
+	public function __construct(private string $formgrid = '')
+	{
 		$this->lines = $this->cleanupFormGrid();
 	}
-
-
 
 	public function toCssGridAreas(): string
 	{
@@ -32,13 +31,12 @@ final class FormGridBuilder
 
 		// Generates extra "." columns for headers and dividers
 		// to ensure they span the same number of columns as the grid.
-		$extraColumns = "";
+		$extraColumns = '';
 		for ($i = 1; $i < $columnCount; $i++) {
-			$extraColumns .= " .";
+			$extraColumns .= ' .';
 		}
 
 		foreach ($this->lines as $line) {
-
 			// Process dividers: ---
 			if (self::DIVIDER === $line) {
 				$sectionCounter++;
@@ -70,7 +68,7 @@ final class FormGridBuilder
 				return htmlspecialchars($area, ENT_QUOTES, 'UTF-8');
 			}, $columns);
 
-			$gridLines[] = "'" . implode(' ', $escapedAreas) . "'";
+			$gridLines[]   = "'" . implode(' ', $escapedAreas) . "'";
 			$columnCount   = max($columnCount, count($columns));
 		}
 
@@ -116,7 +114,7 @@ final class FormGridBuilder
 	{
 		return HTMLUtils::inlineElement('hr', [
 			'class' => 'form-grid-section-divider',
-			'style' => "grid-area: $gridArea;"
+			'style' => "grid-area: $gridArea;",
 		]);
 	}
 
@@ -124,7 +122,7 @@ final class FormGridBuilder
 	{
 		return HTMLUtils::element('h3', htmlspecialchars($title, ENT_QUOTES, 'UTF-8'), [
 			'class' => 'form-grid-section-header',
-			'style' => "grid-area: $gridArea;"
+			'style' => "grid-area: $gridArea;",
 		]);
 	}
 
@@ -139,7 +137,6 @@ final class FormGridBuilder
 		$sectionCounter = 0;
 
 		foreach ($this->lines as $line) {
-
 			// Process dividers: ---
 			if (self::DIVIDER === $line) {
 				$sectionCounter++;
@@ -186,6 +183,7 @@ final class FormGridBuilder
 			$columns    = preg_split('/\s+/', $line) ?: [];
 			$maxColumns = max($maxColumns, count($columns));
 		}
+
 		return $maxColumns;
 	}
 
