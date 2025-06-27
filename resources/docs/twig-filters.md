@@ -417,6 +417,317 @@ Detailed variable dump for debugging.
 {% endif %}
 ```
 
+## Date and Time Filters
+
+Total CMS includes powerful date manipulation filters powered by CakePHP Chronos. These filters support natural language date strings like "tomorrow", "next monday", "+1 week", making date handling intuitive and flexible.
+
+### Date Formatting
+
+#### `dateFormat(mixed $date, string $format = 'Y-m-d H:i:s'): string`
+Formats dates with custom format strings.
+
+```twig
+{{ post.created_at | dateFormat }}
+{# Output: 2024-06-15 14:30:00 #}
+
+{{ post.created_at | dateFormat('F j, Y') }}
+{# Output: June 15, 2024 #}
+
+{{ post.created_at | dateFormat('l, F d, Y g:i A') }}
+{# Output: Saturday, June 15, 2024 2:30 PM #}
+
+{# Works with smart date strings #}
+{{ "tomorrow" | dateFormat('Y-m-d') }}
+{{ "+1 week" | dateFormat('F j, Y') }}
+```
+
+#### `dateRelative(mixed $date): string`
+Returns human-readable relative date strings.
+
+```twig
+{{ post.updated_at | dateRelative }}
+{# Output: 2 days ago #}
+
+{{ event.date | dateRelative }}
+{# Output: in 3 weeks #}
+
+{# Perfect for social media style timestamps #}
+{% for comment in post.comments %}
+    <time>{{ comment.created | dateRelative }}</time>
+{% endfor %}
+```
+
+### Date Manipulation
+
+#### `dateAdd(mixed $date, string $interval): string`
+Adds time intervals to dates.
+
+```twig
+{{ "now" | dateAdd('+1 day') | dateFormat('Y-m-d') }}
+{{ event.date | dateAdd('+2 weeks') | dateFormat('F j, Y') }}
+{{ deadline | dateAdd('+3 hours') | dateFormat('g:i A') }}
+
+{# Chain multiple additions #}
+{{ "now" | dateAdd('+1 month') | dateAdd('+5 days') | dateFormat('Y-m-d') }}
+
+{# Calculate future dates #}
+{% set nextPayment = subscription.date | dateAdd('+1 month') %}
+```
+
+#### `dateSubtract(mixed $date, string $interval): string`
+Subtracts time intervals from dates.
+
+```twig
+{{ "now" | dateSubtract('1 day') | dateFormat('Y-m-d') }}
+{{ event.date | dateSubtract('2 weeks') | dateFormat('F j, Y') }}
+
+{# Calculate past dates #}
+{% set lastWeek = "now" | dateSubtract('7 days') %}
+{% set lastMonth = "now" | dateSubtract('1 month') %}
+```
+
+#### `dateDiff(mixed $date1, mixed $date2): string`
+Returns human-readable difference between two dates.
+
+```twig
+{{ start_date | dateDiff(end_date) }}
+{# Output: 2 weeks before #}
+
+{{ "now" | dateDiff(deadline) }}
+{# Output: in 3 days #}
+
+{# Project duration #}
+<p>Project duration: {{ project.start | dateDiff(project.end) }}</p>
+```
+
+### Date Period Operations
+
+#### `dateStartOf(mixed $date, string $unit = 'day'): string`
+Returns the start of a period (day, week, month, year).
+
+```twig
+{{ "now" | dateStartOf('day') | dateFormat('Y-m-d H:i:s') }}
+{# Output: 2024-06-15 00:00:00 #}
+
+{{ "now" | dateStartOf('month') | dateFormat('Y-m-d') }}
+{# Output: 2024-06-01 #}
+
+{{ "now" | dateStartOf('year') | dateFormat('Y-m-d') }}
+{# Output: 2024-01-01 #}
+
+{# Get this week's start #}
+{% set weekStart = "now" | dateStartOf('week') %}
+```
+
+#### `dateEndOf(mixed $date, string $unit = 'day'): string`
+Returns the end of a period (day, week, month, year).
+
+```twig
+{{ "now" | dateEndOf('day') | dateFormat('Y-m-d H:i:s') }}
+{# Output: 2024-06-15 23:59:59 #}
+
+{{ "now" | dateEndOf('month') | dateFormat('Y-m-d') }}
+{# Output: 2024-06-30 #}
+
+{# Get month range #}
+{% set monthStart = "now" | dateStartOf('month') %}
+{% set monthEnd = "now" | dateEndOf('month') %}
+```
+
+### Date Validation
+
+#### `dateIsWeekend(mixed $date): bool`
+Checks if a date falls on a weekend.
+
+```twig
+{% if event.date | dateIsWeekend %}
+    <span class="badge">Weekend Event</span>
+{% endif %}
+
+{# Business hours check #}
+{% if "now" | dateIsWeekend %}
+    <p>Our office is closed on weekends</p>
+{% endif %}
+```
+
+#### `dateIsWeekday(mixed $date): bool`
+Checks if a date is a weekday (Monday-Friday).
+
+```twig
+{% if meeting.date | dateIsWeekday %}
+    <p>Regular business hours apply</p>
+{% endif %}
+```
+
+#### `dateIsPast(mixed $date): bool`
+Checks if a date is in the past.
+
+```twig
+{% if event.date | dateIsPast %}
+    <span class="badge">Past Event</span>
+{% else %}
+    <a href="/register">Register Now</a>
+{% endif %}
+
+{# Deadline checking #}
+{% if task.deadline | dateIsPast %}
+    <div class="alert alert-danger">Overdue!</div>
+{% endif %}
+```
+
+#### `dateIsFuture(mixed $date): bool`
+Checks if a date is in the future.
+
+```twig
+{% if product.launch_date | dateIsFuture %}
+    <span class="badge">Coming Soon</span>
+{% else %}
+    <button>Buy Now</button>
+{% endif %}
+```
+
+#### `dateIsToday(mixed $date): bool`
+Checks if a date is today.
+
+```twig
+{% if event.date | dateIsToday %}
+    <div class="alert alert-info">Event is TODAY!</div>
+{% endif %}
+
+{# Birthday check #}
+{% if user.birthday | dateFormat('m-d') == "now" | dateFormat('m-d') %}
+    <p>🎉 Happy Birthday!</p>
+{% endif %}
+```
+
+### Smart Date Strings
+
+The date filters support natural language strings powered by Chronos:
+
+```twig
+{# Relative dates #}
+{{ "now" | dateFormat('Y-m-d H:i:s') }}
+{{ "today" | dateFormat('Y-m-d') }}
+{{ "tomorrow" | dateFormat('Y-m-d') }}
+{{ "yesterday" | dateFormat('Y-m-d') }}
+
+{# Relative intervals #}
+{{ "+1 day" | dateFormat('Y-m-d') }}
+{{ "-1 week" | dateFormat('Y-m-d') }}
+{{ "+2 months" | dateFormat('Y-m-d') }}
+{{ "-1 year" | dateFormat('Y-m-d') }}
+
+{# Natural language #}
+{{ "next monday" | dateFormat('l, F j') }}
+{{ "last friday" | dateFormat('Y-m-d') }}
+{{ "first day of this month" | dateFormat('Y-m-d') }}
+{{ "last day of this month" | dateFormat('Y-m-d') }}
+{{ "first day of next month" | dateFormat('Y-m-d') }}
+```
+
+### Real-World Date Examples
+
+#### Event Management
+```twig
+{% set event = cms.object('events', 'summer-conference') %}
+
+<div class="event-card">
+    <h3>{{ event.title }}</h3>
+    
+    {# Display formatted date #}
+    <p>📅 {{ event.date | dateFormat('l, F j, Y \\a\\t g:i A') }}</p>
+    
+    {# Show relative time #}
+    <p>{{ event.date | dateRelative }}</p>
+    
+    {# Status badges #}
+    {% if event.date | dateIsToday %}
+        <span class="badge badge-primary">Today!</span>
+    {% elseif event.date | dateIsPast %}
+        <span class="badge badge-secondary">Past Event</span>
+    {% elseif event.date | dateIsFuture %}
+        <span class="badge badge-success">Upcoming</span>
+    {% endif %}
+    
+    {# Registration deadline #}
+    {% set deadline = event.date | dateSubtract('1 week') %}
+    {% if deadline | dateIsFuture %}
+        <p>Registration closes {{ deadline | dateRelative }}</p>
+    {% else %}
+        <p>Registration closed</p>
+    {% endif %}
+</div>
+```
+
+#### Blog Post Scheduling
+```twig
+{% for post in cms.objects('blog') %}
+    <article>
+        <h2>{{ post.title }}</h2>
+        
+        {# Publication status #}
+        {% if post.publish_date | dateIsFuture %}
+            <div class="scheduled">
+                ⏰ Scheduled for {{ post.publish_date | dateFormat('F j, Y') }}
+                ({{ post.publish_date | dateRelative }})
+            </div>
+        {% else %}
+            <time>Published {{ post.publish_date | dateRelative }}</time>
+        {% endif %}
+        
+        {# Show content only if published #}
+        {% if post.publish_date | dateIsPast or post.publish_date | dateIsToday %}
+            <p>{{ post.excerpt }}</p>
+        {% endif %}
+    </article>
+{% endfor %}
+```
+
+#### Task Management
+```twig
+{% set tasks = cms.objects('tasks') %}
+
+{% for task in tasks %}
+    <div class="task {% if task.due_date | dateIsPast %}overdue{% endif %}">
+        <h4>{{ task.title }}</h4>
+        
+        {# Due date with smart formatting #}
+        {% if task.due_date | dateIsToday %}
+            <span class="due-today">Due today!</span>
+        {% elseif task.due_date | dateFormat('Y-m-d') == "now" | dateAdd('+1 day') | dateFormat('Y-m-d') %}
+            <span class="due-tomorrow">Due tomorrow</span>
+        {% else %}
+            <span>Due {{ task.due_date | dateRelative }}</span>
+        {% endif %}
+        
+        {# Days remaining/overdue #}
+        {% set daysUntil = "now" | dateDiff(task.due_date) %}
+        <small>{{ daysUntil }}</small>
+    </div>
+{% endfor %}
+```
+
+#### Business Hours
+```twig
+{% set now = "now" %}
+{% set openTime = now | dateStartOf('day') | dateAdd('+9 hours') %}
+{% set closeTime = now | dateStartOf('day') | dateAdd('+17 hours') %}
+
+<div class="business-hours">
+    <h3>Store Hours</h3>
+    
+    {% if now | dateIsWeekend %}
+        <p class="closed">🚫 Closed on weekends</p>
+    {% elseif now >= openTime and now <= closeTime %}
+        <p class="open">✅ Open until {{ closeTime | dateFormat('g:i A') }}</p>
+    {% elseif now < openTime %}
+        <p class="closed">🚫 Opens at {{ openTime | dateFormat('g:i A') }}</p>
+    {% else %}
+        <p class="closed">🚫 Closed - Opens tomorrow at 9:00 AM</p>
+    {% endif %}
+</div>
+```
+
 ## Collection Filtering and Sorting
 
 ### Advanced Collection Filtering

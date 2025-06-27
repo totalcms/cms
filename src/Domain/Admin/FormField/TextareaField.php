@@ -24,6 +24,7 @@ class TextareaField extends FormField
 			'readonly'         => $this->readonly ? '' : null,
 			'rows'             => $this->rows > 0 ? strval($this->rows) : '8',
 			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
+			'autocomplete'     => 'off', // Stop 1Password Managers from filling in the field
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
 		];
 

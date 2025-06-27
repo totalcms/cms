@@ -3,7 +3,6 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Property\Data\DateData;
-use TotalCMS\Support\Config;
 
 class DateField extends FormField
 {
@@ -20,14 +19,14 @@ class DateField extends FormField
 			$this->readonly = true;
 		}
 
+		// Handle smart defaults for date fields
+		if (!empty($this->default) && empty($this->value)) {
+			$this->value = DateData::cleanDate($this->default);
+		}
+
+		// Process existing value with smart parsing
 		if (!empty($this->value)) {
-			$config   = Config::init();
-			$timezone = new \DateTimeZone($config->timezone);
-
-			$date = new \DateTime($this->value, $timezone);
-			$date->setTimezone($timezone);
-
-			$this->value = $date->format('c');
+			$this->value = DateData::cleanDate($this->value);
 		}
 	}
 }

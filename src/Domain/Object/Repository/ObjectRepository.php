@@ -91,13 +91,16 @@ final class ObjectRepository extends StorageRepository
 			$contents = json_decode($this->filesystem->read($objectFile), true);
 			if (is_array($contents)) {
 				// Cache the raw data (not the ObjectData instance) for 1 hour
-				$this->cacheManager->storeComputedData($cacheKey, $contents, 3600);
+				$this->cacheManager->storeComputedData($cacheKey, $contents, CacheManager::TTL_OBJECT_DATA);
 
 				$object = $this->factory->generateObject($collection, $contents);
 
 				return $object;
 			}
 		}
+
+		// If object file doesn't exist, invalidate cache to prevent stale data
+		$this->cacheManager->clearComputedData($cacheKey);
 
 		return null;
 	}
@@ -125,11 +128,10 @@ final class ObjectRepository extends StorageRepository
 	private function invalidateObjectCache(string $objectCacheKey, string $collection): void
 	{
 		// Remove the specific object from cache
-		// Note: CacheManager doesn't have delete method yet, but we can store null with short TTL
-		$this->cacheManager->storeComputedData($objectCacheKey, null, 1);
+		$this->cacheManager->clearComputedData($objectCacheKey);
 
 		// Also invalidate collection index cache (objects list has changed)
-		$this->cacheManager->storeCollectionIndex($collection, [], 1);
+		$this->cacheManager->clearCollectionIndex($collection);
 	}
 
 	public function copyObjectFiles(string $fromCollection, string $fromId, string $toCollection, string $toId): void

@@ -13,6 +13,16 @@ interface CacheInterface
 	public function isAvailable(): bool;
 
 	/**
+	 * Check if the cache backend is installed (extension/functionality exists).
+	 */
+	public function isInstalled(): bool;
+
+	/**
+	 * Check if the cache backend is active (installed, enabled, and working).
+	 */
+	public function isActive(): bool;
+
+	/**
 	 * Get a value from the cache.
 	 *
 	 * @param string $key The cache key

@@ -40,6 +40,11 @@
 	dialog .form-field {
 		grid-area: unset !important;
 	}
+
+	>div:last-child:has(.cms-save) {
+		// Make sure the the buttons stay at the bottom of the form
+		grid-column: 1/-1;
+	}
 }
 
 .totalform:not(.edit-mode) {
@@ -250,4 +255,24 @@ button.cms-add {
 	& > .form-field {
 		margin : 0;
 	}
+}
+
+// Form grid section styling
+.form-grid-section-header {
+	grid-column   : 1 / -1 !important;
+	margin        : 3rem 0 1rem 0;
+	padding       : 1rem;
+	font-size     : 1.4rem;
+	// border-bottom : 1px solid oklch(var(--totalform-lightgray) / 70%);
+	color            : oklch(var(--totalform-label-color));
+	background-image : linear-gradient(70deg, oklch(var(--totalform-nearwhite)), transparent 80%);
+	border-radius    : var(--totalform-radius);
+}
+
+.form-grid-section-divider {
+	grid-column      : 1 / -1 !important;
+	height           : 1px;
+	background-color : oklch(var(--totalform-lightgray) / 70%);
+	margin           : 3rem;
+	border           : none;
 }

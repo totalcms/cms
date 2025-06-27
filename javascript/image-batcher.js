@@ -127,6 +127,15 @@ class ImageBatcher {
 			return;
 		}
 
+		// Validate the example URL before starting batch processing
+		this.updateProgress(0, 'Validating ImageWorks URL...');
+		const isValidUrl = await this.validateExampleUrl();
+		
+		if (!isValidUrl) {
+			this.updateProgress(0, 'Failed to validate ImageWorks URL. Batch processing cannot continue.');
+			return;
+		}
+
 		this.currentIndex = 0;
 		this.processedImages = [];
 
@@ -197,6 +206,51 @@ class ImageBatcher {
 					<small>❌ Error: ${error.message}</small>
 				`;
 			}
+		}
+	}
+
+	async validateExampleUrl() {
+		try {
+			// Get the example URL from batch data
+			const exampleUrl = this.batchData.example;
+			
+			if (!exampleUrl) {
+				console.error('No example URL provided in batch data');
+				return false;
+			}
+
+			// Validate that it's a proper URL
+			let url;
+			try {
+				url = new URL(exampleUrl);
+			} catch (error) {
+				console.error('Invalid URL format:', exampleUrl, error);
+				return false;
+			}
+
+			// Verify this is an ImageWorks URL
+			if (!url.pathname.includes('imageworks')) {
+				console.error('URL does not appear to be an ImageWorks URL (missing "imageworks" in path):', exampleUrl);
+				return false;
+			}
+
+			// Make a HEAD request to check if the URL exists and returns 200
+			const response = await fetch(exampleUrl, {
+				method: 'HEAD',
+				cache: 'no-cache'
+			});
+
+			if (!response.ok) {
+				console.error(`Example URL validation failed: ${response.status} ${response.statusText}`);
+				return false;
+			}
+
+			console.log('Example URL validation successful:', response.status);
+			return true;
+
+		} catch (error) {
+			console.error('Error validating example URL:', error);
+			return false;
 		}
 	}
 

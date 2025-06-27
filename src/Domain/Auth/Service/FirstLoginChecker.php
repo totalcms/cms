@@ -22,14 +22,16 @@ final class FirstLoginChecker
 
 	public function isNewInstallation(): bool
 	{
-		$exists = $this->collectionFetcher->collectionExists($this->collection);
-		if (!$exists) {
+		// Try to fetch the collection, which will create it if it's a reserved collection
+		try {
+			$this->collectionFetcher->fetchCollection($this->collection);
+			$index = $this->indexReader->fetchIndex($this->collection);
+
+			return $index->objects->isEmpty();
+		} catch (\Exception $e) {
+			// If collection doesn't exist and can't be created, it's a new installation
 			return true;
 		}
-
-		$index = $this->indexReader->fetchIndex($this->collection);
-
-		return $index->objects->isEmpty();
 	}
 
 	public function createFirstUser(string $email, string $password): void

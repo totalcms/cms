@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use PhpParser\Builder\Property;
+use Cake\Chronos\Chronos;
 use TotalCMS\Support\Config;
 
 /**
@@ -28,23 +28,21 @@ class DateData extends PropertyData
 	public static function cleanDate(?string $date = 'now'): string
 	{
 		if (empty($date)) {
-			$date = 'now';
-		}
-
-		// If the date is a timestamp, convert it to a formatted date string
-		if (is_numeric($date)) {
-			$date = date('Y-m-d H:i:s', intval($date));
+			return '';
 		}
 
 		try {
 			$config   = Config::init();
 			$timezone = new \DateTimeZone($config->timezone);
-			$date     = new \DateTime($date, $timezone);
+
+			// Use Chronos for smart date parsing with natural language support
+			$chronosDate = Chronos::parse($date, $timezone);
+
+			return $chronosDate->format('c');
 		} catch (\Exception $e) {
+			// Fallback to empty string if parsing fails
 			return '';
 		}
-
-		return $date->format('c');
 	}
 
 	public function transform(): string

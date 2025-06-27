@@ -126,10 +126,11 @@ final class CollectionTable
 		);
 
 		return HTMLUtils::element('img', '', [
-			'src'    => $imageSrc,
-			'alt'    => $image['alt'],
-			'width'  => '128',
-			'height' => '128',
+			'src'     => $imageSrc,
+			'alt'     => $image['alt'],
+			'width'   => '128',
+			'height'  => '128',
+			'loading' => 'lazy',
 		]);
 	}
 
@@ -148,10 +149,11 @@ final class CollectionTable
 
 		$badge = HTMLUtils::element('span', (string)$count, ['class' => 'image-count']);
 		$image = HTMLUtils::element('img', '', [
-			'src'    => $imageSrc,
-			'alt'    => "{$this->collection} / {$id} / {$property} gallery preview",
-			'width'  => '128',
-			'height' => '128',
+			'src'     => $imageSrc,
+			'alt'     => "{$this->collection} / {$id} / {$property} gallery preview",
+			'width'   => '128',
+			'height'  => '128',
+			'loading' => 'lazy',
 		]);
 
 		return HTMLUtils::element('div', $image . $badge, ['class' => 'gallery-preview']);

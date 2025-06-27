@@ -1,125 +1,141 @@
 {
-	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
-	"$id"         : "https://www.totalcms.co/schemas/blog.json",
-	"id"          : "blog",
-	"type"        : "object",
-	"description" : "A schema for a Total CMS Blog object",
-	"properties"  : {
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/blog.json",
+	"id": "blog",
+	"type": "object",
+	"description": "A schema for a Total CMS Blog object",
+	"formgrid": "draft draft featured\nid id author\ntitle title date\nimage image tags\nimage image categories\nsummary summary summary\ncontent content content\nmedia media media\ngallery gallery gallery\nextra extra extra",
+	"properties": {
 		"draft": {
-			"type"    : "boolean",
-			"label"   : "Draft",
-			"help"    : "Mark this post as a draft",
-			"default" : false,
-			"field"   : "checkbox"
+			"type": "boolean",
+			"label": "Draft",
+			"help": "Mark this post as a draft",
+			"default": false,
+			"field": "checkbox"
 		},
 		"featured": {
-			"type"    : "boolean",
-			"label"   : "Featured",
-			"help"    : "Mark this post as featured",
-			"field"   : "checkbox",
-			"default" : false,
-			"factory" : "boolean"
+			"type": "boolean",
+			"label": "Featured",
+			"help": "Mark this post as featured",
+			"field": "checkbox",
+			"default": false,
+			"factory": "boolean"
 		},
 		"id": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"    : "Blog Post ID",
-			"help"     : "A unique ID for this post. No spaces or special characters.",
-			"field"    : "id",
-			"factory"  : "slug",
-			"settings" : { "autogen" : "${title}" }
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "Blog Post ID",
+			"help": "A unique ID for this post. No spaces or special characters.",
+			"field": "id",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${title}"
+			}
 		},
 		"title": {
-			"type"    : "string",
-			"label"   : "Title",
-			"help"    : "Blog Post title",
-			"field"   : "text",
-			"factory" : "catchPhrase"
+			"type": "string",
+			"label": "Title",
+			"help": "Blog Post title",
+			"field": "text",
+			"factory": "catchPhrase"
 		},
 		"date": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"   : "Date",
-			"help"    : "Blog Post date",
-			"field"   : "date",
-			"factory" : "iso8601"
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Date",
+			"help": "Blog Post date",
+			"field": "date",
+			"default": "now",
+			"factory": "iso8601"
 		},
 		"author": {
-			"type"    : "string",
-			"label"   : "Author",
-			"help"    : "Author for this post",
-			"field"   : "text",
-			"factory" : "name",
-			"settings": { "propertyOptions" : true }
+			"type": "string",
+			"label": "Author",
+			"help": "Author for this post",
+			"field": "text",
+			"factory": "name",
+			"settings": {
+				"propertyOptions": true
+			}
 		},
 		"summary": {
-			"type"    : "string",
-			"label"   : "Summary",
-			"help"    : "Blog Post summary",
-			"field"   : "styledtext",
-			"factory" : "paragraph"
+			"type": "string",
+			"label": "Summary",
+			"help": "Blog Post summary",
+			"field": "styledtext",
+			"factory": "paragraph"
 		},
 		"media": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
-			"label"   : "Media",
-			"help"    : "Media URL for this post",
-			"field"   : "url"
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
+			"label": "Media",
+			"help": "Media URL for this post",
+			"field": "url"
 		},
 		"content": {
-			"type"    : "string",
-			"label"   : "Content",
-			"help"    : "Main blog post content",
-			"field"   : "styledtext",
-			"factory" : "paragraph"
+			"type": "string",
+			"label": "Content",
+			"help": "Main blog post content",
+			"field": "styledtext",
+			"factory": "paragraph"
 		},
 		"extra": {
-			"type"    : "string",
-			"label"   : "Extra Content",
-			"help"    : "Extra content area for this post",
-			"field"   : "styledtext"
+			"type": "string",
+			"label": "Extra Content",
+			"help": "Extra content area for this post",
+			"field": "styledtext"
 		},
 		"categories": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"   : "Categories",
-			"help"    : "A list of categories for this post",
-			"field"   : "list",
-			"factory" : "tags",
-			"settings": { "propertyOptions" : true }
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"label": "Categories",
+			"help": "A list of categories for this post",
+			"field": "list",
+			"factory": "tags",
+			"settings": {
+				"propertyOptions": true
+			}
 		},
 		"tags": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"   : "Tags",
-			"help"    : "A list of tags for this post",
-			"field"   : "list",
-			"factory" : "tags",
-			"settings": { "propertyOptions" : true }
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"label": "Tags",
+			"help": "A list of tags for this post",
+			"field": "list",
+			"factory": "tags",
+			"settings": {
+				"propertyOptions": true
+			}
 		},
 		"image": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
-			"label"   : "Image",
-			"help"    : "Main image for this post",
-			"field"   : "image",
-			"factory" : "imageShapes(1920,1080)"
+			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+			"label": "Image",
+			"help": "Main image for this post",
+			"field": "image",
+			"factory": "imageShapes(1920,1080)"
 		},
 		"gallery": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/gallery.json",
-			"label"   : "Gallery",
-			"help"    : "Gallery of images for this post",
-			"field"   : "gallery"
+			"$ref": "https://www.totalcms.co/schemas/properties/gallery.json",
+			"label": "Gallery",
+			"help": "Gallery of images for this post",
+			"field": "gallery"
 		},
 		"updated": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"   : "Updated Date",
-			"help"    : "Blog Post updated date",
-			"field"   : "hidden",
-			"factory" : "iso8601",
-			"settings": { "onUpdate" : true, "readonly": true }
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Updated Date",
+			"help": "Blog Post updated date",
+			"field": "hidden",
+			"factory": "iso8601",
+			"settings": {
+				"onUpdate": true,
+				"readonly": true
+			}
 		},
 		"created": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"   : "Creation Date",
-			"help"    : "Blog Post creation date",
-			"field"   : "hidden",
-			"factory" : "iso8601",
-			"settings": { "onCreate" : true, "readonly": true }
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Creation Date",
+			"help": "Blog Post creation date",
+			"field": "hidden",
+			"factory": "iso8601",
+			"settings": {
+				"onCreate": true,
+				"readonly": true
+			}
 		}
 	},
 	"required": [

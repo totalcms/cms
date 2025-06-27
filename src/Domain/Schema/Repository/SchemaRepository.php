@@ -60,6 +60,8 @@ final class SchemaRepository extends StorageRepository
 	/**
 	 * List reserved Schemas.
 	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @return array<SchemaData>
 	 */
 	public function listReservedSchemas(): array
@@ -69,17 +71,7 @@ final class SchemaRepository extends StorageRepository
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
-			// Convert cached data back to SchemaData objects
-			$schemas = [];
-			foreach ($cached as $schemaArray) {
-				if (is_array($schemaArray)) {
-					try {
-						$schemas[] = $this->factory->generateSchema($schemaArray);
-					} catch (\Exception $e) {
-						// Skip invalid cached schema, will be refreshed below
-					}
-				}
-			}
+			$schemas = $this->hydrateSchemasFromCache($cached);
 			if (!empty($schemas)) {
 				return $schemas;
 			}
@@ -97,14 +89,22 @@ final class SchemaRepository extends StorageRepository
 		}
 
 		// Cache the schemas as arrays for 1 hour (reserved schemas never change)
-		$schemasArray = array_map(fn ($schema) => $schema->toArray(), $schemas);
-		$this->cacheManager->storeComputedData($cacheKey, $schemasArray, 3600);
+		if (empty($schemas)) {
+			// Clear cache if no schemas to prevent serving stale data
+			$this->cacheManager->clearComputedData($cacheKey);
+		} else {
+			// Cache non-empty schemas
+			$schemasArray = array_map(fn ($schema) => $schema->toArray(), $schemas);
+			$this->cacheManager->storeComputedData($cacheKey, $schemasArray, CacheManager::TTL_RESERVED_SCHEMAS);
+		}
 
 		return $schemas;
 	}
 
 	/**
 	 * List reserved Schema IDs.
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @return array<string>
 	 */
@@ -135,7 +135,13 @@ final class SchemaRepository extends StorageRepository
 		});
 
 		// Cache for 1 hour (reserved schema IDs never change)
-		$this->cacheManager->storeComputedData($cacheKey, $filteredIds, 3600);
+		if (empty($filteredIds)) {
+			// Clear cache if no filtered IDs to prevent serving stale data
+			$this->cacheManager->clearComputedData($cacheKey);
+		} else {
+			// Cache non-empty filtered IDs
+			$this->cacheManager->storeComputedData($cacheKey, $filteredIds, CacheManager::TTL_RESERVED_SCHEMA_IDS);
+		}
 
 		return $filteredIds;
 	}
@@ -150,7 +156,7 @@ final class SchemaRepository extends StorageRepository
 	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
 		// Try cache first (Redis preferred, long TTL since default schemas never change)
-		$cacheKey = "default_schema:{$id}";
+		$cacheKey = "schema:{$id}";
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -178,7 +184,7 @@ final class SchemaRepository extends StorageRepository
 		$schema = $this->factory->generateSchemaFromJson($contents);
 
 		// Cache default schema for 1 hour (they never change during runtime)
-		$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), 3600);
+		$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
 
 		return $schema;
 	}
@@ -193,7 +199,7 @@ final class SchemaRepository extends StorageRepository
 	public function fetchCustomSchema(string $id): ?SchemaData
 	{
 		// Try cache first (Redis preferred, medium TTL since custom schemas change rarely)
-		$cacheKey = "custom_schema:{$id}";
+		$cacheKey = "schema:{$id}";
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -295,6 +301,27 @@ final class SchemaRepository extends StorageRepository
 	private function invalidateCustomSchemaCache(string $id): void
 	{
 		// Clear custom schema cache
-		$this->cacheManager->storeComputedData("custom_schema:{$id}", null, 1);
+		$this->cacheManager->clearComputedData("schema:{$id}");
+	}
+
+	/**
+	 * Convert cached schema arrays back to SchemaData objects.
+	 *
+	 * @param array<array<string,mixed>> $cachedSchemas
+	 *
+	 * @return array<SchemaData>
+	 */
+	private function hydrateSchemasFromCache(array $cachedSchemas): array
+	{
+		$schemas = [];
+		foreach ($cachedSchemas as $schemaArray) {
+			try {
+				$schemas[] = $this->factory->generateSchema($schemaArray);
+			} catch (\Exception $e) {
+				// Skip invalid cached schema, will be refreshed from source
+			}
+		}
+
+		return $schemas;
 	}
 }

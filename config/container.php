@@ -27,6 +27,7 @@ use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -262,7 +263,7 @@ return [
 			$container->get(SchemaFetcher::class),
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
-			$container->get(CacheManager::class),
+			$container->get(CacheReporter::class),
 			$container->get(LogAnalyzer::class),
 			$container->get(PhpSession::class),
 			$container->get(AccessManager::class),
@@ -326,8 +327,7 @@ return [
 	TwigEngine::class => function (ContainerInterface $container) {
 		return new TwigEngine(
 			$container->get(Config::class),
-			$container->get(TotalCMSTwigExtension::class),
-			$container->get(CacheManager::class)
+			$container->get(TotalCMSTwigExtension::class)
 		);
 	},
 
@@ -346,6 +346,15 @@ return [
 
 	MemcachedService::class => function (ContainerInterface $container) {
 		return new MemcachedService($container->get(Config::class));
+	},
+
+	CacheReporter::class => function (ContainerInterface $container) {
+		return new CacheReporter(
+			$container->get(FilesystemService::class),
+			$container->get(OPcacheService::class),
+			$container->get(RedisService::class),
+			$container->get(MemcachedService::class),
+		);
 	},
 
 	CacheManager::class => function (ContainerInterface $container) {

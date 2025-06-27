@@ -57,8 +57,8 @@
 		label  : "Clear Content Caches",
 	}) }}
 
-	{% set cacheStats = cms.cacheManager.getCacheStats() %}
-	{% set cacheConfig = cms.cacheManager.getOptimalCacheConfig() %}
+	{% set cacheStats = cms.cacheReporter.getCacheStats() %}
+	{% set cacheConfig = cms.cacheReporter.getOptimalCacheConfig() %}
 
 	{% if not cacheStats.cache_enabled %}
 		<div class="cache-disabled-notice">
@@ -82,30 +82,33 @@
 				<tr>
 					<td><strong>{{ name }}</strong></td>
 					<td>
-						{% if backend in cacheStats|keys %}
+						{% set status = cacheStats.backend_status[backend] %}
+						{% if status == 'active' %}
 							<span class="success">✅ Active</span>
+						{% elseif status == 'available' %}
+							<span class="warning">⚠️ Available (Installed but not enabled)</span>
 						{% else %}
-							<span class="warning">⚠️ Available</span>
+							<span class="error">❌ Not Installed</span>
 						{% endif %}
 					</td>
 					<td>
-						{% if backend == 'filesystem' and cacheStats.filesystem.exists %}
-							{{ cacheStats.filesystem.size_mb }} MB ({{ cacheStats.filesystem.files }} files)
-						{% elseif backend == 'opcache' and cacheStats.opcache.available %}
-							{% if cacheStats.opcache.hit_rate > 0 %}
-								{{ cacheStats.opcache.hit_rate }}% hit rate
+						{% if backend == 'filesystem' and cacheStats.services.filesystem.available %}
+							{{ cacheStats.services.filesystem.size_mb }} MB ({{ cacheStats.services.filesystem.files }} files)
+						{% elseif backend == 'opcache' and cacheStats.services.opcache.available %}
+							{% if cacheStats.services.opcache.hit_rate > 0 %}
+								{{ cacheStats.services.opcache.hit_rate }}% hit rate
 							{% else %}
 								Enabled, warming up
 							{% endif %}
-						{% elseif backend == 'redis' and cacheStats.redis.available %}
-							{% if cacheStats.redis.hit_rate > 0 %}
-								{{ cacheStats.redis.hit_rate }}% hit rate, {{ cacheStats.redis.memory_usage }}
+						{% elseif backend == 'redis' and cacheStats.services.redis.available %}
+							{% if cacheStats.services.redis.hit_rate > 0 %}
+								{{ cacheStats.services.redis.hit_rate }}% hit rate, {{ cacheStats.services.redis.memory_usage }}
 							{% else %}
 								Connected, no metrics yet
 							{% endif %}
-						{% elseif backend == 'memcached' and cacheStats.memcached.available %}
-							{% if cacheStats.memcached.hit_rate > 0 %}
-								{{ cacheStats.memcached.hit_rate }}% hit rate, {{ cacheStats.memcached.memory_usage }}
+						{% elseif backend == 'memcached' and cacheStats.services.memcached.available %}
+							{% if cacheStats.services.memcached.hit_rate > 0 %}
+								{{ cacheStats.services.memcached.hit_rate }}% hit rate, {{ cacheStats.services.memcached.memory_usage }}
 							{% else %}
 								Connected, no metrics yet
 							{% endif %}
@@ -190,7 +193,12 @@
 }
 
 .warning {
-	color: #ffc107;
+	/* color: #ffc107; */
+	font-weight: bold;
+}
+
+.error {
+	color: #dc3545;
 	font-weight: bold;
 }
 </style>

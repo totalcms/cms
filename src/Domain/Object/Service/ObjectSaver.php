@@ -31,7 +31,8 @@ final class ObjectSaver
 
 		$this->storage->saveObject($collection, $object);
 
-		$this->indexBuilder->smartBuildIndex($collection);
+		// Pass the new object for immediate index append when queueRebuildOnSave is enabled
+		$this->indexBuilder->smartBuildIndex($collection, $object);
 
 		return $object;
 	}

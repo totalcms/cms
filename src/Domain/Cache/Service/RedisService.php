@@ -47,6 +47,16 @@ final class RedisService implements CacheInterface
 		}
 	}
 
+	public function isInstalled(): bool
+	{
+		return extension_loaded('redis') && class_exists('Redis');
+	}
+
+	public function isActive(): bool
+	{
+		return $this->enabled && $this->isAvailable();
+	}
+
 	public function get(string $key): mixed
 	{
 		if (!$this->isAvailable()) {

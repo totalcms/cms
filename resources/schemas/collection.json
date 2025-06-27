@@ -4,6 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
+	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nurl url\nprettyUrl prettyUrl\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\nqueueRebuildOnSave queueRebuildOnSave\nproperties properties\ncustomProperties customProperties",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",

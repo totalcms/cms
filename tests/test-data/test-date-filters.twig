@@ -1,0 +1,154 @@
+{# Test template for new Chronos-based date filters #}
+
+<h1>Date Filter Test Suite</h1>
+
+{# Set up test dates #}
+{% set now = "now" %}
+{% set tomorrow = "tomorrow" %}
+{% set yesterday = "yesterday" %}
+{% set nextWeek = "+1 week" %}
+{% set lastMonth = "-1 month" %}
+{% set specificDate = "2024-06-15 14:30:00" %}
+{% set futureDate = "2030-12-25" %}
+{% set pastDate = "2020-01-01" %}
+{% set invalidDate = "not a valid date" %}
+
+<h2>1. Date Relative Filter</h2>
+<ul>
+    <li>Now: {{ now|dateRelative }}</li>
+    <li>Tomorrow: {{ tomorrow|dateRelative }}</li>
+    <li>Yesterday: {{ yesterday|dateRelative }}</li>
+    <li>Next Week: {{ nextWeek|dateRelative }}</li>
+    <li>Last Month: {{ lastMonth|dateRelative }}</li>
+    <li>Specific Date (2024-06-15): {{ specificDate|dateRelative }}</li>
+    <li>Invalid Date: {{ invalidDate|dateRelative }}</li>
+</ul>
+
+<h2>2. Date Format Filter</h2>
+<ul>
+    <li>Default format: {{ specificDate|dateFormat }}</li>
+    <li>Y-m-d: {{ specificDate|dateFormat('Y-m-d') }}</li>
+    <li>F j, Y: {{ specificDate|dateFormat('F j, Y') }}</li>
+    <li>l, F d, Y g:i A: {{ specificDate|dateFormat('l, F d, Y g:i A') }}</li>
+    <li>D M j G:i:s Y: {{ specificDate|dateFormat('D M j G:i:s Y') }}</li>
+    <li>ISO 8601: {{ specificDate|dateFormat('c') }}</li>
+    <li>Tomorrow formatted: {{ "tomorrow"|dateFormat('Y-m-d') }}</li>
+</ul>
+
+<h2>3. Date Add Filter</h2>
+<ul>
+    <li>Today + 1 day: {{ now|dateAdd('+1 day')|dateFormat('Y-m-d') }}</li>
+    <li>Today + 1 week: {{ now|dateAdd('+1 week')|dateFormat('Y-m-d') }}</li>
+    <li>Today + 1 month: {{ now|dateAdd('+1 month')|dateFormat('Y-m-d') }}</li>
+    <li>Today + 1 year: {{ now|dateAdd('+1 year')|dateFormat('Y-m-d') }}</li>
+    <li>Today + 3 hours: {{ now|dateAdd('+3 hours')|dateFormat('Y-m-d H:i:s') }}</li>
+    <li>Chain multiple: {{ now|dateAdd('+1 week')|dateAdd('+2 days')|dateFormat('Y-m-d') }}</li>
+</ul>
+
+<h2>4. Date Subtract Filter</h2>
+<ul>
+    <li>Today - 1 day: {{ now|dateSubtract('1 day')|dateFormat('Y-m-d') }}</li>
+    <li>Today - 1 week: {{ now|dateSubtract('1 week')|dateFormat('Y-m-d') }}</li>
+    <li>Today - 1 month: {{ now|dateSubtract('1 month')|dateFormat('Y-m-d') }}</li>
+    <li>Today - 1 year: {{ now|dateSubtract('1 year')|dateFormat('Y-m-d') }}</li>
+    <li>With minus sign: {{ now|dateSubtract('-1 day')|dateFormat('Y-m-d') }} (should still subtract)</li>
+</ul>
+
+<h2>5. Date Diff Filter</h2>
+<ul>
+    <li>Difference between today and tomorrow: {{ now|dateDiff(tomorrow) }}</li>
+    <li>Difference between today and yesterday: {{ now|dateDiff(yesterday) }}</li>
+    <li>Difference between today and next week: {{ now|dateDiff(nextWeek) }}</li>
+    <li>Difference between two specific dates: {{ "2024-01-01"|dateDiff("2024-12-31") }}</li>
+</ul>
+
+<h2>6. Date Start/End Of Period</h2>
+<h3>Start Of:</h3>
+<ul>
+    <li>Start of day: {{ specificDate|dateStartOf('day')|dateFormat('Y-m-d H:i:s') }}</li>
+    <li>Start of week: {{ specificDate|dateStartOf('week')|dateFormat('Y-m-d H:i:s') }}</li>
+    <li>Start of month: {{ specificDate|dateStartOf('month')|dateFormat('Y-m-d H:i:s') }}</li>
+    <li>Start of year: {{ specificDate|dateStartOf('year')|dateFormat('Y-m-d H:i:s') }}</li>
+</ul>
+
+<h3>End Of:</h3>
+<ul>
+    <li>End of day: {{ specificDate|dateEndOf('day')|dateFormat('Y-m-d H:i:s') }}</li>
+    <li>End of week: {{ specificDate|dateEndOf('week')|dateFormat('Y-m-d H:i:s') }}</li>
+    <li>End of month: {{ specificDate|dateEndOf('month')|dateFormat('Y-m-d H:i:s') }}</li>
+    <li>End of year: {{ specificDate|dateEndOf('year')|dateFormat('Y-m-d H:i:s') }}</li>
+</ul>
+
+<h2>7. Date Boolean Checks</h2>
+<ul>
+    <li>Is today a weekend? {{ now|dateIsWeekend ? 'Yes' : 'No' }}</li>
+    <li>Is Saturday a weekend? {{ "2024-06-15"|dateIsWeekend ? 'Yes' : 'No' }} (June 15, 2024)</li>
+    <li>Is Monday a weekday? {{ "2024-06-17"|dateIsWeekday ? 'Yes' : 'No' }} (June 17, 2024)</li>
+    <li>Is 2020-01-01 in the past? {{ pastDate|dateIsPast ? 'Yes' : 'No' }}</li>
+    <li>Is 2030-12-25 in the future? {{ futureDate|dateIsFuture ? 'Yes' : 'No' }}</li>
+    <li>Is today today? {{ now|dateIsToday ? 'Yes' : 'No' }}</li>
+    <li>Is tomorrow today? {{ tomorrow|dateIsToday ? 'Yes' : 'No' }}</li>
+</ul>
+
+<h2>8. Complex Examples</h2>
+<ul>
+    <li>Next Monday: {{ "next monday"|dateFormat('l, F j, Y') }}</li>
+    <li>First day of next month: {{ "first day of next month"|dateFormat('Y-m-d') }}</li>
+    <li>Last Friday: {{ "last friday"|dateFormat('Y-m-d') }}</li>
+    <li>2 weeks from tomorrow: {{ tomorrow|dateAdd('+2 weeks')|dateFormat('Y-m-d') }}</li>
+</ul>
+
+<h2>9. Conditional Date Display</h2>
+{% set eventDate = "+3 days" %}
+<p>Event date: {{ eventDate|dateFormat('F j, Y') }}</p>
+<p>Status: 
+{% if eventDate|dateIsToday %}
+    <strong>Event is TODAY!</strong>
+{% elseif eventDate|dateIsPast %}
+    <em>This event has passed</em>
+{% elseif eventDate|dateIsFuture %}
+    <strong>Upcoming in {{ now|dateDiff(eventDate) }}</strong>
+{% endif %}
+</p>
+
+<h2>10. Date Loop Example</h2>
+<p>Next 7 days:</p>
+<ul>
+{% for i in 0..6 %}
+    {% set loopDate = now|dateAdd('+' ~ i ~ ' days') %}
+    <li>
+        {{ loopDate|dateFormat('D, M j') }}
+        {% if loopDate|dateIsWeekend %}(Weekend){% endif %}
+        {% if loopDate|dateIsToday %}← Today{% endif %}
+    </li>
+{% endfor %}
+</ul>
+
+<h2>11. Working with CMS Data</h2>
+{# Example with typical CMS date fields #}
+{% set post = {
+    created_date: "2024-01-15 10:30:00",
+    updated_date: "-3 days",
+    publish_date: "tomorrow"
+} %}
+
+<h3>Blog Post Dates:</h3>
+<ul>
+    <li>Created: {{ post.created_date|dateFormat('F j, Y') }} ({{ post.created_date|dateRelative }})</li>
+    <li>Updated: {{ post.updated_date|dateFormat('F j, Y') }} ({{ post.updated_date|dateRelative }})</li>
+    <li>Scheduled: {{ post.publish_date|dateFormat('F j, Y g:i A') }}</li>
+    <li>Status: 
+        {% if post.publish_date|dateIsPast or post.publish_date|dateIsToday %}
+            Published
+        {% else %}
+            Scheduled for {{ post.publish_date|dateRelative }}
+        {% endif %}
+    </li>
+</ul>
+
+<h2>12. Error Handling</h2>
+<ul>
+    <li>Invalid date format: {{ invalidDate|dateFormat('Y-m-d') }}</li>
+    <li>Invalid date relative: {{ invalidDate|dateRelative }}</li>
+    <li>Invalid date boolean: {{ invalidDate|dateIsToday ? 'True' : 'False' }}</li>
+</ul>

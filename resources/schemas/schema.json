@@ -38,7 +38,7 @@
 			"type"        : "string",
 			"label"       : "Form Grid Layout",
 			"help"        : "A text based grid layout for the form. This is used to create a grid layout for the form fields.",
-			"placeholder" : "id id id\naddress city state",
+			"placeholder" : "id id id\nfield field field",
 			"settings"    : { "rows" : 5 },
 			"field"       : "textarea"
 		},

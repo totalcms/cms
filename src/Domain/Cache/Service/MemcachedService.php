@@ -41,6 +41,16 @@ final class MemcachedService implements CacheInterface
 		}
 	}
 
+	public function isInstalled(): bool
+	{
+		return extension_loaded('memcached') && class_exists('Memcached');
+	}
+
+	public function isActive(): bool
+	{
+		return $this->enabled && $this->isAvailable();
+	}
+
 	public function get(string $key): mixed
 	{
 		if (!$this->isAvailable()) {

@@ -4,6 +4,7 @@
 	"id"          : "blog-legacy",
 	"type"        : "object",
 	"description" : "A schema for a Total CMS Legacy Blog object. This is used for backwards compatibility with older versions of Total CMS.",
+	"formgrid"    : "draft featured archived\nid id author\ntitle title date\nimage image tags\nimage image categories\nimage image labels\nimage image genre\nsummary summary summary\ncontent content content\nmedia media media\ngallery gallery gallery\nextra extra extra\nextra2 extra2 extra2",
 	"properties"  : {
 		"draft": {
 			"type"    : "boolean",
@@ -44,6 +45,7 @@
 			"label"   : "Date",
 			"help"    : "Blog Post date",
 			"field"   : "date",
+			"default" : "now",
 			"factory" : "iso8601"
 		},
 		"author": {

@@ -29,12 +29,14 @@ final class IndexRepository extends StorageRepository
 	 *
 	 * @param string $collection
 	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
 	 * @return ?IndexData
 	 */
 	public function fetchIndex(string $collection): ?IndexData
 	{
 		// Try cache first (Redis preferred for fast index access)
-		$cacheKey = "index_data:{$collection}";
+		$cacheKey = "index:{$collection}";
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -57,7 +59,13 @@ final class IndexRepository extends StorageRepository
 
 		// Cache the index objects array for 30 minutes (indexes change when objects are added/removed)
 		if ($indexData !== null) {
-			$this->cacheManager->storeComputedData($cacheKey, $indexData->objects->toArray(), 1800);
+			if ($indexData->objects->isEmpty()) {
+				// Clear cache if index is empty to prevent serving stale data
+				$this->cacheManager->clearComputedData($cacheKey);
+			} else {
+				// Cache non-empty indexes
+				$this->cacheManager->storeComputedData($cacheKey, $indexData->objects->toArray(), CacheManager::TTL_INDEX_DATA);
+			}
 		}
 
 		return $indexData;
@@ -67,6 +75,8 @@ final class IndexRepository extends StorageRepository
 	 * Get an array of object IDs in.
 	 *
 	 * @param string $collection
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @return array<string>
 	 */
@@ -88,8 +98,13 @@ final class IndexRepository extends StorageRepository
 
 		$objectIds = array_map(fn (string $path) => basename($path, StorageRepository::FILE_EXT), $files);
 
-		// Cache object IDs for 15 minutes (changes when objects are added/removed)
-		$this->cacheManager->storeComputedData($cacheKey, $objectIds, 900);
+		if (empty($objectIds)) {
+			// Clear cache if no objects to prevent serving stale data
+			$this->cacheManager->clearComputedData($cacheKey);
+		} else {
+			// Cache object IDs for 15 minutes (changes when objects are added/removed)
+			$this->cacheManager->storeComputedData($cacheKey, $objectIds, CacheManager::TTL_OBJECT_IDS);
+		}
 
 		return $objectIds;
 	}
@@ -119,10 +134,10 @@ final class IndexRepository extends StorageRepository
 	private function invalidateIndexCache(string $collection): void
 	{
 		// Clear index data cache
-		$this->cacheManager->storeComputedData("index_data:{$collection}", null, 1);
+		$this->cacheManager->clearComputedData("index:{$collection}");
 
 		// Clear object IDs cache (index changes usually mean object list changed)
-		$this->cacheManager->storeComputedData("object_ids:{$collection}", null, 1);
+		$this->cacheManager->clearComputedData("object_ids:{$collection}");
 	}
 
 	private function buildIndexPath(string $collection): string

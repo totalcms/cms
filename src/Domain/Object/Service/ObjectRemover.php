@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -15,6 +16,7 @@ final class ObjectRemover
 		private ObjectFetcher $objectFetcher,
 		private ObjectUpdater $objectUpdater,
 		private IndexBuilder $indexBuilder,
+		private CollectionFetcher $collectionFetcher,
 	) {
 	}
 
@@ -23,7 +25,18 @@ final class ObjectRemover
 		$status = $this->storage->deleteObject($collection, $id);
 
 		if ($status) {
-			$this->indexBuilder->smartBuildIndex($collection);
+			// Use optimized removal for immediate index update
+			$collectionData = $this->collectionFetcher->fetchCollection($collection);
+			$queueReindex   = $collectionData !== null && ($collectionData->queueRebuildOnSave ?? false);
+
+			if ($queueReindex) {
+				// Remove immediately from index, then queue full rebuild for consistency
+				$this->indexBuilder->removeObjectFromIndex($collection, $id);
+				$this->indexBuilder->smartBuildIndex($collection);
+			} else {
+				// Full rebuild immediately
+				$this->indexBuilder->smartBuildIndex($collection);
+			}
 		}
 
 		return $status;
