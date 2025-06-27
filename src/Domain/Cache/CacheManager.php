@@ -16,7 +16,7 @@ final class CacheManager
 	// Cache key prefixes
 	public const PREFIX_COMPUTED     = 'computed';
 	public const PREFIX_COLLECTION   = 'collection';
-	public const PREFIX_API_RESPONSE = 'api_response';
+	public const PREFIX_API_RESPONSE = 'api';
 	public const PREFIX_SESSION      = 'session';
 	public const PREFIX_TEMPLATE     = 'template';
 

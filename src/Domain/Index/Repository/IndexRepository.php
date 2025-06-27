@@ -36,7 +36,7 @@ final class IndexRepository extends StorageRepository
 	public function fetchIndex(string $collection): ?IndexData
 	{
 		// Try cache first (Redis preferred for fast index access)
-		$cacheKey = "index_data:{$collection}";
+		$cacheKey = "index:{$collection}";
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -134,10 +134,10 @@ final class IndexRepository extends StorageRepository
 	private function invalidateIndexCache(string $collection): void
 	{
 		// Clear index data cache
-		$this->cacheManager->storeComputedData("index_data:{$collection}", null, 1);
+		$this->cacheManager->clearComputedData("index:{$collection}");
 
 		// Clear object IDs cache (index changes usually mean object list changed)
-		$this->cacheManager->storeComputedData("object_ids:{$collection}", null, 1);
+		$this->cacheManager->clearComputedData("object_ids:{$collection}");
 	}
 
 	private function buildIndexPath(string $collection): string

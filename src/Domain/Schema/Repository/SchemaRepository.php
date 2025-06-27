@@ -156,7 +156,7 @@ final class SchemaRepository extends StorageRepository
 	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
 		// Try cache first (Redis preferred, long TTL since default schemas never change)
-		$cacheKey = "default_schema:{$id}";
+		$cacheKey = "schema:{$id}";
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -199,7 +199,7 @@ final class SchemaRepository extends StorageRepository
 	public function fetchCustomSchema(string $id): ?SchemaData
 	{
 		// Try cache first (Redis preferred, medium TTL since custom schemas change rarely)
-		$cacheKey = "custom_schema:{$id}";
+		$cacheKey = "schema:{$id}";
 		$cached   = $this->cacheManager->getComputedData($cacheKey);
 
 		if ($cached !== null && is_array($cached)) {
@@ -301,7 +301,7 @@ final class SchemaRepository extends StorageRepository
 	private function invalidateCustomSchemaCache(string $id): void
 	{
 		// Clear custom schema cache
-		$this->cacheManager->storeComputedData("custom_schema:{$id}", null, 1);
+		$this->cacheManager->clearComputedData("schema:{$id}");
 	}
 
 	/**
