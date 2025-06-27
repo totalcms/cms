@@ -41,21 +41,18 @@ final class SettingsSaver
 			unset($settings['pagination']);
 		}
 
-		$configContent = "<?php\n\nreturn [\n";
-		foreach ($settings as $key => $value) {
-			if (is_array($value)) {
-				$arrayString = var_export($value, true);
-				$arrayString = str_replace('array (', '[', $arrayString);
-				$arrayString = str_replace(')', ']', $arrayString);
-
-				$configContent .= "\"$key\" => $arrayString,\n";
-				continue;
-			}
-			$configContent .= "\"$key\" => " . (is_bool($value) ? ($value ? 'true' : 'false') : "\"$value\"") . ",\n";
-		}
-		$configContent .= "];\n";
-
 		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+		if (file_exists($configFile)) {
+			$existingSettings = include $configFile;
+			if (is_array($existingSettings)) {
+				$settings = array_replace_recursive($existingSettings, $settings);
+			}
+		}
+
+		$configContent = "<?php\n\nreturn json_decode(<<<JSON\n";
+		$configContent .= json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		$configContent .= "\nJSON, true);\n";
+
 		file_put_contents($configFile, $configContent);
 
 		// Clear all caches after settings are saved

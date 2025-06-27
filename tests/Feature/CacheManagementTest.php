@@ -179,7 +179,7 @@ describe('Cache Manager Operations', function () {
 	it('provides correct cache prefixes', function (): void {
 		expect(CacheManager::PREFIX_COMPUTED)->toBe('computed');
 		expect(CacheManager::PREFIX_COLLECTION)->toBe('collection');
-		expect(CacheManager::PREFIX_API_RESPONSE)->toBe('api_response');
+		expect(CacheManager::PREFIX_API_RESPONSE)->toBe('api');
 		expect(CacheManager::PREFIX_SESSION)->toBe('session');
 		expect(CacheManager::PREFIX_TEMPLATE)->toBe('template');
 
