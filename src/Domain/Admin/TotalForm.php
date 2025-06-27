@@ -214,8 +214,8 @@ abstract class TotalForm
 		$formgrid = null;
 		if (!empty($this->schemaData->formgrid)) {
 			$this->class .= ' formgrid';
-			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
-			$formgrid = $gridBuilder->toCss();
+			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
+			$formgrid     = $gridBuilder->toCss();
 		}
 
 		$attributes = array_filter([
@@ -251,7 +251,6 @@ abstract class TotalForm
 			$delete   = $this->deleteButton();
 			$content .= HTMLUtils::element('div', $save . $delete, [
 				'class' => 'form-inline-fields',
-				// 'style' => 'grid-area: buttons;',
 			]);
 		}
 
@@ -336,7 +335,7 @@ abstract class TotalForm
 		}
 
 		$content = '';
-		
+
 		// If using formgrid, inject section headers and dividers
 		if (!empty($this->schemaData->formgrid)) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);

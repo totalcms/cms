@@ -6,20 +6,48 @@ use TotalCMS\Utils\HTMLUtils;
 
 /**
  * Builds CSS Grid layouts and HTML sections from formgrid definitions.
- * 
+ *
  * Handles the conversion of text-based grid layouts to CSS Grid properties
  * and generates section headers/dividers for visual organization.
  */
 final class FormGridBuilder
 {
+	private const HEADER_REGEX = '/^---(.+?)---$/';
+	private const DIVIDER      = '---';
+
 	public function __construct(
-		private string $formgrid = ''
+		private string $formgrid = '',
 	) {
 	}
 
-	/**
-	 * Convert formgrid text definition to CSS Grid template areas.
-	 */
+	private function getColumnCount(): int
+	{
+		// Split the grid into lines and normalize line endings
+		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
+		if ($lines === false) {
+			return 0;
+		}
+
+		$maxColumns = 0;
+
+		foreach ($lines as $line) {
+			$line = trim($line);
+			if (empty($line)) {
+				continue; // Skip empty lines
+			}
+
+			// Count columns in the current line
+			$columns = preg_split('/\s+/', $line);
+			if ($columns === false) {
+				continue; // Skip invalid lines
+			}
+
+			$maxColumns = max($maxColumns, count($columns));
+		}
+
+		return $maxColumns;
+	}
+
 	public function toCss(): string
 	{
 		// Return empty string if no grid is defined
@@ -33,37 +61,34 @@ final class FormGridBuilder
 			return '';
 		}
 
-		$columnCount = 1;
-		$quotedLines = [];
+		$columnCount    = 1;
 		$sectionCounter = 0;
+		$quotedLines    = [];
 
 		foreach ($lines as $line) {
-			$trimmed = trim($line);
+			$line = trim($line);
+
 			// Skip empty lines
-			if (empty($trimmed)) {
+			if (empty($line)) {
 				continue;
 			}
 
 			// Process section headers: ---Title---
-			if (preg_match('/^---(.+?)---$/', $trimmed, $matches)) {
+			if (preg_match(self::HEADER_REGEX, $line)) {
 				$sectionCounter++;
-				$sectionId = 'section-header-' . $sectionCounter;
-				$quotedLines[] = "'" . $sectionId . " " . $sectionId . " " . $sectionId . "'";
-				$columnCount = max($columnCount, 3); // Section headers span 3 columns minimum
+				$quotedLines[] = "'section-header-$sectionCounter . .'";
 				continue;
 			}
 
 			// Process dividers: ---
-			if ($trimmed === '---') {
+			if ($line === self::DIVIDER) {
 				$sectionCounter++;
-				$divId = 'section-divider-' . $sectionCounter;
-				$quotedLines[] = "'" . $divId . " " . $divId . " " . $divId . "'";
-				$columnCount = max($columnCount, 3); // Dividers span 3 columns minimum
+				$quotedLines[] = "'section-divider-$sectionCounter . .'";
 				continue;
 			}
 
 			// Process regular grid areas
-			$normalized = (string)preg_replace('/\s+/', ' ', $trimmed);
+			$normalized = (string)preg_replace('/\s+/', ' ', $line);
 			$columns    = explode(' ', $normalized);
 
 			// Validate each area name
@@ -116,7 +141,7 @@ final class FormGridBuilder
 			return [];
 		}
 
-		$sections = [];
+		$sections       = [];
 		$sectionCounter = 0;
 
 		foreach ($lines as $line) {
@@ -130,9 +155,9 @@ final class FormGridBuilder
 			if (preg_match('/^---(.+?)---$/', $trimmed, $matches)) {
 				$sectionCounter++;
 				$sections[] = [
-					'type' => 'header',
-					'title' => trim($matches[1]),
-					'id' => 'section-header-' . $sectionCounter,
+					'type'      => 'header',
+					'title'     => trim($matches[1]),
+					'id'        => 'section-header-' . $sectionCounter,
 					'grid_area' => 'section-header-' . $sectionCounter,
 				];
 				continue;
@@ -142,8 +167,8 @@ final class FormGridBuilder
 			if ($trimmed === '---') {
 				$sectionCounter++;
 				$sections[] = [
-					'type' => 'divider',
-					'id' => 'section-divider-' . $sectionCounter,
+					'type'      => 'divider',
+					'id'        => 'section-divider-' . $sectionCounter,
 					'grid_area' => 'section-divider-' . $sectionCounter,
 				];
 				continue;
@@ -166,20 +191,23 @@ final class FormGridBuilder
 		$content = '';
 		foreach ($sections as $section) {
 			if ($section['type'] === 'header') {
-				$content .= HTMLUtils::element('div', 
-					HTMLUtils::element('h3', htmlspecialchars($section['title'], ENT_QUOTES, 'UTF-8')), 
+				$content .= HTMLUtils::element(
+					'div',
+					HTMLUtils::element('h3', htmlspecialchars($section['title'], ENT_QUOTES, 'UTF-8')),
 					[
 						'class' => 'form-grid-section-header',
 						'style' => 'grid-area: ' . $section['grid_area'] . ';',
-						'id' => $section['id'],
+						'id'    => $section['id'],
 					]
 				);
 			} elseif ($section['type'] === 'divider') {
-				$content .= HTMLUtils::element('div', '', 
+				$content .= HTMLUtils::element(
+					'div',
+					'',
 					[
 						'class' => 'form-grid-section-divider',
 						'style' => 'grid-area: ' . $section['grid_area'] . ';',
-						'id' => $section['id'],
+						'id'    => $section['id'],
 					]
 				);
 			}
