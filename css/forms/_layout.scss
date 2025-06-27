@@ -10,7 +10,14 @@
 		margin-top : 1rem;
 	}
 
-	input:focus,cms-save
+	&.custom-layout {
+		display : block;
+		.form-field {
+			grid-area : unset !important;
+		}
+	}
+
+	input:focus,
 	textarea:focus,
 	input:focus + .form-group-icon,
 	textarea:focus + .form-group-icon {
