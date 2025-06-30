@@ -77,7 +77,12 @@ final class CollectionTable
 		$collectionField = HTMLUtils::element('div', $label . $input);
 
 		$label   = HTMLUtils::element('label', 'New ' . $labelSingular . ' ID', ['for' => 'clone-id']);
-		$input   = HTMLUtils::inlineElement('input', ['id'=>'clone-id', 'type'=>'text', 'name'=>'id']);
+		$input   = HTMLUtils::inlineElement('input', [
+			'id'             => 'clone-id',
+			'type'           => 'text',
+			'name'           => 'id',
+			'autocapitalize' => 'off',
+		]);
 		$idField = HTMLUtils::element('div', $label . $input);
 
 		$form = new SimpleForm(

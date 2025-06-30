@@ -19,4 +19,13 @@ class IdField extends FormField
 			$this->readonly = true;
 		}
 	}
+
+	/** @return array<string,?string> */
+	protected function formFieldAttributes(): array
+	{
+		$attributes = parent::formFieldAttributes();
+		$attributes['autocapitalize'] = 'off';
+
+		return $attributes;
+	}
 }
