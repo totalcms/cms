@@ -68,24 +68,24 @@
 			</div>
 
 			<div class="form-field text-field" data-type="text">
-				<label for="api">404 - Page Not Found Path</label>
+				<label for="notfound">404 - Page Not Found Path</label>
 				<div class="form-group">
 					<input type="text"
 						value="{{ settings.notfound }}"
-						id="api"
-						name="api"
-						aria-describedby="help-api"
+						id="notfound"
+						name="notfound"
+						aria-describedby="help-notfound"
 						placeholder="{{ defaults.notfound }}">
 					<div class="form-group-icon"></div>
 				</div>
-				<p class="help" id="help-api">
+				<p class="help" id="help-notfound">
 					The path to the 404 page that will be used when a page is not found. This is used by the
 					CMS to redirect when an object is not found.
 				</p>
 			</div>
 
 			<div class="form-field number-field" data-type="number">
-				<label for="api">Dashboard Table Pagination</label>
+				<label for="pagination">Dashboard Table Pagination</label>
 				<div class="form-group">
 					<input type="number"
 						value="{{ settings.dashboard.pagination }}"
