@@ -100,7 +100,15 @@ final class CollectionRepository extends StorageRepository
 	{
 		$metaFile = $this->buildMetaPath($collection);
 
-		return $this->filesystem->delete($metaFile);
+		$result = $this->filesystem->delete($metaFile);
+
+		// Clear caches after deleting collection
+		if ($result) {
+			$this->cacheManager->clearComputedData('collections_list');
+			$this->cacheManager->clearCollectionIndex($collection);
+		}
+
+		return $result;
 	}
 
 	/**
@@ -159,6 +167,10 @@ final class CollectionRepository extends StorageRepository
 		$metaFile    = $this->buildMetaPath($collection->id);
 
 		$this->filesystem->write($metaFile, $jsonContent);
+
+		// Clear caches after saving collection
+		$this->cacheManager->clearComputedData('collections_list');
+		$this->cacheManager->clearCollectionIndex($collection->id);
 	}
 
 	public function isReservedCollection(string $collectionId): bool

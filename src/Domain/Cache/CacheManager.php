@@ -187,6 +187,11 @@ final class CacheManager
 			$success &= $this->filesystemService->delete($key);
 		}
 
+		// Always clear OPcache to ensure no stale cached data
+		if ($this->opcacheService->isAvailable()) {
+			$success &= $this->opcacheService->clear();
+		}
+
 		return (bool)$success;
 	}
 
