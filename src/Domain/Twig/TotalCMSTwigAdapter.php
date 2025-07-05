@@ -38,6 +38,7 @@ use TotalCMS\Utils\ServerChecker;
  */
 final class TotalCMSTwigAdapter
 {
+	public string $env;
 	public string $api;
 	public string $dashboard;
 	public string $login;
@@ -62,6 +63,7 @@ final class TotalCMSTwigAdapter
 		private FileAccessManager $fileAccessManager,
 		public ImageCacheService $imageCacheService,
 	) {
+		$this->env               = $this->config->env;
 		$this->api               = $this->config->api;
 		$this->dashboard         = $this->api . '/admin';
 		$this->logout            = $this->api . '/logout';
