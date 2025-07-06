@@ -4,20 +4,14 @@
 
 {% set action = getData.action %}
 
-{# Jumpstart Content Generator #}
-{% if cms.env == 'preview' %}
-	<h2>🚀 Jumpstart Content</h2>
-	
-	{% if action == "jumpstart" %}
-		{% include "admin/utils/jumpstart.twig" %}
-	{% else %}
-		<p>Jumpstart your project with demo content! This will create sample schemas, collections, and realistic content to showcase Total CMS capabilities.</p>
-		<p class="text-muted">This feature is only available in preview environments.</p>
-		<a class="dash-button transparent" href="utils/project-setup?action=jumpstart">🚀 Start Jumpstart Import</a>
-	{% endif %}
-	
-	<hr style="margin: 2rem 0; border-color: oklch(var(--totalform-border-color));">
-{% endif %}
+{# Jumpstart Content Management #}
+<h2>🚀 Jumpstart Content</h2>
+
+<p>Jumpstart your project with demo content! Import sample data or export your current setup for future use.</p>
+<p class="text-muted">Import is only available in preview environments. Export is available in all environments.</p>
+<a class="dash-button transparent" href="utils/jumpstart">🚀 Open Jumpstart</a>
+
+<hr style="margin: 2rem 0; border-color: oklch(var(--totalform-border-color));" />
 
 <h2>Default Collections</h2>
 

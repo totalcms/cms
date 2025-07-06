@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Jumpstart;
+namespace TotalCMS\Domain\JumpStart\Service;
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
@@ -15,7 +15,7 @@ use TotalCMS\Utils\Faker\FakerExtension;
 use Exception;
 use Psr\Log\LoggerInterface;
 
-final class JumpstartImporter
+final class JumpStartImporter
 {
 	private CollectionFetcher $collectionFetcher;
 	private CollectionSaver $collectionSaver;
