@@ -1,0 +1,200 @@
+{# Jumpstart Import Results #}
+
+{% set jumpstartImporter = container.get('TotalCMS\\Domain\\Jumpstart\\JumpstartImporter') %}
+{% set definitionPath = container.get('settings')['root'] ~ '/resources/jumpstart-example.json' %}
+
+{% if file_exists(definitionPath) %}
+	{% set definition = file_get_contents(definitionPath) | json_decode %}
+	{% set results = jumpstartImporter.importFromDefinition(definition) %}
+	
+	<div class="card">
+		<div class="card-header">
+			<h3>Jumpstart Import Results</h3>
+			<p class="text-muted">{{ definition.name }} (v{{ definition.version }})</p>
+		</div>
+		
+		<div class="card-body">
+			{% if results.success %}
+				<div class="alert alert-success">
+					<i class="fas fa-check-circle"></i>
+					<strong>Success!</strong> Jumpstart content has been imported.
+				</div>
+				
+				<div class="row mb-4">
+					<div class="col-md-2">
+						<div class="stat-box">
+							<div class="stat-value">{{ results.summary.schemas_created }}</div>
+							<div class="stat-label">Schemas</div>
+						</div>
+					</div>
+					<div class="col-md-2">
+						<div class="stat-box">
+							<div class="stat-value">{{ results.summary.collections_created }}</div>
+							<div class="stat-label">Collections</div>
+						</div>
+					</div>
+					<div class="col-md-2">
+						<div class="stat-box">
+							<div class="stat-value">{{ results.summary.objects_created }}</div>
+							<div class="stat-label">Objects</div>
+						</div>
+					</div>
+					<div class="col-md-3">
+						<div class="stat-box">
+							<div class="stat-value">{{ results.summary.factory_items_created }}</div>
+							<div class="stat-label">Factory Items</div>
+						</div>
+					</div>
+					<div class="col-md-3">
+						<div class="stat-box">
+							<div class="stat-value">{{ results.summary.total_errors }}</div>
+							<div class="stat-label">Errors</div>
+						</div>
+					</div>
+				</div>
+				
+				{% if results.results %}
+					<h4>Generated Items</h4>
+					<div class="table-responsive">
+						<table class="table table-sm">
+							<thead>
+								<tr>
+									<th>Type</th>
+									<th>Action</th>
+									<th>Item</th>
+									<th>Details</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for result in results.results %}
+									<tr>
+										<td>
+											<span class="badge badge-{{ result.type == 'schema' ? 'primary' : (result.type == 'collection' ? 'info' : (result.type == 'object' ? 'warning' : 'success')) }}">
+												{{ result.type }}
+											</span>
+										</td>
+										<td>{{ result.action }}</td>
+										<td>
+											{% if result.type == 'schema' %}
+												<strong>{{ result.name }}</strong> ({{ result.id }})
+											{% elseif result.type == 'collection' %}
+												<strong>{{ result.name }}</strong> ({{ result.id }})
+												{% if result.schema %}
+													<small class="text-muted">Schema: {{ result.schema }}</small>
+												{% endif %}
+											{% elseif result.type == 'object' %}
+												<strong>{{ result.collection }}</strong> / {{ result.id }}
+											{% elseif result.type == 'factory' %}
+												<strong>{{ result.collection }}</strong>
+												{% if result.id %}
+													/ {{ result.id }}
+													<small class="text-muted">(factory generated)</small>
+												{% else %}
+													<small class="text-muted">({{ result.count }} items)</small>
+												{% endif %}
+											{% endif %}
+										</td>
+										<td>
+											{% if result.type == 'factory' %}
+												{% if result.id %}
+													<small class="text-muted">Factory object with ID</small>
+												{% else %}
+													<small class="text-muted">Generated {{ result.count }} items</small>
+												{% endif %}
+											{% endif %}
+										</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				{% endif %}
+			{% else %}
+				<div class="alert alert-danger">
+					<i class="fas fa-exclamation-circle"></i>
+					<strong>Jumpstart import failed!</strong> Please check the errors below.
+				</div>
+			{% endif %}
+			
+			{% if results.errors %}
+				<h4>Errors</h4>
+				<div class="alert alert-danger">
+					<ul class="mb-0">
+						{% for error in results.errors %}
+							<li>
+								<strong>{{ error.type|capitalize }}</strong>
+								{% if error.id %}({{ error.id }}){% endif %}
+								{% if error.collection %}in {{ error.collection }}{% endif %}:
+								{{ error.error }}
+							</li>
+						{% endfor %}
+					</ul>
+				</div>
+			{% endif %}
+		</div>
+		
+		<div class="card-footer">
+			<a href="{{ utils_url }}/project-setup" class="btn btn-secondary">
+				<i class="fas fa-arrow-left"></i> Back to Project Setup
+			</a>
+		</div>
+	</div>
+{% else %}
+	<div class="alert alert-warning">
+		<i class="fas fa-exclamation-triangle"></i>
+		<strong>No jumpstart definition found!</strong>
+		<p>The jumpstart definition file was not found at: <code>{{ definitionPath }}</code></p>
+	</div>
+	
+	<a href="{{ utils_url }}/project-setup" class="btn btn-secondary">
+		<i class="fas fa-arrow-left"></i> Back to Project Setup
+	</a>
+{% endif %}
+
+<style>
+	.stat-box {
+		text-align: center;
+		padding: 1.5rem;
+		background: oklch(var(--totalform-nearwhite));
+		border-radius: var(--totalform-radius);
+		border: 1px solid oklch(var(--totalform-border-color));
+	}
+	
+	.stat-value {
+		font-size: 2rem;
+		font-weight: 700;
+		color: oklch(var(--totalform-accent));
+	}
+	
+	.stat-label {
+		font-size: 0.875rem;
+		color: oklch(var(--totalform-darkgray));
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+	
+	.badge {
+		font-weight: 500;
+		padding: 0.25rem 0.5rem;
+	}
+	
+	.badge-primary {
+		background-color: oklch(var(--totalform-accent));
+		color: white;
+	}
+	
+	.badge-info {
+		background-color: oklch(var(--totalform-info));
+		color: white;
+	}
+	
+	.badge-success {
+		background-color: oklch(var(--totalform-success));
+		color: white;
+	}
+	
+	.badge-warning {
+		background-color: orange;
+		color: white;
+	}
+</style>

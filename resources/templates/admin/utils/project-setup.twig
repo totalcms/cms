@@ -3,15 +3,31 @@
 <section class="dash-content-section">
 
 {% set action = getData.action %}
-	<h2>Default Collections</h2>
 
-	{% if action == "default-collections" %}
-		{% include "admin/utils/actions/default-collections.twig" %}
+{# Jumpstart Content Generator #}
+{% if cms.env == 'preview' %}
+	<h2>🚀 Jumpstart Content</h2>
+	
+	{% if action == "jumpstart" %}
+		{% include "admin/utils/jumpstart.twig" %}
 	{% else %}
-		<p>This action will generate all of the default collections for you. This is useful when starting
-		a new project. If a collection already exists, it will not be touched.</p>
-		<a class="dash-button transparent" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
+		<p>Jumpstart your project with demo content! This will create sample schemas, collections, and realistic content to showcase Total CMS capabilities.</p>
+		<p class="text-muted">This feature is only available in preview environments.</p>
+		<a class="dash-button transparent" href="utils/project-setup?action=jumpstart">🚀 Start Jumpstart Import</a>
 	{% endif %}
+	
+	<hr style="margin: 2rem 0; border-color: oklch(var(--totalform-border-color));">
+{% endif %}
+
+<h2>Default Collections</h2>
+
+{% if action == "default-collections" %}
+	{% include "admin/utils/actions/default-collections.twig" %}
+{% else %}
+	<p>This action will generate all of the default collections for you. This is useful when starting
+	a new project. If a collection already exists, it will not be touched.</p>
+	<a class="dash-button transparent" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
+{% endif %}
 
 {% if totalcms1DetectionData is defined and totalcms1DetectionData %}
 	{% set cmsDataPath = totalcms1DetectionData.path %}

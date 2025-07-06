@@ -26,6 +26,7 @@ final class SchemaData
 		'file',
 		'gallery',
 		'image',
+		'jumpstart',
 		'new', // not allowed for /admin url routes
 		'number',
 		'schema',
