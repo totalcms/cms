@@ -19,10 +19,11 @@ final class FactoryImporter
 	private LoggerInterface $logger;
 	private FakerGenerator $faker;
 
-	private const DEFAULT_FACTORY = 'word';
+	private const DEFAULT_FACTORY  = 'word';
+	private const FAKER_RULE_REGEX = '/^(\w+)(\((.*)\))*$/';
 
 	public function __construct(
-		private ObjectFactory $factory,
+		private ObjectFactory $objectFactory,
 		private ObjectRepository $storage,
 		private LoggerFactory $loggerFactory,
 		private FakerFactory $fakerFactory,
@@ -48,11 +49,22 @@ final class FactoryImporter
 		}
 	}
 
+	public static function isFakerRule(string $rule): bool
+	{
+		// Check if the rule is a valid Faker method call
+		$syntaxCheck = preg_match(self::FAKER_RULE_REGEX, $rule) === 1;
+		if (!$syntaxCheck) {
+			return false;
+		}
+		[$method, $args] = self::parseFakerRule($rule);
+		return method_exists(FakerGenerator::class, $method) && is_array($args);
+	}
+
 	/** @return array<mixed> */
 	private static function parseFakerRule(string $rule): array
 	{
 		// Extract method name and arguments string
-		preg_match('/^(\w+)(\((.*)\))*$/', $rule, $matches);
+		preg_match(self::FAKER_RULE_REGEX, $rule, $matches);
 		$method = $matches[1] ?? '';
 		$args   = $matches[3] ?? '';
 		$args   = trim($args);
@@ -99,34 +111,61 @@ final class FactoryImporter
 		}, $schema->properties);
 	}
 
+	/**
+	 * @param array<string,string> $defs
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function generateFakeObject(string $collection, array $defs = [], string $id = ''): array
+	{
+		$objectData = ['id' => $id];
+
+		if (empty($objectData['id'])) {
+			// Generate object id first since other methods may require it
+			[$method, $args]  = self::parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
+			$objectData['id'] = $this->faker->unique()->$method(...$args);
+		}
+
+		foreach ($defs as $key => $value) {
+			if (empty($value) || $key === 'id') {
+				continue;
+			}
+			[$method, $args] = self::parseFakerRule($value);
+			if (str_starts_with($method, 'image')) {
+				// Save image to file and store path in object data
+				$path             = $this->faker->$method(...$args);
+				$objectData[$key] = $this->propertyRepository->saveImage($collection, $objectData['id'], $key, $path);
+				continue;
+			}
+			$objectData[$key] = $this->faker->$method(...$args);
+		}
+
+		return $objectData;
+	}
+
+	/**
+	 * @param array<string,string> $defs
+	 *
+	 * @return array<string,string>
+	 */
+	public function mergeFactoryDefinitions(string $collection, array $defs): array
+	{
+		// Get definitions from collection and merge with user provided definitions
+		$defs = array_merge($this->fetchCollectionFactories($collection), $defs);
+
+		return $defs;
+	}
+
 	/** @param array<string,string> $defs */
 	public function import(string $collection, int $quantity = 1, array $defs = []): int
 	{
 		$importCount = 0;
 
 		// Get definitions from collection and merge with user provided definitions
-		$defs = array_merge($this->fetchCollectionFactories($collection), $defs);
+		$defs = $this->mergeFactoryDefinitions($collection, $defs);
 
 		for ($i = 0; $i < $quantity; $i++) {
-			$objectData = [];
-
-			// Generate object id first since other methods may require it
-			[$method, $args]  = self::parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
-			$objectData['id'] = $this->faker->unique()->$method(...$args);
-
-			foreach ($defs as $key => $value) {
-				if (empty($value) || $key === 'id') {
-					continue;
-				}
-				[$method, $args] = self::parseFakerRule($value);
-				if (str_starts_with($method, 'image')) {
-					// Save image to file and store path in object data
-					$path             = $this->faker->$method(...$args);
-					$objectData[$key] = $this->propertyRepository->saveImage($collection, $objectData['id'], $key, $path);
-					continue;
-				}
-				$objectData[$key] = $this->faker->$method(...$args);
-			}
+			$objectData = $this->generateFakeObject($collection, $defs);
 
 			if ($this->storage->existsObject($collection, $objectData['id'])) {
 				$this->logger->info(sprintf('Skipping existing object: %s', $objectData['id']));
@@ -141,7 +180,7 @@ final class FactoryImporter
 			// The ObjectSaver class is not used here for performance.
 			// ObjectSaver rebuilds the index after every save.
 			// We do that once after all objects are saved.
-			$object = $this->factory->generateObject($collection, $objectData);
+			$object = $this->objectFactory->generateObject($collection, $objectData);
 			$this->storage->saveObject($collection, $object);
 			$this->logger->info(sprintf('Imported object: %s', $objectData['id']));
 			$this->logger->debug('Imported object', $objectData);
