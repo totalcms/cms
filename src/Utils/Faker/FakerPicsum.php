@@ -24,9 +24,9 @@ class FakerPicsum extends Base
 	{
 		$url  = '';
 		$url .= "{$width}/{$height}";
-		$queryString = self::buildQueryString($gray, $blur, true);
+		$queryString = self::buildQueryString($gray, $blur, false);
 
-		return self::buildpicsumUrl($url, $queryString, 'jpg');
+		return self::buildPicsumUrl($url, $queryString, 'jpg');
 	}
 
 	/**
