@@ -110,40 +110,7 @@ final class SchemaRepository extends StorageRepository
 	 */
 	public function reservedSchemasIds(): array
 	{
-		// Try cache first (reserved schemas never change during runtime)
-		$cacheKey = 'reserved_schema_ids';
-		$cached   = $this->cacheManager->getComputedData($cacheKey);
-
-		if ($cached !== null && is_array($cached)) {
-			return $cached;
-		}
-
-		// Cache miss - expensive glob() operation
-		$files = glob(self::DEFAULT_SCHEMA_DIR . '*' . self::FILE_EXT);
-
-		if ($files === false) {
-			throw new \RuntimeException('Failed to list reserved schemas');
-		}
-
-		$ids = array_map(function (string $file) {
-			return basename($file, self::FILE_EXT);
-		}, $files);
-
-		$filteredIds = array_filter($ids, function (string $id) {
-			// Exclude the schema and collection schemas
-			return $id !== 'schema' && $id !== 'collection';
-		});
-
-		// Cache for 1 hour (reserved schema IDs never change)
-		if (empty($filteredIds)) {
-			// Clear cache if no filtered IDs to prevent serving stale data
-			$this->cacheManager->clearComputedData($cacheKey);
-		} else {
-			// Cache non-empty filtered IDs
-			$this->cacheManager->storeComputedData($cacheKey, $filteredIds, CacheManager::TTL_RESERVED_SCHEMA_IDS);
-		}
-
-		return $filteredIds;
+		return SchemaData::RESERVED_SCHEMAS;
 	}
 
 	/**

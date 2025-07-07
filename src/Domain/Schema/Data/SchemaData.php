@@ -13,12 +13,17 @@ final class SchemaData
 {
 	public const SCHEMA_PREFIX    = 'https://www.totalcms.co/schemas/';
 	public const SCHEMA_VERSION   = 'https://json-schema.org/draft/2020-12/schema';
+	public const RESERVED_NAMES   = [
+		'collection',
+		'jumpstart',
+		'new', // not allowed for /admin url routes
+		'schema',
+	];
 	public const RESERVED_SCHEMAS = [
 		'auth',
 		'blog-legacy',
 		'blog',
 		'color',
-		'collection',
 		'date',
 		'depot',
 		'email',
@@ -26,10 +31,7 @@ final class SchemaData
 		'file',
 		'gallery',
 		'image',
-		'jumpstart',
-		'new', // not allowed for /admin url routes
 		'number',
-		'schema',
 		'styledtext',
 		'svg',
 		'text',
