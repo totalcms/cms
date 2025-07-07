@@ -1,6 +1,6 @@
 <?php
 
-use TotalCMS\Utils\HTMLSanitizer;
+use TotalCMS\Domain\Security\Sanitization\HTMLSanitizer;
 
 describe('XSS Vulnerabilities', function () {
 	it('identifies disabled Twig autoescaping', function () {

@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Media\Service;
 
 use ColorThief\ColorThief;
 

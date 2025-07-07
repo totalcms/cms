@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
-use TotalCMS\Utils\QRGenerator;
+use TotalCMS\Domain\Media\Generator\QRGenerator;
 
 /**
  * Twig Adapter with QR Code Generation.

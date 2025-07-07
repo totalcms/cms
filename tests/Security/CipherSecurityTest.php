@@ -1,6 +1,6 @@
 <?php
 
-use TotalCMS\Utils\Cipher;
+use TotalCMS\Domain\Security\Encryption\Cipher;
 
 describe('Cipher Obfuscation Analysis', function () {
 	it('confirms obfuscation is deterministic by design', function () {

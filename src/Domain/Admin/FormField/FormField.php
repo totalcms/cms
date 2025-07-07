@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Admin\TotalForm;
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 /**
  *  @SuppressWarnings("PHPMD.ExcessiveClassComplexity")

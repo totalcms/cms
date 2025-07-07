@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Media\Generator;
 
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;

@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use TotalCMS\Utils\SVGSanitizer;
+use TotalCMS\Domain\Security\Sanitization\SVGSanitizer;
 
 /**
  * SVG type property data with sanitization.

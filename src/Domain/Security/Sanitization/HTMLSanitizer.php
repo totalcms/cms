@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Security\Sanitization;
 
 /**
  * HTML Sanitizer for preventing XSS attacks while preserving safe HTML.

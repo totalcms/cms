@@ -1,6 +1,6 @@
 <?php
 
-use TotalCMS\Utils\Cipher;
+use TotalCMS\Domain\Security\Encryption\Cipher;
 
 describe('Enhanced Cipher Implementation', function () {
 	it('works correctly with various data types', function () {

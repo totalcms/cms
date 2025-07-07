@@ -9,7 +9,7 @@ use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
-use TotalCMS\Utils\PathUtils;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 final class ObjectRepository extends StorageRepository
 {

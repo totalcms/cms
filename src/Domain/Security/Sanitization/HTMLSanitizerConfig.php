@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Security\Sanitization;
 
 /**
  * Configuration constants for HTML sanitization.

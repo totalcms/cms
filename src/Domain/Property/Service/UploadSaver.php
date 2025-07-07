@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
-use TotalCMS\Utils\PathUtils;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 class UploadSaver
 {

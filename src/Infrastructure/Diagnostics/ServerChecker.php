@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Infrastructure\Diagnostics;
 
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Support\Config;

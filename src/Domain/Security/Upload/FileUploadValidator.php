@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Security\Upload;
 
 use Psr\Http\Message\UploadedFileInterface;
 

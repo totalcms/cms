@@ -1,6 +1,6 @@
 <?php
 
-use TotalCMS\Utils\FileUploadValidator;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {

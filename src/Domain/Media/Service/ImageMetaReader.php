@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Media\Service;
 
 use PHPExif\Enum\ReaderType as ExifReaderType;
 use PHPExif\Reader\Reader as ExifReader;

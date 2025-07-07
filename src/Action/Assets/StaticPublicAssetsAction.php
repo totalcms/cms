@@ -6,7 +6,7 @@ use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
-use TotalCMS\Utils\MimeLookup;
+use TotalCMS\Infrastructure\Filesystem\MimeLookup;
 
 // This Action is used to serve static assets from the public/assets directory
 // This should really only ever be used with using the PHP built-in server

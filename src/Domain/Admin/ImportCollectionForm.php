@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 final class ImportCollectionForm
 {

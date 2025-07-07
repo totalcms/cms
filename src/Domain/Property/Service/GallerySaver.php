@@ -2,11 +2,11 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Media\Service\ImageMetaReader;
+use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
-use TotalCMS\Utils\ImageMetaReader;
-use TotalCMS\Utils\ImagePaletteGenerator;
 
 final class GallerySaver extends FileSaver
 {

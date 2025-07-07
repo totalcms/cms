@@ -5,7 +5,7 @@ namespace Tests\Security;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\UploadedFileInterface;
-use TotalCMS\Utils\FileUploadValidator;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 
 /**
  * Test File Upload Security Validation.

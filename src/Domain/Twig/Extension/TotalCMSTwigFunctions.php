@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Twig\Extension;
 
-use TotalCMS\Utils\EmbedBuilder;
+use TotalCMS\Domain\Rendering\Utilities\EmbedBuilder;
 use Twig\TwigFunction;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */

@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Security\Authentication;
 
 use TotalCMS\Domain\Property\Data\PasswordData;
 

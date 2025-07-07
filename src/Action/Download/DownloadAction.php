@@ -11,8 +11,8 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Renderer\TwigRenderer;
-use TotalCMS\Utils\Cipher;
 
 abstract class DownloadAction
 {

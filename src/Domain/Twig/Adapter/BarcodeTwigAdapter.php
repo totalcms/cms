@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
-use TotalCMS\Utils\BarcodeGenerator;
+use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 
 /**
  * Twig Adapter with Barcode Generation.

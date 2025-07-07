@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Infrastructure\Filesystem;
 
 use TotalCMS\Domain\Property\Data\SlugData;
 

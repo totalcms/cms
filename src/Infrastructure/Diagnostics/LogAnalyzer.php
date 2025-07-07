@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Infrastructure\Diagnostics;
 
 use TotalCMS\Support\Config;
 

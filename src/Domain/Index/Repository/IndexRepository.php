@@ -6,7 +6,7 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
-use TotalCMS\Utils\PathUtils;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
  * Repository.

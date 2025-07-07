@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 /**
  * Builds CSS Grid layouts and HTML sections from formgrid definitions.

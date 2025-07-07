@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Utils\FileUtils;
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 final class DepotField extends FormField
 {

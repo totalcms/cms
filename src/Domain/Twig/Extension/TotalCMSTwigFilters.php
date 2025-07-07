@@ -3,11 +3,11 @@
 namespace TotalCMS\Domain\Twig\Extension;
 
 use Cake\Chronos\Chronos;
+use TotalCMS\Domain\Collection\Utilities\CollectionRefiner;
+use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\Cipher;
-use TotalCMS\Utils\CollectionRefiner;
-use TotalCMS\Utils\CollectionSorter;
 use Twig\TwigFilter;
 
 /**

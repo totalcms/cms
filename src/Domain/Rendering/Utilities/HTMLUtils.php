@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Rendering\Utilities;
 
 /**
  * HTML Utilities.

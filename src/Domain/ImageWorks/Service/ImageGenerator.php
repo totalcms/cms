@@ -7,7 +7,7 @@ use Slim\Psr7\Response;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
-use TotalCMS\Utils\PathUtils;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 final class ImageGenerator
 {

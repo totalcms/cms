@@ -5,9 +5,9 @@ namespace TotalCMS\Action\Froala;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadSaver;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\FileUploadValidator;
 
 final class FroalaUploadFileAction
 {

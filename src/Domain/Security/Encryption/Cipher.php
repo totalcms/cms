@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Security\Encryption;
 
 /**
  * Cipher utility for obfuscation and encryption in Total CMS.

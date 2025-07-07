@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Property\Repository;
 
 use TotalCMS\Domain\Storage\StorageRepository;
-use TotalCMS\Utils\PathUtils;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
  * Repository.

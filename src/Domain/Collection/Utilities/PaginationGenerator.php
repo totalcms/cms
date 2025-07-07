@@ -1,6 +1,8 @@
 <?php
 
-namespace TotalCMS\Utils;
+namespace TotalCMS\Domain\Collection\Utilities;
+
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 class PaginationGenerator
 {
