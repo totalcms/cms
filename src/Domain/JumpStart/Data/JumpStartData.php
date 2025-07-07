@@ -118,4 +118,30 @@ final class JumpStartData
 
 		return self::fromArray($data);
 	}
+
+	public function isEmpty(): bool
+	{
+		return empty($this->collections['reserved']) &&
+			empty($this->collections['custom']) &&
+			empty($this->schemas) &&
+			empty($this->objects) &&
+			empty($this->factory);
+	}
+
+	public function getTotalObjectCount(): int
+	{
+		$count = count($this->objects);
+
+		foreach ($this->factory as $factoryDef) {
+			if (isset($factoryDef['id'])) {
+				// Factory with specific ID counts as 1 object
+				$count += 1;
+			} else {
+				// Factory with count creates multiple objects
+				$count += $factoryDef['count'] ?? 0;
+			}
+		}
+
+		return $count;
+	}
 }
