@@ -436,6 +436,7 @@ return [
 		return new JumpStartImporter(
 			$container->get(CollectionFetcher::class),
 			$container->get(CollectionSaver::class),
+			$container->get(ObjectFetcher::class),
 			$container->get(ObjectSaver::class),
 			$container->get(SchemaSaver::class),
 			$container->get(FactoryImporter::class),

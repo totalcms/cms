@@ -20,7 +20,6 @@ final class FactoryImporter
 	private FakerGenerator $faker;
 
 	private const DEFAULT_FACTORY  = 'word';
-	private const FAKER_RULE_REGEX = '/^(\w+)(\((.*)\))*$/';
 
 	public function __construct(
 		private ObjectFactory $objectFactory,
@@ -49,22 +48,22 @@ final class FactoryImporter
 		}
 	}
 
-	public static function isFakerRule(string $rule): bool
+	public function isFakerRule(string $rule): bool
 	{
-		// Check if the rule is a valid Faker method call
-		$syntaxCheck = preg_match(self::FAKER_RULE_REGEX, $rule) === 1;
-		if (!$syntaxCheck) {
+		[$method, $args] = self::parseFakerRule($rule);
+
+		if (empty($method)) {
 			return false;
 		}
-		[$method, $args] = self::parseFakerRule($rule);
-		return method_exists(FakerGenerator::class, $method) && is_array($args);
+
+		return is_callable([$this->faker, $method]) && is_array($args);
 	}
 
 	/** @return array<mixed> */
 	private static function parseFakerRule(string $rule): array
 	{
 		// Extract method name and arguments string
-		preg_match(self::FAKER_RULE_REGEX, $rule, $matches);
+		preg_match('/^(\w+)(\((.*)\))*$/', $rule, $matches);
 		$method = $matches[1] ?? '';
 		$args   = $matches[3] ?? '';
 		$args   = trim($args);
@@ -126,6 +125,7 @@ final class FactoryImporter
 			$objectData['id'] = $this->faker->unique()->$method(...$args);
 		}
 
+
 		foreach ($defs as $key => $value) {
 			if (empty($value) || $key === 'id') {
 				continue;
@@ -151,9 +151,7 @@ final class FactoryImporter
 	public function mergeFactoryDefinitions(string $collection, array $defs): array
 	{
 		// Get definitions from collection and merge with user provided definitions
-		$defs = array_merge($this->fetchCollectionFactories($collection), $defs);
-
-		return $defs;
+		return array_merge($this->fetchCollectionFactories($collection), $defs);
 	}
 
 	/** @param array<string,string> $defs */

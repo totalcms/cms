@@ -121,15 +121,20 @@ final class JumpStartExporter
 		// Process each field according to its schema type
 		foreach ($schema->properties as $fieldName => $property) {
 			if (isset($processedData[$fieldName])) {
-				$fieldType = $property['type'] ?? '';
+				$fieldType = $property['field'] ?? $property['type'] ?? '';
 
-				// Normalize image properties to "image" for Factory
-				if ($fieldType === 'image') {
-					$processedData[$fieldName] = 'image';
-				}
-				// Normalize gallery properties to "gallery" for Factory
-				elseif ($fieldType === 'gallery') {
-					$processedData[$fieldName] = 'gallery';
+				switch ($fieldType) {
+					case 'image':
+					case 'gallery':
+						// Normalize image and gallery properties to their respective types
+						$processedData[$fieldName] = $fieldType;
+						break;
+
+					case 'depot':
+					case 'file':
+						// Normalize depot and file properties to empty arrays
+						$processedData[$fieldName] = [];
+						break;
 				}
 			}
 		}
