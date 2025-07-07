@@ -44,6 +44,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
@@ -419,6 +420,7 @@ return [
 			$container->get(SchemaFetcher::class),
 			$container->get(ObjectFetcher::class),
 			$container->get(IndexReader::class),
+			new JumpStartData(),
 			$container->get(LoggerFactory::class),
 		);
 	},

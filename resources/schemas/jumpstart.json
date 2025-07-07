@@ -21,50 +21,7 @@
 			"type": "array",
 			"description": "Custom schemas to create",
 			"items": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string",
-						"description": "Unique identifier for the schema"
-					},
-					"name": {
-						"type": "string",
-						"description": "Display name for the schema"
-					},
-					"description": {
-						"type": "string"
-					},
-					"fields": {
-						"type": "array",
-						"description": "Field definitions for the schema",
-						"items": {
-							"type": "object",
-							"properties": {
-								"name": {
-									"type": "string"
-								},
-								"type": {
-									"type": "string",
-									"enum": ["text", "textarea", "number", "select", "checkbox", "date", "image", "file", "markdown", "code", "color", "email", "url", "toggle", "multiselect", "json", "array", "object"]
-								},
-								"label": {
-									"type": "string"
-								},
-								"required": {
-									"type": "boolean",
-									"default": false
-								},
-								"default": {},
-								"options": {
-									"type": "object",
-									"description": "Field-specific options"
-								}
-							},
-							"required": ["name", "type"]
-						}
-					}
-				},
-				"required": ["id", "name", "fields"]
+				"$ref": "https://www.totalcms.co/schemas/schema.json"
 			}
 		},
 		"collections": {
@@ -75,34 +32,14 @@
 					"type": "array",
 					"description": "Default collections to create",
 					"items": {
-						"type": "string",
-						"enum": ["blog", "image", "gallery", "text", "feed", "form", "file", "depot", "toggle", "navigation", "snippet", "template"]
+						"type": "string"
 					}
 				},
 				"custom": {
 					"type": "array",
 					"description": "Custom collections to create",
 					"items": {
-						"type": "object",
-						"properties": {
-							"id": {
-								"type": "string",
-								"description": "Collection identifier"
-							},
-							"name": {
-								"type": "string",
-								"description": "Display name"
-							},
-							"schemaId": {
-								"type": "string",
-								"description": "ID of the custom schema to use"
-							},
-							"settings": {
-								"type": "object",
-								"description": "Collection-specific settings"
-							}
-						},
-						"required": ["id", "name", "schemaId"]
+						"$ref": "https://www.totalcms.co/schemas/collection.json"
 					}
 				}
 			}

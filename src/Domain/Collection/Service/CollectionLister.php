@@ -21,6 +21,16 @@ final class CollectionLister
 	}
 
 	/** @return array<CollectionData> */
+	public function listCustomCollections(): array
+	{
+		$collections = $this->storage->listAllCollections();
+
+		return array_filter($collections, function (CollectionData $collection) {
+			return $this->storage->isReservedCollection($collection->id) === false;
+		});
+	}
+
+	/** @return array<CollectionData> */
 	public function listCollectionsWithSchema(string $schemaId): array
 	{
 		$collections = $this->storage->listAllCollections();
