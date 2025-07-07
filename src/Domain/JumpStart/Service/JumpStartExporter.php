@@ -34,6 +34,16 @@ final class JumpStartExporter
 		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-exporter');
 	}
 
+	public function setMetadata(string $name = '', string $description = ''): void
+	{
+		if (!empty($name)) {
+			$this->jumpstart->setName($name);
+		}
+		if (!empty($description)) {
+			$this->jumpstart->setDescription($description);
+		}
+	}
+
 	/**
 	 * Export current CMS data to jumpstart definition.
 	 */

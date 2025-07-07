@@ -19,17 +19,21 @@ final class ExportJumpStartAction
 		ResponseInterface $response,
 	): ResponseInterface {
 		$queryParams = $request->getQueryParams();
-		$name = $queryParams['name'] ?? '';
+		$name        = $queryParams['name'] ?? '';
 		$description = $queryParams['description'] ?? '';
-		
+
+		$this->jumpStartExporter->setMetadata($name, $description);
+
 		// Export current CMS data to jumpstart format
-		$jumpStartData = $this->jumpStartExporter->exportCurrentData($name, $description);
-		
+		$jumpStartData = $this->jumpStartExporter->exportCurrentData();
+
+		$date = date('Ymd-His');
+
 		// Set response headers for JSON download
-		$filename = !empty($name) ? 
-			sprintf('jumpstart-%s.json', preg_replace('/[^a-zA-Z0-9-_]/', '-', strtolower($name))) :
-			sprintf('jumpstart-export-%s.json', date('Y-m-d-H-i-s'));
-			
+		$filename = !empty($name) ?
+			sprintf('jumpstart-%s-%s.json', preg_replace('/[^a-zA-Z0-9-_]/', '-', strtolower($name)), $date) :
+			sprintf('jumpstart-export-%s.json', $date);
+
 		$response = $response->withHeader('Content-Type', 'application/json')
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
 

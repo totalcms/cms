@@ -27,6 +27,16 @@ final class JumpStartData
 		$this->description .= ' - ' . date('Y-m-d H:i:s');
 	}
 
+	public function setName(string $name): void
+	{
+		$this->name = $name;
+	}
+
+	public function setDescription(string $description): void
+	{
+		$this->description = $description;
+	}
+
 	/** @param array<string,mixed> $schema */
 	public function addSchema(array $schema): void
 	{
