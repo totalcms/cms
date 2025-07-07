@@ -8,44 +8,60 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Import\FactoryImporter;
 use TotalCMS\Utils\Faker\FakerExtension;
+use TotalCMS\Factory\LoggerFactory;
 use Exception;
 use Psr\Log\LoggerInterface;
 
 final class JumpStartImporter
 {
-	private CollectionFetcher $collectionFetcher;
-	private CollectionSaver $collectionSaver;
-	private ObjectSaver $objectSaver;
-	private SchemaRepository $schemaRepository;
-	private FactoryImporter $factoryImporter;
 	private LoggerInterface $logger;
-	
+
 	/** @var array<int, array<string, mixed>> */
 	private array $results = [];
-	
+
 	/** @var array<int, array<string, mixed>> */
 	private array $errors = [];
-	
+
 	public function __construct(
-		CollectionFetcher $collectionFetcher,
-		CollectionSaver $collectionSaver,
-		ObjectSaver $objectSaver,
-		SchemaRepository $schemaRepository,
-		FactoryImporter $factoryImporter,
-		LoggerInterface $logger
+		private CollectionFetcher $collectionFetcher,
+		private CollectionSaver $collectionSaver,
+		private ObjectSaver $objectSaver,
+		private SchemaSaver $schemaSaver,
+		private FactoryImporter $factoryImporter,
+		LoggerFactory $loggerFactory
 	) {
-		$this->collectionFetcher = $collectionFetcher;
-		$this->collectionSaver = $collectionSaver;
-		$this->objectSaver = $objectSaver;
-		$this->schemaRepository = $schemaRepository;
-		$this->factoryImporter = $factoryImporter;
-		$this->logger = $logger;
+		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-importer');
 	}
-	
+
+	/**
+	 * Import jumpstart content from file
+	 * @param string $filePath Path to the jumpstart JSON file
+	 * @return array{success: bool, results: array<int, array<string, mixed>>, errors: array<int, array<string, mixed>>, summary: array<string, int>}
+	 */
+	public function importFromFile(string $filePath): array
+	{
+		if (!file_exists($filePath)) {
+			throw new Exception("Jumpstart file not found: {$filePath}");
+		}
+
+		$content = file_get_contents($filePath);
+		if ($content === false) {
+			throw new Exception("Failed to read jumpstart file: {$filePath}");
+		}
+
+		$definition = json_decode($content, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			throw new Exception("Invalid JSON in jumpstart file: " . json_last_error_msg());
+		}
+
+		return $this->importFromDefinition($definition);
+	}
+
 	/**
 	 * Import jumpstart content from definition
 	 * @param array<string, mixed> $definition
@@ -55,40 +71,34 @@ final class JumpStartImporter
 	{
 		$this->results = [];
 		$this->errors = [];
-		
+
 		$this->logger->info('Starting jumpstart import', [
-			'name' => $definition['name'] ?? 'Unknown',
+			'name'    => $definition['name'] ?? 'Unknown',
 			'version' => $definition['version'] ?? 'Unknown'
 		]);
-		
-		// Process schemas first
+
+		// Need to process in this order to ensure dependencies are met
 		if (isset($definition['schemas'])) {
 			$this->processSchemas($definition['schemas']);
 		}
-		
-		// Process collections
-		if (isset($definition['collections'])) {
-			$this->processCollections($definition['collections']);
-		}
-		
-		// Process specific objects
-		if (isset($definition['objects'])) {
-			$this->processObjects($definition['objects']);
-		}
-		
-		// Process factory generation
-		if (isset($definition['factory'])) {
-			$this->processFactory($definition['factory']);
-		}
-		
+		// if (isset($definition['collections'])) {
+		// 	$this->processCollections($definition['collections']);
+		// }
+		// if (isset($definition['objects'])) {
+		// 	$this->processObjects($definition['objects']);
+		// }
+		// if (isset($definition['factory'])) {
+		// 	$this->processFactory($definition['factory']);
+		// }
+
 		return [
 			'success' => empty($this->errors),
 			'results' => $this->results,
-			'errors' => $this->errors,
+			'errors'  => $this->errors,
 			'summary' => $this->generateSummary()
 		];
 	}
-	
+
 	/**
 	 * @param array<int, array<string, mixed>> $schemas
 	 */
@@ -96,128 +106,107 @@ final class JumpStartImporter
 	{
 		foreach ($schemas as $schema) {
 			try {
-				$schemaData = new SchemaData();
-				$schemaData->id = $schema['id'];
-				$schemaData->description = $schema['description'] ?? '';
-				
-				// Convert fields to properties format
-				$properties = [];
-				$required = [];
-				foreach ($schema['fields'] as $field) {
-					$properties[$field['name']] = [
-						'type' => $field['type'],
-						'label' => $field['label'] ?? $field['name'],
-						'options' => $field['options'] ?? []
-					];
-					if ($field['required'] ?? false) {
-						$required[] = $field['name'];
-					}
+				// Skip reserved schemas
+				if (in_array($schema['id'] ?? '', SchemaData::RESERVED_SCHEMAS)) {
+					$this->logger->info('Skipping reserved schema', ['id' => $schema['id']]);
+					continue;
 				}
-				$schemaData->properties = $properties;
-				$schemaData->required = $required;
-				
-				// Save custom schema
-				$this->schemaRepository->saveSchema($schemaData);
-				
+				$schemaData      = $this->schemaSaver->saveSchema($schema);
 				$this->results[] = [
-					'type' => 'schema',
+					'type'   => 'schema',
 					'action' => 'created',
-					'id' => $schema['id'],
-					'name' => $schema['name']
+					'id'     => $schemaData->id,
 				];
-				
-				$this->logger->info('Created jumpstart schema', ['id' => $schema['id']]);
+
+				$this->logger->info('Created jumpstart schema', ['id' => $schemaData->id]);
+
 			} catch (Exception $e) {
 				$this->errors[] = [
 					'type' => 'schema',
-					'id' => $schema['id'],
+					'id' => $schema['id'] ?? 'unknown',
 					'error' => $e->getMessage()
 				];
 				$this->logger->error('Failed to create jumpstart schema', [
-					'id' => $schema['id'],
+					'id' => $schema['id'] ?? 'unknown',
 					'error' => $e->getMessage()
 				]);
 			}
 		}
 	}
-	
+
 	/**
 	 * @param array<string, mixed> $collections
 	 */
 	private function processCollections(array $collections): void
 	{
-		// Process default collections
-		if (isset($collections['default'])) {
-			foreach ($collections['default'] as $collectionType) {
+		// Process reserved collections
+		if (isset($collections['reserved'])) {
+			foreach ($collections['reserved'] as $collectionType) {
 				try {
+					// Reserved collections are auto-created by fetching them
 					$collection = $this->collectionFetcher->fetchCollection($collectionType);
-					
+
 					$this->results[] = [
 						'type' => 'collection',
 						'action' => 'created',
 						'id' => $collectionType,
 						'name' => ucfirst($collectionType),
-						'schema' => 'default'
+						'schema' => 'reserved'
 					];
-					
-					$this->logger->info('Created default collection via jumpstart', ['type' => $collectionType]);
+
+					$this->logger->info('Created reserved collection via jumpstart', ['type' => $collectionType]);
 				} catch (Exception $e) {
 					$this->errors[] = [
 						'type' => 'collection',
 						'id' => $collectionType,
 						'error' => $e->getMessage()
 					];
-					$this->logger->error('Failed to create default collection via jumpstart', [
+					$this->logger->error('Failed to create reserved collection via jumpstart', [
 						'type' => $collectionType,
 						'error' => $e->getMessage()
 					]);
 				}
 			}
 		}
-		
+
 		// Process custom collections
 		if (isset($collections['custom'])) {
 			foreach ($collections['custom'] as $collectionDef) {
 				try {
-					$data = [
-						'id' => $collectionDef['id'],
-						'name' => $collectionDef['name'],
-						'schema' => $collectionDef['schemaId']
-					];
-					
-					if (isset($collectionDef['settings'])) {
-						$data = array_merge($data, $collectionDef['settings']);
-					}
-					
-					$this->collectionSaver->saveCollection($data);
-					
+					// The collection is already in the correct format from export
+					// Create CollectionData from the array
+					$collectionData = CollectionData::fromArray($collectionDef);
+
+					// Save the collection
+					$this->collectionSaver->saveCollection($collectionData->toArray());
+
 					$this->results[] = [
 						'type' => 'collection',
 						'action' => 'created',
 						'id' => $collectionDef['id'],
 						'name' => $collectionDef['name'],
-						'schema' => $collectionDef['schemaId']
+						'schema' => $collectionDef['schema']
 					];
-					
+
 					$this->logger->info('Created custom collection via jumpstart', [
 						'id' => $collectionDef['id'],
-						'schema' => $collectionDef['schemaId']
+						'schema' => $collectionDef['schema']
 					]);
 				} catch (Exception $e) {
 					$this->errors[] = [
 						'type' => 'collection',
-						'id' => $collectionDef['id'],
+						'id' => $collectionDef['id'] ?? 'unknown',
 						'error' => $e->getMessage()
 					];
 					$this->logger->error('Failed to create custom collection via jumpstart', [
-						'id' => $collectionDef['id'],
+						'id' => $collectionDef['id'] ?? 'unknown',
 						'error' => $e->getMessage()
 					]);
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * @param array<int, array<string, mixed>> $objects
 	 */
@@ -226,10 +215,10 @@ final class JumpStartImporter
 		foreach ($objects as $objectDef) {
 			$collectionId = $objectDef['collection'];
 			$objectId = $objectDef['id'];
-			
+
 			try {
 				$collection = $this->collectionFetcher->fetchCollection($collectionId);
-				
+
 				if ($collection === null) {
 					$this->errors[] = [
 						'type' => 'object',
@@ -239,23 +228,23 @@ final class JumpStartImporter
 					];
 					continue;
 				}
-				
+
 				// Process data and handle factory rules for images
 				$data = $this->processObjectData($objectDef['data']);
-				
+
 				// Add ID to the data
 				$data['id'] = $objectId;
-				
+
 				// Save the object
 				$this->objectSaver->saveObject($collectionId, $data);
-				
+
 				$this->results[] = [
 					'type' => 'object',
 					'action' => 'created',
 					'collection' => $collectionId,
 					'id' => $objectId
 				];
-				
+
 				$this->logger->info('Created jumpstart object', [
 					'collection' => $collectionId,
 					'id' => $objectId
@@ -275,7 +264,7 @@ final class JumpStartImporter
 			}
 		}
 	}
-	
+
 	/**
 	 * @param array<int, array<string, mixed>> $factoryItems
 	 */
@@ -284,7 +273,7 @@ final class JumpStartImporter
 		foreach ($factoryItems as $factoryDef) {
 			$collectionId = $factoryDef['collection'];
 			$factoryData = $factoryDef['data'] ?? [];
-			
+
 			// Check if this is a specific ID factory item
 			if (isset($factoryDef['id'])) {
 				$this->processSpecificFactoryObject($collectionId, $factoryDef['id'], $factoryData);
@@ -295,7 +284,7 @@ final class JumpStartImporter
 			}
 		}
 	}
-	
+
 	/**
 	 * Process a factory item with a specific ID
 	 * @param array<string, mixed> $factoryData
@@ -304,7 +293,7 @@ final class JumpStartImporter
 	{
 		try {
 			$collection = $this->collectionFetcher->fetchCollection($collectionId);
-			
+
 			if ($collection === null) {
 				$this->errors[] = [
 					'type' => 'factory',
@@ -314,16 +303,16 @@ final class JumpStartImporter
 				];
 				return;
 			}
-			
+
 			// Generate data using factory rules
 			$generatedData = $this->generateFactoryData($factoryData);
-			
+
 			// Add ID to the data
 			$generatedData['id'] = $objectId;
-			
+
 			// Save the object
 			$this->objectSaver->saveObject($collectionId, $generatedData);
-			
+
 			$this->results[] = [
 				'type' => 'factory',
 				'action' => 'generated',
@@ -331,7 +320,7 @@ final class JumpStartImporter
 				'id' => $objectId,
 				'count' => 1
 			];
-			
+
 			$this->logger->info('Generated jumpstart factory object with specific ID', [
 				'collection' => $collectionId,
 				'id' => $objectId
@@ -350,7 +339,7 @@ final class JumpStartImporter
 			]);
 		}
 	}
-	
+
 	/**
 	 * Process bulk factory generation
 	 * @param array<string, mixed> $factoryData
@@ -359,7 +348,7 @@ final class JumpStartImporter
 	{
 		try {
 			$collection = $this->collectionFetcher->fetchCollection($collectionId);
-			
+
 			if ($collection === null) {
 				$this->errors[] = [
 					'type' => 'factory',
@@ -368,23 +357,23 @@ final class JumpStartImporter
 				];
 				return;
 			}
-			
+
 			// Get schema factory definitions
 			$schemaFactoryDefs = $this->factoryImporter->fetchCollectionFactories($collectionId);
-			
+
 			// Merge with custom factory data (custom overrides schema)
 			$finalFactoryDefs = array_merge($schemaFactoryDefs, $factoryData);
-			
+
 			// Import using FactoryImporter
 			$imported = $this->factoryImporter->import($collectionId, $count, $finalFactoryDefs);
-			
+
 			$this->results[] = [
 				'type' => 'factory',
 				'action' => 'generated',
 				'collection' => $collectionId,
 				'count' => $imported
 			];
-			
+
 			$this->logger->info('Generated jumpstart factory content', [
 				'collection' => $collectionId,
 				'count' => $imported
@@ -401,7 +390,7 @@ final class JumpStartImporter
 			]);
 		}
 	}
-	
+
 	/**
 	 * Generate data using factory rules
 	 * @param array<string, string> $factoryData
@@ -411,10 +400,10 @@ final class JumpStartImporter
 	{
 		$generatedData = [];
 		$faker = \Faker\Factory::create();
-		
+
 		// Add custom extensions
 		$faker->addProvider(new FakerExtension($faker));
-		
+
 		foreach ($factoryData as $field => $rule) {
 			try {
 				$generatedData[$field] = $this->generateFromFactoryRule($faker, $rule);
@@ -427,10 +416,10 @@ final class JumpStartImporter
 				$generatedData[$field] = $rule; // Use original rule as fallback
 			}
 		}
-		
+
 		return $generatedData;
 	}
-	
+
 	/**
 	 * Process object data and handle factory rules for image fields
 	 * @param array<string, mixed> $data
@@ -440,10 +429,10 @@ final class JumpStartImporter
 	{
 		$processedData = [];
 		$faker = \Faker\Factory::create();
-		
+
 		// Add custom extensions
 		$faker->addProvider(new FakerExtension($faker));
-		
+
 		foreach ($data as $key => $value) {
 			if (is_string($value) && $this->isFactoryRule($value)) {
 				// Handle factory rule for images
@@ -462,10 +451,10 @@ final class JumpStartImporter
 				$processedData[$key] = $value;
 			}
 		}
-		
+
 		return $processedData;
 	}
-	
+
 	/**
 	 * Check if a string looks like a factory rule
 	 */
@@ -474,7 +463,7 @@ final class JumpStartImporter
 		// Check if it matches the factory rule pattern (method name with optional parameters)
 		return preg_match('/^[a-zA-Z][a-zA-Z0-9]*(?:\([^)]*\))?$/', $value) === 1;
 	}
-	
+
 	/**
 	 * Generate content from a factory rule string
 	 * @return mixed
@@ -485,7 +474,7 @@ final class JumpStartImporter
 		if (preg_match('/^(\w+)(?:\((.*)\))?$/', $rule, $matches)) {
 			$method = $matches[1];
 			$args = [];
-			
+
 			if (isset($matches[2]) && $matches[2] !== '') {
 				// Parse arguments
 				$argStrings = str_getcsv($matches[2]);
@@ -500,7 +489,7 @@ final class JumpStartImporter
 					}
 				}
 			}
-			
+
 			// Call the faker method
 			if (method_exists($faker, $method)) {
 				return $faker->$method(...$args);
@@ -509,11 +498,11 @@ final class JumpStartImporter
 				return $faker->word();
 			}
 		}
-		
+
 		// If parsing fails, return the original rule
 		return $rule;
 	}
-	
+
 	/**
 	 * @return array<string, int>
 	 */
@@ -526,7 +515,7 @@ final class JumpStartImporter
 			'factory_items_created' => 0,
 			'total_errors' => count($this->errors)
 		];
-		
+
 		foreach ($this->results as $result) {
 			switch ($result['type']) {
 				case 'schema':
@@ -543,7 +532,7 @@ final class JumpStartImporter
 					break;
 			}
 		}
-		
+
 		return $summary;
 	}
 }

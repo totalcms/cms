@@ -25,8 +25,6 @@ final class ImportJumpStartAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$params = (array)$request->getParsedBody();
-
 		/** @var UploadedFileInterface[] $files */
 		$files = $request->getUploadedFiles();
 
@@ -36,7 +34,7 @@ final class ImportJumpStartAction
 
 		// Read the uploaded JSON file
 		$jsonContent = (string)$files['jumpstart']->getStream();
-		
+
 		try {
 			$definition = json_decode($jsonContent, true);
 			if (!is_array($definition)) {

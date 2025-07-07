@@ -36,9 +36,12 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
+use TotalCMS\Domain\Import\FactoryImporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -47,6 +50,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -54,6 +58,8 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\BarcodeTwigAdapter;
@@ -421,6 +427,17 @@ return [
 			$container->get(ObjectFetcher::class),
 			$container->get(IndexReader::class),
 			new JumpStartData(),
+			$container->get(LoggerFactory::class),
+		);
+	},
+
+	JumpStartImporter::class => function (ContainerInterface $container) {
+		return new JumpStartImporter(
+			$container->get(CollectionFetcher::class),
+			$container->get(CollectionSaver::class),
+			$container->get(ObjectSaver::class),
+			$container->get(SchemaSaver::class),
+			$container->get(FactoryImporter::class),
 			$container->get(LoggerFactory::class),
 		);
 	},
