@@ -1,6 +1,6 @@
 <?php
 
-use TotalCMS\Domain\Twig\TotalCMSTwigFilters;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
 test('date relative filter', function () {
 	// Test with a known date to get predictable relative results

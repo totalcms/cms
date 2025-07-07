@@ -5,7 +5,7 @@ namespace Tests\Security;
 use ParsedownExtra;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Twig\ParsedownMarkdown;
+use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 
 #[CoversClass(ParsedownMarkdown::class)]
 final class ParsedownSecurityTest extends TestCase

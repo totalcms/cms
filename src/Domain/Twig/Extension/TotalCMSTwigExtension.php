@@ -1,9 +1,12 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Extension;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
+use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Utils\CSRFTokenManager;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;

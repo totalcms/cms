@@ -18,7 +18,7 @@ use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
-use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Utils\HTMLUtils;
 

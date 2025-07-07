@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Extension;
 
 /**
  * Twig Adapter with Total CMS.

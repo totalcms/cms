@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Markdown;
 
 use Twig\Extra\Markdown\MarkdownInterface;
 

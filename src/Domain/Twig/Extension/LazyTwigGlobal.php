@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Extension;
 
 /**
  * Lazy loading proxy for Twig global variables.

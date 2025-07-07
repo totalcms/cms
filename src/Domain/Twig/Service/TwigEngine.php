@@ -1,8 +1,10 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
+use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
 use Twig\Environment as TwigEnvironment;
 use Twig\Extension\DebugExtension;

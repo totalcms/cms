@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;

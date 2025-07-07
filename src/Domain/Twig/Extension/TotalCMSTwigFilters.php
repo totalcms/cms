@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Extension;
 
 use Cake\Chronos\Chronos;
 use TotalCMS\Domain\Property\Data\ColorData;
@@ -634,7 +634,7 @@ final class TotalCMSTwigFilters
 		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension
 		static $markdown = null;
 		if ($markdown === null) {
-			$markdown = new ParsedownMarkdown();
+			$markdown = new \TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown();
 		}
 
 		return $markdown->convert($value);

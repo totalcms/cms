@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Service;
 
 /**
  * Simple in-memory cache for expensive Twig function results.

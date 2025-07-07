@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Twig;
+namespace TotalCMS\Domain\Twig\Extension;
 
 use TotalCMS\Utils\EmbedBuilder;
 use Twig\TwigFunction;

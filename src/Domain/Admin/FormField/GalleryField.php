@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Utils\HTMLUtils;
 
 final class GalleryField extends ImageField
