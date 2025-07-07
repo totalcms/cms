@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace TotalCMS\Domain\JumpStart\Service;
 
-use Illuminate\Support\Facades\Cache;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
