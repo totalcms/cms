@@ -1,204 +1,203 @@
 {
-    "version": "1.0.0",
-    "name": "Exported from Current CMS Data",
-    "description": "Jumpstart definition generated from existing Total CMS data - 2025-07-06 21:13:11",
-    "schemas": [
-        {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": "https://www.totalcms.co/schemas/products.json",
-            "type": "object",
-            "id": "products",
-            "description": "schema for my products",
-            "properties": {
-                "id": {
-                    "field": "id",
-                    "label": "ID",
-                    "placeholder": "Enter a unique identifier",
-                    "help": "The unique identifier",
-                    "settings": {
-                        "autogen": "${name}"
-                    },
-                    "factory": "slug",
-                    "$ref": "https://www.totalcms.co/schemas/properties/slug.json"
-                },
-                "name": {
-                    "type": "string",
-                    "field": "text",
-                    "label": "Name",
-                    "factory": "words(3, true)"
-                },
-                "image": {
-                    "field": "image",
-                    "label": "Image",
-                    "factory": "imageBlur",
-                    "$ref": "https://www.totalcms.co/schemas/properties/image.json"
-                },
-                "description": {
-                    "type": "string",
-                    "field": "textarea",
-                    "label": "Description",
-                    "factory": "paragraph"
-                },
-                "price": {
-                    "type": "number",
-                    "field": "number",
-                    "settings": {
-                        "min": 1,
-                        "step": 0.01
-                    },
-                    "factory": "randomFloat(2, 10, 100)"
-                },
-                "tags": {
-                    "field": "list",
-                    "label": "Tags",
-                    "settings": {
-                        "propertyOptions": true
-                    },
-                    "factory": "tags(1, 5)",
-                    "$ref": "https://www.totalcms.co/schemas/properties/list.json"
-                }
-            },
-            "required": [
-                "id",
-                "name",
-                "description",
-                "image",
-                "price",
-                "tags"
-            ],
-            "index": [
-                "id",
-                "name",
-                "description",
-                "image",
-                "price",
-                "tags"
-            ]
-        }
-    ],
-    "collections": {
-        "reserved": ["text", "number", "date", "image", "color", "url", "svg", "gallery", "styledtext"],
-        "custom": [
-            {
-                "id": "products",
-                "schema": "products",
-                "name": "Products",
-                "description": "A collection of products objects that conform to the products schema.",
-                "url": "",
-                "category": "Custom Collections",
-                "labelPlural": "Products",
-                "labelSingular": "Product",
-                "groups": [],
-                "sortBy": "",
-                "reverseSort": false,
-                "prettyUrl": false,
-                "queueRebuildOnSave": false
-            }
-        ]
+  "factory": [
+    {
+      "count": 5,
+      "data": {
+        "image": "imageBlur",
+        "tags": "tags(1, 5)"
+      },
+      "collection": "blog"
     },
-    "objects": [
-        {
-            "collection": "svg",
-            "id": "demosvg",
-            "data": {
-                "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><g fill=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"34\" x2=\"32\" y2=\"2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></line><path d=\"M49,45v12c0,2.761-2.239,5-5,5H20c-2.761,0-5-2.239-5-5v-12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><rect x=\"9\" y=\"39\" width=\"46\" height=\"6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></rect><path d=\"M18,6h1c7.18,0,13,5.82,13,13v2s-1,0-1,0c-7.18,0-13-5.82-13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><path d=\"M46,12h-1c-7.18,0-13,5.82-13,13v2s1,0,1,0c7.18,0,13-5.82,13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path></g></svg>"
-            }
+    {
+      "count": 5,
+      "collection": "products"
+    },
+    {
+      "count": 5,
+      "collection": "feed"
+    },
+    {
+      "id": "demoname",
+      "data": {
+        "text": "name"
+      },
+      "collection": "text"
+    },
+    {
+      "id": "democolor",
+      "collection": "color"
+    },
+    {
+      "id": "demoprice",
+      "data": {
+        "number": "randomFloat(2, 10, 99)"
+      },
+      "collection": "number"
+    },
+    {
+      "id": "demoimage",
+      "collection": "image"
+    }
+  ],
+  "schemas": [
+    {
+      "formgrid": "id\nname\nimage\ndescription\nprice\ntags",
+      "id": "products",
+      "$id": "https://www.totalcms.co/schemas/products.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "price": {
+          "factory": "randomFloat(2, 10, 100)",
+          "settings": {
+            "min": 1,
+            "step": 0.01
+          },
+          "type": "number",
+          "field": "number"
         },
-        {
-            "collection": "gallery",
-            "id": "demogallery",
-            "data": {
-                "gallery": []
-            }
+        "id": {
+          "placeholder": "Enter a unique identifier",
+          "help": "The unique identifier",
+          "factory": "slug",
+          "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+          "field": "id",
+          "label": "ID",
+          "settings": {
+            "autogen": "${name}"
+          }
         },
-        {
-            "collection": "color",
-            "id": "democolor",
-            "data": {
-                "color": {
-                    "hex": "#3139a5",
-                    "oklch": {
-                        "l": 41.13,
-                        "c": 0.171,
-                        "h": 272.909
-                    }
-                }
-            }
+        "tags": {
+          "factory": "tags(1, 5)",
+          "label": "Tags",
+          "settings": {
+            "propertyOptions": true
+          },
+          "field": "list",
+          "$ref": "https://www.totalcms.co/schemas/properties/list.json"
         },
-        {
-            "collection": "date",
-            "id": "demodate",
-            "data": {
-                "date": "2025-07-04T00:00:00-07:00"
-            }
+        "image": {
+          "factory": "imageBlur",
+          "label": "Image",
+          "field": "image",
+          "$ref": "https://www.totalcms.co/schemas/properties/image.json"
         },
-        {
-            "collection": "url",
-            "id": "demourl",
-            "data": {
-                "url": "https://www.weavers.space/"
-            }
+        "description": {
+          "factory": "paragraph",
+          "label": "Description",
+          "type": "string",
+          "field": "textarea"
         },
-        {
-            "collection": "image",
-            "id": "demoimage",
-            "data": {
-                "image": {
-                    "alt": "",
-                    "exif": {
-                        "nodata": ""
-                    },
-                    "featured": false,
-                    "focalpoint": {
-                        "x": 50,
-                        "y": 50
-                    },
-                    "height": 589,
-                    "link": "",
-                    "mime": "image/jpeg",
-                    "name": "Camping stock photo.jpg",
-                    "palette": [
-                        "#303750",
-                        "#18110c",
-                        "#d1d1cc",
-                        "#5d617d",
-                        "#764832"
-                    ],
-                    "size": 101643,
-                    "tags": [],
-                    "uploadDate": "2025-07-06T19:43:58-07:00",
-                    "width": 900
-                }
-            }
-        },
-        {
-            "collection": "number",
-            "id": "demoprice",
-            "data": {
-                "number": 95
-            }
-        },
-        {
-            "collection": "text",
-            "id": "demoname",
-            "data": {
-                "text": "Joe Workman"
-            }
-        },
-        {
-            "collection": "text",
-            "id": "demoheader",
-            "data": {
-                "text": "Welcome to Total CMS 3"
-            }
-        },
-        {
-            "collection": "styledtext",
-            "id": "demostyledtext",
-            "data": {
-                "styledtext": "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>"
-            }
+        "name": {
+          "factory": "words(3, true)",
+          "label": "Name",
+          "type": "string",
+          "field": "text"
         }
+      },
+      "description": "schema for my products",
+      "required": [
+        "id",
+        "name",
+        "description",
+        "image",
+        "price",
+        "tags"
+      ],
+      "type": "object",
+      "index": [
+        "id",
+        "name",
+        "description",
+        "image",
+        "price",
+        "tags"
+      ]
+    }
+  ],
+  "collections": {
+    "custom": [
+      {
+        "id": "products",
+        "category": "Custom Collections",
+        "description": "A collection of products objects that conform to the products schema.",
+        "name": "Products",
+        "queueRebuildOnSave": false,
+        "labelPlural": "Products",
+        "schema": "products",
+        "url": "",
+        "labelSingular": "Product",
+        "sortBy": "",
+        "groups": [
+        ],
+        "reverseSort": false,
+        "prettyUrl": false
+      }
     ],
-    "factory": []
+    "reserved": [
+      "svg",
+      "depot",
+      "file",
+      "auth",
+      "gallery",
+      "color",
+      "date",
+      "url",
+      "image",
+      "blog",
+      "number",
+      "toggle",
+      "feed",
+      "text",
+      "styledtext",
+      "email"
+    ]
+  },
+  "version": "1.0.0",
+  "description": "Jumpstart definition generated from existing Total CMS data - 2025-07-06 21:13:11",
+  "objects": [
+    {
+      "id": "demosvg",
+      "data": {
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><g fill=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"34\" x2=\"32\" y2=\"2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></line><path d=\"M49,45v12c0,2.761-2.239,5-5,5H20c-2.761,0-5-2.239-5-5v-12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><rect x=\"9\" y=\"39\" width=\"46\" height=\"6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></rect><path d=\"M18,6h1c7.18,0,13,5.82,13,13v2s-1,0-1,0c-7.18,0-13-5.82-13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><path d=\"M46,12h-1c-7.18,0-13,5.82-13,13v2s1,0,1,0c7.18,0,13-5.82,13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path></g></svg>"
+      },
+      "collection": "svg"
+    },
+    {
+      "id": "demogallery",
+      "data": {
+        "gallery": [
+        ]
+      },
+      "collection": "gallery"
+    },
+    {
+      "id": "demodate",
+      "data": {
+        "date": "-5 days"
+      },
+      "collection": "date"
+    },
+    {
+      "id": "demourl",
+      "data": {
+        "url": "https://www.weavers.space/"
+      },
+      "collection": "url"
+    },
+    {
+      "id": "demoheader",
+      "data": {
+        "text": "Welcome to Total CMS 3"
+      },
+      "collection": "text"
+    },
+    {
+      "id": "demostyledtext",
+      "data": {
+        "styledtext": "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>"
+      },
+      "collection": "styledtext"
+    }
+  ],
+  "name": "Exported from Current CMS Data"
 }
