@@ -427,6 +427,7 @@ return [
 			$container->get(ObjectFetcher::class),
 			$container->get(IndexReader::class),
 			new JumpStartData(),
+			$container->get(CacheManager::class),
 			$container->get(LoggerFactory::class),
 		);
 	},

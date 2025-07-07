@@ -81,9 +81,9 @@ final class JumpStartImporter
 		if (isset($definition['schemas'])) {
 			$this->processSchemas($definition['schemas']);
 		}
-		// if (isset($definition['collections'])) {
-		// 	$this->processCollections($definition['collections']);
-		// }
+		if (isset($definition['collections'])) {
+			$this->processCollections($definition['collections']);
+		}
 		// if (isset($definition['objects'])) {
 		// 	$this->processObjects($definition['objects']);
 		// }
@@ -134,76 +134,83 @@ final class JumpStartImporter
 		}
 	}
 
-	/**
-	 * @param array<string, mixed> $collections
-	 */
+	/** @param array<string, mixed> $collections */
 	private function processCollections(array $collections): void
 	{
 		// Process reserved collections
 		if (isset($collections['reserved'])) {
 			foreach ($collections['reserved'] as $collectionType) {
-				try {
-					// Reserved collections are auto-created by fetching them
-					$collection = $this->collectionFetcher->fetchCollection($collectionType);
-
-					$this->results[] = [
-						'type' => 'collection',
-						'action' => 'created',
-						'id' => $collectionType,
-						'name' => ucfirst($collectionType),
-						'schema' => 'reserved'
-					];
-
-					$this->logger->info('Created reserved collection via jumpstart', ['type' => $collectionType]);
-				} catch (Exception $e) {
-					$this->errors[] = [
-						'type' => 'collection',
-						'id' => $collectionType,
-						'error' => $e->getMessage()
-					];
-					$this->logger->error('Failed to create reserved collection via jumpstart', [
-						'type' => $collectionType,
-						'error' => $e->getMessage()
-					]);
-				}
+				$this->createReservedCollection($collectionType);
 			}
 		}
 
 		// Process custom collections
 		if (isset($collections['custom'])) {
 			foreach ($collections['custom'] as $collectionDef) {
-				try {
-					// The collection is already in the correct format from export
-					// Create CollectionData from the array
-					$collectionData = CollectionData::fromArray($collectionDef);
-
-					// Save the collection
-					$this->collectionSaver->saveCollection($collectionData->toArray());
-
-					$this->results[] = [
-						'type' => 'collection',
-						'action' => 'created',
-						'id' => $collectionDef['id'],
-						'name' => $collectionDef['name'],
-						'schema' => $collectionDef['schema']
-					];
-
-					$this->logger->info('Created custom collection via jumpstart', [
-						'id' => $collectionDef['id'],
-						'schema' => $collectionDef['schema']
-					]);
-				} catch (Exception $e) {
-					$this->errors[] = [
-						'type' => 'collection',
-						'id' => $collectionDef['id'] ?? 'unknown',
-						'error' => $e->getMessage()
-					];
-					$this->logger->error('Failed to create custom collection via jumpstart', [
-						'id' => $collectionDef['id'] ?? 'unknown',
-						'error' => $e->getMessage()
-					]);
-				}
+				$this->createCustomCollection($collectionDef);
 			}
+		}
+	}
+
+	private function createReservedCollection(string $collectionType): void
+	{
+		try {
+			// Reserved collections are auto-created by fetching them
+			$collection = $this->collectionFetcher->fetchCollection($collectionType);
+
+			if ($collection === null) {
+				throw new Exception("Error creating Reserved Collection: {$collectionType}");
+			}
+
+			$this->results[] = [
+				'type'   => 'collection',
+				'action' => 'created',
+				'id'     => $collection->id,
+				'schema' => $collection->schema,
+			];
+
+			$this->logger->info('Created reserved collection via jumpstart', ['type' => $collectionType]);
+		} catch (Exception $e) {
+			$this->errors[] = [
+				'type'  => 'collection',
+				'id'    => $collectionType,
+				'error' => $e->getMessage()
+			];
+			$this->logger->error('Failed to create reserved collection via jumpstart', [
+				'type'  => $collectionType,
+				'error' => $e->getMessage()
+			]);
+		}
+	}
+
+	/** @param array<string, mixed> $collectionDef */
+	private function createCustomCollection(array $collectionDef): void
+	{
+		try {
+			// Save the collection
+			$collection = $this->collectionSaver->saveCollection($collectionDef);
+
+			$this->results[] = [
+				'type'   => 'collection',
+				'action' => 'created',
+				'id'     => $collection->id,
+				'schema' => $collection->schema,
+			];
+
+			$this->logger->info('Created custom collection via jumpstart', [
+				'id'     => $collection->id,
+				'schema' => $collection->schema
+			]);
+		} catch (Exception $e) {
+			$this->errors[] = [
+				'type'  => 'collection',
+				'id'    => $collectionDef['id'] ?? 'unknown',
+				'error' => $e->getMessage()
+			];
+			$this->logger->error('Failed to create custom collection via jumpstart', [
+				'id'    => $collectionDef['id'] ?? 'unknown',
+				'error' => $e->getMessage()
+			]);
 		}
 	}
 

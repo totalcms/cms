@@ -77,7 +77,7 @@
         }
     ],
     "collections": {
-        "reserved": [],
+        "reserved": ["text", "number", "date", "image", "color", "url", "svg", "gallery", "styledtext"],
         "custom": [
             {
                 "id": "products",

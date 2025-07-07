@@ -4,12 +4,15 @@ declare(strict_types = 1);
 
 namespace TotalCMS\Domain\JumpStart\Service;
 
+use Illuminate\Support\Facades\Cache;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Factory\LoggerFactory;
@@ -25,6 +28,7 @@ final class JumpStartExporter
 		private ObjectFetcher $objectFetcher,
 		private IndexReader $indexReader,
 		private JumpStartData $jumpstart,
+		private CacheManager $cacheManager,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-exporter');
@@ -36,6 +40,9 @@ final class JumpStartExporter
 	public function exportCurrentData(): JumpStartData
 	{
 		$this->logger->info('Starting jumpstart export');
+
+		// Make sure we do not have any cached data
+		$this->cacheManager->clearAllCaches();
 
 		$this->exportCustomSchemas();
 		$this->exportCollections();
@@ -62,9 +69,13 @@ final class JumpStartExporter
 
 	private function exportCollections(): void
 	{
-		$collections = $this->collectionLister->listCustomCollections();
+		$collections = $this->collectionLister->listAllCollections();
 
 		foreach ($collections as $collection) {
+			if (in_array($collection->schema, SchemaData::RESERVED_SCHEMAS)) {
+				$this->jumpstart->addReservedCollection($collection->schema);
+				continue;
+			}
 			$this->jumpstart->addCustomCollection($collection->toArray());
 		}
 	}
