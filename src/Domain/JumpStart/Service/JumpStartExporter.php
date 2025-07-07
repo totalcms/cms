@@ -8,6 +8,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Factory\LoggerFactory;
 
 final class JumpStartExporter
 {
@@ -24,11 +25,11 @@ final class JumpStartExporter
 	public function __construct(
 		CollectionRepository $collectionRepository,
 		SchemaRepository $schemaRepository,
-		LoggerInterface $logger
+		LoggerFactory $loggerFactory
 	) {
 		$this->collectionRepository = $collectionRepository;
 		$this->schemaRepository = $schemaRepository;
-		$this->logger = $logger;
+		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-exporter');
 	}
 	
 	/**

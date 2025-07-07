@@ -38,6 +38,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
+use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -407,6 +408,14 @@ return [
 			$container->get(CollectionFactory::class),
 			$container->get(CollectionRepository::class),
 			$container->get(JobQueuer::class),
+			$container->get(LoggerFactory::class),
+		);
+	},
+
+	JumpStartExporter::class => function (ContainerInterface $container) {
+		return new JumpStartExporter(
+			$container->get(CollectionRepository::class),
+			$container->get(SchemaRepository::class),
 			$container->get(LoggerFactory::class),
 		);
 	},
