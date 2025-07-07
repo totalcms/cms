@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Import;
+namespace TotalCMS\Domain\Factory\Service;
 
 use Faker\Generator as FakerGenerator;
 use Psr\Log\LoggerInterface;
@@ -11,7 +11,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Factory\FakerFactory;
+use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 
 final class FactoryImporter

@@ -1,11 +1,11 @@
 <?php
 
-namespace TotalCMS\Factory;
+namespace TotalCMS\Domain\Factory\Service;
 
 use Faker\Factory;
 use Faker\Generator;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\Faker\FakerExtension;
+use TotalCMS\Domain\Factory\Faker\FakerExtension;
 
 /**
  * Factory.

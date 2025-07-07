@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Twig;
 
 use Odan\Session\PhpSession;
-use TotalCMS\Factory\FakerFactory;
+use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Utils\CSRFTokenManager;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;

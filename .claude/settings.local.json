@@ -23,7 +23,8 @@
       "Bash(bin/code-report.sh:*)",
       "Bash(gh run list:*)",
       "Bash(git log:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

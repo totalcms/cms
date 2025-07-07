@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\JumpStart\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Import\FactoryImporter;
+use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;

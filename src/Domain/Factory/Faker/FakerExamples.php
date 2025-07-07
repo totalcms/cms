@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Utils\Faker;
+namespace TotalCMS\Domain\Factory\Faker;
 
 class FakerExamples
 {

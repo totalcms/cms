@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Import;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Import\FactoryImporter;
+use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class ImportFactoryAction
