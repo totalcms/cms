@@ -4,8 +4,8 @@ namespace TotalCMS\Domain\Factory\Service;
 
 use Faker\Factory;
 use Faker\Generator;
-use TotalCMS\Support\Config;
 use TotalCMS\Domain\Factory\Faker\FakerExtension;
+use TotalCMS\Support\Config;
 
 /**
  * Factory.

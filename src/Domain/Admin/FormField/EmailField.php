@@ -10,7 +10,7 @@ final class EmailField extends FormField
 	/** @return array<string,?string> */
 	protected function formFieldAttributes(): array
 	{
-		$attributes = parent::formFieldAttributes();
+		$attributes                   = parent::formFieldAttributes();
 		$attributes['autocapitalize'] = 'off';
 
 		return $attributes;

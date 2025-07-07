@@ -17,11 +17,11 @@ final class ImportJumpStartAction
 	public function __construct(JumpStartImporter $jumpStartImporter, JsonRenderer $renderer)
 	{
 		$this->jumpStartImporter = $jumpStartImporter;
-		$this->renderer = $renderer;
+		$this->renderer          = $renderer;
 	}
 
 	/**
-	 * Import jumpstart definition from uploaded JSON file
+	 * Import jumpstart definition from uploaded JSON file.
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{

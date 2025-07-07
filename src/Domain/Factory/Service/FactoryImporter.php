@@ -11,7 +11,6 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Factory\LoggerFactory;
 
 final class FactoryImporter
@@ -124,7 +123,6 @@ final class FactoryImporter
 			[$method, $args]  = self::parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
 			$objectData['id'] = $this->faker->unique()->$method(...$args);
 		}
-
 
 		foreach ($defs as $key => $value) {
 			if (empty($value) || $key === 'id') {

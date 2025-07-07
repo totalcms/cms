@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace TotalCMS\Domain\JumpStart\Data;
 
@@ -11,7 +11,7 @@ final class JumpStartData
 	/** @var array<string,mixed> */
 	public array $collections = [
 		'reserved' => [],
-		'custom' => []
+		'custom'   => [],
 	];
 	/** @var array<int,array<string,mixed>> */
 	public array $schemas = [];
@@ -23,7 +23,7 @@ final class JumpStartData
 	public function __construct(
 		public string $name        = 'Exported from Current CMS Data',
 		public string $description = 'Jumpstart definition generated from existing Total CMS data',
-	){
+	) {
 		$this->description .= ' - ' . date('Y-m-d H:i:s');
 	}
 
@@ -78,7 +78,7 @@ final class JumpStartData
 			'schemas'     => $this->schemas,
 			'collections' => $this->collections,
 			'objects'     => $this->objects,
-			'factory'     => $this->factory
+			'factory'     => $this->factory,
 		];
 	}
 
@@ -105,6 +105,7 @@ final class JumpStartData
 		if ($json === false) {
 			throw new \RuntimeException('Failed to encode jumpstart data to JSON');
 		}
+
 		return $json;
 	}
 
