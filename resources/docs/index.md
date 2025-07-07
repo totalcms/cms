@@ -20,6 +20,7 @@ New to Total CMS? Start here:
 
 ### Content Management
 - **[Dashboard Overview](dashboard.md)** - Admin interface guide
+- **[JumpStart](jumpstart.md)** - Quick project setup with predefined content structures
 - **[Import Data](import.md)** - Importing content from external sources
 - **[Export Data](export.md)** - Backing up and exporting your content
 - **[Download Files](download.md)** - File download and media management
@@ -69,15 +70,17 @@ Full walkthrough from installation to deployment:
 
 ### For Content Creators
 1. **Creating Content**: Start with the [Dashboard Overview](dashboard.md)
-2. **Managing Media**: See [Download Files](download.md)
-3. **Organizing Content**: Learn about the [Data Model](data-model.md)
-4. **Bulk Operations**: Check [Import](import.md) and [Export](export.md) guides
+2. **Quick Project Setup**: Use [JumpStart](jumpstart.md) to bootstrap new projects
+3. **Managing Media**: See [Download Files](download.md)
+4. **Organizing Content**: Learn about the [Data Model](data-model.md)
+5. **Bulk Operations**: Check [Import](import.md) and [Export](export.md) guides
 
 ### For Developers
-1. **Template Development**: Begin with [Twig Overview](twig-overview.md)
-2. **API Integration**: Read the [REST API](rest-api.md) and [PHP API](php-api.md) docs
-3. **Custom Fields**: Study [Field Settings](field-settings.md)
-4. **Search Implementation**: Follow the [Search](search.md) guide
+1. **Project Setup**: Use [JumpStart](jumpstart.md) to create consistent project templates
+2. **Template Development**: Begin with [Twig Overview](twig-overview.md)
+3. **API Integration**: Read the [REST API](rest-api.md) and [PHP API](php-api.md) docs
+4. **Custom Fields**: Study [Field Settings](field-settings.md)
+5. **Search Implementation**: Follow the [Search](search.md) guide
 
 ### For System Administrators
 1. **Initial Setup**: Review [Configuration](configuration.md)
