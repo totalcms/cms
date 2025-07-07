@@ -16,4 +16,17 @@
 		<p><a href="{{ exportapi }}" class="dash-button" download target="_blank">Export JumpStart Data</a></p>
 	</div>
 
+	<div>
+		<h3>Import JumpStart Data</h3>
+		<p>Import data from an existing JumpStart JSON file that you have. Depending on how much data is inside
+		the JSON file, the import process may take some time. If there are any errors, you can see the details
+		in the <strong>JumpStart logs</strong> in the <a href="utils/logs">Log Analyzer</a>.</p>
+		{{ cms.form.importJumpStart() }}
+	</div>
+
 </section>
+
+
+<style>
+.import-form { margin-top: 1rem; }
+</style>

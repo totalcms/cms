@@ -1,28 +1,42 @@
 <h1>Project Setup Actions</h1>
 
-<section class="dash-content-section">
-
 {% set action = getData.action %}
 
+<section class="dash-content-section">
+	{% if cms.env == "preview" or cms.env == "dev" %}
+		<h2>Jumpstart Demo Content</h2>
+		{% if action == "jumpstart-demo" %}
+			{% include "admin/utils/actions/jumpstart-demo.twig" %}
+		{% else %}
+			<p>JumpStart your project with demo content! Click on the button below to import all of the data used
+			for the demo project. This action may take up to 1-2 mins to complete.</p>
+			{{ cms.form.simple("/import/jumpstart?demo=true", '', {
+				method : "POST",
+				label  : "JumpStart Demo Data",
+				class  : "jumpstart-demo",
+			}) }}
+		{% endif %}
+	{% else %}
+		<h2>Jumpstart Data</h2>
+		<p>You can use the JumpStart utility to import data from another project to get you up and running quickly.</p>
+		<a class="dash-button transparent" href="utils/jumpstart">Open Jumpstart Utility</a>
+	{% endif %}
+</section>
 
-<h2>Jumpstart Content</h2>
 
-<p>Jumpstart your project with demo content! Import sample data or export your current setup for future use.</p>
-<p class="text-muted">Import is only available in preview environments. Export is available in all environments.</p>
-<a class="dash-button transparent" href="utils/jumpstart">Open Jumpstart</a>
+<section class="dash-content-section">
+	<h2>Default Collections</h2>
 
-<hr style="margin: 2rem 0; border-color: oklch(var(--totalform-border-color));" />
+	{% if action == "default-collections" %}
+		{% include "admin/utils/actions/default-collections.twig" %}
+	{% else %}
+		<p>This action will generate all of the default collections for you. This is useful when starting
+		a new project. If a collection already exists, it will not be touched.</p>
+		<a class="dash-button" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
+	{% endif %}
+</section>
 
 
-<h2>Default Collections</h2>
-
-{% if action == "default-collections" %}
-	{% include "admin/utils/actions/default-collections.twig" %}
-{% else %}
-	<p>This action will generate all of the default collections for you. This is useful when starting
-	a new project. If a collection already exists, it will not be touched.</p>
-	<a class="dash-button transparent" href="utils/project-setup?action=default-collections">Setup Default Collections</a>
-{% endif %}
 
 {% if totalcms1DetectionData is defined and totalcms1DetectionData %}
 	{% set cmsDataPath = totalcms1DetectionData.path %}
@@ -30,7 +44,8 @@
 {% endif %}
 
 {% if cmsDataPath %}
-	<h2 style="margin-top:3rem;">Total CMS v1 Data Import</h2>
+<section class="dash-content-section">
+	<h2>Total CMS v1 Data Import</h2>
 
 	{% if action == "totalcms-one-import" %}
 		<div id="import-status">
@@ -66,6 +81,7 @@
 			})();
 		</script>
 	{% else %}
+		<div>
 		<p>We have detected a Total CMS 1 installation at: <code>{{ cmsDataPath }}</code></p>
 		<p>This action will import all of your Total CMS 1 data including:</p>
 		<ul>
@@ -74,6 +90,13 @@
 			<li>Galleries, Images, Texts, and Videos</li>
 		</ul>
 		<p><strong>Note:</strong> All items will be queued for import via the job queue system. You can monitor progress in the Job Queue section.</p>
-		<a class="dash-button transparent" href="utils/project-setup?action=totalcms-one-import">Import Total CMS 1 Data</a>
+		</div>
+		<a class="dash-button" href="utils/project-setup?action=totalcms-one-import">Import Total CMS 1 Data</a>
 	{% endif %}
+</section>
 {% endif %}
+
+<style>
+.dash-content-section:not(:first-child) { padding-top: 2rem; }
+.dash-main-content { align-content: start; }
+</style>

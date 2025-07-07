@@ -84,9 +84,19 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importSchema(array $options = []): string
 	{
-		$options['api']    = $this->api;
+		$options['api'] = $this->api;
 
 		$form = new ImportSchemaForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function importJumpStart(array $options = []): string
+	{
+		$options['api'] = $this->api;
+
+		$form = new ImportJumpStartForm(...$options);
 
 		return $form->build();
 	}

@@ -107,7 +107,7 @@ export default class SimpleForm {
 				this.button.textContent = originalText;
 				this.button.style.width = "";
 				this.refreshPage();
-			}, 1500);
+			}, 4000);
 		}, 200);
 	}
 

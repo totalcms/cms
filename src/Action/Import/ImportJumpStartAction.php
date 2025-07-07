@@ -25,6 +25,25 @@ final class ImportJumpStartAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
+		$params = $request->getQueryParams();
+
+		if (isset($params['demo']) && $params['demo'] === 'true') {
+			return $this->importDemoDefinition($request, $response);
+		}
+
+		// Handle custom import from uploaded file
+		return $this->importFromUploadedFile($request, $response);
+	}
+
+	private function importDemoDefinition(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
+		$definition = $this->jumpStartImporter->importDemoDefinition();
+
+		return $this->renderer->json($response, $definition);
+	}
+
+	private function importFromUploadedFile(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
 		/** @var UploadedFileInterface[] $files */
 		$files = $request->getUploadedFiles();
 

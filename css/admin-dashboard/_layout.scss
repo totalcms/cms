@@ -149,6 +149,7 @@ body {
 			&.pretty-url-builder { --collection-icon : var(--icon-link) }
 			&.server-checker { --collection-icon : var(--icon-health) }
 			&.twig-playground { --collection-icon : var(--icon-twig-playground) }
+			&.jumpstart { --collection-icon : var(--icon-jumpstart) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);
@@ -215,12 +216,11 @@ body {
 		}
 	}
 	p, ul, ol {
-		max-width : 65ch;
-		margin-top: 1rem;
-
-		&:first-child {
-			margin-top: 0;
-		}
+		max-width  : 65ch;
+		margin-top : 1rem;
+	}
+	p:first-of-type {
+		margin-top: 0;
 	}
 	form {
 		max-width : 800px;
