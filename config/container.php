@@ -414,8 +414,11 @@ return [
 
 	JumpStartExporter::class => function (ContainerInterface $container) {
 		return new JumpStartExporter(
-			$container->get(CollectionRepository::class),
-			$container->get(SchemaRepository::class),
+			$container->get(CollectionLister::class),
+			$container->get(SchemaLister::class),
+			$container->get(SchemaFetcher::class),
+			$container->get(ObjectFetcher::class),
+			$container->get(IndexReader::class),
 			$container->get(LoggerFactory::class),
 		);
 	},
