@@ -71,7 +71,7 @@
 			"type": "object",
 			"description": "Collections to create (both default and custom)",
 			"properties": {
-				"default": {
+				"reserved": {
 					"type": "array",
 					"description": "Default collections to create",
 					"items": {

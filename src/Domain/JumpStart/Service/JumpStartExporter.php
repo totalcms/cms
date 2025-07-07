@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\JumpStart\Service;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -16,11 +17,6 @@ final class JumpStartExporter
 	private SchemaRepository $schemaRepository;
 	private LoggerInterface $logger;
 	
-	/** @var array<string> */
-	private array $defaultCollectionTypes = [
-		'blog', 'image', 'gallery', 'text', 'feed', 'form', 'file', 
-		'depot', 'toggle', 'navigation', 'snippet', 'template'
-	];
 	
 	public function __construct(
 		CollectionRepository $collectionRepository,
@@ -57,7 +53,7 @@ final class JumpStartExporter
 		
 		$this->logger->info('Completed jumpstart export', [
 			'schemas' => count($jumpstart->schemas),
-			'default_collections' => count($jumpstart->collections['default']),
+			'reserved_collections' => count($jumpstart->collections['reserved']),
 			'custom_collections' => count($jumpstart->collections['custom']),
 			'objects' => count($jumpstart->objects)
 		]);
@@ -66,15 +62,15 @@ final class JumpStartExporter
 	}
 	
 	/**
-	 * Export custom schemas (non-default schemas)
+	 * Export custom schemas (non-reserved schemas)
 	 */
 	private function exportCustomSchemas(JumpStartData $jumpstart): void
 	{
 		$allSchemas = $this->schemaRepository->listCustomSchemas();
 		
 		foreach ($allSchemas as $schema) {
-			// Skip default/reserved schemas
-			if (in_array($schema->id, $this->defaultCollectionTypes)) {
+			// Skip reserved schemas
+			if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS)) {
 				continue;
 			}
 			
@@ -108,16 +104,16 @@ final class JumpStartExporter
 	}
 	
 	/**
-	 * Export collections (both default and custom)
+	 * Export collections (both reserved and custom)
 	 */
 	private function exportCollections(JumpStartData $jumpstart): void
 	{
 		$allCollections = $this->collectionRepository->listAllCollections();
 		
 		foreach ($allCollections as $collection) {
-			if (in_array($collection->schema, $this->defaultCollectionTypes)) {
-				// Default collection
-				$jumpstart->addDefaultCollection($collection->schema);
+			if (in_array($collection->schema, SchemaData::RESERVED_SCHEMAS)) {
+				// Reserved collection
+				$jumpstart->addReservedCollection($collection->schema);
 			} else {
 				// Custom collection
 				$jumpstart->addCustomCollection([

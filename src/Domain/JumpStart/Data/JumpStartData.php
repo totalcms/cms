@@ -15,7 +15,7 @@ final class JumpStartData
 	
 	/** @var array<string, mixed> */
 	public array $collections = [
-		'default' => [],
+		'reserved' => [],
 		'custom' => []
 	];
 	
@@ -41,12 +41,12 @@ final class JumpStartData
 	}
 	
 	/**
-	 * Add a default collection to the jumpstart definition
+	 * Add a reserved collection to the jumpstart definition
 	 */
-	public function addDefaultCollection(string $collectionType): void
+	public function addReservedCollection(string $collectionType): void
 	{
-		if (!in_array($collectionType, $this->collections['default'])) {
-			$this->collections['default'][] = $collectionType;
+		if (!in_array($collectionType, $this->collections['reserved'])) {
+			$this->collections['reserved'][] = $collectionType;
 		}
 	}
 	
