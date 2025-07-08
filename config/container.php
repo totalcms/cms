@@ -52,8 +52,10 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\GallerySaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
@@ -435,13 +437,13 @@ return [
 
 	FactoryImporter::class => function (ContainerInterface $container) {
 		return new FactoryImporter(
-			$container->get(CollectionFetcher::class),
-			$container->get(GallerySaver::class),
-			$container->get(ImageSaver::class),
+			$container->get(ObjectFactory::class),
+			$container->get(ObjectRepository::class),
 			$container->get(IndexBuilder::class),
-			$container->get(ObjectFetcher::class),
-			$container->get(ObjectSaver::class),
+			$container->get(CollectionFetcher::class),
 			$container->get(SchemaFetcher::class),
+			$container->get(PropertyRepository::class),
+			$container->get(CacheManager::class),
 			$container->get(FakerFactory::class),
 			$container->get(LoggerFactory::class),
 		);

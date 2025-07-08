@@ -18,16 +18,14 @@
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
-			"factory" : "boolean",
-			"default" : false
+			"factory" : "boolean"
 		},
 		"title": {
 			"type"    : "string",
 			"label"   : "Title",
 			"help"    : "A title for your post",
 			"field"   : "text",
-			"factory" : "catchPhrase",
-			"default" : ""
+			"factory" : "catchPhrase"
 		},
 		"created": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
@@ -57,8 +55,7 @@
 			"label"   : "Content",
 			"help"    : "Post content",
 			"field"   : "styledtext",
-			"factory" : "styledtext",
-			"default" : ""
+			"factory" : "styledtext"
 		}
 	},
 	"required": [

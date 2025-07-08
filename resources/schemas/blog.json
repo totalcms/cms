@@ -10,15 +10,14 @@
 			"type"    : "boolean",
 			"label"   : "Draft",
 			"help"    : "Mark this post as a draft",
-			"default" : false,
-			"field"   : "checkbox"
+			"field"   : "checkbox",
+			"default" : false
 		},
 		"featured": {
 			"type"    : "boolean",
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
 			"field"   : "checkbox",
-			"default" : false,
 			"factory" : "boolean"
 		},
 		"id": {
@@ -64,10 +63,10 @@
 			"factory" : "styledtext(1,3,false)"
 		},
 		"media": {
-			"$ref"  : "https://www.totalcms.co/schemas/properties/url.json",
-			"label" : "Media",
-			"help"  : "Media URL for this post",
-			"field" : "url"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
+			"label"   : "Media",
+			"help"    : "Media URL for this post",
+			"field"   : "url"
 		},
 		"content": {
 			"type"    : "string",

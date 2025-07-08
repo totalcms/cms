@@ -4,13 +4,13 @@ namespace TotalCMS\Domain\Factory\Service;
 
 use Faker\Generator as FakerGenerator;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Property\Service\GallerySaver;
-use TotalCMS\Domain\Property\Service\ImageSaver;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -22,14 +22,19 @@ final class FactoryImporter
 
 	private const DEFAULT_FACTORY  = 'word';
 
+	// ---------------------------------------------------------------------------------
+	// This class uses the Repository classes directly instead of the Service classes
+	// to avoid unnecessary complexity and performance overhead.
+	// ---------------------------------------------------------------------------------
+
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private GallerySaver $gallerySaver,
-		private ImageSaver $imageSaver,
+		private ObjectFactory $objectFactory,
+		private ObjectRepository $objectRepository,
 		private IndexBuilder $indexBuilder,
-		private ObjectFetcher $objectFetcher,
-		private ObjectSaver $objectSaver,
+		private CollectionFetcher $collectionFetcher,
 		private SchemaFetcher $schemaFetcher,
+		private PropertyRepository $propertyRepository,
+		private CacheManager $cacheManager,
 		FakerFactory $fakerFactory,
 		LoggerFactory $loggerFactory,
 	) {
@@ -49,6 +54,7 @@ final class FactoryImporter
 				unlink($file);
 			}
 		}
+		$this->cacheManager->clearAllCaches();
 	}
 
 	public function isFakerRule(string $rule): bool
@@ -137,16 +143,18 @@ final class FactoryImporter
 			}
 			[$method, $args] = self::parseFakerRule($value);
 			if (str_starts_with($method, 'image')) {
-				// Save image to file and store path in object data
+				// Save image and store path in object data
+				// Not using the ImageSaver here to avoid unnecessary complexity
 				$path = $this->faker->$method(...$args);
-				$objectData[$property] = $this->imageSaver->save($collection, $objectData['id'], $property, $path)->toArray();
+				$objectData[$property] = $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path);
 				continue;
 			}
 			if (str_starts_with($method, 'gallery')) {
-				// Save images to file and store path in object data
+				// Save images and store path in object data
+				// Not using the GallerySaver here to avoid unnecessary complexity
 				$paths = $this->faker->$method(...$args);
 				$objectData[$property] = array_map(
-					fn($path) => $this->gallerySaver->save($collection, $objectData['id'], $property, $path)->toArray(),
+					fn($path) => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
 					$paths
 				);
 				continue;
@@ -179,7 +187,7 @@ final class FactoryImporter
 		for ($i = 0; $i < $quantity; $i++) {
 			$objectData = $this->generateFakeObject($collection, $defs);
 
-			if ($this->objectFetcher->existsObject($collection, $objectData['id'])) {
+			if ($this->objectRepository->existsObject($collection, $objectData['id'])) {
 				$this->logger->info(sprintf('Skipping existing object: %s', $objectData['id']));
 				continue;
 			}
@@ -192,7 +200,8 @@ final class FactoryImporter
 			// The ObjectSaver class is not used here for performance.
 			// ObjectSaver rebuilds the index after every save.
 			// We do that once after all objects are saved.
-			$this->objectSaver->saveObject($collection, $objectData);
+			$object = $this->objectFactory->generateObject($collection, $objectData);
+			$this->objectRepository->saveObject($collection, $object);
 			$this->logger->info(sprintf('Imported object: %s', $objectData['id']));
 			$this->logger->debug('Imported object', $objectData);
 
