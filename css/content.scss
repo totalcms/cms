@@ -1,4 +1,7 @@
-@use "sass:meta";
+@use "variables";
+@use "cms-grid";
+@use "pagination";
+
 @import "froala-editor/css/froala_style.css";
 
 .cms-hide {
@@ -41,5 +44,3 @@ body>.cms-twig-error {
 	height    : auto;
 	width     : auto;
 }
-
-@include meta.load-css("pagination");

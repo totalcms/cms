@@ -1,0 +1,407 @@
+/*
+ * Total CMS Grid Framework
+ * A flexible CSS Grid system for displaying collection data
+ * Customizable via CSS variables for different content types
+ */
+
+.cms-grid {
+	/* Default Grid Variables */
+	--cms-grid-gap              : 1rem;
+	--cms-grid-columns          : repeat(auto-fill, minmax(250px, 1fr));
+	--cms-grid-min-column-width : 250px;
+	--cms-grid-max-columns      : none;
+	--cms-grid-align-items      : stretch;
+	--cms-grid-justify-items    : stretch;
+
+	/* Card Variables */
+	--cms-card-padding       : 1rem;
+	--cms-card-bg            : #ffffff;
+	--cms-card-border        : 1px solid oklch(var(--totalform-border-color));
+	--cms-card-border-radius : var(--totalform-radius);
+	--cms-card-shadow        : 0 1px 3px oklch(0.2 0 0 / 0.1);
+	--cms-card-hover-shadow  : 0 4px 12px oklch(0.2 0 0 / 0.15);
+	--cms-card-transition    : all 0.2s ease;
+
+	/* Typography Variables */
+	--cms-text-color    : oklch(var(--totalform-text-color));
+	--cms-heading-color : oklch(var(--totalform-darkgray));
+	--cms-meta-color    : oklch(var(--totalform-lightgray));
+	--cms-link-color    : oklch(var(--totalform-accent));
+
+	/* Spacing Variables */
+	--cms-item-spacing        : 0.5rem;
+	--cms-image-aspect-ratio  : 16 / 9;
+	--cms-image-border-radius : calc(var(--cms-card-border-radius) * 0.5);
+
+	/* Base Grid Styles */
+	display               : grid;
+	grid-template-columns : var(--cms-grid-columns);
+	gap                   : var(--cms-grid-gap);
+	align-items           : var(--cms-grid-align-items);
+	justify-items         : var(--cms-grid-justify-items);
+
+	/* Responsive Grid Behavior */
+	@media (max-width: 768px) {
+		--cms-grid-columns : 1fr;
+		--cms-grid-gap     : 0.75rem;
+		--cms-card-padding : 0.75rem;
+	}
+
+	@media (max-width: 480px) {
+		--cms-grid-gap     : 0.5rem;
+		--cms-card-padding : 0.5rem;
+	}
+}
+
+/* Grid Item Base Styles */
+.cms-grid-item {
+	background    : var(--cms-card-bg);
+	border        : var(--cms-card-border);
+	border-radius : var(--cms-card-border-radius);
+	padding       : var(--cms-card-padding);
+	box-shadow    : var(--cms-card-shadow);
+	transition    : var(--cms-card-transition);
+	color         : var(--cms-text-color);
+	position      : relative;
+	overflow      : hidden;
+
+	&:hover {
+		box-shadow : var(--cms-card-hover-shadow);
+		transform  : translateY(-2px);
+	}
+
+	/* Typography Inside Cards */
+	h1, h2, h3, h4, h5, h6 {
+		color       : var(--cms-heading-color);
+		margin      : 0 0 var(--cms-item-spacing);
+		line-height : 1.3;
+	}
+
+	p {
+		margin      : 0 0 var(--cms-item-spacing);
+		line-height : 1.5;
+	}
+
+	a {
+		color           : var(--cms-link-color);
+		text-decoration : none;
+
+		&:hover {
+			text-decoration : underline;
+		}
+	}
+
+	/* Meta Information */
+	.cms-meta {
+		color     : var(--cms-meta-color);
+		font-size : 0.875rem;
+		margin    : 0 0 var(--cms-item-spacing);
+	}
+
+	/* Featured Image */
+	.cms-image {
+		margin        : calc(var(--cms-card-padding) * -1) calc(var(--cms-card-padding) * -1) var(--cms-item-spacing);
+		border-radius : var(--cms-image-border-radius) var(--cms-image-border-radius) 0 0;
+		overflow      : hidden;
+		aspect-ratio  : var(--cms-image-aspect-ratio);
+
+		img {
+			width      : 100%;
+			height     : 100%;
+			object-fit : cover;
+			display    : block;
+		}
+	}
+
+	/* Tags */
+	.cms-tags {
+		display   : flex;
+		flex-wrap : wrap;
+		gap       : 0.25rem;
+		margin    : var(--cms-item-spacing) 0 0;
+
+		.tag {
+			background    : oklch(var(--totalform-nearwhite));
+			color         : var(--cms-text-color);
+			padding       : 0.2rem 0.5rem;
+			border-radius : calc(var(--cms-card-border-radius) * 0.5);
+			font-size     : 0.75rem;
+			border        : 1px solid oklch(var(--totalform-border-color));
+		}
+	}
+
+	/* Price Display */
+	.cms-price {
+		font-weight : bold;
+		color       : var(--cms-heading-color);
+		font-size   : 1.125rem;
+	}
+}
+
+/* Grid Layout Variations */
+.cms-grid {
+	/* Compact Grid - Smaller cards, more columns */
+	&.compact {
+		--cms-grid-min-column-width : 200px;
+		--cms-card-padding          : 0.75rem;
+		--cms-grid-gap              : 0.75rem;
+	}
+
+	/* Wide Grid - Larger cards, fewer columns */
+	&.wide {
+		--cms-grid-min-column-width : 350px;
+		--cms-card-padding          : 1.5rem;
+		--cms-grid-gap              : 1.5rem;
+	}
+
+	/* List Style - Single column layout */
+	&.list {
+		--cms-grid-columns : 1fr;
+		--cms-grid-gap     : 1rem;
+
+		.cms-grid-item {
+			display               : grid;
+			grid-template-columns : auto 1fr;
+			gap                   : var(--cms-card-padding);
+			align-items           : start;
+
+			.cms-image {
+				margin        : 0;
+				width         : 150px;
+				border-radius : var(--cms-image-border-radius);
+			}
+
+			.cms-content {
+				min-width : 0;  /* Prevents text overflow */
+			}
+		}
+	}
+
+	/* Masonry-like Layout (using CSS Grid) */
+	&.masonry {
+		grid-template-rows : masonry;
+		align-items        : start;
+	}
+}
+
+/* Content-Specific Layouts */
+
+/* Blog Post Grid */
+.cms-grid.blog {
+	--cms-image-aspect-ratio : 16 / 9;
+
+	.cms-grid-item {
+		.cms-excerpt {
+			color       : var(--cms-meta-color);
+			font-size   : 0.9rem;
+			line-height : 1.6;
+			margin      : var(--cms-item-spacing) 0;
+		}
+
+		.cms-read-more {
+			margin-top  : auto;
+			padding-top : var(--cms-item-spacing);
+			font-weight : 500;
+		}
+	}
+}
+
+/* Product Grid */
+.cms-grid.products {
+	--cms-image-aspect-ratio : 1;
+
+	.cms-grid-item {
+		text-align : center;
+
+		.cms-title {
+			font-size   : 1rem;
+			font-weight : 600;
+		}
+
+		.cms-price {
+			margin-top  : auto;
+			padding-top : var(--cms-item-spacing);
+		}
+
+		.cms-image {
+			border-radius : var(--cms-image-border-radius);
+		}
+	}
+}
+
+/* Gallery Grid */
+.cms-grid.gallery {
+	--cms-card-padding       : 0;
+	--cms-image-aspect-ratio : 1;
+
+	.cms-grid-item {
+		.cms-image {
+			margin        : 0;
+			border-radius : var(--cms-card-border-radius);
+			aspect-ratio  : var(--cms-image-aspect-ratio);
+		}
+
+		.cms-content {
+			padding : var(--cms-card-padding);
+		}
+	}
+}
+
+/* Feed/News Grid */
+.cms-grid.feed {
+	.cms-grid-item {
+		.cms-date {
+			font-size     : 0.8rem;
+			color         : var(--cms-meta-color);
+			margin-bottom : var(--cms-item-spacing);
+		}
+
+		.cms-source {
+			font-size   : 0.8rem;
+			color       : var(--cms-meta-color);
+			margin-top  : auto;
+			padding-top : var(--cms-item-spacing);
+		}
+	}
+}
+
+/* Team/People Grid */
+.cms-grid.team {
+	--cms-image-aspect-ratio : 1;
+
+	.cms-grid-item {
+		text-align : center;
+
+		.cms-image {
+			border-radius : 50%;
+			width         : 120px;
+			height        : 120px;
+			margin        : 0 auto var(--cms-item-spacing);
+			aspect-ratio  : 1;
+		}
+
+		.cms-role {
+			color     : var(--cms-meta-color);
+			font-size : 0.9rem;
+		}
+	}
+}
+
+/* Responsive Grid Columns */
+.cms-grid {
+	/* Fixed Column Counts */
+	&.cols-1 { --cms-grid-columns: repeat(1, 1fr); }
+	&.cols-2 { --cms-grid-columns: repeat(2, 1fr); }
+	&.cols-3 { --cms-grid-columns: repeat(3, 1fr); }
+	&.cols-4 { --cms-grid-columns: repeat(4, 1fr); }
+	&.cols-5 { --cms-grid-columns: repeat(5, 1fr); }
+	&.cols-6 { --cms-grid-columns: repeat(6, 1fr); }
+
+	/* Responsive Fixed Columns */
+	@media (max-width: 1200px) {
+		&.cols-6 { --cms-grid-columns: repeat(4, 1fr); }
+		&.cols-5 { --cms-grid-columns: repeat(3, 1fr); }
+	}
+
+	@media (max-width: 768px) {
+		&.cols-6, &.cols-5, &.cols-4 { --cms-grid-columns: repeat(2, 1fr); }
+		&.cols-3 { --cms-grid-columns: repeat(2, 1fr); }
+	}
+
+	@media (max-width: 480px) {
+		&.cols-6, &.cols-5, &.cols-4, &.cols-3, &.cols-2 {
+			--cms-grid-columns: 1fr;
+		}
+	}
+}
+
+/* Utility Classes */
+.cms-grid {
+	/* Gap Variations */
+	&.gap-none    { --cms-grid-gap: 0; }
+	&.gap-sm      { --cms-grid-gap: 0.5rem; }
+	&.gap-md      { --cms-grid-gap: 1rem; }
+	&.gap-lg      { --cms-grid-gap: 1.5rem; }
+	&.gap-xl      { --cms-grid-gap: 2rem; }
+
+	/* Padding Variations */
+	&.padding-none { --cms-card-padding: 0; }
+	&.padding-sm   { --cms-card-padding: 0.5rem; }
+	&.padding-md   { --cms-card-padding: 1rem; }
+	&.padding-lg   { --cms-card-padding: 1.5rem; }
+	&.padding-xl   { --cms-card-padding: 2rem; }
+
+	/* Card Style Variations */
+	&.no-border {
+		.cms-grid-item {
+			border : none;
+		}
+	}
+
+	&.no-shadow {
+		.cms-grid-item {
+			box-shadow : none;
+
+			&:hover {
+				box-shadow : none;
+				transform  : none;
+			}
+		}
+	}
+
+	&.flat {
+		.cms-grid-item {
+			border        : none;
+			box-shadow    : none;
+			border-radius : 0;
+
+			&:hover {
+				box-shadow : none;
+				transform  : none;
+			}
+		}
+	}
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+	.cms-grid:not(.light-mode) {
+		--cms-card-bg           : #1a1a1a;
+		--cms-text-color        : #e0e0e0;
+		--cms-heading-color     : #ffffff;
+		--cms-meta-color        : #9ca3af;
+		--cms-card-border       : 1px solid #374151;
+		--cms-card-shadow       : 0 1px 3px rgba(0, 0, 0, 0.3);
+		--cms-card-hover-shadow : 0 4px 12px rgba(0, 0, 0, 0.4);
+	}
+}
+
+/* Loading States */
+.cms-grid-item.loading {
+	.cms-image, .cms-title, .cms-content {
+		background: linear-gradient(90deg,
+			oklch(var(--totalform-nearwhite)) 25%,
+			oklch(var(--totalform-border-color)) 50%,
+			oklch(var(--totalform-nearwhite)) 75%
+		);
+		background-size : 200% 100%;
+		animation       : loading-shimmer 1.5s infinite;
+		border-radius   : 4px;
+		height          : 1em;
+		margin-bottom   : var(--cms-item-spacing);
+	}
+
+	.cms-image {
+		height        : 200px;
+		border-radius : var(--cms-image-border-radius);
+	}
+}
+
+@keyframes loading-shimmer {
+	0% {
+		background-position : -200% 0;
+	}
+	100% {
+		background-position : 200% 0;
+	}
+}
