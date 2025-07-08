@@ -110,10 +110,11 @@
 			"factory": "imageShapes(1920,1080)"
 		},
 		"gallery": {
-			"$ref": "https://www.totalcms.co/schemas/properties/gallery.json",
-			"label": "Gallery",
-			"help": "Gallery of images for this post",
-			"field": "gallery"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/gallery.json",
+			"label"   : "Gallery",
+			"help"    : "Gallery of images for this post",
+			"field"   : "gallery",
+			"factory" : "galleryShapes(5,1920,1080)"
 		},
 		"updated": {
 			"$ref": "https://www.totalcms.co/schemas/properties/date.json",

@@ -37,6 +37,13 @@
     {
       "id": "demoimage",
       "collection": "image"
+    },
+    {
+      "id": "demogallery",
+      "data": {
+        "gallery": "galleryText(15,1280,720)"
+      },
+      "collection": "gallery"
     }
   ],
   "schemas": [
@@ -153,7 +160,7 @@
     ]
   },
   "version": "1.0.0",
-  "description": "Jumpstart definition generated from existing Total CMS data - 2025-07-06 21:13:11",
+  "description": "JumpStart data from the Total CMS 3 Demo Project",
   "objects": [
     {
       "id": "demosvg",
@@ -161,14 +168,6 @@
         "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><g fill=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"34\" x2=\"32\" y2=\"2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></line><path d=\"M49,45v12c0,2.761-2.239,5-5,5H20c-2.761,0-5-2.239-5-5v-12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><rect x=\"9\" y=\"39\" width=\"46\" height=\"6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></rect><path d=\"M18,6h1c7.18,0,13,5.82,13,13v2s-1,0-1,0c-7.18,0-13-5.82-13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><path d=\"M46,12h-1c-7.18,0-13,5.82-13,13v2s1,0,1,0c7.18,0,13-5.82,13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path></g></svg>"
       },
       "collection": "svg"
-    },
-    {
-      "id": "demogallery",
-      "data": {
-        "gallery": [
-        ]
-      },
-      "collection": "gallery"
     },
     {
       "id": "demodate",

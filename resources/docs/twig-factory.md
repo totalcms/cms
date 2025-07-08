@@ -29,10 +29,22 @@ imageText(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $
 imageShapes(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
 ```
 
+### Gallery
+
+```
+gallery(int $count = 3, int $width = 640, int $height = 480): string
+galleryBlur(int $count = 3, int $width = 640, int $height = 480, int $blur = 10): string
+galleryBW(int $count = 3, int $width = 640, int $height = 480): string
+galleryBWBlur(int $count = 3, int $width = 640, int $height = 480, int $blur = 10): string
+galleryText(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): string
+galleryShapes(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
+```
+
+
 ### Tags
 
 ```
-factory.tags(int $min = 0, int $max = 5): array
+factory.tags(int $min = 0, int $max = 4, array $choices = []): array
 ```
 
 

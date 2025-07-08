@@ -7,9 +7,10 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
-use TotalCMS\Domain\Object\Service\ObjectFactory;
-use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Property\Service\GallerySaver;
+use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -17,26 +18,29 @@ final class FactoryImporter
 {
 	private LoggerInterface $logger;
 	private FakerGenerator $faker;
+	private string $cacheDir;
 
 	private const DEFAULT_FACTORY  = 'word';
 
 	public function __construct(
-		private ObjectFactory $objectFactory,
-		private ObjectRepository $storage,
-		private LoggerFactory $loggerFactory,
-		private FakerFactory $fakerFactory,
-		private IndexBuilder $indexBuilder,
 		private CollectionFetcher $collectionFetcher,
+		private GallerySaver $gallerySaver,
+		private ImageSaver $imageSaver,
+		private IndexBuilder $indexBuilder,
+		private ObjectFetcher $objectFetcher,
+		private ObjectSaver $objectSaver,
 		private SchemaFetcher $schemaFetcher,
-		private PropertyRepository $propertyRepository,
+		FakerFactory $fakerFactory,
+		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $this->loggerFactory->addFileHandler('factory.log')->createLogger('factory');
-		$this->faker  = $this->fakerFactory->createFaker();
+		$this->logger   = $loggerFactory->addFileHandler('factory.log')->createLogger('factory');
+		$this->faker    = $fakerFactory->createFaker();
+		$this->cacheDir = $fakerFactory->cacheDir;
 	}
 
 	private function cleanCache(): void
 	{
-		$files = glob($this->fakerFactory->cacheDir . '/*');
+		$files = glob($this->cacheDir . '/*');
 		if ($files === false) {
 			return;
 		}
@@ -124,18 +128,27 @@ final class FactoryImporter
 			$objectData['id'] = $this->faker->unique()->$method(...$args);
 		}
 
-		foreach ($defs as $key => $value) {
-			if (empty($value) || $key === 'id') {
+		foreach ($defs as $property => $value) {
+			if (empty($value) || $property === 'id') {
 				continue;
 			}
 			[$method, $args] = self::parseFakerRule($value);
 			if (str_starts_with($method, 'image')) {
 				// Save image to file and store path in object data
-				$path             = $this->faker->$method(...$args);
-				$objectData[$key] = $this->propertyRepository->saveImage($collection, $objectData['id'], $key, $path);
+				$path = $this->faker->$method(...$args);
+				$objectData[$property] = $this->imageSaver->save($collection, $objectData['id'], $property, $path)->toArray();
 				continue;
 			}
-			$objectData[$key] = $this->faker->$method(...$args);
+			if (str_starts_with($method, 'gallery')) {
+				// Save images to file and store path in object data
+				$paths = $this->faker->$method(...$args);
+				$objectData[$property] = array_map(
+					fn($path) => $this->gallerySaver->save($collection, $objectData['id'], $property, $path)->toArray(),
+					$paths
+				);
+				continue;
+			}
+			$objectData[$property] = $this->faker->$method(...$args);
 		}
 
 		return $objectData;
@@ -163,7 +176,7 @@ final class FactoryImporter
 		for ($i = 0; $i < $quantity; $i++) {
 			$objectData = $this->generateFakeObject($collection, $defs);
 
-			if ($this->storage->existsObject($collection, $objectData['id'])) {
+			if ($this->objectFetcher->existsObject($collection, $objectData['id'])) {
 				$this->logger->info(sprintf('Skipping existing object: %s', $objectData['id']));
 				continue;
 			}
@@ -176,8 +189,7 @@ final class FactoryImporter
 			// The ObjectSaver class is not used here for performance.
 			// ObjectSaver rebuilds the index after every save.
 			// We do that once after all objects are saved.
-			$object = $this->objectFactory->generateObject($collection, $objectData);
-			$this->storage->saveObject($collection, $object);
+			$this->objectSaver->saveObject($collection, $objectData);
 			$this->logger->info(sprintf('Imported object: %s', $objectData['id']));
 			$this->logger->debug('Imported object', $objectData);
 

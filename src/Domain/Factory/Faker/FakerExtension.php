@@ -55,8 +55,76 @@ class FakerExtension extends Base
 	}
 
 	/** @return array<string> */
-	public static function tags(int $min = 0, int $max = 5): array
+	public static function gallery(int $count = 3, int $width = 640, int $height = 480): array
 	{
-		return array_values(array_unique((array)Lorem::words(self::numberBetween($min, $max), false)));
+		$images = [];
+		for ($i = 0; $i < $count; $i++) {
+			$images[] = self::image($width, $height);
+		}
+		return $images;
+	}
+
+	/** @return array<string> */
+	public static function galleryBlur(int $count = 3, int $width = 640, int $height = 480, int $blur = 10): array
+	{
+		$images = [];
+		for ($i = 0; $i < $count; $i++) {
+			$images[] = self::imageBlur($width, $height, $blur);
+		}
+		return $images;
+	}
+
+	/** @return array<string> */
+	public static function galleryBW(int $count = 3, int $width = 640, int $height = 480): array
+	{
+		$images = [];
+		for ($i = 0; $i < $count; $i++) {
+			$images[] = self::imageBW($width, $height);
+		}
+		return $images;
+	}
+
+	/** @return array<string> */
+	public static function galleryBWBlur(int $count = 3, int $width = 640, int $height = 480, int $blur = 10): array
+	{
+		$images = [];
+		for ($i = 0; $i < $count; $i++) {
+			$images[] = self::imageBWBlur($width, $height, $blur);
+		}
+		return $images;
+	}
+
+	/** @return array<string> */
+	public static function galleryText(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): array
+	{
+		$images = [];
+		for ($i = 0; $i < $count; $i++) {
+			$images[] = self::imageText($width, $height, $bgColor, $textSize, $textColor, $text);
+		}
+		return $images;
+	}
+
+	/** @return array<string> */
+	public static function galleryShapes(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): array
+	{
+		$images = [];
+		for ($i = 0; $i < $count; $i++) {
+			$images[] = self::imageShapes($width, $height, $bgColor);
+		}
+		return $images;
+	}
+
+	/**
+	 * @param array<string> $choices
+	 * @return array<string>
+	 * */
+	public static function tags(int $min = 0, int $max = 4, array $choices = []): array
+	{
+		shuffle($choices);
+		$words = empty($choices) ?
+			array_unique((array)Lorem::words(self::numberBetween($min, $max), false)) :
+			array_slice($choices, 0, self::numberBetween($min, $max));
+
+		return array_values($words);
 	}
 }
