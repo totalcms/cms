@@ -229,7 +229,7 @@ class HTMLUtils
 
 			$tagContent = htmlspecialchars($tag, ENT_QUOTES, 'UTF-8');
 
-			if ($linkBase !== null) {
+			if (!empty($linkBase)) {
 				$tagUrl = rtrim($linkBase, '/') . '/' . urlencode($tag);
 				$tagElements[] = self::element('a', $tagContent, [
 					'href' => $tagUrl,
