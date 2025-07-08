@@ -84,15 +84,15 @@
         "labelPlural": {
 			"type"        : "string",
 			"label"       : "Plural Label",
-			"help"        : "Custom plural term for collection items (e.g. 'posts', 'articles'). Defaults to 'objects' if not set.",
-			"placeholder" : "objects",
+			"help"        : "Custom plural term for collection items (e.g. 'Posts', 'Articles'). Defaults to 'Objects' if not set.",
+			"placeholder" : "Objects",
 			"field"       : "text"
         },
         "labelSingular": {
 			"type"        : "string",
 			"label"       : "Singular Label",
-			"help"        : "Custom singular term for collection items (e.g. 'post', 'article'). Defaults to 'object' if not set.",
-			"placeholder" : "object",
+			"help"        : "Custom singular term for collection items (e.g. 'Post', 'Article'). Defaults to 'Object' if not set.",
+			"placeholder" : "Object",
 			"field"       : "text"
         },
 		"sortBy": {
