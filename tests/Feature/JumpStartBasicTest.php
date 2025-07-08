@@ -107,7 +107,7 @@ describe('JumpStart Basic Functionality', function () {
 	});
 
 	it('validates demo file can be loaded and parsed', function () {
-		$demoPath = '/Users/joeworkman/Developer/totalcms/resources/jumpstart/demo.json';
+		$demoPath = jumpstartResourcePath('demo.json');
 		expect(file_exists($demoPath))->toBeTrue();
 		
 		$demoContent = file_get_contents($demoPath);

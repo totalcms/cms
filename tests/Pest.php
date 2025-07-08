@@ -93,6 +93,11 @@ function reservedTemplatePath(): string
 	return __DIR__ . '/../resources/templates/';
 }
 
+function jumpstartResourcePath(string $file = ''): string
+{
+	return __DIR__ . '/../resources/jumpstart/' . $file;
+}
+
 function indexPath(string $collection): string
 {
 	return cmsDataDir() . "$collection/.index.json";

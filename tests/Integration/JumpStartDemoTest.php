@@ -4,7 +4,7 @@ namespace Tests\Integration;
 
 describe('JumpStart Demo Integration', function () {
 	it('validates demo definition against jumpstart schema', function () {
-		$demoPath = '/Users/joeworkman/Developer/totalcms/resources/jumpstart/demo.json';
+		$demoPath = jumpstartResourcePath('demo.json');
 		expect(file_exists($demoPath))->toBeTrue('Demo jumpstart file should exist');
 		
 		$demoContent = file_get_contents($demoPath);
@@ -57,7 +57,7 @@ describe('JumpStart Demo Integration', function () {
 	});
 
 	it('has valid demo data structure', function () {
-		$demoPath = '/Users/joeworkman/Developer/totalcms/resources/jumpstart/demo.json';
+		$demoPath = jumpstartResourcePath('demo.json');
 		$demoContent = file_get_contents($demoPath);
 		$demoDefinition = json_decode($demoContent, true);
 		
@@ -124,7 +124,7 @@ describe('JumpStart Demo Integration', function () {
 	});
 
 	it('has consistent factory data and schema relationships', function () {
-		$demoPath = '/Users/joeworkman/Developer/totalcms/resources/jumpstart/demo.json';
+		$demoPath = jumpstartResourcePath('demo.json');
 		$demoContent = file_get_contents($demoPath);
 		$demoDefinition = json_decode($demoContent, true);
 		
@@ -156,7 +156,7 @@ describe('JumpStart Demo Integration', function () {
 	});
 
 	it('ensures important customer-facing objects exist', function () {
-		$demoPath = '/Users/joeworkman/Developer/totalcms/resources/jumpstart/demo.json';
+		$demoPath = jumpstartResourcePath('demo.json');
 		$demoContent = file_get_contents($demoPath);
 		$demoDefinition = json_decode($demoContent, true);
 		
