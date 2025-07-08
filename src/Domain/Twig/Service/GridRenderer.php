@@ -7,7 +7,7 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
 /**
  * Service for rendering CMS grids
- * 
+ *
  * Handles grid template generation, auto-detection, and processing
  */
 final class GridRenderer
@@ -17,7 +17,7 @@ final class GridRenderer
 
 	/**
 	 * Set image callback for processing image_html placeholders
-	 * 
+	 *
 	 * @param callable $callback Function that takes (id, imageworks, options) and returns HTML
 	 */
 	public function setImageCallback(callable $callback): void
@@ -31,7 +31,7 @@ final class GridRenderer
 
 	/**
 	 * Format meta information for grid display
-	 * 
+	 *
 	 * @param mixed $data Meta data (date, author, etc.)
 	 * @param string $format Format type (default, date, author, etc.)
 	 * @return string Formatted meta HTML
@@ -58,12 +58,12 @@ final class GridRenderer
 				$content = is_string($data) ? htmlspecialchars($data, ENT_QUOTES, 'UTF-8') : '';
 		}
 
-		return '<span class="cms-meta">' . $content . '</span>';
+		return HTMLUtils::metaData($content, $format);
 	}
 
 	/**
 	 * Format tags for grid display
-	 * 
+	 *
 	 * @param array<string>|string|null $tags Tags array or comma-separated string
 	 * @param string|null $linkBase Base URL for tag links (null for no links)
 	 * @return string Formatted tags HTML
@@ -79,28 +79,12 @@ final class GridRenderer
 			$tags = array_map('trim', explode(',', $tags));
 		}
 
-		$tagElements = [];
-		foreach ($tags as $tag) {
-			if (empty($tag)) {
-				continue;
-			}
-			
-			$tagContent = htmlspecialchars($tag, ENT_QUOTES, 'UTF-8');
-			
-			if ($linkBase !== null) {
-				$tagUrl = rtrim($linkBase, '/') . '/' . urlencode($tag);
-				$tagElements[] = '<a href="' . htmlspecialchars($tagUrl, ENT_QUOTES, 'UTF-8') . '" class="tag">' . $tagContent . '</a>';
-			} else {
-				$tagElements[] = '<span class="tag">' . $tagContent . '</span>';
-			}
-		}
-
-		return '<div class="cms-tags">' . implode('', $tagElements) . '</div>';
+		return HTMLUtils::tagList($tags, $linkBase);
 	}
 
 	/**
 	 * Format date for grid display
-	 * 
+	 *
 	 * @param mixed $date Date string or timestamp
 	 * @param string $format Format type (relative, short, long, custom)
 	 * @return string Formatted date HTML
@@ -133,18 +117,18 @@ final class GridRenderer
 		// Get ISO datetime for the datetime attribute
 		$datetime = TotalCMSTwigFilters::dateFormat($date, 'c');
 
-		return '<time class="cms-date" datetime="' . htmlspecialchars($datetime, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($formatted, ENT_QUOTES, 'UTF-8') . '</time>';
+		return HTMLUtils::time($formatted, $datetime, ['class' => 'cms-date']);
 	}
 
 	/**
 	 * Format excerpt for grid display
-	 * 
+	 *
 	 * @param string|null $text Text to excerpt
 	 * @param int $length Maximum length in characters
 	 * @param string $suffix Suffix to append when truncated
 	 * @return string Formatted excerpt HTML
 	 */
-	public function excerpt(?string $text, int $length = 100, string $suffix = '...'): string
+	public function excerpt(?string $text, int $length = 100, string $suffix = '…'): string
 	{
 		if (empty($text)) {
 			return '';
@@ -152,7 +136,7 @@ final class GridRenderer
 
 		// Strip HTML tags
 		$text = strip_tags($text);
-		
+
 		// Truncate if needed
 		if (strlen($text) > $length) {
 			$text = substr($text, 0, $length);
@@ -164,12 +148,12 @@ final class GridRenderer
 			$text .= $suffix;
 		}
 
-		return '<div class="cms-excerpt">' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</div>';
+		return HTMLUtils::element('div', htmlspecialchars($text, ENT_QUOTES, 'UTF-8'), ['class' => 'cms-excerpt']);
 	}
 
 	/**
 	 * Format price for grid display
-	 * 
+	 *
 	 * @param mixed $price Price value
 	 * @param string $currency Currency symbol or code
 	 * @param string $format Format type (symbol, code, none)
@@ -182,7 +166,7 @@ final class GridRenderer
 		}
 
 		$numericPrice = is_numeric($price) ? floatval($price) : 0;
-		
+
 		switch ($format) {
 			case 'symbol':
 				$formatted = $currency . number_format($numericPrice, 2);
@@ -197,12 +181,12 @@ final class GridRenderer
 				$formatted = $currency . number_format($numericPrice, 2);
 		}
 
-		return '<span class="cms-price">' . $formatted . '</span>';
+		return HTMLUtils::element('span', $formatted, ['class' => 'cms-price']);
 	}
 
 	/**
 	 * Generate image HTML for grid display
-	 * 
+	 *
 	 * @param mixed $imageData Image data array or string
 	 * @param array<string,mixed> $options Options for image processing
 	 * @return string Image HTML
@@ -229,11 +213,17 @@ final class GridRenderer
 			return '';
 		}
 
-		return '<img src="' . $src . '" alt="' . $alt . '" loading="lazy" draggable="false" oncontextmenu="return false;">';
+		return HTMLUtils::inlineElement('img', [
+			'src' => $src,
+			'alt' => $alt,
+			'loading' => 'lazy',
+			'draggable' => 'false',
+			'oncontextmenu' => 'return false;'
+		]);
 	}
 	/**
 	 * Generate a CMS grid layout for displaying collections
-	 * 
+	 *
 	 * @param array<array<string,mixed>> $objects Array of objects to display
 	 * @param string $classes CSS classes for the grid container
 	 * @param string $itemTag HTML tag for grid items (default: 'div')
@@ -266,7 +256,7 @@ final class GridRenderer
 
 	/**
 	 * Auto-detect appropriate template based on object structure and classes
-	 * 
+	 *
 	 * @param array<string,mixed> $sampleObject Sample object to analyze
 	 * @param string $classes Grid classes to help determine template
 	 * @return string Template string
@@ -296,7 +286,7 @@ final class GridRenderer
 
 	/**
 	 * Process template string with object data
-	 * 
+	 *
 	 * @param string $template Template string with placeholders
 	 * @param array<string,mixed> $object Object data
 	 * @return string Processed template
@@ -305,10 +295,10 @@ final class GridRenderer
 	{
 		// Enhanced template variable replacement with special handling for common grid elements
 		$processed = $template;
-		
+
 		// Process special template variables first
 		$processed = $this->processSpecialTemplateVariables($processed, $object);
-		
+
 		// Process regular object properties
 		foreach ($object as $key => $value) {
 			$placeholder = "{{ $key }}";
@@ -320,7 +310,7 @@ final class GridRenderer
 
 	/**
 	 * Process special template variables that require complex processing
-	 * 
+	 *
 	 * @param string $template Template string
 	 * @param array<string,mixed> $object Object data
 	 * @return string Processed template
@@ -383,28 +373,28 @@ final class GridRenderer
 
 	/**
 	 * Get blog template
-	 * 
+	 *
 	 * @param array<string,mixed> $object Sample object
 	 * @return string Template string
 	 */
 	private function getBlogTemplate(array $object): string
 	{
 		$template = '';
-		
+
 		if (isset($object['image'])) {
 			$template .= '<div class="cms-image">{{ image_html }}</div>';
 		}
-		
+
 		$template .= '<h3 class="cms-title">{{ title }}</h3>';
-		
+
 		if (isset($object['created'])) {
 			$template .= '<div class="cms-meta">{{ created_formatted }}</div>';
 		}
-		
+
 		if (isset($object['excerpt'])) {
 			$template .= '<div class="cms-excerpt">{{ excerpt }}</div>';
 		}
-		
+
 		if (isset($object['tags'])) {
 			$template .= '<div class="cms-tags">{{ tags_html }}</div>';
 		}
@@ -414,20 +404,20 @@ final class GridRenderer
 
 	/**
 	 * Get product template
-	 * 
+	 *
 	 * @param array<string,mixed> $object Sample object
 	 * @return string Template string
 	 */
 	private function getProductTemplate(array $object): string
 	{
 		$template = '';
-		
+
 		if (isset($object['image'])) {
 			$template .= '<div class="cms-image">{{ image_html }}</div>';
 		}
-		
+
 		$template .= '<h3 class="cms-title">{{ title }}</h3>';
-		
+
 		if (isset($object['price'])) {
 			$template .= '<div class="cms-price">{{ price_formatted }}</div>';
 		}
@@ -437,18 +427,18 @@ final class GridRenderer
 
 	/**
 	 * Get gallery template
-	 * 
+	 *
 	 * @param array<string,mixed> $object Sample object
 	 * @return string Template string
 	 */
 	private function getGalleryTemplate(array $object): string
 	{
 		$template = '';
-		
+
 		if (isset($object['image'])) {
 			$template .= '<div class="cms-image">{{ image_html }}</div>';
 		}
-		
+
 		if (isset($object['title'])) {
 			$template .= '<div class="cms-content"><h4>{{ title }}</h4></div>';
 		}
@@ -458,20 +448,20 @@ final class GridRenderer
 
 	/**
 	 * Get team template
-	 * 
+	 *
 	 * @param array<string,mixed> $object Sample object
 	 * @return string Template string
 	 */
 	private function getTeamTemplate(array $object): string
 	{
 		$template = '';
-		
+
 		if (isset($object['image'])) {
 			$template .= '<div class="cms-image">{{ image_html }}</div>';
 		}
-		
+
 		$template .= '<h3 class="cms-title">{{ title }}</h3>';
-		
+
 		if (isset($object['role'])) {
 			$template .= '<div class="cms-role">{{ role }}</div>';
 		}
@@ -481,24 +471,24 @@ final class GridRenderer
 
 	/**
 	 * Get feed template
-	 * 
+	 *
 	 * @param array<string,mixed> $object Sample object
 	 * @return string Template string
 	 */
 	private function getFeedTemplate(array $object): string
 	{
 		$template = '';
-		
+
 		if (isset($object['date'])) {
 			$template .= '<div class="cms-date">{{ date_formatted }}</div>';
 		}
-		
+
 		$template .= '<h3 class="cms-title">{{ title }}</h3>';
-		
+
 		if (isset($object['excerpt'])) {
 			$template .= '<div class="cms-excerpt">{{ excerpt }}</div>';
 		}
-		
+
 		if (isset($object['source'])) {
 			$template .= '<div class="cms-source">{{ source }}</div>';
 		}
@@ -508,20 +498,20 @@ final class GridRenderer
 
 	/**
 	 * Get generic template
-	 * 
+	 *
 	 * @param array<string,mixed> $object Sample object
 	 * @return string Template string
 	 */
 	private function getGenericTemplate(array $object): string
 	{
 		$template = '';
-		
+
 		if (isset($object['image'])) {
 			$template .= '<div class="cms-image">{{ image_html }}</div>';
 		}
-		
+
 		$template .= '<h3 class="cms-title">{{ title }}</h3>';
-		
+
 		if (isset($object['excerpt']) || isset($object['description'])) {
 			$template .= '<div class="cms-content">{{ excerpt }}{{ description }}</div>';
 		}

@@ -112,29 +112,32 @@
 			display    : block;
 		}
 	}
-
-	/* Tags */
-	.cms-tags {
-		display   : flex;
-		flex-wrap : wrap;
-		gap       : 0.25rem;
-		margin    : var(--cms-item-spacing) 0 0;
-
-		.tag {
-			background    : oklch(var(--totalform-nearwhite));
-			color         : var(--cms-text-color);
-			padding       : 0.2rem 0.5rem;
-			border-radius : calc(var(--cms-card-border-radius) * 0.5);
-			font-size     : 0.75rem;
-			border        : 1px solid oklch(var(--totalform-border-color));
-		}
-	}
-
 	/* Price Display */
 	.cms-price {
 		font-weight : bold;
 		color       : var(--cms-heading-color);
 		font-size   : 1.125rem;
+	}
+}
+
+/* Tags */
+.cms-tags {
+	display   : flex;
+	flex-wrap : wrap;
+	gap       : 0.25rem;
+	margin    : var(--cms-item-spacing) 0 0;
+
+	.tag {
+		background    : oklch(var(--totalform-nearwhite));
+		color         : var(--cms-text-color);
+		padding       : 0.2rem 0.5rem;
+		border-radius : calc(var(--cms-card-border-radius) * 0.5);
+		font-size     : 0.75rem;
+		border        : 1px solid oklch(var(--totalform-border-color));
+
+		a {
+			text-decoration : none;
+		}
 	}
 }
 
