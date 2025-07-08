@@ -40,7 +40,7 @@
 	align-items           : var(--cms-grid-align-items);
 	justify-items         : var(--cms-grid-justify-items);
 
-	/* Responsive Grid Behavior */
+	/* responsive behavior */
 	@media (max-width: 768px) {
 		--cms-grid-columns : 1fr;
 		--cms-grid-gap     : 0.75rem;
@@ -287,33 +287,44 @@
 	}
 }
 
-/* Responsive Grid Columns */
-.cms-grid {
-	/* Fixed Column Counts */
-	&.cols-1 { --cms-grid-columns: repeat(1, 1fr); }
-	&.cols-2 { --cms-grid-columns: repeat(2, 1fr); }
-	&.cols-3 { --cms-grid-columns: repeat(3, 1fr); }
-	&.cols-4 { --cms-grid-columns: repeat(4, 1fr); }
-	&.cols-5 { --cms-grid-columns: repeat(5, 1fr); }
-	&.cols-6 { --cms-grid-columns: repeat(6, 1fr); }
+// TODO: could not get these container queries to work - Will have to revisit later
+// /* Responsive Grid Columns with Container Queries */
+// /* Container queries allow the grid to respond to its own size rather than viewport size */
+// /* This makes the grid more flexible when used in different layout contexts */
+// .cms-grid {
+// 	/* Enable container queries for responsive behavior */
+// 	container-type: inline-size;
 
-	/* Responsive Fixed Columns */
-	@media (max-width: 1200px) {
-		&.cols-6 { --cms-grid-columns: repeat(4, 1fr); }
-		&.cols-5 { --cms-grid-columns: repeat(3, 1fr); }
-	}
+// 	/* Fixed Column Counts */
+// 	&.cols-1 { --cms-grid-columns: repeat(1, 1fr); }
+// 	&.cols-2 { --cms-grid-columns: repeat(2, 1fr); }
+// 	&.cols-3 { --cms-grid-columns: repeat(3, 1fr); }
+// 	&.cols-4 { --cms-grid-columns: repeat(4, 1fr); }
+// 	&.cols-5 { --cms-grid-columns: repeat(5, 1fr); }
+// 	&.cols-6 { --cms-grid-columns: repeat(6, 1fr); }
 
-	@media (max-width: 768px) {
-		&.cols-6, &.cols-5, &.cols-4 { --cms-grid-columns: repeat(2, 1fr); }
-		&.cols-3 { --cms-grid-columns: repeat(2, 1fr); }
-	}
+// 	/* Container-based responsive columns */
+// 	@container (max-width: 1200px) {
+// 		&.cols-6 { --cms-grid-columns: repeat(4, 1fr); }
+// 		&.cols-5 { --cms-grid-columns: repeat(4, 1fr); }
+// 	}
 
-	@media (max-width: 480px) {
-		&.cols-6, &.cols-5, &.cols-4, &.cols-3, &.cols-2 {
-			--cms-grid-columns: 1fr;
-		}
-	}
-}
+// 	@container (max-width: 900px) {
+// 		&.cols-6, &.cols-5 { --cms-grid-columns: repeat(3, 1fr); }
+// 		&.cols-4 { --cms-grid-columns: repeat(3, 1fr); }
+// 	}
+
+// 	@container (max-width: 600px) {
+// 		&.cols-6, &.cols-5, &.cols-4 { --cms-grid-columns: repeat(2, 1fr); }
+// 		&.cols-3 { --cms-grid-columns: repeat(2, 1fr); }
+// 	}
+
+// 	@container (max-width: 400px) {
+// 		&.cols-6, &.cols-5, &.cols-4, &.cols-3, &.cols-2 {
+// 			--cms-grid-columns: 1fr;
+// 		}
+// 	}
+// }
 
 /* Utility Classes */
 .cms-grid {
@@ -363,18 +374,19 @@
 	}
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-	.cms-grid:not(.light-mode) {
-		--cms-card-bg           : #1a1a1a;
-		--cms-text-color        : #e0e0e0;
-		--cms-heading-color     : #ffffff;
-		--cms-meta-color        : #9ca3af;
-		--cms-card-border       : 1px solid #374151;
-		--cms-card-shadow       : 0 1px 3px rgba(0, 0, 0, 0.3);
-		--cms-card-hover-shadow : 0 4px 12px rgba(0, 0, 0, 0.4);
-	}
-}
+// TODO: Dark mode support
+// /* Dark Mode Support */
+// @media (prefers-color-scheme: dark) {
+// 	.cms-grid:not(.light-mode) {
+// 		--cms-card-bg           : #1a1a1a;
+// 		--cms-text-color        : #e0e0e0;
+// 		--cms-heading-color     : #ffffff;
+// 		--cms-meta-color        : #9ca3af;
+// 		--cms-card-border       : 1px solid #374151;
+// 		--cms-card-shadow       : 0 1px 3px rgba(0, 0, 0, 0.3);
+// 		--cms-card-hover-shadow : 0 4px 12px rgba(0, 0, 0, 0.4);
+// 	}
+// }
 
 /* Loading States */
 .cms-grid-item.loading {
