@@ -108,9 +108,12 @@ final class FactoryImporter
 
 		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
 
-		return array_map(function ($property) {
+		$factories = array_map(function ($property) {
 			return $property['factory'] ?? null;
 		}, $schema->properties);
+
+		// Filter out null values to only return properties that have factory definitions
+		return array_filter($factories);
 	}
 
 	/**
