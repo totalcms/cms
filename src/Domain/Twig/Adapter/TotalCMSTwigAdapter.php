@@ -21,6 +21,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
@@ -45,6 +46,7 @@ final class TotalCMSTwigAdapter
 	public string $logout;
 	public string $domain;
 	public string $clearcache;
+	public GridRenderer $grid;
 
 	public function __construct(
 		private Config $config,
@@ -63,6 +65,7 @@ final class TotalCMSTwigAdapter
 		private AccessManager $accessManager,
 		private FileAccessManager $fileAccessManager,
 		public ImageCacheService $imageCacheService,
+		private GridRenderer $gridRenderer,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
@@ -70,6 +73,10 @@ final class TotalCMSTwigAdapter
 		$this->dashboard  = $this->api . '/admin';
 		$this->logout     = $this->api . '/logout';
 		$this->domain     = $this->getDomainName();
+		
+		// Set up grid renderer with image callback and expose as public property
+		$this->gridRenderer->setImageCallback([$this, 'image']);
+		$this->grid = $this->gridRenderer;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -764,6 +771,20 @@ NGINX;
 		array $getData     = [],
 	): string {
 		return PaginationGenerator::fullPagination(...func_get_args());
+	}
+
+	/**
+	 * Generate a CMS grid layout for displaying collections
+	 * 
+	 * @param array<array<string,mixed>> $objects Array of objects to display
+	 * @param string $classes CSS classes for the grid container
+	 * @param string $itemTag HTML tag for grid items (default: 'div')
+	 * @param string|null $template Template string for each item (uses auto-detection if null)
+	 * @return string HTML grid markup
+	 */
+	public function grid(array $objects, string $classes = '', string $itemTag = 'div', ?string $template = null): string
+	{
+		return $this->gridRenderer->render($objects, $classes, $itemTag, $template);
 	}
 
 	/**

@@ -74,6 +74,7 @@ use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
+use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -260,6 +261,10 @@ return [
 		);
 	},
 
+	GridRenderer::class => function (ContainerInterface $container) {
+		return new GridRenderer();
+	},
+
 	TotalCMSTwigAdapter::class => function (ContainerInterface $container) {
 		return new TotalCMSTwigAdapter(
 			$container->get(Config::class),
@@ -278,6 +283,7 @@ return [
 			$container->get(AccessManager::class),
 			$container->get(FileAccessManager::class),
 			$container->get(ImageCacheService::class),
+			$container->get(GridRenderer::class),
 		);
 	},
 

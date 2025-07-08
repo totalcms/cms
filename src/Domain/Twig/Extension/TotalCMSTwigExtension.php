@@ -38,7 +38,7 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 			// Lightweight globals - direct access
 			'getData'     => $_GET,
 			'postData'    => array_filter($_POST),
-			'sessionData' => $_SESSION,
+			'sessionData' => array_filter($_SESSION),
 			'patterns'    => $this->patterns,
 
 			// Heavy objects - use lazy loading proxies
@@ -68,5 +68,12 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 	public function getFilters()
 	{
 		return TotalCMSTwigFilters::getFilters();
+	}
+
+	public function getTokenParsers()
+	{
+		return [
+			new CmsGridTokenParser(),
+		];
 	}
 }
