@@ -121,11 +121,11 @@ final class JumpStartData
 
 	public function isEmpty(): bool
 	{
-		return empty($this->collections['reserved']) &&
-			empty($this->collections['custom']) &&
-			empty($this->schemas) &&
-			empty($this->objects) &&
-			empty($this->factory);
+		return empty($this->collections['reserved'])
+			&& empty($this->collections['custom'])
+			&& empty($this->schemas)
+			&& empty($this->objects)
+			&& empty($this->factory);
 	}
 
 	public function getTotalObjectCount(): int
@@ -135,7 +135,7 @@ final class JumpStartData
 		foreach ($this->factory as $factoryDef) {
 			if (isset($factoryDef['id'])) {
 				// Factory with specific ID counts as 1 object
-				$count += 1;
+				$count++;
 			} else {
 				// Factory with count creates multiple objects
 				$count += $factoryDef['count'] ?? 0;

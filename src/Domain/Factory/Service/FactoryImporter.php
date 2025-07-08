@@ -145,16 +145,16 @@ final class FactoryImporter
 			if (str_starts_with($method, 'image')) {
 				// Save image and store path in object data
 				// Not using the ImageSaver here to avoid unnecessary complexity
-				$path = $this->faker->$method(...$args);
+				$path                  = $this->faker->$method(...$args);
 				$objectData[$property] = $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path);
 				continue;
 			}
 			if (str_starts_with($method, 'gallery')) {
 				// Save images and store path in object data
 				// Not using the GallerySaver here to avoid unnecessary complexity
-				$paths = $this->faker->$method(...$args);
+				$paths                 = $this->faker->$method(...$args);
 				$objectData[$property] = array_map(
-					fn($path) => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
+					fn ($path) => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
 					$paths
 				);
 				continue;

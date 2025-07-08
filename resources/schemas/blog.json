@@ -11,6 +11,7 @@
 			"label"   : "Draft",
 			"help"    : "Mark this post as a draft",
 			"field"   : "checkbox",
+			"factory" : "boolean",
 			"default" : false
 		},
 		"featured": {
@@ -66,7 +67,8 @@
 			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
 			"label"   : "Media",
 			"help"    : "Media URL for this post",
-			"field"   : "url"
+			"field"   : "url",
+			"factory" : "url"
 		},
 		"content": {
 			"type"    : "string",

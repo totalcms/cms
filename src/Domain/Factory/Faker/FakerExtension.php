@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Factory\Faker;
 
 use Faker\Generator as FakerGenerator;
 use Faker\Provider\Base;
-use Faker\Provider\HtmlLorem;
 use Faker\Provider\Lorem;
 
 /**
@@ -62,6 +61,7 @@ class FakerExtension extends Base
 		for ($i = 0; $i < $count; $i++) {
 			$images[] = self::image($width, $height);
 		}
+
 		return $images;
 	}
 
@@ -72,6 +72,7 @@ class FakerExtension extends Base
 		for ($i = 0; $i < $count; $i++) {
 			$images[] = self::imageBlur($width, $height, $blur);
 		}
+
 		return $images;
 	}
 
@@ -82,6 +83,7 @@ class FakerExtension extends Base
 		for ($i = 0; $i < $count; $i++) {
 			$images[] = self::imageBW($width, $height);
 		}
+
 		return $images;
 	}
 
@@ -92,6 +94,7 @@ class FakerExtension extends Base
 		for ($i = 0; $i < $count; $i++) {
 			$images[] = self::imageBWBlur($width, $height, $blur);
 		}
+
 		return $images;
 	}
 
@@ -102,6 +105,7 @@ class FakerExtension extends Base
 		for ($i = 0; $i < $count; $i++) {
 			$images[] = self::imageText($width, $height, $bgColor, $textSize, $textColor, $text);
 		}
+
 		return $images;
 	}
 
@@ -112,11 +116,13 @@ class FakerExtension extends Base
 		for ($i = 0; $i < $count; $i++) {
 			$images[] = self::imageShapes($width, $height, $bgColor);
 		}
+
 		return $images;
 	}
 
 	/**
 	 * @param array<string> $choices
+	 *
 	 * @return array<string>
 	 * */
 	public static function tags(int $min = 0, int $max = 4, array $choices = []): array
@@ -136,12 +142,12 @@ class FakerExtension extends Base
 	 */
 	public static function styledtext(int $minParagraphs = 3, int $maxParagraphs = 6, bool $includeHeadings = false, bool $includeLists = true): string
 	{
-		$content = [];
+		$content        = [];
 		$paragraphCount = self::numberBetween($minParagraphs, $maxParagraphs);
 
 		// Add optional heading at the start
 		if ($includeHeadings && self::randomFloat(1, 0, 1) < 0.7) {
-			$level = self::numberBetween(2, 4);
+			$level     = self::numberBetween(2, 4);
 			$content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 8)) . '</h' . $level . '>';
 		}
 
@@ -161,7 +167,7 @@ class FakerExtension extends Base
 			} else {
 				// Another heading if enabled
 				if ($includeHeadings && $i > 0) {
-					$level = self::numberBetween(3, 5);
+					$level     = self::numberBetween(3, 5);
 					$content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 6)) . '</h' . $level . '>';
 				} else {
 					$content[] = self::generateStyledParagraph();
@@ -184,11 +190,11 @@ class FakerExtension extends Base
 			$styleChance = self::numberBetween(1, 10);
 			if ($styleChance == 1) {
 				// Add a link
-				$words = explode(' ', $sentence);
-				$linkStart = self::numberBetween(0, max(0, count($words) - 3));
-				$linkLength = self::numberBetween(1, min(3, count($words) - $linkStart));
-				$linkText = implode(' ', array_slice($words, $linkStart, $linkLength));
-				$linkUrl = '#' . Lorem::word();
+				$words             = explode(' ', $sentence);
+				$linkStart         = self::numberBetween(0, max(0, count($words) - 3));
+				$linkLength        = self::numberBetween(1, min(3, count($words) - $linkStart));
+				$linkText          = implode(' ', array_slice($words, $linkStart, $linkLength));
+				$linkUrl           = '#' . Lorem::word();
 				$words[$linkStart] = '<a href="' . $linkUrl . '">' . $linkText;
 				for ($j = 1; $j < $linkLength; $j++) {
 					unset($words[$linkStart + $j]);
@@ -197,10 +203,10 @@ class FakerExtension extends Base
 				$sentence = implode(' ', array_values($words));
 			} elseif ($styleChance == 2) {
 				// Add strong emphasis
-				$words = explode(' ', $sentence);
-				$strongPos = self::numberBetween(0, max(0, count($words) - 2));
-				$strongLength = self::numberBetween(1, min(2, count($words) - $strongPos));
-				$strongText = implode(' ', array_slice($words, $strongPos, $strongLength));
+				$words             = explode(' ', $sentence);
+				$strongPos         = self::numberBetween(0, max(0, count($words) - 2));
+				$strongLength      = self::numberBetween(1, min(2, count($words) - $strongPos));
+				$strongText        = implode(' ', array_slice($words, $strongPos, $strongLength));
 				$words[$strongPos] = '<strong>' . $strongText . '</strong>';
 				for ($j = 1; $j < $strongLength; $j++) {
 					unset($words[$strongPos + $j]);
@@ -208,10 +214,10 @@ class FakerExtension extends Base
 				$sentence = implode(' ', array_values($words));
 			} elseif ($styleChance == 3) {
 				// Add italic emphasis
-				$words = explode(' ', $sentence);
-				$emPos = self::numberBetween(0, max(0, count($words) - 2));
-				$emLength = self::numberBetween(1, min(2, count($words) - $emPos));
-				$emText = implode(' ', array_slice($words, $emPos, $emLength));
+				$words         = explode(' ', $sentence);
+				$emPos         = self::numberBetween(0, max(0, count($words) - 2));
+				$emLength      = self::numberBetween(1, min(2, count($words) - $emPos));
+				$emText        = implode(' ', array_slice($words, $emPos, $emLength));
 				$words[$emPos] = '<em>' . $emText . '</em>';
 				for ($j = 1; $j < $emLength; $j++) {
 					unset($words[$emPos + $j]);
@@ -228,23 +234,24 @@ class FakerExtension extends Base
 	private static function generateList(string $type): string
 	{
 		$items = self::numberBetween(3, 8);
-		$list = '<' . $type . '>';
+		$list  = '<' . $type . '>';
 
 		for ($i = 0; $i < $items; $i++) {
 			$itemText = Lorem::sentence(self::numberBetween(3, 10));
 
 			// Sometimes add emphasis to list items
 			if (self::randomFloat(1, 0, 1) < 0.2) {
-				$words = explode(' ', $itemText);
-				$pos = self::numberBetween(0, max(0, count($words) - 2));
+				$words       = explode(' ', $itemText);
+				$pos         = self::numberBetween(0, max(0, count($words) - 2));
 				$words[$pos] = self::randomFloat(1, 0, 1) < 0.5 ? '<strong>' . $words[$pos] . '</strong>' : '<em>' . $words[$pos] . '</em>';
-				$itemText = implode(' ', $words);
+				$itemText    = implode(' ', $words);
 			}
 
 			$list .= "\n\t<li>" . $itemText . '</li>';
 		}
 
 		$list .= "\n</" . $type . '>';
+
 		return $list;
 	}
 }
