@@ -44,6 +44,7 @@ final class TotalCMSTwigAdapter
 	public string $login;
 	public string $logout;
 	public string $domain;
+	public string $clearcache;
 
 	public function __construct(
 		private Config $config,
@@ -63,11 +64,12 @@ final class TotalCMSTwigAdapter
 		private FileAccessManager $fileAccessManager,
 		public ImageCacheService $imageCacheService,
 	) {
-		$this->env               = $this->config->env;
-		$this->api               = $this->config->api;
-		$this->dashboard         = $this->api . '/admin';
-		$this->logout            = $this->api . '/logout';
-		$this->domain            = $this->getDomainName();
+		$this->env        = $this->config->env;
+		$this->api        = $this->config->api;
+		$this->clearcache = $this->api . '/emergency/cache/clear';
+		$this->dashboard  = $this->api . '/admin';
+		$this->logout     = $this->api . '/logout';
+		$this->domain     = $this->getDomainName();
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
