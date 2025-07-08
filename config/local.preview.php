@@ -11,12 +11,13 @@ $settings['env'] = 'preview';
 // This file can exist in order to set a preview domain for the preview environment
 $previewDomainFile = __DIR__ . '/preview-domain';
 
-$settings['datadir'] = sys_get_temp_dir() . '/tcms-data';
+$settings['datadir'] = sys_get_temp_dir() . '/Stacks-TotalCMS/tcms-data';
 if (isset($_SERVER['DOMAIN']) && is_string($_SERVER['DOMAIN'])) {
 	$settings['datadir'] .= '-' . $_SERVER['DOMAIN'];
 } elseif (file_exists($previewDomainFile)) {
 	$settings['datadir'] .= '-' . file_get_contents($previewDomainFile);
 }
+mkdir($settings['datadir'], 0777, true);
 
 $settings['docroot']   = $settings['root'];
 $settings['api']       = '/site-assets/stacks/ws.tcms3.core/tcms/public/index.php';
