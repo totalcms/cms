@@ -44,6 +44,13 @@
         "gallery": "galleryText(15,1280,720)"
       },
       "collection": "gallery"
+    },
+    {
+      "id": "demostyledtext",
+      "data": {
+        "styledtext": "styledtext(1,8,true,true)"
+      },
+      "collection": "styledtext"
     }
   ],
   "schemas": [
@@ -89,10 +96,10 @@
           "$ref": "https://www.totalcms.co/schemas/properties/image.json"
         },
         "description": {
-          "factory": "paragraph",
+          "factory": "styledtext",
           "label": "Description",
           "type": "string",
-          "field": "textarea"
+          "field": "styledtext"
         },
         "name": {
           "factory": "words(3, true)",
@@ -114,7 +121,6 @@
       "index": [
         "id",
         "name",
-        "description",
         "image",
         "price",
         "tags"
@@ -189,13 +195,6 @@
         "text": "Welcome to Total CMS 3"
       },
       "collection": "text"
-    },
-    {
-      "id": "demostyledtext",
-      "data": {
-        "styledtext": "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>"
-      },
-      "collection": "styledtext"
     }
   ],
   "name": "Exported from Current CMS Data"

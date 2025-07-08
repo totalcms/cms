@@ -17,7 +17,7 @@
 			"label"   : "Styled Text",
 			"help"    : "Edit the text here.",
 			"field"   : "styledtext",
-			"factory" : "paragraphs"
+			"factory" : "styledtext"
         }
     },
     "required": [

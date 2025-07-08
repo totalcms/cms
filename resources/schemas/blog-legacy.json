@@ -16,8 +16,7 @@
 			"type"    : "boolean",
 			"label"   : "Featured",
 			"help"    : "Mark this post as featured",
-			"field"   : "checkbox",
-			"factory" : "boolean"
+			"field"   : "checkbox"
 		},
 		"archived": {
 			"type"    : "boolean",
@@ -30,38 +29,33 @@
 			"label"    : "Blog Post ID",
 			"help"     : "A unique ID for this post. No spaces or special characters.",
 			"field"    : "id",
-			"factory"  : "slug",
 			"settings" : { "autogen" : "${title}" }
 		},
 		"title": {
 			"type"    : "string",
 			"label"   : "Title",
 			"help"    : "Blog Post title",
-			"field"   : "text",
-			"factory" : "catchPhrase"
+			"field"   : "text"
 		},
 		"date": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"   : "Date",
 			"help"    : "Blog Post date",
 			"field"   : "date",
-			"default" : "now",
-			"factory" : "iso8601"
+			"default" : "now"
 		},
 		"author": {
 			"type"    : "string",
 			"label"   : "Author",
 			"help"    : "Author for this post",
 			"field"   : "text",
-			"factory" : "name",
 			"settings": { "propertyOptions" : true }
 		},
 		"summary": {
 			"type"    : "string",
 			"label"   : "Summary",
 			"help"    : "Blog Post summary",
-			"field"   : "textarea",
-			"factory" : "paragraph"
+			"field"   : "textarea"
 		},
 		"media": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
@@ -73,8 +67,7 @@
 			"type"    : "string",
 			"label"   : "Content",
 			"help"    : "Main blog post content",
-			"field"   : "styledtext",
-			"factory" : "paragraph"
+			"field"   : "styledtext"
 		},
 		"extra": {
 			"type"    : "string",
@@ -100,7 +93,6 @@
 			"label"   : "Categories",
 			"help"    : "A list of categories for this post",
 			"field"   : "list",
-			"factory" : "tags",
 			"settings": { "propertyOptions" : true }
 		},
 		"tags": {
@@ -108,7 +100,6 @@
 			"label"   : "Tags",
 			"help"    : "A list of tags for this post",
 			"field"   : "list",
-			"factory" : "tags",
 			"settings": { "propertyOptions" : true }
 		},
 		"labels": {
@@ -116,15 +107,13 @@
 			"label"   : "Labels",
 			"help"    : "A list of labels for this post",
 			"field"   : "list",
-			"factory" : "tags",
 			"settings": { "propertyOptions" : true }
 		},
 		"image": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
 			"label"   : "Image",
 			"help"    : "Main image for this post",
-			"field"   : "image",
-			"factory" : "imageShapes(1920,1080)"
+			"field"   : "image"
 		},
 		"gallery": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/gallery.json",

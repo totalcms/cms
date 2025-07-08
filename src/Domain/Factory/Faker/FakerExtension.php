@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Factory\Faker;
 
 use Faker\Generator as FakerGenerator;
 use Faker\Provider\Base;
+use Faker\Provider\HtmlLorem;
 use Faker\Provider\Lorem;
 
 /**
@@ -126,5 +127,124 @@ class FakerExtension extends Base
 			array_slice($choices, 0, self::numberBetween($min, $max));
 
 		return array_values($words);
+	}
+
+	/**
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 */
+	public static function styledtext(int $minParagraphs = 3, int $maxParagraphs = 6, bool $includeLists = true, bool $includeHeadings = false): string
+	{
+		$content = [];
+		$paragraphCount = self::numberBetween($minParagraphs, $maxParagraphs);
+
+		// Add optional heading at the start
+		if ($includeHeadings && self::randomFloat(1, 0, 1) < 0.7) {
+			$level = self::numberBetween(2, 4);
+			$content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 8)) . '</h' . $level . '>';
+		}
+
+		for ($i = 0; $i < $paragraphCount; $i++) {
+			// Randomly decide what type of content to add
+			$rand = self::numberBetween(1, 10);
+
+			if (!$includeLists || $rand <= 7) {
+				// Regular paragraph with possible inline styling
+				$content[] = self::generateStyledParagraph();
+			} elseif ($rand == 8) {
+				// Unordered list
+				$content[] = self::generateList('ul');
+			} elseif ($rand == 9) {
+				// Ordered list
+				$content[] = self::generateList('ol');
+			} else {
+				// Another heading if enabled
+				if ($includeHeadings && $i > 0) {
+					$level = self::numberBetween(3, 5);
+					$content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 6)) . '</h' . $level . '>';
+				} else {
+					$content[] = self::generateStyledParagraph();
+				}
+			}
+		}
+
+		return implode("\n\n", $content);
+	}
+
+	private static function generateStyledParagraph(): string
+	{
+		$sentences = self::numberBetween(3, 8);
+		$paragraph = [];
+
+		for ($i = 0; $i < $sentences; $i++) {
+			$sentence = Lorem::sentence(self::numberBetween(5, 15));
+
+			// Randomly add inline styling
+			$styleChance = self::numberBetween(1, 10);
+			if ($styleChance == 1) {
+				// Add a link
+				$words = explode(' ', $sentence);
+				$linkStart = self::numberBetween(0, max(0, count($words) - 3));
+				$linkLength = self::numberBetween(1, min(3, count($words) - $linkStart));
+				$linkText = implode(' ', array_slice($words, $linkStart, $linkLength));
+				$linkUrl = '#' . Lorem::word();
+				$words[$linkStart] = '<a href="' . $linkUrl . '">' . $linkText;
+				for ($j = 1; $j < $linkLength; $j++) {
+					unset($words[$linkStart + $j]);
+				}
+				$words[$linkStart] .= '</a>';
+				$sentence = implode(' ', array_values($words));
+			} elseif ($styleChance == 2) {
+				// Add strong emphasis
+				$words = explode(' ', $sentence);
+				$strongPos = self::numberBetween(0, max(0, count($words) - 2));
+				$strongLength = self::numberBetween(1, min(2, count($words) - $strongPos));
+				$strongText = implode(' ', array_slice($words, $strongPos, $strongLength));
+				$words[$strongPos] = '<strong>' . $strongText . '</strong>';
+				for ($j = 1; $j < $strongLength; $j++) {
+					unset($words[$strongPos + $j]);
+				}
+				$sentence = implode(' ', array_values($words));
+			} elseif ($styleChance == 3) {
+				// Add italic emphasis
+				$words = explode(' ', $sentence);
+				$emPos = self::numberBetween(0, max(0, count($words) - 2));
+				$emLength = self::numberBetween(1, min(2, count($words) - $emPos));
+				$emText = implode(' ', array_slice($words, $emPos, $emLength));
+				$words[$emPos] = '<em>' . $emText . '</em>';
+				for ($j = 1; $j < $emLength; $j++) {
+					unset($words[$emPos + $j]);
+				}
+				$sentence = implode(' ', array_values($words));
+			}
+
+			$paragraph[] = $sentence;
+		}
+
+		return '<p>' . implode(' ', $paragraph) . '</p>';
+	}
+
+	private static function generateList(string $type): string
+	{
+		$items = self::numberBetween(3, 8);
+		$list = '<' . $type . '>';
+
+		for ($i = 0; $i < $items; $i++) {
+			$itemText = Lorem::sentence(self::numberBetween(3, 10));
+
+			// Sometimes add emphasis to list items
+			if (self::randomFloat(1, 0, 1) < 0.2) {
+				$words = explode(' ', $itemText);
+				$pos = self::numberBetween(0, max(0, count($words) - 2));
+				$words[$pos] = self::randomFloat(1, 0, 1) < 0.5 ? '<strong>' . $words[$pos] . '</strong>' : '<em>' . $words[$pos] . '</em>';
+				$itemText = implode(' ', $words);
+			}
+
+			$list .= "\n\t<li>" . $itemText . '</li>';
+		}
+
+		$list .= "\n</" . $type . '>';
+		return $list;
 	}
 }

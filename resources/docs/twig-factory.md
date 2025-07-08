@@ -15,36 +15,38 @@ text($maxChars = 200)
 
 realText($maxNbChars = 200, $indexSize = 2)
 realTextBetween($minNbChars = 160, $maxNbChars = 200, $indexSize = 2)
+
+styledtext($minParagraphs = 3, $maxParagraphs = 6, $includeLists = true, $includeHeadings = false)
 ```
 
 ### Images
 
 ```
-imageUrl(int $width = 640, int $height = 480): string
-image(int $width = 640, int $height = 480): string
-imageBlur(int $width = 640, int $height = 480, int $blur = 10): string
-imageBW(int $width = 640, int $height = 480): string
-imageBWBlur(int $width = 640, int $height = 480, int $blur = 10): string
-imageText(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): string
-imageShapes(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
+imageUrl($width = 640, $height = 480): string
+image($width = 640, $height = 480): string
+imageBlur($width = 640, $height = 480, $blur = 10): string
+imageBW($width = 640, $height = 480): string
+imageBWBlur($width = 640, $height = 480, $blur = 10): string
+imageText($width = 640, $height = 480, $bgColor = 'f8f8f8', $textSize = 200, $textColor = null, $text = null): string
+imageShapes($width = 640, $height = 480, $bgColor = 'f8f8f8'): string
 ```
 
 ### Gallery
 
 ```
-gallery(int $count = 3, int $width = 640, int $height = 480): string
-galleryBlur(int $count = 3, int $width = 640, int $height = 480, int $blur = 10): string
-galleryBW(int $count = 3, int $width = 640, int $height = 480): string
-galleryBWBlur(int $count = 3, int $width = 640, int $height = 480, int $blur = 10): string
-galleryText(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): string
-galleryShapes(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
+gallery($count = 3, $width = 640, $height = 480): string
+galleryBlur($count = 3, $width = 640, $height = 480, $blur = 10): string
+galleryBW($count = 3, $width = 640, $height = 480): string
+galleryBWBlur($count = 3, $width = 640, $height = 480, $blur = 10): string
+galleryText($count = 3, $width = 640, $height = 480, $bgColor = 'f8f8f8', $textSize = 200, $textColor = null, $text = null): string
+galleryShapes($count = 3, $width = 640, $height = 480, $bgColor = 'f8f8f8'): string
 ```
 
 
 ### Tags
 
 ```
-factory.tags(int $min = 0, int $max = 4, array $choices = []): array
+factory.tags($min = 0, $max = 4, array $choices = []): array
 ```
 
 

@@ -57,7 +57,7 @@
 			"label"   : "Content",
 			"help"    : "Post content",
 			"field"   : "styledtext",
-			"factory" : "paragraph",
+			"factory" : "styledtext",
 			"default" : ""
 		}
 	},
