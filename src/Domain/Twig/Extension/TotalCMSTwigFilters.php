@@ -90,6 +90,7 @@ final class TotalCMSTwigFilters
 		'dateIsPast',
 		'dateIsFuture',
 		'dateIsToday',
+		'price',
 	];
 
 	/** @return array<TwigFilter> */
@@ -851,6 +852,38 @@ final class TotalCMSTwigFilters
 			return $chronos->isToday();
 		} catch (\Exception $e) {
 			return false;
+		}
+	}
+
+	// -------------------------
+	// Price Formatting
+	// -------------------------
+
+	/**
+	 * Format price value with currency
+	 *
+	 * @param string|int $price Price value
+	 * @param string $currency Currency symbol or code
+	 * @param string $format Format type (prepend, append, none)
+	 * @return string Formatted price string
+	 */
+	public static function price(string|int $price, string $currency = '$', string $format = 'prepend'): string
+	{
+		if (empty($price) && $price !== 0 && $price !== '0') {
+			return '';
+		}
+
+		$numericPrice = is_numeric($price) ? floatval($price) : 0;
+
+		switch ($format) {
+			case 'prepend':
+				return $currency . number_format($numericPrice, 2);
+			case 'append':
+				return number_format($numericPrice, 2) . $currency;
+			case 'none':
+				return number_format($numericPrice, 2);
+			default:
+				return $currency . number_format($numericPrice, 2);
 		}
 	}
 }

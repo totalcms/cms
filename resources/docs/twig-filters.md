@@ -870,4 +870,75 @@ The date filters support natural language strings powered by Chronos:
 </style>
 ```
 
+## Price Formatting
+
+### `price(mixed $price, string $currency = '$', string $format = 'prepend'): string`
+Formats price values with currency symbols.
+
+```twig
+{# Basic usage #}
+{{ 19.99 | price }}
+{# Output: $19.99 #}
+
+{{ 19.99 | price('€') }}
+{# Output: €19.99 #}
+
+{# Different formats #}
+{{ 19.99 | price('USD', 'prepend') }}
+{# Output: USD19.99 #}
+
+{{ 19.99 | price('USD', 'append') }}
+{# Output: 19.99 USD #}
+
+{{ 19.99 | price('', 'none') }}
+{# Output: 19.99 #}
+```
+
+#### Format Options:
+- **`prepend`** (default): Places currency before the number (`$19.99`)
+- **`append`**: Places currency after the number with a space (`19.99 USD`)
+- **`none`**: Shows only the formatted number (`19.99`)
+
+#### Real-World Examples:
+
+```twig
+{# Product listing #}
+{% for product in cms.objects('products') %}
+    <div class="product">
+        <h3>{{ product.name }}</h3>
+        <span class="price">{{ product.price | price }}</span>
+        
+        {# Sale price with comparison #}
+        {% if product.sale_price %}
+            <span class="sale">{{ product.sale_price | price }}</span>
+            <span class="original">{{ product.price | price }}</span>
+        {% endif %}
+    </div>
+{% endfor %}
+
+{# International pricing #}
+{% set currency = get.currency | default('USD') %}
+{% for product in products %}
+    <span class="price">
+        {{ product.price | price(currency, 'append') }}
+    </span>
+{% endfor %}
+
+{# Price ranges #}
+{% set minPrice = products | map(p => p.price) | min %}
+{% set maxPrice = products | map(p => p.price) | max %}
+<p>Prices from {{ minPrice | price }} to {{ maxPrice | price }}</p>
+
+{# Shopping cart totals #}
+{% set subtotal = cart.items | map(item => item.price * item.quantity) | sum %}
+{% set tax = subtotal * 0.08 %}
+{% set total = subtotal + tax %}
+
+<div class="cart-totals">
+    <div>Subtotal: {{ subtotal | price }}</div>
+    <div>Tax: {{ tax | price }}</div>
+    <div class="total">Total: {{ total | price }}</div>
+</div>
+```
+
 Remember: These filters make Twig templates more powerful and help you process data without complex PHP logic in your templates!
