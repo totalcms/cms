@@ -68,11 +68,11 @@
 	],
 	"index": [
 		"id",
+		"image",
 		"title",
 		"content",
 		"created",
 		"updated",
-		"featured",
-		"image"
+		"featured"
 	]
 }

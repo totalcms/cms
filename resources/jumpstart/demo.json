@@ -1,7 +1,7 @@
 {
   "factory": [
     {
-      "count": 5,
+      "count": 7,
       "data": {
         "image": "imageBlur",
         "tags": "tags(1, 5)"
@@ -9,11 +9,11 @@
       "collection": "blog"
     },
     {
-      "count": 5,
+      "count": 7,
       "collection": "products"
     },
     {
-      "count": 5,
+      "count": 11,
       "collection": "feed"
     },
     {
@@ -48,7 +48,7 @@
     {
       "id": "demostyledtext",
       "data": {
-        "styledtext": "styledtext(1,8,true,true)"
+        "styledtext": "styledtext(1,4,true,true)"
       },
       "collection": "styledtext"
     }
@@ -176,6 +176,13 @@
       "collection": "svg"
     },
     {
+      "id": "demotoggle",
+      "data": {
+        "status": true
+      },
+      "collection": "toggle"
+    },
+    {
       "id": "demodate",
       "data": {
         "date": "-5 days"
@@ -197,5 +204,5 @@
       "collection": "text"
     }
   ],
-  "name": "Exported from Current CMS Data"
+  "name": "Demo Project Data"
 }
