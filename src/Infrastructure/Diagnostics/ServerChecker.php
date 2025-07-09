@@ -64,6 +64,9 @@ class ServerChecker
 		// Add cache-specific information
 		$info = array_merge($info, $this->getCacheInfo());
 
+		// Add GD-specific information
+		$info = array_merge($info, $this->getGDInfo());
+
 		return $info;
 	}
 
@@ -118,6 +121,11 @@ class ServerChecker
 		];
 		foreach (self::REQUIRED_SOFTWARE as $requiredSoftware) {
 			$software["PHP Extension: $requiredSoftware"] = extension_loaded($requiredSoftware);
+		}
+
+		// Check for GD with FreeType support
+		if (extension_loaded('gd')) {
+			$software['GD FreeType Support'] = function_exists('imageftbbox') && function_exists('imagettftext');
 		}
 
 		return $software;
@@ -281,6 +289,37 @@ class ServerChecker
 		}
 
 		return $cacheInfo;
+	}
+
+	/**
+	 * Get GD-specific information including FreeType support.
+	 *
+	 * @return array<string,string>
+	 */
+	private function getGDInfo(): array
+	{
+		$gdInfo = [];
+
+		if (function_exists('gd_info')) {
+			$info                 = gd_info();
+			$gdInfo['GD Version'] = $info['GD Version'] ?? 'Unknown';
+
+			// Check FreeType support
+			if (isset($info['FreeType Support'])) {
+				$gdInfo['GD FreeType Support'] = $info['FreeType Support'] ? 'Yes' : 'No';
+			}
+
+			// Check specific functions that Total CMS uses
+			$gdInfo['GD imageftbbox Function']  = function_exists('imageftbbox') ? 'Available' : 'Not Available';
+			$gdInfo['GD imagettftext Function'] = function_exists('imagettftext') ? 'Available' : 'Not Available';
+
+			// If FreeType is not available, explain the impact
+			if (!function_exists('imageftbbox')) {
+				$gdInfo['GD FreeType Impact'] = 'Image text generation will use basic fonts with limited sizing';
+			}
+		}
+
+		return $gdInfo;
 	}
 
 	/**
