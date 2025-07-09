@@ -3,8 +3,8 @@
     {
       "count": 7,
       "data": {
-        "image" : "imageBlur",
-        "tags"  : "tags(1, 5)"
+        "image": "imageBlur",
+        "tags": "tags(1, 5)"
       },
       "collection": "blog"
     },
@@ -137,9 +137,25 @@
         "queueRebuildOnSave": false,
         "labelPlural": "Products",
         "schema": "products",
-        "url": "",
+        "url": "/products/product.php",
         "labelSingular": "Product",
         "sortBy": "",
+        "groups": [
+        ],
+        "reverseSort": false,
+        "prettyUrl": false
+      },
+      {
+        "id": "blog",
+        "category": "",
+        "description": "A collection of blog objects that conform to the blog schema.",
+        "name": "Blog",
+        "queueRebuildOnSave": false,
+        "labelPlural": "Posts",
+        "schema": "blog",
+        "url": "/blog/post.php",
+        "labelSingular": "Post",
+        "sortBy": "id",
         "groups": [
         ],
         "reverseSort": false,
@@ -176,6 +192,13 @@
       "collection": "svg"
     },
     {
+      "id": "demoemail",
+      "data": {
+        "email": "support@weaversspace.com"
+      },
+      "collection": "email"
+    },
+    {
       "id": "demotoggle",
       "data": {
         "status": true
@@ -202,6 +225,14 @@
         "text": "Welcome to Total CMS 3"
       },
       "collection": "text"
+    },
+    {
+      "id": "watermarks",
+      "data": {
+        "gallery": [
+        ]
+      },
+      "collection": "gallery"
     }
   ],
   "name": "Demo Project Data"

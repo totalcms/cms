@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nurl url\nprettyUrl prettyUrl\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\nqueueRebuildOnSave queueRebuildOnSave\nproperties properties\ncustomProperties customProperties",
+	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Overrides---\nproperties properties\ncustomProperties customProperties",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -57,11 +57,11 @@
 			"field"       : "textarea"
         },
         "url": {
-			"$ref"        : "https://www.totalcms.co/schemas/properties/url.json",
-			"label"       : "URL",
-			"help"        : "The base url for objects stored in this collection.",
-			"placeholder" : "https://www.example.com/objects/",
-			"field"       : "url"
+			"type"        : "string",
+			"label"       : "Object Path or URL",
+			"help"        : "The base url or path for objects stored in this collection.",
+			"placeholder" : "/objects/object.php",
+			"field"       : "text"
         },
         "prettyUrl": {
 			"type"  : "boolean",

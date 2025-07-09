@@ -142,17 +142,6 @@ final class JumpStartImporter
 	/** @param array<string, mixed> $collections */
 	private function processCollections(array $collections): void
 	{
-		// Process reserved collections
-		if (isset($collections['reserved'])) {
-			foreach ($collections['reserved'] as $collectionType) {
-				try {
-					$this->createReservedCollection($collectionType);
-				} catch (\Exception $e) {
-					$this->addError(sprintf('Collection %s: %s', $collectionType, $e->getMessage()));
-				}
-			}
-		}
-
 		// Process custom collections
 		if (isset($collections['custom'])) {
 			foreach ($collections['custom'] as $collectionDef) {
@@ -160,6 +149,17 @@ final class JumpStartImporter
 					$this->createCustomCollection($collectionDef);
 				} catch (\Exception $e) {
 					$this->addError(sprintf('Collection %s: %s', $collectionDef['id'] ?? 'unknown', $e->getMessage()));
+				}
+			}
+		}
+
+		// Process reserved collections
+		if (isset($collections['reserved'])) {
+			foreach ($collections['reserved'] as $collectionType) {
+				try {
+					$this->createReservedCollection($collectionType);
+				} catch (\Exception $e) {
+					$this->addError(sprintf('Collection %s: %s', $collectionType, $e->getMessage()));
 				}
 			}
 		}
