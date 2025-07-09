@@ -3,8 +3,8 @@
     {
       "count": 7,
       "data": {
-        "image": "imageBlur",
-        "tags": "tags(1, 5)"
+        "image" : "imageBlur",
+        "tags"  : "tags(1, 5)"
       },
       "collection": "blog"
     },
@@ -41,7 +41,7 @@
     {
       "id": "demogallery",
       "data": {
-        "gallery": "galleryText(15,1280,720,500)"
+        "gallery": "galleryShapes(15,1280,720)"
       },
       "collection": "gallery"
     },
