@@ -1,41 +1,323 @@
-## Total CMS Adapter
+# Total CMS Twig Adapter
 
-### Form Helpers
+The Total CMS Twig Adapter provides access to all CMS data and functionality through the global `cms` variable in Twig templates.
 
-```
-cms.formDefinitions(string $property, string $collection, ?string $id): array
-cms.getData(string $key): mixed
-cms.storeData(string $key, mixed $value): void
-cms.clearStorage(): void
-```
+## Configuration & Environment
 
-### Collection Data
-
-```
-cms.collection(string $collection): array
-cms.objects(string $collection): array
-```
-
-### Object Data
-
-```
-cms.object(string $collection, string $id): array
+```twig
+{{ cms.env }}                                    {# Current environment (development, production) #}
+{{ cms.config('key') }}                          {# Get config value by key #}
+{{ cms.config('key', 'setting') }}               {# Get nested config setting #}
+{{ cms.api }}                                    {# API base URL #}
+{{ cms.dashboard }}                              {# Admin dashboard URL #}
+{{ cms.login }}                                  {# Login URL #}
+{{ cms.logout }}                                 {# Logout URL #}
+{{ cms.domain }}                                 {# Current domain name #}
+{{ cms.clearcache }}                             {# Emergency cache clear URL #}
 ```
 
+## Authentication & Access Control
 
-### Property Data
-
+```twig
+{{ cms.login() }}                                {# Default login URL #}
+{{ cms.login('collection') }}                    {# Collection-specific login URL #}
+{{ cms.userData() }}                             {# Get current user data array #}
+{{ cms.userLoggedIn() }}                         {# Check if user is logged in (boolean) #}
+{{ cms.userLoggedIn('collection') }}             {# Check login for specific collection #}
+{{ cms.userHasAccess('group') }}                 {# Check if user has access to group #}
+{{ cms.userHasAccess(['group1', 'group2']) }}    {# Check multiple groups #}
+{{ cms.sessionData('key') }}                     {# Get session data by key #}
+{{ cms.verifyFilePassword(password, collection, id, property) }}  {# Verify file password #}
 ```
-cms.property(string $collection, string $property): array
-cms.data(string $collection, string $id, string $property): mixed
-cms.text(string $id, string $collection = 'text', string $property = 'text'): string
-cms.styledtext(string $id, string $collection = 'styledtext', string $property = 'styledtext'): string
-cms.depot(string $id, string $collection = 'depot', string $property = 'files'): array
+
+## Schemas
+
+```twig
+{{ cms.schemas() }}                              {# Get all schemas #}
+{{ cms.reservedSchemas() }}                      {# Get built-in schemas #}
+{{ cms.customSchemas() }}                        {# Get custom schemas #}
+{{ cms.schema('schemaName') }}                   {# Get specific schema definition #}
+{{ cms.schemaForCollection('collection') }}      {# Get schema for a collection #}
 ```
 
-### Image Data
+## Collections
 
+```twig
+{{ cms.collections() }}                          {# Get all collections #}
+{{ cms.collectionsByCategory() }}                {# Get collections grouped by category #}
+{{ cms.collection('collectionName') }}           {# Get collection metadata #}
+{{ cms.objects('collectionName') }}              {# Get all objects from collection #}
+{{ cms.property('collection', 'property') }}     {# Get unique values from property #}
+{{ cms.objectUrl('collection', 'id') }}          {# Get URL for an object #}
 ```
-cms.imagePath(?string $id, array $options = [], string $collection = 'image', string $property = 'image'): string
-cms.alt(string $id, string $collection = 'image', string $property = 'image'): string
+
+## Object Data
+
+```twig
+{{ cms.object('collection', 'id') }}             {# Get complete object data #}
+{{ cms.data('collection', 'id', 'property') }}   {# Get specific property value #}
+```
+
+## Search
+
+```twig
+{{ cms.search('collection', 'query', 'property') }}          {# Search with single property #}
+{{ cms.search('collection', 'query', ['prop1', 'prop2']) }}  {# Search multiple properties #}
+```
+
+## Text Content
+
+```twig
+{{ cms.text('id') }}                             {# Get text (default collection: text) #}
+{{ cms.text('id', {collection: 'custom'}) }}     {# Custom collection #}
+{{ cms.text('id', {property: 'content'}) }}      {# Custom property #}
+
+{{ cms.styledtext('id') }}                       {# Get styled text (HTML) #}
+{{ cms.styledtext('id', {collection: 'custom', property: 'html'}) }}
+```
+
+## Simple Data Types
+
+```twig
+{{ cms.toggle('id') }}                           {# Get boolean toggle value #}
+{{ cms.toggle('id', {collection: 'settings', property: 'enabled'}) }}
+
+{{ cms.date('id') }}                             {# Get date string #}
+{{ cms.date('id', {collection: 'events', property: 'eventDate'}) }}
+
+{{ cms.number('id') }}                           {# Get number value #}
+{{ cms.number('id', {collection: 'stats', property: 'count'}) }}
+
+{{ cms.url('id') }}                              {# Get URL #}
+{{ cms.url('id', {collection: 'links', property: 'href'}) }}
+
+{{ cms.email('id') }}                            {# Get email address #}
+{{ cms.email('id', {}, true) }}                  {# Get email with HTML encoding (anti-spam) #}
+
+{{ cms.svg('id') }}                              {# Get SVG content #}
+{{ cms.svg('id', {collection: 'icons', property: 'svgData'}) }}
+```
+
+## Colors
+
+```twig
+{% set myColor = cms.color('id') %}              {# Get color data array #}
+{% set myColor = cms.colour('id') %}             {# British spelling alias #}
+
+{# Color has 'hex' and 'oklch' properties #}
+{{ myColor.hex }}                                {# Hex value: #ff0000 #}
+{{ myColor.oklch.l }}                            {# Lightness #}
+{{ myColor.oklch.c }}                            {# Chroma #}
+{{ myColor.oklch.h }}                            {# Hue #}
+
+{# Use with color filters #}
+{{ myColor|hex }}                                {# Output: #ff0000 #}
+{{ myColor|oklch }}                              {# Output: oklch(62.8% 0.25768 29.234) #}
+{{ myColor|rgb }}                                {# Output: rgb(255 0 0) #}
+{{ myColor|hsl }}                                {# Output: hsl(0 100% 50%) #}
+```
+
+## Images
+
+```twig
+{# Basic image output #}
+{{ cms.image('id') }}                            {# Returns complete <img> HTML #}
+{{ cms.imagePath('id') }}                        {# Returns image URL only #}
+{{ cms.alt('id') }}                              {# Get alt text #}
+
+{# With ImageWorks transformations #}
+{{ cms.image('id', {w: 800, h: 600, fit: 'crop'}) }}
+{{ cms.imagePath('id', {w: 400, blur: 20, fm: 'webp'}) }}
+
+{# Custom collections and properties #}
+{{ cms.image('id', {}, {collection: 'products', property: 'photo'}) }}
+
+{# Create image from existing data #}
+{{ cms.imageFromData(imageData, 'id', {w: 600}) }}
+
+{# Loading options #}
+{{ cms.image('id', {}, {loading: 'eager'}) }}    {# Default is 'lazy' #}
+```
+
+## Galleries
+
+```twig
+{# Complete gallery with lightbox #}
+{{ cms.gallery('id') }}                          {# Default 300x200 thumbs #}
+{{ cms.gallery('id', {w: 150, h: 150}) }}        {# Custom thumb size #}
+{{ cms.gallery('id', {w: 150}, {w: 1200}) }}     {# Thumb and full size settings #}
+
+{# Gallery with options #}
+{{ cms.gallery('id', {w: 200}, {}, {
+    maxVisible: 8,
+    viewAllText: 'Show all photos',
+    loop: true,
+    download: false
+}) }}
+
+{# Individual gallery images #}
+{{ cms.galleryImage('id', 'filename.jpg') }}     {# Get specific image HTML #}
+{{ cms.galleryPath('id', 'filename.jpg', {w: 800}) }}  {# Get image URL #}
+{{ cms.galleryAlt('id', 'filename.jpg') }}       {# Get alt text #}
+{{ cms.galleryImageData('id', 'filename.jpg') }} {# Get complete image data #}
+
+{# Dynamic gallery images #}
+{{ cms.galleryImage('id', 'first') }}            {# First image #}
+{{ cms.galleryImage('id', 'last') }}             {# Last image #}
+{{ cms.galleryImage('id', 'random') }}           {# Random image #}
+{{ cms.galleryImage('id', 'featured') }}         {# Featured image #}
+```
+
+## File Downloads
+
+```twig
+{# Single file download #}
+{{ cms.download('id') }}                         {# Default from 'file' collection #}
+{{ cms.download('id', {collection: 'documents', property: 'pdf'}) }}
+{{ cms.download('id', {pwd: 'secret123'}) }}     {# Password-protected file #}
+
+{# Depot (multiple files) #}
+{% set files = cms.depot('id') %}                {# Get files array #}
+{% for file in files %}
+    <a href="{{ cms.depotDownload('id', file.name) }}">{{ file.name }}</a>
+{% endfor %}
+
+{# Depot with folders #}
+{{ cms.depotDownload('id', 'document.pdf', {path: 'folder/subfolder'}) }}
+{{ cms.depotDownload('id', 'folder/document.pdf') }}  {# Path in filename #}
+{{ cms.depotDownload('id', 'file.zip', {pwd: 'pass123'}) }}
+```
+
+## Pagination
+
+```twig
+{# Simple pagination (Previous/Next only) #}
+{{ cms.paginationSimple(totalObjects, currentPage, pageLimit) }}
+{{ cms.paginationSimple(items|length, page, 10, 'page', 'Prev', 'Next') }}
+
+{# Full pagination with page numbers #}
+{{ cms.paginationFull(totalObjects, currentPage, pageLimit) }}
+{{ cms.paginationFull(items|length, page, 10, 'p', '← Previous', 'Next →', {sort: 'date'}) }}
+```
+
+## URL Helpers
+
+```twig
+{{ cms.prettyUrl('/blog/post.php') }}            {# Convert to pretty URL #}
+{{ cms.apacheRule(currentUrl, 'Blog Posts') }}   {# Generate .htaccess rules #}
+{{ cms.nginxRule(currentUrl, 'Products') }}      {# Generate nginx rules #}
+```
+
+## Form Builder Integration
+
+```twig
+{{ cms.form.render('formId') }}                  {# Render complete form #}
+{{ cms.form.field('fieldType', 'name', 'value', {options}) }}  {# Individual field #}
+```
+
+## Grid Renderer
+
+The grid renderer provides helper methods for content grids:
+
+```twig
+{{ cms.grid.date(item, 'M j, Y') }}              {# Format date with fallback #}
+{{ cms.grid.tags(item, '/blog/tag') }}           {# Render tag list with links #}
+{{ cms.grid.excerpt(item, 160) }}                {# Generate excerpt #}
+{{ cms.grid.price(item) }}                       {# Format price #}
+{{ cms.grid.meta(item) }}                        {# Render metadata (author, date, etc) #}
+```
+
+## Server & Diagnostics
+
+```twig
+{{ cms.checker.serverInfo() }}                   {# Server information array #}
+{{ cms.checker.checkRequiredSoftware() }}        {# Required software check #}
+{{ cms.checker.checkOptionalSoftware() }}        {# Optional software check #}
+{{ cms.checker.getVersion() }}                   {# Total CMS version #}
+
+{{ cms.cacheReporter.getStatus() }}              {# Cache status #}
+{{ cms.logger.getRecentErrors(10) }}             {# Recent error logs #}
+```
+
+## Job Queue
+
+```twig
+{{ cms.processJobQueueCommand() }}               {# Get CLI command for processing jobs #}
+{{ cms.jobQueuePendingInfo() }}                  {# HTML table of pending jobs #}
+{{ cms.jobQueueFailedInfo() }}                   {# HTML table of failed jobs #}
+```
+
+## Utility Functions
+
+```twig
+{{ cms.redirectIfNotFound(object) }}             {# Redirect if object is empty #}
+{{ cms.languages() }}                            {# Get supported languages array #}
+```
+
+## ImageWorks Parameters
+
+Common parameters for image transformations:
+
+- `w` - Width in pixels
+- `h` - Height in pixels  
+- `fit` - How to fit image: `contain`, `max`, `fill`, `stretch`, `crop`
+- `crop` - Crop position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
+- `fm` - Output format: `jpg`, `png`, `gif`, `webp`, `avif`
+- `q` - Quality (1-100)
+- `blur` - Blur amount (0-100)
+- `sharp` - Sharpen amount (0-100)
+- `pixel` - Pixelate amount (0-100)
+- `filt` - Filter: `greyscale`, `sepia`
+- `mark` - Watermark image path
+- `markw` - Watermark width
+- `markh` - Watermark height
+- `markpos` - Watermark position
+- `markpad` - Watermark padding
+- `markalpha` - Watermark opacity (0-100)
+
+## Examples
+
+### Display a blog post
+```twig
+{% set post = cms.object('blog', 'my-post-id') %}
+<article>
+    <h1>{{ post.title }}</h1>
+    <time>{{ post.date|dateRelative }}</time>
+    {{ post.content|markdown }}
+    {{ cms.image(post.id, {w: 800, h: 400, fit: 'crop'}) }}
+</article>
+```
+
+### Create an image gallery
+```twig
+{% set product = cms.object('products', 'widget-pro') %}
+<div class="product-gallery">
+    {{ cms.gallery(product.id, {w: 100, h: 100}, {w: 1200}, {
+        maxVisible: 4,
+        viewAllText: 'View all images'
+    }) }}
+</div>
+```
+
+### Protected downloads
+```twig
+{% if cms.verifyFilePassword(password, 'documents', docId, 'file') %}
+    <a href="{{ cms.download(docId, {pwd: password}) }}">Download Document</a>
+{% else %}
+    <p>Invalid password</p>
+{% endif %}
+```
+
+### Search with pagination
+```twig
+{% set results = cms.search('blog', query, ['title', 'content', 'tags']) %}
+{% set page = app.request.get('page', 1) %}
+{% set perPage = 10 %}
+{% set paged = results|paginate(perPage, page) %}
+
+{% for item in paged %}
+    <article>{{ item.title }}</article>
+{% endfor %}
+
+{{ cms.paginationFull(results|length, page, perPage) }}
 ```

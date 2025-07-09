@@ -188,7 +188,6 @@ For basic form submission without full object management:
 }) }}
 ```
 
-
 ## Form Patterns
 
 Total CMS provides built-in validation patterns that can be used in form fields:
@@ -407,7 +406,7 @@ Date fields can also be configured to automatically update:
 }
 
 {
-    "type": "date", 
+    "type": "date",
     "label": "Last Modified",
     "settings": {
         "onUpdate": true  // Automatically update to current date when object is modified
