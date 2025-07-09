@@ -7,8 +7,8 @@
 .cms-grid {
 	/* Default Grid Variables */
 	--cms-grid-gap              : 1rem;
-	--cms-grid-columns          : repeat(auto-fill, minmax(250px, 1fr));
 	--cms-grid-min-column-width : 250px;
+	--cms-grid-columns          : repeat(auto-fill, minmax(var(--cms-grid-min-column-width), 1fr));
 	--cms-grid-max-columns      : none;
 	--cms-grid-align-items      : stretch;
 	--cms-grid-justify-items    : stretch;
