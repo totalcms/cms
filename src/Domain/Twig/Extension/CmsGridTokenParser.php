@@ -10,8 +10,8 @@ use Twig\TokenParser\AbstractTokenParser;
  * Token parser for the {% cmsgrid %} Twig tag
  * 
  * Syntax:
- * {% cmsgrid objects with 'classes' as 'tag' %}
- *   template content with {{ item }} variable
+ * {% cmsgrid objects from 'collection' with 'classes' as 'tag' %}
+ *   template content with {{ item }} and {{ collection }} variables
  * {% endcmsgrid %}
  */
 final class CmsGridTokenParser extends AbstractTokenParser
@@ -23,6 +23,12 @@ final class CmsGridTokenParser extends AbstractTokenParser
 		
 		// Parse: cmsgrid objects
 		$objects = $this->parser->parseExpression();
+		
+		// Parse: from 'collection'
+		$collection = null;
+		if ($stream->nextIf(Token::NAME_TYPE, 'from')) {
+			$collection = $this->parser->parseExpression();
+		}
 		
 		// Parse: with 'classes'
 		$classes = null;
@@ -43,7 +49,7 @@ final class CmsGridTokenParser extends AbstractTokenParser
 		
 		$stream->expect(Token::BLOCK_END_TYPE);
 		
-		return new CmsGridNode($objects, $classes, $itemTag, $template, $lineno, $this->getTag());
+		return new CmsGridNode($objects, $collection, $classes, $itemTag, $template, $lineno, $this->getTag());
 	}
 	
 	public function decideBlockEnd(Token $token): bool

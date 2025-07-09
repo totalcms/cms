@@ -1,7 +1,7 @@
 {# Feed Grid Item Template #}
 {% if item.image %}
     <div class="cms-image">
-        {{ cms.imageFromData(item.image, item.id, {}, {collection: 'feed'}) }}
+        {{ cms.imageFromData(item.image, item.id, {}, {collection: collection|default("feed")}) }}
     </div>
 {% endif %}
 

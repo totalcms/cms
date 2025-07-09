@@ -15,6 +15,7 @@ final class CmsGridNode extends Node
 {
 	public function __construct(
 		Node $objects,
+		?Node $collection,
 		?Node $classes,
 		?Node $itemTag,
 		Node $template,
@@ -25,6 +26,10 @@ final class CmsGridNode extends Node
 			'objects' => $objects,
 			'template' => $template,
 		];
+
+		if ($collection !== null) {
+			$nodes['collection'] = $collection;
+		}
 
 		if ($classes !== null) {
 			$nodes['classes'] = $classes;
@@ -48,6 +53,15 @@ final class CmsGridNode extends Node
 		// Get the objects array
 		$compiler->write('$objects = ');
 		$compiler->subcompile($this->getNode('objects'));
+		$compiler->raw(';' . PHP_EOL);
+
+		// Get collection name (default to empty string)
+		$compiler->write('$collection = ');
+		if ($this->hasNode('collection')) {
+			$compiler->subcompile($this->getNode('collection'));
+		} else {
+			$compiler->raw('""');
+		}
 		$compiler->raw(';' . PHP_EOL);
 
 		// Get classes (default to empty string)
@@ -82,8 +96,9 @@ final class CmsGridNode extends Node
 		// Start grid item
 		$compiler->write('echo "<" . $itemTag . " class=\"cms-grid-item\">";' . PHP_EOL);
 
-		// Render template content with $item available
+		// Render template content with $item and $collection available
 		$compiler->write('$context[\'item\'] = $item;' . PHP_EOL);
+		$compiler->write('$context[\'collection\'] = $collection;' . PHP_EOL);
 		$compiler->subcompile($this->getNode('template'));
 
 		// End grid item

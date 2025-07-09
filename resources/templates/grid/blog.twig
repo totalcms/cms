@@ -1,7 +1,7 @@
 {# Blog Grid Item Template #}
 {% if item.image %}
     <div class="cms-image">
-        {{ cms.imageFromData(item.image, item.id, {}, {collection: 'blog'}) }}
+        {{ cms.imageFromData(item.image, item.id, {}, {collection: collection|default("blog")}) }}
     </div>
 {% endif %}
 
