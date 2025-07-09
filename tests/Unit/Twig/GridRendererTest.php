@@ -18,9 +18,9 @@ test('meta method handles empty data', function () {
 });
 
 test('tags method formats array of tags', function () {
-	$tags = ['PHP', 'Twig', 'CMS'];
+	$tags   = ['PHP', 'Twig', 'CMS'];
 	$result = $this->gridRenderer->tags($tags);
-	
+
 	expect($result)->toContain('PHP');
 	expect($result)->toContain('Twig');
 	expect($result)->toContain('CMS');
@@ -28,9 +28,9 @@ test('tags method formats array of tags', function () {
 });
 
 test('tags method formats comma-separated string', function () {
-	$tags = 'PHP, Twig, CMS';
+	$tags   = 'PHP, Twig, CMS';
 	$result = $this->gridRenderer->tags($tags);
-	
+
 	expect($result)->toContain('PHP');
 	expect($result)->toContain('Twig');
 	expect($result)->toContain('CMS');
@@ -43,9 +43,9 @@ test('tags method handles empty tags', function () {
 });
 
 test('tags method with link base', function () {
-	$tags = ['PHP', 'Twig'];
+	$tags   = ['PHP', 'Twig'];
 	$result = $this->gridRenderer->tags($tags, '/tag/');
-	
+
 	expect($result)->toContain('PHP');
 	expect($result)->toContain('Twig');
 	expect($result)->toContain('/tag/'); // Should contain link base
@@ -70,8 +70,8 @@ test('date method with custom format', function () {
 
 test('excerpt method truncates text', function () {
 	$longText = str_repeat('Lorem ipsum dolor sit amet, ', 10);
-	$result = $this->gridRenderer->excerpt($longText, 50);
-	
+	$result   = $this->gridRenderer->excerpt($longText, 50);
+
 	expect(strlen(strip_tags($result)))->toBeLessThanOrEqual(55); // Allow for suffix
 	expect($result)->toContain('cms-excerpt'); // Should have CSS class
 	expect($result)->toContain('…'); // Should have ellipsis
@@ -79,8 +79,8 @@ test('excerpt method truncates text', function () {
 
 test('excerpt method handles short text', function () {
 	$shortText = 'Short text';
-	$result = $this->gridRenderer->excerpt($shortText, 50);
-	
+	$result    = $this->gridRenderer->excerpt($shortText, 50);
+
 	expect($result)->toContain('Short text');
 	expect($result)->not->toContain('…'); // Should not have ellipsis
 });
@@ -92,15 +92,15 @@ test('excerpt method handles empty text', function () {
 
 test('excerpt method with custom suffix', function () {
 	$longText = str_repeat('Lorem ipsum ', 20);
-	$result = $this->gridRenderer->excerpt($longText, 50, '...');
-	
+	$result   = $this->gridRenderer->excerpt($longText, 50, '...');
+
 	expect($result)->toContain('...');
 	expect($result)->not->toContain('…');
 });
 
 test('price method returns formatted price with HTML wrapper', function () {
 	$result = $this->gridRenderer->price(19.99);
-	
+
 	expect($result)->toContain('$19.99');
 	expect($result)->toContain('cms-price'); // Should have CSS class
 	expect($result)->toContain('<span'); // Should be wrapped in span
@@ -113,7 +113,7 @@ test('price method handles empty price', function () {
 
 test('price method with custom currency and format', function () {
 	$result = $this->gridRenderer->price(19.99, '€', 'append');
-	
+
 	expect($result)->toContain('19.99€');
 	expect($result)->toContain('cms-price');
 });
@@ -121,7 +121,7 @@ test('price method with custom currency and format', function () {
 test('all methods handle edge cases gracefully', function () {
 	// Test with various edge case inputs
 	$edgeCases = [null, '', 0, '0', false];
-	
+
 	foreach ($edgeCases as $case) {
 		// These should not throw exceptions
 		if ($case !== null) {
@@ -132,6 +132,6 @@ test('all methods handle edge cases gracefully', function () {
 		$this->gridRenderer->excerpt($case);
 		$this->gridRenderer->price($case);
 	}
-	
+
 	expect(true)->toBeTrue(); // If we get here, no exceptions were thrown
 });
