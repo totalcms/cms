@@ -5,7 +5,12 @@
     display : none !important;
 }
 .link-container {
-	display : block;
+	display         : block;
+	text-decoration : none;
+
+	&:hover, *, *:hover {
+		text-decoration : none;
+	}
 }
 .cms-twig-traceback {
 	display : none;
