@@ -24,7 +24,8 @@
       "Bash(gh run list:*)",
       "Bash(git log:*)",
       "Bash(mv:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(vendor/bin/pest:*)"
     ],
     "deny": []
   }

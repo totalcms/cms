@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig\Extension;
 
+use Twig\Attribute\YieldReady;
 use Twig\Compiler;
 use Twig\Node\Node;
 
@@ -10,6 +11,7 @@ use Twig\Node\Node;
  *
  * Compiles to PHP code that generates grid HTML
  */
+#[YieldReady]
 final class CmsGridNode extends Node
 {
 	public function __construct(
@@ -19,7 +21,6 @@ final class CmsGridNode extends Node
 		?Node $itemTag,
 		Node $template,
 		int $lineno,
-		string $tag = 'cmsgrid',
 	) {
 		$nodes = [
 			'objects'  => $objects,
@@ -38,7 +39,7 @@ final class CmsGridNode extends Node
 			$nodes['itemTag'] = $itemTag;
 		}
 
-		parent::__construct($nodes, [], $lineno, $tag);
+		parent::__construct($nodes, [], $lineno);
 	}
 
 	/** @SuppressWarnings("PHPMD.ElseExpression") */
@@ -86,14 +87,14 @@ final class CmsGridNode extends Node
 		$compiler->indent();
 
 		// Output grid container opening
-		$compiler->write('echo "<div class=\"cms-grid " . htmlspecialchars($classes, ENT_QUOTES, \'UTF-8\') . "\">";' . PHP_EOL);
+		$compiler->write('yield "<div class=\"cms-grid " . htmlspecialchars($classes, ENT_QUOTES, \'UTF-8\') . "\">";' . PHP_EOL);
 
 		// Loop through objects
 		$compiler->write('foreach ($objects as $item) {' . PHP_EOL);
 		$compiler->indent();
 
 		// Start grid item
-		$compiler->write('echo "<" . $itemTag . " class=\"cms-grid-item\">";' . PHP_EOL);
+		$compiler->write('yield "<" . $itemTag . " class=\"cms-grid-item\">";' . PHP_EOL);
 
 		// Render template content with $item and $collection available
 		$compiler->write('$context[\'item\'] = $item;' . PHP_EOL);
@@ -101,18 +102,18 @@ final class CmsGridNode extends Node
 		$compiler->subcompile($this->getNode('template'));
 
 		// End grid item
-		$compiler->write('echo "</" . $itemTag . ">";' . PHP_EOL);
+		$compiler->write('yield "</" . $itemTag . ">";' . PHP_EOL);
 
 		$compiler->outdent();
 		$compiler->write('}' . PHP_EOL);
 
 		// Output grid container closing
-		$compiler->write('echo "</div>";' . PHP_EOL);
+		$compiler->write('yield "</div>";' . PHP_EOL);
 
 		$compiler->outdent();
 		$compiler->write('}' . PHP_EOL);
 
 		// Output the buffered content
-		$compiler->write('echo ob_get_clean();' . PHP_EOL);
+		$compiler->write('yield ob_get_clean();' . PHP_EOL);
 	}
 }

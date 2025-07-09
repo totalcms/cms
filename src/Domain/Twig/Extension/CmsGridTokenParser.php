@@ -49,7 +49,7 @@ final class CmsGridTokenParser extends AbstractTokenParser
 
 		$stream->expect(Token::BLOCK_END_TYPE);
 
-		return new CmsGridNode($objects, $collection, $classes, $itemTag, $template, $lineno, $this->getTag());
+		return new CmsGridNode($objects, $collection, $classes, $itemTag, $template, $lineno);
 	}
 
 	public function decideBlockEnd(Token $token): bool

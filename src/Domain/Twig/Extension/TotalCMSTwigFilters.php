@@ -862,13 +862,13 @@ final class TotalCMSTwigFilters
 	/**
 	 * Format price value with currency.
 	 *
-	 * @param string|int $price Price value
+	 * @param mixed $price Price value
 	 * @param string $currency Currency symbol or code
 	 * @param string $format Format type (prepend, append, none)
 	 *
 	 * @return string Formatted price string
 	 */
-	public static function price(string|int $price, string $currency = '$', string $format = 'prepend'): string
+	public static function price(mixed $price, string $currency = '$', string $format = 'prepend'): string
 	{
 		if (empty($price) && $price !== 0 && $price !== '0') {
 			return '';
