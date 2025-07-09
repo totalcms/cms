@@ -61,6 +61,7 @@ class HTMLUtils
 		foreach (str_split($content) as $char) {
 			$encoded .= '&#' . ord($char) . ';';
 		}
+
 		return $encoded;
 	}
 
