@@ -27,7 +27,7 @@ image($width = 640, $height = 480): string
 imageBlur($width = 640, $height = 480, $blur = 10): string
 imageBW($width = 640, $height = 480): string
 imageBWBlur($width = 640, $height = 480, $blur = 10): string
-imageText($width = 640, $height = 480, $bgColor = 'f8f8f8', $textSize = 200, $textColor = null, $text = null): string
+imageText($width = 640, $height = 480, $textSize = 200, $bgColor = 'f8f8f8', $textColor = null, $text = null): string
 imageShapes($width = 640, $height = 480, $bgColor = 'f8f8f8'): string
 ```
 
@@ -38,7 +38,7 @@ gallery($count = 3, $width = 640, $height = 480): string
 galleryBlur($count = 3, $width = 640, $height = 480, $blur = 10): string
 galleryBW($count = 3, $width = 640, $height = 480): string
 galleryBWBlur($count = 3, $width = 640, $height = 480, $blur = 10): string
-galleryText($count = 3, $width = 640, $height = 480, $bgColor = 'f8f8f8', $textSize = 200, $textColor = null, $text = null): string
+galleryText($count = 3, $width = 640, $height = 480, $textSize = 200, $bgColor = 'f8f8f8', $textColor = null, $text = null): string
 galleryShapes($count = 3, $width = 640, $height = 480, $bgColor = 'f8f8f8'): string
 ```
 

@@ -44,7 +44,7 @@ class FakerExtension extends Base
 		return FakerPicsum::picsum(self::$dir, $width, $height, true, $blur);
 	}
 
-	public static function imageText(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): string
+	public static function imageText(int $width = 640, int $height = 480, int $textSize = 200, string $bgColor = 'f8f8f8', ?string $textColor = null, ?string $text = null): string
 	{
 		return FakerImageGD::imageText(self::$dir, $width, $height, $text, $textSize, $textColor, $bgColor);
 	}
@@ -99,11 +99,11 @@ class FakerExtension extends Base
 	}
 
 	/** @return array<string> */
-	public static function galleryText(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8', int $textSize = 200, ?string $textColor = null, ?string $text = null): array
+	public static function galleryText(int $count = 3, int $width = 640, int $height = 480, int $textSize = 200, string $bgColor = 'f8f8f8', ?string $textColor = null, ?string $text = null): array
 	{
 		$images = [];
 		for ($i = 0; $i < $count; $i++) {
-			$images[] = self::imageText($width, $height, $bgColor, $textSize, $textColor, $text);
+			$images[] = self::imageText($width, $height, $textSize, $bgColor, $textColor, $text);
 		}
 
 		return $images;

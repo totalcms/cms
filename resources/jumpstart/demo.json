@@ -41,7 +41,7 @@
     {
       "id": "demogallery",
       "data": {
-        "gallery": "galleryText(15,1280,720)"
+        "gallery": "galleryText(15,1280,720,500)"
       },
       "collection": "gallery"
     },
