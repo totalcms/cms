@@ -75,6 +75,9 @@ bin/codecount.sh
   - **`/src/Domain/JumpStart/`** - JumpStart data import/export system with services, data objects, and factories
   - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
   - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
+    - **`CmsGridTokenParser`** - Parses `{% cmsgrid %}` tag syntax with `from`, `with`, `as` parameters
+    - **`CmsGridNode`** - Compiles grid tags to PHP, provides `{{ item }}` and `{{ collection }}` variables
+    - **`GridRenderer`** - Helper methods for `cms.grid.*` (date, tags, excerpt, price, meta)
 - **`/src/Middleware/`** - HTTP middleware for auth, CORS, licensing, validation
 - **`/src/Renderer/`** - Response rendering (JSON, XML, Twig, Raw)
 - **`/src/Utils/`** - Utility classes for file handling, image processing, QR codes
@@ -82,6 +85,7 @@ bin/codecount.sh
 - **`/tcms-data/`** - JSON-based flat-file storage for collections
 - **`/resources/schemas/`** - JSON schemas for data validation
 - **`/resources/templates/`** - Twig templates for admin interface
+  - **`/resources/templates/grid/`** - Default grid templates (blog.twig, feed.twig, generic.twig)
 - **`/resources/docs/`** - Documentation files including JumpStart guide
 
 ### Design Patterns
@@ -95,6 +99,7 @@ bin/codecount.sh
 - **Collection System**: 13 built-in collection types (blog, image, gallery, etc.) stored as JSON files in `/tcms-data/`
 - **JumpStart System**: Data import/export system for quick project setup with predefined content structures, factory data generation, and Total CMS 1 migration
 - **Twig Integration**: Custom filters/functions in `src/Domain/Twig/`, markdown processing via ParsedownExtra
+- **Grid System**: `{% cmsgrid %}` Twig tag for flexible content grids with built-in templates and helper methods in `cms.grid.*`
 - **Admin Interface**: Form builder with 20+ field types, JavaScript components in `/javascript/totalform/`
 - **Build System**: ESBuild with code splitting, configuration in `esbuild.config.js`
 
