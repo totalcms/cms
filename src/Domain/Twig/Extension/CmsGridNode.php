@@ -90,14 +90,14 @@ final class CmsGridNode extends Node
 		$compiler->write('yield "<div class=\"cms-grid " . htmlspecialchars($classes, ENT_QUOTES, \'UTF-8\') . "\">";' . PHP_EOL);
 
 		// Loop through objects
-		$compiler->write('foreach ($objects as $item) {' . PHP_EOL);
+		$compiler->write('foreach ($objects as $object) {' . PHP_EOL);
 		$compiler->indent();
 
 		// Start grid item
 		$compiler->write('yield "<" . $itemTag . " class=\"cms-grid-item\">";' . PHP_EOL);
 
-		// Render template content with $item and $collection available
-		$compiler->write('$context[\'item\'] = $item;' . PHP_EOL);
+		// Render template content with $object and $collection available
+		$compiler->write('$context[\'object\'] = $object;' . PHP_EOL);
 		$compiler->write('$context[\'collection\'] = $collection;' . PHP_EOL);
 		$compiler->subcompile($this->getNode('template'));
 

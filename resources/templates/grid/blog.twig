@@ -1,20 +1,20 @@
 {# Blog Grid Item Template #}
-{% if item.image %}
+{% if object.image %}
     <div class="cms-image">
-        {{ cms.imageFromData(item.image, item.id, {}, {collection: collection|default("blog")}) }}
+        {{ cms.imageFromData(object.image, object.id, {}, {collection: collection|default("blog")}) }}
     </div>
 {% endif %}
 
-<h3 class="cms-title">{{ item.title }}</h3>
+<h3 class="cms-title">{{ object.title }}</h3>
 
-{% if item.date %}
-	{{ cms.grid.meta(cms.grid.date(item.date, 'relative')) }}
+{% if object.date %}
+	{{ cms.grid.meta(cms.grid.date(object.date, 'relative')) }}
 {% endif %}
 
-{% if item.summary %}
-	{{ cms.grid.excerpt(item.summary, 150) }}
+{% if object.summary %}
+	{{ cms.grid.excerpt(object.summary, 150) }}
 {% endif %}
 
-{% if item.tags %}
-	{{ cms.grid.tags(item.tags) }}
+{% if object.tags %}
+	{{ cms.grid.tags(object.tags) }}
 {% endif %}

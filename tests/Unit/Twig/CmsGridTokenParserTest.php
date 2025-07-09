@@ -38,7 +38,7 @@ test('token parser extends AbstractTokenParser', function () {
 // Integration test to verify the token parser works with Twig
 test('cmsgrid tag can be registered with twig', function () {
 	$loader = new ArrayLoader([
-		'test' => '{% cmsgrid objects from "blog" with "grid" %}{{ item.title }}{% endcmsgrid %}',
+		'test' => '{% cmsgrid objects from "blog" with "grid" %}{{ object.title }}{% endcmsgrid %}',
 	]);
 
 	$twig = new Environment($loader);
@@ -51,7 +51,7 @@ test('cmsgrid tag can be registered with twig', function () {
 
 test('cmsgrid tag compiles with minimal syntax', function () {
 	$loader = new ArrayLoader([
-		'minimal' => '{% cmsgrid objects %}{{ item.title }}{% endcmsgrid %}',
+		'minimal' => '{% cmsgrid objects %}{{ object.title }}{% endcmsgrid %}',
 	]);
 
 	$twig = new Environment($loader);
@@ -63,7 +63,7 @@ test('cmsgrid tag compiles with minimal syntax', function () {
 
 test('cmsgrid tag compiles with full syntax', function () {
 	$loader = new ArrayLoader([
-		'full' => '{% cmsgrid objects from "blog" with "grid compact" as "article" %}{{ item.title }}{% endcmsgrid %}',
+		'full' => '{% cmsgrid objects from "blog" with "grid compact" as "article" %}{{ object.title }}{% endcmsgrid %}',
 	]);
 
 	$twig = new Environment($loader);
@@ -75,11 +75,11 @@ test('cmsgrid tag compiles with full syntax', function () {
 
 test('cmsgrid tag compiles with partial syntax variations', function () {
 	$variations = [
-		'{% cmsgrid objects with "classes" %}{{ item.title }}{% endcmsgrid %}',
-		'{% cmsgrid objects as "div" %}{{ item.title }}{% endcmsgrid %}',
-		'{% cmsgrid objects from "blog" %}{{ item.title }}{% endcmsgrid %}',
-		'{% cmsgrid objects from "blog" with "classes" %}{{ item.title }}{% endcmsgrid %}',
-		'{% cmsgrid objects with "classes" as "span" %}{{ item.title }}{% endcmsgrid %}',
+		'{% cmsgrid objects with "classes" %}{{ object.title }}{% endcmsgrid %}',
+		'{% cmsgrid objects as "div" %}{{ object.title }}{% endcmsgrid %}',
+		'{% cmsgrid objects from "blog" %}{{ object.title }}{% endcmsgrid %}',
+		'{% cmsgrid objects from "blog" with "classes" %}{{ object.title }}{% endcmsgrid %}',
+		'{% cmsgrid objects with "classes" as "span" %}{{ object.title }}{% endcmsgrid %}',
 	];
 
 	foreach ($variations as $index => $template) {
@@ -110,7 +110,7 @@ test('cmsgrid syntax error handling', function () {
 
 test('cmsgrid missing end tag handling', function () {
 	$loader = new ArrayLoader([
-		'no_end' => '{% cmsgrid objects %}{{ item.title }}', // Missing {% endcmsgrid %}
+		'no_end' => '{% cmsgrid objects %}{{ object.title }}', // Missing {% endcmsgrid %}
 	]);
 
 	$twig = new Environment($loader);

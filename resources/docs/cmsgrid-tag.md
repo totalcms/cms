@@ -6,7 +6,7 @@ The `{% cmsgrid %}` tag provides a powerful way to display collections of conten
 
 ```twig
 {% cmsgrid objects from 'collection' with 'classes' as 'tag' %}
-    {# Template content with {{ item }} and {{ collection }} variables #}
+    {# Template content with {{ object }} and {{ collection }} variables #}
 {% endcmsgrid %}
 ```
 
@@ -22,9 +22,9 @@ The `{% cmsgrid %}` tag provides a powerful way to display collections of conten
 ### Simple Blog Grid
 ```twig
 {% cmsgrid cms.objects('blog') from 'blog' with 'blog compact' %}
-    <h3>{{ item.title }}</h3>
-    <p>{{ item.summary }}</p>
-    <time>{{ cms.grid.date(item.date) }}</time>
+    <h3>{{ object.title }}</h3>
+    <p>{{ object.summary }}</p>
+    <time>{{ cms.grid.date(object.date) }}</time>
 {% endcmsgrid %}
 ```
 
@@ -38,21 +38,21 @@ The `{% cmsgrid %}` tag provides a powerful way to display collections of conten
 ### Custom Item Tags
 ```twig
 {% cmsgrid cms.objects('products') from 'products' with 'products grid' as 'article' %}
-    <h4>{{ item.name }}</h4>
-    <span class="price">{{ item.price|price }}</span>
+    <h4>{{ object.name }}</h4>
+    <span class="price">{{ object.price|price }}</span>
 {% endcmsgrid %}
 ```
 
 ## Available Variables
 
-### `{{ item }}`
+### `{{ object }}`
 Each object in the collection array with all its properties:
 ```twig
-{{ item.title }}
-{{ item.summary }}
-{{ item.date }}
-{{ item.image }}
-{{ item.tags }}
+{{ object.title }}
+{{ object.summary }}
+{{ object.date }}
+{{ object.image }}
+{{ object.tags }}
 ```
 
 ### `{{ collection }}`
@@ -69,37 +69,37 @@ Access via `cms.grid.*` for formatted HTML output:
 
 ### Date Formatting
 ```twig
-{{ cms.grid.date(item.date, 'relative') }}  {# "2 days ago" #}
-{{ cms.grid.date(item.date, 'short') }}     {# "Mar 15, 2024" #}
+{{ cms.grid.date(object.date, 'relative') }}  {# "2 days ago" #}
+{{ cms.grid.date(object.date, 'short') }}     {# "Mar 15, 2024" #}
 ```
 
 ### Text Excerpts
 ```twig
-{{ cms.grid.excerpt(item.summary, 150) }}   {# Truncated with HTML wrapper #}
+{{ cms.grid.excerpt(object.summary, 150) }}   {# Truncated with HTML wrapper #}
 ```
 
 ### Tag Lists
 ```twig
-{{ cms.grid.tags(item.tags) }}              {# Formatted tag list #}
-{{ cms.grid.tags(item.tags, '/tag/') }}     {# With links #}
+{{ cms.grid.tags(object.tags) }}              {# Formatted tag list #}
+{{ cms.grid.tags(object.tags, '/tag/') }}     {# With links #}
 ```
 
 ### Price Formatting
 ```twig
-{{ cms.grid.price(item.price) }}            {# $19.99 with HTML wrapper #}
+{{ cms.grid.price(object.price) }}            {# $19.99 with HTML wrapper #}
 ```
 
 ### Meta Information
 ```twig
-{{ cms.grid.meta(item.author) }}            {# Formatted meta data #}
+{{ cms.grid.meta(object.author) }}            {# Formatted meta data #}
 ```
 
 ## Image Handling
 
 Use `cms.imageFromData()` with the collection context:
 ```twig
-{% if item.image %}
-    {{ cms.imageFromData(item.image, item.id, {w: 400}, {collection: collection}) }}
+{% if object.image %}
+    {{ cms.imageFromData(object.image, object.id, {w: 400}, {collection: collection}) }}
 {% endif %}
 ```
 
@@ -141,13 +141,13 @@ The grid system includes comprehensive CSS with design system variables:
 ### E-commerce Products
 ```twig
 {% cmsgrid cms.objects('products') from 'products' with 'products grid compact' %}
-    {% if item.image %}
-        {{ cms.imageFromData(item.image, item.id, {w: 300, h: 300}, {collection: collection}) }}
+    {% if object.image %}
+        {{ cms.imageFromData(object.image, object.id, {w: 300, h: 300}, {collection: collection}) }}
     {% endif %}
-    <h4>{{ item.name }}</h4>
-    <p class="price">{{ cms.grid.price(item.price) }}</p>
-    {% if item.sale_price %}
-        <p class="sale">{{ cms.grid.price(item.sale_price) }}</p>
+    <h4>{{ object.name }}</h4>
+    <p class="price">{{ cms.grid.price(object.price) }}</p>
+    {% if object.sale_price %}
+        <p class="sale">{{ cms.grid.price(object.sale_price) }}</p>
     {% endif %}
 {% endcmsgrid %}
 ```
@@ -155,10 +155,10 @@ The grid system includes comprehensive CSS with design system variables:
 ### Team Members
 ```twig
 {% cmsgrid cms.objects('team') from 'team' with 'team grid' %}
-    {{ cms.imageFromData(item.photo, item.id, {w: 200, h: 200}, {collection: collection}) }}
-    <h3>{{ item.name }}</h3>
-    <p class="role">{{ item.position }}</p>
-    <p>{{ cms.grid.excerpt(item.bio, 100) }}</p>
+    {{ cms.imageFromData(object.photo, object.id, {w: 200, h: 200}, {collection: collection}) }}
+    <h3>{{ object.name }}</h3>
+    <p class="role">{{ object.position }}</p>
+    <p>{{ cms.grid.excerpt(object.bio, 100) }}</p>
 {% endcmsgrid %}
 ```
 
@@ -177,8 +177,8 @@ The grid system includes comprehensive CSS with design system variables:
     {% if collection == 'blog' %}
         {% include 'grid/blog.twig' %}
     {% elseif collection == 'products' %}
-        <h4>{{ item.name }}</h4>
-        <p>{{ cms.grid.price(item.price) }}</p>
+        <h4>{{ object.name }}</h4>
+        <p>{{ cms.grid.price(object.price) }}</p>
     {% else %}
         {% include 'grid/generic.twig' %}
     {% endif %}

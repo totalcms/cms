@@ -11,7 +11,7 @@ use Twig\TokenParser\AbstractTokenParser;
  *
  * Syntax:
  * {% cmsgrid objects from 'collection' with 'classes' as 'tag' %}
- *   template content with {{ item }} and {{ collection }} variables
+ *   template content with {{ object }} and {{ collection }} variables
  * {% endcmsgrid %}
  */
 final class CmsGridTokenParser extends AbstractTokenParser

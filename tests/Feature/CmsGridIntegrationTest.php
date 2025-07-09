@@ -28,8 +28,8 @@ beforeEach(function () {
 
 test('cmsgrid renders basic grid without errors', function () {
 	$template = '{% cmsgrid objects %}
-		<h3>{{ item.title }}</h3>
-		<p>{{ item.summary }}</p>
+		<h3>{{ object.title }}</h3>
+		<p>{{ object.summary }}</p>
 	{% endcmsgrid %}';
 
 	$loader = new ArrayLoader(['test' => $template]);
@@ -46,7 +46,7 @@ test('cmsgrid renders basic grid without errors', function () {
 
 test('cmsgrid renders with collection context', function () {
 	$template = '{% cmsgrid objects from "blog" %}
-		<h3>{{ item.title }}</h3>
+		<h3>{{ object.title }}</h3>
 		<p>Collection: {{ collection }}</p>
 	{% endcmsgrid %}';
 
@@ -62,7 +62,7 @@ test('cmsgrid renders with collection context', function () {
 
 test('cmsgrid renders with CSS classes', function () {
 	$template = '{% cmsgrid objects with "blog compact" %}
-		<h3>{{ item.title }}</h3>
+		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
 
 	$loader = new ArrayLoader(['test' => $template]);
@@ -76,7 +76,7 @@ test('cmsgrid renders with CSS classes', function () {
 
 test('cmsgrid renders with custom item tag', function () {
 	$template = '{% cmsgrid objects as "article" %}
-		<h3>{{ item.title }}</h3>
+		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
 
 	$loader = new ArrayLoader(['test' => $template]);
@@ -91,7 +91,7 @@ test('cmsgrid renders with custom item tag', function () {
 
 test('cmsgrid renders with full syntax', function () {
 	$template = '{% cmsgrid objects from "products" with "grid wide" as "section" %}
-		<h4>{{ item.title }}</h4>
+		<h4>{{ object.title }}</h4>
 		<p>From: {{ collection }}</p>
 	{% endcmsgrid %}';
 
@@ -108,8 +108,8 @@ test('cmsgrid renders with full syntax', function () {
 
 test('cmsgrid works with grid helper methods via mock', function () {
 	$template = '{% cmsgrid objects from "blog" %}
-		<h3>{{ item.title }}</h3>
-		<div class="meta">{{ item.date }}</div>
+		<h3>{{ object.title }}</h3>
+		<div class="meta">{{ object.date }}</div>
 	{% endcmsgrid %}';
 
 	$loader = new ArrayLoader(['test' => $template]);
@@ -124,7 +124,7 @@ test('cmsgrid works with grid helper methods via mock', function () {
 
 test('cmsgrid handles empty objects array', function () {
 	$template = '{% cmsgrid objects %}
-		<h3>{{ item.title }}</h3>
+		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
 
 	$loader = new ArrayLoader(['test' => $template]);
@@ -139,7 +139,7 @@ test('cmsgrid handles empty objects array', function () {
 
 test('cmsgrid handles null objects', function () {
 	$template = '{% cmsgrid objects %}
-		<h3>{{ item.title }}</h3>
+		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
 
 	$loader = new ArrayLoader(['test' => $template]);
@@ -154,14 +154,14 @@ test('cmsgrid handles null objects', function () {
 
 test('cmsgrid renders complex templates', function () {
 	$template = '{% cmsgrid objects from "blog" with "blog list" %}
-		{% if item.image %}
-			<div class="image">Image: {{ item.image.src }}</div>
+		{% if object.image %}
+			<div class="image">Image: {{ object.image.src }}</div>
 		{% endif %}
-		<h3>{{ item.title }}</h3>
-		<p>{{ item.summary }}</p>
-		{% if item.tags %}
+		<h3>{{ object.title }}</h3>
+		<p>{{ object.summary }}</p>
+		{% if object.tags %}
 			<div class="tags">
-				{% for tag in item.tags %}
+				{% for tag in object.tags %}
 					<span>{{ tag }}</span>{% if not loop.last %}, {% endif %}
 				{% endfor %}
 			</div>
@@ -191,8 +191,8 @@ test('price filter integration works', function () {
 	];
 
 	$template = '{% cmsgrid products %}
-		<h4>{{ item.name }}</h4>
-		<span class="price">{{ item.price|price }}</span>
+		<h4>{{ object.name }}</h4>
+		<span class="price">{{ object.price|price }}</span>
 	{% endcmsgrid %}';
 
 	$loader = new ArrayLoader(['test' => $template]);
