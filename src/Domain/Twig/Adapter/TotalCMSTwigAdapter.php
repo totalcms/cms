@@ -768,7 +768,6 @@ NGINX;
 		return PaginationGenerator::fullPagination(...func_get_args());
 	}
 
-
 	/**
 	 * @param array<string,string|int> $imageworks
 	 * @param array<string,mixed> $options
@@ -808,12 +807,13 @@ NGINX;
 	}
 
 	/**
-	 * Create image HTML from provided image data (without fetching from CMS)
+	 * Create image HTML from provided image data (without fetching from CMS).
 	 *
 	 * @param array<string,mixed> $imageData Image data array
 	 * @param string $id of the object with the image
 	 * @param array<string,string|int> $imageworks Imageworks processing options
 	 * @param array<string,mixed> $options Additional options
+	 *
 	 * @return string Image HTML
 	 */
 	public function imageFromData(array $imageData, string $id, array $imageworks = [], array $options = []): string

@@ -135,6 +135,7 @@ class HTMLUtils
 
 	/**
 	 * @param array<string,mixed> $data
+	 *
 	 * @return array<string,mixed>
 	 */
 	public static function dataAttributes(array $data): array
@@ -143,11 +144,13 @@ class HTMLUtils
 		foreach ($data as $key => $value) {
 			$attributes["data-$key"] = $value;
 		}
+
 		return $attributes;
 	}
 
 	/**
 	 * @param array<string,mixed> $aria
+	 *
 	 * @return array<string,mixed>
 	 */
 	public static function ariaAttributes(array $aria): array
@@ -156,6 +159,7 @@ class HTMLUtils
 		foreach ($aria as $key => $value) {
 			$attributes["aria-$key"] = $value;
 		}
+
 		return $attributes;
 	}
 
@@ -197,6 +201,7 @@ class HTMLUtils
 		if (!empty($datetime)) {
 			$attributes['datetime'] = $datetime;
 		}
+
 		return self::element('time', $formatted, $attributes);
 	}
 
@@ -232,6 +237,7 @@ class HTMLUtils
 	public static function card(string $content, array $attributes = []): string
 	{
 		$attributes['class'] = self::mergeClasses($attributes['class'] ?? '', 'cms-card');
+
 		return self::article($content, $attributes);
 	}
 
@@ -254,10 +260,10 @@ class HTMLUtils
 			$tagContent = htmlspecialchars($tag, ENT_QUOTES, 'UTF-8');
 
 			if (!empty($linkBase)) {
-				$tagUrl = rtrim($linkBase, '/') . '/' . urlencode($tag);
+				$tagUrl        = rtrim($linkBase, '/') . '/' . urlencode($tag);
 				$tagElements[] = self::element('a', $tagContent, [
-					'href' => $tagUrl,
-					'class' => 'tag'
+					'href'  => $tagUrl,
+					'class' => 'tag',
 				]);
 				continue;
 			}
@@ -266,6 +272,7 @@ class HTMLUtils
 		}
 
 		$attributes['class'] = self::mergeClasses($attributes['class'] ?? '', 'cms-tags');
+
 		return self::element('div', implode('', $tagElements), $attributes);
 	}
 
@@ -273,6 +280,7 @@ class HTMLUtils
 	public static function metaData(string $content, array $attributes = []): string
 	{
 		$attributes['class'] = self::mergeClasses($attributes['class'] ?? '', 'cms-meta');
+
 		return self::element('span', $content, $attributes);
 	}
 
@@ -282,17 +290,18 @@ class HTMLUtils
 	public static function imageWithCaption(string $imageSrc, string $caption = '', array $options = []): string
 	{
 		$imageAttrs = [
-			'src' => $imageSrc,
-			'alt' => $options['alt'] ?? '',
-			'loading' => $options['loading'] ?? 'lazy',
-			'draggable' => 'false',
-			'oncontextmenu' => 'return false;'
+			'src'           => $imageSrc,
+			'alt'           => $options['alt'] ?? '',
+			'loading'       => $options['loading'] ?? 'lazy',
+			'draggable'     => 'false',
+			'oncontextmenu' => 'return false;',
 		];
 
 		$image = self::inlineElement('img', $imageAttrs);
 
 		if (!empty($caption)) {
 			$figcaption = self::figcaption($caption);
+
 			return self::figure($image . $figcaption, $options['figureAttrs'] ?? []);
 		}
 
@@ -307,6 +316,7 @@ class HTMLUtils
 	public static function link(string $content, string $href, array $attributes = []): string
 	{
 		$attributes['href'] = $href;
+
 		return self::element('a', $content, $attributes);
 	}
 
@@ -329,6 +339,7 @@ class HTMLUtils
 		}
 
 		$attributes['class'] = self::mergeClasses($attributes['class'] ?? '', 'cms-link-list');
+
 		return self::element('ul', implode('', $linkElements), $attributes);
 	}
 }

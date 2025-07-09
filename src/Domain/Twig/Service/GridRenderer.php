@@ -6,21 +6,21 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
 /**
- * Service for rendering CMS grids
+ * Service for rendering CMS grids.
  *
  * Handles grid template generation, auto-detection, and processing
  */
 final class GridRenderer
 {
-
 	// -------------------------
 	// Grid Helper Methods (accessible via cms.grid.*)
 	// -------------------------
 
 	/**
-	 * Format meta information for grid display
+	 * Format meta information for grid display.
 	 *
 	 * @param string $data Meta data (date, author, etc.)
+	 *
 	 * @return string Formatted meta HTML
 	 */
 	public function meta(string $data): string
@@ -33,10 +33,11 @@ final class GridRenderer
 	}
 
 	/**
-	 * Format tags for grid display
+	 * Format tags for grid display.
 	 *
 	 * @param array<string>|string|null $tags Tags array or comma-separated string
 	 * @param string|null $linkBase Base URL for tag links (null for no links)
+	 *
 	 * @return string Formatted tags HTML
 	 */
 	public function tags(array|string|null $tags, ?string $linkBase = null): string
@@ -53,10 +54,11 @@ final class GridRenderer
 	}
 
 	/**
-	 * Format date for grid display
+	 * Format date for grid display.
 	 *
 	 * @param string $date Date string or timestamp
 	 * @param string $format Format type (relative, short, long, custom)
+	 *
 	 * @return string Formatted date HTML
 	 */
 	public function date(string $date, string $format = 'relative'): string
@@ -69,11 +71,12 @@ final class GridRenderer
 	}
 
 	/**
-	 * Format excerpt for grid display
+	 * Format excerpt for grid display.
 	 *
 	 * @param string|null $text Text to excerpt
 	 * @param int $length Maximum length in characters
 	 * @param string $suffix Suffix to append when truncated
+	 *
 	 * @return string Formatted excerpt HTML
 	 */
 	public function excerpt(?string $text, int $length = 100, string $suffix = '…'): string
@@ -100,11 +103,12 @@ final class GridRenderer
 	}
 
 	/**
-	 * Format price for grid display with HTML wrapper
+	 * Format price for grid display with HTML wrapper.
 	 *
 	 * @param mixed $price Price value
 	 * @param string $currency Currency symbol or code
 	 * @param string $format Format type (prepend, append, none)
+	 *
 	 * @return string Formatted price HTML
 	 */
 	public function price(mixed $price, string $currency = '$', string $format = 'prepend'): string

@@ -2,12 +2,11 @@
 
 namespace TotalCMS\Domain\Twig\Extension;
 
-use Twig\Node\Node;
 use Twig\Compiler;
-use Twig\Node\Expression\ConstantExpression;
+use Twig\Node\Node;
 
 /**
- * Node for the {% cmsgrid %} Twig tag
+ * Node for the {% cmsgrid %} Twig tag.
  *
  * Compiles to PHP code that generates grid HTML
  */
@@ -20,10 +19,10 @@ final class CmsGridNode extends Node
 		?Node $itemTag,
 		Node $template,
 		int $lineno,
-		string $tag = 'cmsgrid'
+		string $tag = 'cmsgrid',
 	) {
 		$nodes = [
-			'objects' => $objects,
+			'objects'  => $objects,
 			'template' => $template,
 		];
 
