@@ -74,7 +74,7 @@
 			"label"   : "Content",
 			"help"    : "Main blog post content",
 			"field"   : "styledtext",
-			"factory" : "styledtext(1,8,true,true)"
+			"factory" : "styledtext(1,8,true)"
 		},
 		"extra": {
 			"type"    : "string",

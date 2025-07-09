@@ -140,7 +140,7 @@ class FakerExtension extends Base
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 */
-	public static function styledtext(int $minParagraphs = 3, int $maxParagraphs = 6, bool $includeHeadings = false, bool $includeLists = true): string
+	public static function styledtext(int $minParagraphs = 3, int $maxParagraphs = 6, bool $includeLists = true, bool $includeHeadings = false): string
 	{
 		$content        = [];
 		$paragraphCount = self::numberBetween($minParagraphs, $maxParagraphs);
