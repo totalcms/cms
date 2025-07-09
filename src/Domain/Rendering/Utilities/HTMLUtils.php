@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Rendering\Utilities;
 
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
+
 /**
  * HTML Utilities.
  */
@@ -168,12 +170,34 @@ class HTMLUtils
 	}
 
 	/** @param array<string,mixed> $attributes */
-	public static function time(string $content, string $datetime = '', array $attributes = []): string
+	public static function time(string $date, string $format = 'relative', array $attributes = []): string
 	{
+		// Use existing Chronos date filters
+		switch ($format) {
+			case 'relative':
+				$formatted = TotalCMSTwigFilters::dateRelative($date);
+				break;
+			case 'short':
+				$formatted = TotalCMSTwigFilters::dateFormat($date, 'M j, Y');
+				break;
+			case 'long':
+				$formatted = TotalCMSTwigFilters::dateFormat($date, 'F j, Y');
+				break;
+			case 'iso':
+				$formatted = TotalCMSTwigFilters::dateFormat($date, 'c');
+				break;
+			default:
+				// Custom format - pass directly to dateFormat
+				$formatted = TotalCMSTwigFilters::dateFormat($date, $format);
+		}
+
+		// Get ISO datetime for the datetime attribute
+		$datetime = TotalCMSTwigFilters::dateFormat($date, 'c');
+
 		if (!empty($datetime)) {
 			$attributes['datetime'] = $datetime;
 		}
-		return self::element('time', $content, $attributes);
+		return self::element('time', $formatted, $attributes);
 	}
 
 	/** @param array<string,mixed> $attributes */
@@ -246,9 +270,9 @@ class HTMLUtils
 	}
 
 	/** @param array<string,mixed> $attributes */
-	public static function metaData(string $content, string $type = 'default', array $attributes = []): string
+	public static function metaData(string $content, array $attributes = []): string
 	{
-		$attributes['class'] = self::mergeClasses($attributes['class'] ?? '', 'cms-meta', "cms-meta-$type");
+		$attributes['class'] = self::mergeClasses($attributes['class'] ?? '', 'cms-meta');
 		return self::element('span', $content, $attributes);
 	}
 

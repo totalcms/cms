@@ -1,0 +1,20 @@
+{# Blog Grid Item Template #}
+{% if item.image %}
+    <div class="cms-image">
+        {{ cms.imageFromData(item.image, item.id, {}, {collection: 'blog'}) }}
+    </div>
+{% endif %}
+
+<h3 class="cms-title">{{ item.title }}</h3>
+
+{% if item.date %}
+	{{ cms.grid.meta(cms.grid.date(item.date, 'relative')) }}
+{% endif %}
+
+{% if item.summary %}
+	{{ cms.grid.excerpt(item.summary, 150) }}
+{% endif %}
+
+{% if item.tags %}
+	{{ cms.grid.tags(item.tags) }}
+{% endif %}

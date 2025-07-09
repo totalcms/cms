@@ -46,7 +46,6 @@ final class TotalCMSTwigAdapter
 	public string $logout;
 	public string $domain;
 	public string $clearcache;
-	public GridRenderer $grid;
 
 	public function __construct(
 		private Config $config,
@@ -65,7 +64,7 @@ final class TotalCMSTwigAdapter
 		private AccessManager $accessManager,
 		private FileAccessManager $fileAccessManager,
 		public ImageCacheService $imageCacheService,
-		private GridRenderer $gridRenderer,
+		public GridRenderer $grid,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
@@ -73,10 +72,6 @@ final class TotalCMSTwigAdapter
 		$this->dashboard  = $this->api . '/admin';
 		$this->logout     = $this->api . '/logout';
 		$this->domain     = $this->getDomainName();
-		
-		// Set up grid renderer with image callback and expose as public property
-		$this->gridRenderer->setImageCallback([$this, 'image']);
-		$this->grid = $this->gridRenderer;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -569,7 +564,7 @@ NGINX;
 
 	/**
 	 * @param array<string,string> $fileOptions
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 */
 	public function depotDownload(string $id, string $name, array $fileOptions = [], array $options = []): string
 	{
@@ -634,7 +629,7 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -655,7 +650,7 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -731,7 +726,7 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 *
 	 * @return array<array<string,string|int>>
 	 */
@@ -773,29 +768,17 @@ NGINX;
 		return PaginationGenerator::fullPagination(...func_get_args());
 	}
 
-	/**
-	 * Generate a CMS grid layout for displaying collections
-	 * 
-	 * @param array<array<string,mixed>> $objects Array of objects to display
-	 * @param string $classes CSS classes for the grid container
-	 * @param string $itemTag HTML tag for grid items (default: 'div')
-	 * @param string|null $template Template string for each item (uses auto-detection if null)
-	 * @return string HTML grid markup
-	 */
-	public function grid(array $objects, string $classes = '', string $itemTag = 'div', ?string $template = null): string
-	{
-		return $this->gridRenderer->render($objects, $classes, $itemTag, $template);
-	}
 
 	/**
-	 * @param array<string,string> $options
 	 * @param array<string,string|int> $imageworks
+	 * @param array<string,mixed> $options
 	 */
 	public function image(?string $id, array $imageworks = [], array $options = []): string
 	{
 		$options = array_merge([
 			'collection' => 'image',
 			'property'   => 'image',
+			'loading'    => 'lazy',
 		], $options);
 
 		if (empty($id)) {
@@ -812,6 +795,7 @@ NGINX;
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
 			'alt'           => $image['alt'],
+			'loading'       => $options['loading'],
 			'draggable'     => 'false',
 			'oncontextmenu' => 'return false;',
 		]);
@@ -823,9 +807,60 @@ NGINX;
 		return $html;
 	}
 
+	/**
+	 * Create image HTML from provided image data (without fetching from CMS)
+	 *
+	 * @param array<string,mixed> $imageData Image data array
+	 * @param string $id of the object with the image
+	 * @param array<string,string|int> $imageworks Imageworks processing options
+	 * @param array<string,mixed> $options Additional options
+	 * @return string Image HTML
+	 */
+	public function imageFromData(array $imageData, string $id, array $imageworks = [], array $options = []): string
+	{
+		if (empty($imageData)) {
+			return '';
+		}
+
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+			'loading'    => 'lazy',
+		], $options);
+
+		if (empty($id)) {
+			return '';
+		}
+
+		// Build path using buildImageworksAPI if we have enough data
+		$imagePath = self::buildImageworksAPI($this->api, $id, $imageData, $imageworks, $options);
+		if (empty($imagePath)) {
+			return '';
+		}
+
+		// Get alt text from various possible keys
+		$alt = $imageData['alt'] ?? $imageData['exif']['title'] ?? $imageData['exif']['description'] ?? $id;
+
+		$html = HTMLUtils::inlineElement('img', [
+			'src'           => $imagePath,
+			'alt'           => $alt,
+			'loading'       => $options['loading'],
+			'draggable'     => 'false',
+			'oncontextmenu' => 'return false;',
+		]);
+
+		// Add link wrapper if present
+		$link = $imageData['link'] ?? '';
+		if (!empty($link)) {
+			$html = HTMLUtils::element('a', $html, ['href' => $link]);
+		}
+
+		return $html;
+	}
+
 	// Get the image path for an image property
 	/**
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
 	public function imagePath(?string $id, array $imageworks = [], array $options = []): string
@@ -852,7 +887,7 @@ NGINX;
 
 	/**
 	 * @param array<string,mixed> $image
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
 	public static function buildImageworksAPI(string $api, string $id, array $image, array $imageworks = [], array $options = []): string
@@ -912,7 +947,7 @@ NGINX;
 	/**
 	 * @param array<string,string|int> $thumbSettings
 	 * @param array<string,string|int> $fullSettings
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 */
 	public function gallery(string $id, array $thumbSettings = [], array $fullSettings = [], array $options = []): string
 	{
@@ -978,7 +1013,7 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
 	public function galleryImage(?string $id, ?string $name, array $imageworks = [], array $options = []): string
@@ -1017,7 +1052,7 @@ NGINX;
 
 	// get an image object from inside a gallery by it's name
 	/**
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -1045,7 +1080,7 @@ NGINX;
 	}
 
 	/**
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
 	public function galleryPath(?string $id, ?string $name, array $imageworks = [], array $options = []): string
@@ -1066,7 +1101,7 @@ NGINX;
 
 	/**
 	 * @param array<string,mixed> $image
-	 * @param array<string,string> $options
+	 * @param array<string,mixed> $options
 	 * @param array<string,string|int> $imageworks
 	 */
 	public static function buildImageworksGalleryAPI(string $baseapi, string $id, string $name, array $image, array $imageworks = [], array $options = []): string
