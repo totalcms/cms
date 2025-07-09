@@ -670,15 +670,21 @@ NGINX;
 		return strval($this->data($options['collection'], $id, $options['property']));
 	}
 
-	/** @param array<string,string> $options */
-	public function email(string $id, array $options = []): string
+	/**
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 * @param array<string,string> $options
+	 */
+	public function email(string $id, array $options = [], bool $obfuscate = false): string
 	{
 		$options = array_merge([
 			'collection' => 'email',
 			'property'   => 'email',
 		], $options);
 
-		return strval($this->data($options['collection'], $id, $options['property']));
+		$email = strval($this->data($options['collection'], $id, $options['property']));
+
+		return $obfuscate ? HTMLUtils::htmlencode($email) : $email;
 	}
 
 	/** @param array<string,string> $options */

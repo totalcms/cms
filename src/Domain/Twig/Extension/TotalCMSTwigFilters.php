@@ -6,6 +6,7 @@ use Cake\Chronos\Chronos;
 use TotalCMS\Domain\Collection\Utilities\CollectionRefiner;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Property\Data\ColorData;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Support\Config;
 use Twig\TwigFilter;
@@ -69,6 +70,7 @@ final class TotalCMSTwigFilters
 		'chroma',
 		'hue',
 		'adjustColor',
+		'htmlencode',
 		'obfuscate',
 		'deobfuscate',
 		'encrypt',
@@ -126,6 +128,11 @@ final class TotalCMSTwigFilters
 	public static function titleize(string $slug, string $sep = '-'): string
 	{
 		return ucwords(str_replace($sep, ' ', $slug));
+	}
+
+	public static function htmlencode(string $string): string
+	{
+		return HTMLUtils::htmlencode($string);
 	}
 
 	public static function obfuscate(string $string): string

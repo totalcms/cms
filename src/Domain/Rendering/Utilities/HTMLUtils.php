@@ -54,6 +54,16 @@ class HTMLUtils
 		return $element;
 	}
 
+	// Useful for obfuscating email addresses
+	public static function htmlencode(string $content): string
+	{
+		$encoded = '';
+		foreach (str_split($content) as $char) {
+			$encoded .= '&#' . ord($char) . ';';
+		}
+		return $encoded;
+	}
+
 	/** @param array<string,mixed> $attributes */
 	public static function details(string $title, string $content, string $class = '', array $attributes = []): string
 	{
