@@ -99,7 +99,7 @@ final class GridRenderer
 			$text .= $suffix;
 		}
 
-		return HTMLUtils::element('div', $text, ['class' => 'cms-excerpt']);
+		return HTMLUtils::element('p', $text, ['class' => 'cms-excerpt']);
 	}
 
 	/**
