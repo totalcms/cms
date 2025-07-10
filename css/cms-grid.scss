@@ -164,18 +164,67 @@
 
 		.cms-grid-item {
 			display               : grid;
-			grid-template-columns : auto 1fr;
-			gap                   : var(--cms-card-padding);
-			align-items           : start;
+			grid-template-columns : 200px 1fr;
+			gap                   : 0; /* Remove gap to allow image to be flush */
+			align-items           : stretch;
+			overflow              : visible;
+			padding               : 0; /* Remove padding from grid item */
 
 			.cms-image {
 				margin        : 0;
-				width         : 150px;
-				border-radius : var(--cms-image-border-radius);
+				width         : 200px;
+				min-height    : 100%;
+				border-radius : var(--cms-card-border-radius) 0 0 var(--cms-card-border-radius);
+				overflow      : hidden;
+				position      : relative;
+				
+				img {
+					position   : absolute;
+					top        : 0;
+					left       : 0;
+					width      : 100%;
+					height     : 100%;
+					object-fit : cover;
+					display    : block;
+				}
 			}
 
 			.cms-content {
-				min-width : 0;  /* Prevents text overflow */
+				min-width      : 0;  /* Prevents text overflow */
+				display        : flex;
+				flex-direction : column;
+				padding        : var(--cms-card-padding);
+			}
+		}
+		
+		/* Responsive adjustments for list view */
+		@media (max-width: 600px) {
+			.cms-grid-item {
+				grid-template-columns : 120px 1fr;
+				
+				.cms-image {
+					width : 120px;
+				}
+			}
+		}
+		
+		@media (max-width: 480px) {
+			.cms-grid-item {
+				grid-template-columns : 1fr;
+				grid-template-rows    : 200px auto;
+				padding               : var(--cms-card-padding);
+				
+				.cms-image {
+					margin        : calc(var(--cms-card-padding) * -1) calc(var(--cms-card-padding) * -1) var(--cms-item-spacing);
+					width         : auto;
+					height        : 200px;
+					min-height    : auto;
+					border-radius : var(--cms-image-border-radius) var(--cms-image-border-radius) 0 0;
+				}
+				
+				.cms-content {
+					padding : 0;
+				}
 			}
 		}
 	}
