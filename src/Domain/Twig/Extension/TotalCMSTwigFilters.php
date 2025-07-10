@@ -405,13 +405,13 @@ final class TotalCMSTwigFilters
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
-	 * @param string $string
-	 * @param int $length
-	 * @param bool $keepWords
 	 */
-	public static function truncate(string $string, int $length, bool $keepWords = false): string
+	public static function truncate(?string $string, int $length, bool $keepWords = false): string
 	{
+		if (empty($string)) {
+			return '';
+		}
+
 		$string = strip_tags($string);
 
 		if (strlen($string) > $length) {

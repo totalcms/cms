@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
+use TotalCMS\TotalCMS;
 
 /**
  * Service for rendering CMS grids.
@@ -75,29 +76,12 @@ final class GridRenderer
 	 *
 	 * @param string|null $text Text to excerpt
 	 * @param int $length Maximum length in characters
-	 * @param string $suffix Suffix to append when truncated
 	 *
 	 * @return string Formatted excerpt HTML
 	 */
-	public function excerpt(?string $text, int $length = 100, string $suffix = '…'): string
+	public function excerpt(?string $text, int $length = 100): string
 	{
-		if (empty($text)) {
-			return '';
-		}
-
-		// Strip HTML tags
-		$text = strip_tags($text);
-
-		// Truncate if needed
-		if (strlen($text) > $length) {
-			$text = substr($text, 0, $length);
-			// Find last space to avoid cutting words
-			$lastSpace = strrpos($text, ' ');
-			if ($lastSpace !== false && $lastSpace > $length * 0.8) {
-				$text = substr($text, 0, $lastSpace);
-			}
-			$text .= $suffix;
-		}
+		$text = TotalCMSTwigFilters::truncate($text, $length, true);
 
 		return HTMLUtils::element('p', $text, ['class' => 'cms-excerpt']);
 	}
