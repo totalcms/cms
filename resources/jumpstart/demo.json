@@ -4,7 +4,7 @@
       "count": 7,
       "data": {
         "image": "imageBlur",
-        "tags": "tags(1, 5)"
+        "tags": "tags(1,5,news,review,opinion,feature,interview,announcement)"
       },
       "collection": "blog"
     },

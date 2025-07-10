@@ -121,18 +121,28 @@ class FakerExtension extends Base
 	}
 
 	/**
-	 * @param array<string> $choices
+	 * Generate tags with optional choices using variable arguments
+	 * Usage: tags(1,5) or tags(1,5,'news','review','opinion','feature').
 	 *
 	 * @return array<string>
 	 * */
-	public static function tags(int $min = 0, int $max = 4, array $choices = []): array
+	public static function tags(int $min = 0, int $max = 4): array
 	{
-		shuffle($choices);
-		$words = empty($choices) ?
-			array_unique((array)Lorem::words(self::numberBetween($min, $max), false)) :
-			array_slice($choices, 0, self::numberBetween($min, $max));
+		$args = func_get_args();
 
-		return array_values($words);
+		// Extract choices from arguments after min and max
+		$choices = array_slice($args, 2);
+
+		// If choices were provided, use them
+		if (!empty($choices)) {
+			shuffle($choices);
+			$count = self::numberBetween($min, min($max, count($choices)));
+
+			return array_slice($choices, 0, $count);
+		}
+
+		// Otherwise generate random words
+		return array_values(array_unique((array)Lorem::words(self::numberBetween($min, $max), false)));
 	}
 
 	/**
