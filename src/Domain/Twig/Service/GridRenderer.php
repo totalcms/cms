@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
-use TotalCMS\TotalCMS;
 
 /**
  * Service for rendering CMS grids.

@@ -74,23 +74,23 @@ class HTMLUtils
 		string $title   = '',
 	): string {
 		$email = trim($email);
-		
+
 		// Encode the email parts
 		$emailParts = explode('@', $email);
 		if (count($emailParts) !== 2) {
 			// Invalid email, return encoded version
 			return self::element('span', self::htmlencode($email), ['class' => 'invalid-email']);
 		}
-		
-		$user = $emailParts[0];
+
+		$user   = $emailParts[0];
 		$domain = $emailParts[1];
-		
+
 		// Create data attributes for the email parts
 		$dataAttrs = [
-			'data-user' => base64_encode($user),
+			'data-user'   => base64_encode($user),
 			'data-domain' => base64_encode($domain),
 		];
-		
+
 		// Add optional parameters if provided
 		if (!empty($subject)) {
 			$dataAttrs['data-subject'] = base64_encode(trim($subject));
@@ -104,12 +104,12 @@ class HTMLUtils
 		if (!empty($bcc)) {
 			$dataAttrs['data-bcc'] = base64_encode(trim($bcc));
 		}
-		
+
 		// Default title
 		if (empty($title)) {
-			$title = empty($subject) ? "Email" : htmlentities($subject);
+			$title = empty($subject) ? 'Email' : htmlentities($subject);
 		}
-		
+
 		// Create a span that will be converted to a link via JavaScript
 		return self::element('span', self::htmlencode($email), array_merge([
 			'class' => 'mailto-obfuscated',
