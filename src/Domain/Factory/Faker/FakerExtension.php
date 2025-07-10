@@ -51,6 +51,16 @@ class FakerExtension extends Base
 
 	public static function imageShapes(int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
 	{
+		$args = func_get_args();
+
+		// Extract color choices from arguments after width, height, and bgColor
+		$colorChoices = array_slice($args, 3);
+
+		// If color choices were provided, randomly pick one
+		if (!empty($colorChoices)) {
+			$bgColor = $colorChoices[array_rand($colorChoices)];
+		}
+
 		return FakerImageGD::imageShapes(self::$dir, $width, $height, $bgColor);
 	}
 
@@ -112,9 +122,19 @@ class FakerExtension extends Base
 	/** @return array<string> */
 	public static function galleryShapes(int $count = 3, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): array
 	{
+		$args = func_get_args();
+
+		// Extract color choices from arguments after count, width, height, and bgColor
+		$colorChoices = array_slice($args, 4);
+
 		$images = [];
 		for ($i = 0; $i < $count; $i++) {
-			$images[] = self::imageShapes($width, $height, $bgColor);
+			// If color choices were provided, randomly pick one for each image
+			$currentBgColor = $bgColor;
+			if (!empty($colorChoices)) {
+				$currentBgColor = $colorChoices[array_rand($colorChoices)];
+			}
+			$images[] = self::imageShapes($width, $height, $currentBgColor);
 		}
 
 		return $images;

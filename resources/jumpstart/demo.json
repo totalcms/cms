@@ -14,6 +14,9 @@
     },
     {
       "count": 11,
+      "data": {
+        "image": "imageShapes(1280,720,1B3854,517491,f8f8f8,2F4C6A,f2f2f2,fcfcfc)"
+      },
       "collection": "feed"
     },
     {
@@ -154,6 +157,22 @@
         "labelPlural": "Posts",
         "schema": "blog",
         "url": "/blog/post.php",
+        "labelSingular": "Post",
+        "sortBy": "id",
+        "groups": [
+        ],
+        "reverseSort": false,
+        "prettyUrl": false
+      },
+      {
+        "id": "feed",
+        "category": "",
+        "description": "A collection of feed objects that conform to the feed schema.",
+        "name": "Feed",
+        "queueRebuildOnSave": false,
+        "labelPlural": "Posts",
+        "schema": "feed",
+        "url": "/feed/post.php",
         "labelSingular": "Post",
         "sortBy": "id",
         "groups": [
