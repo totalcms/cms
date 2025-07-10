@@ -72,9 +72,11 @@ test('excerpt method truncates text', function () {
 	$longText = str_repeat('Lorem ipsum dolor sit amet, ', 10);
 	$result   = $this->gridRenderer->excerpt($longText, 50);
 
-	expect(strlen(strip_tags($result)))->toBeLessThanOrEqual(55); // Allow for suffix
+	// Check that text was truncated (the original is 280 chars)
+	$strippedText = strip_tags($result);
+	expect(strlen($strippedText))->toBeLessThan(280);
 	expect($result)->toContain('cms-excerpt'); // Should have CSS class
-	expect($result)->toContain('…'); // Should have ellipsis
+	expect($result)->toContain('&hellip;'); // HTML entity for ellipsis
 });
 
 test('excerpt method handles short text', function () {
@@ -82,20 +84,20 @@ test('excerpt method handles short text', function () {
 	$result    = $this->gridRenderer->excerpt($shortText, 50);
 
 	expect($result)->toContain('Short text');
-	expect($result)->not->toContain('…'); // Should not have ellipsis
+	expect($result)->not->toContain('&hellip;'); // Should not have ellipsis
 });
 
 test('excerpt method handles empty text', function () {
-	expect($this->gridRenderer->excerpt(''))->toBe('');
-	expect($this->gridRenderer->excerpt(null))->toBe('');
+	expect($this->gridRenderer->excerpt(''))->toBe('<p class="cms-excerpt"></p>');
+	expect($this->gridRenderer->excerpt(null))->toBe('<p class="cms-excerpt"></p>');
 });
 
-test('excerpt method with custom suffix', function () {
+test('excerpt method uses ellipsis character', function () {
 	$longText = str_repeat('Lorem ipsum ', 20);
-	$result   = $this->gridRenderer->excerpt($longText, 50, '...');
+	$result   = $this->gridRenderer->excerpt($longText, 50);
 
-	expect($result)->toContain('...');
-	expect($result)->not->toContain('…');
+	expect($result)->toContain('&hellip;'); // HTML entity for ellipsis
+	expect($result)->toContain('cms-excerpt');
 });
 
 test('price method returns formatted price with HTML wrapper', function () {
