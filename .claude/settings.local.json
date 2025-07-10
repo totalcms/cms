@@ -25,7 +25,8 @@
       "Bash(git log:*)",
       "Bash(mv:*)",
       "Bash(sed:*)",
-      "Bash(vendor/bin/pest:*)"
+      "Bash(vendor/bin/pest:*)",
+      "Bash(git tag:*)"
     ],
     "deny": []
   }
