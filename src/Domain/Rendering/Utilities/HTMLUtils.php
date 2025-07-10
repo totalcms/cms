@@ -65,6 +65,59 @@ class HTMLUtils
 		return $encoded;
 	}
 
+	public static function mailtoLink(
+		string $email,
+		string $subject = '',
+		string $body    = '',
+		string $cc      = '',
+		string $bcc     = '',
+		string $title   = '',
+	): string {
+		$email = trim($email);
+		
+		// Encode the email parts
+		$emailParts = explode('@', $email);
+		if (count($emailParts) !== 2) {
+			// Invalid email, return encoded version
+			return self::element('span', self::htmlencode($email), ['class' => 'invalid-email']);
+		}
+		
+		$user = $emailParts[0];
+		$domain = $emailParts[1];
+		
+		// Create data attributes for the email parts
+		$dataAttrs = [
+			'data-user' => base64_encode($user),
+			'data-domain' => base64_encode($domain),
+		];
+		
+		// Add optional parameters if provided
+		if (!empty($subject)) {
+			$dataAttrs['data-subject'] = base64_encode(trim($subject));
+		}
+		if (!empty($body)) {
+			$dataAttrs['data-body'] = base64_encode(trim($body));
+		}
+		if (!empty($cc)) {
+			$dataAttrs['data-cc'] = base64_encode(trim($cc));
+		}
+		if (!empty($bcc)) {
+			$dataAttrs['data-bcc'] = base64_encode(trim($bcc));
+		}
+		
+		// Default title
+		if (empty($title)) {
+			$title = empty($subject) ? "Email" : htmlentities($subject);
+		}
+		
+		// Create a span that will be converted to a link via JavaScript
+		return self::element('span', self::htmlencode($email), array_merge([
+			'class' => 'mailto-obfuscated',
+			'title' => $title,
+			'style' => 'cursor:pointer;text-decoration:underline;',
+		], $dataAttrs));
+	}
+
 	/** @param array<string,mixed> $attributes */
 	public static function details(string $title, string $content, string $class = '', array $attributes = []): string
 	{

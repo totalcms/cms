@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig\Extension;
 
 use Cake\Chronos\Chronos;
+use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Domain\Collection\Utilities\CollectionRefiner;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\Property\Data\ColorData;
@@ -93,6 +94,7 @@ final class TotalCMSTwigFilters
 		'dateIsFuture',
 		'dateIsToday',
 		'price',
+		'mailto',
 	];
 
 	/** @return array<TwigFilter> */
@@ -175,6 +177,11 @@ final class TotalCMSTwigFilters
 			</symbol>
 		</svg>
 		SVG;
+	}
+
+	public static function mailto(string $email, string $subject = '', string $body = '', string $title = ''): string
+	{
+		return HTMLUtils::mailtoLink(email: $email, subject: $subject, body: $body, title: $title);
 	}
 
 	// -------------------------
