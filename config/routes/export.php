@@ -11,5 +11,6 @@ return function (App $app) {
 		$group->get('/collections/{collection}/zip', Export\ExportZipAction::class)->setName('export-zip');
 		$group->get('/schemas/{schema}', Export\ExportSchemaAction::class)->setName('export-schema');
 		$group->get('/jumpstart', Export\ExportJumpStartAction::class)->setName('export-jumpstart');
+		$group->get('/jumpstart/demo', Export\ExportJumpStartDemoAction::class)->setName('export-jumpstart-demo');
 	});
 };

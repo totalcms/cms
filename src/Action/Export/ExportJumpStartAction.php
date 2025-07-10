@@ -14,10 +14,8 @@ final class ExportJumpStartAction
 	) {
 	}
 
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-	): ResponseInterface {
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	{
 		$queryParams = $request->getQueryParams();
 		$name        = $queryParams['name'] ?? '';
 		$description = $queryParams['description'] ?? '';

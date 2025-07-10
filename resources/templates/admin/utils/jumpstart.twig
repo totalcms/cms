@@ -1,13 +1,18 @@
 <h1>JumpStart Data</h1>
 
+{% set exportapi = cms.api ~ "/export/jumpstart" %}
+
 <section style="display:grid;align-content:start;gap:3rem">
 
-	<p>JumpStart is a feature of the CMS that allows you to quickly set up a content structure
-	by exporting and importing data in a standardized JSON format. This is particularly useful for
-	creating new projects or sharing content structures with others. See the
-	<a href="docs/jumpstart">JumpStart documentation</a> for more information.</p>
+	<div>
+		<p>JumpStart is a feature of the CMS that allows you to quickly set up a content structure
+		by exporting and importing data in a standardized JSON format. This is particularly useful for
+		creating new projects or sharing content structures with others. See the
+		<a href="docs/jumpstart">JumpStart documentation</a> for more information.</p>
 
-	{% set exportapi = cms.api ~ "/export/jumpstart/" %}
+		<p>You can also download the <a href="{{ exportapi ~ '/demo' }}" download>Demo JumpStart Data</a>
+		to see the structure and format of the JumpStart data.</p>
+	</div>
 
 	<div>
 		<h3>Export JumpStart Data</h3>
