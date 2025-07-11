@@ -12,6 +12,7 @@ use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
+use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Middleware\AuthMiddleware;
 
 return function (App $app) {
@@ -31,6 +32,9 @@ return function (App $app) {
 
 		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
 		$group->post('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils-post');
+
+		$group->get('/playground', AdminPlaygroundAction::class)->setName('admin-playground');
+		$group->post('/playground', AdminPlaygroundAction::class)->setName('admin-playground-post');
 
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
 		$group->post('/settings', AdminSettingsSaveAction::class)->setName('admin-settings-save');

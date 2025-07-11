@@ -67,6 +67,9 @@ body {
 	.docs {
 		mask-image : var(--icon-docs);
 	}
+	.playground {
+		mask-image : var(--icon-twig-playground);
+	}
 }
 
 .dash-content {
