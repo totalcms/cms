@@ -23,11 +23,9 @@
 		"category": {
 			"type"     : "string",
 			"label"    : "Category",
-			"field"    : "list",
+			"field"    : "text",
 			"settings" : {
-				"propertyOptions" : true,
-				"maxItemCount"    : 1,
-				"asString"        : true
+				"propertyOptions" : true
 			}
 		},
         "snippet": {

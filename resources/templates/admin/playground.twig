@@ -8,21 +8,32 @@
 	</header>
 
 	<nav class="links" id="playground-links">
-		<h3>Snippets</h3>
-		{% set snippets = sortByKey(cms.objects("playground")) %}
-		<ul>
+		{% set snippets = cms.objects("playground") %}
 		{% if snippets|length == 0 %}
-			<li class="no-snippets">No snippets found</li>
+			<h3>Snippets</h3>
+			<ul>
+				<li class="no-snippets">No snippets found</li>
+			</ul>
 		{% else %}
+			{% set snippetsByCategory = {} %}
 			{% for snippet in snippets %}
-			<li class="playground-{{snippet.id}}">
-				<a  {% if url.playground == snippet.id %}class="active"{% endif %}
-					href="playground/{{ snippet.id }}"
-					title="{{ snippet.description | escape }}">{{ snippet.name }}</a>
-			</li>
+				{% set category = snippet.category|default('Snippets') %}
+				{% set snippetsByCategory = snippetsByCategory|merge({(category): (snippetsByCategory[category]|default([]))|merge([snippet])}) %}
+			{% endfor %}
+
+			{% for category, categorySnippets in snippetsByCategory %}
+				<h3>{{ category }}</h3>
+				<ul>
+					{% for snippet in sortByKey(categorySnippets) %}
+					<li class="playground-{{snippet.id}}">
+						<a  {% if url.id == snippet.id %}class="active"{% endif %}
+							href="playground/{{ snippet.id }}"
+							title="{{ snippet.description | escape }}">{{ snippet.name }}</a>
+					</li>
+					{% endfor %}
+				</ul>
 			{% endfor %}
 		{% endif %}
-		</ul>
 	</nav>
 
 	<footer>
@@ -32,7 +43,7 @@
 
 <main class="dash-main-content">
 
-<h1><a href="playground">playground</a> / <span>new snippet</span></h1>
+<h1><a href="playground">playground</a> / <span>{{ url.id | default('new snippet') }}</span></h1>
 
 <section class="dash-content-section">
 	<p>Playground allows you to learn twig faster and run it against the data inside of the CMS. After you
