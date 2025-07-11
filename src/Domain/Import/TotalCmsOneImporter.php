@@ -505,6 +505,11 @@ final class TotalCmsOneImporter
 			$collection = $this->collectionFactory->generateCollection($collectionData);
 			$this->collectionRepository->saveCollection($collection);
 
+			// Verify collection was created successfully
+			if (!$this->collectionFetcher->collectionExists($id)) {
+				throw new \RuntimeException(sprintf('Collection %s was not created successfully', $id));
+			}
+
 			$this->logger->info(sprintf('Created collection: %s with schema: %s', $id, $schema));
 		} catch (\Exception $e) {
 			$this->logger->error(sprintf('Error creating collection %s: %s', $id, $e->getMessage()));
