@@ -30,7 +30,7 @@
 		},
         "snippet": {
 			"type"     : "string",
-			"label"    : "Twig Code",
+			"label"    : "Twig Template Code",
 			"help"     : "Type your twig template code here.",
 			"field"    : "code",
 			"settings" : {

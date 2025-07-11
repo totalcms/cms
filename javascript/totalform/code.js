@@ -73,6 +73,13 @@ export default class Code extends TotalField {
 
         // Set up form submission handling
         this.setupFormSubmission();
+
+        // Force a refresh after initialization to ensure proper gutter calculations
+        setTimeout(() => {
+            this.editor.refresh();
+            // Force gutter width to prevent content overlap
+            this.forceGutterWidth();
+        }, 150);
     }
 
     setupAutoResize() {
@@ -98,7 +105,10 @@ export default class Code extends TotalField {
 
         // Resize on content changes
         this.editor.on('changes', () => {
-            setTimeout(resizeEditor, 0);
+            setTimeout(() => {
+                resizeEditor();
+                this.forceGutterWidth();
+            }, 0);
         });
     }
 
@@ -175,6 +185,32 @@ export default class Code extends TotalField {
         if (this.input.hasAttribute('required')) {
             this.input.setAttribute('data-required', 'true');
         }
+    }
+
+    forceGutterWidth() {
+        if (!this.editor) return;
+
+        // Force proper gutter widths to prevent content overlap
+        const wrapper = this.editor.getWrapperElement();
+        const gutters = wrapper.querySelector('.CodeMirror-gutters');
+        const lineNumbers = wrapper.querySelector('.CodeMirror-linenumber');
+        const foldGutter = wrapper.querySelector('.CodeMirror-foldgutter');
+
+        if (gutters) {
+            gutters.style.width = '56px';
+        }
+        if (lineNumbers) {
+            lineNumbers.style.width = '40px';
+            lineNumbers.style.minWidth = '40px';
+        }
+        if (foldGutter) {
+            foldGutter.style.width = '16px';
+        }
+
+        // Force a refresh to apply the changes
+        setTimeout(() => {
+            this.editor.refresh();
+        }, 10);
     }
 
     setValue(value) {

@@ -47,16 +47,16 @@
 		box-sizing: border-box !important; // Include padding in width calculation
 	}
 
-	// Gutter styling
-	.CodeMirror-gutters {
-		width: 40px !important; // Match the line number width
-		border-right: 1px solid oklch(var(--totalform-lightgray));
-		background-color: oklch(var(--totalform-nearwhite));
-	}
-
 	// Fold gutter
 	.CodeMirror-foldgutter {
-		width: 16px;
+		width: 16px !important;
+	}
+
+	// Gutter styling - account for both line numbers and fold gutter
+	.CodeMirror-gutters {
+		width: 56px !important; // Line numbers (40px) + fold gutter (16px)
+		border-right: 1px solid oklch(var(--totalform-lightgray));
+		background-color: oklch(var(--totalform-nearwhite));
 	}
 
 	// Active line highlighting
