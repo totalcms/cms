@@ -36,8 +36,8 @@ final class AdminPlaygroundAction
 				'query'   => $request->getUri()->getQuery(),
 				'page'    => 'playground',
 				'id'      => $args['id'] ?? '',
-				'results' => $render,
 			],
+			'results' => $render,
 		]);
 	}
 }

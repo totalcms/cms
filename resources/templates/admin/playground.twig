@@ -39,7 +39,22 @@
 	type your twig template code below, you can click the <code>Render Twig</code> button to see the output.
 	If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
 
-	{{ cms.form.playground(url.id|default('')) }}
+	{{ cms.form.playground(url.id|default(''), {
+		deleteAction : {
+			"action" : "redirect",
+			"link"   : "playground"
+		},
+	}) }}
+
+	{% set twigfield %}
+		<textarea name="twig" id="twig" class="cms-hide"></textarea>
+	{% endset %}
+	{{ cms.form.simple('playground', twigfield, {
+		class  : "render-playground",
+		method : "POST",
+		label  : "Render Twig",
+		ajax   : false,
+	}) }}
 
 	{% if results %}
 	<section class="playground-results">
@@ -54,7 +69,7 @@
 
 		<div class="result-section">
 			<h3>HTML</h3>
-			<textarea id="html-output" style="display: none;">{{ results }}</textarea>
+			<textarea id="html-output">{{ results }}</textarea>
 		</div>
 
 	</section>
@@ -65,6 +80,9 @@
 .form-field.id-field {
 	height   : 0;
 	overflow : hidden;
+}
+.form-inline-fields:has(.cms-save) {
+	justify-content : flex-end;
 }
 .playground-results {
 	margin-top: 2rem;
@@ -82,16 +100,36 @@
 	background-color : oklch(var(--totalform-purewhite));
 	border-radius    : var(--totalform-radius);
 }
+
+.html-output-editor .CodeMirror {
+	height: auto;
+	min-height: 100px;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+}
+
+.html-output-editor .CodeMirror-scroll {
+	overflow: visible !important;
+}
+
+.html-output-editor .CodeMirror-scrollbar-filler,
+.html-output-editor .CodeMirror-gutter-filler {
+	display: none;
+}
 </style>
 
 <script>
 // Function to manage save button visibility
 function manageSaveButton() {
-	const form       = document.querySelector('.totalform');
-	const saveButton = document.querySelector('.cms-save');
-	const nameInput  = document.querySelector('input[name="name"]');
+	const form         = document.querySelector('.totalform');
+	const saveButton   = document.querySelector('.cms-save');
+	const deleteButton = document.querySelector('.cms-delete');
+	const nameInput    = document.querySelector('input[name="name"]');
 
 	if (!form || !saveButton || !nameInput) return;
+
+	if (deleteButton) deleteButton.classList.add('transparent');
+	saveButton.classList.add('transparent');
 
 	const showSaveButton = () => saveButton.style.display = '';
 	const hideSaveButton = () => saveButton.style.display = 'none';
@@ -107,6 +145,80 @@ function manageSaveButton() {
 	if (nameInput.value.trim()) showSaveButton();
 }
 manageSaveButton();
+
+// Function to sync code field content to twig textarea when render button is clicked
+function setupRenderSync() {
+	const renderButton = document.querySelector('.render-playground button');
+
+	renderButton.addEventListener('pointerdown', () => {
+		const snippetTextarea = document.querySelector('textarea[name="snippet"]');
+		const twigTextarea = document.getElementById('twig');
+
+		// Check if CodeMirror is active
+		const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
+		if (cmWrapper && cmWrapper.CodeMirror) {
+			// Get content from CodeMirror editor
+			twigTextarea.value = cmWrapper.CodeMirror.getValue();
+		} else {
+			// Fallback to textarea value
+			twigTextarea.value = snippetTextarea.value;
+		}
+	});
+}
+setupRenderSync();
+
+// Function to setup CodeMirror for HTML output
+function setupHtmlOutput() {
+	const htmlOutput = document.getElementById('html-output');
+	if (!htmlOutput || !htmlOutput.value.trim()) return;
+	
+	// Wait for TotalCMSCodeMirror to be available
+	if (!window.TotalCMSCodeMirror) {
+		setTimeout(setupHtmlOutput, 100);
+		return;
+	}
+	
+	// Format the HTML using our bundled beautifier
+	const formattedHtml = window.TotalCMSCodeMirror.formatHtml(htmlOutput.value);
+	
+	// Replace the textarea with a div for the editor
+	const outputContainer = document.createElement('div');
+	outputContainer.className = 'html-output-container';
+	htmlOutput.parentElement.replaceChild(outputContainer, htmlOutput);
+	
+	// Create HTML output editor using CodeMirror
+	const outputEditor = window.CodeMirror(outputContainer, {
+		value: formattedHtml,
+		mode: 'htmlmixed',
+		theme: 'elegant',
+		lineNumbers: true,
+		lineWrapping: true,
+		readOnly: true,
+		foldGutter: true,
+		gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+		matchBrackets: true,
+		autoCloseTags: true
+	});
+	
+	// Add custom classes
+	outputContainer.classList.add('html-output-editor');
+	outputEditor.getWrapperElement().classList.add('html-output-editor');
+	
+	// Set height to content height to avoid scrollbars
+	const lineHeight = outputEditor.defaultTextHeight();
+	const lineCount = outputEditor.lineCount();
+	const totalHeight = Math.max((lineCount * lineHeight) + 40, 200); // Minimum height
+	
+	outputEditor.setSize(null, totalHeight);
+	
+	// Force refresh after a moment
+	setTimeout(() => {
+		outputEditor.refresh();
+	}, 100);
+}
+
+// Initialize HTML output styling
+setupHtmlOutput();
 </script>
 
 </main>
