@@ -32,10 +32,11 @@ final class AdminPlaygroundAction
 		// Handle GET requests for the playground page
 		return $this->twigRenderer->template($response, 'admin/playground.twig', [
 			'url' => [
-				'path'    => $request->getUri()->getPath(),
-				'query'   => $request->getUri()->getQuery(),
-				'page'    => 'playground',
-				'id'      => $args['id'] ?? '',
+				'path'       => $request->getUri()->getPath(),
+				'query'      => $request->getUri()->getQuery(),
+				'page'       => 'playground',
+				'id'         => $args['id'] ?? '',
+				'collection' => 'playground',
 			],
 			'results' => $render,
 		]);

@@ -43,53 +43,72 @@
 
 <main class="dash-main-content">
 
-<h1><a href="playground">playground</a> / <span>{{ url.id | default('new snippet') }}</span></h1>
+	<header>
+		<h1><a href="playground">playground</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) | default('new snippet') }}</span></h1>
+		<button class="dash-action-dots" title="Playground Actions" popovertarget="playground-actions"></button>
+		<nav popover id="playground-actions">
+			<ul>
+				<li class="export"><a href="playground/-export">Export</a></li>
+				<li class="import"><a href="playground/-import">Import</a></li>
+			</ul>
+		</nav>
+	</header>
 
-<section class="dash-content-section">
-	<p>Playground allows you to learn twig faster and run it against the data inside of the CMS. After you
-	type your twig template code below, you can click the <code>Render Twig</code> button to see the output.
-	If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
+{% if url.id == '-export' %}
 
-	{{ cms.form.playground(url.id|default(''), {
-		deleteAction : {
-			"action" : "redirect",
-			"link"   : "playground"
-		},
-		newAction   : {
-			"action" : "redirect-object",
-			"link"   : "playground/{id}"
-		},
-	}) }}
+	{% include "admin/collection/export.twig" %}
 
-	{% set twigfield %}
-		<textarea name="twig" id="twig" class="cms-hide"></textarea>
-	{% endset %}
-	{{ cms.form.simple('playground', twigfield, {
-		class  : "render-playground",
-		method : "POST",
-		label  : "Render Twig",
-		ajax   : false,
-	}) }}
+{% elseif url.id == '-import' %}
 
-	{% if results %}
-	<section class="playground-results">
-		<h2>Results</h2>
+	{% include "admin/collection/import.twig" %}
 
-		<div class="result-section">
-			<h3>Rendered HTML</h3>
-			<div class="rendered-output">
-				{{ results|raw }}
+{% else %}
+	<section class="dash-content-section">
+		<p>Playground allows you to learn twig faster and run it against the data inside of the CMS. After you
+		type your twig template code below, you can click the <code>Render Twig</code> button to see the output.
+		If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
+
+		{{ cms.form.playground(url.id|default(''), {
+			deleteAction : {
+				"action" : "redirect",
+				"link"   : "playground"
+			},
+			newAction   : {
+				"action" : "redirect-object",
+				"link"   : "playground/{id}"
+			},
+		}) }}
+
+		{% set twigfield %}
+			<textarea name="twig" id="twig" class="cms-hide"></textarea>
+		{% endset %}
+		{{ cms.form.simple('playground', twigfield, {
+			class  : "render-playground",
+			method : "POST",
+			label  : "Render Twig",
+			ajax   : false,
+		}) }}
+
+		{% if results %}
+		<section class="playground-results">
+			<h2>Results</h2>
+
+			<div class="result-section">
+				<h3>Rendered HTML</h3>
+				<div class="rendered-output">
+					{{ results|raw }}
+				</div>
 			</div>
-		</div>
 
-		<div class="result-section">
-			<h3>HTML</h3>
-			<textarea id="html-output">{{ results }}</textarea>
-		</div>
+			<div class="result-section">
+				<h3>HTML</h3>
+				<textarea id="html-output">{{ results }}</textarea>
+			</div>
 
+		</section>
+		{% endif %}
 	</section>
-	{% endif %}
-</section>
+{% endif %}
 
 <style>
 .form-field.id-field {
