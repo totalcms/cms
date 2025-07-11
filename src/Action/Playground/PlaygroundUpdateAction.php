@@ -22,6 +22,6 @@ final class PlaygroundUpdateAction
 		$data   = (array)$request->getParsedBody();
 		$object = $this->playgroundUpdater->updateSnippet($args['id'], $data);
 
-		return $this->renderer->jsonItem($response, $object	, new ObjectMetaTransformer());
+		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}
 }

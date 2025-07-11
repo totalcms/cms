@@ -8,7 +8,6 @@ use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
 final class PlaygroundLister
 {
-
 	public function __construct(
 		private CollectionFetcher $collectionFetcher,
 		private IndexReader $indexReader,
@@ -16,13 +15,15 @@ final class PlaygroundLister
 	}
 
 	/**
-	 * List all playground snippets
+	 * List all playground snippets.
+	 *
 	 * @return array<mixed>
 	 */
 	public function listSnippets(): array
 	{
 		$this->ensureCollection();
 		$index = $this->indexReader->fetchIndex(PlaygroundData::COLLECTION_ID);
+
 		return $index->objects->toArray();
 	}
 

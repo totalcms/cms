@@ -8,7 +8,6 @@ use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
 final class PlaygroundUpdater
 {
-
 	public function __construct(
 		private ObjectUpdater $objectUpdater,
 	) {

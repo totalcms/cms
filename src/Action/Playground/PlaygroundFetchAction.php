@@ -4,10 +4,10 @@ namespace TotalCMS\Action\Playground;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Playground\Service\PlaygroundFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
-use Slim\Exception\HttpNotFoundException;
 
 final class PlaygroundFetchAction
 {

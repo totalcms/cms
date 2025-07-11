@@ -14,38 +14,38 @@ class CodeField extends TextareaField
 	{
 		// Get base textarea attributes
 		$attributes = parent::formFieldAttributes();
-		
+
 		// Add code-specific attributes
 		$attributes['data-field-type'] = 'code';
-		
+
 		// Add language mode if specified in settings
 		if (isset($this->settings['mode'])) {
 			$attributes['data-mode'] = $this->settings['mode'];
 		} else {
 			$attributes['data-mode'] = 'twig'; // Default to Twig mode
 		}
-		
+
 		// Add theme if specified in settings
 		if (isset($this->settings['theme'])) {
 			$attributes['data-theme'] = $this->settings['theme'];
 		} else {
 			$attributes['data-theme'] = 'elegant'; // Default theme
 		}
-		
+
 		// Code editor specific options
 		$editorOptions = [
-			'autofocus' => $this->settings['autofocus'] ?? false,
-			'lineNumbers' => $this->settings['lineNumbers'] ?? true,
-			'lineWrapping' => $this->settings['lineWrapping'] ?? true,
-			'indentUnit' => $this->settings['indentUnit'] ?? 2,
-			'tabSize' => $this->settings['tabSize'] ?? 2,
-			'foldGutter' => $this->settings['foldGutter'] ?? true,
+			'autofocus'     => $this->settings['autofocus'] ?? false,
+			'lineNumbers'   => $this->settings['lineNumbers'] ?? true,
+			'lineWrapping'  => $this->settings['lineWrapping'] ?? true,
+			'indentUnit'    => $this->settings['indentUnit'] ?? 2,
+			'tabSize'       => $this->settings['tabSize'] ?? 2,
+			'foldGutter'    => $this->settings['foldGutter'] ?? true,
 			'matchBrackets' => $this->settings['matchBrackets'] ?? true,
 			'autoCloseTags' => $this->settings['autoCloseTags'] ?? true,
 		];
-		
+
 		$attributes['data-editor-options'] = json_encode($editorOptions);
-		
+
 		return $attributes;
 	}
 

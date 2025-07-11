@@ -18,7 +18,7 @@ final class PlaygroundSaveAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$data   = (array)$request->getParsedBody();
+		$data    = (array)$request->getParsedBody();
 		$snippet = $this->playgroundSaver->saveSnippet($data);
 
 		return $this->renderer->jsonItem($response, $snippet, new ObjectMetaTransformer());

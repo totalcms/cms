@@ -3,17 +3,17 @@
 namespace TotalCMS\Domain\Playground\Data;
 
 /**
- * Data object for Playground domain constants and utilities
+ * Data object for Playground domain constants and utilities.
  */
 final class PlaygroundData
 {
 	/**
-	 * The collection ID for playground snippets
+	 * The collection ID for playground snippets.
 	 */
 	public const COLLECTION_ID = 'playground';
 
 	/**
-	 * The schema ID for playground snippets
+	 * The schema ID for playground snippets.
 	 */
 	public const SCHEMA_ID = 'playground';
 }

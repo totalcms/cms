@@ -16,7 +16,7 @@ final class AdminPlaygroundAction
 	}
 
 	/** @param array<string,string> $args The routing arguments */
-	public function __invoke( ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		// Handle POST requests for rendering Twig (JSON response)
 		$render = '';

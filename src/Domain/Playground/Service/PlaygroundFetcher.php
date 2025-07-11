@@ -8,7 +8,6 @@ use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
 final class PlaygroundFetcher
 {
-
 	public function __construct(
 		private ObjectFetcher $objectFetcher,
 	) {

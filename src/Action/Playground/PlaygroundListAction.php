@@ -19,6 +19,7 @@ final class PlaygroundListAction
 	{
 		try {
 			$snippets = $this->playgroundLister->listSnippets();
+
 			return $this->renderer->json($response, ['snippets' => $snippets]);
 		} catch (\Exception $e) {
 			return $this->renderer->json($response, ['error' => $e->getMessage()], 500);
