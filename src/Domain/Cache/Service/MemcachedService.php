@@ -112,6 +112,29 @@ final class MemcachedService implements CacheInterface
 		}
 	}
 
+	/**
+	 * Clear cache entries by pattern.
+	 * Note: Memcached doesn't support native pattern matching like Redis,
+	 * so this implementation falls back to clearing all cache.
+	 * A more sophisticated implementation would require tracking keys separately.
+	 */
+	public function clearByPattern(string $pattern): bool
+	{
+		if (!$this->isAvailable()) {
+			return false;
+		}
+
+		// Memcached doesn't have native pattern support like Redis SCAN
+		// For now, fall back to clearing all cache to ensure patterns are cleared
+		// TODO: Consider implementing key tracking for more precise pattern clearing
+		try {
+			$memcached = $this->getConnection();
+			return $memcached->flush();
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
 	public function getStats(): array
 	{
 		if (!$this->isAvailable()) {

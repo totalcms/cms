@@ -154,6 +154,29 @@ final class FilesystemService implements CacheInterface
 		return $this->deleteDirectory($this->cacheDir, true);
 	}
 
+	/**
+	 * Clear cache entries by pattern.
+	 * Note: Since filesystem cache uses hashed file structure, we need to read
+	 * each cache file to check if the key matches the pattern.
+	 * For efficiency, this falls back to clearing all cache.
+	 */
+	public function clearByPattern(string $pattern): bool
+	{
+		if (!$this->isAvailable()) {
+			return false;
+		}
+
+		try {
+			// For filesystem cache with hashed structure, pattern matching is complex
+			// since the actual cache keys are hashed before being used as filenames.
+			// For now, fall back to clearing all cache to ensure pattern is cleared.
+			// TODO: Implement key tracking for more precise pattern clearing
+			return $this->clear();
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
 	public function getStats(): array
 	{
 		if (!$this->isAvailable()) {

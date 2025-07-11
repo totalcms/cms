@@ -124,6 +124,37 @@ final class RedisService implements CacheInterface
 		}
 	}
 
+	/**
+	 * Clear cache entries by pattern using Redis SCAN and DEL.
+	 */
+	public function clearByPattern(string $pattern): bool
+	{
+		if (!$this->isAvailable()) {
+			return false;
+		}
+
+		try {
+			$redis = $this->getConnection();
+			$iterator = null;
+			$deleted = 0;
+
+			// Use SCAN to find keys matching the pattern
+			while (($keys = $redis->scan($iterator, $pattern)) !== false) {
+				if (!empty($keys)) {
+					$deleted += $redis->del($keys);
+				}
+				if ($iterator === 0) {
+					break; // SCAN completed
+				}
+			}
+
+			return true;
+		} catch (\Exception $e) {
+			// Fall back to clearing everything if pattern clearing fails
+			return $this->clear();
+		}
+	}
+
 	public function getStats(): array
 	{
 		if (!$this->isAvailable()) {

@@ -212,6 +212,14 @@ final class CacheManager
 	}
 
 	/**
+	 * Clear all computed data (useful for clearing schema caches).
+	 */
+	public function clearAllComputedData(): bool
+	{
+		return $this->clearByType(self::PREFIX_COMPUTED);
+	}
+
+	/**
 	 * Clear collection index cache from all backends.
 	 */
 	public function clearCollectionIndex(string $collectionName): bool
@@ -294,14 +302,16 @@ final class CacheManager
 
 	/**
 	 * Clear cache entries by pattern for a specific cache service.
-	 * Note: This is a simplified implementation. Full pattern support would require
-	 * each cache service to implement pattern-based deletion.
 	 */
 	private function clearByPattern(CacheInterface $service, string $pattern): bool
 	{
-		// For now, we fallback to the service's clear() method which clears everything
-		// This is not ideal but ensures cache is cleared when needed
-		// TODO: Implement proper pattern-based clearing in each cache service
+		// Check if the service supports pattern-based clearing
+		if ($service instanceof RedisService || $service instanceof MemcachedService || $service instanceof FilesystemService) {
+			return $service->clearByPattern($pattern);
+		}
+
+		// For other services, fallback to clearing everything
+		// This ensures cache is cleared when needed, though not optimal
 		return $service->clear();
 	}
 
