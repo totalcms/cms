@@ -19,6 +19,19 @@
 @import 'codemirror/addon/dialog/dialog.css';
 @import 'codemirror/addon/display/fullscreen.css';
 
+.CodeMirror {
+	&:before {
+		content          : '';
+		display          : block;
+		top              : 0;
+		left             : 0;
+		bottom           : 0;
+		width            : 40px;
+		position         : absolute;
+		background-color : oklch(var(--totalform-nearwhite));
+		border-right     : 1px solid oklch(var(--totalform-lightgray));
+	}
+}
 .totalcms-editor {
 	border        : 1px solid oklch(var(--totalform-border-color));
 	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
