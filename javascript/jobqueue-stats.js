@@ -21,7 +21,7 @@ export default class JobQueueStatsTable {
     start() {
         const poll = () => {
             this.updateQueueStats();
-            const interval = this.pendingCount() === 0 ? 30 : 5;
+            const interval = this.pendingCount() === 0 ? 10 : 2;
             this.timer = setTimeout(poll, interval * 1000);
         };
         poll();

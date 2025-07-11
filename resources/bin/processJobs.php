@@ -63,7 +63,15 @@ $startTime = microtime(true);
 
 try {
 	$totalcms = new TotalCMS\TotalCMS();
-	$totalcms->jobRunner()->processPendingJobs();
+	$jobRunner = $totalcms->jobRunner();
+
+	// First retry any failed jobs that haven't exceeded max attempts
+	echo "Retrying failed jobs...\n";
+	$jobRunner->retryFailedJobs();
+
+	// Then process all pending jobs (including the retried ones)
+	echo "Processing pending jobs...\n";
+	$jobRunner->processPendingJobs();
 } catch (Exception $e) {
 	echo 'Error: ' . $e->getMessage() . "\n";
 	exit(1);

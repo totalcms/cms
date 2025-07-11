@@ -58,10 +58,10 @@
 			"field"   : "textarea"
 		},
 		"media": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
+			"type"    : "string",
 			"label"   : "Media",
 			"help"    : "Media URL for this post",
-			"field"   : "url"
+			"field"   : "text"
 		},
 		"content": {
 			"type"    : "string",
