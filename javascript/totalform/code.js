@@ -104,7 +104,19 @@ export default class Code extends TotalField {
     setupLocalStorage() {
         if (!this.editor || !this.localStorageKey) return;
 
-        // Load saved content from localStorage
+        // Check if form is in edit mode using TotalField's form reference
+        if (this.form && this.form.isEditMode()) {
+            // Clear any existing storage data for edit mode
+            if (window.TotalCMSCodeMirror?.clearStorage) {
+                window.TotalCMSCodeMirror.clearStorage(this.localStorageKey);
+            } else if (window.localStorage) {
+                window.localStorage.removeItem(this.localStorageKey);
+            }
+            // Don't set up auto-save in edit mode
+            return;
+        }
+
+        // Only load saved content in create mode
         const savedContent = window.TotalCMSCodeMirror?.loadFromStorage(this.localStorageKey);
         if (savedContent && !this.input.value) {
             this.editor.setValue(savedContent);
@@ -114,10 +126,13 @@ export default class Code extends TotalField {
             this.editor.setCursor(0, 0);
         }
 
-        // Save content to localStorage on changes
+        // Save content to localStorage on changes (only in create mode)
         this.editor.on('change', () => {
-            if (window.TotalCMSCodeMirror?.saveToStorage) {
-                window.TotalCMSCodeMirror.saveToStorage(this.localStorageKey, this.editor.getValue());
+            // Double-check we're still not in edit mode before saving
+            if (!this.form || !this.form.isEditMode()) {
+                if (window.TotalCMSCodeMirror?.saveToStorage) {
+                    window.TotalCMSCodeMirror.saveToStorage(this.localStorageKey, this.editor.getValue());
+                }
             }
         });
     }
@@ -128,7 +143,8 @@ export default class Code extends TotalField {
         // Find the closest form
         const form = this.container.closest('form');
         if (form) {
-            form.addEventListener('submit', () => {
+            form.addEventListener('submit', (e) => {
+                // Update the textarea value before form submission
                 this.input.value = this.editor.getValue();
             });
         }
@@ -136,8 +152,19 @@ export default class Code extends TotalField {
         // Also update on any change for real-time updates
         this.editor.on('change', () => {
             this.input.value = this.editor.getValue();
+            // Remove required attribute if value is not empty to prevent validation issues
+            if (this.input.value.trim()) {
+                this.input.removeAttribute('required');
+            } else if (this.input.hasAttribute('data-required')) {
+                this.input.setAttribute('required', '');
+            }
             this.changed(); // Trigger TotalField change event
         });
+
+        // Store the original required state
+        if (this.input.hasAttribute('required')) {
+            this.input.setAttribute('data-required', 'true');
+        }
     }
 
     setValue(value) {
@@ -170,5 +197,15 @@ export default class Code extends TotalField {
                 this.editor.refresh();
             }, 0);
         }
+    }
+
+    validate() {
+        // Ensure the textarea has the latest value from CodeMirror
+        if (this.editor) {
+            this.input.value = this.editor.getValue();
+        }
+        
+        // Call parent validate method
+        return super.validate();
     }
 }

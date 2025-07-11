@@ -30,7 +30,7 @@
 			"settings" : {
 				"propertyOptions" : true,
 				"maxItemCount"    : 1,
-				"asString"        : false
+				"asString"        : true
 			}
 		},
         "description": {
