@@ -119,6 +119,11 @@
 </style>
 
 <script>
+// Replace POST in history to prevent resubmission warning on refresh
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.pathname);
+}
+
 // Function to manage save button visibility
 function manageSaveButton() {
 	const form         = document.querySelector('.totalform');
