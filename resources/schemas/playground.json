@@ -4,28 +4,25 @@
  "id"          : "playground",
  "type"        : "object",
  "description" : "A schema for a Total CMS Playground snippet",
- "formgrid"    : "id .\nname description\ncategory description\nsnippet snippet",
+ "formgrid"    : "id .\nname category\nsnippet snippet",
  "properties"  : {
         "id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"    : "Snippet ID",
-			"help"     : "A unique ID for this snippet. No spaces or special characters.",
 			"field"    : "id",
 			"factory"  : "uuid",
 			"settings" : {
-				"autogen" : "${name-uuid}"
+				"autogen" : "${name}-${uuid}"
 			}
         },
         "name": {
 			"type"    : "string",
 			"label"   : "Name",
-			"help"    : "A descriptive name for this snippet.",
 			"field"   : "text"
         },
 		"category": {
 			"type"     : "string",
 			"label"    : "Category",
-			"help"     : "Category for this snippet.",
 			"field"    : "list",
 			"settings" : {
 				"propertyOptions" : true,
@@ -33,17 +30,10 @@
 				"asString"        : true
 			}
 		},
-        "description": {
-			"type"     : "string",
-			"label"    : "Description",
-			"help"     : "Optional description of what this snippet does.",
-			"settings" : {"rows" : 5},
-			"field"    : "textarea"
-        },
         "snippet": {
 			"type"     : "string",
 			"label"    : "Twig Code",
-			"help"     : "The Twig template code for this snippet.",
+			"help"     : "Type your twig template code here.",
 			"field"    : "code",
 			"settings" : {
 				"mode"         : "twig",

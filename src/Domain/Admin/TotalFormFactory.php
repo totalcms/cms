@@ -183,6 +183,20 @@ final class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function playground(string $id = '', array $options = []): string
+	{
+		$options = array_merge([
+			'save'   => 'Save',
+			'delete' => 'Delete',
+		], $options);
+		$options['id'] = $id;
+
+		$form = $this->builder('playground', $options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([

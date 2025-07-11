@@ -15,32 +15,29 @@ final class AdminPlaygroundAction
 	) {
 	}
 
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-	): ResponseInterface {
-		$results = '';
+	/** @param array<string,string> $args The routing arguments */
+	public function __invoke( ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		// Handle POST requests for rendering Twig (JSON response)
+		$render = '';
 
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();
 
 			if (isset($post['twig'])) {
-				try {
-					$results = $this->twigEngine->renderString($post['twig']);
-				} catch (\Throwable $e) {
-					$results = sprintf('<div class="error"><pre><code>%s</code></pre></div>', htmlspecialchars($e->getMessage()));
-				}
+				$render = $this->twigEngine->renderString($post['twig']);
 			}
 		}
 
+		// Handle GET requests for the playground page
 		return $this->twigRenderer->template($response, 'admin/playground.twig', [
 			'url' => [
-				'path'  => $request->getUri()->getPath(),
-				'query' => $request->getUri()->getQuery(),
-				'page'  => 'playground',
+				'path'    => $request->getUri()->getPath(),
+				'query'   => $request->getUri()->getQuery(),
+				'page'    => 'playground',
+				'id'      => $args['id'] ?? '',
+				'results' => $render,
 			],
-			'results'  => $results,
-			'postData' => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
 }
