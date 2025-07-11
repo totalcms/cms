@@ -26,7 +26,9 @@
       "Bash(mv:*)",
       "Bash(sed:*)",
       "Bash(vendor/bin/pest:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(diff:*)",
+      "Bash(redis-cli keys:*)"
     ],
     "deny": []
   }
