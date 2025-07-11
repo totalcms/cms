@@ -71,18 +71,11 @@ If you must keep `tcms-data` within the document root, configure your web server
 
 Add this to your root `.htaccess` file:
 ```apache
+# Define 404 page
+ErrorDocument 404 /404/
+
 # Block access to tcms-data directory
 RedirectMatch 404 ^/tcms-data/
-
-# Alternative method using mod_rewrite
-RewriteEngine On
-RewriteRule ^tcms-data/ - [F,L]
-
-# Or using Directory directive (if you have access to main config)
-<Directory /path/to/tcms-data>
-    Order deny,allow
-    Deny from all
-</Directory>
 ```
 
 #### Nginx
