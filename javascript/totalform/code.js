@@ -10,6 +10,7 @@ export default class Code extends TotalField {
 
         this.editor = null;
         this.localStorageKey = `totalcms-code-${this.property}`;
+        this.autoSaveEnabled = false; // Track if auto-save is enabled
 
         // Initialize CodeMirror when available
         this.initializeCodeEditor();
@@ -67,8 +68,8 @@ export default class Code extends TotalField {
         // Set up auto-resize functionality
         this.setupAutoResize();
 
-        // Set up localStorage persistence
-        this.setupLocalStorage();
+        // Set up auto-save (localStorage persistence)
+        this.setupAutoSave();
 
         // Set up form submission handling
         this.setupFormSubmission();
@@ -101,7 +102,7 @@ export default class Code extends TotalField {
         });
     }
 
-    setupLocalStorage() {
+    setupAutoSave() {
         if (!this.editor || !this.localStorageKey) return;
 
         // Check if form is in edit mode using TotalField's form reference
@@ -113,8 +114,12 @@ export default class Code extends TotalField {
                 window.localStorage.removeItem(this.localStorageKey);
             }
             // Don't set up auto-save in edit mode
+            this.autoSaveEnabled = false;
             return;
         }
+
+        // Enable auto-save for create mode
+        this.autoSaveEnabled = true;
 
         // Only load saved content in create mode
         const savedContent = window.TotalCMSCodeMirror?.loadFromStorage(this.localStorageKey);
@@ -158,7 +163,12 @@ export default class Code extends TotalField {
             } else if (this.input.hasAttribute('data-required')) {
                 this.input.setAttribute('required', '');
             }
-            this.changed(); // Trigger TotalField change event
+            
+            // Only trigger change event if auto-save is not enabled
+            // This prevents "unsaved changes" warnings when auto-save is active
+            if (!this.autoSaveEnabled) {
+                this.changed(); // Trigger TotalField change event
+            }
         });
 
         // Store the original required state
