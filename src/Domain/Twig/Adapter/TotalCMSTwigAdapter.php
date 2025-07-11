@@ -79,7 +79,7 @@ final class TotalCMSTwigAdapter
 	{
 		// php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
-		$installDir = realpath(__DIR__ . '/../../..');
+		$installDir = realpath(__DIR__ . '/../../../..');
 		$docroot    = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
 		$command    = sprintf(
 			'%s %s/resources/bin/processJobs.php --docroot=%s',
