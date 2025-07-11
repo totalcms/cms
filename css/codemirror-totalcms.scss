@@ -21,10 +21,9 @@
 
 .totalcms-editor {
 	border        : 1px solid oklch(var(--totalform-border-color));
-	border-radius : var(--totalform-radius);
+	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
 	overflow      : hidden;
 	box-shadow    : 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
-	margin-bottom : 1rem;
 
 	&.CodeMirror {
 		height        : auto;
@@ -32,7 +31,7 @@
 		font-size     : 14px;
 		line-height   : 1.5;
 		border        : none;
-		border-radius : var(--totalform-radius);
+		border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
 
 		.CodeMirror-scroll {
 			min-height: 250px; // Increased to match container
@@ -589,7 +588,6 @@
 	border-radius: var(--totalform-radius);
 	overflow: hidden;
 	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
-	margin-bottom: 1rem;
 
 	&.CodeMirror {
 		background-color: oklch(var(--totalform-purewhite));
@@ -713,12 +711,10 @@
 	border-radius: var(--totalform-radius);
 	overflow: hidden;
 	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
-	margin-bottom: 1rem;
 
 	&.CodeMirror {
 		height: auto;
 		min-height: 200px;
-		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		font-size: 14px;
 		line-height: 1.5;
 		border: none;
@@ -865,14 +861,12 @@
 	border-radius: var(--totalform-radius);
 	overflow: hidden;
 	box-shadow: 0 2px 4px oklch(var(--totalform-shadow-color) / 0.1);
-	margin-bottom: 1rem;
 	position: relative;
 	margin: 1rem 0;
 
 	.CodeMirror {
 		height: auto;
 		min-height: 200px;
-		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		font-size: 14px;
 		line-height: 1.5;
 		border: none;
@@ -961,7 +955,6 @@
 	.CodeMirror {
 		border: none;
 		border-radius: 0;
-		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		font-size: 14px;
 		line-height: 1.4;
 		height: auto;

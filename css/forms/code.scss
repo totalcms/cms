@@ -11,8 +11,11 @@
 // TotalForm code editor wrapper
 .totalform-code-editor {
 	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
+	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius)!important;
 	overflow: hidden;
+	flex: 1; // Allow it to grow in flex containers
+	width: 100%; // Ensure full width
+	min-width: 0; // Prevent flex shrinking below content size
 
 	// Auto-resize functionality for editors
 	.CodeMirror-scroll {
@@ -28,6 +31,7 @@
 	.CodeMirror {
 		height: auto;
 		min-height: 250px;
+		width: 100%; // Ensure CodeMirror takes full width
 		font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
 		font-size: 14px;
 		line-height: 1.4;
@@ -93,6 +97,11 @@
 
 // Form field container styling
 .totalform .field-container[data-field-type="code"] {
+	// Ensure the field container takes full width in flex layouts
+	flex: 1;
+	width: 100%;
+	min-width: 0;
+
 	.field-label {
 		margin-bottom: 0.5rem;
 	}
@@ -101,6 +110,15 @@
 		margin-top: 0.5rem;
 		font-size: 0.875rem;
 		color: oklch(var(--totalform-mediumgray));
+	}
+
+	// If the field container itself is a flex container (form-group)
+	&.form-group {
+		flex-direction: column;
+
+		.totalform-code-editor {
+			flex: 1;
+		}
 	}
 
 	// Error state styling
@@ -122,7 +140,7 @@
 	&.is-readonly {
 		.totalform-code-editor {
 			background-color: oklch(var(--totalform-nearwhite));
-			
+
 			.CodeMirror {
 				background-color: oklch(var(--totalform-nearwhite));
 			}
