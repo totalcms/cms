@@ -32,7 +32,7 @@
 
 <main class="dash-main-content">
 
-<h1><a href="playground">playground</a> / <span>new {{ labelSingular | lower }}</span></h1>
+<h1><a href="playground">playground</a> / <span>new snippet</span></h1>
 
 <section class="dash-content-section">
 	<p>Playground allows you to learn twig faster and run it against the data inside of the CMS. After you
@@ -43,6 +43,10 @@
 		deleteAction : {
 			"action" : "redirect",
 			"link"   : "playground"
+		},
+		newAction   : {
+			"action" : "redirect-object",
+			"link"   : "playground/{id}"
 		},
 	}) }}
 
@@ -176,21 +180,21 @@ setupRenderSync();
 function setupHtmlOutput() {
 	const htmlOutput = document.getElementById('html-output');
 	if (!htmlOutput || !htmlOutput.value.trim()) return;
-	
+
 	// Wait for TotalCMSCodeMirror to be available
 	if (!window.TotalCMSCodeMirror) {
 		setTimeout(setupHtmlOutput, 100);
 		return;
 	}
-	
+
 	// Format the HTML using our bundled beautifier
 	const formattedHtml = window.TotalCMSCodeMirror.formatHtml(htmlOutput.value);
-	
+
 	// Replace the textarea with a div for the editor
 	const outputContainer = document.createElement('div');
 	outputContainer.className = 'html-output-container';
 	htmlOutput.parentElement.replaceChild(outputContainer, htmlOutput);
-	
+
 	// Create HTML output editor using CodeMirror
 	const outputEditor = window.CodeMirror(outputContainer, {
 		value: formattedHtml,
@@ -204,18 +208,18 @@ function setupHtmlOutput() {
 		matchBrackets: true,
 		autoCloseTags: true
 	});
-	
+
 	// Add custom classes
 	outputContainer.classList.add('html-output-editor');
 	outputEditor.getWrapperElement().classList.add('html-output-editor');
-	
+
 	// Set height to content height to avoid scrollbars
 	const lineHeight = outputEditor.defaultTextHeight();
 	const lineCount = outputEditor.lineCount();
 	const totalHeight = Math.max((lineCount * lineHeight) + 40, 200); // Minimum height
-	
+
 	outputEditor.setSize(null, totalHeight);
-	
+
 	// Force refresh after a moment
 	setTimeout(() => {
 		outputEditor.refresh();
