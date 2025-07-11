@@ -41,10 +41,15 @@
 	.CodeMirror-linenumber {
 		color: oklch(var(--totalform-mediumgray));
 		padding-right: 8px;
+		width: 40px !important; // Override CodeMirror's inline width calculation
+		min-width: 40px !important; // Ensure minimum width
+		text-align: right !important; // Force right alignment
+		box-sizing: border-box !important; // Include padding in width calculation
 	}
 
 	// Gutter styling
 	.CodeMirror-gutters {
+		width: 40px !important; // Match the line number width
 		border-right: 1px solid oklch(var(--totalform-lightgray));
 		background-color: oklch(var(--totalform-nearwhite));
 	}
