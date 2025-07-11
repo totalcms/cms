@@ -25,7 +25,7 @@
 				<h3>{{ category }}</h3>
 				<ul>
 					{% for snippet in sortByKey(categorySnippets) %}
-					<li class="playground-{{snippet.id}}">
+					<li class="playground-snippet">
 						<a  {% if url.id == snippet.id %}class="active"{% endif %}
 							href="playground/{{ snippet.id }}"
 							title="{{ snippet.description | escape }}">{{ snippet.name }}</a>

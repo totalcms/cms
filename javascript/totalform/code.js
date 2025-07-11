@@ -136,7 +136,7 @@ export default class Code extends TotalField {
             // Double-check we're still not in edit mode before saving
             if (!this.form || !this.form.isEditMode()) {
                 if (window.TotalCMSCodeMirror?.saveToStorage) {
-                    window.TotalCMSCodeMirror.saveToStorage(this.localStorageKey, this.editor.getValue());
+                    window.TotalCMSCodeMirror.saveToStorage(this.localStorageKey, this.editor.getValue().replace(/\n+$/, ''));
                 }
             }
         });
@@ -149,21 +149,21 @@ export default class Code extends TotalField {
         const form = this.container.closest('form');
         if (form) {
             form.addEventListener('submit', (e) => {
-                // Update the textarea value before form submission
-                this.input.value = this.editor.getValue();
+                // Update the textarea value before form submission with trimmed content
+                this.input.value = this.getValue();
             });
         }
 
         // Also update on any change for real-time updates
         this.editor.on('change', () => {
-            this.input.value = this.editor.getValue();
+            this.input.value = this.getValue();
             // Remove required attribute if value is not empty to prevent validation issues
             if (this.input.value.trim()) {
                 this.input.removeAttribute('required');
             } else if (this.input.hasAttribute('data-required')) {
                 this.input.setAttribute('required', '');
             }
-            
+
             // Only trigger change event if auto-save is not enabled
             // This prevents "unsaved changes" warnings when auto-save is active
             if (!this.autoSaveEnabled) {
@@ -188,9 +188,9 @@ export default class Code extends TotalField {
 
     getValue() {
         if (this.editor) {
-            return this.editor.getValue();
+            return this.editor.getValue().replace(/\n+$/, '');
         }
-        return this.input.value;
+        return this.input.value.replace(/\n+$/, '');
     }
 
     focus() {
@@ -210,11 +210,11 @@ export default class Code extends TotalField {
     }
 
     validate() {
-        // Ensure the textarea has the latest value from CodeMirror
+        // Ensure the textarea has the latest value from CodeMirror with trimmed content
         if (this.editor) {
-            this.input.value = this.editor.getValue();
+            this.input.value = this.getValue();
         }
-        
+
         // Call parent validate method
         return super.validate();
     }
