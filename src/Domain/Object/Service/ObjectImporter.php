@@ -50,23 +50,14 @@ final class ObjectImporter
 	{
 		$this->collection = $collection;
 
-		// Extract source file for better error logging (if available)
-		$sourceFile = $objectData['_source_file'] ?? 'unknown';
-		unset($objectData['_source_file']); // Remove from data to be saved
-
 		// Reset property arrays for each import
 		$this->images    = [];
 		$this->galleries = [];
 		$this->files     = [];
 		$this->depots    = [];
 
-		try {
-			$objectData = $this->saveRefPropsforLaterProcessing($objectData);
-			$object     = $this->objectSaver->saveObject($collection, $objectData);
-		} catch (\Exception $e) {
-			// Re-throw with source file context
-			throw new \Exception(sprintf('Import failed for %s: %s', $sourceFile, $e->getMessage()), 0, $e);
-		}
+		$objectData = $this->saveRefPropsforLaterProcessing($objectData);
+		$object     = $this->objectSaver->saveObject($collection, $objectData);
 
 		$this->objectID = $object->id;
 		$this->saveImages();

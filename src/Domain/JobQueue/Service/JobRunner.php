@@ -17,7 +17,7 @@ final class JobRunner
 	/**
 	 * Maximum number of retry attempts for failed jobs.
 	 */
-	private const MAX_RETRY_ATTEMPTS = 300;
+	private const MAX_RETRY_ATTEMPTS = 3;
 
 	public function __construct(
 		private JobRepository $jobRepository,
@@ -88,11 +88,9 @@ final class JobRunner
 			$this->jobRepository->delete($job);
 			$this->logger->info('Job processed successfully', $job->toArray());
 		} catch (\Throwable $e) {
-			// Create simple error message for job queue
-			$simpleError = $this->createSimpleErrorMessage($e);
-			$this->jobRepository->markFailed($job, $simpleError);
+			$this->jobRepository->markFailed($job, $e->getMessage());
 
-			// Log verbose error details to log file
+			// Add additional context if job has reached max attempts
 			$logContext = array_merge($job->toArray(), [
 				'error'        => $e->getMessage(),
 				'backtrace'    => "\n" . $e->getTraceAsString() . "\n",
@@ -139,51 +137,6 @@ final class JobRunner
 			return;
 		}
 		$this->objectImporter->importObject($job->collection, $data);
-	}
-
-	/**
-	 * Create a simplified error message for job queue display.
-	 * This keeps the job queue clean while full details go to logs.
-	 */
-	private function createSimpleErrorMessage(\Throwable $e): string
-	{
-		$message = $e->getMessage();
-
-		// Simplify common error patterns
-		if (str_contains($message, 'Object data must contain an ID')) {
-			return 'Missing required ID field';
-		}
-
-		if (str_contains($message, 'Invalid JSON payload')) {
-			return 'Invalid data format';
-		}
-
-		if (str_contains($message, 'Import failed for')) {
-			// Extract just the core error without the "Import failed for {source}:" prefix
-			$parts = explode(':', $message, 2);
-			if (count($parts) > 1) {
-				return trim($parts[1]);
-			}
-		}
-
-		if (str_contains($message, 'Schema validation failed')) {
-			return 'Data validation error';
-		}
-
-		if (str_contains($message, 'File not found') || str_contains($message, 'No such file')) {
-			return 'Required file missing';
-		}
-
-		if (str_contains($message, 'Permission denied') || str_contains($message, 'not writable')) {
-			return 'File permission error';
-		}
-
-		// For very long messages, truncate but keep the essential part
-		if (strlen($message) > 100) {
-			return substr($message, 0, 97) . '...';
-		}
-
-		return $message;
 	}
 
 	private function processRebuildJob(JobData $job): void
