@@ -65,7 +65,7 @@
         },
         "prettyUrl": {
 			"type"  : "boolean",
-			"label" : "Pretty URL",
+			"label" : "Pretty URLs",
 			"help"  : "Use pretty URLs for linking building to objects in this collection.",
 			"field" : "checkbox"
         },

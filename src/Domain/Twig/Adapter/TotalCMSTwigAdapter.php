@@ -225,10 +225,11 @@ final class TotalCMSTwigAdapter
 		}
 	}
 
-	public function prettyUrl(string $path): string
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function prettyUrl(string $path, bool $addDomain = false): string
 	{
 		$home = 'https://' . $this->domain;
-		$url  = $home . $path;
+		$url  = $addDomain ? $home . $path : $path;
 
 		// just incase someone puts in the full url and not just the path
 		if (str_starts_with($path, $home)) {
