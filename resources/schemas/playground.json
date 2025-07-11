@@ -1,0 +1,59 @@
+{
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/playground.json",
+    "id"          : "playground",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Playground snippet",
+    "properties"  : {
+        "id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Snippet ID",
+			"help"     : "A unique ID for this snippet. No spaces or special characters.",
+			"field"    : "id",
+			"factory"  : "uuid",
+			"settings" : {
+				"autogen" : "${uuid}"
+			}
+        },
+        "name": {
+			"type"    : "string",
+			"label"   : "Name",
+			"help"    : "A descriptive name for this snippet.",
+			"field"   : "text"
+        },
+        "snippet": {
+			"type"    : "string",
+			"label"   : "Twig Code",
+			"help"    : "The Twig template code for this snippet.",
+			"field"   : "code"
+        },
+        "description": {
+			"type"    : "string",
+			"label"   : "Description",
+			"help"    : "Optional description of what this snippet does.",
+			"field"   : "textarea"
+        },
+		"category": {
+			"type"     : "string",
+			"label"    : "Category",
+			"help"     : "Category for this snippet.",
+			"field"    : "list",
+			"settings" : {
+				"propertyOptions" : true,
+				"maxItemCount"    : 1,
+				"asString"        : false
+			}
+		}
+    },
+    "required": [
+        "id",
+        "name",
+        "snippet"
+    ],
+    "index": [
+        "id",
+        "name",
+		"category",
+		"description"
+    ]
+}
