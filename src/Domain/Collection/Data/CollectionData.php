@@ -138,6 +138,7 @@ final class CollectionData
 		$defaults = [
 			'auth'       => ['labelPlural' => 'Users', 'labelSingular' => 'User'],
 			'blog'       => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
+			'playground' => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
 			'color'      => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],
 			'date'       => ['labelPlural' => 'Dates', 'labelSingular' => 'Date'],
 			'depot'      => ['labelPlural' => 'Depots', 'labelSingular' => 'Depot'],

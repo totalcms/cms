@@ -1,0 +1,140 @@
+//-----------------------------------------------
+// Total CMS Code Editor Field Styles
+//-----------------------------------------------
+
+// Code editor field container
+.code-editor-field {
+	// Hide the original textarea since CodeMirror replaces it
+	display: none;
+}
+
+// TotalForm code editor wrapper
+.totalform-code-editor {
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	overflow: hidden;
+
+	// Auto-resize functionality for editors
+	.CodeMirror-scroll {
+		overflow: visible !important;
+	}
+
+	.CodeMirror-scrollbar-filler,
+	.CodeMirror-gutter-filler {
+		display: none;
+	}
+
+	// Ensure proper height and auto-resize
+	.CodeMirror {
+		height: auto;
+		min-height: 250px;
+		font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+		font-size: 14px;
+		line-height: 1.4;
+	}
+
+	// Line numbers styling
+	.CodeMirror-linenumber {
+		color: oklch(var(--totalform-mediumgray));
+		padding-right: 8px;
+	}
+
+	// Gutter styling
+	.CodeMirror-gutters {
+		border-right: 1px solid oklch(var(--totalform-lightgray));
+		background-color: oklch(var(--totalform-nearwhite));
+	}
+
+	// Fold gutter
+	.CodeMirror-foldgutter {
+		width: 16px;
+	}
+
+	// Active line highlighting
+	.CodeMirror-activeline-background {
+		background-color: oklch(var(--totalform-nearwhite) / 0.5);
+	}
+
+	// Selection styling
+	.CodeMirror-selected {
+		background-color: oklch(var(--totalform-accent) / 0.2);
+	}
+
+	// Cursor styling
+	.CodeMirror-cursor {
+		border-left: 2px solid oklch(var(--totalform-nearblack));
+	}
+
+	// Focus state
+	&.CodeMirror-focused {
+		.CodeMirror-cursor {
+			border-left-color: oklch(var(--totalform-accent));
+		}
+	}
+}
+
+// Mode-specific styling
+.totalform-code-editor-twig {
+	// Twig-specific enhancements could go here
+}
+
+.totalform-code-editor-html {
+	// HTML-specific enhancements could go here
+}
+
+.totalform-code-editor-css {
+	// CSS-specific enhancements could go here
+}
+
+.totalform-code-editor-javascript,
+.totalform-code-editor-js {
+	// JavaScript-specific enhancements could go here
+}
+
+// Form field container styling
+.totalform .field-container[data-field-type="code"] {
+	.field-label {
+		margin-bottom: 0.5rem;
+	}
+
+	.field-help {
+		margin-top: 0.5rem;
+		font-size: 0.875rem;
+		color: oklch(var(--totalform-mediumgray));
+	}
+
+	// Error state styling
+	&.has-error {
+		.totalform-code-editor {
+			border-color: oklch(var(--totalform-error));
+		}
+	}
+
+	// Disabled state styling
+	&.is-disabled {
+		.totalform-code-editor {
+			opacity: 0.6;
+			pointer-events: none;
+		}
+	}
+
+	// Readonly state styling
+	&.is-readonly {
+		.totalform-code-editor {
+			background-color: oklch(var(--totalform-nearwhite));
+			
+			.CodeMirror {
+				background-color: oklch(var(--totalform-nearwhite));
+			}
+		}
+	}
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+	.totalform-code-editor {
+		.CodeMirror {
+			font-size: 12px;
+		}
+	}
+}

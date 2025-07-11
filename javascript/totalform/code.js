@@ -1,0 +1,174 @@
+import TotalField from './totalfield';
+
+//-----------------------------------------------
+// Total CMS Code Editor Field
+//-----------------------------------------------
+export default class Code extends TotalField {
+
+    constructor(container, options) {
+        super(container, options);
+
+        this.editor = null;
+        this.localStorageKey = `totalcms-code-${this.property}`;
+
+        // Initialize CodeMirror when available
+        this.initializeCodeEditor();
+    }
+
+    initializeCodeEditor() {
+        // Wait for TotalCMSCodeMirror to be available
+        if (!window.TotalCMSCodeMirror) {
+            console.warn('TotalCMSCodeMirror not loaded yet, retrying...');
+            setTimeout(() => this.initializeCodeEditor(), 100);
+            return;
+        }
+
+        const mode = this.input.dataset.mode || 'twig';
+        const theme = this.input.dataset.theme || 'elegant';
+        const editorOptions = this.input.dataset.editorOptions ?
+            JSON.parse(this.input.dataset.editorOptions) : {};
+
+        // Default editor configuration
+        const config = {
+            theme          : theme,
+            viewportMargin : Infinity,                                              // Auto-expand
+            indentUnit     : editorOptions.indentUnit || 2,
+            tabSize        : editorOptions.tabSize || 2,
+            lineNumbers    : editorOptions.lineNumbers !== false,
+            lineWrapping   : editorOptions.lineWrapping !== false,
+            foldGutter     : editorOptions.foldGutter !== false,
+            matchBrackets  : editorOptions.matchBrackets !== false,
+            autoCloseTags  : editorOptions.autoCloseTags !== false,
+            gutters        : ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+            ...editorOptions
+        };
+
+        // Create the appropriate editor based on mode
+        if (mode === 'twig') {
+            this.editor = window.TotalCMSCodeMirror.createTwigEditor(this.input, config);
+        } else if (mode === 'html' || mode === 'htmlmixed') {
+            this.editor = window.TotalCMSCodeMirror.createHtmlEditor(this.input, config);
+        } else if (mode === 'css') {
+            this.editor = window.TotalCMSCodeMirror.createCssEditor(this.input, config);
+        } else if (mode === 'javascript' || mode === 'js') {
+            this.editor = window.TotalCMSCodeMirror.createJsEditor(this.input, config);
+        } else {
+            // Fallback to generic editor
+            this.editor = window.CodeMirror.fromTextArea(this.input, {
+                mode : mode,
+                ...config
+            });
+        }
+
+        // Add custom CSS class for styling
+        this.editor.getWrapperElement().classList.add('totalform-code-editor');
+        this.editor.getWrapperElement().classList.add(`totalform-code-editor-${mode}`);
+
+        // Set up auto-resize functionality
+        this.setupAutoResize();
+
+        // Set up localStorage persistence
+        this.setupLocalStorage();
+
+        // Set up form submission handling
+        this.setupFormSubmission();
+    }
+
+    setupAutoResize() {
+        if (!this.editor) return;
+
+        const resizeEditor = () => {
+            const lineHeight = this.editor.defaultTextHeight();
+            const lineCount = Math.max(this.editor.lineCount(), 10); // Minimum 10 lines
+            const totalHeight = (lineCount * lineHeight) + 20; // Add some padding
+            this.editor.setSize(null, totalHeight);
+        };
+
+        // Initial resize after a short delay
+        setTimeout(() => {
+            resizeEditor();
+            // Fallback minimum height
+            const wrapper = this.editor.getWrapperElement();
+            const currentHeight = wrapper.offsetHeight;
+            if (currentHeight < 250) {
+                this.editor.setSize(null, 250);
+            }
+        }, 100);
+
+        // Resize on content changes
+        this.editor.on('changes', () => {
+            setTimeout(resizeEditor, 0);
+        });
+    }
+
+    setupLocalStorage() {
+        if (!this.editor || !this.localStorageKey) return;
+
+        // Load saved content from localStorage
+        const savedContent = window.TotalCMSCodeMirror?.loadFromStorage(this.localStorageKey);
+        if (savedContent && !this.input.value) {
+            this.editor.setValue(savedContent);
+        } else if (!this.input.value || this.input.value.trim() === '') {
+            // If empty, add some empty lines to show line numbers
+            this.editor.setValue('\n\n\n\n\n\n\n\n\n');
+            this.editor.setCursor(0, 0);
+        }
+
+        // Save content to localStorage on changes
+        this.editor.on('change', () => {
+            if (window.TotalCMSCodeMirror?.saveToStorage) {
+                window.TotalCMSCodeMirror.saveToStorage(this.localStorageKey, this.editor.getValue());
+            }
+        });
+    }
+
+    setupFormSubmission() {
+        if (!this.editor) return;
+
+        // Find the closest form
+        const form = this.container.closest('form');
+        if (form) {
+            form.addEventListener('submit', () => {
+                this.input.value = this.editor.getValue();
+            });
+        }
+
+        // Also update on any change for real-time updates
+        this.editor.on('change', () => {
+            this.input.value = this.editor.getValue();
+            this.changed(); // Trigger TotalField change event
+        });
+    }
+
+    setValue(value) {
+        if (this.editor) {
+            this.editor.setValue(value);
+        } else {
+            this.input.value = value;
+        }
+        this.changed();
+    }
+
+    getValue() {
+        if (this.editor) {
+            return this.editor.getValue();
+        }
+        return this.input.value;
+    }
+
+    focus() {
+        if (this.editor) {
+            this.editor.focus();
+        } else {
+            this.input.focus();
+        }
+    }
+
+    refresh() {
+        if (this.editor) {
+            setTimeout(() => {
+                this.editor.refresh();
+            }, 0);
+        }
+    }
+}

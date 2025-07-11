@@ -32,6 +32,7 @@ abstract class TotalForm
 
 	public const FIELDS_BY_TYPE = [
 		'Text (String) Fields' => [
+			'code',
 			'email',
 			'hidden',
 			'json',
@@ -75,6 +76,7 @@ abstract class TotalForm
 
 	public const FIELDS = [
 		'checkbox',
+		'code',
 		'color',
 		'date',
 		'datetime',
