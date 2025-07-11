@@ -13,7 +13,7 @@
 			"field"    : "id",
 			"factory"  : "uuid",
 			"settings" : {
-				"autogen" : "${name}"
+				"autogen" : "${name-uuid}"
 			}
         },
         "name": {
