@@ -84,5 +84,30 @@
 }
 </style>
 
+<script>
+// Function to manage save button visibility
+function manageSaveButton() {
+	const form       = document.querySelector('.totalform');
+	const saveButton = document.querySelector('.cms-save');
+	const nameInput  = document.querySelector('input[name="name"]');
+
+	if (!form || !saveButton || !nameInput) return;
+
+	const showSaveButton = () => saveButton.style.display = '';
+	const hideSaveButton = () => saveButton.style.display = 'none';
+
+	if (form.classList.contains('edit-mode')) {
+		showSaveButton();
+		return;
+	}
+	hideSaveButton();
+	nameInput.addEventListener('input', function() {
+		this.value.trim() ? showSaveButton() : hideSaveButton();
+	});
+	if (nameInput.value.trim()) showSaveButton();
+}
+manageSaveButton();
+</script>
+
 </main>
 {% endblock %}
