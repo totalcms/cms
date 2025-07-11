@@ -331,6 +331,13 @@
 		display : none;
 	}
 }
+.code-field {
+	--schema-icon : var(--icon-macro);
+
+	&.string-type:after {
+		display : none;
+	}
+}
 .checkbox-field {
 	--schema-icon : var(--icon-checkbox);
 

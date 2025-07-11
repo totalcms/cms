@@ -104,6 +104,15 @@
 }
 
 //------------------------------
+// Code Field
+//------------------------------
+.code-field .form-group-icon {
+	&:after {
+		mask-image : var(--icon-macro);
+	}
+}
+
+//------------------------------
 // JSON Field
 //------------------------------
 .json-field .form-group-icon {
