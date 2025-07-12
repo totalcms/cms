@@ -36,23 +36,13 @@ final class ImportTotalCmsOneAction
 		}
 
 		try {
-			// Start output buffering to capture any PHP warnings/notices
-			ob_start();
 			$importCount = $this->importer->import($cmsDataPath);
-			// Clean any captured output (warnings, notices, etc.)
-			ob_end_clean();
-
 			return $this->renderer->json($response, [
 				'success'      => true,
 				'message'      => sprintf('Successfully queued %d items for import from Total CMS 1.', $importCount),
 				'import_count' => $importCount,
 			]);
 		} catch (\Exception $e) {
-			// Clean any captured output in case of exception
-			if (ob_get_level() > 0) {
-				ob_end_clean();
-			}
-			
 			return $this->renderer->json($response, [
 				'success' => false,
 				'message' => 'Import failed: ' . $e->getMessage(),

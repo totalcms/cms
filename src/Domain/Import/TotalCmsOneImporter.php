@@ -122,7 +122,6 @@ final class TotalCmsOneImporter
 			$postData = json_decode((string)file_get_contents($postFile), true);
 			if (!is_array($postData)) {
 				$this->logger->error(sprintf('Invalid blog post data in file: %s', $postFile));
-
 				return;
 			}
 
@@ -132,7 +131,11 @@ final class TotalCmsOneImporter
 				unset($postData['permalink']);
 			}
 
-			$postId = $postData['id'] ?? basename($postFile, '.cms');
+			if (!isset($postData['id'])) {
+				$this->logger->error(sprintf('Missing blog post ID in file: %s', $postFile));
+				return;
+			}
+			$postId = $postData['id'];
 
 			// Convert timestamp to ISO8601
 			if (isset($postData['timestamp'])) {
