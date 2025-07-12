@@ -18,9 +18,9 @@ beforeEach(function (): void {
 describe('Cache Pattern Clearing', function () {
 	it('has clearByPattern method on all cache services', function (): void {
 		$container = $this->app->getContainer();
-		
-		$redisService = $container->get(RedisService::class);
-		$memcachedService = $container->get(MemcachedService::class);
+
+		$redisService      = $container->get(RedisService::class);
+		$memcachedService  = $container->get(MemcachedService::class);
 		$filesystemService = $container->get(FilesystemService::class);
 
 		// All services should have clearByPattern method
@@ -30,7 +30,7 @@ describe('Cache Pattern Clearing', function () {
 	});
 
 	it('Redis clearByPattern works when Redis is available', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$redisService = $container->get(RedisService::class);
 
 		if (!$redisService->isAvailable()) {
@@ -54,13 +54,13 @@ describe('Cache Pattern Clearing', function () {
 		// Schema data should be cleared
 		expect($redisService->get('computed:schema:blog'))->toBeNull();
 		expect($redisService->get('computed:schema:blog-legacy'))->toBeNull();
-		
+
 		// Other data should remain
 		expect($redisService->get('computed:other:data'))->toBe(['type' => 'other']);
 	});
 
 	it('Memcached clearByPattern clears all cache when called', function (): void {
-		$container = $this->app->getContainer();
+		$container        = $this->app->getContainer();
 		$memcachedService = $container->get(MemcachedService::class);
 
 		if (!$memcachedService->isAvailable()) {
@@ -85,7 +85,7 @@ describe('Cache Pattern Clearing', function () {
 	});
 
 	it('Filesystem clearByPattern clears all cache', function (): void {
-		$container = $this->app->getContainer();
+		$container         = $this->app->getContainer();
 		$filesystemService = $container->get(FilesystemService::class);
 
 		// Filesystem should always be available
@@ -112,7 +112,7 @@ describe('Cache Pattern Clearing', function () {
 	});
 
 	it('CacheManager uses service-specific pattern clearing', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
 
 		// Store schema data that would cause the original issue
@@ -132,13 +132,13 @@ describe('Cache Pattern Clearing', function () {
 
 		// The specific key should be cleared
 		expect($cacheManager->getComputedData('schema:blog-legacy'))->toBeNull();
-		
+
 		// Note: Depending on which cache backend is active, other data might also be cleared
 		// This is acceptable behavior as it ensures stale data is removed
 	});
 
 	it('Emergency cache clear scenario works', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
 
 		// Simulate the scenario that caused the original issue
@@ -146,10 +146,10 @@ describe('Cache Pattern Clearing', function () {
 		$staleSchema = [
 			'properties' => [
 				'media' => [
-					'$ref' => 'https://www.totalcms.co/schemas/properties/url.json',
-					'field' => 'url'
-				]
-			]
+					'$ref'  => 'https://www.totalcms.co/schemas/properties/url.json',
+					'field' => 'url',
+				],
+			],
 		];
 		$cacheManager->storeComputedData('schema:blog-legacy', $staleSchema);
 
@@ -176,7 +176,7 @@ describe('Cache Pattern Clearing', function () {
 	});
 
 	it('Pattern clearing handles non-existent patterns gracefully', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
 
 		// Try to clear a pattern that doesn't exist
@@ -190,9 +190,9 @@ describe('Cache Pattern Clearing', function () {
 
 	it('Handles cache service availability correctly', function (): void {
 		$container = $this->app->getContainer();
-		
-		$redisService = $container->get(RedisService::class);
-		$memcachedService = $container->get(MemcachedService::class);
+
+		$redisService      = $container->get(RedisService::class);
+		$memcachedService  = $container->get(MemcachedService::class);
 		$filesystemService = $container->get(FilesystemService::class);
 
 		// Test each service handles unavailability gracefully
@@ -210,7 +210,7 @@ describe('Cache Pattern Clearing', function () {
 	});
 
 	it('Cache clearing is atomic per service', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
 
 		// Store test data
@@ -229,7 +229,7 @@ describe('Cache Pattern Clearing', function () {
 
 describe('Cache Service Pattern Clearing Edge Cases', function () {
 	it('handles empty patterns correctly', function (): void {
-		$container = $this->app->getContainer();
+		$container         = $this->app->getContainer();
 		$filesystemService = $container->get(FilesystemService::class);
 
 		// Store some data
@@ -244,7 +244,7 @@ describe('Cache Service Pattern Clearing Edge Cases', function () {
 	});
 
 	it('handles special characters in patterns', function (): void {
-		$container = $this->app->getContainer();
+		$container         = $this->app->getContainer();
 		$filesystemService = $container->get(FilesystemService::class);
 
 		// Store data with special characters in keys
@@ -263,7 +263,7 @@ describe('Cache Service Pattern Clearing Edge Cases', function () {
 	});
 
 	it('Redis SCAN handles large key sets efficiently', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$redisService = $container->get(RedisService::class);
 
 		if (!$redisService->isAvailable()) {

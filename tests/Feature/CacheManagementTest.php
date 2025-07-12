@@ -171,7 +171,7 @@ describe('Cache Manager Operations', function () {
 		$cacheManager->storeComputedData('schema:blog', ['type' => 'blog_schema']);
 		$cacheManager->storeComputedData('schema:blog-legacy', ['type' => 'blog_legacy_schema']);
 		$cacheManager->storeComputedData('collection:metadata', ['type' => 'metadata']);
-		
+
 		// Store non-computed data that should remain
 		$cacheManager->storeCollectionIndex('test_coll', ['objects' => []]);
 		$cacheManager->storeApiResponse('/test', [], ['response' => 'api']);

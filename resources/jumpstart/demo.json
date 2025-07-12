@@ -252,6 +252,60 @@
         ]
       },
       "collection": "gallery"
+    },
+    {
+      "id": "toggle-content",
+      "data": {
+        "name": "Toggle Content",
+        "category": "JumpStart Snippets",
+        "snippet": "{% if cms.toggle(\"demotoggle\") %}\n\t<h3>Toggle is On</h3>\n{% else %}\n\t<h3>Toggle is On</h3>\n{% endif %}"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "contact-info",
+      "data": {
+        "name": "Contact Info",
+        "category": "JumpStart Snippets",
+        "snippet": "<div style=\"background: #f5f5f5; padding: 2rem; border-radius: 8px;\">\n    <h3>Get in Touch</h3>\n    <p><strong>Email:</strong> {{ cms.email('demoemail') ?: 'contact@example.com' }}</p>\n    <p><strong>Website:</strong> <a href=\"{{ cms.url('demourl') }}\">{{ cms.url('demourl') ?: 'https://example.com' }}</a></p>\n    <p><strong>Phone:</strong> (555) 123-4567</p>\n</div>"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "basic-text-display",
+      "data": {
+        "name": "Basic Text Display",
+        "category": "JumpStart Snippets",
+        "snippet": "<h3>{{ cms.text('demoheader') }}</h3>\n<p>Welcome to {{ cms.text('demoname') }}!</p>\n<p>Contact us: {{ cms.email('demoemail') }}</p>"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "simple-blog-links",
+      "data": {
+        "name": "Simple Blog Links",
+        "category": "JumpStart Snippets",
+        "snippet": "{% set posts = cms.objects('blog') %}\n<h2>Recent Posts</h2>\n<ul>\n{% for post in posts|slice(0, 5) %}\n    <li>\n        <a href=\"/blog/{{ post.id }}\">{{ post.title }}</a>\n        <small> - {{ cms.grid.date(post.date) }}</small>\n    </li>\n{% endfor %}\n</ul>"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "image",
+      "data": {
+        "name": "Image",
+        "category": "JumpStart Snippets",
+        "snippet": "{{ cms.image(\"demoimage\", {w:400}) }}"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "blog-with-cmsgrid",
+      "data": {
+        "name": "Blog with CmsGrid",
+        "category": "JumpStart Snippets",
+        "snippet": "{% cmsgrid cms.objects('blog') with 'list' %}\n   {% include 'grid/blog.twig' %}\n{% endcmsgrid %}"
+      },
+      "collection": "playground"
     }
   ],
   "name": "Demo Project Data"

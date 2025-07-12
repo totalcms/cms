@@ -14,14 +14,14 @@ beforeEach(function (): void {
 
 describe('Emergency Cache Clear Endpoint', function () {
 	it('clears all caches via emergency endpoint', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
 
 		// Store test data in various cache types
 		$cacheManager->storeComputedData('schema:blog-legacy', [
 			'properties' => [
-				'media' => ['$ref' => 'url.json'] // Stale schema data
-			]
+				'media' => ['$ref' => 'url.json'], // Stale schema data
+			],
 		]);
 		$cacheManager->storeCollectionIndex('test_collection', ['objects' => ['obj1', 'obj2']]);
 		$cacheManager->storeApiResponse('/api/test', [], ['cached' => 'response']);
@@ -32,13 +32,13 @@ describe('Emergency Cache Clear Endpoint', function () {
 		expect($cacheManager->getApiResponse('/api/test', []))->toBeArray();
 
 		// Call emergency cache clear endpoint
-		$request = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		// Should respond with success
 		expect($response->getStatusCode())->toBe(200);
 
-		$responseBody = (string) $response->getBody();
+		$responseBody = (string)$response->getBody();
 		$responseData = json_decode($responseBody, true);
 
 		expect($responseData)->toBeArray();
@@ -49,9 +49,9 @@ describe('Emergency Cache Clear Endpoint', function () {
 
 		// Verify caches are cleared (may still contain data if cache backends aren't available)
 		// But the endpoint should have attempted to clear them
-		$afterSchema = $cacheManager->getComputedData('schema:blog-legacy');
+		$afterSchema     = $cacheManager->getComputedData('schema:blog-legacy');
 		$afterCollection = $cacheManager->getCollectionIndex('test_collection');
-		$afterApi = $cacheManager->getApiResponse('/api/test', []);
+		$afterApi        = $cacheManager->getApiResponse('/api/test', []);
 
 		// Data should be null if clearing was successful, but we allow for cache backends being unavailable
 		expect($afterSchema)->toBeIn([null, ['properties' => ['media' => ['$ref' => 'url.json']]]]);
@@ -63,13 +63,13 @@ describe('Emergency Cache Clear Endpoint', function () {
 		// This test simulates what happens when cache backends fail
 		// We can't easily force a failure, but we can test the endpoint structure
 
-		$request = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		// Should always respond, even if cache clearing fails
 		expect($response->getStatusCode())->toBeIn([200, 500]);
 
-		$responseBody = (string) $response->getBody();
+		$responseBody = (string)$response->getBody();
 		$responseData = json_decode($responseBody, true);
 
 		expect($responseData)->toBeArray();
@@ -91,7 +91,7 @@ describe('Emergency Cache Clear Endpoint', function () {
 		// Emergency cache clear should be accessible without authentication
 		// to help when admin interface is broken due to cached errors
 
-		$request = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		// Should not return 401 or 403 (authentication/authorization errors)
@@ -101,10 +101,10 @@ describe('Emergency Cache Clear Endpoint', function () {
 	});
 
 	it('provides helpful usage information', function (): void {
-		$request = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
-		$responseBody = (string) $response->getBody();
+		$responseBody = (string)$response->getBody();
 		$responseData = json_decode($responseBody, true);
 
 		if ($response->getStatusCode() === 200) {
@@ -117,7 +117,7 @@ describe('Emergency Cache Clear Endpoint', function () {
 	});
 
 	it('emergency clear resolves the schema caching issue', function (): void {
-		$container = $this->app->getContainer();
+		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
 
 		// Simulate the exact issue that occurred:
@@ -125,10 +125,10 @@ describe('Emergency Cache Clear Endpoint', function () {
 		$staleBlogLegacySchema = [
 			'properties' => [
 				'media' => [
-					'$ref' => 'https://www.totalcms.co/schemas/properties/url.json',
-					'field' => 'url'
-				]
-			]
+					'$ref'  => 'https://www.totalcms.co/schemas/properties/url.json',
+					'field' => 'url',
+				],
+			],
 		];
 
 		$cacheManager->storeComputedData('schema:blog-legacy', $staleBlogLegacySchema);
@@ -138,13 +138,13 @@ describe('Emergency Cache Clear Endpoint', function () {
 		expect($cached)->toBe($staleBlogLegacySchema);
 
 		// Call emergency cache clear
-		$request = $this->createRequest('GET', '/emergency/cache/clear');
+		$request  = $this->createRequest('GET', '/emergency/cache/clear');
 		$response = $this->app->handle($request);
 
 		expect($response->getStatusCode())->toBe(200);
 
 		// Parse response to check if clearing was successful
-		$responseData = json_decode((string) $response->getBody(), true);
+		$responseData       = json_decode((string)$response->getBody(), true);
 		$clearingSuccessful = $responseData['cleared'] ?? false;
 
 		// Stale schema should be cleared if the operation was successful
@@ -173,8 +173,8 @@ describe('Emergency Cache Clear Endpoint', function () {
 		expect($response2->getStatusCode())->toBeIn([200, 500]);
 
 		// Both should return valid JSON
-		$data1 = json_decode((string) $response1->getBody(), true);
-		$data2 = json_decode((string) $response2->getBody(), true);
+		$data1 = json_decode((string)$response1->getBody(), true);
+		$data2 = json_decode((string)$response2->getBody(), true);
 
 		expect($data1)->toBeArray();
 		expect($data2)->toBeArray();

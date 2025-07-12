@@ -129,6 +129,7 @@ final class MemcachedService implements CacheInterface
 		// TODO: Consider implementing key tracking for more precise pattern clearing
 		try {
 			$memcached = $this->getConnection();
+
 			return $memcached->flush();
 		} catch (\Exception $e) {
 			return false;

@@ -37,6 +37,7 @@ final class ImportTotalCmsOneAction
 
 		try {
 			$importCount = $this->importer->import($cmsDataPath);
+
 			return $this->renderer->json($response, [
 				'success'      => true,
 				'message'      => sprintf('Successfully queued %d items for import from Total CMS 1.', $importCount),

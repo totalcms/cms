@@ -62,7 +62,7 @@ echo "Starting job processing...\n";
 $startTime = microtime(true);
 
 try {
-	$totalcms = new TotalCMS\TotalCMS();
+	$totalcms  = new TotalCMS\TotalCMS();
 	$jobRunner = $totalcms->jobRunner();
 
 	// First retry any failed jobs that haven't exceeded max attempts

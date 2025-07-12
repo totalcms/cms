@@ -84,7 +84,8 @@
 		{% set twigfield %}
 			<textarea name="twig" id="twig" class="cms-hide"></textarea>
 		{% endset %}
-		{{ cms.form.simple('playground', twigfield, {
+
+		{{ cms.form.simple(url.path, twigfield, {
 			class  : "render-playground",
 			method : "POST",
 			label  : "Render Twig",

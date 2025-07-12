@@ -134,9 +134,9 @@ final class RedisService implements CacheInterface
 		}
 
 		try {
-			$redis = $this->getConnection();
+			$redis    = $this->getConnection();
 			$iterator = null;
-			$deleted = 0;
+			$deleted  = 0;
 
 			// Use SCAN to find keys matching the pattern
 			while (($keys = $redis->scan($iterator, $pattern)) !== false) {
