@@ -29,6 +29,8 @@
 						<a  {% if url.id == snippet.id %}class="active"{% endif %}
 							href="playground/{{ snippet.id }}"
 							title="{{ snippet.description | escape }}">{{ snippet.name }}</a>
+						<button class="cms-clip-button" title="Copy Snippet {{ snippet.name | escape }}" data-clip="#{{ snippet.id }}"></button>
+						<span id="{{ snippet.id }}" style="display:none;">{{ snippet.snippet | escape }}</span>
 					</li>
 					{% endfor %}
 				</ul>
@@ -111,6 +113,37 @@
 {% endif %}
 
 <style>
+.playground-snippet {
+	position: relative;
+}
+.playground-snippet .cms-clip-button {
+	display             : inline-block;
+	width               : 1.5rem;
+	height              : 1.5rem;
+	margin-left         : 0.5rem;
+	background-color    : transparent;
+	background-image    : var(--icon-clipboard);
+	background-size     : contain;
+	background-repeat   : no-repeat;
+	background-position : center;
+	border              : none;
+	cursor              : pointer;
+	opacity             : 0;
+	transition          : opacity 0.2s ease-in-out;
+	position            : absolute;
+	right               : 0.5rem;
+	top                 : 50%;
+	transform           : translateY(-50%);
+	text-indent         : -99999px;
+
+}
+.playground-snippet .cms-clip-button.copied {
+	background-image : var(--icon-clipboard-check);
+	opacity          : 1;
+}
+.playground-snippet:hover .cms-clip-button {
+	opacity: 1;
+}
 .form-field.id-field {
 	height   : 0;
 	overflow : hidden;

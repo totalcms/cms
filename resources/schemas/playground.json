@@ -55,6 +55,6 @@
         "id",
         "name",
 		"category",
-		"description"
+		"snippet"
     ]
 }
