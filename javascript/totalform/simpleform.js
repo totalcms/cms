@@ -84,9 +84,13 @@ export default class SimpleForm {
 	}
 
 	refreshPage() {
-		if (this.refresh) {
+		if (this.refresh && !this.hasError()) {
 			window.location.reload();
 		}
+	}
+
+	hasError() {
+		return this.button.classList.has("error");
 	}
 
 	error(error) {
@@ -102,12 +106,13 @@ export default class SimpleForm {
 			this.button.classList.add(state);
 			this.button.textContent = label;
 
-			setTimeout(() => {
+			this.button.addEventListener("pointermove", () => {
 				this.button.classList.remove(state);
 				this.button.textContent = originalText;
 				this.button.style.width = "";
-				this.refreshPage();
-			}, 1500);
+			}, { once: true });
+
+			setTimeout(() => this.refreshPage(), 1500);
 		}, 200);
 	}
 

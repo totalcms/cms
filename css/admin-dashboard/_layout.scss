@@ -67,6 +67,9 @@ body {
 	.docs {
 		mask-image : var(--icon-docs);
 	}
+	.playground {
+		mask-image : var(--icon-twig-playground);
+	}
 }
 
 .dash-content {
@@ -136,6 +139,7 @@ body {
 			&.schema-gallery { --collection-icon : var(--icon-gallery) }
 			&.schema-image { --collection-icon : var(--icon-image) }
 			&.schema-number { --collection-icon : var(--icon-number) }
+			&.schema-playground { --collection-icon : var(--icon-twig-playground) }
 			&.schema-styledtext { --collection-icon : var(--icon-styledtext) }
 			&.schema-svg { --collection-icon : var(--icon-svg) }
 			&.schema-text { --collection-icon : var(--icon-text) }
@@ -148,7 +152,8 @@ body {
 			&.macro-builder { --collection-icon : var(--icon-build) }
 			&.pretty-url-builder { --collection-icon : var(--icon-link) }
 			&.server-checker { --collection-icon : var(--icon-health) }
-			&.twig-playground { --collection-icon : var(--icon-twig-playground) }
+			&.playground-snippet { --collection-icon : var(--icon-macro) }
+			&.jumpstart { --collection-icon : var(--icon-jumpstart) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);
@@ -215,12 +220,11 @@ body {
 		}
 	}
 	p, ul, ol {
-		max-width : 65ch;
-		margin-top: 1rem;
-
-		&:first-child {
-			margin-top: 0;
-		}
+		max-width  : 65ch;
+		margin-top : 1rem;
+	}
+	p:first-of-type {
+		margin-top: 0;
 	}
 	form {
 		max-width : 800px;

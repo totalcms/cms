@@ -3,7 +3,7 @@
 namespace TotalCMS\Domain\Admin\PropertyField;
 
 use TotalCMS\Domain\Admin\TotalForm;
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 class PropertyField
 {

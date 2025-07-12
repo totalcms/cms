@@ -6,11 +6,11 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\HTMLUtils;
 
 /** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
 final class CollectionTable
@@ -77,7 +77,12 @@ final class CollectionTable
 		$collectionField = HTMLUtils::element('div', $label . $input);
 
 		$label   = HTMLUtils::element('label', 'New ' . $labelSingular . ' ID', ['for' => 'clone-id']);
-		$input   = HTMLUtils::inlineElement('input', ['id'=>'clone-id', 'type'=>'text', 'name'=>'id']);
+		$input   = HTMLUtils::inlineElement('input', [
+			'id'             => 'clone-id',
+			'type'           => 'text',
+			'name'           => 'id',
+			'autocapitalize' => 'off',
+		]);
 		$idField = HTMLUtils::element('div', $label . $input);
 
 		$form = new SimpleForm(

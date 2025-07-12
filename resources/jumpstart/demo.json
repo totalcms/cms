@@ -1,0 +1,312 @@
+{
+  "factory": [
+    {
+      "count": 7,
+      "data": {
+        "image": "imageBlur",
+        "tags": "tags(1,5,news,review,opinion,feature,interview,announcement)"
+      },
+      "collection": "blog"
+    },
+    {
+      "count": 7,
+      "collection": "products"
+    },
+    {
+      "count": 11,
+      "data": {
+        "image": "imageShapes(1280,720,1B3854,517491,f8f8f8,2F4C6A,f2f2f2,fcfcfc)"
+      },
+      "collection": "feed"
+    },
+    {
+      "id": "demoname",
+      "data": {
+        "text": "name"
+      },
+      "collection": "text"
+    },
+    {
+      "id": "democolor",
+      "collection": "color"
+    },
+    {
+      "id": "demoprice",
+      "data": {
+        "number": "randomFloat(2, 10, 99)"
+      },
+      "collection": "number"
+    },
+    {
+      "id": "demoimage",
+      "collection": "image"
+    },
+    {
+      "id": "demogallery",
+      "data": {
+        "gallery": "galleryShapes(15,1280,720)"
+      },
+      "collection": "gallery"
+    },
+    {
+      "id": "demostyledtext",
+      "data": {
+        "styledtext": "styledtext(1,4,true,true)"
+      },
+      "collection": "styledtext"
+    }
+  ],
+  "schemas": [
+    {
+      "formgrid": "id\nname\nimage\ndescription\nprice\ntags",
+      "id": "products",
+      "$id": "https://www.totalcms.co/schemas/products.json",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "price": {
+          "factory": "randomFloat(2, 10, 100)",
+          "settings": {
+            "min": 1,
+            "step": 0.01
+          },
+          "type": "number",
+          "field": "number"
+        },
+        "id": {
+          "placeholder": "Enter a unique identifier",
+          "help": "The unique identifier",
+          "factory": "slug",
+          "$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+          "field": "id",
+          "label": "ID",
+          "settings": {
+            "autogen": "${name}"
+          }
+        },
+        "tags": {
+          "factory": "tags(1, 5)",
+          "label": "Tags",
+          "settings": {
+            "propertyOptions": true
+          },
+          "field": "list",
+          "$ref": "https://www.totalcms.co/schemas/properties/list.json"
+        },
+        "image": {
+          "factory": "imageBlur",
+          "label": "Image",
+          "field": "image",
+          "$ref": "https://www.totalcms.co/schemas/properties/image.json"
+        },
+        "description": {
+          "factory": "styledtext",
+          "label": "Description",
+          "type": "string",
+          "field": "styledtext"
+        },
+        "name": {
+          "factory": "words(3, true)",
+          "label": "Name",
+          "type": "string",
+          "field": "text"
+        }
+      },
+      "description": "schema for my products",
+      "required": [
+        "id",
+        "name",
+        "description",
+        "image",
+        "price",
+        "tags"
+      ],
+      "type": "object",
+      "index": [
+        "id",
+        "name",
+        "image",
+        "price",
+        "tags"
+      ]
+    }
+  ],
+  "collections": {
+    "custom": [
+      {
+        "id": "products",
+        "category": "Custom Collections",
+        "description": "A collection of products objects that conform to the products schema.",
+        "name": "Products",
+        "queueRebuildOnSave": false,
+        "labelPlural": "Products",
+        "schema": "products",
+        "url": "/products/product.php",
+        "labelSingular": "Product",
+        "sortBy": "",
+        "groups": [
+        ],
+        "reverseSort": false,
+        "prettyUrl": false
+      },
+      {
+        "id": "blog",
+        "category": "",
+        "description": "A collection of blog objects that conform to the blog schema.",
+        "name": "Blog",
+        "queueRebuildOnSave": false,
+        "labelPlural": "Posts",
+        "schema": "blog",
+        "url": "/blog/post.php",
+        "labelSingular": "Post",
+        "sortBy": "id",
+        "groups": [
+        ],
+        "reverseSort": false,
+        "prettyUrl": false
+      },
+      {
+        "id": "feed",
+        "category": "",
+        "description": "A collection of feed objects that conform to the feed schema.",
+        "name": "Feed",
+        "queueRebuildOnSave": false,
+        "labelPlural": "Posts",
+        "schema": "feed",
+        "url": "/feed/post.php",
+        "labelSingular": "Post",
+        "sortBy": "id",
+        "groups": [
+        ],
+        "reverseSort": false,
+        "prettyUrl": false
+      }
+    ],
+    "reserved": [
+      "svg",
+      "depot",
+      "file",
+      "auth",
+      "gallery",
+      "color",
+      "date",
+      "url",
+      "image",
+      "blog",
+      "number",
+      "toggle",
+      "feed",
+      "text",
+      "styledtext",
+      "email"
+    ]
+  },
+  "version": "1.0.0",
+  "description": "JumpStart data from the Total CMS 3 Demo Project",
+  "objects": [
+    {
+      "id": "demosvg",
+      "data": {
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><g fill=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"34\" x2=\"32\" y2=\"2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></line><path d=\"M49,45v12c0,2.761-2.239,5-5,5H20c-2.761,0-5-2.239-5-5v-12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><rect x=\"9\" y=\"39\" width=\"46\" height=\"6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></rect><path d=\"M18,6h1c7.18,0,13,5.82,13,13v2s-1,0-1,0c-7.18,0-13-5.82-13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path><path d=\"M46,12h-1c-7.18,0-13,5.82-13,13v2s1,0,1,0c7.18,0,13-5.82,13-13v-2Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></path></g></svg>"
+      },
+      "collection": "svg"
+    },
+    {
+      "id": "demoemail",
+      "data": {
+        "email": "support@weaversspace.com"
+      },
+      "collection": "email"
+    },
+    {
+      "id": "demotoggle",
+      "data": {
+        "status": true
+      },
+      "collection": "toggle"
+    },
+    {
+      "id": "demodate",
+      "data": {
+        "date": "-5 days"
+      },
+      "collection": "date"
+    },
+    {
+      "id": "demourl",
+      "data": {
+        "url": "https://www.weavers.space/"
+      },
+      "collection": "url"
+    },
+    {
+      "id": "demoheader",
+      "data": {
+        "text": "Welcome to Total CMS 3"
+      },
+      "collection": "text"
+    },
+    {
+      "id": "watermarks",
+      "data": {
+        "gallery": [
+        ]
+      },
+      "collection": "gallery"
+    },
+    {
+      "id": "toggle-content",
+      "data": {
+        "name": "Toggle Content",
+        "category": "JumpStart Snippets",
+        "snippet": "{% if cms.toggle(\"demotoggle\") %}\n\t<h3>Toggle is On</h3>\n{% else %}\n\t<h3>Toggle is On</h3>\n{% endif %}"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "contact-info",
+      "data": {
+        "name": "Contact Info",
+        "category": "JumpStart Snippets",
+        "snippet": "<div style=\"background: #f5f5f5; padding: 2rem; border-radius: 8px;\">\n    <h3>Get in Touch</h3>\n    <p><strong>Email:</strong> {{ cms.email('demoemail') ?: 'contact@example.com' }}</p>\n    <p><strong>Website:</strong> <a href=\"{{ cms.url('demourl') }}\">{{ cms.url('demourl') ?: 'https://example.com' }}</a></p>\n    <p><strong>Phone:</strong> (555) 123-4567</p>\n</div>"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "basic-text-display",
+      "data": {
+        "name": "Basic Text Display",
+        "category": "JumpStart Snippets",
+        "snippet": "<h3>{{ cms.text('demoheader') }}</h3>\n<p>Welcome to {{ cms.text('demoname') }}!</p>\n<p>Contact us: {{ cms.email('demoemail') }}</p>"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "simple-blog-links",
+      "data": {
+        "name": "Simple Blog Links",
+        "category": "JumpStart Snippets",
+        "snippet": "{% set posts = cms.objects('blog') %}\n<h2>Recent Posts</h2>\n<ul>\n{% for post in posts|slice(0, 5) %}\n    <li>\n        <a href=\"/blog/{{ post.id }}\">{{ post.title }}</a>\n        <small> - {{ cms.grid.date(post.date) }}</small>\n    </li>\n{% endfor %}\n</ul>"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "image",
+      "data": {
+        "name": "Image",
+        "category": "JumpStart Snippets",
+        "snippet": "{{ cms.image(\"demoimage\", {w:400}) }}"
+      },
+      "collection": "playground"
+    },
+    {
+      "id": "blog-with-cmsgrid",
+      "data": {
+        "name": "Blog with CmsGrid",
+        "category": "JumpStart Snippets",
+        "snippet": "{% cmsgrid cms.objects('blog') with 'list' %}\n   {% include 'grid/blog.twig' %}\n{% endcmsgrid %}"
+      },
+      "collection": "playground"
+    }
+  ],
+  "name": "Demo Project Data"
+}

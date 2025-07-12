@@ -12,8 +12,8 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -84,9 +84,19 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importSchema(array $options = []): string
 	{
-		$options['api']    = $this->api;
+		$options['api'] = $this->api;
 
 		$form = new ImportSchemaForm(...$options);
+
+		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function importJumpStart(array $options = []): string
+	{
+		$options['api'] = $this->api;
+
+		$form = new ImportJumpStartForm(...$options);
 
 		return $form->build();
 	}
@@ -170,6 +180,20 @@ final class TotalFormFactory
 		$table = new CollectionTable(...$options);
 
 		return $table->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function playground(string $id = '', array $options = []): string
+	{
+		$options = array_merge([
+			'save'   => 'Save',
+			'delete' => 'Delete',
+		], $options);
+		$options['id'] = $id;
+
+		$form = $this->builder('playground', $options);
+
+		return $form->autoBuild();
 	}
 
 	/** @param array<string,mixed> $options */

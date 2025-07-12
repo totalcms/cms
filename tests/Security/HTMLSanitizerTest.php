@@ -4,8 +4,8 @@ namespace Tests\Security;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Utils\HTMLSanitizer;
-use TotalCMS\Utils\HTMLSanitizerConfig;
+use TotalCMS\Domain\Security\Sanitization\HTMLSanitizer;
+use TotalCMS\Domain\Security\Sanitization\HTMLSanitizerConfig;
 
 /**
  * Test HTML Sanitization Security.

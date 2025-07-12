@@ -1,0 +1,28 @@
+{# Generic Grid Item Template #}
+{% if object.image %}
+    <div class="cms-image">
+        {{ cms.imageFromData(object.image, object.id, {}, {collection: collection|default("")}) }}
+    </div>
+{% endif %}
+
+<div class="cms-content">
+    <h3 class="cms-title">{{ object.title | default(object.name) }}</h3>
+
+    {% if object.date %}
+        {{ cms.grid.meta(cms.grid.date(object.date, 'relative')) }}
+    {% elseif object.created %}
+        {{ cms.grid.meta(cms.grid.date(object.created, 'relative')) }}
+    {% endif %}
+
+    {% if object.summary %}
+        {{ cms.grid.excerpt(object.summary, 150) }}
+    {% elseif object.content %}
+        {{ cms.grid.excerpt(object.content, 150) }}
+    {% elseif object.description %}
+        {{ cms.grid.excerpt(object.description, 150) }}
+    {% endif %}
+
+    {% if object.tags %}
+        {{ cms.grid.tags(object.tags) }}
+    {% endif %}
+</div>

@@ -2,6 +2,10 @@
 // Action Bar
 //--------------------------------
 .actionbar {
+	--actionbar-color: var(--totalform-purewhite) / 0.6;
+	--actionbar-icon-color: var(--totalform-nearblack);
+	--actionbar-icon-size: 24px;
+
 	background-color : oklch(var(--actionbar-color));
 	position         : absolute;
 	top              : 0;

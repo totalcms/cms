@@ -22,6 +22,7 @@ import SchemaPropertiesField from './schemaProperties';
 import JSONField from './json';
 import FileField from './file';
 import DepotField from './depot';
+import CodeField from './code';
 
 // import Deck from './deck';
 // import MarkdownField from './markdown';
@@ -281,6 +282,9 @@ export default class TotalForm {
 
 			case "depot":
 				return new DepotField(field,options);
+
+			case "code":
+				return new CodeField(field,options);
 
 			// case "radio":
 			// 	return new RadioField(field, options);

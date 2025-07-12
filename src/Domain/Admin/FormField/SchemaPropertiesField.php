@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Admin\PropertyField\SchemaField;
 use TotalCMS\Domain\Admin\SchemaForm;
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 class SchemaPropertiesField extends PropertiesField
 {

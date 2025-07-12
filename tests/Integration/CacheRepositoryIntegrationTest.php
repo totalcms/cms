@@ -264,16 +264,9 @@ describe('Cache Repository Integration', function () {
 		expect($collectionRepo->collectionExists($testId))->toBeTrue();
 
 		if ($hasCachedCollections) {
-			// BUG: Cache is NOT cleared automatically when collections exist
+			// Cache IS cleared automatically when collections are saved
 			$cacheAfterSave = $cacheManager->getComputedData('collections_list');
-			expect($cacheAfterSave)->not()->toBeNull();
-
-			// The cached data doesn't include our new collection (stale cache)
-			$cachedIds = array_map(fn ($c) => $c->id, $cacheAfterSave);
-			expect($cachedIds)->not()->toContain($testId);
-
-			// Only after manual cache clear will fresh data be loaded
-			$cacheManager->clearComputedData('collections_list');
+			expect($cacheAfterSave)->toBeNull();
 		}
 
 		// Fetch fresh collections (will now include our new collection)

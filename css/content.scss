@@ -1,11 +1,16 @@
-@use "sass:meta";
+@use "variables";
 @import "froala-editor/css/froala_style.css";
 
 .cms-hide {
     display : none !important;
 }
 .link-container {
-	display : block;
+	display         : block;
+	text-decoration : none;
+
+	&:hover, *, *:hover {
+		text-decoration : none;
+	}
 }
 .cms-twig-traceback {
 	display : none;
@@ -36,10 +41,8 @@ body>.cms-twig-error {
 	height       : auto !important;
 	aspect-ratio : 16 / 9;
 }
-.cms-image {
+img.cms-image {
 	max-width : 100%;
 	height    : auto;
 	width     : auto;
 }
-
-@include meta.load-css("pagination");

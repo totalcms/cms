@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nurl url\nprettyUrl prettyUrl\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\nqueueRebuildOnSave queueRebuildOnSave\nproperties properties\ncustomProperties customProperties",
+	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Overrides---\nproperties properties\ncustomProperties customProperties",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -57,15 +57,15 @@
 			"field"       : "textarea"
         },
         "url": {
-			"$ref"        : "https://www.totalcms.co/schemas/properties/url.json",
-			"label"       : "URL",
-			"help"        : "The base url for objects stored in this collection.",
-			"placeholder" : "https://www.example.com/objects/",
-			"field"       : "url"
+			"type"        : "string",
+			"label"       : "Object Path or URL",
+			"help"        : "The base url or path for objects stored in this collection.",
+			"placeholder" : "/objects/object.php",
+			"field"       : "text"
         },
         "prettyUrl": {
 			"type"  : "boolean",
-			"label" : "Pretty URL",
+			"label" : "Pretty URLs",
 			"help"  : "Use pretty URLs for linking building to objects in this collection.",
 			"field" : "checkbox"
         },
@@ -84,15 +84,15 @@
         "labelPlural": {
 			"type"        : "string",
 			"label"       : "Plural Label",
-			"help"        : "Custom plural term for collection items (e.g. 'posts', 'articles'). Defaults to 'objects' if not set.",
-			"placeholder" : "objects",
+			"help"        : "Custom plural term for collection items (e.g. 'Posts', 'Articles'). Defaults to 'Objects' if not set.",
+			"placeholder" : "Objects",
 			"field"       : "text"
         },
         "labelSingular": {
 			"type"        : "string",
 			"label"       : "Singular Label",
-			"help"        : "Custom singular term for collection items (e.g. 'post', 'article'). Defaults to 'object' if not set.",
-			"placeholder" : "object",
+			"help"        : "Custom singular term for collection items (e.g. 'Post', 'Article'). Defaults to 'Object' if not set.",
+			"placeholder" : "Object",
 			"field"       : "text"
         },
 		"sortBy": {

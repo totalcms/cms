@@ -5,7 +5,7 @@ namespace Tests\Security;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Data\SvgData;
-use TotalCMS\Utils\SVGSanitizer;
+use TotalCMS\Domain\Security\Sanitization\SVGSanitizer;
 
 /**
  * Test SVG Sanitization Security.

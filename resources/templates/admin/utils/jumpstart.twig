@@ -1,0 +1,37 @@
+<h1>JumpStart Data</h1>
+
+{% set exportapi = cms.api ~ "/export/jumpstart" %}
+
+<section style="display:grid;align-content:start;gap:3rem">
+
+	<div>
+		<p>JumpStart is a feature of the CMS that allows you to quickly set up a content structure
+		by exporting and importing data in a standardized JSON format. This is particularly useful for
+		creating new projects or sharing content structures with others. See the
+		<a href="docs/jumpstart">JumpStart documentation</a> for more information.</p>
+
+		<p>You can also download the <a href="{{ exportapi ~ '/demo' }}" download>Demo JumpStart Data</a>
+		to see the structure and format of the JumpStart data.</p>
+	</div>
+
+	<div>
+		<h3>Export JumpStart Data</h3>
+		<p>This will export all of the data currently stored in the CMS into standardized JSON
+		file. This can be used in other projects to quickly set up a similar content structure.</p>
+		<p><a href="{{ exportapi }}" class="dash-button" download target="_blank">Export JumpStart Data</a></p>
+	</div>
+
+	<div>
+		<h3>Import JumpStart Data</h3>
+		<p>Import data from an existing JumpStart JSON file that you have. Depending on how much data is inside
+		the JSON file, the import process may take some time. If there are any errors, you can see the details
+		in the <strong>JumpStart logs</strong> in the <a href="utils/logs">Log Analyzer</a>.</p>
+		{{ cms.form.importJumpStart() }}
+	</div>
+
+</section>
+
+
+<style>
+.import-form { margin-top: 1rem; }
+</style>

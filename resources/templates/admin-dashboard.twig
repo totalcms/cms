@@ -8,7 +8,7 @@
 	<title>Total CMS Admin</title>
 
     <base href="{{ cms.api }}/admin/">
-	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css"/>
+	<link rel="stylesheet" href="{{ cms.api }}/assets/content-bundled.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css"/>
 
@@ -25,20 +25,23 @@
                     <li class="menu-item">
                         <a class="home" href="" title="Home">Home</a>
                     </li>
-                    <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
-                        <a class="schemas" href="schemas" title="Schemas">Schemas</a>
-                    </li>
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
                         <a class="collections" href="collections" title="Collections">Collections</a>
                     </li>
-                    <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
-                        <a class="docs" href="docs" title="Docs">Docs</a>
+                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
+                        <a class="playground" href="playground" title="Playground">Playground</a>
+                    </li>
+                    <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
+                        <a class="schemas" href="schemas" title="Schemas">Schemas</a>
                     </li>
                     <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
                         <a class="utils" href="utils" title="Utils">Utils</a>
                     </li>
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
                         <a class="settings" href="settings" title="Settings">Settings</a>
+                    </li>
+                    <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
+                        <a class="docs" href="docs" title="Docs">Docs</a>
                     </li>
                 </ul>
             </nav>
@@ -69,6 +72,7 @@
     {% endblock %}
 
 
+	<script type="module" src="{{ cms.api }}/assets/content.js"></script>
 	<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
 
 	{% block bodyBelow %}{% endblock %}

@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
 
 final class AdminUtilsAction

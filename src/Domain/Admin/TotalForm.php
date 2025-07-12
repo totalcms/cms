@@ -10,10 +10,10 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Utils\HTMLUtils;
 
 /**
  * Total Form Builder.
@@ -32,6 +32,7 @@ abstract class TotalForm
 
 	public const FIELDS_BY_TYPE = [
 		'Text (String) Fields' => [
+			'code',
 			'email',
 			'hidden',
 			'json',
@@ -75,6 +76,7 @@ abstract class TotalForm
 
 	public const FIELDS = [
 		'checkbox',
+		'code',
 		'color',
 		'date',
 		'datetime',

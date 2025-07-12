@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
+use TotalCMS\Domain\Security\Sanitization\HTMLSanitizer;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\HTMLSanitizer;
 
 class StringData extends PropertyData
 {

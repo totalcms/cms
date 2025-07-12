@@ -1,0 +1,18 @@
+{# Feed Grid Item Template #}
+{% if object.image %}
+    <div class="cms-image">
+        {{ cms.imageFromData(object.image, object.id, {}, {collection: collection|default("feed")}) }}
+    </div>
+{% endif %}
+
+<div class="cms-content">
+    {% if object.created %}
+        {{ cms.grid.meta(cms.grid.date(object.created, 'relative')) }}
+    {% endif %}
+
+    <h3 class="cms-title">{{ object.title }}</h3>
+
+    {% if object.content %}
+        {{ cms.grid.excerpt(object.content, 200) }}
+    {% endif %}
+</div>

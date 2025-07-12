@@ -132,7 +132,12 @@ final class TotalCmsOneImporter
 				unset($postData['permalink']);
 			}
 
-			$postId = $postData['id'] ?? basename($postFile, '.cms');
+			if (!isset($postData['id'])) {
+				$this->logger->error(sprintf('Missing blog post ID in file: %s', $postFile));
+
+				return;
+			}
+			$postId = $postData['id'];
 
 			// Convert timestamp to ISO8601
 			if (isset($postData['timestamp'])) {
@@ -504,6 +509,11 @@ final class TotalCmsOneImporter
 
 			$collection = $this->collectionFactory->generateCollection($collectionData);
 			$this->collectionRepository->saveCollection($collection);
+
+			// Verify collection was created successfully
+			if (!$this->collectionFetcher->collectionExists($id)) {
+				throw new \RuntimeException(sprintf('Collection %s was not created successfully', $id));
+			}
 
 			$this->logger->info(sprintf('Created collection: %s with schema: %s', $id, $schema));
 		} catch (\Exception $e) {

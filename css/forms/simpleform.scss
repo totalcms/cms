@@ -3,12 +3,32 @@
 //------------------------------
 .simple-form {
 	button {
-		transition-property : opacity, color, background-color;
-		transition-duration : 500ms;
+		cursor              : pointer;
+		transition-property : opacity, color, background-color, box-shadow, transform;
+		transition-duration : 250ms;
 		opacity             : 1;
+
+		&:active {
+			opacity    : 0.5;
+			transform  : scale(0.97);
+			box-shadow : 0 0 10px oklch(var(--totalform-darkgray) / 0.7);
+		}
 	}
 	button.processing {
-		opacity : 0.5;
+		opacity   : 0.5;
+		cursor    : progress;
+		animation : pluse-glow 1.2s ease-in-out infinite;
+
+		@keyframes pluse-glow {
+			0%, 100% {
+				transform  : scale(0.97);
+				box-shadow : 0 0 10px oklch(var(--totalform-darkgray) / 0.7);
+			}
+			50% {
+				transform  : scale(1);
+				box-shadow : 0 0 0px oklch(var(--totalform-darkgray) / 0);
+			}
+		}
 	}
 	button.success {
 		background-color : oklch(var(--totalform-success));

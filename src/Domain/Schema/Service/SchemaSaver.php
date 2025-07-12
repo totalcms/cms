@@ -57,7 +57,11 @@ final class SchemaSaver
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schema                   = $this->factory->generateSchema($schemaData);
 
-		if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, $this->storage->reservedSchemasIds())) {
+		if (!isset($schema->id)) {
+			throw new \UnexpectedValueException('Schema ID is required: ' . json_encode($schemaData), 1);
+		}
+
+		if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, SchemaData::RESERVED_NAMES)) {
 			throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
 		}
 

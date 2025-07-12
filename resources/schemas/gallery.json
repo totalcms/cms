@@ -13,10 +13,11 @@
 			"factory" : "slug"
         },
         "gallery": {
-			"$ref"  : "https://www.totalcms.co/schemas/properties/gallery.json",
-			"label" : "Gallery",
-			"help"  : "Drag and drop images here to add them to the gallery.",
-			"field" : "gallery"
+			"$ref"    : "https://www.totalcms.co/schemas/properties/gallery.json",
+			"label"   : "Gallery",
+			"help"    : "Drag and drop images here to add them to the gallery.",
+			"field"   : "gallery",
+			"factory" : "gallery(5,1920,1080)"
         }
     },
     "required": [

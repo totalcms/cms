@@ -2,6 +2,41 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.32] - 2025-07-12
+
+### Added
+- **NEW**: Complete playground system for testing Twig templates with live data
+- **NEW**: `{% cmsgrid %}` Twig tag for flexible content grids with helper methods
+- **NEW**: JumpStart system for data import/export with factory generation
+- New code field type with CodeMirror integration and syntax highlighting
+- Copy-to-clipboard functionality for playground snippets
+- `mailto` Twig filter for email links
+- `htmlencode` filter with encoding options
+- `clearcache` Twig variable for cache management
+- Emergency cache clearing capabilities
+- Grid renderer with date, tags, excerpt, and price helpers
+- Factory system for generating test data with Faker
+- Export/import functionality for playground snippets
+
+### Changed
+- **BREAKING**: `config` variable in Twig templates changed to `cms.env`
+- Reorganized Factory, Twig, and Util classes for better structure
+- Enhanced Total CMS 1 import functionality with better error handling
+- Improved cache clearing mechanisms and OPcache integration
+- Better form handling with disabled autosave on edit forms
+- Enhanced dashboard with bundled CSS and improved responsiveness
+- Autocapitalize disabled on ID, URL, and Email fields for better mobile UX
+
+### Fixed
+- Grid list layouts and template rendering
+- Line numbers and code gutters in editors
+- Collection factory import issues with images and galleries
+- Dashboard JavaScript compatibility issues
+- 404 security handling and API URL validation
+- Cache issues with collection lists
+- Form refresh warnings on playground page
+- GitHub test compatibility and stacks preview directory handling
+
 ## [3.0.31] - 2025-06-27
 
 ### Added

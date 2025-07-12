@@ -30,7 +30,7 @@ final class SitemapBuilder
 
 		$sitemap = new Sitemap();
 
-		$dateProperty = $options['date'] ?? 'date';
+		$dateProperty = $options['date'] ?? 'updated';
 		unset($options['date']);
 
 		foreach ($index->objects as $object) {

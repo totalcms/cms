@@ -3,7 +3,7 @@
 namespace TotalCMS\Renderer;
 
 use Psr\Http\Message\ResponseInterface;
-use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 /**
  * A HTML template renderer.

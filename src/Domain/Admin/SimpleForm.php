@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Utils\CSRFTokenManager;
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * Simple Form Builder.

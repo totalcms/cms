@@ -4,7 +4,7 @@ namespace Tests\Security;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 

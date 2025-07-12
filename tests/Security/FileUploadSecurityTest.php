@@ -5,7 +5,7 @@ namespace Tests\Security;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Service\ImageSaver;
-use TotalCMS\Utils\FileUploadValidator;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 
 #[CoversClass(ImageSaver::class)]
 #[CoversClass(FileUploadValidator::class)]

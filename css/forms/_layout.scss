@@ -141,6 +141,14 @@
 			mask-repeat      : no-repeat;
 			mask-position    : center;
 		}
+		&.transparent {
+			background-color : transparent;
+			color            : oklch(var(--totalform-darkgray));
+
+			&:before {
+				background-color : oklch(var(--totalform-darkgray));
+			}
+		}
 	}
 	.cms-save:before {
 		mask-image : var(--icon-save);

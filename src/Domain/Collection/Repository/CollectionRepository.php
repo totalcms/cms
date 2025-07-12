@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
-use TotalCMS\Utils\PathUtils;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
  * Repository.
@@ -77,14 +77,10 @@ final class CollectionRepository extends StorageRepository
 			$collections[] = $collection;
 		}
 
-		if (empty($collections)) {
-			// Clear cache if no collections to prevent serving stale data
-			$this->cacheManager->clearComputedData('collections_list');
-		} else {
-			// Cache the collections as arrays for 15 minutes (collections don't change often)
-			$collectionsArray = array_map(fn ($collection) => $collection->toArray(), $collections);
-			$this->cacheManager->storeComputedData('collections_list', $collectionsArray, CacheManager::TTL_COLLECTIONS_LIST);
-		}
+		// Always cache the result, even if empty
+		// This ensures consistent behavior and prevents null cache values
+		$collectionsArray = array_map(fn ($collection) => $collection->toArray(), $collections);
+		$this->cacheManager->storeComputedData('collections_list', $collectionsArray, CacheManager::TTL_COLLECTIONS_LIST);
 
 		return $collections;
 	}
@@ -100,7 +96,15 @@ final class CollectionRepository extends StorageRepository
 	{
 		$metaFile = $this->buildMetaPath($collection);
 
-		return $this->filesystem->delete($metaFile);
+		$result = $this->filesystem->delete($metaFile);
+
+		// Clear caches after deleting collection
+		if ($result) {
+			$this->cacheManager->clearComputedData('collections_list');
+			$this->cacheManager->clearCollectionIndex($collection);
+		}
+
+		return $result;
 	}
 
 	/**
@@ -159,6 +163,10 @@ final class CollectionRepository extends StorageRepository
 		$metaFile    = $this->buildMetaPath($collection->id);
 
 		$this->filesystem->write($metaFile, $jsonContent);
+
+		// Clear caches after saving collection
+		$this->cacheManager->clearComputedData('collections_list');
+		$this->cacheManager->clearCollectionIndex($collection->id);
 	}
 
 	public function isReservedCollection(string $collectionId): bool

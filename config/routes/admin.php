@@ -8,6 +8,7 @@ use TotalCMS\Action\Admin\AdminEditProfileAction;
 use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
+use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveAction;
@@ -31,6 +32,9 @@ return function (App $app) {
 
 		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
 		$group->post('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils-post');
+
+		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground');
+		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post');
 
 		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
 		$group->post('/settings', AdminSettingsSaveAction::class)->setName('admin-settings-save');

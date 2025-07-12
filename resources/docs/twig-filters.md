@@ -187,6 +187,62 @@ Converts SVG to symbol for icon systems.
 <svg><use href="#home"></use></svg>
 ```
 
+### Email and HTML Encoding
+
+#### `htmlencode(string $text): string`
+Encodes text to HTML entities, useful for obfuscating email addresses from scrapers.
+
+```twig
+{{ "user@example.com" | htmlencode }}
+{# Output: &#117;&#115;&#101;&#114;&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109; #}
+
+{# Useful for displaying emails without making them easily scrapable #}
+<span>Contact: {{ contact.email | htmlencode }}</span>
+```
+
+#### `mailto(string $email, string $subject = '', string $body = '', string $title = ''): string`
+Creates an obfuscated mailto link that protects email addresses from spam bots. The email is not visible in the raw HTML source and is decoded via JavaScript.
+
+```twig
+{# Basic usage #}
+{{ "info@example.com" | mailto }}
+
+{# With subject #}
+{{ "support@example.com" | mailto("Support Request") }}
+
+{# With subject and body #}
+{{ "sales@example.com" | mailto("Product Inquiry", "I'm interested in your products...") }}
+
+{# With custom link title #}
+{{ "contact@example.com" | mailto("", "", "Contact Our Team") }}
+
+{# Real-world examples #}
+<div class="contact-info">
+    <p>General inquiries: {{ site.email | mailto }}</p>
+    <p>Support: {{ "support@example.com" | mailto("Help needed") }}</p>
+    <p>{{ "hr@example.com" | mailto("Job Application", "Position: ", "Apply Now") }}</p>
+</div>
+```
+
+**How it works:**
+- Email addresses are split and base64 encoded in data attributes
+- Displayed using HTML entities (e.g., `&#64;` for @)
+- JavaScript converts to real mailto links on page load
+- If JavaScript is disabled, the encoded email is still visible
+
+**Generated HTML:**
+```html
+<span class="mailto-obfuscated" 
+      data-user="aW5mbw==" 
+      data-domain="ZXhhbXBsZS5jb20=" 
+      title="Email" 
+      style="cursor:pointer;text-decoration:underline;">
+    &#105;&#110;&#102;&#111;&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109;
+</span>
+```
+
+**Note:** Requires `content.js` to be loaded on your pages for the JavaScript decoder to work.
+
 ## Color Filters
 
 ### Color Conversion
@@ -868,6 +924,77 @@ The date filters support natural language strings powered by Chronos:
         );
     }
 </style>
+```
+
+## Price Formatting
+
+### `price(mixed $price, string $currency = '$', string $format = 'prepend'): string`
+Formats price values with currency symbols.
+
+```twig
+{# Basic usage #}
+{{ 19.99 | price }}
+{# Output: $19.99 #}
+
+{{ 19.99 | price('€') }}
+{# Output: €19.99 #}
+
+{# Different formats #}
+{{ 19.99 | price('USD', 'prepend') }}
+{# Output: USD19.99 #}
+
+{{ 19.99 | price('USD', 'append') }}
+{# Output: 19.99 USD #}
+
+{{ 19.99 | price('', 'none') }}
+{# Output: 19.99 #}
+```
+
+#### Format Options:
+- **`prepend`** (default): Places currency before the number (`$19.99`)
+- **`append`**: Places currency after the number with a space (`19.99 USD`)
+- **`none`**: Shows only the formatted number (`19.99`)
+
+#### Real-World Examples:
+
+```twig
+{# Product listing #}
+{% for product in cms.objects('products') %}
+    <div class="product">
+        <h3>{{ product.name }}</h3>
+        <span class="price">{{ product.price | price }}</span>
+        
+        {# Sale price with comparison #}
+        {% if product.sale_price %}
+            <span class="sale">{{ product.sale_price | price }}</span>
+            <span class="original">{{ product.price | price }}</span>
+        {% endif %}
+    </div>
+{% endfor %}
+
+{# International pricing #}
+{% set currency = get.currency | default('USD') %}
+{% for product in products %}
+    <span class="price">
+        {{ product.price | price(currency, 'append') }}
+    </span>
+{% endfor %}
+
+{# Price ranges #}
+{% set minPrice = products | map(p => p.price) | min %}
+{% set maxPrice = products | map(p => p.price) | max %}
+<p>Prices from {{ minPrice | price }} to {{ maxPrice | price }}</p>
+
+{# Shopping cart totals #}
+{% set subtotal = cart.items | map(item => item.price * item.quantity) | sum %}
+{% set tax = subtotal * 0.08 %}
+{% set total = subtotal + tax %}
+
+<div class="cart-totals">
+    <div>Subtotal: {{ subtotal | price }}</div>
+    <div>Tax: {{ tax | price }}</div>
+    <div class="total">Total: {{ total | price }}</div>
+</div>
 ```
 
 Remember: These filters make Twig templates more powerful and help you process data without complex PHP logic in your templates!

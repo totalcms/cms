@@ -1,0 +1,298 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter Snippets" />
+	</header>
+
+	<nav class="links" id="playground-links">
+		{% set snippets = cms.objects("playground") %}
+		{% if snippets|length == 0 %}
+			<h3>Snippets</h3>
+			<ul>
+				<li class="no-snippets">No snippets found</li>
+			</ul>
+		{% else %}
+			{% set snippetsByCategory = {} %}
+			{% for snippet in snippets %}
+				{% set category = snippet.category|default('Snippets') %}
+				{% set snippetsByCategory = snippetsByCategory|merge({(category): (snippetsByCategory[category]|default([]))|merge([snippet])}) %}
+			{% endfor %}
+
+			{% for category, categorySnippets in snippetsByCategory %}
+				<h3>{{ category }}</h3>
+				<ul>
+					{% for snippet in sortByKey(categorySnippets) %}
+					<li class="playground-snippet">
+						<a  {% if url.id == snippet.id %}class="active"{% endif %}
+							href="playground/{{ snippet.id }}"
+							title="{{ snippet.description | escape }}">{{ snippet.name }}</a>
+						<button class="cms-clip-button" title="Copy Snippet {{ snippet.name | escape }}" data-clip="#{{ snippet.id }}"></button>
+						<span id="{{ snippet.id }}" style="display:none;">{{ snippet.snippet | escape }}</span>
+					</li>
+					{% endfor %}
+				</ul>
+			{% endfor %}
+		{% endif %}
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="playground" title="Create a new playground snippet">+ New Snippet</a>
+	</footer>
+</aside>
+
+<main class="dash-main-content">
+
+	<header>
+		<h1><a href="playground">playground</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) | default('new snippet') }}</span></h1>
+		<button class="dash-action-dots" title="Playground Actions" popovertarget="playground-actions"></button>
+		<nav popover id="playground-actions">
+			<ul>
+				<li class="export"><a href="playground/-export">Export</a></li>
+				<li class="import"><a href="playground/-import">Import</a></li>
+			</ul>
+		</nav>
+	</header>
+
+{% if url.id == '-export' %}
+
+	{% include "admin/collection/export.twig" %}
+
+{% elseif url.id == '-import' %}
+
+	{% include "admin/collection/import.twig" %}
+
+{% else %}
+	<section class="dash-content-section">
+		<p>Playground allows you to learn twig faster and run it against the data inside of the CMS. After you
+		type your twig template code below, you can click the <code>Render Twig</code> button to see the output.
+		If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
+
+		{{ cms.form.playground(url.id|default(''), {
+			deleteAction : {
+				"action" : "redirect",
+				"link"   : "playground"
+			},
+			newAction   : {
+				"action" : "redirect-object",
+				"link"   : "playground/{id}"
+			},
+		}) }}
+
+		{% set twigfield %}
+			<textarea name="twig" id="twig" class="cms-hide"></textarea>
+		{% endset %}
+
+		{{ cms.form.simple(url.path, twigfield, {
+			class  : "render-playground",
+			method : "POST",
+			label  : "Render Twig",
+			ajax   : false,
+		}) }}
+
+		{% if results %}
+		<section class="playground-results">
+			<h2>Results</h2>
+
+			<div class="result-section">
+				<h3>Rendered HTML</h3>
+				<div class="rendered-output">
+					{{ results|raw }}
+				</div>
+			</div>
+
+			<div class="result-section">
+				<h3>HTML</h3>
+				<textarea id="html-output">{{ results }}</textarea>
+			</div>
+
+		</section>
+		{% endif %}
+	</section>
+{% endif %}
+
+<style>
+.playground-snippet {
+	position: relative;
+}
+.playground-snippet .cms-clip-button {
+	display             : inline-block;
+	width               : 1.5rem;
+	height              : 1.5rem;
+	margin-left         : 0.5rem;
+	background-color    : transparent;
+	background-image    : var(--icon-clipboard);
+	background-size     : contain;
+	background-repeat   : no-repeat;
+	background-position : center;
+	border              : none;
+	cursor              : pointer;
+	opacity             : 0;
+	transition          : opacity 0.2s ease-in-out;
+	position            : absolute;
+	right               : 0.5rem;
+	top                 : 50%;
+	transform           : translateY(-50%);
+	text-indent         : -99999px;
+
+}
+.playground-snippet .cms-clip-button.copied {
+	background-image : var(--icon-clipboard-check);
+	opacity          : 1;
+}
+.playground-snippet:hover .cms-clip-button {
+	opacity: 1;
+}
+.form-field.id-field {
+	height   : 0;
+	overflow : hidden;
+}
+.form-inline-fields:has(.cms-save) {
+	justify-content : flex-end;
+}
+.playground-results {
+	margin-top: 2rem;
+}
+.result-section {
+	margin-bottom: 2rem;
+}
+.result-section h3 {
+	margin-bottom: 0.5rem;
+	color: oklch(var(--totalform-nearblack));
+}
+.rendered-output {
+	border           : 1px solid oklch(var(--totalform-border-color));
+	padding          : 2rem;
+	background-color : oklch(var(--totalform-purewhite));
+	border-radius    : var(--totalform-radius);
+}
+
+.html-output-editor .CodeMirror {
+	height: auto;
+	min-height: 100px;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+}
+
+.html-output-editor .CodeMirror-scroll {
+	overflow: visible !important;
+}
+
+.html-output-editor .CodeMirror-scrollbar-filler,
+.html-output-editor .CodeMirror-gutter-filler {
+	display: none;
+}
+</style>
+
+<script>
+// Replace POST in history to prevent resubmission warning on refresh
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.pathname);
+}
+
+// Function to manage save button visibility
+function manageSaveButton() {
+	const form         = document.querySelector('.totalform');
+	const saveButton   = document.querySelector('.cms-save');
+	const deleteButton = document.querySelector('.cms-delete');
+	const nameInput    = document.querySelector('input[name="name"]');
+
+	if (!form || !saveButton || !nameInput) return;
+
+	if (deleteButton) deleteButton.classList.add('transparent');
+	saveButton.classList.add('transparent');
+
+	const showSaveButton = () => saveButton.style.display = '';
+	const hideSaveButton = () => saveButton.style.display = 'none';
+
+	if (form.classList.contains('edit-mode')) {
+		showSaveButton();
+		return;
+	}
+	hideSaveButton();
+	nameInput.addEventListener('input', function() {
+		this.value.trim() ? showSaveButton() : hideSaveButton();
+	});
+	if (nameInput.value.trim()) showSaveButton();
+}
+manageSaveButton();
+
+// Function to sync code field content to twig textarea when render button is clicked
+function setupRenderSync() {
+	const renderButton = document.querySelector('.render-playground button');
+
+	renderButton.addEventListener('pointerdown', () => {
+		const snippetTextarea = document.querySelector('textarea[name="snippet"]');
+		const twigTextarea = document.getElementById('twig');
+
+		// Check if CodeMirror is active
+		const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
+		if (cmWrapper && cmWrapper.CodeMirror) {
+			// Get content from CodeMirror editor
+			twigTextarea.value = cmWrapper.CodeMirror.getValue();
+		} else {
+			// Fallback to textarea value
+			twigTextarea.value = snippetTextarea.value;
+		}
+	});
+}
+setupRenderSync();
+
+// Function to setup CodeMirror for HTML output
+function setupHtmlOutput() {
+	const htmlOutput = document.getElementById('html-output');
+	if (!htmlOutput || !htmlOutput.value.trim()) return;
+
+	// Wait for TotalCMSCodeMirror to be available
+	if (!window.TotalCMSCodeMirror) {
+		setTimeout(setupHtmlOutput, 100);
+		return;
+	}
+
+	// Format the HTML using our bundled beautifier
+	const formattedHtml = window.TotalCMSCodeMirror.formatHtml(htmlOutput.value);
+
+	// Replace the textarea with a div for the editor
+	const outputContainer = document.createElement('div');
+	outputContainer.className = 'html-output-container';
+	htmlOutput.parentElement.replaceChild(outputContainer, htmlOutput);
+
+	// Create HTML output editor using CodeMirror
+	const outputEditor = window.CodeMirror(outputContainer, {
+		value: formattedHtml,
+		mode: 'htmlmixed',
+		theme: 'elegant',
+		lineNumbers: true,
+		lineWrapping: true,
+		readOnly: true,
+		foldGutter: true,
+		gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+		matchBrackets: true,
+		autoCloseTags: true
+	});
+
+	// Add custom classes
+	outputContainer.classList.add('html-output-editor');
+	outputEditor.getWrapperElement().classList.add('html-output-editor');
+
+	// Set height to content height to avoid scrollbars
+	const lineHeight = outputEditor.defaultTextHeight();
+	const lineCount = outputEditor.lineCount();
+	const totalHeight = Math.max((lineCount * lineHeight) + 40, 200); // Minimum height
+
+	outputEditor.setSize(null, totalHeight);
+
+	// Force refresh after a moment
+	setTimeout(() => {
+		outputEditor.refresh();
+	}, 100);
+}
+
+// Initialize HTML output styling
+setupHtmlOutput();
+</script>
+
+</main>
+{% endblock %}

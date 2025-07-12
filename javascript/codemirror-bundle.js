@@ -99,14 +99,14 @@ const TotalCMSCodeMirror = {
 			...this.defaultConfig,
 			mode: 'twig',
 			theme: options.theme || 'elegant',
-			placeholder: options.placeholder || 'Enter your Twig template here...',
+			placeholder: options.placeholder || '',
 			...options
 		};
 		const editor = CodeMirror.fromTextArea(element, config);
-		
+
 		// Add twig-editor class for custom styling
 		editor.getWrapperElement().classList.add('twig-editor');
-		
+
 		return editor;
 	},
 
@@ -124,10 +124,10 @@ const TotalCMSCodeMirror = {
 			...options
 		};
 		const editor = CodeMirror.fromTextArea(element, config);
-		
+
 		// Add html-output-editor class for custom styling
 		editor.getWrapperElement().classList.add('html-output-editor');
-		
+
 		return editor;
 	},
 

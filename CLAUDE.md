@@ -72,6 +72,12 @@ bin/codecount.sh
 ### Directory Structure
 - **`/src/Action/`** - HTTP action handlers organized by domain (Admin, Auth, Collection, etc.)
 - **`/src/Domain/`** - Business logic layer with services, repositories, and data objects
+  - **`/src/Domain/JumpStart/`** - JumpStart data import/export system with services, data objects, and factories
+  - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
+  - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
+    - **`CmsGridTokenParser`** - Parses `{% cmsgrid %}` tag syntax with `from`, `with`, `as` parameters
+    - **`CmsGridNode`** - Compiles grid tags to PHP, provides `{{ item }}` and `{{ collection }}` variables
+    - **`GridRenderer`** - Helper methods for `cms.grid.*` (date, tags, excerpt, price, meta)
 - **`/src/Middleware/`** - HTTP middleware for auth, CORS, licensing, validation
 - **`/src/Renderer/`** - Response rendering (JSON, XML, Twig, Raw)
 - **`/src/Utils/`** - Utility classes for file handling, image processing, QR codes
@@ -79,6 +85,8 @@ bin/codecount.sh
 - **`/tcms-data/`** - JSON-based flat-file storage for collections
 - **`/resources/schemas/`** - JSON schemas for data validation
 - **`/resources/templates/`** - Twig templates for admin interface
+  - **`/resources/templates/grid/`** - Default grid templates (blog.twig, feed.twig, generic.twig)
+- **`/resources/docs/`** - Documentation files including JumpStart guide
 
 ### Design Patterns
 - **Domain-Driven Design**: Clear separation between Actions, Domain services, and Data layers
@@ -89,7 +97,9 @@ bin/codecount.sh
 ## Key Features
 
 - **Collection System**: 13 built-in collection types (blog, image, gallery, etc.) stored as JSON files in `/tcms-data/`
+- **JumpStart System**: Data import/export system for quick project setup with predefined content structures, factory data generation, and Total CMS 1 migration
 - **Twig Integration**: Custom filters/functions in `src/Domain/Twig/`, markdown processing via ParsedownExtra
+- **Grid System**: `{% cmsgrid %}` Twig tag for flexible content grids with built-in templates and helper methods in `cms.grid.*`
 - **Admin Interface**: Form builder with 20+ field types, JavaScript components in `/javascript/totalform/`
 - **Build System**: ESBuild with code splitting, configuration in `esbuild.config.js`
 
@@ -186,3 +196,43 @@ bin/codecount.sh
 - **Emergency Endpoint**: `/emergency/cache/clear` provides public cache clearing when admin interface is inaccessible
 - **Customer-Friendly**: No authentication required - customers can clear caches from any location without server access
 - **Test Script**: `bin/test-emergency-cache.php` verifies emergency cache clearing functionality
+
+## JumpStart System
+
+### Overview
+JumpStart is Total CMS's data import/export system for quick project setup with predefined content structures.
+
+### Key Components
+- **JumpStartData**: Core data structure containing collections, schemas, objects, and factory definitions
+- **JumpStartExporter**: Exports project data to JSON format, strips media files, retains object metadata
+- **JumpStartImporter**: Imports JumpStart data, processes factory definitions for test data generation
+- **FactoryImporter**: Generates test data using Faker based on factory definitions
+
+### Usage Patterns
+- **Export**: Collections and objects are exported; images, files, galleries, and depot files are removed
+- **Import**: Objects can be imported directly or converted to factory definitions for dynamic data generation
+- **Factory System**: Use `factory` array instead of `objects` for generating test data with Faker
+- **Admin Interface**: Access via `/admin/utils/jumpstart` for import/export operations
+- **Project Setup**: Environment-specific demo data loading via `/admin/utils/project-setup`
+
+### Testing
+- **JumpStartBasicTest**: Core functionality tests without HTTP dependencies
+- **Simplified Testing**: Removed complex HTTP endpoint tests to focus on business logic
+- **24 Passing Tests**: Comprehensive test coverage for JumpStart functionality
+
+## Twig Template System
+
+### Global Variables
+- **cms**: Primary global variable providing access to configuration, collections, and services
+- **Configuration Access**: Use `cms.config('key')` not direct `config` variable (which doesn't exist)
+- **Common Usage**: `cms.env` for environment, `cms.config('debug')` for debug mode
+
+### Template Conventions
+- **LazyTwigGlobal**: Proxy pattern for lazy loading of Twig global variables
+- **TotalCMSTwigAdapter**: Main adapter providing CMS functionality to templates
+- **Custom Extensions**: TotalCMSTwigExtension with CMS-specific filters and functions
+
+### Development Notes
+- **Template Debugging**: Use `cms.env` instead of `config.env` for environment checks
+- **Error Handling**: TwigEngine provides detailed error messages in development mode
+- **Performance**: Twig templates are cached in production, auto-reloaded in development

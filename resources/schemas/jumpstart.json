@@ -1,0 +1,117 @@
+{
+	"$schema"     : "http://json-schema.org/draft-07/schema#",
+	"$id"         : "https://www.totalcms.co/schemas/jumpstart.json",
+	"id"          : "jumpstart",
+	"type"        : "object",
+	"title"       : "Total CMS Jumpstart Definition",
+	"description" : "Schema for defining jumpstart content generation in Total CMS",
+	"properties"  : {
+		"version": {
+			"type": "string",
+			"description": "Version of the content definition format",
+			"pattern": "^\\d+\\.\\d+\\.\\d+$"
+		},
+		"name": {
+			"type": "string",
+			"description": "Name of the content generation template"
+		},
+		"description": {
+			"type": "string",
+			"description": "Description of what this template creates"
+		},
+		"schemas": {
+			"type": "array",
+			"description": "Custom schemas to create",
+			"items": {
+				"$ref": "https://www.totalcms.co/schemas/schema.json"
+			}
+		},
+		"collections": {
+			"type": "object",
+			"description": "Collections to create (both default and custom)",
+			"properties": {
+				"reserved": {
+					"type": "array",
+					"description": "Default collections to create",
+					"items": {
+						"type": "string"
+					}
+				},
+				"custom": {
+					"type": "array",
+					"description": "Custom collections to create",
+					"items": {
+						"$ref": "https://www.totalcms.co/schemas/collection.json"
+					}
+				}
+			}
+		},
+		"objects": {
+			"type": "array",
+			"description": "Specific objects to create with defined content",
+			"items": {
+				"type": "object",
+				"properties": {
+					"collection": {
+						"type": "string",
+						"description": "Target collection ID"
+					},
+					"id": {
+						"type": "string",
+						"description": "Specific ID for the object"
+					},
+					"data": {
+						"type": "object",
+						"description": "Object data (for image/gallery fields, use factory rule strings)"
+					}
+				},
+				"required": ["collection", "id", "data"]
+			}
+		},
+		"factory": {
+			"type": "array",
+			"description": "Bulk content generation using factory importer",
+			"items": {
+				"type": "object",
+				"properties": {
+					"collection": {
+						"type": "string",
+						"description": "Target collection ID"
+					},
+					"id": {
+						"type": "string",
+						"description": "Specific ID for a single object (if provided, count is ignored and set to 1)"
+					},
+					"count": {
+						"type": "integer",
+						"description": "Number of objects to generate (ignored if id is provided)",
+						"minimum": 1
+					},
+					"data": {
+						"type": "object",
+						"description": "Property names mapped to factory rules (overrides schema defaults)",
+						"additionalProperties": {
+							"type": "string"
+						}
+					}
+				},
+				"required": ["collection"],
+				"oneOf": [
+					{
+						"required": ["count"],
+						"not": {
+							"required": ["id"]
+						}
+					},
+					{
+						"required": ["id"],
+						"not": {
+							"required": ["count"]
+						}
+					}
+				]
+			}
+		}
+	},
+	"required": ["version", "name"]
+}

@@ -15,6 +15,7 @@ esbuild.build({
 		"javascript/image-batcher.js",
 		"javascript/totalcms.js",
 		"javascript/swagger.js",
+		"javascript/mailto-decoder.js",
 	],
 	format    : "esm",
 	platform  : "browser",

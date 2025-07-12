@@ -192,3 +192,65 @@ You can disable this by setting the following.
   "asString"              : false
 }
 ```
+
+## Code Editor
+
+The code field provides a syntax-highlighted code editor powered by CodeMirror. It supports multiple programming languages and can be customized with various settings.
+
+```json
+{
+  "mode"          : "twig",
+  "theme"         : "elegant",
+  "lineNumbers"   : true,
+  "lineWrapping"  : true,
+  "indentUnit"    : 2,
+  "tabSize"       : 2,
+  "foldGutter"    : true,
+  "matchBrackets" : true,
+  "autoCloseTags" : true
+}
+```
+
+### Available Settings
+
+- **mode** - The syntax highlighting mode. Supported values:
+  - `"twig"` - Twig templating
+  - `"html"` or `"htmlmixed"` - HTML with embedded CSS/JS
+  - `"css"` - CSS stylesheets
+  - `"javascript"` or `"js"` - JavaScript
+  - `"php"` - PHP code
+  - `"markdown"` - Markdown text
+  - Any other CodeMirror mode name
+
+- **theme** - The color theme. Default is `"elegant"` (light theme)
+
+- **lineNumbers** - Show line numbers in the gutter. Default: `true`
+
+- **lineWrapping** - Wrap long lines. Default: `true`
+
+- **indentUnit** - Number of spaces per indentation level. Default: `2`
+
+- **tabSize** - Width of a tab character. Default: `2`
+
+- **foldGutter** - Enable code folding in the gutter. Default: `true`
+
+- **matchBrackets** - Highlight matching brackets. Default: `true`
+
+- **autoCloseTags** - Auto-close HTML/XML tags. Default: `true`
+
+### Example Usage
+
+```json
+{
+  "snippet": {
+    "type"     : "string",
+    "label"    : "Code Snippet",
+    "field"    : "code",
+    "settings" : {
+      "mode"         : "javascript",
+      "theme"        : "elegant",
+      "lineNumbers"  : true,
+      "indentUnit"   : 4
+    }
+  }
+}

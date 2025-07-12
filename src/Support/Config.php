@@ -4,6 +4,7 @@ namespace TotalCMS\Support;
 
 final class Config
 {
+	public string $env      = 'prod';
 	public string $template = '';
 	public string $datadir  = '';
 	public string $tmpdir   = '';
@@ -35,6 +36,7 @@ final class Config
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
 	{
+		$this->env        = $settings['env'] ?? 'prod';
 		$this->template   = $settings['template'];
 		$this->dashboard  = $settings['dashboard'];
 		$this->datadir    = $settings['datadir'];

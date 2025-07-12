@@ -5,9 +5,9 @@ namespace Tests\Security;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\Media\Service\ImageMetaReader;
+use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 use TotalCMS\Domain\Property\Service\ImageSaver;
-use TotalCMS\Utils\ImageMetaReader;
-use TotalCMS\Utils\ImagePaletteGenerator;
 
 #[CoversClass(ImageMetaReader::class)]
 #[CoversClass(ImagePaletteGenerator::class)]

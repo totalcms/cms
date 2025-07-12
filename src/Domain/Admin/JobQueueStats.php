@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
-use TotalCMS\Utils\HTMLUtils;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 final class JobQueueStats
 {

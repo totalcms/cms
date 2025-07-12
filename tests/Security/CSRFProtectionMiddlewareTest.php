@@ -10,8 +10,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
-use TotalCMS\Utils\CSRFTokenManager;
 
 /**
  * Test CSRF Protection Middleware.

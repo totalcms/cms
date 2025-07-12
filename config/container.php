@@ -36,6 +36,9 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Factory\Service\FactoryImporter;
+use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
@@ -43,8 +46,16 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\JumpStart\Data\JumpStartData;
+use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
+use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -52,29 +63,28 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
-use TotalCMS\Domain\Twig\BarcodeTwigAdapter;
-use TotalCMS\Domain\Twig\QRCodeTwigAdapter;
-use TotalCMS\Domain\Twig\TotalCMSTwigAdapter;
-use TotalCMS\Domain\Twig\TotalCMSTwigExtension;
-use TotalCMS\Domain\Twig\TotalCMSTwigPatterns;
-use TotalCMS\Domain\Twig\TwigEngine;
-use TotalCMS\Factory\FakerFactory;
+use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
+use TotalCMS\Domain\Twig\Service\GridRenderer;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
+use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
+use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
-use TotalCMS\Utils\BarcodeGenerator;
-use TotalCMS\Utils\Cipher;
-use TotalCMS\Utils\CSRFTokenManager;
-use TotalCMS\Utils\FileUploadValidator;
-use TotalCMS\Utils\LogAnalyzer;
-use TotalCMS\Utils\QRGenerator;
-use TotalCMS\Utils\ServerChecker;
 
 return [
 	// Application settings
@@ -251,6 +261,10 @@ return [
 		);
 	},
 
+	GridRenderer::class => function (ContainerInterface $container) {
+		return new GridRenderer();
+	},
+
 	TotalCMSTwigAdapter::class => function (ContainerInterface $container) {
 		return new TotalCMSTwigAdapter(
 			$container->get(Config::class),
@@ -269,6 +283,7 @@ return [
 			$container->get(AccessManager::class),
 			$container->get(FileAccessManager::class),
 			$container->get(ImageCacheService::class),
+			$container->get(GridRenderer::class),
 		);
 	},
 
@@ -407,6 +422,45 @@ return [
 			$container->get(CollectionFactory::class),
 			$container->get(CollectionRepository::class),
 			$container->get(JobQueuer::class),
+			$container->get(LoggerFactory::class),
+		);
+	},
+
+	JumpStartExporter::class => function (ContainerInterface $container) {
+		return new JumpStartExporter(
+			$container->get(CollectionLister::class),
+			$container->get(SchemaLister::class),
+			$container->get(SchemaFetcher::class),
+			$container->get(ObjectFetcher::class),
+			$container->get(IndexReader::class),
+			new JumpStartData(),
+			$container->get(CacheManager::class),
+			$container->get(LoggerFactory::class),
+		);
+	},
+
+	FactoryImporter::class => function (ContainerInterface $container) {
+		return new FactoryImporter(
+			$container->get(ObjectFactory::class),
+			$container->get(ObjectRepository::class),
+			$container->get(IndexBuilder::class),
+			$container->get(CollectionFetcher::class),
+			$container->get(SchemaFetcher::class),
+			$container->get(PropertyRepository::class),
+			$container->get(CacheManager::class),
+			$container->get(FakerFactory::class),
+			$container->get(LoggerFactory::class),
+		);
+	},
+
+	JumpStartImporter::class => function (ContainerInterface $container) {
+		return new JumpStartImporter(
+			$container->get(CollectionFetcher::class),
+			$container->get(CollectionSaver::class),
+			$container->get(ObjectFetcher::class),
+			$container->get(ObjectSaver::class),
+			$container->get(SchemaSaver::class),
+			$container->get(FactoryImporter::class),
 			$container->get(LoggerFactory::class),
 		);
 	},

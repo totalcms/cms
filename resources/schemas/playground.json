@@ -1,0 +1,60 @@
+{
+ "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+ "$id"         : "https://www.totalcms.co/schemas/playground.json",
+ "id"          : "playground",
+ "type"        : "object",
+ "description" : "A schema for a Total CMS Playground snippet",
+ "formgrid"    : "id .\nname category\nsnippet snippet",
+ "properties"  : {
+        "id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Snippet ID",
+			"field"    : "id",
+			"factory"  : "uuid",
+			"settings" : {
+				"autogen" : "${name}-${uuid}"
+			}
+        },
+        "name": {
+			"type"    : "string",
+			"label"   : "Name",
+			"field"   : "text"
+        },
+		"category": {
+			"type"     : "string",
+			"label"    : "Category",
+			"field"    : "text",
+			"settings" : {
+				"propertyOptions" : true
+			}
+		},
+        "snippet": {
+			"type"     : "string",
+			"label"    : "Twig Template Code",
+			"help"     : "Type your twig template code here.",
+			"field"    : "code",
+			"settings" : {
+				"mode"         : "twig",
+				"theme"        : "elegant",
+				"lineNumbers"  : true,
+				"lineWrapping" : true,
+				"indentUnit"   : 2,
+				"tabSize"      : 2,
+				"foldGutter"   : true,
+				"matchBrackets": true,
+				"autoCloseTags": true
+			}
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "snippet"
+    ],
+    "index": [
+        "id",
+        "name",
+		"category",
+		"snippet"
+    ]
+}

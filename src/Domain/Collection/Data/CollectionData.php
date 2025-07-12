@@ -55,6 +55,10 @@ final class CollectionData
 			throw new \RuntimeException('CollectionData is not valid.');
 		}
 		$defaultDescription = "A collection of {$this->id} objects that conform to the {$this->schema} schema.";
+
+		// Get default labels for the schema if not explicitly set
+		$defaultLabels = self::getDefaultLabelsForSchema($this->schema);
+
 		$collection         = [
 			'id'                 => $this->id,
 			'schema'             => $this->schema,
@@ -62,8 +66,8 @@ final class CollectionData
 			'description'        => empty($this->description) ? $defaultDescription : $this->description,
 			'url'                => $this->url ?? '',
 			'category'           => $this->category ?? '',
-			'labelPlural'        => $this->labelPlural ?? '',
-			'labelSingular'      => $this->labelSingular ?? '',
+			'labelPlural'        => !empty($this->labelPlural) ? $this->labelPlural : $defaultLabels['labelPlural'],
+			'labelSingular'      => !empty($this->labelSingular) ? $this->labelSingular : $defaultLabels['labelSingular'],
 			'groups'             => $this->groups ?? [],
 			'sortBy'             => $this->sortBy ?? 'id',
 			'reverseSort'        => $this->reverseSort ?? false,
@@ -124,5 +128,33 @@ final class CollectionData
 		}
 
 		return sprintf('%s?id=%s', $collectionData->url, $id);
+	}
+
+	/**
+	 * @return array{labelPlural: string, labelSingular: string}
+	 */
+	public static function getDefaultLabelsForSchema(string $schemaId): array
+	{
+		$defaults = [
+			'auth'       => ['labelPlural' => 'Users', 'labelSingular' => 'User'],
+			'blog'       => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
+			'playground' => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
+			'color'      => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],
+			'date'       => ['labelPlural' => 'Dates', 'labelSingular' => 'Date'],
+			'depot'      => ['labelPlural' => 'Depots', 'labelSingular' => 'Depot'],
+			'email'      => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
+			'feed'       => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
+			'file'       => ['labelPlural' => 'Files', 'labelSingular' => 'File'],
+			'gallery'    => ['labelPlural' => 'Galleries', 'labelSingular' => 'Gallery'],
+			'image'      => ['labelPlural' => 'Images', 'labelSingular' => 'Image'],
+			'number'     => ['labelPlural' => 'Numbers', 'labelSingular' => 'Number'],
+			'styledtext' => ['labelPlural' => 'Content', 'labelSingular' => 'Styled Text'],
+			'svg'        => ['labelPlural' => 'SVGs', 'labelSingular' => 'SVG'],
+			'text'       => ['labelPlural' => 'Content', 'labelSingular' => 'Text'],
+			'toggle'     => ['labelPlural' => 'Toggles', 'labelSingular' => 'Toggle'],
+			'url'        => ['labelPlural' => 'URLs', 'labelSingular' => 'URL'],
+		];
+
+		return $defaults[$schemaId] ?? ['labelPlural' => '', 'labelSingular' => ''];
 	}
 }
