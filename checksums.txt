@@ -33,7 +33,7 @@ b9da25afe59c9877bb3bf9c3d3472aad6fe279c4910ce1991d87d871c4086f74  ./dist/config/
 be80ed481cef10f7ec711adb78e4c2dd45c1d4a37e7c1549936e6307e4567672  ./dist/config/routes/collections.php
 3584f590072593e1886f74371dcd5077e7b618653f216a65ccfc4a6b74bb415e  ./dist/config/routes/admin.php
 ea4ac1601b66ec6e0503bd7a0974480062d34255803d24c45c398a65a9b8962d  ./dist/config/routes/assets.php
-af00a332c74f8258d777b8668e88accc768e84e8258667aa45164193d425bd3a  ./dist/config/local.stacks.php
+0a1da2b9c74ea85c3ced6d3dbb39473b46ff3352a121c58aa6c7e340b5098ae6  ./dist/config/local.stacks.php
 bb49d52f0c6ff8a88aa7884e31d9b0a9853f4cb566aef62ff72469afb0edd2ec  ./dist/resources/bin/processJobs.php
 63a36c0087251c4ef3937afbf734fb986873a1545a2938a2dd7ee59a480fd5f9  ./dist/resources/templates/docs/swagger.php
 2237704bbd611b89f64303fe5e9446fb451d0bf77f4c80ab3c91cf590198ff6a  ./dist/public/index.php
@@ -948,7 +948,7 @@ f5150bd88ee25be40725666554daa0e383d5c16f2ac5713e087d4d7fed78ffce  ./dist/vendor/
 971ac336532e94edd8b66d6ab1b7ecb7be89f98e57786a19aac7611bbc3c179a  ./dist/vendor/composer/autoload_real.php
 eb4929baf229033b37c443ae0c381d92349e556e69f6db7bac9abe80efa23e92  ./dist/vendor/composer/autoload_files.php
 1e4525198301d1ed1f87ac3df2a8555a6f139f8df30a703d0b775a61963c96e4  ./dist/vendor/composer/InstalledVersions.php
-8ab5a99659f7aa4ad2422b4f0f5db761a5a9da617359ab6ed0ee5bb55f7b8831  ./dist/vendor/composer/installed.php
+feaabdd43c65b3d54ca1f21565f5d1fb62542a0344f706cf8f877afe0edb5757  ./dist/vendor/composer/installed.php
 cc8ce77a73e0aeb29f86967661c4e09f662998ab0af6c7bb6094c347216625e8  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelper.php
 986cfaff3ec755cfe7e933534d98f387a62d32d41a065262c1d12a02526ef7b6  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/Module.php
 35925311f8f49dd55f750dbf87481d928315a26cc10950aac2dde65763b60a02  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelperFactory.php
@@ -4859,7 +4859,7 @@ b9da25afe59c9877bb3bf9c3d3472aad6fe279c4910ce1991d87d871c4086f74  ./config/route
 be80ed481cef10f7ec711adb78e4c2dd45c1d4a37e7c1549936e6307e4567672  ./config/routes/collections.php
 3584f590072593e1886f74371dcd5077e7b618653f216a65ccfc4a6b74bb415e  ./config/routes/admin.php
 ea4ac1601b66ec6e0503bd7a0974480062d34255803d24c45c398a65a9b8962d  ./config/routes/assets.php
-af00a332c74f8258d777b8668e88accc768e84e8258667aa45164193d425bd3a  ./config/local.stacks.php
+0a1da2b9c74ea85c3ced6d3dbb39473b46ff3352a121c58aa6c7e340b5098ae6  ./config/local.stacks.php
 095ce8c182e07c755899965b0a8701f8b50771d90efa3745ca16cd8c2f1fc689  ./esbuild.config.js
 bb49d52f0c6ff8a88aa7884e31d9b0a9853f4cb566aef62ff72469afb0edd2ec  ./resources/bin/processJobs.php
 63a36c0087251c4ef3937afbf734fb986873a1545a2938a2dd7ee59a480fd5f9  ./resources/templates/docs/swagger.php
