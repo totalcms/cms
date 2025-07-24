@@ -40,13 +40,23 @@ abstract class DownloadAction
 	/** @return resource */
 	abstract protected function streamFile();
 
+	/**
+	 * Decode filename from URL, supporting both + and %20 encoding
+	 */
+	private function decodeFilename(string $filename): string
+	{
+		// Handle both + and %20 style encoding for maximum compatibility
+		// urldecode handles %20, then we handle + for form-style encoding
+		return str_replace('+', ' ', urldecode($filename));
+	}
+
 	/** @param array<string,string> $args The arguments	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$this->collection = $args['collection'];
 		$this->id         = $args['id'];
 		$this->property   = $args['property'];
-		$this->name       = $args['name'] ?? '';
+		$this->name       = $this->decodeFilename($args['name'] ?? '');
 
 		$query          = $request->getQueryParams();
 		$this->subpath  = $query['path'] ?? null;

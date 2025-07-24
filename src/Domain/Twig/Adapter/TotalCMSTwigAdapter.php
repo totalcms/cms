@@ -592,7 +592,7 @@ NGINX;
 			$name     = $pathinfo['basename'];
 		}
 
-		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$name}";
+		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/" . urlencode($name);
 
 		// Auto-encrypt password if provided and not already encrypted
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
@@ -650,7 +650,7 @@ NGINX;
 			$name     = $pathinfo['basename'];
 		}
 
-		$url = "{$this->api}/stream/{$collection}/{$id}/{$property}/{$name}";
+		$url = "{$this->api}/stream/{$collection}/{$id}/{$property}/" . urlencode($name);
 
 		// Auto-encrypt password if provided and not already encrypted
 		if (!empty($password) && !$this->isEncryptedPassword($password)) {
