@@ -41,6 +41,7 @@ use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermark;
+use TotalCMS\Domain\ImageWorks\Data\WatermarkProcessor;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -470,6 +471,12 @@ return [
 	TextWatermark::class => function (ContainerInterface $container) {
 		return new TextWatermark(
 			$container->get(StorageAdapterInterface::class)
+		);
+	},
+
+	WatermarkProcessor::class => function (ContainerInterface $container) {
+		return new WatermarkProcessor(
+			$container->get(TextWatermark::class)
 		);
 	},
 ];

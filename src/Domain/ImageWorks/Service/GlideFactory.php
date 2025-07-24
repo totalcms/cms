@@ -7,25 +7,22 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
+use TotalCMS\Domain\ImageWorks\Data\WatermarkProcessor;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
 final class GlideFactory
 {
-	private StorageAdapterInterface $filesystem;
-	private Config $config;
-	private TextWatermark $textWatermark;
-
 	public const CACHEDIR  = '.cache';
 	public const PALETTE   = 'palette';
 	public const IMG_TYPES = ['jpg', 'jpeg', 'pjpg', 'png', 'gif', 'webp', 'avif'];
 
-	public function __construct(StorageAdapterInterface $filesystem, Config $config, TextWatermark $textWatermark)
-	{
-		$this->filesystem    = $filesystem;
-		$this->config        = $config;
-		$this->textWatermark = $textWatermark;
+	public function __construct(
+		private StorageAdapterInterface $filesystem,
+		private Config $config,
+		private WatermarkProcessor $watermarkProcessor,
+	) {
 	}
 
 	/**
@@ -48,11 +45,11 @@ final class GlideFactory
 
 	/**
 	 * Create a glide server and process parameters.
-	 * 
+	 *
 	 * Supports sequential watermark processing for both image and text watermarks.
 	 *
 	 * @param string $source
-	 * @param ImageData $imageData  
+	 * @param ImageData $imageData
 	 * @param ?string $cache
 	 * @param ?string $watermark
 	 * @param array<string,mixed> $params
@@ -61,43 +58,24 @@ final class GlideFactory
 	 */
 	public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null, array $params = []): array
 	{
-		// Check if text watermark is requested before processing
-		$hasTextWatermark = isset($params['marktext']) && !empty($params['marktext']);
+		// Process watermarks using the dedicated processor
+		$watermarkResult = $this->watermarkProcessor->processWatermarks($params);
 
-		// Handle text watermark if specified
-		$this->processTextWatermark($params);
-
-		// Check if we need sequential processing (both image and text watermarks)
-		$needsSecondPass = isset($params['_textmark']) && isset($params['mark']);
-		$secondPassParams = [];
-
-		if ($needsSecondPass) {
-			// Prepare second pass parameters for text watermark
-			$secondPassParams = $params['_textmarkparams'];
-			$secondPassParams['mark'] = $params['_textmark'];
-			
-			// Debug logging
-			error_log('Sequential watermark processing: First pass mark = ' . $params['mark']);
-			error_log('Sequential watermark processing: Second pass mark = ' . $secondPassParams['mark']);
-			
-			// Clean up internal parameters from first pass
-			unset($params['_textmark'], $params['_textmarkparams']);
+		// Debug logging
+		if ($watermarkResult->needsSequentialProcessing()) {
+			$primaryParams = $watermarkResult->getPrimaryPassParams();
+			$secondaryParams = $watermarkResult->getSecondaryPassParams();
+			error_log('Sequential watermark processing: First pass mark = ' . ($primaryParams['mark'] ?? 'none'));
+			error_log('Sequential watermark processing: Second pass mark = ' . ($secondaryParams['mark'] ?? 'none'));
+		} elseif ($watermarkResult->hasWatermarks()) {
+			$primaryParams = $watermarkResult->getPrimaryPassParams();
+			error_log('Single watermark: mark = ' . ($primaryParams['mark'] ?? 'none'));
 		}
 
-		// Determine watermark path prefix for first pass
-		$watermarkPathPrefix = '.watermarks'; // Default fallback
-		
-		if ($needsSecondPass) {
-			// First pass is image watermark - use the correct gallery path
-			$watermarkPathPrefix = $this->watermarkPath($watermark);
-		} else if ($hasTextWatermark) {
-			// Only text watermark - use .watermarks
-			$watermarkPathPrefix = '.watermarks';
-		} else if ($watermark) {
-			// Only image watermark - use gallery path
-			$watermarkPathPrefix = $this->watermarkPath($watermark);
-		}
+		// Determine watermark path prefix
+		$watermarkPathPrefix = $watermarkResult->getWatermarkPathPrefix($this->watermarkPath($watermark));
 
+		// Create Glide server
 		$glide = ServerFactory::create([
 			'source'                 => $this->filesystem->flysystem(),
 			'cache'                  => $this->filesystem->flysystem(),
@@ -113,13 +91,13 @@ final class GlideFactory
 
 		$result = [
 			'server' => $glide,
-			'params' => $params,
+			'params' => $watermarkResult->getPrimaryPassParams(),
 		];
 
 		// Add second pass information if needed
-		if ($needsSecondPass) {
+		if ($watermarkResult->needsSequentialProcessing()) {
 			$result['needsSecondPass'] = true;
-			$result['secondPassParams'] = $secondPassParams;
+			$result['secondPassParams'] = $watermarkResult->getSecondaryPassParams();
 		}
 
 		return $result;
@@ -148,7 +126,7 @@ final class GlideFactory
 
 	/**
 	 * Get the filesystem adapter.
-	 * 
+	 *
 	 * @return StorageAdapterInterface
 	 */
 	public function filesystem(): StorageAdapterInterface
@@ -158,10 +136,11 @@ final class GlideFactory
 
 	/**
 	 * Create a server specifically for text watermarks (second pass).
-	 * 
+	 *
 	 * @param string $source
 	 * @param ImageData $imageData
 	 * @param ?string $cache
+	 *
 	 * @return Server
 	 */
 	public function createTextWatermarkServer(string $source, ImageData $imageData, ?string $cache = null): Server
@@ -226,149 +205,4 @@ final class GlideFactory
 		return str_replace('#', '', $color);
 	}
 
-	/**
-	 * Process text watermark parameters and generate text watermark if needed.
-	 * 
-	 * This method handles text watermark generation and prepares parameters for
-	 * potential sequential watermark processing (image + text).
-	 *
-	 * @param array<string,mixed> $params
-	 *
-	 * @return void
-	 */
-	private function processTextWatermark(array &$params): void
-	{
-		// Check if text watermark is requested
-		if (!isset($params['marktext']) || empty($params['marktext'])) {
-			return;
-		}
-
-		try {
-			// Generate text watermark image
-			$textWatermarkPath = $this->textWatermark->generateTextWatermark($params);
-
-			// Store text watermark parameters for later use if we have both image and text watermarks
-			if (isset($params['mark'])) {
-				// We have both image and text watermarks - store text watermark info
-				$params['_textmark'] = $textWatermarkPath;
-				$params['_textmarkparams'] = $this->extractTextWatermarkParams($params);
-				
-				// Keep the original image watermark as the primary mark for first pass
-				// Text watermark will be applied in a second pass
-			} else {
-				// Only text watermark - use it as the primary mark
-				$params['mark'] = $textWatermarkPath;
-				
-				// Map text-specific positioning parameters to standard watermark parameters
-				$this->mapTextPositioningParams($params);
-			}
-
-			// Remove text-specific parameters as they're processed
-			$textParams = [
-				'marktext', 'marktextsize', 'marktextcolor', 'marktextfont', 'marktextbg', 
-				'marktextpad', 'marktextangle', 'marktextalpha',
-				// New positioning parameters
-				'marktextpos', 'marktextw', 'marktexth', 'marktextx', 'marktexty', 'marktextfit'
-			];
-			foreach ($textParams as $param) {
-				unset($params[$param]);
-			}
-		} catch (\Exception $e) {
-			// Log error but don't fail the entire image generation
-			error_log('Text watermark generation failed: ' . $e->getMessage());
-		}
-	}
-
-	/**
-	 * Extract text watermark positioning parameters.
-	 *
-	 * @param array<string,mixed> $params
-	 * @return array<string,mixed>
-	 */
-	private function extractTextWatermarkParams(array $params): array
-	{
-		$textParams = [];
-		
-		// Text-specific positioning parameters
-		if (isset($params['marktextpos'])) {
-			$textParams['markpos'] = $params['marktextpos'];
-		}
-		if (isset($params['marktextw'])) {
-			$textParams['markw'] = $params['marktextw'];
-		}
-		if (isset($params['marktexth'])) {
-			$textParams['markh'] = $params['marktexth'];
-		}
-		if (isset($params['marktextx'])) {
-			$textParams['markx'] = $params['marktextx'];
-		}
-		if (isset($params['marktexty'])) {
-			$textParams['marky'] = $params['marktexty'];
-		}
-		if (isset($params['marktextpad'])) {
-			$textParams['markpad'] = $params['marktextpad'];
-		}
-		if (isset($params['marktextfit'])) {
-			$textParams['markfit'] = $params['marktextfit'];
-		}
-
-		// Default positioning if not specified
-		if (!isset($textParams['markpos'])) {
-			$textParams['markpos'] = 'bottom-left'; // Different default from image watermarks
-		}
-		if (!isset($textParams['markw'])) {
-			$textParams['markw'] = '100w';
-		}
-
-		return $textParams;
-	}
-
-	/**
-	 * Map text positioning parameters to standard watermark parameters.
-	 *
-	 * @param array<string,mixed> $params
-	 * @return void
-	 */
-	private function mapTextPositioningParams(array &$params): void
-	{
-		// Map text-specific positioning to standard positioning
-		if (isset($params['marktextpos'])) {
-			$params['markpos'] = $params['marktextpos'];
-			unset($params['marktextpos']);
-		} else {
-			$params['markpos'] = 'bottom-left'; // Different default for text
-		}
-
-		if (isset($params['marktextw'])) {
-			$params['markw'] = $params['marktextw'];
-			unset($params['marktextw']);
-		} else if (!isset($params['markw'])) {
-			$params['markw'] = '100w';
-		}
-
-		if (isset($params['marktexth'])) {
-			$params['markh'] = $params['marktexth'];
-			unset($params['marktexth']);
-		}
-
-		if (isset($params['marktextx'])) {
-			$params['markx'] = $params['marktextx'];
-			unset($params['marktextx']);
-		}
-
-		if (isset($params['marktexty'])) {
-			$params['marky'] = $params['marktexty'];
-			unset($params['marktexty']);
-		}
-
-		if (isset($params['marktextfit'])) {
-			$params['markfit'] = $params['marktextfit'];
-			unset($params['marktextfit']);
-		}
-
-		// Remove marktextpad since it's handled during text generation, not positioning
-		if (isset($params['marktextpad'])) {
-			unset($params['marktextpad']);
-		}
-	}
 }
