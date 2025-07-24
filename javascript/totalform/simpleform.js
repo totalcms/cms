@@ -90,7 +90,7 @@ export default class SimpleForm {
 	}
 
 	hasError() {
-		return this.button.classList.has("error");
+		return this.button.classList.contains("error");
 	}
 
 	error(error) {
