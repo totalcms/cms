@@ -6,12 +6,14 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Sitemap\Data\Sitemap;
+use TotalCMS\Support\Config;
 
 final class SitemapBuilder
 {
 	public function __construct(
 		private IndexReader $indexReader,
 		private CollectionFetcher $collectionFetcher,
+		private Config $config,
 	) {
 	}
 
@@ -24,9 +26,6 @@ final class SitemapBuilder
 		if (is_null($collectionData)) {
 			throw new \Exception('Collection not found: ' . $collection);
 		}
-		if (!str_starts_with($collectionData->url, 'http')) {
-			throw new \Exception('Invalid URL for collection: ' . $collection);
-		}
 
 		$sitemap = new Sitemap();
 
@@ -35,6 +34,10 @@ final class SitemapBuilder
 
 		foreach ($index->objects as $object) {
 			$url = CollectionData::objectUrl($collectionData, $object['id']);
+
+			if (!str_starts_with($url, 'http')) {
+				$url = 'https://' . $this->config->domain . $url;
+			}
 
 			if (!empty($object[$dateProperty])) {
 				$options['date'] = $object[$dateProperty];
