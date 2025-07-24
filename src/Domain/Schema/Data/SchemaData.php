@@ -81,15 +81,15 @@ final class SchemaData
 		'url'      => 'https://www.totalcms.co/schemas/properties/url.json',
 	];
 
-	public string $id;
+	public string $id = '';
 	public string $formgrid = '';
-	public string $description;
+	public string $description = '';
 	/** @var array<string,mixed> */
-	public array $properties;
+	public array $properties = [];
 	/** @var array<string> */
-	public array $required;
+	public array $required = [];
 	/** @var array<string> */
-	public array $index;
+	public array $index = [];
 	protected Serializer $serializer;
 
 	public function __construct()
