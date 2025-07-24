@@ -7,6 +7,7 @@ use FeedWriter\RSS2;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Support\Config;
 
 final class RssBuilder
 {
@@ -26,6 +27,7 @@ final class RssBuilder
 	public function __construct(
 		private IndexReader $indexReader,
 		private CollectionFetcher $collectionFetcher,
+		private Config $config,
 	) {
 		$this->feed = new RSS2();
 	}
@@ -44,9 +46,6 @@ final class RssBuilder
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		if (is_null($collectionData)) {
 			throw new \Exception('Collection not found: ' . $collection);
-		}
-		if (!str_starts_with($collectionData->url, 'http')) {
-			throw new \Exception('Invalid URL for collection: ' . $collection);
 		}
 
 		$this->setupFeed($options);
@@ -69,13 +68,17 @@ final class RssBuilder
 	private function createItem(CollectionData $collection, array $object): Item
 	{
 		$id      = $object['id'];
-		$url     = CollectionData::objectUrl($collection, $object['id']);
 		$title   = $object[$this->fieldMap['title']] ?? false;
 		$author  = $object[$this->fieldMap['author']] ?? false;
 		$content = $object[$this->fieldMap['content']] ?? false;
 		$media   = $object[$this->fieldMap['media']] ?? false;
 		$date    = $object[$this->fieldMap['date']] ?? time();
 		$mime    = $this->mimeType($media);
+		$url     = CollectionData::objectUrl($collection, $object['id']);
+
+		if (!str_starts_with($url, 'http')) {
+			$url = 'https://' . $this->config->domain . $url;
+		}
 
 		$item = $this->feed->createNewItem();
 		$item->setLink($url);
