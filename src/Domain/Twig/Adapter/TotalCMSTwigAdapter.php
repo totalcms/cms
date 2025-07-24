@@ -595,6 +595,54 @@ NGINX;
 		return $url;
 	}
 
+	/** @param array<string,string> $options */
+	public function stream(string $id, array $options = []): string
+	{
+		$collection = $options['collection'] ?? 'file';
+		$property   = $options['property'] ?? 'file';
+		$password   = $options['pwd'] ?? '';
+
+		$url = "{$this->api}/stream/{$collection}/{$id}/{$property}";
+
+		if (!empty($password)) {
+			$url .= "?pwd={$password}";
+		}
+
+		return $url;
+	}
+
+	/**
+	 * @param array<string,string> $fileOptions
+	 * @param array<string,mixed> $options
+	 */
+	public function depotStream(string $id, string $name, array $fileOptions = [], array $options = []): string
+	{
+		$collection = $options['collection'] ?? 'depot';
+		$property   = $options['property'] ?? 'depot';
+		$path       = $fileOptions['path'] ?? '';
+		$password   = $fileOptions['pwd'] ?? '';
+
+		// Add support for supplying the path via the name
+		if (str_contains($name, '/')) {
+			$pathinfo = pathinfo($name);
+			$path     = $pathinfo['dirname'];
+			$name     = $pathinfo['basename'];
+		}
+
+		$url = "{$this->api}/stream/{$collection}/{$id}/{$property}/{$name}";
+
+		$query = http_build_query(array_filter([
+			'path' => trim($path, '/'),
+			'pwd'  => $password,
+		]));
+
+		if (!empty($query)) {
+			$url .= "?$query";
+		}
+
+		return $url;
+	}
+
 	// Get an data property from an object
 	public function data(string $collection, string $id, string $property): mixed
 	{

@@ -1,0 +1,143 @@
+<?php
+
+namespace TotalCMS\Action\Stream;
+
+use Nyholm\Psr7\Stream;
+use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpForbiddenException;
+use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Security\Encryption\Cipher;
+
+abstract class StreamAction
+{
+	protected FileAccessManager $accessManager;
+	protected ObjectUpdater $objectUpdater;
+	protected PhpSession $session;
+
+	protected string $collection;
+	protected string $id;
+	protected string $property;
+	protected string $name;
+	protected ?string $subpath = null;
+
+	abstract protected function fileExists(): bool;
+
+	abstract protected function loadFile(): void;
+
+	abstract protected function fetchFile(): FileData;
+
+	abstract protected function incrementCount(FileData $file): void;
+
+	/** @return resource */
+	abstract protected function streamFile();
+
+	/** @param array<string,string> $args The arguments	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	{
+		$this->collection = $args['collection'];
+		$this->id         = $args['id'];
+		$this->property   = $args['property'];
+		$this->name       = $args['name'] ?? '';
+
+		$query          = $request->getQueryParams();
+		$this->subpath  = $query['path'] ?? null;
+
+		if (!$this->fileExists()) {
+			throw new HttpNotFoundException($request, 'File not found');
+		}
+
+		$this->loadFile();
+
+		if ($this->accessManager->isProtectedByGroups()) {
+			// check if the user is logged in and has access to the file
+			if ($this->accessManager->sessionHasUser() === false) {
+				throw new HttpForbiddenException($request, 'Authentication required');
+			}
+			if ($this->accessManager->userHasAccess() === false) {
+				throw new HttpForbiddenException($request, 'Access denied');
+			}
+		}
+
+		if ($this->accessManager->isPasswordProtected()) {
+			$password = $this->passwordFromRequest($request);
+
+			if (is_null($password)) {
+				throw new HttpForbiddenException($request, 'Password required');
+			}
+			if ($this->accessManager->verfiyPassword($password) === false) {
+				throw new HttpForbiddenException($request, 'Invalid password');
+			}
+		}
+
+		$file = $this->fetchFile();
+		$this->incrementCount($file);
+
+		return $this->buildStreamResponse($request, $response, $file);
+	}
+
+	private function buildStreamResponse(ServerRequestInterface $request, ResponseInterface $response, FileData $file): ResponseInterface
+	{
+		$fileSize = $file->size;
+		$rangeHeader = $request->getHeaderLine('Range');
+
+		// Basic headers for all responses
+		$response = $response
+			->withHeader('Content-Type', $file->mime)
+			->withHeader('Content-Disposition', "inline; filename={$file->download}")
+			->withHeader('Accept-Ranges', 'bytes')
+			->withHeader('Cache-Control', 'no-cache');
+
+		// Handle range requests for Safari video streaming
+		if (!empty($rangeHeader) && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
+			$start = (int)$matches[1];
+			$end = !empty($matches[2]) ? (int)$matches[2] : $fileSize - 1;
+			
+			// Ensure valid range
+			if ($start >= $fileSize || $end >= $fileSize || $start > $end) {
+				return $response->withStatus(416) // Range Not Satisfiable
+					->withHeader('Content-Range', "bytes */{$fileSize}");
+			}
+
+			$contentLength = $end - $start + 1;
+
+			// Create range-specific file stream
+			$fileStream = $this->streamFile();
+			$rangeContent = '';
+			if (is_resource($fileStream) && $contentLength > 0) {
+				fseek($fileStream, $start);
+				$readResult = fread($fileStream, $contentLength);
+				$rangeContent = $readResult !== false ? $readResult : '';
+				fclose($fileStream);
+			}
+
+			return $response
+				->withStatus(206) // Partial Content
+				->withHeader('Content-Length', (string)$contentLength)
+				->withHeader('Content-Range', "bytes {$start}-{$end}/{$fileSize}")
+				->withBody(Stream::create($rangeContent));
+		}
+
+		// Full file response
+		return $response
+			->withHeader('Content-Length', (string)$fileSize)
+			->withBody(Stream::create($this->streamFile()));
+	}
+
+	private function passwordFromRequest(ServerRequestInterface $request): ?string
+	{
+		$queryParams = $request->getQueryParams();
+
+		$password = null;
+
+		if (isset($queryParams['pwd'])) {
+			$password = Cipher::decrypt($queryParams['pwd']);
+		}
+
+		return $password;
+	}
+}
