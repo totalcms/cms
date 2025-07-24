@@ -364,7 +364,7 @@ class ServerChecker
 	public function getVersion(): string
 	{
 		$version = false;
-		$file    = __DIR__ . '/../../version.txt';
+		$file    = __DIR__ . '/../../../version.txt';
 
 		if (file_exists($file)) {
 			$version = file_get_contents($file);
