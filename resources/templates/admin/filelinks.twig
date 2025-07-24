@@ -37,11 +37,19 @@
 		</section>
 
 		<section>
-			<h4>Macro:</h4>
+			<h4>Download Macro:</h4>
 			{% if filename %}
-				<pre {% if password %}data-pwd="{{password}}"{% endif %} id="download-macro">&#123;&#123; cms.depotDownload("{{id}}", "{{filename}}") &#125;&#125;</pre>
+				{% if password %}
+					<pre data-pwd="{{password}}" id="download-macro">&#123;&#123; cms.depotDownload("{{id}}", "{{filename}}", {pwd: "{{password | urldecode}}"}) &#125;&#125;</pre>
+				{% else %}
+					<pre id="download-macro">&#123;&#123; cms.depotDownload("{{id}}", "{{filename}}") &#125;&#125;</pre>
+				{% endif %}
 			{% else %}
-				<pre {% if password %}data-pwd="{{password}}"{% endif %} id="download-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+				{% if password %}
+					<pre data-pwd="{{password}}" id="download-macro">&#123;&#123; cms.download("{{id}}", {pwd: "{{password | urldecode}}"}) &#125;&#125;</pre>
+				{% else %}
+					<pre id="download-macro">&#123;&#123; cms.download("{{id}}") &#125;&#125;</pre>
+				{% endif %}
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#download-macro">Copy Macro</button>
 		</section>
@@ -57,11 +65,19 @@
 		</section>
 
 		<section>
-			<h4>Macro:</h4>
+			<h4>Stream Macro:</h4>
 			{% if filename %}
-				<pre {% if password %}data-pwd="{{password}}"{% endif %} id="stream-macro">&#123;&#123; cms.depotStream("{{id}}", "{{filename}}") &#125;&#125;</pre>
+				{% if password %}
+					<pre data-pwd="{{password}}" id="stream-macro">&#123;&#123; cms.depotStream("{{id}}", "{{filename}}", {pwd: "{{password | urldecode}}"}) &#125;&#125;</pre>
+				{% else %}
+					<pre id="stream-macro">&#123;&#123; cms.depotStream("{{id}}", "{{filename}}") &#125;&#125;</pre>
+				{% endif %}
 			{% else %}
-				<pre {% if password %}data-pwd="{{password}}"{% endif %} id="stream-macro">&#123;&#123; cms.stream("{{id}}") &#125;&#125;</pre>
+				{% if password %}
+					<pre data-pwd="{{password}}" id="stream-macro">&#123;&#123; cms.stream("{{id}}", {pwd: "{{password | urldecode}}"}) &#125;&#125;</pre>
+				{% else %}
+					<pre id="stream-macro">&#123;&#123; cms.stream("{{id}}") &#125;&#125;</pre>
+				{% endif %}
 			{% endif %}
 			<button type="button" class="cms-clip-button" data-clip="#stream-macro">Copy Macro</button>
 		</section>
