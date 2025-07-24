@@ -2,185 +2,115 @@
 
 namespace TotalCMS\Domain\ImageWorks\Data;
 
+use TotalCMS\Domain\ImageWorks\Service\TextWatermark;
+
 /**
- * Watermark data class that represents both image and text watermarks.
- * 
- * Centralizes watermark configuration and provides a clean API for 
- * watermark operations in the ImageWorks system.
+ * Simple watermark data object with standard Glide watermark properties.
  */
 final class Watermark
 {
-	public const TYPE_IMAGE = 'image';
-	public const TYPE_TEXT = 'text';
-
-	/**
-	 * @param array<string,mixed> $positioning
-	 * @param array<string,mixed> $metadata
-	 */
 	public function __construct(
-		public readonly string $type,
-		public readonly string $source,
-		public readonly array $positioning = [],
-		public readonly array $metadata = [],
+		public readonly ?string $mark = null,
+		public readonly ?string $markpos = null,
+		public readonly ?string $markw = null,
+		public readonly ?string $markh = null,
+		public readonly ?string $markx = null,
+		public readonly ?string $marky = null,
+		public readonly ?string $markfit = null,
+		public readonly ?string $markpad = null,
 	) {
 	}
 
 	/**
-	 * Create an image watermark from parameters.
+	 * Create a watermark from text parameters.
 	 *
-	 * @param array<string,mixed> $params
+	 * @param array<string,mixed> $params Text watermark parameters
+	 * @param TextWatermark $textWatermark Service to generate text watermark
+	 * @return self
+	 */
+	public static function fromTextParams(array $params, TextWatermark $textWatermark): self
+	{
+		// Generate the text watermark image
+		$textWatermarkPath = $textWatermark->generateTextWatermark($params);
+
+		return new self(
+			mark: $textWatermarkPath,
+			markpos: $params['marktextpos'] ?? 'bottom-left',
+			markw: $params['marktextw'] ?? '100w',
+			markh: $params['marktexth'] ?? null,
+			markx: $params['marktextx'] ?? null,
+			marky: $params['marktexty'] ?? null,
+			markfit: $params['marktextfit'] ?? null,
+			markpad: $params['marktextpad'] ?? null,
+		);
+	}
+
+	/**
+	 * Create a watermark from image parameters.
+	 *
+	 * @param array<string,mixed> $params Image watermark parameters
 	 * @return self|null
 	 */
-	public static function createImageWatermark(array $params): ?self
+	public static function fromImageParams(array $params): ?self
 	{
 		if (!isset($params['mark']) || empty($params['mark'])) {
 			return null;
 		}
 
-		$positioning = [];
-		$metadata = [];
-
-		// Extract standard watermark positioning parameters
-		$positioningParams = ['markpos', 'markw', 'markh', 'markx', 'marky', 'markfit', 'markpad'];
-		foreach ($positioningParams as $param) {
-			if (isset($params[$param])) {
-				$positioning[$param] = $params[$param];
-			}
-		}
-
-		// Set default positioning if not specified
-		if (!isset($positioning['markpos'])) {
-			$positioning['markpos'] = 'bottom-right'; // Default for image watermarks
-		}
-		if (!isset($positioning['markw'])) {
-			$positioning['markw'] = '100w'; // Default width
-		}
-
 		return new self(
-			type: self::TYPE_IMAGE,
-			source: $params['mark'],
-			positioning: $positioning,
-			metadata: $metadata
+			mark: $params['mark'],
+			markpos: $params['markpos'] ?? 'bottom-right',
+			markw: $params['markw'] ?? '100w',
+			markh: $params['markh'] ?? null,
+			markx: $params['markx'] ?? null,
+			marky: $params['marky'] ?? null,
+			markfit: $params['markfit'] ?? null,
+			markpad: $params['markpad'] ?? null,
 		);
 	}
 
 	/**
-	 * Create a text watermark from parameters.
-	 *
-	 * @param array<string,mixed> $params
-	 * @param string $textWatermarkPath Generated text watermark image path
-	 * @return self|null
-	 */
-	public static function createTextWatermark(array $params, string $textWatermarkPath): ?self
-	{
-		if (!isset($params['marktext']) || empty($params['marktext'])) {
-			return null;
-		}
-
-		$positioning = [];
-		$metadata = [];
-
-		// Extract text-specific positioning parameters and map to standard parameters
-		if (isset($params['marktextpos'])) {
-			$positioning['markpos'] = $params['marktextpos'];
-		} else {
-			$positioning['markpos'] = 'bottom-left'; // Different default for text
-		}
-
-		if (isset($params['marktextw'])) {
-			$positioning['markw'] = $params['marktextw'];
-		} else {
-			$positioning['markw'] = '100w'; // Default width
-		}
-
-		if (isset($params['marktexth'])) {
-			$positioning['markh'] = $params['marktexth'];
-		}
-
-		if (isset($params['marktextx'])) {
-			$positioning['markx'] = $params['marktextx'];
-		}
-
-		if (isset($params['marktexty'])) {
-			$positioning['marky'] = $params['marktexty'];
-		}
-
-		if (isset($params['marktextfit'])) {
-			$positioning['markfit'] = $params['marktextfit'];
-		}
-
-		if (isset($params['marktextpad'])) {
-			$positioning['markpad'] = $params['marktextpad'];
-		}
-
-		// Store text-specific metadata
-		$metadata = [
-			'text' => $params['marktext'],
-			'fontSize' => $params['marktextsize'] ?? 24,
-			'color' => $params['marktextcolor'] ?? 'ffffff',
-			'font' => $params['marktextfont'] ?? null,
-			'backgroundColor' => $params['marktextbg'] ?? null,
-			'padding' => $params['marktextpad'] ?? 10,
-			'angle' => $params['marktextangle'] ?? 0,
-			'opacity' => $params['marktextalpha'] ?? 100,
-		];
-
-		return new self(
-			type: self::TYPE_TEXT,
-			source: $textWatermarkPath,
-			positioning: $positioning,
-			metadata: $metadata
-		);
-	}
-
-	/**
-	 * Get positioning parameters as an array suitable for Glide.
+	 * Convert watermark to array for Glide parameters.
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function getPositioningParams(): array
+	public function toArray(): array
 	{
-		return array_merge(['mark' => $this->source], $this->positioning);
+		$params = [];
+
+		if ($this->mark !== null) {
+			$params['mark'] = $this->mark;
+		}
+		if ($this->markpos !== null) {
+			$params['markpos'] = $this->markpos;
+		}
+		if ($this->markw !== null) {
+			$params['markw'] = $this->markw;
+		}
+		if ($this->markh !== null) {
+			$params['markh'] = $this->markh;
+		}
+		if ($this->markx !== null) {
+			$params['markx'] = $this->markx;
+		}
+		if ($this->marky !== null) {
+			$params['marky'] = $this->marky;
+		}
+		if ($this->markfit !== null) {
+			$params['markfit'] = $this->markfit;
+		}
+		if ($this->markpad !== null) {
+			$params['markpad'] = $this->markpad;
+		}
+
+		return $params;
 	}
 
 	/**
-	 * Check if this is an image watermark.
+	 * Check if this watermark has any data.
 	 */
-	public function isImageWatermark(): bool
+	public function isEmpty(): bool
 	{
-		return $this->type === self::TYPE_IMAGE;
-	}
-
-	/**
-	 * Check if this is a text watermark.
-	 */
-	public function isTextWatermark(): bool
-	{
-		return $this->type === self::TYPE_TEXT;
-	}
-
-	/**
-	 * Get the watermark path prefix for Glide configuration.
-	 */
-	public function getPathPrefix(string $galleryWatermarkPath): string
-	{
-		return $this->isTextWatermark() ? '.watermarks' : $galleryWatermarkPath;
-	}
-
-	/**
-	 * Get all parameters that should be removed from the main params array.
-	 *
-	 * @return array<string>
-	 */
-	public static function getParametersToRemove(): array
-	{
-		return [
-			// Image watermark parameters
-			'mark', 'markpos', 'markw', 'markh', 'markx', 'marky', 'markfit', 'markpad',
-			// Text watermark parameters
-			'marktext', 'marktextsize', 'marktextcolor', 'marktextfont', 'marktextbg',
-			'marktextpad', 'marktextangle', 'marktextalpha',
-			'marktextpos', 'marktextw', 'marktexth', 'marktextx', 'marktexty', 'marktextfit',
-		];
+		return $this->mark === null;
 	}
 }

@@ -7,7 +7,7 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
-use TotalCMS\Domain\ImageWorks\Data\WatermarkProcessor;
+use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
@@ -21,7 +21,7 @@ final class GlideFactory
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
 		private Config $config,
-		private WatermarkProcessor $watermarkProcessor,
+		private TextWatermark $textWatermark,
 	) {
 	}
 
@@ -58,22 +58,44 @@ final class GlideFactory
 	 */
 	public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null, array $params = []): array
 	{
-		// Process watermarks using the dedicated processor
-		$watermarkResult = $this->watermarkProcessor->processWatermarks($params);
+		// Create watermark objects
+		$imageWatermark = Watermark::fromImageParams($params);
+		$textWatermark = null;
 
-		// Debug logging
-		if ($watermarkResult->needsSequentialProcessing()) {
-			$primaryParams = $watermarkResult->getPrimaryPassParams();
-			$secondaryParams = $watermarkResult->getSecondaryPassParams();
-			error_log('Sequential watermark processing: First pass mark = ' . ($primaryParams['mark'] ?? 'none'));
-			error_log('Sequential watermark processing: Second pass mark = ' . ($secondaryParams['mark'] ?? 'none'));
-		} elseif ($watermarkResult->hasWatermarks()) {
-			$primaryParams = $watermarkResult->getPrimaryPassParams();
-			error_log('Single watermark: mark = ' . ($primaryParams['mark'] ?? 'none'));
+		// Generate text watermark if requested
+		if (isset($params['marktext']) && !empty($params['marktext'])) {
+			try {
+				$textWatermark = Watermark::fromTextParams($params, $this->textWatermark);
+			} catch (\Exception $e) {
+				error_log('Text watermark generation failed: ' . $e->getMessage());
+			}
 		}
 
+		// Determine which watermarks we have
+		$hasImageWatermark = $imageWatermark !== null && !$imageWatermark->isEmpty();
+		$hasTextWatermark = $textWatermark !== null && !$textWatermark->isEmpty();
+		$needsSequentialProcessing = $hasImageWatermark && $hasTextWatermark;
+
 		// Determine watermark path prefix
-		$watermarkPathPrefix = $watermarkResult->getWatermarkPathPrefix($this->watermarkPath($watermark));
+		$watermarkPathPrefix = '.watermarks'; // Default for text watermarks
+		if ($hasImageWatermark) {
+			$watermarkPathPrefix = $this->watermarkPath($watermark);
+		}
+
+		// Clean parameters by removing watermark-specific parameters
+		$cleanedParams = $this->removeWatermarkParameters($params);
+
+		// Prepare primary pass parameters
+		$primaryPassParams = $cleanedParams;
+		if ($needsSequentialProcessing) {
+			// Image watermark goes first
+			$primaryPassParams = array_merge($cleanedParams, $imageWatermark->toArray());
+		} elseif ($hasImageWatermark) {
+			$primaryPassParams = array_merge($cleanedParams, $imageWatermark->toArray());
+		} elseif ($hasTextWatermark) {
+			$primaryPassParams = array_merge($cleanedParams, $textWatermark->toArray());
+			$watermarkPathPrefix = '.watermarks'; // Text watermarks always use .watermarks
+		}
 
 		// Create Glide server
 		$glide = ServerFactory::create([
@@ -91,13 +113,13 @@ final class GlideFactory
 
 		$result = [
 			'server' => $glide,
-			'params' => $watermarkResult->getPrimaryPassParams(),
+			'params' => $primaryPassParams,
 		];
 
 		// Add second pass information if needed
-		if ($watermarkResult->needsSequentialProcessing()) {
+		if ($needsSequentialProcessing) {
 			$result['needsSecondPass'] = true;
-			$result['secondPassParams'] = $watermarkResult->getSecondaryPassParams();
+			$result['secondPassParams'] = $textWatermark->toArray();
 		}
 
 		return $result;
@@ -132,6 +154,29 @@ final class GlideFactory
 	public function filesystem(): StorageAdapterInterface
 	{
 		return $this->filesystem;
+	}
+
+	/**
+	 * Remove watermark parameters from the params array.
+	 *
+	 * @param array<string,mixed> $params
+	 * @return array<string,mixed>
+	 */
+	private function removeWatermarkParameters(array $params): array
+	{
+		$cleanedParams = $params;
+		$parametersToRemove = [
+			'mark', 'markpos', 'markw', 'markh', 'markx', 'marky', 'markfit', 'markpad',
+			'marktext', 'marktextpos', 'marktextw', 'marktexth', 'marktextx', 'marktexty', 
+			'marktextfit', 'marktextpad', 'marktextsize', 'marktextcolor', 'marktextangle',
+			'marktextfont', 'marktextstrokewidth', 'marktextstrokecolor'
+		];
+
+		foreach ($parametersToRemove as $param) {
+			unset($cleanedParams[$param]);
+		}
+
+		return $cleanedParams;
 	}
 
 	/**

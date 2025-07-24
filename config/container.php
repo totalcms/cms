@@ -39,9 +39,9 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
+use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermark;
-use TotalCMS\Domain\ImageWorks\Data\WatermarkProcessor;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -474,8 +474,10 @@ return [
 		);
 	},
 
-	WatermarkProcessor::class => function (ContainerInterface $container) {
-		return new WatermarkProcessor(
+	GlideFactory::class => function (ContainerInterface $container) {
+		return new GlideFactory(
+			$container->get(StorageAdapterInterface::class),
+			$container->get(Config::class),
 			$container->get(TextWatermark::class)
 		);
 	},
