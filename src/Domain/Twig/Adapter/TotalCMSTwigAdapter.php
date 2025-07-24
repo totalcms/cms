@@ -368,9 +368,14 @@ NGINX;
 		return null;
 	}
 
-	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $name = ''): bool
+	/** @SuppressWarnings("PHPMD.ElseExpression") */
+	public function verifyFilePassword(string $password, string $collection, string $id, string $property, ?string $name = null): bool
 	{
-		$this->fileAccessManager->loadFile($collection, $id, $property);
+		if ($name !== null) {
+			$this->fileAccessManager->loadDepotFile($collection, $id, $property, $name);
+		} else {
+			$this->fileAccessManager->loadFile($collection, $id, $property);
+		}
 
 		return $this->fileAccessManager->verfiyPasswordOnly($password);
 	}
