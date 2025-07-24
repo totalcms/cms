@@ -106,12 +106,22 @@ final class TextWatermark
 				throw new \RuntimeException('Failed to create text bounding box');
 			}
 
-			$textWidth  = abs($textBox[2] - $textBox[0]);
-			$textHeight = abs($textBox[1] - $textBox[7]);
+			// For rotated text, we need to calculate the envelope (bounding rectangle)
+			// textBox contains 8 values: [0]=>lower left X, [1]=>lower left Y, [2]=>lower right X, [3]=>lower right Y,
+			// [4]=>upper right X, [5]=>upper right Y, [6]=>upper left X, [7]=>upper left Y
+			$minX = min($textBox[0], $textBox[2], $textBox[4], $textBox[6]);
+			$maxX = max($textBox[0], $textBox[2], $textBox[4], $textBox[6]);
+			$minY = min($textBox[1], $textBox[3], $textBox[5], $textBox[7]);
+			$maxY = max($textBox[1], $textBox[3], $textBox[5], $textBox[7]);
+
+			$textWidth  = abs($maxX - $minX);
+			$textHeight = abs($maxY - $minY);
+			
 			// Add extra width padding to balance font bearing - small additional padding on right
 			$width = $textWidth + ($padding * 2) + ($fontSize * 0.1);
-			// Add extra height for descenders - 50% of font size for more room
-			$height = $textHeight + ($padding * 2) + ($fontSize * 0.5);
+			// Add extra height for descenders and rotation space - increase margin for rotated text
+			$extraHeight = $angle == 0 ? ($fontSize * 0.5) : ($fontSize * 0.8);
+			$height = $textHeight + ($padding * 2) + $extraHeight;
 		} else {
 			// Fallback for built-in fonts
 			$width  = strlen($text) * ($fontSize * 0.6) + ($padding * 2);
@@ -169,9 +179,9 @@ final class TextWatermark
 			throw new \RuntimeException('Failed to allocate text color');
 		}
 
-		// Add text to image using simple positioning
+		// Add text to image using positioning that accounts for rotation
 		if ($fontPath && function_exists('imagettftext')) {
-			// Use TTF font - simple positioning with enough space for descenders
+			// Use TTF font - position text correctly for both rotated and non-rotated text
 			if ($angle === 0) {
 				// No rotation - position text with baseline well above bottom
 				$x = $padding;
@@ -179,13 +189,21 @@ final class TextWatermark
 				// TTF baseline is where the text sits, descenders go below this line
 				$y = $height - $padding - ($fontSize * 0.5); // Leave 50% of font size for descenders
 			} else {
-				// With rotation - center the text
+				// With rotation - calculate proper centered positioning
 				$textBox = imageftbbox($fontSize, $angle, $fontPath, $text);
 				if (is_array($textBox)) {
-					$x = ($width / 2) - (($textBox[2] - $textBox[0]) / 2);
-					$y = ($height / 2) + (($textBox[1] - $textBox[7]) / 2);
+					// Calculate the bounding box dimensions
+					$minX = min($textBox[0], $textBox[2], $textBox[4], $textBox[6]);
+					$maxX = max($textBox[0], $textBox[2], $textBox[4], $textBox[6]);
+					$minY = min($textBox[1], $textBox[3], $textBox[5], $textBox[7]);
+					$maxY = max($textBox[1], $textBox[3], $textBox[5], $textBox[7]);
+					
+					// Center the text in the image by adjusting for the bounding box offset
+					$x = ($width / 2) - ($minX + ($maxX - $minX) / 2);
+					$y = ($height / 2) - ($minY + ($maxY - $minY) / 2);
 				} else {
-					$x = $padding;
+					// Fallback positioning
+					$x = $width / 2;
 					$y = $height / 2;
 				}
 			}
