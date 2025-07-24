@@ -186,19 +186,8 @@ final class ImageGenerator
 			$params['markw'] = '100w';
 		}
 
-		// Handle text watermark parameters - these are processed by GlideFactory
-		$textWatermarkParams = ['marktext', 'marktextsize', 'marktextcolor', 'marktextfont', 'marktextbg', 'marktextpad', 'marktextangle', 'marktextalpha'];
-		$hasTextWatermark    = false;
-		foreach ($textWatermarkParams as $param) {
-			if (isset($params[$param])) {
-				$hasTextWatermark = true;
-				break;
-			}
-		}
-
-		// If we have text watermark parameters, preserve them for processing
-		if ($hasTextWatermark && !isset($params['markw'])) {
-			$params['markw'] = '100w'; // Default width for text watermarks
+		if (isset($params['marktext']) && !isset($params['marktextw'])) {
+			$params['marktextw'] = '100w';
 		}
 
 		return array_filter($params);
@@ -230,6 +219,43 @@ final class ImageGenerator
 			params: $this->params
 		);
 
+		// Check if we need sequential processing for multiple watermarks
+		if (isset($result['needsSecondPass']) && $result['needsSecondPass'] && isset($result['secondPassParams'])) {
+			// First pass: apply image watermark
+			$firstPassResponse = $result['server']->getImageResponse($imageData->name, $result['params']);
+
+			// Get the processed image data from first pass
+			$firstPassImageData = (string)$firstPassResponse->getBody();
+
+			// Create a temporary file for the intermediate result
+			$tempFileName = 'temp_' . uniqid() . '.png';
+			$tempPath     = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName);
+
+			// Save first pass result temporarily
+			$this->glideFactory->filesystem()->write($tempPath, $firstPassImageData);
+
+			// Create second pass server specifically for text watermark
+			$secondServer = $this->glideFactory->createTextWatermarkServer(
+				source: PathUtils::buildPath($this->collection, $this->id, $this->property),
+				imageData: $imageData,
+				cache: null
+			);
+
+			// Apply text watermark to the intermediate result
+			$finalResponse = $secondServer->getImageResponse($tempFileName, $result['secondPassParams']);
+
+			// Clean up temporary file
+			try {
+				$this->glideFactory->filesystem()->delete($tempPath);
+			} catch (\Exception $e) {
+				// Log but don't fail if cleanup fails
+				error_log('Failed to clean up temporary watermark file: ' . $e->getMessage());
+			}
+
+			return $finalResponse;
+		}
+
+		// Single pass processing (only image or only text watermark)
 		return $result['server']->getImageResponse($imageData->name, $result['params']);
 	}
 
