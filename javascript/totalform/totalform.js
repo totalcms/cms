@@ -331,12 +331,20 @@ export default class TotalForm {
 		return false;
 	}
 
+	closeDialog() {
+		const dialog = this.form.querySelector("dialog[open]");
+		if (dialog) {
+			dialog.dialog ? dialog.dialog.close() : dialog.close();
+		}
+	}
+
 	save() {
 		if (!this.validate()) {
 			this.validated = false;
 			return;
 		}
 		this.validated = true;
+		this.closeDialog();
         this.processing();
         this.api.postAPI(this.route, this.generateData(), this.method)
             .then(response => this.afterSave(response))
