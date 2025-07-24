@@ -186,6 +186,21 @@ final class ImageGenerator
 			$params['markw'] = '100w';
 		}
 
+		// Handle text watermark parameters - these are processed by GlideFactory
+		$textWatermarkParams = ['marktext', 'marktextsize', 'marktextcolor', 'marktextfont', 'marktextbg', 'marktextpad', 'marktextangle', 'marktextalpha'];
+		$hasTextWatermark    = false;
+		foreach ($textWatermarkParams as $param) {
+			if (isset($params[$param])) {
+				$hasTextWatermark = true;
+				break;
+			}
+		}
+
+		// If we have text watermark parameters, preserve them for processing
+		if ($hasTextWatermark && !isset($params['markw'])) {
+			$params['markw'] = '100w'; // Default width for text watermarks
+		}
+
 		return array_filter($params);
 	}
 
@@ -207,12 +222,15 @@ final class ImageGenerator
 			return $this->returnOriginalImage($imageData);
 		}
 
-		$glide = $this->glideFactory->create(
+		$result = $this->glideFactory->create(
 			source: PathUtils::buildPath($this->collection, $this->id, $this->property),
 			imageData: $imageData,
+			cache: null,
+			watermark: null,
+			params: $this->params
 		);
 
-		return $glide->getImageResponse($imageData->name, $this->params);
+		return $result['server']->getImageResponse($imageData->name, $result['params']);
 	}
 
 	/** @param array<string,mixed> $params */
@@ -234,11 +252,14 @@ final class ImageGenerator
 				->withBody($response['stream']);
 		}
 
-		$glide = $this->glideFactory->create(
-			source    : PathUtils::buildPath($collection, $id, $property),
-			imageData : new ImageData()
+		$result = $this->glideFactory->create(
+			source: PathUtils::buildPath($collection, $id, $property),
+			imageData: new ImageData(),
+			cache: null,
+			watermark: null,
+			params: $params
 		);
 
-		return $glide->getImageResponse($name, $params);
+		return $result['server']->getImageResponse($name, $result['params']);
 	}
 }

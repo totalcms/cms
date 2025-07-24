@@ -40,6 +40,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
+use TotalCMS\Domain\ImageWorks\Service\TextWatermark;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -462,6 +463,12 @@ return [
 			$container->get(SchemaSaver::class),
 			$container->get(FactoryImporter::class),
 			$container->get(LoggerFactory::class),
+		);
+	},
+
+	TextWatermark::class => function (ContainerInterface $container) {
+		return new TextWatermark(
+			$container->get(StorageAdapterInterface::class)
 		);
 	},
 ];

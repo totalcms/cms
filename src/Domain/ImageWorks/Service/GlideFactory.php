@@ -15,15 +15,17 @@ final class GlideFactory
 {
 	private StorageAdapterInterface $filesystem;
 	private Config $config;
+	private TextWatermark $textWatermark;
 
 	public const CACHEDIR  = '.cache';
 	public const PALETTE   = 'palette';
 	public const IMG_TYPES = ['jpg', 'jpeg', 'pjpg', 'png', 'gif', 'webp', 'avif'];
 
-	public function __construct(StorageAdapterInterface $filesystem, Config $config)
+	public function __construct(StorageAdapterInterface $filesystem, Config $config, TextWatermark $textWatermark)
 	{
-		$this->filesystem = $filesystem;
-		$this->config     = $config;
+		$this->filesystem    = $filesystem;
+		$this->config        = $config;
+		$this->textWatermark = $textWatermark;
 	}
 
 	/**
@@ -45,31 +47,44 @@ final class GlideFactory
 	}
 
 	/**
-	 * Create a glide server.
+	 * Create a glide server and process parameters.
 	 *
 	 * @param string $source
 	 * @param ?string $cache
 	 * @param ?string $watermark
 	 * @param ImageData $imageData
+	 * @param array<string,mixed> $params
 	 *
-	 * @return Server
+	 * @return array{server: Server, params: array<string,mixed>}
 	 */
-	public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null): Server
+	public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null, array $params = []): array
 	{
+		// Check if text watermark is requested before processing
+		$hasTextWatermark = isset($params['marktext']) && !empty($params['marktext']);
+
+		// Handle text watermark if specified
+		$this->processTextWatermark($params);
+
+		// Determine watermark path prefix based on whether we have a text watermark
+		$watermarkPathPrefix = $hasTextWatermark ? '.watermarks' : $this->watermarkPath($watermark);
+
 		$glide = ServerFactory::create([
 			'source'                 => $this->filesystem->flysystem(),
 			'cache'                  => $this->filesystem->flysystem(),
 			'watermarks'             => $this->filesystem->flysystem(),
 			'source_path_prefix'     => $source,
 			'cache_path_prefix'      => sprintf('%s/%s', $source, $cache ?? self::CACHEDIR),
-			'watermarks_path_prefix' => $this->watermarkPath($watermark),
+			'watermarks_path_prefix' => $watermarkPathPrefix,
 			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
 			'defaults'               => $this->config->imageworks['defaults'],
 			'presets'                => $this->presets($imageData),
 			'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
 		]);
 
-		return $glide;
+		return [
+			'server' => $glide,
+			'params' => $params,
+		];
 	}
 
 	/** @return array<string,array<string,mixed>> */
@@ -137,5 +152,44 @@ final class GlideFactory
 		}
 
 		return str_replace('#', '', $color);
+	}
+
+	/**
+	 * Process text watermark parameters and generate text watermark if needed.
+	 *
+	 * @param array<string,mixed> $params
+	 *
+	 * @return void
+	 */
+	private function processTextWatermark(array &$params): void
+	{
+		// Check if text watermark is requested
+		if (!isset($params['marktext']) || empty($params['marktext'])) {
+			return;
+		}
+
+		try {
+			// Generate text watermark image
+			$textWatermarkPath = $this->textWatermark->generateTextWatermark($params);
+
+			// If both image and text watermarks are specified, we need to handle them differently
+			if (isset($params['mark'])) {
+				// For now, text watermark takes precedence, but we could extend this
+				// to support multiple watermarks by combining them
+				$params['mark2'] = $params['mark']; // Store original watermark for potential future use
+			}
+
+			// Replace or set the mark parameter with our generated text watermark
+			$params['mark'] = $textWatermarkPath;
+
+			// Remove text-specific parameters as they're no longer needed
+			$textParams = ['marktext', 'marktextsize', 'marktextcolor', 'marktextfont', 'marktextbg', 'marktextpad', 'marktextangle', 'marktextalpha'];
+			foreach ($textParams as $param) {
+				unset($params[$param]);
+			}
+		} catch (\Exception $e) {
+			// Log error but don't fail the entire image generation
+			error_log('Text watermark generation failed: ' . $e->getMessage());
+		}
 	}
 }

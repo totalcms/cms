@@ -1,0 +1,383 @@
+<?php
+
+namespace TotalCMS\Domain\ImageWorks\Service;
+
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+
+/**
+ * Text watermark generator for ImageWorks
+ * 
+ * Generates text watermarks as images that can be applied to images
+ */
+final class TextWatermark
+{
+	public function __construct(
+		private StorageAdapterInterface $filesystem
+	) {
+	}
+
+	/**
+	 * Generate a text watermark image with caching
+	 * 
+	 * @param array<string,mixed> $params Text watermark parameters
+	 * @return string Path to generated watermark image
+	 */
+	public function generateTextWatermark(array $params): string
+	{
+		$text = $params['marktext'] ?? '';
+		if (empty($text)) {
+			throw new \InvalidArgumentException('Text watermark requires marktext parameter');
+		}
+		
+		// Text watermark parameters with defaults
+		$fontSize = (int)($params['marktextsize'] ?? 24);
+		$fontColor = $this->parseColor($params['marktextcolor'] ?? 'ffffff');
+		$fontFamily = $params['marktextfont'] ?? null;
+		$backgroundColor = isset($params['marktextbg']) ? $this->parseColor($params['marktextbg']) : null;
+		$padding = (int)($params['marktextpad'] ?? 10);
+		$angle = (int)($params['marktextangle'] ?? 0);
+		$opacity = (int)($params['marktextalpha'] ?? 100);
+
+		// Generate cache key based on all parameters
+		$cacheKey = $this->generateCacheKey($text, $fontSize, $fontColor, $fontFamily, $backgroundColor, $padding, $angle, $opacity);
+		$cachedWatermarkPath = '.watermarks/' . $cacheKey . '.png';
+
+		// Check if cached watermark exists
+		if ($this->filesystem->fileExists($cachedWatermarkPath)) {
+			return $cacheKey . '.png';
+		}
+
+		// Create new watermark image
+		$watermarkPath = $this->createTextImage($text, $fontSize, $fontColor, $fontFamily, $backgroundColor, $padding, $angle, $opacity, $cacheKey);
+
+		return $watermarkPath;
+	}
+
+	/**
+	 * Create a text image using GD (based on FakerImageGD approach)
+	 * 
+	 * @param string $text
+	 * @param int $fontSize
+	 * @param array<int> $fontColor RGB array
+	 * @param string|null $fontFamily
+	 * @param array<int>|null $backgroundColor RGB array or null for transparent
+	 * @param int $padding
+	 * @param int $angle
+	 * @param int $opacity
+	 * @param string|null $cacheKey Optional cache key, if null generates temp name
+	 * @return string
+	 */
+	private function createTextImage(
+		string $text,
+		int $fontSize,
+		array $fontColor,
+		?string $fontFamily,
+		?array $backgroundColor,
+		int $padding,
+		int $angle,
+		int $opacity,
+		?string $cacheKey = null
+	): string {
+		if (!function_exists('imagecreatetruecolor')) {
+			throw new \RuntimeException('GD is not available on this PHP installation. Impossible to generate text watermark.');
+		}
+
+		// Get font path (prefer TTF)
+		$fontPath = $this->getFontPath($fontFamily);
+		
+		// Calculate initial dimensions based on whether we have TTF support
+		if ($fontPath && function_exists('imageftbbox')) {
+			// Start with larger dimensions and adjust if needed
+			$initialWidth = max(200, strlen($text) * $fontSize);
+			$initialHeight = max(100, $fontSize * 2);
+			
+			// Create temporary image to calculate actual text size
+			$tempImage = imagecreatetruecolor($initialWidth, $initialHeight);
+			if ($tempImage === false) {
+				throw new \RuntimeException('Failed to create temporary image for text measurement');
+			}
+			
+			$textBox = imageftbbox($fontSize, $angle, $fontPath, $text);
+			imagedestroy($tempImage);
+			
+			if (!is_array($textBox)) {
+				throw new \RuntimeException('Failed to create text bounding box');
+			}
+			
+			$textWidth = abs($textBox[2] - $textBox[0]);
+			$textHeight = abs($textBox[1] - $textBox[7]);
+			$width = $textWidth + ($padding * 2);
+			$height = $textHeight + ($padding * 2);
+		} else {
+			// Fallback for built-in fonts
+			$width = strlen($text) * ($fontSize * 0.6) + ($padding * 2);
+			$height = $fontSize * 1.5 + ($padding * 2);
+		}
+
+		// Ensure minimum dimensions and convert to int
+		$width = max(10, (int)$width);
+		$height = max(10, (int)$height);
+
+		// Create the actual image
+		$image = imagecreatetruecolor($width, $height);
+		if ($image === false) {
+			throw new \RuntimeException('Failed to create image resource');
+		}
+
+		// Set up transparency or background
+		if ($backgroundColor === null) {
+			// Transparent background - crucial for watermarks
+			imagealphablending($image, false);
+			imagesavealpha($image, true);
+			$transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
+			if ($transparent === false) {
+				imagedestroy($image);
+				throw new \RuntimeException('Failed to allocate transparent color');
+			}
+			imagefill($image, 0, 0, $transparent);
+			imagealphablending($image, true); // Re-enable for text rendering
+		} else {
+			// Solid background
+			$bgColor = imagecolorallocate($image, 
+				max(0, min(255, $backgroundColor[0])), 
+				max(0, min(255, $backgroundColor[1])), 
+				max(0, min(255, $backgroundColor[2])));
+			if ($bgColor === false) {
+				imagedestroy($image);
+				throw new \RuntimeException('Failed to allocate background color');
+			}
+			imagefill($image, 0, 0, $bgColor);
+		}
+
+		// Calculate alpha from opacity (0-100 to 0-127)
+		$alpha = max(0, min(127, (int)(127 - ($opacity / 100 * 127))));
+		$textColor = imagecolorallocatealpha($image, 
+			max(0, min(255, $fontColor[0])), 
+			max(0, min(255, $fontColor[1])), 
+			max(0, min(255, $fontColor[2])), 
+			$alpha
+		);
+		if ($textColor === false) {
+			imagedestroy($image);
+			throw new \RuntimeException('Failed to allocate text color');
+		}
+
+		// Add text to image using the same logic as FakerImageGD
+		if ($fontPath && function_exists('imagettftext')) {
+			// Use TTF font - position text properly
+			if ($angle === 0) {
+				// No rotation - simple positioning
+				$x = $padding;
+				$y = $height - $padding;
+			} else {
+				// With rotation - center the text
+				$textBox = imageftbbox($fontSize, $angle, $fontPath, $text);
+				if (is_array($textBox)) {
+					$x = ($width / 2) - (($textBox[2] - $textBox[0]) / 2);
+					$y = ($height / 2) + (($textBox[1] - $textBox[7]) / 2);
+				} else {
+					$x = $padding;
+					$y = $height - $padding;
+				}
+			}
+			
+			$result = imagettftext($image, $fontSize, $angle, (int)$x, (int)$y, $textColor, $fontPath, $text);
+			if ($result === false) {
+				imagedestroy($image);
+				throw new \RuntimeException('Failed to render TTF text');
+			}
+		} else {
+			// Use built-in font as fallback
+			$fontId = min(5, max(1, (int)($fontSize / 10)));
+			$x = $padding;
+			$y = ($height - imagefontheight($fontId)) / 2;
+			imagestring($image, $fontId, (int)$x, (int)$y, $text, $textColor);
+		}
+
+		// Determine filename
+		$filename = $cacheKey ? $cacheKey . '.png' : $this->generateTempPath();
+		$fullPath = sys_get_temp_dir() . '/' . $filename;
+		
+		if (!imagepng($image, $fullPath)) {
+			imagedestroy($image);
+			throw new \RuntimeException('Failed to save text watermark image');
+		}
+
+		imagedestroy($image);
+
+		// Store in filesystem for Glide to access
+		$watermarkPath = '.watermarks/' . $filename;
+		$content = file_get_contents($fullPath);
+		if ($content === false) {
+			throw new \RuntimeException('Failed to read temporary file');
+		}
+		$this->filesystem->write($watermarkPath, $content);
+		
+		// Clean up temp file
+		unlink($fullPath);
+
+		return $filename;
+	}
+
+	/**
+	 * Generate cache key based on all text watermark parameters
+	 * 
+	 * @param string $text
+	 * @param int $fontSize
+	 * @param array<int> $fontColor
+	 * @param string|null $fontFamily
+	 * @param array<int>|null $backgroundColor
+	 * @param int $padding
+	 * @param int $angle
+	 * @param int $opacity
+	 * @return string
+	 */
+	private function generateCacheKey(
+		string $text,
+		int $fontSize,
+		array $fontColor,
+		?string $fontFamily,
+		?array $backgroundColor,
+		int $padding,
+		int $angle,
+		int $opacity
+	): string {
+		// Create a deterministic cache key based on all parameters
+		$keyData = [
+			'text' => $text,
+			'fontSize' => $fontSize,
+			'fontColor' => implode(',', $fontColor),
+			'fontFamily' => $fontFamily ?? 'default',
+			'backgroundColor' => $backgroundColor ? implode(',', $backgroundColor) : 'transparent',
+			'padding' => $padding,
+			'angle' => $angle,
+			'opacity' => $opacity,
+		];
+		
+		// Generate a hash of the parameters for the cache key
+		$serialized = serialize($keyData);
+		$hash = hash('sha256', $serialized);
+		
+		// Use first 16 characters of hash for cache key (sufficient for uniqueness while keeping filenames reasonable)
+		return 'text_watermark_' . substr($hash, 0, 16);
+	}
+
+	/**
+	 * Parse color string to RGB array
+	 * 
+	 * @param string $color Hex color (with or without #)
+	 * @return array<int> RGB array
+	 */
+	private function parseColor(string $color): array
+	{
+		$color = ltrim($color, '#');
+		
+		if (strlen($color) === 3) {
+			$color = $color[0] . $color[0] . $color[1] . $color[1] . $color[2] . $color[2];
+		}
+		
+		if (strlen($color) !== 6) {
+			throw new \InvalidArgumentException('Invalid color format. Use hex format like "ffffff" or "#ffffff"');
+		}
+
+		return [
+			(int)hexdec(substr($color, 0, 2)),  // R
+			(int)hexdec(substr($color, 2, 2)),  // G
+			(int)hexdec(substr($color, 4, 2))   // B
+		];
+	}
+
+	/**
+	 * Get font path for custom fonts
+	 * 
+	 * @param string|null $fontFamily
+	 * @return string|null
+	 */
+	private function getFontPath(?string $fontFamily): ?string
+	{
+		// Always use the same TTF font that FakerImageGD uses
+		$fakerFontPath = __DIR__ . '/../../Factory/Faker/FakerImageGD.ttf';
+		
+		if (file_exists($fakerFontPath)) {
+			return $fakerFontPath;
+		}
+
+		// Fallback: check if font exists in filesystem
+		if ($fontFamily) {
+			$fontPath = "fonts/{$fontFamily}.ttf";
+			if ($this->filesystem->fileExists($fontPath)) {
+				$tempFontPath = sys_get_temp_dir() . '/' . basename($fontPath);
+				file_put_contents($tempFontPath, $this->filesystem->read($fontPath));
+				return $tempFontPath;
+			}
+		}
+
+		// System fonts (basic support)
+		$systemFonts = [
+			'arial' => '/System/Library/Fonts/Arial.ttf',
+			'helvetica' => '/System/Library/Fonts/Helvetica.ttc',
+			'times' => '/System/Library/Fonts/Times.ttc',
+		];
+
+		return $systemFonts[strtolower($fontFamily ?? 'arial')] ?? null;
+	}
+
+	/**
+	 * Generate temporary file path
+	 * 
+	 * @return string
+	 */
+	private function generateTempPath(): string
+	{
+		return 'text_watermark_' . uniqid() . '.png';
+	}
+
+	/**
+	 * Clean up temporary watermark files (for backwards compatibility)
+	 * 
+	 * @param string $watermarkPath
+	 * @return void
+	 */
+	public function cleanup(string $watermarkPath): void
+	{
+		$fullPath = '.watermarks/' . $watermarkPath;
+		if ($this->filesystem->fileExists($fullPath)) {
+			$this->filesystem->delete($fullPath);
+		}
+	}
+
+	/**
+	 * Clear cached watermarks older than specified time
+	 * 
+	 * @param int $maxAge Maximum age in seconds (default: 30 days)
+	 * @return int Number of files cleaned up
+	 */
+	public function clearOldCache(int $maxAge = 2592000): int
+	{
+		$cleaned = 0;
+		$cutoffTime = time() - $maxAge;
+		
+		try {
+			$files = $this->filesystem->listFiles('.watermarks');
+			
+			foreach ($files as $file) {
+				if (str_starts_with($file, 'text_watermark_')) {
+					$fullPath = '.watermarks/' . $file;
+					
+					// Use flysystem directly to get file metadata
+					$lastModified = $this->filesystem->flysystem()->lastModified($fullPath);
+					
+					if ($lastModified && $lastModified < $cutoffTime) {
+						$this->filesystem->delete($fullPath);
+						$cleaned++;
+					}
+				}
+			}
+		} catch (\Exception $e) {
+			// Log error but don't fail
+			error_log('Error cleaning watermark cache: ' . $e->getMessage());
+		}
+		
+		return $cleaned;
+	}
+}
