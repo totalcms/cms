@@ -168,7 +168,9 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.galleryImage('id', 'featured') }}         {# Featured image #}
 ```
 
-## File Downloads
+## File Downloads & Streaming
+
+### Downloads (attachment; forces download)
 
 ```twig
 {# Single file download #}
@@ -187,6 +189,35 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.depotDownload('id', 'folder/document.pdf') }}  {# Path in filename #}
 {{ cms.depotDownload('id', 'file.zip', {pwd: 'pass123'}) }}
 ```
+
+### Streaming (inline; plays in browser)
+
+```twig
+{# Single file streaming (ideal for video/audio) #}
+{{ cms.stream('id') }}                           {# Default from 'file' collection #}
+{{ cms.stream('id', {collection: 'videos', property: 'video'}) }}
+{{ cms.stream('id', {pwd: 'secret123'}) }}       {# Password-protected file #}
+
+{# Depot file streaming #}
+{{ cms.depotStream('id', 'video.mp4') }}         {# Stream specific file #}
+{{ cms.depotStream('id', 'movie.mp4', {path: 'folder/subfolder'}) }}
+{{ cms.depotStream('id', 'folder/video.mp4') }}  {# Path in filename #}
+{{ cms.depotStream('id', 'audio.mp3', {pwd: 'pass123'}) }}
+
+{# HTML5 video/audio examples #}
+<video controls>
+    <source src="{{ cms.stream('video-id') }}" type="video/mp4">
+</video>
+
+<audio controls>
+    <source src="{{ cms.depotStream('audio-id', 'song.mp3') }}" type="audio/mpeg">
+</audio>
+```
+
+**Stream vs Download:**
+- **Stream**: Content-Disposition: inline, supports HTTP range requests, ideal for media files
+- **Download**: Content-Disposition: attachment, forces download dialog
+- Both support password protection and automatic encryption
 
 ## Pagination
 

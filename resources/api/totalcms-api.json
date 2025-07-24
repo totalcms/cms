@@ -61,6 +61,10 @@
       "description": "File download operations"
     },
     {
+      "name": "streaming",
+      "description": "File streaming operations with range request support"
+    },
+    {
       "name": "upload",
       "description": "File upload operations"
     },
@@ -1741,6 +1745,239 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/stream/{collection}/{id}/{property}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Stream File",
+        "description": "Stream a file with Content-Disposition: inline and HTTP range request support. Ideal for video/audio files.",
+        "tags": ["streaming"],
+        "parameters": [
+          {
+            "name": "pwd",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Encrypted password for protected files"
+          },
+          {
+            "name": "Range",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "example": "bytes=0-1023"
+            },
+            "description": "HTTP range request for partial content"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content (full file)",
+            "headers": {
+              "Accept-Ranges": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial content (range request)",
+            "headers": {
+              "Content-Range": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes 0-1023/2048"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "416": {
+            "description": "Range Not Satisfiable",
+            "headers": {
+              "Content-Range": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes */2048"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stream/{collection}/{id}/{property}/{filename}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "filename",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Stream Depot File",
+        "description": "Stream a specific file from a depot (multi-file) property with range request support",
+        "tags": ["streaming"],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Subfolder path within depot"
+          },
+          {
+            "name": "pwd",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Encrypted password for protected files"
+          },
+          {
+            "name": "Range",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "example": "bytes=0-1023"
+            },
+            "description": "HTTP range request for partial content"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content (full file)",
+            "headers": {
+              "Accept-Ranges": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial content (range request)",
+            "headers": {
+              "Content-Range": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes 0-1023/2048"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }

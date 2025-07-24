@@ -384,57 +384,178 @@ GET /api/image/{collection}/{id}/info
 }
 ```
 
-## File Downloads API
+## File Downloads & Streaming API
 
-### Download File
+### Download File (Forces Download)
+
+Download a file from a specific collection with `Content-Disposition: attachment`.
 
 ```http
-GET /api/download/{collection}/{id}
+GET /api/download/{collection}/{id}/{property}
+POST /api/download/{collection}/{id}/{property}
 ```
 
+**Path Parameters:**
+- `collection` - Collection name (e.g., 'files', 'documents')
+- `id` - Object ID
+- `property` - Property name containing the file
+
 **Query Parameters:**
-- `filename` - Custom download filename
-- `inline` - Display in browser instead of download (true/false)
+- `pwd` - Encrypted password for protected files
 
 **Examples:**
 
 ```bash
-# Force download
-curl -O https://yoursite.com/api/download/files/manual
+# Basic file download
+curl -O https://yoursite.com/api/download/files/manual/file
 
-# Custom filename
-curl -O "https://yoursite.com/api/download/files/manual?filename=user-guide.pdf"
+# Download with custom collection/property
+curl -O https://yoursite.com/api/download/documents/guide/pdf
 
-# Display in browser
-curl "https://yoursite.com/api/download/files/manual?inline=true"
+# Password-protected file (password must be encrypted)
+curl -O "https://yoursite.com/api/download/private/secret/file?pwd=ENCRYPTED_PASSWORD"
 ```
 
-### Bulk Download
+### Download Depot File
+
+Download a specific file from a depot (multi-file) property.
 
 ```http
-POST /api/download/bulk
+GET /api/download/{collection}/{id}/{property}/{filename}
+POST /api/download/{collection}/{id}/{property}/{filename}
 ```
 
-**Request Body:**
-```json
-{
-    "items": [
-        {"collection": "files", "id": "manual"},
-        {"collection": "files", "id": "quick-start"},
-        {"collection": "images", "id": "logo"}
-    ],
-    "format": "zip",
-    "filename": "resources.zip"
-}
-```
+**Path Parameters:**
+- `collection` - Collection name
+- `id` - Object ID
+- `property` - Depot property name
+- `filename` - Specific file to download
 
-### Protected Downloads
+**Query Parameters:**
+- `path` - Subfolder path within depot
+- `pwd` - Encrypted password for protected files
 
-For protected files, include authentication:
+**Examples:**
 
 ```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-     https://yoursite.com/api/download/private/confidential
+# Download specific depot file
+curl -O https://yoursite.com/api/download/depot/assets/files/document.pdf
+
+# Download from subfolder
+curl -O "https://yoursite.com/api/download/depot/assets/files/image.jpg?path=photos/vacation"
+
+# Password-protected depot file
+curl -O "https://yoursite.com/api/download/depot/private/files/secret.zip?pwd=ENCRYPTED_PASSWORD"
+```
+
+### Stream File (Plays in Browser)
+
+Stream a file with `Content-Disposition: inline` and HTTP range request support. Ideal for video/audio files.
+
+```http
+GET /api/stream/{collection}/{id}/{property}
+```
+
+**Path Parameters:**
+- `collection` - Collection name
+- `id` - Object ID
+- `property` - Property name containing the file
+
+**Query Parameters:**
+- `pwd` - Encrypted password for protected files
+
+**Headers:**
+- `Range` - HTTP range request (e.g., "bytes=0-1023")
+
+**Response Headers:**
+- `Accept-Ranges: bytes`
+- `Content-Range` - For partial content responses (206)
+- `Content-Length` - File or range size
+
+**Examples:**
+
+```bash
+# Stream video file
+curl https://yoursite.com/api/stream/videos/movie/video
+
+# Range request for video seeking
+curl -H "Range: bytes=0-1023" https://yoursite.com/api/stream/videos/movie/video
+
+# Password-protected streaming
+curl "https://yoursite.com/api/stream/private/secret/video?pwd=ENCRYPTED_PASSWORD"
+```
+
+### Stream Depot File
+
+Stream a specific file from a depot property.
+
+```http
+GET /api/stream/{collection}/{id}/{property}/{filename}
+```
+
+**Path Parameters:**
+- `collection` - Collection name
+- `id` - Object ID
+- `property` - Depot property name
+- `filename` - Specific file to stream
+
+**Query Parameters:**
+- `path` - Subfolder path within depot
+- `pwd` - Encrypted password for protected files
+
+**Examples:**
+
+```bash
+# Stream depot video
+curl https://yoursite.com/api/stream/media/playlist/videos/movie.mp4
+
+# Stream with subfolder path
+curl "https://yoursite.com/api/stream/media/playlist/videos/song.mp3?path=albums/rock"
+```
+
+### HTML5 Media Integration
+
+**Video Streaming:**
+```html
+<video controls>
+    <source src="/api/stream/videos/movie/video" type="video/mp4">
+</video>
+```
+
+**Audio Streaming:**
+```html
+<audio controls>
+    <source src="/api/stream/audio/song/file" type="audio/mpeg">
+</audio>
+```
+
+### Download vs Stream Comparison
+
+| Feature | Download | Stream |
+|---------|----------|--------|
+| Content-Disposition | attachment | inline |
+| Browser Behavior | Forces download dialog | Plays/displays in browser |
+| Range Requests | No | Yes (HTTP 206) |
+| Video/Audio Support | Basic | Full seeking/scrubbing |
+| Safari Compatibility | Standard | Enhanced for media |
+| Use Cases | Documents, archives | Video, audio, PDFs |
+
+### Password Protection
+
+Both download and stream endpoints support password protection:
+
+1. **Frontend**: Use Twig functions that auto-encrypt passwords
+2. **API**: Passwords must be encrypted using the Cipher class
+3. **URLs**: Encrypted passwords are URL-encoded in query parameters
+
+**Twig Examples:**
+```twig
+{# Auto-encrypts plain password #}
+{{ cms.download('id', {pwd: 'plaintext'}) }}
+{{ cms.stream('id', {pwd: 'plaintext'}) }}
+
+{# Already encrypted passwords work too #}
+{{ cms.download('id', {pwd: encrypted_pwd}) }}
 ```
 
 ## Import/Export API

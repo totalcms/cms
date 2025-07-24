@@ -28,7 +28,8 @@
       "Bash(vendor/bin/pest:*)",
       "Bash(git tag:*)",
       "Bash(diff:*)",
-      "Bash(redis-cli keys:*)"
+      "Bash(redis-cli keys:*)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }
