@@ -160,6 +160,86 @@ For basic form submission without full object management:
 
 ## Form Options
 
+### General Form Options
+
+All Total CMS form methods accept `formOptions` to control form behavior, appearance, and functionality:
+
+#### Core Form Options
+
+```twig
+{{ cms.form.builder('products', {
+    method     : 'POST',           # HTTP method (string, default: 'POST')
+    class      : 'custom-form',    # CSS classes for form (string, default: '')
+    buildError : 'Save failed',    # Error message to display (string, default: '')
+    helpStyle  : 'popup',          # Help text style : 'popup',      etc. (string, default: '')
+    save       : 'Save Product',   # Save button label (string, default: '')
+    delete     : 'Delete Product', # Delete button label (string, default: '')
+    formType   : 'object',         # Form type : 'collection', 'schema', 'object' (string, default: '')
+    schema     : 'product',        # Schema name to use (string, default: '')
+    route      : '/custom/submit', # Custom form submission route (string)
+    label      : 'Submit',         # Button label for simple forms (string)
+    refresh    : true,             # Refresh page after submission (bool, default: false)
+    data       : {},               # Pre-populated form data (array, default: [])
+}) }}
+```
+
+#### Form Behavior Options
+
+```twig
+{{ cms.form.builder('products', {
+    autosave: true,                # Enable automatic saving (bool, default: false)
+    helpOnHover: true,             # Show help on hover (bool, default: false)
+    helpOnFocus: false,            # Show help on focus (bool, default: false)
+    hideID: false,                 # Hide the ID field (bool, default: false)
+}) }}
+```
+
+#### Action Configuration Options
+
+Configure form actions for different operations:
+
+```twig
+{{ cms.form.builder('products', {
+    newAction: {                   # Action for new items (array, default: [])
+        action: 'redirect-object',
+        link: '?id='
+    },
+    editAction: {                  # Action for editing (array, default: [])
+        action: 'redirect-object',
+        link: '?id='
+    },
+    deleteAction: {                # Action for deletion (array, default: [])
+        action: 'redirect',
+        link: '/admin/products'
+    }
+}) }}
+```
+
+#### Auto-Applied CSS Classes
+
+The form system automatically applies CSS classes based on options:
+
+- `.autosave` - when `autosave: true`
+- `.help-on-hover` - when `helpOnHover: true`
+- `.help-on-focus` - when `helpOnFocus: true`
+- `.help-{helpStyle}` - when `helpStyle` is set (e.g., `.help-popup`)
+- `.edit-mode` - when method is not 'POST'
+- `.formgrid` - when schema has formgrid configuration
+
+#### Simple Form Options
+
+For `cms.form.simple()` method:
+
+```twig
+{{ cms.form.simple('/api/contact', content, {
+    method: 'POST',                # HTTP method (string, default: 'POST')
+    label: 'Send Message',         # Submit button label (string)
+    refresh: true,                 # Refresh page after submission (bool, default: false)
+    class: 'contact-form',         # CSS classes (string, default: '')
+    csrfManager: csrfManager       # CSRF token manager instance
+}) }}
+```
+
 ### Blog Form Options
 
 ```twig
