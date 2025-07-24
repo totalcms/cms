@@ -107,7 +107,8 @@ final class TextWatermark
 			$textWidth = abs($textBox[2] - $textBox[0]);
 			$textHeight = abs($textBox[1] - $textBox[7]);
 			$width = $textWidth + ($padding * 2);
-			$height = $textHeight + ($padding * 2);
+			// Add extra height for descenders - 50% of font size for more room
+			$height = $textHeight + ($padding * 2) + ($fontSize * 0.5);
 		} else {
 			// Fallback for built-in fonts
 			$width = strlen($text) * ($fontSize * 0.6) + ($padding * 2);
@@ -162,13 +163,15 @@ final class TextWatermark
 			throw new \RuntimeException('Failed to allocate text color');
 		}
 
-		// Add text to image using the same logic as FakerImageGD
+		// Add text to image using simple positioning
 		if ($fontPath && function_exists('imagettftext')) {
-			// Use TTF font - position text properly
+			// Use TTF font - simple positioning with enough space for descenders
 			if ($angle === 0) {
-				// No rotation - simple positioning
+				// No rotation - position text with baseline well above bottom
 				$x = $padding;
-				$y = $height - $padding;
+				// Position baseline high enough to show descenders
+				// TTF baseline is where the text sits, descenders go below this line
+				$y = $height - $padding - ($fontSize * 0.5); // Leave 50% of font size for descenders
 			} else {
 				// With rotation - center the text
 				$textBox = imageftbbox($fontSize, $angle, $fontPath, $text);
@@ -177,7 +180,7 @@ final class TextWatermark
 					$y = ($height / 2) + (($textBox[1] - $textBox[7]) / 2);
 				} else {
 					$x = $padding;
-					$y = $height - $padding;
+					$y = $height / 2;
 				}
 			}
 			
