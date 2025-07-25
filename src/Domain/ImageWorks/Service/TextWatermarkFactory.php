@@ -335,25 +335,20 @@ final class TextWatermarkFactory
 	 */
 	private function getFontPath(?string $fontFamily): ?string
 	{
-		error_log("TextWatermarkFactory: getFontPath called with fontFamily: " . ($fontFamily ?? 'null'));
-
 		// If a specific font family is requested, try to load from depot
 		if ($fontFamily) {
 			$depotFontPath = $this->loadFontFromDepot($fontFamily);
 			if ($depotFontPath !== null) {
-				error_log("TextWatermarkFactory: Using depot font: {$depotFontPath}");
 				return $depotFontPath;
 			}
 		}
 
 		// Default font: Always use Roboto Regular
 		if (file_exists(self::FONT_PATH)) {
-			error_log("TextWatermarkFactory: Using default font: " . self::FONT_PATH);
 			return self::FONT_PATH;
 		}
 
 		// No font available
-		error_log("TextWatermarkFactory: No font available");
 		return null;
 	}
 
@@ -375,20 +370,14 @@ final class TextWatermarkFactory
 
 		$depotPath = "depot/{$depotId}/depot/{$fontFileName}";
 
-		error_log("TextWatermarkFactory: Attempting to load font '{$fontFamily}' from depot '{$depotId}' at path '{$depotPath}'");
-
 		try {
 			if ($this->filesystem->fileExists($depotPath)) {
-				error_log("TextWatermarkFactory: Font file found, creating temporary file");
 				// Create temporary file for the font
 				$tempFontPath = sys_get_temp_dir() . '/' . 'watermark_font_' . $fontFamily . '_' . uniqid() . '.ttf';
 				$fontContent = $this->filesystem->read($depotPath);
 				file_put_contents($tempFontPath, $fontContent);
 
-				error_log("TextWatermarkFactory: Font loaded successfully from depot, temp path: {$tempFontPath}");
 				return $tempFontPath;
-			} else {
-				error_log("TextWatermarkFactory: Font file does not exist at depot path: {$depotPath}");
 			}
 		} catch (\Exception $e) {
 			// Log error but don't fail - fall back to default font
