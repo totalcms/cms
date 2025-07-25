@@ -12,6 +12,7 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 final class TextWatermarkFactory
 {
 	public const WATERMARK_DIR = '.watermarks';
+	private const FONT_PATH = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
 
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
@@ -326,10 +327,8 @@ final class TextWatermarkFactory
 	private function getFontPath(?string $fontFamily): ?string
 	{
 		// Always use the same TTF font that FakerImageGD uses
-		$fakerFontPath = __DIR__ . '/../../Factory/Faker/FakerImageGD.ttf';
-
-		if (file_exists($fakerFontPath)) {
-			return $fakerFontPath;
+		if (file_exists(self::FONT_PATH)) {
+			return self::FONT_PATH;
 		}
 
 		// Fallback: check if font exists in filesystem
