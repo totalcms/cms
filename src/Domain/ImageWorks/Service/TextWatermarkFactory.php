@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Support\Config;
 
 /**
  * Text watermark generator for ImageWorks.
@@ -16,6 +17,7 @@ final class TextWatermarkFactory
 
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
+		private Config $config,
 	) {
 	}
 
@@ -90,6 +92,8 @@ final class TextWatermarkFactory
 
 		// Get font path (prefer TTF)
 		$fontPath = $this->getFontPath($fontFamily);
+		// Only depot fonts create temporary files that need cleanup
+		$isTemporaryFont = $fontFamily && $fontPath && str_contains($fontPath, sys_get_temp_dir());
 
 		// Calculate initial dimensions based on whether we have TTF support
 		if ($fontPath && function_exists('imageftbbox')) {
@@ -247,6 +251,11 @@ final class TextWatermarkFactory
 		// Clean up temp file
 		unlink($fullPath);
 
+		// Clean up temporary font file if it was loaded from depot
+		if ($isTemporaryFont && $fontPath && file_exists($fontPath)) {
+			unlink($fontPath);
+		}
+
 		return $filename;
 	}
 
@@ -326,30 +335,67 @@ final class TextWatermarkFactory
 	 */
 	private function getFontPath(?string $fontFamily): ?string
 	{
-		// Always use the same TTF font that FakerImageGD uses
-		if (file_exists(self::FONT_PATH)) {
-			return self::FONT_PATH;
-		}
+		error_log("TextWatermarkFactory: getFontPath called with fontFamily: " . ($fontFamily ?? 'null'));
 
-		// Fallback: check if font exists in filesystem
+		// If a specific font family is requested, try to load from depot
 		if ($fontFamily) {
-			$fontPath = "fonts/{$fontFamily}.ttf";
-			if ($this->filesystem->fileExists($fontPath)) {
-				$tempFontPath = sys_get_temp_dir() . '/' . basename($fontPath);
-				file_put_contents($tempFontPath, $this->filesystem->read($fontPath));
-
-				return $tempFontPath;
+			$depotFontPath = $this->loadFontFromDepot($fontFamily);
+			if ($depotFontPath !== null) {
+				error_log("TextWatermarkFactory: Using depot font: {$depotFontPath}");
+				return $depotFontPath;
 			}
 		}
 
-		// System fonts (basic support)
-		$systemFonts = [
-			'arial'     => '/System/Library/Fonts/Arial.ttf',
-			'helvetica' => '/System/Library/Fonts/Helvetica.ttc',
-			'times'     => '/System/Library/Fonts/Times.ttc',
-		];
+		// Default font: Always use Roboto Regular
+		if (file_exists(self::FONT_PATH)) {
+			error_log("TextWatermarkFactory: Using default font: " . self::FONT_PATH);
+			return self::FONT_PATH;
+		}
 
-		return $systemFonts[strtolower($fontFamily ?? 'arial')] ?? null;
+		// No font available
+		error_log("TextWatermarkFactory: No font available");
+		return null;
+	}
+
+	/**
+	 * Load font file from the configured depot.
+	 *
+	 * @param string $fontFamily Font family name (without .ttf extension)
+	 *
+	 * @return string|null Path to temporary font file or null if not found
+	 */
+	private function loadFontFromDepot(string $fontFamily): ?string
+	{
+		$depotId = $this->config->imageworks['watermarkFontsDepot'] ?? 'watermark-fonts';
+		
+		// Handle both "Dorsa-Regular" and "Dorsa-Regular.ttf" formats
+		$fontFileName = str_ends_with(strtolower($fontFamily), '.ttf') 
+			? $fontFamily 
+			: $fontFamily . '.ttf';
+			
+		$depotPath = "depot/{$depotId}/depot/{$fontFileName}";
+
+		error_log("TextWatermarkFactory: Attempting to load font '{$fontFamily}' from depot '{$depotId}' at path '{$depotPath}'");
+
+		try {
+			if ($this->filesystem->fileExists($depotPath)) {
+				error_log("TextWatermarkFactory: Font file found, creating temporary file");
+				// Create temporary file for the font
+				$tempFontPath = sys_get_temp_dir() . '/' . 'watermark_font_' . $fontFamily . '_' . uniqid() . '.ttf';
+				$fontContent = $this->filesystem->read($depotPath);
+				file_put_contents($tempFontPath, $fontContent);
+
+				error_log("TextWatermarkFactory: Font loaded successfully from depot, temp path: {$tempFontPath}");
+				return $tempFontPath;
+			} else {
+				error_log("TextWatermarkFactory: Font file does not exist at depot path: {$depotPath}");
+			}
+		} catch (\Exception $e) {
+			// Log error but don't fail - fall back to default font
+			error_log("Failed to load font '{$fontFamily}' from depot '{$depotId}': " . $e->getMessage());
+		}
+
+		return null;
 	}
 
 	/**

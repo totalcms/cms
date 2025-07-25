@@ -135,6 +135,7 @@ $settings['smtp'] = [
 
 $settings['imageworks'] = [
 	'watermarksGallery' => 'watermarks',
+	'watermarkFontsDepot' => 'watermark-fonts',
 	'defaults'          => [
 		'fm' => 'jpg',
 		'q'  => 92,

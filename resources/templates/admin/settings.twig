@@ -135,6 +135,23 @@
 				</p>
 			</div>
 
+			<div class="form-field text-field" data-type="text">
+				<label for="watermarkFontsDepot">Watermark Fonts Depot</label>
+				<div class="form-group">
+					<input type="text"
+						value="{{ settings.watermarkFontsDepot }}"
+						id="watermarkFontsDepot"
+						name="watermarkFontsDepot"
+						aria-describedby="help-watermarkFontsDepot"
+						placeholder="{{ defaults.imageworks.watermarkFontsDepot }}">
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-watermarkFontsDepot">
+					The ID of the depot where TTF font files for text watermarks should be uploaded to. If not set, the default
+					<code>watermark-fonts</code> ID will be used.
+				</p>
+			</div>
+
 			<div class="form-field json-field" data-type="json">
 				<label for="field-presets">Imageworks Presets</label>
 				<div class="form-group">

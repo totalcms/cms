@@ -470,7 +470,8 @@ return [
 
 	TextWatermarkFactory::class => function (ContainerInterface $container) {
 		return new TextWatermarkFactory(
-			$container->get(StorageAdapterInterface::class)
+			$container->get(StorageAdapterInterface::class),
+			$container->get(Config::class)
 		);
 	},
 
