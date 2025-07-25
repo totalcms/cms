@@ -313,7 +313,7 @@ Common parameters for image transformations:
 
 ### Text Watermarks
 - `marktext` - Text to display as watermark
-- `marktextfont` - Font family name (loaded from watermark-fonts depot)
+- `marktextfont` - Font family name (TTF/OTF fonts from watermark-fonts depot)
 - `marktextsize` - Text size in pixels (default: 500)
 - `marktextcolor` - Text color as hex (without #, e.g., 'ffffff' for white)
 - `marktextbg` - Background color as hex (optional, transparent if not set)

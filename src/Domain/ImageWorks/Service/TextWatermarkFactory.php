@@ -354,7 +354,7 @@ final class TextWatermarkFactory
 	/**
 	 * Load font file from the configured depot.
 	 *
-	 * @param string $fontFamily Font family name (without .ttf extension)
+	 * @param string $fontFamily Font family name (with or without .ttf/.otf extension)
 	 *
 	 * @return string|null Path to temporary font file or null if not found
 	 */
@@ -362,17 +362,45 @@ final class TextWatermarkFactory
 	{
 		$depotId = $this->config->imageworks['watermarkFontsDepot'] ?? 'watermark-fonts';
 
-		// Handle both "Dorsa-Regular" and "Dorsa-Regular.ttf" formats
-		$fontFileName = str_ends_with(strtolower($fontFamily), '.ttf')
-			? $fontFamily
-			: $fontFamily . '.ttf';
+		// Handle font files with or without extensions (.ttf, .otf)
+		$supportedExtensions = ['.ttf', '.otf'];
+		$fontFileName = $fontFamily;
+		$fontExtension = '';
+
+		// Check if the font already has a supported extension
+		$hasExtension = false;
+		foreach ($supportedExtensions as $ext) {
+			if (str_ends_with(strtolower($fontFamily), $ext)) {
+				$hasExtension = true;
+				$fontExtension = $ext;
+				break;
+			}
+		}
+
+		// If no extension provided, try each supported format
+		if (!$hasExtension) {
+			foreach ($supportedExtensions as $ext) {
+				$testFileName = $fontFamily . $ext;
+				$testPath = "depot/{$depotId}/depot/{$testFileName}";
+				
+				try {
+					if ($this->filesystem->fileExists($testPath)) {
+						$fontFileName = $testFileName;
+						$fontExtension = $ext;
+						break;
+					}
+				} catch (\Exception $e) {
+					// Continue trying other extensions
+				}
+			}
+		}
 
 		$depotPath = "depot/{$depotId}/depot/{$fontFileName}";
 
 		try {
 			if ($this->filesystem->fileExists($depotPath)) {
-				// Create temporary file for the font
-				$tempFontPath = sys_get_temp_dir() . '/watermark_font_' . $fontFamily . '_' . uniqid() . '.ttf';
+				// Create temporary file for the font (keep original extension)
+				$tempFontPath = sys_get_temp_dir() . '/watermark_font_' . $fontFamily . '_' . uniqid() . $fontExtension;
 				$fontContent  = $this->filesystem->read($depotPath);
 				file_put_contents($tempFontPath, $fontContent);
 
