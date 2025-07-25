@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Admin\FormField\IdField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;

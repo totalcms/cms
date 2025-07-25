@@ -13,8 +13,9 @@ final class ObjectCloner
 	public function __construct(
 		private ObjectRepository $storage,
 		private IndexBuilder $indexBuilder,
-		private SchemaFetcher $schemaFetcher
-	){}
+		private SchemaFetcher $schemaFetcher,
+	) {
+	}
 
 	/**
 	 * @param array<string,mixed> $from
@@ -71,7 +72,7 @@ final class ObjectCloner
 		foreach ($fields as $fieldName) {
 			if ($object->properties->has($fieldName) && $object->properties->get($fieldName) instanceof DateData) {
 				/** @var DateData $dateProperty */
-				$dateProperty = $object->properties->get($fieldName);
+				$dateProperty       = $object->properties->get($fieldName);
 				$dateProperty->date = $currentDate;
 			}
 		}
@@ -80,25 +81,26 @@ final class ObjectCloner
 	/** @return array<string>  */
 	private function getDateFieldsBySetting(string $collection, string $setting): array
 	{
-		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		$dateFields = [];
 
 		foreach ($schema->properties as $fieldName => $fieldDefinition) {
 			// Check if this is a date field with the specified setting
 			$isDateField = (
-				(isset($fieldDefinition['type']) && $fieldDefinition['type'] === 'date') ||
-				(isset($fieldDefinition['$ref']) && str_contains($fieldDefinition['$ref'], '/date.json'))
+				(isset($fieldDefinition['type']) && $fieldDefinition['type'] === 'date')
+				|| (isset($fieldDefinition['$ref']) && str_contains($fieldDefinition['$ref'], '/date.json'))
 			);
 
 			$hasSetting = (
-				(isset($fieldDefinition[$setting]) && $fieldDefinition[$setting] === true) ||
-				(isset($fieldDefinition['settings'][$setting]) && $fieldDefinition['settings'][$setting] === true)
+				(isset($fieldDefinition[$setting]) && $fieldDefinition[$setting] === true)
+				|| (isset($fieldDefinition['settings'][$setting]) && $fieldDefinition['settings'][$setting] === true)
 			);
 
 			if ($isDateField && $hasSetting) {
 				$dateFields[] = $fieldName;
 			}
 		}
+
 		return $dateFields;
 	}
 }

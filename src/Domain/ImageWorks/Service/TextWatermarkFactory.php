@@ -364,14 +364,14 @@ final class TextWatermarkFactory
 
 		// Handle font files with or without extensions (.ttf, .otf)
 		$supportedExtensions = ['.ttf', '.otf'];
-		$fontFileName = $fontFamily;
-		$fontExtension = '';
+		$fontFileName        = $fontFamily;
+		$fontExtension       = '';
 
 		// Check if the font already has a supported extension
 		$hasExtension = false;
 		foreach ($supportedExtensions as $ext) {
 			if (str_ends_with(strtolower($fontFamily), $ext)) {
-				$hasExtension = true;
+				$hasExtension  = true;
 				$fontExtension = $ext;
 				break;
 			}
@@ -381,11 +381,11 @@ final class TextWatermarkFactory
 		if (!$hasExtension) {
 			foreach ($supportedExtensions as $ext) {
 				$testFileName = $fontFamily . $ext;
-				$testPath = "depot/{$depotId}/depot/{$testFileName}";
-				
+				$testPath     = "depot/{$depotId}/depot/{$testFileName}";
+
 				try {
 					if ($this->filesystem->fileExists($testPath)) {
-						$fontFileName = $testFileName;
+						$fontFileName  = $testFileName;
 						$fontExtension = $ext;
 						break;
 					}

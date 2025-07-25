@@ -169,6 +169,7 @@ class TextWatermarkFactoryTest extends TestCase
 				if ($path === 'depot/watermark-fonts/depot/ModernFont.otf') {
 					return true;
 				}
+
 				return false;
 			});
 
