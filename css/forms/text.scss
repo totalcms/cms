@@ -195,7 +195,7 @@
 //------------------------------
 [type="url"] + .form-group-icon {
 	&:after {
-		mask-image : var(--icon-url);
+		mask-image : var(--icon-link);
 	}
 }
 
@@ -365,4 +365,18 @@
 		mask-image : var(--icon-settings);
 	}
 }
-
+.form-field.icon-text .form-group-icon {
+	&:after {
+		mask-image : var(--icon-text);
+	}
+}
+.form-field.icon-font .form-group-icon {
+	&:after {
+		mask-image : var(--icon-font);
+	}
+}
+.form-field.icon-angle .form-group-icon {
+	&:after {
+		mask-image : var(--icon-angle);
+	}
+}

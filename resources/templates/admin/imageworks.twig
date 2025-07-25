@@ -94,6 +94,18 @@
 			flip      : "Flips the image. Accepts v, h and both.",
 			"or" 	  : "Rotates the image. Accepts auto, 0, 90, 180 or 270. Default is auto. " ~
 					  	"The auto option uses Exif data to automatically orient images correctly.",
+			marktext      : "The text to display as a watermark on the image.",
+			marktextfont  : "Select a custom font for the text watermark from the configured watermark-fonts depot.",
+			marktextsize  : "Sets the size of the text watermark in pixels. Use values between 10 and 500.",
+			marktextcolor : "Sets the color of the text. Accepts hex values (without hashtag) like 'ffffff' for white.",
+			marktextbg    : "Sets the background color behind the text. Accepts hex values (without hashtag) or leave empty for transparent.",
+			marktextpad   : "Sets the padding around the text in pixels. Use values between 0 and 100.",
+			marktextpos   : "Sets the position of the text watermark. Accepts top-left, top-right, bottom-left, bottom-right, " ~
+						  	"top, bottom, left, right, center.",
+			marktextangle : "Rotates the text watermark. Use values between -360 and 360 degrees.",
+			marktextw     : "Sets the maximum width of the text area in pixels or using relative dimensions. " ~
+						    "For relative dimensions, 50w represents 50% of the width of the image.",
+			marktextalpha : "Sets the transparency of the text watermark. Use values between 0 (transparent) and 100 (opaque).",
 		}
 	%}
 
@@ -243,6 +255,40 @@
 						]) }}
 						{{ _self.input("markfit", "text", "Fit and Crop", "icon-crop", help.markfit, values.markfit, {list : "fit-options"}) }}
 						<button type="button" class='open-fit-docs'>Fit Options Docs</button>
+					</section>
+				</div>
+			</details>
+
+			<details class="cms-accordion">
+				<summary>Text Watermark</summary>
+				<div>
+					<section>
+						{% set watermarkDepotId = cms.config("imageworks", "watermarkFontsDepot") %}
+						{% set watermarkDepot = cms.data("depot", watermarkDepotId, "depot") | default([]) %}
+						{% set watermarkFonts = selectOptions(watermarkDepot.files, "name", "name") %}
+
+						{{ _self.input("marktext", "text", "Watermark Text", "icon-text", help.marktext, values.marktext) }}
+						{{ _self.select("marktextfont", "Font", "icon-font", help.marktextfont, values.marktextfont, watermarkFonts) }}
+						{{ _self.input("marktextsize", "number", "Text Size", "icon-height", help.marktextsize, values.marktextsize) }}
+						{{ _self.input("marktextcolor", "text", "Text Color", "icon-paint-brush", help.marktextcolor, values.marktextcolor) }}
+						{{ _self.input("marktextbg", "text", "Text Background Color", "icon-paint-roller", help.marktextbg, values.marktextbg) }}
+					</section>
+					<section>
+						{{ _self.input("marktextpad", "text", "Padding", "icon-padding", help.marktextpad, values.marktextpad) }}
+						{{ _self.select("marktextpos", "Position", "icon-position", help.marktextpos, values.marktextpos, [
+							{ value: "top-left", label: "Top Left" },
+							{ value: "top-right", label: "Top Right" },
+							{ value: "bottom-left", label: "Bottom Left" },
+							{ value: "bottom-right", label: "Bottom Right" },
+							{ value: "top", label: "Top Center" },
+							{ value: "bottom", label: "Bottom Center" },
+							{ value: "left", label: "Left Center" },
+							{ value: "right", label: "Right Center" },
+							{ value: "center", label: "Center" },
+						]) }}
+						{{ _self.input("marktextangle", "number", "Angle", "icon-angle", help.marktextangle, values.marktextangle) }}
+						{{ _self.input("marktextw", "text", "Width", "icon-width", help.marktextw, values.marktextw) }}
+						{{ _self.input("marktextalpha", "number", "Alpha", "icon-eye", help.marktextalpha, values.marktextalpha, { min:0, max:100 }) }}
 					</section>
 				</div>
 			</details>

@@ -53,7 +53,7 @@ final class WatermarkFactory
 
 		return new Watermark(
 			mark      : $textWatermarkPath,
-			markpos   : $params['marktextpos'] ?? 'bottom-left',
+			markpos   : $params['marktextpos'] ?? 'center',
 			markw     : $params['marktextw'] ?? '100w',
 			markh     : $params['marktexth'] ?? null,
 			markx     : $params['marktextx'] ?? null,

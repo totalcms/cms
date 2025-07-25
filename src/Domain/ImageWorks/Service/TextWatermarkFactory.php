@@ -36,7 +36,7 @@ final class TextWatermarkFactory
 		}
 
 		// Text watermark parameters with defaults
-		$fontSize        = (int)($params['marktextsize'] ?? 100);
+		$fontSize        = (int)($params['marktextsize'] ?? 500);
 		$fontColor       = $this->parseColor($params['marktextcolor'] ?? 'ffffff');
 		$fontFamily      = $params['marktextfont'] ?? null;
 		$backgroundColor = isset($params['marktextbg']) ? $this->parseColor($params['marktextbg']) : null;
