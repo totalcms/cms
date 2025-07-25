@@ -252,7 +252,7 @@ final class TextWatermarkFactory
 		unlink($fullPath);
 
 		// Clean up temporary font file if it was loaded from depot
-		if ($isTemporaryFont && $fontPath && file_exists($fontPath)) {
+		if ($isTemporaryFont && file_exists($fontPath)) {
 			unlink($fontPath);
 		}
 
@@ -367,12 +367,12 @@ final class TextWatermarkFactory
 	private function loadFontFromDepot(string $fontFamily): ?string
 	{
 		$depotId = $this->config->imageworks['watermarkFontsDepot'] ?? 'watermark-fonts';
-		
+
 		// Handle both "Dorsa-Regular" and "Dorsa-Regular.ttf" formats
-		$fontFileName = str_ends_with(strtolower($fontFamily), '.ttf') 
-			? $fontFamily 
+		$fontFileName = str_ends_with(strtolower($fontFamily), '.ttf')
+			? $fontFamily
 			: $fontFamily . '.ttf';
-			
+
 		$depotPath = "depot/{$depotId}/depot/{$fontFileName}";
 
 		error_log("TextWatermarkFactory: Attempting to load font '{$fontFamily}' from depot '{$depotId}' at path '{$depotPath}'");
