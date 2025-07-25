@@ -289,22 +289,39 @@ The grid renderer provides helper methods for content grids:
 
 Common parameters for image transformations:
 
+### Basic Image Controls
 - `w` - Width in pixels
 - `h` - Height in pixels  
 - `fit` - How to fit image: `contain`, `max`, `fill`, `stretch`, `crop`
 - `crop` - Crop position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
 - `fm` - Output format: `jpg`, `png`, `gif`, `webp`, `avif`
 - `q` - Quality (1-100)
+
+### Effects & Filters
 - `blur` - Blur amount (0-100)
 - `sharp` - Sharpen amount (0-100)
 - `pixel` - Pixelate amount (0-100)
 - `filt` - Filter: `greyscale`, `sepia`
+
+### Image Watermarks
 - `mark` - Watermark image path
 - `markw` - Watermark width
 - `markh` - Watermark height
 - `markpos` - Watermark position
 - `markpad` - Watermark padding
 - `markalpha` - Watermark opacity (0-100)
+
+### Text Watermarks
+- `marktext` - Text to display as watermark
+- `marktextfont` - Font family name (loaded from watermark-fonts depot)
+- `marktextsize` - Text size in pixels (default: 500)
+- `marktextcolor` - Text color as hex (without #, e.g., 'ffffff' for white)
+- `marktextbg` - Background color as hex (optional, transparent if not set)
+- `marktextpad` - Padding around text in pixels (default: 10)
+- `marktextangle` - Text rotation angle in degrees (-360 to 360, default: 0)
+- `marktextpos` - Text position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
+- `marktextw` - Maximum text width in pixels or relative (e.g., '50w' for 50% of image width)
+- `marktextalpha` - Text transparency (0-100, where 100 is fully opaque)
 
 ## Examples
 
@@ -351,4 +368,45 @@ Common parameters for image transformations:
 {% endfor %}
 
 {{ cms.paginationFull(results|length, page, perPage) }}
+```
+
+### Text watermark examples
+```twig
+{# Simple text watermark #}
+{{ cms.imagePath('hero-image', {
+    w: 1200, 
+    h: 600, 
+    marktext: 'Copyright 2024'
+}) }}
+
+{# Styled text watermark with custom font #}
+{{ cms.imagePath('product-photo', {
+    w: 800,
+    marktext: 'Premium Quality',
+    marktextfont: 'Dorsa-Regular',
+    marktextsize: 120,
+    marktextcolor: 'ffffff',
+    marktextbg: '000000',
+    marktextpad: 20,
+    marktextpos: 'bottom-right',
+    marktextalpha: 80
+}) }}
+
+{# Rotated watermark #}
+{{ cms.imagePath('landscape', {
+    marktext: 'DRAFT',
+    marktextsize: 200,
+    marktextangle: -45,
+    marktextcolor: 'ff0000',
+    marktextpos: 'center',
+    marktextalpha: 50
+}) }}
+
+{# Responsive text width #}
+{{ cms.imagePath('banner', {
+    w: 1200,
+    marktext: 'This is a very long watermark text that will wrap',
+    marktextw: '80w',  {# 80% of image width #}
+    marktextpos: 'top'
+}) }}
 ```
