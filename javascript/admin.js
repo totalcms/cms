@@ -10,6 +10,7 @@ import JobQueueStatsTable from './jobqueue-stats';
 import JSONField from './totalform/json';
 import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
+import SlugifyInput from './totalform/slugify-inputs';
 import initExternalLinks from './external-links';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
@@ -58,6 +59,9 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const jobqueueStats = Array.from(document.getElementsByClassName("jobqueue-stats"));
 	jobqueueStats.forEach(table => new JobQueueStatsTable(table));
+
+	const inputs = Array.from(document.getElementsByClassName('slugify-input'));
+	inputs.forEach(input => new SlugifyInput(input));
 
 	initExternalLinks();
 });
