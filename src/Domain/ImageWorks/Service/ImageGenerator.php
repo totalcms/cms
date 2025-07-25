@@ -96,6 +96,28 @@ final class ImageGenerator
 		return $this->responseFromImageData($imageData);
 	}
 
+	/** @param array<string,mixed> $params */
+	public function generateUploadImage(
+		string $collection,
+		string $id,
+		string $property,
+		string $name,
+		array $params,
+	): ResponseInterface {
+		// Create dummy ImageData object
+		$imageData         = new ImageData();
+		$imageData->name   = $name;
+		// $imageData->width  = 0;
+		// $imageData->height = 0;
+
+		$this->collection = $collection;
+		$this->id         = $id;
+		$this->property   = $property;
+		$this->params     = $this->cleanupParams($params, $imageData);
+
+		return $this->responseFromImageData($imageData);
+	}
+
 	/** @param array<ImageData> $images */
 	private function getImageByName(array $images, string $name): ?ImageData
 	{
@@ -210,11 +232,16 @@ final class ImageGenerator
 			->withBody($response['stream']);
 	}
 
-	/** @return array<string,mixed> */
-	private function filterWatermarkParams(): array
+	/**
+	 * @param array<string,mixed> $params
+	 * @return array<string,mixed>
+	 */
+	private function filterWatermarkParams(array $params = []): array
 	{
+		$params = empty($params) ? $this->params : $params;
+
 		return array_filter(
-			$this->params,
+			$params,
 			fn ($param) => !str_starts_with($param, 'mark'),
 			ARRAY_FILTER_USE_KEY
 		);
@@ -304,32 +331,5 @@ final class ImageGenerator
 
 		// No watermarks provided, return image with params
 		return $glide->getImageResponse($imageData->name, $params);
-	}
-
-	/** @param array<string,mixed> $params */
-	public function generateUploadImage(
-		string $collection,
-		string $id,
-		string $property,
-		string $name,
-		array $params,
-	): ResponseInterface {
-		if (empty($params)) {
-			$path = PathUtils::buildPath($collection, $id, $property, $name);
-
-			// If no params are provided, return the original image
-			$response  = $this->glideFactory->originalImage($path);
-
-			return (new Response())
-				->withHeader('Content-Type', $response['mimeType'] ?: 'image/jpeg')
-				->withBody($response['stream']);
-		}
-
-		$glide = $this->glideFactory->create(
-			source    : PathUtils::buildPath($collection, $id, $property),
-			imageData : new ImageData(),
-		);
-
-		return $glide->getImageResponse($name, $params);
 	}
 }
