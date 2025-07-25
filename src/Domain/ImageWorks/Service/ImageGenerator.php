@@ -325,14 +325,11 @@ final class ImageGenerator
 				->withBody($response['stream']);
 		}
 
-		$result = $this->glideFactory->create(
-			source: PathUtils::buildPath($collection, $id, $property),
-			imageData: new ImageData(),
-			cache: null,
-			watermark: null,
-			params: $params
+		$glide = $this->glideFactory->create(
+			source    : PathUtils::buildPath($collection, $id, $property),
+			imageData : new ImageData(),
 		);
 
-		return $result['server']->getImageResponse($name, $result['params']);
+		return $glide->getImageResponse($name, $params);
 	}
 }

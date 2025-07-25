@@ -7,7 +7,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
-use TotalCMS\Domain\ImageWorks\Service\TextWatermark;
+use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
@@ -52,7 +52,7 @@ final class CacheManager
 		private OPcacheService $opcacheService,
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
-		private TextWatermark $textWatermark,
+		private TextWatermarkFactory $textWatermarkFacTextWatermarkFactory,
 	) {
 		// Initialize cache services and version
 		$this->cacheServices = [
@@ -348,7 +348,7 @@ final class CacheManager
 
 		// Clear text watermark cache (clear all cached watermarks)
 		try {
-			$this->textWatermark->clearOldCache(0); // Clear all watermarks regardless of age
+			$this->textWatermarkFacTextWatermarkFactory->clearOldCache(0); // Clear all watermarks regardless of age
 		} catch (\Exception $e) {
 			// Log error but don't fail the entire cache clear operation
 			error_log('Failed to clear text watermark cache: ' . $e->getMessage());

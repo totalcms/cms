@@ -43,10 +43,10 @@ final class GlideFactory
 	}
 
 	public function create(
-		string $source,
+		string    $source,
 		ImageData $imageData,
-		?string $watermarkPath = null,
-		?string $cacheDir      = null,
+		?string   $watermarkPath = null,
+		?string   $cacheDir      = null,
 	): Server
 	{
 		// Create Glide server
@@ -80,12 +80,6 @@ final class GlideFactory
 		return $presets;
 	}
 
-
-	/**
-	 * Get the filesystem adapter.
-	 *
-	 * @return StorageAdapterInterface
-	 */
 	public function filesystem(): StorageAdapterInterface
 	{
 		return $this->filesystem;

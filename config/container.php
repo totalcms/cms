@@ -41,7 +41,7 @@ use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Factory\Service\FakerFactory;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
-use TotalCMS\Domain\ImageWorks\Service\TextWatermark;
+use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -380,7 +380,7 @@ return [
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
-			$container->get(TextWatermark::class)
+			$container->get(TextWatermarkFactory::class)
 		);
 	},
 
@@ -468,8 +468,8 @@ return [
 		);
 	},
 
-	TextWatermark::class => function (ContainerInterface $container) {
-		return new TextWatermark(
+	TextWatermarkFactory::class => function (ContainerInterface $container) {
+		return new TextWatermarkFactory(
 			$container->get(StorageAdapterInterface::class)
 		);
 	},
@@ -478,7 +478,6 @@ return [
 		return new GlideFactory(
 			$container->get(StorageAdapterInterface::class),
 			$container->get(Config::class),
-			$container->get(TextWatermark::class)
 		);
 	},
 ];
