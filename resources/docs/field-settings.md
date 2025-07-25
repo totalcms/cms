@@ -74,10 +74,55 @@ list all of the objects from another collection.
   "relationalOptions" : {
   	"collection" : "feed",
   	"label"      : "title",
-  	"value"      : "id",
+  	"value"      : "id"
   }
 }
 ```
+
+### Multiple Fields in Label
+
+You can combine multiple fields in the label using the `join` parameter. This allows you to display more descriptive labels by combining multiple properties from the related object.
+
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "authors",
+  	"label"      : "firstName lastName",
+  	"value"      : "id",
+  	"join"       : " "
+  }
+}
+```
+
+In this example, the label will display "John Doe" by combining the `firstName` and `lastName` fields with a space. The `join` parameter defaults to a single space `" "` if not specified.
+
+### Advanced Examples
+
+**Combine with separator:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "products",
+  	"label"      : "name, category",
+  	"value"      : "id",
+  	"join"       : ", "
+  }
+}
+```
+This will create labels like "Product Name - Category Name".
+
+**Three fields:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "users",
+  	"label"      : "firstName,lastName,email",
+  	"value"      : "id",
+  	"join"       : ","
+  }
+}
+```
+This will create labels like "John | Doe | john@example.com".
 
 ## Smart Date Defaults
 
