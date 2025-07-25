@@ -3,7 +3,10 @@
 namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Psr\Http\Message\ResponseInterface;
+use League\Glide\Server;
 use Slim\Psr7\Response;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -18,8 +21,10 @@ final class ImageGenerator
 	private array $params;
 
 	public function __construct(
+		private StorageAdapterInterface $filesystem,
 		private PropertyFetcher $propertyFetcher,
 		private GlideFactory $glideFactory,
+		private WatermarkFactory $watermarkFactory,
 	) {
 	}
 
@@ -205,58 +210,100 @@ final class ImageGenerator
 			->withBody($response['stream']);
 	}
 
+	/** @return array<string,mixed> */
+	private function filterWatermarkParams(): array
+	{
+		return array_filter(
+			$this->params,
+			fn ($param) => !str_starts_with($param, 'mark'),
+			ARRAY_FILTER_USE_KEY
+		);
+	}
+
+	/** @param array<string,mixed> $params */
+	private function handleBothWatermarks(
+		Server $glide,
+		ImageData $imageData,
+		Watermark $imageMark,
+		Watermark $textMark,
+		array $params
+	): ResponseInterface
+	{
+		// Both image and text watermarks provided, return image with params
+		$imageParams = array_merge($params, $imageMark->toArray());
+		$textParams  = array_merge($params, $textMark->toArray());
+
+		$firstPassResponse = $glide->getImageResponse($imageData->name, $imageParams);
+
+		// Get the processed image data from first pass
+		// Create a temporary file for the intermediate result
+		$firstPassImageData = (string)$firstPassResponse->getBody();
+		$tempFileName = 'temp_' . uniqid() . '.png';
+		$tempPath     = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName);
+		$this->filesystem->write($tempPath, $firstPassImageData);
+
+		// Create second pass server specifically for text watermark
+		$secondServer = $this->glideFactory->create(
+			source        : PathUtils::buildPath($this->collection, $this->id, $this->property),
+			imageData     : $imageData,
+			watermarkPath : TextWatermarkFactory::WATERMARK_DIR,
+		);
+
+		// Apply text watermark to the intermediate result
+		$finalResponse = $secondServer->getImageResponse($tempFileName, $textParams);
+
+		// Clean up temporary file
+		try {
+			$this->filesystem->delete($tempPath);
+		} catch (\Exception $e) {
+			// Log but don't fail if cleanup fails
+			error_log('Failed to clean up temporary watermark file: ' . $e->getMessage());
+		}
+
+		return $finalResponse;
+	}
+
+
 	private function responseFromImageData(ImageData $imageData): ResponseInterface
 	{
 		if (empty($this->params)) {
 			return $this->returnOriginalImage($imageData);
 		}
 
-		$result = $this->glideFactory->create(
-			source: PathUtils::buildPath($this->collection, $this->id, $this->property),
-			imageData: $imageData,
-			cache: null,
-			watermark: null,
-			params: $this->params
+		$imageMark = $this->watermarkFactory->createImageWatermark($this->params);
+		$textMark  = $this->watermarkFactory->createTextWatermark($this->params);
+
+		$hasImageMark = $imageMark instanceof Watermark && !$imageMark->isEmpty();
+		$hasTextMark  = $textMark  instanceof Watermark && !$textMark->isEmpty();
+
+		$watermarkPath = $hasImageMark ? $imageMark->path : TextWatermarkFactory::WATERMARK_DIR;
+
+		$glide = $this->glideFactory->create(
+			source        : PathUtils::buildPath($this->collection, $this->id, $this->property),
+			imageData     : $imageData,
+			watermarkPath : $watermarkPath,
 		);
 
-		// Check if we need sequential processing for multiple watermarks
-		if (isset($result['needsSecondPass']) && $result['needsSecondPass'] && isset($result['secondPassParams'])) {
-			// First pass: apply image watermark
-			$firstPassResponse = $result['server']->getImageResponse($imageData->name, $result['params']);
+		$params = $this->filterWatermarkParams();
 
-			// Get the processed image data from first pass
-			$firstPassImageData = (string)$firstPassResponse->getBody();
-
-			// Create a temporary file for the intermediate result
-			$tempFileName = 'temp_' . uniqid() . '.png';
-			$tempPath     = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName);
-
-			// Save first pass result temporarily
-			$this->glideFactory->filesystem()->write($tempPath, $firstPassImageData);
-
-			// Create second pass server specifically for text watermark
-			$secondServer = $this->glideFactory->createTextWatermarkServer(
-				source: PathUtils::buildPath($this->collection, $this->id, $this->property),
-				imageData: $imageData,
-				cache: null
-			);
-
-			// Apply text watermark to the intermediate result
-			$finalResponse = $secondServer->getImageResponse($tempFileName, $result['secondPassParams']);
-
-			// Clean up temporary file
-			try {
-				$this->glideFactory->filesystem()->delete($tempPath);
-			} catch (\Exception $e) {
-				// Log but don't fail if cleanup fails
-				error_log('Failed to clean up temporary watermark file: ' . $e->getMessage());
-			}
-
-			return $finalResponse;
+		if ($hasImageMark && $hasTextMark) {
+			return $this->handleBothWatermarks($glide, $imageData, $imageMark, $textMark, $params);
 		}
 
-		// Single pass processing (only image or only text watermark)
-		return $result['server']->getImageResponse($imageData->name, $result['params']);
+		if ($hasTextMark) {
+			// Only text watermark provided, return image with params
+			$params = array_merge($params, $textMark->toArray());
+			return $glide->getImageResponse($imageData->name, $params);
+		}
+
+		if ($hasImageMark) {
+			// Only image watermark provided, return image with params
+			$params = array_merge($params, $imageMark->toArray());
+			return $glide->getImageResponse($imageData->name, $params);
+		}
+
+		// No watermarks provided, return image with params
+		return $glide->getImageResponse($imageData->name, $params);
 	}
 
 	/** @param array<string,mixed> $params */

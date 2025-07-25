@@ -9,8 +9,10 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
  *
  * Generates text watermarks as images that can be applied to images
  */
-final class TextWatermark
+final class TextWatermarkFactory
 {
+	public const WATERMARK_DIR = '.watermarks';
+
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
 	) {
@@ -25,31 +27,32 @@ final class TextWatermark
 	 */
 	public function generateTextWatermark(array $params): string
 	{
+
 		$text = $params['marktext'] ?? '';
 		if (empty($text)) {
 			throw new \InvalidArgumentException('Text watermark requires marktext parameter');
 		}
 
 		// Text watermark parameters with defaults
-		$fontSize        = (int)($params['marktextsize'] ?? 24);
+		$fontSize        = (int)($params['marktextsize'] ?? 100);
 		$fontColor       = $this->parseColor($params['marktextcolor'] ?? 'ffffff');
 		$fontFamily      = $params['marktextfont'] ?? null;
 		$backgroundColor = isset($params['marktextbg']) ? $this->parseColor($params['marktextbg']) : null;
 		$padding         = (int)($params['marktextpad'] ?? 10);
 		$angle           = (int)($params['marktextangle'] ?? 0);
-		$opacity         = (int)($params['marktextalpha'] ?? 100);
+		// $opacity         = (int)($params['marktextalpha'] ?? 100);
 
-		// Generate cache key based on all parameters
-		$cacheKey            = $this->generateCacheKey($text, $fontSize, $fontColor, $fontFamily, $backgroundColor, $padding, $angle, $opacity);
-		$cachedWatermarkPath = '.watermarks/' . $cacheKey . '.png';
+		// Generate cache key based on all parameters except opacity
+		$cacheKey            = $this->generateCacheKey($text, $fontSize, $fontColor, $fontFamily, $backgroundColor, $padding, $angle);
+		$cachedWatermarkPath = self::WATERMARK_DIR . '/' . $cacheKey . '.png';
 
 		// Check if cached watermark exists
 		if ($this->filesystem->fileExists($cachedWatermarkPath)) {
 			return $cacheKey . '.png';
 		}
 
-		// Create new watermark image
-		$watermarkPath = $this->createTextImage($text, $fontSize, $fontColor, $fontFamily, $backgroundColor, $padding, $angle, $opacity, $cacheKey);
+		// Create new watermark image at full opacity
+		$watermarkPath = $this->createTextImage($text, $fontSize, $fontColor, $fontFamily, $backgroundColor, $padding, $angle, 100, $cacheKey);
 
 		return $watermarkPath;
 	}
@@ -116,12 +119,12 @@ final class TextWatermark
 
 			$textWidth  = abs($maxX - $minX);
 			$textHeight = abs($maxY - $minY);
-			
+
 			// Add extra width padding to balance font bearing - small additional padding on right
 			$width = $textWidth + ($padding * 2) + ($fontSize * 0.1);
 			// Add extra height for descenders and rotation space - increase margin for rotated text
 			$extraHeight = $angle == 0 ? ($fontSize * 0.5) : ($fontSize * 0.8);
-			$height = $textHeight + ($padding * 2) + $extraHeight;
+			$height      = $textHeight + ($padding * 2) + $extraHeight;
 		} else {
 			// Fallback for built-in fonts
 			$width  = strlen($text) * ($fontSize * 0.6) + ($padding * 2);
@@ -197,7 +200,7 @@ final class TextWatermark
 					$maxX = max($textBox[0], $textBox[2], $textBox[4], $textBox[6]);
 					$minY = min($textBox[1], $textBox[3], $textBox[5], $textBox[7]);
 					$maxY = max($textBox[1], $textBox[3], $textBox[5], $textBox[7]);
-					
+
 					// Center the text in the image by adjusting for the bounding box offset
 					$x = ($width / 2) - ($minX + ($maxX - $minX) / 2);
 					$y = ($height / 2) - ($minY + ($maxY - $minY) / 2);
@@ -233,7 +236,7 @@ final class TextWatermark
 		imagedestroy($image);
 
 		// Store in filesystem for Glide to access
-		$watermarkPath = '.watermarks/' . $filename;
+		$watermarkPath = self::WATERMARK_DIR . '/' . $filename;
 		$content       = file_get_contents($fullPath);
 		if ($content === false) {
 			throw new \RuntimeException('Failed to read temporary file');
@@ -247,7 +250,7 @@ final class TextWatermark
 	}
 
 	/**
-	 * Generate cache key based on all text watermark parameters.
+	 * Generate cache key based on text watermark parameters (excluding opacity).
 	 *
 	 * @param string $text
 	 * @param int $fontSize
@@ -256,7 +259,6 @@ final class TextWatermark
 	 * @param array<int>|null $backgroundColor
 	 * @param int $padding
 	 * @param int $angle
-	 * @param int $opacity
 	 *
 	 * @return string
 	 */
@@ -268,9 +270,8 @@ final class TextWatermark
 		?array $backgroundColor,
 		int $padding,
 		int $angle,
-		int $opacity,
 	): string {
-		// Create a deterministic cache key based on all parameters
+		// Create a deterministic cache key based on all parameters except opacity
 		$keyData = [
 			'text'            => $text,
 			'fontSize'        => $fontSize,
@@ -279,7 +280,6 @@ final class TextWatermark
 			'backgroundColor' => $backgroundColor ? implode(',', $backgroundColor) : 'transparent',
 			'padding'         => $padding,
 			'angle'           => $angle,
-			'opacity'         => $opacity,
 		];
 
 		// Generate a hash of the parameters for the cache key
@@ -372,7 +372,7 @@ final class TextWatermark
 	 */
 	public function cleanup(string $watermarkPath): void
 	{
-		$fullPath = '.watermarks/' . $watermarkPath;
+		$fullPath = self::WATERMARK_DIR . '/' . $watermarkPath;
 		if ($this->filesystem->fileExists($fullPath)) {
 			$this->filesystem->delete($fullPath);
 		}
@@ -391,11 +391,11 @@ final class TextWatermark
 		$cutoffTime = time() - $maxAge;
 
 		try {
-			$files = $this->filesystem->listFiles('.watermarks');
+			$files = $this->filesystem->listFiles(self::WATERMARK_DIR);
 
 			foreach ($files as $file) {
 				if (str_starts_with($file, 'text_watermark_')) {
-					$fullPath = '.watermarks/' . $file;
+					$fullPath = self::WATERMARK_DIR . '/' . $file;
 
 					// Use flysystem directly to get file metadata
 					$lastModified = $this->filesystem->flysystem()->lastModified($fullPath);
