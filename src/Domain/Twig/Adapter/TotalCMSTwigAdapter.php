@@ -815,7 +815,7 @@ NGINX;
 	{
 		$options = array_merge([
 			'collection' => 'depot',
-			'property'   => 'files',
+			'property'   => 'depot',
 		], $options);
 
 		$files = $this->data($options['collection'], $id, $options['property']);
