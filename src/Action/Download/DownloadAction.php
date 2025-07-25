@@ -41,7 +41,7 @@ abstract class DownloadAction
 	abstract protected function streamFile();
 
 	/**
-	 * Decode filename from URL, supporting both + and %20 encoding
+	 * Decode filename from URL, supporting both + and %20 encoding.
 	 */
 	private function decodeFilename(string $filename): string
 	{

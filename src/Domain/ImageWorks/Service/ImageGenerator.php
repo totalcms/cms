@@ -2,14 +2,14 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
-use Psr\Http\Message\ResponseInterface;
 use League\Glide\Server;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Response;
-use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 final class ImageGenerator
@@ -234,6 +234,7 @@ final class ImageGenerator
 
 	/**
 	 * @param array<string,mixed> $params
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function filterWatermarkParams(array $params = []): array
@@ -253,9 +254,8 @@ final class ImageGenerator
 		ImageData $imageData,
 		Watermark $imageMark,
 		Watermark $textMark,
-		array $params
-	): ResponseInterface
-	{
+		array $params,
+	): ResponseInterface {
 		// Both image and text watermarks provided, return image with params
 		$imageParams = array_merge($params, $imageMark->toArray());
 		$textParams  = array_merge($params, $textMark->toArray());
@@ -265,8 +265,8 @@ final class ImageGenerator
 		// Get the processed image data from first pass
 		// Create a temporary file for the intermediate result
 		$firstPassImageData = (string)$firstPassResponse->getBody();
-		$tempFileName = 'temp_' . uniqid() . '.png';
-		$tempPath     = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName);
+		$tempFileName       = 'temp_' . uniqid() . '.png';
+		$tempPath           = PathUtils::buildPath($this->collection, $this->id, $this->property, $tempFileName);
 		$this->filesystem->write($tempPath, $firstPassImageData);
 
 		// Create second pass server specifically for text watermark
@@ -289,7 +289,6 @@ final class ImageGenerator
 
 		return $finalResponse;
 	}
-
 
 	private function responseFromImageData(ImageData $imageData): ResponseInterface
 	{
@@ -320,12 +319,14 @@ final class ImageGenerator
 		if ($hasTextMark) {
 			// Only text watermark provided, return image with params
 			$params = array_merge($params, $textMark->toArray());
+
 			return $glide->getImageResponse($imageData->name, $params);
 		}
 
 		if ($hasImageMark) {
 			// Only image watermark provided, return image with params
 			$params = array_merge($params, $imageMark->toArray());
+
 			return $glide->getImageResponse($imageData->name, $params);
 		}
 

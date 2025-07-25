@@ -13,7 +13,7 @@ use TotalCMS\Support\Config;
 final class TextWatermarkFactory
 {
 	public const WATERMARK_DIR = '.watermarks';
-	private const FONT_PATH = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
+	private const FONT_PATH    = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
 
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
@@ -30,7 +30,6 @@ final class TextWatermarkFactory
 	 */
 	public function generateTextWatermark(array $params): string
 	{
-
 		$text = $params['marktext'] ?? '';
 		if (empty($text)) {
 			throw new \InvalidArgumentException('Text watermark requires marktext parameter');
@@ -373,8 +372,8 @@ final class TextWatermarkFactory
 		try {
 			if ($this->filesystem->fileExists($depotPath)) {
 				// Create temporary file for the font
-				$tempFontPath = sys_get_temp_dir() . '/' . 'watermark_font_' . $fontFamily . '_' . uniqid() . '.ttf';
-				$fontContent = $this->filesystem->read($depotPath);
+				$tempFontPath = sys_get_temp_dir() . '/watermark_font_' . $fontFamily . '_' . uniqid() . '.ttf';
+				$fontContent  = $this->filesystem->read($depotPath);
 				file_put_contents($tempFontPath, $fontContent);
 
 				return $tempFontPath;

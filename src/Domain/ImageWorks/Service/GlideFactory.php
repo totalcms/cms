@@ -7,7 +7,6 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
-use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
@@ -43,12 +42,11 @@ final class GlideFactory
 	}
 
 	public function create(
-		string    $source,
+		string $source,
 		ImageData $imageData,
-		?string   $watermarkPath = null,
-		?string   $cacheDir      = null,
-	): Server
-	{
+		?string $watermarkPath = null,
+		?string $cacheDir      = null,
+	): Server {
 		// Create Glide server
 		$glide = ServerFactory::create([
 			'source'                 => $this->filesystem->flysystem(),

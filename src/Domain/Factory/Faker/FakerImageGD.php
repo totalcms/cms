@@ -12,6 +12,7 @@ use Faker\Provider\Lorem;
 class FakerImageGD extends Base
 {
 	private const FONT_PATH = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
+
 	/** @return array<int<0,255>> */
 	private static function hex2rgb(string $hex): array
 	{

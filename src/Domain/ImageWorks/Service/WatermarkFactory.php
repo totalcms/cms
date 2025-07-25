@@ -53,13 +53,13 @@ final class WatermarkFactory
 
 		return new Watermark(
 			mark      : $textWatermarkPath,
-			markpos   : $params['marktextpos']   ?? 'bottom-left',
-			markw     : $params['marktextw']     ?? '100w',
-			markh     : $params['marktexth']     ?? null,
-			markx     : $params['marktextx']     ?? null,
-			marky     : $params['marktexty']     ?? null,
-			markfit   : $params['marktextfit']   ?? null,
-			markpad   : $params['marktextpad']   ?? null,
+			markpos   : $params['marktextpos'] ?? 'bottom-left',
+			markw     : $params['marktextw'] ?? '100w',
+			markh     : $params['marktexth'] ?? null,
+			markx     : $params['marktextx'] ?? null,
+			marky     : $params['marktexty'] ?? null,
+			markfit   : $params['marktextfit'] ?? null,
+			markpad   : $params['marktextpad'] ?? null,
 			markalpha : $params['marktextalpha'] ?? null,
 			path      : TextWatermarkFactory::WATERMARK_DIR,
 		);

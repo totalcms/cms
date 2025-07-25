@@ -27,7 +27,7 @@ describe('Download and Stream API', function () {
 
 		// Create test depot collection
 		$depotCollection = [
-			'id'     => 'test-depot', 
+			'id'     => 'test-depot',
 			'name'   => 'Test Depot',
 			'schema' => 'depot',
 		];
@@ -189,7 +189,7 @@ describe('Download and Stream API', function () {
 		});
 
 		it('both endpoints are accessible', function (): void {
-			$streamResponse = get('/stream/test-files/test-file/file');
+			$streamResponse   = get('/stream/test-files/test-file/file');
 			$downloadResponse = get('/download/test-files/test-file/file');
 
 			expect($streamResponse->getStatusCode())->toBeIn([200, 404]);
@@ -206,9 +206,9 @@ describe('Download and Stream API', function () {
 
 		it('validates encrypted passwords correctly', function (): void {
 			// Test with various password scenarios
-			$validResponse = get('/download/test-files/test-file/file?pwd=valid_encrypted_password');
+			$validResponse   = get('/download/test-files/test-file/file?pwd=valid_encrypted_password');
 			$invalidResponse = get('/download/test-files/test-file/file?pwd=invalid_password');
-			
+
 			expect($validResponse->getStatusCode())->toBeIn([200, 401, 403, 404]);
 			expect($invalidResponse->getStatusCode())->toBeIn([200, 401, 403, 404]);
 		});

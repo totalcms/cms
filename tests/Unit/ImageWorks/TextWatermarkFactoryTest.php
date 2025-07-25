@@ -19,7 +19,7 @@ class TextWatermarkFactoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->mockFilesystem = $this->createMock(StorageAdapterInterface::class);
-		$this->mockConfig = $this->createTestConfig(['watermarkFontsDepot' => 'watermark-fonts']);
+		$this->mockConfig     = $this->createTestConfig(['watermarkFontsDepot' => 'watermark-fonts']);
 
 		$this->textWatermarkFactory = new TextWatermarkFactory(
 			$this->mockFilesystem,
@@ -30,26 +30,27 @@ class TextWatermarkFactoryTest extends TestCase
 	private function createTestConfig(array $imageworksSettings = []): Config
 	{
 		$settings = [
-			'env' => 'test',
-			'template' => '/tmp',
-			'dashboard' => [],
-			'datadir' => '/tmp',
-			'tmpdir' => '/tmp',
-			'cache' => [],
-			'logger' => [],
-			'sentry' => [],
-			'error' => [],
-			'domain' => 'test.com',
-			'api' => 'http://test.com/api',
-			'locale' => 'en_US',
-			'session' => [],
-			'auth' => [],
-			'debug' => false,
-			'notfound' => '/404',
-			'htmlclean' => [],
-			'timezone' => 'UTC',
-			'imageworks' => $imageworksSettings
+			'env'        => 'test',
+			'template'   => '/tmp',
+			'dashboard'  => [],
+			'datadir'    => '/tmp',
+			'tmpdir'     => '/tmp',
+			'cache'      => [],
+			'logger'     => [],
+			'sentry'     => [],
+			'error'      => [],
+			'domain'     => 'test.com',
+			'api'        => 'http://test.com/api',
+			'locale'     => 'en_US',
+			'session'    => [],
+			'auth'       => [],
+			'debug'      => false,
+			'notfound'   => '/404',
+			'htmlclean'  => [],
+			'timezone'   => 'UTC',
+			'imageworks' => $imageworksSettings,
 		];
+
 		return new Config($settings);
 	}
 
@@ -57,7 +58,7 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		// Mock font content
 		$fontContent = 'fake-ttf-content';
-		
+
 		// Expect the correct depot path to be checked
 		$this->mockFilesystem
 			->expects($this->once())
@@ -74,7 +75,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
-		$method = $reflection->getMethod('loadFontFromDepot');
+		$method     = $reflection->getMethod('loadFontFromDepot');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'Dorsa-Regular');
@@ -84,11 +85,11 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->assertStringContainsString(sys_get_temp_dir(), $result);
 		$this->assertStringContainsString('watermark_font_Dorsa-Regular_', $result);
 		$this->assertStringEndsWith('.ttf', $result);
-		
+
 		// Verify the temporary file was created with correct content
 		$this->assertFileExists($result);
 		$this->assertEquals($fontContent, file_get_contents($result));
-		
+
 		// Clean up
 		unlink($result);
 	}
@@ -97,7 +98,7 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		// Mock font content
 		$fontContent = 'fake-ttf-content';
-		
+
 		// Expect the correct depot path to be checked (should still work with .ttf extension)
 		$this->mockFilesystem
 			->expects($this->once())
@@ -114,7 +115,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
-		$method = $reflection->getMethod('loadFontFromDepot');
+		$method     = $reflection->getMethod('loadFontFromDepot');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'Dorsa-Regular.ttf');
@@ -122,7 +123,7 @@ class TextWatermarkFactoryTest extends TestCase
 		// Should return a temporary file path
 		$this->assertNotNull($result);
 		$this->assertStringContainsString(sys_get_temp_dir(), $result);
-		
+
 		// Clean up
 		unlink($result);
 	}
@@ -143,7 +144,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
-		$method = $reflection->getMethod('loadFontFromDepot');
+		$method     = $reflection->getMethod('loadFontFromDepot');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'NonExistent');
@@ -156,9 +157,9 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		// Create a new config with custom depot ID
 		$customConfig = $this->createTestConfig([
-			'watermarkFontsDepot' => 'custom-fonts'
+			'watermarkFontsDepot' => 'custom-fonts',
 		]);
-		
+
 		$customFactory = new TextWatermarkFactory(
 			$this->mockFilesystem,
 			$customConfig
@@ -173,7 +174,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 		// Use reflection to call the private method on the custom factory
 		$reflection = new \ReflectionClass($customFactory);
-		$method = $reflection->getMethod('loadFontFromDepot');
+		$method     = $reflection->getMethod('loadFontFromDepot');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($customFactory, 'MyFont');
@@ -185,7 +186,7 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		// Create config with no watermarkFontsDepot specified
 		$defaultConfig = $this->createTestConfig([]); // No watermarkFontsDepot specified
-		
+
 		$defaultFactory = new TextWatermarkFactory(
 			$this->mockFilesystem,
 			$defaultConfig
@@ -200,7 +201,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 		// Use reflection to call the private method on the default factory
 		$reflection = new \ReflectionClass($defaultFactory);
-		$method = $reflection->getMethod('loadFontFromDepot');
+		$method     = $reflection->getMethod('loadFontFromDepot');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($defaultFactory, 'TestFont');
@@ -212,7 +213,7 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		// Mock font content
 		$fontContent = 'fake-ttf-content';
-		
+
 		$this->mockFilesystem
 			->expects($this->once())
 			->method('fileExists')
@@ -227,7 +228,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
-		$method = $reflection->getMethod('getFontPath');
+		$method     = $reflection->getMethod('getFontPath');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'Dorsa-Regular');
@@ -235,7 +236,7 @@ class TextWatermarkFactoryTest extends TestCase
 		// Should return depot font path (temporary file)
 		$this->assertNotNull($result);
 		$this->assertStringContainsString(sys_get_temp_dir(), $result);
-		
+
 		// Clean up
 		if ($result && file_exists($result)) {
 			unlink($result);
@@ -253,7 +254,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
-		$method = $reflection->getMethod('getFontPath');
+		$method     = $reflection->getMethod('getFontPath');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'NonExistent');
@@ -267,7 +268,7 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
-		$method = $reflection->getMethod('getFontPath');
+		$method     = $reflection->getMethod('getFontPath');
 		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, null);
@@ -283,7 +284,7 @@ class TextWatermarkFactoryTest extends TestCase
 		$files = [
 			'text_watermark_abc123.png',
 			'text_watermark_def456.png',
-			'other_file.png'
+			'other_file.png',
 		];
 
 		$this->mockFilesystem

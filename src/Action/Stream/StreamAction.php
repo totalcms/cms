@@ -37,7 +37,7 @@ abstract class StreamAction
 	abstract protected function streamFile();
 
 	/**
-	 * Decode filename from URL, supporting both + and %20 encoding
+	 * Decode filename from URL, supporting both + and %20 encoding.
 	 */
 	private function decodeFilename(string $filename): string
 	{
@@ -92,7 +92,7 @@ abstract class StreamAction
 
 	private function buildStreamResponse(ServerRequestInterface $request, ResponseInterface $response, FileData $file): ResponseInterface
 	{
-		$fileSize = $file->size;
+		$fileSize    = $file->size;
 		$rangeHeader = $request->getHeaderLine('Range');
 
 		// Basic headers for all responses
@@ -105,8 +105,8 @@ abstract class StreamAction
 		// Handle range requests for Safari video streaming
 		if (!empty($rangeHeader) && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
 			$start = (int)$matches[1];
-			$end = !empty($matches[2]) ? (int)$matches[2] : $fileSize - 1;
-			
+			$end   = !empty($matches[2]) ? (int)$matches[2] : $fileSize - 1;
+
 			// Ensure valid range
 			if ($start >= $fileSize || $end >= $fileSize || $start > $end) {
 				return $response->withStatus(416) // Range Not Satisfiable
@@ -116,11 +116,11 @@ abstract class StreamAction
 			$contentLength = $end - $start + 1;
 
 			// Create range-specific file stream
-			$fileStream = $this->streamFile();
+			$fileStream   = $this->streamFile();
 			$rangeContent = '';
 			if (is_resource($fileStream) && $contentLength > 0) {
 				fseek($fileStream, $start);
-				$readResult = fread($fileStream, $contentLength);
+				$readResult   = fread($fileStream, $contentLength);
 				$rangeContent = $readResult !== false ? $readResult : '';
 				fclose($fileStream);
 			}

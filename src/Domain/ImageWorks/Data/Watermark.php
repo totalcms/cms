@@ -48,5 +48,4 @@ final class Watermark
 	{
 		return $this->mark === null;
 	}
-
 }
