@@ -4,7 +4,7 @@
 	"id": "blog",
 	"type": "object",
 	"description": "A schema for a Total CMS Blog object",
-	"formgrid": "draft draft featured\nid id author\ntitle title date\nimage image tags\nimage image categories\nsummary summary summary\ncontent content content\nmedia media media\ngallery gallery gallery\nextra extra extra",
+	"formgrid": "draft draft featured\nid id author\ntitle title date\nimage image tags\nimage image categories\nsummary summary summary\ncontent content content\nmedia media media\ngallery gallery gallery\nextra extra extra\ncreated updated .",
 	"properties": {
 		"draft": {
 			"type"    : "boolean",
@@ -121,7 +121,7 @@
 			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"    : "Updated Date",
 			"help"     : "Blog Post updated date",
-			"field"    : "hidden",
+			"field"    : "datetime",
 			"factory"  : "iso8601",
 			"settings" : {
 				"onUpdate": true,
@@ -132,7 +132,7 @@
 			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"    : "Creation Date",
 			"help"     : "Blog Post creation date",
-			"field"    : "hidden",
+			"field"    : "datetime",
 			"factory"  : "iso8601",
 			"settings" : {
 				"onCreate": true,
