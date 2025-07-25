@@ -52,7 +52,7 @@ final class CacheManager
 		private OPcacheService $opcacheService,
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
-		private TextWatermarkFactory $textWatermarkFacTextWatermarkFactory,
+		private TextWatermarkFactory $textWatermarkFactory,
 	) {
 		// Initialize cache services and version
 		$this->cacheServices = [
@@ -348,7 +348,7 @@ final class CacheManager
 
 		// Clear text watermark cache (clear all cached watermarks)
 		try {
-			$this->textWatermarkFacTextWatermarkFactory->clearOldCache(0); // Clear all watermarks regardless of age
+			$this->textWatermarkFactory->clearOldCache(0); // Clear all watermarks regardless of age
 		} catch (\Exception $e) {
 			// Log error but don't fail the entire cache clear operation
 			error_log('Failed to clear text watermark cache: ' . $e->getMessage());
