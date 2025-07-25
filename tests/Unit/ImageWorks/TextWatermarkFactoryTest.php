@@ -125,9 +125,9 @@ class TextWatermarkFactoryTest extends TestCase
 		// Mock font content
 		$fontContent = 'fake-ttf-content';
 
-		// Font name without extension - should try TTF first and find it
+		// Font name without extension - should try TTF first and find it (extension check + final check)
 		$this->mockFilesystem
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fileExists')
 			->with('depot/watermark-fonts/depot/MyFont.ttf')
 			->willReturn(true);
@@ -158,9 +158,9 @@ class TextWatermarkFactoryTest extends TestCase
 		// Mock font content
 		$fontContent = 'fake-otf-content';
 
-		// Font name without extension - TTF not found, but OTF found
+		// Font name without extension - TTF not found, but OTF found (try .ttf, try .otf, final check)
 		$this->mockFilesystem
-			->expects($this->exactly(2))
+			->expects($this->exactly(3))
 			->method('fileExists')
 			->willReturnCallback(function ($path) {
 				if ($path === 'depot/watermark-fonts/depot/ModernFont.ttf') {
@@ -195,9 +195,9 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testLoadFontFromDepotNotFound(): void
 	{
-		// Font not found in either format
+		// Font not found in either format - tries .ttf, .otf, then final check
 		$this->mockFilesystem
-			->expects($this->exactly(2))
+			->expects($this->exactly(3))
 			->method('fileExists')
 			->willReturnCallback(function ($path) {
 				return str_contains($path, 'NonExistent') ? false : true;
@@ -227,9 +227,9 @@ class TextWatermarkFactoryTest extends TestCase
 			$customConfig
 		);
 
-		// Should use custom depot path
+		// Should use custom depot path - tries .ttf, .otf, then final check
 		$this->mockFilesystem
-			->expects($this->exactly(2))
+			->expects($this->exactly(3))
 			->method('fileExists')
 			->willReturnCallback(function ($path) {
 				return str_contains($path, 'custom-fonts') && str_contains($path, 'TestFont') ? false : true;
@@ -251,10 +251,12 @@ class TextWatermarkFactoryTest extends TestCase
 		$fontContent = 'fake-ttf-content';
 
 		$this->mockFilesystem
-			->expects($this->once())
+			->expects($this->exactly(2))
 			->method('fileExists')
-			->with('depot/watermark-fonts/depot/Dorsa.ttf')
-			->willReturn(true);
+			->willReturnCallback(function ($path) {
+				// Return true for both the extension check and final path check
+				return str_contains($path, 'Dorsa.ttf');
+			});
 
 		$this->mockFilesystem
 			->expects($this->once())
@@ -280,9 +282,9 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testGetFontPathFallbackToDefault(): void
 	{
-		// Font not found in depot, should fall back to default
+		// Font not found in depot, should fall back to default - tries .ttf, .otf, then final check
 		$this->mockFilesystem
-			->expects($this->exactly(2))
+			->expects($this->exactly(3))
 			->method('fileExists')
 			->willReturn(false);
 
