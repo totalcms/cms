@@ -2,6 +2,62 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.34] - 2025-07-26
+
+### Added
+- **NEW**: Text watermarking system with custom font support
+  - Support for TTF and OTF font files from depot storage
+  - Configurable `watermarkFontsDepot` setting (default: 'watermark-fonts')
+  - Text size, color, background, padding, and rotation angle support
+  - Automatic caching for improved performance
+- **NEW**: Enhanced object cloning functionality
+  - Objects with `onCreate` date fields now get current timestamp when cloned
+  - Objects with `onUpdate` date fields now get current timestamp when cloned
+  - Automatic property processing for date field management
+- **NEW**: Multi-field relational options documentation
+  - Support for combining multiple fields in `relationalOptions` labels
+  - Configurable join separators for field combinations
+  - Enhanced field-settings.md with comprehensive examples
+- **NEW**: File streaming API enhancements
+  - Password protection support for streamed files
+  - Enhanced download and stream endpoints with better error handling
+  - Improved file access controls and security
+
+### Enhanced
+- **ImageWorks**: Complete text watermarking integration
+  - Centralized Roboto font management in `resources/fonts/`
+  - Custom font loading from depot with fallback to default font
+  - Improved watermark cache management and clearing
+  - Better text positioning and angle handling
+- **Color System**: Fixed OKLCH color manipulation
+  - Proper hue wraparound (360° cycling) for color adjustments
+  - Fixed hex color conversion issues with ColorFactory library
+  - Enhanced color math operations for design system variables
+- **Forms**: Improved select options flexibility
+  - Better depot file handling in select dropdowns
+  - Enhanced form field rendering with updated icons
+- **Documentation**: Comprehensive ImageWorks parameter documentation
+  - Complete marktext options reference in twig-totalcms.md
+  - Organized parameters into logical sections (Basic, Effects, Watermarks)
+  - Practical examples for text watermark usage
+
+### Fixed
+- Object cloning now properly resets creation and update timestamps
+- Text watermark font loading from depot with proper path structure
+- Cache API now correctly clears watermark cache files
+- Color hue calculations now properly wrap around 360° boundary
+- PHPStan compliance improvements for color data processing
+- Form field icon references updated (removed icon-url, added icon-font and icon-angle)
+- SelectOptions template calls with proper parameter handling
+- CMS depot functionality restored with proper adapter calls
+
+### Changed
+- Moved FakerImageGD.ttf to resources/fonts/RobotoRegular.ttf for centralized font management
+- Enhanced TextWatermarkFactory with comprehensive font support and error handling
+- Improved cache clearing integration across all cache services
+- Updated blog schema to include proper created/updated field visibility
+- Code style improvements and PHPStan Level 8 compliance throughout
+
 ## [3.0.32] - 2025-07-12
 
 ### Added
