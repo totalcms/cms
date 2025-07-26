@@ -4,52 +4,7 @@
 	<p>This tool manages all cache systems in Total CMS. Clearing cache will remove cached templates,
 	compiled code, and other temporary data to ensure you see the latest changes.</p>
 
-	<h2>Clear Collection Image Cache</h2>
-
-	<p><strong>Clear Collection Image Cache</strong> will remove all cached images (.cache directories)
-		for a specific collection.</p>
-
-	{% set formfields %}
-		{{ cms.form.field("select", "collection", {
-			placeholder : "Select a Collection",
-			label       : "Collection",
-			class       : "no-change-listener",
-			options     : cms.collections() | map(c => { value : c.id, label : c.name } ) | sortBy("label"),
-		}) }}
-	{% endset %}
-
-	{{ cms.form.simple("/cache/images", formfields, {
-		method  : "DELETE",
-		label   : "Clear Collection Image Cache",
-		refresh : true,
-	}) }}
-
-	{% set imageCacheStats = cms.imageCacheService.getAllCollectionImageCacheStats() %}
-	{% if imageCacheStats|length > 0 %}
-		<h3 style="margin-top:2rem">Image Cache Statistics</h3>
-		<table class="admin-table">
-			<thead>
-				<tr>
-					<th>Collection</th>
-					<th>Cached Files</th>
-					<th>Total Size</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for stats in imageCacheStats %}
-				<tr>
-					<td><strong>{{ stats.collection }}</strong></td>
-					<td>{{ stats.cached_files }}</td>
-					<td>{{ stats.total_size_mb }} MB</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	{% else %}
-		<p style="margin-top:2rem"><em>No image cache data found in any collections.</em></p>
-	{% endif %}
-
-	<h2 style="margin-top:3rem">Clear Content Cache</h2>
+	<h2>Clear Content Cache</h2>
 
 	<p><strong>Clear Content Caches</strong> will clear filesystem cache, OPcache, Redis, and Memcached (if available).</p>
 	{{ cms.form.simple("/cache", "", {
@@ -150,6 +105,51 @@
 			<li><strong>Total Space</strong>: {{ cms.checker.totalspace }}</li>
 			<li><strong>Free Space</strong>: {{ cms.checker.freespace }}</li>
 		</ul>
+	{% endif %}
+
+	<h2 style="margin-top:3rem">Clear Collection Image Cache</h2>
+
+	<p><strong>Clear Collection Image Cache</strong> will remove all cached images (.cache directories)
+		for a specific collection.</p>
+
+	{% set formfields %}
+		{{ cms.form.field("select", "collection", {
+			placeholder : "Select a Collection",
+			label       : "Collection",
+			class       : "no-change-listener",
+			options     : cms.collections() | map(c => { value : c.id, label : c.name } ) | sortBy("label"),
+		}) }}
+	{% endset %}
+
+	{{ cms.form.simple("/cache/images", formfields, {
+		method  : "DELETE",
+		label   : "Clear Collection Image Cache",
+		refresh : true,
+	}) }}
+
+	{% set imageCacheStats = cms.imageCacheService.getAllCollectionImageCacheStats() %}
+	{% if imageCacheStats|length > 0 %}
+		<h3 style="margin-top:2rem">Image Cache Statistics</h3>
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>Collection</th>
+					<th>Cached Files</th>
+					<th>Total Size</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for stats in imageCacheStats %}
+				<tr>
+					<td><strong>{{ stats.collection }}</strong></td>
+					<td>{{ stats.cached_files }}</td>
+					<td>{{ stats.total_size_mb }} MB</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p style="margin-top:2rem"><em>No image cache data found in any collections.</em></p>
 	{% endif %}
 
 </section>

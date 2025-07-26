@@ -28,7 +28,11 @@
       "Bash(vendor/bin/pest:*)",
       "Bash(git tag:*)",
       "Bash(diff:*)",
-      "Bash(redis-cli keys:*)"
+      "Bash(redis-cli keys:*)",
+      "Bash(python3:*)",
+      "WebFetch(domain:glide.thephpleague.com)",
+      "Bash(curl:*)",
+      "Bash(open:*)"
     ],
     "deny": []
   }

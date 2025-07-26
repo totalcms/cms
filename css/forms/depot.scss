@@ -58,7 +58,7 @@
 	width               : 100%;
 	cursor              : default;
 	overflow-x          : hidden;
-	margin              : 0;
+	margin              : 0 !important;
 	background          : repeating-linear-gradient(to bottom,
 		transparent 0,
 		transparent var(--depot-line-height),

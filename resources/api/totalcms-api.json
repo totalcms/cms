@@ -57,8 +57,16 @@
       "description": "Image processing and manipulation"
     },
     {
+      "name": "auth",
+      "description": "Authentication and authorization"
+    },
+    {
       "name": "download",
       "description": "File download operations"
+    },
+    {
+      "name": "streaming",
+      "description": "File streaming operations with range request support"
     },
     {
       "name": "upload",
@@ -324,6 +332,155 @@
     {"SessionAuth": []}
   ],
   "paths": {
+    "/login": {
+      "get": {
+        "summary": "Login Form",
+        "description": "Display login form for default authentication",
+        "tags": ["auth"],
+        "responses": {
+          "200": {
+            "description": "Login form HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "User Login",
+        "description": "Authenticate user with credentials",
+        "tags": ["auth"],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect on success/failure"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/login/{collection}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Collection Login Form",
+        "description": "Display login form for specific collection authentication",
+        "tags": ["auth"],
+        "responses": {
+          "200": {
+            "description": "Login form HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Collection User Login",
+        "description": "Authenticate user for specific collection access",
+        "tags": ["auth"],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect on success/failure"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "get": {
+        "summary": "User Logout",
+        "description": "Log out current user session",
+        "tags": ["auth"],
+        "responses": {
+          "302": {
+            "description": "Redirect to login or home page"
+          }
+        }
+      },
+      "post": {
+        "summary": "User Logout",
+        "description": "Log out current user session",
+        "tags": ["auth"],
+        "responses": {
+          "302": {
+            "description": "Redirect to login or home page"
+          }
+        }
+      }
+    },
+    "/denied": {
+      "get": {
+        "summary": "Access Denied Page",
+        "description": "Display access denied page",
+        "tags": ["auth"],
+        "responses": {
+          "403": {
+            "description": "Access denied HTML page",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/collections": {
       "get": {
         "summary": "List Collections",
@@ -1741,6 +1898,365 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/download/{collection}/{id}/{property}/{filename}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "filename",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Download Depot File",
+        "description": "Download a specific file from a depot (multi-file) property with Content-Disposition: attachment",
+        "tags": ["download"],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Subfolder path within depot"
+          },
+          {
+            "name": "pwd",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Encrypted password for protected files"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "summary": "Download Protected Depot File",
+        "description": "Download a password-protected depot file",
+        "tags": ["download"],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Subfolder path within depot"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File content",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/stream/{collection}/{id}/{property}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Stream File",
+        "description": "Stream a file with Content-Disposition: inline and HTTP range request support. Ideal for video/audio files.",
+        "tags": ["streaming"],
+        "parameters": [
+          {
+            "name": "pwd",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Encrypted password for protected files"
+          },
+          {
+            "name": "Range",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "example": "bytes=0-1023"
+            },
+            "description": "HTTP range request for partial content"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content (full file)",
+            "headers": {
+              "Accept-Ranges": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial content (range request)",
+            "headers": {
+              "Content-Range": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes 0-1023/2048"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "416": {
+            "description": "Range Not Satisfiable",
+            "headers": {
+              "Content-Range": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes */2048"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stream/{collection}/{id}/{property}/{filename}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "filename",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Stream Depot File",
+        "description": "Stream a specific file from a depot (multi-file) property with range request support",
+        "tags": ["streaming"],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Subfolder path within depot"
+          },
+          {
+            "name": "pwd",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Encrypted password for protected files"
+          },
+          {
+            "name": "Range",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "example": "bytes=0-1023"
+            },
+            "description": "HTTP range request for partial content"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content (full file)",
+            "headers": {
+              "Accept-Ranges": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial content (range request)",
+            "headers": {
+              "Content-Range": {
+                "schema": {
+                  "type": "string",
+                  "example": "bytes 0-1023/2048"
+                }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }

@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Property\Data;
 
 use matthieumastadenis\couleur\ColorFactory;
 use matthieumastadenis\couleur\ColorSpace;
-use matthieumastadenis\couleur\utils\hexRgb;
 
 /**
  * Color property data.
@@ -107,13 +106,19 @@ class ColorData extends PropertyData
 	/** @param array<string,float> $oklch */
 	public static function oklchToHex(array $oklch): string
 	{
-		$hex = ColorFactory::newHexRgb([$oklch['l'], $oklch['c'], $oklch['h']], ColorSpace::OkLch);
-		if ($hex === null) {
+		// Convert OKLCH to RGB first to avoid ColorFactory hex issues
+		$rgb = ColorFactory::newRgb([$oklch['l'], $oklch['c'], $oklch['h']], ColorSpace::OkLch);
+		if ($rgb === null) {
 			return '#000000'; // black
 		}
-		$coordinates = $hex->coordinates();
+		$coordinates = $rgb->coordinates();
 
-		return hexRgb\stringify($coordinates[0], $coordinates[1], $coordinates[2], short: false);
+		// Manually format hex to avoid ColorFactory stringify issues
+		$r = max(0, min(255, round($coordinates[0])));
+		$g = max(0, min(255, round($coordinates[1])));
+		$b = max(0, min(255, round($coordinates[2])));
+
+		return sprintf('#%02x%02x%02x', $r, $g, $b);
 	}
 
 	/**
@@ -124,22 +129,51 @@ class ColorData extends PropertyData
 	 */
 	public static function oklchChange(array $oklch, array $change): array
 	{
-		$oklch = ColorFactory::newOkLch([$oklch['l'], $oklch['c'], $oklch['h']], ColorSpace::OkLch);
-		if ($oklch === null) {
+		$oklchColor = ColorFactory::newOkLch([$oklch['l'], $oklch['c'], $oklch['h']], ColorSpace::OkLch);
+		if ($oklchColor === null) {
 			return ['l' => 0, 'c' => 0, 'h' => 0]; // black
 		}
-		$oklch = $oklch->change(
+
+		// ColorFactory library doesn't handle hue wrapping
+		$updatedHue = self::changeHue($oklch['h'], $change['h']);
+
+		$oklchColor = $oklchColor->change(
 			lightness: $change['l'] ?? null,
 			chroma: $change['c'] ?? null,
-			hue: $change['h'] ?? null
+			hue: null
 		);
-		$coordinates = array_map(fn ($c) => round($c, 3), $oklch->coordinates());
+		$coordinates = array_map(fn ($c) => round($c, 3), $oklchColor->coordinates());
 
 		return [
 			'l' => $coordinates[0],
 			'c' => $coordinates[1],
-			'h' => $coordinates[2],
+			'h' => $updatedHue,
 		];
+	}
+
+	private static function changeHue(int|float $hue, string $formula): float
+	{
+		// possible formulas: "+10", "-20", "*2", "/3"
+
+		$formula   = trim($formula);
+		$operation = substr($formula, 0, 1);
+		$value     = floatval(substr($formula, 1));
+
+		$hue = match ($operation) {
+			'+'     => $hue + $value,
+			'-'     => $hue - $value,
+			'*'     => $hue * $value,
+			'/'     => $hue / $value,
+			default => $hue,
+		};
+		if ($hue < 0 || $hue >= 360) {
+			$hue = fmod($hue, 360);
+			if ($hue < 0) {
+				$hue += 360;
+			}
+		}
+
+		return round($hue, 3);
 	}
 
 	/** @return array<string,float> */

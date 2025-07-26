@@ -82,6 +82,7 @@ final class CollectionTable
 			'type'           => 'text',
 			'name'           => 'id',
 			'autocapitalize' => 'off',
+			'class'          => 'slugify-input',
 		]);
 		$idField = HTMLUtils::element('div', $label . $input);
 

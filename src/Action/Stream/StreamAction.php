@@ -1,22 +1,20 @@
 <?php
 
-namespace TotalCMS\Action\Download;
+namespace TotalCMS\Action\Stream;
 
 use Nyholm\Psr7\Stream;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
-use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Security\Encryption\Cipher;
-use TotalCMS\Renderer\TwigRenderer;
 
-abstract class DownloadAction
+abstract class StreamAction
 {
-	protected TwigRenderer $twigRenderer;
 	protected FileAccessManager $accessManager;
 	protected ObjectUpdater $objectUpdater;
 	protected PhpSession $session;
@@ -26,8 +24,6 @@ abstract class DownloadAction
 	protected string $property;
 	protected string $name;
 	protected ?string $subpath = null;
-
-	protected const MAX_ATTEMPTS = 10;
 
 	abstract protected function fileExists(): bool;
 
@@ -65,30 +61,15 @@ abstract class DownloadAction
 			throw new HttpNotFoundException($request, 'File not found');
 		}
 
-		// Clear all flash messages
-		$flash = $this->session->getFlash();
-		$flash->clear();
-
-		$attempts = $this->session->get('downloadAttempts', 0);
-		$this->session->set('downloadAttempts', $attempts + 1);
-
-		$maxAttempts = self::MAX_ATTEMPTS;
-
-		if ($attempts > $maxAttempts) {
-			$flash->add('error', 'Too many download attempts');
-
-			return $this->accessDenied($response);
-		}
-
 		$this->loadFile();
 
 		if ($this->accessManager->isProtectedByGroups()) {
 			// check if the user is logged in and has access to the file
 			if ($this->accessManager->sessionHasUser() === false) {
-				return $this->redirectToLogin($request, $response);
+				throw new HttpForbiddenException($request, 'Authentication required');
 			}
 			if ($this->accessManager->userHasAccess() === false) {
-				return $this->accessDenied($response);
+				throw new HttpForbiddenException($request, 'Access denied');
 			}
 		}
 
@@ -96,59 +77,77 @@ abstract class DownloadAction
 			$password = $this->passwordFromRequest($request);
 
 			if (is_null($password)) {
-				return $this->loadPasswordForm($response);
+				throw new HttpForbiddenException($request, 'Password required');
 			}
 			if ($this->accessManager->verfiyPassword($password) === false) {
-				$flash->add('error', 'Invalid password');
-
-				return $this->loadPasswordForm($response);
+				throw new HttpForbiddenException($request, 'Invalid password');
 			}
 		}
 
 		$file = $this->fetchFile();
 		$this->incrementCount($file);
 
-		$this->session->delete('downloadAttempts');
+		return $this->buildStreamResponse($request, $response, $file);
+	}
 
-		$response = $response->withHeader('Content-Type', $file->mime)
-			->withHeader('Content-Disposition', "attachment; filename={$file->download}");
+	private function buildStreamResponse(ServerRequestInterface $request, ResponseInterface $response, FileData $file): ResponseInterface
+	{
+		$fileSize    = $file->size;
+		$rangeHeader = $request->getHeaderLine('Range');
 
-		return $response->withBody(Stream::create($this->streamFile()));
+		// Basic headers for all responses
+		$response = $response
+			->withHeader('Content-Type', $file->mime)
+			->withHeader('Content-Disposition', "inline; filename={$file->download}")
+			->withHeader('Accept-Ranges', 'bytes')
+			->withHeader('Cache-Control', 'no-cache');
+
+		// Handle range requests for Safari video streaming
+		if (!empty($rangeHeader) && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
+			$start = (int)$matches[1];
+			$end   = !empty($matches[2]) ? (int)$matches[2] : $fileSize - 1;
+
+			// Ensure valid range
+			if ($start >= $fileSize || $end >= $fileSize || $start > $end) {
+				return $response->withStatus(416) // Range Not Satisfiable
+					->withHeader('Content-Range', "bytes */{$fileSize}");
+			}
+
+			$contentLength = $end - $start + 1;
+
+			// Create range-specific file stream
+			$fileStream   = $this->streamFile();
+			$rangeContent = '';
+			if (is_resource($fileStream) && $contentLength > 0) {
+				fseek($fileStream, $start);
+				$readResult   = fread($fileStream, $contentLength);
+				$rangeContent = $readResult !== false ? $readResult : '';
+				fclose($fileStream);
+			}
+
+			return $response
+				->withStatus(206) // Partial Content
+				->withHeader('Content-Length', (string)$contentLength)
+				->withHeader('Content-Range', "bytes {$start}-{$end}/{$fileSize}")
+				->withBody(Stream::create($rangeContent));
+		}
+
+		// Full file response
+		return $response
+			->withHeader('Content-Length', (string)$fileSize)
+			->withBody(Stream::create($this->streamFile()));
 	}
 
 	private function passwordFromRequest(ServerRequestInterface $request): ?string
 	{
 		$queryParams = $request->getQueryParams();
-		$postData    = (array)$request->getParsedBody();
 
 		$password = null;
 
-		if (isset($postData['password'])) {
-			$password = $postData['password'];
-		} elseif (isset($queryParams['pwd'])) {
+		if (isset($queryParams['pwd'])) {
 			$password = Cipher::decrypt($queryParams['pwd']);
 		}
 
 		return $password;
-	}
-
-	private function redirectToLogin(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-	{
-		$router = RouteContext::fromRequest($request)->getRouteParser();
-		$url    = $router->urlFor('login');
-
-		return $response->withStatus(302)->withHeader('Location', $url);
-	}
-
-	private function accessDenied(ResponseInterface $response): ResponseInterface
-	{
-		$response = $response->withStatus(403);
-
-		return $this->twigRenderer->template($response, 'admin/denied.twig');
-	}
-
-	private function loadPasswordForm(ResponseInterface $response): ResponseInterface
-	{
-		return $this->twigRenderer->template($response, 'admin/download-auth.twig');
 	}
 }

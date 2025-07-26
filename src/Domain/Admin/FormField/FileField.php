@@ -21,8 +21,8 @@ final class FileField extends FormField
 		$fileData = is_array($this->value) ? $this->value : []; // File data is stored in the value field
 
 		$previewAttrs = ['class' => 'file-preview'];
-		$name         = empty($fileData['download']) ? $fileData['name'] : $fileData['download'];
-		$filePreview  = $this->filePreview($name ?? '');
+		$name         = $fileData['download'] ?? $fileData['name'] ?? '';
+		$filePreview  = $this->filePreview($name);
 		$fileDialog   = $this->fileDialog($fileData);
 		$linkDialog   = $this->linkDialog($fileData['name'] ?? null);
 

@@ -268,7 +268,7 @@
 	--schema-type-icon : var(--icon-time);
 }
 .url-type {
-	--schema-type-icon : var(--icon-url);
+	--schema-type-icon : var(--icon-link);
 }
 
 
@@ -294,7 +294,7 @@
 	}
 }
 .url-field {
-	--schema-icon : var(--icon-url);
+	--schema-icon : var(--icon-link);
 
 	&.url-type:after {
 		display : none;

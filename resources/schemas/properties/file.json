@@ -42,7 +42,7 @@
     "count": {
       "minimum"  : 0,
       "default"  : 0,
-      "$comment" : "The number of times a file has been downloaded",
+      "$comment" : "The number of times a file has been downloaded or streamed",
       "type"     : "integer"
     },
     "uploadDate": {

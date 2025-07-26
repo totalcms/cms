@@ -1,9 +1,0 @@
-</div>
-
-<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
-<script type="module" src="{{ cms.api }}/assets/content.js"></script>
-</body>
-
-</html>
-
-<?php echo $totalcms->processBufferMacros(); ?>

@@ -144,7 +144,7 @@ body {
 			&.schema-svg { --collection-icon : var(--icon-svg) }
 			&.schema-text { --collection-icon : var(--icon-text) }
 			&.schema-toggle { --collection-icon : var(--icon-toggle) }
-			&.schema-url { --collection-icon : var(--icon-url) }
+			&.schema-url { --collection-icon : var(--icon-link) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
 			&.cache-cleaner { --collection-icon : var(--icon-clean-o) }

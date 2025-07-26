@@ -90,7 +90,7 @@ export default class SimpleForm {
 	}
 
 	hasError() {
-		return this.button.classList.has("error");
+		return this.button.classList.contains("error");
 	}
 
 	error(error) {
@@ -112,7 +112,9 @@ export default class SimpleForm {
 				this.button.style.width = "";
 			}, { once: true });
 
-			setTimeout(() => this.refreshPage(), 1500);
+			if (!this.hasError()) {
+				setTimeout(() => this.refreshPage(), 1500);
+			}
 		}, 200);
 	}
 

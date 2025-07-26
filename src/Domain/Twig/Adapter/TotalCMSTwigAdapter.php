@@ -21,6 +21,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
@@ -368,9 +369,14 @@ NGINX;
 		return null;
 	}
 
-	public function verifyFilePassword(string $password, string $collection, string $id, string $property, string $name = ''): bool
+	/** @SuppressWarnings("PHPMD.ElseExpression") */
+	public function verifyFilePassword(string $password, string $collection, string $id, string $property, ?string $name = null): bool
 	{
-		$this->fileAccessManager->loadFile($collection, $id, $property);
+		if ($name !== null) {
+			$this->fileAccessManager->loadDepotFile($collection, $id, $property, $name);
+		} else {
+			$this->fileAccessManager->loadFile($collection, $id, $property);
+		}
 
 		return $this->fileAccessManager->verfiyPasswordOnly($password);
 	}
@@ -556,8 +562,13 @@ NGINX;
 
 		$url = "{$this->api}/download/{$collection}/{$id}/{$property}";
 
+		// Auto-encrypt password if provided and not already encrypted
+		if (!empty($password) && !$this->isEncryptedPassword($password)) {
+			$password = Cipher::encrypt($password);
+		}
+
 		if (!empty($password)) {
-			$url .= "?pwd={$password}";
+			$url .= '?pwd=' . urlencode($password);
 		}
 
 		return $url;
@@ -581,7 +592,70 @@ NGINX;
 			$name     = $pathinfo['basename'];
 		}
 
-		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/{$name}";
+		$url = "{$this->api}/download/{$collection}/{$id}/{$property}/" . urlencode($name);
+
+		// Auto-encrypt password if provided and not already encrypted
+		if (!empty($password) && !$this->isEncryptedPassword($password)) {
+			$password = Cipher::encrypt($password);
+		}
+
+		$query = http_build_query(array_filter([
+			'path' => trim($path, '/'),
+			'pwd'  => $password,
+		]));
+
+		if (!empty($query)) {
+			$url .= "?$query";
+		}
+
+		return $url;
+	}
+
+	/** @param array<string,string> $options */
+	public function stream(string $id, array $options = []): string
+	{
+		$collection = $options['collection'] ?? 'file';
+		$property   = $options['property'] ?? 'file';
+		$password   = $options['pwd'] ?? '';
+
+		$url = "{$this->api}/stream/{$collection}/{$id}/{$property}";
+
+		// Auto-encrypt password if provided and not already encrypted
+		if (!empty($password) && !$this->isEncryptedPassword($password)) {
+			$password = Cipher::encrypt($password);
+		}
+
+		if (!empty($password)) {
+			$url .= '?pwd=' . urlencode($password);
+		}
+
+		return $url;
+	}
+
+	/**
+	 * @param array<string,string> $fileOptions
+	 * @param array<string,mixed> $options
+	 */
+	public function depotStream(string $id, string $name, array $fileOptions = [], array $options = []): string
+	{
+		$collection = $options['collection'] ?? 'depot';
+		$property   = $options['property'] ?? 'depot';
+		$path       = $fileOptions['path'] ?? '';
+		$password   = $fileOptions['pwd'] ?? '';
+
+		// Add support for supplying the path via the name
+		if (str_contains($name, '/')) {
+			$pathinfo = pathinfo($name);
+			$path     = $pathinfo['dirname'];
+			$name     = $pathinfo['basename'];
+		}
+
+		$url = "{$this->api}/stream/{$collection}/{$id}/{$property}/" . urlencode($name);
+
+		// Auto-encrypt password if provided and not already encrypted
+		if (!empty($password) && !$this->isEncryptedPassword($password)) {
+			$password = Cipher::encrypt($password);
+		}
 
 		$query = http_build_query(array_filter([
 			'path' => trim($path, '/'),
@@ -741,7 +815,7 @@ NGINX;
 	{
 		$options = array_merge([
 			'collection' => 'depot',
-			'property'   => 'files',
+			'property'   => 'depot',
 		], $options);
 
 		$files = $this->data($options['collection'], $id, $options['property']);
@@ -1208,5 +1282,20 @@ NGINX;
 		}
 
 		return $image['alt'];
+	}
+
+	/**
+	 * Check if a password is already encrypted (base64 encoded).
+	 * Encrypted passwords from Cipher::encrypt() are base64 encoded strings.
+	 */
+	private function isEncryptedPassword(string $password): bool
+	{
+		// Check if string is valid base64 and has reasonable length for encrypted data
+		if (base64_decode($password, true) === false) {
+			return false;
+		}
+
+		// Encrypted passwords should be longer than typical plain passwords
+		return strlen($password) > 20;
 	}
 }

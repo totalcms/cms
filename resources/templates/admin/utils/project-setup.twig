@@ -56,7 +56,7 @@
 		<script>
 			(async function() {
 				try {
-					const response = await fetch('/import/totalcms-one', {
+					const response = await fetch('{{ cms.api }}/import/totalcms-one', {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',

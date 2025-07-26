@@ -33,6 +33,7 @@ final class TotalCMSTwigFilters
 		'html_entity_decode',
 		'urldecode',
 		'urlencode',
+		'rawurlencode',
 		'ceil',
 		'floor',
 		'count',

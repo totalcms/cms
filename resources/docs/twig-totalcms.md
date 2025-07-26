@@ -168,7 +168,9 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.galleryImage('id', 'featured') }}         {# Featured image #}
 ```
 
-## File Downloads
+## File Downloads & Streaming
+
+### Downloads (attachment; forces download)
 
 ```twig
 {# Single file download #}
@@ -187,6 +189,35 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.depotDownload('id', 'folder/document.pdf') }}  {# Path in filename #}
 {{ cms.depotDownload('id', 'file.zip', {pwd: 'pass123'}) }}
 ```
+
+### Streaming (inline; plays in browser)
+
+```twig
+{# Single file streaming (ideal for video/audio) #}
+{{ cms.stream('id') }}                           {# Default from 'file' collection #}
+{{ cms.stream('id', {collection: 'videos', property: 'video'}) }}
+{{ cms.stream('id', {pwd: 'secret123'}) }}       {# Password-protected file #}
+
+{# Depot file streaming #}
+{{ cms.depotStream('id', 'video.mp4') }}         {# Stream specific file #}
+{{ cms.depotStream('id', 'movie.mp4', {path: 'folder/subfolder'}) }}
+{{ cms.depotStream('id', 'folder/video.mp4') }}  {# Path in filename #}
+{{ cms.depotStream('id', 'audio.mp3', {pwd: 'pass123'}) }}
+
+{# HTML5 video/audio examples #}
+<video controls>
+    <source src="{{ cms.stream('video-id') }}" type="video/mp4">
+</video>
+
+<audio controls>
+    <source src="{{ cms.depotStream('audio-id', 'song.mp3') }}" type="audio/mpeg">
+</audio>
+```
+
+**Stream vs Download:**
+- **Stream**: Content-Disposition: inline, supports HTTP range requests, ideal for media files
+- **Download**: Content-Disposition: attachment, forces download dialog
+- Both support password protection and automatic encryption
 
 ## Pagination
 
@@ -258,22 +289,39 @@ The grid renderer provides helper methods for content grids:
 
 Common parameters for image transformations:
 
+### Basic Image Controls
 - `w` - Width in pixels
 - `h` - Height in pixels  
 - `fit` - How to fit image: `contain`, `max`, `fill`, `stretch`, `crop`
 - `crop` - Crop position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
 - `fm` - Output format: `jpg`, `png`, `gif`, `webp`, `avif`
 - `q` - Quality (1-100)
+
+### Effects & Filters
 - `blur` - Blur amount (0-100)
 - `sharp` - Sharpen amount (0-100)
 - `pixel` - Pixelate amount (0-100)
 - `filt` - Filter: `greyscale`, `sepia`
+
+### Image Watermarks
 - `mark` - Watermark image path
 - `markw` - Watermark width
 - `markh` - Watermark height
 - `markpos` - Watermark position
 - `markpad` - Watermark padding
 - `markalpha` - Watermark opacity (0-100)
+
+### Text Watermarks
+- `marktext` - Text to display as watermark
+- `marktextfont` - Font family name (TTF/OTF fonts from watermark-fonts depot)
+- `marktextsize` - Text size in pixels (default: 500)
+- `marktextcolor` - Text color as hex (without #, e.g., 'ffffff' for white)
+- `marktextbg` - Background color as hex (optional, transparent if not set)
+- `marktextpad` - Padding around text in pixels (default: 10)
+- `marktextangle` - Text rotation angle in degrees (-360 to 360, default: 0)
+- `marktextpos` - Text position: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`
+- `marktextw` - Maximum text width in pixels or relative (e.g., '50w' for 50% of image width)
+- `marktextalpha` - Text transparency (0-100, where 100 is fully opaque)
 
 ## Examples
 
@@ -320,4 +368,45 @@ Common parameters for image transformations:
 {% endfor %}
 
 {{ cms.paginationFull(results|length, page, perPage) }}
+```
+
+### Text watermark examples
+```twig
+{# Simple text watermark #}
+{{ cms.imagePath('hero-image', {
+    w: 1200, 
+    h: 600, 
+    marktext: 'Copyright 2024'
+}) }}
+
+{# Styled text watermark with custom font #}
+{{ cms.imagePath('product-photo', {
+    w: 800,
+    marktext: 'Premium Quality',
+    marktextfont: 'Dorsa-Regular',
+    marktextsize: 120,
+    marktextcolor: 'ffffff',
+    marktextbg: '000000',
+    marktextpad: 20,
+    marktextpos: 'bottom-right',
+    marktextalpha: 80
+}) }}
+
+{# Rotated watermark #}
+{{ cms.imagePath('landscape', {
+    marktext: 'DRAFT',
+    marktextsize: 200,
+    marktextangle: -45,
+    marktextcolor: 'ff0000',
+    marktextpos: 'center',
+    marktextalpha: 50
+}) }}
+
+{# Responsive text width #}
+{{ cms.imagePath('banner', {
+    w: 1200,
+    marktext: 'This is a very long watermark text that will wrap',
+    marktextw: '80w',  {# 80% of image width #}
+    marktextpos: 'top'
+}) }}
 ```

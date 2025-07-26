@@ -69,12 +69,15 @@ final class TotalCMSTwigFunctions
 	// Custom Functions
 	// -------------------------
 	/**
-	 * @param array<mixed> $data
+	 * @param ?array<mixed> $data
 	 *
 	 * @return array<array<string,string>>
 	 */
-	public static function selectOptions(array $data, string $label = '', string $value = ''): array
+	public static function selectOptions(?array $data, string $label = '', string $value = ''): array
 	{
+		if (empty($data)) {
+			return [];
+		}
 		// this takes a normal array and converts it to an array of arrays with label and value keys
 		// the resulting array can be used for select options in a form
 		if (empty($value) || empty($label)) {

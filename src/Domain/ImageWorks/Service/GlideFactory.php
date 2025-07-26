@@ -13,17 +13,14 @@ use TotalCMS\Support\Config;
 
 final class GlideFactory
 {
-	private StorageAdapterInterface $filesystem;
-	private Config $config;
-
 	public const CACHEDIR  = '.cache';
 	public const PALETTE   = 'palette';
 	public const IMG_TYPES = ['jpg', 'jpeg', 'pjpg', 'png', 'gif', 'webp', 'avif'];
 
-	public function __construct(StorageAdapterInterface $filesystem, Config $config)
-	{
-		$this->filesystem = $filesystem;
-		$this->config     = $config;
+	public function __construct(
+		private StorageAdapterInterface $filesystem,
+		private Config $config,
+	) {
 	}
 
 	/**
@@ -44,25 +41,20 @@ final class GlideFactory
 		];
 	}
 
-	/**
-	 * Create a glide server.
-	 *
-	 * @param string $source
-	 * @param ?string $cache
-	 * @param ?string $watermark
-	 * @param ImageData $imageData
-	 *
-	 * @return Server
-	 */
-	public function create(string $source, ImageData $imageData, ?string $cache = null, ?string $watermark = null): Server
-	{
+	public function create(
+		string $source,
+		ImageData $imageData,
+		?string $watermarkPath = null,
+		?string $cacheDir      = null,
+	): Server {
+		// Create Glide server
 		$glide = ServerFactory::create([
 			'source'                 => $this->filesystem->flysystem(),
 			'cache'                  => $this->filesystem->flysystem(),
 			'watermarks'             => $this->filesystem->flysystem(),
 			'source_path_prefix'     => $source,
-			'cache_path_prefix'      => sprintf('%s/%s', $source, $cache ?? self::CACHEDIR),
-			'watermarks_path_prefix' => $this->watermarkPath($watermark),
+			'cache_path_prefix'      => sprintf('%s/%s', $source, $cacheDir ?? self::CACHEDIR),
+			'watermarks_path_prefix' => $watermarkPath ?? TextWatermarkFactory::WATERMARK_DIR,
 			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
 			'defaults'               => $this->config->imageworks['defaults'],
 			'presets'                => $this->presets($imageData),
@@ -86,11 +78,9 @@ final class GlideFactory
 		return $presets;
 	}
 
-	public function watermarkPath(?string $watermark): string
+	public function filesystem(): StorageAdapterInterface
 	{
-		$objectID = $watermark ?? $this->config->imageworks['watermarksGallery'];
-
-		return sprintf('gallery/%s/gallery', $objectID);
+		return $this->filesystem;
 	}
 
 	/** @param array<string,int> $focalpoint */
