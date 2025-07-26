@@ -4,7 +4,6 @@ namespace TotalCMS\Domain\Property\Data;
 
 use matthieumastadenis\couleur\ColorFactory;
 use matthieumastadenis\couleur\ColorSpace;
-use matthieumastadenis\couleur\utils\hexRgb;
 
 /**
  * Color property data.
@@ -113,12 +112,12 @@ class ColorData extends PropertyData
 			return '#000000'; // black
 		}
 		$coordinates = $rgb->coordinates();
-		
+
 		// Manually format hex to avoid ColorFactory stringify issues
 		$r = max(0, min(255, round($coordinates[0])));
 		$g = max(0, min(255, round($coordinates[1])));
 		$b = max(0, min(255, round($coordinates[2])));
-		
+
 		return sprintf('#%02x%02x%02x', $r, $g, $b);
 	}
 
@@ -161,10 +160,10 @@ class ColorData extends PropertyData
 		$value     = floatval(substr($formula, 1));
 
 		$hue = match ($operation) {
-			'+' => $hue + $value,
-			'-' => $hue - $value,
-			'*' => $hue * $value,
-			'/' => $hue / $value,
+			'+'     => $hue + $value,
+			'-'     => $hue - $value,
+			'*'     => $hue * $value,
+			'/'     => $hue / $value,
 			default => $hue,
 		};
 		if ($hue < 0 || $hue >= 360) {
