@@ -949,7 +949,7 @@ b98cdd419f9932efecb2d78794b837d3194c6b8e7b34e1fddaa7503c9b933fec  ./dist/vendor/
 971ac336532e94edd8b66d6ab1b7ecb7be89f98e57786a19aac7611bbc3c179a  ./dist/vendor/composer/autoload_real.php
 eb4929baf229033b37c443ae0c381d92349e556e69f6db7bac9abe80efa23e92  ./dist/vendor/composer/autoload_files.php
 1e4525198301d1ed1f87ac3df2a8555a6f139f8df30a703d0b775a61963c96e4  ./dist/vendor/composer/InstalledVersions.php
-a69c9fe268342dc90bb656eef82ae3dedffd467870a1bb3662e9f0edbf7c03e3  ./dist/vendor/composer/installed.php
+4e938a29756c149b7161bd5985e89a2da20e5e6c9eab94d20178d1af4127e7ab  ./dist/vendor/composer/installed.php
 cc8ce77a73e0aeb29f86967661c4e09f662998ab0af6c7bb6094c347216625e8  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelper.php
 986cfaff3ec755cfe7e933534d98f387a62d32d41a065262c1d12a02526ef7b6  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/Module.php
 35925311f8f49dd55f750dbf87481d928315a26cc10950aac2dde65763b60a02  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelperFactory.php
@@ -4807,7 +4807,7 @@ d2b98690cec82e15466f5d64a3185d7e8218344dfc91b25a6c45f4c1441eb1b0  ./dist/src/Dom
 a867b98aea10f12d9276b9950b8b8f28740c76da878dc86b5619b29f65aa5635  ./dist/src/Domain/Twig/Extension/TotalCMSTwigFilters.php
 76515f94de4c1cbda86f6150f296f85c1943eb179519acac4fed15d239f48215  ./dist/src/Domain/Twig/Extension/CmsGridTokenParser.php
 3914499bae0902ff7bc9bc550bdfe92ef52c36d321e0b8bc223a9f806f517606  ./dist/src/Domain/Twig/Extension/TotalCMSTwigPatterns.php
-1b65aae66c257fee005743166dfbddc88634de55d640443fefad707615ec3754  ./dist/src/Domain/Twig/Extension/TotalCMSTwigFunctions.php
+240b167430a6cbbb9a596a99d04896a8e76327437ebf14b101be75d57d678131  ./dist/src/Domain/Twig/Extension/TotalCMSTwigFunctions.php
 7e7dff8b3ca324e3f2d159dd02f866769990e2436debe906cda9966f2ead9931  ./dist/src/Domain/Twig/Extension/LazyTwigGlobal.php
 55a33318cf124dcf93583378707a0061f2af63d2e14ed427b1f85b78694b16b0  ./dist/src/Domain/Twig/Markdown/ParsedownMarkdown.php
 0d5c6accd1bda9ceb2e574cae73d0b554073db38f161f53ea11f571dedfe3d5c  ./dist/src/Domain/Twig/Adapter/QRCodeTwigAdapter.php
@@ -5359,7 +5359,7 @@ d2b98690cec82e15466f5d64a3185d7e8218344dfc91b25a6c45f4c1441eb1b0  ./src/Domain/T
 a867b98aea10f12d9276b9950b8b8f28740c76da878dc86b5619b29f65aa5635  ./src/Domain/Twig/Extension/TotalCMSTwigFilters.php
 76515f94de4c1cbda86f6150f296f85c1943eb179519acac4fed15d239f48215  ./src/Domain/Twig/Extension/CmsGridTokenParser.php
 3914499bae0902ff7bc9bc550bdfe92ef52c36d321e0b8bc223a9f806f517606  ./src/Domain/Twig/Extension/TotalCMSTwigPatterns.php
-1b65aae66c257fee005743166dfbddc88634de55d640443fefad707615ec3754  ./src/Domain/Twig/Extension/TotalCMSTwigFunctions.php
+240b167430a6cbbb9a596a99d04896a8e76327437ebf14b101be75d57d678131  ./src/Domain/Twig/Extension/TotalCMSTwigFunctions.php
 7e7dff8b3ca324e3f2d159dd02f866769990e2436debe906cda9966f2ead9931  ./src/Domain/Twig/Extension/LazyTwigGlobal.php
 55a33318cf124dcf93583378707a0061f2af63d2e14ed427b1f85b78694b16b0  ./src/Domain/Twig/Markdown/ParsedownMarkdown.php
 0d5c6accd1bda9ceb2e574cae73d0b554073db38f161f53ea11f571dedfe3d5c  ./src/Domain/Twig/Adapter/QRCodeTwigAdapter.php
