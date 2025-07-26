@@ -74,6 +74,14 @@ bin/codecount.sh
 - **`/src/Domain/`** - Business logic layer with services, repositories, and data objects
   - **`/src/Domain/JumpStart/`** - JumpStart data import/export system with services, data objects, and factories
   - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
+  - **`/src/Domain/ImageWorks/`** - Complete image processing system with watermarking, font management, and caching
+    - **`TextWatermarkFactory`** - Text watermark generation with TTF/OTF font support from depot
+    - **`GlideFactory`** - Image manipulation and watermark application via League/Glide
+    - **`ImageGenerator`** - Main service for image processing operations
+  - **`/src/Domain/Property/Data/`** - Property data objects with enhanced color manipulation
+    - **`ColorData`** - OKLCH color manipulation with proper hue wraparound and hex conversion
+  - **`/src/Domain/Object/Service/`** - Object management services
+    - **`ObjectCloner`** - Enhanced cloning with automatic onCreate/onUpdate date field handling
   - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
     - **`CmsGridTokenParser`** - Parses `{% cmsgrid %}` tag syntax with `from`, `with`, `as` parameters
     - **`CmsGridNode`** - Compiles grid tags to PHP, provides `{{ item }}` and `{{ collection }}` variables
@@ -86,7 +94,8 @@ bin/codecount.sh
 - **`/resources/schemas/`** - JSON schemas for data validation
 - **`/resources/templates/`** - Twig templates for admin interface
   - **`/resources/templates/grid/`** - Default grid templates (blog.twig, feed.twig, generic.twig)
-- **`/resources/docs/`** - Documentation files including JumpStart guide
+- **`/resources/docs/`** - Documentation files including JumpStart guide and field settings
+- **`/resources/fonts/`** - Centralized font storage (RobotoRegular.ttf for default text watermarks)
 
 ### Design Patterns
 - **Domain-Driven Design**: Clear separation between Actions, Domain services, and Data layers
@@ -98,6 +107,7 @@ bin/codecount.sh
 
 - **Collection System**: 13 built-in collection types (blog, image, gallery, etc.) stored as JSON files in `/tcms-data/`
 - **JumpStart System**: Data import/export system for quick project setup with predefined content structures, factory data generation, and Total CMS 1 migration
+- **ImageWorks System**: Complete image processing with text/image watermarking, custom font support, caching
 - **Twig Integration**: Custom filters/functions in `src/Domain/Twig/`, markdown processing via ParsedownExtra
 - **Grid System**: `{% cmsgrid %}` Twig tag for flexible content grids with built-in templates and helper methods in `cms.grid.*`
 - **Admin Interface**: Form builder with 20+ field types, JavaScript components in `/javascript/totalform/`
@@ -236,3 +246,107 @@ JumpStart is Total CMS's data import/export system for quick project setup with 
 - **Template Debugging**: Use `cms.env` instead of `config.env` for environment checks
 - **Error Handling**: TwigEngine provides detailed error messages in development mode
 - **Performance**: Twig templates are cached in production, auto-reloaded in development
+
+## ImageWorks System
+
+### Overview
+ImageWorks is Total CMS's comprehensive image processing system providing dynamic image manipulation, watermarking, and caching.
+
+### Key Components
+- **TextWatermarkFactory**: Generates text watermarks with custom font support
+- **GlideFactory**: Integrates with League/Glide for image manipulation and watermark application
+- **ImageGenerator**: Main service orchestrating image processing operations
+- **ColorData**: Enhanced OKLCH color manipulation with proper hue calculations
+
+### Text Watermarking
+- **Font Support**: TTF and OTF fonts loaded from depot storage or default Roboto font
+- **Configuration**: `watermarkFontsDepot` setting (default: 'watermark-fonts') for depot-based font storage
+- **Features**: Text size, color, background, padding, rotation angle, transparency support
+- **Caching**: Automatic watermark caching in `.watermarks` directory for performance
+- **Flexible Fonts**: Supports both "FontName" and "FontName.ttf" format for font specification
+
+### Implementation Details
+- **Font Loading**: Depot fonts create temporary files for GD compatibility, cleaned up after use
+- **Path Structure**: Depot fonts stored at `depot/{depotId}/depot/{filename}`
+- **Cache Integration**: Watermark cache clearing integrated with main cache management system
+- **Error Handling**: Graceful fallbacks to default font if depot fonts unavailable
+
+### Usage Examples
+```twig
+{# Text watermark with custom font #}
+{{ cms.image('image.jpg') | imageworks({
+    marktext: 'Copyright 2024',
+    marktextfont: 'CustomFont',
+    marktextsize: 24,
+    marktextcolor: 'ffffff',
+    marktextalpha: 80
+}) }}
+
+{# Combined text and image watermarks #}  
+{{ cms.image('photo.jpg') | imageworks({
+    marktext: 'Watermark',
+    markimage: 'logo.png',
+    markalpha: 50
+}) }}
+```
+
+### Color System Integration
+- **OKLCH Support**: Full OKLCH color space manipulation with proper hue wraparound
+- **Color Filters**: Twig filters for `hue()`, `lightness()`, `chroma()` adjustments
+- **Hue Calculations**: Fixed 360° wraparound for color wheel operations
+- **Hex Conversion**: Reliable OKLCH-to-hex conversion avoiding ColorFactory library issues
+
+### Configuration
+```php
+// config/defaults.php
+'imageworks' => [
+    'watermarkFontsDepot' => 'watermark-fonts', // Default depot for custom fonts
+    // ... other ImageWorks settings
+]
+```
+
+## Object Management System
+
+### Object Cloning
+- **Enhanced Cloning**: `ObjectCloner` service with automatic date field management
+- **Date Field Handling**: Objects with `onCreate` and `onUpdate` date fields automatically get current timestamps when cloned
+- **Schema Integration**: Uses `SchemaFetcher` to identify date fields with special settings
+- **Property Processing**: Automatic processing of date properties during clone operations
+
+### Date Field Behavior
+- **onCreate Fields**: Automatically set to current time when objects are cloned (e.g., blog post creation dates)
+- **onUpdate Fields**: Automatically set to current time when objects are cloned (e.g., last modified timestamps)
+- **Schema Detection**: Detects date fields from both direct type and `$ref`-based schema definitions
+- **Settings Support**: Handles both top-level and nested settings for `onCreate`/`onUpdate` properties
+
+### Implementation Example
+```php
+// ObjectCloner automatically handles these schema settings:
+"created": {
+    "$ref": "https://www.totalcms.co/schemas/properties/date.json",
+    "settings": {
+        "onCreate": true,
+        "readonly": true
+    }
+},
+"updated": {  
+    "$ref": "https://www.totalcms.co/schemas/properties/date.json",
+    "settings": {
+        "onUpdate": true,
+        "readonly": true
+    }
+}
+```
+
+## Form Field System
+
+### Relational Options
+- **Multi-field Labels**: Support for combining multiple fields in `relationalOptions` labels
+- **Field Combination**: Space-separated field names in `label` parameter (e.g., `"firstName lastName"`)
+- **Custom Separators**: Configurable `join` parameter for field combination (default: single space)
+- **Flexible Syntax**: Supports both space-separated and comma-separated field names
+
+### Enhanced Field Settings
+- **Documentation**: Comprehensive field settings documentation in `/resources/docs/field-settings.md`
+- **Examples**: Practical examples for complex relational field configurations
+- **Icon System**: Updated icon reference system with font and angle icon support
