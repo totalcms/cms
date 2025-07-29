@@ -1,3 +1,4 @@
+.deck-field,
 .schemaProperties-field,
 .customProperties-field,
 .properties-field {
@@ -60,6 +61,7 @@
 	}
 }
 
+.deck-item button:active,
 .properties-field button:active,
 .customProperties-object > summary:active {
 	cursor : grabbing;
@@ -99,7 +101,7 @@
 	}
 }
 
-
+.deck-item,
 .property-field,
 .schema-field {
 	--schema-icon      : var(--icon-question);
@@ -205,6 +207,13 @@
 		details:first-of-type {
 			margin-top : 1rem;
 		}
+	}
+}
+.deck-item {
+	padding : 0.5rem;
+
+	&:before, &:after {
+		display : none;
 	}
 }
 

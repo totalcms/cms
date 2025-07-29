@@ -176,6 +176,11 @@ abstract class TotalForm
 		}
 	}
 
+	public function getSchemaFetcher(): SchemaFetcher
+	{
+		return $this->schemaFetcher;
+	}
+
 	protected function initClass(): void
 	{
 		if ($this->autosave === true) {

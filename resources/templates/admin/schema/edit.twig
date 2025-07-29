@@ -36,7 +36,7 @@
 		</div>
 	{% else %}
 		<div class="deck-incompatible-message">
-			<span class="status-icon incompatible">✗</span>
+			<span class="status-icon incompatible">⚠</span>
 			<strong>Deck Incompatible:</strong> This schema cannot be used as a deck property type.
 			{% if incompatibleTypes|length > 0 %}
 				<br><small>Incompatible property types: {{ incompatibleTypes|join(', ') }}</small>
@@ -64,7 +64,7 @@
 }
 
 .status-icon {
-	font-weight: bold;
+	/* font-weight: bold; */
 }
 
 .status-icon.compatible {
