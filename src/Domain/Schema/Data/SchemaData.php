@@ -11,9 +11,10 @@ use Symfony\Component\Serializer\Serializer;
  */
 final class SchemaData
 {
-	public const SCHEMA_PREFIX    = 'https://www.totalcms.co/schemas/';
-	public const SCHEMA_VERSION   = 'https://json-schema.org/draft/2020-12/schema';
-	public const RESERVED_NAMES   = [
+	public const SCHEMA_PREFIX        = 'https://www.totalcms.co/schemas/';
+	public const SCHEMA_CUSTOM_PREFIX = 'https://www.totalcms.co/schemas/custom/';
+	public const SCHEMA_VERSION       = 'https://json-schema.org/draft/2020-12/schema';
+	public const RESERVED_NAMES       = [
 		'collection',
 		'jumpstart',
 		'new', // not allowed for /admin url routes
@@ -100,9 +101,14 @@ final class SchemaData
 	/** @return array<string,mixed> */
 	public function toArray(): array
 	{
+		// Use custom prefix for non-reserved schemas, default prefix for reserved schemas
+		$prefix = in_array($this->id, self::RESERVED_SCHEMAS, true)
+			? self::SCHEMA_PREFIX
+			: self::SCHEMA_CUSTOM_PREFIX;
+
 		$array = [
 			'$schema'     => self::SCHEMA_VERSION,
-			'$id'         => self::SCHEMA_PREFIX . $this->id . '.json',
+			'$id'         => $prefix . $this->id . '.json',
 			'type'        => 'object',
 			'id'          => $this->id,
 			'description' => $this->description,

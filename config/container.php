@@ -388,7 +388,8 @@ return [
 		return new SchemaRepository(
 			$container->get(StorageAdapterInterface::class),
 			$container->get(SchemaFactory::class),
-			$container->get(CacheManager::class)
+			$container->get(CacheManager::class),
+			$container->get(Config::class),
 		);
 	},
 

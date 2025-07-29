@@ -13,6 +13,7 @@ final class DeckCompatibilityCheckerTest extends TestCase
 
 	protected function setUp(): void
 	{
+		// Use null SchemaFetcher for basic compatibility testing
 		$this->checker = new DeckCompatibilityChecker();
 	}
 

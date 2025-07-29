@@ -12,9 +12,9 @@ final class DeckDataTest extends TestCase
 	public function testCreatesValidDeckWithNamedObjects(): void
 	{
 		$deck = [
-			'feature1' => ['title' => 'Fast Performance', 'icon' => 'speed', 'description' => 'Lightning fast'],
-			'feature2' => ['title' => 'Secure', 'icon' => 'lock', 'description' => 'Industry standard'],
-			'feature3' => ['title' => 'Scalable', 'icon' => 'scale', 'description' => 'Grows with you'],
+			'feature1' => ['id' => 'feature1', 'title' => 'Fast Performance', 'icon' => 'speed', 'description' => 'Lightning fast'],
+			'feature2' => ['id' => 'feature2', 'title' => 'Secure', 'icon' => 'lock', 'description' => 'Industry standard'],
+			'feature3' => ['id' => 'feature3', 'title' => 'Scalable', 'icon' => 'scale', 'description' => 'Grows with you'],
 		];
 
 		$data = new DeckData($deck);
@@ -32,9 +32,9 @@ final class DeckDataTest extends TestCase
 	public function testAcceptsVariousScalarValues(): void
 	{
 		$deck = [
-			'item1' => ['id' => 1, 'name' => 'Item 1', 'active' => true],
-			'item2' => ['id' => 2, 'name' => 'Item 2', 'active' => false],
-			'item3' => ['id' => 3, 'name' => 'Item 3', 'price' => 29.99],
+			'item1' => ['id' => 'item1', 'sequence' => 1, 'name' => 'Item 1', 'active' => true],
+			'item2' => ['id' => 'item2', 'sequence' => 2, 'name' => 'Item 2', 'active' => false],
+			'item3' => ['id' => 'item3', 'sequence' => 3, 'name' => 'Item 3', 'price' => 29.99],
 		];
 
 		$data = new DeckData($deck);
@@ -131,7 +131,8 @@ final class DeckDataTest extends TestCase
 		$largeDeck = [];
 		for ($i = 0; $i < 1000; $i++) {
 			$largeDeck["item{$i}"] = [
-				'id' => $i,
+				'id' => "item{$i}",
+				'sequence' => $i,
 				'name' => "Item {$i}",
 				'category' => 'category_' . ($i % 10),
 				'active' => ($i % 2 === 0),
@@ -205,7 +206,7 @@ final class DeckDataTest extends TestCase
 	{
 		$largeDeck = [];
 		for ($i = 0; $i < 100; $i++) {
-			$largeDeck["item{$i}"] = ['name' => 'Test', 'id' => $i];
+			$largeDeck["item{$i}"] = ['id' => "item{$i}", 'name' => 'Test', 'sequence' => $i];
 		}
 
 		$start = microtime(true);
@@ -330,7 +331,7 @@ final class DeckDataTest extends TestCase
 		$validNames = [
 			'feature1' => ['title' => 'Feature 1'],
 			'feature_2' => ['title' => 'Feature 2'],
-			'feature-3' => ['title' => 'Feature 3'],
+			'feature3' => ['title' => 'Feature 3'],
 			'FeatureCamelCase' => ['title' => 'Feature Camel'],
 			'f' => ['title' => 'Single Letter'],
 		];
@@ -347,5 +348,77 @@ final class DeckDataTest extends TestCase
 
 		$this->expectException(\InvalidArgumentException::class);
 		new DeckData($invalidNames);
+	}
+
+	public function testRejectsDashesInNames(): void
+	{
+		$invalidNames = [
+			'feature-with-dash' => ['title' => 'Contains dashes'],
+		];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
+		new DeckData($invalidNames);
+	}
+
+	public function testRejectsInconsistentIds(): void
+	{
+		$inconsistentDeck = [
+			'feature1' => ['id' => 'feature2', 'title' => 'Mismatched ID'], // ID doesn't match key
+		];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
+		new DeckData($inconsistentDeck);
+	}
+
+	public function testAcceptsItemsWithMatchingIds(): void
+	{
+		$consistentDeck = [
+			'feature1' => ['id' => 'feature1', 'title' => 'Matching ID'],
+			'feature2' => ['id' => 'feature2', 'title' => 'Another Matching ID'],
+		];
+
+		$data = new DeckData($consistentDeck);
+		$this->assertSame($consistentDeck, $data->deck);
+	}
+
+	public function testAcceptsItemsWithoutIds(): void
+	{
+		$deckWithoutIds = [
+			'feature1' => ['title' => 'No ID field'],
+			'feature2' => ['title' => 'Another without ID'],
+		];
+
+		$data = new DeckData($deckWithoutIds);
+		$this->assertSame($deckWithoutIds, $data->deck);
+	}
+
+	public function testSetItemRejectsInconsistentId(): void
+	{
+		$data = new DeckData();
+		$item = ['id' => 'wrong_id', 'title' => 'Feature'];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage("Deck item 'id' field ('wrong_id') must match the dictionary key ('correct_id')");
+		$data->setItem('correct_id', $item);
+	}
+
+	public function testSetItemAcceptsMatchingId(): void
+	{
+		$data = new DeckData();
+		$item = ['id' => 'feature1', 'title' => 'Feature'];
+
+		$data->setItem('feature1', $item);
+		$this->assertSame($item, $data->getItem('feature1'));
+	}
+
+	public function testSetItemAcceptsItemWithoutId(): void
+	{
+		$data = new DeckData();
+		$item = ['title' => 'Feature without ID'];
+
+		$data->setItem('feature1', $item);
+		$this->assertSame($item, $data->getItem('feature1'));
 	}
 }
