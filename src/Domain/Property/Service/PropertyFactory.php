@@ -23,7 +23,7 @@ final class PropertyFactory
 	 */
 	public function generateProperty(array $propertySchema, mixed $value): PropertyData
 	{
-		$type = $propertySchema['type'] ?? basename($propertySchema['$ref'], StorageRepository::FILE_EXT);
+		$type = $propertySchema['type'] ?? basename($propertySchema['$ref'] ?? '', StorageRepository::FILE_EXT);
 
 		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
 		if (!class_exists($className)) {

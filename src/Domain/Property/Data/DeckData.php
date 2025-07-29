@@ -44,13 +44,6 @@ class DeckData extends PropertyData
 			if (isset($item['id']) && $item['id'] !== $name) {
 				return false;
 			}
-
-			// All properties within the item must be scalar values
-			foreach ($item as $key => $value) {
-				if (!is_string($key) || (!is_scalar($value) && $value !== null)) {
-					return false;
-				}
-			}
 		}
 
 		return true;
@@ -64,7 +57,9 @@ class DeckData extends PropertyData
 
 	/**
 	 * Get a specific deck item by name.
+	 *
 	 * @param string $name
+	 *
 	 * @return array<string,mixed>|null
 	 */
 	public function getItem(string $name): ?array
@@ -74,6 +69,7 @@ class DeckData extends PropertyData
 
 	/**
 	 * Set a deck item by name.
+	 *
 	 * @param string $name
 	 * @param array<string,mixed> $item
 	 */
@@ -86,13 +82,6 @@ class DeckData extends PropertyData
 		// If item has an 'id' field, it must match the dictionary key
 		if (isset($item['id']) && $item['id'] !== $name) {
 			throw new \InvalidArgumentException("Deck item 'id' field ('{$item['id']}') must match the dictionary key ('{$name}')");
-		}
-
-		// Verify item has scalar values only
-		foreach ($item as $key => $value) {
-			if (!is_scalar($value) && $value !== null) {
-				throw new \InvalidArgumentException('Deck item properties must be scalar values');
-			}
 		}
 
 		$this->deck[$name] = $item;
@@ -108,6 +97,7 @@ class DeckData extends PropertyData
 
 	/**
 	 * Get all deck item names.
+	 *
 	 * @return array<string>
 	 */
 	public function getItemNames(): array
