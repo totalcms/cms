@@ -45,6 +45,12 @@ return function (App $app) {
 		$group->put('/{collection}/{id}/{property}/{name}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
 		$group->patch('/{collection}/{id}/{property}/{name}', Action\Object\ObjectPatchPropertyMetaAction::class)->setName('property-meta-patch');
 
+		// Deck Items (for deck properties)
+		$group->post('/{collection}/{id}/{property}/deck', Action\Object\Deck\DeckItemCreateAction::class)->setName('deck-item-create');
+		$group->get('/{collection}/{id}/{property}/deck/{name}', Action\Object\Deck\DeckItemFetchAction::class)->setName('deck-item-fetch');
+		$group->put('/{collection}/{id}/{property}/deck/{name}', Action\Object\Deck\DeckItemUpdateAction::class)->setName('deck-item-update');
+		$group->delete('/{collection}/{id}/{property}/deck/{name}', Action\Object\Deck\DeckItemDeleteAction::class)->setName('deck-item-delete');
+
 		// Property File
 		$group->post('/{collection}/{id}/{property}', Property\File\FileSaveAction::class)->setName('property-file-save');
 		$group->post('/{collection}/{id}/{property}/folder', Property\File\FolderSaveAction::class)->setName('property-folder-save');

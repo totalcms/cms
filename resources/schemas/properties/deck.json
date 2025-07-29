@@ -1,28 +1,39 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "array",
-  "items": {
-    "type": "object"
+  "type": "object",
+  "patternProperties": {
+    "^[a-zA-Z][a-zA-Z0-9_-]*$": {
+      "type": "object",
+      "description": "A deck item with a unique name key"
+    }
   },
-  "description": "A set contains an array of object items",
+  "additionalProperties": false,
+  "description": "A deck contains a dictionary of named objects with custom schema-defined properties",
   "examples": [
-    [
-      {
-        "prop1": "Content",
-        "prop3": "Content",
-        "prop2": "Content"
+    {
+      "feature1": {
+        "title": "Fast Performance",
+        "icon": "speed",
+        "description": "Lightning fast response times"
       },
-      {
-        "prop1": "Content",
-        "prop3": "Content",
-        "prop2": "Content"
-      },
-      {
-        "prop1": "Content",
-        "prop3": "Content",
-        "prop2": "Content"
+      "feature2": {
+        "title": "Secure",
+        "icon": "lock",
+        "description": "Industry standard security"
       }
-    ]
+    },
+    {
+      "v1.0.0": {
+        "version": "1.0.0",
+        "date": "2024-01-15",
+        "notes": "Initial release with core features"
+      },
+      "v1.1.0": {
+        "version": "1.1.0", 
+        "date": "2024-02-01",
+        "notes": "Added user management and improved performance"
+      }
+    }
   ],
   "$id": "https://www.totalcms.co/schemas/properties/deck.json"
 }
