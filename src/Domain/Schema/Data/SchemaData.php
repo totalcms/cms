@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Schema\Data;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use TotalCMS\Domain\Schema\Service\SchemaTransformer;
 
 /**
  * Schema Data object.
@@ -122,7 +123,9 @@ final class SchemaData
 			$array['formgrid'] = $this->formgrid;
 		}
 
-		return $array;
+		// Apply schema transformations to expand simplified deck syntax
+		$transformer = new SchemaTransformer();
+		return $transformer->transformSchema($array);
 	}
 
 	public function toJson(): string
