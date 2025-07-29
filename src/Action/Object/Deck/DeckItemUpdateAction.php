@@ -29,7 +29,7 @@ final class DeckItemUpdateAction
 				$args['collection'],
 				$args['id'],
 				$args['property'],
-				$args['name'],
+				$args['itemId'],
 				$data
 			);
 

@@ -27,7 +27,7 @@ final class DeckItemDeleteAction
 				$args['collection'],
 				$args['id'],
 				$args['property'],
-				$args['name']
+				$args['itemId']
 			);
 
 			return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

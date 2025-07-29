@@ -23,20 +23,20 @@ final class DeckItemCreateAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$data = (array)$request->getParsedBody();
-		$name = $data['name'] ?? '';
+		$itemId = $data['id'] ?? '';
 
-		if (empty($name)) {
-			return $this->renderer->json($response, ['error' => 'Deck item name is required'], 400);
+		if (empty($itemId)) {
+			return $this->renderer->json($response, ['error' => 'Deck item id is required'], 400);
 		}
 
-		unset($data['name']); // Remove name from data since it's used as the key
+		// Keep the id in the data since it's part of the deck item structure
 
 		try {
 			$object = $this->deckManager->createDeckItem(
 				$args['collection'],
 				$args['id'],
 				$args['property'],
-				$name,
+				$itemId,
 				$data
 			);
 

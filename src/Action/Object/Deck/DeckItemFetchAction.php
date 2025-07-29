@@ -26,7 +26,7 @@ final class DeckItemFetchAction
 				$args['collection'],
 				$args['id'],
 				$args['property'],
-				$args['name']
+				$args['itemId']
 			);
 
 			if ($item === null) {

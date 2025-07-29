@@ -1,39 +1,65 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "patternProperties": {
-    "^[a-zA-Z][a-zA-Z0-9_-]*$": {
+  "$id"               : "https://www.totalcms.co/schemas/properties/deck.json",
+  "$schema"           : "https://json-schema.org/draft/2020-12/schema",
+  "type"              : "object",
+  "patternProperties" : {
+    "^[a-zA-Z]\\w*$": {
       "type": "object",
-      "description": "A deck item with a unique name key"
+      "description": "A deck item with a unique name key",
+      "patternProperties": {
+        "^[a-zA-Z]\\w*$": {
+          "anyOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {"type": "boolean"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/color.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/date.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/email.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/empty.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/list.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/password.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/phone.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/slug.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/svg.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/time.json"},
+			{"$ref": "https://www.totalcms.co/schemas/properties/url.json"}
+          ],
+          "description": "Deck item property values must be basic types or supported property schemas (no file-based properties)"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
   "description": "A deck contains a dictionary of named objects with custom schema-defined properties",
   "examples": [
     {
-      "feature1": {
+      "performance": {
+        "id": "performance",
         "title": "Fast Performance",
         "icon": "speed",
         "description": "Lightning fast response times"
       },
-      "feature2": {
+      "security": {
+        "id": "security",
         "title": "Secure",
         "icon": "lock",
         "description": "Industry standard security"
       }
     },
     {
-      "v1.0.0": {
+      "v1_0_0": {
+        "id": "v1_0_0",
         "version": "1.0.0",
         "date": "2024-01-15",
         "notes": "Initial release with core features"
       },
-      "v1.1.0": {
-        "version": "1.1.0", 
+      "v1_1_0": {
+        "id": "v1_1_0",
+        "version": "1.1.0",
         "date": "2024-02-01",
         "notes": "Added user management and improved performance"
       }
     }
-  ],
-  "$id": "https://www.totalcms.co/schemas/properties/deck.json"
+  ]
 }

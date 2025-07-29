@@ -6,6 +6,8 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 
 /**
  * Service for managing deck property operations.
@@ -15,7 +17,40 @@ final class DeckManager
 	public function __construct(
 		private ObjectFetcher $objectFetcher,
 		private ObjectUpdater $objectUpdater,
+		private SchemaValidator $schemaValidator,
+		private DeckCompatibilityChecker $compatibilityChecker,
 	) {
+	}
+
+	/**
+	 * Validate deck item data against the specified deck schema.
+	 * 
+	 * @param DeckData $deckProperty
+	 * @param array<string,mixed> $itemData
+	 * @throws \InvalidArgumentException
+	 */
+	private function validateDeckItem(DeckData $deckProperty, array $itemData): void
+	{
+		// Check if deck has a schema setting
+		$deckSchemaName = $deckProperty->settings['deckSchema'] ?? null;
+		
+		if ($deckSchemaName === null) {
+			return; // No schema validation required
+		}
+
+		// First check if the deck schema itself is compatible
+		if (!$this->compatibilityChecker->isDeckSchemaCompatible($deckSchemaName)) {
+			$incompatibleProps = $this->compatibilityChecker->getDeckSchemaIncompatibleProperties($deckSchemaName);
+			$propList = implode(', ', $incompatibleProps);
+			throw new \InvalidArgumentException("Deck schema '{$deckSchemaName}' contains incompatible properties: {$propList}");
+		}
+
+		try {
+			// Validate the item data against the deck schema
+			$this->schemaValidator->validateSchema($itemData, $deckSchemaName);
+		} catch (\DomainException $e) {
+			throw new \InvalidArgumentException("Deck item validation failed: {$e->getMessage()}");
+		}
 	}
 
 	/**
@@ -24,10 +59,10 @@ final class DeckManager
 	 * @param string $collection
 	 * @param string $objectId
 	 * @param string $propertyName
-	 * @param string $itemName
+	 * @param string $itemId
 	 * @return array<string,mixed>|null
 	 */
-	public function getDeckItem(string $collection, string $objectId, string $propertyName, string $itemName): ?array
+	public function getDeckItem(string $collection, string $objectId, string $propertyName, string $itemId): ?array
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $objectId);
 		$property = $object->properties->get($propertyName);
@@ -36,7 +71,7 @@ final class DeckManager
 			throw new \InvalidArgumentException("Property '{$propertyName}' is not a deck property");
 		}
 
-		return $property->getItem($itemName);
+		return $property->getItem($itemId);
 	}
 
 	/**
@@ -45,7 +80,7 @@ final class DeckManager
 	 * @param string $collection
 	 * @param string $objectId
 	 * @param string $propertyName
-	 * @param string $itemName
+	 * @param string $itemId
 	 * @param array<string,mixed> $itemData
 	 * @return ObjectData
 	 */
@@ -53,7 +88,7 @@ final class DeckManager
 		string $collection,
 		string $objectId,
 		string $propertyName,
-		string $itemName,
+		string $itemId,
 		array $itemData
 	): ObjectData {
 		$object = $this->objectFetcher->fetchObject($collection, $objectId);
@@ -63,13 +98,19 @@ final class DeckManager
 			throw new \InvalidArgumentException("Property '{$propertyName}' is not a deck property");
 		}
 
-		if ($property->hasItem($itemName)) {
-			throw new \InvalidArgumentException("Deck item '{$itemName}' already exists");
+		if ($property->hasItem($itemId)) {
+			throw new \InvalidArgumentException("Deck item '{$itemId}' already exists");
 		}
+
+		// Ensure the ID is stored inside the item data
+		$itemData['id'] = $itemId;
+
+		// Validate the item data against the deck schema
+		$this->validateDeckItem($property, $itemData);
 
 		// Create new deck data with the added item
 		$newDeckData = $property->deck;
-		$newDeckData[$itemName] = $itemData;
+		$newDeckData[$itemId] = $itemData;
 
 		// Update the object with the new deck data (just pass the raw array)
 		$objectData = $object->toArray();
@@ -84,7 +125,7 @@ final class DeckManager
 	 * @param string $collection
 	 * @param string $objectId
 	 * @param string $propertyName
-	 * @param string $itemName
+	 * @param string $itemId
 	 * @param array<string,mixed> $itemData
 	 * @return ObjectData
 	 */
@@ -92,7 +133,7 @@ final class DeckManager
 		string $collection,
 		string $objectId,
 		string $propertyName,
-		string $itemName,
+		string $itemId,
 		array $itemData
 	): ObjectData {
 		$object = $this->objectFetcher->fetchObject($collection, $objectId);
@@ -102,13 +143,19 @@ final class DeckManager
 			throw new \InvalidArgumentException("Property '{$propertyName}' is not a deck property");
 		}
 
-		if (!$property->hasItem($itemName)) {
-			throw new \InvalidArgumentException("Deck item '{$itemName}' does not exist");
+		if (!$property->hasItem($itemId)) {
+			throw new \InvalidArgumentException("Deck item '{$itemId}' does not exist");
 		}
+
+		// Ensure the ID is stored inside the item data  
+		$itemData['id'] = $itemId;
+
+		// Validate the item data against the deck schema
+		$this->validateDeckItem($property, $itemData);
 
 		// Create new deck data with the updated item
 		$newDeckData = $property->deck;
-		$newDeckData[$itemName] = $itemData;
+		$newDeckData[$itemId] = $itemData;
 
 		// Update the object with the new deck data (just pass the raw array)
 		$objectData = $object->toArray();
@@ -123,14 +170,14 @@ final class DeckManager
 	 * @param string $collection
 	 * @param string $objectId
 	 * @param string $propertyName
-	 * @param string $itemName
+	 * @param string $itemId
 	 * @return ObjectData
 	 */
 	public function deleteDeckItem(
 		string $collection,
 		string $objectId,
 		string $propertyName,
-		string $itemName
+		string $itemId
 	): ObjectData {
 		$object = $this->objectFetcher->fetchObject($collection, $objectId);
 		$property = $object->properties->get($propertyName);
@@ -139,13 +186,13 @@ final class DeckManager
 			throw new \InvalidArgumentException("Property '{$propertyName}' is not a deck property");
 		}
 
-		if (!$property->hasItem($itemName)) {
-			throw new \InvalidArgumentException("Deck item '{$itemName}' does not exist");
+		if (!$property->hasItem($itemId)) {
+			throw new \InvalidArgumentException("Deck item '{$itemId}' does not exist");
 		}
 
 		// Create new deck data with the item removed
 		$newDeckData = $property->deck;
-		unset($newDeckData[$itemName]);
+		unset($newDeckData[$itemId]);
 
 		// Update the object with the new deck data (just pass the raw array)
 		$objectData = $object->toArray();
@@ -175,14 +222,14 @@ final class DeckManager
 	}
 
 	/**
-	 * Get the names of all deck items in an object property.
+	 * Get the IDs of all deck items in an object property.
 	 * 
 	 * @param string $collection
 	 * @param string $objectId
 	 * @param string $propertyName
 	 * @return array<string>
 	 */
-	public function getDeckItemNames(string $collection, string $objectId, string $propertyName): array
+	public function getDeckItemIds(string $collection, string $objectId, string $propertyName): array
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $objectId);
 		$property = $object->properties->get($propertyName);
@@ -191,6 +238,6 @@ final class DeckManager
 			throw new \InvalidArgumentException("Property '{$propertyName}' is not a deck property");
 		}
 
-		return $property->getItemNames();
+		return $property->getItemNames(); // Note: getItemNames() returns the keys, which are IDs
 	}
 }

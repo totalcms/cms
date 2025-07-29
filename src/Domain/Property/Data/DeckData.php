@@ -31,12 +31,17 @@ class DeckData extends PropertyData
 
 		foreach ($deck as $name => $item) {
 			// Verify name is valid identifier
-			if (!is_string($name) || !preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*$/', $name)) {
+			if (!is_string($name) || !preg_match('/^[a-zA-Z]\\w*$/', $name)) {
 				return false;
 			}
 
 			// Each item must be an array (object)
 			if (!is_array($item)) {
+				return false;
+			}
+
+			// If item has an 'id' field, it must match the dictionary key
+			if (isset($item['id']) && $item['id'] !== $name) {
 				return false;
 			}
 
@@ -74,8 +79,13 @@ class DeckData extends PropertyData
 	 */
 	public function setItem(string $name, array $item): void
 	{
-		if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*$/', $name)) {
+		if (!preg_match('/^[a-zA-Z]\\w*$/', $name)) {
 			throw new \InvalidArgumentException('Deck item name must be a valid identifier');
+		}
+
+		// If item has an 'id' field, it must match the dictionary key
+		if (isset($item['id']) && $item['id'] !== $name) {
+			throw new \InvalidArgumentException("Deck item 'id' field ('{$item['id']}') must match the dictionary key ('{$name}')");
 		}
 
 		// Verify item has scalar values only
