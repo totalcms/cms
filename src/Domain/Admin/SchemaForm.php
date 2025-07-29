@@ -27,7 +27,7 @@ final class SchemaForm extends TotalForm
 	 */
 	public function __construct(
 		protected SchemaFetcher $schemaFetcher,
-		protected SchemaLister $schemaLister,
+		public SchemaLister $schemaLister,
 		protected SchemaFactory $schemaFactory,
 		public string $api,
 		public string $id          = '',

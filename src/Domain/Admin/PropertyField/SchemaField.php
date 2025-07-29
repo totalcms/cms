@@ -7,11 +7,13 @@ use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Factory\Faker\FakerExamples;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 
 class SchemaField extends PropertyField
 {
 	public const SCHEMA_PROPERTY_FIELDS = [
 		'default',
+		'deckref',
 		'factory',
 		'field',
 		'help',
@@ -39,6 +41,7 @@ class SchemaField extends PropertyField
 		protected string $placeholder = '',
 		protected string $factory     = '',
 		protected string $default     = '',
+		protected string $deckref     = '',
 		protected array $options      = [],
 		protected array $settings     = [],
 		protected array $extra        = [],
@@ -77,6 +80,14 @@ class SchemaField extends PropertyField
 			'placeholder' => '',
 			'help'        => 'The default value for this property when an object is saved without a value',
 			'value'       => $this->default,
+		]);
+		$content .= $this->form->field('deckref', [
+			'field'       => 'select',
+			'label'       => 'Deck Schema Reference',
+			// 'placeholder' => 'Select a schema compatible with deck',
+			'help'        => 'The schema reference for deck items. Only compatible schemas are shown.',
+			'value'       => $this->deckref,
+			'options'     => $this->getDeckCompatibleSchemaOptions(),
 		]);
 		$content .= $this->form->field('extra', [
 			'field'       => 'json',
@@ -159,5 +170,47 @@ class SchemaField extends PropertyField
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
 		return array_filter($properties, fn ($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+	}
+
+	/**
+	 * Get options for deck-compatible schemas.
+	 *
+	 * @return array<array<string,string>>
+	 */
+	private function getDeckCompatibleSchemaOptions(): array
+	{
+		$options = [
+			['label' => '', 'value' => ''],
+		];
+
+		try {
+			// Check if the form has schemaLister available
+			if (!($this->form instanceof SchemaForm)) {
+				return $options;
+			}
+
+			$deckChecker = new DeckCompatibilityChecker();
+
+			// Get all schemas directly from the form's public schemaLister
+			$schemas = $this->form->schemaLister->listAllSchemas();
+
+			foreach ($schemas as $schema) {
+				$schemaArray = $schema->toArray();
+
+				// Check if the schema is deck compatible
+				if ($deckChecker->isCompatible($schemaArray)) {
+					// Use schema ID as label and $id as value
+					$options[] = [
+						'label' => $schemaArray['id'],
+						'value' => $schemaArray['$id'],
+					];
+				}
+			}
+		} catch (\Exception $e) {
+			// If there's an error, just return the empty select option
+			// This prevents breaking the form if services aren't available
+		}
+
+		return $options;
 	}
 }
