@@ -26,7 +26,7 @@ it('saves a new schema', function (): void {
 		->assertJson()
 		->assertJsonFragment([
 			'id'      => $id,
-			'$id'     => "https://www.totalcms.co/schemas/{$id}.json",
+			'$id'     => "https://www.totalcms.co/schemas/custom/{$id}.json",
 			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
 		]);
 
@@ -52,7 +52,7 @@ it('fetches a schema', function (): void {
 		->assertJson()
 		->assertJsonFragment([
 			'id'      => $id,
-			'$id'     => "https://www.totalcms.co/schemas/{$id}.json",
+			'$id'     => "https://www.totalcms.co/schemas/custom/{$id}.json",
 			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
 		]);
 });

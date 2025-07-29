@@ -49,7 +49,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
 		new DeckData($invalidDeck);
 	}
 
@@ -60,7 +60,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
 		new DeckData($invalidDeck);
 	}
 
@@ -72,30 +72,28 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
 		new DeckData($invalidDeck);
 	}
 
-	public function testRejectsNestedArrays(): void
+	public function testAcceptsNestedArrays(): void
 	{
-		$invalidDeck = [
-			'item' => ['name' => 'Item', 'nested' => ['invalid' => 'structure']],
+		$validDeck = [
+			'item' => ['name' => 'Item', 'nested' => ['valid' => 'structure']],
 		];
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
-		new DeckData($invalidDeck);
+		$data = new DeckData($validDeck);
+		$this->assertSame($validDeck, $data->deck);
 	}
 
-	public function testRejectsNestedObjects(): void
+	public function testAcceptsNestedObjects(): void
 	{
-		$invalidDeck = [
-			'item' => ['name' => 'Item', 'object' => (object)['invalid' => 'structure']],
+		$validDeck = [
+			'item' => ['name' => 'Item', 'object' => (object)['valid' => 'structure']],
 		];
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
-		new DeckData($invalidDeck);
+		$data = new DeckData($validDeck);
+		$this->assertSame($validDeck, $data->deck);
 	}
 
 	public function testAcceptsNullValues(): void
@@ -263,14 +261,13 @@ final class DeckDataTest extends TestCase
 		$data->setItem('123invalid', $item);
 	}
 
-	public function testSetItemRejectsNonScalarValues(): void
+	public function testSetItemAcceptsNonScalarValues(): void
 	{
 		$data = new DeckData();
-		$item = ['title' => 'Feature', 'nested' => ['invalid' => 'structure']];
+		$item = ['title' => 'Feature', 'nested' => ['valid' => 'structure']];
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck item properties must be scalar values');
 		$data->setItem('feature', $item);
+		$this->assertSame($item, $data->getItem('feature'));
 	}
 
 	public function testRemoveItem(): void
@@ -357,7 +354,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
 		new DeckData($invalidNames);
 	}
 
@@ -368,7 +365,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects with scalar values');
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
 		new DeckData($inconsistentDeck);
 	}
 

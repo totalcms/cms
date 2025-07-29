@@ -11,7 +11,7 @@ class DeckData extends PropertyData
 	public function __construct(public array $deck = [], public array $settings = [])
 	{
 		if (!self::verifyDeck($deck)) {
-			throw new \InvalidArgumentException('Deck must be a dictionary of named objects with scalar values');
+			throw new \InvalidArgumentException('Deck must be a dictionary of named objects');
 		}
 		$this->deck = $deck;
 	}
