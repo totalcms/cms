@@ -18,7 +18,6 @@ final class DeckManager
 	) {
 	}
 
-
 	/**
 	 * Get a specific deck item from an object property.
 	 *

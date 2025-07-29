@@ -22,7 +22,7 @@ final class DeckItemCreateAction
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = (array)$request->getParsedBody();
+		$data   = (array)$request->getParsedBody();
 		$itemId = $data['id'] ?? '';
 
 		if (empty($itemId)) {

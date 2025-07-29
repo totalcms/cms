@@ -27,7 +27,7 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	{
 		$schema = [
 			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'type' => 'object',
+			'type'    => 'object',
 		];
 		$this->assertTrue($this->checker->isCompatible($schema));
 	}
@@ -35,14 +35,14 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testCompatibleSchemaWithBasicTypes(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'       => ['type' => 'string'],
 				'description' => ['type' => 'string'],
-				'active' => ['type' => 'boolean'],
-				'count' => ['type' => 'number'],
-				'created' => ['$ref' => 'https://www.totalcms.co/schemas/properties/date.json'],
-				'email' => ['$ref' => 'https://www.totalcms.co/schemas/properties/email.json'],
+				'active'      => ['type' => 'boolean'],
+				'count'       => ['type' => 'number'],
+				'created'     => ['$ref' => 'https://www.totalcms.co/schemas/properties/date.json'],
+				'email'       => ['$ref' => 'https://www.totalcms.co/schemas/properties/email.json'],
 			],
 		];
 
@@ -53,7 +53,7 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithImageType(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'title' => ['type' => 'string'],
 				'photo' => ['type' => 'image'], // Incompatible
@@ -67,9 +67,9 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithGalleryType(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'  => ['type' => 'string'],
 				'photos' => ['type' => 'gallery'], // Incompatible
 			],
 		];
@@ -81,9 +81,9 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithFileType(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'      => ['type' => 'string'],
 				'attachment' => ['type' => 'file'], // Incompatible
 			],
 		];
@@ -95,9 +95,9 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithDepotType(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'    => ['type' => 'string'],
 				'document' => ['type' => 'depot'], // Incompatible
 			],
 		];
@@ -109,7 +109,7 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithImageRef(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'title' => ['type' => 'string'],
 				'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'], // Incompatible
@@ -123,9 +123,9 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithGalleryRef(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'  => ['type' => 'string'],
 				'photos' => ['$ref' => 'https://www.totalcms.co/schemas/properties/gallery.json'], // Incompatible
 			],
 		];
@@ -137,9 +137,9 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithFileRef(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'      => ['type' => 'string'],
 				'attachment' => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json'], // Incompatible
 			],
 		];
@@ -151,9 +151,9 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testIncompatibleSchemaWithDepotRef(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'    => ['type' => 'string'],
 				'document' => ['$ref' => 'https://www.totalcms.co/schemas/properties/depot.json'], // Incompatible
 			],
 		];
@@ -165,12 +165,12 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testMultipleIncompatibleProperties(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
-				'photo' => ['type' => 'image'], // Incompatible
-				'gallery' => ['type' => 'gallery'], // Incompatible
-				'document' => ['type' => 'file'], // Incompatible
+				'title'       => ['type' => 'string'],
+				'photo'       => ['type' => 'image'], // Incompatible
+				'gallery'     => ['type' => 'gallery'], // Incompatible
+				'document'    => ['type' => 'file'], // Incompatible
 				'description' => ['type' => 'string'], // Compatible
 			],
 		];
@@ -187,13 +187,13 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testNestedObjectWithIncompatibleProperty(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'    => ['type' => 'string'],
 				'metadata' => [
-					'type' => 'object',
+					'type'       => 'object',
 					'properties' => [
-						'name' => ['type' => 'string'],
+						'name'  => ['type' => 'string'],
 						'photo' => ['type' => 'image'], // Incompatible nested property
 					],
 				],
@@ -207,11 +207,11 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testArrayWithIncompatibleItems(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'  => ['type' => 'string'],
 				'photos' => [
-					'type' => 'array',
+					'type'  => 'array',
 					'items' => ['type' => 'image'], // Incompatible array items
 				],
 			],
@@ -224,24 +224,24 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testComplexCompatibleSchema(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
+				'title'       => ['type' => 'string'],
 				'description' => ['type' => 'string'],
-				'tags' => [
-					'type' => 'array',
+				'tags'        => [
+					'type'  => 'array',
 					'items' => ['type' => 'string'],
 				],
 				'metadata' => [
-					'type' => 'object',
+					'type'       => 'object',
 					'properties' => [
-						'author' => ['type' => 'string'],
+						'author'    => ['type' => 'string'],
 						'published' => ['type' => 'boolean'],
-						'created' => ['$ref' => 'https://www.totalcms.co/schemas/properties/date.json'],
+						'created'   => ['$ref' => 'https://www.totalcms.co/schemas/properties/date.json'],
 					],
 				],
 				'contact' => ['$ref' => 'https://www.totalcms.co/schemas/properties/email.json'],
-				'rating' => ['type' => 'number'],
+				'rating'  => ['type' => 'number'],
 			],
 		];
 
@@ -251,19 +251,19 @@ final class DeckCompatibilityCheckerTest extends TestCase
 
 	public function testGetIncompatibleTypes(): void
 	{
-		$types = $this->checker->getIncompatibleTypes();
+		$types    = $this->checker->getIncompatibleTypes();
 		$expected = ['image', 'gallery', 'file', 'depot'];
-		
+
 		$this->assertSame($expected, $types);
 	}
 
 	public function testProductFeatureListUseCase(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string'],
-				'icon' => ['$ref' => 'https://www.totalcms.co/schemas/properties/svg.json'],
+				'title'       => ['type' => 'string'],
+				'icon'        => ['$ref' => 'https://www.totalcms.co/schemas/properties/svg.json'],
 				'description' => ['type' => 'string'],
 			],
 		];
@@ -275,11 +275,11 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testProductUpdatesUseCase(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'version' => ['type' => 'string'],
-				'date' => ['$ref' => 'https://www.totalcms.co/schemas/properties/date.json'],
-				'notes' => ['type' => 'string'],
+				'date'    => ['$ref' => 'https://www.totalcms.co/schemas/properties/date.json'],
+				'notes'   => ['type' => 'string'],
 			],
 		];
 
@@ -290,7 +290,7 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testHandlesNonArrayProperty(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'title' => 'string', // Non-array property definition
 			],
@@ -302,7 +302,7 @@ final class DeckCompatibilityCheckerTest extends TestCase
 	public function testHandlesNullProperty(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'title' => null, // Null property definition
 			],

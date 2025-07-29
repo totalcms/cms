@@ -67,7 +67,7 @@ final class DeckDataTest extends TestCase
 	public function testRejectsNonArrayItems(): void
 	{
 		$invalidDeck = [
-			'valid' => ['name' => 'Valid'],
+			'valid'   => ['name' => 'Valid'],
 			'invalid' => 'not_an_array',
 		];
 
@@ -100,7 +100,7 @@ final class DeckDataTest extends TestCase
 	{
 		$deckWithNull = [
 			'item' => [
-				'string' => 'text',
+				'string'     => 'text',
 				'null_value' => null,
 			],
 		];
@@ -114,8 +114,8 @@ final class DeckDataTest extends TestCase
 		$dangerousDeck = [
 			'malicious' => ['name' => '<script>alert("xss")</script>', 'type' => 'malicious'],
 			'injection' => ['name' => '"; DROP TABLE cards; --', 'type' => 'sql_injection'],
-			'protocol' => ['name' => 'javascript:void(0)', 'type' => 'protocol_attack'],
-			'command' => ['name' => '${system("ls")}', 'type' => 'command_injection'],
+			'protocol'  => ['name' => 'javascript:void(0)', 'type' => 'protocol_attack'],
+			'command'   => ['name' => '${system("ls")}', 'type' => 'command_injection'],
 		];
 
 		$data = new DeckData($dangerousDeck);
@@ -129,11 +129,11 @@ final class DeckDataTest extends TestCase
 		$largeDeck = [];
 		for ($i = 0; $i < 1000; $i++) {
 			$largeDeck["item{$i}"] = [
-				'id' => "item{$i}",
+				'id'       => "item{$i}",
 				'sequence' => $i,
-				'name' => "Item {$i}",
+				'name'     => "Item {$i}",
 				'category' => 'category_' . ($i % 10),
-				'active' => ($i % 2 === 0),
+				'active'   => ($i % 2 === 0),
 			];
 		}
 
@@ -146,10 +146,10 @@ final class DeckDataTest extends TestCase
 	{
 		$deck = [
 			'mixed' => [
-				'string' => 'text',
-				'integer' => 42,
-				'float' => 3.14,
-				'boolean_true' => true,
+				'string'        => 'text',
+				'integer'       => 42,
+				'float'         => 3.14,
+				'boolean_true'  => true,
 				'boolean_false' => false,
 			],
 		];
@@ -162,7 +162,7 @@ final class DeckDataTest extends TestCase
 	{
 		$unicodeDeck = [
 			'unicode' => ['name' => 'Unicode: 世界', 'emoji' => '🌍🚀💫'],
-			'french' => ['name' => 'Français: café', 'accents' => 'àáâãäåæç'],
+			'french'  => ['name' => 'Français: café', 'accents' => 'àáâãäåæç'],
 			'russian' => ['name' => 'Русский: мир', 'cyrillic' => 'абвгдеё'],
 		];
 
@@ -175,7 +175,7 @@ final class DeckDataTest extends TestCase
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['validation' => 'strict', 'maxItems' => 100];
-		$deck = ['test' => ['name' => 'Test']];
+		$deck     = ['test' => ['name' => 'Test']];
 
 		$data = new DeckData($deck, $settings);
 		$this->assertSame($settings, $data->settings);
@@ -190,9 +190,9 @@ final class DeckDataTest extends TestCase
 	public function testHandlesEmptyObjects(): void
 	{
 		$deck = [
-			'empty1' => [],
+			'empty1'   => [],
 			'nonempty' => ['name' => 'Non-empty'],
-			'empty2' => [],
+			'empty2'   => [],
 		];
 
 		$data = new DeckData($deck);
@@ -208,8 +208,8 @@ final class DeckDataTest extends TestCase
 		}
 
 		$start = microtime(true);
-		$data = new DeckData($largeDeck);
-		$time = microtime(true) - $start;
+		$data  = new DeckData($largeDeck);
+		$time  = microtime(true) - $start;
 
 		$this->assertLessThan(0.1, $time);
 		$this->assertCount(100, $data->deck);
@@ -219,8 +219,8 @@ final class DeckDataTest extends TestCase
 	{
 		$pathTraversalDeck = [
 			'traversal' => ['path' => '../../../etc/passwd', 'type' => 'traversal'],
-			'windows' => ['path' => '..\\..\\..\\windows\\system32\\hosts', 'type' => 'windows_traversal'],
-			'absolute' => ['path' => '/etc/shadow', 'type' => 'absolute_path'],
+			'windows'   => ['path' => '..\\..\\..\\windows\\system32\\hosts', 'type' => 'windows_traversal'],
+			'absolute'  => ['path' => '/etc/shadow', 'type' => 'absolute_path'],
 		];
 
 		$data = new DeckData($pathTraversalDeck);
@@ -293,7 +293,7 @@ final class DeckDataTest extends TestCase
 			'feature3' => ['title' => 'Scalable'],
 		];
 
-		$data = new DeckData($deck);
+		$data  = new DeckData($deck);
 		$names = $data->getItemNames();
 
 		$this->assertSame(['feature1', 'feature2', 'feature3'], $names);
@@ -326,11 +326,11 @@ final class DeckDataTest extends TestCase
 	public function testValidNamePatterns(): void
 	{
 		$validNames = [
-			'feature1' => ['title' => 'Feature 1'],
-			'feature_2' => ['title' => 'Feature 2'],
-			'feature3' => ['title' => 'Feature 3'],
+			'feature1'         => ['title' => 'Feature 1'],
+			'feature_2'        => ['title' => 'Feature 2'],
+			'feature3'         => ['title' => 'Feature 3'],
 			'FeatureCamelCase' => ['title' => 'Feature Camel'],
-			'f' => ['title' => 'Single Letter'],
+			'f'                => ['title' => 'Single Letter'],
 		];
 
 		$data = new DeckData($validNames);

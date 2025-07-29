@@ -2,11 +2,9 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-
 /**
  * Service to check if a schema is compatible with deck usage.
- * 
+ *
  * Deck-compatible schemas must only contain properties that don't require file uploads
  * or complex data structures that aren't supported in the deck format.
  */
@@ -22,9 +20,9 @@ final class DeckCompatibilityChecker
 	 */
 	private const INCOMPATIBLE_TYPES = [
 		'image',
-		'gallery', 
+		'gallery',
 		'file',
-		'depot'
+		'depot',
 	];
 
 	/**
@@ -34,13 +32,14 @@ final class DeckCompatibilityChecker
 		'https://www.totalcms.co/schemas/properties/image.json',
 		'https://www.totalcms.co/schemas/properties/gallery.json',
 		'https://www.totalcms.co/schemas/properties/file.json',
-		'https://www.totalcms.co/schemas/properties/depot.json'
+		'https://www.totalcms.co/schemas/properties/depot.json',
 	];
 
 	/**
 	 * Check if a schema is compatible with deck usage.
-	 * 
+	 *
 	 * @param array<string,mixed> $schema The schema array to check
+	 *
 	 * @return bool True if compatible, false otherwise
 	 */
 	public function isCompatible(array $schema): bool
@@ -62,8 +61,9 @@ final class DeckCompatibilityChecker
 
 	/**
 	 * Check if a single property is compatible with deck usage.
-	 * 
+	 *
 	 * @param mixed $property The property definition to check
+	 *
 	 * @return bool True if compatible, false otherwise
 	 */
 	private function isPropertyCompatible(mixed $property): bool
@@ -103,8 +103,9 @@ final class DeckCompatibilityChecker
 
 	/**
 	 * Get the list of incompatible properties in a schema.
-	 * 
+	 *
 	 * @param array<string,mixed> $schema The schema array to check
+	 *
 	 * @return array<string> Array of property names that are incompatible
 	 */
 	public function getIncompatibleProperties(array $schema): array
@@ -126,7 +127,7 @@ final class DeckCompatibilityChecker
 
 	/**
 	 * Get a list of the property types that are incompatible with deck usage.
-	 * 
+	 *
 	 * @return array<string>
 	 */
 	public function getIncompatibleTypes(): array
@@ -136,8 +137,9 @@ final class DeckCompatibilityChecker
 
 	/**
 	 * Check if a deck schema (referenced by name) is compatible.
-	 * 
+	 *
 	 * @param string $schemaName Name of the schema to check
+	 *
 	 * @return bool True if the deck schema is compatible
 	 */
 	public function isDeckSchemaCompatible(string $schemaName): bool
@@ -145,9 +147,10 @@ final class DeckCompatibilityChecker
 		if ($this->schemaFetcher === null) {
 			return false; // Cannot validate without SchemaFetcher
 		}
-		
+
 		try {
 			$schema = $this->schemaFetcher->fetchSchema($schemaName);
+
 			return $this->isCompatible($schema->toArray());
 		} catch (\Exception $e) {
 			return false; // Schema not found or invalid
@@ -156,8 +159,9 @@ final class DeckCompatibilityChecker
 
 	/**
 	 * Get incompatible properties from a deck schema (referenced by name).
-	 * 
+	 *
 	 * @param string $schemaName Name of the schema to check
+	 *
 	 * @return array<string> Array of incompatible property names
 	 */
 	public function getDeckSchemaIncompatibleProperties(string $schemaName): array
@@ -165,12 +169,14 @@ final class DeckCompatibilityChecker
 		if ($this->schemaFetcher === null) {
 			return []; // Cannot validate without SchemaFetcher
 		}
-		
+
 		try {
 			$schema = $this->schemaFetcher->fetchSchema($schemaName);
+
 			return $this->getIncompatibleProperties($schema->toArray());
 		} catch (\Exception $e) {
 			error_log("DeckCompatibilityChecker: Exception getting incompatible properties for '$schemaName': " . $e->getMessage());
+
 			return []; // Schema not found or invalid
 		}
 	}

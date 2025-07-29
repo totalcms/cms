@@ -87,7 +87,7 @@ it('can fetch a schema for a collection', function (): void {
 	$collection = collectionTestData();
 	$id         = $collection['id'];
 	$schema     = $collection['schema'];
-	
+
 	// Create the collection if it doesn't exist (it might exist from previous tests)
 	$createResponse = postJson('/collections', $collection);
 	if ($createResponse->getStatusCode() === 400) {
@@ -95,7 +95,7 @@ it('can fetch a schema for a collection', function (): void {
 	} else {
 		$createResponse->assertOk();
 	}
-	
+
 	// Then fetch its schema
 	get("/collections/{$id}/schema")
 		->assertOk()
