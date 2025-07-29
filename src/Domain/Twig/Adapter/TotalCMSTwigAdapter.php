@@ -19,6 +19,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\Encryption\Cipher;
@@ -57,6 +58,7 @@ final class TotalCMSTwigAdapter
 		private CollectionFetcher $collectionFetcher,
 		private SchemaLister $schemaLister,
 		private SchemaFetcher $schemaFetcher,
+		private DeckCompatibilityChecker $deckCompatibilityChecker,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
@@ -1297,5 +1299,33 @@ NGINX;
 
 		// Encrypted passwords should be longer than typical plain passwords
 		return strlen($password) > 20;
+	}
+
+	/**
+	 * Check if a schema is compatible with deck usage.
+	 */
+	public function isDeckCompatible(string $schemaId): bool
+	{
+		try {
+			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+			return $this->deckCompatibilityChecker->isCompatible($schema->toArray());
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Get incompatible property types for a schema when used with deck.
+	 *
+	 * @return array<string>
+	 */
+	public function getDeckIncompatibleTypes(string $schemaId): array
+	{
+		try {
+			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+			return $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schema->toArray());
+		} catch (\Exception $e) {
+			return [];
+		}
 	}
 }

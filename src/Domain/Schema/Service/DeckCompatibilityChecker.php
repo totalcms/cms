@@ -33,6 +33,7 @@ final class DeckCompatibilityChecker
 		'https://www.totalcms.co/schemas/properties/gallery.json',
 		'https://www.totalcms.co/schemas/properties/file.json',
 		'https://www.totalcms.co/schemas/properties/depot.json',
+		'https://www.totalcms.co/schemas/properties/deck.json',
 	];
 
 	/**
@@ -133,6 +134,44 @@ final class DeckCompatibilityChecker
 	public function getIncompatibleTypes(): array
 	{
 		return self::INCOMPATIBLE_TYPES;
+	}
+
+	/**
+	 * Get the specific incompatible property types found in a schema.
+	 *
+	 * @param array<string,mixed> $schema The schema array to check
+	 *
+	 * @return array<string> Array of incompatible property types found in the schema
+	 */
+	public function getSchemaIncompatibleTypes(array $schema): array
+	{
+		$foundIncompatibleTypes = [];
+
+		if (!isset($schema['properties']) || !is_array($schema['properties'])) {
+			return $foundIncompatibleTypes;
+		}
+
+		foreach ($schema['properties'] as $property) {
+			if (!is_array($property)) {
+				continue;
+			}
+
+			// Check direct type property
+			if (isset($property['type']) && in_array($property['type'], self::INCOMPATIBLE_TYPES)) {
+				$foundIncompatibleTypes[] = $property['type'];
+			}
+
+			// Check $ref property
+			if (isset($property['$ref'])) {
+				foreach (self::INCOMPATIBLE_TYPES as $type) {
+					if (str_contains($property['$ref'], "/$type.json")) {
+						$foundIncompatibleTypes[] = $type;
+					}
+				}
+			}
+		}
+
+		return array_unique($foundIncompatibleTypes);
 	}
 
 	/**

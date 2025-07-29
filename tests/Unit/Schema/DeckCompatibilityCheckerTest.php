@@ -310,4 +310,79 @@ final class DeckCompatibilityCheckerTest extends TestCase
 
 		$this->assertTrue($this->checker->isCompatible($schema));
 	}
+
+	public function testGetSchemaIncompatibleTypesReturnsEmpty(): void
+	{
+		$schema = [
+			'type'       => 'object',
+			'properties' => [
+				'title' => ['type' => 'string'],
+				'count' => ['type' => 'number'],
+			],
+		];
+
+		$this->assertSame([], $this->checker->getSchemaIncompatibleTypes($schema));
+	}
+
+	public function testGetSchemaIncompatibleTypesFindsDirectTypes(): void
+	{
+		$schema = [
+			'type'       => 'object',
+			'properties' => [
+				'title'   => ['type' => 'string'],
+				'photo'   => ['type' => 'image'],
+				'gallery' => ['type' => 'gallery'],
+			],
+		];
+
+		$incompatibleTypes = $this->checker->getSchemaIncompatibleTypes($schema);
+		$this->assertContains('image', $incompatibleTypes);
+		$this->assertContains('gallery', $incompatibleTypes);
+		$this->assertCount(2, $incompatibleTypes);
+	}
+
+	public function testGetSchemaIncompatibleTypesFindsRefTypes(): void
+	{
+		$schema = [
+			'type'       => 'object',
+			'properties' => [
+				'title' => ['type' => 'string'],
+				'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
+				'files' => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json'],
+			],
+		];
+
+		$incompatibleTypes = $this->checker->getSchemaIncompatibleTypes($schema);
+		$this->assertContains('image', $incompatibleTypes);
+		$this->assertContains('file', $incompatibleTypes);
+		$this->assertCount(2, $incompatibleTypes);
+	}
+
+	public function testGetSchemaIncompatibleTypesHandlesEmptySchema(): void
+	{
+		$schema = [];
+		$this->assertSame([], $this->checker->getSchemaIncompatibleTypes($schema));
+	}
+
+	public function testGetSchemaIncompatibleTypesHandlesNoProperties(): void
+	{
+		$schema = ['type' => 'object'];
+		$this->assertSame([], $this->checker->getSchemaIncompatibleTypes($schema));
+	}
+
+	public function testGetSchemaIncompatibleTypesDeduplicates(): void
+	{
+		$schema = [
+			'type'       => 'object',
+			'properties' => [
+				'photo1' => ['type' => 'image'],
+				'photo2' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json'],
+				'photo3' => ['type' => 'image'], // Duplicate type
+			],
+		];
+
+		$incompatibleTypes = $this->checker->getSchemaIncompatibleTypes($schema);
+		$this->assertSame(['image'], $incompatibleTypes);
+		$this->assertCount(1, $incompatibleTypes);
+	}
 }

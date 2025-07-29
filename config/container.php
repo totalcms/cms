@@ -62,6 +62,7 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -277,6 +278,7 @@ return [
 			$container->get(CollectionFetcher::class),
 			$container->get(SchemaLister::class),
 			$container->get(SchemaFetcher::class),
+			$container->get(DeckCompatibilityChecker::class),
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
 			$container->get(CacheReporter::class),
