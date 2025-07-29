@@ -20,6 +20,7 @@ final class FileSaveAction
 
 	/**
 	 * File Save Action.
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param ServerRequestInterface $request
 	 * @param ResponseInterface $response
@@ -31,38 +32,39 @@ final class FileSaveAction
 	{
 		$files = $request->getUploadedFiles();
 		$file  = $files[$args['property']] ?? null;
-
+		$body  = (array)$request->getParsedBody();
 		$query = $request->getQueryParams();
 
+		$finalFilePath = '';
+
 		if ($file === null) {
-			throw new \RuntimeException('No file found in request for property: ' . $args['property']);
+			// Check if a URL was provided instead of a file upload
+			if (isset($body[$args['property']]) && is_string($body[$args['property']])) {
+				$fileUrl = trim($body[$args['property']]);
+
+				// Validate that it's a valid URL and not empty
+				if (empty($fileUrl) || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
+					throw new \RuntimeException('Invalid URL provided for property: ' . $args['property']);
+				}
+
+				// Download the file from the URL
+				$finalFilePath = $this->downloadFileFromUrl($fileUrl);
+			} else {
+				throw new \RuntimeException('No file found in request for property: ' . $args['property']);
+			}
+		} else {
+			// Handle normal file upload with chunking
+			$uploadResult = $this->handleFileUpload($file, $body, $response);
+
+			// If it's a ResponseInterface, it means we're dealing with a chunk
+			if ($uploadResult instanceof ResponseInterface) {
+				return $uploadResult;
+			}
+
+			$finalFilePath = $uploadResult;
 		}
 
-		// Get chunk information from the request
-		$body             = (array)$request->getParsedBody();
-		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
-		$totalChunks      = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
-		$originalFilename = $file->getClientFilename();
-		$chunkFilename    = $this->chunkName($originalFilename, $chunkIndex);
-
-		// Ensure the temporary directory exists
-		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0777, true);
-		}
-
-		// Move the uploaded chunk to the temporary directory
-		$file->moveTo($chunkFilename);
-
-		// return $this->renderer->json($response, $body);
-
-		if ($chunkIndex !== $totalChunks - 1) {
-			// If not the last chunk, return a success response
-			return $this->renderer->json($response, ['status' => 'chunk received']);
-		}
-
-		$finalFilePath = $this->assembleChunks($originalFilename, $totalChunks);
-
-		// Save the assembled file
+		// Save the file (whether uploaded or downloaded)
 		$saver  = $this->factory->generateSaverService($args['collection'], $args['property']);
 		$object = $saver->save(
 			$args['collection'],
@@ -106,5 +108,123 @@ final class FileSaveAction
 	private function chunkName(string $filename, int $chunkIndex): string
 	{
 		return $this->config->tmpdir . '/' . $filename . '.part' . $chunkIndex;
+	}
+
+	/**
+	 * Handle normal file upload with chunking support.
+	 *
+	 * @param \Psr\Http\Message\UploadedFileInterface $file
+	 * @param array<string,mixed> $body
+	 * @param ResponseInterface $response
+	 *
+	 * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
+	 *
+	 * @throws \RuntimeException If upload processing fails
+	 */
+	private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
+	{
+		// Get chunk information from the request
+		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
+		$totalChunks      = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
+		$originalFilename = $file->getClientFilename() ?? 'unknown_file';
+		$chunkFilename    = $this->chunkName($originalFilename, $chunkIndex);
+
+		// Ensure the temporary directory exists
+		if (!file_exists($this->config->tmpdir)) {
+			mkdir($this->config->tmpdir, 0777, true);
+		}
+
+		// Move the uploaded chunk to the temporary directory
+		$file->moveTo($chunkFilename);
+
+		if ($chunkIndex !== $totalChunks - 1) {
+			// If not the last chunk, return a success response
+			return $this->renderer->json($response, ['status' => 'chunk received']);
+		}
+
+		return $this->assembleChunks($originalFilename, $totalChunks);
+	}
+
+	/**
+	 * Download a file from a URL and save it to a temporary location.
+	 *
+	 * @param non-empty-string $url The URL to download from
+	 *
+	 * @return string Path to the downloaded file
+	 *
+	 * @throws \RuntimeException If the download fails
+	 */
+	private function downloadFileFromUrl(string $url): string
+	{
+		// Ensure the temporary directory exists
+		if (!file_exists($this->config->tmpdir)) {
+			mkdir($this->config->tmpdir, 0777, true);
+		}
+
+		// Extract filename from URL or generate one
+		$filename = $this->extractFilenameFromUrl($url);
+		$tempFilePath = $this->config->tmpdir . '/' . $filename;
+
+		// Download the file using cURL for better control
+		$ch = curl_init();
+		if ($ch === false) {
+			throw new \RuntimeException('Failed to initialize cURL');
+		}
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+		curl_setopt($ch, CURLOPT_USERAGENT, 'TotalCMS File Downloader');
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+
+		$fileContent = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$error = curl_error($ch);
+		curl_close($ch);
+
+		if ($fileContent === false || !empty($error)) {
+			throw new \RuntimeException('Failed to download file from URL: ' . $error);
+		}
+
+		if ($httpCode !== 200) {
+			throw new \RuntimeException('HTTP error when downloading file: ' . $httpCode);
+		}
+
+		// Save the downloaded content to a temporary file
+		$bytesWritten = file_put_contents($tempFilePath, $fileContent);
+		if ($bytesWritten === false) {
+			throw new \RuntimeException('Failed to save downloaded file to: ' . $tempFilePath);
+		}
+
+		return $tempFilePath;
+	}
+
+	/**
+	 * Extract filename from URL or generate a unique filename.
+	 *
+	 * @param string $url The URL to extract filename from
+	 *
+	 * @return string The extracted or generated filename
+	 */
+	private function extractFilenameFromUrl(string $url): string
+	{
+		// Parse the URL to get the path
+		$parsedUrl = parse_url($url);
+		$path = $parsedUrl['path'] ?? '';
+
+		// Get the filename from the path
+		$filename = basename($path);
+
+		// If no filename or it doesn't have an extension, generate one
+		if (empty($filename) || !pathinfo($filename, PATHINFO_EXTENSION)) {
+			$filename = 'downloaded_file_' . uniqid() . '.tmp';
+		}
+
+		// Sanitize the filename for safety
+		$sanitized = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
+
+		return $sanitized ?? 'sanitized_file_' . uniqid();
 	}
 }
