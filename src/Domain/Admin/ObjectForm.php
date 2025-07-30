@@ -30,7 +30,7 @@ final class ObjectForm extends TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function buildFieldOptions(string $name, array $options = [])
+	protected function buildFieldOptions(string $name, array $options = []): array
 	{
 		// Set the name of the field
 		$options['name'] = $name;
@@ -77,6 +77,14 @@ final class ObjectForm extends TotalForm
 		$collection = $this->collectionData->properties[$property] ?? [];
 
 		$defaults = array_merge($schema, $collection);
+		
+		// Handle deckref for deck fields - move it to settings
+		if (isset($defaults['deckref'])) {
+			$settings = $defaults['settings'] ?? [];
+			$settings['deckref'] = $defaults['deckref'];
+			$defaults['settings'] = $settings;
+			unset($defaults['deckref']);
+		}
 
 		return TotalForm::filterFieldProperties($defaults);
 	}

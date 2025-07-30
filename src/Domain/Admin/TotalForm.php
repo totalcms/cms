@@ -397,7 +397,7 @@ abstract class TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function buildFieldOptions(string $name, array $options = [])
+	protected function buildFieldOptions(string $name, array $options = []): array
 	{
 		return $options;
 	}

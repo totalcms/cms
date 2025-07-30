@@ -65,6 +65,7 @@ final class SchemaTransformer
 
 	/**
 	 * Expand a simplified deck property into full patternProperties format.
+	 * Preserves the original deckref for form building while adding patternProperties for validation.
 	 *
 	 * @param array<string,mixed> $property
 	 *
@@ -85,8 +86,9 @@ final class SchemaTransformer
 				],
 			];
 
-			// Remove the simplified deckref property as it's now expanded
-			unset($expanded['deckref']);
+			// Keep the deckref property for form building - don't remove it
+			// This allows both JSON Schema validation (via patternProperties) 
+			// and form generation (via deckref) to work
 		}
 
 		return $expanded;
