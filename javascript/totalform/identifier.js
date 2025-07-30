@@ -17,12 +17,11 @@ export default class Identifier extends TotalField {
 
 		this.valid = false;
 
-		// Check if we're inside a deck-item
-		this.deckItem = this.container.closest('.deck-item');
-		this.isInDeck = !!this.deckItem;
-
 		// Check if we're editing an existing item (form has an ID)
-		if (this.form.id && this.form.id.length > 0) {
+		if (
+			(this.form.id && this.form.id.length > 0 && !this.isInDeck) ||
+			(this.getValue().length > 0 && this.isInDeck)
+		) {
 			// The ID cannot be changed when editing
 			this.disable();
 			this.valid = true; // ID is valid in edit mode since it can't be changed
@@ -41,7 +40,7 @@ export default class Identifier extends TotalField {
 
 	// Override TotalField.changeListener
 	changeListener() {
-		if (this.options.autogen) {
+		if (this.options.autogen && !this.isLocked()) {
 			// autogen example: ${title}-${timestamp}
 			const autogenNames = this.options.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
 			const reservedNames = ["now", "timestamp", "uuid", "id"];
@@ -65,9 +64,7 @@ export default class Identifier extends TotalField {
 		}
         // Check ID changes directly
         this.input.addEventListener("input",  e => this.lock(), {once: true});
-		if (!this.isInDeck) {
-        	this.input.addEventListener("change", e => this.validateIdExists());
-		}
+		this.input.addEventListener("change", e => this.validateIdExists());
 	}
 
 	autogenId() {
@@ -76,11 +73,7 @@ export default class Identifier extends TotalField {
 		if (this.isInDeck) {
 			// Get field data from within the deck-item scope
 			const fields = this.deckItem.querySelectorAll('input, textarea, select');
-			fields.forEach(field => {
-				if (field.name && field.value && typeof field.value === 'string') {
-					data[field.name] = field.value;
-				}
-			});
+			fields.forEach(field => data[field.name] = field.value);
 		} else {
 			// Get the field data from the form (original behavior)
 			data = this.form.generateData();
@@ -106,6 +99,7 @@ export default class Identifier extends TotalField {
 	}
 
 	disable() {
+		this.lock();
 		return this.input.setAttribute("disabled", true);
 	}
 
@@ -174,6 +168,9 @@ export default class Identifier extends TotalField {
 			this.updateNonIDProperty();
 			return;
 		}
+
+		// If we are in a deck item, we don't need to check for ID existence
+		if (this.isInDeck) return;
 
 		let api = `/collections/${this.form.collection}/${id}`;
 
