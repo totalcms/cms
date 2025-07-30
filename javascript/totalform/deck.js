@@ -46,7 +46,7 @@ export default class DeckField extends TotalField {
 
         // Clone the template
         const clone = this.template.content.cloneNode(true);
-        
+
         // Insert before add button
         const parent = this.addButton.parentNode;
         parent.insertBefore(clone, this.addButton);
@@ -61,7 +61,7 @@ export default class DeckField extends TotalField {
             idInput.value = '';
             idInput.focus();
         }
-        
+
         // Initialize the new item
         this.newItem(itemElement);
     }
@@ -86,19 +86,19 @@ export default class DeckField extends TotalField {
             // Replace hyphens with underscores and ensure lowercase
             const oldValue = idInput.value;
             const newValue = slugify(oldValue, { lower: true }).replace(/-/g, "_");
-            
+
             if (oldValue !== newValue) {
                 idInput.value = newValue;
-                
+
                 // Update the item's data-item-id attribute
                 itemElement.setAttribute('data-item-id', newValue);
                 itemElement.className = itemElement.className.replace(/deck-item-\S+/, `deck-item-${newValue}`);
-                
+
                 // Update button titles
                 const editBtn = itemElement.querySelector("button.edit");
                 const duplicateBtn = itemElement.querySelector("button.duplicate");
                 const trashBtn = itemElement.querySelector("button.trash");
-                
+
                 if (editBtn) editBtn.setAttribute("title", `Edit ${newValue} item`);
                 if (duplicateBtn) duplicateBtn.setAttribute("title", `Duplicate ${newValue} item`);
                 if (trashBtn) trashBtn.setAttribute("title", `Delete ${newValue} item`);
@@ -122,7 +122,7 @@ export default class DeckField extends TotalField {
         // Get all form values before cloning
         const selects = itemElement.querySelectorAll('select');
         const selectValues = Array.from(selects).map(select => select.value);
-        
+
         const inputs = itemElement.querySelectorAll('input:not([name="deck-item-id"]), textarea');
         const inputValues = Array.from(inputs).map(input => {
             if (input.type === 'checkbox' || input.type === 'radio') {
@@ -133,7 +133,7 @@ export default class DeckField extends TotalField {
 
         // Clone the item element
         const clone = itemElement.cloneNode(true);
-        
+
         // Clean up any existing totalfield references or event listeners on cloned elements
         const clonedElements = clone.querySelectorAll('*');
         clonedElements.forEach(element => {
@@ -141,17 +141,17 @@ export default class DeckField extends TotalField {
                 delete element.totalfield;
             }
         });
-        
+
         // Update the cloned element
         clone.className = clone.className.replace(/deck-item-\S+/, `deck-item-${newId}`);
         clone.setAttribute('data-item-id', newId);
-        
+
         // Update the ID input
         const idInput = clone.querySelector("input[name='deck-item-id']");
         if (idInput) {
             idInput.value = newId;
         }
-        
+
         // Restore form values after cloning
         const clonedSelects = clone.querySelectorAll('select');
         clonedSelects.forEach((select, index) => {
@@ -159,7 +159,10 @@ export default class DeckField extends TotalField {
                 select.value = selectValues[index];
             }
         });
-        
+
+		const clonedFroala = clone.querySelectorAll('.fr-box');
+		clonedFroala.forEach(froala => froala.remove());
+
         const clonedInputs = clone.querySelectorAll('input:not([name="deck-item-id"]), textarea');
         clonedInputs.forEach((input, index) => {
             if (inputValues[index] !== undefined) {
@@ -170,12 +173,12 @@ export default class DeckField extends TotalField {
                 }
             }
         });
-        
+
         // Update button titles
         const editBtn = clone.querySelector("button.edit");
         const duplicateBtn = clone.querySelector("button.duplicate");
         const trashBtn = clone.querySelector("button.trash");
-        
+
         if (editBtn) editBtn.setAttribute("title", `Edit ${newId} item`);
         if (duplicateBtn) duplicateBtn.setAttribute("title", `Duplicate ${newId} item`);
         if (trashBtn) trashBtn.setAttribute("title", `Delete ${newId} item`);
@@ -220,7 +223,7 @@ export default class DeckField extends TotalField {
             for (const [itemId, itemData] of Object.entries(value)) {
                 // Clone the template
                 const clone = this.template.content.cloneNode(true);
-                
+
                 // Insert before add button
                 const parent = this.addButton.parentNode;
                 parent.insertBefore(clone, this.addButton);
