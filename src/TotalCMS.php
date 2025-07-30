@@ -21,6 +21,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 /**
  * Entry point for Total CMS PHP API.
@@ -37,6 +38,7 @@ class TotalCMS
 	private CacheManager $cacheManager;
 	private PhpSession $session;
 	private AccessManager $access;
+	public Config $config;
 
 	public function __construct()
 	{
@@ -57,6 +59,7 @@ class TotalCMS
 			$this->cacheManager = $this->container->get(CacheManager::class);
 			$this->session      = $this->container->get(PhpSession::class);
 			$this->access       = $this->container->get(AccessManager::class);
+			$this->config       = $this->container->get(Config::class);
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
@@ -244,5 +247,80 @@ class TotalCMS
 		echo $this->sitemapForCollection($collection, $options);
 
 		exit(0);
+	}
+
+	// ---------------------------------------------------------------------------------
+	// Public methods for file and depot path generation
+	// ---------------------------------------------------------------------------------
+
+	/**
+	 * Get the filesystem path for a file property.
+	 *
+	 * @param array<string,string> $options
+	 */
+	public function filePath(string $id, array $options = []): ?string
+	{
+		$collection = $options['collection'] ?? 'file';
+		$property   = $options['property'] ?? 'file';
+
+		try {
+			$fileFetcher = $this->container->get(Domain\Property\Service\FileFetcher::class);
+			$file        = $fileFetcher->fetchFile($collection, $id, $property);
+
+			$relativePath = Infrastructure\Filesystem\PathUtils::buildPath(
+				$collection,
+				$id,
+				$property,
+				$file->name
+			);
+
+			$dataDir = $this->config->datadir;
+
+			return $dataDir . '/' . $relativePath;
+		} catch (\Throwable $e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Get the filesystem path for a depot file.
+	 *
+	 * @param array<string,string> $options
+	 */
+	public function depotPath(string $id, string $filePath, array $options = []): ?string
+	{
+		$collection = $options['collection'] ?? 'depot';
+		$property   = $options['property'] ?? 'depot';
+
+		// Handle full path in filePath parameter
+		$subpath  = '';
+		$filename = $filePath;
+		if (str_contains($filePath, '/')) {
+			$pathinfo = pathinfo($filePath);
+			$subpath  = $pathinfo['dirname'];
+			$filename = $pathinfo['basename'];
+		}
+
+		try {
+			$relativePath = Infrastructure\Filesystem\PathUtils::buildPath(
+				$collection,
+				$id,
+				$property,
+				$filename,
+				$subpath
+			);
+
+			$dataDir  = $this->config->datadir;
+			$fullPath = $dataDir . '/' . $relativePath;
+
+			// Check if file exists before returning path
+			if (file_exists($fullPath)) {
+				return $fullPath;
+			}
+
+			return null;
+		} catch (\Throwable $e) {
+			return null;
+		}
 	}
 }
