@@ -25,7 +25,11 @@ final class AdminPlaygroundAction
 			$post = (array)$request->getParsedBody();
 
 			if (isset($post['twig'])) {
-				$render = $this->twigEngine->renderString($post['twig']);
+				try {
+					$render = $this->twigEngine->renderString($post['twig']);
+				} catch (\Throwable $e) {
+					$render = '<div class="cms-twig-error"><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</div>';
+				}
 			}
 		}
 
