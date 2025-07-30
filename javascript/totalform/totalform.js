@@ -7,6 +7,7 @@ import Textarea from './textarea';
 import NumberField from './number';
 import ColorField from './color';
 import DateField from './date';
+import DeckField from './deck';
 import PasswordField from './password';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
@@ -289,8 +290,8 @@ export default class TotalForm {
 			// case "radio":
 			// 	return new RadioField(field, options);
 
-			// case "deck":
-            //     return new Deck(field, options);
+			case "deck":
+                return new DeckField(field, options);
 
 			// case "markdown":
             //     return new MarkdownField(field, options);

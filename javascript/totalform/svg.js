@@ -89,7 +89,7 @@ export default class SVGField extends TotalField {
 			key                  : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
 			attribution          : false,
 			heightMin            : 200,
-			heightMax            : 800,
+			heightMax            : 500,
 			toolbarButtons       : ["html"],
 			htmlRemoveTags       : ["xml"],
 			htmlAllowedTags      : svgTags,
