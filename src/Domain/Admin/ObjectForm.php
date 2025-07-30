@@ -47,7 +47,8 @@ final class ObjectForm extends TotalForm
 		if (!empty($this->id)) {
 			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
 
-			if ($name === 'id') {
+			// A DeckItem will set the deck_context option if it is a deck field
+			if ($name === 'id' && !isset($options['deck_context'])) {
 				$options['value'] = $this->id;
 				// Hide the ID field if requested
 				if ($this->hideID) {
@@ -77,11 +78,11 @@ final class ObjectForm extends TotalForm
 		$collection = $this->collectionData->properties[$property] ?? [];
 
 		$defaults = array_merge($schema, $collection);
-		
+
 		// Handle deckref for deck fields - move it to settings
 		if (isset($defaults['deckref'])) {
-			$settings = $defaults['settings'] ?? [];
-			$settings['deckref'] = $defaults['deckref'];
+			$settings             = $defaults['settings'] ?? [];
+			$settings['deckref']  = $defaults['deckref'];
 			$defaults['settings'] = $settings;
 			unset($defaults['deckref']);
 		}

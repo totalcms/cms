@@ -6,10 +6,10 @@ import Dialog from "./dialog";
 export default class DeckItem {
 
     constructor(container, fieldClass) {
-        this.container = container;
+        this.container            = container;
         this.container.totalfield = this;
-        this.fieldClass = fieldClass;
-        this.deckref = '';
+        this.fieldClass           = fieldClass;
+        this.deckref              = '';
 
         this.dialog = this.setupDialog();
     }
@@ -28,23 +28,10 @@ export default class DeckItem {
             },
             onClose: () => {
                 this.dialogOpened = false;
-                this.updateItemData();
             }
         });
     }
 
-    updateItemData() {
-        // Update any visual indicators based on dialog content
-        // This could show if the item has content, validation status, etc.
-        const itemId = this.getItemId();
-        const titleField = this.dialog.dialog.querySelector(`input[name="deck-${itemId}-title"]`);
-        
-        if (titleField && titleField.value.trim()) {
-            this.container.classList.add('has-content');
-        } else {
-            this.container.classList.remove('has-content');
-        }
-    }
 
     getItemId() {
         const idInput = this.container.querySelector("input[name='deck-item-id']");
@@ -56,29 +43,24 @@ export default class DeckItem {
     }
 
     getValue() {
-        const itemId = this.getItemId();
-        if (!itemId) return null;
-
         const data = {};
-        
+
         // Collect all form fields within this item's dialog
         const formFields = this.dialog.dialog.querySelectorAll('input, textarea, select');
-        
+
         for (const field of formFields) {
-            if (field.name && field.name.startsWith(`deck-${itemId}-`)) {
-                const fieldName = field.name.replace(`deck-${itemId}-`, '');
-                
+            if (field.name) {
                 // Handle different field types
                 if (field.type === 'checkbox') {
-                    data[fieldName] = field.checked;
+                    data[field.name] = field.checked;
                 } else if (field.type === 'radio') {
                     if (field.checked) {
-                        data[fieldName] = field.value;
+                        data[field.name] = field.value;
                     }
                 } else if (field.tagName === 'SELECT' && field.multiple) {
-                    data[fieldName] = Array.from(field.selectedOptions).map(option => option.value);
+                    data[field.name] = Array.from(field.selectedOptions).map(option => option.value);
                 } else {
-                    data[fieldName] = field.value;
+                    data[field.name] = field.value;
                 }
             }
         }
@@ -89,13 +71,10 @@ export default class DeckItem {
     setValue(value) {
         if (!value || typeof value !== 'object') return;
 
-        const itemId = this.getItemId();
-        
         // Set values for all fields in the dialog
         for (const [fieldName, fieldValue] of Object.entries(value)) {
-            const fieldSelector = `[name="deck-${itemId}-${fieldName}"]`;
-            const field = this.dialog.dialog.querySelector(fieldSelector);
-            
+            const field = this.dialog.dialog.querySelector(`[name="${fieldName}"]`);
+
             if (field) {
                 if (field.type === 'checkbox') {
                     field.checked = Boolean(fieldValue);
@@ -113,16 +92,13 @@ export default class DeckItem {
             }
         }
 
-        // Update visual indicators
-        this.updateItemData();
     }
 
     clearValue() {
-        const itemId = this.getItemId();
         const formFields = this.dialog.dialog.querySelectorAll('input, textarea, select');
-        
+
         for (const field of formFields) {
-            if (field.name && field.name.startsWith(`deck-${itemId}-`)) {
+            if (field.name) {
                 if (field.type === 'checkbox' || field.type === 'radio') {
                     field.checked = false;
                 } else if (field.tagName === 'SELECT' && field.multiple) {
@@ -135,7 +111,6 @@ export default class DeckItem {
             }
         }
 
-        this.container.classList.remove('has-content');
     }
 
     isUnsaved() {

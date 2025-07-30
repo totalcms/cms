@@ -37,6 +37,7 @@ class DeckItem
 			'value'        => $this->itemId,
 		];
 
+
 		$dialog  = $this->buildDialog();
 		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
 		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$this->itemId} item"]);
@@ -94,7 +95,13 @@ class DeckItem
 					'label' => $propertySchema['label'] ?? ucfirst($propertyName),
 					'help'  => $propertySchema['help'] ?? '',
 					'value' => $fieldValue,
+					'deck_context' => true, // Indicate this field is within a deck item
 				];
+
+				// For template items (empty itemId), ensure fields start empty
+				if (empty($this->itemId)) {
+					$fieldConfig['value'] = '';
+				}
 
 				// Add placeholder if available
 				if (isset($propertySchema['placeholder'])) {
@@ -111,7 +118,7 @@ class DeckItem
 					$fieldConfig['settings'] = $propertySchema['settings'];
 				}
 
-				$content .= $this->form->field("deck-{$this->itemId}-{$propertyName}", $fieldConfig);
+				$content .= $this->form->field($propertyName, $fieldConfig);
 			}
 		} catch (\Exception $e) {
 			// If schema can't be loaded, show a simple text field
