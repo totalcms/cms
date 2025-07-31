@@ -49,6 +49,11 @@ class CollectionRefiner
 				return [];
 			}
 
+			if (!isset($rule['property'], $rule['operator'])) {
+				// Skip invalid rules
+				continue;
+			}
+
 			$value = $rule['value'] ?? '';
 			if (is_array($value)) {
 				$filteredCollection = $this->filterByArrayRule(
@@ -56,6 +61,7 @@ class CollectionRefiner
 					property   : $rule['property'],
 					values     : $value,
 					operator   : $rule['operator'],
+					logic      : $rule['logic'] ?? 'or',
 				);
 				continue;
 			}
@@ -72,12 +78,40 @@ class CollectionRefiner
 	}
 
 	/**
+	 * Filter collection by array of values with OR/AND logic.
+	 *
+	 * @param array<array<string,mixed>> $collection The collection to filter
+	 * @param string $property The property to filter on
+	 * @param array<string> $values Array of values to match against
+	 * @param string $operator The comparison operator (equal, contains, etc.)
+	 * @param string $logic Logic operator: 'or' (default) returns items matching ANY value, 'and' returns items matching ALL values
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function filterByArrayRule(array $collection, string $property, array $values = [], string $operator = 'equal', string $logic = 'or'): array
+	{
+		// Early exit for empty values
+		if (empty($values)) {
+			return $collection;
+		}
+
+		if ($logic === 'and') {
+			return $this->filterByArrayRuleAnd($collection, $property, $values, $operator);
+		}
+
+		// Default OR logic (existing behavior)
+		return $this->filterByArrayRuleOr($collection, $property, $values, $operator);
+	}
+
+	/**
+	 * OR Logic: Return items that match ANY of the values.
+	 *
 	 * @param array<array<string,mixed>> $collection
 	 * @param array<string> $values
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function filterByArrayRule(array $collection, string $property, array $values = [], string $operator = 'equal'): array
+	private function filterByArrayRuleOr(array $collection, string $property, array $values, string $operator): array
 	{
 		// Use array to track unique items instead of array_merge
 		$results = [];
@@ -102,6 +136,36 @@ class CollectionRefiner
 		}
 
 		return $results;
+	}
+
+	/**
+	 * AND Logic: Return items that match ALL of the values.
+	 *
+	 * @param array<array<string,mixed>> $collection
+	 * @param array<string> $values
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	private function filterByArrayRuleAnd(array $collection, string $property, array $values, string $operator): array
+	{
+		$filteredCollection = $collection;
+
+		// Apply each filter sequentially, narrowing down the results
+		foreach ($values as $value) {
+			// Early exit if nothing left to filter
+			if (empty($filteredCollection)) {
+				return [];
+			}
+
+			$filteredCollection = $this->filterByRule(
+				collection : $filteredCollection,
+				property   : $property,
+				value      : strval($value),
+				operator   : $operator,
+			);
+		}
+
+		return $filteredCollection;
 	}
 
 	/**

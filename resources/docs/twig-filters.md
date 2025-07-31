@@ -827,6 +827,137 @@ The date filters support natural language strings powered by Chronos:
 ]) %}
 ```
 
+### Array Rule Logic: OR vs AND
+
+When filtering with an array of values, you can control whether items must match **ANY** value (OR logic) or **ALL** values (AND logic) using the `logic` parameter.
+
+#### OR Logic (Default)
+Returns items that match **ANY** of the values in the array:
+
+```twig
+{# Posts tagged with 'php' OR 'javascript' OR 'web' #}
+{% set posts = cms.objects('blog') | filterCollection([
+    {
+        property: "tags",
+        operator: "contains",
+        value: ["php", "javascript", "web"],
+        logic: "or"  {# Default - can be omitted #}
+    }
+]) %}
+
+{# Products in category 'electronics' OR 'computers' #}
+{% set products = cms.objects('products') | filterCollection([
+    {
+        property: "category",
+        operator: "equal",
+        value: ["electronics", "computers"]
+        {# logic: "or" is the default #}
+    }
+]) %}
+```
+
+#### AND Logic
+Returns items that match **ALL** of the values in the array:
+
+```twig
+{# Posts that contain ALL tags: 'php' AND 'framework' AND 'tutorial' #}
+{% set advancedPosts = cms.objects('blog') | filterCollection([
+    {
+        property: "tags",
+        operator: "contains",
+        value: ["php", "framework", "tutorial"],
+        logic: "and"
+    }
+]) %}
+
+{# Events on weekends AND evening time #}
+{% set weekendEvenings = cms.objects('events') | filterCollection([
+    {
+        property: "day_of_week",
+        operator: "equal",
+        value: ["saturday", "sunday"],
+        logic: "and"  {# Must be both saturday AND sunday - unlikely but demonstrates concept #}
+    }
+]) %}
+
+{# Products with ALL specified features #}
+{% set premiumProducts = cms.objects('products') | filterCollection([
+    {
+        property: "features",
+        operator: "contains",
+        value: ["waterproof", "wireless", "fast-charging"],
+        logic: "and"  {# Must have ALL three features #}
+    }
+]) %}
+```
+
+#### Real-World AND Logic Examples
+
+**Multi-tag content filtering:**
+```twig
+{# Find blog posts that cover ALL specified topics #}
+{% set comprehensivePosts = cms.objects('blog') | filterCollection([
+    {
+        property: "tags",
+        operator: "contains", 
+        value: ["security", "performance", "scalability"],
+        logic: "and"
+    }
+]) %}
+
+<h2>Comprehensive Guides</h2>
+<p>Posts covering security, performance, and scalability:</p>
+{% for post in comprehensivePosts %}
+    <article>{{ post.title }}</article>
+{% endfor %}
+```
+
+**Product feature requirements:**
+```twig
+{# Products that have ALL required features #}
+{% set requiredFeatures = ["bluetooth", "waterproof", "long-battery"] %}
+{% set suitableProducts = cms.objects('products') | filterCollection([
+    {
+        property: "features",
+        operator: "contains",
+        value: requiredFeatures,
+        logic: "and"
+    }
+]) %}
+
+<h2>Products with ALL Required Features</h2>
+{% if suitableProducts | length > 0 %}
+    {% for product in suitableProducts %}
+        <div class="product">{{ product.name }}</div>
+    {% endfor %}
+{% else %}
+    <p>No products match all requirements</p>
+{% endif %}
+```
+
+**Event availability filtering:**
+```twig
+{# Events available on ALL specified days #}
+{% set availableDays = ["monday", "wednesday", "friday"] %}
+{% set consistentEvents = cms.objects('events') | filterCollection([
+    {
+        property: "available_days",
+        operator: "contains",
+        value: availableDays,
+        logic: "and"
+    }
+]) %}
+```
+
+#### Logic Parameter Summary
+
+| Logic | Behavior | Use Case |
+|-------|----------|----------|
+| `"or"` (default) | Match **ANY** value | Broad filtering, multiple categories |
+| `"and"` | Match **ALL** values | Strict requirements, feature completeness |
+
+**Performance Note:** AND logic applies filters sequentially, making it more restrictive and potentially faster for large collections since it narrows results with each filter.
+
 ### Collection Sorting
 
 ```twig
