@@ -361,4 +361,33 @@ final class HTMLSanitizerTest extends TestCase
 		$this->assertStringContainsString('<ul>', $result);
 		$this->assertStringContainsString('<li>List item', $result);
 	}
+
+	/**
+	 * Test URL truncation issue reported by user.
+	 * Tests whether HTMLSanitizer truncates long URLs with query parameters.
+	 */
+	public function testLongURLPreservation(): void
+	{
+		// Test the exact URL that was being truncated
+		$originalURL = 'https://marlerandbeyond.com/keyplus/?denkey=&format_key=&typekey=&zonekey=&tag_key=TDL&sekey=&marlerkey=&platekey=&q=';
+		$input = '<p>Check out this link: <a href="' . $originalURL . '">Long URL</a></p>';
+		
+		$result = HTMLSanitizer::sanitizeRichContent($input);
+		
+		// The full URL should be preserved - no truncation
+		$this->assertStringContainsString($originalURL, $result);
+		$this->assertStringContainsString('tag_key=TDL', $result);
+		$this->assertStringContainsString('platekey=&q=', $result);
+		
+		// Test with even longer URL with more parameters
+		$longerURL = 'https://example.com/path/to/resource?param1=value1&param2=value2&param3=value3&param4=value4&param5=value5&param6=value6&param7=value7&param8=value8&param9=value9&param10=value10&very_long_parameter_name=very_long_parameter_value&another_param=';
+		$longerInput = '<a href="' . $longerURL . '">Very Long URL</a>';
+		
+		$longerResult = HTMLSanitizer::sanitizeRichContent($longerInput);
+		
+		// Should preserve the entire long URL
+		$this->assertStringContainsString($longerURL, $longerResult);
+		$this->assertStringContainsString('very_long_parameter_name=very_long_parameter_value', $longerResult);
+		$this->assertStringContainsString('another_param=', $longerResult);
+	}
 }
