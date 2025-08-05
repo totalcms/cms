@@ -37,6 +37,11 @@ class DeckItem
 			'value'        => $this->itemId,
 		];
 
+		// For existing deck items, make the ID field readonly
+		if (!empty($this->itemId)) {
+			$inputAttributes['readonly'] = '';
+		}
+
 
 		$dialog  = $this->buildDialog();
 		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
