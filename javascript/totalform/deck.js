@@ -144,12 +144,28 @@ export default class DeckField extends TotalField {
 
         // Update the cloned element
         clone.className = clone.className.replace(/deck-item-\S+/, `deck-item-${newId}`);
-        clone.setAttribute('data-item-id', newId);
+        clone.setAttribute('data-item-id', ''); // Clear item ID for new item
 
-        // Update the ID input
+        // Update the ID input - clear it for new item and make it editable
         const idInput = clone.querySelector("input[name='deck-item-id']");
         if (idInput) {
-            idInput.value = newId;
+            idInput.value = ''; // Clear the ID for new item
+            idInput.removeAttribute('readonly'); // Make it editable again
+            idInput.removeAttribute('disabled'); // Remove any disabled state
+        }
+
+        // Also clear the dialog ID field
+        const dialogIdInput = clone.querySelector("dialog input[name='id']");
+        if (dialogIdInput) {
+            dialogIdInput.value = '';
+            dialogIdInput.removeAttribute('readonly');
+            dialogIdInput.removeAttribute('disabled');
+            
+            // Remove any locked/disabled state from the field container
+            const dialogIdContainer = dialogIdInput.closest('.form-field');
+            if (dialogIdContainer) {
+                dialogIdContainer.classList.remove('locked');
+            }
         }
 
         // Restore form values after cloning
