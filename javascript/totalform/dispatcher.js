@@ -19,7 +19,7 @@ export default class TotalDispatcher {
 	dispatchEvent(event, detail) {
 		clearTimeout(this.debounceTimer[event]);
 		this.debounceTimer[event] = setTimeout(() => {
-			this.container.dispatchEvent(new CustomEvent(event, { detail: detail }));
+			this.container.dispatchEvent(new CustomEvent(event, { detail: detail, bubbles: true }));
 		}, this.options.delay);
 	}
 }

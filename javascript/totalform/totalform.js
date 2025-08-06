@@ -190,15 +190,16 @@ export default class TotalForm {
             fieldObjects.push(object);
 
 			// Mark as dirty
-            field.addEventListener("field-change", e => {
-				// Ignore change events when form is processing
-				// If a field is in focus on submit, a change event is triggered
-				if (this.isProcessing()) return;
-				this.unsaved();
-				if (this.autosave) this.save();
-			});
-            field.addEventListener("field-error", e => this.error(e.detail.message));
         });
+		this.form.addEventListener("field-change", e => {
+			// Ignore change events when form is processing
+			// If a field is in focus on submit, a change event is triggered
+			if (this.isProcessing()) return;
+			this.unsaved();
+			if (this.autosave) this.save();
+		});
+		this.form.addEventListener("field-error", e => this.error(e.detail.message));
+
         this.fields = fieldObjects;
     }
 
