@@ -191,8 +191,15 @@ export default class DeckField extends TotalField {
         unsavedChildren.forEach(unsavedChild => unsavedChild.classList.remove("unsaved"));
     }
 
+	error(message) {
+		super.error(message);
+		this.input.setCustomValidity(message);
+	}
+
     validate() {
-        let   isValid = true;
+		this.input.setCustomValidity(""); // Clear previous custom validity message
+
+		let   isValid = true;
         const itemIds = [];
 
         // Count occurrences of each ID and track items
@@ -200,15 +207,16 @@ export default class DeckField extends TotalField {
             const itemId = item.getItemId();
 
 			if (itemId.length == 0) {
-				this.error(`ID is required for deck items`);
-				item.error(`ID is required for deck items`);
+				const errorMessage = "Item ID cannot be empty";
+				this.error(errorMessage);
 				isValid = false;
 				return; // Skip this item for duplicate checking
 			}
 
 			if (itemIds.includes(itemId)) {
-				this.error(`Duplicate ID found: ${itemId}`);
-				item.error(`Duplicate ID found: ${itemId}`);
+				const errorMessage = `Duplicate ID found: ${itemId}`;
+				this.error(errorMessage);
+				item.error(errorMessage);
 				isValid = false;
 				return; // Skip this item for duplicate checking
 			}

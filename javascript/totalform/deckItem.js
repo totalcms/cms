@@ -64,6 +64,8 @@ export default class DeckItem {
                 deckItemIdField.value = sanitizedValue;
             }
             dialogIdField.value = sanitizedValue;
+			dialogIdField.classList.remove("error");
+            dialogIdField.closest(".form-field")?.classList.remove("error");
             syncing = false;
         };
 
@@ -76,6 +78,8 @@ export default class DeckItem {
                 dialogIdField.value = sanitizedValue;
             }
             deckItemIdField.value = sanitizedValue;
+            dialogIdField.classList.remove("error");
+            dialogIdField.closest(".form-field")?.classList.remove("error");
             syncing = false;
         };
 

@@ -42,9 +42,9 @@ final class DeckField extends FormField
 	{
 		$content = '';
 
-		// Hidden input to store the field name
 		$content .= HTMLUtils::inlineElement('input', [
-			'type' => 'hidden',
+			'id'   => 'field-' . $this->uuid,
+			'type' => 'text',
 			'name' => $this->name,
 		]);
 
