@@ -165,8 +165,10 @@ export default class DeckField extends TotalField {
     getValue() {
         const deckData = {};
 
-        for (const item of this.items) {
-			deckData[item.getItemId()] = item.getValue();
+		// not using this.items so we can maintain the order of items in the DOM
+		const deckItems = this.container.getElementsByClassName(this.fieldClass);
+        for (const item of deckItems) {
+			deckData[item.deckitem.getItemId()] = item.deckitem.getValue();
         }
 
         return deckData;
