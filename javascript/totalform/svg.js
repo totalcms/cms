@@ -110,6 +110,19 @@ export default class SVGField extends TotalField {
                         // this.codeView.toggle();
 					}
 				},
+				'codeView.update': function() {
+					// Ensure CodeMirror is properly refreshed when entering code view
+					setTimeout(() => {
+						if (this.codeView.isActive()) {
+							const codeMirror = this.codeView.get();
+							if (codeMirror && codeMirror.refresh) {
+								codeMirror.refresh();
+								// Make sure CodeMirror is not read-only
+								codeMirror.setOption('readOnly', false);
+							}
+						}
+					}, 100);
+				},
 				'contentChanged': () => this.changed(),
 			}
         });

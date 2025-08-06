@@ -227,6 +227,19 @@ export default class StyledTextField extends TotalField {
                 'image.beforeUpload' : ()    => this.updateUploadURLs(),
                 'file.unlink'        : file  => this.deleteFileFromServer(file.href),
                 'video.removed'      : video => this.deleteFileFromServer(video[0].src),
+                'codeView.update'    : function() {
+                    // Ensure CodeMirror is properly refreshed when entering code view
+                    setTimeout(() => {
+                        if (this.codeView.isActive()) {
+                            const codeMirror = this.codeView.get();
+                            if (codeMirror && codeMirror.refresh) {
+                                codeMirror.refresh();
+                                // Make sure CodeMirror is not read-only
+                                codeMirror.setOption('readOnly', false);
+                            }
+                        }
+                    }, 100);
+                },
 			}
         };
     }
