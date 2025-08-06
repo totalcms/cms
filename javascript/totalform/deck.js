@@ -118,6 +118,7 @@ export default class DeckField extends TotalField {
             itemElement.deckitem.destroy();
         }
         itemElement.remove();
+		this.items = this.items.filter(item => item.container !== itemElement);
     }
 
     duplicateItem(itemElement) {
