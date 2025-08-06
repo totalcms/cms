@@ -84,7 +84,7 @@
 		--totalform-icon-bg      : var(--totalform-changed);
 		--totalform-icon-color   : var(--totalform-purewhite);
 	}
-	&.error {
+	&:not(.deck-field).error {
 		--totalform-border-color : var(--totalform-error);
 		--totalform-icon-bg      : var(--totalform-error);
 		--totalform-icon-color   : var(--totalform-purewhite);
