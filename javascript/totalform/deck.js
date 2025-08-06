@@ -122,37 +122,8 @@ export default class DeckField extends TotalField {
     }
 
     duplicateItem(itemElement) {
-        // Get the current item ID and generate a new one for the duplicate
-        const currentId = itemElement.getAttribute('data-item-id');
-        const random = Math.random().toString(36).substr(2, 5);
-        const newId = `${currentId}_${random}`;
-
-        // Get all form values before cloning
-        const selects = itemElement.querySelectorAll('select');
-        const selectValues = Array.from(selects).map(select => select.value);
-
-        const inputs = itemElement.querySelectorAll('input:not([name="deck-item-id"]), textarea');
-        const inputValues = Array.from(inputs).map(input => {
-            if (input.type === 'checkbox' || input.type === 'radio') {
-                return input.checked;
-            }
-            return input.value;
-        });
-
         // Clone the item element
         const clone = itemElement.cloneNode(true);
-
-        // Clean up any existing totalfield references or event listeners on cloned elements
-        const clonedElements = clone.querySelectorAll('*');
-        clonedElements.forEach(element => {
-            if (element.totalfield) {
-                delete element.totalfield;
-            }
-        });
-
-        // Update the cloned element
-        clone.className = clone.className.replace(/deck-item-\S+/, `deck-item-${newId}`);
-        clone.setAttribute('data-item-id', ''); // Clear item ID for new item
 
         // Update the ID input - clear it for new item and make it editable
         const idInput = clone.querySelector("input[name='deck-item-id']");
@@ -176,38 +147,10 @@ export default class DeckField extends TotalField {
             }
         }
 
-        // Restore form values after cloning
-        const clonedSelects = clone.querySelectorAll('select');
-        clonedSelects.forEach((select, index) => {
-            if (selectValues[index]) {
-                select.value = selectValues[index];
-            }
-        });
-
 		const clonedFroala = clone.querySelectorAll('.fr-box');
 		clonedFroala.forEach(froala => froala.remove());
 
-        const clonedInputs = clone.querySelectorAll('input:not([name="deck-item-id"]), textarea');
-        clonedInputs.forEach((input, index) => {
-            if (inputValues[index] !== undefined) {
-                if (input.type === 'checkbox' || input.type === 'radio') {
-                    input.checked = inputValues[index];
-                } else {
-                    input.value = inputValues[index];
-                }
-            }
-        });
-
-        // Update button titles
-        const editBtn = clone.querySelector("button.edit");
-        const duplicateBtn = clone.querySelector("button.duplicate");
-        const trashBtn = clone.querySelector("button.trash");
-
-        if (editBtn) editBtn.setAttribute("title", `Edit ${newId} item`);
-        if (duplicateBtn) duplicateBtn.setAttribute("title", `Duplicate ${newId} item`);
-        if (trashBtn) trashBtn.setAttribute("title", `Delete ${newId} item`);
-
-        // Insert after the original item
+		// Insert after the original item
         const parent = itemElement.parentNode;
         parent.insertBefore(clone, itemElement.nextSibling);
 
