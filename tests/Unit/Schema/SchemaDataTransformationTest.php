@@ -38,7 +38,7 @@ final class SchemaDataTransformationTest extends TestCase
 		$featuresProperty = $array['properties']['features'];
 		
 		$this->assertArrayHasKey('patternProperties', $featuresProperty);
-		$this->assertArrayNotHasKey('deckref', $featuresProperty);
+		$this->assertArrayHasKey('deckref', $featuresProperty);
 		
 		$expected = [
 			'^[a-zA-Z]\\w*$' => [
@@ -105,8 +105,8 @@ final class SchemaDataTransformationTest extends TestCase
 		// Both deck properties should be transformed
 		$this->assertArrayHasKey('patternProperties', $array['properties']['features']);
 		$this->assertArrayHasKey('patternProperties', $array['properties']['updates']);
-		$this->assertArrayNotHasKey('deckref', $array['properties']['features']);
-		$this->assertArrayNotHasKey('deckref', $array['properties']['updates']);
+		$this->assertArrayHasKey('deckref', $array['properties']['features']);
+		$this->assertArrayHasKey('deckref', $array['properties']['updates']);
 
 		// Check the correct schema references are preserved
 		$this->assertEquals(

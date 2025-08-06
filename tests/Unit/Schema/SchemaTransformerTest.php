@@ -64,10 +64,11 @@ final class SchemaTransformerTest extends TestCase
 				],
 			],
 			'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+			'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
 		];
 
 		$this->assertEquals($expectedFeatures, $result['properties']['features']);
-		$this->assertArrayNotHasKey('deckref', $result['properties']['features']);
+		$this->assertArrayHasKey('deckref', $result['properties']['features']);
 	}
 
 	public function testIgnoresNonDeckPropertiesWithDeckrefKey(): void
@@ -114,8 +115,8 @@ final class SchemaTransformerTest extends TestCase
 		// Both deck properties should be transformed
 		$this->assertArrayHasKey('patternProperties', $result['properties']['features']);
 		$this->assertArrayHasKey('patternProperties', $result['properties']['updates']);
-		$this->assertArrayNotHasKey('deckref', $result['properties']['features']);
-		$this->assertArrayNotHasKey('deckref', $result['properties']['updates']);
+		$this->assertArrayHasKey('deckref', $result['properties']['features']);
+		$this->assertArrayHasKey('deckref', $result['properties']['updates']);
 
 		// Non-deck property should remain unchanged
 		$this->assertEquals(['type' => 'string'], $result['properties']['title']);
