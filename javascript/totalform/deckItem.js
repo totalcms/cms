@@ -243,6 +243,7 @@ export default class DeckItem {
             clearInterval(this.idSyncData.syncChecker);
             this.idSyncData = null;
         }
+		this.container.remove();
     }
 
     isUnsaved() {

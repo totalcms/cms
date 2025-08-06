@@ -19,7 +19,7 @@ export default class DeckField extends TotalField {
         // Initialize existing deck items
         const deckItems = this.container.getElementsByClassName(this.fieldClass);
         for (const item of deckItems) {
-            this.items.push(this.newItem(item));
+            this.newItem(item);
         }
         this.sortableDeckItems(deckItems);
 
@@ -72,6 +72,7 @@ export default class DeckField extends TotalField {
 
     newItem(itemElement) {
         const newItem = new DeckItem(itemElement, this.fieldClass, this);
+		this.items.push(newItem);
         this.initActionbar(itemElement);
         this.form?.processFields();
 		return newItem;
@@ -217,18 +218,10 @@ export default class DeckField extends TotalField {
     }
 
     getValue() {
-        const deckItems = this.container.getElementsByClassName(this.fieldClass);
         const deckData = {};
 
-        for (const itemElement of deckItems) {
-            const deckItem = itemElement.totalfield;
-            if (deckItem) {
-                const itemId = deckItem.getItemId();
-                const itemData = deckItem.getValue();
-                if (itemId && itemData) {
-                    deckData[itemId] = itemData;
-                }
-            }
+        for (const item of this.items) {
+			deckData[item.getItemId()] = item.getValue();
         }
 
         return deckData;
@@ -273,8 +266,7 @@ export default class DeckField extends TotalField {
     }
 
     clearValue() {
-        const deckItems = this.container.querySelectorAll(`.${this.fieldClass}`);
-        deckItems.forEach(item => this.removeItem(item));
+        this.items.forEach(item => item.destroy());
     }
 
     isUnsaved() {
