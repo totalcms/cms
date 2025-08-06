@@ -14,10 +14,12 @@ export default class DeckField extends TotalField {
         this.fieldClass = "deck-item";
         this.deckref = container.dataset.deckref || '';
 
+		this.items = [];
+
         // Initialize existing deck items
         const deckItems = this.container.getElementsByClassName(this.fieldClass);
         for (const item of deckItems) {
-            this.newItem(item);
+            this.items.push(this.newItem(item));
         }
         this.sortableDeckItems(deckItems);
 
@@ -69,11 +71,10 @@ export default class DeckField extends TotalField {
 
 
     newItem(itemElement) {
-        const newItem = new DeckItem(itemElement, this.fieldClass);
-        newItem.form = this.form;
-        newItem.deckref = this.deckref;
+        const newItem = new DeckItem(itemElement, this.fieldClass, this);
         this.initActionbar(itemElement);
         this.form?.processFields();
+		return newItem;
     }
 
     initActionbar(itemElement) {
@@ -110,6 +111,10 @@ export default class DeckField extends TotalField {
     }
 
     removeItem(itemElement) {
+        // Call destroy method to clean up observers before removing
+        if (itemElement.deckitem && typeof itemElement.deckitem.destroy === 'function') {
+            itemElement.deckitem.destroy();
+        }
         itemElement.remove();
     }
 
@@ -160,7 +165,7 @@ export default class DeckField extends TotalField {
             dialogIdInput.value = '';
             dialogIdInput.removeAttribute('readonly');
             dialogIdInput.removeAttribute('disabled');
-            
+
             // Remove any locked/disabled state from the field container
             const dialogIdContainer = dialogIdInput.closest('.form-field');
             if (dialogIdContainer) {
@@ -231,8 +236,7 @@ export default class DeckField extends TotalField {
 
     setValue(value) {
         // Clear existing items
-        const existingItems = this.container.querySelectorAll(`.${this.fieldClass}`);
-        existingItems.forEach(item => item.remove());
+		this.clearValue();
 
         // Add items from value
         if (value && typeof value === 'object' && this.template) {
@@ -270,7 +274,7 @@ export default class DeckField extends TotalField {
 
     clearValue() {
         const deckItems = this.container.querySelectorAll(`.${this.fieldClass}`);
-        deckItems.forEach(item => item.remove());
+        deckItems.forEach(item => this.removeItem(item));
     }
 
     isUnsaved() {

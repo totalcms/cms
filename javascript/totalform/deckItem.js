@@ -5,13 +5,15 @@ import Dialog from "./dialog";
 //-----------------------------------------------
 export default class DeckItem {
 
-    constructor(container, fieldClass) {
-        this.container            = container;
-        this.container.totalfield = this;
-        this.fieldClass           = fieldClass;
-        this.deckref              = '';
+    constructor(container, fieldClass, deck) {
+		this.container          = container;
+		this.container.deckitem = this;
+		this.fieldClass         = fieldClass;
+		this.deck               = deck;
 
         this.dialog = this.setupDialog();
+        this.deck.form.processFields();
+		setTimeout(() => this.setupIdSync(), 0);
     }
 
     setupDialog() {
@@ -21,15 +23,116 @@ export default class DeckItem {
             onOpen: () => {
                 if (this.dialogOpened) return;
                 this.dialogOpened = true;
-                // Process any form fields in the dialog
-                if (this.form) {
-                    this.form.processFields();
-                }
             },
             onClose: () => {
                 this.dialogOpened = false;
             }
         });
+    }
+
+    setupIdSync() {
+        const deckItemIdField = this.container.querySelector("input[name='deck-item-id']");
+        const dialogIdField = this.dialog.dialog.querySelector("input[name='id']");
+
+        if (!deckItemIdField || !dialogIdField) return;
+
+        // Skip sync if deck-item-id field is readonly (existing items)
+        if (deckItemIdField.hasAttribute('readonly') || deckItemIdField.hasAttribute('disabled')) {
+            return;
+        }
+
+        // Flag to prevent infinite loops during synchronization
+        let syncing = false;
+
+        // Use MutationObserver to detect all value changes (programmatic and user input)
+        const syncFromDeckItem = () => {
+            if (syncing || dialogIdField.value === deckItemIdField.value) return;
+            syncing = true;
+            dialogIdField.value = deckItemIdField.value;
+            syncing = false;
+        };
+
+        const syncFromDialog = () => {
+            if (syncing || deckItemIdField.value === dialogIdField.value) return;
+            syncing = true;
+            deckItemIdField.value = dialogIdField.value;
+            syncing = false;
+        };
+
+        // Store current values to detect property changes
+        let lastDeckItemValue = deckItemIdField.value;
+        let lastDialogValue = dialogIdField.value;
+
+        // Observe changes to the deck-item-id field
+        const deckItemObserver = new MutationObserver(() => {
+            // Check if the value property has changed (not just the attribute)
+            if (deckItemIdField.value !== lastDeckItemValue) {
+                lastDeckItemValue = deckItemIdField.value;
+                syncFromDeckItem();
+            }
+        });
+
+        // Observe changes to the dialog id field
+        const dialogObserver = new MutationObserver(() => {
+            // Check if the value property has changed (not just the attribute)
+            if (dialogIdField.value !== lastDialogValue) {
+                lastDialogValue = dialogIdField.value;
+                syncFromDialog();
+            }
+        });
+
+        // Configure observers to watch for any changes to the elements
+        const observerConfig = {
+            attributes: true,
+            attributeOldValue: true,
+            childList: true,
+            subtree: true
+        };
+
+        deckItemObserver.observe(deckItemIdField, observerConfig);
+        dialogObserver.observe(dialogIdField, observerConfig);
+
+        // Also listen for various events that might indicate value changes
+        const events = ['input', 'change', 'paste', 'keyup', 'focus', 'blur'];
+        events.forEach(eventType => {
+            deckItemIdField.addEventListener(eventType, () => {
+                if (deckItemIdField.value !== lastDeckItemValue) {
+                    lastDeckItemValue = deckItemIdField.value;
+                    syncFromDeckItem();
+                }
+            });
+            dialogIdField.addEventListener(eventType, () => {
+                if (dialogIdField.value !== lastDialogValue) {
+                    lastDialogValue = dialogIdField.value;
+                    syncFromDialog();
+                }
+            });
+        });
+
+        // Periodic check for programmatic changes (fallback)
+        const syncChecker = setInterval(() => {
+            if (deckItemIdField.value !== lastDeckItemValue) {
+                lastDeckItemValue = deckItemIdField.value;
+                syncFromDeckItem();
+            }
+            if (dialogIdField.value !== lastDialogValue) {
+                lastDialogValue = dialogIdField.value;
+                syncFromDialog();
+            }
+        }, 100);
+
+        // Store references for cleanup
+        this.idSyncData = {
+            lastDeckItemValue,
+            lastDialogValue,
+            syncChecker
+        };
+
+        // Store observers for cleanup if needed
+        this.idSyncObservers = {
+            deckItemObserver,
+            dialogObserver
+        };
     }
 
 
@@ -111,6 +214,20 @@ export default class DeckItem {
             }
         }
 
+    }
+
+    // Cleanup method to disconnect observers when deck item is destroyed
+    destroy() {
+        if (this.idSyncObservers) {
+            this.idSyncObservers.deckItemObserver?.disconnect();
+            this.idSyncObservers.dialogObserver?.disconnect();
+            this.idSyncObservers = null;
+        }
+
+        if (this.idSyncData?.syncChecker) {
+            clearInterval(this.idSyncData.syncChecker);
+            this.idSyncData = null;
+        }
     }
 
     isUnsaved() {
