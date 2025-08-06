@@ -4,17 +4,17 @@ namespace TotalCMS\Domain\Schema\Service;
 
 /**
  * Service to transform schemas with simplified deck syntax into full JSON Schema format.
- * 
+ *
  * This allows users to write:
  * "features": {
  *     "field": "deck",
  *     "deckref": "https://www.totalcms.co/schemas/custom/features.json",
  *     "$ref": "https://www.totalcms.co/schemas/properties/deck.json"
  * }
- * 
+ *
  * Instead of the more verbose:
  * "features": {
- *     "field": "deck", 
+ *     "field": "deck",
  *     "patternProperties": {
  *         "^[a-zA-Z]\\w*$": {"$ref": "https://www.totalcms.co/schemas/custom/features.json"}
  *     },
@@ -59,8 +59,8 @@ final class SchemaTransformer
 	 */
 	private function isDeckProperty(array $property): bool
 	{
-		return isset($property['$ref']) && 
-			   str_contains($property['$ref'], '/properties/deck.json');
+		return isset($property['$ref'])
+			   && str_contains($property['$ref'], '/properties/deck.json');
 	}
 
 	/**
@@ -87,7 +87,7 @@ final class SchemaTransformer
 			];
 
 			// Keep the deckref property for form building - don't remove it
-			// This allows both JSON Schema validation (via patternProperties) 
+			// This allows both JSON Schema validation (via patternProperties)
 			// and form generation (via deckref) to work
 		}
 

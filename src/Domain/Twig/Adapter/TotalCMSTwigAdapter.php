@@ -1308,6 +1308,7 @@ NGINX;
 	{
 		try {
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+
 			return $this->deckCompatibilityChecker->isCompatible($schema->toArray());
 		} catch (\Exception $e) {
 			return false;
@@ -1323,6 +1324,7 @@ NGINX;
 	{
 		try {
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+
 			return $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schema->toArray());
 		} catch (\Exception $e) {
 			return [];

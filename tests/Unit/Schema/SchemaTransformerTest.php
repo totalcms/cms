@@ -19,7 +19,7 @@ final class SchemaTransformerTest extends TestCase
 	public function testTransformSchemaWithoutDeckPropertiesRemainsUnchanged(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'title' => ['type' => 'string'],
 				'count' => ['type' => 'number'],
@@ -40,14 +40,14 @@ final class SchemaTransformerTest extends TestCase
 	public function testTransformsDeckPropertyWithSimplifiedSyntax(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'features' => [
-					'field' => 'deck',
-					'label' => 'Product Features',
-					'help' => 'Add key features and selling points for this product',
+					'field'   => 'deck',
+					'label'   => 'Product Features',
+					'help'    => 'Add key features and selling points for this product',
 					'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
-					'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+					'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 				],
 			],
 		];
@@ -55,15 +55,15 @@ final class SchemaTransformerTest extends TestCase
 		$result = $this->transformer->transformSchema($schema);
 
 		$expectedFeatures = [
-			'field' => 'deck',
-			'label' => 'Product Features',
-			'help' => 'Add key features and selling points for this product',
+			'field'             => 'deck',
+			'label'             => 'Product Features',
+			'help'              => 'Add key features and selling points for this product',
 			'patternProperties' => [
 				'^[a-zA-Z]\\w*$' => [
 					'$ref' => 'https://www.totalcms.co/schemas/custom/features.json',
 				],
 			],
-			'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+			'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 			'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
 		];
 
@@ -74,12 +74,12 @@ final class SchemaTransformerTest extends TestCase
 	public function testIgnoresNonDeckPropertiesWithDeckrefKey(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'notadeck' => [
-					'field' => 'text',
+					'field'   => 'text',
 					'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
-					'$ref' => 'https://www.totalcms.co/schemas/properties/text.json',
+					'$ref'    => 'https://www.totalcms.co/schemas/properties/text.json',
 				],
 			],
 		];
@@ -92,17 +92,17 @@ final class SchemaTransformerTest extends TestCase
 	public function testTransformsMultipleDeckProperties(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'features' => [
-					'field' => 'deck',
+					'field'   => 'deck',
 					'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
-					'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+					'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 				],
 				'updates' => [
-					'field' => 'deck',
+					'field'   => 'deck',
 					'deckref' => 'https://www.totalcms.co/schemas/custom/updates.json',
-					'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+					'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 				],
 				'title' => [
 					'type' => 'string',
@@ -125,13 +125,13 @@ final class SchemaTransformerTest extends TestCase
 	public function testHandlesNonArrayProperties(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
-				'invalid' => 'not_an_array',
+				'invalid'  => 'not_an_array',
 				'features' => [
-					'field' => 'deck',
+					'field'   => 'deck',
 					'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
-					'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+					'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 				],
 			],
 		];
@@ -147,12 +147,12 @@ final class SchemaTransformerTest extends TestCase
 	public function testDeckPropertyWithoutDeckrefKeyRemainsUnchanged(): void
 	{
 		$schema = [
-			'type' => 'object',
+			'type'       => 'object',
 			'properties' => [
 				'features' => [
 					'field' => 'deck',
 					'label' => 'Product Features',
-					'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+					'$ref'  => 'https://www.totalcms.co/schemas/properties/deck.json',
 					// No 'deckref' key - should use existing patternProperties if any
 				],
 			],

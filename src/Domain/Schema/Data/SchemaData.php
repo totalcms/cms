@@ -125,6 +125,7 @@ final class SchemaData
 
 		// Apply schema transformations to expand simplified deck syntax
 		$transformer = new SchemaTransformer();
+
 		return $transformer->transformSchema($array);
 	}
 

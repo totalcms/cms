@@ -13,41 +13,41 @@ final class SchemaDataTransformationTest extends TestCase
 	{
 		$properties = [
 			'title' => [
-				'type' => 'string',
+				'type'  => 'string',
 				'field' => 'text',
 			],
 			'features' => [
-				'field' => 'deck',
-				'label' => 'Product Features',
-				'help' => 'Add key features and selling points for this product',
+				'field'   => 'deck',
+				'label'   => 'Product Features',
+				'help'    => 'Add key features and selling points for this product',
 				'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
-				'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+				'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 			],
 		];
 
-		$schema = new SchemaData();
-		$schema->id = 'testschema';
+		$schema              = new SchemaData();
+		$schema->id          = 'testschema';
 		$schema->description = 'Test schema with deck transformation';
-		$schema->properties = $properties;
-		$schema->required = ['title'];
-		$schema->index = ['title'];
+		$schema->properties  = $properties;
+		$schema->required    = ['title'];
+		$schema->index       = ['title'];
 
 		$array = $schema->toArray();
 
 		// Check that the deck property was transformed
 		$featuresProperty = $array['properties']['features'];
-		
+
 		$this->assertArrayHasKey('patternProperties', $featuresProperty);
 		$this->assertArrayHasKey('deckref', $featuresProperty);
-		
+
 		$expected = [
 			'^[a-zA-Z]\\w*$' => [
 				'$ref' => 'https://www.totalcms.co/schemas/custom/features.json',
 			],
 		];
-		
+
 		$this->assertEquals($expected, $featuresProperty['patternProperties']);
-		
+
 		// Other properties should remain unchanged
 		$this->assertEquals(['type' => 'string', 'field' => 'text'], $array['properties']['title']);
 	}
@@ -56,21 +56,21 @@ final class SchemaDataTransformationTest extends TestCase
 	{
 		$properties = [
 			'title' => [
-				'type' => 'string',
+				'type'  => 'string',
 				'field' => 'text',
 			],
 			'count' => [
-				'type' => 'number',
+				'type'  => 'number',
 				'field' => 'number',
 			],
 		];
 
-		$schema = new SchemaData();
-		$schema->id = 'testschema';
+		$schema              = new SchemaData();
+		$schema->id          = 'testschema';
 		$schema->description = 'Test schema without deck properties';
-		$schema->properties = $properties;
-		$schema->required = ['title'];
-		$schema->index = ['title'];
+		$schema->properties  = $properties;
+		$schema->required    = ['title'];
+		$schema->index       = ['title'];
 
 		$array = $schema->toArray();
 
@@ -82,23 +82,23 @@ final class SchemaDataTransformationTest extends TestCase
 	{
 		$properties = [
 			'features' => [
-				'field' => 'deck',
+				'field'   => 'deck',
 				'deckref' => 'https://www.totalcms.co/schemas/custom/features.json',
-				'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+				'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 			],
 			'updates' => [
-				'field' => 'deck',
+				'field'   => 'deck',
 				'deckref' => 'https://www.totalcms.co/schemas/custom/updates.json',
-				'$ref' => 'https://www.totalcms.co/schemas/properties/deck.json',
+				'$ref'    => 'https://www.totalcms.co/schemas/properties/deck.json',
 			],
 		];
 
-		$schema = new SchemaData();
-		$schema->id = 'testschema';
+		$schema              = new SchemaData();
+		$schema->id          = 'testschema';
 		$schema->description = 'Test schema with multiple deck properties';
-		$schema->properties = $properties;
-		$schema->required = [];
-		$schema->index = [];
+		$schema->properties  = $properties;
+		$schema->required    = [];
+		$schema->index       = [];
 
 		$array = $schema->toArray();
 

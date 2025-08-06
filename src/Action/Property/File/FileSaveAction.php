@@ -20,6 +20,7 @@ final class FileSaveAction
 
 	/**
 	 * File Save Action.
+	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param ServerRequestInterface $request
@@ -117,9 +118,9 @@ final class FileSaveAction
 	 * @param array<string,mixed> $body
 	 * @param ResponseInterface $response
 	 *
-	 * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
-	 *
 	 * @throws \RuntimeException If upload processing fails
+	 *
+	 * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
 	 */
 	private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
 	{
@@ -150,9 +151,9 @@ final class FileSaveAction
 	 *
 	 * @param non-empty-string $url The URL to download from
 	 *
-	 * @return string Path to the downloaded file
-	 *
 	 * @throws \RuntimeException If the download fails
+	 *
+	 * @return string Path to the downloaded file
 	 */
 	private function downloadFileFromUrl(string $url): string
 	{
@@ -162,7 +163,7 @@ final class FileSaveAction
 		}
 
 		// Extract filename from URL or generate one
-		$filename = $this->extractFilenameFromUrl($url);
+		$filename     = $this->extractFilenameFromUrl($url);
 		$tempFilePath = $this->config->tmpdir . '/' . $filename;
 
 		// Download the file using cURL for better control
@@ -180,8 +181,8 @@ final class FileSaveAction
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
 		$fileContent = curl_exec($ch);
-		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		$error = curl_error($ch);
+		$httpCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$error       = curl_error($ch);
 		curl_close($ch);
 
 		if ($fileContent === false || !empty($error)) {
@@ -212,7 +213,7 @@ final class FileSaveAction
 	{
 		// Parse the URL to get the path
 		$parsedUrl = parse_url($url);
-		$path = $parsedUrl['path'] ?? '';
+		$path      = $parsedUrl['path'] ?? '';
 
 		// Get the filename from the path
 		$filename = basename($path);

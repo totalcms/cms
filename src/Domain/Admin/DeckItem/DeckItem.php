@@ -42,7 +42,6 @@ class DeckItem
 			$inputAttributes['readonly'] = '';
 		}
 
-
 		$dialog  = $this->buildDialog();
 		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
 		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$this->itemId} item"]);
@@ -52,7 +51,7 @@ class DeckItem
 		$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$this->itemId} item"]);
 
 		$field = HTMLUtils::element('div', $input . $buttons . $dialog, [
-			'class' => "deck-item deck-item-{$this->itemId}",
+			'class'        => "deck-item deck-item-{$this->itemId}",
 			'data-item-id' => $this->itemId,
 		]);
 
@@ -96,10 +95,10 @@ class DeckItem
 				$fieldValue = $this->itemData[$propertyName] ?? '';
 
 				$fieldConfig = [
-					'field' => $propertySchema['field'] ?? 'text',
-					'label' => $propertySchema['label'] ?? ucfirst($propertyName),
-					'help'  => $propertySchema['help'] ?? '',
-					'value' => $fieldValue,
+					'field'        => $propertySchema['field'] ?? 'text',
+					'label'        => $propertySchema['label'] ?? ucfirst($propertyName),
+					'help'         => $propertySchema['help'] ?? '',
+					'value'        => $fieldValue,
 					'deck_context' => true, // Indicate this field is within a deck item
 				];
 
@@ -127,7 +126,8 @@ class DeckItem
 			}
 		} catch (\Exception $e) {
 			// If schema can't be loaded, show a simple text field
-			$content .= HTMLUtils::element('p',
+			$content .= HTMLUtils::element(
+				'p',
 				'Unable to load schema fields: ' . htmlspecialchars($e->getMessage()),
 				['class' => 'error']
 			);
@@ -140,6 +140,7 @@ class DeckItem
 	 * Extract schema ID from deckref URL.
 	 *
 	 * @param string $deckref
+	 *
 	 * @return string
 	 */
 	protected function extractSchemaId(string $deckref): string
