@@ -44,18 +44,33 @@ export default class DeckItem {
         // Flag to prevent infinite loops during synchronization
         let syncing = false;
 
+        // Helper function to sanitize ID values (replace hyphens with underscores)
+        const sanitizeId = (value) => {
+            return value.replace(/-/g, '_');
+        };
+
         // Use MutationObserver to detect all value changes (programmatic and user input)
         const syncFromDeckItem = () => {
-            if (syncing || dialogIdField.value === deckItemIdField.value) return;
+            const sanitizedValue = sanitizeId(deckItemIdField.value);
+            if (syncing || dialogIdField.value === sanitizedValue) return;
             syncing = true;
-            dialogIdField.value = deckItemIdField.value;
+            // Update the deck item field with sanitized value if needed
+            if (deckItemIdField.value !== sanitizedValue) {
+                deckItemIdField.value = sanitizedValue;
+            }
+            dialogIdField.value = sanitizedValue;
             syncing = false;
         };
 
         const syncFromDialog = () => {
-            if (syncing || deckItemIdField.value === dialogIdField.value) return;
+            const sanitizedValue = sanitizeId(dialogIdField.value);
+            if (syncing || deckItemIdField.value === sanitizedValue) return;
             syncing = true;
-            deckItemIdField.value = dialogIdField.value;
+            // Update the dialog field with sanitized value if needed
+            if (dialogIdField.value !== sanitizedValue) {
+                dialogIdField.value = sanitizedValue;
+            }
+            deckItemIdField.value = sanitizedValue;
             syncing = false;
         };
 
