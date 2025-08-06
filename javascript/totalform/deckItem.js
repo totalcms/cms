@@ -30,6 +30,11 @@ export default class DeckItem {
         });
     }
 
+	error(message) {
+		const idField = this.container.querySelector(".id-field");
+		idField?.totalfield?.error(message);
+	}
+
     setupIdSync() {
         const deckItemIdField = this.container.querySelector("input[name='deck-item-id']");
         const dialogIdField = this.dialog.dialog.querySelector("input[name='id']");
@@ -154,10 +159,6 @@ export default class DeckItem {
     getItemId() {
         const idInput = this.container.querySelector("input[name='deck-item-id']");
         return idInput ? idInput.value : this.container.getAttribute('data-item-id') || '';
-    }
-
-    getName() {
-        return this.getItemId();
     }
 
     getValue() {

@@ -15,6 +15,7 @@ export default class DeckField extends TotalField {
         this.deckref = container.dataset.deckref || '';
 
 		this.items = [];
+		this.valid = true;
 
         // Initialize existing deck items
         const deckItems = this.container.getElementsByClassName(this.fieldClass);
@@ -228,41 +229,7 @@ export default class DeckField extends TotalField {
     }
 
     setValue(value) {
-        // Clear existing items
-		this.clearValue();
-
-        // Add items from value
-        if (value && typeof value === 'object' && this.template) {
-            for (const [itemId, itemData] of Object.entries(value)) {
-                // Clone the template
-                const clone = this.template.content.cloneNode(true);
-
-                // Insert before add button
-                const parent = this.addButton.parentNode;
-                parent.insertBefore(clone, this.addButton);
-
-                // Get the newly added item
-                const deckItems = parent.querySelectorAll(`.${this.fieldClass}`);
-                const itemElement = deckItems[deckItems.length - 1];
-
-                // Set the ID
-                const idInput = itemElement.querySelector("input[name='deck-item-id']");
-                if (idInput) {
-                    idInput.value = itemId;
-                }
-
-                // Update item attributes
-                itemElement.setAttribute('data-item-id', itemId);
-                itemElement.className = itemElement.className.replace(/deck-item-\S*/, `deck-item-${itemId}`);
-
-                // Initialize and set data
-                this.newItem(itemElement);
-                const deckItem = itemElement.totalfield;
-                if (deckItem) {
-                    deckItem.setValue(itemData);
-                }
-            }
-        }
+		console.warn("DeckField.setValue() is not implemented", value);
     }
 
     clearValue() {
@@ -278,6 +245,36 @@ export default class DeckField extends TotalField {
         super.saved();
         const unsavedChildren = this.container.querySelectorAll(".unsaved");
         unsavedChildren.forEach(unsavedChild => unsavedChild.classList.remove("unsaved"));
+    }
+
+    validate() {
+        let   isValid = true;
+        const itemIds = [];
+
+        // Count occurrences of each ID and track items
+        this.items.forEach(item => {
+            const itemId = item.getItemId();
+
+			if (itemId.length == 0) {
+				this.error(`ID is required for deck items`);
+				item.error(`ID is required for deck items`);
+				isValid = false;
+				return; // Skip this item for duplicate checking
+			}
+
+			if (itemIds.includes(itemId)) {
+				this.error(`Duplicate ID found: ${itemId}`);
+				item.error(`Duplicate ID found: ${itemId}`);
+				isValid = false;
+				return; // Skip this item for duplicate checking
+			}
+
+            itemIds.push(itemId);
+        });
+
+		this.valid = isValid;
+
+        return this.valid;
     }
 
     schema() {
