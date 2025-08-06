@@ -147,9 +147,15 @@ export default class Identifier extends TotalField {
     }
 
 	validate() {
+		// For deck items with empty IDs, this might be acceptable if they're new
+		if (this.isInDeck && this.getValue() !== "") {
+			this.valid = true;
+		}
+
 		if (this.valid && this.input.checkValidity()) {
 			return true;
 		}
+
 		this.error(this.input.validationMessage);
 		return false;
 	}
