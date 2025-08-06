@@ -67,6 +67,7 @@ export default class DeckField extends TotalField {
 
         // Initialize the new item
         this.newItem(itemElement);
+		this.changed();
     }
 
 
@@ -119,6 +120,7 @@ export default class DeckField extends TotalField {
         }
         itemElement.remove();
 		this.items = this.items.filter(item => item.container !== itemElement);
+		this.changed();
     }
 
     duplicateItem(itemElement) {
@@ -160,6 +162,7 @@ export default class DeckField extends TotalField {
 
         // Initialize the duplicated item (this will properly initialize all form fields)
         this.newItem(clone);
+		this.changed();
     }
 
     getValue() {
