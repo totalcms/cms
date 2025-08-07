@@ -41,6 +41,8 @@ final class CollectionForm extends TotalForm
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
 		protected bool $helpOnFocus = false,
+		protected bool $hideID      = false,
+		protected bool $useFormGrid = true,
 	) {
 		$this->init();
 		$this->initClass();
