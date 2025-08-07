@@ -40,12 +40,12 @@ final class DeckField extends FormField
 
 	public function buildFormField(): string
 	{
-		$content = '';
-
-		$content .= HTMLUtils::inlineElement('input', [
-			'id'   => 'field-' . $this->uuid,
-			'type' => 'text',
-			'name' => $this->name,
+		$content = HTMLUtils::inlineElement('input', [
+			'id'       => 'field-' . $this->uuid,
+			'type'     => 'text',
+			'name'     => $this->name,
+			'required' => $this->required ? true : null,
+			'value'    => $this->name,
 		]);
 
 		// Build each deck item

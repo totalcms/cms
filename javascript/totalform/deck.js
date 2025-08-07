@@ -203,10 +203,31 @@ export default class DeckField extends TotalField {
 		super.error(message);
 	}
 
+	changed() {
+		// Clear custom validity when deck content changes
+		this.input.setCustomValidity("");
+		super.changed();
+	}
+
     validate() {
 		this.input.setCustomValidity(""); // Clear previous custom validity message
 
-		let   isValid = true;
+		let isValid = true;
+        
+        // Check if deck is required and empty
+        if (this.input.required) {
+            const deckItems = this.container.getElementsByClassName(this.fieldClass);
+            if (deckItems.length === 0) {
+                const errorMessage = "Please add at least one item to the deck.";
+                this.input.setCustomValidity(errorMessage);
+                this.input.reportValidity();
+                this.error(errorMessage);
+                isValid = false;
+                this.valid = isValid;
+                return this.valid;
+            }
+        }
+
         const itemIds = [];
 
         // Count occurrences of each ID and track items

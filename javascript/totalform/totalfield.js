@@ -130,6 +130,7 @@ export default class TotalField {
 	}
 
     changed() {
+		this.input.setCustomValidity("");
 		this.container.classList.remove("error");
 
 		if (this.isUnsaved()) return;
