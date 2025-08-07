@@ -427,6 +427,7 @@ return [
 			$container->get(CollectionFetcher::class),
 			$container->get(CollectionFactory::class),
 			$container->get(CollectionRepository::class),
+			$container->get(IndexReader::class),
 			$container->get(JobQueuer::class),
 			$container->get(LoggerFactory::class),
 		);
