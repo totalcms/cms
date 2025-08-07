@@ -168,6 +168,7 @@ $settings['auth'] = [
 	'maxAttempts'           => 10,
 	'deniedTimeout'         => 7,
 	'deniedDefaultRedirect' => '/',
+	'persistentLoginDays'   => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
 ];
 
 $settings['htmlclean'] = [

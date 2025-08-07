@@ -61,9 +61,10 @@ final class AuthLoginSubmitAction
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
-		$email      = $data['email'];
-		$password   = $data['password'];
-		$collection = $args['collection'] ?? '';
+		$email           = $data['email'];
+		$password        = $data['password'];
+		$persistentLogin = isset($data['persistent_login']) && $data['persistent_login'] === '1';
+		$collection      = $args['collection'] ?? '';
 
 		try {
 			$user = $this->loginService->authenticate($email, $password, $collection);
@@ -79,13 +80,51 @@ final class AuthLoginSubmitAction
 			$this->session->start();
 			$this->session->regenerateId();
 
+			// Set session data
 			$this->session->set('user', $user['id']);
 			$this->session->set('collection', $collection);
+			$this->session->set('persistent_login', $persistentLogin);
 			$this->session->delete('loginAttempts');
+
+			// If persistent login is checked, set session cookie to persist longer
+			if ($persistentLogin) {
+				$this->setPersistentSession();
+			}
 
 			$flash->add('success', 'Login successful');
 		}
 
 		return $response->withStatus(302)->withHeader('Location', $url);
+	}
+
+	/**
+	 * Set session cookie to persist for a longer duration when "Keep me signed in" is checked
+	 * This sets the session cookie to expire in configured days instead of when browser closes
+	 */
+	private function setPersistentSession(): void
+	{
+		$sessionName = $this->session->getName();
+		$sessionId = $this->session->getId();
+		
+		// Get configured persistent login days from config (default 30 days)
+		$persistentDays = $this->config->auth['persistentLoginDays'] ?? 30;
+		$expiry = time() + ($persistentDays * 24 * 60 * 60);
+		
+		// Get session cookie parameters
+		$cookieParams = session_get_cookie_params();
+		
+		// Set the session cookie with extended expiry
+		setcookie(
+			$sessionName,
+			$sessionId,
+			[
+				'expires' => $expiry,
+				'path' => $cookieParams['path'],
+				'domain' => $cookieParams['domain'],
+				'secure' => $cookieParams['secure'],
+				'httponly' => $cookieParams['httponly'],
+				'samesite' => $cookieParams['samesite']
+			]
+		);
 	}
 }
