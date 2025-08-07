@@ -86,6 +86,7 @@ final class SchemaData
 	public string $id          = '';
 	public string $formgrid    = '';
 	public string $description = '';
+	public string $category    = '';
 	/** @var array<string,mixed> */
 	public array $properties = [];
 	/** @var array<string> */
@@ -121,6 +122,11 @@ final class SchemaData
 		// Only include formgrid if it's not empty
 		if (!empty($this->formgrid)) {
 			$array['formgrid'] = $this->formgrid;
+		}
+
+		// Only include category if it's not empty
+		if (!empty($this->category)) {
+			$array['category'] = $this->category;
 		}
 
 		// Apply schema transformations to expand simplified deck syntax

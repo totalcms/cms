@@ -7,34 +7,19 @@
 		<input type="search" class="filter" placeholder="Filter schemas" />
 	</header>
 
-	</header>
-
 	<nav class="links" id="schema-links">
-		<h3>Custom Schemas</h3>
-		{% set customSchemas = sortByKey(cms.customSchemas()) %}
-		<ul>
-		{% if customSchemas|length == 0 %}
-			<li class="no-schemas">No custom schemas</li>
-		{% else %}
-			{% for schema in customSchemas %}
-			<li class="schema-{{schema.id}}">
-				<a  {% if url.schema == schema.id %}class="active"{% endif %}
-					href="schemas/{{ schema.id }}"
-					title="{{ schema.description }}">{{ schema.id }}</a>
-			</li>
+		{% for category, schemas in cms.schemasByCategory() %}
+			<h3>{{ category }}</h3>
+			{% for schema in sortByKey(schemas) %}
+				<ul>
+					<li class="schema-{{schema.id}}">
+						<a {% if url.schema == schema.id %}class="active"{% endif %}
+							href="schemas/{{ schema.id }}"
+							title="{{ schema.description }}">{{ schema.id }}</a>
+					</li>
+				</ul>
 			{% endfor %}
-		{% endif %}
-		</ul>
-		<h3>Built-in Schemas</h3>
-		<ul>
-			{% for schema in sortByKey(cms.reservedSchemas()) %}
-			<li class="schema-{{schema.id}}">
-				<a  {% if url.schema == schema.id %}class="active"{% endif %}
-					href="schemas/{{ schema.id }}"
-					title="{{ schema.description }}">{{ schema.id }}</a>
-			</li>
-			{% endfor %}
-		</ul>
+		{% endfor %}
 	</nav>
 
 	<footer>

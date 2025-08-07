@@ -450,6 +450,47 @@ NGINX;
 		return array_map(fn ($schema) => $schema->toArray(), $schemas);
 	}
 
+	/** @return array<string,array<array<string,mixed>>> */
+	public function schemasByCategory(): array
+	{
+		$customSchemas = $this->customSchemas();
+		$reservedSchemas = $this->reservedSchemas();
+		
+		$categories = [];
+		
+		// Process custom schemas by category
+		foreach ($customSchemas as $schema) {
+			$category = empty($schema['category']) ? 'Custom Schemas' : trim(strval($schema['category']));
+			if (!key_exists($category, $categories)) {
+				$categories[$category] = [];
+			}
+			$categories[$category][] = $schema;
+		}
+		
+		// Always add Built-in Schemas category for reserved schemas
+		$categories['Built-in Schemas'] = $reservedSchemas;
+		
+		// Sort the categories by key, but keep Built-in Schemas at the bottom
+		uksort($categories, function ($a, $b) {
+			if ($a === 'Built-in Schemas') {
+				return 1;
+			}
+			if ($b === 'Built-in Schemas') {
+				return -1;
+			}
+			if ($a === 'Custom Schemas') {
+				return 1;
+			}
+			if ($b === 'Custom Schemas') {
+				return -1;
+			}
+
+			return strcmp($a, $b);
+		});
+
+		return $categories;
+	}
+
 	// Get schema definition
 	/** @return array<string,mixed> */
 	public function schema(string $schema): array

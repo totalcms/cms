@@ -36,6 +36,7 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 {{ cms.schemas() }}                              {# Get all schemas #}
 {{ cms.reservedSchemas() }}                      {# Get built-in schemas #}
 {{ cms.customSchemas() }}                        {# Get custom schemas #}
+{{ cms.schemasByCategory() }}                    {# Get schemas grouped by category #}
 {{ cms.schema('schemaName') }}                   {# Get specific schema definition #}
 {{ cms.schemaForCollection('collection') }}      {# Get schema for a collection #}
 ```
