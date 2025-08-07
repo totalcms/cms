@@ -84,11 +84,17 @@ final class TotalCMSTwigAdapter
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
 		$installDir = realpath(__DIR__ . '/../../../..');
 		$docroot    = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
-		$command    = sprintf(
-			'%s %s/resources/bin/processJobs.php --docroot=%s',
+		$command    = $installDir . '/resources/bin/processJobs.php';
+
+		// Quote paths that contain spaces
+		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
+		$quotedDocroot = str_contains($docroot, ' ') ? '"' . $docroot . '"' : $docroot;
+
+		$command = sprintf(
+			'%s %s --docroot=%s',
 			$phpPath,
-			$installDir,
-			$docroot,
+			$quotedCommand,
+			$quotedDocroot,
 		);
 
 		return $command;
