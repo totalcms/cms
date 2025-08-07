@@ -80,6 +80,21 @@ export default class ListField extends MultiSelectField {
 		return value;
     }
 
+	validate() {
+		this.input.setCustomValidity("");
+		// For list fields, we need to check if there are items when the field is required
+		if (this.input.required) {
+			const items = this.getValue();
+			if (!Array.isArray(items) || items.length === 0) {
+				this.input.setCustomValidity("Please add at least one item to the list.");
+				this.error("Please add at least one item to the list.");
+				return false;
+			}
+		}
+		// Call parent validation for other checks
+		return super.validate();
+	}
+
     schema() {
         return {
             "type"  : "array",
