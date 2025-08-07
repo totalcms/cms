@@ -147,7 +147,7 @@ abstract class TotalForm
 		protected SchemaLister $schemaLister,
 		public string $api,
 		public string $collection,
-		public string $id          = '',
+		public    string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
 		protected string $buildError  = '',
@@ -163,6 +163,7 @@ abstract class TotalForm
 		protected bool $helpOnHover   = false,
 		protected bool $helpOnFocus   = false,
 		protected bool $hideID        = false,
+		protected bool $useFormGrid   = true,
 	) {
 		$this->init();
 		$this->initClass();
@@ -219,7 +220,7 @@ abstract class TotalForm
 	public function build(string $content = ''): string
 	{
 		$formgrid = null;
-		if (!empty($this->schemaData->formgrid)) {
+		if (!empty($this->schemaData->formgrid) && $this->useFormGrid) {
 			$this->class .= ' formgrid';
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
 			$formgrid     = $gridBuilder->toCssGridAreas();
@@ -344,7 +345,7 @@ abstract class TotalForm
 		$content = '';
 
 		// If using formgrid, inject section headers and dividers
-		if (!empty($this->schemaData->formgrid)) {
+		if (!empty($this->schemaData->formgrid) && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
 			$content .= $gridBuilder->buildGridSectionHtml();
 		}
