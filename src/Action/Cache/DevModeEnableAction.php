@@ -6,6 +6,7 @@ namespace TotalCMS\Action\Cache;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -16,6 +17,7 @@ final class DevModeEnableAction
 {
 	public function __construct(
 		private readonly DevModeManager $devModeManager,
+		private readonly CacheManager $cacheManager,
 		private readonly JsonRenderer $jsonRenderer
 	) {
 	}
@@ -25,11 +27,12 @@ final class DevModeEnableAction
 		ResponseInterface $response
 	): ResponseInterface {
 		$this->devModeManager->enableDevMode();
+		$this->cacheManager->clearAllCaches();
 		$status = $this->devModeManager->getDevModeStatus();
 
 		return $this->jsonRenderer->json($response, [
 			'success' => true,
-			'message' => 'Development mode enabled for 3 hours. Caching is now disabled.',
+			'message' => 'Development mode enabled for 3 hours. All caches cleared and caching is now disabled.',
 			'devmode' => $status
 		]);
 	}

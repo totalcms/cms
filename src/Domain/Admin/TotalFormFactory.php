@@ -14,7 +14,6 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Support\Config;
 
 /**
@@ -43,7 +42,6 @@ final class TotalFormFactory
 		private SchemaLister $schemaLister,
 		private SchemaFactory $schemaFactory,
 		private CSRFTokenManager $csrfManager,
-		private CacheManager $cacheManager,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -153,7 +151,7 @@ final class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function devmode(array $options = []): string
 	{
-		$devModeManager = new DevModeManager($this->cacheManager);
+		$devModeManager = new DevModeManager();
 		$devModeStatus = $devModeManager->getDevModeStatus();
 
 		$options = array_merge([

@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Cache;
 
 use TotalCMS\Domain\Cache\Service\CacheInterface;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -53,6 +54,7 @@ final class CacheManager
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
 		private TextWatermarkFactory $textWatermarkFactory,
+		private DevModeManager $devModeManager,
 	) {
 		// Initialize cache services and version
 		$this->cacheServices = [
@@ -127,6 +129,11 @@ final class CacheManager
 
 	public function storeData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
 	{
+		// Skip caching entirely when development mode is active
+		if ($this->devModeManager->isDevModeActive()) {
+			return false;
+		}
+
 		// Priority: Redis > Memcached > Filesystem (single cache layer only)
 		if ($this->redisService->isAvailable()) {
 			return $this->redisService->set($key, $data, $ttl);
@@ -258,6 +265,11 @@ final class CacheManager
 	 */
 	public function storeCompiledTemplate(string $templateName, string $compiledCode): bool
 	{
+		// Skip caching entirely when development mode is active
+		if ($this->devModeManager->isDevModeActive()) {
+			return false;
+		}
+
 		if ($this->filesystemService->isAvailable()) {
 			$key = self::PREFIX_TEMPLATE . ":{$templateName}";
 

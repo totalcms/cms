@@ -262,7 +262,6 @@ return [
 			$container->get(SchemaLister::class),
 			$container->get(SchemaFactory::class),
 			$container->get(CSRFTokenManager::class),
-			$container->get(CacheManager::class),
 		);
 	},
 
@@ -387,14 +386,13 @@ return [
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
-			$container->get(TextWatermarkFactory::class)
+			$container->get(TextWatermarkFactory::class),
+			$container->get(DevModeManager::class)
 		);
 	},
 
 	DevModeManager::class => function (ContainerInterface $container) {
-		return new DevModeManager(
-			$container->get(CacheManager::class)
-		);
+		return new DevModeManager();
 	},
 
 	SchemaRepository::class => function (ContainerInterface $container) {

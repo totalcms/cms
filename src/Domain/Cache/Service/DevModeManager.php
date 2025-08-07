@@ -15,9 +15,8 @@ final class DevModeManager
 	private string $devModeFile;
 	private int $devModeDuration = 10800; // 3 hours in seconds
 
-	public function __construct(
-		private CacheManager $cacheManager
-	) {
+	public function __construct()
+	{
 		$this->devModeFile = sys_get_temp_dir() . '/totalcms_devmode.json';
 	}
 
@@ -36,9 +35,6 @@ final class DevModeManager
 			$this->devModeFile,
 			json_encode($devModeData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)
 		);
-
-		// Clear all caches when development mode is enabled
-		$this->cacheManager->clearAllCaches();
 	}
 
 	/**
