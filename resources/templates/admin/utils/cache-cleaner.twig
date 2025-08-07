@@ -1,6 +1,16 @@
 <h1>Cache Cleaner</h1>
 
 <section class="dash-content-section">
+
+	<div class="devmode-section">
+		<h2>Development Mode</h2>
+		<p>Enable temporary development mode to disable all caching for 3 hours. This is useful for debugging and development work.</p>
+
+		<div class="devmode-controls" style="margin-top:2rem">
+			{{ cms.form.devmode() }}
+		</div>
+	</div>
+
 	<p>This tool manages all cache systems in Total CMS. Clearing cache will remove cached templates,
 	compiled code, and other temporary data to ensure you see the latest changes.</p>
 
@@ -155,6 +165,28 @@
 </section>
 
 <style>
+.devmode-section {
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	padding: 1.5rem;
+	margin-bottom: 2rem;
+}
+
+.devmode-section h2 {
+	margin-top: 0;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.devmode-controls .form-field {
+	margin-bottom: 0;
+}
+
+.devmode-countdown-active {
+	font-weight: bold;
+	color: oklch(var(--totalform-success));
+}
+
 .cache-disabled-notice {
 	background: #fff3cd;
 	border: 1px solid #ffeaa7;
@@ -202,3 +234,4 @@
 	font-weight: bold;
 }
 </style>
+

@@ -13,6 +13,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Support\Config;
 
 /**
@@ -145,6 +146,43 @@ final class TotalFormFactory
 		$form = new JobQueueForm(...$options);
 
 		return $form->build();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function devmode(array $options = []): string
+	{
+		$devModeManager = new DevModeManager();
+		$devModeStatus = $devModeManager->getDevModeStatus();
+
+		$options = array_merge([
+			'form'  => $this->dummyForm(),
+			'field' => 'toggle',
+			'label' => 'Development Mode',
+			'help'  => $devModeStatus['enabled']
+				? sprintf('<strong>Development mode is active.</strong> Remaining time: <span id="devmode-countdown">%s</span>', $devModeStatus['remaining_formatted'])
+				: 'Development mode is disabled. Caching is active.',
+		], $options);
+
+		// Add JavaScript variable for remaining seconds
+		$jsVariable = sprintf(
+			'<script>globalThis.DEVMODE_REMAINING_SECONDS = %d;</script>',
+			$devModeStatus['remaining_seconds']
+		);
+
+		// Generate the field using the existing field system
+		$fieldHtml = $this->field('toggle', 'devmode', $options);
+
+		// Add the API endpoint attribute and checked state
+		$fieldHtml = str_replace(
+			'type="checkbox"',
+			sprintf(
+				'type="checkbox" %s data-api-endpoint="/cache/devmode"',
+				$devModeStatus['enabled'] ? 'checked' : ''
+			),
+			$fieldHtml
+		);
+
+		return $jsVariable . $fieldHtml;
 	}
 
 	/** @param array<string,mixed> $options */
