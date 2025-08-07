@@ -264,11 +264,17 @@ final class CacheReporter
 	 * Determine if caching is currently enabled.
 	 *
 	 * Cache is considered enabled when:
-	 * - Debug mode is disabled (production mode)
+	 * - Development mode is not active
 	 * - At least one cache backend is available
 	 */
 	private function isCacheEnabled(): bool
 	{
+		// Check if development mode is active (overrides cache settings)
+		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
+		if ($devModeManager->isDevModeActive()) {
+			return false;
+		}
+
 		// Check if at least one cache backend is available
 		return $this->filesystemService->isAvailable()
 			   || $this->opcacheService->isAvailable()

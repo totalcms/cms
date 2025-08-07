@@ -101,6 +101,26 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
+	 * Get development mode status
+	 * 
+	 * @return array<string,mixed>
+	 */
+	public function getDevModeStatus(): array
+	{
+		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
+		return $devModeManager->getDevModeStatus();
+	}
+
+	/**
+	 * Check if development mode is active
+	 */
+	public function isDevModeActive(): bool
+	{
+		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
+		return $devModeManager->isDevModeActive();
+	}
+
+	/**
 	 * Get pending jobs info for display.
 	 *
 	 * @return string

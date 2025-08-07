@@ -43,11 +43,16 @@ final class TwigEngine
 		$filesystemConfig   = $config->cache['filesystem'];
 		$cacheDir           = $filesystemConfig['enabled'] ? $filesystemConfig['directory'] : false;
 
+		// Check if development mode is active (overrides cache settings)
+		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
+		$devModeActive  = $devModeManager->isDevModeActive();
+		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== false;
+
 		$loader     = new TwigFilesystemLoader($paths);
 		$this->twig = new TwigEnvironment($loader, [
-			'cache'            => $config->debug ? false : $cacheDir,
-			'debug'            => $config->debug,
-			'auto_reload'      => $config->debug,   // Auto-reload in dev, disabled in production
+			'cache'            => $cacheEnabled ? $cacheDir : false,
+			'debug'            => $config->debug || $devModeActive,
+			'auto_reload'      => $config->debug || $devModeActive,   // Auto-reload in dev or devmode
 			'autoescape'       => false,
 			'optimizations'    => -1,               // Enable all optimizations
 			'strict_variables' => false,
