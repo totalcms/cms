@@ -39,6 +39,9 @@ rm -rf dist
 mkdir dist
 cp -r config public resources src vendor autoload.php .htaccess dist
 
+# copy distribution gitignore as .gitignore
+cp .gitignore-dist dist/.gitignore
+
 # remove all public dev/test files
 rm -rf dist/public/test
 rm -rf dist/public/false
