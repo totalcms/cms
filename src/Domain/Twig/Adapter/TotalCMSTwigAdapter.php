@@ -7,6 +7,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -68,6 +69,7 @@ final class TotalCMSTwigAdapter
 		private FileAccessManager $fileAccessManager,
 		public ImageCacheService $imageCacheService,
 		public GridRenderer $grid,
+		private DevModeManager $devModeManager,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
@@ -107,8 +109,7 @@ final class TotalCMSTwigAdapter
 	 */
 	public function getDevModeStatus(): array
 	{
-		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
-		return $devModeManager->getDevModeStatus();
+		return $this->devModeManager->getDevModeStatus();
 	}
 
 	/**
@@ -116,8 +117,7 @@ final class TotalCMSTwigAdapter
 	 */
 	public function isDevModeActive(): bool
 	{
-		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
-		return $devModeManager->isDevModeActive();
+		return $this->devModeManager->isDevModeActive();
 	}
 
 	/**

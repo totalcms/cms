@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Cache;
 
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -18,6 +19,7 @@ final class CacheReporter
 		private OPcacheService $opcacheService,
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
+		private DevModeManager $devModeManager,
 	) {
 	}
 
@@ -270,8 +272,7 @@ final class CacheReporter
 	private function isCacheEnabled(): bool
 	{
 		// Check if development mode is active (overrides cache settings)
-		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
-		if ($devModeManager->isDevModeActive()) {
+		if ($this->devModeManager->isDevModeActive()) {
 			return false;
 		}
 

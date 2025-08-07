@@ -28,6 +28,7 @@ use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -261,6 +262,7 @@ return [
 			$container->get(SchemaLister::class),
 			$container->get(SchemaFactory::class),
 			$container->get(CSRFTokenManager::class),
+			$container->get(CacheManager::class),
 		);
 	},
 
@@ -288,6 +290,7 @@ return [
 			$container->get(FileAccessManager::class),
 			$container->get(ImageCacheService::class),
 			$container->get(GridRenderer::class),
+			$container->get(DevModeManager::class),
 		);
 	},
 
@@ -346,7 +349,8 @@ return [
 	TwigEngine::class => function (ContainerInterface $container) {
 		return new TwigEngine(
 			$container->get(Config::class),
-			$container->get(TotalCMSTwigExtension::class)
+			$container->get(TotalCMSTwigExtension::class),
+			$container->get(DevModeManager::class)
 		);
 	},
 
@@ -373,6 +377,7 @@ return [
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
+			$container->get(DevModeManager::class),
 		);
 	},
 
@@ -383,6 +388,12 @@ return [
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
 			$container->get(TextWatermarkFactory::class)
+		);
+	},
+
+	DevModeManager::class => function (ContainerInterface $container) {
+		return new DevModeManager(
+			$container->get(CacheManager::class)
 		);
 	},
 

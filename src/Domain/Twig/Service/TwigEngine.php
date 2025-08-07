@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Twig\Service;
 
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
@@ -28,6 +29,7 @@ final class TwigEngine
 	public function __construct(
 		Config $config,
 		TotalCMSTwigExtension $extension,
+		DevModeManager $devModeManager,
 	) {
 		$internalTemplates = TemplateRepository::RESERVED_TEMPLATE_DIR;
 		if (!file_exists($internalTemplates)) {
@@ -44,7 +46,6 @@ final class TwigEngine
 		$cacheDir           = $filesystemConfig['enabled'] ? $filesystemConfig['directory'] : false;
 
 		// Check if development mode is active (overrides cache settings)
-		$devModeManager = new \TotalCMS\Domain\Cache\Service\DevModeManager();
 		$devModeActive  = $devModeManager->isDevModeActive();
 		$cacheEnabled   = !$config->debug && !$devModeActive && $cacheDir !== false;
 
