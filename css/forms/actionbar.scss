@@ -18,6 +18,7 @@
 	transition       : opacity 300ms ease-in-out;
 	z-index          : 1;
 	display          : flex;
+	flex-wrap        : wrap;
 	gap              : 1rem;
 	backdrop-filter  : blur(3px);
 
