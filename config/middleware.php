@@ -10,6 +10,7 @@ use Slim\Middleware\MethodOverrideMiddleware;
 use TotalCMS\Middleware\BetaMiddleware;
 use TotalCMS\Middleware\BundleMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
+use TotalCMS\Middleware\DevModeMiddleware;
 use TotalCMS\Middleware\LiteLicenseMiddleware;
 use TotalCMS\Middleware\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
@@ -19,6 +20,7 @@ use TotalCMS\TotalCMS;
 
 return function (App $app) {
 	$app->addBodyParsingMiddleware();
+	$app->add(DevModeMiddleware::class);
 	$app->add(BetaMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(SessionStartMiddleware::class);

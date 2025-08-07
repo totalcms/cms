@@ -85,6 +85,7 @@ use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
+use TotalCMS\Middleware\DevModeMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -342,6 +343,13 @@ return [
 	CSRFProtectionMiddleware::class => function (ContainerInterface $container) {
 		return new CSRFProtectionMiddleware(
 			$container->get(CSRFTokenManager::class)
+		);
+	},
+
+	DevModeMiddleware::class => function (ContainerInterface $container) {
+		return new DevModeMiddleware(
+			$container->get(DevModeManager::class),
+			$container->get(OPcacheService::class)
 		);
 	},
 
