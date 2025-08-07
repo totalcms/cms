@@ -206,6 +206,7 @@ $settings['htmlclean'] = [
 
 $settings['dashboard'] = [
 	'pagination' => 50, // Default pagination for dashboard tables
+	'title' => 'Total CMS Admin', // Browser title for admin dashboard pages
 ];
 
 // https://www.php.net/manual/en/timezones.php

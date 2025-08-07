@@ -34,11 +34,18 @@ final class SettingsSaver
 			}
 		}
 
+		// Handle dashboard settings
+		$dashboardSettings = [];
 		if (isset($settings['pagination'])) {
-			$settings['dashboard'] = [
-				'pagination' => (int)$settings['pagination'],
-			];
+			$dashboardSettings['pagination'] = (int)$settings['pagination'];
 			unset($settings['pagination']);
+		}
+		if (isset($settings['title'])) {
+			$dashboardSettings['title'] = $settings['title'];
+			unset($settings['title']);
+		}
+		if (!empty($dashboardSettings)) {
+			$settings['dashboard'] = $dashboardSettings;
 		}
 
 		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';

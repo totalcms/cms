@@ -84,6 +84,22 @@
 				</p>
 			</div>
 
+			<div class="form-field text-field" data-type="text">
+				<label for="title">Admin Dashboard Browser Title</label>
+				<div class="form-group">
+					<input type="text"
+						value="{{ settings.dashboard.title }}"
+						id="title"
+						name="title"
+						aria-describedby="help-title"
+						placeholder="{{ defaults.dashboard.title }}">
+					<div class="form-group-icon"></div>
+				</div>
+				<p class="help" id="help-title">
+					The browser title displayed in admin dashboard pages. This appears in the browser tab and bookmarks.
+				</p>
+			</div>
+
 			<div class="form-field number-field" data-type="number">
 				<label for="pagination">Dashboard Table Pagination</label>
 				<div class="form-group">
