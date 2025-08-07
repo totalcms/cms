@@ -28,3 +28,4 @@ public/assets
 /version
 /resources/jobqueue
 .cache_version
+/tests/test-data/alloy/image-uploads
