@@ -1,14 +1,11 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace TotalCMS\Domain\Cache\Service;
 
-use JsonException;
-use TotalCMS\Domain\Cache\CacheManager;
-
 /**
- * Manages temporary development mode state
+ * Manages temporary development mode state.
  */
 final class DevModeManager
 {
@@ -21,14 +18,14 @@ final class DevModeManager
 	}
 
 	/**
-	 * Enable development mode for specified duration
+	 * Enable development mode for specified duration.
 	 */
 	public function enableDevMode(): void
 	{
 		$devModeData = [
-			'enabled' => true,
+			'enabled'    => true,
 			'expires_at' => time() + $this->devModeDuration,
-			'started_at' => time()
+			'started_at' => time(),
 		];
 
 		file_put_contents(
@@ -38,7 +35,7 @@ final class DevModeManager
 	}
 
 	/**
-	 * Disable development mode
+	 * Disable development mode.
 	 */
 	public function disableDevMode(): void
 	{
@@ -48,7 +45,7 @@ final class DevModeManager
 	}
 
 	/**
-	 * Check if development mode is currently active
+	 * Check if development mode is currently active.
 	 */
 	public function isDevModeActive(): bool
 	{
@@ -63,7 +60,7 @@ final class DevModeManager
 			}
 
 			$devModeData = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-			
+
 			if (!isset($devModeData['enabled'], $devModeData['expires_at'])) {
 				return false;
 			}
@@ -71,19 +68,21 @@ final class DevModeManager
 			// Check if expired
 			if (time() > $devModeData['expires_at']) {
 				$this->disableDevMode();
+
 				return false;
 			}
 
 			return $devModeData['enabled'];
-		} catch (JsonException) {
+		} catch (\JsonException) {
 			// Invalid JSON, remove the file
 			$this->disableDevMode();
+
 			return false;
 		}
 	}
 
 	/**
-	 * Get remaining time in seconds until dev mode expires
+	 * Get remaining time in seconds until dev mode expires.
 	 */
 	public function getRemainingTime(): int
 	{
@@ -98,28 +97,28 @@ final class DevModeManager
 			}
 
 			$devModeData = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-			$remaining = $devModeData['expires_at'] - time();
-			
-			return (int) max(0, $remaining);
-		} catch (JsonException) {
+			$remaining   = $devModeData['expires_at'] - time();
+
+			return (int)max(0, $remaining);
+		} catch (\JsonException) {
 			return 0;
 		}
 	}
 
 	/**
-	 * Get development mode status information
-	 * 
+	 * Get development mode status information.
+	 *
 	 * @return array<string,mixed>
 	 */
 	public function getDevModeStatus(): array
 	{
 		if (!$this->isDevModeActive()) {
 			return [
-				'enabled' => false,
-				'remaining_seconds' => 0,
+				'enabled'             => false,
+				'remaining_seconds'   => 0,
 				'remaining_formatted' => '0:00:00',
-				'expires_at' => null,
-				'started_at' => null
+				'expires_at'          => null,
+				'started_at'          => null,
 			];
 		}
 
@@ -129,27 +128,27 @@ final class DevModeManager
 				return $this->getDevModeStatus(); // Recurse to get disabled state
 			}
 
-			$devModeData = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+			$devModeData      = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
 			$remainingSeconds = $this->getRemainingTime();
-			
+
 			return [
-				'enabled' => true,
-				'remaining_seconds' => $remainingSeconds,
+				'enabled'             => true,
+				'remaining_seconds'   => $remainingSeconds,
 				'remaining_formatted' => $this->formatTime($remainingSeconds),
-				'expires_at' => $devModeData['expires_at'],
-				'started_at' => $devModeData['started_at']
+				'expires_at'          => $devModeData['expires_at'],
+				'started_at'          => $devModeData['started_at'],
 			];
-		} catch (JsonException) {
+		} catch (\JsonException) {
 			return $this->getDevModeStatus(); // Recurse to get disabled state
 		}
 	}
 
 	/**
-	 * Format seconds into HH:MM:SS format
+	 * Format seconds into HH:MM:SS format.
 	 */
 	private function formatTime(int $seconds): string
 	{
-		$hours = intval($seconds / 3600);
+		$hours   = intval($seconds / 3600);
 		$minutes = intval(($seconds % 3600) / 60);
 		$seconds = $seconds % 60;
 

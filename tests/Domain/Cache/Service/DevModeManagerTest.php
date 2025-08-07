@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Domain\Cache\Service;
 
@@ -17,9 +17,9 @@ final class DevModeManagerTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->devModeManager = new DevModeManager();
+		$this->devModeManager  = new DevModeManager();
 		$this->testDevModeFile = sys_get_temp_dir() . '/totalcms_devmode.json';
-		
+
 		// Clean up any existing dev mode file
 		$this->cleanupDevModeFile();
 	}
@@ -48,16 +48,16 @@ final class DevModeManagerTest extends TestCase
 		$endTime = time();
 
 		$this->assertFileExists($this->testDevModeFile);
-		
+
 		$content = file_get_contents($this->testDevModeFile);
 		$this->assertNotFalse($content);
-		
+
 		$data = json_decode($content, true);
 		$this->assertIsArray($data);
 		$this->assertArrayHasKey('enabled', $data);
 		$this->assertArrayHasKey('expires_at', $data);
 		$this->assertArrayHasKey('started_at', $data);
-		
+
 		$this->assertTrue($data['enabled']);
 		$this->assertGreaterThanOrEqual($startTime, $data['started_at']);
 		$this->assertLessThanOrEqual($endTime, $data['started_at']);
@@ -74,13 +74,13 @@ final class DevModeManagerTest extends TestCase
 	{
 		// Create an expired dev mode file
 		$expiredData = [
-			'enabled' => true,
+			'enabled'    => true,
 			'expires_at' => time() - 3600, // 1 hour ago
-			'started_at' => time() - 7200   // 2 hours ago
+			'started_at' => time() - 7200,   // 2 hours ago
 		];
-		
+
 		file_put_contents($this->testDevModeFile, json_encode($expiredData));
-		
+
 		$this->assertFalse($this->devModeManager->isDevModeActive());
 		$this->assertFileDoesNotExist($this->testDevModeFile); // Should be cleaned up
 	}
@@ -88,7 +88,7 @@ final class DevModeManagerTest extends TestCase
 	public function testIsDevModeActiveReturnsFalseWithCorruptedFile(): void
 	{
 		file_put_contents($this->testDevModeFile, 'invalid json content');
-		
+
 		$this->assertFalse($this->devModeManager->isDevModeActive());
 		$this->assertFileDoesNotExist($this->testDevModeFile); // Should be cleaned up
 	}
@@ -97,7 +97,7 @@ final class DevModeManagerTest extends TestCase
 	{
 		$incompleteData = ['enabled' => true]; // missing expires_at
 		file_put_contents($this->testDevModeFile, json_encode($incompleteData));
-		
+
 		$this->assertFalse($this->devModeManager->isDevModeActive());
 	}
 
@@ -105,7 +105,7 @@ final class DevModeManagerTest extends TestCase
 	{
 		$this->devModeManager->enableDevMode();
 		$this->assertFileExists($this->testDevModeFile);
-		
+
 		$this->devModeManager->disableDevMode();
 		$this->assertFileDoesNotExist($this->testDevModeFile);
 	}
@@ -126,7 +126,7 @@ final class DevModeManagerTest extends TestCase
 	{
 		$this->devModeManager->enableDevMode();
 		$remaining = $this->devModeManager->getRemainingTime();
-		
+
 		// Should be close to 3 hours (10800 seconds), allowing for small timing differences
 		$this->assertGreaterThan(10795, $remaining);
 		$this->assertLessThan(10801, $remaining);
@@ -135,20 +135,20 @@ final class DevModeManagerTest extends TestCase
 	public function testGetRemainingTimeReturnsZeroWhenExpired(): void
 	{
 		$expiredData = [
-			'enabled' => true,
+			'enabled'    => true,
 			'expires_at' => time() - 1,
-			'started_at' => time() - 3601
+			'started_at' => time() - 3601,
 		];
-		
+
 		file_put_contents($this->testDevModeFile, json_encode($expiredData));
-		
+
 		$this->assertEquals(0, $this->devModeManager->getRemainingTime());
 	}
 
 	public function testGetDevModeStatusWhenInactive(): void
 	{
 		$status = $this->devModeManager->getDevModeStatus();
-		
+
 		$this->assertIsArray($status);
 		$this->assertFalse($status['enabled']);
 		$this->assertEquals(0, $status['remaining_seconds']);
@@ -162,9 +162,9 @@ final class DevModeManagerTest extends TestCase
 		$startTime = time();
 		$this->devModeManager->enableDevMode();
 		$endTime = time();
-		
+
 		$status = $this->devModeManager->getDevModeStatus();
-		
+
 		$this->assertIsArray($status);
 		$this->assertTrue($status['enabled']);
 		$this->assertGreaterThan(10795, $status['remaining_seconds']);
@@ -179,10 +179,10 @@ final class DevModeManagerTest extends TestCase
 	{
 		$this->devModeManager->enableDevMode();
 		$status = $this->devModeManager->getDevModeStatus();
-		
+
 		// Should format as H:MM:SS
 		$this->assertMatchesRegularExpression('/^\d+:\d{2}:\d{2}$/', $status['remaining_formatted']);
-		
+
 		// For 3 hours, should start with "2:5" or "3:0" (approximately)
 		$this->assertStringStartsWithOneOf(['2:5', '2:6', '3:0'], $status['remaining_formatted']);
 	}
@@ -196,7 +196,7 @@ final class DevModeManagerTest extends TestCase
 				break;
 			}
 		}
-		
+
 		$this->assertTrue($matches, "String '$actual' does not start with any of: " . implode(', ', $prefixes));
 	}
 
@@ -204,10 +204,10 @@ final class DevModeManagerTest extends TestCase
 	{
 		// Create a file that will cause JSON exception
 		file_put_contents($this->testDevModeFile, "\x00\x01\x02"); // Invalid UTF-8
-		
+
 		$this->assertFalse($this->devModeManager->isDevModeActive());
 		$this->assertEquals(0, $this->devModeManager->getRemainingTime());
-		
+
 		$status = $this->devModeManager->getDevModeStatus();
 		$this->assertFalse($status['enabled']);
 	}
@@ -216,9 +216,9 @@ final class DevModeManagerTest extends TestCase
 	{
 		// Create a directory with the same name as the file to cause read error
 		mkdir($this->testDevModeFile);
-		
+
 		$this->assertFalse($this->devModeManager->isDevModeActive());
-		
+
 		// Clean up
 		rmdir($this->testDevModeFile);
 	}

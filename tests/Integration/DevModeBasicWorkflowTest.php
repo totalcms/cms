@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Integration;
 
@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 
 /**
- * Basic integration tests for DevModeManager without mocking dependencies
+ * Basic integration tests for DevModeManager without mocking dependencies.
  */
 final class DevModeBasicWorkflowTest extends TestCase
 {
@@ -17,7 +17,7 @@ final class DevModeBasicWorkflowTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->devModeManager = new DevModeManager();
+		$this->devModeManager  = new DevModeManager();
 		$this->testDevModeFile = sys_get_temp_dir() . '/totalcms_devmode.json';
 		$this->cleanupDevModeFile();
 	}
@@ -39,7 +39,7 @@ final class DevModeBasicWorkflowTest extends TestCase
 		// Step 1: Verify initial state (dev mode inactive)
 		$this->assertFalse($this->devModeManager->isDevModeActive());
 		$this->assertEquals(0, $this->devModeManager->getRemainingTime());
-		
+
 		$status = $this->devModeManager->getDevModeStatus();
 		$this->assertFalse($status['enabled']);
 		$this->assertEquals(0, $status['remaining_seconds']);
@@ -54,7 +54,7 @@ final class DevModeBasicWorkflowTest extends TestCase
 
 		// Verify dev mode is active
 		$this->assertTrue($this->devModeManager->isDevModeActive());
-		
+
 		$remaining = $this->devModeManager->getRemainingTime();
 		$this->assertGreaterThan(10795, $remaining);
 		$this->assertLessThan(10801, $remaining);
@@ -87,11 +87,11 @@ final class DevModeBasicWorkflowTest extends TestCase
 	{
 		// Create a dev mode state that's about to expire
 		$almostExpiredData = [
-			'enabled' => true,
+			'enabled'    => true,
 			'expires_at' => time() + 5, // 5 seconds from now
-			'started_at' => time() - 10795 // Almost 3 hours ago
+			'started_at' => time() - 10795, // Almost 3 hours ago
 		];
-		
+
 		file_put_contents($this->testDevModeFile, json_encode($almostExpiredData));
 
 		// Verify it's still active
@@ -103,11 +103,11 @@ final class DevModeBasicWorkflowTest extends TestCase
 
 		// Wait for expiration (simulate by creating expired data)
 		$expiredData = [
-			'enabled' => true,
+			'enabled'    => true,
 			'expires_at' => time() - 1, // 1 second ago
-			'started_at' => time() - 10801 // More than 3 hours ago
+			'started_at' => time() - 10801, // More than 3 hours ago
 		];
-		
+
 		file_put_contents($this->testDevModeFile, json_encode($expiredData));
 
 		// Verify it's now inactive due to expiration
@@ -149,17 +149,17 @@ final class DevModeBasicWorkflowTest extends TestCase
 	{
 		// Enable dev mode
 		$this->devModeManager->enableDevMode();
-		
+
 		// Get status multiple times and verify consistency
 		$status1 = $this->devModeManager->getDevModeStatus();
 		sleep(1); // Wait 1 second
 		$status2 = $this->devModeManager->getDevModeStatus();
-		
+
 		// Basic properties should be the same
 		$this->assertEquals($status1['enabled'], $status2['enabled']);
 		$this->assertEquals($status1['started_at'], $status2['started_at']);
 		$this->assertEquals($status1['expires_at'], $status2['expires_at']);
-		
+
 		// Remaining time should decrease
 		$this->assertGreaterThan($status2['remaining_seconds'], $status1['remaining_seconds']);
 	}
@@ -168,20 +168,20 @@ final class DevModeBasicWorkflowTest extends TestCase
 	{
 		$this->devModeManager->enableDevMode();
 		$status = $this->devModeManager->getDevModeStatus();
-		
+
 		// Parse the formatted time
 		$parts = explode(':', $status['remaining_formatted']);
 		$this->assertCount(3, $parts);
-		
-		$hours = (int) $parts[0];
-		$minutes = (int) $parts[1];
-		$seconds = (int) $parts[2];
-		
+
+		$hours   = (int)$parts[0];
+		$minutes = (int)$parts[1];
+		$seconds = (int)$parts[2];
+
 		// Verify it's approximately 3 hours
 		$totalSeconds = $hours * 3600 + $minutes * 60 + $seconds;
 		$this->assertGreaterThan(10795, $totalSeconds);
 		$this->assertLessThan(10801, $totalSeconds);
-		
+
 		// Verify formatting is correct
 		$this->assertGreaterThanOrEqual(0, $hours);
 		$this->assertGreaterThanOrEqual(0, $minutes);
@@ -194,21 +194,21 @@ final class DevModeBasicWorkflowTest extends TestCase
 	{
 		$this->devModeManager->enableDevMode();
 		$this->assertFileExists($this->testDevModeFile);
-		
+
 		$content = file_get_contents($this->testDevModeFile);
 		$this->assertNotFalse($content);
-		
+
 		$data = json_decode($content, true);
 		$this->assertIsArray($data);
 		$this->assertArrayHasKey('enabled', $data);
 		$this->assertArrayHasKey('expires_at', $data);
 		$this->assertArrayHasKey('started_at', $data);
-		
+
 		$this->assertTrue($data['enabled']);
 		$this->assertIsInt($data['expires_at']);
 		$this->assertIsInt($data['started_at']);
 		$this->assertEquals($data['started_at'] + 10800, $data['expires_at']);
-		
+
 		// Verify JSON is properly formatted
 		$this->assertJson($content);
 	}
@@ -218,24 +218,24 @@ final class DevModeBasicWorkflowTest extends TestCase
 		// Simulate concurrent access by creating multiple DevModeManager instances
 		$manager1 = new DevModeManager();
 		$manager2 = new DevModeManager();
-		
+
 		// First manager enables dev mode
 		$manager1->enableDevMode();
-		
+
 		// Second manager should see the same state
 		$this->assertTrue($manager1->isDevModeActive());
 		$this->assertTrue($manager2->isDevModeActive());
-		
+
 		$status1 = $manager1->getDevModeStatus();
 		$status2 = $manager2->getDevModeStatus();
-		
+
 		$this->assertEquals($status1['enabled'], $status2['enabled']);
 		$this->assertEquals($status1['expires_at'], $status2['expires_at']);
 		$this->assertEquals($status1['started_at'], $status2['started_at']);
-		
+
 		// First manager disables dev mode
 		$manager1->disableDevMode();
-		
+
 		// Both should see it as disabled
 		$this->assertFalse($manager1->isDevModeActive());
 		$this->assertFalse($manager2->isDevModeActive());

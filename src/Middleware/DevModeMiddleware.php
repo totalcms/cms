@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace TotalCMS\Middleware;
 
@@ -22,7 +22,7 @@ final class DevModeMiddleware implements MiddlewareInterface
 
 	public function __construct(
 		private DevModeManager $devModeManager,
-		private OPcacheService $opcacheService
+		private OPcacheService $opcacheService,
 	) {
 	}
 
@@ -31,7 +31,7 @@ final class DevModeMiddleware implements MiddlewareInterface
 		// Check dev mode status only once per request (performance optimization)
 		if (self::$devModeChecked === null) {
 			self::$isDevModeActive = $this->devModeManager->isDevModeActive();
-			self::$devModeChecked = true;
+			self::$devModeChecked  = true;
 		}
 
 		// Flush OPcache if dev mode is active and OPcache is available

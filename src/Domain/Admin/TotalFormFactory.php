@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -13,7 +14,6 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Support\Config;
 
 /**
@@ -152,7 +152,7 @@ final class TotalFormFactory
 	public function devmode(array $options = []): string
 	{
 		$devModeManager = new DevModeManager();
-		$devModeStatus = $devModeManager->getDevModeStatus();
+		$devModeStatus  = $devModeManager->getDevModeStatus();
 
 		$options = array_merge([
 			'form'  => $this->dummyForm(),

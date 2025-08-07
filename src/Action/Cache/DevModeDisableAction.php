@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace TotalCMS\Action\Cache;
 
@@ -10,19 +10,19 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * Disable development mode
+ * Disable development mode.
  */
 final class DevModeDisableAction
 {
 	public function __construct(
 		private readonly DevModeManager $devModeManager,
-		private readonly JsonRenderer $jsonRenderer
+		private readonly JsonRenderer $jsonRenderer,
 	) {
 	}
 
 	public function __invoke(
 		ServerRequestInterface $request,
-		ResponseInterface $response
+		ResponseInterface $response,
 	): ResponseInterface {
 		$this->devModeManager->disableDevMode();
 		$status = $this->devModeManager->getDevModeStatus();
@@ -30,7 +30,7 @@ final class DevModeDisableAction
 		return $this->jsonRenderer->json($response, [
 			'success' => true,
 			'message' => 'Development mode disabled. Caching has been restored.',
-			'devmode' => $status
+			'devmode' => $status,
 		]);
 	}
 }

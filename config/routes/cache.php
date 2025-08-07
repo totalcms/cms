@@ -4,8 +4,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Cache\CacheDeleteAction;
 use TotalCMS\Action\Cache\CollectionImageCacheDeleteAction;
-use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeDisableAction;
+use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeStatusAction;
 
 return function (App $app) {

@@ -103,8 +103,8 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * Get development mode status
-	 * 
+	 * Get development mode status.
+	 *
 	 * @return array<string,mixed>
 	 */
 	public function getDevModeStatus(): array
@@ -113,7 +113,7 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * Check if development mode is active
+	 * Check if development mode is active.
 	 */
 	public function isDevModeActive(): bool
 	{
