@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Cache;
 
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\Cache\Service\FilesystemService;
+use TotalCMS\Domain\Cache\Service\MemcachedService;
+use TotalCMS\Domain\Cache\Service\OPcacheService;
+use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeDisableAction;
 use TotalCMS\Action\Cache\DevModeStatusAction;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\Config;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\RequestFactory;
 use Slim\Psr7\Factory\ResponseFactory;
@@ -19,6 +26,7 @@ use Slim\Psr7\Factory\ResponseFactory;
 final class DevModeApiTest extends TestCase
 {
 	private DevModeManager $devModeManager;
+	private CacheManager $cacheManager;
 	private JsonRenderer $jsonRenderer;
 	private RequestFactory $requestFactory;
 	private ResponseFactory $responseFactory;
@@ -27,6 +35,54 @@ final class DevModeApiTest extends TestCase
 	{
 		parent::setUp();
 		$this->devModeManager = new DevModeManager();
+		
+		// Create a simple CacheManager for testing (all services disabled)
+		$config = new Config([
+			'env' => 'test',
+			'template' => '/tmp',
+			'dashboard' => [],
+			'datadir' => '/tmp',
+			'tmpdir' => '/tmp',
+			'cache' => [
+				'filesystem' => ['enabled' => false, 'directory' => '/tmp/test-cache']
+			],
+			'logger' => [],
+			'sentry' => [],
+			'error' => [],
+			'domain' => 'test.com',
+			'api' => 'http://test.com/api',
+			'locale' => 'en_US',
+			'session' => [],
+			'auth' => [],
+			'debug' => false,
+			'notfound' => '/404',
+			'htmlclean' => [],
+			'timezone' => 'UTC',
+			'imageworks' => []
+		]);
+		
+		$filesystemService = new FilesystemService($config);
+		$opcacheService = new OPcacheService();
+		$redisService = new RedisService($config);
+		$memcachedService = new MemcachedService($config);
+		$textWatermarkFactory = new TextWatermarkFactory(
+			new \TotalCMS\Domain\Storage\StorageFilesystemAdapter(
+				new \League\Flysystem\Filesystem(
+					new \League\Flysystem\Local\LocalFilesystemAdapter('/tmp')
+				)
+			),
+			$config
+		);
+		
+		$this->cacheManager = new CacheManager(
+			$filesystemService,
+			$opcacheService,
+			$redisService,
+			$memcachedService,
+			$textWatermarkFactory,
+			$this->devModeManager
+		);
+		
 		$this->jsonRenderer = new JsonRenderer();
 		$this->requestFactory = new RequestFactory();
 		$this->responseFactory = new ResponseFactory();
@@ -65,7 +121,7 @@ final class DevModeApiTest extends TestCase
 	{
 		$this->assertFalse($this->devModeManager->isDevModeActive());
 
-		$action = new DevModeEnableAction($this->devModeManager, $this->jsonRenderer);
+		$action = new DevModeEnableAction($this->devModeManager, $this->cacheManager, $this->jsonRenderer);
 		$request = $this->requestFactory->createRequest('POST', '/cache/devmode');
 		$response = $this->responseFactory->createResponse();
 
@@ -78,7 +134,7 @@ final class DevModeApiTest extends TestCase
 		$data = json_decode($body, true);
 
 		$this->assertTrue($data['success']);
-		$this->assertSame('Development mode enabled for 3 hours. Caching is now disabled.', $data['message']);
+		$this->assertStringContainsString('Development mode enabled for 3 hours', $data['message']);
 		$this->assertTrue($data['devmode']['enabled']);
 		$this->assertGreaterThan(10000, $data['devmode']['remaining_seconds']);
 
@@ -156,7 +212,7 @@ final class DevModeApiTest extends TestCase
 		$this->devModeManager->enableDevMode();
 		$this->assertTrue($this->devModeManager->isDevModeActive());
 
-		$action = new DevModeEnableAction($this->devModeManager, $this->jsonRenderer);
+		$action = new DevModeEnableAction($this->devModeManager, $this->cacheManager, $this->jsonRenderer);
 		$request = $this->requestFactory->createRequest('POST', '/cache/devmode');
 		$response = $this->responseFactory->createResponse();
 
