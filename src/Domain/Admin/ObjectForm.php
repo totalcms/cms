@@ -41,7 +41,10 @@ final class ObjectForm extends TotalForm
 		$defaults = $this->fieldDefaults($name);
 		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
 
-		$defaults['required'] = $this->isRequired($name);
+		// Only set required from schema if not explicitly provided in options
+		if (!isset($options['required'])) {
+			$defaults['required'] = $this->isRequired($name);
+		}
 
 		// Get the value from the object data if it exists
 		if (!empty($this->id)) {

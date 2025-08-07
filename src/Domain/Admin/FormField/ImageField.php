@@ -151,10 +151,11 @@ class ImageField extends FormField
 	private function infoFields(array $imageData): string
 	{
 		$content = $this->form->field('featured', [
-			'field' => 'checkbox',
-			'label' => 'Featured',
-			'help'  => 'Mark this image as featured.',
-			'value' => $imageData['featured'] ?? false,
+			'field'    => 'checkbox',
+			'label'    => 'Featured',
+			'help'     => 'Mark this image as featured.',
+			'value'    => $imageData['featured'] ?? false,
+			'required' => false,
 		]);
 		$content .= $this->form->field('alt', [
 			'field'       => 'text',
@@ -162,6 +163,7 @@ class ImageField extends FormField
 			'help'        => 'Alt text is used by screen readers and search engines to describe the image.',
 			'placeholder' => 'Enter Alt Text',
 			'value'       => $imageData['alt'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('link', [
 			'field'       => 'url',
@@ -169,6 +171,7 @@ class ImageField extends FormField
 			'help'        => 'Enter a URL to link the image to.',
 			'placeholder' => 'https://example.com',
 			'value'       => $imageData['link'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('tags', [
 			'field'       => 'list',
@@ -176,6 +179,7 @@ class ImageField extends FormField
 			'help'        => 'Add tags to help organize your images.',
 			'placeholder' => 'Add Tags',
 			'value'       => $imageData['tags'] ?? [],
+			'required'    => false,
 		]);
 
 		return HTMLUtils::details('Info', $content);
@@ -185,16 +189,18 @@ class ImageField extends FormField
 	private function focalFields(array $imageData): string
 	{
 		$content = $this->form->field('focalpoint-x', [
-			'field' => 'range',
-			'label' => 'Focal Point X',
-			'help'  => 'Set the horizontal focal point coordinate of the image.',
-			'value' => $imageData['focalpoint']['x'] ?? 50,
+			'field'    => 'range',
+			'label'    => 'Focal Point X',
+			'help'     => 'Set the horizontal focal point coordinate of the image.',
+			'value'    => $imageData['focalpoint']['x'] ?? 50,
+			'required' => false,
 		]);
 		$content .= $this->form->field('focalpoint-y', [
-			'field' => 'range',
-			'label' => 'Focal Point Y',
-			'help'  => 'Set the vertical focal point coordinate of the image.',
-			'value' => $imageData['focalpoint']['y'] ?? 50,
+			'field'    => 'range',
+			'label'    => 'Focal Point Y',
+			'help'     => 'Set the vertical focal point coordinate of the image.',
+			'value'    => $imageData['focalpoint']['y'] ?? 50,
+			'required' => false,
 		]);
 
 		return HTMLUtils::details('Focal Point', $content);
@@ -204,15 +210,17 @@ class ImageField extends FormField
 	private function exifFields(array $imageData): string
 	{
 		$content = $this->form->field('exif-date', [
-			'field' => 'datetime',
-			'label' => 'Date',
-			'value' => $imageData['exif']['date'] ?? '',
+			'field'    => 'datetime',
+			'label'    => 'Date',
+			'value'    => $imageData['exif']['date'] ?? '',
+			'required' => false,
 		]);
 		$content .= $this->form->field('exif-title', [
 			'field'       => 'text',
 			'label'       => 'Title',
 			'placeholder' => 'No Title Found',
 			'value'       => $imageData['exif']['title'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-author', [
 			'field'       => 'text',
@@ -220,6 +228,7 @@ class ImageField extends FormField
 			'placeholder' => 'No Autor Found',
 			'class'       => 'icon-user',
 			'value'       => $imageData['exif']['author'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-copyright', [
 			'field'       => 'text',
@@ -227,6 +236,7 @@ class ImageField extends FormField
 			'placeholder' => 'No Copyright Found',
 			'class'       => 'icon-copyright',
 			'value'       => $imageData['exif']['copyright'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-description', [
 			'field'       => 'textarea',
@@ -234,6 +244,7 @@ class ImageField extends FormField
 			'placeholder' => 'No Description Found',
 			'value'       => $imageData['exif']['description'] ?? '',
 			'rows'        => 3,
+			'required'    => false,
 		]);
 
 		return HTMLUtils::details('EXIF - Info', $content);
@@ -248,6 +259,7 @@ class ImageField extends FormField
 			'class'       => 'icon-camera',
 			'placeholder' => 'Camera Make Not Found',
 			'value'       => $imageData['exif']['make'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-camera', [
 			'field'       => 'text',
@@ -255,6 +267,7 @@ class ImageField extends FormField
 			'placeholder' => 'Camera Model Not Found',
 			'class'       => 'icon-camera',
 			'value'       => $imageData['exif']['camera'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-lens', [
 			'field'       => 'text',
@@ -262,6 +275,7 @@ class ImageField extends FormField
 			'placeholder' => 'Lens Not Found',
 			'class'       => 'icon-camera',
 			'value'       => $imageData['exif']['lens'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-focalLength', [
 			'field'       => 'number',
@@ -270,6 +284,7 @@ class ImageField extends FormField
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['focalLength'] ?? '',
 			'step'        => '0.1',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-aperture', [
 			'field'       => 'number',
@@ -278,6 +293,7 @@ class ImageField extends FormField
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['aperture'] ?? '',
 			'step'        => '0.1',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-iso', [
 			'field'       => 'number',
@@ -286,6 +302,7 @@ class ImageField extends FormField
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['iso'] ?? '',
 			'step'        => '0.1',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-shutterSpeed', [
 			'field'       => 'text',
@@ -293,6 +310,7 @@ class ImageField extends FormField
 			'placeholder' => 'Shutter Speed Not Found',
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['shutterSpeed'] ?? '',
+			'required'    => false,
 		]);
 
 		return HTMLUtils::details('EXIF - Camera', $content);
@@ -307,6 +325,7 @@ class ImageField extends FormField
 			'class'       => 'icon-gps',
 			'placeholder' => 'Country Not Found',
 			'value'       => $imageData['exif']['country'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-state', [
 			'field'       => 'text',
@@ -314,6 +333,7 @@ class ImageField extends FormField
 			'class'       => 'icon-gps',
 			'placeholder' => 'State or Province Not Found',
 			'value'       => $imageData['exif']['state'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-city', [
 			'field'       => 'text',
@@ -321,6 +341,7 @@ class ImageField extends FormField
 			'class'       => 'icon-gps',
 			'placeholder' => 'City Not Found',
 			'value'       => $imageData['exif']['city'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-sublocation', [
 			'field'       => 'text',
@@ -328,6 +349,7 @@ class ImageField extends FormField
 			'class'       => 'icon-gps',
 			'placeholder' => 'Sub-Location Not Found',
 			'value'       => $imageData['exif']['sublocation'] ?? '',
+			'required'    => false,
 		]);
 
 		$content .= HTMLUtils::inlineElement('hr');
@@ -338,6 +360,7 @@ class ImageField extends FormField
 			'class'       => 'icon-gps',
 			'placeholder' => 'Longitude Not Found',
 			'value'       => $imageData['exif']['longitude'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-latitude', [
 			'field'       => 'text',
@@ -345,6 +368,7 @@ class ImageField extends FormField
 			'class'       => 'icon-gps',
 			'placeholder' => 'Latitude Not Found',
 			'value'       => $imageData['exif']['latitude'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('exif-altitude', [
 			'field'       => 'text',
@@ -352,6 +376,7 @@ class ImageField extends FormField
 			'class'       => 'icon-gps',
 			'placeholder' => 'Altitude Not Found',
 			'value'       => $imageData['exif']['altitude'] ?? '',
+			'required'    => false,
 		]);
 
 		return HTMLUtils::details('EXIF - Location', $content);
@@ -361,24 +386,29 @@ class ImageField extends FormField
 	private function paletteFields(array $imageData): string
 	{
 		$content = $this->form->field('palette-0', [
-			'field' => 'color',
-			'value' => $imageData['palette'][0] ?? '',
+			'field'    => 'color',
+			'value'    => $imageData['palette'][0] ?? '',
+			'required' => false,
 		]);
 		$content .= $this->form->field('palette-1', [
-			'field' => 'color',
-			'value' => $imageData['palette'][1] ?? '',
+			'field'    => 'color',
+			'value'    => $imageData['palette'][1] ?? '',
+			'required' => false,
 		]);
 		$content .= $this->form->field('palette-2', [
-			'field' => 'color',
-			'value' => $imageData['palette'][2] ?? '',
+			'field'    => 'color',
+			'value'    => $imageData['palette'][2] ?? '',
+			'required' => false,
 		]);
 		$content .= $this->form->field('palette-3', [
-			'field' => 'color',
-			'value' => $imageData['palette'][3] ?? '',
+			'field'    => 'color',
+			'value'    => $imageData['palette'][3] ?? '',
+			'required' => false,
 		]);
 		$content .= $this->form->field('palette-4', [
-			'field' => 'color',
-			'value' => $imageData['palette'][4] ?? '',
+			'field'    => 'color',
+			'value'    => $imageData['palette'][4] ?? '',
+			'required' => false,
 		]);
 
 		$palette = HTMLUtils::element('div', $content, ['class' => 'palette']);
