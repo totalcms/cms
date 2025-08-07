@@ -197,8 +197,8 @@ export default class DeckField extends TotalField {
     }
 
 	error(message) {
-		super.error(message);
 		this.input.setCustomValidity(message);
+		super.error(message);
 	}
 
     validate() {

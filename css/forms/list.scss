@@ -25,20 +25,20 @@
   $choices-z-index: 100
 );
 
+.list-field .choices select[hidden] {
+	// needs to be visible to see browser validation
+	display  : block !important;
+	width    : 80% !important;
+	opacity  : 0 !important;
+	padding  : 0 !important;
+	margin   : 0 !important;
+	position : absolute;
+}
 
 .choices {
     width: 100%;
     margin-bottom: 0;
 
-	select[hidden] {
-		// needs to be visible to see browser validation
-		display : block !important;
-		width   : 0 !important;
-		height  : 0 !important;
-		opacity : 0 !important;
-		padding : 0 !important;
-		margin  : 0 !important;
-	}
 
     input[type="search"] {
         box-shadow  : none;

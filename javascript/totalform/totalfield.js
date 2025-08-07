@@ -147,6 +147,7 @@ export default class TotalField {
 
 	validate() {
 		if (this.input.checkValidity()) return true;
+		this.input.reportValidity();
 		this.error(this.input.validationMessage);
 		return false;
 	}

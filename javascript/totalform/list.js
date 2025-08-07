@@ -87,7 +87,8 @@ export default class ListField extends MultiSelectField {
 			const items = this.getValue();
 			if (!Array.isArray(items) || items.length === 0) {
 				this.input.setCustomValidity("Please add at least one item to the list.");
-				this.error("Please add at least one item to the list.");
+				this.input.reportValidity();
+				this.error(this.input.validationMessage);
 				return false;
 			}
 		}
