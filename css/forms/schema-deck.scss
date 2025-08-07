@@ -125,6 +125,10 @@
 	border                : 1px solid oklch(var(--totalform-nearwhite));
 	transition            : border-color 200ms ease-in-out;
 
+	> button {
+		--totalform-icon-color: var(--totalform-darkgray) !important;
+	}
+
 	&:hover {
 		border-color : oklch(var(--totalform-lightgray));
 	}
