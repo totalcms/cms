@@ -26,7 +26,8 @@ final class DeckDataTest extends TestCase
 	{
 		$data = new DeckData();
 		$this->assertSame([], $data->deck);
-		$this->assertSame([], $data->transform());
+		// Empty deck should transform to stdClass object for proper JSON schema validation
+		$this->assertInstanceOf(\stdClass::class, $data->transform());
 	}
 
 	public function testAcceptsVariousScalarValues(): void

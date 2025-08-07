@@ -174,7 +174,9 @@ export default class DeckField extends TotalField {
 			deckData[item.deckitem.getItemId()] = item.deckitem.getValue();
         }
 
-        return deckData;
+        // Ensure we always return an object, never an empty array
+        // This prevents PHP JSON decoding from converting {} to []
+        return Object.keys(deckData).length === 0 ? {} : deckData;
     }
 
     setValue(value) {

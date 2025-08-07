@@ -19,7 +19,7 @@ class DeckData extends PropertyData
 	/** @param array<mixed> $deck */
 	private static function verifyDeck(array $deck): bool
 	{
-		// Empty deck is valid
+		// Empty deck is valid (both empty associative array and empty indexed array)
 		if (empty($deck)) {
 			return true;
 		}
@@ -49,9 +49,14 @@ class DeckData extends PropertyData
 		return true;
 	}
 
-	/** @return array<string,array<string,mixed>> */
-	public function transform(): array
+	/** @return array<string,array<string,mixed>>|object */
+	public function transform(): array|object
 	{
+		// Return empty object (stdClass) for empty deck to ensure JSON serialization as {}
+		// This prevents empty decks from being serialized as [] which fails schema validation
+		if (empty($this->deck)) {
+			return new \stdClass();
+		}
 		return $this->deck;
 	}
 
