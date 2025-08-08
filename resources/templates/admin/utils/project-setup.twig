@@ -99,7 +99,7 @@
 <section class="dash-content-section">
 	<h2>Other Supported Import Tools</h2>
 	<p>Total CMS can import data from various other content management systems to help you migrate your existing content.</p>
-	
+
 	<div class="supported-tools">
 		<div class="tool-item">
 			<h3>Alloy</h3>
@@ -112,13 +112,16 @@
 <style>
 .dash-content-section:not(:first-child) { padding-top: 2rem; }
 .dash-main-content { align-content: start; }
-.supported-tools { margin-top: 1rem; }
-.tool-item { 
-	border: 1px solid oklch(var(--totalform-border-color)); 
-	border-radius: var(--totalform-radius);
-	padding: 1.5rem; 
-	margin-bottom: 1rem; 
+.supported-tools {
+	margin-top : 1rem;
+	display    : grid;
+	gap        : 1rem;
 }
-.tool-item h3 { margin-top: 0; margin-bottom: 0.5rem; }
-.tool-item p { margin-bottom: 1rem; }
+.tool-item {
+	display       : grid;
+	gap           : 0.75rem;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+}
 </style>
