@@ -82,27 +82,40 @@
 			.then(response => response.json())
 			.then(data => {
 				if (data.success) {
-					// Build results HTML
-					let html = '<div class="message success">Analysis completed successfully!</div>';
-					html += '<h3>Found Data:</h3>';
-					html += '<ul>';
-					if (data.data.blogs && data.data.blogs.length > 0) {
-						html += `<li><strong>Blog Posts:</strong> ${data.data.blogs.length} posts found</li>`;
-					}
-					if (data.data.embeds && data.data.embeds.length > 0) {
-						html += `<li><strong>Embeds:</strong> ${data.data.embeds.length} embeds found</li>`;
-					}
-					if (data.data.droplets && data.data.droplets.length > 0) {
-						html += `<li><strong>Droplets:</strong> ${data.data.droplets.length} droplets found</li>`;
-					}
-					html += '</ul>';
-					html += '<p style="margin-top: 1rem;"><button class="dash-button" onclick="startImport()">Import All Data</button></p>';
+					// Check if any data was found
+					const totalItems = (data.data.blogs?.length || 0) + (data.data.embeds?.length || 0) + (data.data.droplets?.length || 0);
+					
+					if (totalItems === 0) {
+						// No data found - show message and link back to form
+						let html = '<div class="message error">No Data Found</div>';
+						html += '<p>No Alloy content was found in the specified folders. Please check your folder paths and try again.</p>';
+						html += '<p style="margin-top: 1rem;"><a class="dash-button transparent" href="utils/import-alloy">Try Again</a></p>';
+						
+						// Replace form with no data message
+						document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2>' + html;
+					} else {
+						// Build results HTML
+						let html = '<div class="message success">Analysis completed successfully!</div>';
+						html += '<h3>Found Data:</h3>';
+						html += '<ul>';
+						if (data.data.blogs && data.data.blogs.length > 0) {
+							html += `<li><strong>Blog Posts:</strong> ${data.data.blogs.length} posts found</li>`;
+						}
+						if (data.data.embeds && data.data.embeds.length > 0) {
+							html += `<li><strong>Embeds:</strong> ${data.data.embeds.length} embeds found</li>`;
+						}
+						if (data.data.droplets && data.data.droplets.length > 0) {
+							html += `<li><strong>Droplets:</strong> ${data.data.droplets.length} droplets found</li>`;
+						}
+						html += '</ul>';
+						html += '<p style="margin-top: 1rem;"><button class="dash-button" onclick="startImport()">Import All Data</button></p>';
 
-					// Replace form with results
-					document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2>' + html;
+						// Replace form with results
+						document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2>' + html;
 
-					// Store form data for import
-					window.alloyFormData = formData;
+						// Store form data for import
+						window.alloyFormData = formData;
+					}
 				} else {
 					alert('Analysis failed: ' + data.message);
 					// Reset button
