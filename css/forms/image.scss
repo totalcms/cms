@@ -33,14 +33,32 @@
 		}
 	}
 
+	.dz-overlay {
+		opacity : 0;
+	}
+
 	> .form-group {
-		// width     : fit-content;
+		max-width : fit-content;
 		min-width : 100px;
+
+		&:has(.not-found) {
+			width : 100%;
+
+			.dz-overlay {
+				opacity : 1;
+			}
+		}
+	}
+	&.dz-drag-hover > .form-group {
+		.dz-overlay {
+			opacity : 1;
+		}
 	}
 
 	.not-found {
 		display : none;
 	}
+
 }
 
 dialog.image-link-dialog {
