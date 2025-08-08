@@ -2,6 +2,79 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.35] - 2025-08-08
+
+### Added
+- **NEW**: Deck field system - powerful structured object management
+  - Full CRUD operations with dedicated UI for deck items
+  - Advanced ID synchronization between deck items and dialog fields
+  - Support for numeric IDs (e.g., "1", "123") alongside traditional identifiers
+  - Real-time validation with comprehensive error handling
+  - JavaScript integration with sorting, duplication, and validation
+  - Schema compatibility checking with built-in warnings
+- **NEW**: Alloy CMS import system for seamless migration
+  - Complete import functionality from Alloy CMS platforms
+  - Pre-import data analysis to identify compatible content structures
+  - Background job queue processing for large imports
+  - Streamlined admin interface for managing import operations
+- **NEW**: Enhanced gallery system with semantic HTML5
+  - All galleries now use proper `<figure>` and `<figcaption>` elements
+  - Optional image captions below thumbnails via `captions` option
+  - Better accessibility with semantic HTML structure
+  - Enhanced LightGallery integration with proper data attributes
+
+### Enhanced
+- **Forms**: Modern layout improvements
+  - New `useFormGrid` option for contemporary form layouts
+  - Multi-field label support in relational options with configurable separators
+  - Enhanced inline form fields with improved styling
+  - Better field validation with real-time feedback
+- **Development Experience**: Improved developer tools
+  - Enhanced development mode with intelligent cache management
+  - Fixed Twig playground HTML code view scrolling issues
+  - Better error display and debugging capabilities
+  - Comprehensive schema categorization system
+- **API**: New utility methods and endpoints
+  - Enhanced file upload capabilities including URL-based uploads
+  - Complete deck management API with CRUD operations
+  - Improved utility methods for common development tasks
+  - Better error handling across all endpoints
+
+### Fixed
+- **Gallery & Media**: Resolved display and functionality issues
+  - Fixed LightGallery `data-src` attribute placement for proper lightbox operation
+  - Resolved maxVisible feature compatibility with new semantic HTML structure  
+  - Enhanced "View All" indicator placement within figure elements
+  - Improved gallery item structure consistency
+- **Deck System**: Comprehensive validation and UI fixes
+  - Fixed numeric ID validation to allow flexible naming patterns
+  - Resolved deck item ID synchronization issues with autogen fields
+  - Fixed deck validation regex to properly handle mixed patterns
+  - Enhanced deck item duplication and deletion workflows
+- **Form & Field Operations**: Various field-specific improvements
+  - Resolved tag field drag-and-drop functionality
+  - Fixed form submission issues in import workflows
+  - Better field synchronization across complex forms
+  - Improved error handling in form validation
+
+### Changed
+- **BREAKING**: Gallery HTML structure now always uses `<figure>` elements
+  - May require CSS updates for custom gallery styling
+  - Improved semantic structure benefits accessibility and SEO
+- **Deck Validation**: More permissive numeric ID validation
+  - Now allows mixed patterns like "123feature" for greater flexibility
+  - Maintains backward compatibility while expanding naming options
+- **Performance**: Enhanced cache management
+  - Better development mode detection and cache handling
+  - Improved memory management for large datasets
+  - Optimized collection processing and filtering
+
+### Developer Notes
+- Updated CLAUDE.md with comprehensive deck system documentation
+- Enhanced import system guides with step-by-step migration instructions
+- Improved API reference documentation with new endpoints
+- Added practical examples for deck usage and gallery integration
+
 ## [3.0.34] - 2025-07-26
 
 ### Added
