@@ -57,7 +57,7 @@ final class DeckDataTest extends TestCase
 	public function testRejectsInvalidNames(): void
 	{
 		$invalidDeck = [
-			'123invalid' => ['name' => 'Invalid Name'],
+			'123-invalid' => ['name' => 'Contains hyphen'], // Hyphen is not allowed
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
@@ -258,8 +258,8 @@ final class DeckDataTest extends TestCase
 		$item = ['title' => 'Feature'];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck item name must be a valid identifier');
-		$data->setItem('123invalid', $item);
+		$this->expectExceptionMessage('Deck item name must contain only alphanumeric characters and underscores');
+		$data->setItem('invalid@name', $item); // @ is not allowed
 	}
 
 	public function testSetItemAcceptsNonScalarValues(): void
@@ -332,16 +332,19 @@ final class DeckDataTest extends TestCase
 			'feature3'         => ['title' => 'Feature 3'],
 			'FeatureCamelCase' => ['title' => 'Feature Camel'],
 			'f'                => ['title' => 'Single Letter'],
+			'123'              => ['title' => 'Pure numeric'],
+			'123feature'       => ['title' => 'Mixed numeric start'],
+			'123invalid'       => ['title' => 'Mixed with letters'],
 		];
 
 		$data = new DeckData($validNames);
-		$this->assertCount(5, $data->deck);
+		$this->assertCount(8, $data->deck);
 	}
 
 	public function testInvalidNamePatterns(): void
 	{
 		$invalidNames = [
-			'123feature' => ['title' => 'Starts with number'],
+			'feature@invalid' => ['title' => 'Contains special character'], // @ is not allowed
 		];
 
 		$this->expectException(\InvalidArgumentException::class);

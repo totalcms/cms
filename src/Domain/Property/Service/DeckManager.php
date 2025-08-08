@@ -171,7 +171,7 @@ final class DeckManager
 	 * @param string $objectId
 	 * @param string $propertyName
 	 *
-	 * @return array<string,array<string,mixed>>
+	 * @return array<int|string,array<string,mixed>>
 	 */
 	public function getAllDeckItems(string $collection, string $objectId, string $propertyName): array
 	{
@@ -192,7 +192,7 @@ final class DeckManager
 	 * @param string $objectId
 	 * @param string $propertyName
 	 *
-	 * @return array<string>
+	 * @return array<int|string>
 	 */
 	public function getDeckItemIds(string $collection, string $objectId, string $propertyName): array
 	{

@@ -37,6 +37,7 @@ class DeckData extends PropertyData
 		foreach ($deck as $name => $item) {
 			// Allow both string and int keys, validate the string representation
 			$stringName = (string)$name;
+			// Allow alphanumeric characters and underscores
 			if (!preg_match('/^[0-9a-zA-Z_]+$/', $stringName)) {
 				return false;
 			}
@@ -86,8 +87,8 @@ class DeckData extends PropertyData
 	 */
 	public function setItem(string $name, array $item): void
 	{
-		if (!preg_match('/^(?:[a-zA-Z_]\\w*|\\d+)$/', $name)) {
-			throw new \InvalidArgumentException('Deck item name must be a valid identifier or numeric string');
+		if (!preg_match('/^[0-9a-zA-Z_]+$/', $name)) {
+			throw new \InvalidArgumentException('Deck item name must contain only alphanumeric characters and underscores');
 		}
 
 		// If item has an 'id' field, it must match the dictionary key
