@@ -134,8 +134,11 @@ class ColorData extends PropertyData
 			return ['l' => 0, 'c' => 0, 'h' => 0]; // black
 		}
 
-		// ColorFactory library doesn't handle hue wrapping
-		$updatedHue = self::changeHue($oklch['h'], $change['h']);
+		// ColorFactory library doesn't handle hue wrapping - only change hue if specified
+		$updatedHue = $oklch['h'];
+		if ($change['h'] !== null) {
+			$updatedHue = self::changeHue($oklch['h'], $change['h']);
+		}
 
 		$oklchColor = $oklchColor->change(
 			lightness: $change['l'] ?? null,

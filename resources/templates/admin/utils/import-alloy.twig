@@ -1,0 +1,178 @@
+<h1>Import from Alloy</h1>
+
+{% set action = getData.action %}
+
+<section class="dash-content-section">
+	<div class="alloy-import-description">
+		<p>This tool will help you import content from Alloy CMS into Total CMS. Please specify the folder names that contain different types of data in your Alloy installation.</p>
+
+		<div class="cms-twig-info" style="margin-top: 1rem;">
+			<h4>What gets imported:</h4>
+			<ul>
+				<li><strong>Blog Posts:</strong> Markdown files with YAML front matter converted to blog collection entries</li>
+				<li><strong>Embeds:</strong> Markdown content converted to styled text collection entries</li>
+				<li><strong>Droplets:</strong> Text and image droplets converted to appropriate collection entries</li>
+			</ul>
+		</div>
+	</div>
+
+	<form class="totalform" method="post" action="utils/import-alloy?action=alloy-import-analyze" id="alloy-import-form">
+		{{ csrf_field() }}
+
+		<div class="form-field text-field" data-type="text">
+			<label for="field-blog">Blog Posts Folder</label>
+			<div class="form-group">
+				<input type="text" id="field-blog" name="blog" value="{{ postData.blog ?? 'posts' }}" required>
+				<div class="form-group-icon"></div>
+			</div>
+			<p class="help">Folder containing blog post markdown files</p>
+		</div>
+
+		<div class="form-field text-field" data-type="text">
+			<label for="field-image-uploads">Image Uploads Folder</label>
+			<div class="form-group">
+				<input type="text" id="field-image-uploads" name="image_uploads" value="{{ postData.image_uploads ?? 'image-uploads' }}" required>
+				<div class="form-group-icon"></div>
+			</div>
+			<p class="help">Folder containing uploaded images referenced by content</p>
+		</div>
+
+		<div class="form-field text-field" data-type="text">
+			<label for="field-embeds">Embeds Folder</label>
+			<div class="form-group">
+				<input type="text" id="field-embeds" name="embeds" value="{{ postData.embeds ?? 'embeds' }}" required>
+				<div class="form-group-icon"></div>
+			</div>
+			<p class="help">Folder containing embed content markdown files</p>
+		</div>
+
+		<div class="form-field text-field" data-type="text">
+			<label for="field-droplets">Droplets Folder</label>
+			<div class="form-group">
+				<input type="text" id="field-droplets" name="droplets" value="{{ postData.droplets ?? 'droplets' }}" required>
+				<div class="form-group-icon"></div>
+			</div>
+			<p class="help">Folder containing droplet content markdown files</p>
+		</div>
+
+		<button class="dash-button" type="submit">Analyze Alloy Data</button>
+	</form>
+
+	<script>
+		document.getElementById('alloy-import-form').addEventListener('submit', function(e) {
+			e.preventDefault(); // Prevent default form submission
+
+			// Get form data
+			const formData = new FormData(this);
+
+			// Show loading state
+			const submitButton = this.querySelector('button[type="submit"]');
+			const originalText = submitButton.textContent;
+			submitButton.textContent = 'Analyzing...';
+			submitButton.disabled = true;
+
+			// Make API call
+			fetch('{{ cms.api }}/import/alloy-analyze', {
+				method: 'POST',
+				headers: {
+					'X-CSRF-Token': '{{ csrf_token() }}'
+				},
+				body: formData
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					// Check if any data was found
+					const totalItems = (data.data.blogs?.length || 0) + (data.data.embeds?.length || 0) + (data.data.droplets?.length || 0);
+					
+					if (totalItems === 0) {
+						// No data found - show message and link back to form
+						let html = '<div class="message error">No Data Found</div>';
+						html += '<p>No Alloy content was found in the specified folders. Please check your folder paths and try again.</p>';
+						html += '<p style="margin-top: 1rem;"><a class="dash-button transparent" href="utils/import-alloy">Try Again</a></p>';
+						
+						// Replace form with no data message
+						document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2>' + html;
+					} else {
+						// Build results HTML
+						let html = '<div class="message success">Analysis completed successfully!</div>';
+						html += '<h3>Found Data:</h3>';
+						html += '<ul>';
+						if (data.data.blogs && data.data.blogs.length > 0) {
+							html += `<li><strong>Blog Posts:</strong> ${data.data.blogs.length} posts found</li>`;
+						}
+						if (data.data.embeds && data.data.embeds.length > 0) {
+							html += `<li><strong>Embeds:</strong> ${data.data.embeds.length} embeds found</li>`;
+						}
+						if (data.data.droplets && data.data.droplets.length > 0) {
+							html += `<li><strong>Droplets:</strong> ${data.data.droplets.length} droplets found</li>`;
+						}
+						html += '</ul>';
+						html += '<p style="margin-top: 1rem;"><button class="dash-button" onclick="startImport()">Import All Data</button></p>';
+
+						// Replace form with results
+						document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2>' + html;
+
+						// Store form data for import
+						window.alloyFormData = formData;
+					}
+				} else {
+					alert('Analysis failed: ' + data.message);
+					// Reset button
+					submitButton.textContent = originalText;
+					submitButton.disabled = false;
+				}
+			})
+			.catch(error => {
+				alert('Analysis failed: ' + error.message);
+				// Reset button
+				submitButton.textContent = originalText;
+				submitButton.disabled = false;
+			});
+		});
+
+		function startImport() {
+			if (!window.alloyFormData) {
+				alert('Form data not available. Please try again.');
+				return;
+			}
+
+			document.querySelector('.dash-content-section').innerHTML = '<h2>Alloy Data Import</h2><p>Starting Alloy import...</p>';
+
+			fetch('{{ cms.api }}/import/alloy', {
+				method: 'POST',
+				headers: {
+					'X-CSRF-Token': '{{ csrf_token() }}'
+				},
+				body: window.alloyFormData
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					document.querySelector('.dash-content-section').innerHTML =
+						'<h2>Alloy Data Import</h2>' +
+						`<div class="message success">${data.message}</div>` +
+						'<p>All items have been queued for import via the job queue system. You can monitor progress in the <a href="utils/jobqueue">Job Queue Manager</a>.</p>';
+				} else {
+					document.querySelector('.dash-content-section').innerHTML =
+						'<h2>Alloy Data Import</h2>' +
+						`<div class="message error">${data.message}</div>`;
+				}
+			})
+			.catch(error => {
+				document.querySelector('.dash-content-section').innerHTML =
+					'<h2>Alloy Data Import</h2>' +
+					`<div class="message error">Import failed: ${error.message}</div>`;
+			});
+		}
+	</script>
+</section>
+
+<style>
+.dash-content-section { max-width: 800px; }
+.alloy-import-description { margin-bottom: 1rem; }
+.alloy-import-description ul { margin-left: 1.5rem; }
+.message { padding: 1rem; border-radius: var(--totalform-radius); margin: 1rem 0; }
+.message.success { background-color: oklch(var(--totalform-success) / 0.1); border: 1px solid oklch(var(--totalform-success)); }
+.message.error { background-color: oklch(var(--totalform-error) / 0.1); border: 1px solid oklch(var(--totalform-error)); }
+</style>

@@ -9,12 +9,12 @@ use TotalCMS\Domain\Property\Data\DeckData;
 #[CoversClass(DeckData::class)]
 final class DeckDataTest extends TestCase
 {
-	public function testCreatesValidDeckWithSimpleObjects(): void
+	public function testCreatesValidDeckWithNamedObjects(): void
 	{
 		$deck = [
-			['name' => 'Card 1', 'value' => 'value1', 'category' => 'type1'],
-			['name' => 'Card 2', 'value' => 'value2', 'category' => 'type2'],
-			['name' => 'Card 3', 'value' => 'value3', 'category' => 'type1'],
+			'feature1' => ['id' => 'feature1', 'title' => 'Fast Performance', 'icon' => 'speed', 'description' => 'Lightning fast'],
+			'feature2' => ['id' => 'feature2', 'title' => 'Secure', 'icon' => 'lock', 'description' => 'Industry standard'],
+			'feature3' => ['id' => 'feature3', 'title' => 'Scalable', 'icon' => 'scale', 'description' => 'Grows with you'],
 		];
 
 		$data = new DeckData($deck);
@@ -26,90 +26,112 @@ final class DeckDataTest extends TestCase
 	{
 		$data = new DeckData();
 		$this->assertSame([], $data->deck);
-		$this->assertSame([], $data->transform());
+		// Empty deck should transform to stdClass object for proper JSON schema validation
+		$this->assertInstanceOf(\stdClass::class, $data->transform());
 	}
 
-	public function testAcceptsSimpleScalarValues(): void
+	public function testAcceptsVariousScalarValues(): void
 	{
 		$deck = [
-			['id' => 1, 'name' => 'Item 1', 'active' => true],
-			['id' => 2, 'name' => 'Item 2', 'active' => false],
-			['id' => 3, 'name' => 'Item 3', 'price' => 29.99],
+			'item1' => ['id' => 'item1', 'sequence' => 1, 'name' => 'Item 1', 'active' => true],
+			'item2' => ['id' => 'item2', 'sequence' => 2, 'name' => 'Item 2', 'active' => false],
+			'item3' => ['id' => 'item3', 'sequence' => 3, 'name' => 'Item 3', 'price' => 29.99],
 		];
 
 		$data = new DeckData($deck);
 		$this->assertSame($deck, $data->deck);
 	}
 
-	public function testRejectsNonListArrays(): void
+	public function testRejectsListArrays(): void
 	{
 		$invalidDeck = [
-			'card1' => ['name' => 'Card 1'],
-			'card2' => ['name' => 'Card 2'],
+			['name' => 'Card 1'],
+			['name' => 'Card 2'],
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a set of simple objects');
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		new DeckData($invalidDeck);
+	}
+
+	public function testRejectsInvalidNames(): void
+	{
+		$invalidDeck = [
+			'123-invalid' => ['name' => 'Contains hyphen'], // Hyphen is not allowed
+		];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
 		new DeckData($invalidDeck);
 	}
 
 	public function testRejectsNonArrayItems(): void
 	{
 		$invalidDeck = [
-			['name' => 'Card 1'],
-			'invalid_string',
-			['name' => 'Card 2'],
+			'valid'   => ['name' => 'Valid'],
+			'invalid' => 'not_an_array',
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a set of simple objects');
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
 		new DeckData($invalidDeck);
 	}
 
-	public function testRejectsNestedArrays(): void
+	public function testAcceptsNestedArrays(): void
 	{
-		$invalidDeck = [
-			['name' => 'Card 1', 'nested' => ['invalid' => 'structure']],
+		$validDeck = [
+			'item' => ['name' => 'Item', 'nested' => ['valid' => 'structure']],
 		];
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a set of simple objects');
-		new DeckData($invalidDeck);
+		$data = new DeckData($validDeck);
+		$this->assertSame($validDeck, $data->deck);
 	}
 
-	public function testRejectsNestedObjects(): void
+	public function testAcceptsNestedObjects(): void
 	{
-		$invalidDeck = [
-			['name' => 'Card 1', 'object' => (object)['invalid' => 'structure']],
+		$validDeck = [
+			'item' => ['name' => 'Item', 'object' => (object)['valid' => 'structure']],
 		];
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a set of simple objects');
-		new DeckData($invalidDeck);
+		$data = new DeckData($validDeck);
+		$this->assertSame($validDeck, $data->deck);
+	}
+
+	public function testAcceptsNullValues(): void
+	{
+		$deckWithNull = [
+			'item' => [
+				'string'     => 'text',
+				'null_value' => null,
+			],
+		];
+
+		$data = new DeckData($deckWithNull);
+		$this->assertSame($deckWithNull, $data->deck);
 	}
 
 	public function testHandlesDangerousScalarValues(): void
 	{
 		$dangerousDeck = [
-			['name' => '<script>alert("xss")</script>', 'type' => 'malicious'],
-			['name' => '"; DROP TABLE cards; --', 'type' => 'sql_injection'],
-			['name' => 'javascript:void(0)', 'type' => 'protocol_attack'],
-			['name' => '${system("ls")}', 'type' => 'command_injection'],
+			'malicious' => ['name' => '<script>alert("xss")</script>', 'type' => 'malicious'],
+			'injection' => ['name' => '"; DROP TABLE cards; --', 'type' => 'sql_injection'],
+			'protocol'  => ['name' => 'javascript:void(0)', 'type' => 'protocol_attack'],
+			'command'   => ['name' => '${system("ls")}', 'type' => 'command_injection'],
 		];
 
-		// DeckData should accept but not sanitize - sanitization happens at display time
 		$data = new DeckData($dangerousDeck);
 		$this->assertSame($dangerousDeck, $data->deck);
-		$this->assertStringContainsString('<script>', $data->deck[0]['name']);
-		$this->assertStringContainsString('DROP TABLE', $data->deck[1]['name']);
+		$this->assertStringContainsString('<script>', $data->deck['malicious']['name']);
+		$this->assertStringContainsString('DROP TABLE', $data->deck['injection']['name']);
 	}
 
 	public function testHandlesLargeDecks(): void
 	{
 		$largeDeck = [];
 		for ($i = 0; $i < 1000; $i++) {
-			$largeDeck[] = [
-				'id'       => $i,
+			$largeDeck["item{$i}"] = [
+				'id'       => "item{$i}",
+				'sequence' => $i,
 				'name'     => "Item {$i}",
 				'category' => 'category_' . ($i % 10),
 				'active'   => ($i % 2 === 0),
@@ -124,7 +146,7 @@ final class DeckDataTest extends TestCase
 	public function testHandlesVariousScalarTypes(): void
 	{
 		$deck = [
-			[
+			'mixed' => [
 				'string'        => 'text',
 				'integer'       => 42,
 				'float'         => 3.14,
@@ -137,38 +159,24 @@ final class DeckDataTest extends TestCase
 		$this->assertSame($deck, $data->deck);
 	}
 
-	public function testRejectsNullValues(): void
-	{
-		$deckWithNull = [
-			[
-				'string'     => 'text',
-				'null_value' => null, // null is not scalar
-			],
-		];
-
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a set of simple objects');
-		new DeckData($deckWithNull);
-	}
-
 	public function testHandlesUnicodeContent(): void
 	{
 		$unicodeDeck = [
-			['name' => 'Unicode: 世界', 'emoji' => '🌍🚀💫'],
-			['name' => 'Français: café', 'accents' => 'àáâãäåæç'],
-			['name' => 'Русский: мир', 'cyrillic' => 'абвгдеё'],
+			'unicode' => ['name' => 'Unicode: 世界', 'emoji' => '🌍🚀💫'],
+			'french'  => ['name' => 'Français: café', 'accents' => 'àáâãäåæç'],
+			'russian' => ['name' => 'Русский: мир', 'cyrillic' => 'абвгдеё'],
 		];
 
 		$data = new DeckData($unicodeDeck);
 		$this->assertSame($unicodeDeck, $data->deck);
-		$this->assertStringContainsString('世界', $data->deck[0]['name']);
-		$this->assertStringContainsString('🌍', $data->deck[0]['emoji']);
+		$this->assertStringContainsString('世界', $data->deck['unicode']['name']);
+		$this->assertStringContainsString('🌍', $data->deck['unicode']['emoji']);
 	}
 
 	public function testAcceptsSettingsParameter(): void
 	{
 		$settings = ['validation' => 'strict', 'maxItems' => 100];
-		$deck     = [['name' => 'Test']];
+		$deck     = ['test' => ['name' => 'Test']];
 
 		$data = new DeckData($deck, $settings);
 		$this->assertSame($settings, $data->settings);
@@ -183,9 +191,9 @@ final class DeckDataTest extends TestCase
 	public function testHandlesEmptyObjects(): void
 	{
 		$deck = [
-			[],
-			['name' => 'Non-empty'],
-			[],
+			'empty1'   => [],
+			'nonempty' => ['name' => 'Non-empty'],
+			'empty2'   => [],
 		];
 
 		$data = new DeckData($deck);
@@ -195,28 +203,223 @@ final class DeckDataTest extends TestCase
 
 	public function testValidationPerformance(): void
 	{
-		// Test that validation doesn't cause performance issues
-		$largeDeck = array_fill(0, 100, ['name' => 'Test', 'id' => 1]);
+		$largeDeck = [];
+		for ($i = 0; $i < 100; $i++) {
+			$largeDeck["item{$i}"] = ['id' => "item{$i}", 'name' => 'Test', 'sequence' => $i];
+		}
 
 		$start = microtime(true);
 		$data  = new DeckData($largeDeck);
 		$time  = microtime(true) - $start;
 
-		$this->assertLessThan(0.1, $time); // Should complete in under 100ms
+		$this->assertLessThan(0.1, $time);
 		$this->assertCount(100, $data->deck);
 	}
 
 	public function testPathTraversalInDeckValues(): void
 	{
 		$pathTraversalDeck = [
-			['path' => '../../../etc/passwd', 'type' => 'traversal'],
-			['path' => '..\\..\\..\\windows\\system32\\hosts', 'type' => 'windows_traversal'],
-			['path' => '/etc/shadow', 'type' => 'absolute_path'],
+			'traversal' => ['path' => '../../../etc/passwd', 'type' => 'traversal'],
+			'windows'   => ['path' => '..\\..\\..\\windows\\system32\\hosts', 'type' => 'windows_traversal'],
+			'absolute'  => ['path' => '/etc/shadow', 'type' => 'absolute_path'],
 		];
 
 		$data = new DeckData($pathTraversalDeck);
-		// DeckData stores values as-is, path validation should happen elsewhere
 		$this->assertSame($pathTraversalDeck, $data->deck);
-		$this->assertStringContainsString('../../../etc/passwd', $data->deck[0]['path']);
+		$this->assertStringContainsString('../../../etc/passwd', $data->deck['traversal']['path']);
+	}
+
+	public function testGetItem(): void
+	{
+		$deck = [
+			'feature1' => ['title' => 'Fast', 'icon' => 'speed'],
+			'feature2' => ['title' => 'Secure', 'icon' => 'lock'],
+		];
+
+		$data = new DeckData($deck);
+		$this->assertSame(['title' => 'Fast', 'icon' => 'speed'], $data->getItem('feature1'));
+		$this->assertSame(['title' => 'Secure', 'icon' => 'lock'], $data->getItem('feature2'));
+		$this->assertNull($data->getItem('nonexistent'));
+	}
+
+	public function testSetItem(): void
+	{
+		$data = new DeckData();
+		$item = ['title' => 'New Feature', 'icon' => 'new'];
+
+		$data->setItem('newFeature', $item);
+		$this->assertSame($item, $data->getItem('newFeature'));
+		$this->assertTrue($data->hasItem('newFeature'));
+	}
+
+	public function testSetItemRejectsInvalidName(): void
+	{
+		$data = new DeckData();
+		$item = ['title' => 'Feature'];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Deck item name must contain only alphanumeric characters and underscores');
+		$data->setItem('invalid@name', $item); // @ is not allowed
+	}
+
+	public function testSetItemAcceptsNonScalarValues(): void
+	{
+		$data = new DeckData();
+		$item = ['title' => 'Feature', 'nested' => ['valid' => 'structure']];
+
+		$data->setItem('feature', $item);
+		$this->assertSame($item, $data->getItem('feature'));
+	}
+
+	public function testRemoveItem(): void
+	{
+		$deck = [
+			'feature1' => ['title' => 'Fast'],
+			'feature2' => ['title' => 'Secure'],
+		];
+
+		$data = new DeckData($deck);
+		$this->assertTrue($data->hasItem('feature1'));
+
+		$data->removeItem('feature1');
+		$this->assertFalse($data->hasItem('feature1'));
+		$this->assertTrue($data->hasItem('feature2'));
+	}
+
+	public function testGetItemNames(): void
+	{
+		$deck = [
+			'feature1' => ['title' => 'Fast'],
+			'feature2' => ['title' => 'Secure'],
+			'feature3' => ['title' => 'Scalable'],
+		];
+
+		$data  = new DeckData($deck);
+		$names = $data->getItemNames();
+
+		$this->assertSame(['feature1', 'feature2', 'feature3'], $names);
+	}
+
+	public function testHasItem(): void
+	{
+		$deck = ['feature1' => ['title' => 'Fast']];
+		$data = new DeckData($deck);
+
+		$this->assertTrue($data->hasItem('feature1'));
+		$this->assertFalse($data->hasItem('nonexistent'));
+	}
+
+	public function testCount(): void
+	{
+		$deck = [
+			'feature1' => ['title' => 'Fast'],
+			'feature2' => ['title' => 'Secure'],
+			'feature3' => ['title' => 'Scalable'],
+		];
+
+		$data = new DeckData($deck);
+		$this->assertSame(3, $data->count());
+
+		$data->removeItem('feature2');
+		$this->assertSame(2, $data->count());
+	}
+
+	public function testValidNamePatterns(): void
+	{
+		$validNames = [
+			'feature1'         => ['title' => 'Feature 1'],
+			'feature_2'        => ['title' => 'Feature 2'],
+			'feature3'         => ['title' => 'Feature 3'],
+			'FeatureCamelCase' => ['title' => 'Feature Camel'],
+			'f'                => ['title' => 'Single Letter'],
+			'123'              => ['title' => 'Pure numeric'],
+			'123feature'       => ['title' => 'Mixed numeric start'],
+			'123invalid'       => ['title' => 'Mixed with letters'],
+		];
+
+		$data = new DeckData($validNames);
+		$this->assertCount(8, $data->deck);
+	}
+
+	public function testInvalidNamePatterns(): void
+	{
+		$invalidNames = [
+			'feature@invalid' => ['title' => 'Contains special character'], // @ is not allowed
+		];
+
+		$this->expectException(\InvalidArgumentException::class);
+		new DeckData($invalidNames);
+	}
+
+	public function testRejectsDashesInNames(): void
+	{
+		$invalidNames = [
+			'feature-with-dash' => ['title' => 'Contains dashes'],
+		];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		new DeckData($invalidNames);
+	}
+
+	public function testRejectsInconsistentIds(): void
+	{
+		$inconsistentDeck = [
+			'feature1' => ['id' => 'feature2', 'title' => 'Mismatched ID'], // ID doesn't match key
+		];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		new DeckData($inconsistentDeck);
+	}
+
+	public function testAcceptsItemsWithMatchingIds(): void
+	{
+		$consistentDeck = [
+			'feature1' => ['id' => 'feature1', 'title' => 'Matching ID'],
+			'feature2' => ['id' => 'feature2', 'title' => 'Another Matching ID'],
+		];
+
+		$data = new DeckData($consistentDeck);
+		$this->assertSame($consistentDeck, $data->deck);
+	}
+
+	public function testAcceptsItemsWithoutIds(): void
+	{
+		$deckWithoutIds = [
+			'feature1' => ['title' => 'No ID field'],
+			'feature2' => ['title' => 'Another without ID'],
+		];
+
+		$data = new DeckData($deckWithoutIds);
+		$this->assertSame($deckWithoutIds, $data->deck);
+	}
+
+	public function testSetItemRejectsInconsistentId(): void
+	{
+		$data = new DeckData();
+		$item = ['id' => 'wrong_id', 'title' => 'Feature'];
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage("Deck item 'id' field ('wrong_id') must match the dictionary key ('correct_id')");
+		$data->setItem('correct_id', $item);
+	}
+
+	public function testSetItemAcceptsMatchingId(): void
+	{
+		$data = new DeckData();
+		$item = ['id' => 'feature1', 'title' => 'Feature'];
+
+		$data->setItem('feature1', $item);
+		$this->assertSame($item, $data->getItem('feature1'));
+	}
+
+	public function testSetItemAcceptsItemWithoutId(): void
+	{
+		$data = new DeckData();
+		$item = ['title' => 'Feature without ID'];
+
+		$data->setItem('feature1', $item);
+		$this->assertSame($item, $data->getItem('feature1'));
 	}
 }

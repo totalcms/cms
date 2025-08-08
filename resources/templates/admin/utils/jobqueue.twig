@@ -20,7 +20,8 @@
 		<p><em>If there is no path to the PHP command, you may need to find out what that is
 		from your hosting company. Depending on your server, it may or may not need it.</em></p>
 
-		<pre><code>{{ cms.processJobQueueCommand() }}</code></pre>
+		<pre class="jobqueue-command"><code id="jobqueue-command-text">{{ cms.processJobQueueCommand() }}</code></pre>
+		<button type="button" class="cms-clip-button dash-button transparent" data-clip="#jobqueue-command-text">Copy Command</button>
 	</section>
 
 	{{ cms.jobQueuePendingInfo() }}
@@ -29,15 +30,39 @@
 </section>
 
 <style>
+.jobqueue-command {
+	width         : 100%;
+	max-width     : 100%;
+	overflow-x    : auto;
+	white-space   : nowrap;
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+	font-size     : 0.9em;
+	box-sizing    : border-box;
+}
+
+.jobqueue-command code {
+	white-space : nowrap;
+	display     : block;
+}
+
+.jobqueue-command + .cms-clip-button {
+	margin-top: 0.5rem;
+}
+
 .jobqueue-table-wrapper {
 	max-height: 400px;
-	overflow-y: auto;
-	border: 1px solid #ddd;
-	border-radius: 4px;
+	max-width: 100%;
+	overflow: auto;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
 }
 
 .jobqueue-preview {
 	width: 100%;
+	min-width: 800px;
 	font-size: 0.9em;
 	border-collapse: collapse;
 }
@@ -45,28 +70,32 @@
 .jobqueue-preview thead {
 	position: sticky;
 	top: 0;
-	background: var(--color-bg, #fff);
+	background: oklch(var(--totalform-nearwhite));
 	z-index: 10;
 }
 
 .jobqueue-preview th,
 .jobqueue-preview td {
-	padding: 0.5rem;
+	padding: 0.75rem 1rem;
 	text-align: left;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid oklch(var(--totalform-border-color));
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .jobqueue-preview th {
 	font-weight: 600;
-	border-bottom: 1px solid #ddd;
+	border-bottom: 2px solid oklch(var(--totalform-border-color));
+	background: oklch(var(--totalform-icon-bg));
 }
 
 .jobqueue-preview.pending-jobs tbody tr:hover {
-	background-color: rgba(0, 150, 0, 0.05);
+	background-color: oklch(var(--totalform-success) / 0.05);
 }
 
 .jobqueue-preview.failed-jobs tbody tr:hover {
-	background-color: rgba(255, 0, 0, 0.05);
+	background-color: oklch(var(--totalform-error) / 0.05);
 }
 
 .jobqueue-preview-section {

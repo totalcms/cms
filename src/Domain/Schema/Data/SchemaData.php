@@ -5,15 +5,17 @@ namespace TotalCMS\Domain\Schema\Data;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use TotalCMS\Domain\Schema\Service\SchemaTransformer;
 
 /**
  * Schema Data object.
  */
 final class SchemaData
 {
-	public const SCHEMA_PREFIX    = 'https://www.totalcms.co/schemas/';
-	public const SCHEMA_VERSION   = 'https://json-schema.org/draft/2020-12/schema';
-	public const RESERVED_NAMES   = [
+	public const SCHEMA_PREFIX        = 'https://www.totalcms.co/schemas/';
+	public const SCHEMA_CUSTOM_PREFIX = 'https://www.totalcms.co/schemas/custom/';
+	public const SCHEMA_VERSION       = 'https://json-schema.org/draft/2020-12/schema';
+	public const RESERVED_NAMES       = [
 		'collection',
 		'jumpstart',
 		'new', // not allowed for /admin url routes
@@ -84,6 +86,7 @@ final class SchemaData
 	public string $id          = '';
 	public string $formgrid    = '';
 	public string $description = '';
+	public string $category    = '';
 	/** @var array<string,mixed> */
 	public array $properties = [];
 	/** @var array<string> */
@@ -100,9 +103,14 @@ final class SchemaData
 	/** @return array<string,mixed> */
 	public function toArray(): array
 	{
+		// Use custom prefix for non-reserved schemas, default prefix for reserved schemas
+		$prefix = in_array($this->id, self::RESERVED_SCHEMAS, true)
+			? self::SCHEMA_PREFIX
+			: self::SCHEMA_CUSTOM_PREFIX;
+
 		$array = [
 			'$schema'     => self::SCHEMA_VERSION,
-			'$id'         => self::SCHEMA_PREFIX . $this->id . '.json',
+			'$id'         => $prefix . $this->id . '.json',
 			'type'        => 'object',
 			'id'          => $this->id,
 			'description' => $this->description,
@@ -116,7 +124,15 @@ final class SchemaData
 			$array['formgrid'] = $this->formgrid;
 		}
 
-		return $array;
+		// Only include category if it's not empty
+		if (!empty($this->category)) {
+			$array['category'] = $this->category;
+		}
+
+		// Apply schema transformations to expand simplified deck syntax
+		$transformer = new SchemaTransformer();
+
+		return $transformer->transformSchema($array);
 	}
 
 	public function toJson(): string

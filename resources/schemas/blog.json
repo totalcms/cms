@@ -4,7 +4,7 @@
 	"id": "blog",
 	"type": "object",
 	"description": "A schema for a Total CMS Blog object",
-	"formgrid": "draft draft featured\nid id author\ntitle title date\nimage image tags\nimage image categories\nsummary summary summary\ncontent content content\nmedia media media\ngallery gallery gallery\nextra extra extra\ncreated updated .",
+	"formgrid": "id id\ntitle title\ndraft featured\ndate author\nimage image\ncategories categories\ntags tags\nsummary summary\ncontent content\nmedia media\ngallery gallery\nextra extra\nupdated created",
 	"properties": {
 		"draft": {
 			"type"    : "boolean",

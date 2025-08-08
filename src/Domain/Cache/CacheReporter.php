@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Cache;
 
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -18,6 +19,7 @@ final class CacheReporter
 		private OPcacheService $opcacheService,
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
+		private DevModeManager $devModeManager,
 	) {
 	}
 
@@ -264,11 +266,16 @@ final class CacheReporter
 	 * Determine if caching is currently enabled.
 	 *
 	 * Cache is considered enabled when:
-	 * - Debug mode is disabled (production mode)
+	 * - Development mode is not active
 	 * - At least one cache backend is available
 	 */
 	private function isCacheEnabled(): bool
 	{
+		// Check if development mode is active (overrides cache settings)
+		if ($this->devModeManager->isDevModeActive()) {
+			return false;
+		}
+
 		// Check if at least one cache backend is available
 		return $this->filesystemService->isAvailable()
 			   || $this->opcacheService->isAvailable()

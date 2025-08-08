@@ -9,6 +9,10 @@ export default class TotalField {
 		this.container = container;
 		this.input     = this.container.querySelector("input,textarea,select");
 
+		// Check if we're inside a deck-item
+		this.deckItem = container.closest('.deck-item');
+		this.isInDeck = !!this.deckItem;
+
 		container.totalfield = this;
 
 		this.type = container.dataset.type;
@@ -126,6 +130,7 @@ export default class TotalField {
 	}
 
     changed() {
+		this.input.setCustomValidity("");
 		this.container.classList.remove("error");
 
 		if (this.isUnsaved()) return;
@@ -143,6 +148,7 @@ export default class TotalField {
 
 	validate() {
 		if (this.input.checkValidity()) return true;
+		this.input.reportValidity();
 		this.error(this.input.validationMessage);
 		return false;
 	}

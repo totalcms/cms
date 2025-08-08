@@ -163,6 +163,7 @@ abstract class TotalForm
 		protected bool $helpOnHover   = false,
 		protected bool $helpOnFocus   = false,
 		protected bool $hideID        = false,
+		protected bool $useFormGrid   = true,
 	) {
 		$this->init();
 		$this->initClass();
@@ -174,6 +175,11 @@ abstract class TotalForm
 		if (empty($this->id) && isset($_GET['id'])) {
 			$this->id = $_GET['id'];
 		}
+	}
+
+	public function getSchemaFetcher(): SchemaFetcher
+	{
+		return $this->schemaFetcher;
 	}
 
 	protected function initClass(): void
@@ -214,7 +220,7 @@ abstract class TotalForm
 	public function build(string $content = ''): string
 	{
 		$formgrid = null;
-		if (!empty($this->schemaData->formgrid)) {
+		if (!empty($this->schemaData->formgrid) && $this->useFormGrid) {
 			$this->class .= ' formgrid';
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
 			$formgrid     = $gridBuilder->toCssGridAreas();
@@ -339,7 +345,7 @@ abstract class TotalForm
 		$content = '';
 
 		// If using formgrid, inject section headers and dividers
-		if (!empty($this->schemaData->formgrid)) {
+		if (!empty($this->schemaData->formgrid) && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
 			$content .= $gridBuilder->buildGridSectionHtml();
 		}
@@ -392,7 +398,7 @@ abstract class TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function buildFieldOptions(string $name, array $options = [])
+	protected function buildFieldOptions(string $name, array $options = []): array
 	{
 		return $options;
 	}
@@ -420,6 +426,11 @@ abstract class TotalForm
 	private function createDynamicField(string $name, array $options = []): FormField
 	{
 		$options = $this->buildFieldOptions($name, $options);
+
+		// Remove context flags that aren't constructor parameters
+		// Deck uses deck_context to determine if it is a deck field for
+		// buildFieldOptions in an ObjectForm
+		unset($options['deck_context']);
 
 		$typeClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($options['field'] ?? '') . 'Field';
 		if (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class)) {

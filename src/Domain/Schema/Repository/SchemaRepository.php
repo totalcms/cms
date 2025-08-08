@@ -9,6 +9,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Support\Config;
 
 /**
  * Repository.
@@ -18,9 +19,6 @@ final class SchemaRepository extends StorageRepository
 	public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../resources/schemas/';
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
-	private SchemaFactory $factory;
-	private CacheManager $cacheManager;
-
 	/**
 	 * The constructor.
 	 *
@@ -28,11 +26,20 @@ final class SchemaRepository extends StorageRepository
 	 * @param SchemaFactory $factory
 	 * @param CacheManager $cacheManager
 	 */
-	public function __construct(StorageAdapterInterface $filesystem, SchemaFactory $factory, CacheManager $cacheManager)
-	{
+	public function __construct(
+		StorageAdapterInterface $filesystem,
+		private SchemaFactory $factory,
+		private CacheManager $cacheManager,
+		private Config $config,
+	) {
 		parent::__construct($filesystem);
-		$this->factory      = $factory;
-		$this->cacheManager = $cacheManager;
+	}
+
+	public function getCustomSchemaDir(): string
+	{
+		// Return the absolute path to the custom schemas directory
+		// Since the filesystem adapter is rooted at tcms-data/, we can construct the full path
+		return $this->config->datadir . '/' . self::CUSTOM_SCHEMA_DIR;
 	}
 
 	/**

@@ -7,6 +7,7 @@ import Textarea from './textarea';
 import NumberField from './number';
 import ColorField from './color';
 import DateField from './date';
+import DeckField from './deck';
 import PasswordField from './password';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
@@ -105,7 +106,7 @@ export default class TotalForm {
 
 		this.dispatcher = new TotalDispatcher(this.form);
 
-        this.saveListener();
+        this.eventListeners();
         this.registerButtons();
 
 		if (this.form.classList.contains("autosave")) {
@@ -189,14 +190,6 @@ export default class TotalForm {
             fieldObjects.push(object);
 
 			// Mark as dirty
-            field.addEventListener("field-change", e => {
-				// Ignore change events when form is processing
-				// If a field is in focus on submit, a change event is triggered
-				if (this.isProcessing()) return;
-				this.unsaved();
-				if (this.autosave) this.save();
-			});
-            field.addEventListener("field-error", e => this.error(e.detail.message));
         });
         this.fields = fieldObjects;
     }
@@ -289,8 +282,8 @@ export default class TotalForm {
 			// case "radio":
 			// 	return new RadioField(field, options);
 
-			// case "deck":
-            //     return new Deck(field, options);
+			case "deck":
+                return new DeckField(field, options);
 
 			// case "markdown":
             //     return new MarkdownField(field, options);
@@ -313,11 +306,19 @@ export default class TotalForm {
     //-------------------------
     // Submit functions
     //-------------------------
-    saveListener() {
+    eventListeners() {
 		// Prevent the default form submission
 		if (this.method.toUpperCase() !== "GET") {
 			this.form.addEventListener("submit", event => event.preventDefault());
 		}
+		this.form.addEventListener("field-change", e => {
+			// Ignore change events when form is processing
+			// If a field is in focus on submit, a change event is triggered
+			if (this.isProcessing()) return;
+			this.unsaved();
+			if (this.autosave) this.save();
+		});
+		this.form.addEventListener("field-error", e => this.error(e.detail.message));
     }
 
 	validate() {
@@ -380,7 +381,8 @@ export default class TotalForm {
     afterSave(response) {
         if (!response) return;
 
-        if (this.droplets.length > 0) {
+		const unsavedDroplets = this.droplets.filter(field => field.isUnsaved());
+        if (unsavedDroplets.length > 0) {
             return this.saveDroplets(() => this.afterSaveAction(response));
         }
 		this.afterSaveAction(response);
@@ -528,7 +530,7 @@ export default class TotalForm {
     error(error) {
 		this.changeState("error", {error:error});
 		this.validated = false;
-        console.error("Form Error", error);
+        console.error("Form Error:", error);
     }
 
 	isError() {
@@ -568,6 +570,7 @@ export default class TotalForm {
         };
 
 		this.droplets.forEach(field => {
+			if (!field.isUnsaved()) return; // skip if the droplet is not unsaved
 			field.updateAPIUrl(); // update the droplet API URL
 			const droplet = field.droplet;
             if (droplet.isComplete()) {

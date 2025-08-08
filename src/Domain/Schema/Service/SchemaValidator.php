@@ -39,7 +39,11 @@ final class SchemaValidator
 		$resolver  = $validator->resolver();
 
 		if ($resolver instanceof SchemaResolver) {
+			// Register default schemas and properties
 			$resolver->registerPrefix(SchemaData::SCHEMA_PREFIX, SchemaRepository::DEFAULT_SCHEMA_DIR);
+			$resolver->registerPrefix(SchemaData::SCHEMA_PREFIX . 'properties/', SchemaRepository::DEFAULT_SCHEMA_DIR . 'properties/');
+			// Register custom schemas with their own prefix
+			$resolver->registerPrefix(SchemaData::SCHEMA_CUSTOM_PREFIX, $this->schemaRepository->getCustomSchemaDir());
 		}
 
 		$json = json_encode($object);

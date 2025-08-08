@@ -11,6 +11,7 @@ import JSONField from './totalform/json';
 import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
 import SlugifyInput from './totalform/slugify-inputs';
+import DevModeToggle from './devmode';
 import initExternalLinks from './external-links';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
@@ -62,6 +63,13 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const inputs = Array.from(document.getElementsByClassName('slugify-input'));
 	inputs.forEach(input => new SlugifyInput(input));
+
+	const devmodeToggle = document.querySelector('input[name="devmode"][type="checkbox"]');
+	if (devmodeToggle) {
+		// Get remaining seconds from a global variable or data attribute
+		const remainingSeconds = globalThis.DEVMODE_REMAINING_SECONDS || 0;
+		new DevModeToggle(devmodeToggle, { remainingSeconds });
+	}
 
 	initExternalLinks();
 });

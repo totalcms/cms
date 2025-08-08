@@ -34,6 +34,12 @@
 			"settings"    : { "rows" : 2 },
 			"field"       : "textarea"
 		},
+		"category": {
+			"type"  : "string",
+			"label" : "Category",
+			"help"  : "Add a category to organize the schemas in the side panel",
+			"field" : "text"
+		},
 		"formgrid": {
 			"type"        : "string",
 			"label"       : "Form Grid Layout",
@@ -81,6 +87,7 @@
 		"index"
 	],
 	"index" : [
-		"id"
+		"id",
+		"category"
 	]
 }

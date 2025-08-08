@@ -1,0 +1,16 @@
+# =============================================================================
+# Total CMS Distribution .gitignore
+# =============================================================================
+# This file is automatically copied to the dist folder during build.
+# It provides recommended git patterns for customers using the distribution.
+
+# -----------------------------------------------------------------------------
+# Cache & Runtime Files
+# -----------------------------------------------------------------------------
+cache/
+.cache_version
+logs/
+*.log
+tmp/
+.bundle
+jobqueue

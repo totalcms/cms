@@ -171,13 +171,15 @@
 
 .html-output-editor .CodeMirror {
 	height: auto;
-	min-height: 100px;
+	min-height: 200px;
+	max-height: 500px;
 	border: 1px solid oklch(var(--totalform-border-color));
 	border-radius: var(--totalform-radius);
 }
 
 .html-output-editor .CodeMirror-scroll {
-	overflow: visible !important;
+	overflow: auto !important;
+	max-height: 500px;
 }
 
 .html-output-editor .CodeMirror-scrollbar-filler,
@@ -277,12 +279,21 @@ function setupHtmlOutput() {
 	outputContainer.classList.add('html-output-editor');
 	outputEditor.getWrapperElement().classList.add('html-output-editor');
 
-	// Set height to content height to avoid scrollbars
+	// Set reasonable height with scrolling for long content
 	const lineHeight = outputEditor.defaultTextHeight();
 	const lineCount = outputEditor.lineCount();
-	const totalHeight = Math.max((lineCount * lineHeight) + 40, 200); // Minimum height
-
-	outputEditor.setSize(null, totalHeight);
+	const calculatedHeight = (lineCount * lineHeight) + 40;
+	const maxHeight = 500; // Max height before scrolling
+	const minHeight = 200; // Minimum height
+	
+	const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
+	outputEditor.setSize(null, finalHeight);
+	
+	// Enable scrolling if content exceeds max height
+	if (calculatedHeight > maxHeight) {
+		outputEditor.getWrapperElement().style.maxHeight = maxHeight + 'px';
+		outputEditor.getScrollerElement().style.maxHeight = maxHeight + 'px';
+	}
 
 	// Force refresh after a moment
 	setTimeout(() => {

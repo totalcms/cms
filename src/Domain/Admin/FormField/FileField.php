@@ -117,16 +117,18 @@ final class FileField extends FormField
 	private function infoFields(array $fileData): string
 	{
 		$content = $this->form->field('download', [
-			'field' => 'text',
-			'label' => 'Download Name',
-			'help'  => 'The name of the file when it gets downloaded.',
-			'value' => $fileData['download'] ?? $fileData['name'] ?? '',
+			'field'    => 'text',
+			'label'    => 'Download Name',
+			'help'     => 'The name of the file when it gets downloaded.',
+			'value'    => $fileData['download'] ?? $fileData['name'] ?? '',
+			'required' => false,
 		]);
 		$content .= $this->form->field('comments', [
 			'field'       => 'textarea',
 			'label'       => 'Comments',
 			'help'        => 'Comments about this file',
 			'value'       => $fileData['comments'] ?? '',
+			'required'    => false,
 		]);
 		$content .= $this->form->field('tags', [
 			'field'       => 'list',
@@ -134,6 +136,7 @@ final class FileField extends FormField
 			'help'        => 'Add tags to help organize your files.',
 			'placeholder' => 'Add Tags',
 			'value'       => $fileData['tags'] ?? [],
+			'required'    => false,
 		]);
 
 		return HTMLUtils::details('Info', $content);
@@ -147,12 +150,14 @@ final class FileField extends FormField
 			'label'       => 'Protected by Collection',
 			'help'        => 'Access group protection is set in the Collection.',
 			'value'       => $fileData['protected'] ?? false,
+			'required'    => false,
 		]);
 		$content .= $this->form->field('password', [
-			'field' => 'password',
-			'label' => 'Password',
-			'help'  => 'Require a password to download this file. This overrides all collection level access controls.',
-			'value' => $fileData['password'] ?? '',
+			'field'    => 'password',
+			'label'    => 'Password',
+			'help'     => 'Require a password to download this file. This overrides all collection level access controls.',
+			'value'    => $fileData['password'] ?? '',
+			'required' => false,
 		]);
 
 		return HTMLUtils::details('Protection', $content);

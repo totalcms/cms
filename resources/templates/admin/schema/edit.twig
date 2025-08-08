@@ -25,6 +25,62 @@
 	},
 }) }}
 
+{% set isDeckCompatible = cms.isDeckCompatible(url.schema) %}
+{% set incompatibleTypes = cms.getDeckIncompatibleTypes(url.schema) %}
+
+<div class="schema-deck-compatibility">
+	{% if isDeckCompatible %}
+		<div class="deck-compatible-message">
+			<span class="status-icon compatible">✓</span>
+			<strong>Deck Compatible:</strong> This schema can be used as a deck property type.
+		</div>
+	{% else %}
+		<div class="deck-incompatible-message">
+			<span class="status-icon incompatible">⚠</span>
+			<strong>Deck Incompatible:</strong> This schema cannot be used as a deck property type.
+			{% if incompatibleTypes|length > 0 %}
+				<br><small>Incompatible property types: {{ incompatibleTypes|join(', ') }}</small>
+			{% endif %}
+		</div>
+	{% endif %}
+</div>
+
+<style>
+.schema-deck-compatibility {
+	margin-top    : 1rem;
+	padding       : 0.75rem 1rem;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	background    : oklch(var(--totalform-nearwhite));
+	align-self    : end;
+}
+
+.deck-compatible-message {
+	color: oklch(var(--totalform-success));
+}
+
+.deck-incompatible-message {
+	color: oklch(var(--totalform-warning, 0.6 0.19 23.85));
+}
+
+.status-icon {
+	/* font-weight: bold; */
+}
+
+.status-icon.compatible {
+	color: oklch(var(--totalform-success));
+}
+
+.status-icon.incompatible {
+	color: oklch(var(--totalform-warning, 0.6 0.19 23.85));
+}
+
+.schema-deck-compatibility small {
+	color: oklch(var(--totalform-darkgray));
+	font-style: italic;
+}
+</style>
+
 <script>
 function duplicateSchema(event) {
 	event.preventDefault();

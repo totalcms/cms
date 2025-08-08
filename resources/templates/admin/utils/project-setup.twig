@@ -96,7 +96,32 @@
 </section>
 {% endif %}
 
+<section class="dash-content-section">
+	<h2>Other Supported Import Tools</h2>
+	<p>Total CMS can import data from various other content management systems to help you migrate your existing content.</p>
+
+	<div class="supported-tools">
+		<div class="tool-item">
+			<h3>Alloy</h3>
+			<p>Import content from Alloy CMS including blog posts, embeds, and droplets.</p>
+			<a class="dash-button transparent" href="utils/import-alloy">Import from Alloy</a>
+		</div>
+	</div>
+</section>
+
 <style>
 .dash-content-section:not(:first-child) { padding-top: 2rem; }
 .dash-main-content { align-content: start; }
+.supported-tools {
+	margin-top : 1rem;
+	display    : grid;
+	gap        : 1rem;
+}
+.tool-item {
+	display       : grid;
+	gap           : 0.75rem;
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+}
 </style>

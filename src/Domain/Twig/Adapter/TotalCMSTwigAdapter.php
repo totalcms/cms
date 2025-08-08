@@ -7,6 +7,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -19,6 +20,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\Encryption\Cipher;
@@ -57,6 +59,7 @@ final class TotalCMSTwigAdapter
 		private CollectionFetcher $collectionFetcher,
 		private SchemaLister $schemaLister,
 		private SchemaFetcher $schemaFetcher,
+		private DeckCompatibilityChecker $deckCompatibilityChecker,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
@@ -66,6 +69,7 @@ final class TotalCMSTwigAdapter
 		private FileAccessManager $fileAccessManager,
 		public ImageCacheService $imageCacheService,
 		public GridRenderer $grid,
+		private DevModeManager $devModeManager,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;
@@ -82,14 +86,38 @@ final class TotalCMSTwigAdapter
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
 		$installDir = realpath(__DIR__ . '/../../../..');
 		$docroot    = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
-		$command    = sprintf(
-			'%s %s/resources/bin/processJobs.php --docroot=%s',
+		$command    = $installDir . '/resources/bin/processJobs.php';
+
+		// Quote paths that contain spaces
+		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
+		$quotedDocroot = str_contains($docroot, ' ') ? '"' . $docroot . '"' : $docroot;
+
+		$command = sprintf(
+			'%s %s --docroot=%s',
 			$phpPath,
-			$installDir,
-			$docroot,
+			$quotedCommand,
+			$quotedDocroot,
 		);
 
 		return $command;
+	}
+
+	/**
+	 * Get development mode status.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getDevModeStatus(): array
+	{
+		return $this->devModeManager->getDevModeStatus();
+	}
+
+	/**
+	 * Check if development mode is active.
+	 */
+	public function isDevModeActive(): bool
+	{
+		return $this->devModeManager->isDevModeActive();
 	}
 
 	/**
@@ -420,6 +448,47 @@ NGINX;
 		$schemas = $this->schemaLister->listCustomSchemas();
 
 		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+	}
+
+	/** @return array<string,array<array<string,mixed>>> */
+	public function schemasByCategory(): array
+	{
+		$customSchemas   = $this->customSchemas();
+		$reservedSchemas = $this->reservedSchemas();
+
+		$categories = [];
+
+		// Process custom schemas by category
+		foreach ($customSchemas as $schema) {
+			$category = empty($schema['category']) ? 'Custom Schemas' : trim(strval($schema['category']));
+			if (!key_exists($category, $categories)) {
+				$categories[$category] = [];
+			}
+			$categories[$category][] = $schema;
+		}
+
+		// Always add Built-in Schemas category for reserved schemas
+		$categories['Built-in Schemas'] = $reservedSchemas;
+
+		// Sort the categories by key, but keep Built-in Schemas at the bottom
+		uksort($categories, function ($a, $b) {
+			if ($a === 'Built-in Schemas') {
+				return 1;
+			}
+			if ($b === 'Built-in Schemas') {
+				return -1;
+			}
+			if ($a === 'Custom Schemas') {
+				return 1;
+			}
+			if ($b === 'Custom Schemas') {
+				return -1;
+			}
+
+			return strcmp($a, $b);
+		});
+
+		return $categories;
 	}
 
 	// Get schema definition
@@ -1045,6 +1114,9 @@ NGINX;
 
 		$images = $this->data($options['collection'], $id, $options['property']);
 
+		// Check if captions should be shown
+		$showCaptions = isset($options['captions']) && $options['captions'];
+
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
 				'src'           => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
@@ -1054,15 +1126,28 @@ NGINX;
 				'oncontextmenu' => 'return false;',
 			]);
 			$link = HTMLUtils::element('a', $img, [
-				'href'         => $this->galleryPath($id, $image['name'], $fullSettings, $options),
+				'href' => $this->galleryPath($id, $image['name'], $fullSettings, $options),
+			]);
+
+			// Always wrap in figure for semantic HTML5
+			$figureContent = $link;
+			if ($showCaptions && !empty($image['alt'])) {
+				$caption = HTMLUtils::element('figcaption', htmlspecialchars($image['alt']), ['class' => 'cms-gallery-caption']);
+				$figureContent .= $caption;
+			}
+
+			$figure = HTMLUtils::element('figure', $figureContent, [
+				'class'        => 'cms-gallery-item',
+				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
 				'data-lg-size' => "{$image['width']}-{$image['height']}",
 			]);
-			$gallery .= $link;
+			$gallery .= $figure;
 		}
 
 		// Don't add these to the gallery settings
 		unset($options['collection']);
 		unset($options['property']);
+		unset($options['captions']); // Remove captions option from JS settings
 
 		// Extract maxVisible and viewAllText before encoding settings
 		$maxVisible = 0;
@@ -1297,5 +1382,35 @@ NGINX;
 
 		// Encrypted passwords should be longer than typical plain passwords
 		return strlen($password) > 20;
+	}
+
+	/**
+	 * Check if a schema is compatible with deck usage.
+	 */
+	public function isDeckCompatible(string $schemaId): bool
+	{
+		try {
+			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+
+			return $this->deckCompatibilityChecker->isCompatible($schema->toArray());
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Get incompatible property types for a schema when used with deck.
+	 *
+	 * @return array<string>
+	 */
+	public function getDeckIncompatibleTypes(string $schemaId): array
+	{
+		try {
+			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+
+			return $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schema->toArray());
+		} catch (\Exception $e) {
+			return [];
+		}
 	}
 }

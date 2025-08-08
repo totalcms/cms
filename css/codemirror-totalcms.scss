@@ -31,6 +31,26 @@
 		background-color : oklch(var(--totalform-nearwhite));
 		border-right     : 1px solid oklch(var(--totalform-lightgray));
 	}
+
+	// Ensure consistent gutter sizing across all CodeMirror instances
+	.CodeMirror-gutters {
+		width: 56px !important; // Line numbers (40px) + fold gutter (16px)
+		background-color: oklch(var(--totalform-nearwhite));
+		border-right: 1px solid oklch(var(--totalform-border-color));
+	}
+
+	.CodeMirror-linenumber {
+		color: oklch(var(--totalform-gray));
+		padding-right: 8px;
+		width: 40px !important; // Override CodeMirror's inline width calculation
+		min-width: 40px !important; // Ensure minimum width
+		text-align: right !important; // Force right alignment
+		box-sizing: border-box !important; // Include padding in width calculation
+	}
+
+	.CodeMirror-foldgutter {
+		width: 16px !important;
+	}
 }
 .totalcms-editor {
 	border        : 1px solid oklch(var(--totalform-border-color));
@@ -977,14 +997,24 @@
 			min-height: 200px;
 		}
 
+		// Match the custom code field gutter styling
 		.CodeMirror-gutters {
+			width: 56px !important; // Line numbers (40px) + fold gutter (16px)
 			background-color: oklch(var(--totalform-nearwhite));
 			border-right: 1px solid oklch(var(--totalform-border-color));
 		}
 
 		.CodeMirror-linenumber {
 			color: oklch(var(--totalform-gray));
-			padding: 0 8px;
+			padding-right: 8px;
+			width: 40px !important; // Override CodeMirror's inline width calculation
+			min-width: 40px !important; // Ensure minimum width
+			text-align: right !important; // Force right alignment
+			box-sizing: border-box !important; // Include padding in width calculation
+		}
+
+		.CodeMirror-foldgutter {
+			width: 16px !important;
 		}
 
 		.CodeMirror-cursor {
@@ -1065,6 +1095,26 @@
 	.CodeMirror {
 		background-color: oklch(var(--totalform-purewhite));
 		color: oklch(var(--totalform-nearblack));
+
+		// Match the custom code field gutter styling for consistency
+		.CodeMirror-gutters {
+			width: 56px !important; // Line numbers (40px) + fold gutter (16px)
+			background-color: oklch(var(--totalform-nearwhite));
+			border-right: 1px solid oklch(var(--totalform-border-color));
+		}
+
+		.CodeMirror-linenumber {
+			color: oklch(var(--totalform-gray));
+			padding-right: 8px;
+			width: 40px !important; // Override CodeMirror's inline width calculation
+			min-width: 40px !important; // Ensure minimum width
+			text-align: right !important; // Force right alignment
+			box-sizing: border-box !important; // Include padding in width calculation
+		}
+
+		.CodeMirror-foldgutter {
+			width: 16px !important;
+		}
 	}
 }
 

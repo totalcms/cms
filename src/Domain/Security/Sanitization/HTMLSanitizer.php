@@ -54,9 +54,13 @@ final class HTMLSanitizer
 
 	private static function removeEventHandlers(string $html): string
 	{
-		$html = (string)preg_replace('/\s*on\w+\s*=\s*"[^"]*"/i', '', $html);
-		$html = (string)preg_replace('/\s*on\w+\s*=\s*\'[^\']*\'/i', '', $html);
-		$html = (string)preg_replace('/\s*on\w+\s*=\s*[^"\'\s>]+/i', '', $html);
+		// Remove event handlers with double quotes
+		$html = (string)preg_replace('/\s+on\w+\s*=\s*"[^"]*"/i', '', $html);
+		// Remove event handlers with single quotes
+		$html = (string)preg_replace('/\s+on\w+\s*=\s*\'[^\']*\'/i', '', $html);
+		// Remove event handlers without quotes - but be more specific to avoid matching URLs
+		// Only match when preceded by whitespace and followed by whitespace or tag closing
+		$html = (string)preg_replace('/\s+on\w+\s*=\s*[^"\'\s>]+(?=\s|>)/i', '', $html);
 
 		return $html;
 	}

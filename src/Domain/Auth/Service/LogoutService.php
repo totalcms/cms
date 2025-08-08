@@ -19,8 +19,15 @@ final class LogoutService
 
 	public function logout(): bool
 	{
-		$user = $this->session->get('user') ?? 'unknown';
+		$user            = $this->session->get('user') ?? 'unknown';
+		$persistentLogin = $this->session->get('persistent_login', false);
+
 		$this->logger->info("User $user logged out");
+
+		// If this was a persistent login session, clear the persistent cookie
+		if ($persistentLogin) {
+			$this->clearPersistentCookie();
+		}
 
 		$this->session->clear();
 		$this->session->destroy();
@@ -37,5 +44,28 @@ final class LogoutService
 		}
 
 		return session_status() !== PHP_SESSION_ACTIVE;
+	}
+
+	/**
+	 * Clear persistent session cookie by setting it to expire in the past.
+	 */
+	private function clearPersistentCookie(): void
+	{
+		$sessionName  = $this->session->getName();
+		$cookieParams = session_get_cookie_params();
+
+		// Set cookie to expire in the past to delete it
+		setcookie(
+			$sessionName,
+			'',
+			[
+				'expires'  => time() - 3600, // 1 hour ago
+				'path'     => $cookieParams['path'],
+				'domain'   => $cookieParams['domain'],
+				'secure'   => $cookieParams['secure'],
+				'httponly' => $cookieParams['httponly'],
+				'samesite' => $cookieParams['samesite'],
+			]
+		);
 	}
 }

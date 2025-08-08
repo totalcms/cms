@@ -41,6 +41,8 @@ final class CollectionForm extends TotalForm
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
 		protected bool $helpOnFocus = false,
+		protected bool $hideID      = false,
+		protected bool $useFormGrid = true,
 	) {
 		$this->init();
 		$this->initClass();
@@ -138,7 +140,7 @@ final class CollectionForm extends TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function buildFieldOptions(string $name, array $options = [])
+	protected function buildFieldOptions(string $name, array $options = []): array
 	{
 		// Get the schema settings for a property
 		$defaults = $this->schemaData->properties[$name] ?? [];

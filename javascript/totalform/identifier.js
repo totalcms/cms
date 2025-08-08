@@ -18,7 +18,10 @@ export default class Identifier extends TotalField {
 		this.valid = false;
 
 		// Check if we're editing an existing item (form has an ID)
-		if (this.form.id && this.form.id.length > 0) {
+		if (
+			(this.form.id && this.form.id.length > 0 && !this.isInDeck) ||
+			(this.getValue().length > 0 && this.isInDeck)
+		) {
 			// The ID cannot be changed when editing
 			this.disable();
 			this.valid = true; // ID is valid in edit mode since it can't be changed
@@ -37,16 +40,21 @@ export default class Identifier extends TotalField {
 
 	// Override TotalField.changeListener
 	changeListener() {
-		if (this.options.autogen) {
+		if (this.options.autogen && !this.isLocked()) {
 			// autogen example: ${title}-${timestamp}
 			const autogenNames = this.options.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
 			const reservedNames = ["now", "timestamp", "uuid", "id"];
 			autogenNames.forEach(name => {
 				// Skip reserved names
 				if (reservedNames.includes(name)) return;
+
+				// Determine the scope to search for fields
+				const searchScope = this.isInDeck ? this.deckItem : this.form.form;
+
 				// Only listen to the fields that are used in the autogen string
-				const field = this.form.form.querySelector(`[name=${name}]`);
+				const field = searchScope.querySelector(`[name="${name}"]`);
 				if (!field) return; // Skip if the field does not exist
+
 				field.addEventListener("change", e => {
 					if (this.isLocked()) return;
 					this.setValue(this.autogenId());
@@ -56,19 +64,27 @@ export default class Identifier extends TotalField {
 		}
         // Check ID changes directly
         this.input.addEventListener("input",  e => this.lock(), {once: true});
-        this.input.addEventListener("change", e => this.validateIdExists());
+		this.input.addEventListener("change", e => this.validateIdExists());
 	}
 
 	autogenId() {
-		// Get the field data from the form
-		let data = this.form.generateData();
-		// Filter out non-string values from data
-		data = Object.entries(data).reduce((acc, [key, value]) => {
-			if (typeof value === 'string') {
-				acc[key] = value;
-			}
-			return acc;
-		}, {});
+		let data = {};
+
+		if (this.isInDeck) {
+			// Get field data from within the deck-item scope
+			const fields = this.deckItem.querySelectorAll('input, textarea, select');
+			fields.forEach(field => data[field.name] = field.value);
+		} else {
+			// Get the field data from the form (original behavior)
+			data = this.form.generateData();
+			// Filter out non-string values from data
+			data = Object.entries(data).reduce((acc, [key, value]) => {
+				if (typeof value === 'string') {
+					acc[key] = value;
+				}
+				return acc;
+			}, {});
+		}
 
 		// Add some default data
 		data.now       = Date.now();
@@ -83,6 +99,7 @@ export default class Identifier extends TotalField {
 	}
 
 	disable() {
+		this.lock();
 		return this.input.setAttribute("disabled", true);
 	}
 
@@ -130,9 +147,15 @@ export default class Identifier extends TotalField {
     }
 
 	validate() {
+		// For deck items with empty IDs, this might be acceptable if they're new
+		if (this.isInDeck && this.getValue() !== "") {
+			this.valid = true;
+		}
+
 		if (this.valid && this.input.checkValidity()) {
 			return true;
 		}
+
 		this.error(this.input.validationMessage);
 		return false;
 	}
@@ -151,6 +174,9 @@ export default class Identifier extends TotalField {
 			this.updateNonIDProperty();
 			return;
 		}
+
+		// If we are in a deck item, we don't need to check for ID existence
+		if (this.isInDeck) return;
 
 		let api = `/collections/${this.form.collection}/${id}`;
 

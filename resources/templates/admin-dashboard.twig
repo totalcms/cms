@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="robots" content="noindex, nofollow">
-	<title>Total CMS Admin</title>
+	<title>{{ cms.config('dashboard', 'title') ?? 'Total CMS Admin' }}</title>
 
     <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content-bundled.css"/>

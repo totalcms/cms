@@ -30,7 +30,7 @@ final class ObjectForm extends TotalForm
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function buildFieldOptions(string $name, array $options = [])
+	protected function buildFieldOptions(string $name, array $options = []): array
 	{
 		// Set the name of the field
 		$options['name'] = $name;
@@ -41,13 +41,17 @@ final class ObjectForm extends TotalForm
 		$defaults = $this->fieldDefaults($name);
 		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
 
-		$defaults['required'] = $this->isRequired($name);
+		// Only set required from schema if not explicitly provided in options
+		if (!isset($options['required'])) {
+			$defaults['required'] = $this->isRequired($name);
+		}
 
 		// Get the value from the object data if it exists
 		if (!empty($this->id)) {
 			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
 
-			if ($name === 'id') {
+			// A DeckItem will set the deck_context option if it is a deck field
+			if ($name === 'id' && !isset($options['deck_context'])) {
 				$options['value'] = $this->id;
 				// Hide the ID field if requested
 				if ($this->hideID) {
@@ -77,6 +81,14 @@ final class ObjectForm extends TotalForm
 		$collection = $this->collectionData->properties[$property] ?? [];
 
 		$defaults = array_merge($schema, $collection);
+
+		// Handle deckref for deck fields - move it to settings
+		if (isset($defaults['deckref'])) {
+			$settings             = $defaults['settings'] ?? [];
+			$settings['deckref']  = $defaults['deckref'];
+			$defaults['settings'] = $settings;
+			unset($defaults['deckref']);
+		}
 
 		return TotalForm::filterFieldProperties($defaults);
 	}

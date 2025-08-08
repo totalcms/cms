@@ -28,6 +28,7 @@ use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -62,6 +63,7 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -83,6 +85,7 @@ use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
+use TotalCMS\Middleware\DevModeMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -277,6 +280,7 @@ return [
 			$container->get(CollectionFetcher::class),
 			$container->get(SchemaLister::class),
 			$container->get(SchemaFetcher::class),
+			$container->get(DeckCompatibilityChecker::class),
 			$container->get(TotalFormFactory::class),
 			$container->get(ServerChecker::class),
 			$container->get(CacheReporter::class),
@@ -286,6 +290,7 @@ return [
 			$container->get(FileAccessManager::class),
 			$container->get(ImageCacheService::class),
 			$container->get(GridRenderer::class),
+			$container->get(DevModeManager::class),
 		);
 	},
 
@@ -341,10 +346,18 @@ return [
 		);
 	},
 
+	DevModeMiddleware::class => function (ContainerInterface $container) {
+		return new DevModeMiddleware(
+			$container->get(DevModeManager::class),
+			$container->get(OPcacheService::class)
+		);
+	},
+
 	TwigEngine::class => function (ContainerInterface $container) {
 		return new TwigEngine(
 			$container->get(Config::class),
-			$container->get(TotalCMSTwigExtension::class)
+			$container->get(TotalCMSTwigExtension::class),
+			$container->get(DevModeManager::class)
 		);
 	},
 
@@ -371,6 +384,7 @@ return [
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
+			$container->get(DevModeManager::class),
 		);
 	},
 
@@ -380,15 +394,21 @@ return [
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
-			$container->get(TextWatermarkFactory::class)
+			$container->get(TextWatermarkFactory::class),
+			$container->get(DevModeManager::class)
 		);
+	},
+
+	DevModeManager::class => function (ContainerInterface $container) {
+		return new DevModeManager();
 	},
 
 	SchemaRepository::class => function (ContainerInterface $container) {
 		return new SchemaRepository(
 			$container->get(StorageAdapterInterface::class),
 			$container->get(SchemaFactory::class),
-			$container->get(CacheManager::class)
+			$container->get(CacheManager::class),
+			$container->get(Config::class),
 		);
 	},
 
@@ -424,6 +444,7 @@ return [
 			$container->get(CollectionFetcher::class),
 			$container->get(CollectionFactory::class),
 			$container->get(CollectionRepository::class),
+			$container->get(IndexReader::class),
 			$container->get(JobQueuer::class),
 			$container->get(LoggerFactory::class),
 		);

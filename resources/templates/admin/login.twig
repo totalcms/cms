@@ -45,6 +45,14 @@
 				<p class="cms-hide help" id="help-66e386299dfa7">Password to login</p>
 			</div>
 
+			<div class="form-field checkbox-field" data-type="checkbox">
+				<div class="form-group">
+					<input id="field-persistent-login" name="persistent_login" type="checkbox" aria-describedby="help-persistent-login">
+					<label for="field-persistent-login">Keep me signed in</label>
+				</div>
+				<p class="help cms-hide" id="help-persistent-login">Stay logged in until you explicitly logout or clear browser data</p>
+			</div>
+
 			<button class="dash-button" type="submit">Sign in</button>
 			{% for message in flash.get('error') %}
 				<p class="cms-twig-error" role="alert">

@@ -1,3 +1,4 @@
+.deck-field.form-field,
 .schemaProperties-field,
 .customProperties-field,
 .properties-field {
@@ -18,6 +19,14 @@
 			border-color : oklch(var(--totalform-error)) !important;
 		}
 	}
+}
+
+.deck-field>.form-group>input {
+    width   : 0;
+    height  : 0;
+    padding : 0;
+    margin  : 0;
+    opacity : 0;
 }
 
 .customProperties-field {
@@ -60,6 +69,7 @@
 	}
 }
 
+.deck-item button:active,
 .properties-field button:active,
 .customProperties-object > summary:active {
 	cursor : grabbing;
@@ -99,7 +109,7 @@
 	}
 }
 
-
+.deck-item,
 .property-field,
 .schema-field {
 	--schema-icon      : var(--icon-question);
@@ -114,6 +124,10 @@
 	position              : relative;
 	border                : 1px solid oklch(var(--totalform-nearwhite));
 	transition            : border-color 200ms ease-in-out;
+
+	> button {
+		--totalform-icon-color: var(--totalform-darkgray) !important;
+	}
 
 	&:hover {
 		border-color : oklch(var(--totalform-lightgray));
@@ -205,6 +219,13 @@
 		details:first-of-type {
 			margin-top : 1rem;
 		}
+	}
+}
+.deck-item {
+	padding : 0.5rem;
+
+	&:before, &:after {
+		display : none;
 	}
 }
 

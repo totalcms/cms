@@ -6,6 +6,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -19,6 +20,7 @@ final class TotalCmsOneImporter
 		private CollectionFetcher $collectionFetcher,
 		private CollectionFactory $collectionFactory,
 		private CollectionRepository $collectionRepository,
+		private IndexReader $indexReader,
 		private JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
@@ -54,6 +56,7 @@ final class TotalCmsOneImporter
 		return $this->importCount;
 	}
 
+	/** @SuppressWarnings("PHPMD.ElseExpression") */
 	private function importBlogs(): void
 	{
 		$blogPath = $this->cmsDataPath . '/blog';
@@ -72,10 +75,19 @@ final class TotalCmsOneImporter
 			$blogId = basename($blogDir);
 			$this->logger->info(sprintf('Importing blog: %s', $blogId));
 
-			// Create collection if it doesn't exist
-			if (!$this->collectionFetcher->collectionExists($blogId)) {
-				$this->createCollection($blogId, 'blog-legacy', ucfirst($blogId));
+			if ($this->collectionFetcher->collectionExists($blogId)) {
+				$index = $this->indexReader->fetchIndex($blogId);
+				if ($index->objects->isEmpty()) {
+					$this->logger->info(sprintf('Blog collection %s exists but is empty, re-creating it', $blogId));
+					$this->collectionRepository->deleteCollection($blogId);
+				} else {
+					$newBlogId = $blogId . '-one';
+					$this->logger->info(sprintf('Blog collection %s already exists, renaming it to %s', $blogId, $newBlogId));
+					$blogId = $newBlogId;
+				}
 			}
+			// Create collection if it doesn't exist
+			$this->createCollection($blogId, 'blog-legacy', ucfirst($blogId));
 
 			// Set blog URL if .posturl file exists
 			$this->setBlogURL($blogDir, $blogId);

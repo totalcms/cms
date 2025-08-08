@@ -57,6 +57,16 @@ class SchemaPropertiesField extends PropertiesField
 		$extra   = SchemaField::filterExtraProperties($options);
 		$options = SchemaField::filterSchemaProperties($options);
 
+		// Check if this is a transformed deck property and extract deckref
+		if (isset($extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'])) {
+			$options['deckref'] = $extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'];
+			// Remove the patternProperties from extra since we've extracted the deckref
+			unset($extra['patternProperties']);
+			if (empty($extra)) {
+				$extra = [];
+			}
+		}
+
 		$options['property'] = $property;
 		$options['form']     = $this->form;
 

@@ -168,6 +168,7 @@ $settings['auth'] = [
 	'maxAttempts'           => 10,
 	'deniedTimeout'         => 7,
 	'deniedDefaultRedirect' => '/',
+	'persistentLoginDays'   => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
 ];
 
 $settings['htmlclean'] = [
@@ -206,6 +207,7 @@ $settings['htmlclean'] = [
 
 $settings['dashboard'] = [
 	'pagination' => 50, // Default pagination for dashboard tables
+	'title'      => 'Total CMS Admin', // Browser title for admin dashboard pages
 ];
 
 // https://www.php.net/manual/en/timezones.php

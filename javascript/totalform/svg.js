@@ -89,7 +89,7 @@ export default class SVGField extends TotalField {
 			key                  : "zEG4iH4B11D9B5B4F4g1JWSDBCQG1ZGDf1C1d2JXDAAOZWJhE5B4E4C3F2H3C11A4C4E5==",
 			attribution          : false,
 			heightMin            : 200,
-			heightMax            : 800,
+			heightMax            : 500,
 			toolbarButtons       : ["html"],
 			htmlRemoveTags       : ["xml"],
 			htmlAllowedTags      : svgTags,
@@ -109,6 +109,19 @@ export default class SVGField extends TotalField {
                         // TODO: Figure out how to enable CodeView without stealing focus
                         // this.codeView.toggle();
 					}
+				},
+				'codeView.update': function() {
+					// Ensure CodeMirror is properly refreshed when entering code view
+					setTimeout(() => {
+						if (this.codeView.isActive()) {
+							const codeMirror = this.codeView.get();
+							if (codeMirror && codeMirror.refresh) {
+								codeMirror.refresh();
+								// Make sure CodeMirror is not read-only
+								codeMirror.setOption('readOnly', false);
+							}
+						}
+					}, 100);
 				},
 				'contentChanged': () => this.changed(),
 			}
