@@ -18,7 +18,7 @@ final class ImportAlloyAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$params = (array)$request->getParsedBody();
-		
+
 		// Validate required parameters
 		$requiredFields = ['blog', 'image_uploads', 'embeds', 'droplets'];
 		foreach ($requiredFields as $field) {
@@ -31,18 +31,18 @@ final class ImportAlloyAction
 		}
 
 		$folders = [
-			'blog' => $params['blog'],
+			'blog'          => $params['blog'],
 			'image_uploads' => $params['image_uploads'],
-			'embeds' => $params['embeds'],
-			'droplets' => $params['droplets'],
+			'embeds'        => $params['embeds'],
+			'droplets'      => $params['droplets'],
 		];
 
 		try {
 			$importCount = $this->importer->import($folders);
 
 			return $this->renderer->json($response, [
-				'success' => true,
-				'message' => sprintf('Successfully queued %d items for import from Alloy.', $importCount),
+				'success'      => true,
+				'message'      => sprintf('Successfully queued %d items for import from Alloy.', $importCount),
 				'import_count' => $importCount,
 			]);
 		} catch (\Exception $e) {

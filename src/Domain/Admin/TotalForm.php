@@ -147,7 +147,7 @@ abstract class TotalForm
 		protected SchemaLister $schemaLister,
 		public string $api,
 		public string $collection,
-		public    string $id          = '',
+		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
 		protected string $buildError  = '',

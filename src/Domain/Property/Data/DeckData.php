@@ -64,6 +64,7 @@ class DeckData extends PropertyData
 		if (empty($this->deck)) {
 			return new \stdClass();
 		}
+
 		return $this->deck;
 	}
 

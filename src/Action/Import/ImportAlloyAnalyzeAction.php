@@ -18,7 +18,7 @@ final class ImportAlloyAnalyzeAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$params = (array)$request->getParsedBody();
-		
+
 		// Validate required parameters
 		$requiredFields = ['blog', 'image_uploads', 'embeds', 'droplets'];
 		foreach ($requiredFields as $field) {
@@ -31,10 +31,10 @@ final class ImportAlloyAnalyzeAction
 		}
 
 		$folders = [
-			'blog' => $params['blog'],
+			'blog'          => $params['blog'],
 			'image_uploads' => $params['image_uploads'],
-			'embeds' => $params['embeds'],
-			'droplets' => $params['droplets'],
+			'embeds'        => $params['embeds'],
+			'droplets'      => $params['droplets'],
 		];
 
 		try {
@@ -43,7 +43,7 @@ final class ImportAlloyAnalyzeAction
 			return $this->renderer->json($response, [
 				'success' => true,
 				'message' => 'Analysis completed successfully',
-				'data' => $analysisResult,
+				'data'    => $analysisResult,
 			]);
 		} catch (\Exception $e) {
 			return $this->renderer->json($response, [

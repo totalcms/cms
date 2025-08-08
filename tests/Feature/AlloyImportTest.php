@@ -1,7 +1,6 @@
 <?php
 
 use function Nekofar\Slim\Pest\get;
-use function Nekofar\Slim\Pest\post;
 use function Nekofar\Slim\Pest\postJson;
 
 beforeEach(function (): void {
@@ -23,14 +22,14 @@ describe('Alloy Import API Validation', function () {
 describe('Alloy Import Data Processing', function () {
 	test('alloy analyze endpoint with test data', function () {
 		$response = postJson('/import/alloy-analyze', [
-			'blog' => 'tests/test-data/alloy/posts',
+			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
-			'embeds' => 'tests/test-data/alloy/embeds',
-			'droplets' => 'tests/test-data/alloy/droplets',
+			'embeds'        => 'tests/test-data/alloy/embeds',
+			'droplets'      => 'tests/test-data/alloy/droplets',
 		]);
 
 		expect($response->getStatusCode())->toBeIn([200, 400]);
-		
+
 		if ($response->getStatusCode() === 200) {
 			$data = json_decode($response->getBody()->getContents(), true);
 			if ($data && isset($data['success']) && $data['success']) {
@@ -42,10 +41,10 @@ describe('Alloy Import Data Processing', function () {
 
 	test('alloy analyze handles blog metadata parsing', function () {
 		$response = postJson('/import/alloy-analyze', [
-			'blog' => 'tests/test-data/alloy/posts',
+			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
-			'embeds' => 'tests/test-data/alloy/embeds',
-			'droplets' => 'tests/test-data/alloy/droplets',
+			'embeds'        => 'tests/test-data/alloy/embeds',
+			'droplets'      => 'tests/test-data/alloy/droplets',
 		]);
 
 		expect($response->getStatusCode())->toBeIn([200, 400]);
@@ -53,10 +52,10 @@ describe('Alloy Import Data Processing', function () {
 
 	test('alloy analyze handles different droplet types', function () {
 		$response = postJson('/import/alloy-analyze', [
-			'blog' => 'tests/test-data/alloy/posts',
+			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
-			'embeds' => 'tests/test-data/alloy/embeds',
-			'droplets' => 'tests/test-data/alloy/droplets',
+			'embeds'        => 'tests/test-data/alloy/embeds',
+			'droplets'      => 'tests/test-data/alloy/droplets',
 		]);
 
 		expect($response->getStatusCode())->toBeIn([200, 400]);
@@ -64,10 +63,10 @@ describe('Alloy Import Data Processing', function () {
 
 	test('alloy import endpoint with test data', function () {
 		$response = postJson('/import/alloy', [
-			'blog' => 'tests/test-data/alloy/posts',
+			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
-			'embeds' => 'tests/test-data/alloy/embeds',
-			'droplets' => 'tests/test-data/alloy/droplets',
+			'embeds'        => 'tests/test-data/alloy/embeds',
+			'droplets'      => 'tests/test-data/alloy/droplets',
 		]);
 
 		expect($response->getStatusCode())->toBeIn([200, 400]);
@@ -77,10 +76,10 @@ describe('Alloy Import Data Processing', function () {
 describe('Alloy Import Error Handling', function () {
 	test('alloy import handles missing directories gracefully', function () {
 		$response = postJson('/import/alloy-analyze', [
-			'blog' => 'nonexistent/posts',
+			'blog'          => 'nonexistent/posts',
 			'image_uploads' => 'nonexistent/images',
-			'embeds' => 'nonexistent/embeds',
-			'droplets' => 'nonexistent/droplets',
+			'embeds'        => 'nonexistent/embeds',
+			'droplets'      => 'nonexistent/droplets',
 		]);
 
 		expect($response->getStatusCode())->toBeIn([200, 400]);
@@ -88,10 +87,10 @@ describe('Alloy Import Error Handling', function () {
 
 	test('alloy import handles partial directory structure', function () {
 		$response = postJson('/import/alloy-analyze', [
-			'blog' => 'tests/test-data/alloy/posts',
+			'blog'          => 'tests/test-data/alloy/posts',
 			'image_uploads' => 'tests/test-data/alloy/image-uploads',
-			'embeds' => 'nonexistent/embeds',
-			'droplets' => 'nonexistent/droplets',
+			'embeds'        => 'nonexistent/embeds',
+			'droplets'      => 'nonexistent/droplets',
 		]);
 
 		expect($response->getStatusCode())->toBeIn([200, 400]);

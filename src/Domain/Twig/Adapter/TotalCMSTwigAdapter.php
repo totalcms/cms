@@ -453,11 +453,11 @@ NGINX;
 	/** @return array<string,array<array<string,mixed>>> */
 	public function schemasByCategory(): array
 	{
-		$customSchemas = $this->customSchemas();
+		$customSchemas   = $this->customSchemas();
 		$reservedSchemas = $this->reservedSchemas();
-		
+
 		$categories = [];
-		
+
 		// Process custom schemas by category
 		foreach ($customSchemas as $schema) {
 			$category = empty($schema['category']) ? 'Custom Schemas' : trim(strval($schema['category']));
@@ -466,10 +466,10 @@ NGINX;
 			}
 			$categories[$category][] = $schema;
 		}
-		
+
 		// Always add Built-in Schemas category for reserved schemas
 		$categories['Built-in Schemas'] = $reservedSchemas;
-		
+
 		// Sort the categories by key, but keep Built-in Schemas at the bottom
 		uksort($categories, function ($a, $b) {
 			if ($a === 'Built-in Schemas') {
@@ -1135,7 +1135,7 @@ NGINX;
 				$caption = HTMLUtils::element('figcaption', htmlspecialchars($image['alt']), ['class' => 'cms-gallery-caption']);
 				$figureContent .= $caption;
 			}
-			
+
 			$figure = HTMLUtils::element('figure', $figureContent, [
 				'class'        => 'cms-gallery-item',
 				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),

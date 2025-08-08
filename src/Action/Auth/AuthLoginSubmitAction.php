@@ -99,31 +99,31 @@ final class AuthLoginSubmitAction
 
 	/**
 	 * Set session cookie to persist for a longer duration when "Keep me signed in" is checked
-	 * This sets the session cookie to expire in configured days instead of when browser closes
+	 * This sets the session cookie to expire in configured days instead of when browser closes.
 	 */
 	private function setPersistentSession(): void
 	{
 		$sessionName = $this->session->getName();
-		$sessionId = $this->session->getId();
-		
+		$sessionId   = $this->session->getId();
+
 		// Get configured persistent login days from config (default 30 days)
 		$persistentDays = $this->config->auth['persistentLoginDays'] ?? 30;
-		$expiry = time() + ($persistentDays * 24 * 60 * 60);
-		
+		$expiry         = time() + ($persistentDays * 24 * 60 * 60);
+
 		// Get session cookie parameters
 		$cookieParams = session_get_cookie_params();
-		
+
 		// Set the session cookie with extended expiry
 		setcookie(
 			$sessionName,
 			$sessionId,
 			[
-				'expires' => $expiry,
-				'path' => $cookieParams['path'],
-				'domain' => $cookieParams['domain'],
-				'secure' => $cookieParams['secure'],
+				'expires'  => $expiry,
+				'path'     => $cookieParams['path'],
+				'domain'   => $cookieParams['domain'],
+				'secure'   => $cookieParams['secure'],
 				'httponly' => $cookieParams['httponly'],
-				'samesite' => $cookieParams['samesite']
+				'samesite' => $cookieParams['samesite'],
 			]
 		);
 	}
