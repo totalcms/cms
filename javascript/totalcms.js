@@ -92,6 +92,18 @@ export default class TotalCMS {
         sessionStorage.clear();
     }
 
+	putAPI(api, data) {
+		return this.postAPI(api, data, "PUT");
+    }
+
+	patchAPI(api, data) {
+		return this.postAPI(api, data, "PATCH");
+	}
+
+	deleteAPI(api, data = {}) {
+		return this.postAPI(api, data, "DELETE");
+    }
+
     // AJAX Post to the Total CMS API
     postAPI(api, data, method = "POST") {
         // If the POST API sets new data, we should delete form storage it if it exists
