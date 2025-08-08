@@ -91,11 +91,15 @@ $zindex-backdrop: 1040;
 	grid-template-columns : repeat(auto-fill, minmax(150px, 1fr));
 	align-items           : center;
 	justify-items         : center;
-	
+
 	a {
 		position: relative;
 	}
-	
+
+	.cms-gallery-caption {
+		text-align: center;
+	}
+
 	.gallery-view-all {
 		position: absolute;
 		inset: 0;
@@ -109,7 +113,7 @@ $zindex-backdrop: 1040;
 		pointer-events: none;
 		transition: background 0.3s ease;
 	}
-	
+
 	a:hover .gallery-view-all {
 		background: rgba(0, 0, 0, 0.8);
 	}

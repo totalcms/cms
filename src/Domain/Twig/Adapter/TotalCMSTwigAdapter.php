@@ -1114,6 +1114,9 @@ NGINX;
 
 		$images = $this->data($options['collection'], $id, $options['property']);
 
+		// Check if captions should be shown
+		$showCaptions = isset($options['captions']) && $options['captions'];
+
 		foreach ($images as $image) {
 			$img = HTMLUtils::inlineElement('img', [
 				'src'           => $this->galleryPath($id, $image['name'], $thumbSettings, $options),
@@ -1126,12 +1129,20 @@ NGINX;
 				'href'         => $this->galleryPath($id, $image['name'], $fullSettings, $options),
 				'data-lg-size' => "{$image['width']}-{$image['height']}",
 			]);
-			$gallery .= $link;
+
+			if ($showCaptions && !empty($image['alt'])) {
+				$caption = HTMLUtils::element('figcaption', htmlspecialchars($image['alt']), ['class' => 'cms-gallery-caption']);
+				$figure = HTMLUtils::element('figure', $link . $caption, ['class' => 'cms-gallery-item']);
+				$gallery .= $figure;
+			} else {
+				$gallery .= $link;
+			}
 		}
 
 		// Don't add these to the gallery settings
 		unset($options['collection']);
 		unset($options['property']);
+		unset($options['captions']); // Remove captions option from JS settings
 
 		// Extract maxVisible and viewAllText before encoding settings
 		$maxVisible = 0;
