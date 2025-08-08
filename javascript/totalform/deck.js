@@ -32,6 +32,19 @@ export default class DeckField extends TotalField {
         this.addButton?.addEventListener("click", this.addItem.bind(this));
     }
 
+    manualIdSync(deckItem) {
+        const deckItemIdField = deckItem.container.querySelector("input[name='deck-item-id']");
+        const dialogIdField = deckItem.dialog.dialog.querySelector("input[name='id']");
+        
+        if (!deckItemIdField || !dialogIdField) return;
+        
+        // If dialog ID field has a value (from autogen) but deck-item-id doesn't, sync it
+        if (dialogIdField.value && !deckItemIdField.value) {
+            const sanitizedValue = dialogIdField.value.replace(/-/g, '_');
+            deckItemIdField.value = sanitizedValue;
+        }
+    }
+
     sortableDeckItems(deckItems) {
         if (deckItems.length === 0) return;
         // Make the items sortable
@@ -77,6 +90,12 @@ export default class DeckField extends TotalField {
 		this.items.push(newItem);
         this.initActionbar(itemElement);
         this.form?.processFields();
+        
+        // After processing fields (which may trigger autogen), manually sync any generated ID
+        setTimeout(() => {
+            this.manualIdSync(newItem);
+        }, 0);
+        
 		return newItem;
     }
 
