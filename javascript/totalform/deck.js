@@ -171,7 +171,9 @@ export default class DeckField extends TotalField {
 		// not using this.items so we can maintain the order of items in the DOM
 		const deckItems = this.container.getElementsByClassName(this.fieldClass);
         for (const item of deckItems) {
-			deckData[item.deckitem.getItemId()] = item.deckitem.getValue();
+			// Ensure deck IDs are always strings, even if they're numeric
+			const itemId = String(item.deckitem.getItemId());
+			deckData[itemId] = item.deckitem.getValue();
         }
 
         // Ensure we always return an object, never an empty array

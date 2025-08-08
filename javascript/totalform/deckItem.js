@@ -162,7 +162,9 @@ export default class DeckItem {
 
     getItemId() {
         const idInput = this.container.querySelector("input[name='deck-item-id']");
-        return idInput ? idInput.value : this.container.getAttribute('data-item-id') || '';
+        const id = idInput ? idInput.value : this.container.getAttribute('data-item-id') || '';
+        // Ensure ID is always returned as a string, even if it's numeric
+        return String(id);
     }
 
     getValue() {
