@@ -3,11 +3,11 @@
   "$schema"           : "https://json-schema.org/draft/2020-12/schema",
   "type"              : "object",
   "patternProperties" : {
-    "^[a-zA-Z]\\w*$": {
+    "^[0-9a-zA-Z_]+$": {
       "type": "object",
       "description": "A deck item with a unique name key",
       "patternProperties": {
-        "^[a-zA-Z]\\w*$": {
+        "^[0-9a-zA-Z_]+$": {
           "anyOf": [
             {"type": "string"},
             {"type": "number"},

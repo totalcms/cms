@@ -7,12 +7,17 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class DeckData extends PropertyData
 {
-	/** @param array<string,array<string,mixed>> $deck */
-	public function __construct(public array $deck = [], public array $settings = [])
+	/** @var array<string|int,array<string,mixed>> */
+	public array $deck;
+
+	/** @param array<mixed> $deck */
+	public function __construct(array $deck = [], public array $settings = [])
 	{
+		// Validate the deck (accepts both string and int keys)
 		if (!self::verifyDeck($deck)) {
 			throw new \InvalidArgumentException('Deck must be a dictionary of named objects');
 		}
+
 		$this->deck = $deck;
 	}
 
@@ -30,8 +35,9 @@ class DeckData extends PropertyData
 		}
 
 		foreach ($deck as $name => $item) {
-			// Verify name is valid identifier
-			if (!is_string($name) || !preg_match('/^[a-zA-Z]\\w*$/', $name)) {
+			// Allow both string and int keys, validate the string representation
+			$stringName = (string)$name;
+			if (!preg_match('/^[0-9a-zA-Z_]+$/', $stringName)) {
 				return false;
 			}
 
@@ -40,8 +46,8 @@ class DeckData extends PropertyData
 				return false;
 			}
 
-			// If item has an 'id' field, it must match the dictionary key
-			if (isset($item['id']) && $item['id'] !== $name) {
+			// If item has an 'id' field, it must match the dictionary key (as string)
+			if (isset($item['id']) && $item['id'] !== $stringName) {
 				return false;
 			}
 		}
@@ -49,7 +55,7 @@ class DeckData extends PropertyData
 		return true;
 	}
 
-	/** @return array<string,array<string,mixed>>|object */
+	/** @return array<int|string,array<string,mixed>>|object */
 	public function transform(): array|object
 	{
 		// Return empty object (stdClass) for empty deck to ensure JSON serialization as {}
@@ -80,8 +86,8 @@ class DeckData extends PropertyData
 	 */
 	public function setItem(string $name, array $item): void
 	{
-		if (!preg_match('/^[a-zA-Z]\\w*$/', $name)) {
-			throw new \InvalidArgumentException('Deck item name must be a valid identifier');
+		if (!preg_match('/^(?:[a-zA-Z_]\\w*|\\d+)$/', $name)) {
+			throw new \InvalidArgumentException('Deck item name must be a valid identifier or numeric string');
 		}
 
 		// If item has an 'id' field, it must match the dictionary key
@@ -103,7 +109,7 @@ class DeckData extends PropertyData
 	/**
 	 * Get all deck item names.
 	 *
-	 * @return array<string>
+	 * @return array<int|string>
 	 */
 	public function getItemNames(): array
 	{
