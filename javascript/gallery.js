@@ -35,34 +35,35 @@ document.addEventListener("DOMContentLoaded", event => {
 	galleries.forEach(gallery => {
 		const settings = gallery.dataset.settings ? JSON.parse(gallery.dataset.settings) : {};
 		settings.licenseKey = '52B84B19-E338-4655-A3BF-DBF401D75F02';
-		
+		settings.selector = '.cms-gallery-item';
+
 		// Check if we need to limit visible thumbnails
 		const maxVisible = parseInt(gallery.dataset.maxVisible) || 0;
 		if (maxVisible > 0) {
-			const allItems = gallery.querySelectorAll('a');
-			allItems.forEach((item, index) => {
+			const allFigures = gallery.querySelectorAll('figure');
+			allFigures.forEach((figure, index) => {
 				if (index >= maxVisible) {
-					item.style.display = 'none';
+					figure.style.display = 'none';
 				}
 			});
-			
+
 			// Add a "View All" indicator if there are hidden images
-			if (allItems.length > maxVisible) {
-				const lastVisible = allItems[maxVisible - 1];
+			if (allFigures.length > maxVisible) {
+				const lastVisibleFigure = allFigures[maxVisible - 1];
 				const viewAllIndicator = document.createElement('div');
 				viewAllIndicator.className = 'gallery-view-all';
-				
+
 				// Get custom text pattern or use default
 				const viewAllText = gallery.dataset.viewAllText || '+{count} more';
-				const remainingCount = allItems.length - maxVisible;
-				
+				const remainingCount = allFigures.length - maxVisible;
+
 				// Replace {count} placeholder with actual count
 				viewAllIndicator.innerHTML = viewAllText.replace('{count}', remainingCount);
-				
-				lastVisible.appendChild(viewAllIndicator);
+
+				lastVisibleFigure.appendChild(viewAllIndicator);
 			}
 		}
-		
+
 		if (settings.plugins) {
 			settings.plugins = settings.plugins.map(plugin => lgPlugins[plugin]);
 		}

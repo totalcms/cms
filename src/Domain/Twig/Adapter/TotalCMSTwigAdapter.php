@@ -1126,17 +1126,22 @@ NGINX;
 				'oncontextmenu' => 'return false;',
 			]);
 			$link = HTMLUtils::element('a', $img, [
-				'href'         => $this->galleryPath($id, $image['name'], $fullSettings, $options),
-				'data-lg-size' => "{$image['width']}-{$image['height']}",
+				'href' => $this->galleryPath($id, $image['name'], $fullSettings, $options),
 			]);
 
+			// Always wrap in figure for semantic HTML5
+			$figureContent = $link;
 			if ($showCaptions && !empty($image['alt'])) {
 				$caption = HTMLUtils::element('figcaption', htmlspecialchars($image['alt']), ['class' => 'cms-gallery-caption']);
-				$figure = HTMLUtils::element('figure', $link . $caption, ['class' => 'cms-gallery-item']);
-				$gallery .= $figure;
-			} else {
-				$gallery .= $link;
+				$figureContent .= $caption;
 			}
+			
+			$figure = HTMLUtils::element('figure', $figureContent, [
+				'class'        => 'cms-gallery-item',
+				'data-src'     => $this->galleryPath($id, $image['name'], $fullSettings, $options),
+				'data-lg-size' => "{$image['width']}-{$image['height']}",
+			]);
+			$gallery .= $figure;
 		}
 
 		// Don't add these to the gallery settings

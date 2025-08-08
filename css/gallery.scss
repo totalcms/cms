@@ -92,8 +92,12 @@ $zindex-backdrop: 1040;
 	align-items           : center;
 	justify-items         : center;
 
-	a {
+	.cms-gallery-item {
 		position: relative;
+
+		a {
+			display: block;
+		}
 	}
 
 	.cms-gallery-caption {
@@ -114,7 +118,7 @@ $zindex-backdrop: 1040;
 		transition: background 0.3s ease;
 	}
 
-	a:hover .gallery-view-all {
+	.cms-gallery-item:hover .gallery-view-all {
 		background: rgba(0, 0, 0, 0.8);
 	}
 }
