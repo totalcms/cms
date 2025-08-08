@@ -8,10 +8,13 @@ export default class DevModeToggle {
 
 	constructor(toggle, options = {}) {
 		this.toggle = toggle;
-		this.endpoint = this.toggle.dataset.apiEndpoint || '/cache/devmode';
+		this.api = new TotalCMS({
+			url: this.toggle.dataset.api || "",
+		});
+		this.endpoint = '/cache/devmode';
 		this.countdownElement = document.getElementById('devmode-countdown');
 		this.helpElement = this.toggle.closest('.form-field')?.querySelector('.help');
-		
+
 		this.countdownInterval = null;
 		this.remainingSeconds = parseInt(options.remainingSeconds) || 0;
 
@@ -20,7 +23,7 @@ export default class DevModeToggle {
 
 	init() {
 		this.toggle.addEventListener('change', this.onToggleChange.bind(this));
-		
+
 		// Start countdown if dev mode is active
 		if (this.remainingSeconds > 0) {
 			this.startCountdown();
@@ -37,19 +40,11 @@ export default class DevModeToggle {
 	}
 
 	async makeApiCall(method) {
-		const response = await fetch(this.endpoint, {
-			method: method,
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Requested-With': 'XMLHttpRequest'
-			}
-		});
-
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
+		if (method === 'POST') {
+			return await this.api.postAPI(this.endpoint);
+		} else {
+			return await this.api.deleteAPI(this.endpoint);
 		}
-
-		return await response.json();
 	}
 
 	handleApiSuccess(data) {
@@ -86,7 +81,7 @@ export default class DevModeToggle {
 
 	startCountdown() {
 		this.stopCountdown(); // Clear any existing interval
-		
+
 		if (this.remainingSeconds <= 0) {
 			return;
 		}
@@ -114,13 +109,13 @@ export default class DevModeToggle {
 		const hours = Math.floor(this.remainingSeconds / 3600);
 		const minutes = Math.floor((this.remainingSeconds % 3600) / 60);
 		const seconds = this.remainingSeconds % 60;
-		
+
 		const formatted = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-		
+
 		if (this.countdownElement) {
 			this.countdownElement.textContent = formatted;
 		}
-		
+
 		this.remainingSeconds--;
 	}
 

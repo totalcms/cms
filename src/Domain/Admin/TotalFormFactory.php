@@ -176,8 +176,9 @@ final class TotalFormFactory
 		$fieldHtml = str_replace(
 			'type="checkbox"',
 			sprintf(
-				'type="checkbox" %s data-api-endpoint="/cache/devmode"',
-				$devModeStatus['enabled'] ? 'checked' : ''
+				'type="checkbox" %s data-api="%s"',
+				$devModeStatus['enabled'] ? 'checked' : '',
+				$this->api
 			),
 			$fieldHtml
 		);
