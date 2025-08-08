@@ -43,6 +43,9 @@ final class AdminUtilsAction
 				case 'image-batcher':
 					// Handle image batcher form submissions - steps are processed via POST data
 					break;
+				case 'import-alloy':
+					// Handle alloy import form submissions
+					break;
 			}
 		}
 
