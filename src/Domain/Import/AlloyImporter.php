@@ -224,10 +224,10 @@ final class AlloyImporter
 			return;
 		}
 
-		// Create posts collection if it doesn't exist
-		$collectionId = 'posts';
+		// Create blog collection if it doesn't exist
+		$collectionId = 'blog';
 		if (!$this->collectionFetcher->collectionExists($collectionId)) {
-			$this->createCollection($collectionId, 'blog', 'Posts');
+			$this->createCollection($collectionId, 'blog', 'Blog');
 		}
 
 		$blogFiles = glob($blogPath . '/*.md');
@@ -329,10 +329,10 @@ final class AlloyImporter
 			return;
 		}
 
-		// Create embeds collection if it doesn't exist
-		$collectionId = 'embeds';
+		// Create styledtext collection if it doesn't exist
+		$collectionId = 'styledtext';
 		if (!$this->collectionFetcher->collectionExists($collectionId)) {
-			$this->createCollection($collectionId, 'styledtext', 'Embeds');
+			$this->createCollection($collectionId, 'styledtext', 'StyledText');
 		}
 
 		$embedFiles = glob($embedsPath . '/*.md');
