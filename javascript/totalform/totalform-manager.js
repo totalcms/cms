@@ -67,16 +67,16 @@ export default class TotalFormManager {
 			if (event.key === "Enter") {
 				const target = event.target;
 				const form = target.closest("form");
-				
+
 				// Only prevent Enter on forms with totalform or simple-form classes
 				if (form && (form.classList.contains("totalform") || form.classList.contains("simple-form"))) {
 					// Allow Enter in textareas and certain input types
-					if (target.tagName === "TEXTAREA" || 
-						target.type === "search" || 
+					if (target.tagName === "TEXTAREA" ||
+						target.type === "search" ||
 						target.classList.contains("allow-enter")) {
 						return;
 					}
-					
+
 					event.preventDefault();
 				}
 			}
@@ -164,7 +164,7 @@ export default class TotalFormManager {
 
     error(error) {
 		if (error) {
-			this.statusBanner.style.setProperty('--totalform-formerror', `'${error}'`);
+			this.statusBanner.style.setProperty('--totalform-formerror', `"${error.toString().replace(/"/g,'')}"`);
 		}
 		this.delayProcessing(() => {
 			this.bannerStatus("error");

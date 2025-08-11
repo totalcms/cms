@@ -32,6 +32,20 @@
 		scale              : 0.6;
     }
 
+	&:before {
+		content    : var(--totalform-formerror);
+		position   : absolute;
+		display    : block;
+		bottom     : 1rem;
+		left       : 0;
+		width      : 100%;
+		font-size  : 1.2rem;
+		text-align : center;
+		color      : oklch(var(--totalform-purewhite));
+		transition : all 500ms ease-in-out;
+		opacity    : 0;
+	}
+
     &.processing,&.success,&.error{
         opacity : 1;
     }
@@ -65,16 +79,7 @@
         }
 
 		&:before {
-			content    : var(--totalform-formerror);
-			position   : absolute;
-			display    : block;
-			bottom     : 1rem;
-			left       : 0;
-			width      : 100%;
-			font-size  : 1.2rem;
-			text-align : center;
-			color      : oklch(var(--totalform-purewhite));
-			transition : all 500ms ease-in-out;
+			opacity : 1;
 		}
     }
 }
