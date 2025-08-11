@@ -868,4 +868,4 @@ For complete API documentation with interactive examples, visit the Swagger UI a
 - **Python**: Community SDK
 - **cURL**: Works with any language supporting HTTP
 
-For more examples and advanced usage, see the [PHP API Documentation](php-api.md).
+For more examples and advanced usage, see the [PHP API Documentation](docs/php-api).

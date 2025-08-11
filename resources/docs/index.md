@@ -6,49 +6,49 @@ Welcome to the Total CMS documentation! This comprehensive guide will help you g
 
 New to Total CMS? Start here:
 
-- **[Dashboard Overview](dashboard.md)** - Learn your way around the admin interface
-- **[Configuration](configuration.md)** - Set up your system correctly
-- **[Twig Overview](twig-overview.md)** - Master the templating system
+- **[Dashboard Overview](docs/dashboard)** - Learn your way around the admin interface
+- **[Configuration](docs/configuration)** - Set up your system correctly
+- **[Twig Overview](docs/twig-overview)** - Master the templating system
 
 ## Core Documentation
 
 ### System & Configuration
-- **[Configuration](configuration.md)** - Complete configuration reference
-- **[Data Model](data-model.md)** - Understanding collections, objects, and properties
-- **[Field Settings](field-settings.md)** - Configure form fields and validation
-- **[Field Options](field-options.md)** - Field-specific configuration options
+- **[Configuration](docs/configuration)** - Complete configuration reference
+- **[Data Model](data-docs/model)** - Understanding collections, objects, and properties
+- **[Field Settings](docs/field-settings)** - Configure form fields and validation
+- **[Field Options](docs/field-options)** - Field-specific configuration options
 
 ### Content Management
-- **[Dashboard Overview](dashboard.md)** - Admin interface guide
-- **[JumpStart](jumpstart.md)** - Quick project setup with predefined content structures
-- **[Import Data](import.md)** - Importing content from external sources
-- **[Export Data](export.md)** - Backing up and exporting your content
-- **[Download Files](download.md)** - File download and media management
+- **[Dashboard Overview](docs/dashboard)** - Admin interface guide
+- **[JumpStart](docs/jumpstart)** - Quick project setup with predefined content structures
+- **[Import Data](docs/import)** - Importing content from external sources
+- **[Export Data](docs/export)** - Backing up and exporting your content
+- **[Download Files](docs/download)** - File download and media management
 
 ### Development & Integration
 
 #### Templating (Twig)
-- **[Twig Overview](twig-overview.md)** - Complete Twig integration guide
-- **[Twig Filters](twig-filters.md)** - Available filters and their usage
-- **[Twig Functions](twig-functions.md)** - Built-in template functions
-- **[Twig Forms](twig-forms.md)** - Form helpers and generation
-- **[TotalCMS Factory](twig-factory.md)** - Factory pattern implementation
-- **[GET Data](twig-get-data.md)** - Accessing GET parameters
-- **[POST Data](twig-post-data.md)** - Working with POST data
-- **[Session Data](twig-session-data.md)** - Session management in templates
-- **[QR Codes](twig-qrcodes.md)** - Generating QR codes
+- **[Twig Overview](docs/twig-overview)** - Complete Twig integration guide
+- **[Twig Filters](docs/twig-filters)** - Available filters and their usage
+- **[Twig Functions](docs/twig-functions)** - Built-in template functions
+- **[Twig Forms](docs/twig-forms)** - Form helpers and generation
+- **[TotalCMS Factory](docs/twig-factory)** - Factory pattern implementation
+- **[GET Data](docs/twig-get-data)** - Accessing GET parameters
+- **[POST Data](docs/twig-post-data)** - Working with POST data
+- **[Session Data](docs/twig-session-data)** - Session management in templates
+- **[QR Codes](docs/twig-qrcodes)** - Generating QR codes
 
 #### APIs & Integration
-- **[REST API](rest-api.md)** - RESTful API endpoints and usage
-- **[PHP API](php-api.md)** - Using Total CMS in PHP applications
-- **[Search](search.md)** - Implementing search functionality
+- **[REST API](docs/rest-api)** - RESTful API endpoints and usage
+- **[PHP API](docs/php-api)** - Using Total CMS in PHP applications
+- **[Search](docs/search)** - Implementing search functionality
 
 ### System Administration
-- **[Authentication](auth.md)** - User management and authentication
-- **[Licenses](licenses.md)** - License management and validation
-- **[Templates](templates.md)** - Template system overview
-- **[Filesystem](filesystem.md)** - File and directory management
-- **[Factory Pattern](factory.md)** - Factory pattern implementation
+- **[Authentication](docs/auth)** - User management and authentication
+- **[Licenses](docs/licenses)** - License management and validation
+- **[Templates](docs/templates)** - Template system overview
+- **[Filesystem](docs/filesystem)** - File and directory management
+- **[Factory Pattern](docs/factory)** - Factory pattern implementation
 
 ## Video Tutorials
 
@@ -69,24 +69,24 @@ Full walkthrough from installation to deployment:
 ## Common Tasks
 
 ### For Content Creators
-1. **Creating Content**: Start with the [Dashboard Overview](dashboard.md)
-2. **Quick Project Setup**: Use [JumpStart](jumpstart.md) to bootstrap new projects
-3. **Managing Media**: See [Download Files](download.md)
-4. **Organizing Content**: Learn about the [Data Model](data-model.md)
-5. **Bulk Operations**: Check [Import](import.md) and [Export](export.md) guides
+1. **Creating Content**: Start with the [Dashboard Overview](docs/dashboard)
+2. **Quick Project Setup**: Use [JumpStart](docs/jumpstart) to bootstrap new projects
+3. **Managing Media**: See [Download Files](docs/download)
+4. **Organizing Content**: Learn about the [Data Model](data-docs/model)
+5. **Bulk Operations**: Check [Import](docs/import) and [Export](docs/export) guides
 
 ### For Developers
-1. **Project Setup**: Use [JumpStart](jumpstart.md) to create consistent project templates
-2. **Template Development**: Begin with [Twig Overview](twig-overview.md)
-3. **API Integration**: Read the [REST API](rest-api.md) and [PHP API](php-api.md) docs
-4. **Custom Fields**: Study [Field Settings](field-settings.md)
-5. **Search Implementation**: Follow the [Search](search.md) guide
+1. **Project Setup**: Use [JumpStart](docs/jumpstart) to create consistent project templates
+2. **Template Development**: Begin with [Twig Overview](docs/twig-overview)
+3. **API Integration**: Read the [REST API](rest-docs/api) and [PHP API](php-docs/api) docs
+4. **Custom Fields**: Study [Field Settings](docs/field-settings)
+5. **Search Implementation**: Follow the [Search](docs/search) guide
 
 ### For System Administrators
-1. **Initial Setup**: Review [Configuration](configuration.md)
-2. **User Management**: See [Authentication](auth.md)
-3. **System Security**: Check [Licenses](licenses.md)
-4. **File Management**: Learn about [Filesystem](filesystem.md)
+1. **Initial Setup**: Review [Configuration](docs/configuration)
+2. **User Management**: See [Authentication](docs/auth)
+3. **System Security**: Check [Licenses](docs/licenses)
+4. **File Management**: Learn about [Filesystem](docs/filesystem)
 
 ## Getting Help
 
@@ -115,7 +115,7 @@ Found an error or want to improve the documentation? We welcome contributions:
 
 For developers integrating with Total CMS:
 
-- **[REST API Documentation](rest-api.md)** - HTTP API endpoints
-- **[PHP API Documentation](php-api.md)** - PHP integration examples
-- **[Twig API Documentation](twig-functions.md)** - Template functions reference
+- **[REST API Documentation](docs/rest-api)** - HTTP API endpoints
+- **[PHP API Documentation](docs/php-api)** - PHP integration examples
+- **[Twig API Documentation](docs/twig-functions)** - Template functions reference
 
