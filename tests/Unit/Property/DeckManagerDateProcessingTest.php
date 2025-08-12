@@ -49,21 +49,21 @@ it('DateData converts datetime field from HTML datetime-local to ISO format', fu
 // Test DateData cleanDate with different formats
 it('DateData cleanDate supports different output formats', function () {
 	$testDate = '2025-08-30T18:54:00-07:00';
-	
+
 	// Test default ISO 8601 format
 	$isoFormat = DateData::cleanDate($testDate);
 	expect($isoFormat)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
-	
+
 	// Test date-only format (for HTML date inputs)
 	$dateOnly = DateData::cleanDate($testDate, 'Y-m-d');
 	expect($dateOnly)->toBe('2025-08-30');
-	
+
 	// Test datetime-local format (for HTML datetime-local inputs)
 	$datetimeLocal = DateData::cleanDate($testDate, 'Y-m-d\\TH:i');
 	expect($datetimeLocal)->toBe('2025-08-30T18:54');
-	
+
 	// Test that HTML datetime-local input converts properly to datetime-local format
-	$htmlInput = '2025-08-11T00:00';
+	$htmlInput      = '2025-08-11T00:00';
 	$convertedLocal = DateData::cleanDate($htmlInput, 'Y-m-d\\TH:i');
 	expect($convertedLocal)->toBe('2025-08-11T00:00');
 });
