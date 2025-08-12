@@ -1,10 +1,10 @@
 <?php
 
-namespace TotalCMS\Action\Object\Deck;
+namespace TotalCMS\Action\Property\Deck;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Property\Service\DeckManager;
+use TotalCMS\Domain\Property\Service\DeckItemSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
@@ -15,7 +15,7 @@ final class DeckItemCreateAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private DeckManager $deckManager,
+		private DeckItemSaver $deckItemSaver,
 	) {
 	}
 
@@ -32,7 +32,7 @@ final class DeckItemCreateAction
 		// Keep the id in the data since it's part of the deck item structure
 
 		try {
-			$object = $this->deckManager->createDeckItem(
+			$object = $this->deckItemSaver->saveDeckItem(
 				$args['collection'],
 				$args['id'],
 				$args['property'],

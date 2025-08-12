@@ -1,36 +1,33 @@
 <?php
 
-namespace TotalCMS\Action\Object\Deck;
+namespace TotalCMS\Action\Property\Deck;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Property\Service\DeckManager;
+use TotalCMS\Domain\Property\Service\DeckItemRemover;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 /**
- * Updates an existing item in a deck property.
+ * Deletes an item from a deck property.
  */
-final class DeckItemUpdateAction
+final class DeckItemDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private DeckManager $deckManager,
+		private DeckItemRemover $deckItemRemover,
 	) {
 	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$data = (array)$request->getParsedBody();
-
 		try {
-			$object = $this->deckManager->updateDeckItem(
+			$object = $this->deckItemRemover->removeDeckItem(
 				$args['collection'],
 				$args['id'],
 				$args['property'],
-				$args['itemId'],
-				$data
+				$args['itemId']
 			);
 
 			return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

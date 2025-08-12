@@ -1,39 +1,39 @@
 <?php
 
-namespace TotalCMS\Action\Object\Deck;
+namespace TotalCMS\Action\Property\Deck;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Property\Service\DeckManager;
+use TotalCMS\Domain\Property\Service\DeckItemUpdater;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 
 /**
- * Fetches a specific item from a deck property.
+ * Updates an existing item in a deck property.
  */
-final class DeckItemFetchAction
+final class DeckItemUpdateAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private DeckManager $deckManager,
+		private DeckItemUpdater $deckItemUpdater,
 	) {
 	}
 
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
+		$data = (array)$request->getParsedBody();
+
 		try {
-			$item = $this->deckManager->getDeckItem(
+			$object = $this->deckItemUpdater->updateDeckItem(
 				$args['collection'],
 				$args['id'],
 				$args['property'],
-				$args['itemId']
+				$args['itemId'],
+				$data
 			);
 
-			if ($item === null) {
-				return $this->renderer->json($response, ['error' => 'Deck item not found'], 404);
-			}
-
-			return $this->renderer->json($response, $item);
+			return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 		} catch (\InvalidArgumentException $e) {
 			return $this->renderer->json($response, ['error' => $e->getMessage()], 400);
 		}
