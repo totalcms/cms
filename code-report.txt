@@ -14,11 +14,11 @@ Total Files: 769
 Code Line Counts:
 	php     : 31174
 	tests   : 19941
-	js      : 7034
+	js      : 7046
 	scss    : 9798
 	json    : 4917
-	twig    : 3478
+	twig    : 3505
 	html    : 276
 	sh      : 397
 
-Total Lines of Code: 77015
+Total Lines of Code: 77054

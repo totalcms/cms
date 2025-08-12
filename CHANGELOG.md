@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [Unreleased]
+## [3.0.36] - 2025-08-11
 
 ### Added
 - **Gallery System**: Added `class` option to `cms.gallery()` function for custom CSS classes
@@ -74,7 +74,7 @@ All notable changes to Total CMS will be documented in this file.
 ### Fixed
 - **Gallery & Media**: Resolved display and functionality issues
   - Fixed LightGallery `data-src` attribute placement for proper lightbox operation
-  - Resolved maxVisible feature compatibility with new semantic HTML structure  
+  - Resolved maxVisible feature compatibility with new semantic HTML structure
   - Enhanced "View All" indicator placement within figure elements
   - Improved gallery item structure consistency
 - **Deck System**: Comprehensive validation and UI fixes
