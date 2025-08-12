@@ -513,6 +513,7 @@ return [
 	PropertyFactory::class => function (ContainerInterface $container) {
 		return new PropertyFactory(
 			$container->get(SchemaFetcher::class),
+			$container->get(DeckCompatibilityChecker::class),
 		);
 	},
 
@@ -550,6 +551,13 @@ return [
 		return new DeckItemRemover(
 			$container->get(ObjectFetcher::class),
 			$container->get(ObjectUpdater::class),
+		);
+	},
+
+	// Schema Services
+	DeckCompatibilityChecker::class => function (ContainerInterface $container) {
+		return new DeckCompatibilityChecker(
+			$container->get(SchemaFetcher::class),
 		);
 	},
 ];

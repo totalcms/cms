@@ -4,6 +4,8 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 
@@ -14,6 +16,7 @@ final class PropertyFactory
 {
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,
+		private DeckCompatibilityChecker $deckCompatibilityChecker,
 	) {
 	}
 
@@ -87,6 +90,9 @@ final class PropertyFactory
 			// Get the deck item schema
 			$schemaId   = $this->extractSchemaId($deckref);
 			$deckSchema = $this->schemaFetcher->fetchSchema($schemaId);
+
+			// Validate that the deck schema doesn't contain incompatible properties
+			$this->validateDeckSchema($deckSchema, $schemaId);
 
 			$processedDeckData = [];
 
@@ -192,5 +198,29 @@ final class PropertyFactory
 		}
 
 		return $deckref;
+	}
+
+	/**
+	 * Validate that a deck schema doesn't contain incompatible property types.
+	 *
+	 * @param SchemaData $deckSchema The deck schema to validate
+	 * @param string $schemaId The schema ID for error messages
+	 *
+	 * @throws \InvalidArgumentException If schema contains incompatible properties
+	 */
+	private function validateDeckSchema(SchemaData $deckSchema, string $schemaId): void
+	{
+		// Use DeckCompatibilityChecker to validate the schema
+		$schemaArray = $deckSchema->toArray();
+
+		if (!$this->deckCompatibilityChecker->isCompatible($schemaArray)) {
+			$incompatibleProperties = $this->deckCompatibilityChecker->getIncompatibleProperties($schemaArray);
+			$propertyList = implode(', ', $incompatibleProperties);
+
+			// $incompatibleTypes = $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schemaArray);
+			// $typeList = implode(', ', $incompatibleTypes);
+
+			throw new \InvalidArgumentException("Deck schema '$schemaId' contains incompatible properties: $propertyList");
+		}
 	}
 }
