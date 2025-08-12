@@ -25,7 +25,7 @@ class DateData extends PropertyData
 		return self::cleanDate($value);
 	}
 
-	public static function cleanDate(?string $date = 'now'): string
+	public static function cleanDate(?string $date = 'now', string $format = 'c'): string
 	{
 		if (empty($date)) {
 			return '';
@@ -38,7 +38,7 @@ class DateData extends PropertyData
 			// Use Chronos for smart date parsing with natural language support
 			$chronosDate = Chronos::parse($date, $timezone);
 
-			return $chronosDate->format('c');
+			return $chronosDate->format($format);
 		} catch (\Exception $e) {
 			// Fallback to empty string if parsing fails
 			return '';

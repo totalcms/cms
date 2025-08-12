@@ -21,12 +21,12 @@ class DateField extends FormField
 
 		// Handle smart defaults for date fields
 		if (!empty($this->default) && empty($this->value)) {
-			$this->value = DateData::cleanDate($this->default);
+			$this->value = DateData::cleanDate($this->default, $this->dateFormat);
 		}
 
 		// Process existing value with smart parsing
 		if (!empty($this->value)) {
-			$this->value = DateData::cleanDate($this->value);
+			$this->value = DateData::cleanDate($this->value, $this->dateFormat);
 		}
 	}
 }
