@@ -4,7 +4,7 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter Snippets" />
+		<input type="search" class="filter" placeholder="Filter Snippets" autofocus />
 	</header>
 
 	<nav class="links" id="playground-links">
@@ -285,10 +285,10 @@ function setupHtmlOutput() {
 	const calculatedHeight = (lineCount * lineHeight) + 40;
 	const maxHeight = 500; // Max height before scrolling
 	const minHeight = 200; // Minimum height
-	
+
 	const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
 	outputEditor.setSize(null, finalHeight);
-	
+
 	// Enable scrolling if content exceeds max height
 	if (calculatedHeight > maxHeight) {
 		outputEditor.getWrapperElement().style.maxHeight = maxHeight + 'px';
@@ -303,6 +303,39 @@ function setupHtmlOutput() {
 
 // Initialize HTML output styling
 setupHtmlOutput();
+
+// Function to focus the CodeMirror editor on new snippet forms
+function focusSnippetEditor() {
+	// Only focus for new snippets (no ID in URL)
+	const isNewSnippet = !window.location.pathname.match(/playground\/[^\/]+$/);
+	if (!isNewSnippet) return;
+	
+	const snippetTextarea = document.querySelector('textarea[name="snippet"]');
+	if (!snippetTextarea) return;
+	
+	// Try to focus immediately if CodeMirror is already initialized
+	const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
+	if (cmWrapper && cmWrapper.CodeMirror) {
+		cmWrapper.CodeMirror.focus();
+		return;
+	}
+	
+	// If CodeMirror isn't ready yet, wait for it
+	const checkForCodeMirror = () => {
+		const wrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
+		if (wrapper && wrapper.CodeMirror) {
+			wrapper.CodeMirror.focus();
+		} else {
+			// Keep checking until CodeMirror is available
+			setTimeout(checkForCodeMirror, 100);
+		}
+	};
+	
+	setTimeout(checkForCodeMirror, 150);
+}
+
+// Focus the editor after page load
+focusSnippetEditor();
 </script>
 
 </main>
