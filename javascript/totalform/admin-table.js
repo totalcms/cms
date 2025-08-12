@@ -37,6 +37,7 @@ export default class AdminTable {
 		this.initCellListner();
 		this.initActionListner();
 		this.initQuickActionListner();
+		this.focusSearchInput();
 	}
 
 	initCloneDialog() {
@@ -85,6 +86,19 @@ export default class AdminTable {
 	initQuickActionListner() {
 		const buttons = Array.from(this.wrapper.getElementsByClassName("cms-quick-action"));
 		buttons.forEach(link => new QuickAction(link));
+	}
+
+	focusSearchInput() {
+		if (this.options.search) {
+			// GridJS creates the search input with class 'gridjs-search'
+			const searchInput = this.wrapper.querySelector('.gridjs-search input[type="search"]');
+			if (searchInput) {
+				// Small delay to ensure the input is fully rendered and focusable
+				setTimeout(() => {
+					searchInput.focus();
+				}, 100);
+			}
+		}
 	}
 
 	initCellListner() {
