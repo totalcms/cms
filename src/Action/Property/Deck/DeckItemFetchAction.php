@@ -1,21 +1,20 @@
 <?php
 
-namespace TotalCMS\Action\Object\Deck;
+namespace TotalCMS\Action\Property\Deck;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Property\Service\DeckManager;
+use TotalCMS\Domain\Property\Service\DeckItemFetcher;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Transformer\ObjectMetaTransformer;
 
 /**
- * Deletes an item from a deck property.
+ * Fetches a specific item from a deck property.
  */
-final class DeckItemDeleteAction
+final class DeckItemFetchAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private DeckManager $deckManager,
+		private DeckItemFetcher $deckItemFetcher,
 	) {
 	}
 
@@ -23,14 +22,18 @@ final class DeckItemDeleteAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		try {
-			$object = $this->deckManager->deleteDeckItem(
+			$item = $this->deckItemFetcher->fetchDeckItem(
 				$args['collection'],
 				$args['id'],
 				$args['property'],
 				$args['itemId']
 			);
 
-			return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
+			if ($item === null) {
+				return $this->renderer->json($response, ['error' => 'Deck item not found'], 404);
+			}
+
+			return $this->renderer->json($response, $item);
 		} catch (\InvalidArgumentException $e) {
 			return $this->renderer->json($response, ['error' => $e->getMessage()], 400);
 		}

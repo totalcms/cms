@@ -2,6 +2,37 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Gallery System**: Added `class` option to `cms.gallery()` function for custom CSS classes
+  - Allows adding custom classes to the gallery wrapper while preserving the default `cms-gallery` class
+  - Supports multiple classes via space-separated string (e.g., `class: 'featured-gallery large-gallery'`)
+  - Works seamlessly with all existing gallery options (captions, maxVisible, etc.)
+
+### Enhanced
+- **Deck System**: Improved default value handling for deck items
+  - Fixed default values not being applied when creating new deck items
+  - Enhanced `DeckItem` form rendering to properly pass schema defaults to form fields
+  - Better integration between deck schemas and form field default value system
+- **Data Validation**: Strengthened deck schema compatibility checking
+  - Added 'deck' type to incompatible property types to prevent nested deck structures
+  - Enhanced PropertyFactory validation with clear error messages for incompatible deck properties
+  - Better error handling when deck schemas contain unsupported field types
+
+### Fixed
+- **Forms**: Resolved form error display issues
+  - Fixed form errors not displaying properly in certain scenarios
+  - Improved error feedback for better user experience
+- **Imports**: Enhanced Alloy CMS import functionality
+  - Improved blog content import with better content processing
+  - Enhanced styled text handling during import operations
+- **Browser Compatibility**: Fixed HTML datetime input format issues
+  - Resolved "value does not conform to required format" console warnings for date fields
+  - Added proper format parameter to `DateData::cleanDate()` method for HTML form compatibility
+  - Updated `DateField` and `DatetimeField` classes to use browser-compatible formats
+- **Documentation**: Fixed broken documentation links
+
 ## [3.0.35] - 2025-08-08
 
 ### Added

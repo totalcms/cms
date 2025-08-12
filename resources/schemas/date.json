@@ -16,7 +16,7 @@
 			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"   : "Date",
 			"help"    : "The date to use.",
-			"field"   : "date",
+			"field"   : "datetime",
 			"factory" : "iso8601"
         }
     },

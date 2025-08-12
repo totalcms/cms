@@ -319,8 +319,8 @@ Enable debug mode to use the `dump()` function:
 ## Resources
 
 - [Official Twig Documentation](https://twig.symfony.com/doc/)
-- [Total CMS Filters Reference](twig-filters.md)
-- [Total CMS Functions Reference](twig-functions.md)
-- [Total CMS Form Helpers](twig-forms.md)
+- [Total CMS Filters Reference](docs/twig-filters)
+- [Total CMS Functions Reference](docs/twig-functions)
+- [Total CMS Form Helpers](docs/twig-forms)
 
 Remember: Twig makes your templates more maintainable, secure, and easier to work with. Take advantage of its features to create clean, efficient templates!

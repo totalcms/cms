@@ -1149,6 +1149,13 @@ NGINX;
 		unset($options['property']);
 		unset($options['captions']); // Remove captions option from JS settings
 
+		// Extract custom class before encoding settings
+		$customClass = '';
+		if (isset($options['class'])) {
+			$customClass = $options['class'];
+			unset($options['class']);
+		}
+
 		// Extract maxVisible and viewAllText before encoding settings
 		$maxVisible = 0;
 		if (isset($options['maxVisible']) && $options['maxVisible'] > 0) {
@@ -1162,8 +1169,14 @@ NGINX;
 			unset($options['viewAllText']);
 		}
 
+		// Build CSS classes - always include 'cms-gallery', add custom class if provided
+		$cssClasses = 'cms-gallery';
+		if (!empty($customClass)) {
+			$cssClasses .= ' ' . $customClass;
+		}
+
 		$attributes = [
-			'class'         => 'cms-gallery',
+			'class'         => $cssClasses,
 			'data-settings' => (string)json_encode($options),
 		];
 

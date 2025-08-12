@@ -98,28 +98,17 @@ class DeckItem
 					'field'        => $propertySchema['field'] ?? 'text',
 					'label'        => $propertySchema['label'] ?? ucfirst($propertyName),
 					'help'         => $propertySchema['help'] ?? '',
+					'default'      => $propertySchema['default'] ?? '',
+					'placeholder'  => $propertySchema['placeholder'] ?? '',
+					'options'      => $propertySchema['options'] ?? [],
+					'settings'     => $propertySchema['settings'] ?? [],
 					'value'        => $fieldValue,
 					'deck_context' => true, // Indicate this field is within a deck item
 				];
 
-				// For template items (empty itemId), ensure fields start empty
+				// For template items (empty itemId) ensure field is empty
 				if (empty($this->itemId)) {
 					$fieldConfig['value'] = '';
-				}
-
-				// Add placeholder if available
-				if (isset($propertySchema['placeholder'])) {
-					$fieldConfig['placeholder'] = $propertySchema['placeholder'];
-				}
-
-				// Add options for select fields
-				if (isset($propertySchema['options'])) {
-					$fieldConfig['options'] = $propertySchema['options'];
-				}
-
-				// Add settings
-				if (isset($propertySchema['settings'])) {
-					$fieldConfig['settings'] = $propertySchema['settings'];
 				}
 
 				$content .= $this->form->field($propertyName, $fieldConfig);

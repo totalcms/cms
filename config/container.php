@@ -58,9 +58,15 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\DeckItemFetcher;
+use TotalCMS\Domain\Property\Service\DeckItemRemover;
+use TotalCMS\Domain\Property\Service\DeckItemSaver;
+use TotalCMS\Domain\Property\Service\DeckItemUpdater;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
+use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
@@ -500,6 +506,58 @@ return [
 		return new GlideFactory(
 			$container->get(StorageAdapterInterface::class),
 			$container->get(Config::class),
+		);
+	},
+
+	// Property and Object Factories
+	PropertyFactory::class => function (ContainerInterface $container) {
+		return new PropertyFactory(
+			$container->get(SchemaFetcher::class),
+			$container->get(DeckCompatibilityChecker::class),
+		);
+	},
+
+	ObjectFactory::class => function (ContainerInterface $container) {
+		return new ObjectFactory(
+			$container->get(SchemaFetcher::class),
+			$container->get(PropertyFactory::class),
+		);
+	},
+
+	// Deck Services
+	DeckItemFetcher::class => function (ContainerInterface $container) {
+		return new DeckItemFetcher(
+			$container->get(ObjectFetcher::class),
+		);
+	},
+
+	DeckItemSaver::class => function (ContainerInterface $container) {
+		return new DeckItemSaver(
+			$container->get(ObjectFetcher::class),
+			$container->get(ObjectUpdater::class),
+			$container->get(PropertyFactory::class),
+		);
+	},
+
+	DeckItemUpdater::class => function (ContainerInterface $container) {
+		return new DeckItemUpdater(
+			$container->get(ObjectFetcher::class),
+			$container->get(ObjectUpdater::class),
+			$container->get(PropertyFactory::class),
+		);
+	},
+
+	DeckItemRemover::class => function (ContainerInterface $container) {
+		return new DeckItemRemover(
+			$container->get(ObjectFetcher::class),
+			$container->get(ObjectUpdater::class),
+		);
+	},
+
+	// Schema Services
+	DeckCompatibilityChecker::class => function (ContainerInterface $container) {
+		return new DeckCompatibilityChecker(
+			$container->get(SchemaFetcher::class),
 		);
 	},
 ];

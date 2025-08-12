@@ -23,6 +23,7 @@ final class DeckCompatibilityChecker
 		'gallery',
 		'file',
 		'depot',
+		'deck',
 	];
 
 	/**

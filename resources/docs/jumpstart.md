@@ -229,6 +229,6 @@ Total CMS includes a demo JumpStart file at `resources/jumpstart/demo.json` that
 ---
 
 **Related Documentation:**
-- [Factory Documentation](factory.md) - Learn more about factory data generation
-- [Import/Export](import.md) - General import/export functionality
-- [Data Model](data-model.md) - Understanding Total CMS data structures
+- [Factory Documentation](docs/factory) - Learn more about factory data generation
+- [Import/Export](docs/import) - General import/export functionality
+- [Data Model](docs/data-model) - Understanding Total CMS data structures
