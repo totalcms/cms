@@ -215,7 +215,7 @@ final class PropertyFactory
 
 		if (!$this->deckCompatibilityChecker->isCompatible($schemaArray)) {
 			$incompatibleProperties = $this->deckCompatibilityChecker->getIncompatibleProperties($schemaArray);
-			$propertyList = implode(', ', $incompatibleProperties);
+			$propertyList           = implode(', ', $incompatibleProperties);
 
 			// $incompatibleTypes = $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schemaArray);
 			// $typeList = implode(', ', $incompatibleTypes);
