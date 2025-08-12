@@ -61,7 +61,7 @@ a0d9cfd6ab83af9911afbd126c720e3f2677b124199b6d8f6ef54729124524c5  ./dist/public/
 f51ce492859ea8fcbe3947782780f60c7fea317736d235e75913b5679e547f6e  ./dist/public/assets/chunk-HH4NZBSD.js
 3cc169c50eb39fdd0410b5b7a5191f69c1eb3c6ff7b6fb54be07e333a70498ff  ./dist/public/assets/chunk-UA46YKLJ.js
 56af38cfbd9f548f89bdc055441732c17dfbc85fe072e8094065d2f15e109cd9  ./dist/public/assets/filelinks.css
-4c5d62bb4ad80c9b6075689becbd17411e1bac55e75dd9797c6216b3bd74ab7d  ./dist/public/assets/admin.js
+81b56bdfcd7648002432d77222f26dffde7d37bb40f58cdc17caeb0d56dcfa25  ./dist/public/assets/admin.js
 af05c813e66b05c02746215f31fefbb9e16391159641e44bbcbddfebc874ce4b  ./dist/public/assets/chunk-NWIZUH7W.js
 2cc019316e5ea99a1d840e021b0c3f36f4f07351e59dad257859fb0cfb185f79  ./dist/public/assets/content.js
 3a8bda89fc93ee06cc4cbdd95dc006b48057b50e465aeeca6538df2b5dc82f24  ./dist/public/assets/docs.css
@@ -949,7 +949,7 @@ d752e956bb1792a5da023a6e6e50acb5a4b282d9d814586b334340fd8736a78a  ./dist/vendor/
 971ac336532e94edd8b66d6ab1b7ecb7be89f98e57786a19aac7611bbc3c179a  ./dist/vendor/composer/autoload_real.php
 eb4929baf229033b37c443ae0c381d92349e556e69f6db7bac9abe80efa23e92  ./dist/vendor/composer/autoload_files.php
 1e4525198301d1ed1f87ac3df2a8555a6f139f8df30a703d0b775a61963c96e4  ./dist/vendor/composer/InstalledVersions.php
-6dda8364e791e7a8ca37cad44c67291f4801e21f9cda3cd16f39efc7f375a776  ./dist/vendor/composer/installed.php
+c6b891947644dadaaed196f63cad8db07136048f82c68c38674b1fc9f8a2437f  ./dist/vendor/composer/installed.php
 cc8ce77a73e0aeb29f86967661c4e09f662998ab0af6c7bb6094c347216625e8  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelper.php
 986cfaff3ec755cfe7e933534d98f387a62d32d41a065262c1d12a02526ef7b6  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/Module.php
 35925311f8f49dd55f750dbf87481d928315a26cc10950aac2dde65763b60a02  ./dist/vendor/cocur/slugify/src/Bridge/ZF2/SlugifyViewHelperFactory.php
@@ -5006,7 +5006,7 @@ a0d9cfd6ab83af9911afbd126c720e3f2677b124199b6d8f6ef54729124524c5  ./public/asset
 f51ce492859ea8fcbe3947782780f60c7fea317736d235e75913b5679e547f6e  ./public/assets/chunk-HH4NZBSD.js
 3cc169c50eb39fdd0410b5b7a5191f69c1eb3c6ff7b6fb54be07e333a70498ff  ./public/assets/chunk-UA46YKLJ.js
 56af38cfbd9f548f89bdc055441732c17dfbc85fe072e8094065d2f15e109cd9  ./public/assets/filelinks.css
-4c5d62bb4ad80c9b6075689becbd17411e1bac55e75dd9797c6216b3bd74ab7d  ./public/assets/admin.js
+81b56bdfcd7648002432d77222f26dffde7d37bb40f58cdc17caeb0d56dcfa25  ./public/assets/admin.js
 af05c813e66b05c02746215f31fefbb9e16391159641e44bbcbddfebc874ce4b  ./public/assets/chunk-NWIZUH7W.js
 2cc019316e5ea99a1d840e021b0c3f36f4f07351e59dad257859fb0cfb185f79  ./public/assets/content.js
 3a8bda89fc93ee06cc4cbdd95dc006b48057b50e465aeeca6538df2b5dc82f24  ./public/assets/docs.css
@@ -5050,7 +5050,7 @@ db91f25740f59a53286d0374192caf380f180ee92e6229e4864f167627eb8090  ./javascript/t
 c59ddf693e4a0580627e30aa2706f84d8bd8f1a6d3e8c4601cc14968a4bfd413  ./javascript/totalform/property.js
 bea84cd7a855a2589739bb4f05d623ad278c8c898a245e2ad875ecd5bdfc7db1  ./javascript/totalform/deck.js
 00385ce5ba1c99a3eec53c68bc321d25f56dc764def85737d2b0b638f8eb88a1  ./javascript/totalform/list.js
-3c4a24747d618bee3789fb0f211ee9b81b0983909d7d38ae5a8928ae7647ab21  ./javascript/totalform/admin-table.js
+e07dba26a4a7215d9b11bff42785d7b67b29f77f73dbd0a75e6ee1c976423a61  ./javascript/totalform/admin-table.js
 4819944ecf2d6044885b2562118cab3a60e87596512ee8ddb9168edb0c6328dd  ./javascript/totalform/color.js
 3e1561eae698b575d7d8e8bcbf2b890c7c99adb4c5edd65448f84c4458373b4f  ./javascript/totalform/filter-list.js
 f47248651dcfe2c59bf0b8a7725fc1daf779e298b7e6cdfa502f2fb4d6359761  ./javascript/totalform/slugify-inputs.js
