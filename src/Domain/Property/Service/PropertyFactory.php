@@ -53,7 +53,10 @@ final class PropertyFactory
 
 		$settings = $propertySchema['settings'] ?? [];
 
-		$property = null === $value ? new $className(settings: $settings) : new $className($value, $settings);
+		if (is_null($value)) {
+			$value = '';
+		}
+		$property = new $className($value, $settings);
 
 		if (!$property instanceof PropertyData) {
 			throw new \DomainException('Error creating property for object.');
@@ -64,6 +67,7 @@ final class PropertyFactory
 
 	/**
 	 * Create a DeckData object with properly processed items.
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $propertySchema The deck property schema
 	 * @param mixed $value The raw deck data
