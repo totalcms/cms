@@ -4,19 +4,18 @@ namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
 
 /**
  * Service.
  */
 final class CollectionSaver
 {
-	private CollectionRepository $storage;
-	private CollectionFactory $factory;
-
-	public function __construct(CollectionRepository $storage, CollectionFactory $factory)
-	{
-		$this->storage   = $storage;
-		$this->factory   = $factory;
+	public function __construct(
+		private CollectionRepository $storage,
+		private CollectionFactory $factory,
+		private IndexRepository $indexRepository,
+	) {
 	}
 
 	/**
@@ -31,6 +30,8 @@ final class CollectionSaver
 	 */
 	public function saveCollection(array $data): CollectionData
 	{
+		$data['count'] = $this->initializeCount($data['id'], $data);
+
 		$collection = $this->factory->generateCollection($data);
 
 		if ($this->storage->collectionExists($collection->id)) {
@@ -54,6 +55,8 @@ final class CollectionSaver
 	 */
 	public function updateCollection(string $collectionId, array $data): CollectionData
 	{
+		$data['count'] = $this->initializeCount($collectionId, $data);
+
 		$collection = $this->factory->generateCollection($data);
 
 		if ($collection->id !== $collectionId) {
@@ -86,5 +89,47 @@ final class CollectionSaver
 		$mergedCollection = array_merge($collection->toArray(), $patch);
 
 		return $this->updateCollection($collectionId, $mergedCollection);
+	}
+
+	/**
+	 * Increment the object count for a collection.
+	 *
+	 * @param string $collectionId
+	 *
+	 * @throws \UnexpectedValueException
+	 *
+	 * @return CollectionData
+	 */
+	public function incrementCount(string $collectionId): CollectionData
+	{
+		$collection = $this->storage->fetchCollection($collectionId);
+
+		if ($collection === null) {
+			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+		}
+
+		$collectionArray = $collection->toArray();
+		
+		// If count is not set or is 0, initialize it to current object count first
+		if (!isset($collectionArray['count']) || $collectionArray['count'] === 0) {
+			$objectIds = $this->indexRepository->fetchObjectIds($collectionId);
+			$collectionArray['count'] = count($objectIds);
+		} else {
+			$collectionArray['count'] = $collectionArray['count'] + 1;
+		}
+
+		return $this->updateCollection($collectionId, $collectionArray);
+	}
+
+	/**	@param array<string,mixed> $data */
+	private function initializeCount(string $collectionId, array $data): int
+	{
+		// Only initialize count if it's not set or is zero
+		if (!isset($data['count']) || $data['count'] === 0) {
+			$objectIds = $this->indexRepository->fetchObjectIds($collectionId);
+			return count($objectIds);
+		}
+
+		return $data['count'];
 	}
 }

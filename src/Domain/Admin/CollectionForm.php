@@ -145,6 +145,7 @@ final class CollectionForm extends TotalForm
 		// Get the schema settings for a property
 		$defaults = $this->schemaData->properties[$name] ?? [];
 		$defaults = TotalForm::filterFieldProperties($defaults);
+		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
 
 		$options  = array_merge($defaults, $options);
 

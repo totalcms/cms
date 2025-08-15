@@ -94,7 +94,7 @@ final class ObjectForm extends TotalForm
 	}
 
 	/** @return array<string,mixed> */
-	private function fieldAttributeSettings(string $property): array
+	protected function fieldAttributeSettings(string $property): array
 	{
 		// Get the schema and collection settings for a property
 		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
@@ -102,7 +102,7 @@ final class ObjectForm extends TotalForm
 
 		$attributes = array_merge($schema, $collection);
 
-		return TotalForm::filterFieldAttributes($attributes);
+		return self::filterFieldAttributes($attributes);
 	}
 
 	private function isRequired(string $property): bool

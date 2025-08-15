@@ -382,6 +382,18 @@ abstract class TotalForm
 	}
 
 	/**
+	 * Extract field attributes from schema settings.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function fieldAttributeSettings(string $property): array
+	{
+		// Get the schema settings for a property
+		$schema = $this->schemaData->properties[$property]['settings'] ?? [];
+		return self::filterFieldAttributes($schema);
+	}
+
+	/**
 	 * @param array<string,mixed> $properties
 	 *
 	 * @return array<string,mixed>

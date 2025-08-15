@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Overrides---\nproperties properties\ncustomProperties customProperties",
+	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Overrides---\nproperties properties\ncustomProperties customProperties\n---\ncount count",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -116,6 +116,17 @@
 			"label" : "Queue Rebuild Index on Save",
 			"help"  : "When enabled, saving objects will no longer trigger a rebuild of the index. This is useful for large collections.",
 			"field" : "checkbox"
+        },
+        "count": {
+			"type"    : "integer",
+			"label"   : "Objects Created",
+			"help"    : "Total number of objects that have been created in this collection.",
+			"default" : 0,
+			"minimum" : 0,
+			"field"   : "number",
+			"settings" : {
+				"readonly": true
+			}
         },
 		"properties": {
 			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",

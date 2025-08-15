@@ -33,6 +33,7 @@ final class CollectionData
 	public bool $reverseSort        = false;         // reverse the sort order
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
 	public bool $prettyUrl          = false;           // use pretty URLs for the collection
+	public int $count               = 0;              // total number of objects created in this collection
 
 	/** @var array<string> */
 	public array $groups;        // access groups that can access this collection
@@ -73,6 +74,7 @@ final class CollectionData
 			'reverseSort'        => $this->reverseSort ?? false,
 			'prettyUrl'          => $this->prettyUrl ?? false,
 			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
+			'count'              => $this->count ?? 0,
 		];
 
 		if (!empty($this->properties)) {

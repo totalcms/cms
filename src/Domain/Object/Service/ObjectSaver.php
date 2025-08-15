@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -14,6 +15,7 @@ final class ObjectSaver
 		private ObjectFactory $factory,
 		private IndexBuilder $indexBuilder,
 		private PropertyDataProcessorInterface $propertyProcessor,
+		private CollectionSaver $collectionSaver,
 	) {
 	}
 
@@ -30,6 +32,9 @@ final class ObjectSaver
 		$object->properties = $object->properties->map(fn ($property) => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
+
+		// Increment the collection count for newly created objects
+		$this->collectionSaver->incrementCount($collection);
 
 		// Pass the new object for immediate index append when queueRebuildOnSave is enabled
 		$this->indexBuilder->smartBuildIndex($collection, $object);
