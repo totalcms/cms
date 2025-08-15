@@ -227,15 +227,16 @@ abstract class TotalForm
 		}
 
 		$attributes = array_filter([
-			'class'           => "totalform {$this->class}",
-			'data-form'       => $this->formType,
-			'data-schema'     => $this->schema,
-			'data-collection' => empty($this->collection) ? null : $this->collection,
-			'data-method'     => $this->method,
-			'data-api'        => $this->api,
-			'data-route'      => $this->route,
-			'data-id'         => empty($this->id) ? null : $this->id,
-			'style'           => empty($formgrid) ? null : $formgrid,
+			'class'                 => "totalform {$this->class}",
+			'data-form'             => $this->formType,
+			'data-schema'           => $this->schema,
+			'data-collection'       => empty($this->collection) ? null : $this->collection,
+			'data-collection-count' => isset($this->collectionData) ? $this->collectionData->count : null,
+			'data-method'           => $this->method,
+			'data-api'              => $this->api,
+			'data-route'            => $this->route,
+			'data-id'               => empty($this->id) ? null : $this->id,
+			'style'                 => empty($formgrid) ? null : $formgrid,
 		]);
 
 		$actions = [

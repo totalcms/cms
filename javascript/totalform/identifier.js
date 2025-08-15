@@ -43,10 +43,10 @@ export default class Identifier extends TotalField {
 		if (this.options.autogen && !this.isLocked()) {
 			// autogen example: ${title}-${timestamp}
 			const autogenNames = this.options.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
-			const reservedNames = ["now", "timestamp", "uuid", "id"];
+			const reservedNames = ["now", "timestamp", "uuid", "id", "oid"];
 			autogenNames.forEach(name => {
-				// Skip reserved names
-				if (reservedNames.includes(name)) return;
+				// Skip reserved names and oid patterns (oid, oid-00000, etc.)
+				if (reservedNames.includes(name) || name.startsWith('oid-')) return;
 
 				// Determine the scope to search for fields
 				const searchScope = this.isInDeck ? this.deckItem : this.form.form;
@@ -90,12 +90,31 @@ export default class Identifier extends TotalField {
 		data.now       = Date.now();
 		data.timestamp = new Date().toISOString().slice(0, -5).replace(/-|:/g, '');
 		data.uuid      = Math.random().toString(36).substring(2,9);
+		data.oid       = this.getCollectionCount();
 
-		// Examples: ${title}-${timestamp}, ${title}-${now}, ${title}-${uuid}
+		// Examples: ${title}-${timestamp}, ${title}-${now}, ${title}-${uuid}, ${title}-${oid}, ${title}-${oid-00000}
 
-		// Magic happens here
-		const autogen = this.options.autogen.replace(/\${(.*?)}/g, (match, key) => data[key] || "");
+		// Magic happens here - enhanced to handle oid zero-padding
+		const autogen = this.options.autogen.replace(/\${(.*?)}/g, (match, key) => {
+			// Check if this is an oid with zero-padding format: oid-00000
+			if (key.startsWith('oid-') && /^oid-0+$/.test(key)) {
+				const zeros = key.substring(4); // Get the zero pattern (e.g., "00000")
+				const paddingLength = zeros.length;
+				const oidValue = this.getCollectionCount();
+				return oidValue.toString().padStart(paddingLength, '0');
+			}
+			
+			// Standard replacement for all other placeholders
+			return data[key] || "";
+		});
 		return this.slugify(autogen);
+	}
+
+	getCollectionCount() {
+		// Get the collection count from the form's data-collection-count attribute
+		// This represents the next OID that should be used for new objects
+		const count = this.form.form.getAttribute('data-collection-count');
+		return count ? parseInt(count, 10) + 1 : 1;
 	}
 
 	disable() {

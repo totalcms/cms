@@ -39,10 +39,74 @@ a few special variables that you can use below.
 
 special autogen vars
 
-* now
-* timestamp
-* uuid
+* **now** - Current timestamp in milliseconds (e.g., 1692123456789)
+* **timestamp** - Current date/time in ISO format without colons/dashes (e.g., 20230815T143056)
+* **uuid** - Random 7-character alphanumeric string (e.g., a4k7m2x)
+* **oid** - Object ID counter (increments with each new object in collection)
+* **oid-00000** - Zero-padded Object ID (e.g., oid-00001, oid-12345)
 
+### Autogen Special Variables Examples
+
+**Using timestamp for date-based IDs:**
+```json
+{
+	"autogen" : "${title}-${timestamp}"
+}
+```
+Generates: `my-post-20230815T143056`
+
+**Using now for unique numeric IDs:**
+```json
+{
+	"autogen" : "item-${now}"
+}
+```
+Generates: `item-1692123456789`
+
+**Using uuid for random IDs:**
+```json
+{
+	"autogen" : "${title}-${uuid}"
+}
+```
+Generates: `my-post-a4k7m2x`
+
+### OID (Object ID) Examples
+
+The `oid` placeholder provides automatic sequential numbering based on the collection's object count:
+
+```json
+{
+	"autogen" : "item-${oid}"
+}
+```
+Generates: `item-1`, `item-2`, `item-3`, etc.
+
+**Zero-padded OID:**
+```json
+{
+	"autogen" : "product-${oid-00000}"
+}
+```
+Generates: `product-00001`, `product-00002`, `product-00003`, etc.
+
+**Different padding lengths:**
+```json
+{
+	"autogen" : "${oid-000}"
+}
+```
+Generates: `001`, `002`, `003`, etc.
+
+**Combined with other placeholders:**
+```json
+{
+	"autogen" : "${title}-${oid-00}"
+}
+```
+Generates: `my-title-01`, `another-title-02`, etc.
+
+The OID counter automatically increments each time a new object is created in the collection, ensuring unique sequential IDs.
 
 ## Sorting Options
 
