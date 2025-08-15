@@ -15,6 +15,7 @@ final class ObjectFactory
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,
 		private PropertyFactory $propertyFactory,
+		private AutogenIdService $autogenIdService,
 	) {
 	}
 
@@ -30,11 +31,16 @@ final class ObjectFactory
 	 */
 	public function generateObject(string $collection, array $objectData): ObjectData
 	{
-		if (!array_key_exists('id', $objectData)) {
-			throw new \UnexpectedValueException('Object data must contain an ID.');
-		}
-
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+
+		// Handle ID generation if not provided
+		if (!array_key_exists('id', $objectData) || empty($objectData['id'])) {
+			$objectData['id'] = $this->generateIdIfNeeded($collection, $objectData, $schema);
+
+			if (empty($objectData['id'])) {
+				throw new \UnexpectedValueException('Object data must contain an ID or schema must have autogen settings for ID field.');
+			}
+		}
 
 		$properties = $this->generateProperties($objectData, $schema);
 
@@ -90,5 +96,27 @@ final class ObjectFactory
 		}
 
 		return $properties;
+	}
+
+	/**
+	 * Generate ID using autogen settings if configured.
+	 *
+	 * @param string $collection
+	 * @param array<string,mixed> $objectData
+	 * @param SchemaData $schema
+	 *
+	 * @return string
+	 */
+	private function generateIdIfNeeded(string $collection, array $objectData, SchemaData $schema): string
+	{
+		// Check if ID field has autogen settings
+		$idProperty     = $schema->properties['id'] ?? [];
+		$autogenPattern = $idProperty['settings']['autogen'] ?? null;
+
+		if (!empty($autogenPattern)) {
+			return $this->autogenIdService->generateId($autogenPattern, $collection, $objectData);
+		}
+
+		return '';
 	}
 }

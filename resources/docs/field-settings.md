@@ -41,7 +41,8 @@ special autogen vars
 
 * **now** - Current timestamp in milliseconds (e.g., 1692123456789)
 * **timestamp** - Current date/time in ISO format without colons/dashes (e.g., 20230815T143056)
-* **uuid** - Random 7-character alphanumeric string (e.g., a4k7m2x)
+* **uuid** - Real UUID v4 format (e.g., 550e8400-e29b-41d4-a716-446655440000)
+* **uid** - Short random alphanumeric string (e.g., a4k7m2x)
 * **oid** - Object ID counter (increments with each new object in collection)
 * **oid-00000** - Zero-padded Object ID (e.g., oid-00001, oid-12345)
 
@@ -63,10 +64,18 @@ Generates: `my-post-20230815T143056`
 ```
 Generates: `item-1692123456789`
 
-**Using uuid for random IDs:**
+**Using uuid for unique IDs:**
 ```json
 {
 	"autogen" : "${title}-${uuid}"
+}
+```
+Generates: `my-post-550e8400-e29b-41d4-a716-446655440000`
+
+**Using uid for short random IDs:**
+```json
+{
+	"autogen" : "${title}-${uid}"
 }
 ```
 Generates: `my-post-a4k7m2x`

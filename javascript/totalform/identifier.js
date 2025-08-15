@@ -43,7 +43,7 @@ export default class Identifier extends TotalField {
 		if (this.options.autogen && !this.isLocked()) {
 			// autogen example: ${title}-${timestamp}
 			const autogenNames = this.options.autogen.match(/\${(.*?)}/g).map(v => v.slice(2, -1));
-			const reservedNames = ["now", "timestamp", "uuid", "id", "oid"];
+			const reservedNames = ["now", "timestamp", "uuid", "uid", "id", "oid"];
 			autogenNames.forEach(name => {
 				// Skip reserved names and oid patterns (oid, oid-00000, etc.)
 				if (reservedNames.includes(name) || name.startsWith('oid-')) return;
@@ -89,7 +89,8 @@ export default class Identifier extends TotalField {
 		// Add some default data
 		data.now       = Date.now();
 		data.timestamp = new Date().toISOString().slice(0, -5).replace(/-|:/g, '');
-		data.uuid      = Math.random().toString(36).substring(2,9);
+		data.uuid      = this.generateUuid();
+		data.uid       = Math.random().toString(36).substring(2,9);
 		data.oid       = this.getCollectionCount();
 
 		// Examples: ${title}-${timestamp}, ${title}-${now}, ${title}-${uuid}, ${title}-${oid}, ${title}-${oid-00000}
@@ -115,6 +116,15 @@ export default class Identifier extends TotalField {
 		// This represents the next OID that should be used for new objects
 		const count = this.form.form.getAttribute('data-collection-count');
 		return count ? parseInt(count, 10) + 1 : 1;
+	}
+
+	generateUuid() {
+		// Generate UUID v4 (random) - RFC 4122 compliant
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+			const r = Math.random() * 16 | 0;
+			const v = c == 'x' ? r : (r & 0x3 | 0x8);
+			return v.toString(16);
+		});
 	}
 
 	disable() {

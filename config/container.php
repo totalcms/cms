@@ -55,6 +55,7 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\AutogenIdService;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -517,10 +518,17 @@ return [
 		);
 	},
 
+	AutogenIdService::class => function (ContainerInterface $container) {
+		return new AutogenIdService(
+			$container->get(CollectionFetcher::class),
+		);
+	},
+
 	ObjectFactory::class => function (ContainerInterface $container) {
 		return new ObjectFactory(
 			$container->get(SchemaFetcher::class),
 			$container->get(PropertyFactory::class),
+			$container->get(AutogenIdService::class),
 		);
 	},
 

@@ -109,10 +109,10 @@ final class CollectionSaver
 		}
 
 		$collectionArray = $collection->toArray();
-		
+
 		// If count is not set or is 0, initialize it to current object count first
 		if (!isset($collectionArray['count']) || $collectionArray['count'] === 0) {
-			$objectIds = $this->indexRepository->fetchObjectIds($collectionId);
+			$objectIds                = $this->indexRepository->fetchObjectIds($collectionId);
 			$collectionArray['count'] = count($objectIds);
 		} else {
 			$collectionArray['count'] = $collectionArray['count'] + 1;
@@ -127,6 +127,7 @@ final class CollectionSaver
 		// Only initialize count if it's not set or is zero
 		if (!isset($data['count']) || $data['count'] === 0) {
 			$objectIds = $this->indexRepository->fetchObjectIds($collectionId);
+
 			return count($objectIds);
 		}
 

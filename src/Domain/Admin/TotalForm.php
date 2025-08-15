@@ -391,6 +391,7 @@ abstract class TotalForm
 	{
 		// Get the schema settings for a property
 		$schema = $this->schemaData->properties[$property]['settings'] ?? [];
+
 		return self::filterFieldAttributes($schema);
 	}
 
