@@ -13,9 +13,6 @@ class DeckData extends PropertyData
 	/** @param array<mixed> $deck */
 	public function __construct(array $deck = [], public array $settings = [])
 	{
-		// Call parent constructor with empty id (decks don't have meaningful IDs for CSV export)
-		parent::__construct('', $settings);
-		
 		// Validate the deck (accepts both string and int keys)
 		if (!self::verifyDeck($deck)) {
 			throw new \InvalidArgumentException('Deck must be a dictionary of named objects');
@@ -135,17 +132,5 @@ class DeckData extends PropertyData
 	public function count(): int
 	{
 		return count($this->deck);
-	}
-
-	/**
-	 * Convert deck data to string for CSV export.
-	 * Deck data is too complex for CSV format, so return empty string to skip export.
-	 * Use JSON import/export for deck data instead.
-	 */
-	public function __toString(): string
-	{
-		// Deck data is too complex for reliable CSV export/import
-		// Return empty string so the field gets skipped in CSV
-		return '';
 	}
 }

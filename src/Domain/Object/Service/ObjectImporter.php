@@ -120,13 +120,6 @@ final class ObjectImporter
 		);
 
 		foreach ($schema->properties as $name => $property) {
-			// Handle string properties that might have escaped newlines from CSV
-			if (isset($property['type']) && $property['type'] === 'string' && isset($objectData[$name]) && is_string($objectData[$name])) {
-				// Convert literal \n back to actual newlines for proper display
-				$objectData[$name] = str_replace("\\n", "\n", $objectData[$name]);
-				continue;
-			}
-
 			// Skip properties that are not references or if the data is not set
 			if (!isset($property['$ref'], $objectData[$name]) || !is_string($objectData[$name])) {
 				continue;
