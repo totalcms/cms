@@ -10,9 +10,12 @@ class DeckData extends PropertyData
 	/** @var array<string|int,array<string,mixed>> */
 	public array $deck;
 
-	/** @param array<mixed> $deck */
-	public function __construct(array $deck = [], public array $settings = [])
+	public function __construct(mixed $deck = [], public array $settings = [])
 	{
+		if (!is_array($deck)) {
+			$deck = [];
+		}
+
 		// Validate the deck (accepts both string and int keys)
 		if (!self::verifyDeck($deck)) {
 			throw new \InvalidArgumentException('Deck must be a dictionary of named objects');
@@ -132,5 +135,14 @@ class DeckData extends PropertyData
 	public function count(): int
 	{
 		return count($this->deck);
+	}
+
+	public function __toString(): string
+	{
+		$json = json_encode($this->transform(), JSON_UNESCAPED_SLASHES);
+		if ($json === false) {
+			return '';
+		}
+		return $json;
 	}
 }
