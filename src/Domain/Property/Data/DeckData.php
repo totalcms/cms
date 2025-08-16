@@ -139,6 +139,7 @@ class DeckData extends PropertyData
 		if ($json === false) {
 			return '';
 		}
+
 		return $json;
 	}
 }

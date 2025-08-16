@@ -57,9 +57,10 @@ class ObjectData
 	{
 		$properties = $this->properties->map(function ($property) {
 			$value = strval($property);
+
 			// Escape newlines for CSV compatibility by converting to literal \n
 			// This preserves newlines in a CSV-safe format that can be parsed back
-			return str_replace(["\r\n", "\r", "\n"], ["\\n", "\\n", "\\n"], $value);
+			return str_replace(["\r\n", "\r", "\n"], ['\\n', '\\n', '\\n'], $value);
 		});
 		$properties['id'] = $this->id;
 

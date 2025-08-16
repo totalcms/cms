@@ -3,8 +3,8 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Index\Repository\IndexRepository;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class ObjectExporter
 {
@@ -37,8 +37,8 @@ final class ObjectExporter
 		// Filter out deck properties from CSV export - they're too complex for CSV format
 		$properties = array_filter(
 			array_keys($schema->properties),
-			fn($propertyName) => !isset($schema->properties[$propertyName]['$ref']) ||
-				$schema->properties[$propertyName]['$ref'] !== SchemaData::PROPERTY_TYPE_TO_REF['deck']
+			fn ($propertyName) => !isset($schema->properties[$propertyName]['$ref'])
+				|| $schema->properties[$propertyName]['$ref'] !== SchemaData::PROPERTY_TYPE_TO_REF['deck']
 		);
 
 		$objects   = [array_values($properties)];
