@@ -10,7 +10,8 @@
   "license": "proprietary",
   "repositories": [
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
+	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" },
+	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/couleur.git" }
   ],
   "require": {
     "php": "^8.2",
@@ -29,6 +30,7 @@
     "guzzlehttp/guzzle": "^7",
     "halaxa/json-machine": "^1.1",
     "illuminate/collections": "^11.45",
+    "joeworkman-forks/couleur": "dev-main",
     "khanzadimahdi/uploadmanager": "^1.0",
     "ksubileau/color-thief-php": "^2.0",
     "league/commonmark": "^2.7",
@@ -37,8 +39,6 @@
     "league/fractal": "^0.20.1",
     "league/glide": "^3.0",
     "league/uri": "^7.4",
-    "lychee-org/php-exif": "^1.0",
-    "matthieumastadenis/couleur": "^0.1.2",
     "mibe/feedwriter": "dev-master#f838297f67dfb96ab69983000b404183b957b625",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
