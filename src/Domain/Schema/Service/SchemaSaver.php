@@ -48,12 +48,22 @@ final class SchemaSaver
 	 *
 	 * @param array<string,mixed> $schemaData
 	 *
+	 * @throws \InvalidArgumentException
 	 * @throws \UnexpectedValueException
 	 *
 	 * @return SchemaData
 	 */
 	public function saveSchema(array $schemaData): SchemaData
 	{
+		// Validate required input structure
+		if (!isset($schemaData['properties'])) {
+			throw new \InvalidArgumentException('Schema data must contain a "properties" key');
+		}
+		
+		if (!is_array($schemaData['properties'])) {
+			throw new \InvalidArgumentException('Schema "properties" must be an array');
+		}
+
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schema                   = $this->factory->generateSchema($schemaData);
 
