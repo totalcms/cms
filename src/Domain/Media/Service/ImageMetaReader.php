@@ -11,7 +11,7 @@ class ImageMetaReader
 	/** @return array<string,string|int> */
 	public static function getBasicImageData(string $imagepath): array
 	{
-		$imageData = getimagesize($imagepath);
+		$imageData = @getimagesize($imagepath);
 		if (!is_array($imageData)) {
 			return [];
 		}
