@@ -170,12 +170,32 @@ export default class DeckItem {
     getValue() {
         const data = {};
 
-        // Collect all form fields within this item's dialog
-        const formFields = this.dialog.dialog.querySelectorAll('input, textarea, select');
+        // Collect all form field containers within this item's dialog
+        const formFieldContainers = this.dialog.dialog.querySelectorAll('.form-field');
 
+        for (const container of formFieldContainers) {
+            // Check if the container has a TotalField instance
+            if (container.totalfield && container.totalfield.input && container.totalfield.input.name) {
+                const fieldName = container.totalfield.input.name;
+                try {
+                    // Use the TotalField's getValue method to get the proper value
+                    data[fieldName] = container.totalfield.getValue();
+                } catch (error) {
+                    // If getValue fails (e.g., field not fully initialized), fall back to input value
+                    console.warn(`Failed to get value for field ${fieldName} in deck item:`, error);
+                    if (container.totalfield.input) {
+                        data[fieldName] = container.totalfield.input.value || '';
+                    }
+                }
+            }
+        }
+
+        // Fallback: collect any remaining input fields that don't have TotalField instances
+        const formFields = this.dialog.dialog.querySelectorAll('input, textarea, select');
+        
         for (const field of formFields) {
-            if (field.name) {
-                // Handle different field types
+            if (field.name && !data.hasOwnProperty(field.name)) {
+                // Handle different field types for fields without TotalField instances
                 if (field.type === 'checkbox') {
                     data[field.name] = field.checked;
                 } else if (field.type === 'radio') {

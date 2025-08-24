@@ -72,7 +72,26 @@ export default class ListField extends MultiSelectField {
 	}
 
 	getValue() {
-		const value = super.getValue();
+		let value;
+		
+		// If Choices.js is initialized, get values from it
+		if (this.choices && this.choices.getValue) {
+			const choicesValue = this.choices.getValue();
+			// Choices.js returns different formats depending on single/multi select
+			if (Array.isArray(choicesValue) && choicesValue.value !== undefined) {
+				// Single object with value property (not an array of objects)
+				value = [choicesValue.value];
+			} else if (Array.isArray(choicesValue)) {
+				// Array of items (objects or strings)
+				value = choicesValue.map(item => typeof item === 'object' && item.value !== undefined ? item.value : item);
+			} else {
+				// Single value or null
+				value = choicesValue ? [choicesValue] : [];
+			}
+		} else {
+			// Fall back to parent method if Choices.js not ready
+			value = super.getValue();
+		}
 
 		if (this.options.asString) {
 			return value.join(',');
