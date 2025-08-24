@@ -5,13 +5,12 @@ namespace Tests\Security;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Twig\MarkdownRuntime;
-use TotalCMS\Domain\Twig\TwigEngine;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use Twig\Environment;
 use Twig\Error\SyntaxError;
 use Twig\Loader\ArrayLoader;
 
 #[CoversClass(TwigEngine::class)]
-#[CoversClass(MarkdownRuntime::class)]
 final class TwigFiltersSecurityTest extends TestCase
 {
 	private Environment $twig;

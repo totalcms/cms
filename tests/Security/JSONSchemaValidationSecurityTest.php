@@ -5,10 +5,10 @@ namespace Tests\Security;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
-use TotalCMS\Domain\Property\Service\PropertyDataFactory;
+use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 
 #[CoversClass(CollectionFactory::class)]
-#[CoversClass(PropertyDataFactory::class)]
+#[CoversClass(PropertyDataProcessor::class)]
 final class JSONSchemaValidationSecurityTest extends TestCase
 {
 	public function testSchemaInjectionPrevention(): void

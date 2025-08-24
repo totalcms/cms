@@ -81,6 +81,7 @@
     "phpmd/phpmd": "^2.12",
     "phpstan/phpstan": "^2.0",
     "phpunit/phpunit": "^11.0",
+    "rector/rector": "^1.2",
     "selective/test-traits": "^4.1",
     "spatie/pest-plugin-snapshots": "^2.0",
     "squizlabs/php_codesniffer": "^3.5",
@@ -113,15 +114,18 @@
     "cs": "php-cs-fixer fix --dry-run --format=txt --verbose --diff --config=.php-cs-fixer.php",
     "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
     "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
-    "stan": "phpstan analyse -c phpstan.neon --no-ansi --no-progress --memory-limit 1G",
+    "stan": "phpstan analyse -c phpstan.neon --no-ansi --no-progress --memory-limit 2G",
     "md:src": "phpmd src ansi phpmd.xml",
     "md:config": "phpmd config ansi phpmd.xml",
     "md:tests": "phpmd tests ansi phpmd.xml",
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcs.xml",
     "sniffer:fix": "phpcbf --standard=phpcs.xml",
+    "rector": "rector --dry-run",
+    "rector:fix": "rector",
     "test": "pest --display-notices --display-warnings --display-errors --display-deprecations",
-    "test:coverage": "pest --type-coverage",
+    "test:coverage": "pest --coverage --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage --coverage-text --display-notices --display-warnings --display-errors --display-deprecations",
+    "test:coverage:type": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
     "bundle": "php bin/make-bundle.php",
     "docs:api": "open API_DOCUMENTATION.md",
@@ -143,6 +147,19 @@
     "test:build": [
       "@stan",
       "@test"
+    ],
+    "quality": [
+      "@cs",
+      "@stan",
+      "@rector",
+      "@sniffer:check"
+    ],
+    "quality:full": [
+      "@cs",
+      "@stan", 
+      "@rector",
+      "@sniffer:check",
+      "@md"
     ]
   },
   "extra": {
