@@ -48,7 +48,7 @@ final class ImageMetaReaderTest extends TestCase
 		$invalidPath = $this->tempDir . '/nonexistent.jpg';
 		
 		// Set custom error handler to suppress expected getimagesize warning
-		$originalHandler = set_error_handler(function ($severity, $message, $file, $line) {
+		set_error_handler(function ($severity, $message, $file, $line): bool {
 			// Only suppress warnings from getimagesize about file not found
 			if ($severity === E_WARNING && str_contains($message, 'getimagesize') && str_contains($message, 'Failed to open stream')) {
 				return true; // Suppress this specific warning
@@ -77,7 +77,7 @@ final class ImageMetaReaderTest extends TestCase
 		// Debug what's actually returned
 		// var_dump('Metadata structure:', $metadata);
 		
-		if (!empty($metadata) && count($metadata) > 3) {
+		if ($metadata !== [] && count($metadata) > 3) {
 			// Check required top-level keys when full metadata is available
 			$requiredKeys = ['exif', 'tags', 'alt', 'mime', 'width', 'height'];
 			foreach ($requiredKeys as $key) {
@@ -105,16 +105,7 @@ final class ImageMetaReaderTest extends TestCase
 	public function testFractionProcessing(): void
 	{
 		// Test with a mock EXIF data that includes fractions
-		$testImageWithFractions = $this->createTestImageWithMockExif([
-			'EXIF' => [
-				'FocalLength' => '35/1', // Should become 35
-				'FNumber' => '28/10',    // Should become 2.8
-				'ExposureTime' => '1/125', // Should become "1/125"
-			],
-			'GPS' => [
-				'GPSAltitude' => '1000/100', // Should become "10.0" (string)
-			],
-		]);
+		$testImageWithFractions = $this->createTestImageWithMockExif();
 
 		if ($testImageWithFractions) {
 			$metadata = ImageMetaReader::getMetaData($testImageWithFractions);
@@ -177,7 +168,7 @@ final class ImageMetaReaderTest extends TestCase
 			$this->assertIsArray($metadata['tags'], 'Tags should be an array');
 			
 			// Keywords should be unique and sorted
-			if (!empty($metadata['tags'])) {
+			if (isset($metadata['tags']) && $metadata['tags'] !== []) {
 				$tags = $metadata['tags'];
 				$uniqueTags = array_unique($tags);
 				$sortedTags = $tags;
@@ -203,7 +194,6 @@ final class ImageMetaReaderTest extends TestCase
 		// by using reflection to test the private formatDate method
 		$reflection = new \ReflectionClass(ImageMetaReader::class);
 		$formatDateMethod = $reflection->getMethod('formatDate');
-		$formatDateMethod->setAccessible(true);
 
 		foreach ($testDates as $input => $expectedPrefix) {
 			$result = $formatDateMethod->invoke(null, $input);
@@ -259,7 +249,7 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		$metadata = ImageMetaReader::getMetaData($this->testImagePath);
 		
-		if (!empty($metadata) && isset($metadata['exif'])) {
+		if ($metadata !== [] && isset($metadata['exif'])) {
 			// Test that null/empty values are properly filtered out
 			$this->assertIsArray($metadata['exif']);
 			
@@ -280,7 +270,7 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		$metadata = ImageMetaReader::getMetaData($this->testImagePath);
 		
-		if (!empty($metadata) && count($metadata) > 3 && isset($metadata['alt'])) {
+		if ($metadata !== [] && count($metadata) > 3 && isset($metadata['alt'])) {
 			// Full metadata structure with alt text
 			$this->assertArrayHasKey('alt', $metadata);
 			
@@ -319,13 +309,14 @@ final class ImageMetaReaderTest extends TestCase
 		return $imagePath;
 	}
 
-	private function createTestImageWithMockExif(array $mockExifData): ?string
-	{
-		// Note: In a real scenario, this would require more complex image manipulation
-		// to actually embed EXIF data. For unit testing, we focus on the parsing logic.
-		// This method serves as a placeholder for more advanced EXIF injection.
-		return null; // Skip advanced EXIF injection for basic unit tests
-	}
+	private function createTestImageWithMockExif(): ?string
+    {
+        // Note: In a real scenario, this would require more complex image manipulation
+        // to actually embed EXIF data. For unit testing, we focus on the parsing logic.
+        // This method serves as a placeholder for more advanced EXIF injection.
+        return null;
+        // Skip advanced EXIF injection for basic unit tests
+    }
 
 	private function createTestImageWithMockGPS(): ?string
 	{

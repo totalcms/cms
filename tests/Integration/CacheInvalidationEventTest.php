@@ -18,7 +18,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Cache Invalidation Events', function () {
+describe('Cache Invalidation Events', function (): void {
 	it('clears object cache when object is saved', function (): void {
 		$container      = $this->app->getContainer();
 		$objectRepo     = $container->get(ObjectRepository::class);

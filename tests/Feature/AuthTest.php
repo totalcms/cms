@@ -15,7 +15,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Authentication Actions', function () {
+describe('Authentication Actions', function (): void {
 	it('can access login page', function (): void {
 		// Test login endpoint exists
 		$response = get('/auth/login');

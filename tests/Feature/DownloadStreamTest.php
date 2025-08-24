@@ -15,7 +15,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Download and Stream API', function () {
+describe('Download and Stream API', function (): void {
 	beforeEach(function (): void {
 		// Create test file collection
 		$collection = [
@@ -47,7 +47,7 @@ describe('Download and Stream API', function () {
 		postJson('/collections/test-depot', $depotObject);
 	});
 
-	describe('Download API (/download/)', function () {
+	describe('Download API (/download/)', function (): void {
 		it('handles single file download endpoint', function (): void {
 			$response = get('/download/test-files/test-file/file');
 			expect($response->getStatusCode())->toBeIn([200, 404]);
@@ -93,7 +93,7 @@ describe('Download and Stream API', function () {
 		});
 	});
 
-	describe('Stream API (/stream/)', function () {
+	describe('Stream API (/stream/)', function (): void {
 		it('handles single file stream endpoint', function (): void {
 			$response = get('/stream/test-files/test-file/file');
 			expect($response->getStatusCode())->toBeIn([200, 404]);
@@ -167,7 +167,7 @@ describe('Download and Stream API', function () {
 		});
 	});
 
-	describe('Download vs Stream Behavior', function () {
+	describe('Download vs Stream Behavior', function (): void {
 		it('download endpoint forces attachment disposition', function (): void {
 			$response = get('/download/test-files/test-file/file');
 			expect($response->getStatusCode())->toBeIn([200, 404]);
@@ -197,7 +197,7 @@ describe('Download and Stream API', function () {
 		});
 	});
 
-	describe('Security and Access Control', function () {
+	describe('Security and Access Control', function (): void {
 		it('blocks access without proper authentication when required', function (): void {
 			// This would need actual protected files to test properly
 			$response = get('/stream/test-files/test-file/file');

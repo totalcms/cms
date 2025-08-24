@@ -9,8 +9,8 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('File Upload Security Vulnerabilities', function () {
-	it('identifies missing file type validation', function () {
+describe('File Upload Security Vulnerabilities', function (): void {
+	it('identifies missing file type validation', function (): void {
 		$validator = new FileUploadValidator();
 
 		// Test dangerous file extensions
@@ -30,13 +30,13 @@ describe('File Upload Security Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies missing file size limits', function () {
+	it('identifies missing file size limits', function (): void {
 		$validator = new FileUploadValidator();
 
 		// Test file size validation
 		$maxFileSize       = 10 * 1024 * 1024; // 10MB
 		$oversizedFileSize = 100 * 1024 * 1024; // 100MB
-		$validFileSize     = 1 * 1024 * 1024; // 1MB
+		$validFileSize     = 1024 * 1024; // 1MB
 
 		// Large files should be rejected
 		expect($oversizedFileSize)->toBeGreaterThan($maxFileSize);
@@ -47,7 +47,7 @@ describe('File Upload Security Vulnerabilities', function () {
 		expect($maxFileSize)->toBeGreaterThan(0);
 	});
 
-	it('identifies path traversal vulnerability in filenames', function () {
+	it('identifies path traversal vulnerability in filenames', function (): void {
 		$validator = new FileUploadValidator();
 
 		$maliciousFilenames = [
@@ -76,7 +76,7 @@ describe('File Upload Security Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies missing MIME type validation', function () {
+	it('identifies missing MIME type validation', function (): void {
 		$validator = new FileUploadValidator();
 
 		// Test MIME type validation
@@ -108,7 +108,7 @@ describe('File Upload Security Vulnerabilities', function () {
 		expect($validator)->toBeInstanceOf(FileUploadValidator::class);
 	});
 
-	it('identifies missing file content validation', function () {
+	it('identifies missing file content validation', function (): void {
 		// Test file content validation
 		$jpegHeader = "\xFF\xD8\xFF\xE0"; // JPEG header
 		$pngHeader  = "\x89PNG\r\n\x1a\n"; // PNG header

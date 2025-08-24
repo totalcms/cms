@@ -193,7 +193,7 @@ final class APCuIntegrationTest extends TestCase
 		// Verify collection data is cleared but others remain
 		$this->assertNull($this->cacheManager->getData('collection:blog'));
 		$this->assertNull($this->cacheManager->getData('collection:news'));
-		
+
 		// API and computed data should remain (though this depends on APCu pattern matching implementation)
 		// Note: The actual behavior may vary based on pattern clearing implementation
 	}
@@ -254,14 +254,14 @@ final class APCuIntegrationTest extends TestCase
 		// Store test data
 		$testKey = 'clear_all_test_' . uniqid();
 		$this->cacheManager->storeData($testKey, 'test_data', 60);
-		
+
 		// Verify data is stored
 		$this->assertNotNull($this->cacheManager->getData($testKey));
-		
+
 		// Clear all caches
 		$result = $this->cacheManager->clearAllCaches();
 		$this->assertTrue($result, 'Should successfully clear all caches');
-		
+
 		// Note: clearAllCaches() might clear all of APCu, not just our prefixed data
 		// This is expected behavior for the "clear all" operation
 	}

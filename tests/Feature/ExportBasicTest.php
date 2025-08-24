@@ -13,7 +13,7 @@ beforeEach(function (): void {
 
 // Core functionality tests - verifying deck exclusion from CSV export
 
-it('checks ObjectExporter excludes deck properties in schema filtering', function () {
+it('checks ObjectExporter excludes deck properties in schema filtering', function (): void {
 	// We can test the filtering logic indirectly by using reflection if needed
 	// or by creating a simple integration test
 
@@ -29,7 +29,7 @@ it('checks ObjectExporter excludes deck properties in schema filtering', functio
 	// Simulate the filtering logic from ObjectExporter
 	$filteredProperties = array_filter(
 		array_keys($properties),
-		fn ($propertyName) => !isset($properties[$propertyName]['$ref'])
+		fn (string $propertyName): bool => !isset($properties[$propertyName]['$ref'])
 							 || $properties[$propertyName]['$ref'] !== 'https://www.totalcms.co/schemas/properties/deck.json'
 	);
 
@@ -44,7 +44,7 @@ it('checks ObjectExporter excludes deck properties in schema filtering', functio
 	expect($filteredProperties)->toHaveCount(4); // Only non-deck properties
 });
 
-it('verifies PropertyData array handling', function () {
+it('verifies PropertyData array handling', function (): void {
 	// Test that PropertyData classes work correctly with array inputs
 	$deckData = new TotalCMS\Domain\Property\Data\DeckData([], []);
 	expect($deckData->count())->toBe(0);

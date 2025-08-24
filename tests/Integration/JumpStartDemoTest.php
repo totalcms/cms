@@ -2,8 +2,8 @@
 
 namespace Tests\Integration;
 
-describe('JumpStart Demo Integration', function () {
-	it('validates demo definition against jumpstart schema', function () {
+describe('JumpStart Demo Integration', function (): void {
+	it('validates demo definition against jumpstart schema', function (): void {
 		$demoPath = jumpstartResourcePath('demo.json');
 		expect(file_exists($demoPath))->toBeTrue('Demo jumpstart file should exist');
 
@@ -56,7 +56,7 @@ describe('JumpStart Demo Integration', function () {
 		}
 	});
 
-	it('has valid demo data structure', function () {
+	it('has valid demo data structure', function (): void {
 		$demoPath       = jumpstartResourcePath('demo.json');
 		$demoContent    = file_get_contents($demoPath);
 		$demoDefinition = json_decode($demoContent, true);
@@ -137,7 +137,7 @@ describe('JumpStart Demo Integration', function () {
 		expect($productsCollection['schema'])->toBe('products', 'Products collection should use products schema');
 	});
 
-	it('has consistent factory data and schema relationships', function () {
+	it('has consistent factory data and schema relationships', function (): void {
 		$demoPath       = jumpstartResourcePath('demo.json');
 		$demoContent    = file_get_contents($demoPath);
 		$demoDefinition = json_decode($demoContent, true);
@@ -169,7 +169,7 @@ describe('JumpStart Demo Integration', function () {
 		expect($productsFactory['count'])->toBeGreaterThan(0, 'Products factory should generate objects');
 	});
 
-	it('ensures important customer-facing objects exist', function () {
+	it('ensures important customer-facing objects exist', function (): void {
 		$demoPath       = jumpstartResourcePath('demo.json');
 		$demoContent    = file_get_contents($demoPath);
 		$demoDefinition = json_decode($demoContent, true);

@@ -294,11 +294,7 @@ final class TwigFiltersSecurityTest extends TestCase
 		$arrayFilters = ['join', 'first', 'last', 'length'];
 
 		foreach ($arrayFilters as $filter) {
-			if ($filter === 'join') {
-				$template = '{{ content|' . $filter . '(",") }}';
-			} else {
-				$template = '{{ content|' . $filter . ' }}';
-			}
+			$template = $filter === 'join' ? '{{ content|' . $filter . '(",") }}' : '{{ content|' . $filter . ' }}';
 
 			$result = $this->twig->createTemplate($template)->render(['content' => $dangerousArray]);
 
@@ -315,11 +311,7 @@ final class TwigFiltersSecurityTest extends TestCase
 		$nullSafeFilters = ['default', 'length'];
 
 		foreach ($nullSafeFilters as $filter) {
-			if ($filter === 'default') {
-				$template = '{{ content|' . $filter . '("fallback") }}';
-			} else {
-				$template = '{{ content|' . $filter . ' }}';
-			}
+			$template = $filter === 'default' ? '{{ content|' . $filter . '("fallback") }}' : '{{ content|' . $filter . ' }}';
 
 			$result = $this->twig->createTemplate($template)->render(['content' => null]);
 

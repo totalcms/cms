@@ -2,8 +2,8 @@
 
 use TotalCMS\Domain\Security\Encryption\Cipher;
 
-describe('Enhanced Cipher Implementation', function () {
-	it('works correctly with various data types', function () {
+describe('Enhanced Cipher Implementation', function (): void {
+	it('works correctly with various data types', function (): void {
 		// Test various types of data commonly obfuscated
 		$testCases = [
 			'sentry_dsn_example',
@@ -23,7 +23,7 @@ describe('Enhanced Cipher Implementation', function () {
 		}
 	});
 
-	it('supports context-specific obfuscation keys', function () {
+	it('supports context-specific obfuscation keys', function (): void {
 		$data = 'sensitive_config_value';
 
 		// Create different context keys
@@ -47,7 +47,7 @@ describe('Enhanced Cipher Implementation', function () {
 		expect(Cipher::deobfuscate($configObfuscated, $configKey))->toBe($data);
 	});
 
-	it('produces URL-safe encoded output (enhanced mode active)', function () {
+	it('produces URL-safe encoded output (enhanced mode active)', function (): void {
 		$testData = [
 			'file_password_123',
 			'special+chars/in=data',
@@ -67,7 +67,7 @@ describe('Enhanced Cipher Implementation', function () {
 		}
 	});
 
-	it('encryption methods remain cryptographically secure', function () {
+	it('encryption methods remain cryptographically secure', function (): void {
 		$sensitiveData = 'file_download_password_123';
 
 		// Encrypt twice - should produce different results (random IV)
@@ -81,7 +81,7 @@ describe('Enhanced Cipher Implementation', function () {
 		expect(Cipher::decrypt($encrypted2))->toBe($sensitiveData);
 	});
 
-	it('demonstrates proper usage patterns', function () {
+	it('demonstrates proper usage patterns', function (): void {
 		// Configuration obfuscation (deterministic, for hiding config values)
 		$sentryDsn     = 'https://key@sentry.io/project';
 		$obfuscatedDsn = Cipher::obfuscate($sentryDsn);
@@ -98,7 +98,7 @@ describe('Enhanced Cipher Implementation', function () {
 		expect(Cipher::deobfuscate($contextObfuscated, $contextKey))->toBe('context_data');
 	});
 
-	it('obfuscation is deterministic while encryption is random', function () {
+	it('obfuscation is deterministic while encryption is random', function (): void {
 		$data = 'test_data_123';
 
 		// Obfuscation should be deterministic
@@ -117,7 +117,7 @@ describe('Enhanced Cipher Implementation', function () {
 		expect(Cipher::decrypt($enc2))->toBe($data);
 	});
 
-	it('handles edge cases gracefully', function () {
+	it('handles edge cases gracefully', function (): void {
 		// Empty string
 		expect(Cipher::deobfuscate(Cipher::obfuscate('')))->toBe('');
 
@@ -130,7 +130,7 @@ describe('Enhanced Cipher Implementation', function () {
 		expect(Cipher::deobfuscate(Cipher::obfuscate($specialChars)))->toBe($specialChars);
 	});
 
-	it('confirms enhanced mode is now active', function () {
+	it('confirms enhanced mode is now active', function (): void {
 		// Enhanced mode is now enabled (USE_LEGACY_OBFUSCATION = false):
 		// ✅ URL-safe base64 encoding (no +, /, = characters)
 		// ✅ Better key derivation using SHA-256
@@ -154,7 +154,7 @@ describe('Enhanced Cipher Implementation', function () {
 		expect(Cipher::deobfuscate($contextObfuscated, $contextKey))->toBe($data);
 	});
 
-	it('provides clear documentation of use cases', function () {
+	it('provides clear documentation of use cases', function (): void {
 		// OBFUSCATION: Hide from casual viewing (not secure)
 		$configValue = 'sentry_dsn_or_api_key';
 		$obfuscated  = Cipher::obfuscate($configValue);

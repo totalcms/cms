@@ -162,7 +162,7 @@ final class PasswordDataTest extends TestCase
 
 		// Should contain various character types
 		$this->assertMatchesRegularExpression('/[A-Za-z]/', $data->hash); // Letters
-		$this->assertMatchesRegularExpression('/[0-9]/', $data->hash); // Numbers
+		$this->assertMatchesRegularExpression('/\d/', $data->hash); // Numbers
 		$this->assertMatchesRegularExpression('/[\.\/\$]/', $data->hash); // Special chars
 	}
 

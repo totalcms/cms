@@ -2,7 +2,7 @@
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
-test('mailto filter creates obfuscated email link', function () {
+test('mailto filter creates obfuscated email link', function (): void {
 	$email  = 'test@example.com';
 	$result = TotalCMSTwigFilters::mailto($email);
 
@@ -19,7 +19,7 @@ test('mailto filter creates obfuscated email link', function () {
 	expect($result)->not->toContain('mailto:test@example.com');
 });
 
-test('mailto filter handles parameters', function () {
+test('mailto filter handles parameters', function (): void {
 	$email   = 'contact@example.com';
 	$subject = 'Inquiry';
 	$body    = 'I have a question...';
@@ -33,7 +33,7 @@ test('mailto filter handles parameters', function () {
 	expect($result)->toContain('title="Contact Us"');
 });
 
-test('htmlencode filter encodes email addresses', function () {
+test('htmlencode filter encodes email addresses', function (): void {
 	$email  = 'admin@site.com';
 	$result = TotalCMSTwigFilters::htmlencode($email);
 

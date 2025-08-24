@@ -89,7 +89,7 @@ describe('Playground Services', function (): void {
 			$publicMethods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
 
 			// Each service should have at least one public method (excluding constructor)
-			$nonConstructorMethods = array_filter($publicMethods, fn ($method) => $method->getName() !== '__construct');
+			$nonConstructorMethods = array_filter($publicMethods, fn (\ReflectionMethod $method): bool => $method->getName() !== '__construct');
 			expect(count($nonConstructorMethods))->toBeGreaterThanOrEqual(1);
 		}
 	});

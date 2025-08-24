@@ -15,7 +15,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Cache Pattern Clearing', function () {
+describe('Cache Pattern Clearing', function (): void {
 	it('has clearByPattern method on all cache services', function (): void {
 		$container = $this->app->getContainer();
 
@@ -227,7 +227,7 @@ describe('Cache Pattern Clearing', function () {
 	});
 });
 
-describe('Cache Service Pattern Clearing Edge Cases', function () {
+describe('Cache Service Pattern Clearing Edge Cases', function (): void {
 	it('handles empty patterns correctly', function (): void {
 		$container         = $this->app->getContainer();
 		$filesystemService = $container->get(FilesystemService::class);

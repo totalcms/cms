@@ -2,7 +2,7 @@
 
 use TotalCMS\Domain\Property\Data\DateData;
 
-test('it handles relative date strings', function () {
+test('it handles relative date strings', function (): void {
 	// Test relative strings that Chronos supports
 	$testCases = [
 		'now'                     => true,
@@ -24,17 +24,14 @@ test('it handles relative date strings', function () {
 		'first day of next month' => true,
 	];
 
-	foreach ($testCases as $dateString => $shouldParse) {
+	foreach (array_keys($testCases) as $dateString) {
 		$result = DateData::cleanDate($dateString);
-
-		if ($shouldParse) {
-			expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
-			expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
-		}
+        expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
+        expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
 	}
 });
 
-test('it handles standard date formats', function () {
+test('it handles standard date formats', function (): void {
 	$testCases = [
 		'2024-01-15'           => true,
 		'2024/01/15'           => true,
@@ -44,17 +41,14 @@ test('it handles standard date formats', function () {
 		'2024-01-15T14:30:00Z' => true,
 	];
 
-	foreach ($testCases as $dateString => $shouldParse) {
+	foreach (array_keys($testCases) as $dateString) {
 		$result = DateData::cleanDate($dateString);
-
-		if ($shouldParse) {
-			expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
-			expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
-		}
+        expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
+        expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
 	}
 });
 
-test('it handles numeric timestamps', function () {
+test('it handles numeric timestamps', function (): void {
 	$timestamp = time();
 	$result    = DateData::cleanDate((string)$timestamp);
 
@@ -62,7 +56,7 @@ test('it handles numeric timestamps', function () {
 	expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
 });
 
-test('it handles invalid dates gracefully', function () {
+test('it handles invalid dates gracefully', function (): void {
 	$invalidDates = [
 		'not a date',
 		'2024-13-40', // Invalid month/day
@@ -80,19 +74,19 @@ test('it handles invalid dates gracefully', function () {
 	expect($result)->toBe('');
 });
 
-test('it returns empty string for null', function () {
+test('it returns empty string for null', function (): void {
 	$result = DateData::cleanDate(null);
 	expect($result)->toBe('');
 });
 
-test('it returns empty string for all empty values', function () {
+test('it returns empty string for all empty values', function (): void {
 	// PHP's empty() returns true for: "", 0, 0.0, "0", NULL, FALSE, array()
 	expect(DateData::cleanDate(''))->toBe('');
 	expect(DateData::cleanDate(null))->toBe('');
 	expect(DateData::cleanDate('0'))->toBe(''); // empty() considers '0' as empty
 });
 
-test('datedata constructor with smart defaults', function () {
+test('datedata constructor with smart defaults', function (): void {
 	// Test with relative date string
 	$dateData = new DateData('tomorrow');
 	expect($dateData->date)->not->toBeEmpty();
@@ -108,7 +102,7 @@ test('datedata constructor with smart defaults', function () {
 	expect($dateData3->date)->toBe('');
 });
 
-test('default value method', function () {
+test('default value method', function (): void {
 	$result = DateData::defaultValue('tomorrow', null);
 	expect($result)->not->toBeEmpty();
 	expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
@@ -117,7 +111,7 @@ test('default value method', function () {
 	expect($result2)->toBe('');
 });
 
-test('transform and tostring methods', function () {
+test('transform and tostring methods', function (): void {
 	$dateData = new DateData('2024-06-15');
 
 	expect($dateData->transform())->toBe($dateData->date);

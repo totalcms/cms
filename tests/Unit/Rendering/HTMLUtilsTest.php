@@ -2,7 +2,7 @@
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-test('htmlencode encodes all characters to HTML entities', function () {
+test('htmlencode encodes all characters to HTML entities', function (): void {
 	$email   = 'test@example.com';
 	$encoded = HTMLUtils::htmlencode($email);
 
@@ -16,7 +16,7 @@ test('htmlencode encodes all characters to HTML entities', function () {
 	expect($encoded)->toBe('&#116;&#101;&#115;&#116;&#64;&#101;&#120;&#97;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#109;');
 });
 
-test('mailtoLink creates obfuscated span with base64 encoded parts', function () {
+test('mailtoLink creates obfuscated span with base64 encoded parts', function (): void {
 	$email  = 'john@example.com';
 	$result = HTMLUtils::mailtoLink($email);
 
@@ -39,7 +39,7 @@ test('mailtoLink creates obfuscated span with base64 encoded parts', function ()
 	expect($result)->toContain('text-decoration:underline');
 });
 
-test('mailtoLink handles subject parameter', function () {
+test('mailtoLink handles subject parameter', function (): void {
 	$email   = 'support@example.com';
 	$subject = 'Help Request';
 	$result  = HTMLUtils::mailtoLink($email, $subject);
@@ -51,7 +51,7 @@ test('mailtoLink handles subject parameter', function () {
 	expect($result)->toContain('title="Help Request"');
 });
 
-test('mailtoLink handles all parameters', function () {
+test('mailtoLink handles all parameters', function (): void {
 	$email   = 'info@example.com';
 	$subject = 'Test Subject';
 	$body    = 'Test Body';
@@ -73,7 +73,7 @@ test('mailtoLink handles all parameters', function () {
 	expect($result)->toContain('title="Custom Title"');
 });
 
-test('mailtoLink handles invalid email format', function () {
+test('mailtoLink handles invalid email format', function (): void {
 	$invalidEmail = 'notanemail';
 	$result       = HTMLUtils::mailtoLink($invalidEmail);
 
@@ -83,7 +83,7 @@ test('mailtoLink handles invalid email format', function () {
 	expect($result)->toContain('&#110;&#111;&#116;&#97;&#110;&#101;&#109;&#97;&#105;&#108;'); // 'notanemail' encoded
 });
 
-test('mailtoLink trims whitespace from parameters', function () {
+test('mailtoLink trims whitespace from parameters', function (): void {
 	$email   = '  test@example.com  ';
 	$subject = '  Subject  ';
 
@@ -94,7 +94,7 @@ test('mailtoLink trims whitespace from parameters', function () {
 	expect($result)->toContain('data-subject="U3ViamVjdA=="'); // 'Subject' in base64 (trimmed)
 });
 
-test('mailtoLink uses default title when not provided', function () {
+test('mailtoLink uses default title when not provided', function (): void {
 	// With no subject, should use "Email"
 	$result1 = HTMLUtils::mailtoLink('test@example.com');
 	expect($result1)->toContain('title="Email"');
@@ -104,7 +104,7 @@ test('mailtoLink uses default title when not provided', function () {
 	expect($result2)->toContain('title="Contact Us"');
 });
 
-test('mailtoLink encodes special characters in subject', function () {
+test('mailtoLink encodes special characters in subject', function (): void {
 	$email   = 'test@example.com';
 	$subject = 'Question & Answer';
 

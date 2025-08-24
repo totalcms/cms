@@ -2,14 +2,14 @@
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
-test('date relative filter', function () {
+test('date relative filter', function (): void {
 	// Test with a known date to get predictable relative results
 	$result = TotalCMSTwigFilters::dateRelative('2024-01-01');
 	expect($result)->toBeString();
 	expect($result)->not->toBeEmpty();
 });
 
-test('date format filter', function () {
+test('date format filter', function (): void {
 	$date = '2024-06-15 14:30:00';
 
 	// Test default format
@@ -25,7 +25,7 @@ test('date format filter', function () {
 	expect($result3)->toBe('June 15, 2024');
 });
 
-test('date add filter', function () {
+test('date add filter', function (): void {
 	$date = '2024-06-15';
 
 	$result = TotalCMSTwigFilters::dateAdd($date, '+1 day');
@@ -38,7 +38,7 @@ test('date add filter', function () {
 	expect($result3)->toContain('2025-06-15');
 });
 
-test('date subtract filter', function () {
+test('date subtract filter', function (): void {
 	$date = '2024-06-15';
 
 	$result = TotalCMSTwigFilters::dateSubtract($date, '1 day');
@@ -51,7 +51,7 @@ test('date subtract filter', function () {
 	expect($result3)->toContain('2024-05-15');
 });
 
-test('date diff filter', function () {
+test('date diff filter', function (): void {
 	$date1 = '2024-06-15';
 	$date2 = '2024-06-16';
 
@@ -60,7 +60,7 @@ test('date diff filter', function () {
 	expect($result)->not->toBeEmpty();
 });
 
-test('date start of filter', function () {
+test('date start of filter', function (): void {
 	$date = '2024-06-15 14:30:45';
 
 	// Start of day
@@ -76,7 +76,7 @@ test('date start of filter', function () {
 	expect($result3)->toContain('2024-01-01T00:00:00');
 });
 
-test('date end of filter', function () {
+test('date end of filter', function (): void {
 	$date = '2024-06-15 14:30:45';
 
 	// End of day
@@ -92,7 +92,7 @@ test('date end of filter', function () {
 	expect($result3)->toContain('2024-12-31T23:59:59');
 });
 
-test('date is weekend filter', function () {
+test('date is weekend filter', function (): void {
 	// Saturday (2024-06-15 is a Saturday)
 	$saturday = '2024-06-15';
 	$result   = TotalCMSTwigFilters::dateIsWeekend($saturday);
@@ -104,7 +104,7 @@ test('date is weekend filter', function () {
 	expect($result2)->toBeFalse();
 });
 
-test('date is weekday filter', function () {
+test('date is weekday filter', function (): void {
 	// Monday (2024-06-17 is a Monday)
 	$monday = '2024-06-17';
 	$result = TotalCMSTwigFilters::dateIsWeekday($monday);
@@ -116,7 +116,7 @@ test('date is weekday filter', function () {
 	expect($result2)->toBeFalse();
 });
 
-test('date is past filter', function () {
+test('date is past filter', function (): void {
 	// A date definitely in the past
 	$pastDate = '2020-01-01';
 	$result   = TotalCMSTwigFilters::dateIsPast($pastDate);
@@ -128,7 +128,7 @@ test('date is past filter', function () {
 	expect($result2)->toBeFalse();
 });
 
-test('date is future filter', function () {
+test('date is future filter', function (): void {
 	// A date in the future
 	$futureDate = '2030-01-01';
 	$result     = TotalCMSTwigFilters::dateIsFuture($futureDate);
@@ -140,7 +140,7 @@ test('date is future filter', function () {
 	expect($result2)->toBeFalse();
 });
 
-test('date is today filter', function () {
+test('date is today filter', function (): void {
 	// Today
 	$today  = date('Y-m-d');
 	$result = TotalCMSTwigFilters::dateIsToday($today);
@@ -152,7 +152,7 @@ test('date is today filter', function () {
 	expect($result2)->toBeFalse();
 });
 
-test('filters handle invalid dates gracefully', function () {
+test('filters handle invalid dates gracefully', function (): void {
 	$invalidDate = 'not a date';
 
 	// All filters should handle invalid dates gracefully
@@ -170,7 +170,7 @@ test('filters handle invalid dates gracefully', function () {
 	expect(TotalCMSTwigFilters::dateIsToday($invalidDate))->toBeFalse();
 });
 
-test('filters work with smart date strings', function () {
+test('filters work with smart date strings', function (): void {
 	// Test with relative date strings
 	$result = TotalCMSTwigFilters::dateFormat('tomorrow', 'Y-m-d');
 	expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}$/');

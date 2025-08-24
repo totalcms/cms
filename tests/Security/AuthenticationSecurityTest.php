@@ -366,9 +366,7 @@ final class AuthenticationSecurityTest extends TestCase
 		}
 
 		// Check if attempts exceed threshold
-		$recentAttempts = array_filter($failedAttempts, function ($failedAttempt) use ($currentTime, $timeWindow) {
-			return ($currentTime - $failedAttempt['timestamp']) <= $timeWindow;
-		});
+		$recentAttempts = array_filter($failedAttempts, fn(array $failedAttempt): bool => ($currentTime - $failedAttempt['timestamp']) <= $timeWindow);
 
 		$maxAllowed     = 5; // Maximum failed attempts allowed
 		$shouldBeLocked = count($recentAttempts) >= $maxAllowed;
@@ -390,19 +388,19 @@ final class AuthenticationSecurityTest extends TestCase
 
 		// Application should detect and sanitize dangerous patterns
 		$hasDangerousUsername = (
-			str_contains($username, "'")
-			|| str_contains($username, '"')
-			|| str_contains($username, '<script>')
-			|| str_contains($username, 'javascript:')
-			|| str_contains($username, '../')
-			|| str_contains($username, "\x00")
+			str_contains((string) $username, "'")
+			|| str_contains((string) $username, '"')
+			|| str_contains((string) $username, '<script>')
+			|| str_contains((string) $username, 'javascript:')
+			|| str_contains((string) $username, '../')
+			|| str_contains((string) $username, "\x00")
 		);
 
 		$hasDangerousPassword = (
-			str_contains($password, "'")
-			|| str_contains($password, '"')
-			|| str_contains($password, 'javascript:')
-			|| str_contains($password, "\x00")
+			str_contains((string) $password, "'")
+			|| str_contains((string) $password, '"')
+			|| str_contains((string) $password, 'javascript:')
+			|| str_contains((string) $password, "\x00")
 		);
 
 		if ($hasDangerousUsername || $hasDangerousPassword) {
@@ -436,10 +434,10 @@ final class AuthenticationSecurityTest extends TestCase
 		// Simulate password verification (even for non-existent users)
 		if ($userExists) {
 			// Simulate database lookup and password verification
-			usleep(rand(50000, 100000)); // 50-100ms variation
+			usleep(random_int(50000, 100000)); // 50-100ms variation
 		} else {
 			// Should still perform dummy operations to maintain consistent timing
-			usleep(rand(50000, 100000)); // Same timing range
+			usleep(random_int(50000, 100000)); // Same timing range
 		}
 
 		$endTime        = microtime(true);
@@ -507,12 +505,12 @@ final class AuthenticationSecurityTest extends TestCase
 
 		// Check password against security policies
 		$isWeak = (
-			strlen($password) < 8                    // Too short
-			|| ctype_digit($password)                   // Only numbers
-			|| ctype_alpha($password)                   // Only letters
-			|| in_array(strtolower($password), ['password', 'admin', '123456']) // Common passwords
-			|| strlen($password) > 128                  // Too long
-			|| str_contains($password, "\x00")             // Contains null bytes
+			strlen((string) $password) < 8                    // Too short
+			|| ctype_digit((string) $password)                   // Only numbers
+			|| ctype_alpha((string) $password)                   // Only letters
+			|| in_array(strtolower((string) $password), ['password', 'admin', '123456']) // Common passwords
+			|| strlen((string) $password) > 128                  // Too long
+			|| str_contains((string) $password, "\x00")             // Contains null bytes
 		);
 
 		if ($isWeak && !$meetsPolicy) {
@@ -546,9 +544,7 @@ final class AuthenticationSecurityTest extends TestCase
 
 		// Check if account should be locked
 		$lockoutThreshold = 5;
-		$recentFailures   = array_filter($attempts, function ($attempt) use ($currentTime, $timeWindow) {
-			return ($currentTime - $attempt['timestamp']) <= $timeWindow;
-		});
+		$recentFailures   = array_filter($attempts, fn(array $attempt): bool => ($currentTime - $attempt['timestamp']) <= $timeWindow);
 
 		$shouldBeLocked = count($recentFailures) >= $lockoutThreshold;
 
@@ -565,13 +561,12 @@ final class AuthenticationSecurityTest extends TestCase
 	private function assertMFABypassPrevention(array $attempt, string $attackType): void
 	{
 		$mfaCode       = $attempt['mfa_code'];
-		$bypassAttempt = $attempt['bypass_attempt'];
 
 		// MFA code should meet security requirements
 		$isInsecure = (
 			empty($mfaCode)                         // Empty code
-			|| strlen($mfaCode) !== 6                  // Wrong length
-			|| !ctype_digit($mfaCode)                  // Non-numeric
+			|| strlen((string) $mfaCode) !== 6                  // Wrong length
+			|| !ctype_digit((string) $mfaCode)                  // Non-numeric
 			|| $mfaCode === '000000'                   // Predictable
 			|| $mfaCode === '123456'                   // Sequential
 			|| str_repeat($mfaCode[0], strlen($mfaCode)) === $mfaCode // Repeated digits
@@ -611,7 +606,7 @@ final class AuthenticationSecurityTest extends TestCase
 			case 'header injection':
 				$headers = $attempt['headers'] ?? [];
 				foreach ($headers as $header) {
-					if (str_contains(strtolower($header), 'admin')) {
+					if (str_contains(strtolower((string) $header), 'admin')) {
 						$hasEscalationAttempt = true;
 						break;
 					}
@@ -656,7 +651,7 @@ final class AuthenticationSecurityTest extends TestCase
 			case 'header_spoofing':
 				$headers = $attempt['headers'] ?? [];
 				foreach ($headers as $header) {
-					if (str_contains(strtolower($header), 'user') || str_contains(strtolower($header), 'admin')) {
+					if (str_contains(strtolower((string) $header), 'user') || str_contains(strtolower((string) $header), 'admin')) {
 						$hasBypassAttempt = true;
 						break;
 					}
@@ -681,17 +676,17 @@ final class AuthenticationSecurityTest extends TestCase
 
 		// Remember me tokens should be secure
 		$isInsecureToken = (
-			strlen($token) < 32                     // Too short
-			|| ctype_digit($token)                     // Only numbers
-			|| str_contains($token, 'predictable')     // Predictable content
-			|| strlen($token) > 255                    // Too long
-			|| str_contains($token, '<script>')        // XSS attempt
-			|| str_contains($token, "\x00")               // Null bytes
+			strlen((string) $token) < 32                     // Too short
+			|| ctype_digit((string) $token)                     // Only numbers
+			|| str_contains((string) $token, 'predictable')     // Predictable content
+			|| strlen((string) $token) > 255                    // Too long
+			|| str_contains((string) $token, '<script>')        // XSS attempt
+			|| str_contains((string) $token, "\x00")               // Null bytes
 		);
 
 		// User ID should be properly validated
 		$isInsecureUserId = (
-			!ctype_digit($userId)                   // Should be numeric
+			!ctype_digit((string) $userId)                   // Should be numeric
 			|| str_contains($userId, "'")              // SQL injection
 			|| str_contains($userId, '<script>')          // XSS attempt
 		);

@@ -2,22 +2,22 @@
 
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 
-beforeEach(function () {
+beforeEach(function (): void {
 	$this->gridRenderer = new GridRenderer();
 });
 
-test('meta method formats data with HTML wrapper', function () {
+test('meta method formats data with HTML wrapper', function (): void {
 	$result = $this->gridRenderer->meta('Test Author');
 	expect($result)->toContain('Test Author');
 	expect($result)->toContain('<'); // Should contain HTML
 });
 
-test('meta method handles empty data', function () {
+test('meta method handles empty data', function (): void {
 	$result = $this->gridRenderer->meta('');
 	expect($result)->toBe('');
 });
 
-test('tags method formats array of tags', function () {
+test('tags method formats array of tags', function (): void {
 	$tags   = ['PHP', 'Twig', 'CMS'];
 	$result = $this->gridRenderer->tags($tags);
 
@@ -27,7 +27,7 @@ test('tags method formats array of tags', function () {
 	expect($result)->toContain('<'); // Should contain HTML
 });
 
-test('tags method formats comma-separated string', function () {
+test('tags method formats comma-separated string', function (): void {
 	$tags   = 'PHP, Twig, CMS';
 	$result = $this->gridRenderer->tags($tags);
 
@@ -36,13 +36,13 @@ test('tags method formats comma-separated string', function () {
 	expect($result)->toContain('CMS');
 });
 
-test('tags method handles empty tags', function () {
+test('tags method handles empty tags', function (): void {
 	expect($this->gridRenderer->tags(null))->toBe('');
 	expect($this->gridRenderer->tags(''))->toBe('');
 	expect($this->gridRenderer->tags([]))->toBe('');
 });
 
-test('tags method with link base', function () {
+test('tags method with link base', function (): void {
 	$tags   = ['PHP', 'Twig'];
 	$result = $this->gridRenderer->tags($tags, '/tag/');
 
@@ -51,35 +51,35 @@ test('tags method with link base', function () {
 	expect($result)->toContain('/tag/'); // Should contain link base
 });
 
-test('date method formats date with HTML wrapper', function () {
+test('date method formats date with HTML wrapper', function (): void {
 	$result = $this->gridRenderer->date('2024-06-15');
 	expect($result)->toContain('2024-06-15');
 	expect($result)->toContain('cms-date'); // Should have CSS class
 });
 
-test('date method handles empty date', function () {
+test('date method handles empty date', function (): void {
 	$result = $this->gridRenderer->date('');
 	expect($result)->toBe('');
 });
 
-test('date method with custom format', function () {
+test('date method with custom format', function (): void {
 	$result = $this->gridRenderer->date('2024-06-15', 'short');
 	expect($result)->toContain('<'); // Should contain HTML
 	expect($result)->toContain('cms-date');
 });
 
-test('excerpt method truncates text', function () {
+test('excerpt method truncates text', function (): void {
 	$longText = str_repeat('Lorem ipsum dolor sit amet, ', 10);
 	$result   = $this->gridRenderer->excerpt($longText, 50);
 
 	// Check that text was truncated (the original is 280 chars)
-	$strippedText = strip_tags($result);
+	$strippedText = strip_tags((string) $result);
 	expect(strlen($strippedText))->toBeLessThan(280);
 	expect($result)->toContain('cms-excerpt'); // Should have CSS class
 	expect($result)->toContain('&hellip;'); // HTML entity for ellipsis
 });
 
-test('excerpt method handles short text', function () {
+test('excerpt method handles short text', function (): void {
 	$shortText = 'Short text';
 	$result    = $this->gridRenderer->excerpt($shortText, 50);
 
@@ -87,12 +87,12 @@ test('excerpt method handles short text', function () {
 	expect($result)->not->toContain('&hellip;'); // Should not have ellipsis
 });
 
-test('excerpt method handles empty text', function () {
+test('excerpt method handles empty text', function (): void {
 	expect($this->gridRenderer->excerpt(''))->toBe('<p class="cms-excerpt"></p>');
 	expect($this->gridRenderer->excerpt(null))->toBe('<p class="cms-excerpt"></p>');
 });
 
-test('excerpt method uses ellipsis character', function () {
+test('excerpt method uses ellipsis character', function (): void {
 	$longText = str_repeat('Lorem ipsum ', 20);
 	$result   = $this->gridRenderer->excerpt($longText, 50);
 
@@ -100,7 +100,7 @@ test('excerpt method uses ellipsis character', function () {
 	expect($result)->toContain('cms-excerpt');
 });
 
-test('price method returns formatted price with HTML wrapper', function () {
+test('price method returns formatted price with HTML wrapper', function (): void {
 	$result = $this->gridRenderer->price(19.99);
 
 	expect($result)->toContain('$19.99');
@@ -108,19 +108,19 @@ test('price method returns formatted price with HTML wrapper', function () {
 	expect($result)->toContain('<span'); // Should be wrapped in span
 });
 
-test('price method handles empty price', function () {
+test('price method handles empty price', function (): void {
 	expect($this->gridRenderer->price(''))->toBe('');
 	expect($this->gridRenderer->price(null))->toBe('');
 });
 
-test('price method with custom currency and format', function () {
+test('price method with custom currency and format', function (): void {
 	$result = $this->gridRenderer->price(19.99, '€', 'append');
 
 	expect($result)->toContain('19.99€');
 	expect($result)->toContain('cms-price');
 });
 
-test('all methods handle edge cases gracefully', function () {
+test('all methods handle edge cases gracefully', function (): void {
 	// Test with various edge case inputs
 	$edgeCases = [null, '', 0, '0', false];
 

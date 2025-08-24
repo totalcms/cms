@@ -3,8 +3,8 @@
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 
-describe('CSRF Vulnerabilities', function () {
-	it('identifies missing CSRF protection on state-changing operations', function () {
+describe('CSRF Vulnerabilities', function (): void {
+	it('identifies missing CSRF protection on state-changing operations', function (): void {
 		// Check that CSRF protection middleware exists
 		expect(CSRFProtectionMiddleware::class)->toBeClass();
 		expect(CSRFTokenManager::class)->toBeClass();
@@ -28,7 +28,7 @@ describe('CSRF Vulnerabilities', function () {
 		expect(class_exists(CSRFTokenManager::class))->toBeTrue();
 	});
 
-	it('identifies missing CSRF tokens in forms', function () {
+	it('identifies missing CSRF tokens in forms', function (): void {
 		// Test token generation and validation logic
 		$validTokenPattern = '/^[a-f0-9]{64}$/'; // 64 character hex string
 		$testToken         = bin2hex(random_bytes(32));
@@ -51,7 +51,7 @@ describe('CSRF Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies missing SameSite cookie attribute', function () {
+	it('identifies missing SameSite cookie attribute', function (): void {
 		// Check session configuration for secure cookie settings
 		$sessionConfig = [
 			'cookie_httponly' => true,
@@ -70,7 +70,7 @@ describe('CSRF Vulnerabilities', function () {
 		expect($sessionConfig['cookie_samesite'])->toBe('Strict');
 	});
 
-	it('identifies missing referer validation', function () {
+	it('identifies missing referer validation', function (): void {
 		// Test referer header validation logic
 		$validReferers = [
 			'https://localhost',
@@ -99,7 +99,7 @@ describe('CSRF Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies missing anti-CSRF headers requirement', function () {
+	it('identifies missing anti-CSRF headers requirement', function (): void {
 		// Test that CSRF protection recognizes custom headers
 		$requiredHeaders = [
 			'X-Requested-With',

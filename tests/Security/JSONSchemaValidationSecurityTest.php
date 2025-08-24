@@ -276,7 +276,7 @@ final class JSONSchemaValidationSecurityTest extends TestCase
 		];
 
 		foreach ($constraintBypassTests as $test) {
-			$this->assertConstraintEnforcement($test['schema'], $test['test_data'], $test['attack_type']);
+			$this->assertConstraintEnforcement($test['schema'], $test['attack_type']);
 		}
 	}
 
@@ -330,7 +330,7 @@ final class JSONSchemaValidationSecurityTest extends TestCase
 		$start_memory = memory_get_usage();
 		$start_time   = microtime(true);
 
-		$decoded = json_decode($schema, true);
+		json_decode($schema, true);
 
 		$memory_used = memory_get_usage() - $start_memory;
 		$time_used   = microtime(true) - $start_time;
@@ -407,7 +407,7 @@ final class JSONSchemaValidationSecurityTest extends TestCase
 	/**
 	 * Helper method to test constraint enforcement.
 	 */
-	private function assertConstraintEnforcement(string $schema, mixed $testData, string $attackType): void
+	private function assertConstraintEnforcement(string $schema, string $attackType): void
 	{
 		$decoded = json_decode($schema, true);
 		$this->assertIsArray($decoded, "Schema should be valid for {$attackType}");

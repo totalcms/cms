@@ -17,7 +17,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Cache Manager Operations', function () {
+describe('Cache Manager Operations', function (): void {
 	it('stores and retrieves computed data', function (): void {
 		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
@@ -228,7 +228,7 @@ describe('Cache Manager Operations', function () {
 	});
 });
 
-describe('Cache Reporter', function () {
+describe('Cache Reporter', function (): void {
 	it('provides usage statistics', function (): void {
 		$container     = $this->app->getContainer();
 		$cacheReporter = $container->get(CacheReporter::class);
@@ -305,7 +305,7 @@ describe('Cache Reporter', function () {
 	});
 });
 
-describe('Cache Service Integration', function () {
+describe('Cache Service Integration', function (): void {
 	it('works with filesystem cache service', function (): void {
 		$container         = $this->app->getContainer();
 		$filesystemService = $container->get(FilesystemService::class);
@@ -374,7 +374,7 @@ describe('Cache Service Integration', function () {
 	});
 });
 
-describe('Cache Performance and Edge Cases', function () {
+describe('Cache Performance and Edge Cases', function (): void {
 	it('handles large data sets efficiently', function (): void {
 		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);

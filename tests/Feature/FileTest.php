@@ -17,7 +17,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('File Operations', function () {
+describe('File Operations', function (): void {
 	beforeEach(function (): void {
 		// Create test collection for file operations
 		$collection = [

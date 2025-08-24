@@ -135,14 +135,14 @@ final class APCuServiceTest extends TestCase
 		}
 
 		$prefix = 'pattern_test_' . uniqid() . '_';
-		
+
 		// Store values with specific pattern
 		$patternKeys = [
 			$prefix . 'collection:blog',
 			$prefix . 'collection:news',
 			$prefix . 'api:endpoint1',
 		];
-		
+
 		foreach ($patternKeys as $key) {
 			$this->apcuService->set($key, 'test_data', 60);
 		}

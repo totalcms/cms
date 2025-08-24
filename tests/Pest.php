@@ -26,9 +26,7 @@ $_SERVER['APP_ENV'] = 'test';
 |
 */
 
-expect()->extend('toBeOne', function () {
-	return $this->toBe(1);
-});
+expect()->extend('toBeOne', fn() => $this->toBe(1));
 
 /*
 |--------------------------------------------------------------------------
@@ -43,9 +41,7 @@ expect()->extend('toBeOne', function () {
 
 function bootstrap()
 {
-	$app = require __DIR__ . '/../config/bootstrap.php';
-
-	return $app;
+	return require __DIR__ . '/../config/bootstrap.php';
 }
 
 function testDataDir(): string
@@ -113,7 +109,7 @@ function objectFilesPath(string $collection, string $id): string
 	return cmsDataDir() . "$collection/$id";
 }
 
-function recursiveDelete($dir)
+function recursiveDelete(string $dir)
 {
 	if (!file_exists($dir)) {
 		return true;
@@ -124,7 +120,7 @@ function recursiveDelete($dir)
 	}
 
 	foreach (scandir($dir) as $item) {
-		if ($item == '.' || $item == '..') {
+		if ($item === '.' || $item === '..') {
 			continue;
 		}
 

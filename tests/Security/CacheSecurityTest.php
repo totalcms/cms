@@ -13,7 +13,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Cache Security Tests', function () {
+describe('Cache Security Tests', function (): void {
 	it('prevents cache key injection attacks', function (): void {
 		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);

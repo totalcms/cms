@@ -6,7 +6,7 @@ use Twig\Loader\ArrayLoader;
 use Twig\Parser;
 use Twig\Token;
 
-beforeEach(function () {
+beforeEach(function (): void {
 	$this->loader      = new ArrayLoader([]);
 	$this->twig        = new Environment($this->loader);
 	$this->parser      = new Parser($this->twig);
@@ -14,11 +14,11 @@ beforeEach(function () {
 	$this->tokenParser->setParser($this->parser);
 });
 
-test('token parser has correct tag name', function () {
+test('token parser has correct tag name', function (): void {
 	expect($this->tokenParser->getTag())->toBe('cmsgrid');
 });
 
-test('decide block end recognizes endcmsgrid', function () {
+test('decide block end recognizes endcmsgrid', function (): void {
 	$token = new Token(Token::NAME_TYPE, 'endcmsgrid', 1);
 	expect($this->tokenParser->decideBlockEnd($token))->toBeTrue();
 
@@ -26,17 +26,17 @@ test('decide block end recognizes endcmsgrid', function () {
 	expect($this->tokenParser->decideBlockEnd($otherToken))->toBeFalse();
 });
 
-test('parser can be instantiated without errors', function () {
+test('parser can be instantiated without errors', function (): void {
 	expect($this->tokenParser)->toBeInstanceOf(CmsGridTokenParser::class);
 	expect($this->tokenParser->getTag())->toBe('cmsgrid');
 });
 
-test('token parser extends AbstractTokenParser', function () {
+test('token parser extends AbstractTokenParser', function (): void {
 	expect($this->tokenParser)->toBeInstanceOf(Twig\TokenParser\AbstractTokenParser::class);
 });
 
 // Integration test to verify the token parser works with Twig
-test('cmsgrid tag can be registered with twig', function () {
+test('cmsgrid tag can be registered with twig', function (): void {
 	$loader = new ArrayLoader([
 		'test' => '{% cmsgrid objects from "blog" with "grid" %}{{ object.title }}{% endcmsgrid %}',
 	]);
@@ -49,7 +49,7 @@ test('cmsgrid tag can be registered with twig', function () {
 	expect($template)->toBeInstanceOf(Twig\TemplateWrapper::class);
 });
 
-test('cmsgrid tag compiles with minimal syntax', function () {
+test('cmsgrid tag compiles with minimal syntax', function (): void {
 	$loader = new ArrayLoader([
 		'minimal' => '{% cmsgrid objects %}{{ object.title }}{% endcmsgrid %}',
 	]);
@@ -61,7 +61,7 @@ test('cmsgrid tag compiles with minimal syntax', function () {
 	expect($template)->toBeInstanceOf(Twig\TemplateWrapper::class);
 });
 
-test('cmsgrid tag compiles with full syntax', function () {
+test('cmsgrid tag compiles with full syntax', function (): void {
 	$loader = new ArrayLoader([
 		'full' => '{% cmsgrid objects from "blog" with "grid compact" as "article" %}{{ object.title }}{% endcmsgrid %}',
 	]);
@@ -73,7 +73,7 @@ test('cmsgrid tag compiles with full syntax', function () {
 	expect($template)->toBeInstanceOf(Twig\TemplateWrapper::class);
 });
 
-test('cmsgrid tag compiles with partial syntax variations', function () {
+test('cmsgrid tag compiles with partial syntax variations', function (): void {
 	$variations = [
 		'{% cmsgrid objects with "classes" %}{{ object.title }}{% endcmsgrid %}',
 		'{% cmsgrid objects as "div" %}{{ object.title }}{% endcmsgrid %}',
@@ -95,7 +95,7 @@ test('cmsgrid tag compiles with partial syntax variations', function () {
 	}
 });
 
-test('cmsgrid syntax error handling', function () {
+test('cmsgrid syntax error handling', function (): void {
 	$loader = new ArrayLoader([
 		'invalid' => '{% cmsgrid %}{% endcmsgrid %}', // Missing objects parameter
 	]);
@@ -104,11 +104,11 @@ test('cmsgrid syntax error handling', function () {
 	$twig->addTokenParser(new CmsGridTokenParser());
 
 	// This should throw a Twig syntax error
-	expect(fn () => $twig->load('invalid'))
+	expect(fn (): \Twig\TemplateWrapper => $twig->load('invalid'))
 		->toThrow(Twig\Error\SyntaxError::class);
 });
 
-test('cmsgrid missing end tag handling', function () {
+test('cmsgrid missing end tag handling', function (): void {
 	$loader = new ArrayLoader([
 		'no_end' => '{% cmsgrid objects %}{{ object.title }}', // Missing {% endcmsgrid %}
 	]);
@@ -117,6 +117,6 @@ test('cmsgrid missing end tag handling', function () {
 	$twig->addTokenParser(new CmsGridTokenParser());
 
 	// This should throw a Twig syntax error
-	expect(fn () => $twig->load('no_end'))
+	expect(fn (): \Twig\TemplateWrapper => $twig->load('no_end'))
 		->toThrow(Twig\Error\SyntaxError::class);
 });

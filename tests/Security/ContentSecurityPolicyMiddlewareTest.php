@@ -16,9 +16,9 @@ use TotalCMS\Middleware\ContentSecurityPolicyMiddleware;
 final class ContentSecurityPolicyMiddlewareTest extends TestCase
 {
 	private ContentSecurityPolicyMiddleware $middleware;
-	private ServerRequestInterface $request;
-	private RequestHandlerInterface $handler;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -48,7 +48,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 		$this->response
 			->expects($this->exactly(5)) // CSP + 4 security headers
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$headerCalls) {
+			->willReturnCallback(function ($name, $value) use (&$headerCalls): \Psr\Http\Message\ResponseInterface {
 				$headerCalls[] = [$name, $value];
 
 				return $this->response;
@@ -83,7 +83,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -131,7 +131,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 		$headerCallCount = 0;
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use ($expectedHeaders, &$headerCallCount) {
+			->willReturnCallback(function ($name, $value) use ($expectedHeaders, &$headerCallCount): \Psr\Http\Message\ResponseInterface {
 				$headerCallCount++;
 
 				if (isset($expectedHeaders[$name])) {
@@ -157,7 +157,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -182,7 +182,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -206,7 +206,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP, &$xFrameOptions) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP, &$xFrameOptions): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				} elseif ($name === 'X-Frame-Options') {
@@ -233,7 +233,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -256,7 +256,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -279,7 +279,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -325,7 +325,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -341,7 +341,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 		$this->assertStringEndsNotWith(';', $capturedCSP, 'CSP should not end with semicolon');
 
 		// Check that directives are properly separated
-		$directives = explode('; ', $capturedCSP);
+		$directives = explode('; ', (string) $capturedCSP);
 		$this->assertGreaterThan(5, count($directives), 'CSP should have multiple directives');
 
 		// Each directive should have a name and value
@@ -391,7 +391,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedCSP) {
+			->willReturnCallback(function ($name, $value) use (&$capturedCSP): \Psr\Http\Message\ResponseInterface {
 				if ($name === 'Content-Security-Policy') {
 					$capturedCSP = $value;
 				}
@@ -441,7 +441,7 @@ final class ContentSecurityPolicyMiddlewareTest extends TestCase
 
 		$this->response
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use (&$capturedHeaders) {
+			->willReturnCallback(function ($name, $value) use (&$capturedHeaders): \Psr\Http\Message\ResponseInterface {
 				$capturedHeaders[$name] = $value;
 
 				return $this->response;

@@ -16,7 +16,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Cache Repository Integration', function () {
+describe('Cache Repository Integration', function (): void {
 	it('caches collection data correctly', function (): void {
 		$container      = $this->app->getContainer();
 		$collectionRepo = $container->get(CollectionRepository::class);

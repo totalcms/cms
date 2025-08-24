@@ -161,7 +161,7 @@ final class DeckFieldChangedEventTest extends TestCase
 		$deckField = $this->createMockDeckField();
 
 		// Add item - should trigger changed
-		$item = $deckField->addItem();
+		$deckField->addItem();
 		$this->assertEquals(1, $deckField->getChangedEventCount());
 
 		// Try to add empty item - should not trigger changed if no actual change
@@ -183,7 +183,7 @@ final class DeckFieldChangedEventTest extends TestCase
 		// Rapid operations
 		$item1 = $deckField->addItem();
 		$item2 = $deckField->addItem();
-		$item3 = $deckField->addItem();
+		$deckField->addItem();
 		$deckField->removeItem($item2);
 		$deckField->duplicateItem($item1);
 
@@ -286,12 +286,10 @@ class MockDeckFieldForChangedEvent
 	private bool $changedEventTriggered = false;
 	private int $changedEventCount      = 0;
 	private array $items                = [];
-	private ?MockFormForChangedEvent $form;
 
-	public function __construct(?MockFormForChangedEvent $form = null)
-	{
-		$this->form = $form;
-	}
+	public function __construct(private readonly ?MockFormForChangedEvent $form = null)
+    {
+    }
 
 	public function addItem(): MockDeckItemForChangedEvent
 	{
@@ -363,7 +361,7 @@ class MockDeckFieldForChangedEvent
 		$this->changedEventCount++;
 
 		// Integrate with form if available
-		if ($this->form) {
+		if ($this->form instanceof \Tests\Unit\JavaScript\MockFormForChangedEvent) {
 			$this->form->markAsUnsaved();
 			$this->form->triggerValidation();
 		}
@@ -391,12 +389,9 @@ class MockDeckFieldForChangedEvent
  */
 class MockDeckItemForChangedEvent
 {
-	private string $id;
-
-	public function __construct(string $id)
-	{
-		$this->id = $id;
-	}
+	public function __construct(private readonly string $id)
+    {
+    }
 
 	public function getId(): string
 	{

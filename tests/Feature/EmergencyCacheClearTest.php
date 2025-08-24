@@ -12,7 +12,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Emergency Cache Clear Endpoint', function () {
+describe('Emergency Cache Clear Endpoint', function (): void {
 	it('clears all caches via emergency endpoint', function (): void {
 		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);

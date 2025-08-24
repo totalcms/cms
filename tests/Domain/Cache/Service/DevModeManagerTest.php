@@ -191,7 +191,7 @@ final class DevModeManagerTest extends TestCase
 	{
 		$matches = false;
 		foreach ($prefixes as $prefix) {
-			if (str_starts_with($actual, $prefix)) {
+			if (str_starts_with($actual, (string) $prefix)) {
 				$matches = true;
 				break;
 			}
@@ -218,7 +218,7 @@ final class DevModeManagerTest extends TestCase
 		mkdir($this->testDevModeFile);
 
 		// Set custom error handler to suppress expected file_get_contents warning
-		$originalHandler = set_error_handler(function ($severity, $message, $file, $line) {
+		set_error_handler(function ($severity, $message, $file, $line): bool {
 			// Only suppress warnings from file_get_contents about directory read errors
 			if ($severity === E_NOTICE && str_contains($message, 'file_get_contents') && str_contains($message, 'Is a directory')) {
 				return true; // Suppress this specific notice
