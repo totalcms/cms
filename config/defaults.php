@@ -59,6 +59,7 @@ $settings['schemas']  = $settings['root'] . '/resources/schemas';
 $settings['debug'] = false; // Set to true for development
 
 // Cache configuration
+// Priority: APCu > Redis > Memcached > Filesystem (optimized for single-server deployments)
 $settings['cache'] = [
 	'filesystem' => [
 		'enabled'   => true,
@@ -76,6 +77,10 @@ $settings['cache'] = [
 		'enabled' => true,
 		'host'    => '127.0.0.1',
 		'port'    => 11211,
+	],
+	'apcu' => [
+		'enabled' => true,
+		'prefix'  => 'tcms_',
 	],
 ];
 

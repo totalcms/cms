@@ -24,8 +24,9 @@ class ServerChecker
 	private const OPTIONAL_SOFTWARE = [
 		'imagick',
 		'opcache',
-		'memcached',
+		'apcu',
 		'redis',
+		'memcached',
 	];
 	private const PHP_VERSION = '8.2.0';
 
@@ -172,8 +173,9 @@ class ServerChecker
 		return match ($extension) {
 			'imagick'   => 'Advanced image processing library with support for 200+ image formats',
 			'opcache'   => 'PHP bytecode cache that dramatically improves performance',
-			'memcached' => 'High-performance, distributed memory object caching system',
+			'apcu'      => 'Fast in-memory user cache for single-server applications',
 			'redis'     => 'In-memory data structure store for caching and session storage',
+			'memcached' => 'High-performance, distributed memory object caching system',
 			default     => 'Optional PHP extension',
 		};
 	}
@@ -185,9 +187,10 @@ class ServerChecker
 	{
 		return match ($extension) {
 			'imagick'   => 'Recommended for sites with heavy image processing, advanced image effects, or PDF generation needs',
-			'opcache'   => 'HIGHLY RECOMMENDED for all production sites - provides 2-5x performance improvement with no downsides',
-			'memcached' => 'Recommended for high-traffic sites (1000+ daily visitors) or multi-server setups requiring shared caching',
+			'opcache'   => 'Recommended for all production sites - provides 2-5x performance improvement with no downsides',
+			'apcu'      => 'Recommended for most sites - zero-config caching that works immediately on single-server setups',
 			'redis'     => 'Recommended for high-traffic sites needing advanced caching, session clustering, or real-time features',
+			'memcached' => 'Recommended for high-traffic sites (1000+ daily visitors) or multi-server setups requiring shared caching',
 			default     => 'Check documentation for specific use cases',
 		};
 	}
@@ -200,8 +203,9 @@ class ServerChecker
 		return match ($extension) {
 			'imagick'   => 'High impact for image operations, no impact if not used',
 			'opcache'   => 'Very high impact: 2-5x faster page loads, 50% less memory usage',
-			'memcached' => 'Medium impact: Faster template caching, reduced database load',
+			'apcu'      => 'Medium-high impact: Much faster than filesystem cache, instant setup',
 			'redis'     => 'Medium-high impact: Fast caching, improved session performance',
+			'memcached' => 'Medium impact: Faster template caching, reduced database load',
 			default     => 'Varies by usage',
 		};
 	}
@@ -217,6 +221,10 @@ class ServerChecker
 				return (extension_loaded('opcache') || extension_loaded('Zend OPcache'))
 					   && function_exists('opcache_get_status')
 					   && opcache_get_status() !== false;
+
+			case 'apcu':
+				// APCu requires extension and basic functionality test
+				return extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch');
 
 			case 'redis':
 				// Redis requires both extension and class
@@ -256,6 +264,41 @@ class ServerChecker
 				}
 			} else {
 				$cacheInfo['OPcache Status'] = 'Available but not functioning';
+			}
+		}
+
+		// APCu information
+		if ($this->checkExtension('apcu')) {
+			try {
+				$testKey = 'tcms_server_check_' . uniqid();
+				$testValue = 'test';
+				
+				if (apcu_store($testKey, $testValue, 1)) {
+					$retrieved = apcu_fetch($testKey, $success);
+					apcu_delete($testKey);
+					
+					if ($success && $retrieved === $testValue) {
+						$cacheInfo['APCu Status'] = 'Working';
+						
+						// Get APCu cache info if available
+						if (function_exists('apcu_cache_info')) {
+							$info = apcu_cache_info(true); // Get info without entries list
+							if (is_array($info) && isset($info['num_hits'], $info['num_misses'])) {
+								$total = (int)$info['num_hits'] + (int)$info['num_misses'];
+								if ($total > 0) {
+									$hitRate = round(((int)$info['num_hits'] / $total) * 100, 2);
+									$cacheInfo['APCu Hit Rate'] = $hitRate . '%';
+								}
+							}
+						}
+					} else {
+						$cacheInfo['APCu Status'] = 'Extension available, functionality failed';
+					}
+				} else {
+					$cacheInfo['APCu Status'] = 'Extension available, store failed';
+				}
+			} catch (\Exception $e) {
+				$cacheInfo['APCu Status'] = 'Extension available, test failed';
 			}
 		}
 

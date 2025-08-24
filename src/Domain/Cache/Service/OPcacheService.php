@@ -74,7 +74,7 @@ final class OPcacheService implements CacheInterface
 			'cache_full'      => $status['cache_full'] ?? false,
 			'memory_usage'    => $status['memory_usage'] ?? [],
 			'hit_rate'        => isset($status['opcache_statistics']['opcache_hit_rate'])
-				? round($status['opcache_statistics']['opcache_hit_rate'], 2)
+				? round($status['opcache_statistics']['opcache_hit_rate'], 1)
 				: 0,
 			'scripts_cached' => $status['opcache_statistics']['num_cached_scripts'] ?? 0,
 		];

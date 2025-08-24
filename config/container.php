@@ -28,6 +28,7 @@ use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -385,12 +386,17 @@ return [
 		return new MemcachedService($container->get(Config::class));
 	},
 
+	APCuService::class => function (ContainerInterface $container) {
+		return new APCuService($container->get(Config::class));
+	},
+
 	CacheReporter::class => function (ContainerInterface $container) {
 		return new CacheReporter(
 			$container->get(FilesystemService::class),
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
+			$container->get(APCuService::class),
 			$container->get(DevModeManager::class),
 		);
 	},
@@ -401,6 +407,7 @@ return [
 			$container->get(OPcacheService::class),
 			$container->get(RedisService::class),
 			$container->get(MemcachedService::class),
+			$container->get(APCuService::class),
 			$container->get(TextWatermarkFactory::class),
 			$container->get(DevModeManager::class)
 		);

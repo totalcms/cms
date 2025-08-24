@@ -44,6 +44,9 @@ $settings['cache'] = [
 	'redis' => [
 		'enabled' => false,
 	],
+	'apcu' => [
+		'enabled' => false,
+	],
 	'memcached' => [
 		'enabled' => false,
 	],

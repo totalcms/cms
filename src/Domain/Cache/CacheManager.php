@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Cache;
 
+use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInterface;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
@@ -53,6 +54,7 @@ final class CacheManager
 		private OPcacheService $opcacheService,
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
+		private APCuService $apcuService,
 		private TextWatermarkFactory $textWatermarkFactory,
 		private DevModeManager $devModeManager,
 	) {
@@ -62,13 +64,14 @@ final class CacheManager
 			'opcache'    => $this->opcacheService,
 			'redis'      => $this->redisService,
 			'memcached'  => $this->memcachedService,
+			'apcu'       => $this->apcuService,
 		];
 		$this->versionFile  = $this->filesystemService->getCachDir() . '/' . $this->versionFile;
 	}
 
 	/**
 	 * Store collection index data (fast access needed, can be large).
-	 * Priority: Redis > Memcached > Filesystem.
+	 * Priority: APCu > Redis > Memcached > Filesystem.
 	 *
 	 * @param array<string,mixed> $index
 	 */
@@ -96,7 +99,7 @@ final class CacheManager
 
 	/**
 	 * Store API response data (fast access, medium TTL).
-	 * Priority: Redis > Memcached > Filesystem.
+	 * Priority: APCu > Redis > Memcached > Filesystem.
 	 *
 	 * @param array<string,mixed> $params
 	 */
@@ -134,7 +137,11 @@ final class CacheManager
 			return false;
 		}
 
-		// Priority: Redis > Memcached > Filesystem (single cache layer only)
+		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
+		if ($this->apcuService->isAvailable()) {
+			return $this->apcuService->set($key, $data, $ttl);
+		}
+
 		if ($this->redisService->isAvailable()) {
 			return $this->redisService->set($key, $data, $ttl);
 		}
@@ -154,6 +161,13 @@ final class CacheManager
 	public function getData(string $key): mixed
 	{
 		// Check memory caches first (fastest)
+		if ($this->apcuService->isAvailable()) {
+			$result = $this->apcuService->get($key);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
 		if ($this->redisService->isAvailable()) {
 			$result = $this->redisService->get($key);
 			if ($result !== null) {
@@ -184,6 +198,10 @@ final class CacheManager
 		$success = true;
 
 		// Delete from all available cache backends
+		if ($this->apcuService->isAvailable()) {
+			$success &= $this->apcuService->delete($key);
+		}
+
 		if ($this->redisService->isAvailable()) {
 			$success &= $this->redisService->delete($key);
 		}
@@ -237,8 +255,8 @@ final class CacheManager
 	}
 
 	/**
-	 * Store session data (fast access, Redis preferred for distributed systems).
-	 * Priority: Redis > Memcached > Filesystem.
+	 * Store session data (fast access, APCu preferred for single-server deployments).
+	 * Priority: APCu > Redis > Memcached > Filesystem.
 	 *
 	 * @param array<string,mixed> $data
 	 */
@@ -296,6 +314,11 @@ final class CacheManager
 		$success = true;
 		$pattern = $type . ':*';
 
+		// Clear from APCu
+		if ($this->apcuService->isAvailable()) {
+			$success &= $this->clearByPattern($this->apcuService, $pattern);
+		}
+
 		// Clear from Redis
 		if ($this->redisService->isAvailable()) {
 			$success &= $this->clearByPattern($this->redisService, $pattern);
@@ -320,7 +343,7 @@ final class CacheManager
 	private function clearByPattern(CacheInterface $service, string $pattern): bool
 	{
 		// Check if the service supports pattern-based clearing
-		if ($service instanceof RedisService || $service instanceof MemcachedService || $service instanceof FilesystemService) {
+		if ($service instanceof RedisService || $service instanceof MemcachedService || $service instanceof FilesystemService || $service instanceof APCuService) {
 			return $service->clearByPattern($pattern);
 		}
 

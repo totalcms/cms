@@ -164,7 +164,7 @@ final class MemcachedService implements CacheInterface
 				'memory_usage' => isset($serverStats['bytes'])
 					? round($serverStats['bytes'] / 1024 / 1024, 2) . 'MB'
 					: 'Unknown',
-				'hit_rate' => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
+				'hit_rate' => $total > 0 ? round(($hits / $total) * 100, 1) : 0,
 				'items'    => $serverStats['curr_items'] ?? 0,
 			];
 		} catch (\Exception $e) {

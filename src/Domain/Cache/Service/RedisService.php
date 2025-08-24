@@ -181,7 +181,7 @@ final class RedisService implements CacheInterface
 				'port'              => $this->port,
 				'memory_usage'      => $info['used_memory_human'] ?? 'Unknown',
 				'connected_clients' => $info['connected_clients'] ?? 0,
-				'hit_rate'          => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
+				'hit_rate'          => $total > 0 ? round(($hits / $total) * 100, 1) : 0,
 				'keys'              => $redis->dbSize(),
 			];
 		} catch (\Exception $e) {

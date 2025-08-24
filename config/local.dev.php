@@ -34,6 +34,9 @@ $settings['cache'] = [
 	'filesystem' => [
 		'enabled'   => false,
 	],
+	'apcu' => [
+		'enabled' => false,
+	],
 	'redis' => [
 		'enabled' => false,
 	],

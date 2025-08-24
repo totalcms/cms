@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Cache;
 
+use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -19,6 +20,7 @@ final class CacheReporter
 		private OPcacheService $opcacheService,
 		private RedisService $redisService,
 		private MemcachedService $memcachedService,
+		private APCuService $apcuService,
 		private DevModeManager $devModeManager,
 	) {
 	}
@@ -32,6 +34,7 @@ final class CacheReporter
 	{
 		return [
 			'redis_available'      => $this->redisService->isAvailable(),
+			'apcu_available'       => $this->apcuService->isAvailable(),
 			'memcached_available'  => $this->memcachedService->isAvailable(),
 			'filesystem_available' => $this->filesystemService->isAvailable(),
 			'opcache_available'    => $this->opcacheService->isAvailable(),
@@ -50,10 +53,11 @@ final class CacheReporter
 		$recommendations = [];
 		$services        = [
 			'redis'      => $this->redisService->isAvailable(),
+			'apcu'       => $this->apcuService->isAvailable(),
 			'memcached'  => $this->memcachedService->isAvailable(),
 			'filesystem' => $this->filesystemService->isAvailable(),
 			'opcache'    => $this->opcacheService->isAvailable(),
-			'memory'     => $this->redisService->isAvailable() || $this->memcachedService->isAvailable(),
+			'memory'     => $this->redisService->isAvailable() || $this->apcuService->isAvailable() || $this->memcachedService->isAvailable(),
 		];
 
 		// Add recommendations based on available services
@@ -83,6 +87,10 @@ final class CacheReporter
 		// Collect stats from each available service
 		if ($this->redisService->isAvailable()) {
 			$stats['services']['redis'] = $this->redisService->getStats();
+		}
+
+		if ($this->apcuService->isAvailable()) {
+			$stats['services']['apcu'] = $this->apcuService->getStats();
 		}
 
 		if ($this->memcachedService->isAvailable()) {
@@ -177,6 +185,10 @@ final class CacheReporter
 	 */
 	private function getPreferredBackend(): string
 	{
+		if ($this->apcuService->isAvailable()) {
+			return 'apcu';
+		}
+
 		if ($this->redisService->isAvailable()) {
 			return 'redis';
 		}
@@ -197,7 +209,7 @@ final class CacheReporter
 	 */
 	private function getRecommendedStrategy(): string
 	{
-		$hasMemory     = $this->redisService->isAvailable() || $this->memcachedService->isAvailable();
+		$hasMemory     = $this->redisService->isAvailable() || $this->apcuService->isAvailable() || $this->memcachedService->isAvailable();
 		$hasFilesystem = $this->filesystemService->isAvailable();
 
 		if ($hasMemory && $hasFilesystem) {
@@ -291,10 +303,11 @@ final class CacheReporter
 	private function getAvailableBackends(): array
 	{
 		return [
-			'filesystem' => 'Filesystem Cache',
 			'opcache'    => 'OPcache',
+			'apcu'       => 'APCu',
 			'redis'      => 'Redis',
 			'memcached'  => 'Memcached',
+			'filesystem' => 'Filesystem Cache',
 		];
 	}
 
@@ -306,17 +319,18 @@ final class CacheReporter
 	private function getBackendStatus(): array
 	{
 		return [
-			'filesystem' => $this->getServiceStatus($this->filesystemService),
 			'opcache'    => $this->getServiceStatus($this->opcacheService),
+			'apcu'       => $this->getServiceStatus($this->apcuService),
 			'redis'      => $this->getServiceStatus($this->redisService),
 			'memcached'  => $this->getServiceStatus($this->memcachedService),
+			'filesystem' => $this->getServiceStatus($this->filesystemService),
 		];
 	}
 
 	/**
 	 * Get status for a specific cache service.
 	 *
-	 * @param FilesystemService|OPcacheService|RedisService|MemcachedService $service
+	 * @param FilesystemService|OPcacheService|RedisService|MemcachedService|APCuService $service
 	 */
 	private function getServiceStatus(mixed $service): string
 	{

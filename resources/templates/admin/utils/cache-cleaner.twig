@@ -16,7 +16,7 @@
 
 	<h2>Clear Content Cache</h2>
 
-	<p><strong>Clear Content Caches</strong> will clear filesystem cache, OPcache, Redis, and Memcached (if available).</p>
+	<p><strong>Clear Content Caches</strong> will clear filesystem cache, OPcache, APCu, Redis, and Memcached (if available).</p>
 	{{ cms.form.simple("/cache", "", {
 		method : "DELETE",
 		label  : "Clear Content Caches",
@@ -65,6 +65,12 @@
 							{% else %}
 								Enabled, warming up
 							{% endif %}
+						{% elseif backend == 'apcu' and cacheStats.services.apcu.available %}
+							{% if cacheStats.services.apcu.hit_rate > 0 %}
+								{{ cacheStats.services.apcu.hit_rate }}% hit rate, {{ cacheStats.services.apcu.entries_ours }} entries
+							{% else %}
+								Active, no metrics yet
+							{% endif %}
 						{% elseif backend == 'redis' and cacheStats.services.redis.available %}
 							{% if cacheStats.services.redis.hit_rate > 0 %}
 								{{ cacheStats.services.redis.hit_rate }}% hit rate, {{ cacheStats.services.redis.memory_usage }}
@@ -86,6 +92,8 @@
 							Twig compiled templates and metadata
 						{% elseif backend == 'opcache' %}
 							PHP bytecode cache (2-5x performance boost)
+						{% elseif backend == 'apcu' %}
+							Fast single-server memory cache (zero-config)
 						{% elseif backend == 'redis' %}
 							High-speed in-memory cache for template metadata
 						{% elseif backend == 'memcached' %}
