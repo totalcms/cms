@@ -64,7 +64,8 @@ class FormField
 			|| isset($this->settings['datalistOptions']));
 
 		// Set a default value on new object forms if one is not provided
-		if (!$this->form->id && empty($this->value) && !empty($this->default)) {
+		// Use is_null() instead of empty() to preserve 0 values
+		if (!$this->form->id && is_null($this->value) && !empty($this->default)) {
 			$this->value = $this->default;
 		}
 	}
@@ -135,7 +136,7 @@ class FormField
 			'pattern'          => empty($this->pattern) ? null : $this->pattern,
 			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
 			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
-			'value'            => empty($this->value) ? null : $this->value,
+			'value'            => ($this->value === null || $this->value === '') ? null : $this->value,
 			'min'              => is_null($this->min) ? null : (string)$this->min,
 			'max'              => is_null($this->max) ? null : (string)$this->max,
 			'step'             => is_null($this->step) ? null : (string)$this->step,

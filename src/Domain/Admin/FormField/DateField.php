@@ -20,7 +20,7 @@ class DateField extends FormField
 		}
 
 		// Handle smart defaults for date fields
-		if (!empty($this->default) && empty($this->value)) {
+		if (!empty($this->default) && ($this->value === null || $this->value === '')) {
 			$this->value = DateData::cleanDate($this->default, $this->dateFormat);
 		}
 
