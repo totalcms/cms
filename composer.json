@@ -68,6 +68,7 @@
     "webuni/front-matter": "^2.0"
   },
   "require-dev": {
+    "cweagans/composer-patches": "*",
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "nekofar/pest-plugin-slim": "dev-develop#f55ba25333d964257a24a3c1206948fcf454cb01",
@@ -89,7 +90,8 @@
     "process-timeout": 0,
     "sort-packages": true,
     "allow-plugins": {
-      "pestphp/pest-plugin": true
+      "pestphp/pest-plugin": true,
+      "cweagans/composer-patches": true
     },
     "platform": {
       "php": "8.2.0"
@@ -142,5 +144,15 @@
       "@stan",
       "@test"
     ]
+  },
+  "extra": {
+    "patches": {
+      "erusev/parsedown": [
+        "patches/parsedown-php84-nullable-fix.patch"
+      ],
+      "erusev/parsedown-extra": [
+        "patches/parsedown-extra-php84-nullable-fix.patch"
+      ]
+    }
   }
 }
