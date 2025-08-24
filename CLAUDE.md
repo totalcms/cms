@@ -130,8 +130,28 @@ bin/codecount.sh
 ## Important Notes
 
 - **Storage**: Flat-file JSON storage (no traditional database)
-- **Caching**: Multi-backend Twig caching (filesystem, OPcache, Redis, Memcached)
-- **Modern PHP**: Strict typing, PSR standards, PHP 8.2+ features
+- **Caching**: Multi-backend Twig caching with APCu-first priority (APCu, Redis, Memcached, filesystem, OPcache)
+- **Modern PHP**: Strict typing, PSR standards, PHP 8.2+ features with PHP 8.4 compatibility
+- **Enhanced Libraries**: Custom couleur fork with OKLCH improvements, native EXIF processing
+
+## Recent Major Updates (2024)
+
+### APCu Cache Integration
+- **Primary Cache Backend**: APCu now first in priority for optimal single-server performance
+- **Zero Configuration**: Works immediately with APCu extension, no external services required  
+- **UI Integration**: Server Checker and Cache Management fully support APCu with detailed statistics
+- **Performance Optimized**: Cache priority reflects real-world single-server deployment patterns
+
+### PHP 8.4 Compatibility & EXIF Enhancements  
+- **ImageMetaReader**: Native PHP EXIF implementation replacing lychee-org/php-exif
+- **Automatic Metadata**: Image uploads auto-populate alt text and tags from EXIF/XMP/IPTC data
+- **Enhanced Processing**: XMP lens extraction, location data, keyword processing, GPS coordinate formatting
+- **Schema Compliance**: All metadata returned in proper string formats for validation
+
+### Enhanced Color System
+- **Couleur Library Fork**: Custom fork with OKLCH hue wraparound mathematics
+- **ColorData Integration**: Simplified using enhanced library functions  
+- **Proper Color Operations**: Fixed 360° hue calculations for color wheel operations
 
 ## Security Architecture
 
@@ -203,15 +223,18 @@ bin/codecount.sh
 ## Performance & Caching
 
 ### Cache System
-- **TwigCacheManager**: Multi-backend caching (filesystem, OPcache, Redis, Memcached) with auto-detection
+- **Multi-Backend Caching**: APCu-first priority system optimized for single-server deployments
+- **Cache Priority**: APCu > Redis > Memcached > Filesystem (OPcache runs automatically for PHP bytecode)
+- **APCu Integration**: Zero-config, fast in-memory caching for single-server setups
+- **TwigCacheManager**: Multi-backend caching with automatic detection and graceful fallbacks
 - **Development Mode**: `isCacheEnabled` property, no file operations when `cachedir: "false"`
-- **Cache Cleaner UI**: Admin interface showing cache status, hit rates, and performance recommendations
-- **Container Integration**: Full dependency injection support
+- **Cache Cleaner UI**: Admin interface showing cache status, hit rates (1 decimal precision), and performance recommendations
+- **Container Integration**: Full dependency injection support with APCuService, RedisService, MemcachedService, FilesystemService
 
 ### Performance Optimizations
 - **CollectionRefiner**: 30-70% improvement via reflection caching, optimized array operations, loose comparisons
 - **CollectionSorter**: 50-70% improvement via property value caching and rule pre-processing
-- **ServerChecker**: Enhanced with detailed extension info, OPcache detection improvements
+- **ServerChecker**: Enhanced with detailed extension info, APCu + OPcache detection, and cache functionality testing
 
 ### Emergency Cache Management
 - **Automatic OPcache Clearing**: `DefaultErrorHandler` automatically clears OPcache on every error to prevent cached errors
@@ -219,6 +242,43 @@ bin/codecount.sh
 - **Emergency Endpoint**: `/emergency/cache/clear` provides public cache clearing when admin interface is inaccessible
 - **Customer-Friendly**: No authentication required - customers can clear caches from any location without server access
 - **Test Script**: `bin/test-emergency-cache.php` verifies emergency cache clearing functionality
+
+### APCu Cache Integration
+
+Total CMS prioritizes APCu as the primary cache backend for optimal single-server performance.
+
+**Priority Order**: APCu → Redis → Memcached → Filesystem (OPcache runs automatically)
+
+#### APCu Service Features
+- **APCuService**: Complete cache implementation with prefix support (`tcms_` default)
+- **Zero Configuration**: Works immediately when APCu extension is installed
+- **Pattern Clearing**: Uses APCu iterators for efficient cache pattern matching
+- **Statistics & Monitoring**: Hit rates, memory usage, entry counts with 1-decimal precision
+- **Graceful Fallbacks**: Auto-detects availability and falls back to Redis/Memcached
+
+#### Benefits for Single-Server Deployments
+- **Performance**: Faster than Redis for single-server (no network overhead)
+- **Simplicity**: No external services to configure, manage, or monitor
+- **Resource Efficiency**: Lower memory footprint than separate Redis daemon  
+- **Shared Hosting Friendly**: Most hosting providers have APCu pre-installed
+- **Immediate Setup**: Zero-config caching that "just works"
+
+#### Configuration
+```php
+// config/defaults.php
+'cache' => [
+    'apcu' => [
+        'enabled' => true,
+        'prefix'  => 'tcms_',
+    ],
+    // Other cache backends remain available for advanced users
+],
+```
+
+#### UI Integration
+- **Server Checker**: APCu appears between OPcache and Redis with functionality testing
+- **Cache Management**: Shows APCu status, hit rates, and entry counts
+- **Admin Interface**: Clear APCu cache individually or as part of "Clear All Caches"
 
 ## JumpStart System
 
@@ -270,6 +330,20 @@ ImageWorks is Total CMS's comprehensive image processing system providing dynami
 - **GlideFactory**: Integrates with League/Glide for image manipulation and watermark application
 - **ImageGenerator**: Main service orchestrating image processing operations
 - **ColorData**: Enhanced OKLCH color manipulation with proper hue calculations
+- **ImageMetaReader**: PHP 8.4-compatible EXIF metadata extraction system
+
+### EXIF Metadata System
+- **Native PHP Implementation**: Replaces lychee-org/php-exif for PHP 8.4 compatibility
+- **Comprehensive Extraction**: EXIF, XMP, and IPTC metadata from multiple sources
+- **Automatic Population**: Image upload auto-populates alt text and tags from metadata
+- **Enhanced Data Processing**: 
+  - XMP lens extraction from `aux:Lens` field
+  - IPTC location data (city, state, country, sublocation)
+  - Keyword extraction from multiple metadata sources
+  - GPS coordinate parsing with proper string formatting
+  - Fraction cleanup (removes "/1" denominators for cleaner display)
+- **Smart Data Preservation**: Existing alt text and tags preserved during re-uploads
+- **Schema Compliance**: All GPS coordinates returned as strings to match validation requirements
 
 ### Text Watermarking
 - **Font Support**: TTF and OTF fonts loaded from depot storage or default Roboto font
@@ -304,10 +378,12 @@ ImageWorks is Total CMS's comprehensive image processing system providing dynami
 ```
 
 ### Color System Integration
-- **OKLCH Support**: Full OKLCH color space manipulation with proper hue wraparound
+- **Enhanced Couleur Library**: Fork with improved OKLCH color space support at `/Users/joeworkman/Developer/forks/couleur`
+- **Hue Wraparound**: Proper 360° hue mathematics for color wheel operations
+- **OKLCH Support**: Full OKLCH color space manipulation with proper hue calculations
 - **Color Filters**: Twig filters for `hue()`, `lightness()`, `chroma()` adjustments
-- **Hue Calculations**: Fixed 360° wraparound for color wheel operations
 - **Hex Conversion**: Reliable OKLCH-to-hex conversion avoiding ColorFactory library issues
+- **ColorData Integration**: Uses enhanced couleur library functions instead of duplicating logic
 
 ### Configuration
 ```php
