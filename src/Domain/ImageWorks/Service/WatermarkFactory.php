@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Support\Config;
 
-final class WatermarkFactory
+final readonly class WatermarkFactory
 {
 	public function __construct(
 		private TextWatermarkFactory $textWatermarkFactory,

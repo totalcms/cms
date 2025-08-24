@@ -18,7 +18,7 @@ final class JumpStartImporter
 {
 	private const DEMO_JUMPSTART_FILE = __DIR__ . '/../../../../resources/jumpstart/demo.json';
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 
 	/** @var array<int, string> */
 	private array $results = [];
@@ -27,12 +27,12 @@ final class JumpStartImporter
 	private array $errors = [];
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private CollectionSaver $collectionSaver,
-		private ObjectFetcher $objectFetcher,
-		private ObjectSaver $objectSaver,
-		private SchemaSaver $schemaSaver,
-		private FactoryImporter $factoryImporter,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionSaver $collectionSaver,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly ObjectSaver $objectSaver,
+		private readonly SchemaSaver $schemaSaver,
+		private readonly FactoryImporter $factoryImporter,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('jumpstart.log')->createLogger('jumpstart-importer');

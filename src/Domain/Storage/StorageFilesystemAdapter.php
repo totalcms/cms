@@ -10,7 +10,7 @@ use League\Flysystem\StorageAttributes;
  *
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
-final class StorageFilesystemAdapter implements StorageAdapterInterface
+final readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 {
 	/**
 	 * The constructor.

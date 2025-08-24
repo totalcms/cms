@@ -11,7 +11,7 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 /**
  * Deletes an item from a deck property.
  */
-final class DeckItemDeleteAction
+final readonly class DeckItemDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

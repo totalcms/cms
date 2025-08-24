@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class ImportJumpStartForm
+final readonly class ImportJumpStartForm
 {
 	private SimpleForm $simpleform;
 

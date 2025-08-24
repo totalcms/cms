@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class DeleteButton
+final readonly class DeleteButton
 {
 	public function __construct(
 		private string $label = 'Delete',

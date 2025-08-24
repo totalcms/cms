@@ -34,14 +34,14 @@ final class ObjectImporter
 	private string $objectID;
 
 	public function __construct(
-		private SchemaFetcher $schemaFetcher,
-		private ObjectSaver $objectSaver,
-		private ObjectPatcher $objectPatcher,
-		private ObjectFetcher $objectFetcher,
-		private ImageSaver $imageSaver,
-		private GallerySaver $gallerySaver,
-		private FileSaver $fileSaver,
-		private DepotSaver $depotSaver,
+		private readonly SchemaFetcher $schemaFetcher,
+		private readonly ObjectSaver $objectSaver,
+		private readonly ObjectPatcher $objectPatcher,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly ImageSaver $imageSaver,
+		private readonly GallerySaver $gallerySaver,
+		private readonly FileSaver $fileSaver,
+		private readonly DepotSaver $depotSaver,
 	) {
 	}
 

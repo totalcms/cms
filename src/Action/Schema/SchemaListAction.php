@@ -8,7 +8,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\SchemaMetaTransformer;
 
-final class SchemaListAction
+final readonly class SchemaListAction
 {
 	private JsonRenderer $renderer;
 	private SchemaLister $schemaLister;

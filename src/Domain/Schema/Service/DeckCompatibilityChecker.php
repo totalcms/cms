@@ -8,7 +8,7 @@ namespace TotalCMS\Domain\Schema\Service;
  * Deck-compatible schemas must only contain properties that don't require file uploads
  * or complex data structures that aren't supported in the deck format.
  */
-final class DeckCompatibilityChecker
+final readonly class DeckCompatibilityChecker
 {
 	public function __construct(
 		private ?SchemaFetcher $schemaFetcher = null,

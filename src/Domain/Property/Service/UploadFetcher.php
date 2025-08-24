@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-final class UploadFetcher
+final readonly class UploadFetcher
 {
 	public function __construct(
 		private PropertyRepository $storage,

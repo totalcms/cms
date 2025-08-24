@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
 
-final class AdminPlaygroundAction
+final readonly class AdminPlaygroundAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,

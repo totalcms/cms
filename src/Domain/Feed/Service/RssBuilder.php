@@ -22,12 +22,12 @@ final class RssBuilder
 
 	/** @var array<string,string> */
 	private array $fieldMap = self::DEFAULT_FIELD_MAP;
-	private RSS2 $feed;
+	private readonly RSS2 $feed;
 
 	public function __construct(
-		private IndexReader $indexReader,
-		private CollectionFetcher $collectionFetcher,
-		private Config $config,
+		private readonly IndexReader $indexReader,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly Config $config,
 	) {
 		$this->feed = new RSS2();
 	}

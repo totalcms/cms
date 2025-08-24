@@ -10,15 +10,15 @@ final class LoginService
 {
 	public const ACCESS_LOG = 'totalcms-access.log';
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 	private string $account = '';
 
 	public function __construct(
-		private UserValidationService $validator,
-		private LastLoginUpdateService $updateService,
-		private FirstLoginChecker $firstLoginChecker,
-		private LoggerFactory $loggerFactory,
-		private Config $config,
+		private readonly UserValidationService $validator,
+		private readonly LastLoginUpdateService $updateService,
+		private readonly FirstLoginChecker $firstLoginChecker,
+		private readonly LoggerFactory $loggerFactory,
+		private readonly Config $config,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::ACCESS_LOG)->createLogger('login');
 	}

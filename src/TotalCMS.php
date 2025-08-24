@@ -32,9 +32,9 @@ use TotalCMS\Support\Config;
 class TotalCMS
 {
 	private BufferController $buffer;
-	private Container $container;
+	private readonly Container $container;
 	private TwigEngine $twigEngine;
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 	private CacheManager $cacheManager;
 	private PhpSession $session;
 	private AccessManager $access;

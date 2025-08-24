@@ -12,16 +12,16 @@ use TotalCMS\Factory\LoggerFactory;
 
 final class TotalCmsOneImporter
 {
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 	private string $cmsDataPath;
 	private int $importCount = 0;
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private CollectionFactory $collectionFactory,
-		private CollectionRepository $collectionRepository,
-		private IndexReader $indexReader,
-		private JobQueuer $jobQueuer,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionFactory $collectionFactory,
+		private readonly CollectionRepository $collectionRepository,
+		private readonly IndexReader $indexReader,
+		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('totalcms-one-importer');

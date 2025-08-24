@@ -9,7 +9,7 @@ use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class ImportSchemaAction
+final readonly class ImportSchemaAction
 {
 	public function __construct(
 		private SchemaSaver $schemaSaver,

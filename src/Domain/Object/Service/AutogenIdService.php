@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Data\SlugData;
 /**
  * Service for generating automatic IDs using autogen patterns.
  */
-final class AutogenIdService
+final readonly class AutogenIdService
 {
 	public function __construct(
 		private CollectionFetcher $collectionFetcher,

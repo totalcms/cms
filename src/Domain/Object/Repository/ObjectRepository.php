@@ -13,10 +13,10 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 final class ObjectRepository extends StorageRepository
 {
-	private ObjectFactory $factory;
-	private SchemaValidator $validator;
-	private CollectionFetcher $collectionFetcher;
-	private CacheManager $cacheManager;
+	private readonly ObjectFactory $factory;
+	private readonly SchemaValidator $validator;
+	private readonly CollectionFetcher $collectionFetcher;
+	private readonly CacheManager $cacheManager;
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,

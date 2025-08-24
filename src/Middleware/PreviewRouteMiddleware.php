@@ -12,7 +12,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * A special middleware that allows to preview a page by passing the "route" query parameter.
  */
-final class PreviewRouteMiddleware implements MiddlewareInterface
+final readonly class PreviewRouteMiddleware implements MiddlewareInterface
 {
 	public function __construct(private string $api)
 	{

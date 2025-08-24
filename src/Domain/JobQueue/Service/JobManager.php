@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\JobQueue\Service;
 
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 
-final class JobManager
+final readonly class JobManager
 {
 	public function __construct(
 		private JobRepository $jobRepository,

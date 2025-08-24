@@ -10,7 +10,7 @@ use Odan\Session\PhpSession;
  * Provides secure token generation, validation, and session management
  * to prevent Cross-Site Request Forgery attacks.
  */
-final class CSRFTokenManager
+final readonly class CSRFTokenManager
 {
 	private const TOKEN_LENGTH   = 32;
 	private const SESSION_KEY    = 'csrf_token';

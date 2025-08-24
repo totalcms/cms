@@ -8,7 +8,7 @@ use TotalCMS\Support\Config;
  * Service for managing ImageWorks cache files.
  * Handles clearing and analyzing .cache directories within collections.
  */
-final class ImageCacheService
+final readonly class ImageCacheService
 {
 	public function __construct(
 		private Config $config,

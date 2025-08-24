@@ -6,7 +6,7 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final class ObjectExporter
+final readonly class ObjectExporter
 {
 	public function __construct(
 		private IndexRepository $storage,

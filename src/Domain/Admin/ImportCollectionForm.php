@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class ImportCollectionForm
+final readonly class ImportCollectionForm
 {
 	private SimpleForm $simpleform;
 

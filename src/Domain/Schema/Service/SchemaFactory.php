@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 /**
  * Service.
  */
-final class SchemaFactory
+final readonly class SchemaFactory
 {
 	private Serializer $serializer;
 

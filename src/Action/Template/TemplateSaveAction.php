@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\RawRenderer;
 
-final class TemplateSaveAction
+final readonly class TemplateSaveAction
 {
 	private RawRenderer $renderer;
 	private TemplateSaver $service;

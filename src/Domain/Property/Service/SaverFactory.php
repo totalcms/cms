@@ -13,12 +13,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class SaverFactory
 {
 	public function __construct(
-		private PropertyRepository $storage,
-		private PropertyFetcher $propFetcher,
-		private ObjectSaver $objectSaver,
-		private SchemaFetcher $schemaFetcher,
+		private readonly PropertyRepository $storage,
+		private readonly PropertyFetcher $propFetcher,
+		private readonly ObjectSaver $objectSaver,
+		private readonly SchemaFetcher $schemaFetcher,
 		protected ObjectPatcher $objectPatcher,
-		private ObjectFetcher $objectFetcher,
+		private readonly ObjectFetcher $objectFetcher,
 		protected LoggerFactory $loggerFactory,
 	) {
 	}

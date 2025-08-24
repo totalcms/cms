@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final class SchemaExistsAction
+final readonly class SchemaExistsAction
 {
 	public function __construct(private SchemaFetcher $schemaFetcher)
 	{

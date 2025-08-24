@@ -7,7 +7,7 @@ use Thepixeldeveloper\Sitemap\Extensions\Link;
 use Thepixeldeveloper\Sitemap\Extensions\Video;
 use Thepixeldeveloper\Sitemap\Url;
 
-final class SitemapLocation
+final readonly class SitemapLocation
 {
 	private Url $location;
 

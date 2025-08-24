@@ -7,7 +7,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 /**
  * Factory Form Builder.
  */
-final class FactoryForm
+final readonly class FactoryForm
 {
 	private SimpleForm $simpleform;
 

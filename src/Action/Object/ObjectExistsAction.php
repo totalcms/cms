@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
-final class ObjectExistsAction
+final readonly class ObjectExistsAction
 {
 	private ObjectFetcher $objectFetcher;
 

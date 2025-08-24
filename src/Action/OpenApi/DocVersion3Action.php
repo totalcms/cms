@@ -9,7 +9,7 @@ use TotalCMS\Renderer\TemplateRenderer;
 /**
  * Action.
  */
-final class DocVersion3Action
+final readonly class DocVersion3Action
 {
 	public function __construct(
 		private TemplateRenderer $templateRenderer,

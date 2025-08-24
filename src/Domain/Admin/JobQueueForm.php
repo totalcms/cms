@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
-final class JobQueueForm
+final readonly class JobQueueForm
 {
 	public function __construct(
 		private string $api,

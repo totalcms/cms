@@ -10,9 +10,9 @@ use TotalCMS\Support\Config;
  */
 final class MemcachedService implements CacheInterface
 {
-	private bool $enabled;
-	private string $host;
-	private int $port;
+	private readonly bool $enabled;
+	private readonly string $host;
+	private readonly int $port;
 	private ?\Memcached $memcached = null;
 
 	public function __construct(

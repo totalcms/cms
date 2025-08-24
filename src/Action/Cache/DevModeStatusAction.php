@@ -12,11 +12,11 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Get development mode status.
  */
-final class DevModeStatusAction
+final readonly class DevModeStatusAction
 {
 	public function __construct(
-		private readonly DevModeManager $devModeManager,
-		private readonly JsonRenderer $jsonRenderer,
+		private DevModeManager $devModeManager,
+		private JsonRenderer $jsonRenderer,
 	) {
 	}
 

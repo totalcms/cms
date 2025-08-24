@@ -10,7 +10,7 @@ final class BundleData
 {
 	/** @var array<string,string> */
 	public array $bundle;
-	private Serializer $serializer;
+	private readonly Serializer $serializer;
 
 	public function __construct()
 	{

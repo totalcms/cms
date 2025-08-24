@@ -8,7 +8,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\IndexTransformer;
 
-final class IndexGetAction
+final readonly class IndexGetAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

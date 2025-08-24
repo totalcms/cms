@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class ObjectUpdateAction
+final readonly class ObjectUpdateAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

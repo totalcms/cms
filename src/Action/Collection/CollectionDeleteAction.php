@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Collection\Service\CollectionRemover;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class CollectionDeleteAction
+final readonly class CollectionDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

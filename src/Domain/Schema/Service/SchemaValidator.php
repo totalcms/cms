@@ -11,7 +11,7 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 /**
  * Service.
  */
-final class SchemaValidator
+final readonly class SchemaValidator
 {
 	private SchemaRepository $schemaRepository;
 

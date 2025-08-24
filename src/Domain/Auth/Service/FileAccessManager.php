@@ -15,17 +15,17 @@ final class FileAccessManager
 {
 	public const DOWNLOAD_LOG = 'totalcms-download.log';
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 
 	private FileData|DepotData $file;
 	private CollectionData $collection;
 
 	public function __construct(
-		private PhpSession $session,
-		private UserValidationService $userValidator,
-		private LoggerFactory $loggerFactory,
-		private PropertyFetcher $propertyFetcher,
-		private CollectionFetcher $collectionFetcher,
+		private readonly PhpSession $session,
+		private readonly UserValidationService $userValidator,
+		private readonly LoggerFactory $loggerFactory,
+		private readonly PropertyFetcher $propertyFetcher,
+		private readonly CollectionFetcher $collectionFetcher,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::DOWNLOAD_LOG)->createLogger('fileaccess');
 	}

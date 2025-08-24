@@ -8,7 +8,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 /**
  * Simple Form Builder.
  */
-final class SimpleForm
+final readonly class SimpleForm
 {
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function __construct(

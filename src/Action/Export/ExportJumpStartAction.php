@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 
-final class ExportJumpStartAction
+final readonly class ExportJumpStartAction
 {
 	public function __construct(
 		private JumpStartExporter $jumpStartExporter,

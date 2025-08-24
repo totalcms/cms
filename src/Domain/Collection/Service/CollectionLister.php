@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Collection\Service;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 
-final class CollectionLister
+final readonly class CollectionLister
 {
 	private CollectionRepository $storage;
 

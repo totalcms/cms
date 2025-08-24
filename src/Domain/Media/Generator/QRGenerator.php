@@ -12,7 +12,7 @@ use BaconQrCode\Writer;
 // ---------------------------------------------------------------------------------
 class QRGenerator
 {
-	private Writer $writer;
+	private readonly Writer $writer;
 
 	public function __construct(int $size = 512)
 	{

@@ -51,25 +51,25 @@ final class TotalCMSTwigAdapter
 	public string $clearcache;
 
 	public function __construct(
-		private Config $config,
-		private IndexReader $indexReader,
-		private IndexSearcher $indexSearcher,
-		private ObjectFetcher $objectFetcher,
-		private CollectionLister $collectionLister,
-		private CollectionFetcher $collectionFetcher,
-		private SchemaLister $schemaLister,
-		private SchemaFetcher $schemaFetcher,
-		private DeckCompatibilityChecker $deckCompatibilityChecker,
+		private readonly Config $config,
+		private readonly IndexReader $indexReader,
+		private readonly IndexSearcher $indexSearcher,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly CollectionLister $collectionLister,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly SchemaLister $schemaLister,
+		private readonly SchemaFetcher $schemaFetcher,
+		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
 		public LogAnalyzer $logger,
-		private PhpSession $session,
-		private AccessManager $accessManager,
-		private FileAccessManager $fileAccessManager,
+		private readonly PhpSession $session,
+		private readonly AccessManager $accessManager,
+		private readonly FileAccessManager $fileAccessManager,
 		public ImageCacheService $imageCacheService,
 		public GridRenderer $grid,
-		private DevModeManager $devModeManager,
+		private readonly DevModeManager $devModeManager,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;

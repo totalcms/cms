@@ -13,7 +13,7 @@ use TotalCMS\Support\Config;
 /**
  * Action.
  */
-final class AuthLoginSubmitAction
+final readonly class AuthLoginSubmitAction
 {
 	public const MAX_LOGIN_ATTEMPTS = 10;
 

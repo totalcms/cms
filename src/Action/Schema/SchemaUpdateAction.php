@@ -8,7 +8,7 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\SchemaMetaTransformer;
 
-final class SchemaUpdateAction
+final readonly class SchemaUpdateAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

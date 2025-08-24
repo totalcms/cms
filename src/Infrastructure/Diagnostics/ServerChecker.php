@@ -31,8 +31,8 @@ class ServerChecker
 	private const PHP_VERSION = '8.2.0';
 
 	public function __construct(
-		private BundleChecker $bundleChecker,
-		private Config $config,
+		private readonly BundleChecker $bundleChecker,
+		private readonly Config $config,
 	) {
 	}
 

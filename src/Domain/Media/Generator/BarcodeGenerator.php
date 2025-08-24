@@ -9,7 +9,7 @@ use Com\Tecnick\Barcode\Barcode;
  */
 class BarcodeGenerator
 {
-	private Barcode $barcode;
+	private readonly Barcode $barcode;
 
 	public function __construct()
 	{

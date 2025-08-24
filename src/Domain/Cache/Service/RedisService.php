@@ -10,12 +10,12 @@ use TotalCMS\Support\Config;
  */
 final class RedisService implements CacheInterface
 {
-	private bool $enabled;
-	private string $host;
-	private int $port;
-	private int $timeout;
-	private ?string $password;
-	private int $database;
+	private readonly bool $enabled;
+	private readonly string $host;
+	private readonly int $port;
+	private readonly int $timeout;
+	private readonly ?string $password;
+	private readonly int $database;
 	private ?\Redis $redis = null;
 
 	public function __construct(

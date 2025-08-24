@@ -7,7 +7,7 @@ use TotalCMS\Support\Config;
 /**
  * Service for creating zip files of collection data including all files and folders.
  */
-final class CollectionZipper
+final readonly class CollectionZipper
 {
 	public function __construct(
 		private Config $config,

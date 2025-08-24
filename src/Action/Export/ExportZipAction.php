@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Export\Service\CollectionZipper;
 
-final class ExportZipAction
+final readonly class ExportZipAction
 {
 	public function __construct(
 		private CollectionZipper $collectionZipper,

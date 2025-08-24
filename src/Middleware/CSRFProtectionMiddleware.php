@@ -15,7 +15,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
  * Validates CSRF tokens for state-changing HTTP methods (POST, PUT, DELETE, PATCH)
  * to prevent Cross-Site Request Forgery attacks.
  */
-final class CSRFProtectionMiddleware implements MiddlewareInterface
+final readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 {
 	/**
 	 * HTTP methods that require CSRF protection.

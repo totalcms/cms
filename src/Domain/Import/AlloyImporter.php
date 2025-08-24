@@ -12,16 +12,16 @@ use Webuni\FrontMatter\FrontMatter;
 
 final class AlloyImporter
 {
-	private LoggerInterface $logger;
-	private FrontMatter $frontMatterParser;
-	private \Parsedown $markdownParser;
+	private readonly LoggerInterface $logger;
+	private readonly FrontMatter $frontMatterParser;
+	private readonly \Parsedown $markdownParser;
 	private int $importCount = 0;
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private CollectionFactory $collectionFactory,
-		private CollectionRepository $collectionRepository,
-		private JobQueuer $jobQueuer,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionFactory $collectionFactory,
+		private readonly CollectionRepository $collectionRepository,
+		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger            = $loggerFactory->addFileHandler('importer.log')->createLogger('alloy-importer');

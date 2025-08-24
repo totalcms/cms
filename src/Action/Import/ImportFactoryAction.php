@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class ImportFactoryAction
+final readonly class ImportFactoryAction
 {
 	private JsonRenderer $renderer;
 	private FactoryImporter $importer;

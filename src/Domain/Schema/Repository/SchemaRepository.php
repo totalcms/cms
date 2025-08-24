@@ -28,9 +28,9 @@ final class SchemaRepository extends StorageRepository
 	 */
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		private SchemaFactory $factory,
-		private CacheManager $cacheManager,
-		private Config $config,
+		private readonly SchemaFactory $factory,
+		private readonly CacheManager $cacheManager,
+		private readonly Config $config,
 	) {
 		parent::__construct($filesystem);
 	}

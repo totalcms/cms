@@ -9,7 +9,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class ObjectFetchAction
+final readonly class ObjectFetchAction
 {
 	private JsonRenderer $renderer;
 	private ObjectFetcher $objectFetcher;

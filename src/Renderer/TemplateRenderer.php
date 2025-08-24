@@ -8,7 +8,7 @@ use Slim\Views\PhpRenderer;
 /**
  * A HTML template renderer.
  */
-final class TemplateRenderer
+final readonly class TemplateRenderer
 {
 	/**
 	 * The constructor.

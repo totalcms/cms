@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-final class UploadRemover
+final readonly class UploadRemover
 {
 	public function __construct(
 		private PropertyRepository $storage,

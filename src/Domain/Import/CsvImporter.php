@@ -14,16 +14,16 @@ use TotalCMS\Factory\LoggerFactory;
 
 final class CsvImporter
 {
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 	private string $collection;
 	private bool $queueJobs = false;
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private ObjectFetcher $objectFetcher,
-		private ObjectImporter $objectImporter,
-		private IndexBuilder $indexBuilder,
-		private JobQueuer $jobQueuer,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly ObjectImporter $objectImporter,
+		private readonly IndexBuilder $indexBuilder,
+		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('csv-importer');

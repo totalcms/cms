@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class ObjectSaveAction
+final readonly class ObjectSaveAction
 {
 	private JsonRenderer $renderer;
 	private ObjectSaver $service;

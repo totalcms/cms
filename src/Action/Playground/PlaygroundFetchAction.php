@@ -9,7 +9,7 @@ use TotalCMS\Domain\Playground\Service\PlaygroundFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class PlaygroundFetchAction
+final readonly class PlaygroundFetchAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

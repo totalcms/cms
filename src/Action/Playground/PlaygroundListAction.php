@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Playground\Service\PlaygroundLister;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class PlaygroundListAction
+final readonly class PlaygroundListAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

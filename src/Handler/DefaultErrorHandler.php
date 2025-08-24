@@ -15,7 +15,7 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Default Error Renderer.
  */
-final class DefaultErrorHandler
+final readonly class DefaultErrorHandler
 {
 	private JsonRenderer $renderer;
 	private ResponseFactoryInterface $responseFactory;

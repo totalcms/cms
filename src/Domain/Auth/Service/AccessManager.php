@@ -9,17 +9,17 @@ use TotalCMS\Support\Config;
 
 final class AccessManager
 {
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 
-	private string $defaultAuthCollection;
+	private readonly string $defaultAuthCollection;
 	private string $userID;
 	private string $userCollection;
 
 	public function __construct(
-		private PhpSession $session,
-		private Config $config,
-		private UserValidationService $userValidator,
-		private LoggerFactory $loggerFactory,
+		private readonly PhpSession $session,
+		private readonly Config $config,
+		private readonly UserValidationService $userValidator,
+		private readonly LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('access');
 

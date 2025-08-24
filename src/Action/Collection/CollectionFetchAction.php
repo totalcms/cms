@@ -9,7 +9,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final class CollectionFetchAction
+final readonly class CollectionFetchAction
 {
 	private JsonRenderer $renderer;
 	private CollectionFetcher $service;

@@ -18,9 +18,9 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 final class CollectionRepository extends StorageRepository
 {
 	private const META_FILE = '.meta.json';
-	private CollectionFactory $factory;
-	private SchemaValidator $validator;
-	private CacheManager $cacheManager;
+	private readonly CollectionFactory $factory;
+	private readonly SchemaValidator $validator;
+	private readonly CacheManager $cacheManager;
 
 	/**
 	 * The constructor.

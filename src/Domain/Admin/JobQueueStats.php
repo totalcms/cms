@@ -6,7 +6,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class JobQueueStats
+final readonly class JobQueueStats
 {
 	public function __construct(
 		private string $api,

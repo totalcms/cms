@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\JobQueue\Repository;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
-final class JobRepository
+final readonly class JobRepository
 {
 	private \PDO $db;
 	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue';

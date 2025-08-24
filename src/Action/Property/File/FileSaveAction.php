@@ -9,7 +9,7 @@ use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class FileSaveAction
+final readonly class FileSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

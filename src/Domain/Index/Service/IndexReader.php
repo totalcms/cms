@@ -8,7 +8,7 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 /**
  * Service.
  */
-final class IndexReader
+final readonly class IndexReader
 {
 	public function __construct(
 		private IndexRepository $storage,

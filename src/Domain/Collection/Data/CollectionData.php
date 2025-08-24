@@ -19,7 +19,7 @@ final class CollectionData
 		'schemas',
 	];
 
-	private Serializer $serializer;
+	private readonly Serializer $serializer;
 
 	public string $id;                        // collection id
 	public string $name;                      // collection name

@@ -18,7 +18,7 @@ final class FormGridBuilder
 	/** @var array<string> */
 	private array $lines = [];
 
-	public function __construct(private string $formgrid = '')
+	public function __construct(private readonly string $formgrid = '')
 	{
 		$this->lines = $this->cleanupFormGrid();
 	}

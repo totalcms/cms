@@ -9,7 +9,7 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 /**
  * Service.
  */
-final class CollectionSaver
+final readonly class CollectionSaver
 {
 	public function __construct(
 		private CollectionRepository $storage,

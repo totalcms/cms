@@ -13,12 +13,12 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Enable development mode for 3 hours.
  */
-final class DevModeEnableAction
+final readonly class DevModeEnableAction
 {
 	public function __construct(
-		private readonly DevModeManager $devModeManager,
-		private readonly CacheManager $cacheManager,
-		private readonly JsonRenderer $jsonRenderer,
+		private DevModeManager $devModeManager,
+		private CacheManager $cacheManager,
+		private JsonRenderer $jsonRenderer,
 	) {
 	}
 

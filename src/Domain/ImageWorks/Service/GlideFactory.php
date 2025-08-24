@@ -11,7 +11,7 @@ use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
-final class GlideFactory
+final readonly class GlideFactory
 {
 	public const CACHEDIR  = '.cache';
 	public const PALETTE   = 'palette';

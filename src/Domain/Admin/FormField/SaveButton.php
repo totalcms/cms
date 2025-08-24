@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class SaveButton
+final readonly class SaveButton
 {
 	public function __construct(
 		private string $label = 'Save',

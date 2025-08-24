@@ -50,13 +50,13 @@ final class CacheManager
 	private array $cacheServices = [];
 
 	public function __construct(
-		private FilesystemService $filesystemService,
-		private OPcacheService $opcacheService,
-		private RedisService $redisService,
-		private MemcachedService $memcachedService,
-		private APCuService $apcuService,
-		private TextWatermarkFactory $textWatermarkFactory,
-		private DevModeManager $devModeManager,
+		private readonly FilesystemService $filesystemService,
+		private readonly OPcacheService $opcacheService,
+		private readonly RedisService $redisService,
+		private readonly MemcachedService $memcachedService,
+		private readonly APCuService $apcuService,
+		private readonly TextWatermarkFactory $textWatermarkFactory,
+		private readonly DevModeManager $devModeManager,
 	) {
 		// Initialize cache services and version
 		$this->cacheServices = [

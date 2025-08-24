@@ -14,7 +14,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 final class IndexRepository extends StorageRepository
 {
 	private const INDEX_FILE = '.index.json';
-	private CacheManager $cacheManager;
+	private readonly CacheManager $cacheManager;
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,

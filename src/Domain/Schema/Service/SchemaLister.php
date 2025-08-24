@@ -8,7 +8,7 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 /**
  * Service.
  */
-final class SchemaLister
+final readonly class SchemaLister
 {
 	private SchemaRepository $storage;
 

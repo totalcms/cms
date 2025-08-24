@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 
-final class TemplateExistsAction
+final readonly class TemplateExistsAction
 {
 	private TemplateFetcher $templateFetcher;
 

@@ -21,8 +21,8 @@ final class DevModeMiddleware implements MiddlewareInterface
 	private static bool $isDevModeActive = false;
 
 	public function __construct(
-		private DevModeManager $devModeManager,
-		private OPcacheService $opcacheService,
+		private readonly DevModeManager $devModeManager,
+		private readonly OPcacheService $opcacheService,
 	) {
 	}
 

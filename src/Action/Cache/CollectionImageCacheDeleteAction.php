@@ -10,7 +10,7 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Action to clear image cache for a specific collection.
  */
-final class CollectionImageCacheDeleteAction
+final readonly class CollectionImageCacheDeleteAction
 {
 	public function __construct(
 		private ImageCacheService $imageCacheService,

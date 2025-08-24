@@ -8,7 +8,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final class CollectionListAction
+final readonly class CollectionListAction
 {
 	private JsonRenderer $renderer;
 	private CollectionLister $collectionListService;

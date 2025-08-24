@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Sitemap\Data;
 use Thepixeldeveloper\Sitemap\Drivers\XmlWriterDriver;
 use Thepixeldeveloper\Sitemap\Urlset;
 
-final class Sitemap
+final readonly class Sitemap
 {
 	private Urlset $urlset;
 

@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 
-final class LastLoginUpdateService
+final readonly class LastLoginUpdateService
 {
 	public function __construct(
 		private ObjectPatcher $objectPatcher,

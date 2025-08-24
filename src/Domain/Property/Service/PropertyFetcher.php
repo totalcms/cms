@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\PropertyData;
 
-final class PropertyFetcher
+final readonly class PropertyFetcher
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

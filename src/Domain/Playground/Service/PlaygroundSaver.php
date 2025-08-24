@@ -6,7 +6,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
-final class PlaygroundSaver
+final readonly class PlaygroundSaver
 {
 	public function __construct(
 		private PlaygroundLister $playgroundLister,

@@ -11,7 +11,7 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 /**
  * Creates a new item in a deck property.
  */
-final class DeckItemCreateAction
+final readonly class DeckItemCreateAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

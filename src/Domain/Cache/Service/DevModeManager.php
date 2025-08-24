@@ -9,7 +9,7 @@ namespace TotalCMS\Domain\Cache\Service;
  */
 final class DevModeManager
 {
-	private string $devModeFile;
+	private readonly string $devModeFile;
 	private int $devModeDuration = 10800; // 3 hours in seconds
 
 	public function __construct()

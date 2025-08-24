@@ -7,7 +7,7 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 /**
  * Service.
  */
-final class PropertyCacheCleaner
+final readonly class PropertyCacheCleaner
 {
 	public function __construct(private PropertyRepository $storage)
 	{

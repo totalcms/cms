@@ -8,7 +8,7 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 /**
  * Service.
  */
-final class TemplateSaver
+final readonly class TemplateSaver
 {
 	private TemplateRepository $storage;
 

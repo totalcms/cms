@@ -11,7 +11,7 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 /**
  * Updates an existing item in a deck property.
  */
-final class DeckItemUpdateAction
+final readonly class DeckItemUpdateAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

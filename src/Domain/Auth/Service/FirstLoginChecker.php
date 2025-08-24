@@ -7,7 +7,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
 
-final class FirstLoginChecker
+final readonly class FirstLoginChecker
 {
 	private string $collection;
 

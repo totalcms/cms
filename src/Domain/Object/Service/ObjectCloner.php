@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final class ObjectCloner
+final readonly class ObjectCloner
 {
 	public function __construct(
 		private ObjectRepository $storage,

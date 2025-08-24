@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadRemover;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class FroalaDeleteFileAction
+final readonly class FroalaDeleteFileAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

@@ -19,7 +19,7 @@ class CollectionSorter
 	 * @param array<array<string,mixed>> $collection
 	 */
 	public function __construct(
-		private array $collection,
+		private readonly array $collection,
 	) {
 	}
 

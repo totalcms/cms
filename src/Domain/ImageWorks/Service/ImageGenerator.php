@@ -21,10 +21,10 @@ final class ImageGenerator
 	private array $params;
 
 	public function __construct(
-		private StorageAdapterInterface $filesystem,
-		private PropertyFetcher $propertyFetcher,
-		private GlideFactory $glideFactory,
-		private WatermarkFactory $watermarkFactory,
+		private readonly StorageAdapterInterface $filesystem,
+		private readonly PropertyFetcher $propertyFetcher,
+		private readonly GlideFactory $glideFactory,
+		private readonly WatermarkFactory $watermarkFactory,
 	) {
 	}
 

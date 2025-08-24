@@ -15,9 +15,9 @@ use Psr\Log\LoggerInterface;
  */
 final class LoggerFactory
 {
-	private string $path;
+	private readonly string $path;
 
-	private Level $level;
+	private readonly Level $level;
 
 	/**
 	 * @var array<HandlerInterface>

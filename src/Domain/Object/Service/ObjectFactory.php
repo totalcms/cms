@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 /**
  * Service.
  */
-final class ObjectFactory
+final readonly class ObjectFactory
 {
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,

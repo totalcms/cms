@@ -12,7 +12,7 @@ final class LazyTwigGlobal
 	private bool $loaded    = false;
 
 	public function __construct(
-		private \Closure $factory,
+		private readonly \Closure $factory,
 	) {
 	}
 

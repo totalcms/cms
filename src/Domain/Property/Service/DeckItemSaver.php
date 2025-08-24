@@ -10,7 +10,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 /**
  * Service for saving new deck items.
  */
-final class DeckItemSaver
+final readonly class DeckItemSaver
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

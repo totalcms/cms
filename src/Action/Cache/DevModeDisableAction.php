@@ -12,11 +12,11 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Disable development mode.
  */
-final class DevModeDisableAction
+final readonly class DevModeDisableAction
 {
 	public function __construct(
-		private readonly DevModeManager $devModeManager,
-		private readonly JsonRenderer $jsonRenderer,
+		private DevModeManager $devModeManager,
+		private JsonRenderer $jsonRenderer,
 	) {
 	}
 

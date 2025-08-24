@@ -18,13 +18,13 @@ use Twig\TwigFunction;
 final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterface
 {
 	public function __construct(
-		private TotalCMSTwigAdapter $adapter,
-		private TotalCMSTwigPatterns $patterns,
-		private FakerFactory $faker,
-		private QRCodeTwigAdapter $generator,
-		private BarcodeTwigAdapter $barcode,
-		private PhpSession $session,
-		private CSRFTokenManager $csrfManager,
+		private readonly TotalCMSTwigAdapter $adapter,
+		private readonly TotalCMSTwigPatterns $patterns,
+		private readonly FakerFactory $faker,
+		private readonly QRCodeTwigAdapter $generator,
+		private readonly BarcodeTwigAdapter $barcode,
+		private readonly PhpSession $session,
+		private readonly CSRFTokenManager $csrfManager,
 	) {
 	}
 

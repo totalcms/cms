@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 
-final class ObjectSaver
+final readonly class ObjectSaver
 {
 	public function __construct(
 		private ObjectRepository $storage,

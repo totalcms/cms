@@ -13,8 +13,8 @@ final class SchemaSaver
 		private SchemaRepository $storage,
 		private SchemaFactory $factory,
 		private SchemaValidator $validator,
-		private IndexBuilder $indexBuilder,
-		private CollectionLister $collectionLister,
+		private readonly IndexBuilder $indexBuilder,
+		private readonly CollectionLister $collectionLister,
 	) {
 		$this->storage   = $storage;
 		$this->factory   = $factory;
