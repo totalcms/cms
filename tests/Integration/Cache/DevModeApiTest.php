@@ -11,6 +11,7 @@ use TotalCMS\Action\Cache\DevModeDisableAction;
 use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeStatusAction;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
@@ -45,6 +46,7 @@ final class DevModeApiTest extends TestCase
 			'tmpdir'    => '/tmp',
 			'cache'     => [
 				'filesystem' => ['enabled' => false, 'directory' => '/tmp/test-cache'],
+				'apcu' => ['enabled' => false, 'prefix' => 'test_dev_mode_'],
 			],
 			'logger'     => [],
 			'sentry'     => [],
@@ -65,6 +67,7 @@ final class DevModeApiTest extends TestCase
 		$opcacheService       = new OPcacheService();
 		$redisService         = new RedisService($config);
 		$memcachedService     = new MemcachedService($config);
+		$apcuService          = new APCuService($config);
 		$textWatermarkFactory = new TextWatermarkFactory(
 			new \TotalCMS\Domain\Storage\StorageFilesystemAdapter(
 				new \League\Flysystem\Filesystem(
@@ -79,6 +82,7 @@ final class DevModeApiTest extends TestCase
 			$opcacheService,
 			$redisService,
 			$memcachedService,
+			$apcuService,
 			$textWatermarkFactory,
 			$this->devModeManager
 		);

@@ -47,10 +47,25 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		$invalidPath = $this->tempDir . '/nonexistent.jpg';
 		
-		$basicData = ImageMetaReader::getBasicImageData($invalidPath);
+		// Set custom error handler to suppress expected getimagesize warning
+		$originalHandler = set_error_handler(function ($severity, $message, $file, $line) {
+			// Only suppress warnings from getimagesize about file not found
+			if ($severity === E_WARNING && str_contains($message, 'getimagesize') && str_contains($message, 'Failed to open stream')) {
+				return true; // Suppress this specific warning
+			}
+			// Let other errors through
+			return false;
+		});
 		
-		$this->assertIsArray($basicData, 'Should return array even for invalid files');
-		$this->assertEmpty($basicData, 'Should return empty array for invalid files');
+		try {
+			$basicData = ImageMetaReader::getBasicImageData($invalidPath);
+			
+			$this->assertIsArray($basicData, 'Should return array even for invalid files');
+			$this->assertEmpty($basicData, 'Should return empty array for invalid files');
+		} finally {
+			// Restore original error handler
+			restore_error_handler();
+		}
 	}
 
 	public function testGetMetaDataStructure(): void

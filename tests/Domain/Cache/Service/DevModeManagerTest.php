@@ -217,9 +217,22 @@ final class DevModeManagerTest extends TestCase
 		// Create a directory with the same name as the file to cause read error
 		mkdir($this->testDevModeFile);
 
-		$this->assertFalse($this->devModeManager->isDevModeActive());
+		// Set custom error handler to suppress expected file_get_contents warning
+		$originalHandler = set_error_handler(function ($severity, $message, $file, $line) {
+			// Only suppress warnings from file_get_contents about directory read errors
+			if ($severity === E_NOTICE && str_contains($message, 'file_get_contents') && str_contains($message, 'Is a directory')) {
+				return true; // Suppress this specific notice
+			}
+			// Let other errors through
+			return false;
+		});
 
-		// Clean up
-		rmdir($this->testDevModeFile);
+		try {
+			$this->assertFalse($this->devModeManager->isDevModeActive());
+		} finally {
+			// Restore original error handler and clean up
+			restore_error_handler();
+			rmdir($this->testDevModeFile);
+		}
 	}
 }

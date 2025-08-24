@@ -151,7 +151,8 @@
         "patches/parsedown-php84-nullable-fix.patch"
       ],
       "erusev/parsedown-extra": [
-        "patches/parsedown-extra-php84-nullable-fix.patch"
+        "patches/parsedown-extra-php84-nullable-fix.patch",
+        "patches/parsedown-extra-php84-callable-fix.patch"
       ]
     }
   }

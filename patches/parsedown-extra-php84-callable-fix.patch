@@ -1,0 +1,11 @@
+--- a/ParsedownExtra.php
++++ b/ParsedownExtra.php
+@@ -394,7 +394,7 @@ class ParsedownExtra extends Parsedown
+             ),
+         );
+ 
+-        uasort($this->DefinitionData['Footnote'], 'self::sortFootnotes');
++        uasort($this->DefinitionData['Footnote'], [$this, 'sortFootnotes']);
+ 
+         foreach ($this->DefinitionData['Footnote'] as $definitionId => $DefinitionData)
+         {
