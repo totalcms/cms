@@ -298,8 +298,8 @@ class ImageMetaReader
 				}
 
 				// Extract keywords from dc:subject
-                // Extract individual keywords from RDF bag/seq
-                if (preg_match('/<dc:subject>(.*?)<\/dc:subject>/s', $xmp, $subjectMatch) && preg_match_all('/<rdf:li>(.*?)<\/rdf:li>/', $subjectMatch[1], $keywordMatches)) {
+				// Extract individual keywords from RDF bag/seq
+				if (preg_match('/<dc:subject>(.*?)<\/dc:subject>/s', $xmp, $subjectMatch) && preg_match_all('/<rdf:li>(.*?)<\/rdf:li>/', $subjectMatch[1], $keywordMatches)) {
 					$xmpData['keywords'] = array_map('trim', $keywordMatches[1]);
 				}
 
@@ -325,13 +325,12 @@ class ImageMetaReader
 	}
 
 	/**
-     * Extract IPTC location data from image file.
-     * Uses getimagesize() to access APP13 section which contains IPTC data.
-     *
-     *
-     * @return array<string,string>
-     */
-    private static function extractIptcLocation(string $imagepath): array
+	 * Extract IPTC location data from image file.
+	 * Uses getimagesize() to access APP13 section which contains IPTC data.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function extractIptcLocation(string $imagepath): array
 	{
 		$locationData = [];
 

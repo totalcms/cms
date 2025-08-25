@@ -3,14 +3,13 @@
 namespace TotalCMS\Domain\Property\Data;
 
 use matthieumastadenis\couleur\ColorFactory;
+use matthieumastadenis\couleur\colors\Hsl;
+use matthieumastadenis\couleur\colors\OkLch;
+use matthieumastadenis\couleur\colors\Rgb;
 use matthieumastadenis\couleur\ColorSpace;
-use \matthieumastadenis\couleur\colors\Rgb;
-use \matthieumastadenis\couleur\colors\Hsl;
-use \matthieumastadenis\couleur\colors\OkLch;
 
 use function matthieumastadenis\couleur\utils\okLch\oklchChange;
 use function matthieumastadenis\couleur\utils\okLch\oklchToHex;
-
 
 /**
  * Color property data.
