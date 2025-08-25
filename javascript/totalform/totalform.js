@@ -6,6 +6,7 @@ import Checkbox from './checkbox';
 import RadioField from './radio';
 import Textarea from './textarea';
 import NumberField from './number';
+import PriceField from './price';
 import ColorField from './color';
 import DateField from './date';
 import DeckField from './deck';
@@ -236,6 +237,9 @@ export default class TotalForm {
 
             case "number":
                 return new NumberField(field, options);
+
+            case "price":
+                return new PriceField(field, options);
 
             case "color":
                 return new ColorField(field, options);

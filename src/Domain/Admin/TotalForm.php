@@ -52,6 +52,7 @@ abstract class TotalForm
 		],
 		'Number Fields' => [
 			'number',
+			'price',
 			'range',
 		],
 		'Date Fields' => [
@@ -94,6 +95,7 @@ abstract class TotalForm
 		'number',
 		'password',
 		'phone',
+		'price',
 		'radio',
 		'range',
 		'select',
