@@ -22,7 +22,7 @@ final readonly class SettingsSaver
 	{
 		unset($settings['csrf_token'], $settings['csrf_token_name']);
 
-		$settings           = array_filter($settings, fn (string $value): bool => $value !== '');
+		$settings           = array_filter($settings, fn (mixed $value): bool => $value !== '');
 		$settings['sentry'] = isset($settings['sentry']);
 
 		$returnSettings = $settings;

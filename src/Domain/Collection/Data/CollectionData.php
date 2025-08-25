@@ -24,25 +24,25 @@ final class CollectionData
 	public string $id;                        // collection id
 	public string $name;                      // collection name
 	public string $schema;                    // schema name
-	public string $category;                  // collection category for grouping in the admin
-	public string $url              = '';                  // collection url to object page minus the slug
-	public string $description      = '';          // collection description
-	public string $labelPlural      = '';          // custom plural label for collection items
-	public string $labelSingular    = '';        // custom singular label for collection items
-	public string $sortBy           = 'id';             // the property to sort the collection by
-	public bool $reverseSort        = false;         // reverse the sort order
+	public string $category = '';             // collection category for grouping in the admin
+	public string $url = '';                  // collection url to object page minus the slug
+	public string $description = '';          // collection description
+	public string $labelPlural = '';          // custom plural label for collection items
+	public string $labelSingular = '';        // custom singular label for collection items
+	public string $sortBy = 'id';             // the property to sort the collection by
+	public bool $reverseSort = false;         // reverse the sort order
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
-	public bool $prettyUrl          = false;           // use pretty URLs for the collection
-	public int $count               = 0;                    // total number of objects created in this collection
+	public bool $prettyUrl = false;           // use pretty URLs for the collection
+	public int $count = 0;                    // total number of objects created in this collection
 
 	/** @var array<string> */
-	public array $groups;        // access groups that can access this collection
+	public array $groups = [];        // access groups that can access this collection
 
 	/** @var array<string,array<string,mixed>> */
-	public array $properties;        // Rules for fields defined in schemaToMetaProps
+	public array $properties = [];        // Rules for fields defined in schemaToMetaProps
 
 	/** @var array<string,array<string,mixed>> */
-	public array $customProperties;  // Custom properties for specific objects
+	public array $customProperties = [];  // Custom properties for specific objects
 
 	public function __construct()
 	{
