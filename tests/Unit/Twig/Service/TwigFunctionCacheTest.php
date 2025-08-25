@@ -1,0 +1,316 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Twig\Service;
+
+use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Twig\Service\TwigFunctionCache;
+
+final class TwigFunctionCacheTest extends TestCase
+{
+	protected function setUp(): void
+	{
+		// Clear cache before each test
+		TwigFunctionCache::clear();
+	}
+
+	protected function tearDown(): void
+	{
+		// Clear cache after each test to prevent test interference
+		TwigFunctionCache::clear();
+	}
+
+	public function testRememberCachesFunction(): void
+	{
+		$callCount = 0;
+		$function = function () use (&$callCount) {
+			$callCount++;
+			return 'test_result';
+		};
+
+		// First call should execute function
+		$result1 = TwigFunctionCache::remember('test_key', $function);
+		$this->assertEquals('test_result', $result1);
+		$this->assertEquals(1, $callCount);
+
+		// Second call should return cached result
+		$result2 = TwigFunctionCache::remember('test_key', $function);
+		$this->assertEquals('test_result', $result2);
+		$this->assertEquals(1, $callCount); // Function not called again
+	}
+
+	public function testRememberWithArguments(): void
+	{
+		$function = function ($a, $b) {
+			return $a + $b;
+		};
+
+		$result1 = TwigFunctionCache::remember('math', $function, [5, 3]);
+		$result2 = TwigFunctionCache::remember('math', $function, [10, 2]);
+		$result3 = TwigFunctionCache::remember('math', $function, [5, 3]); // Same args
+
+		$this->assertEquals(8, $result1);
+		$this->assertEquals(12, $result2);
+		$this->assertEquals(8, $result3); // Should be cached
+	}
+
+	public function testRememberWithComplexArguments(): void
+	{
+		$function = function ($data) {
+			return count($data);
+		};
+
+		$args1 = [['a', 'b', 'c']];
+		$args2 = [['x', 'y']];
+
+		$result1 = TwigFunctionCache::remember('count', $function, $args1);
+		$result2 = TwigFunctionCache::remember('count', $function, $args2);
+		$result3 = TwigFunctionCache::remember('count', $function, $args1); // Same args
+
+		$this->assertEquals(3, $result1);
+		$this->assertEquals(2, $result2);
+		$this->assertEquals(3, $result3); // Should be cached
+	}
+
+	public function testHasReturnsTrueForCachedItems(): void
+	{
+		$function = function () {
+			return 'cached_value';
+		};
+
+		$this->assertFalse(TwigFunctionCache::has('test_key'));
+
+		TwigFunctionCache::remember('test_key', $function);
+		
+		$this->assertTrue(TwigFunctionCache::has('test_key'));
+	}
+
+	public function testHasReturnsFalseForUncachedItems(): void
+	{
+		$this->assertFalse(TwigFunctionCache::has('nonexistent_key'));
+	}
+
+	public function testHasWithArguments(): void
+	{
+		$function = function ($value) {
+			return $value * 2;
+		};
+
+		$this->assertFalse(TwigFunctionCache::has('multiply', [5]));
+
+		TwigFunctionCache::remember('multiply', $function, [5]);
+		
+		$this->assertTrue(TwigFunctionCache::has('multiply', [5]));
+		$this->assertFalse(TwigFunctionCache::has('multiply', [10])); // Different args
+	}
+
+	public function testClearRemovesAllCachedItems(): void
+	{
+		$function = function ($value) {
+			return $value;
+		};
+
+		TwigFunctionCache::remember('key1', $function, ['value1']);
+		TwigFunctionCache::remember('key2', $function, ['value2']);
+
+		$this->assertTrue(TwigFunctionCache::has('key1', ['value1']));
+		$this->assertTrue(TwigFunctionCache::has('key2', ['value2']));
+
+		TwigFunctionCache::clear();
+
+		$this->assertFalse(TwigFunctionCache::has('key1', ['value1']));
+		$this->assertFalse(TwigFunctionCache::has('key2', ['value2']));
+	}
+
+	public function testForgetRemovesSpecificKey(): void
+	{
+		$function = function ($value) {
+			return $value;
+		};
+
+		TwigFunctionCache::remember('key1', $function, ['a']);
+		TwigFunctionCache::remember('key1', $function, ['b']);
+		TwigFunctionCache::remember('key2', $function, ['c']);
+
+		$this->assertTrue(TwigFunctionCache::has('key1', ['a']));
+		$this->assertTrue(TwigFunctionCache::has('key1', ['b']));
+		$this->assertTrue(TwigFunctionCache::has('key2', ['c']));
+
+		TwigFunctionCache::forget('key1');
+
+		$this->assertFalse(TwigFunctionCache::has('key1', ['a']));
+		$this->assertFalse(TwigFunctionCache::has('key1', ['b']));
+		$this->assertTrue(TwigFunctionCache::has('key2', ['c'])); // Different key should remain
+	}
+
+	public function testGetStatsReturnsCorrectCount(): void
+	{
+		$function = function ($value) {
+			return $value;
+		};
+
+		$stats = TwigFunctionCache::getStats();
+		$this->assertEquals(0, $stats['count']);
+
+		TwigFunctionCache::remember('key1', $function, ['value1']);
+		$stats = TwigFunctionCache::getStats();
+		$this->assertEquals(1, $stats['count']);
+
+		TwigFunctionCache::remember('key2', $function, ['value2']);
+		$stats = TwigFunctionCache::getStats();
+		$this->assertEquals(2, $stats['count']);
+	}
+
+	public function testGetStatsIncludesMemoryUsage(): void
+	{
+		$function = function ($value) {
+			return $value;
+		};
+
+		$stats = TwigFunctionCache::getStats();
+		$this->assertArrayHasKey('memory', $stats);
+		$this->assertIsInt($stats['memory']);
+		$this->assertGreaterThanOrEqual(0, $stats['memory']);
+	}
+
+	public function testRememberWithNoArguments(): void
+	{
+		$callCount = 0;
+		$function = function () use (&$callCount) {
+			$callCount++;
+			return 'no_args_result';
+		};
+
+		$result1 = TwigFunctionCache::remember('no_args', $function);
+		$result2 = TwigFunctionCache::remember('no_args', $function);
+
+		$this->assertEquals('no_args_result', $result1);
+		$this->assertEquals('no_args_result', $result2);
+		$this->assertEquals(1, $callCount); // Function called only once
+	}
+
+	public function testRememberWithEmptyArgumentsArray(): void
+	{
+		$function = function () {
+			return 'empty_args';
+		};
+
+		$result1 = TwigFunctionCache::remember('test', $function, []);
+		$result2 = TwigFunctionCache::remember('test', $function, []);
+
+		$this->assertEquals('empty_args', $result1);
+		$this->assertEquals('empty_args', $result2);
+	}
+
+	public function testCacheKeyGeneration(): void
+	{
+		$function = function ($value) {
+			return $value;
+		};
+
+		// Same key, different args should create different cache entries
+		TwigFunctionCache::remember('test', $function, ['a']);
+		TwigFunctionCache::remember('test', $function, ['b']);
+
+		$this->assertTrue(TwigFunctionCache::has('test', ['a']));
+		$this->assertTrue(TwigFunctionCache::has('test', ['b']));
+
+		$stats = TwigFunctionCache::getStats();
+		$this->assertEquals(2, $stats['count']);
+	}
+
+	public function testCacheWithDifferentDataTypes(): void
+	{
+		$function = function ($value) {
+			return gettype($value);
+		};
+
+		$result1 = TwigFunctionCache::remember('type', $function, [123]);
+		$result2 = TwigFunctionCache::remember('type', $function, ['123']);
+		$result3 = TwigFunctionCache::remember('type', $function, [true]);
+		$result4 = TwigFunctionCache::remember('type', $function, [null]);
+
+		$this->assertEquals('integer', $result1);
+		$this->assertEquals('string', $result2);
+		$this->assertEquals('boolean', $result3);
+		$this->assertEquals('NULL', $result4);
+	}
+
+	public function testCacheWithNestedArrayArguments(): void
+	{
+		$function = function ($data) {
+			return json_encode($data);
+		};
+
+		$complexData = [
+			'user' => ['name' => 'John', 'age' => 30],
+			'tags' => ['php', 'testing']
+		];
+
+		$result1 = TwigFunctionCache::remember('json', $function, [$complexData]);
+		$result2 = TwigFunctionCache::remember('json', $function, [$complexData]); // Same data
+
+		$this->assertIsString($result1);
+		$this->assertIsString($result2);
+		$this->assertEquals($result1, $result2);
+		$this->assertStringContainsString('John', $result1);
+		$this->assertStringContainsString('php', $result1);
+	}
+
+	public function testExceptionInFunctionIsNotCached(): void
+	{
+		$callCount = 0;
+		$function = function () use (&$callCount) {
+			$callCount++;
+			throw new \RuntimeException('Test exception');
+		};
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('Test exception');
+
+		try {
+			TwigFunctionCache::remember('exception', $function);
+		} catch (\RuntimeException $e) {
+			// First call should increment counter
+			$this->assertEquals(1, $callCount);
+			throw $e;
+		}
+	}
+
+	public function testMultipleInstancesShareCache(): void
+	{
+		// Since TwigFunctionCache uses static methods, all instances share the same cache
+		$function = function () {
+			return 'shared_result';
+		};
+
+		TwigFunctionCache::remember('shared', $function);
+		
+		$this->assertTrue(TwigFunctionCache::has('shared'));
+
+		// Clear from anywhere should clear for everyone
+		TwigFunctionCache::clear();
+		
+		$this->assertFalse(TwigFunctionCache::has('shared'));
+	}
+
+	public function testCachePerformanceWithLargeData(): void
+	{
+		$largeData = array_fill(0, 1000, 'large_data_item');
+		$function = function ($data) {
+			return array_sum(array_map('strlen', $data));
+		};
+
+		$start = microtime(true);
+		$result1 = TwigFunctionCache::remember('large', $function, [$largeData]);
+		$firstCallTime = microtime(true) - $start;
+
+		$start = microtime(true);
+		$result2 = TwigFunctionCache::remember('large', $function, [$largeData]);
+		$secondCallTime = microtime(true) - $start;
+
+		$this->assertEquals($result1, $result2);
+		$this->assertLessThan($firstCallTime, $secondCallTime); // Cache should be faster
+	}
+}
