@@ -19,8 +19,8 @@ final readonly class CollectionFetchAction
 	 * @param CollectionFetcher $service Collection service
 	 */
 	public function __construct(private JsonRenderer $renderer, private CollectionFetcher $service)
-    {
-    }
+	{
+	}
 
 	/**
 	 * Action.

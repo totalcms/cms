@@ -2,10 +2,11 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use TotalCMS\Domain\Collection\Data\CollectionData;
+
 final readonly class SchemaFetcher
 {
 	public function __construct(

@@ -12,8 +12,8 @@ use TotalCMS\Renderer\JsonRenderer;
 final readonly class ImportJumpStartAction
 {
 	public function __construct(private JumpStartImporter $jumpStartImporter, private JsonRenderer $renderer)
-    {
-    }
+	{
+	}
 
 	/**
 	 * Import jumpstart definition from uploaded JSON file.

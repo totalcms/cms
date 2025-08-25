@@ -64,7 +64,7 @@ final class FormGridBuilder
 			}
 
 			// Escape area names for CSS
-			$escapedAreas = array_map(fn(string $area): string => htmlspecialchars($area, ENT_QUOTES, 'UTF-8'), $columns);
+			$escapedAreas = array_map(fn (string $area): string => htmlspecialchars($area, ENT_QUOTES, 'UTF-8'), $columns);
 
 			$gridLines[]   = "'" . implode(' ', $escapedAreas) . "'";
 			$columnCount   = max($columnCount, count($columns));

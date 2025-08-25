@@ -11,16 +11,15 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 final readonly class CollectionFetcher
 {
 	public function __construct(private CollectionRepository $storage)
-    {
-    }
+	{
+	}
 
 	/**
-     * Fetch a collection.
-     *
-     *
-     * @return CollectionData
-     */
-    public function fetchCollection(string $collectionId): ?CollectionData
+	 * Fetch a collection.
+	 *
+	 * @return CollectionData
+	 */
+	public function fetchCollection(string $collectionId): ?CollectionData
 	{
 		if ($this->collectionExists($collectionId)) {
 			return $this->storage->getCollection($collectionId);

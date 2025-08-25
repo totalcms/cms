@@ -300,9 +300,9 @@ final class ImageProcessingSecurityTest extends TestCase
 		foreach ($exifData as $value) {
 			// Application should detect dangerous patterns in EXIF data
 			if (is_string($value) && (str_contains($value, '<script>') || str_contains($value, 'javascript:') || str_contains($value, 'DROP TABLE') || str_contains($value, '../'))) {
-                $hasDangerousContent = true;
-                break;
-            }
+				$hasDangerousContent = true;
+				break;
+			}
 		}
 
 		if ($hasDangerousContent) {

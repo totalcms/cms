@@ -25,11 +25,9 @@ final class ObjectRepository extends StorageRepository
 	}
 
 	/**
-     * Save an object.
-     *
-     *
-     */
-    public function saveObject(string $collection, ObjectData $object): void
+	 * Save an object.
+	 */
+	public function saveObject(string $collection, ObjectData $object): void
 	{
 		if (in_array($object->id, ObjectData::RESERVED_NAMES)) {
 			throw new \UnexpectedValueException('Cannot save object with a reserved name:' . $object->id);

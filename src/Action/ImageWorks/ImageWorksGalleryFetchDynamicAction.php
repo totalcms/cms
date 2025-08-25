@@ -14,13 +14,13 @@ final readonly class ImageWorksGalleryFetchDynamicAction
 	}
 
 	/**
-     * Action.
-     *
-     * @param array<string,string> $args The arguments
-     * @throws HttpNotFoundException
-     *
-     */
-    public function __invoke(
+	 * Action.
+	 *
+	 * @param array<string,string> $args The arguments
+	 *
+	 * @throws HttpNotFoundException
+	 */
+	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,

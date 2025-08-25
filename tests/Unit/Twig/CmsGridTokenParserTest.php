@@ -104,7 +104,7 @@ test('cmsgrid syntax error handling', function (): void {
 	$twig->addTokenParser(new CmsGridTokenParser());
 
 	// This should throw a Twig syntax error
-	expect(fn (): \Twig\TemplateWrapper => $twig->load('invalid'))
+	expect(fn (): Twig\TemplateWrapper => $twig->load('invalid'))
 		->toThrow(Twig\Error\SyntaxError::class);
 });
 
@@ -117,6 +117,6 @@ test('cmsgrid missing end tag handling', function (): void {
 	$twig->addTokenParser(new CmsGridTokenParser());
 
 	// This should throw a Twig syntax error
-	expect(fn (): \Twig\TemplateWrapper => $twig->load('no_end'))
+	expect(fn (): Twig\TemplateWrapper => $twig->load('no_end'))
 		->toThrow(Twig\Error\SyntaxError::class);
 });

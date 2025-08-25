@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use function Nekofar\Slim\Pest\postJson;
-use function Nekofar\Slim\Pest\get;
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
@@ -15,71 +14,70 @@ beforeEach(function (): void {
 function numberTestSchema(): array
 {
 	return [
-		'id' => 'numberbug-schema',
+		'id'          => 'numberbug-schema',
 		'description' => 'Schema for testing number field bug',
-		'properties' => [
+		'properties'  => [
 			'quantity' => [
-				'type' => 'number',
-				'label' => 'Quantity',
-				'field' => 'number',
-				'default' => 1
+				'type'    => 'number',
+				'label'   => 'Quantity',
+				'field'   => 'number',
+				'default' => 1,
 			],
 			'price' => [
-				'type' => 'number',
-				'label' => 'Price',
-				'field' => 'number',
-				'default' => 0.00
+				'type'    => 'number',
+				'label'   => 'Price',
+				'field'   => 'number',
+				'default' => 0.00,
 			],
 			'stock' => [
-				'type' => 'number',
-				'label' => 'Stock',
-				'field' => 'number',
-				'default' => 10
-			]
+				'type'    => 'number',
+				'label'   => 'Stock',
+				'field'   => 'number',
+				'default' => 10,
+			],
 		],
 		'required' => ['quantity', 'price', 'stock'],
-		'index' => ['quantity', 'price', 'stock']
+		'index'    => ['quantity', 'price', 'stock'],
 	];
 }
 
 function numberTestCollection(): array
 {
 	return [
-		'id' => 'numberbug',
-		'label' => 'Number Field Tests',
-		'schema' => 'numberbug-schema'
+		'id'     => 'numberbug',
+		'label'  => 'Number Field Tests',
+		'schema' => 'numberbug-schema',
 	];
 }
 
 it('reproduces the zero value bug in number fields', function (): void {
-	$schema = numberTestSchema();
+	$schema     = numberTestSchema();
 	$collection = numberTestCollection();
-	
+
 	// Create the schema and collection
 	postJson('/schemas', $schema)->assertOk();
 	postJson('/collections', $collection)->assertOk();
-	
+
 	try {
 		// Test object with zero values
 		$objectWithZeros = [
-			'id' => 'test-zeros-' . uniqid(),
+			'id'       => 'test-zeros-' . uniqid(),
 			'quantity' => 0,    // This should be saved as 0, not blank
-			'price' => 0.0,     // This should be saved as 0.0, not blank
-			'stock' => 0        // This should be saved as 0, not blank
+			'price'    => 0.0,     // This should be saved as 0.0, not blank
+			'stock'    => 0,        // This should be saved as 0, not blank
 		];
-		
+
 		// Save the object
 		$response = postJson('/collections/numberbug', $objectWithZeros);
 		$response->assertOk();
-		
+
 		$savedObject = json_decode($response->getBody()->getContents(), true);
-		
+
 		// Check if zero values were preserved (data is wrapped in Fractal transformer)
 		$data = $savedObject['data'];
 		expect($data['quantity'])->toBe(0, 'Zero integer should be preserved');
 		expect($data['price'])->toBe(0, 'Zero float should be preserved'); // JSON serializes 0.0 as 0 (integer)
 		expect($data['stock'])->toBe(0, 'Zero integer should be preserved');
-		
 	} finally {
 		// Clean up
 		if (file_exists(schemaPath('numberbug-schema'))) {
@@ -95,32 +93,31 @@ it('reproduces the zero value bug in number fields', function (): void {
 });
 
 it('tests that non-zero values work correctly', function (): void {
-	$schema = numberTestSchema();
+	$schema     = numberTestSchema();
 	$collection = numberTestCollection();
-	
-	// Create the schema and collection  
+
+	// Create the schema and collection
 	postJson('/schemas', $schema)->assertOk();
 	postJson('/collections', $collection)->assertOk();
-	
+
 	try {
 		// Test object with non-zero values
 		$objectWithValues = [
-			'id' => 'test-values',
+			'id'       => 'test-values',
 			'quantity' => 5,
-			'price' => 29.99,
-			'stock' => 100
+			'price'    => 29.99,
+			'stock'    => 100,
 		];
-		
+
 		// Save the object
-		$response = postJson('/collections/numberbug', $objectWithValues)->assertOk();
+		$response    = postJson('/collections/numberbug', $objectWithValues)->assertOk();
 		$savedObject = json_decode($response->getBody()->getContents(), true);
-		
+
 		// Check values were preserved (data is wrapped in Fractal transformer)
 		$data = $savedObject['data'];
 		expect($data['quantity'])->toBe(5);
 		expect($data['price'])->toBe(29.99);
 		expect($data['stock'])->toBe(100);
-		
 	} finally {
 		// Clean up
 		if (file_exists(schemaPath('numberbug-schema'))) {

@@ -33,7 +33,7 @@ final class JsonRenderer
 		$json = json_encode($data, $options);
 
 		$response = $response->withHeader('Content-Type', 'application/json');
-		$body = $response->getBody();
+		$body     = $response->getBody();
 		$body->rewind();
 		$body->write((string)$json);
 		$body->rewind();

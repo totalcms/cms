@@ -19,14 +19,13 @@ final readonly class FileSaveAction
 	}
 
 	/**
-     * File Save Action.
-     *
-     * @SuppressWarnings("PHPMD.ElseExpression")
-     *
-     * @param array<string,string> $args
-     *
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	 * File Save Action.
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @param array<string,string> $args
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$files = $request->getUploadedFiles();
 		$file  = $files[$args['property']] ?? null;
@@ -109,15 +108,15 @@ final readonly class FileSaveAction
 	}
 
 	/**
-     * Handle normal file upload with chunking support.
-     *
-     * @param array<string,mixed> $body
-     *
-     * @throws \RuntimeException If upload processing fails
-     *
-     * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
-     */
-    private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
+	 * Handle normal file upload with chunking support.
+	 *
+	 * @param array<string,mixed> $body
+	 *
+	 * @throws \RuntimeException If upload processing fails
+	 *
+	 * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
+	 */
+	private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
 	{
 		// Get chunk information from the request
 		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);

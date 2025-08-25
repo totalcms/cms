@@ -12,19 +12,19 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 final readonly class ObjectFetchAction
 {
 	public function __construct(private JsonRenderer $renderer, private ObjectFetcher $objectFetcher)
-    {
-    }
+	{
+	}
 
 	/**
-     * Action.
-     *
-     * @param array<string,string> $args The routing arguments
-     *
-     * @throws HttpNotFoundException
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	 * Action.
+	 *
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @throws HttpNotFoundException
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		try {
 			$object = $this->objectFetcher->fetchObject($args['collection'], $args['id']);

@@ -12,8 +12,8 @@ use TotalCMS\Renderer\JsonRenderer;
 final readonly class ImportJsonAction
 {
 	public function __construct(private JsonImporter $jsonImporter, private JsonRenderer $renderer)
-    {
-    }
+	{
+	}
 
 	/**
 	 * Action.

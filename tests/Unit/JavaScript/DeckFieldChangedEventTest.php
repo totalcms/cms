@@ -288,8 +288,8 @@ class MockDeckFieldForChangedEvent
 	private array $items                = [];
 
 	public function __construct(private readonly ?MockFormForChangedEvent $form = null)
-    {
-    }
+	{
+	}
 
 	public function addItem(): MockDeckItemForChangedEvent
 	{
@@ -361,7 +361,7 @@ class MockDeckFieldForChangedEvent
 		$this->changedEventCount++;
 
 		// Integrate with form if available
-		if ($this->form instanceof \Tests\Unit\JavaScript\MockFormForChangedEvent) {
+		if ($this->form instanceof MockFormForChangedEvent) {
 			$this->form->markAsUnsaved();
 			$this->form->triggerValidation();
 		}
@@ -390,8 +390,8 @@ class MockDeckFieldForChangedEvent
 class MockDeckItemForChangedEvent
 {
 	public function __construct(private readonly string $id)
-    {
-    }
+	{
+	}
 
 	public function getId(): string
 	{

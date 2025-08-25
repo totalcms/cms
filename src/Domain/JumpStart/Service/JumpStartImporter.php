@@ -244,9 +244,9 @@ final class JumpStartImporter
 
 		foreach ($objectData as $property => $value) {
 			if (is_string($value) && $this->factoryImporter->isFakerRule($value) && ($filterFakerRule === null || $filterFakerRule($value))) {
-                $factoryRules[$property] = $value;
-                continue;
-            }
+				$factoryRules[$property] = $value;
+				continue;
+			}
 			$staticData[$property] = $value;
 		}
 

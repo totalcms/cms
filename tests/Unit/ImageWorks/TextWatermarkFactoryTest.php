@@ -163,7 +163,8 @@ class TextWatermarkFactoryTest extends TestCase
 				if ($path === 'depot/watermark-fonts/depot/ModernFont.ttf') {
 					return false;
 				}
-                return $path === 'depot/watermark-fonts/depot/ModernFont.otf';
+
+				return $path === 'depot/watermark-fonts/depot/ModernFont.otf';
 			});
 
 		$this->mockFilesystem
@@ -192,7 +193,7 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->mockFilesystem
 			->expects($this->exactly(3))
 			->method('fileExists')
-			->willReturnCallback(fn($path): bool => !str_contains((string) $path, 'NonExistent'));
+			->willReturnCallback(fn ($path): bool => !str_contains((string)$path, 'NonExistent'));
 
 		$this->mockFilesystem
 			->expects($this->never())
@@ -221,7 +222,7 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->mockFilesystem
 			->expects($this->exactly(3))
 			->method('fileExists')
-			->willReturnCallback(fn($path): bool => str_contains((string) $path, 'custom-fonts') && str_contains((string) $path, 'TestFont') ? false : true);
+			->willReturnCallback(fn ($path): bool => str_contains((string)$path, 'custom-fonts') && str_contains((string)$path, 'TestFont') ? false : true);
 
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($customFactory);
@@ -240,9 +241,9 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->mockFilesystem
 			->expects($this->exactly(2))
 			->method('fileExists')
-			->willReturnCallback(fn($path): bool =>
-                // Return true for both the extension check and final path check
-                str_contains((string) $path, 'Dorsa.ttf'));
+			->willReturnCallback(fn ($path): bool =>
+				// Return true for both the extension check and final path check
+				str_contains((string)$path, 'Dorsa.ttf'));
 
 		$this->mockFilesystem
 			->expects($this->once())

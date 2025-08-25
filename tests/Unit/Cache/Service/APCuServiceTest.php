@@ -13,7 +13,7 @@ final class APCuServiceTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->config = $this->createTestConfig();
+		$this->config      = $this->createTestConfig();
 		$this->apcuService = new APCuService($this->config);
 	}
 
@@ -35,7 +35,7 @@ final class APCuServiceTest extends TestCase
 			$this->markTestSkipped('APCu is not available in this environment');
 		}
 
-		$key = 'test_key_' . uniqid();
+		$key   = 'test_key_' . uniqid();
 		$value = 'test_value_' . time();
 
 		// Test set operation
@@ -62,20 +62,20 @@ final class APCuServiceTest extends TestCase
 		}
 
 		$testCases = [
-			'array_data' => ['key1' => 'value1', 'key2' => ['nested' => 'data']],
-			'object_data' => (object)['prop1' => 'value1', 'prop2' => 123],
+			'array_data'   => ['key1' => 'value1', 'key2' => ['nested' => 'data']],
+			'object_data'  => (object)['prop1' => 'value1', 'prop2' => 123],
 			'numeric_data' => 42.5,
 			'boolean_data' => true,
-			'null_data' => null,
+			'null_data'    => null,
 		];
 
 		foreach ($testCases as $key => $testData) {
 			$cacheKey = 'complex_' . $key . '_' . uniqid();
-			
+
 			$this->assertTrue($this->apcuService->set($cacheKey, $testData, 60));
 			$retrievedData = $this->apcuService->get($cacheKey);
 			$this->assertEquals($testData, $retrievedData, "Should handle $key correctly");
-			
+
 			$this->apcuService->delete($cacheKey);
 		}
 	}
@@ -86,7 +86,7 @@ final class APCuServiceTest extends TestCase
 			$this->markTestSkipped('APCu is not available in this environment');
 		}
 
-		$key = 'ttl_test_' . uniqid();
+		$key   = 'ttl_test_' . uniqid();
 		$value = 'ttl_test_value';
 
 		// Test with 1 second TTL
@@ -95,7 +95,7 @@ final class APCuServiceTest extends TestCase
 
 		// Wait for expiration (note: this makes the test slower but necessary)
 		sleep(2);
-		
+
 		$expiredValue = $this->apcuService->get($key);
 		$this->assertNull($expiredValue, 'Value should expire after TTL');
 	}
@@ -109,7 +109,7 @@ final class APCuServiceTest extends TestCase
 		// Store multiple test values
 		$testKeys = [];
 		for ($i = 0; $i < 3; $i++) {
-			$key = 'clear_test_' . $i . '_' . uniqid();
+			$key        = 'clear_test_' . $i . '_' . uniqid();
 			$testKeys[] = $key;
 			$this->apcuService->set($key, "value_$i", 60);
 		}
@@ -163,7 +163,7 @@ final class APCuServiceTest extends TestCase
 		}
 
 		$stats = $this->apcuService->getStats();
-		
+
 		$this->assertIsArray($stats, 'Stats should return an array');
 		$this->assertTrue($stats['available'], 'Stats should indicate APCu is available');
 		$this->assertArrayHasKey('version', $stats);
@@ -171,7 +171,7 @@ final class APCuServiceTest extends TestCase
 		$this->assertArrayHasKey('memory_used', $stats);
 		$this->assertArrayHasKey('hit_rate', $stats);
 		$this->assertArrayHasKey('prefix', $stats);
-		
+
 		// Verify hit rate is properly formatted (1 decimal place)
 		if ($stats['hit_rate'] > 0) {
 			$this->assertIsFloat($stats['hit_rate']);
@@ -181,10 +181,10 @@ final class APCuServiceTest extends TestCase
 	public function testGetRecommendations(): void
 	{
 		$recommendations = $this->apcuService->getRecommendations();
-		
+
 		$this->assertIsArray($recommendations, 'Recommendations should return an array');
 		$this->assertNotEmpty($recommendations, 'Should provide recommendations');
-		
+
 		if (!$this->apcuService->isInstalled()) {
 			$this->assertStringContainsString('Install APCu extension', implode(' ', $recommendations));
 		}
@@ -192,7 +192,7 @@ final class APCuServiceTest extends TestCase
 
 	public function testIsActiveWhenDisabled(): void
 	{
-		$disabledConfig = $this->createTestConfig(['enabled' => false]);
+		$disabledConfig  = $this->createTestConfig(['enabled' => false]);
 		$disabledService = new APCuService($disabledConfig);
 		$this->assertFalse($disabledService->isActive(), 'Should not be active when disabled in config');
 	}
@@ -200,15 +200,15 @@ final class APCuServiceTest extends TestCase
 	public function testUnavailableServiceBehavior(): void
 	{
 		// Create service with disabled config to simulate unavailable APCu
-		$disabledConfig = $this->createTestConfig(['enabled' => false]);
+		$disabledConfig     = $this->createTestConfig(['enabled' => false]);
 		$unavailableService = new APCuService($disabledConfig);
-		
+
 		// Test graceful handling when unavailable
 		$this->assertFalse($unavailableService->set('key', 'value', 60));
 		$this->assertNull($unavailableService->get('key'));
 		$this->assertFalse($unavailableService->delete('key'));
 		$this->assertFalse($unavailableService->clear());
-		
+
 		$stats = $unavailableService->getStats();
 		$this->assertFalse($stats['available']);
 	}

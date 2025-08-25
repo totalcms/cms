@@ -624,12 +624,12 @@ final readonly class TotalFormFactory
 		// It will not be used, but it is required to create a FormField instance.
 		return new ObjectForm(
 			objectFetcher     : $this->objectFetcher,
-            collectionFetcher : $this->collectionFetcher,
+			collectionFetcher : $this->collectionFetcher,
 			collectionReader  : $this->collectionReader,
 			schemaFetcher     : $this->schemaFetcher,
 			schemaLister      : $this->schemaLister,
-            api               : $this->api,
-            collection        : 'text',
+			api               : $this->api,
+			collection        : 'text',
 		);
 	}
 

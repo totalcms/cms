@@ -20,12 +20,11 @@ final readonly class DeckItemSaver
 	}
 
 	/**
-     * Create a new deck item in an object property.
-     *
-     * @param array<string,mixed> $itemData
-     *
-     */
-    public function saveDeckItem(
+	 * Create a new deck item in an object property.
+	 *
+	 * @param array<string,mixed> $itemData
+	 */
+	public function saveDeckItem(
 		string $collection,
 		string $objectId,
 		string $propertyName,

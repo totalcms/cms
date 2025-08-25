@@ -17,12 +17,11 @@ final readonly class SchemaRemover
 	}
 
 	/**
-     * delete a schema.
-     *
-     *
-     * @throws \UnexpectedValueException
-     */
-    public function deleteSchema(string $id): bool
+	 * delete a schema.
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	public function deleteSchema(string $id): bool
 	{
 		$reserved = $this->storage->reservedSchemasIds();
 		if (in_array($id, $reserved)) {

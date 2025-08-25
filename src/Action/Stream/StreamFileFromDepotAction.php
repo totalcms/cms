@@ -34,7 +34,7 @@ final class StreamFileFromDepotAction extends StreamAction
 
 	protected function loadFile(): void
 	{
-		$this->accessManager->loadDepotFile($this->collection, $this->id, $this->property, $this->name, $this->subpath);
+		$this->accessManager->loadDepotFile($this->collection, $this->id, $this->property);
 	}
 
 	protected function incrementCount(FileData $file): void

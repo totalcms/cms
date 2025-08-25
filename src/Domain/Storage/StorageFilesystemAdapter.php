@@ -22,19 +22,19 @@ final readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	}
 
 	/**
-     * Access the flysystem filesystem.
-     */
-    public function flysystem(): FilesystemOperator
+	 * Access the flysystem filesystem.
+	 */
+	public function flysystem(): FilesystemOperator
 	{
 		return $this->filesystem;
 	}
 
 	/**
-     * Read file.
-     *
-     * @param string $location The path of file to read
-     */
-    public function read(string $location): string
+	 * Read file.
+	 *
+	 * @param string $location The path of file to read
+	 */
+	public function read(string $location): string
 	{
 		return $this->filesystem->read($location);
 	}
@@ -52,11 +52,11 @@ final readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	}
 
 	/**
-     * Delete file.
-     *
-     * @param string $location The path of file to delete
-     */
-    public function delete(string $location): bool
+	 * Delete file.
+	 *
+	 * @param string $location The path of file to delete
+	 */
+	public function delete(string $location): bool
 	{
 		$this->filesystem->delete($location);
 
@@ -64,11 +64,11 @@ final readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	}
 
 	/**
-     * Delete directory.
-     *
-     * @param string $location The path of directory to delete
-     */
-    public function deleteDirectory(string $location): bool
+	 * Delete directory.
+	 *
+	 * @param string $location The path of directory to delete
+	 */
+	public function deleteDirectory(string $location): bool
 	{
 		$this->filesystem->deleteDirectory($location);
 
@@ -117,12 +117,12 @@ final readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	}
 
 	/**
-     * Write file contents.
-     *
-     * @param string $location The path of file to write to
-     * @param string $contents The data to write to the file
-     */
-    public function write(string $location, string $contents): bool
+	 * Write file contents.
+	 *
+	 * @param string $location The path of file to write to
+	 * @param string $contents The data to write to the file
+	 */
+	public function write(string $location, string $contents): bool
 	{
 		$this->filesystem->write($location, $contents);
 
@@ -130,12 +130,12 @@ final readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	}
 
 	/**
-     * Import a file into the filesystem.
-     *
-     * @param string $import Path to the file to import
-     * @param string $dest Path to put the file
-     */
-    public function import(string $import, string $dest): bool
+	 * Import a file into the filesystem.
+	 *
+	 * @param string $import Path to the file to import
+	 * @param string $dest Path to put the file
+	 */
+	public function import(string $import, string $dest): bool
 	{
 		$stream = fopen($import, 'r+');
 		$this->filesystem->writeStream($dest, $stream);
@@ -144,12 +144,12 @@ final readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 	}
 
 	/**
-     * Move a file.
-     *
-     * @param string $old Existing path
-     * @param string $new New location
-     */
-    public function move(string $old, string $new): bool
+	 * Move a file.
+	 *
+	 * @param string $old Existing path
+	 * @param string $new New location
+	 */
+	public function move(string $old, string $new): bool
 	{
 		$this->filesystem->move($old, $new);
 

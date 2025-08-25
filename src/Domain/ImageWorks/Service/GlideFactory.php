@@ -24,11 +24,11 @@ final readonly class GlideFactory
 	}
 
 	/**
-     * Get the original image.
-     *
-     * @return array<string,mixed>
-     */
-    public function originalImage(string $imagePath): array
+	 * Get the original image.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function originalImage(string $imagePath): array
 	{
 		$imageFile = $this->filesystem->readStream($imagePath);
 		$mimeType  = $this->filesystem->mimeType($imagePath);

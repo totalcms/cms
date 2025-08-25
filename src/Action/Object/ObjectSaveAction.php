@@ -17,16 +17,15 @@ final readonly class ObjectSaveAction
 	 * @param ObjectSaver $service Object save service
 	 */
 	public function __construct(private JsonRenderer $renderer, private ObjectSaver $service)
-    {
-    }
+	{
+	}
 
 	/**
-     * Action.
-     *
-     * @param array<string,string> $args
-     *
-     */
-    public function __invoke(
+	 * Action.
+	 *
+	 * @param array<string,string> $args
+	 */
+	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,

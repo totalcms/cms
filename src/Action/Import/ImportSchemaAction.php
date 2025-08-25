@@ -29,7 +29,7 @@ final readonly class ImportSchemaAction
 		}
 
 		$jsonContent = $files['schema']->getStream()->getContents();
-		$schemaData = json_decode($jsonContent, true);
+		$schemaData  = json_decode($jsonContent, true);
 
 		// Handle JSON decode errors
 		if ($schemaData === null && json_last_error() !== JSON_ERROR_NONE) {

@@ -11,15 +11,13 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 final readonly class ObjectFetcher
 {
 	public function __construct(private ObjectRepository $storage)
-    {
-    }
+	{
+	}
 
 	/**
-     * get a collection object.
-     *
-     *
-     */
-    public function fetchObject(string $collection, string $id): ObjectData
+	 * get a collection object.
+	 */
+	public function fetchObject(string $collection, string $id): ObjectData
 	{
 		$object = $this->storage->fetchObject($collection, $id);
 
@@ -31,11 +29,9 @@ final readonly class ObjectFetcher
 	}
 
 	/**
-     * get a collection object.
-     *
-     *
-     */
-    public function existsObject(string $collection, string $id): bool
+	 * get a collection object.
+	 */
+	public function existsObject(string $collection, string $id): bool
 	{
 		return $this->storage->existsObject($collection, $id);
 	}

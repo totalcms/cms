@@ -14,7 +14,7 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		$this->tempDir = sys_get_temp_dir() . '/totalcms_test_images_' . uniqid();
 		mkdir($this->tempDir, 0777, true);
-		
+
 		// Create a test image for metadata extraction
 		$this->testImagePath = $this->createTestImage();
 	}
@@ -30,12 +30,12 @@ final class ImageMetaReaderTest extends TestCase
 	public function testGetBasicImageData(): void
 	{
 		$basicData = ImageMetaReader::getBasicImageData($this->testImagePath);
-		
+
 		$this->assertIsArray($basicData, 'Should return array for basic image data');
 		$this->assertArrayHasKey('mime', $basicData);
 		$this->assertArrayHasKey('width', $basicData);
 		$this->assertArrayHasKey('height', $basicData);
-		
+
 		$this->assertEquals('image/jpeg', $basicData['mime']);
 		$this->assertIsInt($basicData['width']);
 		$this->assertIsInt($basicData['height']);
@@ -46,20 +46,21 @@ final class ImageMetaReaderTest extends TestCase
 	public function testGetBasicImageDataWithInvalidFile(): void
 	{
 		$invalidPath = $this->tempDir . '/nonexistent.jpg';
-		
+
 		// Set custom error handler to suppress expected getimagesize warning
 		set_error_handler(function ($severity, $message, $file, $line): bool {
 			// Only suppress warnings from getimagesize about file not found
 			if ($severity === E_WARNING && str_contains($message, 'getimagesize') && str_contains($message, 'Failed to open stream')) {
 				return true; // Suppress this specific warning
 			}
+
 			// Let other errors through
 			return false;
 		});
-		
+
 		try {
 			$basicData = ImageMetaReader::getBasicImageData($invalidPath);
-			
+
 			$this->assertIsArray($basicData, 'Should return array even for invalid files');
 			$this->assertEmpty($basicData, 'Should return empty array for invalid files');
 		} finally {
@@ -71,24 +72,24 @@ final class ImageMetaReaderTest extends TestCase
 	public function testGetMetaDataStructure(): void
 	{
 		$metadata = ImageMetaReader::getMetaData($this->testImagePath);
-		
+
 		$this->assertIsArray($metadata, 'Should return array for metadata');
-		
+
 		// Debug what's actually returned
 		// var_dump('Metadata structure:', $metadata);
-		
+
 		if ($metadata !== [] && count($metadata) > 3) {
 			// Check required top-level keys when full metadata is available
 			$requiredKeys = ['exif', 'tags', 'alt', 'mime', 'width', 'height'];
 			foreach ($requiredKeys as $key) {
 				$this->assertArrayHasKey($key, $metadata, "Should have '$key' key in metadata");
 			}
-			
+
 			// Check basic image data is included
 			$this->assertEquals('image/jpeg', $metadata['mime']);
 			$this->assertIsInt($metadata['width']);
 			$this->assertIsInt($metadata['height']);
-			
+
 			// Check EXIF data structure
 			$this->assertIsArray($metadata['exif'], 'EXIF data should be an array');
 			$this->assertIsArray($metadata['tags'], 'Tags should be an array');
@@ -109,17 +110,17 @@ final class ImageMetaReaderTest extends TestCase
 
 		if ($testImageWithFractions) {
 			$metadata = ImageMetaReader::getMetaData($testImageWithFractions);
-			
+
 			if (isset($metadata['exif']['focalLength'])) {
 				// Should be 35 (not "35/1")
 				$this->assertEquals(35.0, $metadata['exif']['focalLength']);
 			}
-			
+
 			if (isset($metadata['exif']['aperture'])) {
-				// Should be 2.8 (not "28/10")  
+				// Should be 2.8 (not "28/10")
 				$this->assertEquals(2.8, $metadata['exif']['aperture']);
 			}
-			
+
 			if (isset($metadata['exif']['altitude'])) {
 				// Should be string "10" (not float 10.0)
 				$this->assertIsString($metadata['exif']['altitude']);
@@ -133,21 +134,21 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		// Test GPS coordinate processing returns strings
 		$testImageWithGPS = $this->createTestImageWithMockGPS();
-		
+
 		if ($testImageWithGPS) {
 			$metadata = ImageMetaReader::getMetaData($testImageWithGPS);
-			
+
 			// GPS coordinates should be strings for schema compliance
 			if (isset($metadata['exif']['latitude'])) {
 				$this->assertIsString($metadata['exif']['latitude'], 'Latitude should be string');
 				$this->assertIsNumeric($metadata['exif']['latitude'], 'Latitude should be numeric string');
 			}
-			
+
 			if (isset($metadata['exif']['longitude'])) {
 				$this->assertIsString($metadata['exif']['longitude'], 'Longitude should be string');
 				$this->assertIsNumeric($metadata['exif']['longitude'], 'Longitude should be numeric string');
 			}
-			
+
 			if (isset($metadata['exif']['altitude'])) {
 				$this->assertIsString($metadata['exif']['altitude'], 'Altitude should be string');
 				$this->assertIsNumeric($metadata['exif']['altitude'], 'Altitude should be numeric string');
@@ -161,19 +162,19 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		// Test keyword extraction from various sources
 		$testImageWithKeywords = $this->createTestImageWithKeywords();
-		
+
 		if ($testImageWithKeywords) {
 			$metadata = ImageMetaReader::getMetaData($testImageWithKeywords);
-			
+
 			$this->assertIsArray($metadata['tags'], 'Tags should be an array');
-			
+
 			// Keywords should be unique and sorted
 			if (isset($metadata['tags']) && $metadata['tags'] !== []) {
-				$tags = $metadata['tags'];
+				$tags       = $metadata['tags'];
 				$uniqueTags = array_unique($tags);
 				$sortedTags = $tags;
 				sort($sortedTags);
-				
+
 				$this->assertEquals($uniqueTags, $tags, 'Tags should be unique');
 				$this->assertEquals($sortedTags, $tags, 'Tags should be sorted');
 			}
@@ -192,12 +193,12 @@ final class ImageMetaReaderTest extends TestCase
 
 		// Since we can't easily inject dates into EXIF, we test the internal date formatting
 		// by using reflection to test the private formatDate method
-		$reflection = new \ReflectionClass(ImageMetaReader::class);
+		$reflection       = new \ReflectionClass(ImageMetaReader::class);
 		$formatDateMethod = $reflection->getMethod('formatDate');
 
 		foreach ($testDates as $input => $expectedPrefix) {
 			$result = $formatDateMethod->invoke(null, $input);
-			
+
 			$this->assertNotNull($result, "Should format date: $input");
 			$this->assertStringStartsWith($expectedPrefix, $result, "Date should be properly formatted for: $input");
 		}
@@ -211,10 +212,10 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		// Test XMP lens data extraction
 		$testImageWithXMP = $this->createTestImageWithMockXMP();
-		
+
 		if ($testImageWithXMP) {
 			$metadata = ImageMetaReader::getMetaData($testImageWithXMP);
-			
+
 			// Check if lens information is extracted
 			if (isset($metadata['exif']['lens'])) {
 				$this->assertIsString($metadata['exif']['lens']);
@@ -229,10 +230,10 @@ final class ImageMetaReaderTest extends TestCase
 	{
 		// Test IPTC location data extraction
 		$testImageWithIPTC = $this->createTestImageWithMockIPTC();
-		
+
 		if ($testImageWithIPTC) {
 			$metadata = ImageMetaReader::getMetaData($testImageWithIPTC);
-			
+
 			$locationFields = ['country', 'state', 'city', 'sublocation'];
 			foreach ($locationFields as $field) {
 				if (isset($metadata['exif'][$field])) {
@@ -248,11 +249,11 @@ final class ImageMetaReaderTest extends TestCase
 	public function testEmptyAndNullDataHandling(): void
 	{
 		$metadata = ImageMetaReader::getMetaData($this->testImagePath);
-		
+
 		if ($metadata !== [] && isset($metadata['exif'])) {
 			// Test that null/empty values are properly filtered out
 			$this->assertIsArray($metadata['exif']);
-			
+
 			// No null values should exist in the final exif array
 			foreach ($metadata['exif'] as $key => $value) {
 				$this->assertNotNull($value, "EXIF field '$key' should not be null");
@@ -269,11 +270,11 @@ final class ImageMetaReaderTest extends TestCase
 	public function testAltTextGeneration(): void
 	{
 		$metadata = ImageMetaReader::getMetaData($this->testImagePath);
-		
+
 		if ($metadata !== [] && count($metadata) > 3 && isset($metadata['alt'])) {
 			// Full metadata structure with alt text
 			$this->assertArrayHasKey('alt', $metadata);
-			
+
 			// Alt text should be generated from title or description if available
 			if (isset($metadata['exif']['title']) || isset($metadata['exif']['description'])) {
 				$this->assertNotEmpty($metadata['alt'], 'Alt text should be generated when title/description exists');
@@ -292,31 +293,31 @@ final class ImageMetaReaderTest extends TestCase
 	private function createTestImage(): string
 	{
 		$imagePath = $this->tempDir . '/test_image.jpg';
-		
+
 		// Create a simple test image
 		$image = imagecreate(100, 100);
 		$white = imagecolorallocate($image, 255, 255, 255);
 		$black = imagecolorallocate($image, 0, 0, 0);
-		
+
 		// Fill background and add some content
 		imagefill($image, 0, 0, $white);
 		imagestring($image, 5, 10, 40, 'TEST', $black);
-		
+
 		// Save as JPEG
 		imagejpeg($image, $imagePath, 90);
 		imagedestroy($image);
-		
+
 		return $imagePath;
 	}
 
 	private function createTestImageWithMockExif(): ?string
-    {
-        // Note: In a real scenario, this would require more complex image manipulation
-        // to actually embed EXIF data. For unit testing, we focus on the parsing logic.
-        // This method serves as a placeholder for more advanced EXIF injection.
-        return null;
-        // Skip advanced EXIF injection for basic unit tests
-    }
+	{
+		// Note: In a real scenario, this would require more complex image manipulation
+		// to actually embed EXIF data. For unit testing, we focus on the parsing logic.
+		// This method serves as a placeholder for more advanced EXIF injection.
+		return null;
+		// Skip advanced EXIF injection for basic unit tests
+	}
 
 	private function createTestImageWithMockGPS(): ?string
 	{
@@ -347,7 +348,7 @@ final class ImageMetaReaderTest extends TestCase
 		if (!is_dir($dir)) {
 			return;
 		}
-		
+
 		$files = array_diff(scandir($dir), ['.', '..']);
 		foreach ($files as $file) {
 			$path = $dir . DIRECTORY_SEPARATOR . $file;

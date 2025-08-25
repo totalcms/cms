@@ -16,13 +16,13 @@ final readonly class ObjectDeleteAction
 	}
 
 	/**
-     * Action.
-     *
-     * @param array<string,string> $args The routing arguments
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(
+	 * Action.
+	 *
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,

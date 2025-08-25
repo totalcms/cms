@@ -31,17 +31,17 @@ final readonly class APCuService implements CacheInterface
 
 		// Test APCu functionality
 		try {
-			$testKey = $this->prefix . 'test_' . uniqid();
+			$testKey   = $this->prefix . 'test_' . uniqid();
 			$testValue = 'test_value';
-			
+
 			// Test store and retrieve
 			if (!apcu_store($testKey, $testValue, 1)) {
 				return false;
 			}
-			
+
 			$retrieved = apcu_fetch($testKey);
 			apcu_delete($testKey);
-			
+
 			return $retrieved === $testValue;
 		} catch (\Exception) {
 			return false;
@@ -66,8 +66,8 @@ final readonly class APCuService implements CacheInterface
 
 		try {
 			$prefixedKey = $this->prefix . $key;
-			$value = apcu_fetch($prefixedKey, $success);
-			
+			$value       = apcu_fetch($prefixedKey, $success);
+
 			return $success ? $value : null;
 		} catch (\Exception) {
 			return null;
@@ -84,7 +84,7 @@ final readonly class APCuService implements CacheInterface
 			$prefixedKey = $this->prefix . $key;
 			// APCu TTL of 0 means never expire, but we want reasonable defaults
 			$actualTtl = $ttl === 0 ? 86400 : $ttl; // Default to 24 hours if no TTL specified
-			
+
 			return apcu_store($prefixedKey, $value, $actualTtl);
 		} catch (\Exception) {
 			return false;
@@ -99,6 +99,7 @@ final readonly class APCuService implements CacheInterface
 
 		try {
 			$prefixedKey = $this->prefix . $key;
+
 			return apcu_delete($prefixedKey);
 		} catch (\Exception) {
 			return false;
@@ -114,18 +115,19 @@ final readonly class APCuService implements CacheInterface
 		try {
 			// Clear all entries with our prefix using APCu iterator
 			$iterator = new \APCUIterator('/^' . preg_quote($this->prefix, '/') . '/');
-			$keys = [];
-			
+			$keys     = [];
+
 			foreach ($iterator as $entry) {
 				$keys[] = $entry['key'];
 			}
-			
+
 			if ($keys === []) {
 				return true; // Nothing to clear
 			}
-			
+
 			// apcu_delete with array returns array of failed keys, empty array means success
 			$result = apcu_delete($keys);
+
 			return empty($result);
 		} catch (\Exception) {
 			// Fallback: try to clear everything (less efficient but works)
@@ -147,20 +149,21 @@ final readonly class APCuService implements CacheInterface
 			$prefixedPattern = $this->prefix . $pattern;
 			// Convert shell-style pattern to regex (e.g., "collection:*" -> "collection:.*")
 			$regexPattern = '/^' . preg_quote($this->prefix, '/') . str_replace('\\*', '.*', preg_quote($pattern, '/')) . '/';
-			
+
 			$iterator = new \APCUIterator($regexPattern);
-			$keys = [];
-			
+			$keys     = [];
+
 			foreach ($iterator as $entry) {
 				$keys[] = $entry['key'];
 			}
-			
+
 			if ($keys === []) {
 				return true; // Nothing to clear
 			}
-			
+
 			// apcu_delete with array returns array of failed keys, empty array means success
 			$result = apcu_delete($keys);
+
 			return empty($result);
 		} catch (\Exception) {
 			return false;
@@ -180,13 +183,13 @@ final readonly class APCuService implements CacheInterface
 		}
 
 		try {
-			$info = apcu_cache_info(true); // Get cache info without entries
+			$info    = apcu_cache_info(true); // Get cache info without entries
 			$smaInfo = apcu_sma_info();
 
 			// Count our prefixed entries
-			$iterator = new \APCUIterator('/^' . preg_quote($this->prefix, '/') . '/');
+			$iterator   = new \APCUIterator('/^' . preg_quote($this->prefix, '/') . '/');
 			$entryCount = 0;
-			$totalSize = 0;
+			$totalSize  = 0;
 
 			foreach ($iterator as $entry) {
 				$entryCount++;
@@ -230,6 +233,7 @@ final readonly class APCuService implements CacheInterface
 
 		if (!$this->isInstalled()) {
 			$recommendations[] = 'Install APCu extension: apt-get install php-apcu (Ubuntu/Debian) or yum install php-apcu (CentOS/RHEL)';
+
 			return $recommendations;
 		}
 
@@ -237,11 +241,12 @@ final readonly class APCuService implements CacheInterface
 			$recommendations[] = 'APCu is installed but not working. Check php.ini configuration';
 			$recommendations[] = 'Ensure apc.enabled=1 in php.ini';
 			$recommendations[] = 'For CLI usage, ensure apc.enable_cli=1 in php.ini';
+
 			return $recommendations;
 		}
 
 		try {
-			$smaInfo = apcu_sma_info();
+			$smaInfo           = apcu_sma_info();
 			$memoryUsedPercent = (($smaInfo['seg_size'] - $smaInfo['avail_mem']) / $smaInfo['seg_size']) * 100;
 
 			if ($memoryUsedPercent > 90) {
@@ -271,6 +276,7 @@ final readonly class APCuService implements CacheInterface
 	private function calculateHitRate(int $hits, int $misses): float
 	{
 		$total = $hits + $misses;
+
 		return $total > 0 ? round(($hits / $total) * 100, 1) : 0;
 	}
 }

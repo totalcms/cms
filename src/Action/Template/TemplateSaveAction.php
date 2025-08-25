@@ -16,16 +16,15 @@ final readonly class TemplateSaveAction
 	 * @param TemplateSaver $service Template save service
 	 */
 	public function __construct(private RawRenderer $renderer, private TemplateSaver $service)
-    {
-    }
+	{
+	}
 
 	/**
-     * Invokable Action.
-     *
-     * @param array<string,string> $args The routing arguments
-     *
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	 * Invokable Action.
+	 *
+	 * @param array<string,string> $args The routing arguments
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$content = (string)$request->getBody();
 		$name    = $args['template'];

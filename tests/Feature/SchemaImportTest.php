@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use function Nekofar\Slim\Pest\postJson;
-
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
@@ -14,59 +12,58 @@ beforeEach(function (): void {
 function validSchemaData(): array
 {
 	return [
-		'id' => 'imported-test-schema',
+		'id'          => 'imported-test-schema',
 		'description' => 'A test schema for import testing',
-		'properties' => [
+		'properties'  => [
 			'title' => [
-				'type' => 'string',
-				'label' => 'Title',
-				'field' => 'input',
-				'default' => ''
+				'type'    => 'string',
+				'label'   => 'Title',
+				'field'   => 'input',
+				'default' => '',
 			],
 			'content' => [
-				'type' => 'string', 
-				'label' => 'Content',
-				'field' => 'textarea',
-				'default' => ''
+				'type'    => 'string',
+				'label'   => 'Content',
+				'field'   => 'textarea',
+				'default' => '',
 			],
 			'published' => [
-				'type' => 'boolean',
-				'label' => 'Published',
-				'field' => 'checkbox',
-				'default' => false
-			]
+				'type'    => 'boolean',
+				'label'   => 'Published',
+				'field'   => 'checkbox',
+				'default' => false,
+			],
 		],
 		'required' => ['title'],
-		'index' => ['title', 'published']
+		'index'    => ['title', 'published'],
 	];
 }
 
 it('tests schema saving service directly', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	$schemaData = validSchemaData();
-	
+
 	try {
 		$savedSchema = $schemaSaver->saveSchema($schemaData);
-		
+
 		// Verify the schema was saved correctly
 		expect($savedSchema->id)->toBe('imported-test-schema');
 		expect($savedSchema->description)->toBe('A test schema for import testing');
-		
+
 		// Verify the file was created
 		$this->assertFileExists(schemaPath('imported-test-schema'));
-		
+
 		// Verify the file contents
 		$fileContent = file_get_contents(schemaPath('imported-test-schema'));
-		$savedData = json_decode($fileContent, true);
-		
+		$savedData   = json_decode($fileContent, true);
+
 		expect($savedData)->toHaveKey('$id');
 		expect($savedData)->toHaveKey('$schema');
 		expect($savedData['$schema'])->toBe('https://json-schema.org/draft/2020-12/schema');
 		expect($savedData['id'])->toBe('imported-test-schema');
-		
 	} finally {
 		// Clean up
 		if (file_exists(schemaPath('imported-test-schema'))) {
@@ -76,61 +73,60 @@ it('tests schema saving service directly', function (): void {
 });
 
 it('handles schema with missing required fields', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	$invalidSchema = [
 		'description' => 'Missing required id field',
-		'properties' => [] // SchemaSaver expects properties key
+		'properties'  => [], // SchemaSaver expects properties key
 	];
-	
+
 	// This should fail during validation because 'id' is missing
-	expect(fn() => $schemaSaver->saveSchema($invalidSchema))
+	expect(fn () => $schemaSaver->saveSchema($invalidSchema))
 		->toThrow(\DomainException::class);
 });
 
 it('handles schema with invalid id format', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
-	$invalidSchema = validSchemaData();
+
+	$invalidSchema       = validSchemaData();
 	$invalidSchema['id'] = 'Invalid ID With Spaces!@#';
-	
-	expect(fn() => $schemaSaver->saveSchema($invalidSchema))
+
+	expect(fn () => $schemaSaver->saveSchema($invalidSchema))
 		->toThrow(\Exception::class);
 });
 
 it('handles reserved schema id conflicts', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
-	$reservedSchema = validSchemaData();
+
+	$reservedSchema       = validSchemaData();
 	$reservedSchema['id'] = 'blog'; // This should be a reserved schema
-	
-	expect(fn() => $schemaSaver->saveSchema($reservedSchema))
+
+	expect(fn () => $schemaSaver->saveSchema($reservedSchema))
 		->toThrow(\Exception::class);
 });
 
 it('handles duplicate schema imports gracefully', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
-	$schemaData = validSchemaData();
+
+	$schemaData       = validSchemaData();
 	$schemaData['id'] = 'duplicate-test';
-	
+
 	try {
 		// First save should succeed
 		$firstSave = $schemaSaver->saveSchema($schemaData);
 		expect($firstSave->id)->toBe('duplicate-test');
-		
+
 		// Second save should also succeed (overwrite existing)
 		$secondSave = $schemaSaver->saveSchema($schemaData);
 		expect($secondSave->id)->toBe('duplicate-test');
-		
 	} finally {
 		if (file_exists(schemaPath('duplicate-test'))) {
 			unlink(schemaPath('duplicate-test'));
@@ -139,61 +135,60 @@ it('handles duplicate schema imports gracefully', function (): void {
 });
 
 it('handles schema with complex nested properties', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	$complexSchema = [
-		'id' => 'complex-schema-test',
+		'id'          => 'complex-schema-test',
 		'description' => 'Complex nested schema',
-		'properties' => [
+		'properties'  => [
 			'metadata' => [
-				'type' => 'object',
-				'label' => 'Metadata',
-				'field' => 'object',
+				'type'       => 'object',
+				'label'      => 'Metadata',
+				'field'      => 'object',
 				'properties' => [
 					'author' => [
-						'type' => 'string',
+						'type'  => 'string',
 						'label' => 'Author',
-						'field' => 'input'
+						'field' => 'input',
 					],
 					'tags' => [
-						'type' => 'array',
+						'type'  => 'array',
 						'label' => 'Tags',
 						'field' => 'list',
 						'items' => [
-							'type' => 'string'
-						]
-					]
-				]
+							'type' => 'string',
+						],
+					],
+				],
 			],
 			'settings' => [
-				'type' => 'object',
-				'label' => 'Settings',
-				'field' => 'object',
+				'type'       => 'object',
+				'label'      => 'Settings',
+				'field'      => 'object',
 				'properties' => [
 					'enabled' => [
-						'type' => 'boolean',
-						'field' => 'checkbox',
-						'default' => true
+						'type'    => 'boolean',
+						'field'   => 'checkbox',
+						'default' => true,
 					],
 					'priority' => [
-						'type' => 'number',
-						'field' => 'number',
+						'type'    => 'number',
+						'field'   => 'number',
 						'minimum' => 1,
-						'maximum' => 10
-					]
-				]
-			]
+						'maximum' => 10,
+					],
+				],
+			],
 		],
 		'required' => ['metadata'],
-		'index' => ['metadata']
+		'index'    => ['metadata'],
 	];
-	
+
 	try {
 		$savedSchema = $schemaSaver->saveSchema($complexSchema);
 		expect($savedSchema->id)->toBe('complex-schema-test');
-		
 	} finally {
 		if (file_exists(schemaPath('complex-schema-test'))) {
 			unlink(schemaPath('complex-schema-test'));
@@ -202,38 +197,37 @@ it('handles schema with complex nested properties', function (): void {
 });
 
 it('handles schema with $ref properties', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	$schemaWithRefs = [
-		'id' => 'ref-schema-test',
+		'id'          => 'ref-schema-test',
 		'description' => 'Schema with $ref properties',
-		'properties' => [
+		'properties'  => [
 			'image' => [
-				'$ref' => 'https://www.totalcms.co/schemas/properties/image.json',
+				'$ref'  => 'https://www.totalcms.co/schemas/properties/image.json',
 				'label' => 'Featured Image',
-				'field' => 'image'
+				'field' => 'image',
 			],
 			'gallery' => [
-				'$ref' => 'https://www.totalcms.co/schemas/properties/gallery.json',
+				'$ref'  => 'https://www.totalcms.co/schemas/properties/gallery.json',
 				'label' => 'Image Gallery',
-				'field' => 'gallery'
+				'field' => 'gallery',
 			],
 			'date' => [
-				'$ref' => 'https://www.totalcms.co/schemas/properties/date.json',
+				'$ref'  => 'https://www.totalcms.co/schemas/properties/date.json',
 				'label' => 'Publication Date',
-				'field' => 'date'
-			]
+				'field' => 'date',
+			],
 		],
 		'required' => ['date'],
-		'index' => ['date']
+		'index'    => ['date'],
 	];
-	
+
 	try {
 		$savedSchema = $schemaSaver->saveSchema($schemaWithRefs);
 		expect($savedSchema->id)->toBe('ref-schema-test');
-		
 	} finally {
 		if (file_exists(schemaPath('ref-schema-test'))) {
 			unlink(schemaPath('ref-schema-test'));
@@ -242,54 +236,53 @@ it('handles schema with $ref properties', function (): void {
 });
 
 it('handles various field types correctly', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	$fieldTypesSchema = [
-		'id' => 'field-types-test',
+		'id'          => 'field-types-test',
 		'description' => 'Schema with various field types',
-		'properties' => [
+		'properties'  => [
 			'text_input' => [
-				'type' => 'string',
+				'type'  => 'string',
 				'label' => 'Text Input',
-				'field' => 'input'
+				'field' => 'input',
 			],
 			'textarea' => [
-				'type' => 'string',
+				'type'  => 'string',
 				'label' => 'Textarea',
-				'field' => 'textarea'
+				'field' => 'textarea',
 			],
 			'number' => [
-				'type' => 'number',
+				'type'  => 'number',
 				'label' => 'Number',
-				'field' => 'number'
+				'field' => 'number',
 			],
 			'checkbox' => [
-				'type' => 'boolean',
+				'type'  => 'boolean',
 				'label' => 'Checkbox',
-				'field' => 'checkbox'
+				'field' => 'checkbox',
 			],
 			'select' => [
-				'type' => 'string',
-				'label' => 'Select',
-				'field' => 'select',
-				'options' => ['option1', 'option2', 'option3']
+				'type'    => 'string',
+				'label'   => 'Select',
+				'field'   => 'select',
+				'options' => ['option1', 'option2', 'option3'],
 			],
 			'list' => [
-				'type' => 'array',
+				'type'  => 'array',
 				'label' => 'List',
-				'field' => 'list'
-			]
+				'field' => 'list',
+			],
 		],
 		'required' => ['text_input'],
-		'index' => ['text_input', 'number', 'checkbox']
+		'index'    => ['text_input', 'number', 'checkbox'],
 	];
-	
+
 	try {
 		$savedSchema = $schemaSaver->saveSchema($fieldTypesSchema);
 		expect($savedSchema->id)->toBe('field-types-test');
-		
 	} finally {
 		if (file_exists(schemaPath('field-types-test'))) {
 			unlink(schemaPath('field-types-test'));
@@ -298,24 +291,23 @@ it('handles various field types correctly', function (): void {
 });
 
 it('validates that saved schema contains proper JSON schema structure', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	$schemaData = validSchemaData();
-	
+
 	try {
 		$savedSchema = $schemaSaver->saveSchema($schemaData);
-		
+
 		// Get the array representation
 		$schemaArray = $savedSchema->toArray();
-		
+
 		// Verify it contains required JSON Schema fields
 		expect($schemaArray)->toHaveKey('$id');
 		expect($schemaArray)->toHaveKey('$schema');
 		expect($schemaArray['$schema'])->toBe('https://json-schema.org/draft/2020-12/schema');
 		expect($schemaArray['$id'])->toContain('schemas/custom/');
-		
 	} finally {
 		if (file_exists(schemaPath('imported-test-schema'))) {
 			unlink(schemaPath('imported-test-schema'));
@@ -325,36 +317,36 @@ it('validates that saved schema contains proper JSON schema structure', function
 
 // Test schema import via regular POST with JSON (simulating what might happen with form submissions)
 it('can save schema via direct service call with malformed data', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	// Test with null data
-	expect(fn() => $schemaSaver->saveSchema(null))
+	expect(fn () => $schemaSaver->saveSchema(null))
 		->toThrow(\TypeError::class);
-	
+
 	// Test with empty array
-	expect(fn() => $schemaSaver->saveSchema([]))
+	expect(fn () => $schemaSaver->saveSchema([]))
 		->toThrow(\InvalidArgumentException::class);
-	
+
 	// Test with invalid structure (missing properties key)
-	expect(fn() => $schemaSaver->saveSchema(['invalid' => 'data']))
+	expect(fn () => $schemaSaver->saveSchema(['invalid' => 'data']))
 		->toThrow(\InvalidArgumentException::class);
 });
 
 it('validates schema properties correctly', function (): void {
-	$app = bootstrap();
-	$container = $app->getContainer();
+	$app         = bootstrap();
+	$container   = $app->getContainer();
 	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
-	
+
 	$schemaWithInvalidProperties = [
-		'id' => 'invalid-props-test',
+		'id'          => 'invalid-props-test',
 		'description' => 'Schema with invalid properties',
-		'properties' => 'not-an-object', // Should be an object
-		'required' => ['title'],
-		'index' => ['title']
+		'properties'  => 'not-an-object', // Should be an object
+		'required'    => ['title'],
+		'index'       => ['title'],
 	];
-	
-	expect(fn() => $schemaSaver->saveSchema($schemaWithInvalidProperties))
+
+	expect(fn () => $schemaSaver->saveSchema($schemaWithInvalidProperties))
 		->toThrow(\InvalidArgumentException::class);
 });

@@ -140,9 +140,9 @@ final class ObjectImporter
 				SchemaData::PROPERTY_TYPE_TO_REF['file'],
 				SchemaData::PROPERTY_TYPE_TO_REF['depot'],
 			], true) && $this->isJson($objectData[$name])) {
-                $objectData[$name] = json_decode($objectData[$name], true);
-                continue;
-            }
+				$objectData[$name] = json_decode($objectData[$name], true);
+				continue;
+			}
 
 			switch ($property['$ref']) {
 				case SchemaData::PROPERTY_TYPE_TO_REF['image']:

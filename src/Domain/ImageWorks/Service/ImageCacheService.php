@@ -145,7 +145,7 @@ final readonly class ImageCacheService
 		}
 
 		// Sort by collection name
-		usort($results, fn (array $a, array $b): int => strcmp((string) $a['collection'], (string) $b['collection']));
+		usort($results, fn (array $a, array $b): int => strcmp((string)$a['collection'], (string)$b['collection']));
 
 		return $results;
 	}
@@ -208,9 +208,9 @@ final readonly class ImageCacheService
 				if (!rmdir($realPath)) {
 					throw new \RuntimeException("Failed to remove directory: {$realPath}");
 				}
-            } elseif (!unlink($realPath)) {
+			} elseif (!unlink($realPath)) {
 				throw new \RuntimeException("Failed to remove file: {$realPath}");
-            }
+			}
 		}
 
 		if (!rmdir($path)) {

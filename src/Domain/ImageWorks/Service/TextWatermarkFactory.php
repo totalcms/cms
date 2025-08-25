@@ -60,14 +60,13 @@ final readonly class TextWatermarkFactory
 	}
 
 	/**
-     * Create a text image using GD (based on FakerImageGD approach).
-     *
-     * @param array<int> $fontColor RGB array
-     * @param array<int>|null $backgroundColor RGB array or null for transparent
-     * @param string|null $cacheKey Optional cache key, if null generates temp name
-     *
-     */
-    private function createTextImage(
+	 * Create a text image using GD (based on FakerImageGD approach).
+	 *
+	 * @param array<int> $fontColor RGB array
+	 * @param array<int>|null $backgroundColor RGB array or null for transparent
+	 * @param string|null $cacheKey Optional cache key, if null generates temp name
+	 */
+	private function createTextImage(
 		string $text,
 		int $fontSize,
 		array $fontColor,
@@ -252,13 +251,12 @@ final readonly class TextWatermarkFactory
 	}
 
 	/**
-     * Generate cache key based on text watermark parameters (excluding opacity).
-     *
-     * @param array<int> $fontColor
-     * @param array<int>|null $backgroundColor
-     *
-     */
-    private function generateCacheKey(
+	 * Generate cache key based on text watermark parameters (excluding opacity).
+	 *
+	 * @param array<int> $fontColor
+	 * @param array<int>|null $backgroundColor
+	 */
+	private function generateCacheKey(
 		string $text,
 		int $fontSize,
 		array $fontColor,
@@ -313,11 +311,9 @@ final readonly class TextWatermarkFactory
 	}
 
 	/**
-     * Get font path for custom fonts.
-     *
-     *
-     */
-    private function getFontPath(?string $fontFamily): ?string
+	 * Get font path for custom fonts.
+	 */
+	private function getFontPath(?string $fontFamily): ?string
 	{
 		// If a specific font family is requested, try to load from depot
 		if ($fontFamily) {
@@ -400,19 +396,17 @@ final readonly class TextWatermarkFactory
 	}
 
 	/**
-     * Generate temporary file path.
-     */
-    private function generateTempPath(): string
+	 * Generate temporary file path.
+	 */
+	private function generateTempPath(): string
 	{
 		return 'text_watermark_' . uniqid() . '.png';
 	}
 
 	/**
-     * Clean up temporary watermark files (for backwards compatibility).
-     *
-     *
-     */
-    public function cleanup(string $watermarkPath): void
+	 * Clean up temporary watermark files (for backwards compatibility).
+	 */
+	public function cleanup(string $watermarkPath): void
 	{
 		$fullPath = self::WATERMARK_DIR . '/' . $watermarkPath;
 		if ($this->filesystem->fileExists($fullPath)) {

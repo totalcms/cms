@@ -19,11 +19,11 @@ final class SchemaRepository extends StorageRepository
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';
 
 	/**
-     * The constructor.
-     *
-     * @param StorageFilesystemAdapter $filesystem The filesystem factory
-     */
-    public function __construct(
+	 * The constructor.
+	 *
+	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
+	 */
+	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly SchemaFactory $factory,
 		private readonly CacheManager $cacheManager,
@@ -118,11 +118,9 @@ final class SchemaRepository extends StorageRepository
 	}
 
 	/**
-     * fetch a schema for one of the default schema types.
-     *
-     *
-     */
-    public function fetchDefaultSchema(string $id): ?SchemaData
+	 * fetch a schema for one of the default schema types.
+	 */
+	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
 		// Try cache first (Redis preferred, long TTL since default schemas never change)
 		$cacheKey = "schema:{$id}";
@@ -159,9 +157,9 @@ final class SchemaRepository extends StorageRepository
 	}
 
 	/**
-     * fetch a schema for a custom schema type.
-     */
-    public function fetchCustomSchema(string $id): ?SchemaData
+	 * fetch a schema for a custom schema type.
+	 */
+	public function fetchCustomSchema(string $id): ?SchemaData
 	{
 		// Try cache first (Redis preferred, medium TTL since custom schemas change rarely)
 		$cacheKey = "schema:{$id}";
@@ -188,9 +186,9 @@ final class SchemaRepository extends StorageRepository
 	}
 
 	/**
-     * fetch a schema for one of the default schema types.
-     */
-    public function getSchema(string $id): SchemaData
+	 * fetch a schema for one of the default schema types.
+	 */
+	public function getSchema(string $id): SchemaData
 	{
 		$schema = $this->fetchDefaultSchema($id);
 
@@ -212,13 +210,14 @@ final class SchemaRepository extends StorageRepository
 		if (!$schema instanceof SchemaData) {
 			$schema = $this->fetchCustomSchema($id);
 		}
-        return $schema instanceof SchemaData;
+
+		return $schema instanceof SchemaData;
 	}
 
 	/**
-     * save a collection schema.
-     */
-    public function saveSchema(SchemaData $schema): void
+	 * save a collection schema.
+	 */
+	public function saveSchema(SchemaData $schema): void
 	{
 		$schemaFile = self::CUSTOM_SCHEMA_DIR . $schema->id . self::FILE_EXT;
 		$schemaJSON = $schema->toJson();

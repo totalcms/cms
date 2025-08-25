@@ -68,12 +68,12 @@ final class ImageGenerator
 		}
 
 		$imageData = match ($name) {
-            'first'    => array_shift($galleryData->images),
-            'last'     => array_pop($galleryData->images),
-            'random'   => $this->getRandomImage($galleryData->images),
-            'featured' => $this->getFeaturedImage($galleryData->images),
-            default    => $this->getImageByName($galleryData->images, $name),
-        };
+			'first'    => array_shift($galleryData->images),
+			'last'     => array_pop($galleryData->images),
+			'random'   => $this->getRandomImage($galleryData->images),
+			'featured' => $this->getFeaturedImage($galleryData->images),
+			default    => $this->getImageByName($galleryData->images, $name),
+		};
 
 		if (empty($imageData)) {
 			throw new \UnexpectedValueException('Gallery Image not found');
@@ -163,7 +163,7 @@ final class ImageGenerator
 	{
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
-		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with((string) $params['fm'], $imageData->name))) {
+		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with((string)$params['fm'], $imageData->name))) {
 			return [];
 		}
 
@@ -234,7 +234,7 @@ final class ImageGenerator
 
 		return array_filter(
 			$params,
-			fn ($param): bool => !str_starts_with((string) $param, 'mark'),
+			fn ($param): bool => !str_starts_with((string)$param, 'mark'),
 			ARRAY_FILTER_USE_KEY
 		);
 	}

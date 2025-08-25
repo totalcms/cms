@@ -49,9 +49,9 @@ final readonly class CollectionZipper
 	}
 
 	/**
-     * Recursively add directory contents to zip, excluding .cache folders.
-     */
-    private function addDirectoryToZip(\ZipArchive $zip, string $realPath, string $zipPath): void
+	 * Recursively add directory contents to zip, excluding .cache folders.
+	 */
+	private function addDirectoryToZip(\ZipArchive $zip, string $realPath, string $zipPath): void
 	{
 		$iterator = new \RecursiveIteratorIterator(
 			new \RecursiveDirectoryIterator($realPath, \RecursiveDirectoryIterator::SKIP_DOTS),
@@ -60,7 +60,7 @@ final readonly class CollectionZipper
 
 		foreach ($iterator as $file) {
 			$filePath     = $file->getRealPath();
-			$relativePath = substr((string) $filePath, strlen($realPath) + 1);
+			$relativePath = substr((string)$filePath, strlen($realPath) + 1);
 
 			// Skip .cache directories and their contents
 			if (str_contains($relativePath, '.cache')) {
@@ -78,11 +78,9 @@ final readonly class CollectionZipper
 	}
 
 	/**
-     * Get the filename for the zip download.
-     *
-     *
-     */
-    public function getZipFilename(string $collection): string
+	 * Get the filename for the zip download.
+	 */
+	public function getZipFilename(string $collection): string
 	{
 		return sprintf('collection-%s.zip', $collection);
 	}

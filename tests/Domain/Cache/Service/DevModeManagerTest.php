@@ -191,7 +191,7 @@ final class DevModeManagerTest extends TestCase
 	{
 		$matches = false;
 		foreach ($prefixes as $prefix) {
-			if (str_starts_with($actual, (string) $prefix)) {
+			if (str_starts_with($actual, (string)$prefix)) {
 				$matches = true;
 				break;
 			}
@@ -223,6 +223,7 @@ final class DevModeManagerTest extends TestCase
 			if ($severity === E_NOTICE && str_contains($message, 'file_get_contents') && str_contains($message, 'Is a directory')) {
 				return true; // Suppress this specific notice
 			}
+
 			// Let other errors through
 			return false;
 		});

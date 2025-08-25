@@ -11,25 +11,24 @@ use TotalCMS\Transformer\SchemaMetaTransformer;
 final readonly class SchemaListAction
 {
 	public function __construct(private JsonRenderer $renderer, private SchemaLister $schemaLister)
-    {
-    }
+	{
+	}
 
 	/**
-     * Action.
-     *
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	 * Action.
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$params = $request->getQueryParams();
 		$filter = $params['filter'] ?? 'all';
 
 		$schemas = match ($filter) {
-            'reserved' => $this->schemaLister->listReservedSchemas(),
-            'custom'   => $this->schemaLister->listCustomSchemas(),
-            default    => $this->schemaLister->listAllSchemas(),
-        };
+			'reserved' => $this->schemaLister->listReservedSchemas(),
+			'custom'   => $this->schemaLister->listCustomSchemas(),
+			default    => $this->schemaLister->listAllSchemas(),
+		};
 
 		return $this->renderer->jsonCollection($response, $schemas, new SchemaMetaTransformer());
 	}

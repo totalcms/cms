@@ -52,6 +52,6 @@ final readonly class SaverFactory
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-		return basename((string) $schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+		return basename((string)$schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
 	}
 }

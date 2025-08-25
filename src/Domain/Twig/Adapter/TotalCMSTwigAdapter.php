@@ -86,7 +86,7 @@ final class TotalCMSTwigAdapter
 		// php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
 		$installDir = realpath(__DIR__ . '/../../../..');
-		$docroot    = rtrim((string) $_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
+		$docroot    = rtrim((string)$_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
 		$command    = $installDir . '/resources/bin/processJobs.php';
 
 		// Quote paths that contain spaces
@@ -120,9 +120,9 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-     * Get pending jobs info for display.
-     */
-    public function jobQueuePendingInfo(): string
+	 * Get pending jobs info for display.
+	 */
+	public function jobQueuePendingInfo(): string
 	{
 		$jobManager = new JobManager(
 			new JobRepository()
@@ -143,7 +143,7 @@ final class TotalCMSTwigAdapter
 				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
 				htmlspecialchars($job->type),
 				htmlspecialchars($job->collection),
-				htmlspecialchars((string) $objectId),
+				htmlspecialchars((string)$objectId),
 				htmlspecialchars($job->createdAt)
 			);
 		}
@@ -170,9 +170,9 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-     * Get failed jobs info for display.
-     */
-    public function jobQueueFailedInfo(): string
+	 * Get failed jobs info for display.
+	 */
+	public function jobQueueFailedInfo(): string
 	{
 		$jobManager = new JobManager(
 			new JobRepository()
@@ -199,7 +199,7 @@ final class TotalCMSTwigAdapter
 				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td title="%s">%s</td></tr>',
 				htmlspecialchars($job->type),
 				htmlspecialchars($job->collection),
-				htmlspecialchars((string) $objectId),
+				htmlspecialchars((string)$objectId),
 				htmlspecialchars(strval($job->attempts)),
 				htmlspecialchars($job->lastError),
 				htmlspecialchars($errorSnippet)
@@ -1042,7 +1042,7 @@ NGINX;
 		}
 
 		// Default to original image type
-		$type = strtolower(pathinfo((string) $image['name'], PATHINFO_EXTENSION));
+		$type = strtolower(pathinfo((string)$image['name'], PATHINFO_EXTENSION));
 		// If type is set in imageworks options, use that
 		if (array_key_exists('fm', $imageworks)) {
 			$type = $imageworks['fm'];
@@ -1054,7 +1054,7 @@ NGINX;
 		$api .= "/imageworks/$collection/$id/$property.$type";
 
 		// cache busting links
-		$imageworks['cache'] = strrev((string) preg_replace('/\W+/', '', (string) $image['uploadDate']));
+		$imageworks['cache'] = strrev((string)preg_replace('/\W+/', '', (string)$image['uploadDate']));
 
 		// From Stacks Preview Server - Not used in Imageworks and breaks the image generation
 		unset($imageworks['datadir']);
@@ -1119,7 +1119,7 @@ NGINX;
 			// Always wrap in figure for semantic HTML5
 			$figureContent = $link;
 			if ($showCaptions && !empty($image['alt'])) {
-				$caption = HTMLUtils::element('figcaption', htmlspecialchars((string) $image['alt']), ['class' => 'cms-gallery-caption']);
+				$caption = HTMLUtils::element('figcaption', htmlspecialchars((string)$image['alt']), ['class' => 'cms-gallery-caption']);
 				$figureContent .= $caption;
 			}
 
@@ -1234,7 +1234,7 @@ NGINX;
 			return null;
 		}
 
-		$image = array_filter($gallery, fn (array $image): bool => pathinfo((string) $image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn (array $image): bool => pathinfo((string)$image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
@@ -1292,7 +1292,7 @@ NGINX;
 			}
 
 			// Default to original image type
-			$type = strtolower(pathinfo((string) $image['name'], PATHINFO_EXTENSION));
+			$type = strtolower(pathinfo((string)$image['name'], PATHINFO_EXTENSION));
 			// If type is set in imageworks, use that
 			if (array_key_exists('fm', $imageworks)) {
 				$type = $imageworks['fm'];
@@ -1305,7 +1305,7 @@ NGINX;
 			$api = $baseapi . "/imageworks/$collection/$id/$property/$basename.$type";
 
 			// cache busting links
-			$imageworks['cache'] = strrev((string) preg_replace('/\W+/', '', (string) $image['uploadDate']));
+			$imageworks['cache'] = strrev((string)preg_replace('/\W+/', '', (string)$image['uploadDate']));
 		}
 
 		// From Stacks Preview Server - Not used in Imageworks and breaks the image generation

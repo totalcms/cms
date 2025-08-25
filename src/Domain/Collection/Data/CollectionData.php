@@ -25,15 +25,15 @@ final class CollectionData
 	public string $name;                      // collection name
 	public string $schema;                    // schema name
 	public string $category;                  // collection category for grouping in the admin
-	public string $url = '';                  // collection url to object page minus the slug
-	public string $description = '';          // collection description
-	public string $labelPlural = '';          // custom plural label for collection items
-	public string $labelSingular = '';        // custom singular label for collection items
-	public string $sortBy = 'id';             // the property to sort the collection by
-	public bool $reverseSort = false;         // reverse the sort order
+	public string $url              = '';                  // collection url to object page minus the slug
+	public string $description      = '';          // collection description
+	public string $labelPlural      = '';          // custom plural label for collection items
+	public string $labelSingular    = '';        // custom singular label for collection items
+	public string $sortBy           = 'id';             // the property to sort the collection by
+	public bool $reverseSort        = false;         // reverse the sort order
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
-	public bool $prettyUrl = false;           // use pretty URLs for the collection
-	public int $count = 0;                    // total number of objects created in this collection
+	public bool $prettyUrl          = false;           // use pretty URLs for the collection
+	public int $count               = 0;                    // total number of objects created in this collection
 
 	/** @var array<string> */
 	public array $groups;        // access groups that can access this collection
@@ -60,8 +60,8 @@ final class CollectionData
 		// Get default labels for the schema if not explicitly set
 		$defaultLabels = self::getDefaultLabelsForSchema($this->schema);
 
-		$description   = $this->description   === '' ? $defaultDescription             : $this->description;
-		$labelPlural   = $this->labelPlural   === '' ? $defaultLabels['labelPlural']   : $this->labelPlural;
+		$description   = $this->description === '' ? $defaultDescription : $this->description;
+		$labelPlural   = $this->labelPlural === '' ? $defaultLabels['labelPlural'] : $this->labelPlural;
 		$labelSingular = $this->labelSingular === '' ? $defaultLabels['labelSingular'] : $this->labelSingular;
 
 		$collection         = [
@@ -113,7 +113,7 @@ final class CollectionData
 
 		foreach ($schema as $key => $prop) {
 			// Only keep the meta properties that we need from the schema
-			$schema[$key] = array_filter($prop, fn($key): bool => in_array($key, $metaProps), ARRAY_FILTER_USE_KEY);
+			$schema[$key] = array_filter($prop, fn ($key): bool => in_array($key, $metaProps), ARRAY_FILTER_USE_KEY);
 		}
 
 		return $schema;

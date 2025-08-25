@@ -14,16 +14,16 @@ final readonly class SchemaSaver
 		private SchemaFactory $factory,
 		private SchemaValidator $validator,
 		private IndexBuilder $indexBuilder,
-		private CollectionLister $collectionLister
+		private CollectionLister $collectionLister,
 	) {
 	}
 
 	/**
-     * @param array<string,mixed> $schemaData
-     *
-     * @throws \UnexpectedValueException
-     */
-    public function updateSchema(string $schemaId, array $schemaData): SchemaData
+	 * @param array<string,mixed> $schemaData
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	public function updateSchema(string $schemaId, array $schemaData): SchemaData
 	{
 		if ($schemaId !== $schemaData['id']) {
 			throw new \UnexpectedValueException('Schema ID does not match');
@@ -39,14 +39,14 @@ final readonly class SchemaSaver
 	}
 
 	/**
-     * Save a schema.
-     *
-     * @param array<string,mixed> $schemaData
-     *
-     * @throws \InvalidArgumentException
-     * @throws \UnexpectedValueException
-     */
-    public function saveSchema(array $schemaData): SchemaData
+	 * Save a schema.
+	 *
+	 * @param array<string,mixed> $schemaData
+	 *
+	 * @throws \InvalidArgumentException
+	 * @throws \UnexpectedValueException
+	 */
+	public function saveSchema(array $schemaData): SchemaData
 	{
 		// Validate required input structure
 		if (!isset($schemaData['properties'])) {

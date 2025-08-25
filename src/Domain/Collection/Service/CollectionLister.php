@@ -8,8 +8,8 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 final readonly class CollectionLister
 {
 	public function __construct(private CollectionRepository $storage)
-    {
-    }
+	{
+	}
 
 	/** @return array<CollectionData> */
 	public function listAllCollections(): array
@@ -22,7 +22,7 @@ final readonly class CollectionLister
 	{
 		$collections = $this->storage->listAllCollections();
 
-		return array_filter($collections, fn(CollectionData $collection): bool => $this->storage->isReservedCollection($collection->id) === false);
+		return array_filter($collections, fn (CollectionData $collection): bool => $this->storage->isReservedCollection($collection->id) === false);
 	}
 
 	/** @return array<CollectionData> */
@@ -30,6 +30,6 @@ final readonly class CollectionLister
 	{
 		$collections = $this->storage->listAllCollections();
 
-		return array_filter($collections, fn(CollectionData $collection): bool => $collection->schema === $schemaId);
+		return array_filter($collections, fn (CollectionData $collection): bool => $collection->schema === $schemaId);
 	}
 }

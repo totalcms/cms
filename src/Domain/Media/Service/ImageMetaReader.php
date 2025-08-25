@@ -66,12 +66,14 @@ class ImageMetaReader
 			if (count($parts) === 2 && $parts[1] === '1') {
 				return $parts[0];
 			}
+
 			return $speed;
 		}
 
 		// Convert decimal to fraction (e.g., "0.008" -> "1/125")
 		if (is_numeric($speed) && floatval($speed) > 0) {
 			$fraction = 1 / floatval($speed);
+
 			return '1/' . round($fraction);
 		}
 
@@ -80,7 +82,7 @@ class ImageMetaReader
 
 	/**
 	 * Format numeric values by removing /1 fractions for cleaner display.
-	 * E.g., "11/1" becomes "11", but "1/60" stays "1/60"
+	 * E.g., "11/1" becomes "11", but "1/60" stays "1/60".
 	 */
 	private static function formatNumericValue(mixed $value): mixed
 	{
@@ -98,6 +100,7 @@ class ImageMetaReader
 					// Return just the numerator for "/1" fractions
 					return floatval($parts[0]);
 				}
+
 				// Return calculated fraction for other cases
 				return floatval($parts[0]) / floatval($parts[1]);
 			}
@@ -161,6 +164,7 @@ class ImageMetaReader
 			if ($date === false) {
 				$date = new \DateTime($dateString);
 			}
+
 			return $date->format('c');
 		} catch (\Exception) {
 			return null;
@@ -230,7 +234,7 @@ class ImageMetaReader
 		];
 
 		// Filter out null values
-		$data = array_filter($data, fn($value) => $value !== null);
+		$data = array_filter($data, fn ($value) => $value !== null);
 
 		// Extract keywords from multiple sources (IPTC, XMP, EXIF)
 		$keywords = self::extractKeywords($exifData, $xmpData);
@@ -327,6 +331,7 @@ class ImageMetaReader
 	 * Uses getimagesize() to access APP13 section which contains IPTC data.
 	 *
 	 * @param string $imagepath
+	 *
 	 * @return array<string,string>
 	 */
 	private static function extractIptcLocation(string $imagepath): array
@@ -366,6 +371,7 @@ class ImageMetaReader
 	 *
 	 * @param array<string,mixed> $exifData
 	 * @param array<string,mixed> $xmpData
+	 *
 	 * @return array<string>
 	 */
 	private static function extractKeywords(array $exifData, array $xmpData): array

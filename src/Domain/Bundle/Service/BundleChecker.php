@@ -25,7 +25,8 @@ class BundleChecker
 		if (!$this->bundleRepository->localBundleExists()) {
 			$this->verify();
 		}
-        return $this->bundleRepository->bundleExists()
+
+		return $this->bundleRepository->bundleExists()
 			&& $this->bundleRepository->localBundleExists();
 	}
 

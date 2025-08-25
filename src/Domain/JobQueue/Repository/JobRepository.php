@@ -283,12 +283,11 @@ final readonly class JobRepository
 	}
 
 	/**
-     * Fetch all pending jobs.
-     *
-     *
-     * @return array<JobData>
-     */
-    public function fetchPendingJobs(?int $limit = null): array
+	 * Fetch all pending jobs.
+	 *
+	 * @return array<JobData>
+	 */
+	public function fetchPendingJobs(?int $limit = null): array
 	{
 		$sql = <<<SQL
 			SELECT * FROM jobqueue
@@ -316,12 +315,11 @@ final readonly class JobRepository
 	}
 
 	/**
-     * Fetch all failed jobs.
-     *
-     *
-     * @return array<JobData>
-     */
-    public function fetchFailedJobs(?int $limit = null): array
+	 * Fetch all failed jobs.
+	 *
+	 * @return array<JobData>
+	 */
+	public function fetchFailedJobs(?int $limit = null): array
 	{
 		$sql = <<<SQL
 			SELECT * FROM jobqueue

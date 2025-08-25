@@ -14,18 +14,17 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 final readonly class SchemaValidator
 {
 	public function __construct(private SchemaRepository $schemaRepository)
-    {
-    }
+	{
+	}
 
 	/**
-     * Validate a schema.
-     *
-     * @param array<string,mixed> $object
-     *
-     * @throws \DomainException
-     *
-     */
-    public function validateSchema(array $object, string $schemaType = 'schema'): bool
+	 * Validate a schema.
+	 *
+	 * @param array<string,mixed> $object
+	 *
+	 * @throws \DomainException
+	 */
+	public function validateSchema(array $object, string $schemaType = 'schema'): bool
 	{
 		$schema     = $this->schemaRepository->getSchema($schemaType);
 		$schemaJSON = $schema->toJson();

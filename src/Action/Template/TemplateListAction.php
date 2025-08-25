@@ -10,25 +10,24 @@ use TotalCMS\Renderer\RawRenderer;
 final readonly class TemplateListAction
 {
 	public function __construct(private RawRenderer $renderer, private TemplateLister $templateLister)
-    {
-    }
+	{
+	}
 
 	/**
-     * Action.
-     *
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	 * Action.
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$params = $request->getQueryParams();
 		$filter = $params['filter'] ?? 'all';
 
 		$templates = match ($filter) {
-            'reserved' => $this->templateLister->listReservedTemplates(),
-            'custom'   => $this->templateLister->listCustomTemplates(),
-            default    => $this->templateLister->listAllTemplates(),
-        };
+			'reserved' => $this->templateLister->listReservedTemplates(),
+			'custom'   => $this->templateLister->listCustomTemplates(),
+			default    => $this->templateLister->listAllTemplates(),
+		};
 
 		$json = json_encode($templates);
 		if ($json === false) {

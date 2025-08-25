@@ -29,7 +29,7 @@ final readonly class AdminUtilsAction
 
 			if ($page === 'twig-playground' && isset($post['twig'])) {
 				try {
-					$results = $this->twigEngine->renderString((string) $post['twig']);
+					$results = $this->twigEngine->renderString((string)$post['twig']);
 				} catch (\Throwable $e) {
 					$results = sprintf('<div class="error"><pre><code>%s</code></pre></div>', htmlspecialchars($e->getMessage()));
 				}
@@ -58,6 +58,7 @@ final readonly class AdminUtilsAction
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
+	 *
 	 * @return array<string,string>|null
 	 */
 	private function detectTotalCms1Data(): ?array

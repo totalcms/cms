@@ -47,7 +47,7 @@ final class CsvImporter
 		$records = $csv->getRecords(); // Get the records
 
 		// Filter out empty headers
-		$headers = array_filter($headers, fn(string $header): bool => (trim($header) === ''));
+		$headers = array_filter($headers, fn (string $header): bool => (trim($header) === ''));
 
 		$cleanedRecords = [];
 		foreach ($records as $record) {

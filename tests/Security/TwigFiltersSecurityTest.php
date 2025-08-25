@@ -4,7 +4,6 @@ namespace Tests\Security;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Twig\MarkdownRuntime;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use Twig\Environment;
 use Twig\Error\SyntaxError;

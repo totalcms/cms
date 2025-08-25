@@ -11,17 +11,15 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 final readonly class TemplateSaver
 {
 	public function __construct(private TemplateRepository $storage)
-    {
-    }
+	{
+	}
 
 	/**
-     * Save a Template.
-     *
-     *
-     * @throws \DomainException
-     *
-     */
-    public function saveTemplate(string $id, string $contents): TemplateData
+	 * Save a Template.
+	 *
+	 * @throws \DomainException
+	 */
+	public function saveTemplate(string $id, string $contents): TemplateData
 	{
 		$template = TemplateFactory::generateTemplate($id, $contents);
 

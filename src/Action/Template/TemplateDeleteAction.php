@@ -14,16 +14,15 @@ final readonly class TemplateDeleteAction
 	 * @param TemplateRemover $service Template save service
 	 */
 	public function __construct(private TemplateRemover $service)
-    {
-    }
+	{
+	}
 
 	/**
-     * Invokable Action.
-     *
-     * @param array<string,string> $args The routing arguments
-     *
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	 * Invokable Action.
+	 *
+	 * @param array<string,string> $args The routing arguments
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$deleted = $this->service->deleteTemplate($args['template']);
 

@@ -23,13 +23,11 @@ final class IndexRepository extends StorageRepository
 	}
 
 	/**
-     * get the index.
-     *
-     *
-     * @SuppressWarnings("PHPMD.ElseExpression")
-     *
-     */
-    public function fetchIndex(string $collection): ?IndexData
+	 * get the index.
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 */
+	public function fetchIndex(string $collection): ?IndexData
 	{
 		// Try cache first (Redis preferred for fast index access)
 		$cacheKey = "index:{$collection}";
@@ -68,13 +66,13 @@ final class IndexRepository extends StorageRepository
 	}
 
 	/**
-     * Get an array of object IDs in.
-     *
-     *
-     * @SuppressWarnings("PHPMD.ElseExpression")
-     * @return array<string>
-     */
-    public function fetchObjectIds(string $collection): array
+	 * Get an array of object IDs in.
+	 *
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 *
+	 * @return array<string>
+	 */
+	public function fetchObjectIds(string $collection): array
 	{
 		// Try cache first (Redis preferred for fast access)
 		$cacheKey = "object_ids:{$collection}";
@@ -104,11 +102,9 @@ final class IndexRepository extends StorageRepository
 	}
 
 	/**
-     * save the index.
-     *
-     *
-     */
-    public function saveIndex(string $collection, IndexData $index): void
+	 * save the index.
+	 */
+	public function saveIndex(string $collection, IndexData $index): void
 	{
 		$indexFile  = $this->buildIndexPath($collection);
 		$indexJSON  = $this->serializer->serialize($index, 'json'); // no pretty print on purpose

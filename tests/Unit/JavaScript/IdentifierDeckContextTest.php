@@ -292,7 +292,7 @@ final class IdentifierDeckContextTest extends TestCase
 		$this->assertLessThan(0.1, $time); // Should be fast
 
 		// Check that all IDs are unique
-		$ids = array_map(fn (\Tests\Unit\JavaScript\MockIdentifierForDeckContext $id): string => $id->getValue(), $identifiers);
+		$ids = array_map(fn (MockIdentifierForDeckContext $id): string => $id->getValue(), $identifiers);
 		$this->assertEquals(50, count(array_unique($ids)));
 	}
 
@@ -320,8 +320,8 @@ class MockIdentifierForDeckContext
 	private string $timestamp       = '';
 
 	public function __construct(private readonly bool $isInDeck)
-    {
-    }
+	{
+	}
 
 	public function isInDeck(): bool
 	{
@@ -444,6 +444,6 @@ class MockIdentifierForDeckContext
 		$value = strtolower($value);
 		$value = preg_replace('/[^a-z0-9]+/', '_', $value);
 
-		return trim((string) $value, '_');
+		return trim((string)$value, '_');
 	}
 }

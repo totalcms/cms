@@ -114,7 +114,7 @@ final readonly class FactoryImporter
 
 		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
 
-		$factories = array_map(fn(array $property) => $property['factory'] ?? null, $schema->properties);
+		$factories = array_map(fn (array $property) => $property['factory'] ?? null, $schema->properties);
 
 		// Filter out null values to only return properties that have factory definitions
 		return array_filter($factories);
@@ -140,14 +140,14 @@ final readonly class FactoryImporter
 				continue;
 			}
 			[$method, $args] = $this->parseFakerRule($value);
-			if (str_starts_with((string) $method, 'image')) {
+			if (str_starts_with((string)$method, 'image')) {
 				// Save image and store path in object data
 				// Not using the ImageSaver here to avoid unnecessary complexity
 				$path                  = $this->faker->$method(...$args);
 				$objectData[$property] = $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path);
 				continue;
 			}
-			if (str_starts_with((string) $method, 'gallery')) {
+			if (str_starts_with((string)$method, 'gallery')) {
 				// Save images and store path in object data
 				// Not using the GallerySaver here to avoid unnecessary complexity
 				$paths                 = $this->faker->$method(...$args);

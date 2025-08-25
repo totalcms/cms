@@ -367,9 +367,9 @@ final class FileUploadSecurityTest extends TestCase
 
 		// Application should detect dangerous content regardless of MIME type
 		$hasDangerousContent = (
-			str_contains((string) $content, '<?php')
-			|| str_contains((string) $content, '<script>')
-			|| str_contains((string) $content, 'javascript:')
+			str_contains((string)$content, '<?php')
+			|| str_contains((string)$content, '<script>')
+			|| str_contains((string)$content, 'javascript:')
 		);
 
 		if ($hasDangerousContent) {
@@ -388,16 +388,16 @@ final class FileUploadSecurityTest extends TestCase
 		$content  = $file['content'];
 
 		// Should detect double extensions
-		$doubleExtension = preg_match('/\.(php|jsp|asp|exe|sh|bat|cmd)\./i', (string) $filename);
+		$doubleExtension = preg_match('/\.(php|jsp|asp|exe|sh|bat|cmd)\./i', (string)$filename);
 		if ($doubleExtension) {
 			$this->assertTrue((bool)$doubleExtension, "Should detect double extension in {$attackType}");
 		}
 
 		// Should detect executable content
 		$hasExecutableContent = (
-			str_contains((string) $content, '<?php')
-			|| str_contains((string) $content, '<%=')
-			|| str_contains((string) $content, 'MZ') // PE header
+			str_contains((string)$content, '<?php')
+			|| str_contains((string)$content, '<%=')
+			|| str_contains((string)$content, 'MZ') // PE header
 		);
 
 		if ($hasExecutableContent) {
@@ -424,7 +424,7 @@ final class FileUploadSecurityTest extends TestCase
 		if (isset($validMagicBytes[$declaredType])) {
 			$hasValidMagic = false;
 			foreach ($validMagicBytes[$declaredType] as $validMagic) {
-				if (str_starts_with((string) $content, $validMagic)) {
+				if (str_starts_with((string)$content, $validMagic)) {
 					$hasValidMagic = true;
 					break;
 				}
@@ -432,9 +432,9 @@ final class FileUploadSecurityTest extends TestCase
 
 			// Should detect if magic bytes don't match type or contain dangerous content
 			$hasDangerousContent = (
-				str_contains((string) $content, '<?php')
-				|| str_contains((string) $content, '<script>')
-				|| str_contains((string) $content, '#!/bin/')
+				str_contains((string)$content, '<?php')
+				|| str_contains((string)$content, '<script>')
+				|| str_contains((string)$content, '#!/bin/')
 			);
 
 			if ($hasDangerousContent) {
@@ -454,16 +454,16 @@ final class FileUploadSecurityTest extends TestCase
 
 		// Should detect if file is valid in multiple formats
 		$hasImageHeader = (
-			str_starts_with((string) $content, "\xFF\xD8\xFF") // JPEG
-			|| str_starts_with((string) $content, "\x89PNG")      // PNG
-			|| str_starts_with((string) $content, 'GIF87a')       // GIF87a
-			|| str_starts_with((string) $content, 'GIF89a')          // GIF89a
+			str_starts_with((string)$content, "\xFF\xD8\xFF") // JPEG
+			|| str_starts_with((string)$content, "\x89PNG")      // PNG
+			|| str_starts_with((string)$content, 'GIF87a')       // GIF87a
+			|| str_starts_with((string)$content, 'GIF89a')          // GIF89a
 		);
 
 		$hasHTMLContent = (
-			str_contains((string) $content, '<html>')
-			|| str_contains((string) $content, '<script>')
-			|| str_contains((string) $content, '<!DOCTYPE')
+			str_contains((string)$content, '<html>')
+			|| str_contains((string)$content, '<script>')
+			|| str_contains((string)$content, '<!DOCTYPE')
 		);
 
 		// Polyglot detected if it has both image header and HTML content
@@ -480,7 +480,7 @@ final class FileUploadSecurityTest extends TestCase
 	private function assertFileSizeLimits(array $file, string $attackType): void
 	{
 		$content = $file['content'];
-		$size    = strlen((string) $content);
+		$size    = strlen((string)$content);
 
 		// Application should detect files that exceed reasonable size limits
 		$maxSize     = 50 * 1024 * 1024; // 50MB
@@ -535,7 +535,7 @@ final class FileUploadSecurityTest extends TestCase
 		$hasExecutableExtension = false;
 
 		foreach ($executableExtensions as $ext) {
-			if (str_ends_with(strtolower((string) $filename), $ext)) {
+			if (str_ends_with(strtolower((string)$filename), $ext)) {
 				$hasExecutableExtension = true;
 				break;
 			}
@@ -572,7 +572,7 @@ final class FileUploadSecurityTest extends TestCase
 
 		if (isset($attack['exif_data'])) {
 			foreach ($attack['exif_data'] as $value) {
-				if (str_contains((string) $value, '<script>') || str_contains((string) $value, 'javascript:') || str_contains((string) $value, 'DROP TABLE')) {
+				if (str_contains((string)$value, '<script>') || str_contains((string)$value, 'javascript:') || str_contains((string)$value, 'DROP TABLE')) {
 					$hasDangerousMetadata = true;
 					break;
 				}
@@ -582,15 +582,15 @@ final class FileUploadSecurityTest extends TestCase
 		if (isset($attack['iptc_data'])) {
 			foreach ($attack['iptc_data'] as $value) {
 				if (is_array($value)) {
-                    $serialized = json_encode($value);
-                    if (str_contains($serialized, '<script>')) {
+					$serialized = json_encode($value);
+					if (str_contains($serialized, '<script>')) {
 						$hasDangerousMetadata = true;
 						break;
 					}
-                } elseif (str_contains((string) $value, '../')) {
-                    $hasDangerousMetadata = true;
-                    break;
-                }
+				} elseif (str_contains((string)$value, '../')) {
+					$hasDangerousMetadata = true;
+					break;
+				}
 			}
 		}
 
@@ -611,7 +611,7 @@ final class FileUploadSecurityTest extends TestCase
 
 		foreach ($files as $filename => $content) {
 			// Application should detect path traversal in archive members
-			if (str_contains((string) $filename, '../') || str_contains((string) $filename, '..\\') || str_starts_with((string) $filename, '/')) {
+			if (str_contains((string)$filename, '../') || str_contains((string)$filename, '..\\') || str_starts_with((string)$filename, '/')) {
 				$hasDangerousFiles = true;
 				break;
 			}
@@ -633,18 +633,18 @@ final class FileUploadSecurityTest extends TestCase
 		$actualContent = $attack['actual_content'];
 
 		// Should detect content type mismatches
-		if ($declaredType === 'image/jpeg' && str_contains((string) $actualContent, '<html>')) {
+		if ($declaredType === 'image/jpeg' && str_contains((string)$actualContent, '<html>')) {
 			$this->assertTrue(true, "Should detect HTML served as image in {$attackType}");
 		}
 
-		if ($declaredType === 'application/json' && str_contains((string) $actualContent, '<?xml')) {
+		if ($declaredType === 'application/json' && str_contains((string)$actualContent, '<?xml')) {
 			$this->assertTrue(true, "Should detect XML served as JSON in {$attackType}");
 		}
 
 		// Application should detect dangerous content regardless of declared type
 		$hasDangerousContent = (
-			str_contains((string) $actualContent, '<script>')
-			|| str_contains((string) $actualContent, 'javascript:')
+			str_contains((string)$actualContent, '<script>')
+			|| str_contains((string)$actualContent, 'javascript:')
 		);
 
 		if ($hasDangerousContent) {
@@ -675,7 +675,7 @@ final class FileUploadSecurityTest extends TestCase
 
 		$hasSuspiciousContent = false;
 		foreach ($suspiciousPatterns as $pattern) {
-			if (str_contains(strtolower((string) $content), strtolower($pattern))) {
+			if (str_contains(strtolower((string)$content), strtolower($pattern))) {
 				$hasSuspiciousContent = true;
 				break;
 			}

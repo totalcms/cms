@@ -17,11 +17,9 @@ final readonly class SchemaSaveAction
 	}
 
 	/**
-     * Invokable Action.
-     *
-     *
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	 * Invokable Action.
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$data = (array)$request->getParsedBody();
 

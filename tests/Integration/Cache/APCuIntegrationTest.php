@@ -28,13 +28,13 @@ final class APCuIntegrationTest extends TestCase
 		// Initialize services
 		$this->apcuService = new APCuService($this->config);
 		$filesystemService = new FilesystemService($this->config);
-		$opcacheService = new OPcacheService();
-		$redisService = new RedisService($this->config);
-		$memcachedService = new MemcachedService($this->config);
-		$devModeManager = new DevModeManager();
-		
+		$opcacheService    = new OPcacheService();
+		$redisService      = new RedisService($this->config);
+		$memcachedService  = new MemcachedService($this->config);
+		$devModeManager    = new DevModeManager();
+
 		// Create real TextWatermarkFactory instance for testing
-		$mockStorage = $this->createMock(\TotalCMS\Domain\Storage\StorageAdapterInterface::class);
+		$mockStorage          = $this->createMock(\TotalCMS\Domain\Storage\StorageAdapterInterface::class);
 		$textWatermarkFactory = new TextWatermarkFactory($mockStorage, $this->config);
 
 		$this->cacheManager = new CacheManager(
@@ -71,7 +71,7 @@ final class APCuIntegrationTest extends TestCase
 			$this->markTestSkipped('APCu is not available for testing');
 		}
 
-		$key = 'priority_test_' . uniqid();
+		$key   = 'priority_test_' . uniqid();
 		$value = 'test_data_for_priority';
 
 		// Store data using CacheManager
@@ -94,9 +94,9 @@ final class APCuIntegrationTest extends TestCase
 		}
 
 		$collectionName = 'test_collection_' . uniqid();
-		$indexData = [
-			'objects' => ['obj1', 'obj2', 'obj3'],
-			'count' => 3,
+		$indexData      = [
+			'objects'      => ['obj1', 'obj2', 'obj3'],
+			'count'        => 3,
 			'lastModified' => time(),
 		];
 
@@ -122,8 +122,8 @@ final class APCuIntegrationTest extends TestCase
 			$this->markTestSkipped('APCu is not available for testing');
 		}
 
-		$endpoint = '/api/test/endpoint';
-		$params = ['param1' => 'value1', 'param2' => 'value2'];
+		$endpoint     = '/api/test/endpoint';
+		$params       = ['param1' => 'value1', 'param2' => 'value2'];
 		$responseData = ['status' => 'success', 'data' => ['items' => [1, 2, 3]]];
 
 		// Store API response
@@ -135,7 +135,7 @@ final class APCuIntegrationTest extends TestCase
 		$this->assertEquals($responseData, $retrievedResponse, 'Should retrieve correct API response');
 
 		// Test with different params (should return null)
-		$differentParams = ['param1' => 'different_value'];
+		$differentParams   = ['param1' => 'different_value'];
 		$differentResponse = $this->cacheManager->getApiResponse($endpoint, $differentParams);
 		$this->assertNull($differentResponse, 'Should return null for different parameters');
 	}
@@ -146,10 +146,10 @@ final class APCuIntegrationTest extends TestCase
 			$this->markTestSkipped('APCu is not available for testing');
 		}
 
-		$cacheKey = 'computed_test_' . uniqid();
+		$cacheKey     = 'computed_test_' . uniqid();
 		$computedData = [
 			'expensive_calculation' => 'result_' . time(),
-			'complex_data' => ['nested' => ['structure' => 'value']],
+			'complex_data'          => ['nested' => ['structure' => 'value']],
 		];
 
 		// Store computed data
@@ -177,7 +177,7 @@ final class APCuIntegrationTest extends TestCase
 		$testData = [
 			'collection:blog' => 'blog_data',
 			'collection:news' => 'news_data',
-			'api:endpoint1' => 'api_data',
+			'api:endpoint1'   => 'api_data',
 			'computed:schema' => 'schema_data',
 		];
 
@@ -201,11 +201,11 @@ final class APCuIntegrationTest extends TestCase
 	public function testCacheReporterWithAPCu(): void
 	{
 		$stats = $this->cacheReporter->getCacheStats();
-		
+
 		$this->assertIsArray($stats, 'Cache stats should return an array');
 		$this->assertArrayHasKey('available_backends', $stats);
 		$this->assertArrayHasKey('backend_status', $stats);
-		
+
 		// Check if APCu is properly reported
 		$backends = $stats['available_backends'];
 		$this->assertArrayHasKey('apcu', $backends, 'APCu should be listed in available backends');
@@ -217,7 +217,7 @@ final class APCuIntegrationTest extends TestCase
 
 		if ($this->apcuService->isAvailable()) {
 			$this->assertEquals('active', $backendStatus['apcu'], 'APCu should show as active when available');
-			
+
 			// Check APCu service stats
 			$this->assertArrayHasKey('services', $stats);
 			if (isset($stats['services']['apcu'])) {
@@ -232,13 +232,13 @@ final class APCuIntegrationTest extends TestCase
 	public function testUsageStatsIncludeAPCu(): void
 	{
 		$usageStats = $this->cacheReporter->getUsageStats();
-		
+
 		$this->assertIsArray($usageStats, 'Usage stats should return an array');
 		$this->assertArrayHasKey('apcu_available', $usageStats, 'Should report APCu availability');
 		$this->assertEquals($this->apcuService->isAvailable(), $usageStats['apcu_available']);
-		
+
 		$this->assertArrayHasKey('preferred_backend', $usageStats);
-		
+
 		// If APCu is available, it should be the preferred backend
 		if ($this->apcuService->isAvailable()) {
 			$this->assertEquals('apcu', $usageStats['preferred_backend'], 'APCu should be preferred backend when available');
@@ -271,7 +271,7 @@ final class APCuIntegrationTest extends TestCase
 		if (!is_dir($dir)) {
 			return;
 		}
-		
+
 		$files = array_diff(scandir($dir), ['.', '..']);
 		foreach ($files as $file) {
 			$path = $dir . DIRECTORY_SEPARATOR . $file;
@@ -293,7 +293,7 @@ final class APCuIntegrationTest extends TestCase
 					'enabled' => true,
 					'prefix'  => 'test_integration_',
 				],
-				'redis' => ['enabled' => false], // Disable Redis for isolated APCu testing
+				'redis'     => ['enabled' => false], // Disable Redis for isolated APCu testing
 				'memcached' => ['enabled' => false], // Disable Memcached for isolated APCu testing
 			],
 			'logger'     => [],

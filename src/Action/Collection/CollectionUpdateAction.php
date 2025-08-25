@@ -17,8 +17,8 @@ final readonly class CollectionUpdateAction
 	 * @param CollectionSaver $service Collection save service
 	 */
 	public function __construct(private JsonRenderer $renderer, private CollectionSaver $service)
-    {
-    }
+	{
+	}
 
 	/**
 	 * Action.

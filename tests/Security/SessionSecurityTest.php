@@ -98,9 +98,9 @@ final class SessionSecurityTest extends TestCase
 		$isExpired = (time() - $_SESSION['last_activity']) > $timeout;
 
 		$this->assertTrue($isExpired, 'Session should be expired');
-        // Session should be invalidated when expired
-        session_destroy();
-        $this->assertSame(PHP_SESSION_NONE, session_status(), 'Expired session should be destroyed');
+		// Session should be invalidated when expired
+		session_destroy();
+		$this->assertSame(PHP_SESSION_NONE, session_status(), 'Expired session should be destroyed');
 	}
 
 	public function testSessionCookieSecurity(): void
@@ -188,9 +188,9 @@ final class SessionSecurityTest extends TestCase
 		}
 
 		// Test brute force detection
-		$recentAttempts = array_filter($attempts, fn(array $attempt): bool => ($currentTime - $attempt['timestamp']) <= $timeWindow);
+		$recentAttempts = array_filter($attempts, fn (array $attempt): bool => ($currentTime - $attempt['timestamp']) <= $timeWindow);
 
-		$failedAttempts = array_filter($recentAttempts, fn(array $attempt): true => !$attempt['success']);
+		$failedAttempts = array_filter($recentAttempts, fn (array $attempt): true => !$attempt['success']);
 
 		$this->assertGreaterThan($maxAttempts, count($failedAttempts), 'Should detect excessive failed attempts');
 

@@ -20,12 +20,11 @@ final readonly class DeckItemUpdater
 	}
 
 	/**
-     * Update an existing deck item in an object property.
-     *
-     * @param array<string,mixed> $itemData
-     *
-     */
-    public function updateDeckItem(
+	 * Update an existing deck item in an object property.
+	 *
+	 * @param array<string,mixed> $itemData
+	 */
+	public function updateDeckItem(
 		string $collection,
 		string $objectId,
 		string $propertyName,

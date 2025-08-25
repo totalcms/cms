@@ -20,14 +20,13 @@ final readonly class ObjectFactory
 	}
 
 	/**
-     * create a schema object.
-     *
-     * @param array<string,mixed> $objectData
-     *
-     * @throws \UnexpectedValueException
-     *
-     */
-    public function generateObject(string $collection, array $objectData): ObjectData
+	 * create a schema object.
+	 *
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	public function generateObject(string $collection, array $objectData): ObjectData
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
@@ -97,12 +96,11 @@ final readonly class ObjectFactory
 	}
 
 	/**
-     * Generate ID using autogen settings if configured.
-     *
-     * @param array<string,mixed> $objectData
-     *
-     */
-    private function generateIdIfNeeded(string $collection, array $objectData, SchemaData $schema): string
+	 * Generate ID using autogen settings if configured.
+	 *
+	 * @param array<string,mixed> $objectData
+	 */
+	private function generateIdIfNeeded(string $collection, array $objectData, SchemaData $schema): string
 	{
 		// Check if ID field has autogen settings
 		$idProperty     = $schema->properties['id'] ?? [];

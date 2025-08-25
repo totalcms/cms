@@ -4,7 +4,9 @@ namespace TotalCMS\Domain\Property\Data;
 
 use matthieumastadenis\couleur\ColorFactory;
 use matthieumastadenis\couleur\ColorSpace;
-use function matthieumastadenis\couleur\utils\okLch\{oklchToHex, oklchChange, changeHue};
+
+use function matthieumastadenis\couleur\utils\okLch\oklchChange;
+use function matthieumastadenis\couleur\utils\okLch\oklchToHex;
 
 /**
  * Color property data.

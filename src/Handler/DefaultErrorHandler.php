@@ -155,15 +155,16 @@ final readonly class DefaultErrorHandler
 	}
 
 	/**
-     * Get exception text.
-     *
-     * @param \Throwable $exception Error
-     * @param int $maxLength The max length of the error message
-     *
-     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-     * @return string The full error message
-     */
-    private function getExceptionText(\Throwable $exception, int $maxLength = 0, bool $backtrace = false): string
+	 * Get exception text.
+	 *
+	 * @param \Throwable $exception Error
+	 * @param int $maxLength The max length of the error message
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 * @return string The full error message
+	 */
+	private function getExceptionText(\Throwable $exception, int $maxLength = 0, bool $backtrace = false): string
 	{
 		$code    = $exception->getCode();
 		$file    = $exception->getFile();

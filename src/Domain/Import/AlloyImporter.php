@@ -288,12 +288,12 @@ final class AlloyImporter
 
 			// Handle summary
 			if (isset($frontMatter['summary'])) {
-				$data['summary'] = '<p>' . trim((string) $frontMatter['summary']) . '</p>';
+				$data['summary'] = '<p>' . trim((string)$frontMatter['summary']) . '</p>';
 			}
 
 			// Handle image (topper field)
 			if (isset($frontMatter['topper'])) {
-				$urlPath = parse_url((string) $frontMatter['topper'], PHP_URL_PATH);
+				$urlPath = parse_url((string)$frontMatter['topper'], PHP_URL_PATH);
 				if ($urlPath !== null && $urlPath !== false) {
 					$imageFilename = basename($urlPath);
 					$imagePath     = $imageUploadsPath . '/' . $imageFilename;

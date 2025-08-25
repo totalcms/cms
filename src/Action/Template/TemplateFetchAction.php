@@ -10,17 +10,17 @@ use TotalCMS\Renderer\RawRenderer;
 final readonly class TemplateFetchAction
 {
 	public function __construct(private RawRenderer $renderer, private TemplateFetcher $templateFetcher)
-    {
-    }
+	{
+	}
 
 	/**
-     * Action.
-     *
-     * @param array<string,string> $args The routing arguments
-     *
-     * @return ResponseInterface the response
-     */
-    public function __invoke(
+	 * Action.
+	 *
+	 * @param array<string,string> $args The routing arguments
+	 *
+	 * @return ResponseInterface the response
+	 */
+	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,

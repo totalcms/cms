@@ -16,7 +16,7 @@ final readonly class IndexSearcher
 	{
 		$index = $this->reader->fetchIndex($collection);
 
-		return $index->objects->filter(fn($object): bool => $this->searchProperty($object, $property, $query));
+		return $index->objects->filter(fn ($object): bool => $this->searchProperty($object, $property, $query));
 	}
 
 	/**
@@ -83,13 +83,13 @@ final readonly class IndexSearcher
 	{
 		foreach ($queries as $query) {
 			if ($this->matchPropertyQuery($query)) {
-                [$property, $searchTerm] = $this->extractPropertyQuery($query);
-                if ($this->searchProperty($object, $property, $searchTerm)) {
+				[$property, $searchTerm] = $this->extractPropertyQuery($query);
+				if ($this->searchProperty($object, $property, $searchTerm)) {
 					return true;
 				}
-            } elseif (self::searchArray($object, $query)) {
-                return true;
-            }
+			} elseif (self::searchArray($object, $query)) {
+				return true;
+			}
 		}
 
 		return false;
@@ -105,14 +105,14 @@ final readonly class IndexSearcher
 	{
 		foreach ($queries as $query) {
 			if ($this->matchPropertyQuery($query)) {
-                [$property, $searchTerm] = $this->extractPropertyQuery($query);
-                if (!$this->searchProperty($object, $property, $searchTerm)) {
+				[$property, $searchTerm] = $this->extractPropertyQuery($query);
+				if (!$this->searchProperty($object, $property, $searchTerm)) {
 					return false; // If any query does not match, exclude the object
 				}
-            } elseif (!self::searchArray($object, $query)) {
-                return false;
-                // If any query does not match, exclude the object
-            }
+			} elseif (!self::searchArray($object, $query)) {
+				return false;
+				// If any query does not match, exclude the object
+			}
 		}
 
 		return true; // All queries matched
@@ -150,14 +150,14 @@ final readonly class IndexSearcher
 				continue;
 			}
 			if (is_array($value)) {
-                // Recursively search in nested arrays
-                if (self::searchArray($value, $query)) {
+				// Recursively search in nested arrays
+				if (self::searchArray($value, $query)) {
 					return true;
 				}
-            } elseif (self::searchValue($value, $query)) {
-                // Perform case-insensitive search for string values
-                return true;
-            }
+			} elseif (self::searchValue($value, $query)) {
+				// Perform case-insensitive search for string values
+				return true;
+			}
 		}
 
 		return false;
@@ -206,12 +206,12 @@ final readonly class IndexSearcher
 			$value = $object[$property];
 			foreach ($queries as $query) {
 				if (is_array($value)) {
-                    if (self::searchArray($value, $query)) {
+					if (self::searchArray($value, $query)) {
 						return $index;
 					}
-                } elseif (self::searchValue($value, $query)) {
-                    return $index;
-                }
+				} elseif (self::searchValue($value, $query)) {
+					return $index;
+				}
 			}
 		}
 

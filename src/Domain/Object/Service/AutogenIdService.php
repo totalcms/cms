@@ -59,12 +59,13 @@ final readonly class AutogenIdService
 	}
 
 	/**
-     * Prepare replacement data including special variables.
-     *
-     * @param array<string,mixed> $objectData
-     * @return array<string,mixed>
-     */
-    private function prepareReplacementData(string $collection, array $objectData): array
+	 * Prepare replacement data including special variables.
+	 *
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function prepareReplacementData(string $collection, array $objectData): array
 	{
 		// Start with object data (filter to strings only like JavaScript version)
 		$data = array_filter($objectData, fn ($value): bool => is_string($value));
@@ -80,12 +81,11 @@ final readonly class AutogenIdService
 	}
 
 	/**
-     * Replace placeholders in the pattern.
-     *
-     * @param array<string,mixed> $data
-     *
-     */
-    private function replacePlaceholders(string $pattern, array $data, string $collection): string
+	 * Replace placeholders in the pattern.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private function replacePlaceholders(string $pattern, array $data, string $collection): string
 	{
 		return preg_replace_callback('/\$\{([^}]+)\}/', function (array $matches) use ($data, $collection) {
 			$key = $matches[1];
@@ -105,11 +105,9 @@ final readonly class AutogenIdService
 	}
 
 	/**
-     * Get the next OID for the collection.
-     *
-     *
-     */
-    private function getNextOid(string $collection): int
+	 * Get the next OID for the collection.
+	 */
+	private function getNextOid(string $collection): int
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		if (!$collectionData instanceof CollectionData) {
@@ -153,13 +151,13 @@ final readonly class AutogenIdService
 	}
 
 	/**
-     * Prepare replacement data with explicit OID count.
-     *
-     * @param array<string,mixed> $objectData
-     *
-     * @return array<string,mixed>
-     */
-    private static function prepareReplacementDataWithOid(array $objectData, int $oidCount): array
+	 * Prepare replacement data with explicit OID count.
+	 *
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function prepareReplacementDataWithOid(array $objectData, int $oidCount): array
 	{
 		// Start with object data (filter to strings only like JavaScript version)
 		$data = array_filter($objectData, fn ($value): bool => is_string($value));
@@ -175,12 +173,11 @@ final readonly class AutogenIdService
 	}
 
 	/**
-     * Replace placeholders with explicit OID count.
-     *
-     * @param array<string,mixed> $data
-     *
-     */
-    private static function replacePlaceholdersWithOid(string $pattern, array $data, int $oidCount): string
+	 * Replace placeholders with explicit OID count.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private static function replacePlaceholdersWithOid(string $pattern, array $data, int $oidCount): string
 	{
 		return preg_replace_callback('/\$\{([^}]+)\}/', function (array $matches) use ($data, $oidCount) {
 			$key = $matches[1];

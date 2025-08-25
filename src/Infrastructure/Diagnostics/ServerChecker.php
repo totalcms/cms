@@ -2,10 +2,10 @@
 
 namespace TotalCMS\Infrastructure\Diagnostics;
 
+use Memcached;
+use Redis;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Support\Config;
-use Redis;
-use Memcached;
 
 /**
  * Run tests against the system to.
@@ -218,15 +218,15 @@ class ServerChecker
 	private function checkExtension(string $extension): bool
 	{
 		return match ($extension) {
-            // OPcache has specific detection requirements and naming variations
-            'opcache' => (extension_loaded('opcache') || extension_loaded('Zend OPcache'))
+			// OPcache has specific detection requirements and naming variations
+			'opcache' => (extension_loaded('opcache') || extension_loaded('Zend OPcache'))
 					   && function_exists('opcache_get_status')
 					   && opcache_get_status() !== false,
-            'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
-            'redis'     => extension_loaded('redis') && class_exists('Redis'),
-            'memcached' => extension_loaded('memcached') && class_exists('Memcached'),
-            default     => extension_loaded($extension),
-        };
+			'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
+			'redis'     => extension_loaded('redis') && class_exists('Redis'),
+			'memcached' => extension_loaded('memcached') && class_exists('Memcached'),
+			default     => extension_loaded($extension),
+		};
 	}
 
 	/**
@@ -279,7 +279,7 @@ class ServerChecker
 							if (is_array($info) && isset($info['num_hits'], $info['num_misses'])) {
 								$total = (int)$info['num_hits'] + (int)$info['num_misses'];
 								if ($total > 0) {
-									$hitRate = round(((int)$info['num_hits'] / $total) * 100, 2);
+									$hitRate                    = round(((int)$info['num_hits'] / $total) * 100, 2);
 									$cacheInfo['APCu Hit Rate'] = $hitRate . '%';
 								}
 							}
@@ -294,7 +294,7 @@ class ServerChecker
 		// Redis information
 		if ($this->checkExtension('redis')) {
 			try {
-				$redis = new Redis();
+				$redis = new \Redis();
 				$redis->connect('127.0.0.1', 6379, 1);
 				$redis->ping();
 				$cacheInfo['Redis Connection'] = 'Connected';
@@ -308,7 +308,7 @@ class ServerChecker
 		if ($this->checkExtension('memcached')) {
 			try {
 				$cacheInfo['Memcached Connection'] = 'Extension available, connection failed';
-				$memcached = new Memcached();
+				$memcached                         = new \Memcached();
 				$memcached->addServer('127.0.0.1', 11211);
 				$memcached->set('test', 'test', 1);
 				if ($memcached->get('test') === 'test') {

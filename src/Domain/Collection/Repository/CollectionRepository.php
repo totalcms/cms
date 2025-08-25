@@ -20,11 +20,11 @@ final class CollectionRepository extends StorageRepository
 	private const META_FILE = '.meta.json';
 
 	/**
-     * The constructor.
-     *
-     * @param StorageFilesystemAdapter $filesystem The filesystem factory
-     */
-    public function __construct(
+	 * The constructor.
+	 *
+	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
+	 */
+	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly CollectionFactory $factory,
 		private readonly SchemaValidator $validator,
@@ -98,9 +98,9 @@ final class CollectionRepository extends StorageRepository
 	}
 
 	/**
-     * Verify that a collection exists.
-     */
-    public function collectionExists(string $collection): bool
+	 * Verify that a collection exists.
+	 */
+	public function collectionExists(string $collection): bool
 	{
 		$metaFile = $this->buildMetaPath($collection);
 
@@ -108,13 +108,11 @@ final class CollectionRepository extends StorageRepository
 	}
 
 	/**
-     * Fetch a collection.
-     *
-     *
-     * @throws \DomainException
-     *
-     */
-    public function getCollection(string $collectionName): CollectionData
+	 * Fetch a collection.
+	 *
+	 * @throws \DomainException
+	 */
+	public function getCollection(string $collectionName): CollectionData
 	{
 		$collection = $this->fetchCollection($collectionName);
 
@@ -129,11 +127,11 @@ final class CollectionRepository extends StorageRepository
 	}
 
 	/**
-     * Save a Collection.
-     *
-     * @param CollectionData $collection The collection to save
-     */
-    public function saveCollection(CollectionData $collection): void
+	 * Save a Collection.
+	 *
+	 * @param CollectionData $collection The collection to save
+	 */
+	public function saveCollection(CollectionData $collection): void
 	{
 		if (in_array($collection->id, CollectionData::RESERVED_NAMES)) {
 			throw new \UnexpectedValueException('Cannot save collection with a reserved name');

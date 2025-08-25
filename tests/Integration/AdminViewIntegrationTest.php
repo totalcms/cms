@@ -58,16 +58,16 @@ function assertNoAdminErrors($response, string $path): void
 	if ($statusCode === 200) {
 		// Check for common error patterns in admin views using manual checks (more reliable)
 		$errorPatterns = [
-			'Fatal error'                                       => "Fatal error found on {$path}",
-			'Parse error'                                       => "Parse error found on {$path}",
-			'Undefined variable'                                => "Undefined variable on {$path}",
-			'must not be accessed before initialization'        => "Uninitialized property error on {$path}",
-			'Call to undefined method'                          => "Undefined method call on {$path}",
-			'Class \''                                          => "Class not found error on {$path}",
-			\Twig\Error\RuntimeError::class                         => "Twig runtime error on {$path}",
-			'An exception has been thrown during the rendering' => "Template rendering error on {$path}",
-			'Unknown function'                                  => "Twig unknown function on {$path}",
-			'Unknown filter'                                    => "Twig unknown filter on {$path}",
+			'Fatal error'                                          => "Fatal error found on {$path}",
+			'Parse error'                                          => "Parse error found on {$path}",
+			'Undefined variable'                                   => "Undefined variable on {$path}",
+			'must not be accessed before initialization'           => "Uninitialized property error on {$path}",
+			'Call to undefined method'                             => "Undefined method call on {$path}",
+			'Class \''                                             => "Class not found error on {$path}",
+			Twig\Error\RuntimeError::class                         => "Twig runtime error on {$path}",
+			'An exception has been thrown during the rendering'    => "Template rendering error on {$path}",
+			'Unknown function'                                     => "Twig unknown function on {$path}",
+			'Unknown filter'                                       => "Twig unknown filter on {$path}",
 		];
 
 		foreach ($errorPatterns as $pattern => $message) {

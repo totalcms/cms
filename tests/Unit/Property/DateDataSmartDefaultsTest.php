@@ -26,8 +26,8 @@ test('it handles relative date strings', function (): void {
 
 	foreach (array_keys($testCases) as $dateString) {
 		$result = DateData::cleanDate($dateString);
-        expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
-        expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
+		expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
+		expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
 	}
 });
 
@@ -43,8 +43,8 @@ test('it handles standard date formats', function (): void {
 
 	foreach (array_keys($testCases) as $dateString) {
 		$result = DateData::cleanDate($dateString);
-        expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
-        expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
+		expect($result)->not->toBeEmpty("Failed to parse: {$dateString}");
+		expect($result)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', "Invalid format for: {$dateString}");
 	}
 });
 

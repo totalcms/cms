@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 /**
  * Service to check if a schema is compatible with deck usage.
  *
@@ -93,8 +92,9 @@ final readonly class DeckCompatibilityChecker
 				}
 			}
 		}
-        // Check array items
-        return !(isset($property['items']) && is_array($property['items']) && !$this->isPropertyCompatible($property['items']));
+
+		// Check array items
+		return !(isset($property['items']) && is_array($property['items']) && !$this->isPropertyCompatible($property['items']));
 	}
 
 	/**

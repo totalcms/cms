@@ -17,16 +17,15 @@ final readonly class ObjectCloneAction
 	 * @param ObjectCloner $service Object service
 	 */
 	public function __construct(private JsonRenderer $renderer, private ObjectCloner $service)
-    {
-    }
+	{
+	}
 
 	/**
-     * Action.
-     *
-     * @param array<string,string> $args
-     *
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	 * Action.
+	 *
+	 * @param array<string,string> $args
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$data = (array)$request->getParsedBody();
 

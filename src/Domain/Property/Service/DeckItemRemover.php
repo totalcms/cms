@@ -19,11 +19,9 @@ final readonly class DeckItemRemover
 	}
 
 	/**
-     * Delete a deck item from an object property.
-     *
-     *
-     */
-    public function removeDeckItem(
+	 * Delete a deck item from an object property.
+	 */
+	public function removeDeckItem(
 		string $collection,
 		string $objectId,
 		string $propertyName,

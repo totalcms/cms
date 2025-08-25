@@ -16,8 +16,8 @@ final readonly class ImportFactoryAction
 	 * @param FactoryImporter $importer Factory import service
 	 */
 	public function __construct(private JsonRenderer $renderer, private FactoryImporter $importer)
-    {
-    }
+	{
+	}
 
 	/**
 	 * Action.

@@ -73,7 +73,7 @@ test('excerpt method truncates text', function (): void {
 	$result   = $this->gridRenderer->excerpt($longText, 50);
 
 	// Check that text was truncated (the original is 280 chars)
-	$strippedText = strip_tags((string) $result);
+	$strippedText = strip_tags((string)$result);
 	expect(strlen($strippedText))->toBeLessThan(280);
 	expect($result)->toContain('cms-excerpt'); // Should have CSS class
 	expect($result)->toContain('&hellip;'); // HTML entity for ellipsis

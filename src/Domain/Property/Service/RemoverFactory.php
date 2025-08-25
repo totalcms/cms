@@ -25,7 +25,7 @@ final readonly class RemoverFactory
 
 		$className = 'TotalCMS\\Domain\\Property\\Service\\' . ucfirst($type) . 'Remover';
 		if (!class_exists($className)) {
-			$className = \TotalCMS\Domain\Property\Service\FileRemover::class;
+			$className = FileRemover::class;
 		}
 
 		$remover = new $className(
@@ -46,6 +46,6 @@ final readonly class RemoverFactory
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-		return basename((string) $schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+		return basename((string)$schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
 	}
 }

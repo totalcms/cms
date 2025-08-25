@@ -56,9 +56,9 @@ final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsIn
 		$functions = TotalCMSTwigFunctions::getFunctions();
 
 		// Add CSRF token functions
-		$functions[] = new TwigFunction('csrf_token', fn(): string => $this->csrfManager->getToken());
+		$functions[] = new TwigFunction('csrf_token', fn (): string => $this->csrfManager->getToken());
 
-		$functions[] = new TwigFunction('csrf_field', fn(): string => $this->csrfManager->getTokenField(), ['is_safe' => ['html']]);
+		$functions[] = new TwigFunction('csrf_field', fn (): string => $this->csrfManager->getTokenField(), ['is_safe' => ['html']]);
 
 		return $functions;
 	}

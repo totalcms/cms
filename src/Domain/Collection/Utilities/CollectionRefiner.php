@@ -246,10 +246,10 @@ class CollectionRefiner
 				}
 
 				$found = match ($numParams) {
-                    1 => self::$operator($item),
-                    2 => self::$operator($item, $value),
-                    default => false,
-                };
+					1       => self::$operator($item),
+					2       => self::$operator($item, $value),
+					default => false,
+				};
 
 				return $not ? !$found : $found;
 			}

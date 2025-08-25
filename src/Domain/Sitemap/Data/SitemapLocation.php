@@ -15,7 +15,7 @@ final readonly class SitemapLocation
 	public function __construct(string $url, array $options = [])
 	{
 		if ($url === '') {
-			return;
+			$url = 'about:blank'; // Fallback for empty URLs
 		}
 		$this->location = new Url(trim($url));
 

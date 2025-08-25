@@ -6,8 +6,8 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
-use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 
 final readonly class ObjectSaver
 {
