@@ -28,7 +28,9 @@ final class RadioField extends FormField
 			}
 		}
 
-		return HTMLUtils::element('div', $label . $radios . $help, $formFieldAttributes);
+		$fieldset = HTMLUtils::element('fieldset', $label . $radios);
+
+		return HTMLUtils::element('div', $fieldset . $help, $formFieldAttributes);
 	}
 
 	protected function buildFieldLabel(): string

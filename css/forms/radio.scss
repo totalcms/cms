@@ -1,13 +1,20 @@
 //------------------------------
 // Radio Field
 //------------------------------
+.radio-field > fieldset {
+	display               : grid;
+	grid-template-columns : repeat(auto-fit, minmax(12ch, min-content));
+	gap                   : 0.75rem;
+	border                : none;
+	padding               : 0;
 
-[type="radio"] {
-    appearance: auto;
+	[type="radio"] {
+		appearance: auto;
+	}
 }
 
+
 .radio {
-  margin: 0.5rem;
 
   label {
     line-height: 1;
