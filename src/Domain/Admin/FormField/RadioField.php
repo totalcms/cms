@@ -26,6 +26,9 @@ final class RadioField extends FormField
 			if ($json) {
 				$formFieldAttributes['data-options'] = $json;
 			}
+			if (isset($this->settings['fieldGrid'])) {
+				$formFieldAttributes['style'] .= '--fieldset-grid-size:' . $this->settings['fieldGrid'] . ';';
+			}
 		}
 
 		$fieldset = HTMLUtils::element('fieldset', $label . $radios);

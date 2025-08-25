@@ -2,7 +2,7 @@
 // Radio Field
 //------------------------------
 .radio-field {
-	--radio-grid-size : 1fr;
+	--fieldset-grid-size : 1fr;
 
 	> fieldset {
 		border: none;
@@ -13,7 +13,7 @@
 		width   : 100%;
 
 		grid-template-columns : 1fr;
-		grid-template-columns : repeat(auto-fit, minmax(var(--radio-grid-size), 1fr));
+		grid-template-columns : repeat(auto-fit, minmax(var(--fieldset-grid-size), 1fr));
 	}
 
 	.radio-label {
