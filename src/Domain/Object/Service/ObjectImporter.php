@@ -186,7 +186,7 @@ final class ObjectImporter
 
 				// Check for alt text file and update the image item if found
 				$altContent = $this->getImageAltText($path);
-				if (!($altContent === '' || $altContent === false)) {
+				if ($altContent !== '' && $altContent !== false) {
 					$this->objectPatcher->patchObjectProperty(
 						$this->collection,
 						$this->objectID,
@@ -247,7 +247,7 @@ final class ObjectImporter
 
 					// Check for alt text file and update the gallery item if found
 					$altContent = $this->getImageAltText($imagePath);
-					if (!($altContent === '' || $altContent === false)) {
+					if ($altContent !== '' && $altContent !== false) {
 						// Get the filename to use as the identifier for the gallery item
 						$filename = $fileInfo->getFilename();
 						$this->objectPatcher->patchObjectPropertyMeta(

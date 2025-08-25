@@ -4,9 +4,13 @@ namespace TotalCMS\Domain\Property\Data;
 
 use matthieumastadenis\couleur\ColorFactory;
 use matthieumastadenis\couleur\ColorSpace;
+use \matthieumastadenis\couleur\colors\Rgb;
+use \matthieumastadenis\couleur\colors\Hsl;
+use \matthieumastadenis\couleur\colors\OkLch;
 
 use function matthieumastadenis\couleur\utils\okLch\oklchChange;
 use function matthieumastadenis\couleur\utils\okLch\oklchToHex;
+
 
 /**
  * Color property data.
@@ -21,7 +25,7 @@ class ColorData extends PropertyData
 	public function __construct(string|array $color, public array $settings = [])
 	{
 		if (is_string($color)) {
-			$this->hex   = self::stringToHex($color);
+			$this->hex   = $this->stringToHex($color);
 			$this->oklch = self::hexToOklch($this->hex);
 
 			return;
@@ -31,74 +35,71 @@ class ColorData extends PropertyData
 		$this->oklch = $color['oklch'] ?? self::hexToOklch($this->hex);
 	}
 
-	private static function rgbToHex(string $color): ?string
+	private function rgbToHex(string $color): ?string
 	{
 		$rgb = preg_replace('/[^0-9,]/', '', $color);
 		if (is_string($rgb)) {
 			$rgb = explode(',', $rgb);
-			$hex = sprintf('#%02x%02x%02x', ...$rgb);
 
-			return $hex;
+			return sprintf('#%02x%02x%02x', ...$rgb);
 		}
 
 		return null;
 	}
 
-	private static function hslToHex(string $color): ?string
+	private function hslToHex(string $color): ?string
 	{
 		$hsl = preg_replace('/[^0-9,]/', '', $color);
 		if (is_string($hsl)) {
 			$hsl = explode(',', $hsl);
 			$rgb = ColorFactory::newRgb($hsl, ColorSpace::Hsl);
-			if ($rgb === null) {
+			if (!$rgb instanceof Rgb) {
 				return '#000000'; // black
 			}
 			$coordinates = $rgb->coordinates();
-			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
 
-			return $hex;
+			return sprintf('#%02x%02x%02x', ...$coordinates);
 		}
 
 		return null;
 	}
 
-	private static function oklchStringToHex(string $color): ?string
+	private function oklchStringToHex(string $color): ?string
 	{
 		$oklch = preg_replace('/[^0-9,]/', '', $color);
 		if (is_string($oklch)) {
 			$oklch = explode(',', $oklch);
 			$rgb   = ColorFactory::newRgb($oklch, ColorSpace::OkLch);
-			if ($rgb === null) {
+			if (!$rgb instanceof Rgb) {
 				return '#000000'; // black
 			}
 			$coordinates = $rgb->coordinates();
-			$hex         = sprintf('#%02x%02x%02x', ...$coordinates);
 
-			return $hex;
+			return sprintf('#%02x%02x%02x', ...$coordinates);
 		}
 
 		return null;
 	}
 
-	private static function stringToHex(string $color): string
+	private function stringToHex(string $color): string
 	{
 		if (preg_match('/^#?([a-f0-9]{3}|[a-f0-9]{6})$/i', $color)) {
 			return $color;
 		}
 		if (str_starts_with($color, 'rgb')) {
-			$hex = self::rgbToHex($color);
+			$hex = $this->rgbToHex($color);
 			if ($hex !== null) {
 				return $hex;
 			}
 		}
 		if (str_starts_with($color, 'hsl')) {
-			$hex = self::hslToHex($color);
+			$hex = $this->hslToHex($color);
 			if ($hex !== null) {
 				return $hex;
 			}
 		}
 		if (str_starts_with($color, 'oklch')) {
-			$hex = self::oklchStringToHex($color);
+			$hex = $this->oklchStringToHex($color);
 			if ($hex !== null) {
 				return $hex;
 			}
@@ -127,10 +128,10 @@ class ColorData extends PropertyData
 	public static function hexToOklch(string $hex): array
 	{
 		$oklch = ColorFactory::newOkLch($hex, ColorSpace::HexRgb);
-		if ($oklch === null) {
+		if (!$oklch instanceof OkLch) {
 			return ['l' => 0, 'c' => 0, 'h' => 0]; // black
 		}
-		$coordinates = array_map(fn ($c) => round($c, 3), $oklch->coordinates());
+		$coordinates = array_map(fn ($c): float => round($c, 3), $oklch->coordinates());
 
 		return [
 			'l' => $coordinates[0],
@@ -143,7 +144,7 @@ class ColorData extends PropertyData
 	public static function hexToRgb(string $hex): array
 	{
 		$rgb = ColorFactory::newRgb($hex, ColorSpace::HexRgb);
-		if ($rgb === null) {
+		if (!$rgb instanceof Rgb) {
 			return ['r' => 0, 'g' => 0, 'b' => 0]; // black
 		}
 		$coordinates = $rgb->coordinates();
@@ -159,10 +160,10 @@ class ColorData extends PropertyData
 	public static function hexToHsl(string $hex): array
 	{
 		$hsl = ColorFactory::newHsl($hex, ColorSpace::HexRgb);
-		if ($hsl === null) {
+		if (!$hsl instanceof Hsl) {
 			return ['h' => 0, 's' => 0, 'l' => 0]; // black
 		}
-		$coordinates = array_map(fn ($c) => round($c, 3), $hsl->coordinates());
+		$coordinates = array_map(fn ($c): float => round($c, 3), $hsl->coordinates());
 
 		return [
 			'h' => $coordinates[0],

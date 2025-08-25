@@ -234,7 +234,7 @@ final class ImageGenerator
 
 		return array_filter(
 			$params,
-			fn ($param): bool => !str_starts_with((string)$param, 'mark'),
+			fn ($param): bool => !str_starts_with($param, 'mark'),
 			ARRAY_FILTER_USE_KEY
 		);
 	}

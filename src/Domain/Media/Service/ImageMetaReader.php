@@ -117,7 +117,7 @@ class ImageMetaReader
 	/** @param array<int,string> $coord */
 	private static function parseGpsCoordinate(array $coord, string $ref): ?float
 	{
-		if (empty($coord) || count($coord) < 3) {
+		if ($coord === [] || count($coord) < 3) {
 			return null;
 		}
 
@@ -176,7 +176,7 @@ class ImageMetaReader
 	{
 		// Start with basic image data
 		$basicData = self::getBasicImageData($imagepath);
-		if (empty($basicData)) {
+		if ($basicData === []) {
 			return [];
 		}
 
@@ -234,7 +234,7 @@ class ImageMetaReader
 		];
 
 		// Filter out null values
-		$data = array_filter($data, fn ($value) => $value !== null);
+		$data = array_filter($data, fn ($value): bool => $value !== null);
 
 		// Extract keywords from multiple sources (IPTC, XMP, EXIF)
 		$keywords = self::extractKeywords($exifData, $xmpData);
@@ -298,11 +298,9 @@ class ImageMetaReader
 				}
 
 				// Extract keywords from dc:subject
-				if (preg_match('/<dc:subject>(.*?)<\/dc:subject>/s', $xmp, $subjectMatch)) {
-					// Extract individual keywords from RDF bag/seq
-					if (preg_match_all('/<rdf:li>(.*?)<\/rdf:li>/', $subjectMatch[1], $keywordMatches)) {
-						$xmpData['keywords'] = array_map('trim', $keywordMatches[1]);
-					}
+                // Extract individual keywords from RDF bag/seq
+                if (preg_match('/<dc:subject>(.*?)<\/dc:subject>/s', $xmp, $subjectMatch) && preg_match_all('/<rdf:li>(.*?)<\/rdf:li>/', $subjectMatch[1], $keywordMatches)) {
+					$xmpData['keywords'] = array_map('trim', $keywordMatches[1]);
 				}
 
 				// Extract location information from photoshop and IPTC4XMP fields
@@ -327,14 +325,13 @@ class ImageMetaReader
 	}
 
 	/**
-	 * Extract IPTC location data from image file.
-	 * Uses getimagesize() to access APP13 section which contains IPTC data.
-	 *
-	 * @param string $imagepath
-	 *
-	 * @return array<string,string>
-	 */
-	private static function extractIptcLocation(string $imagepath): array
+     * Extract IPTC location data from image file.
+     * Uses getimagesize() to access APP13 section which contains IPTC data.
+     *
+     *
+     * @return array<string,string>
+     */
+    private static function extractIptcLocation(string $imagepath): array
 	{
 		$locationData = [];
 
@@ -354,7 +351,7 @@ class ImageMetaReader
 					];
 
 					foreach ($fields as $iptcCode => $fieldName) {
-						if (isset($iptc[$iptcCode]) && !empty($iptc[$iptcCode][0])) {
+						if (isset($iptc[$iptcCode]) && (isset($iptc[$iptcCode][0]) && ($iptc[$iptcCode][0] !== ''))) {
 							$locationData[$fieldName] = trim($iptc[$iptcCode][0]);
 						}
 					}

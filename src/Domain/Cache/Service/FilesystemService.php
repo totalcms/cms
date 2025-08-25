@@ -261,7 +261,7 @@ final readonly class FilesystemService implements CacheInterface
 			if ($items === false) {
 				return false;
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 

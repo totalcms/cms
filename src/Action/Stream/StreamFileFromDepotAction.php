@@ -14,11 +14,11 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 final class StreamFileFromDepotAction extends StreamAction
 {
 	public function __construct(
-		protected DepotFileFetcher $fileFetcher,
+		private readonly DepotFileFetcher $fileFetcher,
 		protected FileAccessManager $accessManager,
 		protected ObjectUpdater $objectUpdater,
 		protected PhpSession $session,
-		protected PropertyFetcher $propFetcher,
+		private readonly PropertyFetcher $propFetcher,
 	) {
 	}
 

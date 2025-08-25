@@ -15,12 +15,12 @@ use TotalCMS\Renderer\TwigRenderer;
 final class DownloadFileFromDepotAction extends DownloadAction
 {
 	public function __construct(
-		protected DepotFileFetcher $fileFetcher,
+		private readonly DepotFileFetcher $fileFetcher,
 		protected TwigRenderer $twigRenderer,
 		protected FileAccessManager $accessManager,
 		protected ObjectUpdater $objectUpdater,
 		protected PhpSession $session,
-		protected PropertyFetcher $propFetcher,
+		private readonly PropertyFetcher $propFetcher,
 	) {
 	}
 
