@@ -37,7 +37,7 @@ final class LoggerFactory
 		$this->path  = (string)($settings['path'] ?? '');
 		$this->level = is_a($settings['level'], Level::class) ? $settings['level'] : Level::Debug;
 
-		if (!empty($this->path) && !is_dir($this->path)) {
+		if ($this->path !== '' && !is_dir($this->path)) {
 			mkdir($this->path, 0777, true);
 		}
 
@@ -97,8 +97,8 @@ final class LoggerFactory
 	 */
 	public function addFileHandler(string $filename, int $maxFiles = 10, int $permissions = 0777, ?Level $level = null): self
 	{
-		$filename            = sprintf('%s/%s', $this->path, $filename);
-		$level               = $level ?? $this->level;
+		$filename = sprintf('%s/%s', $this->path, $filename);
+		$level ??= $this->level;
 		$rotatingFileHandler = new RotatingFileHandler($filename, $maxFiles, $level, true, $permissions);
 
 		// The last "true" here tells monolog to remove empty []'s

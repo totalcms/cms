@@ -35,10 +35,10 @@ final readonly class JumpStartExporter
 
 	public function setMetadata(string $name = '', string $description = ''): void
 	{
-		if (!empty($name)) {
+		if ($name !== '') {
 			$this->jumpstart->setName($name);
 		}
-		if (!empty($description)) {
+		if ($description !== '') {
 			$this->jumpstart->setDescription($description);
 		}
 	}

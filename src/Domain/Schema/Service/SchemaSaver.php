@@ -7,28 +7,23 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
-final class SchemaSaver
+final readonly class SchemaSaver
 {
 	public function __construct(
 		private SchemaRepository $storage,
 		private SchemaFactory $factory,
 		private SchemaValidator $validator,
-		private readonly IndexBuilder $indexBuilder,
-		private readonly CollectionLister $collectionLister,
+		private IndexBuilder $indexBuilder,
+		private CollectionLister $collectionLister
 	) {
-		$this->storage   = $storage;
-		$this->factory   = $factory;
-		$this->validator = $validator;
 	}
 
 	/**
-	 * @param array<string,mixed> $schemaData
-	 *
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
-	 */
-	public function updateSchema(string $schemaId, array $schemaData): SchemaData
+     * @param array<string,mixed> $schemaData
+     *
+     * @throws \UnexpectedValueException
+     */
+    public function updateSchema(string $schemaId, array $schemaData): SchemaData
 	{
 		if ($schemaId !== $schemaData['id']) {
 			throw new \UnexpectedValueException('Schema ID does not match');
@@ -44,22 +39,20 @@ final class SchemaSaver
 	}
 
 	/**
-	 * Save a schema.
-	 *
-	 * @param array<string,mixed> $schemaData
-	 *
-	 * @throws \InvalidArgumentException
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
-	 */
-	public function saveSchema(array $schemaData): SchemaData
+     * Save a schema.
+     *
+     * @param array<string,mixed> $schemaData
+     *
+     * @throws \InvalidArgumentException
+     * @throws \UnexpectedValueException
+     */
+    public function saveSchema(array $schemaData): SchemaData
 	{
 		// Validate required input structure
 		if (!isset($schemaData['properties'])) {
 			throw new \InvalidArgumentException('Schema data must contain a "properties" key');
 		}
-		
+
 		if (!is_array($schemaData['properties'])) {
 			throw new \InvalidArgumentException('Schema "properties" must be an array');
 		}

@@ -14,26 +14,22 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 final class IndexRepository extends StorageRepository
 {
 	private const INDEX_FILE = '.index.json';
-	private readonly CacheManager $cacheManager;
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		CacheManager $cacheManager,
+		private readonly CacheManager $cacheManager,
 	) {
 		parent::__construct($filesystem);
-		$this->cacheManager = $cacheManager;
 	}
 
 	/**
-	 * get the index.
-	 *
-	 * @param string $collection
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
-	 * @return ?IndexData
-	 */
-	public function fetchIndex(string $collection): ?IndexData
+     * get the index.
+     *
+     *
+     * @SuppressWarnings("PHPMD.ElseExpression")
+     *
+     */
+    public function fetchIndex(string $collection): ?IndexData
 	{
 		// Try cache first (Redis preferred for fast index access)
 		$cacheKey = "index:{$collection}";
@@ -43,7 +39,7 @@ final class IndexRepository extends StorageRepository
 			// Reconstruct IndexData from cached array of objects
 			try {
 				return new IndexData($cached);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Cache contains invalid data, fall through to filesystem
 			}
 		}
@@ -72,15 +68,13 @@ final class IndexRepository extends StorageRepository
 	}
 
 	/**
-	 * Get an array of object IDs in.
-	 *
-	 * @param string $collection
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
-	 * @return array<string>
-	 */
-	public function fetchObjectIds(string $collection): array
+     * Get an array of object IDs in.
+     *
+     *
+     * @SuppressWarnings("PHPMD.ElseExpression")
+     * @return array<string>
+     */
+    public function fetchObjectIds(string $collection): array
 	{
 		// Try cache first (Redis preferred for fast access)
 		$cacheKey = "object_ids:{$collection}";
@@ -94,11 +88,11 @@ final class IndexRepository extends StorageRepository
 		$files = $this->filesystem->listFiles($collection);
 
 		// Filter for object json files
-		$files = array_filter($files, fn (string $path) => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
+		$files = array_filter($files, fn (string $path): bool => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
 
-		$objectIds = array_map(fn (string $path) => basename($path, StorageRepository::FILE_EXT), $files);
+		$objectIds = array_map(fn (string $path): string => basename($path, StorageRepository::FILE_EXT), $files);
 
-		if (empty($objectIds)) {
+		if ($objectIds === []) {
 			// Clear cache if no objects to prevent serving stale data
 			$this->cacheManager->clearComputedData($cacheKey);
 		} else {
@@ -110,14 +104,11 @@ final class IndexRepository extends StorageRepository
 	}
 
 	/**
-	 * save the index.
-	 *
-	 * @param string $collection
-	 * @param IndexData $index
-	 *
-	 * @return void
-	 */
-	public function saveIndex(string $collection, IndexData $index): void
+     * save the index.
+     *
+     *
+     */
+    public function saveIndex(string $collection, IndexData $index): void
 	{
 		$indexFile  = $this->buildIndexPath($collection);
 		$indexJSON  = $this->serializer->serialize($index, 'json'); // no pretty print on purpose

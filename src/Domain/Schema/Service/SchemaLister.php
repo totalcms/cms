@@ -10,12 +10,9 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
  */
 final readonly class SchemaLister
 {
-	private SchemaRepository $storage;
-
-	public function __construct(SchemaRepository $storage)
-	{
-		$this->storage = $storage;
-	}
+	public function __construct(private SchemaRepository $storage)
+    {
+    }
 
 	/**
 	 * List all Schemas.

@@ -18,29 +18,19 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 final class CollectionRepository extends StorageRepository
 {
 	private const META_FILE = '.meta.json';
-	private readonly CollectionFactory $factory;
-	private readonly SchemaValidator $validator;
-	private readonly CacheManager $cacheManager;
 
 	/**
-	 * The constructor.
-	 *
-	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
-	 * @param CollectionFactory $factory
-	 * @param SchemaValidator $validator
-	 * @param CacheManager $cacheManager
-	 */
-	public function __construct(
+     * The constructor.
+     *
+     * @param StorageFilesystemAdapter $filesystem The filesystem factory
+     */
+    public function __construct(
 		StorageAdapterInterface $filesystem,
-		CollectionFactory $factory,
-		SchemaValidator $validator,
-		CacheManager $cacheManager,
+		private readonly CollectionFactory $factory,
+		private readonly SchemaValidator $validator,
+		private readonly CacheManager $cacheManager,
 	) {
 		parent::__construct($filesystem);
-
-		$this->factory      = $factory;
-		$this->validator    = $validator;
-		$this->cacheManager = $cacheManager;
 	}
 
 	/**
@@ -79,7 +69,7 @@ final class CollectionRepository extends StorageRepository
 
 		// Always cache the result, even if empty
 		// This ensures consistent behavior and prevents null cache values
-		$collectionsArray = array_map(fn ($collection) => $collection->toArray(), $collections);
+		$collectionsArray = array_map(fn (CollectionData $collection): array => $collection->toArray(), $collections);
 		$this->cacheManager->storeComputedData('collections_list', $collectionsArray, CacheManager::TTL_COLLECTIONS_LIST);
 
 		return $collections;
@@ -108,11 +98,9 @@ final class CollectionRepository extends StorageRepository
 	}
 
 	/**
-	 * Verify that a collection exists.
-	 *
-	 * @param string $collection
-	 */
-	public function collectionExists(string $collection): bool
+     * Verify that a collection exists.
+     */
+    public function collectionExists(string $collection): bool
 	{
 		$metaFile = $this->buildMetaPath($collection);
 
@@ -120,19 +108,17 @@ final class CollectionRepository extends StorageRepository
 	}
 
 	/**
-	 * Fetch a collection.
-	 *
-	 * @param string $collectionName
-	 *
-	 * @throws \DomainException
-	 *
-	 * @return CollectionData
-	 */
-	public function getCollection(string $collectionName): CollectionData
+     * Fetch a collection.
+     *
+     *
+     * @throws \DomainException
+     *
+     */
+    public function getCollection(string $collectionName): CollectionData
 	{
 		$collection = $this->fetchCollection($collectionName);
 
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			throw new \DomainException(sprintf('Collection does not exist: %s', $collectionName));
 		}
 		if ($collection->isValid() === false) {
@@ -143,13 +129,11 @@ final class CollectionRepository extends StorageRepository
 	}
 
 	/**
-	 * Save a Collection.
-	 *
-	 * @param CollectionData $collection The collection to save
-	 *
-	 * @return void
-	 */
-	public function saveCollection(CollectionData $collection): void
+     * Save a Collection.
+     *
+     * @param CollectionData $collection The collection to save
+     */
+    public function saveCollection(CollectionData $collection): void
 	{
 		if (in_array($collection->id, CollectionData::RESERVED_NAMES)) {
 			throw new \UnexpectedValueException('Cannot save collection with a reserved name');

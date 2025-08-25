@@ -11,14 +11,9 @@ use TotalCMS\Renderer\JsonRenderer;
 
 final readonly class ImportJumpStartAction
 {
-	private JumpStartImporter $jumpStartImporter;
-	private JsonRenderer $renderer;
-
-	public function __construct(JumpStartImporter $jumpStartImporter, JsonRenderer $renderer)
-	{
-		$this->jumpStartImporter = $jumpStartImporter;
-		$this->renderer          = $renderer;
-	}
+	public function __construct(private JumpStartImporter $jumpStartImporter, private JsonRenderer $renderer)
+    {
+    }
 
 	/**
 	 * Import jumpstart definition from uploaded JSON file.
@@ -28,14 +23,14 @@ final readonly class ImportJumpStartAction
 		$params = $request->getQueryParams();
 
 		if (isset($params['demo']) && $params['demo'] === 'true') {
-			return $this->importDemoDefinition($request, $response);
+			return $this->importDemoDefinition($response);
 		}
 
 		// Handle custom import from uploaded file
 		return $this->importFromUploadedFile($request, $response);
 	}
 
-	private function importDemoDefinition(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	private function importDemoDefinition(ResponseInterface $response): ResponseInterface
 	{
 		$definition = $this->jumpStartImporter->importDemoDefinition();
 

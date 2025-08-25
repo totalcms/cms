@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final readonly class ImportJumpStartForm
+final readonly class ImportJumpStartForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 
@@ -37,7 +37,7 @@ final readonly class ImportJumpStartForm
 		return $this->simpleform->build($file);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->build();
 	}

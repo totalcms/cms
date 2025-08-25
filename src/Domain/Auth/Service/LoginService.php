@@ -46,7 +46,7 @@ final class LoginService
 		$this->testUserExpiration($user);
 		$this->testUserMaxLoginCount($user);
 
-		if (!password_verify($password, $user['password'])) {
+		if (!password_verify($password, (string) $user['password'])) {
 			$error = "{$this->account}: Invalid password";
 			$this->logger->error($error);
 			throw new \Exception($error);
@@ -76,7 +76,7 @@ final class LoginService
 		if (
 			isset($user['expiration'])
 			&& !empty($user['expiration'])
-			&& strtotime($user['expiration']) < time()
+			&& strtotime((string) $user['expiration']) < time()
 		) {
 			$error = "User account {$this->account} has expired";
 			$this->logger->error($error);

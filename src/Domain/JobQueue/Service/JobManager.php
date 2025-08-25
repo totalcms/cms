@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\JobQueue\Service;
 
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\JobQueue\Data\JobData;
 
 final readonly class JobManager
 {
@@ -64,21 +65,17 @@ final readonly class JobManager
 	}
 
 	/**
-	 * @param int|null $limit
-	 *
-	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
-	 */
-	public function getPendingJobs(?int $limit = null): array
+     * @return array<JobData>
+     */
+    public function getPendingJobs(?int $limit = null): array
 	{
 		return $this->jobRepository->fetchPendingJobs($limit);
 	}
 
 	/**
-	 * @param int|null $limit
-	 *
-	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
-	 */
-	public function getFailedJobs(?int $limit = null): array
+     * @return array<JobData>
+     */
+    public function getFailedJobs(?int $limit = null): array
 	{
 		return $this->jobRepository->fetchFailedJobs($limit);
 	}

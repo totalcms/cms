@@ -17,15 +17,12 @@ final readonly class SchemaUpdateAction
 	}
 
 	/**
-	 * Invokable Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+     * Invokable Action.
+     *
+     * @param array<string,string> $args The routing arguments
+     *
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$data   = (array)$request->getParsedBody();
 		$schema = $this->service->updateSchema($args['id'], $data);

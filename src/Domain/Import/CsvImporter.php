@@ -47,9 +47,7 @@ final class CsvImporter
 		$records = $csv->getRecords(); // Get the records
 
 		// Filter out empty headers
-		$headers = array_filter($headers, function ($header) {
-			return !empty(trim($header));
-		});
+		$headers = array_filter($headers, fn(string $header): bool => (trim($header) === ''));
 
 		$cleanedRecords = [];
 		foreach ($records as $record) {
@@ -88,7 +86,7 @@ final class CsvImporter
 
 		foreach ($cleanedRecords as $offset => $record) {
 			try {
-				$imported = $updateObject === true ?
+				$imported = $updateObject ?
 					$this->updateObject($offset, $record) :
 					$this->importNewObject($offset, $record);
 

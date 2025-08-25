@@ -10,33 +10,26 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
  */
 final readonly class TemplateFetcher
 {
-	private TemplateRepository $storage;
-
-	public function __construct(TemplateRepository $storage)
-	{
-		$this->storage = $storage;
-	}
+	public function __construct(private TemplateRepository $storage)
+    {
+    }
 
 	/**
-	 * fetch a template.
-	 *
-	 * @param string $id
-	 *
-	 * @return TemplateData
-	 */
-	public function fetchTemplate(string $id): TemplateData
+     * fetch a template.
+     *
+     *
+     */
+    public function fetchTemplate(string $id): TemplateData
 	{
 		return $this->storage->fetchTemplate($id);
 	}
 
 	/**
-	 * check if a template exists.
-	 *
-	 * @param string $id Template ID
-	 *
-	 * @return bool
-	 */
-	public function templateExists(string $id): bool
+     * check if a template exists.
+     *
+     * @param string $id Template ID
+     */
+    public function templateExists(string $id): bool
 	{
 		return $this->storage->templateExists($id);
 	}

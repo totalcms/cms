@@ -45,7 +45,7 @@ final readonly class ImageCacheService
 				}
 			}
 		} catch (\Exception $e) {
-			throw new \RuntimeException('Failed to scan collection directory: ' . $e->getMessage());
+			throw new \RuntimeException('Failed to scan collection directory: ' . $e->getMessage(), $e->getCode(), $e);
 		}
 
 		// Now remove all found cache directories
@@ -106,7 +106,7 @@ final readonly class ImageCacheService
 					}
 				}
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// If we can't read the directory, just return basic stats
 			// This prevents errors from breaking the stats collection
 		}
@@ -133,7 +133,7 @@ final readonly class ImageCacheService
 		// Get all collection directories
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn ($item) => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
+			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
 		);
 
 		foreach ($collections as $collection) {
@@ -145,7 +145,7 @@ final readonly class ImageCacheService
 		}
 
 		// Sort by collection name
-		usort($results, fn ($a, $b) => strcmp($a['collection'], $b['collection']));
+		usort($results, fn (array $a, array $b): int => strcmp((string) $a['collection'], (string) $b['collection']));
 
 		return $results;
 	}
@@ -171,7 +171,7 @@ final readonly class ImageCacheService
 		// Get all collection directories
 		$collections = array_filter(
 			scandir($datadir) ?: [],
-			fn ($item) => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
+			fn (string $item): bool => $item !== '.' && $item !== '..' && is_dir($datadir . '/' . $item)
 		);
 
 		foreach ($collections as $collection) {
@@ -208,11 +208,9 @@ final readonly class ImageCacheService
 				if (!rmdir($realPath)) {
 					throw new \RuntimeException("Failed to remove directory: {$realPath}");
 				}
-			} else {
-				if (!unlink($realPath)) {
-					throw new \RuntimeException("Failed to remove file: {$realPath}");
-				}
-			}
+            } elseif (!unlink($realPath)) {
+				throw new \RuntimeException("Failed to remove file: {$realPath}");
+            }
 		}
 
 		if (!rmdir($path)) {

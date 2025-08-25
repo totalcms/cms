@@ -10,31 +10,23 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final readonly class ObjectCloneAction
 {
-	private JsonRenderer $renderer;
-	private ObjectCloner $service;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param JsonRenderer $renderer The renderer
 	 * @param ObjectCloner $service Object service
 	 */
-	public function __construct(JsonRenderer $renderer, ObjectCloner $service)
-	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
-	}
+	public function __construct(private JsonRenderer $renderer, private ObjectCloner $service)
+    {
+    }
 
 	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+     * Action.
+     *
+     * @param array<string,string> $args
+     *
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$data = (array)$request->getParsedBody();
 

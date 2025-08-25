@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Data\SlugData;
 
@@ -58,17 +59,15 @@ final readonly class AutogenIdService
 	}
 
 	/**
-	 * Prepare replacement data including special variables.
-	 *
-	 * @param string $collection
-	 * @param array<string,mixed> $objectData
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function prepareReplacementData(string $collection, array $objectData): array
+     * Prepare replacement data including special variables.
+     *
+     * @param array<string,mixed> $objectData
+     * @return array<string,mixed>
+     */
+    private function prepareReplacementData(string $collection, array $objectData): array
 	{
 		// Start with object data (filter to strings only like JavaScript version)
-		$data = array_filter($objectData, fn ($value) => is_string($value));
+		$data = array_filter($objectData, fn ($value): bool => is_string($value));
 
 		// Add special autogen variables
 		$data['now']       = (string)(time() * 1000); // JavaScript Date.now() equivalent
@@ -81,17 +80,14 @@ final readonly class AutogenIdService
 	}
 
 	/**
-	 * Replace placeholders in the pattern.
-	 *
-	 * @param string $pattern
-	 * @param array<string,mixed> $data
-	 * @param string $collection
-	 *
-	 * @return string
-	 */
-	private function replacePlaceholders(string $pattern, array $data, string $collection): string
+     * Replace placeholders in the pattern.
+     *
+     * @param array<string,mixed> $data
+     *
+     */
+    private function replacePlaceholders(string $pattern, array $data, string $collection): string
 	{
-		return preg_replace_callback('/\$\{([^}]+)\}/', function ($matches) use ($data, $collection) {
+		return preg_replace_callback('/\$\{([^}]+)\}/', function (array $matches) use ($data, $collection) {
 			$key = $matches[1];
 
 			// Handle OID with zero-padding: oid-00000
@@ -109,16 +105,14 @@ final readonly class AutogenIdService
 	}
 
 	/**
-	 * Get the next OID for the collection.
-	 *
-	 * @param string $collection
-	 *
-	 * @return int
-	 */
-	private function getNextOid(string $collection): int
+     * Get the next OID for the collection.
+     *
+     *
+     */
+    private function getNextOid(string $collection): int
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null) {
+		if (!$collectionData instanceof CollectionData) {
 			return 1;
 		}
 
@@ -159,17 +153,16 @@ final readonly class AutogenIdService
 	}
 
 	/**
-	 * Prepare replacement data with explicit OID count.
-	 *
-	 * @param array<string,mixed> $objectData
-	 * @param int $oidCount
-	 *
-	 * @return array<string,mixed>
-	 */
-	private static function prepareReplacementDataWithOid(array $objectData, int $oidCount): array
+     * Prepare replacement data with explicit OID count.
+     *
+     * @param array<string,mixed> $objectData
+     *
+     * @return array<string,mixed>
+     */
+    private static function prepareReplacementDataWithOid(array $objectData, int $oidCount): array
 	{
 		// Start with object data (filter to strings only like JavaScript version)
-		$data = array_filter($objectData, fn ($value) => is_string($value));
+		$data = array_filter($objectData, fn ($value): bool => is_string($value));
 
 		// Add special autogen variables
 		$data['now']       = (string)(time() * 1000); // JavaScript Date.now() equivalent
@@ -182,17 +175,14 @@ final readonly class AutogenIdService
 	}
 
 	/**
-	 * Replace placeholders with explicit OID count.
-	 *
-	 * @param string $pattern
-	 * @param array<string,mixed> $data
-	 * @param int $oidCount
-	 *
-	 * @return string
-	 */
-	private static function replacePlaceholdersWithOid(string $pattern, array $data, int $oidCount): string
+     * Replace placeholders with explicit OID count.
+     *
+     * @param array<string,mixed> $data
+     *
+     */
+    private static function replacePlaceholdersWithOid(string $pattern, array $data, int $oidCount): string
 	{
-		return preg_replace_callback('/\$\{([^}]+)\}/', function ($matches) use ($data, $oidCount) {
+		return preg_replace_callback('/\$\{([^}]+)\}/', function (array $matches) use ($data, $oidCount) {
 			$key = $matches[1];
 
 			// Handle OID with zero-padding: oid-00000

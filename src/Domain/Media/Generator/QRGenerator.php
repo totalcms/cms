@@ -28,9 +28,7 @@ class QRGenerator
 
 	private function generateSVG(string $text): string
 	{
-		$svg = $this->stripFirstLine($this->writer->writeString($text));
-
-		return $svg;
+		return $this->stripFirstLine($this->writer->writeString($text));
 	}
 
 	private function stripFirstLine(string $text): string
@@ -40,56 +38,47 @@ class QRGenerator
 
 	public function text(string $text): string
 	{
-		$svg = $this->generateSVG($text);
-
-		return $svg;
+		return $this->generateSVG($text);
 	}
 
 	public function url(string $text): string
 	{
-		$svg = $this->generateSVG($text);
-
-		return $svg;
+		return $this->generateSVG($text);
 	}
 
 	public function tel(string $text): string
 	{
 		$url  = "tel:$text";
-		$svg  = $this->generateSVG($url);
 
-		return $svg;
+		return $this->generateSVG($url);
 	}
 
 	public function gps(string $latitude, string $longitude): string
 	{
 		$url  = 'geo:' . $latitude . ',' . $longitude;
-		$svg  = $this->generateSVG($url);
 
-		return $svg;
+		return $this->generateSVG($url);
 	}
 
 	public function sms(string $telephone, string $message): string
 	{
 		$url  = 'smsto:' . $telephone . ':' . $message;
-		$svg  = $this->generateSVG($url);
 
-		return $svg;
+		return $this->generateSVG($url);
 	}
 
 	public function wifi(string $auth, string $ssid, string $password, string $hidden): string
 	{
 		$url  = 'WIFI:T:' . $auth . ';S:' . $ssid . ';P:' . $password . ';H:' . $hidden;
-		$svg  = $this->generateSVG($url);
 
-		return $svg;
+		return $this->generateSVG($url);
 	}
 
 	public function mailto(string $email, string $subject = '', string $body = ''): string
 	{
 		$url  = 'mailto:' . $email . '?subject=' . $subject . '&body=' . $body;
-		$svg  =  $this->generateSVG($url);
 
-		return $svg;
+		return $this->generateSVG($url);
 	}
 
 	/** @param array<string,string> $data */
@@ -117,9 +106,8 @@ DTSTART:{$start}
 DTEND:{$end}
 END:VEVENT
 EVENT;
-		$svg = $this->generateSVG($vcard);
 
-		return $svg;
+		return $this->generateSVG($vcard);
 	}
 
 	/** @param array<string,string> $data */
@@ -153,8 +141,7 @@ EMAIL;WORK;INTERNET:{$data['email']}
 URL:{$data['website']}
 END:VCARD
 VCF;
-		$svg = $this->generateSVG($vcard);
 
-		return $svg;
+		return $this->generateSVG($vcard);
 	}
 }

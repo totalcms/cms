@@ -9,31 +9,23 @@ use TotalCMS\Renderer\RawRenderer;
 
 final readonly class TemplateSaveAction
 {
-	private RawRenderer $renderer;
-	private TemplateSaver $service;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param RawRenderer $renderer The renderer
 	 * @param TemplateSaver $service Template save service
 	 */
-	public function __construct(RawRenderer $renderer, TemplateSaver $service)
-	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
-	}
+	public function __construct(private RawRenderer $renderer, private TemplateSaver $service)
+    {
+    }
 
 	/**
-	 * Invokable Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+     * Invokable Action.
+     *
+     * @param array<string,string> $args The routing arguments
+     *
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$content = (string)$request->getBody();
 		$name    = $args['template'];

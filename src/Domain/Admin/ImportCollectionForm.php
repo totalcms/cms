@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final readonly class ImportCollectionForm
+final readonly class ImportCollectionForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 
@@ -84,7 +84,7 @@ final readonly class ImportCollectionForm
 		return $this->simpleform->build($file . $update . $queue);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->build();
 	}

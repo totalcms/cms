@@ -37,7 +37,7 @@ final readonly class ObjectExporter
 		// Filter out deck properties from CSV export - they're too complex for CSV format
 		$properties = array_filter(
 			array_keys($schema->properties),
-			fn ($propertyName) => !isset($schema->properties[$propertyName]['$ref'])
+			fn (string $propertyName): bool => !isset($schema->properties[$propertyName]['$ref'])
 				|| $schema->properties[$propertyName]['$ref'] !== SchemaData::PROPERTY_TYPE_TO_REF['deck']
 		);
 

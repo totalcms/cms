@@ -28,8 +28,6 @@ final readonly class BundleMiddleware implements MiddlewareInterface
 			$this->bundleChecker->check();
 		}
 
-		$response = $handler->handle($request);
-
-		return $response;
+		return $handler->handle($request);
 	}
 }

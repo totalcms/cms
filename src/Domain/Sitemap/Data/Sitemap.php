@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Sitemap\Data;
 use Thepixeldeveloper\Sitemap\Drivers\XmlWriterDriver;
 use Thepixeldeveloper\Sitemap\Urlset;
 
-final readonly class Sitemap
+final readonly class Sitemap implements \Stringable
 {
 	private Urlset $urlset;
 
@@ -17,9 +17,7 @@ final readonly class Sitemap
 	/** @param array<string,string> $options */
 	public function newLocation(string $url, array $options = []): SitemapLocation
 	{
-		$location = new SitemapLocation($url, $options);
-
-		return $location;
+		return new SitemapLocation($url, $options);
 	}
 
 	public function addLocation(SitemapLocation $location): void

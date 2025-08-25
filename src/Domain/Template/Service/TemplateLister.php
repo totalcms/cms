@@ -9,12 +9,9 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
  */
 final readonly class TemplateLister
 {
-	private TemplateRepository $storage;
-
-	public function __construct(TemplateRepository $storage)
-	{
-		$this->storage = $storage;
-	}
+	public function __construct(private TemplateRepository $storage)
+    {
+    }
 
 	/**
 	 * List reserved templates.

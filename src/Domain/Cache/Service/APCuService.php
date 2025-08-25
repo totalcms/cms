@@ -120,7 +120,7 @@ final readonly class APCuService implements CacheInterface
 				$keys[] = $entry['key'];
 			}
 			
-			if (empty($keys)) {
+			if ($keys === []) {
 				return true; // Nothing to clear
 			}
 			
@@ -129,7 +129,7 @@ final readonly class APCuService implements CacheInterface
 			return empty($result);
 		} catch (\Exception) {
 			// Fallback: try to clear everything (less efficient but works)
-			return apcu_clear_cache() !== false;
+			return apcu_clear_cache();
 		}
 	}
 
@@ -155,7 +155,7 @@ final readonly class APCuService implements CacheInterface
 				$keys[] = $entry['key'];
 			}
 			
-			if (empty($keys)) {
+			if ($keys === []) {
 				return true; // Nothing to clear
 			}
 			
@@ -255,7 +255,7 @@ final readonly class APCuService implements CacheInterface
 				$recommendations[] = 'APCu hit rate is low (' . round($stats['hit_rate'], 1) . '%). Consider adjusting TTL values or increasing memory';
 			}
 
-			if (empty($recommendations)) {
+			if ($recommendations === []) {
 				$recommendations[] = 'APCu is working well! Memory usage: ' . round($memoryUsedPercent, 1) . '%, Hit rate: ' . round($stats['hit_rate'] ?? 0, 1) . '%';
 			}
 		} catch (\Exception) {

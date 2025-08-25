@@ -9,23 +9,18 @@ use TotalCMS\Domain\Template\Service\TemplateFetcher;
 
 final readonly class TemplateExistsAction
 {
-	private TemplateFetcher $templateFetcher;
-
-	public function __construct(TemplateFetcher $service)
-	{
-		$this->templateFetcher = $service;
-	}
+	public function __construct(private TemplateFetcher $templateFetcher)
+    {
+    }
 
 	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @return ResponseInterface the response
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+     * Action.
+     *
+     * @param array<string,string> $args The routing arguments
+     *
+     * @return ResponseInterface the response
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$exists = $this->templateFetcher->templateExists($args['template']);
 

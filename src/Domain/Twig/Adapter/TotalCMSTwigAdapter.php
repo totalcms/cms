@@ -20,6 +20,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -85,21 +86,19 @@ final class TotalCMSTwigAdapter
 		// php <install_dir>/resources/bin/processJobs.php --docroot=/home/username/websites/example.com
 		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
 		$installDir = realpath(__DIR__ . '/../../../..');
-		$docroot    = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
+		$docroot    = rtrim((string) $_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
 		$command    = $installDir . '/resources/bin/processJobs.php';
 
 		// Quote paths that contain spaces
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
 		$quotedDocroot = str_contains($docroot, ' ') ? '"' . $docroot . '"' : $docroot;
 
-		$command = sprintf(
+		return sprintf(
 			'%s %s --docroot=%s',
 			$phpPath,
 			$quotedCommand,
 			$quotedDocroot,
 		);
-
-		return $command;
 	}
 
 	/**
@@ -121,11 +120,9 @@ final class TotalCMSTwigAdapter
 	}
 
 	/**
-	 * Get pending jobs info for display.
-	 *
-	 * @return string
-	 */
-	public function jobQueuePendingInfo(): string
+     * Get pending jobs info for display.
+     */
+    public function jobQueuePendingInfo(): string
 	{
 		$jobManager = new JobManager(
 			new JobRepository()
@@ -133,7 +130,7 @@ final class TotalCMSTwigAdapter
 
 		$pendingJobs = $jobManager->getPendingJobs();
 
-		if (empty($pendingJobs)) {
+		if ($pendingJobs === []) {
 			return '';
 		}
 
@@ -146,12 +143,12 @@ final class TotalCMSTwigAdapter
 				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
 				htmlspecialchars($job->type),
 				htmlspecialchars($job->collection),
-				htmlspecialchars($objectId),
+				htmlspecialchars((string) $objectId),
 				htmlspecialchars($job->createdAt)
 			);
 		}
 
-		$table = sprintf(
+		return sprintf(
 			'<section class="jobqueue-preview-section">
 				<h3>Pending Jobs</h3>
 				<div class="jobqueue-table-wrapper">
@@ -170,16 +167,12 @@ final class TotalCMSTwigAdapter
 			</section>',
 			$rows
 		);
-
-		return $table;
 	}
 
 	/**
-	 * Get failed jobs info for display.
-	 *
-	 * @return string
-	 */
-	public function jobQueueFailedInfo(): string
+     * Get failed jobs info for display.
+     */
+    public function jobQueueFailedInfo(): string
 	{
 		$jobManager = new JobManager(
 			new JobRepository()
@@ -187,7 +180,7 @@ final class TotalCMSTwigAdapter
 
 		$failedJobs = $jobManager->getFailedJobs();
 
-		if (empty($failedJobs)) {
+		if ($failedJobs === []) {
 			return '';
 		}
 
@@ -206,14 +199,14 @@ final class TotalCMSTwigAdapter
 				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td title="%s">%s</td></tr>',
 				htmlspecialchars($job->type),
 				htmlspecialchars($job->collection),
-				htmlspecialchars($objectId),
+				htmlspecialchars((string) $objectId),
 				htmlspecialchars(strval($job->attempts)),
 				htmlspecialchars($job->lastError),
 				htmlspecialchars($errorSnippet)
 			);
 		}
 
-		$table = sprintf(
+		return sprintf(
 			'<section class="jobqueue-preview-section">
 				<h3>Failed Jobs</h3>
 				<div class="jobqueue-table-wrapper">
@@ -233,8 +226,6 @@ final class TotalCMSTwigAdapter
 			</section>',
 			$rows
 		);
-
-		return $table;
 	}
 
 	/**
@@ -244,9 +235,9 @@ final class TotalCMSTwigAdapter
 	 */
 	public function redirectIfNotFound(array $object = []): void
 	{
-		if (empty($object)) {
+		if ($object === []) {
 			$notfound = $this->config->notfound;
-			if (!empty($notfound)) {
+			if ($notfound !== '') {
 				http_response_code(404);
 				header('Location: ' . $notfound);
 				exit;
@@ -294,15 +285,13 @@ final class TotalCMSTwigAdapter
 		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
-		$snippet = <<<HTACCESS
+		return <<<HTACCESS
 # Total CMS Pretty URL Rewrites for $collection
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^$start([\w-]+)$ $path?id=$1 [L,QSA]
 HTACCESS;
-
-		return $snippet;
 	}
 
 	public function nginxRule(string $url, string $collection = 'Collection'): string
@@ -310,12 +299,10 @@ HTACCESS;
 		$path  = strval(parse_url($url, PHP_URL_PATH));
 		$start = $this->startPathForUrl($url);
 
-		$snippet = <<<NGINX
+		return <<<NGINX
 # Total CMS Pretty URL Rewrites for {$collection}
 rewrite ^/{$start}([\w-]+)/?\$ /{$path}?id=\$1 last;
 NGINX;
-
-		return $snippet;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -364,7 +351,7 @@ NGINX;
 
 	public function login(string $collection = ''): string
 	{
-		if (empty($collection)) {
+		if ($collection === '') {
 			return sprintf('%s/%s', $this->api, 'login');
 		}
 
@@ -401,7 +388,7 @@ NGINX;
 	public function verifyFilePassword(string $password, string $collection, string $id, string $property, ?string $name = null): bool
 	{
 		if ($name !== null) {
-			$this->fileAccessManager->loadDepotFile($collection, $id, $property, $name);
+			$this->fileAccessManager->loadDepotFile($collection, $id, $property);
 		} else {
 			$this->fileAccessManager->loadFile($collection, $id, $property);
 		}
@@ -416,7 +403,7 @@ NGINX;
 		}
 
 		$config = $this->config->$key;
-		if (is_array($config) && key_exists($setting, $config)) {
+		if (is_array($config) && array_key_exists($setting, $config)) {
 			return $config[$setting];
 		}
 
@@ -429,7 +416,7 @@ NGINX;
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
 	// Get all reserved schemas
@@ -438,7 +425,7 @@ NGINX;
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
 	// Get all custom schemas
@@ -447,7 +434,7 @@ NGINX;
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn ($schema) => $schema->toArray(), $schemas);
+		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 	}
 
 	/** @return array<string,array<array<string,mixed>>> */
@@ -461,7 +448,7 @@ NGINX;
 		// Process custom schemas by category
 		foreach ($customSchemas as $schema) {
 			$category = empty($schema['category']) ? 'Custom Schemas' : trim(strval($schema['category']));
-			if (!key_exists($category, $categories)) {
+			if (!array_key_exists($category, $categories)) {
 				$categories[$category] = [];
 			}
 			$categories[$category][] = $schema;
@@ -471,7 +458,7 @@ NGINX;
 		$categories['Built-in Schemas'] = $reservedSchemas;
 
 		// Sort the categories by key, but keep Built-in Schemas at the bottom
-		uksort($categories, function ($a, $b) {
+		uksort($categories, function ($a, $b): int {
 			if ($a === 'Built-in Schemas') {
 				return 1;
 			}
@@ -522,13 +509,13 @@ NGINX;
 		$categories  = [];
 		foreach ($collections as $collection) {
 			$category = empty($collection->category) ? 'Collections' : trim(strval($collection->category));
-			if (!key_exists($category, $categories)) {
+			if (!array_key_exists($category, $categories)) {
 				$categories[$category] = [];
 			}
 			$categories[$category][] = $collection;
 		}
 		// Sort the categories by key and move the Collections category to the bottom
-		uksort($categories, function ($a, $b) {
+		uksort($categories, function ($a, $b): int {
 			if ($a === 'Collections') {
 				return 1;
 			}
@@ -548,7 +535,7 @@ NGINX;
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collection);
 
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			return [];
 		}
 
@@ -558,7 +545,7 @@ NGINX;
 	public function objectUrl(string $collection, string $id): string
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collection);
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			return '';
 		}
 
@@ -574,7 +561,7 @@ NGINX;
 	{
 		try {
 			$results = $this->indexSearcher->search($collection, $query, $propertyPriorities);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return [];
 		}
 
@@ -592,7 +579,7 @@ NGINX;
 		// if there is an exception, return an empty array
 		try {
 			$collection = $this->indexReader->fetchIndex($collection);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return [];
 		}
 
@@ -615,7 +602,7 @@ NGINX;
 		// if there is an exception, return an empty array for the template
 		try {
 			$object = $this->objectFetcher->fetchObject($collection, $id);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return [];
 		}
 
@@ -673,7 +660,7 @@ NGINX;
 			'pwd'  => $password,
 		]));
 
-		if (!empty($query)) {
+		if ($query !== '') {
 			$url .= "?$query";
 		}
 
@@ -731,7 +718,7 @@ NGINX;
 			'pwd'  => $password,
 		]));
 
-		if (!empty($query)) {
+		if ($query !== '') {
 			$url .= "?$query";
 		}
 
@@ -743,7 +730,7 @@ NGINX;
 	{
 		$object = $this->object($collection, $id);
 
-		if (key_exists($property, $object)) {
+		if (array_key_exists($property, $object)) {
 			return $object[$property];
 		}
 
@@ -930,12 +917,12 @@ NGINX;
 			'loading'    => 'lazy',
 		], $options);
 
-		if (empty($id)) {
+		if ($id === null || $id === '') {
 			return '';
 		}
 
 		$imagePath = $this->imagePath($id, $imageworks, $options);
-		if (empty($imagePath)) {
+		if ($imagePath === '') {
 			return '';
 		}
 
@@ -968,7 +955,7 @@ NGINX;
 	 */
 	public function imageFromData(array $imageData, string $id, array $imageworks = [], array $options = []): string
 	{
-		if (empty($imageData)) {
+		if ($imageData === []) {
 			return '';
 		}
 
@@ -978,13 +965,13 @@ NGINX;
 			'loading'    => 'lazy',
 		], $options);
 
-		if (empty($id)) {
+		if ($id === '') {
 			return '';
 		}
 
 		// Build path using buildImageworksAPI if we have enough data
 		$imagePath = self::buildImageworksAPI($this->api, $id, $imageData, $imageworks, $options);
-		if (empty($imagePath)) {
+		if ($imagePath === '') {
 			return '';
 		}
 
@@ -1020,7 +1007,7 @@ NGINX;
 			'property'   => 'image',
 		], $options);
 
-		if (empty($id)) {
+		if ($id === null || $id === '') {
 			return '';
 		}
 
@@ -1028,7 +1015,7 @@ NGINX;
 		$property   = $options['property'];
 
 		$image = $this->data($collection, $id, $property);
-		if (!is_array($image) || !key_exists('size', $image) || $image['size'] === 0) {
+		if (!is_array($image) || !array_key_exists('size', $image) || $image['size'] === 0) {
 			return '';
 		}
 
@@ -1050,14 +1037,14 @@ NGINX;
 		$collection = $options['collection'];
 		$property   = $options['property'];
 
-		if (empty($image) || !key_exists('name', $image)) {
+		if ($image === [] || !array_key_exists('name', $image)) {
 			return '';
 		}
 
 		// Default to original image type
-		$type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+		$type = strtolower(pathinfo((string) $image['name'], PATHINFO_EXTENSION));
 		// If type is set in imageworks options, use that
-		if (key_exists('fm', $imageworks)) {
+		if (array_key_exists('fm', $imageworks)) {
 			$type = $imageworks['fm'];
 			unset($imageworks['fm']);
 		}
@@ -1067,7 +1054,7 @@ NGINX;
 		$api .= "/imageworks/$collection/$id/$property.$type";
 
 		// cache busting links
-		$imageworks['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+		$imageworks['cache'] = strrev((string) preg_replace('/\W+/', '', (string) $image['uploadDate']));
 
 		// From Stacks Preview Server - Not used in Imageworks and breaks the image generation
 		unset($imageworks['datadir']);
@@ -1106,7 +1093,7 @@ NGINX;
 			'property'   => 'gallery',
 		], $options);
 
-		if (empty($thumbSettings)) {
+		if ($thumbSettings === []) {
 			$thumbSettings = ['w' => 300, 'h' => 200];
 		}
 
@@ -1132,7 +1119,7 @@ NGINX;
 			// Always wrap in figure for semantic HTML5
 			$figureContent = $link;
 			if ($showCaptions && !empty($image['alt'])) {
-				$caption = HTMLUtils::element('figcaption', htmlspecialchars($image['alt']), ['class' => 'cms-gallery-caption']);
+				$caption = HTMLUtils::element('figcaption', htmlspecialchars((string) $image['alt']), ['class' => 'cms-gallery-caption']);
 				$figureContent .= $caption;
 			}
 
@@ -1202,12 +1189,12 @@ NGINX;
 			'property'   => 'gallery',
 		], $options);
 
-		if (empty($id) || empty($name)) {
+		if ($id === null || $id === '' || $id === '0' || ($name === null || $name === '' || $name === '0')) {
 			return '';
 		}
 
 		$imagePath = $this->galleryPath($id, $name, $imageworks, $options);
-		if (empty($imagePath)) {
+		if ($imagePath === '') {
 			return '';
 		}
 
@@ -1247,7 +1234,7 @@ NGINX;
 			return null;
 		}
 
-		$image = array_filter($gallery, fn ($image) => pathinfo($image['name'])['filename'] === $name);
+		$image = array_filter($gallery, fn (array $image): bool => pathinfo((string) $image['name'])['filename'] === $name);
 
 		foreach ($gallery as $image) {
 			if ($image['name'] === $name) {
@@ -1269,7 +1256,7 @@ NGINX;
 			'property'   => 'gallery',
 		], $options);
 
-		if (empty($id) || empty($name)) {
+		if ($id === null || $id === '' || $name === null || $name === '') {
 			return '';
 		}
 
@@ -1300,14 +1287,14 @@ NGINX;
 
 		// Process the image as regular filename
 		if (!in_array($name, $dynamicRoutes)) {
-			if (!key_exists('uploadDate', $image)) {
+			if (!array_key_exists('uploadDate', $image)) {
 				return '';
 			}
 
 			// Default to original image type
-			$type = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+			$type = strtolower(pathinfo((string) $image['name'], PATHINFO_EXTENSION));
 			// If type is set in imageworks, use that
-			if (key_exists('fm', $imageworks)) {
+			if (array_key_exists('fm', $imageworks)) {
 				$type = $imageworks['fm'];
 				unset($imageworks['fm']);
 			}
@@ -1318,7 +1305,7 @@ NGINX;
 			$api = $baseapi . "/imageworks/$collection/$id/$property/$basename.$type";
 
 			// cache busting links
-			$imageworks['cache'] = strrev(preg_replace('/\W+/', '', $image['uploadDate']));
+			$imageworks['cache'] = strrev((string) preg_replace('/\W+/', '', (string) $image['uploadDate']));
 		}
 
 		// From Stacks Preview Server - Not used in Imageworks and breaks the image generation
@@ -1357,7 +1344,7 @@ NGINX;
 
 		$image = $this->data($options['collection'], $id, $options['property']);
 
-		if (!is_array($image) || !key_exists('alt', $image)) {
+		if (!is_array($image) || !array_key_exists('alt', $image)) {
 			return '';
 		}
 
@@ -1375,7 +1362,7 @@ NGINX;
 
 		$image = $this->galleryImageData($id, $name, $options);
 
-		if (!is_array($image) || !key_exists('alt', $image)) {
+		if (!is_array($image) || !array_key_exists('alt', $image)) {
 			return '';
 		}
 
@@ -1406,7 +1393,7 @@ NGINX;
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			return $this->deckCompatibilityChecker->isCompatible($schema->toArray());
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -1422,7 +1409,7 @@ NGINX;
 			$schema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			return $this->deckCompatibilityChecker->getSchemaIncompatibleTypes($schema->toArray());
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return [];
 		}
 	}

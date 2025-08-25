@@ -28,7 +28,7 @@ final readonly class FirstLoginChecker
 			$index = $this->indexReader->fetchIndex($this->collection);
 
 			return $index->objects->isEmpty();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// If collection doesn't exist and can't be created, it's a new installation
 			return true;
 		}

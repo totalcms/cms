@@ -25,15 +25,8 @@ class BundleChecker
 		if (!$this->bundleRepository->localBundleExists()) {
 			$this->verify();
 		}
-
-		if (
-			$this->bundleRepository->bundleExists()
-			&& $this->bundleRepository->localBundleExists()
-		) {
-			return true;
-		}
-
-		return false;
+        return $this->bundleRepository->bundleExists()
+			&& $this->bundleRepository->localBundleExists();
 	}
 
 	public function verify(): bool

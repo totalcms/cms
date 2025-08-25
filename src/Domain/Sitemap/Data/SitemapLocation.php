@@ -14,7 +14,7 @@ final readonly class SitemapLocation
 	/** @param array<string,string> $options */
 	public function __construct(string $url, array $options = [])
 	{
-		if (strlen($url) === 0) {
+		if ($url === '') {
 			return;
 		}
 		$this->location = new Url(trim($url));
@@ -40,7 +40,7 @@ final readonly class SitemapLocation
 	public function addImage(string $imageUrl): void
 	{
 		$imageUrl = trim($imageUrl);
-		if (empty($imageUrl)) {
+		if ($imageUrl === '') {
 			return;
 		}
 

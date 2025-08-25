@@ -10,31 +10,23 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final readonly class ObjectSaveAction
 {
-	private JsonRenderer $renderer;
-	private ObjectSaver $service;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param JsonRenderer $renderer The renderer
 	 * @param ObjectSaver $service Object save service
 	 */
-	public function __construct(JsonRenderer $renderer, ObjectSaver $service)
-	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
-	}
+	public function __construct(private JsonRenderer $renderer, private ObjectSaver $service)
+    {
+    }
 
 	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(
+     * Action.
+     *
+     * @param array<string,string> $args
+     *
+     */
+    public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,

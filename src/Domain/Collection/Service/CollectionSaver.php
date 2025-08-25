@@ -19,16 +19,14 @@ final readonly class CollectionSaver
 	}
 
 	/**
-	 * Save Collection data.
-	 *
-	 * @param array<string,mixed> $data
-	 *
-	 * @throws \DomainException
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return CollectionData
-	 */
-	public function saveCollection(array $data): CollectionData
+     * Save Collection data.
+     *
+     * @param array<string,mixed> $data
+     *
+     * @throws \DomainException
+     * @throws \UnexpectedValueException
+     */
+    public function saveCollection(array $data): CollectionData
 	{
 		$data['count'] = $this->initializeCount($data['id'], $data);
 
@@ -44,16 +42,14 @@ final readonly class CollectionSaver
 	}
 
 	/**
-	 * update Collection data.
-	 *
-	 * @param string $collectionId
-	 * @param array<string,mixed> $data The collection data to save
-	 *
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return CollectionData
-	 */
-	public function updateCollection(string $collectionId, array $data): CollectionData
+     * update Collection data.
+     *
+     * @param array<string,mixed> $data The collection data to save
+     *
+     * @throws \UnexpectedValueException
+     *
+     */
+    public function updateCollection(string $collectionId, array $data): CollectionData
 	{
 		$data['count'] = $this->initializeCount($collectionId, $data);
 
@@ -69,20 +65,18 @@ final readonly class CollectionSaver
 	}
 
 	/**
-	 * update Collection data.
-	 *
-	 * @param string $collectionId
-	 * @param array<string,mixed> $patch The collection data to patch
-	 *
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return CollectionData
-	 */
-	public function patchCollection(string $collectionId, array $patch): CollectionData
+     * update Collection data.
+     *
+     * @param array<string,mixed> $patch The collection data to patch
+     *
+     * @throws \UnexpectedValueException
+     *
+     */
+    public function patchCollection(string $collectionId, array $patch): CollectionData
 	{
 		$collection = $this->storage->fetchCollection($collectionId);
 
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
 
@@ -92,19 +86,18 @@ final readonly class CollectionSaver
 	}
 
 	/**
-	 * Increment the object count for a collection.
+     * Increment the object count for a collection.
 	 *
-	 * @param string $collectionId
-	 *
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return CollectionData
-	 */
-	public function incrementCount(string $collectionId): CollectionData
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+     *
+     * @throws \UnexpectedValueException
+     *
+     */
+    public function incrementCount(string $collectionId): CollectionData
 	{
 		$collection = $this->storage->fetchCollection($collectionId);
 
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
 
@@ -115,7 +108,7 @@ final readonly class CollectionSaver
 			$objectIds                = $this->indexRepository->fetchObjectIds($collectionId);
 			$collectionArray['count'] = count($objectIds);
 		} else {
-			$collectionArray['count'] = $collectionArray['count'] + 1;
+			$collectionArray['count'] += 1;
 		}
 
 		return $this->updateCollection($collectionId, $collectionArray);

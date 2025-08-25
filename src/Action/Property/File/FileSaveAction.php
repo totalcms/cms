@@ -19,17 +19,14 @@ final readonly class FileSaveAction
 	}
 
 	/**
-	 * File Save Action.
-	 *
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+     * File Save Action.
+     *
+     * @SuppressWarnings("PHPMD.ElseExpression")
+     *
+     * @param array<string,string> $args
+     *
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$files = $request->getUploadedFiles();
 		$file  = $files[$args['property']] ?? null;
@@ -44,7 +41,7 @@ final readonly class FileSaveAction
 				$fileUrl = trim($body[$args['property']]);
 
 				// Validate that it's a valid URL and not empty
-				if (empty($fileUrl) || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
+				if ($fileUrl === '' || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
 					throw new \RuntimeException('Invalid URL provided for property: ' . $args['property']);
 				}
 
@@ -112,17 +109,15 @@ final readonly class FileSaveAction
 	}
 
 	/**
-	 * Handle normal file upload with chunking support.
-	 *
-	 * @param \Psr\Http\Message\UploadedFileInterface $file
-	 * @param array<string,mixed> $body
-	 * @param ResponseInterface $response
-	 *
-	 * @throws \RuntimeException If upload processing fails
-	 *
-	 * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
-	 */
-	private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
+     * Handle normal file upload with chunking support.
+     *
+     * @param array<string,mixed> $body
+     *
+     * @throws \RuntimeException If upload processing fails
+     *
+     * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
+     */
+    private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
 	{
 		// Get chunk information from the request
 		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
@@ -185,7 +180,7 @@ final readonly class FileSaveAction
 		$error       = curl_error($ch);
 		curl_close($ch);
 
-		if ($fileContent === false || !empty($error)) {
+		if ($fileContent === false || $error !== '') {
 			throw new \RuntimeException('Failed to download file from URL: ' . $error);
 		}
 
@@ -219,7 +214,7 @@ final readonly class FileSaveAction
 		$filename = basename($path);
 
 		// If no filename or it doesn't have an extension, generate one
-		if (empty($filename) || !pathinfo($filename, PATHINFO_EXTENSION)) {
+		if ($filename === '' || !pathinfo($filename, PATHINFO_EXTENSION)) {
 			$filename = 'downloaded_file_' . uniqid() . '.tmp';
 		}
 

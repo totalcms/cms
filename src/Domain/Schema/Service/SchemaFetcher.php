@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Schema\Service;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-
+use TotalCMS\Domain\Collection\Data\CollectionData;
 final readonly class SchemaFetcher
 {
 	public function __construct(
@@ -28,7 +28,7 @@ final readonly class SchemaFetcher
 	{
 		$collectionData = $this->collectionRepository->fetchCollection($collection);
 
-		if ($collectionData === null) {
+		if (!$collectionData instanceof CollectionData) {
 			throw new \UnexpectedValueException('Collection for Schema not found: ' . $collection);
 		}
 

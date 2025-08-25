@@ -14,17 +14,13 @@ final readonly class ImageWorksGalleryFetchAction
 	}
 
 	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The arguments
-	 *
-	 * @throws HttpNotFoundException
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(
+     * Action.
+     *
+     * @param array<string,string> $args The arguments
+     * @throws HttpNotFoundException
+     *
+     */
+    public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,

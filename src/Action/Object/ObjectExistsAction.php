@@ -9,25 +9,20 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
 final readonly class ObjectExistsAction
 {
-	private ObjectFetcher $objectFetcher;
-
-	public function __construct(ObjectFetcher $fetcher)
-	{
-		$this->objectFetcher = $fetcher;
-	}
+	public function __construct(private ObjectFetcher $objectFetcher)
+    {
+    }
 
 	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @throws HttpNotFoundException
-	 *
-	 * @return ResponseInterface the response
-	 */
-	public function __invoke(
+     * Action.
+     *
+     * @param array<string,string> $args The routing arguments
+     *
+     * @throws HttpNotFoundException
+     *
+     * @return ResponseInterface the response
+     */
+    public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
 		array $args,

@@ -24,13 +24,11 @@ final readonly class GlideFactory
 	}
 
 	/**
-	 * Get the original image.
-	 *
-	 * @param string $imagePath
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function originalImage(string $imagePath): array
+     * Get the original image.
+     *
+     * @return array<string,mixed>
+     */
+    public function originalImage(string $imagePath): array
 	{
 		$imageFile = $this->filesystem->readStream($imagePath);
 		$mimeType  = $this->filesystem->mimeType($imagePath);
@@ -58,7 +56,7 @@ final readonly class GlideFactory
 			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
 			'defaults'               => $this->config->imageworks['defaults'],
 			'presets'                => $this->presets($imageData),
-			'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
+			'response'               => new PsrResponseFactory(new Response(), fn ($stream): Stream => new Stream($stream)),
 		]);
 
 		return $glide;
@@ -104,11 +102,11 @@ final readonly class GlideFactory
 
 		$size = intval($size);
 
-		if (empty($border)) {
+		if ($border === '') {
 			$border = 'ffffff';
 		}
 
-		if (empty($method)) {
+		if ($method === '') {
 			$method = 'overlay';
 		}
 

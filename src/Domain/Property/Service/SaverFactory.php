@@ -10,16 +10,16 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Factory\LoggerFactory;
 
-final class SaverFactory
+final readonly class SaverFactory
 {
 	public function __construct(
-		private readonly PropertyRepository $storage,
-		private readonly PropertyFetcher $propFetcher,
-		private readonly ObjectSaver $objectSaver,
-		private readonly SchemaFetcher $schemaFetcher,
-		protected ObjectPatcher $objectPatcher,
-		private readonly ObjectFetcher $objectFetcher,
-		protected LoggerFactory $loggerFactory,
+		private PropertyRepository $storage,
+		private PropertyFetcher $propFetcher,
+		private ObjectSaver $objectSaver,
+		private SchemaFetcher $schemaFetcher,
+		private ObjectPatcher $objectPatcher,
+		private ObjectFetcher $objectFetcher,
+		private LoggerFactory $loggerFactory,
 	) {
 	}
 
@@ -52,6 +52,6 @@ final class SaverFactory
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-		return basename($schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+		return basename((string) $schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
 	}
 }

@@ -22,7 +22,7 @@ final readonly class SettingsSaver
 	{
 		unset($settings['csrf_token'], $settings['csrf_token_name']);
 
-		$settings           = array_filter($settings, fn ($value) => $value !== '');
+		$settings           = array_filter($settings, fn (string $value): bool => $value !== '');
 		$settings['sentry'] = isset($settings['sentry']);
 
 		$returnSettings = $settings;
@@ -44,7 +44,7 @@ final readonly class SettingsSaver
 			$dashboardSettings['title'] = $settings['title'];
 			unset($settings['title']);
 		}
-		if (!empty($dashboardSettings)) {
+		if ($dashboardSettings !== []) {
 			$settings['dashboard'] = $dashboardSettings;
 		}
 

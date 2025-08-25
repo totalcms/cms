@@ -33,7 +33,7 @@ final readonly class ObjectUpdater
 		}
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn ($property) => $this->propertyProcessor->processBeforeSave($property));
+		$object->properties = $object->properties->map(fn ($property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$this->storage->saveObject($collection, $object);
 
@@ -49,7 +49,7 @@ final readonly class ObjectUpdater
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
 		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn ($property) => $this->propertyProcessor->processBeforeSave($property));
+		$object->properties = $object->properties->map(fn ($property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
 
 		$objectData            = $object->toArray();
 		$objectData[$property] = $newData;
@@ -81,7 +81,7 @@ final readonly class ObjectUpdater
 			$depotUpdater->patchMeta($name, $newData, $subpath);
 		}
 
-		$object->properties = $object->properties->map(function ($item) use ($property) {
+		$object->properties = $object->properties->map(function ($item) use ($property): PropertyData {
 			if ($item->id === $property->id) {
 				$item = $property;
 			}

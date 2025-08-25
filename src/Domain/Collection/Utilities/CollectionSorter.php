@@ -46,7 +46,7 @@ class CollectionSorter
 	public function sortByRules(array $rules): array
 	{
 		// Early exit for common cases
-		if (empty($rules) || empty($this->collection)) {
+		if ($rules === [] || $this->collection === []) {
 			return $this->collection;
 		}
 
@@ -56,14 +56,14 @@ class CollectionSorter
 
 		// Check for shuffle rule first (most efficient)
 		foreach ($rules as $rule) {
-			if (isset($rule['shuffle']) && boolval($rule['shuffle']) === true) {
+			if (isset($rule['shuffle']) && boolval($rule['shuffle'])) {
 				return $this->shuffle();
 			}
 		}
 
 		// Pre-process and validate rules
 		$processedRules = $this->preprocessRules($rules);
-		if (empty($processedRules)) {
+		if ($processedRules === []) {
 			return $this->collection;
 		}
 
@@ -72,7 +72,7 @@ class CollectionSorter
 
 		$collection = $this->collection;
 
-		usort($collection, function ($a, $b) use ($processedRules) {
+		usort($collection, function ($a, $b) use ($processedRules): int {
 			// Get unique identifiers for cache lookup
 			$aId = $this->getItemId($a);
 			$bId = $this->getItemId($b);
@@ -129,8 +129,8 @@ class CollectionSorter
 
 			$processedRules[] = [
 				'property' => $rule['property'],
-				'natural'  => isset($rule['natural']) && boolval($rule['natural']) === true,
-				'reverse'  => isset($rule['reverse']) && boolval($rule['reverse']) === true,
+				'natural'  => isset($rule['natural']) && boolval($rule['natural']),
+				'reverse'  => isset($rule['reverse']) && boolval($rule['reverse']),
 			];
 		}
 

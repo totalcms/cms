@@ -115,14 +115,12 @@ final readonly class CacheReporter
 	 */
 	public function getOptimalCacheConfig(): array
 	{
-		$config = [
+		return [
 			'recommended_strategy' => $this->getRecommendedStrategy(),
 			'ttl_recommendations'  => $this->getTTLRecommendations(),
 			'backend_priorities'   => $this->getBackendPriorities(),
 			'performance_tips'     => $this->getPerformanceTips(),
 		];
-
-		return $config;
 	}
 
 	/**

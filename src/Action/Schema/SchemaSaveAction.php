@@ -17,15 +17,11 @@ final readonly class SchemaSaveAction
 	}
 
 	/**
-	 * Invokable Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @return ResponseInterface
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+     * Invokable Action.
+     *
+     *
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$data = (array)$request->getParsedBody();
 

@@ -10,20 +10,15 @@ use TotalCMS\Transformer\CollectionMetaTransformer;
 
 final readonly class CollectionListAction
 {
-	private JsonRenderer $renderer;
-	private CollectionLister $collectionListService;
-
 	/**
-	 * The constructor.
-	 *
-	 * @param JsonRenderer $renderer The renderer
-	 * @param CollectionLister $service The service
-	 */
-	public function __construct(JsonRenderer $renderer, CollectionLister $service)
-	{
-		$this->renderer              = $renderer;
-		$this->collectionListService = $service;
-	}
+     * The constructor.
+     *
+     * @param JsonRenderer $renderer The renderer
+     * @param CollectionLister $collectionListService The service
+     */
+    public function __construct(private JsonRenderer $renderer, private CollectionLister $collectionListService)
+    {
+    }
 
 	/**
 	 * Action.

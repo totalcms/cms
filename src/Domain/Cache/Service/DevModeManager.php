@@ -150,7 +150,7 @@ final class DevModeManager
 	{
 		$hours   = intval($seconds / 3600);
 		$minutes = intval(($seconds % 3600) / 60);
-		$seconds = $seconds % 60;
+		$seconds %= 60;
 
 		return sprintf('%d:%02d:%02d', $hours, $minutes, $seconds);
 	}

@@ -37,7 +37,7 @@ class CollectionRefiner
 	public function filter(array $rules): array
 	{
 		// Early exit for common cases
-		if (empty($rules) || empty($this->collection)) {
+		if ($rules === [] || $this->collection === []) {
 			return $this->collection;
 		}
 
@@ -45,7 +45,7 @@ class CollectionRefiner
 
 		foreach ($rules as $rule) {
 			// Early exit if nothing left to filter
-			if (empty($filteredCollection)) {
+			if ($filteredCollection === []) {
 				return [];
 			}
 
@@ -91,7 +91,7 @@ class CollectionRefiner
 	public function filterByArrayRule(array $collection, string $property, array $values = [], string $operator = 'equal', string $logic = 'or'): array
 	{
 		// Early exit for empty values
-		if (empty($values)) {
+		if ($values === []) {
 			return $collection;
 		}
 
@@ -127,7 +127,7 @@ class CollectionRefiner
 
 			foreach ($filtered as $item) {
 				// Use ID if available, otherwise serialize
-				$key = isset($item['id']) ? $item['id'] : serialize($item);
+				$key = $item['id'] ?? serialize($item);
 				if (!isset($seen[$key])) {
 					$results[]  = $item;
 					$seen[$key] = true;
@@ -153,7 +153,7 @@ class CollectionRefiner
 		// Apply each filter sequentially, narrowing down the results
 		foreach ($values as $value) {
 			// Early exit if nothing left to filter
-			if (empty($filteredCollection)) {
+			if ($filteredCollection === []) {
 				return [];
 			}
 
@@ -180,7 +180,7 @@ class CollectionRefiner
 
 		foreach ($collection as $item) {
 			// Use ID if available, otherwise serialize
-			$key = isset($item['id']) ? $item['id'] : serialize($item);
+			$key = $item['id'] ?? serialize($item);
 			if (!isset($seen[$key])) {
 				$unique[]   = $item;
 				$seen[$key] = true;
@@ -231,7 +231,7 @@ class CollectionRefiner
 			return $collection;
 		}
 
-		return array_filter($collection, function ($record) use ($property, $value, $operator, $not, $numParams, $methodExists) {
+		return array_filter($collection, function (array $record) use ($property, $value, $operator, $not, $numParams, $methodExists) {
 			$item = self::getPropertyValueForRecord($record, $property);
 
 			if ($item === null) {
@@ -245,16 +245,11 @@ class CollectionRefiner
 					return $not ? !$found : $found;
 				}
 
-				switch ($numParams) {
-					case 1:
-						$found = self::$operator($item);
-						break;
-					case 2:
-						$found = self::$operator($item, $value);
-						break;
-					default:
-						$found = false;
-				}
+				$found = match ($numParams) {
+                    1 => self::$operator($item),
+                    2 => self::$operator($item, $value),
+                    default => false,
+                };
 
 				return $not ? !$found : $found;
 			}

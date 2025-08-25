@@ -135,20 +135,14 @@ final class RssBuilder
 	private function mimeType(string $media): string
 	{
 		$extension = pathinfo($media, PATHINFO_EXTENSION);
-		switch ($extension) {
-			case 'mp3':
-				return 'audio/mpeg';
-			case 'ogg':
-				return 'audio/ogg';
-			case 'wav':
-				return 'audio/wav';
-			case 'mp4':
-				return 'video/mp4';
-			case 'webm':
-				return 'video/webm';
-		}
-
-		return 'application/octet-stream';
+        return match ($extension) {
+            'mp3'   => 'audio/mpeg',
+            'ogg'   => 'audio/ogg',
+            'wav'   => 'audio/wav',
+            'mp4'   => 'video/mp4',
+            'webm'  => 'video/webm',
+            default => 'application/octet-stream',
+        };
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

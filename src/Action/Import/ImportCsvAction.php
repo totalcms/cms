@@ -11,14 +11,9 @@ use TotalCMS\Renderer\JsonRenderer;
 
 final readonly class ImportCsvAction
 {
-	private CsvImporter $csvImporter;
-	private JsonRenderer $renderer;
-
-	public function __construct(CsvImporter $csvImporter, JsonRenderer $renderer)
-	{
-		$this->csvImporter = $csvImporter;
-		$this->renderer    = $renderer;
-	}
+	public function __construct(private CsvImporter $csvImporter, private JsonRenderer $renderer)
+    {
+    }
 
 	/**
 	 * Action.

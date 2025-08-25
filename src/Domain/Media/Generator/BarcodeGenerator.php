@@ -27,7 +27,7 @@ class BarcodeGenerator
 			// Use getInlineSvgCode() for HTML embedding (no XML declaration)
 			return $barcodeObj->getInlineSvgCode();
 		} catch (\Exception $e) {
-			throw new \InvalidArgumentException("Unable to generate barcode with type: {$type}. Error: " . $e->getMessage());
+			throw new \InvalidArgumentException("Unable to generate barcode with type: {$type}. Error: " . $e->getMessage(), $e->getCode(), $e);
 		}
 	}
 

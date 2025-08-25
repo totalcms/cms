@@ -169,11 +169,7 @@ class TotalCMS
 
 			$this->logger->error(sprintf('%s: %s', $error, $th->getTraceAsString()));
 
-			if (str_contains($content, '<body>')) {
-				$content = str_replace('<body>', '<body>' . $error, $content);
-			} else {
-				$content = $error . $content;
-			}
+			$content = str_contains($content, '<body>') ? str_replace('<body>', '<body>' . $error, $content) : $error . $content;
 		}
 
 		return $content;
@@ -197,9 +193,8 @@ class TotalCMS
 	{
 		// Stacks internal PHP server
 		$environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
-		$preview     = ($environment === 'preview' || PHP_SAPI === 'cli-server');
 
-		return $preview;
+		return $environment === 'preview' || PHP_SAPI === 'cli-server';
 	}
 
 	/** @param array<string,string> $options */
@@ -277,7 +272,7 @@ class TotalCMS
 			$dataDir = $this->config->datadir;
 
 			return $dataDir . '/' . $relativePath;
-		} catch (\Throwable $e) {
+		} catch (\Throwable) {
 			return null;
 		}
 	}
@@ -319,7 +314,7 @@ class TotalCMS
 			}
 
 			return null;
-		} catch (\Throwable $e) {
+		} catch (\Throwable) {
 			return null;
 		}
 	}

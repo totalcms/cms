@@ -14,17 +14,15 @@ final readonly class SchemaExistsAction
 	}
 
 	/**
-	 * Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @throws HttpNotFoundException
-	 *
-	 * @return ResponseInterface the response
-	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+     * Action.
+     *
+     * @param array<string,string> $args The routing arguments
+     *
+     * @throws HttpNotFoundException
+     *
+     * @return ResponseInterface the response
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$exists = $this->schemaFetcher->schemaExists($args['id']);
 

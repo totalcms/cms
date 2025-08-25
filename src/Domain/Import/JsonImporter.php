@@ -45,7 +45,7 @@ final class JsonImporter
 
 		$records = json_decode((string)$file->getStream(), true);
 
-		if (!is_array($records) || !array_reduce($records, fn ($carry, $item) => $carry && is_array($item), true)) {
+		if (!is_array($records) || !array_reduce($records, fn ($carry, $item): bool => $carry && is_array($item), true)) {
 			$error = 'Invalid JSON structure for import: expected an array of records';
 			$this->logger->error($error);
 			throw new \InvalidArgumentException($error);
@@ -55,7 +55,7 @@ final class JsonImporter
 
 		foreach ($records as $offset => $record) {
 			try {
-				$imported = $updateObject === true ?
+				$imported = $updateObject ?
 					$this->updateObject($record) :
 					$this->importNewObject($record);
 

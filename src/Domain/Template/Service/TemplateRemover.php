@@ -9,23 +9,18 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
  */
 final readonly class TemplateRemover
 {
-	private TemplateRepository $storage;
-
-	public function __construct(TemplateRepository $storage)
-	{
-		$this->storage = $storage;
-	}
+	public function __construct(private TemplateRepository $storage)
+    {
+    }
 
 	/**
-	 * Delete a Template.
-	 *
-	 * @param string $id
-	 *
-	 * @throws \DomainException
-	 *
-	 * @return bool
-	 */
-	public function deleteTemplate(string $id): bool
+     * Delete a Template.
+     *
+     *
+     * @throws \DomainException
+     *
+     */
+    public function deleteTemplate(string $id): bool
 	{
 		if ($this->storage->reservedTemplateExists($id)) {
 			throw new \DomainException('Cannot delete a built-in template.');

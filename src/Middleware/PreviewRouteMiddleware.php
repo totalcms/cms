@@ -22,15 +22,13 @@ final readonly class PreviewRouteMiddleware implements MiddlewareInterface
 	{
 		$route = $this->getPreviewRoute($request);
 
-		if (!empty($route)) {
+		if ($route !== '') {
 			// Update the request path to match the "route" query parameter
 			$uri     = $request->getUri()->withPath($route);
 			$request = $request->withUri($uri);
 		}
 
-		$response = $handler->handle($request);
-
-		return $response;
+		return $handler->handle($request);
 	}
 
 	private function getPreviewRoute(ServerRequestInterface $request): string
@@ -39,8 +37,7 @@ final readonly class PreviewRouteMiddleware implements MiddlewareInterface
 		$api = $this->api ?: 'tcms/public';
 
 		$parts = explode($api, $url);
-		$route = $parts[1] ?? '';
 
-		return $route;
+		return $parts[1] ?? '';
 	}
 }

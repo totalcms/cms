@@ -59,7 +59,7 @@ final readonly class FactoryImporter
 
 	public function isFakerRule(string $rule): bool
 	{
-		[$method, $args] = self::parseFakerRule($rule);
+		[$method, $args] = $this->parseFakerRule($rule);
 
 		if (empty($method)) {
 			return false;
@@ -69,7 +69,7 @@ final readonly class FactoryImporter
 	}
 
 	/** @return array<mixed> */
-	private static function parseFakerRule(string $rule): array
+	private function parseFakerRule(string $rule): array
 	{
 		// Extract method name and arguments string
 		preg_match('/^(\w+)(\((.*)\))*$/', $rule, $matches);
@@ -77,7 +77,7 @@ final readonly class FactoryImporter
 		$args   = $matches[3] ?? '';
 		$args   = trim($args);
 
-		if (!empty($args)) {
+		if ($args !== '' && $args !== '0') {
 			$args = preg_split('/\s*,\s*/', trim($args));
 			if ($args === false) {
 				$args = [];
@@ -114,9 +114,7 @@ final readonly class FactoryImporter
 
 		$schema = $this->schemaFetcher->fetchSchema($collection->schema);
 
-		$factories = array_map(function ($property) {
-			return $property['factory'] ?? null;
-		}, $schema->properties);
+		$factories = array_map(fn(array $property) => $property['factory'] ?? null, $schema->properties);
 
 		// Filter out null values to only return properties that have factory definitions
 		return array_filter($factories);
@@ -133,7 +131,7 @@ final readonly class FactoryImporter
 
 		if (empty($objectData['id'])) {
 			// Generate object id first since other methods may require it
-			[$method, $args]  = self::parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
+			[$method, $args]  = $this->parseFakerRule($defs['id'] ?? self::DEFAULT_FACTORY);
 			$objectData['id'] = $this->faker->unique()->$method(...$args);
 		}
 
@@ -141,20 +139,20 @@ final readonly class FactoryImporter
 			if (empty($value) || $property === 'id') {
 				continue;
 			}
-			[$method, $args] = self::parseFakerRule($value);
-			if (str_starts_with($method, 'image')) {
+			[$method, $args] = $this->parseFakerRule($value);
+			if (str_starts_with((string) $method, 'image')) {
 				// Save image and store path in object data
 				// Not using the ImageSaver here to avoid unnecessary complexity
 				$path                  = $this->faker->$method(...$args);
 				$objectData[$property] = $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path);
 				continue;
 			}
-			if (str_starts_with($method, 'gallery')) {
+			if (str_starts_with((string) $method, 'gallery')) {
 				// Save images and store path in object data
 				// Not using the GallerySaver here to avoid unnecessary complexity
 				$paths                 = $this->faker->$method(...$args);
 				$objectData[$property] = array_map(
-					fn ($path) => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
+					fn ($path): array => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
 					$paths
 				);
 				continue;

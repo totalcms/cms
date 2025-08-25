@@ -6,7 +6,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final readonly class JobQueueStats
+final readonly class JobQueueStats implements \Stringable
 {
 	public function __construct(
 		private string $api,
@@ -18,7 +18,7 @@ final readonly class JobQueueStats
 	{
 		$jobManager = new JobManager(new JobRepository());
 
-		$stats = empty($this->collection)
+		$stats = $this->collection === ''
 			? $jobManager->queueByType()
 			: $jobManager->queueByTypeForCollection($this->collection);
 
@@ -36,18 +36,17 @@ final readonly class JobQueueStats
 		]);
 
 		$header  = HTMLUtils::element('h4', $header);
-		$wrapper = HTMLUtils::element('div', $header . $table, [
+
+		return HTMLUtils::element('div', $header . $table, [
 			'class' => 'jobqueue-stats-wrapper',
 		]);
-
-		return $wrapper;
 	}
 
 	public function tableByStatus(string $header = 'Job Queue by Status'): string
 	{
 		$jobManager = new JobManager(new JobRepository());
 
-		$stats = empty($this->collection)
+		$stats = $this->collection === ''
 			? $jobManager->queueByStatus()
 			: $jobManager->queueByStatusForCollection($this->collection);
 
@@ -65,24 +64,22 @@ final readonly class JobQueueStats
 		]);
 
 		$header  = HTMLUtils::element('h4', $header);
-		$wrapper = HTMLUtils::element('div', $header . $table, [
+
+		return HTMLUtils::element('div', $header . $table, [
 			'class' => 'jobqueue-stats-wrapper',
 		]);
-
-		return $wrapper;
 	}
 
 	public function allStats(): string
 	{
 		$tables  = $this->tableByType() . $this->tableByStatus();
-		$wrapper = HTMLUtils::element('div', $tables, [
+
+		return HTMLUtils::element('div', $tables, [
 			'class' => 'jobqueue-all-stats',
 		]);
-
-		return $wrapper;
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->allStats();
 	}

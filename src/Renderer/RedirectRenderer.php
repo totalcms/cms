@@ -32,7 +32,7 @@ final readonly class RedirectRenderer
 		string $destination,
 		array $queryParams = [],
 	): ResponseInterface {
-		if ($queryParams) {
+		if ($queryParams !== []) {
 			$destination = sprintf('%s?%s', $destination, \http_build_query($queryParams));
 		}
 

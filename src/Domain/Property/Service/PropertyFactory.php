@@ -21,17 +21,15 @@ final readonly class PropertyFactory
 	}
 
 	/**
-	 * create a property object.
-	 *
-	 * @param array<string,mixed>  $propertySchema
-	 * @param mixed  $value
-	 *
-	 * @throws \DomainException
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return PropertyData
-	 */
-	public function generateProperty(array $propertySchema, mixed $value): PropertyData
+     * create a property object.
+     *
+     * @param array<string,mixed>  $propertySchema
+     *
+     * @throws \DomainException
+     * @throws \UnexpectedValueException
+     *
+     */
+    public function generateProperty(array $propertySchema, mixed $value): PropertyData
 	{
 		$type = $propertySchema['type'] ?? basename($propertySchema['$ref'] ?? '', StorageRepository::FILE_EXT);
 
@@ -42,7 +40,7 @@ final readonly class PropertyFactory
 			return $this->createDeck($propertySchema, $value, $settings);
 		}
 
-		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
+		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst((string) $type) . 'Data';
 		if (!class_exists($className)) {
 			throw new \UnexpectedValueException('Unknown property type for object.');
 		}
@@ -63,15 +61,13 @@ final readonly class PropertyFactory
 	}
 
 	/**
-	 * Create a DeckData object with properly processed items.
-	 *
-	 * @param array<string,mixed> $propertySchema The deck property schema
-	 * @param mixed $value The raw deck data
-	 * @param array<string,mixed> $settings The deck settings
-	 *
-	 * @return DeckData
-	 */
-	public function createDeck(array $propertySchema, mixed $value, array $settings = []): DeckData
+     * Create a DeckData object with properly processed items.
+     *
+     * @param array<string,mixed> $propertySchema The deck property schema
+     * @param mixed $value The raw deck data
+     * @param array<string,mixed> $settings The deck settings
+     */
+    public function createDeck(array $propertySchema, mixed $value, array $settings = []): DeckData
 	{
 		// If no deck data provided, return empty deck
 		if (empty($value) || !is_array($value)) {
@@ -112,35 +108,34 @@ final readonly class PropertyFactory
 						// Use PropertyFactory for proper data conversion (dates, colors, etc.)
 						$propertyObject                = $this->generateProperty($fieldSchema, $fieldValue);
 						$processedItemData[$fieldName] = $propertyObject->transform();
-					} else {
+					}
+					// else {
 						// Field not in schema, skip it (proper schema validation)
 						// This ensures only schema-defined fields are included
-					}
+					// }
 				}
 
 				$processedDeckData[$itemId] = $processedItemData;
 			}
 
 			return new DeckData($processedDeckData, $settings);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// If deck processing fails, return original data to avoid breaking the system
 			return new DeckData($value, $settings);
 		}
 	}
 
 	/**
-	 * Process an individual deck item (for individual deck API operations).
-	 *
-	 * This method handles the common case where you need to process a single deck item
-	 * through the same pipeline as full deck processing, ensuring data consistency.
-	 *
-	 * @param string $collection
-	 * @param string $propertyName
-	 * @param array<string,mixed> $itemData
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function processIndividualDeckItem(string $collection, string $propertyName, array $itemData): array
+     * Process an individual deck item (for individual deck API operations).
+     *
+     * This method handles the common case where you need to process a single deck item
+     * through the same pipeline as full deck processing, ensuring data consistency.
+     *
+     * @param array<string,mixed> $itemData
+     *
+     * @return array<string,mixed>
+     */
+    public function processIndividualDeckItem(string $collection, string $propertyName, array $itemData): array
 	{
 		// Get the schema for the collection to find the deck property configuration
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
@@ -176,20 +171,18 @@ final readonly class PropertyFactory
 			}
 
 			return $itemData;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// If processing fails, return original data
 			return $itemData;
 		}
 	}
 
 	/**
-	 * Extract schema ID from deckref URL.
-	 *
-	 * @param string $deckref
-	 *
-	 * @return string
-	 */
-	private function extractSchemaId(string $deckref): string
+     * Extract schema ID from deckref URL.
+     *
+     *
+     */
+    private function extractSchemaId(string $deckref): string
 	{
 		// Extract schema ID from URL like "https://www.totalcms.co/schemas/custom/features.json"
 		$path = parse_url($deckref, PHP_URL_PATH);

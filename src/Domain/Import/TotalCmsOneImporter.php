@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Import;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -110,9 +111,9 @@ final class TotalCmsOneImporter
 		$posturlFile = $blogDir . '/' . $blogId . '.posturl';
 		if (file_exists($posturlFile)) {
 			$url = trim((string)file_get_contents($posturlFile));
-			if ($url) {
+			if ($url !== '') {
 				$collection = $this->collectionFetcher->fetchCollection($blogId);
-				if ($collection !== null) {
+				if ($collection instanceof CollectionData) {
 					$collectionData              = $collection->toArray();
 					$collectionData['url']       = $url;
 					$collectionData['prettyUrl'] = !str_contains($url, '?permalink=');

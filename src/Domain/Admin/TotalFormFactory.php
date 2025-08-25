@@ -623,13 +623,13 @@ final readonly class TotalFormFactory
 		// This is a dummy form to satisfy the type hinting in the field method.
 		// It will not be used, but it is required to create a FormField instance.
 		return new ObjectForm(
-			collection        : 'text',
-			api               : $this->api,
-			collectionFetcher : $this->collectionFetcher,
-			collectionReader  : $this->collectionReader,
 			objectFetcher     : $this->objectFetcher,
+            collectionFetcher : $this->collectionFetcher,
+			collectionReader  : $this->collectionReader,
 			schemaFetcher     : $this->schemaFetcher,
 			schemaLister      : $this->schemaLister,
+            api               : $this->api,
+            collection        : 'text',
 		);
 	}
 

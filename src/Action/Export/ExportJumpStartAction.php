@@ -28,9 +28,9 @@ final readonly class ExportJumpStartAction
 		$date = date('Ymd-His');
 
 		// Set response headers for JSON download
-		$filename = !empty($name) ?
-			sprintf('jumpstart-%s-%s.json', preg_replace('/[^a-zA-Z0-9-_]/', '-', strtolower($name)), $date) :
-			sprintf('jumpstart-export-%s.json', $date);
+		$filename = $name === '' ?
+			sprintf('jumpstart-export-%s.json', $date) :
+			sprintf('jumpstart-%s-%s.json', preg_replace('/[^a-zA-Z0-9-_]/', '-', strtolower((string) $name)), $date);
 
 		$response = $response->withHeader('Content-Type', 'application/json')
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));

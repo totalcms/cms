@@ -20,15 +20,13 @@ final readonly class SchemaFactory
 	}
 
 	/**
-	 * create a schema object.
-	 *
-	 * @param array<string,mixed> $schemaData
-	 *
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
-	 */
-	public function generateSchema(array $schemaData): SchemaData
+     * create a schema object.
+     *
+     * @param array<string,mixed> $schemaData
+     *
+     * @throws \UnexpectedValueException
+     */
+    public function generateSchema(array $schemaData): SchemaData
 	{
 		$schema = $this->serializer->denormalize($schemaData, SchemaData::class);
 
@@ -40,18 +38,14 @@ final readonly class SchemaFactory
 	}
 
 	/**
-	 * create a schema object.
-	 *
-	 * @param string $schemaJson
-	 *
-	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
-	 */
-	public function generateSchemaFromJson(string $schemaJson): SchemaData
+     * create a schema object.
+     *
+     *
+     * @throws \UnexpectedValueException
+     *
+     */
+    public function generateSchemaFromJson(string $schemaJson): SchemaData
 	{
-		$schema = $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
-
-		return $schema;
+		return $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
 	}
 }
