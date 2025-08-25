@@ -6,7 +6,7 @@ use TotalCMS\Domain\Rendering\Utilities\EmbedBuilder;
 use Twig\TwigFunction;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
-final class TotalCMSTwigFunctions
+class TotalCMSTwigFunctions
 {
 	/** @var array<string> */
 	public static array $phpFunctions = [

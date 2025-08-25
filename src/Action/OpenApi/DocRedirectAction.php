@@ -9,7 +9,7 @@ use TotalCMS\Renderer\RedirectRenderer;
 /**
  * Action.
  */
-final class DocRedirectAction
+class DocRedirectAction
 {
 	public function __construct(
 		private RedirectRenderer $redirectRenderer,

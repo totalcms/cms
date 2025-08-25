@@ -8,7 +8,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Sitemap\Data\Sitemap;
 use TotalCMS\Support\Config;
 
-final readonly class SitemapBuilder
+readonly class SitemapBuilder
 {
 	public function __construct(
 		private IndexReader $indexReader,

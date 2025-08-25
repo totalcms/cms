@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * A HTML template renderer.
  */
-final class RawRenderer
+class RawRenderer
 {
 	/**
 	 * Output raw content.

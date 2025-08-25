@@ -10,7 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * License middleware.
  */
-final class StandardLicenseMiddleware implements MiddlewareInterface
+class StandardLicenseMiddleware implements MiddlewareInterface
 {
 	/**
 	 * Invoke middleware.

@@ -13,7 +13,7 @@ use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Support\Config;
 
 /** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
-final readonly class CollectionTable
+readonly class CollectionTable
 {
 	private CollectionData $collectionData;
 	private SchemaData $schemaData;

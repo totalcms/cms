@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin;
 /**
  * Total Form Builder.
  */
-final class ObjectForm extends TotalForm
+class ObjectForm extends TotalForm
 {
 	protected function init(): void
 	{

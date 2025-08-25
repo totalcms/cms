@@ -7,7 +7,7 @@ use enshrined\svgSanitize\Sanitizer;
 /**
  * SVG Sanitizer for preventing XSS attacks while preserving valid SVG functionality.
  */
-final class SVGSanitizer
+class SVGSanitizer
 {
 	private static ?Sanitizer $sanitizer = null;
 

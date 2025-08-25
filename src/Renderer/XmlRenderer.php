@@ -4,7 +4,7 @@ namespace TotalCMS\Renderer;
 
 use Psr\Http\Message\ResponseInterface;
 
-final class XmlRenderer
+class XmlRenderer
 {
 	public function xml(
 		ResponseInterface $response,

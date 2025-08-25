@@ -12,7 +12,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
 
-final class CsvImporter
+class CsvImporter
 {
 	private readonly LoggerInterface $logger;
 	private string $collection;

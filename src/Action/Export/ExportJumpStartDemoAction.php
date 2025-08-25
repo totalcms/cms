@@ -6,7 +6,7 @@ use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class ExportJumpStartDemoAction
+class ExportJumpStartDemoAction
 {
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{

@@ -6,7 +6,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
-final class LoginService
+class LoginService
 {
 	public const ACCESS_LOG = 'totalcms-access.log';
 

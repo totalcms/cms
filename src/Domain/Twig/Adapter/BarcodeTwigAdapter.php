@@ -7,7 +7,7 @@ use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 /**
  * Twig Adapter with Barcode Generation.
  */
-final readonly class BarcodeTwigAdapter
+readonly class BarcodeTwigAdapter
 {
 	public function __construct(private BarcodeGenerator $generator)
 	{

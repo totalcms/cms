@@ -12,7 +12,7 @@ use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
-final class DownloadFileFromDepotAction extends DownloadAction
+class DownloadFileFromDepotAction extends DownloadAction
 {
 	public function __construct(
 		private readonly DepotFileFetcher $fileFetcher,

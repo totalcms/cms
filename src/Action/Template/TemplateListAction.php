@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Renderer\RawRenderer;
 
-final readonly class TemplateListAction
+readonly class TemplateListAction
 {
 	public function __construct(private RawRenderer $renderer, private TemplateLister $templateLister)
 	{

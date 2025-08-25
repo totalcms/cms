@@ -9,7 +9,7 @@ use TotalCMS\Support\Config;
  * APCu (APCu User Cache) is a fast, in-memory cache for single-server applications.
  * It provides excellent performance without requiring external services like Redis or Memcached.
  */
-final readonly class APCuService implements CacheInterface
+readonly class APCuService implements CacheInterface
 {
 	private bool $enabled;
 	private string $prefix;

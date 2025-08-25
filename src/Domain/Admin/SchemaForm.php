@@ -11,7 +11,7 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 /**
  * Total Form Builder.
  */
-final class SchemaForm extends TotalForm
+class SchemaForm extends TotalForm
 {
 	public bool $reserved = false;
 	public SchemaData $schemaObjectData;

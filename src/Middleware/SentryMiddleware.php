@@ -8,7 +8,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 
-final class SentryMiddleware implements MiddlewareInterface
+class SentryMiddleware implements MiddlewareInterface
 {
 	public const SALT = 's3ntryR0cks';
 

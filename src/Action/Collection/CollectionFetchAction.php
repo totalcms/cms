@@ -10,7 +10,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final readonly class CollectionFetchAction
+readonly class CollectionFetchAction
 {
 	/**
 	 * The constructor.

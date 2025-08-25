@@ -7,7 +7,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
-final readonly class SchemaFetcher
+readonly class SchemaFetcher
 {
 	public function __construct(
 		private SchemaRepository $storage,

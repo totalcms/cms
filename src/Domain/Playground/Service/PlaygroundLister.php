@@ -6,7 +6,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
-final readonly class PlaygroundLister
+readonly class PlaygroundLister
 {
 	public function __construct(
 		private CollectionFetcher $collectionFetcher,

@@ -17,7 +17,7 @@ use TotalCMS\Support\Config;
  *
  * Redirects to the login page if the user is not authenticated.
  */
-final readonly class AuthMiddleware implements MiddlewareInterface
+readonly class AuthMiddleware implements MiddlewareInterface
 {
 	private string $defaultAuthCollection;
 

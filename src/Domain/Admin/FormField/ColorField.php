@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-final class ColorField extends FormField
+class ColorField extends FormField
 {
 	protected string $defaultInputType = 'color';
 	protected string $defaultFieldType = 'color';

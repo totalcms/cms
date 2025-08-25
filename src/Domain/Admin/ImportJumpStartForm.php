@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final readonly class ImportJumpStartForm implements \Stringable
+readonly class ImportJumpStartForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 

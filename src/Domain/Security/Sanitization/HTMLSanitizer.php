@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Security\Sanitization;
 /**
  * HTML Sanitizer for preventing XSS attacks while preserving safe HTML.
  */
-final class HTMLSanitizer
+class HTMLSanitizer
 {
 	/**
 	 * @param array<string,mixed> $config

@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-final class PriceField extends FormField
+class PriceField extends FormField
 {
 	protected string $defaultInputType = 'number';
 	protected string $defaultFieldType = 'price';

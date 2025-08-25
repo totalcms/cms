@@ -12,7 +12,7 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
-final class ObjectRepository extends StorageRepository
+class ObjectRepository extends StorageRepository
 {
 	public function __construct(
 		StorageAdapterInterface $filesystem,

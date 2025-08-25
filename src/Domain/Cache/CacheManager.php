@@ -14,7 +14,7 @@ use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
  */
-final class CacheManager
+class CacheManager
 {
 	// Cache key prefixes
 	public const PREFIX_COMPUTED     = 'computed';

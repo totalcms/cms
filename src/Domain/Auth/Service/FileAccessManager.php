@@ -11,7 +11,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
-final class FileAccessManager
+class FileAccessManager
 {
 	public const DOWNLOAD_LOG = 'totalcms-download.log';
 

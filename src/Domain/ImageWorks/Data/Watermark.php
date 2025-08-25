@@ -7,7 +7,7 @@ use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 /**
  * Simple watermark data object with standard Glide watermark properties.
  */
-final readonly class Watermark
+readonly class Watermark
 {
 	public function __construct(
 		public ?string $mark      = null,

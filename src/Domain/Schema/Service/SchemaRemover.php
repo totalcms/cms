@@ -8,7 +8,7 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 /**
  * Service.
  */
-final readonly class SchemaRemover
+readonly class SchemaRemover
 {
 	public function __construct(
 		private SchemaRepository $storage,

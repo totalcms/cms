@@ -8,7 +8,7 @@ use TotalCMS\Support\Config;
 /**
  * Redis cache service.
  */
-final class RedisService implements CacheInterface
+class RedisService implements CacheInterface
 {
 	private readonly bool $enabled;
 	private readonly string $host;

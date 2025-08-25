@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Factory\LoggerFactory;
 
-final readonly class SaverFactory
+readonly class SaverFactory
 {
 	public function __construct(
 		private PropertyRepository $storage,

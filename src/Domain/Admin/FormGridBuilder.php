@@ -10,7 +10,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  * Handles the conversion of text-based grid layouts to CSS Grid properties
  * and generates section headers/dividers for visual organization.
  */
-final class FormGridBuilder
+class FormGridBuilder
 {
 	private const HEADER_REGEX = '/^---(.+?)---$/';
 	private const DIVIDER      = '---';

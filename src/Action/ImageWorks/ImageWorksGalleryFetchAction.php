@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
-final readonly class ImageWorksGalleryFetchAction
+readonly class ImageWorksGalleryFetchAction
 {
 	public function __construct(private ImageGenerator $imageGenerator)
 	{

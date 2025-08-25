@@ -7,7 +7,7 @@ use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 
-final readonly class ObjectPatcher
+readonly class ObjectPatcher
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

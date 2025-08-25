@@ -13,7 +13,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * Applies strict CSP to all requests since Total CMS only serves admin/API routes.
  */
-final class ContentSecurityPolicyMiddleware implements MiddlewareInterface
+class ContentSecurityPolicyMiddleware implements MiddlewareInterface
 {
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{

@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Bundle\Repository;
 use TotalCMS\Domain\Bundle\Data\BundleData;
 use TotalCMS\Domain\Storage\StorageRepository;
 
-final class BundleRepository extends StorageRepository
+class BundleRepository extends StorageRepository
 {
 	public const RESOURCES   = __DIR__ . '/../../../../resources/';
 	public const BUNDLE      = self::RESOURCES . 'bundle';

@@ -16,7 +16,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Factory\LoggerFactory;
 
-final readonly class JumpStartExporter
+readonly class JumpStartExporter
 {
 	private LoggerInterface $logger;
 

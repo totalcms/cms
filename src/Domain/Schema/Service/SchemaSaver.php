@@ -7,7 +7,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
-final readonly class SchemaSaver
+readonly class SchemaSaver
 {
 	public function __construct(
 		private SchemaRepository $storage,

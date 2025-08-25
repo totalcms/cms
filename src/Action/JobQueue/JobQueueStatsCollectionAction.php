@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class JobQueueStatsCollectionAction
+readonly class JobQueueStatsCollectionAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

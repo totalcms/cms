@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final readonly class ObjectSaveAction
+readonly class ObjectSaveAction
 {
 	/**
 	 * The constructor.

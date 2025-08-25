@@ -11,7 +11,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 /**
  * Total Form Builder.
  */
-final class CollectionForm extends TotalForm
+class CollectionForm extends TotalForm
 {
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")

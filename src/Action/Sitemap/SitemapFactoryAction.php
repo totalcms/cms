@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Renderer\XmlRenderer;
 
-final readonly class SitemapFactoryAction
+readonly class SitemapFactoryAction
 {
 	public function __construct(
 		private XmlRenderer $xmlRenderer,

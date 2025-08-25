@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DepotData;
 
-final class DepotRemover extends FileRemover
+class DepotRemover extends FileRemover
 {
 	public function deleteFile(
 		string $collection,

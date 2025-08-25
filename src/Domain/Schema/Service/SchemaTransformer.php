@@ -21,7 +21,7 @@ namespace TotalCMS\Domain\Schema\Service;
  *     "$ref": "https://www.totalcms.co/schemas/properties/deck.json"
  * }
  */
-final class SchemaTransformer
+class SchemaTransformer
 {
 	/**
 	 * Transform a schema to expand simplified deck syntax into full JSON Schema format.

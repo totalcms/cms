@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\JobQueue\Service;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 
-final readonly class JobQueuer
+readonly class JobQueuer
 {
 	public function __construct(
 		private JobRepository $jobRepository,

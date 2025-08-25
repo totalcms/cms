@@ -13,7 +13,7 @@ use Slim\Psr7\Response;
  *
  * Allows CORS preflight from any domain.
  */
-final class BetaMiddleware implements MiddlewareInterface
+class BetaMiddleware implements MiddlewareInterface
 {
 	/**
 	 * Invoke middleware.

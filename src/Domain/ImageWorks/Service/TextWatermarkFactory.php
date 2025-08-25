@@ -10,7 +10,7 @@ use TotalCMS\Support\Config;
  *
  * Generates text watermarks as images that can be applied to images
  */
-final readonly class TextWatermarkFactory
+readonly class TextWatermarkFactory
 {
 	public const WATERMARK_DIR = '.watermarks';
 	private const FONT_PATH    = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';

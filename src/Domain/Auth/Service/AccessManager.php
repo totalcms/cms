@@ -7,7 +7,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
-final class AccessManager
+class AccessManager
 {
 	private readonly LoggerInterface $logger;
 

@@ -12,7 +12,7 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
-final class ImageGenerator
+class ImageGenerator
 {
 	private string $collection;
 	private string $id;

@@ -15,7 +15,7 @@ use TotalCMS\Domain\Cache\Service\OPcacheService;
  * Development mode middleware that flushes OPcache on each request when dev mode is active.
  * This ensures PHP code changes are immediately visible during development.
  */
-final class DevModeMiddleware implements MiddlewareInterface
+class DevModeMiddleware implements MiddlewareInterface
 {
 	private static ?bool $devModeChecked = null;
 	private static bool $isDevModeActive = false;

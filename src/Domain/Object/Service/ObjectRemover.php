@@ -9,7 +9,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-final readonly class ObjectRemover
+readonly class ObjectRemover
 {
 	public function __construct(
 		private PropertyRepository $propStorage,

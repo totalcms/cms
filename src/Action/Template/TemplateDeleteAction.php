@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 
-final readonly class TemplateDeleteAction
+readonly class TemplateDeleteAction
 {
 	/**
 	 * The constructor.

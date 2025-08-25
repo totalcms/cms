@@ -9,7 +9,7 @@ use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
-final readonly class FroalaUploadFileAction
+readonly class FroalaUploadFileAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

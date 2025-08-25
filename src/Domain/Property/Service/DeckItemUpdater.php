@@ -10,7 +10,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 /**
  * Service for updating existing deck items.
  */
-final readonly class DeckItemUpdater
+readonly class DeckItemUpdater
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

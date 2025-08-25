@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final readonly class ImportCollectionForm implements \Stringable
+readonly class ImportCollectionForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 

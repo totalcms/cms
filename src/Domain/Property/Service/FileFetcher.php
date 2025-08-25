@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-final readonly class FileFetcher
+readonly class FileFetcher
 {
 	public function __construct(
 		private PropertyRepository $storage,

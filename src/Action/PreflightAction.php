@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Action.
  */
-final class PreflightAction
+class PreflightAction
 {
 	/**
 	 * Action.

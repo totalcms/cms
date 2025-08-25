@@ -6,7 +6,7 @@ use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
 
-final readonly class UserValidationService
+readonly class UserValidationService
 {
 	public const ADMINGROUP = 'admin';
 

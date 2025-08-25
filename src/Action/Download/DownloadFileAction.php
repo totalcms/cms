@@ -9,7 +9,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
-final class DownloadFileAction extends DownloadAction
+class DownloadFileAction extends DownloadAction
 {
 	public function __construct(
 		protected FileFetcher $fileFetcher,

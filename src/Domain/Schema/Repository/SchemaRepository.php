@@ -13,7 +13,7 @@ use TotalCMS\Support\Config;
 /**
  * Repository.
  */
-final class SchemaRepository extends StorageRepository
+class SchemaRepository extends StorageRepository
 {
 	public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../resources/schemas/';
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';

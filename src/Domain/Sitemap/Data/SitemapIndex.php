@@ -6,7 +6,7 @@ use Thepixeldeveloper\Sitemap\Drivers\XmlWriterDriver;
 use Thepixeldeveloper\Sitemap\Sitemap as SitemapBase;
 use Thepixeldeveloper\Sitemap\SitemapIndex as SitemapIndexBase;
 
-final readonly class SitemapIndex implements \Stringable
+readonly class SitemapIndex implements \Stringable
 {
 	private SitemapIndexBase $index;
 

@@ -7,7 +7,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 /**
  * Factory Form Builder.
  */
-final readonly class FactoryForm implements \Stringable
+readonly class FactoryForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 

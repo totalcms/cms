@@ -11,7 +11,7 @@ use TotalCMS\Domain\Property\Data\PropertyData;
  * This service handles business logic that was previously embedded
  * in property data classes, improving separation of concerns.
  */
-final class PropertyDataProcessor implements PropertyDataProcessorInterface
+class PropertyDataProcessor implements PropertyDataProcessorInterface
 {
 	/**
 	 * Process property data before save operations.

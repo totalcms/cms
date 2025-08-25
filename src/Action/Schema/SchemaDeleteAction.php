@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Schema\Service\SchemaRemover;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class SchemaDeleteAction
+readonly class SchemaDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

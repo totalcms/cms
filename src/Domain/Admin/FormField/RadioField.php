@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class RadioField extends FormField
+class RadioField extends FormField
 {
 	protected string $defaultInputType = 'radio';
 	protected string $defaultFieldType = 'radio';

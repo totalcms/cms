@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Cache\Service;
 /**
  * Manages temporary development mode state.
  */
-final class DevModeManager
+class DevModeManager
 {
 	private readonly string $devModeFile;
 	private int $devModeDuration = 10800; // 3 hours in seconds

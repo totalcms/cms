@@ -10,7 +10,7 @@ use TotalCMS\Infrastructure\Filesystem\MimeLookup;
 
 // This Action is used to serve static assets from the public/assets directory
 // This should really only ever be used with using the PHP built-in server
-final class StaticPublicAssetsAction
+class StaticPublicAssetsAction
 {
 	/**
 	 * @param array<string,mixed> $args The routing arguments

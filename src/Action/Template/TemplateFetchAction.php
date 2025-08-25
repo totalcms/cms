@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Renderer\RawRenderer;
 
-final readonly class TemplateFetchAction
+readonly class TemplateFetchAction
 {
 	public function __construct(private RawRenderer $renderer, private TemplateFetcher $templateFetcher)
 	{

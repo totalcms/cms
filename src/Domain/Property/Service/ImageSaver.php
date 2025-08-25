@@ -7,7 +7,7 @@ use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\ImageData;
 
-final class ImageSaver extends FileSaver
+class ImageSaver extends FileSaver
 {
 	public string $type = 'image';
 

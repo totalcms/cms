@@ -19,7 +19,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  *
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
-final class ObjectImporter
+class ObjectImporter
 {
 	/** @var array<string,string> */
 	private array $images = [];

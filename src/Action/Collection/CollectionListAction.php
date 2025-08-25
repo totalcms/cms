@@ -8,7 +8,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final readonly class CollectionListAction
+readonly class CollectionListAction
 {
 	/**
 	 * The constructor.

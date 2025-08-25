@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 
-final readonly class RemoverFactory
+readonly class RemoverFactory
 {
 	public function __construct(
 		private PropertyRepository $storage,

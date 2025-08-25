@@ -8,7 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
 
-final readonly class ExportCsvAction
+readonly class ExportCsvAction
 {
 	public function __construct(
 		private ObjectExporter $objectExporter,

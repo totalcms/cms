@@ -28,7 +28,7 @@ use TotalCMS\Support\Config;
  * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
  * This encapsulates the creation of the TotalForm object without depencency injection here.
  */
-final readonly class TotalFormFactory
+readonly class TotalFormFactory
 {
 	private string $api;
 

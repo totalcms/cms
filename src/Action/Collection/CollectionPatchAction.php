@@ -8,7 +8,7 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final readonly class CollectionPatchAction
+readonly class CollectionPatchAction
 {
 	/**
 	 * The constructor.

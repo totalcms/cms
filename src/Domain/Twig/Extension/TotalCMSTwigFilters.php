@@ -19,7 +19,7 @@ use Twig\TwigFilter;
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyMethods")
  */
-final class TotalCMSTwigFilters
+class TotalCMSTwigFilters
 {
 	/** @var array<string> */
 	public static array $phpFunctions = [

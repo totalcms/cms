@@ -10,7 +10,7 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
 
-final readonly class JobRunner
+readonly class JobRunner
 {
 	private LoggerInterface $logger;
 

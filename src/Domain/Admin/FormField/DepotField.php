@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
-final class DepotField extends FormField
+class DepotField extends FormField
 {
 	protected string $defaultFieldType = 'file';
 	protected string $defaultInputType = 'file';

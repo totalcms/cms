@@ -15,7 +15,7 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Default Error Renderer.
  */
-final readonly class DefaultErrorHandler
+readonly class DefaultErrorHandler
 {
 	private LoggerInterface $logger;
 

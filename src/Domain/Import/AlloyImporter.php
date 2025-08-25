@@ -10,7 +10,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 use Webuni\FrontMatter\FrontMatter;
 
-final class AlloyImporter
+class AlloyImporter
 {
 	private readonly LoggerInterface $logger;
 	private readonly FrontMatter $frontMatterParser;

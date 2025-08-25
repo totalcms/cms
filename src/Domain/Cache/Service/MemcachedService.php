@@ -8,7 +8,7 @@ use TotalCMS\Support\Config;
 /**
  * Memcached cache service.
  */
-final class MemcachedService implements CacheInterface
+class MemcachedService implements CacheInterface
 {
 	private readonly bool $enabled;
 	private readonly string $host;

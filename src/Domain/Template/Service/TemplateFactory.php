@@ -7,7 +7,7 @@ use TotalCMS\Domain\Template\Data\TemplateData;
 /**
  * Service.
  */
-final class TemplateFactory
+class TemplateFactory
 {
 	/**
 	 * create a template object.

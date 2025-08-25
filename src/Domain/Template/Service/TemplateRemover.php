@@ -7,7 +7,7 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 /**
  * Service.
  */
-final readonly class TemplateRemover
+readonly class TemplateRemover
 {
 	public function __construct(private TemplateRepository $storage)
 	{

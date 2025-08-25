@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 /**
  * Service for fetching deck items.
  */
-final readonly class DeckItemFetcher
+readonly class DeckItemFetcher
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

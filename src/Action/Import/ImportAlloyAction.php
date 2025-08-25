@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Import\AlloyImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class ImportAlloyAction
+readonly class ImportAlloyAction
 {
 	public function __construct(
 		private AlloyImporter $importer,

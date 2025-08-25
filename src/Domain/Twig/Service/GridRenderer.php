@@ -10,7 +10,7 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
  *
  * Handles grid template generation, auto-detection, and processing
  */
-final class GridRenderer
+class GridRenderer
 {
 	// -------------------------
 	// Grid Helper Methods (accessible via cms.grid.*)

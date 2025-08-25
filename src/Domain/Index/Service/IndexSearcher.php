@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Index\Service;
 
 use Illuminate\Support\Collection;
 
-final readonly class IndexSearcher
+readonly class IndexSearcher
 {
 	public function __construct(
 		private IndexReader $reader,

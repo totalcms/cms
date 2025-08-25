@@ -15,7 +15,7 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Factory\LoggerFactory;
 
 /** @SuppressWarnings("PHPMD.ExcessiveClassComplexity") */
-final class JumpStartImporter
+class JumpStartImporter
 {
 	private const DEMO_JUMPSTART_FILE = __DIR__ . '/../../../../resources/jumpstart/demo.json';
 

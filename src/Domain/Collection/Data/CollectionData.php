@@ -9,7 +9,7 @@ use Symfony\Component\Serializer\Serializer;
 /**
  * Data object.
  */
-final class CollectionData
+class CollectionData
 {
 	// Reserved names that cannot be used for collections
 	public const RESERVED_NAMES = [

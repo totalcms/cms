@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 
-final class GallerySaver extends FileSaver
+class GallerySaver extends FileSaver
 {
 	public string $type = 'gallery';
 

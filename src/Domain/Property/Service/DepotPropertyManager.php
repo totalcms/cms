@@ -6,7 +6,7 @@ use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\FolderData;
 
-final class DepotPropertyManager
+class DepotPropertyManager
 {
 	public function __construct(public DepotData &$depot)
 	{

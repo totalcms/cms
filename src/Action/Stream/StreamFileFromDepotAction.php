@@ -11,7 +11,7 @@ use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 
-final class StreamFileFromDepotAction extends StreamAction
+class StreamFileFromDepotAction extends StreamAction
 {
 	public function __construct(
 		private readonly DepotFileFetcher $fileFetcher,

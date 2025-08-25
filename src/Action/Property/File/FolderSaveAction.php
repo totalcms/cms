@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Service\DepotFolderSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final readonly class FolderSaveAction
+readonly class FolderSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

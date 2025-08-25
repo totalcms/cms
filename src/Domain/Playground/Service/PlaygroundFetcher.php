@@ -6,7 +6,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
-final readonly class PlaygroundFetcher
+readonly class PlaygroundFetcher
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

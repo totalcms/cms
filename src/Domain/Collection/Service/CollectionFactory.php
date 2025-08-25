@@ -8,7 +8,7 @@ use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
-final readonly class CollectionFactory
+readonly class CollectionFactory
 {
 	private Serializer $serializer;
 

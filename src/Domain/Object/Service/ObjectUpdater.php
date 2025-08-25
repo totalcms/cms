@@ -10,7 +10,7 @@ use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 
-final readonly class ObjectUpdater
+readonly class ObjectUpdater
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

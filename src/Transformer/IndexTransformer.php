@@ -5,7 +5,7 @@ namespace TotalCMS\Transformer;
 use League\Fractal;
 use TotalCMS\Domain\Index\Data\IndexData;
 
-final class IndexTransformer extends Fractal\TransformerAbstract
+class IndexTransformer extends Fractal\TransformerAbstract
 {
 	/**
 	 * Fractal transform for a collection index.

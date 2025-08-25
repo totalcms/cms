@@ -11,7 +11,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final readonly class IndexBuilder
+readonly class IndexBuilder
 {
 	public function __construct(
 		private IndexRepository $storage,

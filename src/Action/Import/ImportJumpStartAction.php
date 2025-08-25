@@ -9,7 +9,7 @@ use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class ImportJumpStartAction
+readonly class ImportJumpStartAction
 {
 	public function __construct(private JumpStartImporter $jumpStartImporter, private JsonRenderer $renderer)
 	{

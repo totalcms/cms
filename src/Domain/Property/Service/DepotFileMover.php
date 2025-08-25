@@ -7,7 +7,7 @@ use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-final class DepotFileMover
+class DepotFileMover
 {
 	public function __construct(
 		protected PropertyRepository $storage,

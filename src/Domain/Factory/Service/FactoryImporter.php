@@ -14,7 +14,7 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
-final readonly class FactoryImporter
+readonly class FactoryImporter
 {
 	private LoggerInterface $logger;
 	private FakerGenerator $faker;

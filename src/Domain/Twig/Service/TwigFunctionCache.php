@@ -6,7 +6,7 @@ namespace TotalCMS\Domain\Twig\Service;
  * Simple in-memory cache for expensive Twig function results.
  * Caches results for the duration of a single request.
  */
-final class TwigFunctionCache
+class TwigFunctionCache
 {
 	/** @var array<string,mixed> */
 	private static array $cache = [];

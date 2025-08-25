@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectCloner;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final readonly class ObjectCloneAction
+readonly class ObjectCloneAction
 {
 	/**
 	 * The constructor.

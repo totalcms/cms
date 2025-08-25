@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Service\SchemaTransformer;
 /**
  * Schema Data object.
  */
-final class SchemaData
+class SchemaData
 {
 	public const SCHEMA_PREFIX        = 'https://www.totalcms.co/schemas/';
 	public const SCHEMA_CUSTOM_PREFIX = 'https://www.totalcms.co/schemas/custom/';

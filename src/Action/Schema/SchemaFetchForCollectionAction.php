@@ -8,7 +8,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\SchemaMetaTransformer;
 
-final readonly class SchemaFetchForCollectionAction
+readonly class SchemaFetchForCollectionAction
 {
 	public function __construct(private JsonRenderer $renderer, private SchemaFetcher $schemaFetcher)
 	{

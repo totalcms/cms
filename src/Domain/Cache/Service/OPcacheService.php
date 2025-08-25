@@ -6,7 +6,7 @@ namespace TotalCMS\Domain\Cache\Service;
  * OPcache service for bytecode caching.
  * OPcache is controlled by PHP configuration (php.ini), not application config.
  */
-final class OPcacheService implements CacheInterface
+class OPcacheService implements CacheInterface
 {
 	// No configuration needed - OPcache runs automatically when enabled in PHP
 

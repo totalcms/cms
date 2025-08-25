@@ -11,7 +11,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 /**
  * Repository.
  */
-final class IndexRepository extends StorageRepository
+class IndexRepository extends StorageRepository
 {
 	private const INDEX_FILE = '.index.json';
 

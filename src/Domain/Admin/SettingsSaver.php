@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Cache\CacheManager;
 
-final readonly class SettingsSaver
+readonly class SettingsSaver
 {
 	public function __construct(
 		private CacheManager $cacheManager,

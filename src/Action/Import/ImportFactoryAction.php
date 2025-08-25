@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class ImportFactoryAction
+readonly class ImportFactoryAction
 {
 	/**
 	 * The constructor.

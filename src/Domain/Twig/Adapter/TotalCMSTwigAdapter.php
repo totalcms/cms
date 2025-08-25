@@ -41,7 +41,7 @@ use TotalCMS\Support\Config;
  * @SuppressWarnings("PHPMD.ExcessivePublicCount")
  * @SuppressWarnings("PHPMD.ExcessiveClassLength")
  */
-final class TotalCMSTwigAdapter
+class TotalCMSTwigAdapter
 {
 	public string $env;
 	public string $api;

@@ -8,7 +8,7 @@ use TotalCMS\Domain\Playground\Service\PlaygroundSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final readonly class PlaygroundSaveAction
+readonly class PlaygroundSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\RawRenderer;
 
-final readonly class TemplateSaveAction
+readonly class TemplateSaveAction
 {
 	/**
 	 * The constructor.

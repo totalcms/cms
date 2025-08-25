@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace TotalCMS\Domain\JumpStart\Data;
 
-final class JumpStartData
+class JumpStartData
 {
 	public string $version = '1.0.0';
 

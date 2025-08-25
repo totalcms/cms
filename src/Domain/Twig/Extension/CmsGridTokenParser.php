@@ -14,7 +14,7 @@ use Twig\TokenParser\AbstractTokenParser;
  *   template content with {{ object }} and {{ collection }} variables
  * {% endcmsgrid %}
  */
-final class CmsGridTokenParser extends AbstractTokenParser
+class CmsGridTokenParser extends AbstractTokenParser
 {
 	public function parse(Token $token): Node
 	{

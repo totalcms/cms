@@ -8,7 +8,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 /**
  * Deck Form Field - Manages a collection of deck items.
  */
-final class DeckField extends FormField
+class DeckField extends FormField
 {
 	protected string $defaultInputType = 'deck';
 	protected string $defaultFieldType = 'deck';

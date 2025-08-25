@@ -8,7 +8,7 @@ use Psr\Http\Message\UploadedFileInterface;
  * Comprehensive file upload security validator.
  * Prevents malicious file uploads, path traversal, and other security issues.
  */
-final class FileUploadValidator
+class FileUploadValidator
 {
 	/**
 	 * Maximum file sizes by category (in bytes).

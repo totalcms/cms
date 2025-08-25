@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class ToggleField extends CheckboxField
+class ToggleField extends CheckboxField
 {
 	protected string $defaultInputType = 'checkbox';
 	protected string $defaultFieldType = 'toggle';

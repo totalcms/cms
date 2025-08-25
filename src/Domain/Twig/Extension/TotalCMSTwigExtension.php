@@ -17,7 +17,7 @@ use Twig\TwigFunction;
 /**
  * Twig Integration with Total CMS.
  */
-final class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterface
+class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterface
 {
 	public function __construct(
 		private readonly TotalCMSTwigAdapter $adapter,

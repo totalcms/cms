@@ -9,7 +9,7 @@ use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Domain\Import\JsonImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class ImportJsonAction
+readonly class ImportJsonAction
 {
 	public function __construct(private JsonImporter $jsonImporter, private JsonRenderer $renderer)
 	{

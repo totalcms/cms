@@ -11,7 +11,7 @@ use TotalCMS\Domain\Template\Service\TemplateFactory;
  *
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
-final class TemplateRepository extends StorageRepository
+class TemplateRepository extends StorageRepository
 {
 	public const RESERVED_TEMPLATE_DIR    = __DIR__ . '/../../../../resources/templates/';
 	public const FILE_EXT                 = '.twig';

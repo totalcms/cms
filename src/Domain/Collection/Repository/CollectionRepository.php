@@ -15,7 +15,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 /**
  * Repository.
  */
-final class CollectionRepository extends StorageRepository
+class CollectionRepository extends StorageRepository
 {
 	private const META_FILE = '.meta.json';
 

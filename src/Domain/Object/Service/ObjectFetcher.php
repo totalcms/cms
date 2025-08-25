@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 /**
  * Service.
  */
-final readonly class ObjectFetcher
+readonly class ObjectFetcher
 {
 	public function __construct(private ObjectRepository $storage)
 	{

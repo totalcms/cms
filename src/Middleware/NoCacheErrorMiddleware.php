@@ -11,7 +11,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Middleware to prevent caching of error responses at the browser and proxy level.
  * This ensures that once errors are fixed, browsers don't serve cached error pages.
  */
-final class NoCacheErrorMiddleware implements MiddlewareInterface
+class NoCacheErrorMiddleware implements MiddlewareInterface
 {
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{

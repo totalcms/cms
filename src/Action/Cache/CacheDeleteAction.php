@@ -10,7 +10,7 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Action.
  */
-final readonly class CacheDeleteAction
+readonly class CacheDeleteAction
 {
 	public function __construct(
 		private CacheManager $cacheManager,

@@ -9,7 +9,7 @@ use TotalCMS\Renderer\TwigRenderer;
 /**
  * Action.
  */
-final readonly class AdminEditProfileAction
+readonly class AdminEditProfileAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,

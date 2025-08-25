@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 
-final class StreamFileAction extends StreamAction
+class StreamFileAction extends StreamAction
 {
 	public function __construct(
 		protected FileFetcher $fileFetcher,

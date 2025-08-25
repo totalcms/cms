@@ -7,7 +7,7 @@ use TotalCMS\Support\Config;
 /**
  * Filesystem cache service.
  */
-final readonly class FilesystemService implements CacheInterface
+readonly class FilesystemService implements CacheInterface
 {
 	private bool $enabled;
 	private string $cacheDir;

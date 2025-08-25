@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class ImportTotalCmsOneAction
+readonly class ImportTotalCmsOneAction
 {
 	public function __construct(
 		private TotalCmsOneImporter $importer,

@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
-final readonly class JobQueueForm implements \Stringable
+readonly class JobQueueForm implements \Stringable
 {
 	public function __construct(
 		private string $api,

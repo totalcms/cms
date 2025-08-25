@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Playground\Service\PlaygroundRemover;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class PlaygroundDeleteAction
+readonly class PlaygroundDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

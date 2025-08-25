@@ -11,7 +11,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 
-final class TotalCmsOneImporter
+class TotalCmsOneImporter
 {
 	private readonly LoggerInterface $logger;
 	private string $cmsDataPath;

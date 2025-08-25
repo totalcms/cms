@@ -6,7 +6,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
-final readonly class PlaygroundUpdater
+readonly class PlaygroundUpdater
 {
 	public function __construct(
 		private ObjectUpdater $objectUpdater,

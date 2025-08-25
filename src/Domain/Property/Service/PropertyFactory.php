@@ -12,7 +12,7 @@ use TotalCMS\Domain\Storage\StorageRepository;
 /**
  * Service.
  */
-final readonly class PropertyFactory
+readonly class PropertyFactory
 {
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,

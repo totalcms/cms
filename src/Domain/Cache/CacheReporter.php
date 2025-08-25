@@ -13,7 +13,7 @@ use TotalCMS\Domain\Cache\Service\RedisService;
  * Cache reporting and analysis service.
  * Provides statistics, recommendations, and performance analysis for cache system.
  */
-final readonly class CacheReporter
+readonly class CacheReporter
 {
 	public function __construct(
 		private FilesystemService $filesystemService,

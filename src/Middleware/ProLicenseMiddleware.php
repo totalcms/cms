@@ -11,7 +11,7 @@ use Tuupola\Http\Factory\ResponseFactory;
 /**
  * License middleware.
  */
-final class ProLicenseMiddleware implements MiddlewareInterface
+class ProLicenseMiddleware implements MiddlewareInterface
 {
 	/**
 	 * Invoke middleware.

@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-final class DepotFolderSaver
+class DepotFolderSaver
 {
 	public function __construct(
 		protected PropertyRepository $storage,

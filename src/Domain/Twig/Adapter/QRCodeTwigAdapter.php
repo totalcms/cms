@@ -7,7 +7,7 @@ use TotalCMS\Domain\Media\Generator\QRGenerator;
 /**
  * Twig Adapter with QR Code Generation.
  */
-final readonly class QRCodeTwigAdapter
+readonly class QRCodeTwigAdapter
 {
 	public function __construct(private QRGenerator $generator)
 	{

@@ -11,7 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * A JSON response renderer.
  */
-final class JsonRenderer
+class JsonRenderer
 {
 	/**
 	 * Write JSON to the response body.

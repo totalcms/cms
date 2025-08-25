@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\DepotFileMover;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class FileMoveAction
+readonly class FileMoveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

@@ -10,7 +10,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 /**
  * Service for removing deck items.
  */
-final readonly class DeckItemRemover
+readonly class DeckItemRemover
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,

@@ -5,7 +5,7 @@ namespace TotalCMS\Transformer;
 use League\Fractal;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
-final class SchemaMetaTransformer extends Fractal\TransformerAbstract
+class SchemaMetaTransformer extends Fractal\TransformerAbstract
 {
 	/**
 	 * Fractal transform for a schema.

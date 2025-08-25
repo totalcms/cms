@@ -14,7 +14,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LoggerFactory;
 
-final readonly class UrlImporter
+readonly class UrlImporter
 {
 	private LoggerInterface $logger;
 

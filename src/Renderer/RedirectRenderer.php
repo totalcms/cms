@@ -8,7 +8,7 @@ use Slim\Interfaces\RouteParserInterface;
 /**
  * A redirect response renderer.
  */
-final readonly class RedirectRenderer
+readonly class RedirectRenderer
 {
 	public function __construct(
 		private RouteParserInterface $routeParser,

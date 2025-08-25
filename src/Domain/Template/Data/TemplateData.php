@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Template\Data;
 /**
  * Template Data object.
  */
-final class TemplateData
+class TemplateData
 {
 	public string $contents;
 	public string $id;

@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Renderer\JsonRenderer;
 
-final readonly class ObjectDeleteAction
+readonly class ObjectDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

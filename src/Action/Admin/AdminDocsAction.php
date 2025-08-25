@@ -10,7 +10,7 @@ use Webuni\FrontMatter\FrontMatterChain;
 /**
  * Action.
  */
-final readonly class AdminDocsAction
+readonly class AdminDocsAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,

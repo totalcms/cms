@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final readonly class ImportSchemaForm implements \Stringable
+readonly class ImportSchemaForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 

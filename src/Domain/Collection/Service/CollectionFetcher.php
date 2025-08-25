@@ -8,7 +8,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 /**
  * Service.
  */
-final readonly class CollectionFetcher
+readonly class CollectionFetcher
 {
 	public function __construct(private CollectionRepository $storage)
 	{

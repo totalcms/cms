@@ -8,7 +8,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 /**
  * Repository.
  */
-final class PropertyRepository extends StorageRepository
+class PropertyRepository extends StorageRepository
 {
 	public function deleteDirectory(string $collection, string $objectID, string $property, ?string $name = null, ?string $subpath = null): void
 	{

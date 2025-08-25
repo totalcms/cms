@@ -6,7 +6,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final readonly class JobQueueStats implements \Stringable
+readonly class JobQueueStats implements \Stringable
 {
 	public function __construct(
 		private string $api,
