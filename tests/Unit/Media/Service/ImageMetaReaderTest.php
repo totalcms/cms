@@ -15,8 +15,14 @@ final class ImageMetaReaderTest extends TestCase
 		$this->tempDir = sys_get_temp_dir() . '/totalcms_test_images_' . uniqid();
 		mkdir($this->tempDir, 0777, true);
 
-		// Create a test image for metadata extraction
-		$this->testImagePath = $this->createTestImage();
+		// Use the real EXIF test image from test-data
+		$realExifImage = dirname(__DIR__, 3) . '/test-data/image-exif.jpg';
+		if (file_exists($realExifImage)) {
+			$this->testImagePath = $realExifImage;
+		} else {
+			// Fallback to creating a simple test image
+			$this->testImagePath = $this->createTestImage();
+		}
 	}
 
 	protected function tearDown(): void
@@ -112,13 +118,13 @@ final class ImageMetaReaderTest extends TestCase
 			$metadata = ImageMetaReader::getMetaData($testImageWithFractions);
 
 			if (isset($metadata['exif']['focalLength'])) {
-				// Should be 35 (not "35/1")
-				$this->assertEquals(35.0, $metadata['exif']['focalLength']);
+				// Should be 31 (not "31/1") - based on test image EXIF data
+				$this->assertEquals(31.0, $metadata['exif']['focalLength']);
 			}
 
 			if (isset($metadata['exif']['aperture'])) {
-				// Should be 2.8 (not "28/10")
-				$this->assertEquals(2.8, $metadata['exif']['aperture']);
+				// Should be 11.0 (not "11/1") - based on test image EXIF data  
+				$this->assertEquals(11.0, $metadata['exif']['aperture']);
 			}
 
 			if (isset($metadata['exif']['altitude'])) {
@@ -179,7 +185,7 @@ final class ImageMetaReaderTest extends TestCase
 				$this->assertEquals($sortedTags, $tags, 'Tags should be sorted');
 			}
 		} else {
-			$this->markTestSkipped('Could not create test image with keywords for testing');
+			$this->markTestIncomplete('Could not create test image with keywords for testing');
 		}
 	}
 
@@ -222,7 +228,7 @@ final class ImageMetaReaderTest extends TestCase
 				$this->assertNotEmpty($metadata['exif']['lens']);
 			}
 		} else {
-			$this->markTestSkipped('Could not create test image with XMP data');
+			$this->markTestIncomplete('Could not create test image with XMP data');
 		}
 	}
 
@@ -242,7 +248,7 @@ final class ImageMetaReaderTest extends TestCase
 				}
 			}
 		} else {
-			$this->markTestSkipped('Could not create test image with IPTC data');
+			$this->markTestIncomplete('Could not create test image with IPTC data');
 		}
 	}
 
@@ -312,35 +318,32 @@ final class ImageMetaReaderTest extends TestCase
 
 	private function createTestImageWithMockExif(): ?string
 	{
-		// Note: In a real scenario, this would require more complex image manipulation
-		// to actually embed EXIF data. For unit testing, we focus on the parsing logic.
-		// This method serves as a placeholder for more advanced EXIF injection.
-		return null;
-		// Skip advanced EXIF injection for basic unit tests
+		// Use the real EXIF test image since it has all the data we need
+		return $this->testImagePath;
 	}
 
 	private function createTestImageWithMockGPS(): ?string
 	{
-		// Placeholder for GPS data injection
-		return null;
+		// Use the real EXIF test image since it has GPS coordinates
+		return $this->testImagePath;
 	}
 
 	private function createTestImageWithKeywords(): ?string
 	{
-		// Placeholder for keyword injection
-		return null;
+		// Use the real EXIF test image for keyword extraction testing
+		return $this->testImagePath;
 	}
 
 	private function createTestImageWithMockXMP(): ?string
 	{
-		// Placeholder for XMP data injection
-		return null;
+		// Use the real EXIF test image for XMP testing 
+		return $this->testImagePath;
 	}
 
 	private function createTestImageWithMockIPTC(): ?string
 	{
-		// Placeholder for IPTC data injection
-		return null;
+		// Use the real EXIF test image for IPTC testing
+		return $this->testImagePath;
 	}
 
 	private function recursiveRemoveDirectory(string $dir): void
