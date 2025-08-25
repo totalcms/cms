@@ -24,16 +24,14 @@ class CheckboxField extends FormField
 			'data-type' => $this->field,
 			'style'     => "grid-area: {$this->name};",
 		];
-		if (!empty($this->settings)) {
+		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
 				$formFieldAtrributes['data-options'] = $json;
 			}
 		}
 
-		$formField = HTMLUtils::element('div', $group . $help, $formFieldAtrributes);
-
-		return $formField;
+		return HTMLUtils::element('div', $group . $help, $formFieldAtrributes);
 	}
 
 	/** @return array<string,?string> */

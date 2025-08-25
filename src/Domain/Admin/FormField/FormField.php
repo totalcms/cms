@@ -87,10 +87,10 @@ class FormField
 
 	public function createFormField(string $content): string
 	{
-		$label = empty($this->label) ? '' : HTMLUtils::element('label', $this->label, [
+		$label = $this->label === '' ? '' : HTMLUtils::element('label', $this->label, [
 			'for' => "field-{$this->uuid}",
 		]);
-		$help  = empty($this->help) ? '' : HTMLUtils::element('p', $this->help, [
+		$help  = $this->help === '' ? '' : HTMLUtils::element('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
@@ -100,7 +100,7 @@ class FormField
 			'data-type' => $this->field,
 			'style'     => "grid-area: {$this->name};",
 		];
-		if (!empty($this->settings)) {
+		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
 				$formFieldAtrributes['data-options'] = $json;
