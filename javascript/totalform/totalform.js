@@ -3,6 +3,7 @@ import TotalField from './totalfield';
 import TotalDispatcher from './dispatcher';
 import Identifier from './identifier';
 import Checkbox from './checkbox';
+import RadioField from './radio';
 import Textarea from './textarea';
 import NumberField from './number';
 import ColorField from './color';
@@ -230,6 +231,9 @@ export default class TotalForm {
             case "toggle":
                 return new Checkbox(field, options);
 
+            case "radio":
+                return new RadioField(field, options);
+
             case "number":
                 return new NumberField(field, options);
 
@@ -278,9 +282,6 @@ export default class TotalForm {
 
 			case "code":
 				return new CodeField(field,options);
-
-			// case "radio":
-			// 	return new RadioField(field, options);
 
 			case "deck":
                 return new DeckField(field, options);
