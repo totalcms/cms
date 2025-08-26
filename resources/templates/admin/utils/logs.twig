@@ -44,25 +44,26 @@
 
 	<h2>Log Analysis <small>Found {{ analysis | length }} Issues</small></h2>
 
-	<table class="admin-table" data-sort>
-		<thead>
-			<tr><th>Count</th><th>Logged Error</th></tr>
-		</thead>
-		{% for error, value in analysis %}
-		<tr>
-			<td>{{ value.count }}</td>
-			<td>{{ error }}</td>
-		</tr>
-		{% endfor %}
-	</table>
+	<div class="log-analysis-container" style="max-height: 600px; overflow-y: auto; border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius);">
+		<table class="admin-table" data-sort>
+			<thead style="position: sticky; top: 0; background: oklch(var(--totalform-nearwhite)); z-index: 10;">
+				<tr><th data-sort="number">Count</th><th>Logged Error</th></tr>
+			</thead>
+			<tbody>
+				{% for error, value in analysis %}
+				<tr>
+					<td data-sort="{{ value.count }}">{{ value.count }}</td>
+					<td>{{ error }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
 
 	<h2>Log Contents</h2>
-	<div class="log-contents">
-<pre>
-{% for line in cms.logger.logfile(activelog) %}
-{{ line | trim | escape }}
-{% endfor %}
-</pre>
+	<div class="log-contents" style="max-height: 500px; overflow-y: auto; border: 1px solid oklch(var(--totalform-border-color)); border-radius: var(--totalform-radius); background: oklch(var(--totalform-nearwhite));">
+<pre style="margin: 0; padding: 1rem; white-space: pre-wrap; word-wrap: break-word;">{% for line in cms.logger.logfile(activelog) %}{{ line | trim | escape }}
+{% endfor %}</pre>
 	</div>
 
 
