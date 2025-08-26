@@ -111,9 +111,10 @@ final class PasswordDataTest extends TestCase
 		$data = new PasswordData('');
 		$this->assertSame('', $data->hash);
 
-		// Test '0' string - PHP's empty() considers '0' as empty
+		// Test '0' string - PasswordData only considers empty string as empty (strict comparison)
 		$data = new PasswordData('0');
-		$this->assertSame('', $data->hash); // '0' is considered empty by PHP
+		$this->assertNotSame('', $data->hash); // '0' is treated as a valid password
+		$this->assertStringStartsWith('$2y$', $data->hash);
 
 		// Test non-empty string that looks like zero
 		$data = new PasswordData('00');

@@ -79,11 +79,12 @@ test('it returns empty string for null', function (): void {
 	expect($result)->toBe('');
 });
 
-test('it returns empty string for all empty values', function (): void {
-	// PHP's empty() returns true for: "", 0, 0.0, "0", NULL, FALSE, array()
+test('it returns empty string for null and empty string values', function (): void {
+	// DateData only considers null and empty string as empty (strict comparison)
 	expect(DateData::cleanDate(''))->toBe('');
 	expect(DateData::cleanDate(null))->toBe('');
-	expect(DateData::cleanDate('0'))->toBe(''); // empty() considers '0' as empty
+	// '0' is treated as a valid date (Unix timestamp 0 = 1970-01-01)
+	expect(DateData::cleanDate('0'))->toBe('1970-01-01T00:00:00+00:00');
 });
 
 test('datedata constructor with smart defaults', function (): void {
