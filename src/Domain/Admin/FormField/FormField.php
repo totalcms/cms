@@ -64,8 +64,7 @@ class FormField
 			|| isset($this->settings['datalistOptions']));
 
 		// Set a default value on new object forms if one is not provided
-		// Use is_null() instead of empty() to preserve 0 values
-		if (!$this->form->id && is_null($this->value) && !empty($this->default)) {
+		if (!$this->form->id && empty($this->value) && !empty($this->default)) {
 			$this->value = $this->default;
 		}
 	}
