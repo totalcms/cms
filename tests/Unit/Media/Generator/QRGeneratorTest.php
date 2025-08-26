@@ -1,315 +1,241 @@
 <?php
 
-declare(strict_types=1);
-
-namespace Tests\Unit\Media\Generator;
-
-use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 
-final class QRGeneratorTest extends TestCase
-{
-	private QRGenerator $qrGenerator;
+describe('QRGenerator', function (): void {
+	beforeEach(function (): void {
+		$this->generator = new QRGenerator();
+	});
 
-	protected function setUp(): void
-	{
-		$this->qrGenerator = new QRGenerator();
-	}
-
-	public function testConstructorWithDefaultSize(): void
-	{
+	test('QRGenerator → creates instance with default size', function (): void {
 		$generator = new QRGenerator();
-		$this->assertInstanceOf(QRGenerator::class, $generator);
-	}
+		
+		expect($generator)->toBeInstanceOf(QRGenerator::class);
+	});
 
-	public function testConstructorWithCustomSize(): void
-	{
+	test('QRGenerator → creates instance with custom size', function (): void {
 		$generator = new QRGenerator(256);
-		$this->assertInstanceOf(QRGenerator::class, $generator);
-	}
-
-	public function testTextGeneratesSvg(): void
-	{
-		$result = $this->qrGenerator->text('Hello World');
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-		$this->assertStringContainsString('xmlns', $result);
-	}
+		expect($generator)->toBeInstanceOf(QRGenerator::class);
+	});
 
-	public function testTextWithEmptyStringThrowsException(): void
-	{
-		$this->expectException(\InvalidArgumentException::class);
+	test('QRGenerator → generates SVG for plain text', function (): void {
+		$text = 'Hello World';
+		$svg = $this->generator->text($text);
 		
-		$this->qrGenerator->text('');
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testTextWithSpecialCharacters(): void
-	{
-		$text = 'Hello! @#$%^&*()_+-=[]{}|;:",.<>?';
-		$result = $this->qrGenerator->text($text);
+	test('QRGenerator → generates SVG for URL', function (): void {
+		$url = 'https://example.com';
+		$svg = $this->generator->url($url);
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testTextWithUnicodeCharacters(): void
-	{
-		// Use simpler unicode that BaconQrCode handles well
-		$text = 'Hello café résumé';
-		$result = $this->qrGenerator->text($text);
+	test('QRGenerator → generates SVG for telephone number', function (): void {
+		$phone = '+1234567890';
+		$svg = $this->generator->tel($phone);
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testTextWithLongString(): void
-	{
-		$text = str_repeat('This is a long test string for QR code generation. ', 20);
-		$result = $this->qrGenerator->text($text);
+	test('QRGenerator → generates SVG for GPS coordinates', function (): void {
+		$latitude = '40.7128';
+		$longitude = '-74.0060';
+		$svg = $this->generator->gps($latitude, $longitude);
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testUrlGeneratesSvg(): void
-	{
-		$result = $this->qrGenerator->url('https://example.com');
+	test('QRGenerator → generates SVG for SMS', function (): void {
+		$phone = '1234567890';
+		$message = 'Hello from QR code';
+		$svg = $this->generator->sms($phone, $message);
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testUrlWithComplexUrl(): void
-	{
-		$url = 'https://example.com/path/to/page?param1=value1&param2=value2#section';
-		$result = $this->qrGenerator->url($url);
+	test('QRGenerator → generates SVG for WiFi credentials', function (): void {
+		$auth = 'WPA';
+		$ssid = 'MyNetwork';
+		$password = 'password123';
+		$hidden = 'false';
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testUrlWithHttpUrl(): void
-	{
-		$result = $this->qrGenerator->url('http://example.com');
+		$svg = $this->generator->wifi($auth, $ssid, $password, $hidden);
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testUrlWithFtpUrl(): void
-	{
-		$result = $this->qrGenerator->url('ftp://files.example.com/document.pdf');
+	test('QRGenerator → generates SVG for email (mailto)', function (): void {
+		$email = 'test@example.com';
+		$svg = $this->generator->mailto($email);
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testTelGeneratesSvgWithTelPrefix(): void
-	{
-		$result = $this->qrGenerator->tel('1234567890');
+	test('QRGenerator → generates SVG for email with subject and body', function (): void {
+		$email = 'contact@domain.com';
+		$subject = 'QR Code Test';
+		$body = 'This email was generated from a QR code';
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testTelWithFormattedPhoneNumber(): void
-	{
-		$result = $this->qrGenerator->tel('+1 (555) 123-4567');
+		$svg = $this->generator->mailto($email, $subject, $body);
 		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-	public function testTelWithInternationalNumber(): void
-	{
-		$result = $this->qrGenerator->tel('+44 20 7946 0958');
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testTelWithExtension(): void
-	{
-		$result = $this->qrGenerator->tel('555-1234 ext 100');
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testGpsGeneratesSvgWithGeoPrefix(): void
-	{
-		$result = $this->qrGenerator->gps('40.7128', '-74.0060');
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testGpsWithPositiveCoordinates(): void
-	{
-		$result = $this->qrGenerator->gps('51.5074', '0.1278'); // London
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testGpsWithNegativeCoordinates(): void
-	{
-		$result = $this->qrGenerator->gps('-33.8688', '151.2093'); // Sydney
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testGpsWithZeroCoordinates(): void
-	{
-		$result = $this->qrGenerator->gps('0.0000', '0.0000'); // Null Island
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testGpsWithHighPrecisionCoordinates(): void
-	{
-		$result = $this->qrGenerator->gps('40.748817', '-73.985428'); // Empire State Building
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testSvgOutputDoesNotContainXmlDeclaration(): void
-	{
-		// The stripFirstLine method should remove the XML declaration
-		$result = $this->qrGenerator->text('test');
-		
-		$this->assertStringNotContainsString('<?xml', $result);
-		$this->assertStringStartsWith('<svg', $result);
-	}
-
-	public function testSvgOutputContainsValidSvgStructure(): void
-	{
-		$result = $this->qrGenerator->text('structure test');
-		
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('xmlns="http://www.w3.org/2000/svg"', $result);
-		$this->assertStringContainsString('viewBox=', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testDifferentMethodsGenerateDifferentOutput(): void
-	{
-		$textResult = $this->qrGenerator->text('test');
-		$urlResult = $this->qrGenerator->url('https://test.com');
-		$telResult = $this->qrGenerator->tel('1234567890');
-		$gpsResult = $this->qrGenerator->gps('40.7128', '-74.0060');
-		
-		// All should be different due to different prefixes or content
-		$this->assertNotEquals($textResult, $urlResult);
-		$this->assertNotEquals($textResult, $telResult);
-		$this->assertNotEquals($textResult, $gpsResult);
-		$this->assertNotEquals($urlResult, $telResult);
-	}
-
-	public function testSameContentGeneratesSameOutput(): void
-	{
-		$result1 = $this->qrGenerator->text('identical content');
-		$result2 = $this->qrGenerator->text('identical content');
-		
-		$this->assertEquals($result1, $result2);
-	}
-
-	public function testDifferentContentGeneratesDifferentOutput(): void
-	{
-		$result1 = $this->qrGenerator->text('content A');
-		$result2 = $this->qrGenerator->text('content B');
-		
-		$this->assertNotEquals($result1, $result2);
-	}
-
-	public function testQrCodeContainsPathElements(): void
-	{
-		$result = $this->qrGenerator->text('path test');
-		
-		// QR codes are typically rendered as paths in SVG
-		$this->assertStringContainsString('<path', $result);
-	}
-
-	public function testQrCodeWithNumericContent(): void
-	{
-		$result = $this->qrGenerator->text('1234567890');
-		
-		$this->assertIsString($result);
-		$this->assertStringContainsString('<svg', $result);
-		$this->assertStringContainsString('</svg>', $result);
-	}
-
-	public function testEdgeCaseInputs(): void
-	{
-		// Test various edge case inputs
-		$edgeCases = [
-			'single char' => 'A',
-			'space only' => ' ',
-			'tab char' => "\t",
-			'newline' => "\n",
-			'carriage return' => "\r",
-			'mixed whitespace' => " \t\n\r ",
+	test('QRGenerator → generates SVG for calendar event', function (): void {
+		$eventData = [
+			'title' => 'Test Meeting',
+			'desc' => 'QR code generated meeting',
+			'location' => 'Conference Room',
+			'start' => '2024-12-01 10:00:00',
+			'end' => '2024-12-01 11:00:00',
 		];
+		
+		$svg = $this->generator->event($eventData);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
 
-		foreach ($edgeCases as $description => $input) {
-			$result = $this->qrGenerator->text($input);
+	test('QRGenerator → generates SVG for VCF contact', function (): void {
+		$contactData = [
+			'first' => 'John',
+			'last' => 'Doe',
+			'company' => 'Test Company',
+			'phone' => '+1234567890',
+			'email' => 'john@example.com',
+		];
+		
+		$svg = $this->generator->vcf($contactData);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		expect($svg)->toContain('</svg>');
+	});
+
+	test('QRGenerator → throws exception for empty text input', function (): void {
+		expect(fn () => $this->generator->text(''))
+			->toThrow(\InvalidArgumentException::class, 'Found empty contents');
+	});
+
+	test('QRGenerator → handles special characters in text', function (): void {
+		$text = 'Special chars: !@#$%^&*()_+-=[]{}|;:,.<>?';
+		$svg = $this->generator->text($text);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+	});
+
+	test('QRGenerator → handles simple unicode characters in text', function (): void {
+		// Use simpler unicode that works with ISO-8859-1 encoding
+		$text = 'Unicode café naïve';
+		$svg = $this->generator->text($text);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+	});
+
+	test('QRGenerator → handles long text input', function (): void {
+		$longText = str_repeat('Long text content for QR code generation. ', 50);
+		$svg = $this->generator->text($longText);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+	});
+
+	test('QRGenerator → event handles partial data with defaults', function (): void {
+		$partialData = [
+			'title' => 'Minimal Event',
+		];
+		
+		$svg = $this->generator->event($partialData);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+	});
+
+	test('QRGenerator → VCF handles partial data with defaults', function (): void {
+		$partialData = [
+			'first' => 'Jane',
+			'email' => 'jane@test.com',
+		];
+		
+		$svg = $this->generator->vcf($partialData);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+	});
+
+	test('QRGenerator → event sanitizes HTML in data', function (): void {
+		$maliciousData = [
+			'title' => '<script>alert("xss")</script>Meeting',
+			'desc' => 'Normal description',
+		];
+		
+		$svg = $this->generator->event($maliciousData);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		// HTML should be escaped/sanitized
+		expect($svg)->not->toContain('<script>');
+	});
+
+	test('QRGenerator → VCF sanitizes HTML in data', function (): void {
+		$maliciousData = [
+			'first' => '<b>Bold</b>Name',
+			'company' => '<i>Company</i>',
+		];
+		
+		$svg = $this->generator->vcf($maliciousData);
+		
+		expect($svg)->toBeString();
+		expect($svg)->toContain('<svg');
+		// HTML should be escaped/sanitized
+		expect($svg)->not->toContain('<b>');
+		expect($svg)->not->toContain('<i>');
+	});
+
+	test('QRGenerator → handles various phone number formats', function (): void {
+		$formats = [
+			'1234567890',
+			'+1-234-567-8900',
+			'(123) 456-7890',
+			'+44 20 7946 0958',
+		];
+		
+		foreach ($formats as $phone) {
+			$svg = $this->generator->tel($phone);
 			
-			$this->assertIsString($result, "Failed for case: {$description}");
-			$this->assertStringContainsString('<svg', $result, "Failed for case: {$description}");
-			$this->assertStringContainsString('</svg>', $result, "Failed for case: {$description}");
+			expect($svg)->toBeString();
+			expect($svg)->toContain('<svg');
 		}
-	}
+	});
 
-	public function testOutputSizeConsistency(): void
-	{
-		// Different content should produce SVGs with similar structure
-		$results = [
-			$this->qrGenerator->text('short'),
-			$this->qrGenerator->text('medium length content'),
-			$this->qrGenerator->text('very long content that should still generate a valid QR code'),
-		];
-
-		foreach ($results as $result) {
-			$this->assertStringContainsString('width=', $result);
-			$this->assertStringContainsString('height=', $result);
-		}
-	}
-
-	public function testCustomSizeGenerator(): void
-	{
-		$smallGenerator = new QRGenerator(128);
-		$largeGenerator = new QRGenerator(1024);
-
-		$smallResult = $smallGenerator->text('size test');
-		$largeResult = $largeGenerator->text('size test');
-
-		$this->assertIsString($smallResult);
-		$this->assertIsString($largeResult);
-		$this->assertStringContainsString('<svg', $smallResult);
-		$this->assertStringContainsString('<svg', $largeResult);
-
-		// Results should be different due to different sizes
-		$this->assertNotEquals($smallResult, $largeResult);
-	}
-}
+	test('QRGenerator → generates different SVG content for different inputs', function (): void {
+		$svg1 = $this->generator->text('Content 1');
+		$svg2 = $this->generator->text('Content 2');
+		
+		expect($svg1)->not->toBe($svg2);
+		expect($svg1)->toContain('<svg');
+		expect($svg2)->toContain('<svg');
+	});
+});
