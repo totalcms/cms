@@ -336,12 +336,12 @@ describe('JumpStartData', function (): void {
 	});
 
 	test('JumpStartData → fromJson throws exception for invalid JSON', function (): void {
-		expect(fn (): \TotalCMS\Domain\JumpStart\Data\JumpStartData => JumpStartData::fromJson('invalid json'))
+		expect(fn (): JumpStartData => JumpStartData::fromJson('invalid json'))
 			->toThrow(InvalidArgumentException::class, 'Invalid JSON data');
 	});
 
 	test('JumpStartData → fromJson throws exception for non-object JSON', function (): void {
-		expect(fn (): \TotalCMS\Domain\JumpStart\Data\JumpStartData => JumpStartData::fromJson('"just a string"'))
+		expect(fn (): JumpStartData => JumpStartData::fromJson('"just a string"'))
 			->toThrow(InvalidArgumentException::class, 'Invalid JSON data');
 	});
 

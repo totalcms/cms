@@ -31,22 +31,22 @@ describe('UrlData', function (): void {
 	});
 
 	test('UrlData → throws exception for invalid URL format', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\UrlData => new UrlData('not-a-valid-url'))
+		expect(fn (): UrlData => new UrlData('not-a-valid-url'))
 			->toThrow(InvalidArgumentException::class, 'Invalid URL');
 	});
 
 	test('UrlData → throws exception for URL without protocol', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\UrlData => new UrlData('example.com'))
+		expect(fn (): UrlData => new UrlData('example.com'))
 			->toThrow(InvalidArgumentException::class, 'Invalid URL');
 	});
 
 	test('UrlData → throws exception for malformed URL', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\UrlData => new UrlData('http://'))
+		expect(fn (): UrlData => new UrlData('http://'))
 			->toThrow(InvalidArgumentException::class, 'Invalid URL');
 	});
 
 	test('UrlData → throws exception for completely invalid format', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\UrlData => new UrlData('::invalid::'))
+		expect(fn (): UrlData => new UrlData('::invalid::'))
 			->toThrow(InvalidArgumentException::class, 'Invalid URL');
 	});
 
@@ -115,12 +115,12 @@ describe('UrlData', function (): void {
 	});
 
 	test('UrlData → throws exception for javascript: URLs', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\UrlData => new UrlData('javascript:alert("xss")'))
+		expect(fn (): UrlData => new UrlData('javascript:alert("xss")'))
 			->toThrow(InvalidArgumentException::class, 'Invalid URL');
 	});
 
 	test('UrlData → throws exception for data: URLs', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\UrlData => new UrlData('data:text/html,<script>alert("xss")</script>'))
+		expect(fn (): UrlData => new UrlData('data:text/html,<script>alert("xss")</script>'))
 			->toThrow(InvalidArgumentException::class, 'Invalid URL');
 	});
 

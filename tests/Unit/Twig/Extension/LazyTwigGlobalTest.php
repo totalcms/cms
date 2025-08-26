@@ -83,7 +83,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testPropertySetting(): void
 	{
-		$factory = (fn(): \stdClass => new \stdClass());
+		$factory = (fn (): \stdClass => new \stdClass());
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -109,17 +109,17 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testMethodCalls(): void
 	{
-		$factory = (fn(): object => new class {
-				public function getName(): string
-				{
-					return 'TestObject';
-				}
+		$factory = (fn (): object => new class {
+			public function getName(): string
+			{
+				return 'TestObject';
+			}
 
-				public function calculate(int $a, int $b): int
-				{
-					return $a + $b;
-				}
-			});
+			public function calculate(int $a, int $b): int
+			{
+				return $a + $b;
+			}
+		});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -129,17 +129,17 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testMethodCallsWithComplexArguments(): void
 	{
-		$factory = (fn(): object => new class {
-				public function processArray(array $data): int
-				{
-					return count($data);
-				}
+		$factory = (fn (): object => new class {
+			public function processArray(array $data): int
+			{
+				return count($data);
+			}
 
-				public function processObject(\stdClass $obj): string
-				{
-					return $obj->name ?? 'unknown';
-				}
-			});
+			public function processObject(\stdClass $obj): string
+			{
+				return $obj->name ?? 'unknown';
+			}
+		});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -152,12 +152,12 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testStringableInterface(): void
 	{
-		$factory = (fn(): \Stringable => new class implements \Stringable {
-				public function __toString(): string
-				{
-					return 'StringableObject';
-				}
-			});
+		$factory = (fn (): \Stringable => new class implements \Stringable {
+			public function __toString(): string
+			{
+				return 'StringableObject';
+			}
+		});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -166,7 +166,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testToStringWithNonStringableObject(): void
 	{
-		$factory = (fn(): \stdClass => new \stdClass());
+		$factory = (fn (): \stdClass => new \stdClass());
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -178,12 +178,12 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testToStringWithObjectThatHasToStringMethod(): void
 	{
-		$factory = (fn(): object => new class {
-				public function __toString(): string
-				{
-					return 'CustomToString';
-				}
-			});
+		$factory = (fn (): object => new class {
+			public function __toString(): string
+			{
+				return 'CustomToString';
+			}
+		});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -192,20 +192,20 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testWithComplexObject(): void
 	{
-		$factory = (fn(): object => new class {
-				public string $name = 'Complex';
-				public array $data  = ['key' => 'value'];
+		$factory = (fn (): object => new class {
+			public string $name = 'Complex';
+			public array $data  = ['key' => 'value'];
 
-				public function getData(): array
-				{
-					return $this->data;
-				}
+			public function getData(): array
+			{
+				return $this->data;
+			}
 
-				public function setData(string $key, mixed $value): void
-				{
-					$this->data[$key] = $value;
-				}
-			});
+			public function setData(string $key, mixed $value): void
+			{
+				$this->data[$key] = $value;
+			}
+		});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -276,19 +276,19 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testMixedAccessPatterns(): void
 	{
-		$factory = (fn(): object => new class {
-				public string $name = 'TestObject';
+		$factory = (fn (): object => new class {
+			public string $name = 'TestObject';
 
-				public function getName(): string
-				{
-					return $this->name;
-				}
+			public function getName(): string
+			{
+				return $this->name;
+			}
 
-				public function setName(string $name): void
-				{
-					$this->name = $name;
-				}
-			});
+			public function setName(string $name): void
+			{
+				$this->name = $name;
+			}
+		});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -313,7 +313,7 @@ final class LazyTwigGlobalTest extends TestCase
 		// Test with different object types
 		$factories = [
 			fn (): \stdClass => new \stdClass(),
-			fn (): \DateTime => new \DateTime(),
+			fn (): \DateTime    => new \DateTime(),
 			fn (): \ArrayObject => new \ArrayObject(['test' => 'data']),
 		];
 

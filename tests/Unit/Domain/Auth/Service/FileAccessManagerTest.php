@@ -80,7 +80,7 @@ final class FileAccessManagerTest extends TestCase
 		// Case 1: No session - should return false
 		$fileAccessManager->method('sessionHasUser')->willReturn(false);
 		$fileAccessManager->method('userHasAccess')->willReturnCallback(
-			fn() => $fileAccessManager->sessionHasUser()
+			fn () => $fileAccessManager->sessionHasUser()
 		);
 
 		expect($fileAccessManager->userHasAccess())->toBeFalse();

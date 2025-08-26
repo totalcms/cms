@@ -46,8 +46,8 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	it('handles ANY HTTP method due to route configuration', function (): void {
 		// Test various HTTP methods that should all work per route config
 		$methods = [
-			fn (): \Nekofar\Slim\Test\TestResponse => get('/denied'),
-			fn (): \Nekofar\Slim\Test\TestResponse => post('/denied'),
+			fn (): Nekofar\Slim\Test\TestResponse => get('/denied'),
+			fn (): Nekofar\Slim\Test\TestResponse => post('/denied'),
 		];
 
 		foreach ($methods as $methodCall) {

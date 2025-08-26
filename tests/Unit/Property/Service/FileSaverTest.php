@@ -60,7 +60,7 @@ class FileSaverTest extends TestCase
 		// Expect object creation
 		$this->mockObjectSaver->expects($this->once())
 			->method('saveObject')
-			->with($collection, $this->callback(fn($data): bool => $data['id'] === $objectID && isset($data[$property])));
+			->with($collection, $this->callback(fn ($data): bool => $data['id'] === $objectID && isset($data[$property])));
 
 		// Clean up existing files
 		$this->mockStorage->expects($this->once())

@@ -118,7 +118,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
 
 		// Cache should be reversed uploadDate with non-word characters removed
-		$expectedCache = strrev((string) preg_replace('/\W+/', '', '2024-01-15T12:30:45Z'));
+		$expectedCache = strrev((string)preg_replace('/\W+/', '', '2024-01-15T12:30:45Z'));
 		expect($result)->toContain("cache=$expectedCache");
 	}
 

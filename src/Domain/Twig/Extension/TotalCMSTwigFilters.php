@@ -758,12 +758,12 @@ class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return match ($unit) {
-                'day'   => $chronos->startOfDay()->format('c'),
-                'week'  => $chronos->startOfWeek()->format('c'),
-                'month' => $chronos->startOfMonth()->format('c'),
-                'year'  => $chronos->startOfYear()->format('c'),
-                default => $chronos->format('c'),
-            };
+				'day'   => $chronos->startOfDay()->format('c'),
+				'week'  => $chronos->startOfWeek()->format('c'),
+				'month' => $chronos->startOfMonth()->format('c'),
+				'year'  => $chronos->startOfYear()->format('c'),
+				default => $chronos->format('c'),
+			};
 		} catch (\Exception) {
 			return (string)$date;
 		}
@@ -778,12 +778,12 @@ class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return match ($unit) {
-                'day'   => $chronos->endOfDay()->format('c'),
-                'week'  => $chronos->endOfWeek()->format('c'),
-                'month' => $chronos->endOfMonth()->format('c'),
-                'year'  => $chronos->endOfYear()->format('c'),
-                default => $chronos->format('c'),
-            };
+				'day'   => $chronos->endOfDay()->format('c'),
+				'week'  => $chronos->endOfWeek()->format('c'),
+				'month' => $chronos->endOfMonth()->format('c'),
+				'year'  => $chronos->endOfYear()->format('c'),
+				default => $chronos->format('c'),
+			};
 		} catch (\Exception) {
 			return (string)$date;
 		}
@@ -881,10 +881,10 @@ class TotalCMSTwigFilters
 		$numericPrice = is_numeric($price) ? floatval($price) : 0;
 
 		return match ($format) {
-            'prepend' => $currency . number_format($numericPrice, 2),
-            'append'  => number_format($numericPrice, 2) . $currency,
-            'none'    => number_format($numericPrice, 2),
-            default   => $currency . number_format($numericPrice, 2),
-        };
+			'prepend' => $currency . number_format($numericPrice, 2),
+			'append'  => number_format($numericPrice, 2) . $currency,
+			'none'    => number_format($numericPrice, 2),
+			default   => $currency . number_format($numericPrice, 2),
+		};
 	}
 }

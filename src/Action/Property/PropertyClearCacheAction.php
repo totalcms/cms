@@ -10,16 +10,15 @@ use TotalCMS\Renderer\JsonRenderer;
 class PropertyClearCacheAction
 {
 	public function __construct(private readonly JsonRenderer $renderer, private readonly PropertyCacheCleaner $service)
-    {
-    }
+	{
+	}
 
 	/**
-     * Action.
-     *
-     * @param array<string,string> $args
-     *
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	 * Action.
+	 *
+	 * @param array<string,string> $args
+	 */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$deleted = $this->service->deletePropertyCache($args['collection'], $args['id'], $args['property']);
 

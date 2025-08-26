@@ -24,11 +24,11 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 abstract class TotalForm implements \Stringable
 {
 	/** @var array<string,FormField> */
-	protected array $fields = [];
-	protected string $route = '';
+	protected array $fields                = [];
+	protected string $route                = '';
 	public ?CollectionData $collectionData = null;
-	public ?ObjectData $objectData = null;
-	public ?SchemaData $schemaData = null;
+	public ?ObjectData $objectData         = null;
+	public ?SchemaData $schemaData         = null;
 
 	public const FIELDS_BY_TYPE = [
 		'Text (String) Fields' => [
@@ -309,7 +309,7 @@ abstract class TotalForm implements \Stringable
 
 		$collection = $this->collectionReader->fetchIndex($collection);
 
-		return $collection->objects->map(fn($item) => collect($item)->only($properties)->toArray())->toArray();
+		return $collection->objects->map(fn ($item) => collect($item)->only($properties)->toArray())->toArray();
 	}
 
 	private function saveButton(): string

@@ -20,7 +20,7 @@ describe('TotalCMSTwigFunctions', function (): void {
 
 	test('TotalCMSTwigFunctions → includes all custom functions in function list', function (): void {
 		$functions     = TotalCMSTwigFunctions::getFunctions();
-		$functionNames = array_map(fn (\Twig\TwigFunction $function): string => $function->getName(), $functions);
+		$functionNames = array_map(fn (Twig\TwigFunction $function): string => $function->getName(), $functions);
 
 		foreach (TotalCMSTwigFunctions::$customFunctions as $customFunction) {
 			expect($functionNames)->toContain($customFunction);
@@ -29,7 +29,7 @@ describe('TotalCMSTwigFunctions', function (): void {
 
 	test('TotalCMSTwigFunctions → includes all PHP functions in function list', function (): void {
 		$functions     = TotalCMSTwigFunctions::getFunctions();
-		$functionNames = array_map(fn (\Twig\TwigFunction $function): string => $function->getName(), $functions);
+		$functionNames = array_map(fn (Twig\TwigFunction $function): string => $function->getName(), $functions);
 
 		foreach (TotalCMSTwigFunctions::$phpFunctions as $phpFunction) {
 			expect($functionNames)->toContain($phpFunction);

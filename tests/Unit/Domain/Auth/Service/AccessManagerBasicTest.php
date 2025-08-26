@@ -44,9 +44,9 @@ final class AccessManagerBasicTest extends TestCase
 		// Case 1: No session - should return false
 		$accessManager->method('sessionHasUser')->willReturn(false);
 		$accessManager->method('userLoggedIn')->willReturnCallback(
-			fn($collection = '') =>
-                // Simulate the actual method logic
-                $accessManager->sessionHasUser()
+			fn ($collection = '') =>
+				// Simulate the actual method logic
+				$accessManager->sessionHasUser()
 		);
 
 		$result = $accessManager->userLoggedIn();
@@ -65,9 +65,9 @@ final class AccessManagerBasicTest extends TestCase
 
 		// Mock userHasAccess to simulate actual logic
 		$accessManager->method('userHasAccess')->willReturnCallback(
-			fn($groups, $collection = '') =>
-                // Simulate the actual method logic - should return false if not logged in
-                $accessManager->userLoggedIn($collection)
+			fn ($groups, $collection = '') =>
+				// Simulate the actual method logic - should return false if not logged in
+				$accessManager->userLoggedIn($collection)
 		);
 
 		$result = $accessManager->userHasAccess(['admin']);
@@ -218,7 +218,7 @@ final class AccessManagerBasicTest extends TestCase
 		];
 
 		$userID2         = $mockSessionData2['user'] ?? '';
-        $userCollection2 = $defaultAuthCollection;
+		$userCollection2 = $defaultAuthCollection;
 
 		expect($userID2)->toBe('jane-doe');
 		expect($userCollection2)->toBe($defaultAuthCollection);

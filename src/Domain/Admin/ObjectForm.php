@@ -109,7 +109,7 @@ class ObjectForm extends TotalForm
 		if ($this->schemaData === null) {
 			return false;
 		}
-		
+
 		return in_array($property, $this->schemaData->required);
 	}
 

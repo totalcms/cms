@@ -18,69 +18,57 @@ class TemplateRepository extends StorageRepository
 	public const CUSTOM_TEMPLATE_DIR      = 'templates/';
 
 	/**
-     * generate a custom template path.
-     *
-     *
-     */
-    public function customPath(string $template): string
+	 * generate a custom template path.
+	 */
+	public function customPath(string $template): string
 	{
 		return self::CUSTOM_TEMPLATE_DIR . $template . self::FILE_EXT;
 	}
 
 	/**
-     * generate a reserved template path.
-     *
-     *
-     */
-    public function reservedPath(string $template): string
+	 * generate a reserved template path.
+	 */
+	public function reservedPath(string $template): string
 	{
 		return self::RESERVED_TEMPLATE_DIR . $template . self::FILE_EXT;
 	}
 
 	/**
-     * test if a template exists.
-     *
-     *
-     * @throws \DomainException
-     *
-     */
-    public function templateExists(string $template): bool
+	 * test if a template exists.
+	 *
+	 * @throws \DomainException
+	 */
+	public function templateExists(string $template): bool
 	{
 		return $this->reservedTemplateExists($template) || $this->customTemplateExists($template);
 	}
 
 	/**
-     * test if a custom template exists.
-     *
-     *
-     * @throws \DomainException
-     *
-     */
-    public function customTemplateExists(string $template): bool
+	 * test if a custom template exists.
+	 *
+	 * @throws \DomainException
+	 */
+	public function customTemplateExists(string $template): bool
 	{
 		return $this->filesystem->fileExists($this->customPath($template));
 	}
 
 	/**
-     * test if a reserved template exists.
-     *
-     *
-     * @throws \DomainException
-     *
-     */
-    public function reservedTemplateExists(string $template): bool
+	 * test if a reserved template exists.
+	 *
+	 * @throws \DomainException
+	 */
+	public function reservedTemplateExists(string $template): bool
 	{
 		return file_exists($this->reservedPath($template));
 	}
 
 	/**
-     * fetch a template.
-     *
-     *
-     * @throws \DomainException
-     *
-     */
-    public function fetchTemplate(string $template): TemplateData
+	 * fetch a template.
+	 *
+	 * @throws \DomainException
+	 */
+	public function fetchTemplate(string $template): TemplateData
 	{
 		// Custom template takes precedence
 		$templateData = $this->fetchCustomTemplate($template) ?? $this->fetchReservedTemplate($template);
@@ -93,11 +81,9 @@ class TemplateRepository extends StorageRepository
 	}
 
 	/**
-     * fetch a reserved template.
-     *
-     *
-     */
-    public function fetchReservedTemplate(string $template): ?TemplateData
+	 * fetch a reserved template.
+	 */
+	public function fetchReservedTemplate(string $template): ?TemplateData
 	{
 		$templateFile = $this->reservedPath($template);
 		$contents     = null;
@@ -114,11 +100,9 @@ class TemplateRepository extends StorageRepository
 	}
 
 	/**
-     * fetch a custom template.
-     *
-     *
-     */
-    public function fetchCustomTemplate(string $template): ?TemplateData
+	 * fetch a custom template.
+	 */
+	public function fetchCustomTemplate(string $template): ?TemplateData
 	{
 		$templateFile = $this->customPath($template);
 		$contents     = null;
@@ -135,11 +119,9 @@ class TemplateRepository extends StorageRepository
 	}
 
 	/**
-     * save a template.
-     *
-     *
-     */
-    public function saveTemplate(TemplateData $template): void
+	 * save a template.
+	 */
+	public function saveTemplate(TemplateData $template): void
 	{
 		$templateFile = $this->customPath($template->id);
 
@@ -147,11 +129,9 @@ class TemplateRepository extends StorageRepository
 	}
 
 	/**
-     * delete a template.
-     *
-     *
-     */
-    public function deleteTemplate(string $template): bool
+	 * delete a template.
+	 */
+	public function deleteTemplate(string $template): bool
 	{
 		$templateFile = $this->customPath($template);
 
@@ -167,7 +147,7 @@ class TemplateRepository extends StorageRepository
 	{
 		$files = $this->filesystem->listFiles(self::CUSTOM_TEMPLATE_DIR);
 
-		return array_map(fn(string $file): string => basename($file, self::FILE_EXT), $files);
+		return array_map(fn (string $file): string => basename($file, self::FILE_EXT), $files);
 	}
 
 	/**
@@ -183,6 +163,6 @@ class TemplateRepository extends StorageRepository
 			throw new \RuntimeException('Failed to list reserved templates');
 		}
 
-		return array_map(fn(string $file): string => basename($file, self::FILE_EXT), $files);
+		return array_map(fn (string $file): string => basename($file, self::FILE_EXT), $files);
 	}
 }

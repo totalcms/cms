@@ -10,13 +10,13 @@ use Psr\Http\Message\ResponseInterface;
 class RawRenderer
 {
 	/**
-     * Output raw content.
-     *
-     * @param ResponseInterface $response The response
-     *
-     * @return ResponseInterface The response
-     */
-    public function render(ResponseInterface $response, string $content): ResponseInterface
+	 * Output raw content.
+	 *
+	 * @param ResponseInterface $response The response
+	 *
+	 * @return ResponseInterface The response
+	 */
+	public function render(ResponseInterface $response, string $content): ResponseInterface
 	{
 		$response->getBody()->write($content);
 

@@ -79,12 +79,11 @@ class DeckField extends FormField
 	}
 
 	/**
-     * Create a new DeckItem instance.
-     *
-     * @param array<string,mixed> $itemData
-     *
-     */
-    protected function createDeckItem(string $itemId, array $itemData): DeckItem
+	 * Create a new DeckItem instance.
+	 *
+	 * @param array<string,mixed> $itemData
+	 */
+	protected function createDeckItem(string $itemId, array $itemData): DeckItem
 	{
 		return new DeckItem(
 			form     : $this->form,

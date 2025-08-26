@@ -34,8 +34,8 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	it('handles ANY HTTP method due to route configuration', function (): void {
 		// Test various HTTP methods that should all work per route config
 		$methods = [
-			fn (): \Nekofar\Slim\Test\TestResponse => get('/logout'),
-			fn (): \Nekofar\Slim\Test\TestResponse => post('/logout'),
+			fn (): Nekofar\Slim\Test\TestResponse => get('/logout'),
+			fn (): Nekofar\Slim\Test\TestResponse => post('/logout'),
 		];
 
 		foreach ($methods as $methodCall) {

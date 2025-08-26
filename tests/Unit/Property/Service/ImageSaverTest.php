@@ -88,7 +88,7 @@ class ImageSaverTest extends TestCase
 		$this->assertTrue($reflection->hasProperty('loggerFactory'));
 
 		$loggerFactoryProperty = $reflection->getProperty('loggerFactory');
-		$injectedFactory = $loggerFactoryProperty->getValue($this->imageSaver);
+		$injectedFactory       = $loggerFactoryProperty->getValue($this->imageSaver);
 
 		$this->assertInstanceOf(LoggerFactory::class, $injectedFactory);
 	}

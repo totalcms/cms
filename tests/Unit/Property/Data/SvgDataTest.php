@@ -56,7 +56,7 @@ describe('SvgData', function (): void {
 		// Test invalid SVG content
 		$invalidSvg = '<not-svg>invalid content</not-svg>';
 
-		expect(fn (): \TotalCMS\Domain\Property\Data\SvgData => new SvgData($invalidSvg))
+		expect(fn (): SvgData => new SvgData($invalidSvg))
 			->toThrow(InvalidArgumentException::class, 'Invalid SVG content');
 	});
 
@@ -73,7 +73,7 @@ describe('SvgData', function (): void {
 		$whitespaceOnly = '   ';
 
 		// This should throw an exception because whitespace becomes empty after sanitization
-		expect(fn (): \TotalCMS\Domain\Property\Data\SvgData => new SvgData($whitespaceOnly))
+		expect(fn (): SvgData => new SvgData($whitespaceOnly))
 			->toThrow(InvalidArgumentException::class, 'Invalid SVG content after sanitization');
 	});
 

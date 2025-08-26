@@ -50,7 +50,7 @@ describe('TimeData', function (): void {
 	});
 
 	test('throws exception for invalid time format', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData('25:00'))
+		expect(fn (): TimeData => new TimeData('25:00'))
 			->toThrow(\InvalidArgumentException::class, 'Invalid Time');
 	});
 
@@ -65,7 +65,7 @@ describe('TimeData', function (): void {
 		];
 
 		foreach ($invalidTimes as $invalidTime) {
-			expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData($invalidTime))
+			expect(fn (): TimeData => new TimeData($invalidTime))
 				->toThrow(\InvalidArgumentException::class, 'Invalid Time');
 		}
 	});
@@ -93,14 +93,14 @@ describe('TimeData', function (): void {
 		// Test the internal verifyTime method through constructor behavior
 
 		// Valid times should not throw
-		expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData('00:00'))->not->toThrow(\InvalidArgumentException::class);
-		expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData('12:30'))->not->toThrow(\InvalidArgumentException::class);
-		expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData('23:59'))->not->toThrow(\InvalidArgumentException::class);
+		expect(fn (): TimeData => new TimeData('00:00'))->not->toThrow(\InvalidArgumentException::class);
+		expect(fn (): TimeData => new TimeData('12:30'))->not->toThrow(\InvalidArgumentException::class);
+		expect(fn (): TimeData => new TimeData('23:59'))->not->toThrow(\InvalidArgumentException::class);
 
 		// Invalid times should throw
-		expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData('24:00'))->toThrow(\InvalidArgumentException::class);
-		expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData('12:60'))->toThrow(\InvalidArgumentException::class);
-		expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData('invalid-time'))->toThrow(\InvalidArgumentException::class);
+		expect(fn (): TimeData => new TimeData('24:00'))->toThrow(\InvalidArgumentException::class);
+		expect(fn (): TimeData => new TimeData('12:60'))->toThrow(\InvalidArgumentException::class);
+		expect(fn (): TimeData => new TimeData('invalid-time'))->toThrow(\InvalidArgumentException::class);
 	});
 
 	test('handles edge cases for time validation', function (): void {
@@ -114,7 +114,7 @@ describe('TimeData', function (): void {
 		];
 
 		foreach ($edgeCases as $edgeCase) {
-			expect(fn (): \TotalCMS\Domain\Property\Data\TimeData => new TimeData($edgeCase))
+			expect(fn (): TimeData => new TimeData($edgeCase))
 				->toThrow(\InvalidArgumentException::class, 'Invalid Time');
 		}
 	});

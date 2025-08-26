@@ -59,7 +59,7 @@ class SchemaForm extends TotalForm
 		// CRITICAL: Must call parent constructor to initialize typed properties
 		// TotalForm::__construct() calls init() which properly sets:
 		// - $this->collectionData, $this->objectData, $this->schemaData
-		// Without this, template access to these properties fails with 
+		// Without this, template access to these properties fails with
 		// "Typed property must not be accessed before initialization" errors
 		parent::__construct(
 			$objectFetcher,

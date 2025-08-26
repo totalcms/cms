@@ -31,22 +31,22 @@ describe('EmailData', function (): void {
 	});
 
 	test('EmailData → throws exception for invalid email format', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\EmailData => new EmailData('invalid-email'))
+		expect(fn (): EmailData => new EmailData('invalid-email'))
 			->toThrow(InvalidArgumentException::class, 'Invalid email');
 	});
 
 	test('EmailData → throws exception for email without domain', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\EmailData => new EmailData('user@'))
+		expect(fn (): EmailData => new EmailData('user@'))
 			->toThrow(InvalidArgumentException::class, 'Invalid email');
 	});
 
 	test('EmailData → throws exception for email without username', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\EmailData => new EmailData('@example.com'))
+		expect(fn (): EmailData => new EmailData('@example.com'))
 			->toThrow(InvalidArgumentException::class, 'Invalid email');
 	});
 
 	test('EmailData → throws exception for completely invalid format', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\EmailData => new EmailData('not-an-email-at-all'))
+		expect(fn (): EmailData => new EmailData('not-an-email-at-all'))
 			->toThrow(InvalidArgumentException::class, 'Invalid email');
 	});
 
@@ -77,12 +77,12 @@ describe('EmailData', function (): void {
 	});
 
 	test('EmailData → throws exception for email with invalid characters', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\EmailData => new EmailData('user@domain..com'))
+		expect(fn (): EmailData => new EmailData('user@domain..com'))
 			->toThrow(InvalidArgumentException::class, 'Invalid email');
 	});
 
 	test('EmailData → throws exception for multiple @ symbols', function (): void {
-		expect(fn (): \TotalCMS\Domain\Property\Data\EmailData => new EmailData('user@@domain.com'))
+		expect(fn (): EmailData => new EmailData('user@@domain.com'))
 			->toThrow(InvalidArgumentException::class, 'Invalid email');
 	});
 

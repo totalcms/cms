@@ -343,7 +343,7 @@ class DepotField extends FormField
 				return 1;
 			}
 
-			return strcmp((string) $a['name'], (string) $b['name']);
+			return strcmp((string)$a['name'], (string)$b['name']);
 		});
 
 		return $files;
