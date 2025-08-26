@@ -9,7 +9,7 @@ use TotalCMS\Support\Config;
 
 readonly class FirstLoginChecker
 {
-	public readonly string $collection;
+	public string $collection;
 
 	public function __construct(
 		private ObjectSaver $objectSaver,
