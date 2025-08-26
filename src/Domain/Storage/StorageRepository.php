@@ -11,7 +11,6 @@ use Symfony\Component\Serializer\Serializer;
  */
 abstract class StorageRepository
 {
-	protected StorageAdapterInterface $filesystem;
 	protected Serializer $serializer;
 
 	public const FILE_EXT = '.json';
@@ -21,23 +20,20 @@ abstract class StorageRepository
 	 *
 	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
 	 */
-	public function __construct(StorageAdapterInterface $filesystem)
+	public function __construct(protected StorageAdapterInterface $filesystem)
 	{
-		$this->filesystem = $filesystem;
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 	}
 
 	/**
-	 * fetch and deserialize a file.
-	 *
-	 * @template CLASS of object
-	 *
-	 * @param string $file
-	 * @param class-string<CLASS> $className
-	 *
-	 * @return CLASS|null
-	 */
-	protected function fetchAndDeserialize(string $file, string $className): ?object
+     * fetch and deserialize a file.
+     *
+     * @template CLASS of object
+     *
+     * @param class-string<CLASS> $className
+     * @return CLASS|null
+     */
+    protected function fetchAndDeserialize(string $file, string $className): ?object
 	{
 		$contents = null;
 
@@ -45,11 +41,11 @@ abstract class StorageRepository
 			$contents = $this->filesystem->read($file);
 		}
 
-		if (empty($contents)) {
+		if ($contents === null || $contents === '') {
 			return null;
 		}
 
-		$object = $this->serializer->deserialize($contents, (string)$className, 'json');
+		$object = $this->serializer->deserialize($contents, $className, 'json');
 		if ($object instanceof $className) {
 			return $object;
 		}

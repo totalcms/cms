@@ -18,7 +18,7 @@ class FakerImageGD extends Base
 	{
 		$rgb = str_split(ltrim($hex, '#'), 2);
 		$rgb = array_map('intval', array_map('hexdec', $rgb));
-		$rgb = array_map(fn ($value) => max(0, min($value, 255)), $rgb);
+		$rgb = array_map(fn (int $value): int => max(0, min($value, 255)), $rgb);
 
 		if (count($rgb) !== 3) {
 			throw new \InvalidArgumentException('Invalid hex color value.');
@@ -28,30 +28,22 @@ class FakerImageGD extends Base
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-	 * @SuppressWarnings("PHPMD.NPathComplexity")
-	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
-	 * @param ?string $dir
-	 * @param int $width
-	 * @param int $height
-	 * @param ?string $text
-	 * @param int $textSize
-	 * @param ?string $textColor
-	 * @param string $bgColor
-	 */
-	public static function imageText(?string $dir = null, int $width = 640, int $height = 480, ?string $text = null, int $textSize = 200, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+     * @SuppressWarnings("PHPMD.NPathComplexity")
+     * @SuppressWarnings("PHPMD.ElseExpression")
+     */
+    public static function imageText(?string $dir = null, int $width = 640, int $height = 480, ?string $text = null, int $textSize = 200, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
 	{
 		// Default to system temp dir
-		$dir = $dir ?? sys_get_temp_dir();
+		$dir ??= sys_get_temp_dir();
 
 		// Validate directory path
 		if (!is_dir($dir) || !is_writable($dir)) {
 			throw new \InvalidArgumentException(sprintf('Cannot write to directory "%s"', $dir));
 		}
 
-		$text      = empty($text) ? strtoupper(substr(Lorem::word(), 0, rand(1, 6))) : $text;
-		$textColor = empty($textColor) ? Color::hexColor() : $textColor;
+		$text      = $text === null || $text === '' ? strtoupper(substr(Lorem::word(), 0, random_int(1, 6))) : $text;
+		$textColor = $textColor === null || $textColor === '' ? Color::hexColor() : $textColor;
 
 		// Generate a random filename.
 		$filename = uniqid('imageText-', true) . '.png';
@@ -127,18 +119,13 @@ class FakerImageGD extends Base
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-	 * @SuppressWarnings("PHPMD.NPathComplexity")
-	 *
-	 * @param ?string $dir
-	 * @param int $width
-	 * @param int $height
-	 * @param string $bgColor
-	 */
-	public static function imageShapes(?string $dir = null, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+     * @SuppressWarnings("PHPMD.NPathComplexity")
+     */
+    public static function imageShapes(?string $dir = null, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
 	{
 		// Default to system temp dir
-		$dir = $dir ?? sys_get_temp_dir();
+		$dir ??= sys_get_temp_dir();
 
 		// Validate directory path
 		if (!is_dir($dir) || !is_writable($dir)) {
@@ -165,15 +152,15 @@ class FakerImageGD extends Base
 		$bgColor = self::hex2rgb($bgColor);
 		imagecolorallocate($image, ...$bgColor);
 
-		$rectCount = rand(0, 1);
+		$rectCount = random_int(0, 1);
 		for ($i = 0; $i < $rectCount; $i++) {
 			// Draw a random rectangle with random color
-			$grayscale = rand(0, 255);
+			$grayscale = random_int(0, 255);
 			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
-			$x1        = rand(0, intval($width / 2));                                             // Random start x
-			$y1        = rand(0, intval($height / 2));                                            // Random start y
-			$x2        = $x1 + rand(intval($width / 5), intval($width / 3));                              // Random end x
-			$y2        = $y1 + rand(intval($height / 5), intval($height / 3));                            // Random end y
+			$x1        = random_int(0, intval($width / 2));                               // Random start x
+			$y1        = random_int(0, intval($height / 2));                              // Random start y
+			$x2        = $x1 + random_int(intval($width / 5), intval($width / 3));        // Random end x
+			$y2        = $y1 + random_int(intval($height / 5), intval($height / 3));      // Random end y
 
 			if ($color === false) {
 				$color = 1;
@@ -181,14 +168,14 @@ class FakerImageGD extends Base
 			imagefilledrectangle($image, $x1, $y1, $x2, $y2, $color);
 		}
 
-		$circleCount = rand(1, 3);
+		$circleCount = random_int(1, 3);
 		for ($i = 0; $i < $circleCount; $i++) {
 			// Draw a random rectangle with random color
-			$grayscale = rand(0, 255);
+			$grayscale = random_int(0, 255);
 			$color     = imagecolorallocate($image, $grayscale, $grayscale, $grayscale);
-			$cr        = rand(intval($width / 15), intval($width / 5));                                   // Radius
-			$cx        = rand(0, $width);                                                 // Center x
-			$cy        = rand(0, $height);                                                // Center y
+			$cr        = random_int(intval($width / 15), intval($width / 5));             // Radius
+			$cx        = random_int(0, $width);                                           // Center x
+			$cy        = random_int(0, $height);                                          // Center y
 			// $cx          = rand($width / 4, 3 * $width / 4); // Center x
 			// $cy          = rand($height / 4, 3 * $height / 4); // Center y
 			if ($color === false) {

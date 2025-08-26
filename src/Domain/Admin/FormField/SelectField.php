@@ -24,19 +24,19 @@ class SelectField extends FormField
 			'disabled'         => $this->disabled ? '' : null,
 			'readonly'         => $this->readonly ? '' : null,
 			'multiple'         => $this->multiple ? '' : null,
-			'size'             => $this->rows ? (string)$this->rows : null,
-			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
+			'size'             => $this->rows !== 0 ? (string)$this->rows : null,
+			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn (?string $x): bool => !is_null($x));
 
 		return $attributes;
 	}
 
 	protected function placeholderOption(): string
 	{
-		if (empty($this->placeholder)) {
+		if ($this->placeholder === '') {
 			return '';
 		}
 

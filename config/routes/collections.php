@@ -7,8 +7,8 @@ use TotalCMS\Action\Collection;
 use TotalCMS\Action\Property;
 use TotalCMS\Action\Schema;
 
-return function (App $app) {
-	$app->group('/collections', function (RouteCollectorProxy $group) {
+return function (App $app): void {
+	$app->group('/collections', function (RouteCollectorProxy $group): void {
 		// All Collections
 		$group->get('', Collection\CollectionListAction::class)->setName('collections-list');
 

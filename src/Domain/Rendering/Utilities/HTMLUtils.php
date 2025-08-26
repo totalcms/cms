@@ -14,9 +14,8 @@ class HTMLUtils
 	{
 		$element  = "<$tag";
 		$element .= self::buildHTMLAttributes($attributes);
-		$element .= ">$content</$tag>";
 
-		return $element;
+		return $element . ">$content</$tag>";
 	}
 
 	/** @param array<string,mixed> $attributes */
@@ -24,9 +23,8 @@ class HTMLUtils
 	{
 		$element  = "<$tag";
 		$element .= self::buildHTMLAttributes($attributes);
-		$element .= '/>';
 
-		return $element;
+		return $element . '/>';
 	}
 
 	/** @param array<string,mixed> $attributes */
@@ -92,22 +90,22 @@ class HTMLUtils
 		];
 
 		// Add optional parameters if provided
-		if (!empty($subject)) {
+		if ($subject !== '') {
 			$dataAttrs['data-subject'] = base64_encode(trim($subject));
 		}
-		if (!empty($body)) {
+		if ($body !== '') {
 			$dataAttrs['data-body'] = base64_encode(trim($body));
 		}
-		if (!empty($cc)) {
+		if ($cc !== '') {
 			$dataAttrs['data-cc'] = base64_encode(trim($cc));
 		}
-		if (!empty($bcc)) {
+		if ($bcc !== '') {
 			$dataAttrs['data-bcc'] = base64_encode(trim($bcc));
 		}
 
 		// Default title
-		if (empty($title)) {
-			$title = empty($subject) ? 'Email' : htmlentities($subject);
+		if ($title === '') {
+			$title = $subject === '' ? 'Email' : htmlentities($subject);
 		}
 
 		// Create a span that will be converted to a link via JavaScript
@@ -125,9 +123,8 @@ class HTMLUtils
 
 		$summary = self::element('summary', $title);
 		$content = self::element('div', $content, ['class' => 'content']);
-		$details = self::element('details', $summary . $content, $attributes);
 
-		return $details;
+		return self::element('details', $summary . $content, $attributes);
 	}
 
 	public static function dialog(string $content, string $class = ''): string
@@ -188,11 +185,9 @@ class HTMLUtils
 	}
 
 	// -------------------------
-	// CSS and Attribute Utilities
-	// -------------------------
-
-	/** @param string ...$classes */
-	public static function mergeClasses(string ...$classes): string
+    // CSS and Attribute Utilities
+    // -------------------------
+    public static function mergeClasses(string ...$classes): string
 	{
 		return implode(' ', array_filter(array_map('trim', $classes)));
 	}
@@ -241,28 +236,18 @@ class HTMLUtils
 	public static function time(string $date, string $format = 'relative', array $attributes = []): string
 	{
 		// Use existing Chronos date filters
-		switch ($format) {
-			case 'relative':
-				$formatted = TotalCMSTwigFilters::dateRelative($date);
-				break;
-			case 'short':
-				$formatted = TotalCMSTwigFilters::dateFormat($date, 'M j, Y');
-				break;
-			case 'long':
-				$formatted = TotalCMSTwigFilters::dateFormat($date, 'F j, Y');
-				break;
-			case 'iso':
-				$formatted = TotalCMSTwigFilters::dateFormat($date, 'c');
-				break;
-			default:
-				// Custom format - pass directly to dateFormat
-				$formatted = TotalCMSTwigFilters::dateFormat($date, $format);
-		}
+		$formatted = match ($format) {
+            'relative' => TotalCMSTwigFilters::dateRelative($date),
+            'short'    => TotalCMSTwigFilters::dateFormat($date, 'M j, Y'),
+            'long'     => TotalCMSTwigFilters::dateFormat($date, 'F j, Y'),
+            'iso'      => TotalCMSTwigFilters::dateFormat($date, 'c'),
+            default    => TotalCMSTwigFilters::dateFormat($date, $format),
+        };
 
 		// Get ISO datetime for the datetime attribute
 		$datetime = TotalCMSTwigFilters::dateFormat($date, 'c');
 
-		if (!empty($datetime)) {
+		if ($datetime !== '') {
 			$attributes['datetime'] = $datetime;
 		}
 
@@ -311,7 +296,7 @@ class HTMLUtils
 	 */
 	public static function tagList(array $tags, ?string $linkBase = null, array $attributes = []): string
 	{
-		if (empty($tags)) {
+		if ($tags === []) {
 			return '';
 		}
 
@@ -323,7 +308,7 @@ class HTMLUtils
 
 			$tagContent = htmlspecialchars($tag, ENT_QUOTES, 'UTF-8');
 
-			if (!empty($linkBase)) {
+			if ($linkBase !== null && $linkBase !== '') {
 				$tagUrl        = rtrim($linkBase, '/') . '/' . urlencode($tag);
 				$tagElements[] = self::element('a', $tagContent, [
 					'href'  => $tagUrl,
@@ -363,7 +348,7 @@ class HTMLUtils
 
 		$image = self::inlineElement('img', $imageAttrs);
 
-		if (!empty($caption)) {
+		if ($caption !== '') {
 			$figcaption = self::figcaption($caption);
 
 			return self::figure($image . $figcaption, $options['figureAttrs'] ?? []);
@@ -390,7 +375,7 @@ class HTMLUtils
 	 */
 	public static function linkList(array $links, array $attributes = []): string
 	{
-		if (empty($links)) {
+		if ($links === []) {
 			return '';
 		}
 

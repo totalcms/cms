@@ -11,7 +11,7 @@ class BufferController
 	public function start(bool $force = false): bool
 	{
 		// Don't start a new buffer if one is already started
-		if ($force !== true && $this->isBuffering()) {
+		if (!$force && $this->isBuffering()) {
 			return true;
 		}
 
@@ -22,7 +22,7 @@ class BufferController
 	{
 		$buffer = $this->isBuffering() ? ob_get_clean() : '';
 
-		return $buffer ? $buffer : '';
+		return $buffer ?: '';
 	}
 
 	public function get(): string

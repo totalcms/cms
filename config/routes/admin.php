@@ -15,10 +15,10 @@ use TotalCMS\Action\Admin\AdminSettingsSaveAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
 
-return function (App $app) {
+return function (App $app): void {
 	$app->redirect('/', '/admin', 301);
 
-	$app->group('/admin', function (RouteCollectorProxy $group) {
+	$app->group('/admin', function (RouteCollectorProxy $group): void {
 		// Display Admin Interface
 		$group->get('', AdminIndexAction::class)->setName('admin-index');
 

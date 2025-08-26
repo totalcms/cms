@@ -13,7 +13,7 @@ class DeckData extends PropertyData
 	/** @param array<mixed> $deck */
 	public function __construct(array $deck = [], public array $settings = [])
 	{
-		if (!self::verifyDeck($deck)) {
+		if (!$this->verifyDeck($deck)) {
 			throw new \InvalidArgumentException('Deck must be a dictionary of named objects');
 		}
 
@@ -21,10 +21,10 @@ class DeckData extends PropertyData
 	}
 
 	/** @param array<mixed> $deck */
-	private static function verifyDeck(array $deck): bool
+	private function verifyDeck(array $deck): bool
 	{
 		// Empty deck is valid (both empty associative array and empty indexed array)
-		if (empty($deck)) {
+		if ($deck === []) {
 			return true;
 		}
 
@@ -37,7 +37,7 @@ class DeckData extends PropertyData
 			// Allow both string and int keys, validate the string representation
 			$stringName = (string)$name;
 			// Allow alphanumeric characters and underscores
-			if (!preg_match('/^[0-9a-zA-Z_]+$/', $stringName)) {
+			if (!preg_match('/^\w+$/', $stringName)) {
 				return false;
 			}
 
@@ -60,7 +60,7 @@ class DeckData extends PropertyData
 	{
 		// Return empty object (stdClass) for empty deck to ensure JSON serialization as {}
 		// This prevents empty decks from being serialized as [] which fails schema validation
-		if (empty($this->deck)) {
+		if ($this->deck === []) {
 			return new \stdClass();
 		}
 
@@ -68,26 +68,24 @@ class DeckData extends PropertyData
 	}
 
 	/**
-	 * Get a specific deck item by name.
-	 *
-	 * @param string $name
-	 *
-	 * @return array<string,mixed>|null
-	 */
-	public function getItem(string $name): ?array
+     * Get a specific deck item by name.
+     *
+     *
+     * @return array<string,mixed>|null
+     */
+    public function getItem(string $name): ?array
 	{
 		return $this->deck[$name] ?? null;
 	}
 
 	/**
-	 * Set a deck item by name.
-	 *
-	 * @param string $name
-	 * @param array<string,mixed> $item
-	 */
-	public function setItem(string $name, array $item): void
+     * Set a deck item by name.
+     *
+     * @param array<string,mixed> $item
+     */
+    public function setItem(string $name, array $item): void
 	{
-		if (!preg_match('/^[0-9a-zA-Z_]+$/', $name)) {
+		if (!preg_match('/^\w+$/', $name)) {
 			throw new \InvalidArgumentException('Deck item name must contain only alphanumeric characters and underscores');
 		}
 

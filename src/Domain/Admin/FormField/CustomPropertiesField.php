@@ -22,22 +22,20 @@ class CustomPropertiesField extends PropertiesField
 		}
 
 		$templateProperty = new CustomPropertyField(
-			object: '',
-			form: $this->form
+			form: $this->form,
+            object: ''
 		);
 		$content .= $templateProperty->template();
 
-		$content .= HTMLUtils::add('Add Object Override');
-
-		return $content;
+		return $content . HTMLUtils::add('Add Object Override');
 	}
 
 	/** @param array<string,mixed> $properties */
 	protected function createPropertyField(string $objectID, array $properties): CustomPropertyField
 	{
 		return new CustomPropertyField(
-			object     : $objectID,
 			form       : $this->form,
+            object     : $objectID,
 			properties : $properties
 		);
 	}

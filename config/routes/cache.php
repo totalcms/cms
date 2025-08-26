@@ -8,8 +8,8 @@ use TotalCMS\Action\Cache\DevModeDisableAction;
 use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeStatusAction;
 
-return function (App $app) {
-	$app->group('/cache', function (RouteCollectorProxy $group) {
+return function (App $app): void {
+	$app->group('/cache', function (RouteCollectorProxy $group): void {
 		$group->delete('', CacheDeleteAction::class)->setName('cache-delete');
 		$group->delete('/images', CollectionImageCacheDeleteAction::class)->setName('post-collection-image-cache-delete');
 		$group->delete('/collections/{collection}/images', CollectionImageCacheDeleteAction::class)->setName('collection-image-cache-delete');

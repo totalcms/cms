@@ -4,8 +4,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Download;
 
-return function (App $app) {
-	$app->group('/download', function (RouteCollectorProxy $group) {
+return function (App $app): void {
+	$app->group('/download', function (RouteCollectorProxy $group): void {
 		// Download a file
 		$group->get('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file');
 		$group->post('/{collection}/{id}/{property}', Download\DownloadFileAction::class)->setName('download-file-password');

@@ -17,7 +17,7 @@ class DateData extends PropertyData
 
 	public function __construct(string $date = '', public array $settings = [])
 	{
-		$this->date = empty($date) ? '' : self::cleanDate($date);
+		$this->date = $date === '' ? '' : self::cleanDate($date);
 	}
 
 	public static function defaultValue(mixed $value, mixed $default): mixed
@@ -27,7 +27,7 @@ class DateData extends PropertyData
 
 	public static function cleanDate(?string $date = 'now', string $format = 'c'): string
 	{
-		if (empty($date)) {
+		if ($date === null || $date === '') {
 			return '';
 		}
 
@@ -39,7 +39,7 @@ class DateData extends PropertyData
 			$chronosDate = Chronos::parse($date, $timezone);
 
 			return $chronosDate->format($format);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// Fallback to empty string if parsing fails
 			return '';
 		}

@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
+use TotalCMS\Domain\Property\Data\ImageData;
+
 class GalleryData extends PropertyData
 {
 	/** @var array<ImageData> */
@@ -11,7 +13,7 @@ class GalleryData extends PropertyData
 	public function __construct(array $images = [], public array $settings = [])
 	{
 		$this->images   = array_map(
-			fn ($image) => $image instanceof ImageData ? $image : new ImageData($image),
+			fn (array|ImageData $image): ImageData => $image instanceof ImageData ? $image : new ImageData($image),
 			$images
 		);
 	}
@@ -20,7 +22,7 @@ class GalleryData extends PropertyData
 	public function transform(): array
 	{
 		return array_map(
-			fn (ImageData $image) => $image->transform(),
+			fn (ImageData $image): array => $image->transform(),
 			$this->images
 		);
 	}

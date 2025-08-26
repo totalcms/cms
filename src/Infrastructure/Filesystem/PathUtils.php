@@ -15,17 +15,11 @@ class PathUtils
 	}
 
 	/**
-	 * Build path to file.
-	 *
-	 * @param string $collection
-	 * @param ?string $objectID
-	 * @param ?string $property
-	 * @param ?string $filename
-	 * @param ?string $subpath
-	 *
-	 * @return string
-	 */
-	public static function buildPath(
+     * Build path to file.
+     *
+     *
+     */
+    public static function buildPath(
 		string $collection,
 		?string $objectID = null,
 		?string $property = null,
@@ -40,8 +34,8 @@ class PathUtils
 		if (isset($property)) {
 			$path = sprintf('%s/%s', $path, self::cleanString($property));
 		}
-		if (!empty($filename)) {
-			if (!empty($subpath)) {
+		if ($filename !== null && $filename !== '') {
+			if ($subpath !== null && $subpath !== '') {
 				$path = sprintf('%s/%s', $path, $subpath);
 			}
 			$path = sprintf('%s/%s', $path, $filename);

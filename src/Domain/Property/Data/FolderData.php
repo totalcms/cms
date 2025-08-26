@@ -4,14 +4,12 @@ namespace TotalCMS\Domain\Property\Data;
 
 class FolderData extends PropertyData
 {
-	public string $name;
 	/** @var array<FileData|FolderData> */
 	public array $files = [];
 
 	/** @param array<array<string,mixed>> $files */
-	public function __construct(string $name, array $files = [])
+	public function __construct(public string $name, array $files = [])
 	{
-		$this->name  = $name;
 		$this->files = self::buildFolder($files);
 	}
 
@@ -44,7 +42,7 @@ class FolderData extends PropertyData
 		return [
 			'name'  => $this->name,
 			'mime'  => 'folder',
-			'files' => array_map(fn ($file) => $file->transform(), $this->files),
+			'files' => array_map(fn (FileData|FolderData $file): array => $file->transform(), $this->files),
 		];
 	}
 }

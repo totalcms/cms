@@ -38,7 +38,7 @@ class DeckItem
 		];
 
 		// For existing deck items, make the ID field readonly
-		if (!empty($this->itemId)) {
+		if ($this->itemId !== '') {
 			$inputAttributes['readonly'] = '';
 		}
 
@@ -50,12 +50,10 @@ class DeckItem
 		$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => "Duplicate {$this->itemId} item"]);
 		$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$this->itemId} item"]);
 
-		$field = HTMLUtils::element('div', $input . $buttons . $dialog, [
+		return HTMLUtils::element('div', $input . $buttons . $dialog, [
 			'class'        => "deck-item deck-item-{$this->itemId}",
 			'data-item-id' => $this->itemId,
 		]);
-
-		return $field;
 	}
 
 	protected function buildDialog(): string
@@ -75,7 +73,7 @@ class DeckItem
 		$content = '';
 
 		// Generate form fields based on deckref schema
-		if (!empty($this->deckref)) {
+		if ($this->deckref !== '') {
 			$content .= $this->buildSchemaBasedFields();
 		}
 
@@ -107,7 +105,7 @@ class DeckItem
 				];
 
 				// For template items (empty itemId) ensure field is empty
-				if (empty($this->itemId)) {
+				if ($this->itemId === '') {
 					$fieldConfig['value'] = '';
 				}
 
@@ -126,13 +124,9 @@ class DeckItem
 	}
 
 	/**
-	 * Extract schema ID from deckref URL.
-	 *
-	 * @param string $deckref
-	 *
-	 * @return string
-	 */
-	protected function extractSchemaId(string $deckref): string
+     * Extract schema ID from deckref URL.
+     */
+    protected function extractSchemaId(string $deckref): string
 	{
 		// Extract schema ID from URL like "https://www.totalcms.co/schemas/custom/features.json"
 		$path = parse_url($deckref, PHP_URL_PATH);

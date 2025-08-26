@@ -29,16 +29,16 @@ class CustomPropertyField
 
 	public function template(): string
 	{
-		$templateProperty = new PropertyField(property : '', form : $this->form);
+		$templateProperty = new PropertyField(form : $this->form, property : '');
 		$content          = $templateProperty->template();
 
 		$content .= $this->createAddPropertyField();
-		$content  = self::accordion('', $content);
+		$content  = $this->accordion('', $content);
 
 		return HTMLUtils::element('template', $content, ['class' => 'custom-property-template']);
 	}
 
-	private static function accordion(string $title = '', string $content = ''): string
+	private function accordion(string $title = '', string $content = ''): string
 	{
 		$input = HTMLUtils::inlineElement('input', [
 			'type'        => 'text',
@@ -66,16 +66,15 @@ class CustomPropertyField
 		}
 		$content .= $this->createNewPropertyTemplate();
 		$content .= $this->createAddPropertyField(array_keys($this->properties));
-		$content  = self::accordion($this->object, $content);
 
-		return $content;
+		return $this->accordion($this->object, $content);
 	}
 
 	protected function createNewPropertyTemplate(): string
 	{
 		$templateProperty = new PropertyField(
-			property : '',
-			form     : $this->form
+			form     : $this->form,
+            property : ''
 		);
 
 		return $templateProperty->template();
@@ -97,7 +96,7 @@ class CustomPropertyField
 		$schemaProperties = array_keys($schema->properties);
 		$propertiesToAdd  = array_diff($schemaProperties, $excludeProperties);
 
-		if (empty($propertiesToAdd)) {
+		if ($propertiesToAdd === []) {
 			return '';
 		}
 
@@ -114,9 +113,7 @@ class CustomPropertyField
 			]);
 		}
 
-		$select = HTMLUtils::element('select', $options, ['name' => 'addProperty']);
-
-		return $select;
+		return HTMLUtils::element('select', $options, ['name' => 'addProperty']);
 	}
 
 	/** @param array<string,mixed> $options */

@@ -72,7 +72,7 @@ class PropertyField
 			'label'       => 'Settings',
 			'placeholder' => '{ "key": "value" }',
 			'help'        => 'The settings for this field in valid JSON format',
-			'value'       => empty($this->settings) ? '' : json_encode($this->settings, JSON_PRETTY_PRINT),
+			'value'       => $this->settings === [] ? '' : json_encode($this->settings, JSON_PRETTY_PRINT),
 			'rows'        => 10,
 		]);
 		$settings .= $this->form->field('options', [
@@ -80,7 +80,7 @@ class PropertyField
 			'label'       => 'Options &amp; Datalist',
 			'placeholder' => '[ "option1", "option2", "option3" ]',
 			'help'        => 'The options for select fields and datalists in valid JSON format.',
-			'value'       => empty($this->options) ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
+			'value'       => $this->options === [] ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
 			'rows'        => 10,
 		]);
 
@@ -116,11 +116,9 @@ class PropertyField
 		$buttons  = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$property} property"]);
 		$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$property} property"]);
 
-		$field = HTMLUtils::element('div', $input . $label . $buttons . $dialog, [
+		return HTMLUtils::element('div', $input . $label . $buttons . $dialog, [
 			'class' => "property-field {$field}-field",
 		]);
-
-		return $field;
 	}
 
 	public function template(): string

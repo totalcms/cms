@@ -4,8 +4,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Stream;
 
-return function (App $app) {
-	$app->group('/stream', function (RouteCollectorProxy $group) {
+return function (App $app): void {
+	$app->group('/stream', function (RouteCollectorProxy $group): void {
 		// Stream a file
 		$group->get('/{collection}/{id}/{property}', Stream\StreamFileAction::class)->setName('stream-file');
 
