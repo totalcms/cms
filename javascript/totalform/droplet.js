@@ -57,7 +57,7 @@ export default class Droplet {
 			url               : this.options.apiUrl,
 			method            : "post",
 			headers           : this.options.requestHeaders,
-			parallelUploads   : 1, // prevent concurrent updates to object json
+			parallelUploads   : 3,
 			paramName         : this.options.paramName,
 			autoProcessQueue  : this.options.autoProcessQueue,
 			thumbnailWidth    : null,
