@@ -195,7 +195,7 @@ abstract class TotalForm implements \Stringable
 		if ($this->helpOnFocus) {
 			$this->class .= ' help-on-focus';
 		}
-		if ($this->helpStyle !== '' && $this->helpStyle !== '0') {
+		if ($this->helpStyle !== '') {
 			$this->class .= " help-{$this->helpStyle}";
 		}
 		if ($this->method !== 'POST') {
@@ -258,13 +258,11 @@ abstract class TotalForm implements \Stringable
 		$content  = $this->buildError() . $content;
 		$content .= $this->fieldContent();
 
-		if ($this->save !== '' && $this->delete !== '') {
-			$save     = $this->saveButton();
-			$delete   = $this->deleteButton();
-			$content .= HTMLUtils::element('div', $save . $delete, [
-				'class' => 'form-inline-fields',
-			]);
-		}
+		$save     = $this->saveButton();
+		$delete   = $this->deleteButton();
+		$content .= HTMLUtils::element('div', $save . $delete, [
+			'class' => 'form-inline-fields',
+		]);
 
 		return HTMLUtils::element('form', $content, $attributes);
 	}
