@@ -57,7 +57,9 @@
 .totalform:not(.edit-mode) {
 	.customProperties-field,
 	.properties-field {
-		display : none;
+		// disable for new collection forms
+		opacity        : 0.25;
+		pointer-events : none;
 	}
 }
 
