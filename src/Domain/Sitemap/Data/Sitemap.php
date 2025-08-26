@@ -7,7 +7,7 @@ use Thepixeldeveloper\Sitemap\Urlset;
 
 readonly class Sitemap implements \Stringable
 {
-	private readonly Urlset $urlset;
+	private Urlset $urlset;
 
 	public function __construct()
 	{

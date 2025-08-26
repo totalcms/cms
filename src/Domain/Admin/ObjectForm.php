@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Object\Data\ObjectData;
 /**
  * Total Form Builder.
  */
@@ -60,7 +62,7 @@ class ObjectForm extends TotalForm
 			}
 
 			// if the value is not already set, try to get it from the object data
-			if (!isset($options['value']) && isset($this->objectData)) {
+			if (!isset($options['value']) && $this->objectData instanceof ObjectData) {
 				$value = $this->objectData->toArray()[$name] ?? null;
 				// Use strict checks to preserve zero values (0, 0.0, '0')
 				if ($value !== '' && $value !== null) {
@@ -106,7 +108,7 @@ class ObjectForm extends TotalForm
 
 	private function isRequired(string $property): bool
 	{
-		if ($this->schemaData === null) {
+		if (!$this->schemaData instanceof SchemaData) {
 			return false;
 		}
 

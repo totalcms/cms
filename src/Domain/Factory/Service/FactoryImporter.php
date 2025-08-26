@@ -16,9 +16,9 @@ use TotalCMS\Factory\LoggerFactory;
 
 readonly class FactoryImporter
 {
-	private readonly LoggerInterface $logger;
-	private readonly FakerGenerator $faker;
-	private readonly string $cacheDir;
+	private LoggerInterface $logger;
+	private FakerGenerator $faker;
+	private string $cacheDir;
 
 	private const DEFAULT_FACTORY  = 'word';
 

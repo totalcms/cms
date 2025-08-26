@@ -8,7 +8,7 @@ use Thepixeldeveloper\Sitemap\SitemapIndex as SitemapIndexBase;
 
 readonly class SitemapIndex implements \Stringable
 {
-	private readonly SitemapIndexBase $index;
+	private SitemapIndexBase $index;
 
 	public function __construct()
 	{

@@ -223,7 +223,7 @@ abstract class TotalForm implements \Stringable
 	{
 		$formgrid = null;
 
-		if ($this->schemaData !== null && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
+		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$this->class .= ' formgrid';
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
 			$formgrid     = $gridBuilder->toCssGridAreas();
@@ -234,7 +234,7 @@ abstract class TotalForm implements \Stringable
 			'data-form'             => $this->formType,
 			'data-schema'           => $this->schema,
 			'data-collection'       => $this->collection === '' ? null : $this->collection,
-			'data-collection-count' => isset($this->collectionData) ? $this->collectionData->count : null,
+			'data-collection-count' => $this->collectionData instanceof CollectionData ? $this->collectionData->count : null,
 			'data-method'           => $this->method,
 			'data-api'              => $this->api,
 			'data-route'            => $this->route,
@@ -342,7 +342,7 @@ abstract class TotalForm implements \Stringable
 		$content = '';
 
 		// If using formgrid, inject section headers and dividers
-		if ($this->schemaData !== null && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
+		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
 			$content .= $gridBuilder->buildGridSectionHtml();
 		}
@@ -452,7 +452,7 @@ abstract class TotalForm implements \Stringable
 
 	private function addFieldsFromSchema(): void
 	{
-		if ($this->schemaData === null) {
+		if (!$this->schemaData instanceof SchemaData) {
 			return;
 		}
 
@@ -466,7 +466,7 @@ abstract class TotalForm implements \Stringable
 	public function propertiesForSchema(): array
 	{
 		// A new collection form will not have a schema yet
-		if (!isset($this->collectionData)) {
+		if (!$this->collectionData instanceof CollectionData) {
 			return [];
 		}
 		$schema     = $this->collectionData->schema;

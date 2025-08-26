@@ -9,7 +9,7 @@ use Thepixeldeveloper\Sitemap\Url;
 
 readonly class SitemapLocation
 {
-	private readonly Url $location;
+	private Url $location;
 
 	/** @param array<string,string> $options */
 	public function __construct(string $url, array $options = [])

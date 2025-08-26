@@ -9,7 +9,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  */
 readonly class FactoryForm implements \Stringable
 {
-	private readonly SimpleForm $simpleform;
+	private SimpleForm $simpleform;
 
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")

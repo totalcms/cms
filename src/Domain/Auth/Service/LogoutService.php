@@ -8,7 +8,7 @@ use TotalCMS\Factory\LoggerFactory;
 
 readonly class LogoutService
 {
-	private readonly LoggerInterface $logger;
+	private LoggerInterface $logger;
 
 	public function __construct(
 		private PhpSession $session,

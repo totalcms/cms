@@ -12,7 +12,7 @@ use TotalCMS\Factory\LoggerFactory;
 
 readonly class JobRunner
 {
-	private readonly LoggerInterface $logger;
+	private LoggerInterface $logger;
 
 	/**
 	 * Maximum number of retry attempts for failed jobs.

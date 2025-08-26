@@ -15,19 +15,19 @@ use TotalCMS\Support\Config;
 /** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
 readonly class CollectionTable
 {
-	private readonly CollectionData $collectionData;
-	private readonly SchemaData $schemaData;
+	private CollectionData $collectionData;
+	private SchemaData $schemaData;
 	/** @var array<array<string,mixed>> */
-	private readonly array $objects;
+	private array $objects;
 
 	public function __construct(
-		private readonly Config $config,
-		private readonly CollectionFetcher $collectionFetcher,
-		private readonly CollectionLister $collectionLister,
-		private readonly SchemaFetcher $schemaFetcher,
-		private readonly IndexReader $collectionReader,
-		private readonly string $api,
-		private readonly string $collection,
+		private Config $config,
+		private CollectionFetcher $collectionFetcher,
+		private CollectionLister $collectionLister,
+		private SchemaFetcher $schemaFetcher,
+		private IndexReader $collectionReader,
+		private string $api,
+		private string $collection,
 	) {
 		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
 

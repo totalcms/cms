@@ -9,8 +9,8 @@ use TotalCMS\Support\Config;
  */
 readonly class FilesystemService implements CacheInterface
 {
-	private readonly bool $enabled;
-	private readonly string $cacheDir;
+	private bool $enabled;
+	private string $cacheDir;
 
 	public function __construct(
 		Config $config,

@@ -12,7 +12,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  */
 readonly class SchemaFactory
 {
-	private readonly Serializer $serializer;
+	private Serializer $serializer;
 
 	public function __construct()
 	{

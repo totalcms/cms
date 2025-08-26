@@ -6,11 +6,11 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 readonly class ImportSchemaForm implements \Stringable
 {
-	private readonly SimpleForm $simpleform;
+	private SimpleForm $simpleform;
 
 	public function __construct(
-		private readonly string $api,
-		private readonly string $label = 'Import Schema',
+		private string $api,
+		private string $label = 'Import Schema',
 	) {
 		$this->simpleform = new SimpleForm(
 			api     : $this->api,

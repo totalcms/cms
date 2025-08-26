@@ -18,7 +18,7 @@ use TotalCMS\Factory\LoggerFactory;
 
 readonly class JumpStartExporter
 {
-	private readonly LoggerInterface $logger;
+	private LoggerInterface $logger;
 
 	public function __construct(
 		private CollectionLister $collectionLister,

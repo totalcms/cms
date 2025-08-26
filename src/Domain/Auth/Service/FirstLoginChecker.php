@@ -9,13 +9,13 @@ use TotalCMS\Support\Config;
 
 readonly class FirstLoginChecker
 {
-	private readonly string $collection;
+	private string $collection;
 
 	public function __construct(
-		private readonly ObjectSaver $objectSaver,
-		private readonly CollectionFetcher $collectionFetcher,
-		private readonly IndexReader $indexReader,
-		private readonly Config $config,
+		private ObjectSaver $objectSaver,
+		private CollectionFetcher $collectionFetcher,
+		private IndexReader $indexReader,
+		private Config $config,
 	) {
 		$this->collection = $this->config->auth['collection'];
 	}

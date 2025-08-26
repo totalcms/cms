@@ -10,7 +10,7 @@ use Twig\Extra\Markdown\MarkdownInterface;
  */
 readonly class ParsedownMarkdown implements MarkdownInterface
 {
-	private readonly \ParsedownExtra $parsedown;
+	private \ParsedownExtra $parsedown;
 
 	public function __construct()
 	{

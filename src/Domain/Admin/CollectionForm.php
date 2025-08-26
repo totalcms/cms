@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Admin\FormField\SelectField;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -139,7 +140,7 @@ class CollectionForm extends TotalForm
 			}
 		}
 		$sortField = $this->fields['sortBy'];
-		if (isset($this->collectionData) && $sortField instanceof SelectField) {
+		if ($this->collectionData instanceof CollectionData && $sortField instanceof SelectField) {
 			$schema     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
 			$properties = $schema->properties ?? [];
 			$options    = count($properties) > 0 ? array_keys($properties) : ['id'];
@@ -192,7 +193,7 @@ class CollectionForm extends TotalForm
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
-		if (isset($this->collectionData)) {
+		if ($this->collectionData instanceof CollectionData) {
 			$value = $this->collectionData->toArray()[$name] ?? '';
 			if (!empty($value)) {
 				$options['value'] = $value;
