@@ -222,7 +222,8 @@ abstract class TotalForm implements \Stringable
 	public function build(string $content = ''): string
 	{
 		$formgrid = null;
-		if ($this->schemaData->formgrid !== '' && $this->useFormGrid) {
+
+		if ($this->schemaData !== null && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$this->class .= ' formgrid';
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
 			$formgrid     = $gridBuilder->toCssGridAreas();
@@ -341,7 +342,7 @@ abstract class TotalForm implements \Stringable
 		$content = '';
 
 		// If using formgrid, inject section headers and dividers
-		if ($this->schemaData->formgrid !== '' && $this->useFormGrid) {
+		if ($this->schemaData !== null && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
 			$content .= $gridBuilder->buildGridSectionHtml();
 		}
@@ -451,6 +452,10 @@ abstract class TotalForm implements \Stringable
 
 	private function addFieldsFromSchema(): void
 	{
+		if ($this->schemaData === null) {
+			return;
+		}
+
 		$properties = array_keys($this->schemaData->properties);
 		foreach ($properties as $property) {
 			$this->addField($property);

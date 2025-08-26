@@ -106,6 +106,10 @@ class ObjectForm extends TotalForm
 
 	private function isRequired(string $property): bool
 	{
+		if ($this->schemaData === null) {
+			return false;
+		}
+		
 		return in_array($property, $this->schemaData->required);
 	}
 
