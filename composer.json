@@ -119,8 +119,8 @@
     "md:config": "phpmd config ansi phpmd.xml",
     "md:tests": "phpmd tests ansi phpmd.xml",
     "schema:dump": "php bin/console.php schema-dump",
-    "sniffer:check": "phpcs --standard=phpcs.xml",
-    "sniffer:fix": "phpcbf --standard=phpcs.xml",
+    "sniffer:check": "phpcs --standard=phpcbf.xml",
+    "sniffer:fix": "phpcbf --standard=phpcbf.xml",
     "rector": "rector --dry-run",
     "rector:fix": "rector",
     "test": [
