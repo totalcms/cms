@@ -2,8 +2,9 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+
 /**
  * Total Form Builder.
  */
