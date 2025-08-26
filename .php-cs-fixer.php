@@ -24,7 +24,7 @@ return (new PhpCsFixer\Config())
             'cast_spaces'                         => ['space' => 'none'],
             'concat_space'                        => ['spacing' => 'one'],
             'compact_nullable_type_declaration'   => true,
-            'declare_equal_normalize'             => ['space' => 'single'],
+            'declare_equal_normalize'             => ['space' => 'none'],
             'increment_style'                     => ['style' => 'post'],
             'list_syntax'                         => ['syntax' => 'short'],
             'echo_tag_syntax'                     => ['format' => 'long'],
