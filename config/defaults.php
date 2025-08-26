@@ -85,7 +85,7 @@ $settings['cache'] = [
 ];
 
 // Clean up trailing slashes in DOCUMENT_ROOT
-$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
+$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
 
 // Path to cms data folder
 $settings['datadir'] = $settings['docroot'] . '/tcms-data';

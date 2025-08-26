@@ -19,8 +19,8 @@ if ($environment) {
 }
 
 // User defined settings
-if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/tcms.php')) {
-	$userSettings = require $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
+if (file_exists(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php')) {
+	$userSettings = require ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php';
 
 	if (is_array($userSettings)) {
 		$userSettingsMap = [
