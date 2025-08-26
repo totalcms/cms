@@ -589,6 +589,7 @@ export default class TotalForm {
                 return;
             }
             droplet.onQueueComplete(() => dropletComplete(callback));
+            droplet.autoProcessQueue(); // Enable auto processing for all queued files
             droplet.processQueue();
 		});
     }

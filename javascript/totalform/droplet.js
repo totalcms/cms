@@ -57,7 +57,7 @@ export default class Droplet {
 			url               : this.options.apiUrl,
 			method            : "post",
 			headers           : this.options.requestHeaders,
-			parallelUploads   : 1,
+			parallelUploads   : 1, // prevent concurrent updates to object json
 			paramName         : this.options.paramName,
 			autoProcessQueue  : this.options.autoProcessQueue,
 			thumbnailWidth    : null,
@@ -100,7 +100,7 @@ export default class Droplet {
     }
 
     onQueueComplete(callback) {
-        this.dropzone.on("success", () => {
+        this.dropzone.on("queuecomplete", () => {
             if (typeof callback === "function") callback();
         });
     }
