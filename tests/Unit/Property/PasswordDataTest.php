@@ -131,26 +131,19 @@ final class PasswordDataTest extends TestCase
 		$this->assertContains($info['algoName'], ['bcrypt', 'argon2i', 'argon2id']);
 	}
 
-	public function testProducesHashesResistantToTimingAttacks(): void
+	public function testProvidesSecurePasswordVerification(): void
 	{
 		$password = 'testPassword123';
 		$data     = new PasswordData($password);
 
-		// Test that verification is consistent
-		$start1  = microtime(true);
-		$result1 = password_verify($password, $data->hash);
-		$time1   = microtime(true) - $start1;
-
-		$start2  = microtime(true);
-		$result2 = password_verify('wrongPassword', $data->hash);
-		$time2   = microtime(true) - $start2;
-
-		$this->assertTrue($result1);
-		$this->assertFalse($result2);
-
-		// Times should be similar (within reasonable bounds)
-		$timeDiff = abs($time1 - $time2);
-		$this->assertLessThan(0.1, $timeDiff); // 100ms tolerance
+		// Verify that password_verify works correctly (timing attack resistance is built into PHP's implementation)
+		$this->assertTrue(password_verify($password, $data->hash));
+		$this->assertFalse(password_verify('wrongPassword', $data->hash));
+		$this->assertFalse(password_verify('', $data->hash));
+		$this->assertFalse(password_verify('similar-password', $data->hash));
+		
+		// Verify hash is long enough to be a proper cryptographic hash
+		$this->assertGreaterThan(50, strlen($data->hash));
 	}
 
 	public function testGeneratesSufficientlyComplexHashes(): void
