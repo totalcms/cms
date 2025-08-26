@@ -16,7 +16,7 @@ use TotalCMS\Factory\LoggerFactory;
 
 readonly class UrlImporter
 {
-	private LoggerInterface $logger;
+	public readonly LoggerInterface $logger;
 
 	public function __construct(
 		private ObjectRepository $storage,
