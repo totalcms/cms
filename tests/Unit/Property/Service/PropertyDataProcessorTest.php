@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Service;
 
@@ -27,9 +27,9 @@ final class PropertyDataProcessorTest extends TestCase
 	public function testProcessBeforeSaveWithNonDateProperty(): void
 	{
 		$stringData = new StringData('test value');
-		
+
 		$result = $this->processor->processBeforeSave($stringData);
-		
+
 		$this->assertSame($stringData, $result);
 		$this->assertEquals('test value', $result->text);
 	}
@@ -37,9 +37,9 @@ final class PropertyDataProcessorTest extends TestCase
 	public function testProcessBeforeSaveWithDateDataNoSpecialSettings(): void
 	{
 		$dateData = new DateData('2024-01-15');
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertStringContainsString('2024-01-15', $result->date);
 	}
@@ -48,9 +48,9 @@ final class PropertyDataProcessorTest extends TestCase
 	{
 		$settings = [DateData::CREATION_DATE => true];
 		$dateData = new DateData('', $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertNotEmpty($result->date);
 		// Should be current timestamp in ISO format
@@ -61,9 +61,9 @@ final class PropertyDataProcessorTest extends TestCase
 	{
 		$settings = [DateData::CREATION_DATE => true];
 		$dateData = new DateData(DateData::CREATION_DATE, $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertNotEmpty($result->date);
 		$this->assertNotEquals(DateData::CREATION_DATE, $result->date);
@@ -73,12 +73,12 @@ final class PropertyDataProcessorTest extends TestCase
 
 	public function testProcessDateDataWithCreationDateSettingAndExistingDate(): void
 	{
-		$settings = [DateData::CREATION_DATE => true];
+		$settings     = [DateData::CREATION_DATE => true];
 		$existingDate = '2023-12-25T10:30:00+00:00';
-		$dateData = new DateData($existingDate, $settings);
-		
+		$dateData     = new DateData($existingDate, $settings);
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		// Should keep existing date, not overwrite it
 		$this->assertStringContainsString('2023-12-25', $result->date);
@@ -88,9 +88,9 @@ final class PropertyDataProcessorTest extends TestCase
 	{
 		$settings = [DateData::UPDATE_DATE => true];
 		$dateData = new DateData('2023-01-01', $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertNotEmpty($result->date);
 		// Should always update to current timestamp
@@ -103,9 +103,9 @@ final class PropertyDataProcessorTest extends TestCase
 	{
 		$settings = [DateData::UPDATE_DATE => true];
 		$dateData = new DateData('', $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertNotEmpty($result->date);
 		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $result->date);
@@ -115,9 +115,9 @@ final class PropertyDataProcessorTest extends TestCase
 	{
 		$settings = [DateData::CREATION_DATE => false];
 		$dateData = new DateData('', $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		// Should not auto-set date when setting is false
 		$this->assertEquals('', $result->date);
@@ -125,12 +125,12 @@ final class PropertyDataProcessorTest extends TestCase
 
 	public function testProcessDateDataWithUpdateDateSettingFalse(): void
 	{
-		$settings = [DateData::UPDATE_DATE => false];
+		$settings     = [DateData::UPDATE_DATE => false];
 		$originalDate = '2023-06-15T14:30:00+00:00';
-		$dateData = new DateData($originalDate, $settings);
-		
+		$dateData     = new DateData($originalDate, $settings);
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		// Should keep original date when setting is false
 		$this->assertStringContainsString('2023-06-15', $result->date);
@@ -142,12 +142,12 @@ final class PropertyDataProcessorTest extends TestCase
 		// If the date already exists, it won't be updated
 		$settings = [
 			DateData::CREATION_DATE => true,
-			DateData::UPDATE_DATE => true
+			DateData::UPDATE_DATE   => true,
 		];
 		$dateData = new DateData('2023-01-01', $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertNotEmpty($result->date);
 		// CREATION_DATE logic preserves existing dates, so original date should remain
@@ -159,12 +159,12 @@ final class PropertyDataProcessorTest extends TestCase
 		// UPDATE_DATE should work when CREATION_DATE is not set to true
 		$settings = [
 			DateData::CREATION_DATE => false,
-			DateData::UPDATE_DATE => true
+			DateData::UPDATE_DATE   => true,
 		];
 		$dateData = new DateData('2023-01-01', $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertNotEmpty($result->date);
 		// UPDATE_DATE should update to current timestamp
@@ -174,12 +174,12 @@ final class PropertyDataProcessorTest extends TestCase
 
 	public function testProcessDateDataWithNoSpecialSettings(): void
 	{
-		$settings = ['someOtherSetting' => true];
+		$settings     = ['someOtherSetting' => true];
 		$originalDate = '2023-08-20T12:00:00+00:00';
-		$dateData = new DateData($originalDate, $settings);
-		
+		$dateData     = new DateData($originalDate, $settings);
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		// Should keep original date unchanged
 		$this->assertStringContainsString('2023-08-20', $result->date);
@@ -189,12 +189,12 @@ final class PropertyDataProcessorTest extends TestCase
 	{
 		$settings = [
 			DateData::CREATION_DATE => true,
-			'customSetting' => 'value'
+			'customSetting'         => 'value',
 		];
 		$dateData = new DateData('', $settings);
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		$this->assertInstanceOf(DateData::class, $result);
 		$this->assertEquals($settings, $result->settings);
 	}
@@ -202,9 +202,9 @@ final class PropertyDataProcessorTest extends TestCase
 	public function testProcessDateDataReturnsNewInstance(): void
 	{
 		$dateData = new DateData('2023-01-01');
-		
+
 		$result = $this->processor->processBeforeSave($dateData);
-		
+
 		// Should return the same instance (no cloning in current implementation)
 		$this->assertSame($dateData, $result);
 	}
@@ -212,12 +212,12 @@ final class PropertyDataProcessorTest extends TestCase
 	public function testProcessBeforeSaveHandlesMultiplePropertyTypes(): void
 	{
 		// Test with StringData
-		$stringData = new StringData('test');
+		$stringData   = new StringData('test');
 		$stringResult = $this->processor->processBeforeSave($stringData);
 		$this->assertSame($stringData, $stringResult);
 
 		// Test with DateData
-		$dateData = new DateData('2023-01-01', [DateData::UPDATE_DATE => true]);
+		$dateData   = new DateData('2023-01-01', [DateData::UPDATE_DATE => true]);
 		$dateResult = $this->processor->processBeforeSave($dateData);
 		$this->assertInstanceOf(DateData::class, $dateResult);
 		$this->assertStringNotContainsString('2023-01-01', $dateResult->date);

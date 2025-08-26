@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Twig\Service;
 
@@ -24,8 +24,9 @@ final class TwigFunctionCacheTest extends TestCase
 	public function testRememberCachesFunction(): void
 	{
 		$callCount = 0;
-		$function = function () use (&$callCount) {
+		$function  = function () use (&$callCount) {
 			$callCount++;
+
 			return 'test_result';
 		};
 
@@ -82,7 +83,7 @@ final class TwigFunctionCacheTest extends TestCase
 		$this->assertFalse(TwigFunctionCache::has('test_key'));
 
 		TwigFunctionCache::remember('test_key', $function);
-		
+
 		$this->assertTrue(TwigFunctionCache::has('test_key'));
 	}
 
@@ -100,7 +101,7 @@ final class TwigFunctionCacheTest extends TestCase
 		$this->assertFalse(TwigFunctionCache::has('multiply', [5]));
 
 		TwigFunctionCache::remember('multiply', $function, [5]);
-		
+
 		$this->assertTrue(TwigFunctionCache::has('multiply', [5]));
 		$this->assertFalse(TwigFunctionCache::has('multiply', [10])); // Different args
 	}
@@ -177,8 +178,9 @@ final class TwigFunctionCacheTest extends TestCase
 	public function testRememberWithNoArguments(): void
 	{
 		$callCount = 0;
-		$function = function () use (&$callCount) {
+		$function  = function () use (&$callCount) {
 			$callCount++;
+
 			return 'no_args_result';
 		};
 
@@ -245,7 +247,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 		$complexData = [
 			'user' => ['name' => 'John', 'age' => 30],
-			'tags' => ['php', 'testing']
+			'tags' => ['php', 'testing'],
 		];
 
 		$result1 = TwigFunctionCache::remember('json', $function, [$complexData]);
@@ -261,7 +263,7 @@ final class TwigFunctionCacheTest extends TestCase
 	public function testExceptionInFunctionIsNotCached(): void
 	{
 		$callCount = 0;
-		$function = function () use (&$callCount) {
+		$function  = function () use (&$callCount) {
 			$callCount++;
 			throw new \RuntimeException('Test exception');
 		};
@@ -286,19 +288,19 @@ final class TwigFunctionCacheTest extends TestCase
 		};
 
 		TwigFunctionCache::remember('shared', $function);
-		
+
 		$this->assertTrue(TwigFunctionCache::has('shared'));
 
 		// Clear from anywhere should clear for everyone
 		TwigFunctionCache::clear();
-		
+
 		$this->assertFalse(TwigFunctionCache::has('shared'));
 	}
 
 	public function testCachePerformanceWithLargeData(): void
 	{
 		$largeData = array_fill(0, 10000, 'large_data_item_with_more_content');
-		
+
 		// Use a more computationally expensive function to make timing differences more apparent
 		$expensiveFunction = function ($data) {
 			$result = 0;
@@ -306,40 +308,41 @@ final class TwigFunctionCacheTest extends TestCase
 				// Add some computational work
 				$result += strlen($item) * count(str_split($item));
 			}
+
 			return $result;
 		};
 
 		// Clear any existing cache
 		TwigFunctionCache::clear();
-		
+
 		// Measure multiple iterations for more reliable timing
-		$firstCallTimes = [];
+		$firstCallTimes  = [];
 		$secondCallTimes = [];
-		
+
 		for ($i = 0; $i < 3; $i++) {
 			// Clear cache for this iteration
 			TwigFunctionCache::forget('large_perf_' . $i);
-			
-			$start = microtime(true);
-			$result1 = TwigFunctionCache::remember('large_perf_' . $i, $expensiveFunction, [$largeData]);
+
+			$start            = microtime(true);
+			$result1          = TwigFunctionCache::remember('large_perf_' . $i, $expensiveFunction, [$largeData]);
 			$firstCallTimes[] = microtime(true) - $start;
 
-			$start = microtime(true);
-			$result2 = TwigFunctionCache::remember('large_perf_' . $i, $expensiveFunction, [$largeData]);
+			$start             = microtime(true);
+			$result2           = TwigFunctionCache::remember('large_perf_' . $i, $expensiveFunction, [$largeData]);
 			$secondCallTimes[] = microtime(true) - $start;
 
 			$this->assertEquals($result1, $result2);
 		}
-		
+
 		// Check that most cached calls are faster (allow for some timing variance)
-		$averageFirstCall = array_sum($firstCallTimes) / count($firstCallTimes);
+		$averageFirstCall  = array_sum($firstCallTimes) / count($firstCallTimes);
 		$averageSecondCall = array_sum($secondCallTimes) / count($secondCallTimes);
-		
+
 		// Cache should generally be faster, but allow for some variance due to system factors
 		// This is more of a smoke test than a strict performance requirement
 		$this->assertGreaterThan(0, $averageFirstCall, 'First call should take some measurable time');
 		$this->assertGreaterThan(0, $averageSecondCall, 'Second call should take some measurable time');
-		
+
 		// The key test is that results are identical (functional correctness)
 		// Performance can vary due to system factors, so we focus on correctness over speed
 	}

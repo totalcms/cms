@@ -1,14 +1,14 @@
 <?php
 
 use TotalCMS\Domain\Property\Data\DepotData;
-use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\FolderData;
+use TotalCMS\Domain\Property\Data\PasswordData;
 
 describe('DepotData', function (): void {
 	test('DepotData → creates with empty depot', function (): void {
 		$depot = new DepotData();
-		
+
 		expect($depot->depot)->toBe([]);
 		expect($depot->settings)->toBe([]);
 		expect($depot->protected)->toBe(true); // Default
@@ -18,24 +18,24 @@ describe('DepotData', function (): void {
 
 	test('DepotData → creates with settings', function (): void {
 		$settings = ['maxSize' => 1000000, 'allowedTypes' => ['pdf', 'jpg']];
-		$depot = new DepotData([], $settings);
-		
+		$depot    = new DepotData([], $settings);
+
 		expect($depot->settings)->toBe($settings);
 	});
 
 	test('DepotData → creates with depot data', function (): void {
 		$depotData = [
 			'protected' => false,
-			'password' => 'secret123',
-			'files' => [
+			'password'  => 'secret123',
+			'files'     => [
 				[
 					'name' => 'document.pdf',
 					'mime' => 'application/pdf',
 					'size' => 1024,
 				],
 				[
-					'name' => 'images',
-					'mime' => 'folder',
+					'name'  => 'images',
+					'mime'  => 'folder',
 					'files' => [
 						[
 							'name' => 'photo.jpg',
@@ -46,9 +46,9 @@ describe('DepotData', function (): void {
 				],
 			],
 		];
-		
+
 		$depot = new DepotData($depotData);
-		
+
 		expect($depot->protected)->toBe(false);
 		expect($depot->password)->toBeInstanceOf(PasswordData::class);
 		expect(count($depot->files))->toBe(2);
@@ -61,9 +61,9 @@ describe('DepotData', function (): void {
 			// Only some fields provided
 			'protected' => false,
 		];
-		
+
 		$depot = new DepotData($depotData);
-		
+
 		expect($depot->protected)->toBe(false);
 		expect($depot->password)->toBeInstanceOf(PasswordData::class);
 		expect($depot->files)->toBe([]); // Empty files array
@@ -73,9 +73,9 @@ describe('DepotData', function (): void {
 		$depotData = [
 			'password' => '',
 		];
-		
+
 		$depot = new DepotData($depotData);
-		
+
 		expect($depot->password)->toBeInstanceOf(PasswordData::class);
 		// Empty password should result in empty hash
 		expect($depot->password->hash)->toBe('');
@@ -85,9 +85,9 @@ describe('DepotData', function (): void {
 		$depotData = [
 			'password' => 'mypassword',
 		];
-		
+
 		$depot = new DepotData($depotData);
-		
+
 		expect($depot->password)->toBeInstanceOf(PasswordData::class);
 		// Password should be hashed
 		expect($depot->password->hash)->not->toBe('mypassword');
@@ -106,8 +106,8 @@ describe('DepotData', function (): void {
 					// No mime - should be skipped
 				],
 				[
-					'name' => 'subfolder',
-					'mime' => 'folder',
+					'name'  => 'subfolder',
+					'mime'  => 'folder',
 					'files' => [
 						[
 							'name' => 'nested.jpg',
@@ -117,9 +117,9 @@ describe('DepotData', function (): void {
 				],
 			],
 		];
-		
+
 		$depot = new DepotData($depotData);
-		
+
 		// Should skip invalid item, resulting in 2 files
 		expect(count($depot->files))->toBe(2);
 		expect($depot->files[0])->toBeInstanceOf(FileData::class);
@@ -131,8 +131,8 @@ describe('DepotData', function (): void {
 	test('DepotData → transform returns correct structure', function (): void {
 		$depotData = [
 			'protected' => false,
-			'password' => 'secret',
-			'files' => [
+			'password'  => 'secret',
+			'files'     => [
 				[
 					'name' => 'file.txt',
 					'mime' => 'text/plain',
@@ -140,10 +140,10 @@ describe('DepotData', function (): void {
 				],
 			],
 		];
-		
-		$depot = new DepotData($depotData);
+
+		$depot  = new DepotData($depotData);
 		$result = $depot->transform();
-		
+
 		expect($result)->toHaveKey('protected', false);
 		expect($result)->toHaveKey('password'); // Hash value
 		expect($result)->toHaveKey('files');
@@ -153,9 +153,9 @@ describe('DepotData', function (): void {
 	});
 
 	test('DepotData → transform handles empty files', function (): void {
-		$depot = new DepotData(['protected' => true, 'password' => 'test']);
+		$depot  = new DepotData(['protected' => true, 'password' => 'test']);
 		$result = $depot->transform();
-		
+
 		expect($result['protected'])->toBe(true);
 		expect($result['files'])->toBe([]);
 	});
@@ -168,8 +168,8 @@ describe('DepotData', function (): void {
 					'mime' => 'text/plain',
 				],
 				[
-					'name' => 'folder',
-					'mime' => 'folder',
+					'name'  => 'folder',
+					'mime'  => 'folder',
 					'files' => [
 						[
 							'name' => 'nested.pdf',
@@ -179,10 +179,10 @@ describe('DepotData', function (): void {
 				],
 			],
 		];
-		
-		$depot = new DepotData($depotData);
+
+		$depot  = new DepotData($depotData);
 		$result = $depot->transform();
-		
+
 		expect(count($result['files']))->toBe(2);
 		expect($result['files'][0]['name'])->toBe('root-file.txt');
 		expect($result['files'][1]['name'])->toBe('folder');
@@ -194,8 +194,8 @@ describe('DepotData', function (): void {
 	test('DepotData → __toString converts to JSON', function (): void {
 		$depotData = [
 			'protected' => false,
-			'password' => 'secret',
-			'files' => [
+			'password'  => 'secret',
+			'files'     => [
 				[
 					'name' => 'document.txt',
 					'mime' => 'text/plain',
@@ -203,13 +203,13 @@ describe('DepotData', function (): void {
 				],
 			],
 		];
-		
+
 		$depot = new DepotData($depotData);
-		$json = (string)$depot;
-		
+		$json  = (string)$depot;
+
 		expect($json)->toBeString();
 		expect($json)->not->toBe('');
-		
+
 		$decoded = json_decode($json, true);
 		expect($decoded)->toBeArray();
 		expect($decoded['protected'])->toBe(false);
@@ -219,10 +219,10 @@ describe('DepotData', function (): void {
 	});
 
 	test('DepotData → handles boolean protected variations', function (): void {
-		$protectedDepot = new DepotData(['protected' => true]);
+		$protectedDepot   = new DepotData(['protected' => true]);
 		$unprotectedDepot = new DepotData(['protected' => false]);
-		$defaultDepot = new DepotData(); // Should default to true
-		
+		$defaultDepot     = new DepotData(); // Should default to true
+
 		expect($protectedDepot->protected)->toBe(true);
 		expect($unprotectedDepot->protected)->toBe(false);
 		expect($defaultDepot->protected)->toBe(true);
@@ -231,17 +231,17 @@ describe('DepotData', function (): void {
 	test('DepotData → handles complex depot structure', function (): void {
 		$complexDepot = [
 			'protected' => true,
-			'password' => 'complex123',
-			'files' => [
+			'password'  => 'complex123',
+			'files'     => [
 				[
-					'name' => 'readme.txt',
-					'mime' => 'text/plain',
-					'size' => 500,
+					'name'     => 'readme.txt',
+					'mime'     => 'text/plain',
+					'size'     => 500,
 					'comments' => 'Important instructions',
 				],
 				[
-					'name' => 'media',
-					'mime' => 'folder',
+					'name'  => 'media',
+					'mime'  => 'folder',
 					'files' => [
 						[
 							'name' => 'banner.jpg',
@@ -249,8 +249,8 @@ describe('DepotData', function (): void {
 							'size' => 15000,
 						],
 						[
-							'name' => 'videos',
-							'mime' => 'folder',
+							'name'  => 'videos',
+							'mime'  => 'folder',
 							'files' => [
 								[
 									'name' => 'intro.mp4',
@@ -262,31 +262,31 @@ describe('DepotData', function (): void {
 					],
 				],
 				[
-					'name' => 'archive.zip',
-					'mime' => 'application/zip',
-					'size' => 1024000,
+					'name'      => 'archive.zip',
+					'mime'      => 'application/zip',
+					'size'      => 1024000,
 					'protected' => true,
-					'password' => 'archive-secret',
+					'password'  => 'archive-secret',
 				],
 			],
 		];
-		
+
 		$depot = new DepotData($complexDepot);
-		
+
 		expect($depot->protected)->toBe(true);
 		expect(count($depot->files))->toBe(3);
-		
+
 		// Check file types
 		expect($depot->files[0])->toBeInstanceOf(FileData::class);
 		expect($depot->files[1])->toBeInstanceOf(FolderData::class);
 		expect($depot->files[2])->toBeInstanceOf(FileData::class);
-		
+
 		// Check nested structure
 		$mediaFolder = $depot->files[1];
 		expect(count($mediaFolder->files))->toBe(2);
 		expect($mediaFolder->files[0])->toBeInstanceOf(FileData::class);
 		expect($mediaFolder->files[1])->toBeInstanceOf(FolderData::class);
-		
+
 		$videosFolder = $mediaFolder->files[1];
 		expect(count($videosFolder->files))->toBe(1);
 		expect($videosFolder->files[0]->name)->toBe('intro.mp4');
@@ -305,10 +305,10 @@ describe('DepotData', function (): void {
 				],
 			],
 		];
-		
-		$depot = new DepotData($depotData);
+
+		$depot  = new DepotData($depotData);
 		$result = $depot->transform();
-		
+
 		// Each file should have been transformed through its transform() method
 		expect(count($result['files']))->toBe(2);
 		foreach ($result['files'] as $fileResult) {

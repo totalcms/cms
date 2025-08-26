@@ -7,29 +7,29 @@ use TotalCMS\Domain\Property\Data\TimeData;
 describe('TimeData', function (): void {
 	test('creates time data with valid time', function (): void {
 		$time = new TimeData('14:30');
-		
+
 		expect($time->time)->toBe('14:30');
 		expect($time->settings)->toBe([]);
 	});
 
 	test('creates time data with time and settings', function (): void {
 		$settings = ['format' => '24h', 'required' => true];
-		$time = new TimeData('09:15', $settings);
-		
+		$time     = new TimeData('09:15', $settings);
+
 		expect($time->time)->toBe('09:15');
 		expect($time->settings)->toBe($settings);
 	});
 
 	test('creates time data with empty time', function (): void {
 		$time = new TimeData('');
-		
+
 		expect($time->time)->toBe('');
 		expect($time->settings)->toBe([]);
 	});
 
 	test('creates time data with default parameters', function (): void {
 		$time = new TimeData();
-		
+
 		expect($time->time)->toBe('');
 		expect($time->settings)->toBe([]);
 	});
@@ -72,31 +72,31 @@ describe('TimeData', function (): void {
 
 	test('transform returns time as string', function (): void {
 		$time = new TimeData('16:45');
-		
+
 		expect($time->transform())->toBe('16:45');
 	});
 
 	test('toString returns time', function (): void {
 		$time = new TimeData('08:30');
-		
+
 		expect((string)$time)->toBe('08:30');
 	});
 
 	test('transform handles empty time', function (): void {
 		$time = new TimeData('');
-		
+
 		expect($time->transform())->toBe('');
 		expect((string)$time)->toBe('');
 	});
 
 	test('verifies time validation logic', function (): void {
 		// Test the internal verifyTime method through constructor behavior
-		
+
 		// Valid times should not throw
 		expect(fn () => new TimeData('00:00'))->not->toThrow(\InvalidArgumentException::class);
 		expect(fn () => new TimeData('12:30'))->not->toThrow(\InvalidArgumentException::class);
 		expect(fn () => new TimeData('23:59'))->not->toThrow(\InvalidArgumentException::class);
-		
+
 		// Invalid times should throw
 		expect(fn () => new TimeData('24:00'))->toThrow(\InvalidArgumentException::class);
 		expect(fn () => new TimeData('12:60'))->toThrow(\InvalidArgumentException::class);
@@ -121,10 +121,10 @@ describe('TimeData', function (): void {
 
 	test('preserves settings across operations', function (): void {
 		$settings = ['format' => '12h', 'step' => 15, 'min' => '09:00', 'max' => '17:00'];
-		$time = new TimeData('14:30', $settings);
-		
+		$time     = new TimeData('14:30', $settings);
+
 		expect($time->settings)->toBe($settings);
-		
+
 		// Settings should persist through transformations
 		$time->transform();
 		expect($time->settings)->toBe($settings);

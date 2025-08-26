@@ -123,7 +123,7 @@ final class ImageMetaReaderTest extends TestCase
 			}
 
 			if (isset($metadata['exif']['aperture'])) {
-				// Should be 11.0 (not "11/1") - based on test image EXIF data  
+				// Should be 11.0 (not "11/1") - based on test image EXIF data
 				$this->assertEquals(11.0, $metadata['exif']['aperture']);
 			}
 
@@ -336,7 +336,7 @@ final class ImageMetaReaderTest extends TestCase
 
 	private function createTestImageWithMockXMP(): ?string
 	{
-		// Use the real EXIF test image for XMP testing 
+		// Use the real EXIF test image for XMP testing
 		return $this->testImagePath;
 	}
 

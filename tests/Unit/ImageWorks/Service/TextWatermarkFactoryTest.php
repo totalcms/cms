@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\ImageWorks\Service;
 
@@ -18,7 +18,7 @@ class TextWatermarkFactoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->mockFilesystem = $this->createMock(StorageAdapterInterface::class);
-		$this->mockConfig = $this->createMock(Config::class);
+		$this->mockConfig     = $this->createMock(Config::class);
 
 		$this->factory = new TextWatermarkFactory(
 			$this->mockFilesystem,
@@ -54,9 +54,9 @@ class TextWatermarkFactoryTest extends TestCase
 	public function testGenerateTextWatermarkReturnsCachedFile(): void
 	{
 		$params = [
-			'marktext' => 'Test Watermark',
-			'marktextsize' => 100,
-			'marktextcolor' => 'ffffff'
+			'marktext'      => 'Test Watermark',
+			'marktextsize'  => 100,
+			'marktextcolor' => 'ffffff',
 		];
 
 		// Mock filesystem to indicate cached file exists
@@ -81,9 +81,9 @@ class TextWatermarkFactoryTest extends TestCase
 		}
 
 		$params = [
-			'marktext' => 'Test Watermark',
-			'marktextsize' => 20,
-			'marktextcolor' => 'ffffff'
+			'marktext'      => 'Test Watermark',
+			'marktextsize'  => 20,
+			'marktextcolor' => 'ffffff',
 		];
 
 		// Mock filesystem to indicate no cached file exists
@@ -117,12 +117,12 @@ class TextWatermarkFactoryTest extends TestCase
 		}
 
 		$params = [
-			'marktext' => 'Custom Watermark',
-			'marktextsize' => 30,
+			'marktext'      => 'Custom Watermark',
+			'marktextsize'  => 30,
 			'marktextcolor' => '000000',
-			'marktextbg' => 'ffffff',
-			'marktextpad' => 15,
-			'marktextangle' => 45
+			'marktextbg'    => 'ffffff',
+			'marktextpad'   => 15,
+			'marktextangle' => 45,
 		];
 
 		// Mock filesystem for no cache initially
@@ -150,7 +150,7 @@ class TextWatermarkFactoryTest extends TestCase
 	public function testParseColorWithValidHexColor(): void
 	{
 		// Test the color parsing functionality through reflection since it's private
-		$reflection = new \ReflectionClass($this->factory);
+		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
 		$parseColorMethod->setAccessible(true);
 
@@ -163,7 +163,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testParseColorWithShortHexColor(): void
 	{
-		$reflection = new \ReflectionClass($this->factory);
+		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
 		$parseColorMethod->setAccessible(true);
 
@@ -175,7 +175,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testParseColorWithHashPrefix(): void
 	{
-		$reflection = new \ReflectionClass($this->factory);
+		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
 		$parseColorMethod->setAccessible(true);
 
@@ -187,7 +187,7 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testParseColorWithInvalidColor(): void
 	{
-		$reflection = new \ReflectionClass($this->factory);
+		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
 		$parseColorMethod->setAccessible(true);
 
@@ -199,17 +199,17 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testGenerateCacheKey(): void
 	{
-		$reflection = new \ReflectionClass($this->factory);
+		$reflection             = new \ReflectionClass($this->factory);
 		$generateCacheKeyMethod = $reflection->getMethod('generateCacheKey');
 		$generateCacheKeyMethod->setAccessible(true);
 
-		$text = 'Test Text';
-		$fontSize = 100;
-		$fontColor = [255, 255, 255];
-		$fontFamily = 'Arial';
+		$text            = 'Test Text';
+		$fontSize        = 100;
+		$fontColor       = [255, 255, 255];
+		$fontFamily      = 'Arial';
 		$backgroundColor = [0, 0, 0];
-		$padding = 10;
-		$angle = 0;
+		$padding         = 10;
+		$angle           = 0;
 
 		$result = $generateCacheKeyMethod->invoke(
 			$this->factory,
@@ -240,11 +240,11 @@ class TextWatermarkFactoryTest extends TestCase
 
 	public function testGenerateCacheKeyDifferentForDifferentInputs(): void
 	{
-		$reflection = new \ReflectionClass($this->factory);
+		$reflection             = new \ReflectionClass($this->factory);
 		$generateCacheKeyMethod = $reflection->getMethod('generateCacheKey');
 		$generateCacheKeyMethod->setAccessible(true);
 
-		$baseParams = ['Test', 100, [255, 255, 255], 'Arial', [0, 0, 0], 10, 0];
+		$baseParams     = ['Test', 100, [255, 255, 255], 'Arial', [0, 0, 0], 10, 0];
 		$modifiedParams = ['Different Text', 100, [255, 255, 255], 'Arial', [0, 0, 0], 10, 0];
 
 		$result1 = $generateCacheKeyMethod->invokeArgs($this->factory, $baseParams);
@@ -275,13 +275,13 @@ class TextWatermarkFactoryTest extends TestCase
 	public function testCustomParameterValues(): void
 	{
 		$params = [
-			'marktext' => 'Custom Text',
-			'marktextsize' => 200,
+			'marktext'      => 'Custom Text',
+			'marktextsize'  => 200,
 			'marktextcolor' => '00ff00',
-			'marktextfont' => 'CustomFont',
-			'marktextbg' => 'ff0000',
-			'marktextpad' => 20,
-			'marktextangle' => 45
+			'marktextfont'  => 'CustomFont',
+			'marktextbg'    => 'ff0000',
+			'marktextpad'   => 20,
+			'marktextangle' => 45,
 		];
 
 		// Mock filesystem to return cached file

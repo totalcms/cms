@@ -1,16 +1,15 @@
 <?php
 
-use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use Psr\Http\Message\UploadedFileInterface;
+use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 
 describe('FileUploadValidator', function (): void {
-
 	// -------------------------
 	// Constants and Configuration
 	// -------------------------
 
 	test('FileUploadValidator → has expected file size limits', function (): void {
-		$validator = new FileUploadValidator();
+		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
 		expect($categories)->toHaveKey('image');
@@ -28,7 +27,7 @@ describe('FileUploadValidator', function (): void {
 	});
 
 	test('FileUploadValidator → has expected file extensions by category', function (): void {
-		$validator = new FileUploadValidator();
+		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
 		// Image extensions
@@ -65,7 +64,7 @@ describe('FileUploadValidator', function (): void {
 	});
 
 	test('FileUploadValidator → has expected MIME types by category', function (): void {
-		$validator = new FileUploadValidator();
+		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
 		// Image MIME types
@@ -90,12 +89,12 @@ describe('FileUploadValidator', function (): void {
 	});
 
 	test('FileUploadValidator → excludes dangerous file extensions', function (): void {
-		$validator = new FileUploadValidator();
+		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
 		foreach ($categories as $category => $config) {
 			$extensions = $config['extensions'];
-			
+
 			// Should not contain dangerous extensions
 			expect($extensions)->not->toContain('php');
 			expect($extensions)->not->toContain('exe');
@@ -170,7 +169,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → sanitizeFilename limits filename length', function (): void {
 		$validator = new FileUploadValidator();
-		$longName = str_repeat('a', 300) . '.txt';
+		$longName  = str_repeat('a', 300) . '.txt';
 
 		$result = $validator->sanitizeFilename($longName);
 
@@ -186,24 +185,47 @@ describe('FileUploadValidator', function (): void {
 		string $filename = 'test.jpg',
 		int $size = 1024,
 		int $error = UPLOAD_ERR_OK,
-		string $mimeType = 'image/jpeg'
+		string $mimeType = 'image/jpeg',
 	): UploadedFileInterface {
 		return new class($filename, $size, $error, $mimeType) implements UploadedFileInterface {
 			public function __construct(
 				private string $filename,
 				private int $size,
 				private int $error,
-				private string $mimeType
-			) {}
+				private string $mimeType,
+			) {
+			}
 
-			public function getClientFilename(): ?string { return $this->filename; }
-			public function getSize(): ?int { return $this->size; }
-			public function getError(): int { return $this->error; }
-			public function getClientMediaType(): ?string { return $this->mimeType; }
-			
+			public function getClientFilename(): ?string
+			{
+				return $this->filename;
+			}
+
+			public function getSize(): ?int
+			{
+				return $this->size;
+			}
+
+			public function getError(): int
+			{
+				return $this->error;
+			}
+
+			public function getClientMediaType(): ?string
+			{
+				return $this->mimeType;
+			}
+
 			// Required interface methods (unused in tests)
-			public function getStream(): \Psr\Http\Message\StreamInterface { throw new \Exception('Not implemented'); }
-			public function moveTo(string $targetPath): void { throw new \Exception('Not implemented'); }
+			public function getStream(): Psr\Http\Message\StreamInterface
+			{
+				throw new Exception('Not implemented');
+			}
+
+			public function moveTo(string $targetPath): void
+			{
+				throw new Exception('Not implemented');
+			}
 		};
 	}
 
@@ -213,7 +235,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → validates successful image upload', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('test.jpg', 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg');
+		$file      = createMockUploadedFile('test.jpg', 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg');
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -227,7 +249,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → rejects oversized files', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('huge.jpg', 20 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg'); // 20MB
+		$file      = createMockUploadedFile('huge.jpg', 20 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg'); // 20MB
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -237,7 +259,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → rejects dangerous file extensions', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('malicious.php', 1024, UPLOAD_ERR_OK, 'application/x-php');
+		$file      = createMockUploadedFile('malicious.php', 1024, UPLOAD_ERR_OK, 'application/x-php');
 
 		$result = $validator->validateFile($file, 'file');
 
@@ -247,7 +269,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → rejects wrong file extension for category', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('document.pdf', 1024, UPLOAD_ERR_OK, 'application/pdf');
+		$file      = createMockUploadedFile('document.pdf', 1024, UPLOAD_ERR_OK, 'application/pdf');
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -257,7 +279,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → rejects wrong MIME type for category', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('fake.jpg', 1024, UPLOAD_ERR_OK, 'text/plain');
+		$file      = createMockUploadedFile('fake.jpg', 1024, UPLOAD_ERR_OK, 'text/plain');
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -267,7 +289,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → handles unsafe filename', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('../../../malicious.jpg', 1024, UPLOAD_ERR_OK, 'image/jpeg');
+		$file      = createMockUploadedFile('../../../malicious.jpg', 1024, UPLOAD_ERR_OK, 'image/jpeg');
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -278,7 +300,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → handles upload errors', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('test.jpg', 0, UPLOAD_ERR_NO_FILE, 'image/jpeg');
+		$file      = createMockUploadedFile('test.jpg', 0, UPLOAD_ERR_NO_FILE, 'image/jpeg');
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -288,7 +310,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → validates with custom configuration', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('large.jpg', 15 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg'); // 15MB
+		$file      = createMockUploadedFile('large.jpg', 15 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg'); // 15MB
 
 		// Custom config allows larger images
 		$config = ['max_size' => 20 * 1024 * 1024];
@@ -300,7 +322,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → validates with custom allowed extensions', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('test.txt', 1024, UPLOAD_ERR_OK, 'text/plain');
+		$file      = createMockUploadedFile('test.txt', 1024, UPLOAD_ERR_OK, 'text/plain');
 
 		// Custom config allows txt files for image category
 		$config = ['allowed_extensions' => ['jpg', 'png', 'txt']];
@@ -317,13 +339,13 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → accumulates multiple validation errors', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('../malicious.php', 50 * 1024 * 1024, UPLOAD_ERR_OK, 'application/x-php');
+		$file      = createMockUploadedFile('../malicious.php', 50 * 1024 * 1024, UPLOAD_ERR_OK, 'application/x-php');
 
 		$result = $validator->validateFile($file, 'image');
 
 		expect($result['valid'])->toBe(false);
 		expect(count($result['errors']))->toBeGreaterThan(1);
-		
+
 		$allErrors = implode(' ', $result['errors']);
 		expect($allErrors)->toContain('unsafe characters');
 		expect($allErrors)->toContain('exceeds maximum');
@@ -349,9 +371,9 @@ describe('FileUploadValidator', function (): void {
 		];
 
 		foreach ($testCases as [$errorCode, $expectedMessage]) {
-			$file = createMockUploadedFile('test.jpg', 1024, $errorCode, 'image/jpeg');
+			$file   = createMockUploadedFile('test.jpg', 1024, $errorCode, 'image/jpeg');
 			$result = $validator->validateFile($file, 'image');
-			
+
 			expect($result['valid'])->toBe(false);
 			expect($result['errors'][0])->toContain($expectedMessage);
 		}
@@ -359,7 +381,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → handles unknown upload error', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('test.jpg', 1024, 999, 'image/jpeg'); // Unknown error code
+		$file      = createMockUploadedFile('test.jpg', 1024, 999, 'image/jpeg'); // Unknown error code
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -372,7 +394,7 @@ describe('FileUploadValidator', function (): void {
 	// -------------------------
 
 	test('FileUploadValidator → getFileCategories returns formatted size information', function (): void {
-		$validator = new FileUploadValidator();
+		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
 		expect($categories['image']['max_size_formatted'])->toBe('10 MB');
@@ -382,7 +404,7 @@ describe('FileUploadValidator', function (): void {
 	});
 
 	test('FileUploadValidator → getFileCategories includes all required information', function (): void {
-		$validator = new FileUploadValidator();
+		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
 		foreach ($categories as $category => $config) {
@@ -390,7 +412,7 @@ describe('FileUploadValidator', function (): void {
 			expect($config)->toHaveKey('max_size_formatted');
 			expect($config)->toHaveKey('extensions');
 			expect($config)->toHaveKey('mime_types');
-			
+
 			expect($config['max_size'])->toBeInt();
 			expect($config['max_size_formatted'])->toBeString();
 			expect($config['extensions'])->toBeArray();
@@ -404,7 +426,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → validateMimeTypeFromFile handles missing file', function (): void {
 		$validator = new FileUploadValidator();
-		$result = $validator->validateMimeTypeFromFile('/nonexistent/path.jpg', 'image');
+		$result    = $validator->validateMimeTypeFromFile('/nonexistent/path.jpg', 'image');
 
 		expect($result['valid'])->toBe(false);
 		expect($result['errors'])->toContain('File does not exist');
@@ -416,7 +438,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → handles null or empty filename', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('', 1024, UPLOAD_ERR_OK, 'text/plain');
+		$file      = createMockUploadedFile('', 1024, UPLOAD_ERR_OK, 'text/plain');
 
 		$result = $validator->validateFile($file, 'file');
 
@@ -425,7 +447,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → handles zero-sized files', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('empty.csv', 0, UPLOAD_ERR_OK, 'text/csv');
+		$file      = createMockUploadedFile('empty.csv', 0, UPLOAD_ERR_OK, 'text/csv');
 
 		$result = $validator->validateFile($file, 'file');
 
@@ -435,7 +457,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → validates case insensitive extensions', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('test.JPG', 1024, UPLOAD_ERR_OK, 'image/jpeg');
+		$file      = createMockUploadedFile('test.JPG', 1024, UPLOAD_ERR_OK, 'image/jpeg');
 
 		$result = $validator->validateFile($file, 'image');
 
@@ -445,7 +467,7 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → handles files without extensions', function (): void {
 		$validator = new FileUploadValidator();
-		$file = createMockUploadedFile('README', 1024, UPLOAD_ERR_OK, 'text/plain');
+		$file      = createMockUploadedFile('README', 1024, UPLOAD_ERR_OK, 'text/plain');
 
 		$result = $validator->validateFile($file, 'file');
 
@@ -457,13 +479,13 @@ describe('FileUploadValidator', function (): void {
 		$validator = new FileUploadValidator();
 
 		// Test double extension attack
-		$file1 = createMockUploadedFile('image.jpg.php', 1024, UPLOAD_ERR_OK, 'image/jpeg');
+		$file1   = createMockUploadedFile('image.jpg.php', 1024, UPLOAD_ERR_OK, 'image/jpeg');
 		$result1 = $validator->validateFile($file1, 'image');
 		expect($result1['valid'])->toBe(false);
 		expect($result1['errors'])->toContain('File extension \'.php\' is not allowed for security reasons');
 
 		// Test null byte injection
-		$file2 = createMockUploadedFile("image.jpg\0.php", 1024, UPLOAD_ERR_OK, 'image/jpeg');
+		$file2   = createMockUploadedFile("image.jpg\0.php", 1024, UPLOAD_ERR_OK, 'image/jpeg');
 		$result2 = $validator->validateFile($file2, 'image');
 		expect($result2['sanitized_filename'])->not->toContain("\0");
 		expect($result2['sanitized_filename'])->toBe('image.jpg_.php');

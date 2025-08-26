@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Domain\Object\Service;
 
@@ -27,10 +27,10 @@ final class ObjectUpdaterTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
-		$this->repository = $this->createMock(ObjectRepository::class);
-		$this->factory = $this->createMock(ObjectFactory::class);
-		$this->indexBuilder = $this->createMock(IndexBuilder::class);
+		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
+		$this->repository        = $this->createMock(ObjectRepository::class);
+		$this->factory           = $this->createMock(ObjectFactory::class);
+		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
 		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
 
 		$this->updater = new ObjectUpdater(
@@ -45,9 +45,9 @@ final class ObjectUpdaterTest extends TestCase
 	public function testUpdateObjectWithObjectDataInstance(): void
 	{
 		// Create mock ObjectData with properties
-		$mockProperty = $this->createMock(PropertyData::class);
+		$mockProperty      = $this->createMock(PropertyData::class);
 		$processedProperty = $this->createMock(PropertyData::class);
-		
+
 		$objectData = $this->createMockObjectData('test-id', [$mockProperty]);
 
 		// Set up property processor expectation
@@ -80,9 +80,9 @@ final class ObjectUpdaterTest extends TestCase
 	public function testUpdateObjectWithArrayData(): void
 	{
 		$arrayData = [
-			'id' => 'test-id',
-			'title' => 'Test Title',
-			'content' => 'Test Content'
+			'id'      => 'test-id',
+			'title'   => 'Test Title',
+			'content' => 'Test Content',
 		];
 
 		$generatedObject = $this->createMockObjectData('test-id', []);
@@ -133,9 +133,9 @@ final class ObjectUpdaterTest extends TestCase
 	public function testUpdateObjectPropertyMetaWithRegularProperty(): void
 	{
 		// Create mock regular property
-		$mockProperty = $this->createMock(PropertyData::class);
+		$mockProperty     = $this->createMock(PropertyData::class);
 		$mockProperty->id = 'meta';
-		
+
 		$existingObject = $this->createMockObjectDataWithProperty('test-id', 'meta', $mockProperty);
 
 		$newMetaData = ['description' => 'Updated description'];
@@ -153,10 +153,10 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Execute
 		$result = $this->updater->updateObjectPropertyMeta(
-			'posts', 
-			'test-id', 
-			'meta', 
-			'item1', 
+			'posts',
+			'test-id',
+			'meta',
+			'item1',
 			$newMetaData
 		);
 
@@ -167,9 +167,9 @@ final class ObjectUpdaterTest extends TestCase
 	public function testUpdateObjectPropertyMetaWithDepotProperty(): void
 	{
 		// Create mock depot property
-		$mockDepotProperty = $this->createMock(DepotData::class);
+		$mockDepotProperty     = $this->createMock(DepotData::class);
 		$mockDepotProperty->id = 'files';
-		
+
 		$existingObject = $this->createMockObjectDataWithProperty('test-id', 'files', $mockDepotProperty);
 
 		$newMetaData = ['alt' => 'Image description'];
@@ -187,10 +187,10 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Execute
 		$result = $this->updater->updateObjectPropertyMeta(
-			'posts', 
-			'test-id', 
-			'files', 
-			'image.jpg', 
+			'posts',
+			'test-id',
+			'files',
+			'image.jpg',
 			$newMetaData
 		);
 
@@ -201,9 +201,9 @@ final class ObjectUpdaterTest extends TestCase
 	public function testUpdateObjectPropertyMetaWithDepotPropertyAndSubpath(): void
 	{
 		// Create mock depot property
-		$mockDepotProperty = $this->createMock(DepotData::class);
+		$mockDepotProperty     = $this->createMock(DepotData::class);
 		$mockDepotProperty->id = 'depot';
-		
+
 		$existingObject = $this->createMockObjectDataWithProperty('test-id', 'depot', $mockDepotProperty);
 
 		$newMetaData = ['caption' => 'Image caption'];
@@ -221,10 +221,10 @@ final class ObjectUpdaterTest extends TestCase
 
 		// Execute with subpath
 		$result = $this->updater->updateObjectPropertyMeta(
-			'posts', 
-			'test-id', 
-			'depot', 
-			'image.jpg', 
+			'posts',
+			'test-id',
+			'depot',
+			'image.jpg',
 			$newMetaData,
 			'images/'
 		);
@@ -248,10 +248,10 @@ final class ObjectUpdaterTest extends TestCase
 		$this->expectExceptionMessage('Unable to locate object property to update');
 
 		$this->updater->updateObjectPropertyMeta(
-			'posts', 
-			'test-id', 
-			'nonexistent', 
-			'item', 
+			'posts',
+			'test-id',
+			'nonexistent',
+			'item',
 			[]
 		);
 	}
@@ -261,10 +261,10 @@ final class ObjectUpdaterTest extends TestCase
 		// Create mock properties
 		$property1 = $this->createMock(PropertyData::class);
 		$property2 = $this->createMock(PropertyData::class);
-		
+
 		$processedProperty1 = $this->createMock(PropertyData::class);
 		$processedProperty2 = $this->createMock(PropertyData::class);
-		
+
 		$objectData = $this->createMockObjectData('test-id', [$property1, $property2]);
 
 		// Set up property processor expectations - should be called for each property
@@ -288,12 +288,14 @@ final class ObjectUpdaterTest extends TestCase
 	{
 		// Create an anonymous class that extends ObjectData to avoid constructor issues
 		return new class($id, $properties) extends ObjectData {
-			public function __construct(string $id, array $properties) {
+			public function __construct(string $id, array $properties)
+			{
 				parent::__construct($id, []);
 				$this->properties = new Collection($properties);
 			}
-			
-			public function toArray(): array {
+
+			public function toArray(): array
+			{
 				return ['id' => $this->id];
 			}
 		};
@@ -303,14 +305,16 @@ final class ObjectUpdaterTest extends TestCase
 	{
 		// Create an anonymous class that provides the needed behavior
 		return new class($id, $propertyKey, $property) extends ObjectData {
-			public function __construct(string $id, string $propertyKey, PropertyData $property) {
+			public function __construct(string $id, string $propertyKey, PropertyData $property)
+			{
 				parent::__construct($id, []);
-				
+
 				// Create a Collection with the property keyed correctly
 				$this->properties = new Collection([$propertyKey => $property]);
 			}
-			
-			public function toArray(): array {
+
+			public function toArray(): array
+			{
 				return ['id' => $this->id];
 			}
 		};

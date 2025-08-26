@@ -1,20 +1,18 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Service;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Object\Data\ObjectData;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
-use Psr\Log\LoggerInterface;
 
 class ImageSaverTest extends TestCase
 {
@@ -29,12 +27,12 @@ class ImageSaverTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->mockStorage = $this->createMock(PropertyRepository::class);
-		$this->mockPropFetcher = $this->createMock(PropertyFetcher::class);
-		$this->mockObjectSaver = $this->createMock(ObjectSaver::class);
+		$this->mockStorage       = $this->createMock(PropertyRepository::class);
+		$this->mockPropFetcher   = $this->createMock(PropertyFetcher::class);
+		$this->mockObjectSaver   = $this->createMock(ObjectSaver::class);
 		$this->mockObjectPatcher = $this->createMock(ObjectPatcher::class);
 		$this->mockObjectFetcher = $this->createMock(ObjectFetcher::class);
-		$this->mockLogger = $this->createMock(LoggerInterface::class);
+		$this->mockLogger        = $this->createMock(LoggerInterface::class);
 
 		// Create LoggerFactory in test mode with mock logger
 		$this->loggerFactory = new LoggerFactory(['test' => $this->mockLogger, 'level' => \Monolog\Level::Debug]);
@@ -57,9 +55,9 @@ class ImageSaverTest extends TestCase
 	public function testSaveCreateObjectException(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'photo';
-		$filePath = '/tmp/test.jpg';
+		$objectID   = 'test-object';
+		$property   = 'photo';
+		$filePath   = '/tmp/test.jpg';
 
 		// Object doesn't exist
 		$this->mockObjectFetcher->expects($this->once())
@@ -88,11 +86,11 @@ class ImageSaverTest extends TestCase
 		// Test that logger factory is properly injected via dependency injection
 		$reflection = new \ReflectionClass($this->imageSaver);
 		$this->assertTrue($reflection->hasProperty('loggerFactory'));
-		
+
 		$loggerFactoryProperty = $reflection->getProperty('loggerFactory');
 		$loggerFactoryProperty->setAccessible(true);
 		$injectedFactory = $loggerFactoryProperty->getValue($this->imageSaver);
-		
+
 		$this->assertInstanceOf(LoggerFactory::class, $injectedFactory);
 	}
 
@@ -100,19 +98,19 @@ class ImageSaverTest extends TestCase
 	{
 		// Test that the class inherits LoggerAwareTrait from FileSaver
 		$reflection = new \ReflectionClass($this->imageSaver);
-		$allTraits = $this->getAllTraitsFromClass($reflection);
+		$allTraits  = $this->getAllTraitsFromClass($reflection);
 		$this->assertContains('TotalCMS\Traits\LoggerAwareTrait', $allTraits);
 	}
 
 	private function getAllTraitsFromClass(\ReflectionClass $class): array
 	{
 		$traits = [];
-		
+
 		// Get traits from current class and all parent classes
 		do {
 			$traits = array_merge($traits, $class->getTraitNames());
 		} while ($class = $class->getParentClass());
-		
+
 		return $traits;
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Cache\Service;
 
@@ -74,7 +74,7 @@ final class RedisServiceTest extends TestCase
 		]);
 
 		$service = new RedisService($configWithoutRedis);
-		
+
 		// Should create service even without Redis config
 		$this->assertInstanceOf(RedisService::class, $service);
 	}
@@ -113,7 +113,7 @@ final class RedisServiceTest extends TestCase
 		]);
 
 		$service = new RedisService($customConfig);
-		
+
 		// Should create service with custom config
 		$this->assertInstanceOf(RedisService::class, $service);
 	}
@@ -121,10 +121,10 @@ final class RedisServiceTest extends TestCase
 	public function testIsInstalled(): void
 	{
 		$isInstalled = $this->redisService->isInstalled();
-		
+
 		// Should return boolean indicating if Redis extension is loaded
 		$this->assertIsBool($isInstalled);
-		
+
 		// Should match actual extension status
 		$expectedInstalled = extension_loaded('redis') && class_exists('Redis');
 		$this->assertEquals($expectedInstalled, $isInstalled);
@@ -168,9 +168,9 @@ final class RedisServiceTest extends TestCase
 			'imageworks' => [],
 		]);
 
-		$service = new RedisService($disabledConfig);
+		$service   = new RedisService($disabledConfig);
 		$available = $service->isAvailable();
-		
+
 		$this->assertFalse($available);
 	}
 
@@ -241,7 +241,7 @@ final class RedisServiceTest extends TestCase
 		}
 
 		$stats = $this->redisService->getStats();
-		
+
 		$this->assertIsArray($stats);
 		$this->assertArrayHasKey('available', $stats);
 		$this->assertArrayHasKey('enabled', $stats);
@@ -261,7 +261,7 @@ final class RedisServiceTest extends TestCase
 		}
 
 		$recommendations = $this->redisService->getRecommendations();
-		
+
 		$this->assertIsArray($recommendations);
 		$this->assertNotEmpty($recommendations);
 		$this->assertStringContainsString('not available', $recommendations[0]);
@@ -275,19 +275,19 @@ final class RedisServiceTest extends TestCase
 		}
 
 		// Test set and get
-		$key = 'test_cache_key_' . uniqid();
+		$key   = 'test_cache_key_' . uniqid();
 		$value = 'test_cache_value_' . time();
-		
+
 		$setResult = $this->redisService->set($key, $value);
 		$this->assertTrue($setResult);
-		
+
 		$getValue = $this->redisService->get($key);
 		$this->assertEquals($value, $getValue);
-		
+
 		// Test delete
 		$deleteResult = $this->redisService->delete($key);
 		$this->assertTrue($deleteResult);
-		
+
 		$getAfterDelete = $this->redisService->get($key);
 		$this->assertNull($getAfterDelete);
 	}
@@ -298,17 +298,17 @@ final class RedisServiceTest extends TestCase
 			$this->markTestSkipped('Redis is not available');
 		}
 
-		$key = 'test_ttl_key_' . uniqid();
+		$key   = 'test_ttl_key_' . uniqid();
 		$value = 'test_ttl_value';
-		
+
 		// Set with TTL
 		$result = $this->redisService->set($key, $value, 1);
 		$this->assertTrue($result);
-		
+
 		// Should be available immediately
 		$getValue = $this->redisService->get($key);
 		$this->assertEquals($value, $getValue);
-		
+
 		// Clean up
 		$this->redisService->delete($key);
 	}
@@ -320,19 +320,19 @@ final class RedisServiceTest extends TestCase
 		}
 
 		$key = 'test_serialization_' . uniqid();
-		
+
 		// Test array serialization
 		$arrayValue = ['foo' => 'bar', 'nested' => ['key' => 'value']];
 		$this->redisService->set($key, $arrayValue);
 		$retrievedArray = $this->redisService->get($key);
 		$this->assertEquals($arrayValue, $retrievedArray);
-		
+
 		// Test object serialization
-		$objectValue = (object) ['prop' => 'value'];
+		$objectValue = (object)['prop' => 'value'];
 		$this->redisService->set($key, $objectValue);
 		$retrievedObject = $this->redisService->get($key);
 		$this->assertEquals($objectValue, $retrievedObject);
-		
+
 		// Clean up
 		$this->redisService->delete($key);
 	}
@@ -354,7 +354,7 @@ final class RedisServiceTest extends TestCase
 		}
 
 		$stats = $this->redisService->getStats();
-		
+
 		$this->assertIsArray($stats);
 		$this->assertArrayHasKey('available', $stats);
 		$this->assertArrayHasKey('enabled', $stats);
@@ -370,7 +370,7 @@ final class RedisServiceTest extends TestCase
 		}
 
 		$recommendations = $this->redisService->getRecommendations();
-		
+
 		$this->assertIsArray($recommendations);
 		$this->assertNotEmpty($recommendations);
 		$this->assertStringContainsString('available', $recommendations[0]);
@@ -387,15 +387,15 @@ final class RedisServiceTest extends TestCase
 		$this->redisService->set($prefix . '_key1', 'value1');
 		$this->redisService->set($prefix . '_key2', 'value2');
 		$this->redisService->set('other_key', 'other_value');
-		
+
 		// Clear by pattern
 		$result = $this->redisService->clearByPattern($prefix . '*');
 		$this->assertTrue($result);
-		
+
 		// Pattern keys should be gone
 		$this->assertNull($this->redisService->get($prefix . '_key1'));
 		$this->assertNull($this->redisService->get($prefix . '_key2'));
-		
+
 		// Other keys should remain (if they existed)
 		// Clean up
 		$this->redisService->delete('other_key');
@@ -408,8 +408,8 @@ final class RedisServiceTest extends TestCase
 		}
 
 		$nonExistentKey = 'non_existent_key_' . uniqid();
-		$result = $this->redisService->delete($nonExistentKey);
-		
+		$result         = $this->redisService->delete($nonExistentKey);
+
 		// Deleting non-existent key should return false
 		$this->assertFalse($result);
 	}
@@ -421,8 +421,8 @@ final class RedisServiceTest extends TestCase
 		}
 
 		$nonExistentKey = 'non_existent_key_' . uniqid();
-		$result = $this->redisService->get($nonExistentKey);
-		
+		$result         = $this->redisService->get($nonExistentKey);
+
 		$this->assertNull($result);
 	}
 }

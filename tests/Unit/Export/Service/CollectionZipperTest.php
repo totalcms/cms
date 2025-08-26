@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Export\Service;
 
@@ -20,7 +20,7 @@ final class CollectionZipperTest extends TestCase
 		mkdir($this->tempDir);
 
 		// Create mock config (now that Config is no longer final)
-		$this->config = $this->createMock(Config::class);
+		$this->config          = $this->createMock(Config::class);
 		$this->config->datadir = $this->tempDir;
 
 		$this->collectionZipper = new CollectionZipper($this->config);
@@ -47,18 +47,18 @@ final class CollectionZipperTest extends TestCase
 	{
 		$collectionPath = $this->tempDir . DIRECTORY_SEPARATOR . $name;
 		mkdir($collectionPath);
-		
+
 		// Create some test files
 		file_put_contents($collectionPath . DIRECTORY_SEPARATOR . 'collection.json', '{"id": "' . $name . '"}');
 		file_put_contents($collectionPath . DIRECTORY_SEPARATOR . 'test-object.json', '{"id": "test"}');
-		
+
 		return $collectionPath;
 	}
 
 	public function testGetZipFilename(): void
 	{
 		$collectionName = 'test-collection';
-		$filename = $this->collectionZipper->getZipFilename($collectionName);
+		$filename       = $this->collectionZipper->getZipFilename($collectionName);
 
 		$this->assertEquals('collection-test-collection.zip', $filename);
 		$this->assertStringStartsWith('collection-', $filename);
@@ -69,7 +69,7 @@ final class CollectionZipperTest extends TestCase
 	public function testGetZipFilenameWithSpecialCharacters(): void
 	{
 		$collectionName = 'special-chars-collection_with-symbols';
-		$filename = $this->collectionZipper->getZipFilename($collectionName);
+		$filename       = $this->collectionZipper->getZipFilename($collectionName);
 
 		$this->assertEquals('collection-special-chars-collection_with-symbols.zip', $filename);
 		$this->assertStringContainsString($collectionName, $filename);
@@ -87,7 +87,7 @@ final class CollectionZipperTest extends TestCase
 		$this->assertStringContainsString($collectionName, $zipPath);
 
 		// Verify zip can be opened
-		$zip = new \ZipArchive();
+		$zip    = new \ZipArchive();
 		$result = $zip->open($zipPath);
 		$this->assertTrue($result);
 

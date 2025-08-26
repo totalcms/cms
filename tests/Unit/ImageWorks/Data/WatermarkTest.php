@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\ImageWorks\Data;
 
@@ -13,7 +13,7 @@ final class WatermarkTest extends TestCase
 	public function testConstructorWithDefaults(): void
 	{
 		$watermark = new Watermark();
-		
+
 		$this->assertNull($watermark->mark);
 		$this->assertNull($watermark->markpos);
 		$this->assertNull($watermark->markw);
@@ -40,7 +40,7 @@ final class WatermarkTest extends TestCase
 			markalpha: '80',
 			path: '/custom/path'
 		);
-		
+
 		$this->assertEquals('logo.png', $watermark->mark);
 		$this->assertEquals('top-left', $watermark->markpos);
 		$this->assertEquals('100', $watermark->markw);
@@ -60,7 +60,7 @@ final class WatermarkTest extends TestCase
 			markpos: 'bottom-right',
 			markalpha: '75'
 		);
-		
+
 		$this->assertEquals('watermark.png', $watermark->mark);
 		$this->assertEquals('bottom-right', $watermark->markpos);
 		$this->assertEquals('75', $watermark->markalpha);
@@ -86,21 +86,21 @@ final class WatermarkTest extends TestCase
 			markpad: '15',
 			markalpha: '90'
 		);
-		
+
 		$array = $watermark->toArray();
-		
+
 		$expected = [
-			'mark' => 'test.png',
-			'markpos' => 'center',
-			'markw' => '200',
-			'markh' => '100',
-			'markx' => '20',
-			'marky' => '30',
-			'markfit' => 'cover',
-			'markpad' => '15',
-			'markalpha' => '90'
+			'mark'      => 'test.png',
+			'markpos'   => 'center',
+			'markw'     => '200',
+			'markh'     => '100',
+			'markx'     => '20',
+			'marky'     => '30',
+			'markfit'   => 'cover',
+			'markpad'   => '15',
+			'markalpha' => '90',
 		];
-		
+
 		$this->assertEquals($expected, $array);
 	}
 
@@ -111,15 +111,15 @@ final class WatermarkTest extends TestCase
 			markpos: 'top-right',
 			markalpha: '60'
 		);
-		
+
 		$array = $watermark->toArray();
-		
+
 		$expected = [
-			'mark' => 'partial.png',
-			'markpos' => 'top-right',
-			'markalpha' => '60'
+			'mark'      => 'partial.png',
+			'markpos'   => 'top-right',
+			'markalpha' => '60',
 		];
-		
+
 		$this->assertEquals($expected, $array);
 		$this->assertArrayNotHasKey('markw', $array);
 		$this->assertArrayNotHasKey('markh', $array);
@@ -138,15 +138,15 @@ final class WatermarkTest extends TestCase
 			markh: null,
 			markalpha: '70'
 		);
-		
+
 		$array = $watermark->toArray();
-		
+
 		$expected = [
-			'mark' => 'filter_test.png',
-			'markw' => '150',
-			'markalpha' => '70'
+			'mark'      => 'filter_test.png',
+			'markw'     => '150',
+			'markalpha' => '70',
 		];
-		
+
 		$this->assertEquals($expected, $array);
 		$this->assertArrayNotHasKey('markpos', $array);
 		$this->assertArrayNotHasKey('markh', $array);
@@ -155,23 +155,23 @@ final class WatermarkTest extends TestCase
 	public function testToArrayWithEmptyWatermark(): void
 	{
 		$watermark = new Watermark();
-		
+
 		$array = $watermark->toArray();
-		
+
 		$this->assertEquals([], $array);
 	}
 
 	public function testIsEmptyWithNullMark(): void
 	{
 		$watermark = new Watermark();
-		
+
 		$this->assertTrue($watermark->isEmpty());
 	}
 
 	public function testIsEmptyWithMark(): void
 	{
 		$watermark = new Watermark(mark: 'has_mark.png');
-		
+
 		$this->assertFalse($watermark->isEmpty());
 	}
 
@@ -184,7 +184,7 @@ final class WatermarkTest extends TestCase
 			markw: '100',
 			markalpha: '50'
 		);
-		
+
 		$this->assertTrue($watermark->isEmpty());
 	}
 
@@ -192,14 +192,14 @@ final class WatermarkTest extends TestCase
 	{
 		// Empty string is not null, so watermark is not empty
 		$watermark = new Watermark(mark: '');
-		
+
 		$this->assertFalse($watermark->isEmpty());
 	}
 
 	public function testReadOnlyProperties(): void
 	{
 		$watermark = new Watermark(mark: 'readonly_test.png');
-		
+
 		// This should fail with a fatal error if we try to modify
 		// Since we can't test fatal errors easily, we just verify the class is readonly
 		$reflection = new \ReflectionClass($watermark);
@@ -209,15 +209,15 @@ final class WatermarkTest extends TestCase
 	public function testWatermarkWithTextWatermarkFactoryConstant(): void
 	{
 		$watermark = new Watermark();
-		
+
 		$this->assertEquals(TextWatermarkFactory::WATERMARK_DIR, $watermark->path);
 	}
 
 	public function testWatermarkWithCustomPath(): void
 	{
 		$customPath = '/custom/watermark/directory';
-		$watermark = new Watermark(path: $customPath);
-		
+		$watermark  = new Watermark(path: $customPath);
+
 		$this->assertEquals($customPath, $watermark->path);
 	}
 
@@ -225,16 +225,16 @@ final class WatermarkTest extends TestCase
 	{
 		$positions = [
 			'top-left', 'top', 'top-right',
-			'left', 'center', 'right', 
-			'bottom-left', 'bottom', 'bottom-right'
+			'left', 'center', 'right',
+			'bottom-left', 'bottom', 'bottom-right',
 		];
-		
+
 		foreach ($positions as $position) {
 			$watermark = new Watermark(
 				mark: 'position_test.png',
 				markpos: $position
 			);
-			
+
 			$this->assertEquals($position, $watermark->markpos);
 			$this->assertFalse($watermark->isEmpty());
 		}
@@ -251,9 +251,9 @@ final class WatermarkTest extends TestCase
 			markpad: '10',
 			markalpha: '100'
 		);
-		
+
 		$array = $watermark->toArray();
-		
+
 		$this->assertEquals('250', $array['markw']);
 		$this->assertEquals('125', $array['markh']);
 		$this->assertEquals('5', $array['markx']);
@@ -271,9 +271,9 @@ final class WatermarkTest extends TestCase
 			marky: '0',    // This will be filtered out
 			markpad: '0'   // This will be filtered out
 		);
-		
+
 		$array = $watermark->toArray();
-		
+
 		$this->assertEquals(['mark' => 'falsy_test.png'], $array);
 		$this->assertArrayNotHasKey('markx', $array);
 		$this->assertArrayNotHasKey('marky', $array);
@@ -283,13 +283,13 @@ final class WatermarkTest extends TestCase
 	public function testWatermarkFitOptions(): void
 	{
 		$fitOptions = ['contain', 'max', 'fill', 'stretch', 'crop'];
-		
+
 		foreach ($fitOptions as $fit) {
 			$watermark = new Watermark(
 				mark: 'fit_test.png',
 				markfit: $fit
 			);
-			
+
 			$this->assertEquals($fit, $watermark->markfit);
 			$array = $watermark->toArray();
 			$this->assertEquals($fit, $array['markfit']);
@@ -307,19 +307,19 @@ final class WatermarkTest extends TestCase
 			markpad: '20',
 			markalpha: '75'
 		);
-		
+
 		$this->assertFalse($watermark->isEmpty());
-		
-		$array = $watermark->toArray();
+
+		$array    = $watermark->toArray();
 		$expected = [
-			'mark' => 'company_logo.png',
-			'markpos' => 'bottom-right', 
-			'markw' => '20%',
-			'markfit' => 'contain',
-			'markpad' => '20',
-			'markalpha' => '75'
+			'mark'      => 'company_logo.png',
+			'markpos'   => 'bottom-right',
+			'markw'     => '20%',
+			'markfit'   => 'contain',
+			'markpad'   => '20',
+			'markalpha' => '75',
 		];
-		
+
 		$this->assertEquals($expected, $array);
 	}
 
@@ -329,7 +329,7 @@ final class WatermarkTest extends TestCase
 			mark: 'watermark-with_special.chars.png',
 			markpos: 'center'
 		);
-		
+
 		$this->assertEquals('watermark-with_special.chars.png', $watermark->mark);
 		$this->assertFalse($watermark->isEmpty());
 	}

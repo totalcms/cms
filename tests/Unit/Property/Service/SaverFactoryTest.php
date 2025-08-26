@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Service;
 
@@ -33,12 +33,12 @@ class SaverFactoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->mockPropertyRepository = $this->createMock(PropertyRepository::class);
-		$this->mockPropertyFetcher = $this->createMock(PropertyFetcher::class);
-		$this->mockObjectSaver = $this->createMock(ObjectSaver::class);
-		$this->mockSchemaFetcher = $this->createMock(SchemaFetcher::class);
-		$this->mockObjectPatcher = $this->createMock(ObjectPatcher::class);
-		$this->mockObjectFetcher = $this->createMock(ObjectFetcher::class);
-		$this->mockLoggerFactory = $this->createMock(LoggerFactory::class);
+		$this->mockPropertyFetcher    = $this->createMock(PropertyFetcher::class);
+		$this->mockObjectSaver        = $this->createMock(ObjectSaver::class);
+		$this->mockSchemaFetcher      = $this->createMock(SchemaFetcher::class);
+		$this->mockObjectPatcher      = $this->createMock(ObjectPatcher::class);
+		$this->mockObjectFetcher      = $this->createMock(ObjectFetcher::class);
+		$this->mockLoggerFactory      = $this->createMock(LoggerFactory::class);
 
 		$this->saverFactory = new SaverFactory(
 			$this->mockPropertyRepository,
@@ -54,11 +54,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServiceForFileProperty(): void
 	{
 		// Mock schema with file property
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'document' => [
-				'$ref' => 'https://www.totalcms.co/schemas/file.json'
-			]
+				'$ref' => 'https://www.totalcms.co/schemas/file.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -76,11 +76,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServiceForImageProperty(): void
 	{
 		// Mock schema with image property
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'photo' => [
-				'$ref' => 'https://www.totalcms.co/schemas/image.json'
-			]
+				'$ref' => 'https://www.totalcms.co/schemas/image.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -98,11 +98,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServiceForDepotProperty(): void
 	{
 		// Mock schema with depot property
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'files' => [
-				'$ref' => 'https://www.totalcms.co/schemas/depot.json'
-			]
+				'$ref' => 'https://www.totalcms.co/schemas/depot.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -120,11 +120,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServiceForGalleryProperty(): void
 	{
 		// Mock schema with gallery property
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'images' => [
-				'$ref' => 'https://www.totalcms.co/schemas/gallery.json'
-			]
+				'$ref' => 'https://www.totalcms.co/schemas/gallery.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -142,11 +142,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServiceThrowsExceptionForUnknownType(): void
 	{
 		// Mock schema with unknown property type
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'unknown_field' => [
-				'$ref' => 'https://www.totalcms.co/schemas/unknowntype.json'
-			]
+				'$ref' => 'https://www.totalcms.co/schemas/unknowntype.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -164,11 +164,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServiceWithCustomSchemaUrl(): void
 	{
 		// Mock schema with custom schema URL structure
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'custom_file' => [
-				'$ref' => 'https://www.example.com/schemas/file.json'
-			]
+				'$ref' => 'https://www.example.com/schemas/file.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -186,11 +186,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServiceHandlesComplexPropertyNames(): void
 	{
 		// Test with various property names
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'my_complex_file_property' => [
-				'$ref' => 'https://www.totalcms.co/schemas/file.json'
-			]
+				'$ref' => 'https://www.totalcms.co/schemas/file.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -207,11 +207,11 @@ class SaverFactoryTest extends TestCase
 	public function testGenerateSaverServicePassesAllDependencies(): void
 	{
 		// Mock schema
-		$mockSchema = new SchemaData();
+		$mockSchema             = new SchemaData();
 		$mockSchema->properties = [
 			'document' => [
-				'$ref' => 'https://www.totalcms.co/schemas/file.json'
-			]
+				'$ref' => 'https://www.totalcms.co/schemas/file.json',
+			],
 		];
 
 		$this->mockSchemaFetcher
@@ -238,21 +238,21 @@ class SaverFactoryTest extends TestCase
 	{
 		// Test that different schema URLs produce correct types
 		$testCases = [
-			'file' => 'file.json',
-			'image' => 'image.json', 
-			'depot' => 'depot.json',
-			'gallery' => 'gallery.json'
+			'file'    => 'file.json',
+			'image'   => 'image.json',
+			'depot'   => 'depot.json',
+			'gallery' => 'gallery.json',
 		];
 
 		foreach ($testCases as $expectedType => $schemaFile) {
 			// Create a fresh mock for each iteration
 			$this->setUp();
-			
-			$mockSchema = new SchemaData();
+
+			$mockSchema             = new SchemaData();
 			$mockSchema->properties = [
 				'test_prop' => [
-					'$ref' => "https://www.totalcms.co/schemas/$schemaFile"
-				]
+					'$ref' => "https://www.totalcms.co/schemas/$schemaFile",
+				],
 			];
 
 			$this->mockSchemaFetcher

@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Cache\Service;
 
@@ -25,10 +25,10 @@ final class OPcacheServiceTest extends TestCase
 	public function testIsInstalled(): void
 	{
 		$isInstalled = $this->opcacheService->isInstalled();
-		
+
 		// Should return boolean indicating if OPcache functions are available
 		$this->assertIsBool($isInstalled);
-		
+
 		// Should match actual function availability
 		$expectedInstalled = function_exists('opcache_get_status');
 		$this->assertEquals($expectedInstalled, $isInstalled);
@@ -37,10 +37,10 @@ final class OPcacheServiceTest extends TestCase
 	public function testIsAvailable(): void
 	{
 		$isAvailable = $this->opcacheService->isAvailable();
-		
+
 		// Should return boolean
 		$this->assertIsBool($isAvailable);
-		
+
 		// Should be consistent with installation status
 		if (!$this->opcacheService->isInstalled()) {
 			$this->assertFalse($isAvailable);
@@ -50,10 +50,10 @@ final class OPcacheServiceTest extends TestCase
 	public function testIsActive(): void
 	{
 		$isActive = $this->opcacheService->isActive();
-		
+
 		// Should return boolean
 		$this->assertIsBool($isActive);
-		
+
 		// Should match isAvailable since they're the same for OPcache
 		$this->assertEquals($this->opcacheService->isAvailable(), $isActive);
 	}
@@ -63,7 +63,7 @@ final class OPcacheServiceTest extends TestCase
 		// OPcache doesn't support key-value storage
 		$result = $this->opcacheService->get('any_key');
 		$this->assertNull($result);
-		
+
 		$result = $this->opcacheService->get('another_key');
 		$this->assertNull($result);
 	}
@@ -73,10 +73,10 @@ final class OPcacheServiceTest extends TestCase
 		// OPcache doesn't support key-value storage
 		$result = $this->opcacheService->set('key', 'value');
 		$this->assertFalse($result);
-		
+
 		$result = $this->opcacheService->set('key', 'value', 3600);
 		$this->assertFalse($result);
-		
+
 		// Test with different data types
 		$result = $this->opcacheService->set('key', ['array' => 'value']);
 		$this->assertFalse($result);
@@ -85,8 +85,8 @@ final class OPcacheServiceTest extends TestCase
 	public function testDeleteWithNonExistentFile(): void
 	{
 		$nonExistentFile = '/non/existent/file/path_' . uniqid() . '.php';
-		$result = $this->opcacheService->delete($nonExistentFile);
-		
+		$result          = $this->opcacheService->delete($nonExistentFile);
+
 		$this->assertFalse($result);
 	}
 
@@ -99,14 +99,13 @@ final class OPcacheServiceTest extends TestCase
 		// Create a temporary PHP file
 		$tempFile = tempnam(sys_get_temp_dir(), 'opcache_test_') . '.php';
 		file_put_contents($tempFile, '<?php echo "test";');
-		
+
 		try {
 			// Try to delete/invalidate the file
 			$result = $this->opcacheService->delete($tempFile);
-			
+
 			// Result should be boolean
 			$this->assertIsBool($result);
-			
 		} finally {
 			// Clean up
 			if (file_exists($tempFile)) {
@@ -132,7 +131,7 @@ final class OPcacheServiceTest extends TestCase
 		}
 
 		$result = $this->opcacheService->clear();
-		
+
 		// Should return boolean
 		$this->assertIsBool($result);
 	}
@@ -150,7 +149,7 @@ final class OPcacheServiceTest extends TestCase
 		}
 
 		$stats = $this->opcacheService->getStats();
-		
+
 		$this->assertIsArray($stats);
 		$this->assertArrayHasKey('available', $stats);
 		$this->assertFalse($stats['available']);
@@ -163,11 +162,11 @@ final class OPcacheServiceTest extends TestCase
 		}
 
 		$stats = $this->opcacheService->getStats();
-		
+
 		$this->assertIsArray($stats);
 		$this->assertArrayHasKey('available', $stats);
 		$this->assertTrue($stats['available']);
-		
+
 		// Should contain OPcache-specific metrics
 		$this->assertArrayHasKey('memory_usage', $stats);
 		$this->assertArrayHasKey('scripts_cached', $stats);
@@ -188,7 +187,7 @@ final class OPcacheServiceTest extends TestCase
 		}
 
 		$recommendations = $this->opcacheService->getRecommendations();
-		
+
 		$this->assertIsArray($recommendations);
 		$this->assertNotEmpty($recommendations);
 		$this->assertStringContainsString('not available', $recommendations[0]);
@@ -201,7 +200,7 @@ final class OPcacheServiceTest extends TestCase
 		}
 
 		$recommendations = $this->opcacheService->getRecommendations();
-		
+
 		$this->assertIsArray($recommendations);
 		$this->assertNotEmpty($recommendations);
 		$this->assertStringContainsString('active', $recommendations[0]);
@@ -216,7 +215,7 @@ final class OPcacheServiceTest extends TestCase
 	{
 		$requiredMethods = [
 			'isAvailable',
-			'isInstalled', 
+			'isInstalled',
 			'isActive',
 			'get',
 			'set',
@@ -224,29 +223,31 @@ final class OPcacheServiceTest extends TestCase
 			'clear',
 			'getStats',
 			'getName',
-			'getRecommendations'
+			'getRecommendations',
 		];
 
 		foreach ($requiredMethods as $method) {
-			$this->assertTrue(method_exists($this->opcacheService, $method), 
-				"Method {$method} should exist");
+			$this->assertTrue(
+				method_exists($this->opcacheService, $method),
+				"Method {$method} should exist"
+			);
 		}
 	}
 
 	public function testOPcacheSpecificBehavior(): void
 	{
 		// OPcache has specific behavior different from other cache services
-		
+
 		// 1. No key-value storage support
 		$this->assertNull($this->opcacheService->get('any_key'));
 		$this->assertFalse($this->opcacheService->set('key', 'value'));
-		
+
 		// 2. Delete works only with file paths
 		$this->assertFalse($this->opcacheService->delete('non_file_key'));
-		
+
 		// 3. No pattern support - method doesn't exist
 		$this->assertFalse(method_exists($this->opcacheService, 'clearByPattern'));
-		
+
 		// 4. isActive should equal isAvailable
 		$this->assertEquals($this->opcacheService->isAvailable(), $this->opcacheService->isActive());
 	}
@@ -255,13 +256,13 @@ final class OPcacheServiceTest extends TestCase
 	{
 		$service1 = new OPcacheService();
 		$service2 = new OPcacheService();
-		
+
 		// Both instances should behave identically
 		$this->assertEquals($service1->isInstalled(), $service2->isInstalled());
 		$this->assertEquals($service1->isAvailable(), $service2->isAvailable());
 		$this->assertEquals($service1->isActive(), $service2->isActive());
 		$this->assertEquals($service1->getName(), $service2->getName());
-		
+
 		// Non-functional operations should consistently return same values
 		$this->assertEquals($service1->get('key'), $service2->get('key'));
 		$this->assertEquals($service1->set('key', 'value'), $service2->set('key', 'value'));
@@ -273,7 +274,7 @@ final class OPcacheServiceTest extends TestCase
 		$this->assertFalse($this->opcacheService->delete(''));
 		$this->assertFalse($this->opcacheService->delete('/'));
 		$this->assertFalse($this->opcacheService->delete('relative_path.php'));
-		
+
 		// Test with special characters
 		$this->assertFalse($this->opcacheService->delete('/path/with spaces/file.php'));
 		$this->assertFalse($this->opcacheService->delete('/path/with-special@chars.php'));

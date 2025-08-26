@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Service;
 
@@ -28,15 +28,15 @@ class PropertyFetcherTest extends TestCase
 	public function testFetchPropertyWhenDataExists(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'title';
+		$objectID   = 'test-object';
+		$property   = 'title';
 
 		// Create mock PropertyData object
 		$mockPropertyDataObject = $this->createMock(PropertyData::class);
 
 		// Create mock object with properties collection
-		$propertiesCollection = new Collection([$property => $mockPropertyDataObject]);
-		$mockObject = $this->createMock(ObjectData::class);
+		$propertiesCollection   = new Collection([$property => $mockPropertyDataObject]);
+		$mockObject             = $this->createMock(ObjectData::class);
 		$mockObject->properties = $propertiesCollection;
 
 		// Mock ObjectFetcher to return the mock object
@@ -54,12 +54,12 @@ class PropertyFetcherTest extends TestCase
 	public function testFetchPropertyThrowsExceptionWhenDataNotFound(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'nonexistent';
+		$objectID   = 'test-object';
+		$property   = 'nonexistent';
 
 		// Create mock object with empty properties collection
-		$propertiesCollection = new Collection([]); // No properties
-		$mockObject = $this->createMock(ObjectData::class);
+		$propertiesCollection   = new Collection([]); // No properties
+		$mockObject             = $this->createMock(ObjectData::class);
 		$mockObject->properties = $propertiesCollection;
 
 		$this->mockObjectFetcher->expects($this->once())
@@ -75,8 +75,8 @@ class PropertyFetcherTest extends TestCase
 	public function testFetchPropertyThrowsExceptionWhenObjectNotFound(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'nonexistent-object';
-		$property = 'title';
+		$objectID   = 'nonexistent-object';
+		$property   = 'title';
 
 		// ObjectFetcher throws exception when object doesn't exist
 		$this->mockObjectFetcher->expects($this->once())
@@ -92,12 +92,12 @@ class PropertyFetcherTest extends TestCase
 	public function testFetchPropertyThrowsExceptionWhenPropertyIsNotPropertyData(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'invalid-property';
+		$objectID   = 'test-object';
+		$property   = 'invalid-property';
 
 		// Create mock object with properties collection containing non-PropertyData
-		$propertiesCollection = new Collection([$property => 'not-a-property-data-object']);
-		$mockObject = $this->createMock(ObjectData::class);
+		$propertiesCollection   = new Collection([$property => 'not-a-property-data-object']);
+		$mockObject             = $this->createMock(ObjectData::class);
 		$mockObject->properties = $propertiesCollection;
 
 		$this->mockObjectFetcher->expects($this->once())
@@ -113,18 +113,18 @@ class PropertyFetcherTest extends TestCase
 	public function testFetchPropertyWithValidPropertyData(): void
 	{
 		$collection = 'articles';
-		$objectID = 'article-123';
-		$property = 'metadata';
+		$objectID   = 'article-123';
+		$property   = 'metadata';
 
 		// Create mock PropertyData object
 		$mockPropertyDataObject = $this->createMock(PropertyData::class);
 
 		// Create mock object with properties collection
 		$propertiesCollection = new Collection([
-			$property => $mockPropertyDataObject,
-			'other-property' => $this->createMock(PropertyData::class)
+			$property        => $mockPropertyDataObject,
+			'other-property' => $this->createMock(PropertyData::class),
 		]);
-		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject             = $this->createMock(ObjectData::class);
 		$mockObject->properties = $propertiesCollection;
 
 		$this->mockObjectFetcher->expects($this->once())

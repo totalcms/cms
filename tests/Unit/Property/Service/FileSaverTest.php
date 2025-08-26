@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Service;
 
@@ -10,7 +10,6 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -28,9 +27,9 @@ class FileSaverTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->mockStorage = $this->createMock(PropertyRepository::class);
-		$this->mockPropFetcher = $this->createMock(PropertyFetcher::class);
-		$this->mockObjectSaver = $this->createMock(ObjectSaver::class);
+		$this->mockStorage       = $this->createMock(PropertyRepository::class);
+		$this->mockPropFetcher   = $this->createMock(PropertyFetcher::class);
+		$this->mockObjectSaver   = $this->createMock(ObjectSaver::class);
 		$this->mockObjectPatcher = $this->createMock(ObjectPatcher::class);
 		$this->mockObjectFetcher = $this->createMock(ObjectFetcher::class);
 		$this->mockLoggerFactory = $this->createMock(LoggerFactory::class);
@@ -48,9 +47,9 @@ class FileSaverTest extends TestCase
 	public function testSaveWithNewObject(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'document';
-		$filePath = '/tmp/test.pdf';
+		$objectID   = 'test-object';
+		$property   = 'document';
+		$filePath   = '/tmp/test.pdf';
 
 		// Object doesn't exist, so will be created
 		$this->mockObjectFetcher->expects($this->once())
@@ -72,10 +71,10 @@ class FileSaverTest extends TestCase
 
 		// Save the file
 		$fileInfo = [
-			'name' => 'test.pdf',
-			'size' => 1024,
-			'mime' => 'application/pdf',
-			'extension' => 'pdf'
+			'name'      => 'test.pdf',
+			'size'      => 1024,
+			'mime'      => 'application/pdf',
+			'extension' => 'pdf',
 		];
 		$this->mockStorage->expects($this->once())
 			->method('saveFile')
@@ -88,17 +87,18 @@ class FileSaverTest extends TestCase
 			->method('patchObject')
 			->with($collection, $objectID, $this->callback(function ($data) use ($property, $fileInfo) {
 				$propData = $data[$property];
+
 				// FileData.transform() includes the file info plus default properties
-				return $propData['name'] === $fileInfo['name'] &&
-					   $propData['size'] === $fileInfo['size'] &&
-					   $propData['mime'] === $fileInfo['mime'] &&
-					   isset($propData['tags']) &&
-					   isset($propData['password']) &&
-					   isset($propData['uploadDate']) &&
-					   isset($propData['protected']) &&
-					   isset($propData['download']) &&
-					   isset($propData['comments']) &&
-					   isset($propData['count']);
+				return $propData['name'] === $fileInfo['name']
+					   && $propData['size'] === $fileInfo['size']
+					   && $propData['mime'] === $fileInfo['mime']
+					   && isset($propData['tags'])
+					   && isset($propData['password'])
+					   && isset($propData['uploadDate'])
+					   && isset($propData['protected'])
+					   && isset($propData['download'])
+					   && isset($propData['comments'])
+					   && isset($propData['count']);
 			}))
 			->willReturn($expectedResult);
 
@@ -111,9 +111,9 @@ class FileSaverTest extends TestCase
 	public function testSaveWithExistingObject(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'document';
-		$filePath = '/tmp/test.pdf';
+		$objectID   = 'test-object';
+		$property   = 'document';
+		$filePath   = '/tmp/test.pdf';
 
 		// Object exists
 		$this->mockObjectFetcher->expects($this->once())
@@ -130,10 +130,10 @@ class FileSaverTest extends TestCase
 
 		// Save the file
 		$fileInfo = [
-			'name' => 'test.pdf',
-			'size' => 1024,
-			'mime' => 'application/pdf',
-			'extension' => 'pdf'
+			'name'      => 'test.pdf',
+			'size'      => 1024,
+			'mime'      => 'application/pdf',
+			'extension' => 'pdf',
 		];
 		$this->mockStorage->expects($this->once())
 			->method('saveFile')
@@ -142,11 +142,11 @@ class FileSaverTest extends TestCase
 
 		// Fetch existing property data
 		$existingFileData = new FileData([
-			'name' => 'old.pdf',
-			'download' => 'Custom Download Name.pdf',
-			'comments' => 'Important document',
-			'tags' => ['work', 'important'],
-			'protected' => true
+			'name'      => 'old.pdf',
+			'download'  => 'Custom Download Name.pdf',
+			'comments'  => 'Important document',
+			'tags'      => ['work', 'important'],
+			'protected' => true,
 		]);
 		$this->mockPropFetcher->expects($this->once())
 			->method('fetchProperty')
@@ -159,12 +159,13 @@ class FileSaverTest extends TestCase
 			->method('patchObject')
 			->with($collection, $objectID, $this->callback(function ($data) use ($property) {
 				$propData = $data[$property];
+
 				// Should merge existing data with new file info
-				return isset($propData['name']) && 
-					   isset($propData['download']) && 
-					   isset($propData['comments']) &&
-					   isset($propData['tags']) &&
-					   isset($propData['protected']);
+				return isset($propData['name'])
+					   && isset($propData['download'])
+					   && isset($propData['comments'])
+					   && isset($propData['tags'])
+					   && isset($propData['protected']);
 			}))
 			->willReturn($expectedResult);
 
@@ -176,9 +177,9 @@ class FileSaverTest extends TestCase
 	public function testSaveWithExistingObjectAndExtensionChange(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'document';
-		$filePath = '/tmp/test.docx'; // Different extension
+		$objectID   = 'test-object';
+		$property   = 'document';
+		$filePath   = '/tmp/test.docx'; // Different extension
 
 		// Object exists
 		$this->mockObjectFetcher->expects($this->once())
@@ -193,10 +194,10 @@ class FileSaverTest extends TestCase
 
 		// Save the file with new extension
 		$fileInfo = [
-			'name' => 'test.docx',
-			'size' => 2048,
-			'mime' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-			'extension' => 'docx'
+			'name'      => 'test.docx',
+			'size'      => 2048,
+			'mime'      => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			'extension' => 'docx',
 		];
 		$this->mockStorage->expects($this->once())
 			->method('saveFile')
@@ -205,9 +206,9 @@ class FileSaverTest extends TestCase
 
 		// Fetch existing property data with different extension
 		$existingFileData = new FileData([
-			'name' => 'old.pdf',
+			'name'     => 'old.pdf',
 			'download' => 'Custom Document.pdf', // Old extension
-			'comments' => 'Document'
+			'comments' => 'Document',
 		]);
 		$this->mockPropFetcher->expects($this->once())
 			->method('fetchProperty')
@@ -219,6 +220,7 @@ class FileSaverTest extends TestCase
 			->method('patchObject')
 			->with($collection, $objectID, $this->callback(function ($data) use ($property) {
 				$propData = $data[$property];
+
 				// Download name should have updated extension
 				return $propData['download'] === 'Custom Document.docx';
 			}))
@@ -231,9 +233,9 @@ class FileSaverTest extends TestCase
 	public function testCreateObjectThrowsExceptionOnFailure(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'document';
-		$filePath = '/tmp/test.pdf';
+		$objectID   = 'test-object';
+		$property   = 'document';
+		$filePath   = '/tmp/test.pdf';
 
 		// Object doesn't exist
 		$this->mockObjectFetcher->expects($this->once())
@@ -260,9 +262,9 @@ class FileSaverTest extends TestCase
 	public function testFetchPropertyCreatesNewWhenNotFound(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'document';
-		$filePath = '/tmp/test.pdf';
+		$objectID   = 'test-object';
+		$property   = 'document';
+		$filePath   = '/tmp/test.pdf';
 
 		// Object exists
 		$this->mockObjectFetcher->expects($this->once())
@@ -295,10 +297,10 @@ class FileSaverTest extends TestCase
 	public function testSaveIgnoresSubpathParameter(): void
 	{
 		$collection = 'test-collection';
-		$objectID = 'test-object';
-		$property = 'document';
-		$filePath = '/tmp/test.pdf';
-		$subpath = 'some/path'; // Should be ignored for FileSaver
+		$objectID   = 'test-object';
+		$property   = 'document';
+		$filePath   = '/tmp/test.pdf';
+		$subpath    = 'some/path'; // Should be ignored for FileSaver
 
 		$this->mockObjectFetcher->expects($this->once())
 			->method('existsObject')

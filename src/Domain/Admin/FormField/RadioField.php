@@ -50,7 +50,7 @@ class RadioField extends FormField
 		$this->processOptions();
 
 		$radiosHtml = '';
-		$index = 1;
+		$index      = 1;
 
 		foreach ($this->options as $option) {
 			if (is_string($option)) {
@@ -67,7 +67,7 @@ class RadioField extends FormField
 	/** @param array<string,string> $option */
 	protected function buildSingleRadio(array $option, int $index): string
 	{
-		$radioId = "field-{$this->uuid}-{$index}";
+		$radioId   = "field-{$this->uuid}-{$index}";
 		$isChecked = $this->isOptionSelected($option['value']);
 
 		$inputAttributes = [
@@ -86,8 +86,8 @@ class RadioField extends FormField
 
 		$input = HTMLUtils::inlineElement('input', $inputAttributes);
 		$label = HTMLUtils::element('label', $option['label'], [
-			'for' => $radioId,
-			'class' => 'radio-label'
+			'for'   => $radioId,
+			'class' => 'radio-label',
 		]);
 
 		return HTMLUtils::element('div', $input . $label, ['class' => 'radio']);

@@ -187,12 +187,12 @@ class Cipher
 		if ($ivlen === false) {
 			throw new \Exception('Failed to get IV length');
 		}
-		
+
 		// Validate that we have enough data for IV + at least some ciphertext
 		if (strlen($data) < $ivlen + 1) {
 			throw new \Exception('Invalid encrypted data: insufficient length');
 		}
-		
+
 		$iv         = substr($data, 0, $ivlen);  // Extract the IV from the encoded string
 		$ciphertext = substr($data, $ivlen);
 

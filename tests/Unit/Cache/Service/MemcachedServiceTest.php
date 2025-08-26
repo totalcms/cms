@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Cache\Service;
 
@@ -71,7 +71,7 @@ final class MemcachedServiceTest extends TestCase
 		]);
 
 		$service = new MemcachedService($configWithoutMemcached);
-		
+
 		// Should create service even without Memcached config
 		$this->assertInstanceOf(MemcachedService::class, $service);
 	}
@@ -107,7 +107,7 @@ final class MemcachedServiceTest extends TestCase
 		]);
 
 		$service = new MemcachedService($customConfig);
-		
+
 		// Should create service with custom config
 		$this->assertInstanceOf(MemcachedService::class, $service);
 	}
@@ -115,10 +115,10 @@ final class MemcachedServiceTest extends TestCase
 	public function testIsInstalled(): void
 	{
 		$isInstalled = $this->memcachedService->isInstalled();
-		
+
 		// Should return boolean indicating if Memcached extension is loaded
 		$this->assertIsBool($isInstalled);
-		
+
 		// Should match actual extension status
 		$expectedInstalled = extension_loaded('memcached') && class_exists('Memcached');
 		$this->assertEquals($expectedInstalled, $isInstalled);
@@ -162,9 +162,9 @@ final class MemcachedServiceTest extends TestCase
 			'imageworks' => [],
 		]);
 
-		$service = new MemcachedService($disabledConfig);
+		$service   = new MemcachedService($disabledConfig);
 		$available = $service->isAvailable();
-		
+
 		$this->assertFalse($available);
 	}
 
@@ -235,7 +235,7 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		$stats = $this->memcachedService->getStats();
-		
+
 		$this->assertIsArray($stats);
 		$this->assertArrayHasKey('available', $stats);
 		$this->assertArrayHasKey('enabled', $stats);
@@ -255,7 +255,7 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		$recommendations = $this->memcachedService->getRecommendations();
-		
+
 		$this->assertIsArray($recommendations);
 		$this->assertNotEmpty($recommendations);
 		$this->assertStringContainsString('not available', $recommendations[0]);
@@ -269,19 +269,19 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		// Test set and get
-		$key = 'test_cache_key_' . uniqid();
+		$key   = 'test_cache_key_' . uniqid();
 		$value = 'test_cache_value_' . time();
-		
+
 		$setResult = $this->memcachedService->set($key, $value);
 		$this->assertTrue($setResult);
-		
+
 		$getValue = $this->memcachedService->get($key);
 		$this->assertEquals($value, $getValue);
-		
+
 		// Test delete
 		$deleteResult = $this->memcachedService->delete($key);
 		$this->assertTrue($deleteResult);
-		
+
 		$getAfterDelete = $this->memcachedService->get($key);
 		$this->assertNull($getAfterDelete);
 	}
@@ -292,17 +292,17 @@ final class MemcachedServiceTest extends TestCase
 			$this->markTestSkipped('Memcached is not available');
 		}
 
-		$key = 'test_ttl_key_' . uniqid();
+		$key   = 'test_ttl_key_' . uniqid();
 		$value = 'test_ttl_value';
-		
+
 		// Set with TTL
 		$result = $this->memcachedService->set($key, $value, 1);
 		$this->assertTrue($result);
-		
+
 		// Should be available immediately
 		$getValue = $this->memcachedService->get($key);
 		$this->assertEquals($value, $getValue);
-		
+
 		// Clean up
 		$this->memcachedService->delete($key);
 	}
@@ -314,19 +314,19 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		$key = 'test_serialization_' . uniqid();
-		
+
 		// Test array serialization
 		$arrayValue = ['foo' => 'bar', 'nested' => ['key' => 'value']];
 		$this->memcachedService->set($key, $arrayValue);
 		$retrievedArray = $this->memcachedService->get($key);
 		$this->assertEquals($arrayValue, $retrievedArray);
-		
+
 		// Test object serialization
-		$objectValue = (object) ['prop' => 'value'];
+		$objectValue = (object)['prop' => 'value'];
 		$this->memcachedService->set($key, $objectValue);
 		$retrievedObject = $this->memcachedService->get($key);
 		$this->assertEquals($objectValue, $retrievedObject);
-		
+
 		// Clean up
 		$this->memcachedService->delete($key);
 	}
@@ -348,7 +348,7 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		$stats = $this->memcachedService->getStats();
-		
+
 		$this->assertIsArray($stats);
 		$this->assertArrayHasKey('available', $stats);
 		$this->assertArrayHasKey('enabled', $stats);
@@ -364,7 +364,7 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		$recommendations = $this->memcachedService->getRecommendations();
-		
+
 		$this->assertIsArray($recommendations);
 		$this->assertNotEmpty($recommendations);
 		$this->assertStringContainsString('available', $recommendations[0]);
@@ -381,11 +381,11 @@ final class MemcachedServiceTest extends TestCase
 		$this->memcachedService->set($prefix . '_key1', 'value1');
 		$this->memcachedService->set($prefix . '_key2', 'value2');
 		$this->memcachedService->set('other_key', 'other_value');
-		
+
 		// Clear by pattern (Memcached doesn't support patterns, so it clears all)
 		$result = $this->memcachedService->clearByPattern($prefix . '*');
 		$this->assertTrue($result);
-		
+
 		// All keys should be gone after pattern clear (since Memcached clears all)
 		$this->assertNull($this->memcachedService->get($prefix . '_key1'));
 		$this->assertNull($this->memcachedService->get($prefix . '_key2'));
@@ -399,8 +399,8 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		$nonExistentKey = 'non_existent_key_' . uniqid();
-		$result = $this->memcachedService->delete($nonExistentKey);
-		
+		$result         = $this->memcachedService->delete($nonExistentKey);
+
 		// Memcached delete should still return true even for non-existent keys
 		// This is different from Redis behavior
 		$this->assertIsBool($result);
@@ -413,8 +413,8 @@ final class MemcachedServiceTest extends TestCase
 		}
 
 		$nonExistentKey = 'non_existent_key_' . uniqid();
-		$result = $this->memcachedService->get($nonExistentKey);
-		
+		$result         = $this->memcachedService->get($nonExistentKey);
+
 		$this->assertNull($result);
 	}
 
@@ -427,7 +427,7 @@ final class MemcachedServiceTest extends TestCase
 	{
 		$requiredMethods = [
 			'isAvailable',
-			'isInstalled', 
+			'isInstalled',
 			'isActive',
 			'get',
 			'set',
@@ -436,12 +436,14 @@ final class MemcachedServiceTest extends TestCase
 			'clearByPattern',
 			'getStats',
 			'getName',
-			'getRecommendations'
+			'getRecommendations',
 		];
 
 		foreach ($requiredMethods as $method) {
-			$this->assertTrue(method_exists($this->memcachedService, $method), 
-				"Method {$method} should exist");
+			$this->assertTrue(
+				method_exists($this->memcachedService, $method),
+				"Method {$method} should exist"
+			);
 		}
 	}
 }

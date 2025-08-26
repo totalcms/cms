@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Domain\Twig\Adapter;
 
@@ -12,17 +12,17 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testBuildImageworksAPIStaticMethod(): void
 	{
 		// Test the static method that doesn't require dependencies
-		$api = '/api';
-		$id = 'test-id';
+		$api   = '/api';
+		$id    = 'test-id';
 		$image = [
-			'name' => 'test.jpg',
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.jpg',
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
 		$imageworks = ['w' => 300, 'h' => 200];
-		$options = ['collection' => 'photos', 'property' => 'gallery'];
-		
+		$options    = ['collection' => 'photos', 'property' => 'gallery'];
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI($api, $id, $image, $imageworks, $options);
-		
+
 		expect($result)->toContain('/api/imageworks/photos/test-id/gallery.jpg');
 		expect($result)->toContain('w=300');
 		expect($result)->toContain('h=200');
@@ -32,29 +32,29 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testBuildImageworksAPIWithEmptyImage(): void
 	{
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', []);
-		
+
 		expect($result)->toBe('');
 	}
 
 	public function testBuildImageworksAPIWithImageMissingName(): void
 	{
 		$image = ['size' => 12345, 'uploadDate' => '2024-01-15T12:30:45Z'];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
-		
+
 		expect($result)->toBe('');
 	}
 
 	public function testBuildImageworksAPIWithFormatConversion(): void
 	{
 		$image = [
-			'name' => 'test.png',
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.png',
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
 		$imageworks = ['w' => 300, 'fm' => 'webp'];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image, $imageworks);
-		
+
 		// Should convert to webp extension and remove fm parameter
 		expect($result)->toContain('/api/imageworks/image/test-id/image.webp');
 		expect($result)->not->toContain('fm=webp');
@@ -64,27 +64,27 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testBuildImageworksAPIDefaultsToJpgForUnknownExtension(): void
 	{
 		$image = [
-			'name' => 'test.unknown',
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.unknown',
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
-		
+
 		expect($result)->toContain('/api/imageworks/image/test-id/image.jpg');
 	}
 
 	public function testBuildImageworksAPIPreservesValidExtensions(): void
 	{
 		$validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
-		
+
 		foreach ($validExtensions as $ext) {
 			$image = [
-				'name' => "test.$ext",
-				'uploadDate' => '2024-01-15T12:30:45Z'
+				'name'       => "test.$ext",
+				'uploadDate' => '2024-01-15T12:30:45Z',
 			];
-			
+
 			$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
-			
+
 			expect($result)->toContain("/api/imageworks/image/test-id/image.$ext");
 		}
 	}
@@ -92,17 +92,17 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testBuildImageworksAPIRemovesStacksPreviewParams(): void
 	{
 		$image = [
-			'name' => 'test.jpg',
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.jpg',
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
 		$imageworks = [
-			'w' => 300,
+			'w'       => 300,
 			'datadir' => '/some/path',  // Should be removed
-			'route' => '/some/route'    // Should be removed
+			'route'   => '/some/route',    // Should be removed
 		];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image, $imageworks);
-		
+
 		expect($result)->toContain('w=300');
 		expect($result)->not->toContain('datadir');
 		expect($result)->not->toContain('route');
@@ -111,12 +111,12 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testBuildImageworksAPICacheBustingFromUploadDate(): void
 	{
 		$image = [
-			'name' => 'test.jpg',
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.jpg',
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'test-id', $image);
-		
+
 		// Cache should be reversed uploadDate with non-word characters removed
 		$expectedCache = strrev(preg_replace('/\W+/', '', '2024-01-15T12:30:45Z'));
 		expect($result)->toContain("cache=$expectedCache");
@@ -124,15 +124,15 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 	public function testBuildImageworksAPIHandlesExistingQueryParams(): void
 	{
-		$api = '/api/imageworks/image/test-id/image.jpg?existing=param';
+		$api   = '/api/imageworks/image/test-id/image.jpg?existing=param';
 		$image = [
-			'name' => 'test.jpg',
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.jpg',
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
 		$imageworks = ['w' => 300];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI($api, 'test-id', $image, $imageworks);
-		
+
 		// Should preserve existing params and add new ones
 		expect($result)->toContain('existing=param');
 		expect($result)->toContain('w=300');
@@ -141,29 +141,29 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testBuildImageworksAPIWithCustomCollectionAndProperty(): void
 	{
 		$image = [
-			'name' => 'photo.jpg',
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'photo.jpg',
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		];
 		$options = [
 			'collection' => 'portfolio',
-			'property' => 'featured'
+			'property'   => 'featured',
 		];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksAPI('/api', 'gallery-123', $image, [], $options);
-		
+
 		expect($result)->toContain('/api/imageworks/portfolio/gallery-123/featured.jpg');
 	}
 
 	public function testBuildImageworksGalleryAPIStaticMethod(): void
 	{
 		// Test the static gallery API method
-		$baseApi = '/api';
-		$id = 'gallery-123';
-		$name = 'photo.jpg';
-		$image = ['name' => 'photo.jpg', 'uploadDate' => '2024-01-15T12:30:45Z'];
+		$baseApi    = '/api';
+		$id         = 'gallery-123';
+		$name       = 'photo.jpg';
+		$image      = ['name' => 'photo.jpg', 'uploadDate' => '2024-01-15T12:30:45Z'];
 		$imageworks = ['w' => 300, 'h' => 200];
-		$options = ['collection' => 'photos', 'property' => 'images'];
-		
+		$options    = ['collection' => 'photos', 'property' => 'images'];
+
 		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
 			$baseApi,
 			$id,
@@ -172,7 +172,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			$imageworks,
 			$options
 		);
-		
+
 		expect($result)->toContain('/api/imageworks/photos/gallery-123/images/photo.jpg');
 		expect($result)->toContain('w=300');
 		expect($result)->toContain('h=200');
@@ -182,7 +182,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	{
 		// Test with dynamic routes (first, last, random)
 		$dynamicRoutes = ['first', 'last', 'random'];
-		
+
 		foreach ($dynamicRoutes as $route) {
 			$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
 				'/api',
@@ -192,7 +192,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 				['w' => 200],
 				[]
 			);
-			
+
 			expect($result)->toContain("/api/imageworks/gallery/gallery-123/gallery/$route");
 			expect($result)->toContain('w=200');
 		}
@@ -205,19 +205,19 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			'gallery-123',
 			'photo.jpg',
 			['name' => 'photo.jpg'], // Missing uploadDate
-			['w' => 300],
+			['w'    => 300],
 			[]
 		);
-		
+
 		// Should return empty string when uploadDate is missing for regular files
 		expect($result)->toBe('');
 	}
 
 	public function testBuildImageworksGalleryAPIWithFormatConversion(): void
 	{
-		$image = ['name' => 'photo.png', 'uploadDate' => '2024-01-15T12:30:45Z'];
+		$image      = ['name' => 'photo.png', 'uploadDate' => '2024-01-15T12:30:45Z'];
 		$imageworks = ['w' => 300, 'fm' => 'webp'];
-		
+
 		$result = TotalCMSTwigAdapter::buildImageworksGalleryAPI(
 			'/api',
 			'gallery-123',
@@ -226,7 +226,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			$imageworks,
 			[]
 		);
-		
+
 		expect($result)->toContain('/api/imageworks/gallery/gallery-123/gallery/photo.webp');
 		expect($result)->not->toContain('fm=webp');
 	}
@@ -234,35 +234,35 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testImagePathMethodLogic(): void
 	{
 		// Test the logic components that can be tested without full dependencies
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
 		$adapter->api = '/api';
-		
+
 		// Test null ID handling
 		expect($adapter->imagePath(null))->toBe('');
 		expect($adapter->imagePath(''))->toBe('');
-		
+
 		// Test with valid image data
 		$adapter->method('data')->willReturn([
-			'name' => 'test.jpg',
-			'size' => 12345,
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.jpg',
+			'size'       => 12345,
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		]);
-		
+
 		$result = $adapter->imagePath('test-id');
 		expect($result)->toBeString();
 		expect($result)->toContain('/api/imageworks/image/test-id/image.jpg');
-		
+
 		// Test with zero-size image (should return empty)
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
+		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, ['data']);
 		$adapter->api = '/api';
 		$adapter->method('data')->willReturn([
-			'name' => 'test.jpg',
-			'size' => 0,
-			'uploadDate' => '2024-01-15T12:30:45Z'
+			'name'       => 'test.jpg',
+			'size'       => 0,
+			'uploadDate' => '2024-01-15T12:30:45Z',
 		]);
-		
+
 		expect($adapter->imagePath('test-id'))->toBe('');
-		
+
 		// Test with non-array data
 		$adapter->method('data')->willReturn('not an array');
 		expect($adapter->imagePath('test-id'))->toBe('');
@@ -271,24 +271,24 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testImageFromDataMethodEdgeCases(): void
 	{
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		
+
 		// Test with empty data
 		expect($adapter->imageFromData([], 'test-id'))->toBe('');
-		
+
 		// Test with empty ID
 		expect($adapter->imageFromData(['filename' => 'test.jpg'], ''))->toBe('');
-		
+
 		// Note: imageFromData requires string $id parameter, so we can't pass null
 	}
 
 	public function testGalleryPathMethodEdgeCases(): void
 	{
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		
+
 		// Test null/empty ID handling
 		expect($adapter->galleryPath(null, 'image.jpg'))->toBe('');
 		expect($adapter->galleryPath('', 'image.jpg'))->toBe('');
-		
+
 		// Test null/empty name handling
 		expect($adapter->galleryPath('gallery-id', null))->toBe('');
 		expect($adapter->galleryPath('gallery-id', ''))->toBe('');
@@ -296,17 +296,17 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 	public function testPrettyUrlEdgeCases(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter         = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 		$adapter->domain = 'example.com';
-		
-		// Test various URL formats  
+
+		// Test various URL formats
 		expect($adapter->prettyUrl(''))->toBe('/');
 		expect($adapter->prettyUrl('/'))->toBe('/');
 		expect($adapter->prettyUrl('/page'))->toBe('/page/');
 		expect($adapter->prettyUrl('/page/'))->toBe('/page/');
 		expect($adapter->prettyUrl('/page.html'))->toBe('/page.html/'); // .html is not .php
 		expect($adapter->prettyUrl('/category/page.php'))->toBe('/category/');
-		
+
 		// Test with domain
 		expect($adapter->prettyUrl('/page', true))->toBe('https://example.com/page/');
 		expect($adapter->prettyUrl('/', true))->toBe('https://example.com/');
@@ -314,19 +314,19 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 	public function testDownloadUrlParameterHandling(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 		$adapter->api = '/api';
-		
+
 		// Test basic download URL
 		expect($adapter->download('test-id'))->toBe('/api/download/file/test-id/file');
-		
+
 		// Test with collection and property options
 		$result = $adapter->download('test-id', [
 			'collection' => 'documents',
-			'property' => 'attachment'
+			'property'   => 'attachment',
 		]);
 		expect($result)->toBe('/api/download/documents/test-id/attachment');
-		
+
 		// Test with password (should contain encrypted pwd parameter)
 		$result = $adapter->download('test-id', ['pwd' => 'secret123']);
 		expect($result)->toContain('/api/download/file/test-id/file?pwd=');
@@ -335,33 +335,33 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 	public function testStreamUrlParameterHandling(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 		$adapter->api = '/api';
-		
+
 		// Test basic stream URL
 		expect($adapter->stream('test-id'))->toBe('/api/stream/file/test-id/file');
-		
+
 		// Test with collection and property options
 		$result = $adapter->stream('test-id', [
 			'collection' => 'videos',
-			'property' => 'video'
+			'property'   => 'video',
 		]);
 		expect($result)->toBe('/api/stream/videos/test-id/video');
 	}
 
 	public function testDepotUrlParameterHandling(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 		$adapter->api = '/api';
-		
+
 		// Test depot download
 		expect($adapter->depotDownload('depot-id', 'file.pdf'))
 			->toBe('/api/download/depot/depot-id/depot/file.pdf');
-		
+
 		// Test depot stream
 		expect($adapter->depotStream('depot-id', 'file.mp4'))
 			->toBe('/api/stream/depot/depot-id/depot/file.mp4');
-		
+
 		// Test with path in filename
 		$result = $adapter->depotDownload('depot-id', 'subfolder/file.pdf');
 		expect($result)->toContain('/api/download/depot/depot-id/depot/file.pdf');
@@ -370,9 +370,9 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 
 	public function testLoginUrlGeneration(): void
 	{
-		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
+		$adapter      = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 		$adapter->api = '/api';
-		
+
 		expect($adapter->login())->toBe('/api/login');
 		expect($adapter->login('admin'))->toBe('/api/login/admin');
 		expect($adapter->login(''))->toBe('/api/login');
@@ -381,16 +381,16 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 	public function testProcessJobQueueCommandGeneration(): void
 	{
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
-		
+
 		// Mock $_SERVER for test
 		$_SERVER['DOCUMENT_ROOT'] = '/var/www/html';
-		
+
 		$command = $adapter->processJobQueueCommand();
-		
+
 		expect($command)->toBeString();
 		expect($command)->toContain('processJobs.php');
 		expect($command)->toContain('--docroot=');
-		
+
 		// Clean up
 		unset($_SERVER['DOCUMENT_ROOT']);
 	}

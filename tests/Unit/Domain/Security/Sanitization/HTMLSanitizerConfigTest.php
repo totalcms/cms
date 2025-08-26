@@ -3,17 +3,16 @@
 use TotalCMS\Domain\Security\Sanitization\HTMLSanitizerConfig;
 
 describe('HTMLSanitizerConfig', function (): void {
-
 	// -------------------------
 	// Rich Content Allowed Tags
 	// -------------------------
 
 	test('HTMLSanitizerConfig → RICH_CONTENT_ALLOWED_TAGS contains expected HTML tags', function (): void {
 		$allowedTags = HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS;
-		
+
 		expect($allowedTags)->toBeArray();
 		expect($allowedTags)->not->toBeEmpty();
-		
+
 		// Basic text formatting
 		expect($allowedTags)->toContain('p');
 		expect($allowedTags)->toContain('br');
@@ -22,7 +21,7 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($allowedTags)->toContain('b');
 		expect($allowedTags)->toContain('i');
 		expect($allowedTags)->toContain('u');
-		
+
 		// Headings
 		expect($allowedTags)->toContain('h1');
 		expect($allowedTags)->toContain('h2');
@@ -30,7 +29,7 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($allowedTags)->toContain('h4');
 		expect($allowedTags)->toContain('h5');
 		expect($allowedTags)->toContain('h6');
-		
+
 		// Lists
 		expect($allowedTags)->toContain('ul');
 		expect($allowedTags)->toContain('ol');
@@ -38,13 +37,13 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($allowedTags)->toContain('dl');
 		expect($allowedTags)->toContain('dt');
 		expect($allowedTags)->toContain('dd');
-		
+
 		// Links and media
 		expect($allowedTags)->toContain('a');
 		expect($allowedTags)->toContain('img');
 		expect($allowedTags)->toContain('figure');
 		expect($allowedTags)->toContain('figcaption');
-		
+
 		// Tables
 		expect($allowedTags)->toContain('table');
 		expect($allowedTags)->toContain('thead');
@@ -52,7 +51,7 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($allowedTags)->toContain('tr');
 		expect($allowedTags)->toContain('td');
 		expect($allowedTags)->toContain('th');
-		
+
 		// Semantic HTML5
 		expect($allowedTags)->toContain('section');
 		expect($allowedTags)->toContain('article');
@@ -61,14 +60,14 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($allowedTags)->toContain('footer');
 		expect($allowedTags)->toContain('main');
 		expect($allowedTags)->toContain('nav');
-		
+
 		// Code elements
 		expect($allowedTags)->toContain('code');
 		expect($allowedTags)->toContain('pre');
 		expect($allowedTags)->toContain('kbd');
 		expect($allowedTags)->toContain('samp');
 		expect($allowedTags)->toContain('var');
-		
+
 		// Media elements
 		expect($allowedTags)->toContain('audio');
 		expect($allowedTags)->toContain('video');
@@ -78,7 +77,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → RICH_CONTENT_ALLOWED_TAGS has expected count', function (): void {
 		$allowedTags = HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS;
-		
+
 		// Should have a substantial number of allowed tags for rich content
 		expect(count($allowedTags))->toBeGreaterThan(40);
 		expect(count($allowedTags))->toBeLessThan(80); // Reasonable upper bound
@@ -86,7 +85,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → RICH_CONTENT_ALLOWED_TAGS contains no dangerous tags', function (): void {
 		$allowedTags = HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS;
-		
+
 		// Should not contain dangerous script-related tags
 		expect($allowedTags)->not->toContain('script');
 		expect($allowedTags)->not->toContain('iframe');
@@ -107,10 +106,10 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → STRICT_CONTENT_ALLOWED_TAGS contains basic formatting', function (): void {
 		$strictTags = HTMLSanitizerConfig::STRICT_CONTENT_ALLOWED_TAGS;
-		
+
 		expect($strictTags)->toBeArray();
 		expect($strictTags)->not->toBeEmpty();
-		
+
 		// Basic elements only
 		expect($strictTags)->toContain('p');
 		expect($strictTags)->toContain('br');
@@ -126,9 +125,9 @@ describe('HTMLSanitizerConfig', function (): void {
 	});
 
 	test('HTMLSanitizerConfig → STRICT_CONTENT_ALLOWED_TAGS is subset of rich content tags', function (): void {
-		$richTags = HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS;
+		$richTags   = HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS;
 		$strictTags = HTMLSanitizerConfig::STRICT_CONTENT_ALLOWED_TAGS;
-		
+
 		// All strict tags should be present in rich tags
 		foreach ($strictTags as $tag) {
 			expect($richTags)->toContain($tag);
@@ -136,12 +135,12 @@ describe('HTMLSanitizerConfig', function (): void {
 	});
 
 	test('HTMLSanitizerConfig → STRICT_CONTENT_ALLOWED_TAGS is more restrictive', function (): void {
-		$richTags = HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS;
+		$richTags   = HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS;
 		$strictTags = HTMLSanitizerConfig::STRICT_CONTENT_ALLOWED_TAGS;
-		
+
 		expect(count($strictTags))->toBeLessThan(count($richTags));
 		expect(count($strictTags))->toBeLessThan(15); // Should be quite restrictive
-		
+
 		// Should not contain some tags that rich content allows
 		expect($strictTags)->not->toContain('h1');
 		expect($strictTags)->not->toContain('table');
@@ -156,10 +155,10 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → ALLOWED_CSS_PROPERTIES contains common CSS properties', function (): void {
 		$cssProps = HTMLSanitizerConfig::ALLOWED_CSS_PROPERTIES;
-		
+
 		expect($cssProps)->toBeArray();
 		expect($cssProps)->not->toBeEmpty();
-		
+
 		// Typography
 		expect($cssProps)->toContain('color');
 		expect($cssProps)->toContain('font-family');
@@ -169,7 +168,7 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($cssProps)->toContain('text-align');
 		expect($cssProps)->toContain('text-decoration');
 		expect($cssProps)->toContain('line-height');
-		
+
 		// Layout
 		expect($cssProps)->toContain('margin');
 		expect($cssProps)->toContain('padding');
@@ -177,7 +176,7 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($cssProps)->toContain('height');
 		expect($cssProps)->toContain('display');
 		expect($cssProps)->toContain('position');
-		
+
 		// Margins and padding
 		expect($cssProps)->toContain('margin-top');
 		expect($cssProps)->toContain('margin-right');
@@ -187,21 +186,21 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($cssProps)->toContain('padding-right');
 		expect($cssProps)->toContain('padding-bottom');
 		expect($cssProps)->toContain('padding-left');
-		
+
 		// Background and borders
 		expect($cssProps)->toContain('background');
 		expect($cssProps)->toContain('background-color');
 		expect($cssProps)->toContain('border');
 		expect($cssProps)->toContain('border-radius');
-		
+
 		// Lists
 		expect($cssProps)->toContain('list-style');
 		expect($cssProps)->toContain('list-style-type');
-		
+
 		// Tables
 		expect($cssProps)->toContain('border-collapse');
 		expect($cssProps)->toContain('border-spacing');
-		
+
 		// Misc
 		expect($cssProps)->toContain('opacity');
 		expect($cssProps)->toContain('visibility');
@@ -209,7 +208,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → ALLOWED_CSS_PROPERTIES excludes dangerous properties', function (): void {
 		$cssProps = HTMLSanitizerConfig::ALLOWED_CSS_PROPERTIES;
-		
+
 		// Should not contain dangerous or advanced CSS
 		expect($cssProps)->not->toContain('content');
 		expect($cssProps)->not->toContain('expression');
@@ -223,7 +222,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → ALLOWED_CSS_PROPERTIES has reasonable count', function (): void {
 		$cssProps = HTMLSanitizerConfig::ALLOWED_CSS_PROPERTIES;
-		
+
 		expect(count($cssProps))->toBeGreaterThan(30);
 		expect(count($cssProps))->toBeLessThan(100); // Reasonable upper bound
 	});
@@ -234,10 +233,10 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → ALLOWED_IFRAME_DOMAINS contains trusted video platforms', function (): void {
 		$domains = HTMLSanitizerConfig::ALLOWED_IFRAME_DOMAINS;
-		
+
 		expect($domains)->toBeArray();
 		expect($domains)->not->toBeEmpty();
-		
+
 		// Video platforms
 		expect($domains)->toContain('www.youtube.com');
 		expect($domains)->toContain('youtube.com');
@@ -245,11 +244,11 @@ describe('HTMLSanitizerConfig', function (): void {
 		expect($domains)->toContain('vimeo.com');
 		expect($domains)->toContain('www.dailymotion.com');
 		expect($domains)->toContain('dailymotion.com');
-		
+
 		// Educational
 		expect($domains)->toContain('embed.ted.com');
 		expect($domains)->toContain('www.ted.com');
-		
+
 		// Code platforms
 		expect($domains)->toContain('codepen.io');
 		expect($domains)->toContain('jsfiddle.net');
@@ -259,7 +258,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → ALLOWED_IFRAME_DOMAINS excludes suspicious domains', function (): void {
 		$domains = HTMLSanitizerConfig::ALLOWED_IFRAME_DOMAINS;
-		
+
 		// Should not contain suspicious or unknown domains
 		expect($domains)->not->toContain('evil.com');
 		expect($domains)->not->toContain('malware.net');
@@ -271,7 +270,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → ALLOWED_IFRAME_DOMAINS has reasonable count', function (): void {
 		$domains = HTMLSanitizerConfig::ALLOWED_IFRAME_DOMAINS;
-		
+
 		expect(count($domains))->toBeGreaterThan(5);
 		expect(count($domains))->toBeLessThan(20); // Should be curated list
 	});
@@ -282,28 +281,28 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → DANGEROUS_MIME_TYPES contains executable types', function (): void {
 		$mimeTypes = HTMLSanitizerConfig::DANGEROUS_MIME_TYPES;
-		
+
 		expect($mimeTypes)->toBeArray();
 		expect($mimeTypes)->not->toBeEmpty();
-		
+
 		// PHP executables
 		expect($mimeTypes)->toContain('application/x-php');
 		expect($mimeTypes)->toContain('application/x-httpd-php');
 		expect($mimeTypes)->toContain('application/php');
 		expect($mimeTypes)->toContain('text/x-php');
-		
+
 		// Shell scripts
 		expect($mimeTypes)->toContain('application/x-sh');
 		expect($mimeTypes)->toContain('application/x-csh');
 		expect($mimeTypes)->toContain('text/x-shellscript');
-		
+
 		// Executables
 		expect($mimeTypes)->toContain('application/x-executable');
 		expect($mimeTypes)->toContain('application/x-msdownload');
 		expect($mimeTypes)->toContain('application/x-msdos-program');
 		expect($mimeTypes)->toContain('application/x-ms-dos-executable');
 		expect($mimeTypes)->toContain('application/x-winexe');
-		
+
 		// JavaScript and scripting
 		expect($mimeTypes)->toContain('application/x-javascript');
 		expect($mimeTypes)->toContain('text/javascript');
@@ -314,7 +313,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → DANGEROUS_MIME_TYPES excludes safe types', function (): void {
 		$mimeTypes = HTMLSanitizerConfig::DANGEROUS_MIME_TYPES;
-		
+
 		// Should not contain safe image/document types
 		expect($mimeTypes)->not->toContain('image/jpeg');
 		expect($mimeTypes)->not->toContain('image/png');
@@ -328,7 +327,7 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → DANGEROUS_MIME_TYPES has reasonable count', function (): void {
 		$mimeTypes = HTMLSanitizerConfig::DANGEROUS_MIME_TYPES;
-		
+
 		expect(count($mimeTypes))->toBeGreaterThan(10);
 		expect(count($mimeTypes))->toBeLessThan(30); // Should be focused list
 	});
@@ -353,7 +352,7 @@ describe('HTMLSanitizerConfig', function (): void {
 			HTMLSanitizerConfig::ALLOWED_IFRAME_DOMAINS,
 			HTMLSanitizerConfig::DANGEROUS_MIME_TYPES,
 		];
-		
+
 		foreach ($constants as $constantArray) {
 			foreach ($constantArray as $item) {
 				expect($item)->toBeString();
@@ -364,13 +363,13 @@ describe('HTMLSanitizerConfig', function (): void {
 
 	test('HTMLSanitizerConfig → arrays have no duplicates', function (): void {
 		$constants = [
-			'RICH_CONTENT_ALLOWED_TAGS' => HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS,
+			'RICH_CONTENT_ALLOWED_TAGS'   => HTMLSanitizerConfig::RICH_CONTENT_ALLOWED_TAGS,
 			'STRICT_CONTENT_ALLOWED_TAGS' => HTMLSanitizerConfig::STRICT_CONTENT_ALLOWED_TAGS,
-			'ALLOWED_CSS_PROPERTIES' => HTMLSanitizerConfig::ALLOWED_CSS_PROPERTIES,
-			'ALLOWED_IFRAME_DOMAINS' => HTMLSanitizerConfig::ALLOWED_IFRAME_DOMAINS,
-			'DANGEROUS_MIME_TYPES' => HTMLSanitizerConfig::DANGEROUS_MIME_TYPES,
+			'ALLOWED_CSS_PROPERTIES'      => HTMLSanitizerConfig::ALLOWED_CSS_PROPERTIES,
+			'ALLOWED_IFRAME_DOMAINS'      => HTMLSanitizerConfig::ALLOWED_IFRAME_DOMAINS,
+			'DANGEROUS_MIME_TYPES'        => HTMLSanitizerConfig::DANGEROUS_MIME_TYPES,
 		];
-		
+
 		foreach ($constants as $name => $constantArray) {
 			$unique = array_unique($constantArray);
 			expect(count($unique))->toBe(count($constantArray), "Constant {$name} should not have duplicates");

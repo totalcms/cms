@@ -141,7 +141,7 @@ final class PasswordDataTest extends TestCase
 		$this->assertFalse(password_verify('wrongPassword', $data->hash));
 		$this->assertFalse(password_verify('', $data->hash));
 		$this->assertFalse(password_verify('similar-password', $data->hash));
-		
+
 		// Verify hash is long enough to be a proper cryptographic hash
 		$this->assertGreaterThan(50, strlen($data->hash));
 	}

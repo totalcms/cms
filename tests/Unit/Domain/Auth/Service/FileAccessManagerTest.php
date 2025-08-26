@@ -1,16 +1,14 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Domain\Auth\Service;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Service\PropertyFetcher;
 
 final class FileAccessManagerTest extends TestCase
 {
@@ -18,7 +16,7 @@ final class FileAccessManagerTest extends TestCase
 	{
 		// Test that FileAccessManager can be created with partial mocking
 		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, []);
-		
+
 		expect($fileAccessManager)->toBeInstanceOf(FileAccessManager::class);
 	}
 
@@ -26,14 +24,14 @@ final class FileAccessManagerTest extends TestCase
 	{
 		// Test the session validation logic
 		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['sessionHasUser']);
-		
+
 		// Mock different return values
 		$fileAccessManager->method('sessionHasUser')
 			->willReturnOnConsecutiveCalls(true, false);
-		
+
 		// Test true case (both user and collection exist)
 		expect($fileAccessManager->sessionHasUser())->toBeTrue();
-		
+
 		// Test false case (missing user or collection)
 		expect($fileAccessManager->sessionHasUser())->toBeFalse();
 	}
@@ -42,17 +40,17 @@ final class FileAccessManagerTest extends TestCase
 	{
 		// Test the protection logic components
 		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['isProtectedByGroups']);
-		
+
 		// Test different scenarios
 		$fileAccessManager->method('isProtectedByGroups')
 			->willReturnOnConsecutiveCalls(true, false, false);
-		
+
 		// Protected file with groups
 		expect($fileAccessManager->isProtectedByGroups())->toBeTrue();
-		
+
 		// Not protected file
 		expect($fileAccessManager->isProtectedByGroups())->toBeFalse();
-		
+
 		// Protected file but no groups
 		expect($fileAccessManager->isProtectedByGroups())->toBeFalse();
 	}
@@ -61,13 +59,13 @@ final class FileAccessManagerTest extends TestCase
 	{
 		// Test password protection detection
 		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['isPasswordProtected']);
-		
+
 		$fileAccessManager->method('isPasswordProtected')
 			->willReturnOnConsecutiveCalls(true, false);
-		
+
 		// File with password
 		expect($fileAccessManager->isPasswordProtected())->toBeTrue();
-		
+
 		// File without password (empty hash)
 		expect($fileAccessManager->isPasswordProtected())->toBeFalse();
 	}
@@ -76,20 +74,21 @@ final class FileAccessManagerTest extends TestCase
 	{
 		// Test the access control logic flow
 		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, [
-			'sessionHasUser', 'userHasAccess'
+			'sessionHasUser', 'userHasAccess',
 		]);
-		
+
 		// Case 1: No session - should return false
 		$fileAccessManager->method('sessionHasUser')->willReturn(false);
 		$fileAccessManager->method('userHasAccess')->willReturnCallback(
-			function() use ($fileAccessManager) {
+			function () use ($fileAccessManager) {
 				if (!$fileAccessManager->sessionHasUser()) {
 					return false;
 				}
+
 				return true;
 			}
 		);
-		
+
 		expect($fileAccessManager->userHasAccess())->toBeFalse();
 	}
 
@@ -97,16 +96,16 @@ final class FileAccessManagerTest extends TestCase
 	{
 		// Test password verification components
 		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, [
-			'verfiyPassword', 'verfiyPasswordOnly'
+			'verfiyPassword', 'verfiyPasswordOnly',
 		]);
-		
+
 		// Test successful password verification
 		$fileAccessManager->method('verfiyPassword')->willReturnOnConsecutiveCalls(true, false);
 		$fileAccessManager->method('verfiyPasswordOnly')->willReturnOnConsecutiveCalls(true, false);
-		
+
 		expect($fileAccessManager->verfiyPassword('correct-password'))->toBeTrue();
 		expect($fileAccessManager->verfiyPasswordOnly('correct-password'))->toBeTrue();
-		
+
 		// Test failed password verification
 		expect($fileAccessManager->verfiyPassword('wrong-password'))->toBeFalse();
 		expect($fileAccessManager->verfiyPasswordOnly('wrong-password'))->toBeFalse();
@@ -115,19 +114,19 @@ final class FileAccessManagerTest extends TestCase
 	public function testLoadDepotFileExceptionHandling(): void
 	{
 		// Test the logic for depot file validation that would throw exceptions
-		$mockDepotData = $this->createMock(DepotData::class);
+		$mockDepotData      = $this->createMock(DepotData::class);
 		$mockCollectionData = $this->createMock(CollectionData::class);
-		$mockInvalidData = $this->createMock(\stdClass::class);
-		
+		$mockInvalidData    = $this->createMock(\stdClass::class);
+
 		// Test the validation logic that happens in loadDepotFile
-		$isValidDepot1 = $mockDepotData instanceof DepotData;
+		$isValidDepot1      = $mockDepotData instanceof DepotData;
 		$isValidCollection1 = $mockCollectionData instanceof CollectionData;
-		$isValidDepot2 = $mockInvalidData instanceof DepotData;
-		
+		$isValidDepot2      = $mockInvalidData instanceof DepotData;
+
 		expect($isValidDepot1)->toBeTrue();
 		expect($isValidCollection1)->toBeTrue();
 		expect($isValidDepot2)->toBeFalse();
-		
+
 		// Test the combined validation logic
 		$wouldThrowException = !($isValidDepot2 && $isValidCollection1);
 		expect($wouldThrowException)->toBeTrue();
@@ -136,19 +135,19 @@ final class FileAccessManagerTest extends TestCase
 	public function testLoadFileExceptionHandling(): void
 	{
 		// Test the logic for file validation that would throw exceptions
-		$mockFileData = $this->createMock(FileData::class);
+		$mockFileData       = $this->createMock(FileData::class);
 		$mockCollectionData = $this->createMock(CollectionData::class);
-		$mockInvalidData = $this->createMock(\stdClass::class);
-		
+		$mockInvalidData    = $this->createMock(\stdClass::class);
+
 		// Test the validation logic that happens in loadFile
-		$isValidFile1 = $mockFileData instanceof FileData;
+		$isValidFile1       = $mockFileData instanceof FileData;
 		$isValidCollection1 = $mockCollectionData instanceof CollectionData;
-		$isValidFile2 = $mockInvalidData instanceof FileData;
-		
+		$isValidFile2       = $mockInvalidData instanceof FileData;
+
 		expect($isValidFile1)->toBeTrue();
 		expect($isValidCollection1)->toBeTrue();
 		expect($isValidFile2)->toBeFalse();
-		
+
 		// Test the combined validation logic
 		$wouldThrowException = !($isValidFile2 && $isValidCollection1);
 		expect($wouldThrowException)->toBeTrue();
@@ -157,25 +156,25 @@ final class FileAccessManagerTest extends TestCase
 	public function testFileProtectionLogicComponents(): void
 	{
 		// Test the logical components used in protection checks
-		
+
 		// Test file protection status
-		$fileProtected = true;
+		$fileProtected    = true;
 		$fileNotProtected = false;
 		expect($fileProtected)->toBeTrue();
 		expect($fileNotProtected)->toBeFalse();
-		
+
 		// Test collection groups
 		$emptyGroups = [];
-		$withGroups = ['admin', 'editor'];
-		
+		$withGroups  = ['admin', 'editor'];
+
 		expect($emptyGroups === [])->toBeTrue();
 		expect($withGroups === [])->toBeFalse();
-		
+
 		// Test protection logic: file is protected AND collection has groups
-		$protectedWithGroups = $fileProtected && $withGroups !== [];
+		$protectedWithGroups    = $fileProtected && $withGroups !== [];
 		$protectedWithoutGroups = $fileProtected && $emptyGroups !== [];
 		$notProtectedWithGroups = $fileNotProtected && $withGroups !== [];
-		
+
 		expect($protectedWithGroups)->toBeTrue();
 		expect($protectedWithoutGroups)->toBeFalse();
 		expect($notProtectedWithGroups)->toBeFalse();
@@ -184,21 +183,21 @@ final class FileAccessManagerTest extends TestCase
 	public function testAccessControlLogicComponents(): void
 	{
 		// Test access control decision logic components
-		
+
 		// Test super admin logic
-		$isSuperAdmin = true;
+		$isSuperAdmin    = true;
 		$isNotSuperAdmin = false;
 		expect($isSuperAdmin)->toBeTrue();
 		expect($isNotSuperAdmin)->toBeFalse();
-		
+
 		// Test collection groups access logic
 		$emptyGroups = [];
-		$withGroups = ['admin'];
-		
+		$withGroups  = ['admin'];
+
 		// If collection groups are empty, grant access (from the actual method)
 		$grantAccessForEmptyGroups = $emptyGroups === [];
 		expect($grantAccessForEmptyGroups)->toBeTrue();
-		
+
 		// If collection has groups, need to check user groups
 		$needsGroupCheck = $withGroups !== [];
 		expect($needsGroupCheck)->toBeTrue();
@@ -209,11 +208,11 @@ final class FileAccessManagerTest extends TestCase
 		// Test password hash validation logic
 		$emptyHash = '';
 		$validHash = '$2y$10$example.hash';
-		
+
 		// Password protection logic: hash is not empty
 		$isPasswordProtected1 = $emptyHash !== '';
 		$isPasswordProtected2 = $validHash !== '';
-		
+
 		expect($isPasswordProtected1)->toBeFalse();
 		expect($isPasswordProtected2)->toBeTrue();
 	}
@@ -223,13 +222,13 @@ final class FileAccessManagerTest extends TestCase
 		// Test user ID validation components
 		$emptyUserId = '';
 		$validUserId = 'john-doe';
-		$nullUserId = null;
-		
+		$nullUserId  = null;
+
 		// Super admin check logic: user ID must not be empty
 		$canBeSuperAdmin1 = !empty($emptyUserId);
 		$canBeSuperAdmin2 = !empty($validUserId);
 		$canBeSuperAdmin3 = !empty($nullUserId);
-		
+
 		expect($canBeSuperAdmin1)->toBeFalse();
 		expect($canBeSuperAdmin2)->toBeTrue();
 		expect($canBeSuperAdmin3)->toBeFalse();
@@ -238,16 +237,16 @@ final class FileAccessManagerTest extends TestCase
 	public function testSuperAdminBypassLogic(): void
 	{
 		// Test super admin bypass logic used in verfiyPassword
-		$hasSession = true;
-		$noSession = false;
-		$isSuperAdmin = true;
+		$hasSession      = true;
+		$noSession       = false;
+		$isSuperAdmin    = true;
 		$isNotSuperAdmin = false;
-		
+
 		// Super admin with session bypasses password check
 		$bypassPassword1 = $hasSession && $isSuperAdmin;
 		$bypassPassword2 = $hasSession && $isNotSuperAdmin;
 		$bypassPassword3 = $noSession && $isSuperAdmin;
-		
+
 		expect($bypassPassword1)->toBeTrue();
 		expect($bypassPassword2)->toBeFalse();
 		expect($bypassPassword3)->toBeFalse();

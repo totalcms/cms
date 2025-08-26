@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Import;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\AlloyImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -33,12 +33,12 @@ class AlloyImporterTest extends TestCase
 		mkdir($this->tempDir);
 
 		// Create mock dependencies (now possible since final was removed)
-		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->collectionFactory = $this->createMock(CollectionFactory::class);
+		$this->collectionFetcher    = $this->createMock(CollectionFetcher::class);
+		$this->collectionFactory    = $this->createMock(CollectionFactory::class);
 		$this->collectionRepository = $this->createMock(CollectionRepository::class);
-		$this->jobQueuer = $this->createMock(JobQueuer::class);
-		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->loggerFactory = $this->createMock(LoggerFactory::class);
+		$this->jobQueuer            = $this->createMock(JobQueuer::class);
+		$this->logger               = $this->createMock(LoggerInterface::class);
+		$this->loggerFactory        = $this->createMock(LoggerFactory::class);
 
 		// Setup logger factory chain
 		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -78,10 +78,10 @@ class AlloyImporterTest extends TestCase
 		$_SERVER['DOCUMENT_ROOT'] = $this->tempDir;
 
 		$folders = [
-			'blog' => 'nonexistent-blog',
+			'blog'          => 'nonexistent-blog',
 			'image_uploads' => 'nonexistent-uploads',
-			'embeds' => 'nonexistent-embeds',
-			'droplets' => 'nonexistent-droplets'
+			'embeds'        => 'nonexistent-embeds',
+			'droplets'      => 'nonexistent-droplets',
 		];
 
 		$result = $this->alloyImporter->analyze($folders);
@@ -104,10 +104,10 @@ class AlloyImporterTest extends TestCase
 		mkdir($this->tempDir . '/droplets');
 
 		$folders = [
-			'blog' => 'blog',
+			'blog'          => 'blog',
 			'image_uploads' => 'uploads',
-			'embeds' => 'embeds',
-			'droplets' => 'droplets'
+			'embeds'        => 'embeds',
+			'droplets'      => 'droplets',
 		];
 
 		$importCount = $this->alloyImporter->import($folders);

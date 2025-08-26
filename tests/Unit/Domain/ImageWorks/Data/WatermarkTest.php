@@ -4,7 +4,6 @@ use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 
 describe('Watermark', function (): void {
-
 	// -------------------------
 	// Constructor and Defaults
 	// -------------------------
@@ -71,7 +70,7 @@ describe('Watermark', function (): void {
 
 	test('Watermark → toArray returns empty array when all properties null', function (): void {
 		$watermark = new Watermark();
-		$result = $watermark->toArray();
+		$result    = $watermark->toArray();
 
 		expect($result)->toBe([]);
 	});
@@ -87,8 +86,8 @@ describe('Watermark', function (): void {
 		$result = $watermark->toArray();
 
 		expect($result)->toBe([
-			'mark' => 'logo.png',
-			'markw' => '100',
+			'mark'      => 'logo.png',
+			'markw'     => '100',
 			'markalpha' => '75',
 		]);
 		expect($result)->not->toHaveKey('markpos');
@@ -110,14 +109,14 @@ describe('Watermark', function (): void {
 		$result = $watermark->toArray();
 
 		expect($result)->toBe([
-			'mark' => 'watermark.png',
-			'markpos' => 'bottom-right',
-			'markw' => '150',
-			'markh' => '75',
-			'markx' => '20',
-			'marky' => '20',
-			'markfit' => 'cover',
-			'markpad' => '10',
+			'mark'      => 'watermark.png',
+			'markpos'   => 'bottom-right',
+			'markw'     => '150',
+			'markh'     => '75',
+			'markx'     => '20',
+			'marky'     => '20',
+			'markfit'   => 'cover',
+			'markpad'   => '10',
 			'markalpha' => '90',
 		]);
 	});
@@ -141,25 +140,25 @@ describe('Watermark', function (): void {
 
 	test('Watermark → isEmpty returns true when mark is null', function (): void {
 		$watermark = new Watermark();
-		
+
 		expect($watermark->isEmpty())->toBe(true);
 	});
 
 	test('Watermark → isEmpty returns true when mark is explicitly null', function (): void {
 		$watermark = new Watermark(mark: null);
-		
+
 		expect($watermark->isEmpty())->toBe(true);
 	});
 
 	test('Watermark → isEmpty returns false when mark is set', function (): void {
 		$watermark = new Watermark(mark: 'logo.png');
-		
+
 		expect($watermark->isEmpty())->toBe(false);
 	});
 
 	test('Watermark → isEmpty returns false when mark is empty string', function (): void {
 		$watermark = new Watermark(mark: '');
-		
+
 		expect($watermark->isEmpty())->toBe(false);
 	});
 
@@ -170,7 +169,7 @@ describe('Watermark', function (): void {
 			markw: '100',
 			markalpha: '50'
 		);
-		
+
 		expect($watermark->isEmpty())->toBe(true);
 	});
 
@@ -179,9 +178,9 @@ describe('Watermark', function (): void {
 	// -------------------------
 
 	test('Watermark → is readonly class with immutable properties', function (): void {
-		$watermark = new Watermark(mark: 'test.png');
+		$watermark  = new Watermark(mark: 'test.png');
 		$reflection = new ReflectionClass($watermark);
-		
+
 		expect($reflection->isReadOnly())->toBe(true);
 	});
 
@@ -199,7 +198,7 @@ describe('Watermark', function (): void {
 		);
 
 		expect($watermark->isEmpty())->toBe(false);
-		
+
 		$params = $watermark->toArray();
 		expect($params)->toHaveKey('mark');
 		expect($params)->toHaveKey('markpos');
@@ -208,7 +207,7 @@ describe('Watermark', function (): void {
 		expect($params)->toHaveKey('markalpha');
 		expect($params)->not->toHaveKey('markw');
 		expect($params)->not->toHaveKey('markh');
-		
+
 		expect($watermark->path)->toBe(TextWatermarkFactory::WATERMARK_DIR);
 	});
 
@@ -222,7 +221,7 @@ describe('Watermark', function (): void {
 
 		expect($watermark->isEmpty())->toBe(false);
 		expect($watermark->path)->toBe('.watermarks');
-		
+
 		$params = $watermark->toArray();
 		expect($params['mark'])->toBe('text-watermark.png');
 		expect($params['markpos'])->toBe('center');

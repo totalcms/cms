@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Domain\Object\Service;
 
@@ -27,11 +27,11 @@ final class ObjectRemoverTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->propStorage = $this->createMock(PropertyRepository::class);
-		$this->storage = $this->createMock(ObjectRepository::class);
-		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
-		$this->objectUpdater = $this->createMock(ObjectUpdater::class);
-		$this->indexBuilder = $this->createMock(IndexBuilder::class);
+		$this->propStorage       = $this->createMock(PropertyRepository::class);
+		$this->storage           = $this->createMock(ObjectRepository::class);
+		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
+		$this->objectUpdater     = $this->createMock(ObjectUpdater::class);
+		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
 
 		$this->remover = new ObjectRemover(
@@ -48,7 +48,7 @@ final class ObjectRemoverTest extends TestCase
 	{
 		// Mock collection that doesn't require queueing
 		$mockCollection = $this->createMock(CollectionData::class);
-		
+
 		// Set up storage to return success
 		$this->storage
 			->expects($this->once())
@@ -79,7 +79,7 @@ final class ObjectRemoverTest extends TestCase
 	public function testDeleteObjectWithQueueRebuildOnSave(): void
 	{
 		// Mock collection with queueRebuildOnSave enabled
-		$mockCollection = $this->createMock(CollectionData::class);
+		$mockCollection                     = $this->createMock(CollectionData::class);
 		$mockCollection->queueRebuildOnSave = true;
 
 		// Set up storage to return success
@@ -181,9 +181,9 @@ final class ObjectRemoverTest extends TestCase
 		// Create mock object
 		$mockObject = $this->createMock(ObjectData::class);
 		$mockObject->method('toArray')->willReturn([
-			'id' => 'test-id',
+			'id'    => 'test-id',
 			'title' => 'Test Title',
-			'files' => ['file1.jpg', 'file2.jpg']
+			'files' => ['file1.jpg', 'file2.jpg'],
 		]);
 
 		$updatedObject = $this->createMock(ObjectData::class);
@@ -203,9 +203,9 @@ final class ObjectRemoverTest extends TestCase
 
 		// Set up object updater expectation with nullified property
 		$expectedUpdatedData = [
-			'id' => 'test-id',
+			'id'    => 'test-id',
 			'title' => 'Test Title',
-			'files' => null  // Should be null
+			'files' => null,  // Should be null
 		];
 
 		$this->objectUpdater
@@ -226,8 +226,8 @@ final class ObjectRemoverTest extends TestCase
 		// Create mock object
 		$mockObject = $this->createMock(ObjectData::class);
 		$mockObject->method('toArray')->willReturn([
-			'id' => 'test-id',
-			'gallery' => ['image1.jpg', 'image2.jpg']
+			'id'      => 'test-id',
+			'gallery' => ['image1.jpg', 'image2.jpg'],
 		]);
 
 		$updatedObject = $this->createMock(ObjectData::class);
@@ -261,13 +261,13 @@ final class ObjectRemoverTest extends TestCase
 	public function testDeleteObjectPropertyMaintainsOtherProperties(): void
 	{
 		// Create mock object with multiple properties
-		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject   = $this->createMock(ObjectData::class);
 		$originalData = [
-			'id' => 'test-id',
-			'title' => 'Keep This Title',
-			'content' => 'Keep This Content',
+			'id'          => 'test-id',
+			'title'       => 'Keep This Title',
+			'content'     => 'Keep This Content',
 			'attachments' => ['file1.pdf', 'file2.doc'],  // This will be deleted
-			'tags' => ['tag1', 'tag2']  // This should remain
+			'tags'        => ['tag1', 'tag2'],  // This should remain
 		];
 		$mockObject->method('toArray')->willReturn($originalData);
 
@@ -288,11 +288,11 @@ final class ObjectRemoverTest extends TestCase
 
 		// Verify that only the specified property is nullified
 		$expectedUpdatedData = [
-			'id' => 'test-id',
-			'title' => 'Keep This Title',
-			'content' => 'Keep This Content',
+			'id'          => 'test-id',
+			'title'       => 'Keep This Title',
+			'content'     => 'Keep This Content',
 			'attachments' => null,  // Only this should be null
-			'tags' => ['tag1', 'tag2']  // This should remain unchanged
+			'tags'        => ['tag1', 'tag2'],  // This should remain unchanged
 		];
 
 		$this->objectUpdater

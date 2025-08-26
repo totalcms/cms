@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\ImageWorks\Service;
 
@@ -17,7 +17,7 @@ class ImageCacheServiceTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->mockConfig = $this->createMock(Config::class);
-		
+
 		// Create a temporary directory for testing
 		$this->testDataDir = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		mkdir($this->testDataDir);
@@ -45,13 +45,14 @@ class ImageCacheServiceTest extends TestCase
 			$path = $dir . '/' . $file;
 			is_dir($path) ? $this->removeDirectory($path) : unlink($path);
 		}
+
 		return rmdir($dir);
 	}
 
 	public function testClearCollectionImageCacheThrowsExceptionWhenCollectionNotExists(): void
 	{
 		$collection = 'nonexistent';
-		
+
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('Collection directory does not exist:');
 
@@ -60,9 +61,9 @@ class ImageCacheServiceTest extends TestCase
 
 	public function testClearCollectionImageCacheWithEmptyCollection(): void
 	{
-		$collection = 'empty-collection';
+		$collection     = 'empty-collection';
 		$collectionPath = $this->testDataDir . '/' . $collection;
-		
+
 		// Create empty collection directory
 		mkdir($collectionPath);
 
@@ -73,27 +74,27 @@ class ImageCacheServiceTest extends TestCase
 
 	public function testClearCollectionImageCacheRemovesCacheDirectories(): void
 	{
-		$collection = 'test-collection';
+		$collection     = 'test-collection';
 		$collectionPath = $this->testDataDir . '/' . $collection;
-		
+
 		// Create collection structure with cache directories
 		$this->createTestStructure($collectionPath, [
 			'object1' => [
 				'property1' => [
 					'.cache' => [
-						'cached_image.jpg' => 'cached content',
-						'another_cached.png' => 'more content'
+						'cached_image.jpg'   => 'cached content',
+						'another_cached.png' => 'more content',
 					],
-					'original.jpg' => 'original content'
-				]
+					'original.jpg' => 'original content',
+				],
 			],
 			'object2' => [
 				'property2' => [
 					'.cache' => [
-						'thumb.jpg' => 'thumbnail'
-					]
-				]
-			]
+						'thumb.jpg' => 'thumbnail',
+					],
+				],
+			],
 		]);
 
 		$result = $this->service->clearCollectionImageCache($collection);
@@ -109,7 +110,7 @@ class ImageCacheServiceTest extends TestCase
 	public function testGetCollectionImageCacheStatsForNonExistentCollection(): void
 	{
 		$collection = 'nonexistent';
-		
+
 		$stats = $this->service->getCollectionImageCacheStats($collection);
 
 		$this->assertIsArray($stats);
@@ -122,9 +123,9 @@ class ImageCacheServiceTest extends TestCase
 
 	public function testGetCollectionImageCacheStatsWithEmptyCollection(): void
 	{
-		$collection = 'empty-collection';
+		$collection     = 'empty-collection';
 		$collectionPath = $this->testDataDir . '/' . $collection;
-		
+
 		// Create empty collection directory
 		mkdir($collectionPath);
 
@@ -141,9 +142,9 @@ class ImageCacheServiceTest extends TestCase
 	public function testConstructorAcceptsConfig(): void
 	{
 		// Test that constructor properly accepts Config dependency
-		$config = $this->createMock(Config::class);
+		$config  = $this->createMock(Config::class);
 		$service = new ImageCacheService($config);
-		
+
 		$this->assertInstanceOf(ImageCacheService::class, $service);
 	}
 
@@ -155,13 +156,13 @@ class ImageCacheServiceTest extends TestCase
 	}
 
 	/**
-	 * Helper method to create test directory structure
+	 * Helper method to create test directory structure.
 	 */
 	private function createTestStructure(string $basePath, array $structure): void
 	{
 		foreach ($structure as $name => $content) {
 			$path = $basePath . '/' . $name;
-			
+
 			if (is_array($content)) {
 				mkdir($path, 0755, true);
 				$this->createTestStructure($path, $content);

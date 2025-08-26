@@ -1,14 +1,14 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\StringData;
-use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
@@ -25,7 +25,7 @@ class PropertyFactoryTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
+		$this->schemaFetcher            = $this->createMock(SchemaFetcher::class);
 		$this->deckCompatibilityChecker = $this->createMock(DeckCompatibilityChecker::class);
 
 		$this->propertyFactory = new PropertyFactory(
@@ -37,7 +37,7 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithStringType(): void
 	{
 		$propertySchema = ['type' => 'string'];
-		$value = 'Hello World';
+		$value          = 'Hello World';
 
 		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
 
@@ -48,7 +48,7 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithDateType(): void
 	{
 		$propertySchema = ['type' => 'date'];
-		$value = '2024-01-15';
+		$value          = '2024-01-15';
 
 		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
 
@@ -58,7 +58,7 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithColorType(): void
 	{
 		$propertySchema = ['type' => 'color'];
-		$value = '#ff0000';
+		$value          = '#ff0000';
 
 		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
 
@@ -68,7 +68,7 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithRefSchema(): void
 	{
 		$propertySchema = ['$ref' => 'https://example.com/schemas/string.json'];
-		$value = 'Test Value';
+		$value          = 'Test Value';
 
 		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
 
@@ -79,8 +79,8 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithDefaultValue(): void
 	{
 		$propertySchema = [
-			'type' => 'string',
-			'default' => 'Default Value'
+			'type'    => 'string',
+			'default' => 'Default Value',
 		];
 		$value = null;
 
@@ -93,8 +93,8 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithSettings(): void
 	{
 		$propertySchema = [
-			'type' => 'string',
-			'settings' => ['maxLength' => 100]
+			'type'     => 'string',
+			'settings' => ['maxLength' => 100],
 		];
 		$value = 'Test';
 
@@ -107,7 +107,7 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithNullValue(): void
 	{
 		$propertySchema = ['type' => 'string'];
-		$value = null;
+		$value          = null;
 
 		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
 
@@ -117,7 +117,7 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyThrowsExceptionForUnknownType(): void
 	{
 		$propertySchema = ['type' => 'unknowntype'];
-		$value = 'test';
+		$value          = 'test';
 
 		$this->expectException(\UnexpectedValueException::class);
 		$this->expectExceptionMessage('Unknown property type for object.');
@@ -128,8 +128,8 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckWithEmptyValue(): void
 	{
 		$propertySchema = ['type' => 'deck'];
-		$value = [];
-		$settings = ['deckref' => 'test-schema'];
+		$value          = [];
+		$settings       = ['deckref' => 'test-schema'];
 
 		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
 
@@ -140,8 +140,8 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckWithNullValue(): void
 	{
 		$propertySchema = ['type' => 'deck'];
-		$value = null;
-		$settings = [];
+		$value          = null;
+		$settings       = [];
 
 		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
 
@@ -152,8 +152,8 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckWithNonArrayValue(): void
 	{
 		$propertySchema = ['type' => 'deck'];
-		$value = 'not an array';
-		$settings = [];
+		$value          = 'not an array';
+		$settings       = [];
 
 		$deck = $this->propertyFactory->createDeck($propertySchema, $value, $settings);
 
@@ -164,8 +164,8 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckWithoutDeckref(): void
 	{
 		$propertySchema = ['type' => 'deck'];
-		$value = [
-			'item1' => ['title' => 'Test Item', 'description' => 'Test Description']
+		$value          = [
+			'item1' => ['title' => 'Test Item', 'description' => 'Test Description'],
 		];
 		$settings = [];
 
@@ -180,29 +180,29 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckWithDeckrefProcessing(): void
 	{
 		$this->markTestSkipped('Complex deck processing - focus on core functionality first');
-		
+
 		$propertySchema = [
-			'type' => 'deck',
-			'deckref' => 'https://example.com/schemas/item.json'
+			'type'    => 'deck',
+			'deckref' => 'https://example.com/schemas/item.json',
 		];
 		$value = [
 			'item1' => [
 				'title' => 'Test Item',
-				'date' => '2024-01-15',
-				'color' => '#ff0000'
-			]
+				'date'  => '2024-01-15',
+				'color' => '#ff0000',
+			],
 		];
 
 		// Create a real SchemaData object with the properties we need
 		$schemaArray = [
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'$id' => 'https://example.com/schemas/item.json',
-			'type' => 'object',
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'$id'        => 'https://example.com/schemas/item.json',
+			'type'       => 'object',
 			'properties' => [
 				'title' => ['type' => 'string'],
-				'date' => ['type' => 'date'],
-				'color' => ['type' => 'color']
-			]
+				'date'  => ['type' => 'date'],
+				'color' => ['type' => 'color'],
+			],
 		];
 		$mockSchema = new SchemaData($schemaArray);
 
@@ -228,23 +228,23 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckWithIncompatibleSchema(): void
 	{
 		$this->markTestSkipped('Complex deck schema validation - focus on core functionality first');
-		
+
 		$propertySchema = [
-			'type' => 'deck',
-			'deckref' => 'https://example.com/schemas/incompatible.json'
+			'type'    => 'deck',
+			'deckref' => 'https://example.com/schemas/incompatible.json',
 		];
 		$value = [
-			'item1' => ['title' => 'Test']
+			'item1' => ['title' => 'Test'],
 		];
 
 		// Create a real SchemaData object
 		$mockSchema = new SchemaData([
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'$id' => 'https://example.com/schemas/incompatible.json',
-			'type' => 'object',
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'$id'        => 'https://example.com/schemas/incompatible.json',
+			'type'       => 'object',
 			'properties' => [
-				'title' => ['type' => 'string']
-			]
+				'title' => ['type' => 'string'],
+			],
 		]);
 
 		$this->schemaFetcher
@@ -272,11 +272,11 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckWithSchemaExceptionFallsBackToOriginalData(): void
 	{
 		$propertySchema = [
-			'type' => 'deck',
-			'deckref' => 'https://example.com/schemas/error.json'
+			'type'    => 'deck',
+			'deckref' => 'https://example.com/schemas/error.json',
 		];
 		$value = [
-			'item1' => ['title' => 'Test Item']
+			'item1' => ['title' => 'Test Item'],
 		];
 
 		$this->schemaFetcher
@@ -296,20 +296,20 @@ class PropertyFactoryTest extends TestCase
 	public function testCreateDeckSkipsNonArrayItems(): void
 	{
 		$propertySchema = [
-			'type' => 'deck',
-			'deckref' => 'https://example.com/schemas/item.json'
+			'type'    => 'deck',
+			'deckref' => 'https://example.com/schemas/item.json',
 		];
 		$value = [
 			'item1' => ['title' => 'Valid Item'],
 			'item2' => 'not an array',
-			'item3' => ['title' => 'Another Valid Item']
+			'item3' => ['title' => 'Another Valid Item'],
 		];
 
 		// Mock schema data
 		$mockSchema = new SchemaData([
 			'properties' => [
-				'title' => ['type' => 'string']
-			]
+				'title' => ['type' => 'string'],
+			],
 		]);
 
 		$this->schemaFetcher
@@ -333,36 +333,36 @@ class PropertyFactoryTest extends TestCase
 	public function testProcessIndividualDeckItem(): void
 	{
 		$this->markTestSkipped('Complex individual deck processing - focus on core functionality first');
-		
-		$collection = 'test-collection';
+
+		$collection   = 'test-collection';
 		$propertyName = 'features';
-		$itemData = [
-			'id' => 'feature1',
+		$itemData     = [
+			'id'    => 'feature1',
 			'title' => 'Test Feature',
-			'date' => '2024-01-15'
+			'date'  => '2024-01-15',
 		];
 
 		// Mock collection schema
 		$mockCollectionSchema = new SchemaData([
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'type' => 'object',
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'type'       => 'object',
 			'properties' => [
 				'features' => [
-					'type' => 'deck',
-					'deckref' => 'https://example.com/schemas/feature.json',
-					'settings' => ['maxItems' => 10]
-				]
-			]
+					'type'     => 'deck',
+					'deckref'  => 'https://example.com/schemas/feature.json',
+					'settings' => ['maxItems' => 10],
+				],
+			],
 		]);
 
 		// Mock deck item schema
 		$mockDeckSchema = new SchemaData([
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'type' => 'object',
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'type'       => 'object',
 			'properties' => [
 				'title' => ['type' => 'string'],
-				'date' => ['type' => 'date']
-			]
+				'date'  => ['type' => 'date'],
+			],
 		]);
 
 		$this->schemaFetcher
@@ -391,17 +391,17 @@ class PropertyFactoryTest extends TestCase
 
 	public function testProcessIndividualDeckItemWithoutPropertyConfig(): void
 	{
-		$collection = 'test-collection';
+		$collection   = 'test-collection';
 		$propertyName = 'nonexistent';
-		$itemData = ['id' => 'item1', 'title' => 'Test'];
+		$itemData     = ['id' => 'item1', 'title' => 'Test'];
 
 		// Mock collection schema without the requested property
 		$mockCollectionSchema = new SchemaData([
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'type' => 'object',
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'type'       => 'object',
 			'properties' => [
-				'other_property' => ['type' => 'string']
-			]
+				'other_property' => ['type' => 'string'],
+			],
 		]);
 
 		$this->schemaFetcher
@@ -419,21 +419,21 @@ class PropertyFactoryTest extends TestCase
 	public function testProcessIndividualDeckItemWithProcessingException(): void
 	{
 		$this->markTestSkipped('Complex individual deck processing - focus on core functionality first');
-		
-		$collection = 'test-collection';
+
+		$collection   = 'test-collection';
 		$propertyName = 'features';
-		$itemData = ['id' => 'feature1', 'title' => 'Test'];
+		$itemData     = ['id' => 'feature1', 'title' => 'Test'];
 
 		// Mock collection schema
 		$mockCollectionSchema = new SchemaData([
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'type' => 'object',
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'type'       => 'object',
 			'properties' => [
 				'features' => [
-					'type' => 'deck',
-					'deckref' => 'https://example.com/schemas/error.json'
-				]
-			]
+					'type'    => 'deck',
+					'deckref' => 'https://example.com/schemas/error.json',
+				],
+			],
 		]);
 
 		$this->schemaFetcher
@@ -457,7 +457,7 @@ class PropertyFactoryTest extends TestCase
 	public function testExtractSchemaIdFromUrl(): void
 	{
 		$reflection = new \ReflectionClass($this->propertyFactory);
-		$method = $reflection->getMethod('extractSchemaId');
+		$method     = $reflection->getMethod('extractSchemaId');
 
 		$result = $method->invoke($this->propertyFactory, 'https://www.totalcms.co/schemas/custom/features.json');
 		$this->assertEquals('features', $result);
@@ -469,11 +469,11 @@ class PropertyFactoryTest extends TestCase
 	public function testGeneratePropertyWithDeckType(): void
 	{
 		$propertySchema = [
-			'type' => 'deck',
-			'settings' => ['maxItems' => 5]
+			'type'     => 'deck',
+			'settings' => ['maxItems' => 5],
 		];
 		$value = [
-			'item1' => ['title' => 'Test Item']
+			'item1' => ['title' => 'Test Item'],
 		];
 
 		$property = $this->propertyFactory->generateProperty($propertySchema, $value);
@@ -486,25 +486,25 @@ class PropertyFactoryTest extends TestCase
 	{
 		// Test deckref in property root
 		$propertySchema1 = [
-			'type' => 'deck',
-			'deckref' => 'root-schema'
+			'type'    => 'deck',
+			'deckref' => 'root-schema',
 		];
 
 		// Test deckref in settings
 		$propertySchema2 = [
-			'type' => 'deck',
-			'settings' => ['deckref' => 'settings-schema']
+			'type'     => 'deck',
+			'settings' => ['deckref' => 'settings-schema'],
 		];
 
 		$value = [
-			'item1' => ['title' => 'Test']
+			'item1' => ['title' => 'Test'],
 		];
 
 		// Mock for first test
 		$mockSchema = new SchemaData([
-			'$schema' => 'https://json-schema.org/draft/2020-12/schema',
-			'type' => 'object',
-			'properties' => ['title' => ['type' => 'string']]
+			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+			'type'       => 'object',
+			'properties' => ['title' => ['type' => 'string']],
 		]);
 		$this->schemaFetcher->expects($this->exactly(2))
 			->method('fetchSchema')

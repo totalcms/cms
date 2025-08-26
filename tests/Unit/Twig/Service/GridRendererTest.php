@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Twig\Service;
 
@@ -19,7 +19,7 @@ final class GridRendererTest extends TestCase
 	public function testMetaWithValidData(): void
 	{
 		$result = $this->gridRenderer->meta('Author Name');
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('Author Name', $result);
 		$this->assertStringContainsString('class="cms-meta"', $result);
@@ -28,15 +28,15 @@ final class GridRendererTest extends TestCase
 	public function testMetaWithEmptyString(): void
 	{
 		$result = $this->gridRenderer->meta('');
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testTagsWithArrayInput(): void
 	{
-		$tags = ['php', 'web', 'development'];
+		$tags   = ['php', 'web', 'development'];
 		$result = $this->gridRenderer->tags($tags);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('php', $result);
 		$this->assertStringContainsString('web', $result);
@@ -45,9 +45,9 @@ final class GridRendererTest extends TestCase
 
 	public function testTagsWithStringInput(): void
 	{
-		$tags = 'php, web, development';
+		$tags   = 'php, web, development';
 		$result = $this->gridRenderer->tags($tags);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('php', $result);
 		$this->assertStringContainsString('web', $result);
@@ -56,10 +56,10 @@ final class GridRendererTest extends TestCase
 
 	public function testTagsWithLinkBase(): void
 	{
-		$tags = ['php', 'web'];
+		$tags     = ['php', 'web'];
 		$linkBase = '/tags/';
-		$result = $this->gridRenderer->tags($tags, $linkBase);
-		
+		$result   = $this->gridRenderer->tags($tags, $linkBase);
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('/tags/', $result);
 		$this->assertStringContainsString('php', $result);
@@ -68,9 +68,9 @@ final class GridRendererTest extends TestCase
 
 	public function testTagsWithNullLinkBase(): void
 	{
-		$tags = ['php', 'web'];
+		$tags   = ['php', 'web'];
 		$result = $this->gridRenderer->tags($tags, null);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('php', $result);
 		$this->assertStringContainsString('web', $result);
@@ -81,29 +81,29 @@ final class GridRendererTest extends TestCase
 	public function testTagsWithEmptyArray(): void
 	{
 		$result = $this->gridRenderer->tags([]);
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testTagsWithNull(): void
 	{
 		$result = $this->gridRenderer->tags(null);
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testTagsWithEmptyString(): void
 	{
 		$result = $this->gridRenderer->tags('');
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testTagsWithStringContainingSpaces(): void
 	{
-		$tags = 'php,  web development  , cms ';
+		$tags   = 'php,  web development  , cms ';
 		$result = $this->gridRenderer->tags($tags);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('php', $result);
 		$this->assertStringContainsString('web development', $result);
@@ -112,9 +112,9 @@ final class GridRendererTest extends TestCase
 
 	public function testDateWithValidDate(): void
 	{
-		$date = '2024-01-15T10:30:00+00:00';
+		$date   = '2024-01-15T10:30:00+00:00';
 		$result = $this->gridRenderer->date($date);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('class="cms-date"', $result);
 		// Should contain some date representation
@@ -123,9 +123,9 @@ final class GridRendererTest extends TestCase
 
 	public function testDateWithCustomFormat(): void
 	{
-		$date = '2024-01-15T10:30:00+00:00';
+		$date   = '2024-01-15T10:30:00+00:00';
 		$result = $this->gridRenderer->date($date, 'short');
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('class="cms-date"', $result);
 		$this->assertNotEmpty($result);
@@ -134,18 +134,18 @@ final class GridRendererTest extends TestCase
 	public function testDateWithEmptyString(): void
 	{
 		$result = $this->gridRenderer->date('');
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testDateWithDifferentFormats(): void
 	{
 		$date = '2024-01-15T10:30:00+00:00';
-		
+
 		$relative = $this->gridRenderer->date($date, 'relative');
-		$short = $this->gridRenderer->date($date, 'short');
-		$long = $this->gridRenderer->date($date, 'long');
-		
+		$short    = $this->gridRenderer->date($date, 'short');
+		$long     = $this->gridRenderer->date($date, 'long');
+
 		$this->assertIsString($relative);
 		$this->assertIsString($short);
 		$this->assertIsString($long);
@@ -156,9 +156,9 @@ final class GridRendererTest extends TestCase
 
 	public function testExcerptWithValidText(): void
 	{
-		$text = 'This is a long piece of text that should be truncated to the specified length for display in grid views.';
+		$text   = 'This is a long piece of text that should be truncated to the specified length for display in grid views.';
 		$result = $this->gridRenderer->excerpt($text, 50);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<p', $result);
 		$this->assertStringContainsString('class="cms-excerpt"', $result);
@@ -167,9 +167,9 @@ final class GridRendererTest extends TestCase
 
 	public function testExcerptWithDefaultLength(): void
 	{
-		$text = str_repeat('This is a test. ', 20); // Create long text
+		$text   = str_repeat('This is a test. ', 20); // Create long text
 		$result = $this->gridRenderer->excerpt($text);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<p', $result);
 		$this->assertStringContainsString('class="cms-excerpt"', $result);
@@ -179,9 +179,9 @@ final class GridRendererTest extends TestCase
 
 	public function testExcerptWithShortText(): void
 	{
-		$text = 'Short text';
+		$text   = 'Short text';
 		$result = $this->gridRenderer->excerpt($text, 100);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<p', $result);
 		$this->assertStringContainsString('class="cms-excerpt"', $result);
@@ -191,7 +191,7 @@ final class GridRendererTest extends TestCase
 	public function testExcerptWithNullText(): void
 	{
 		$result = $this->gridRenderer->excerpt(null, 50);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<p', $result);
 		$this->assertStringContainsString('class="cms-excerpt"', $result);
@@ -200,7 +200,7 @@ final class GridRendererTest extends TestCase
 	public function testExcerptWithEmptyText(): void
 	{
 		$result = $this->gridRenderer->excerpt('', 50);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<p', $result);
 		$this->assertStringContainsString('class="cms-excerpt"', $result);
@@ -209,7 +209,7 @@ final class GridRendererTest extends TestCase
 	public function testPriceWithNumericValue(): void
 	{
 		$result = $this->gridRenderer->price(19.99);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<span', $result);
 		$this->assertStringContainsString('class="cms-price"', $result);
@@ -220,7 +220,7 @@ final class GridRendererTest extends TestCase
 	public function testPriceWithCustomCurrency(): void
 	{
 		$result = $this->gridRenderer->price(25.50, '€');
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<span', $result);
 		$this->assertStringContainsString('class="cms-price"', $result);
@@ -231,7 +231,7 @@ final class GridRendererTest extends TestCase
 	public function testPriceWithAppendFormat(): void
 	{
 		$result = $this->gridRenderer->price(100, 'USD', 'append');
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<span', $result);
 		$this->assertStringContainsString('class="cms-price"', $result);
@@ -242,7 +242,7 @@ final class GridRendererTest extends TestCase
 	public function testPriceWithNoFormatting(): void
 	{
 		$result = $this->gridRenderer->price(50, '$', 'none');
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<span', $result);
 		$this->assertStringContainsString('class="cms-price"', $result);
@@ -252,7 +252,7 @@ final class GridRendererTest extends TestCase
 	public function testPriceWithZeroValue(): void
 	{
 		$result = $this->gridRenderer->price(0);
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<span', $result);
 		$this->assertStringContainsString('class="cms-price"', $result);
@@ -262,7 +262,7 @@ final class GridRendererTest extends TestCase
 	public function testPriceWithInvalidValue(): void
 	{
 		$result = $this->gridRenderer->price('invalid');
-		
+
 		// Invalid strings are converted to 0.00 by the price filter
 		$this->assertIsString($result);
 		$this->assertStringContainsString('<span', $result);
@@ -273,7 +273,7 @@ final class GridRendererTest extends TestCase
 	public function testPriceWithNullValue(): void
 	{
 		$result = $this->gridRenderer->price(null);
-		
+
 		// Should handle null gracefully
 		$this->assertIsString($result);
 	}

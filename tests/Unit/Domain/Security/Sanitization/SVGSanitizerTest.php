@@ -3,105 +3,104 @@
 use TotalCMS\Domain\Security\Sanitization\SVGSanitizer;
 
 describe('SVGSanitizer', function (): void {
-	
 	// -------------------------
 	// Basic Sanitization
 	// -------------------------
-	
+
 	test('SVGSanitizer → sanitize returns empty string for empty input', function (): void {
 		expect(SVGSanitizer::sanitize(''))->toBe('');
 	});
-	
+
 	test('SVGSanitizer → sanitize handles valid SVG content', function (): void {
 		$validSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
-		$result = SVGSanitizer::sanitize($validSvg);
-		
+		$result   = SVGSanitizer::sanitize($validSvg);
+
 		expect($result)->toBeString();
 		expect($result)->not->toBe('');
 		expect($result)->toContain('<svg');
 		expect($result)->toContain('<circle');
 	});
-	
+
 	test('SVGSanitizer → sanitize removes dangerous script elements', function (): void {
 		$dangerousSvg = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert("xss")</script><circle cx="12" cy="12" r="10"/></svg>';
-		$result = SVGSanitizer::sanitize($dangerousSvg);
-		
+		$result       = SVGSanitizer::sanitize($dangerousSvg);
+
 		expect($result)->not->toContain('<script>');
 		expect($result)->not->toContain('alert');
 		expect($result)->toContain('<circle'); // Safe content preserved
 	});
-	
+
 	test('SVGSanitizer → sanitize removes dangerous event handlers', function (): void {
 		$dangerousSvg = '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" onclick="alert(\'xss\')"/></svg>';
-		$result = SVGSanitizer::sanitize($dangerousSvg);
-		
+		$result       = SVGSanitizer::sanitize($dangerousSvg);
+
 		expect($result)->not->toContain('onclick');
 		expect($result)->not->toContain('alert');
 		expect($result)->toContain('<circle'); // Element preserved, just attributes removed
 	});
-	
+
 	test('SVGSanitizer → sanitize removes foreign elements', function (): void {
 		$mixedSvg = '<svg xmlns="http://www.w3.org/2000/svg"><div>Not SVG</div><circle cx="12" cy="12" r="10"/></svg>';
-		$result = SVGSanitizer::sanitize($mixedSvg);
-		
+		$result   = SVGSanitizer::sanitize($mixedSvg);
+
 		expect($result)->not->toContain('<div>');
 		expect($result)->not->toContain('Not SVG');
 		expect($result)->toContain('<circle'); // Valid SVG elements preserved
 	});
-	
+
 	test('SVGSanitizer → sanitize handles malformed SVG gracefully', function (): void {
 		$malformedSvg = '<svg><circle cx="12" cy="12" r="10"</svg>'; // Missing closing >
-		$result = SVGSanitizer::sanitize($malformedSvg);
-		
+		$result       = SVGSanitizer::sanitize($malformedSvg);
+
 		// Should not crash and return some result (empty or fixed)
 		expect($result)->toBeString();
 	});
-	
+
 	test('SVGSanitizer → sanitize returns empty string for completely invalid content', function (): void {
 		$invalidContent = 'This is not SVG at all';
-		$result = SVGSanitizer::sanitize($invalidContent);
-		
+		$result         = SVGSanitizer::sanitize($invalidContent);
+
 		expect($result)->toBe('');
 	});
 
 	// -------------------------
 	// SVG Validation
 	// -------------------------
-	
+
 	test('SVGSanitizer → isValidSvg returns false for empty string', function (): void {
 		expect(SVGSanitizer::isValidSvg(''))->toBe(false);
 	});
-	
+
 	test('SVGSanitizer → isValidSvg validates correct SVG structure', function (): void {
 		$validSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
-		
+
 		expect(SVGSanitizer::isValidSvg($validSvg))->toBe(true);
 	});
-	
+
 	test('SVGSanitizer → isValidSvg validates minimal SVG', function (): void {
 		$minimalSvg = '<svg></svg>';
-		
+
 		expect(SVGSanitizer::isValidSvg($minimalSvg))->toBe(true);
 	});
-	
+
 	test('SVGSanitizer → isValidSvg rejects non-SVG XML', function (): void {
 		$xmlNotSvg = '<root><item>content</item></root>';
-		
+
 		expect(SVGSanitizer::isValidSvg($xmlNotSvg))->toBe(false);
 	});
-	
+
 	test('SVGSanitizer → isValidSvg rejects malformed XML', function (): void {
 		$malformedXml = '<svg><circle cx="12" cy="12" r="10"</svg>'; // Missing closing >
-		
+
 		expect(SVGSanitizer::isValidSvg($malformedXml))->toBe(false);
 	});
-	
+
 	test('SVGSanitizer → isValidSvg rejects plain text', function (): void {
 		$plainText = 'This is just plain text';
-		
+
 		expect(SVGSanitizer::isValidSvg($plainText))->toBe(false);
 	});
-	
+
 	test('SVGSanitizer → isValidSvg handles complex valid SVG', function (): void {
 		$complexSvg = '
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -116,17 +115,17 @@ describe('SVGSanitizer', function (): void {
 				<text x="50" y="55" text-anchor="middle">Test</text>
 			</svg>
 		';
-		
+
 		expect(SVGSanitizer::isValidSvg($complexSvg))->toBe(true);
 	});
-	
+
 	test('SVGSanitizer → isValidSvg restores libxml error settings', function (): void {
 		// Set a custom error handler state
 		$originalState = libxml_use_internal_errors(false);
-		
+
 		// Call isValidSvg which should restore the original state
 		SVGSanitizer::isValidSvg('<svg></svg>');
-		
+
 		// Check that the original state was restored
 		$currentState = libxml_use_internal_errors($originalState);
 		expect($currentState)->toBe(false);
@@ -135,70 +134,70 @@ describe('SVGSanitizer', function (): void {
 	// -------------------------
 	// Sanitize and Validate Combined
 	// -------------------------
-	
+
 	test('SVGSanitizer → sanitizeAndValidate returns empty string for empty input', function (): void {
 		expect(SVGSanitizer::sanitizeAndValidate(''))->toBe('');
 	});
-	
+
 	test('SVGSanitizer → sanitizeAndValidate handles valid SVG', function (): void {
 		$validSvg = '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/></svg>';
-		$result = SVGSanitizer::sanitizeAndValidate($validSvg);
-		
+		$result   = SVGSanitizer::sanitizeAndValidate($validSvg);
+
 		expect($result)->toBeString();
 		expect($result)->not->toBe('');
 		expect($result)->toContain('<svg');
 		expect($result)->toContain('<circle');
 	});
-	
+
 	test('SVGSanitizer → sanitizeAndValidate sanitizes and validates', function (): void {
 		$svgWithDangerousContent = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert("xss")</script><circle cx="12" cy="12" r="10"/></svg>';
-		$result = SVGSanitizer::sanitizeAndValidate($svgWithDangerousContent);
-		
+		$result                  = SVGSanitizer::sanitizeAndValidate($svgWithDangerousContent);
+
 		expect($result)->not->toContain('<script>');
 		expect($result)->not->toContain('alert');
 		expect($result)->toContain('<circle');
 		// Should still be valid SVG after sanitization
 		expect(SVGSanitizer::isValidSvg($result))->toBe(true);
 	});
-	
+
 	test('SVGSanitizer → sanitizeAndValidate throws exception for invalid SVG after sanitization', function (): void {
 		// Content that might become invalid after sanitization
 		$problematicSvg = '<not-svg>This will be cleaned to invalid content</not-svg>';
-		
+
 		expect(fn () => SVGSanitizer::sanitizeAndValidate($problematicSvg))
-			->toThrow(\InvalidArgumentException::class, 'Invalid SVG content after sanitization');
+			->toThrow(InvalidArgumentException::class, 'Invalid SVG content after sanitization');
 	});
 
 	// -------------------------
 	// Security Tests
 	// -------------------------
-	
+
 	test('SVGSanitizer → handles external resource references', function (): void {
 		$svgWithExternalRef = '<svg xmlns="http://www.w3.org/2000/svg"><image href="http://evil.com/malicious.jpg"/></svg>';
-		$result = SVGSanitizer::sanitize($svgWithExternalRef);
-		
+		$result             = SVGSanitizer::sanitize($svgWithExternalRef);
+
 		// The sanitizer might keep the element but processes it - verify it doesn't crash
 		expect($result)->toBeString();
 		expect($result)->toContain('<svg');
 		// The specific behavior may vary based on sanitizer version, but it should not crash
 	});
-	
+
 	test('SVGSanitizer → removes javascript URLs', function (): void {
 		$svgWithJsUrl = '<svg xmlns="http://www.w3.org/2000/svg"><a href="javascript:alert(\'xss\')"><circle cx="12" cy="12" r="10"/></a></svg>';
-		$result = SVGSanitizer::sanitize($svgWithJsUrl);
-		
+		$result       = SVGSanitizer::sanitize($svgWithJsUrl);
+
 		expect($result)->not->toContain('javascript:');
 		expect($result)->not->toContain('alert');
 	});
-	
+
 	test('SVGSanitizer → removes data URLs with scripts', function (): void {
 		$svgWithDataUrl = '<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/svg+xml;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4="/></svg>';
-		$result = SVGSanitizer::sanitize($svgWithDataUrl);
-		
+		$result         = SVGSanitizer::sanitize($svgWithDataUrl);
+
 		// Should not contain the dangerous data URL
 		expect($result)->not->toContain('PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4');
 	});
-	
+
 	test('SVGSanitizer → preserves safe SVG elements and attributes', function (): void {
 		$safeSvg = '
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
@@ -213,7 +212,7 @@ describe('SVGSanitizer', function (): void {
 			</svg>
 		';
 		$result = SVGSanitizer::sanitize($safeSvg);
-		
+
 		// All safe elements should be preserved
 		expect($result)->toContain('<rect');
 		expect($result)->toContain('<circle');
@@ -223,7 +222,7 @@ describe('SVGSanitizer', function (): void {
 		expect($result)->toContain('<polygon');
 		expect($result)->toContain('<path');
 		expect($result)->toContain('<text');
-		
+
 		// Safe attributes should be preserved
 		expect($result)->toContain('viewBox');
 		expect($result)->toContain('fill=');
@@ -235,14 +234,14 @@ describe('SVGSanitizer', function (): void {
 	// -------------------------
 	// Edge Cases and Error Handling
 	// -------------------------
-	
+
 	test('SVGSanitizer → handles whitespace-only input', function (): void {
 		$whitespace = "   \t\n   ";
-		
+
 		expect(SVGSanitizer::sanitize($whitespace))->toBe('');
 		expect(SVGSanitizer::isValidSvg($whitespace))->toBe(false);
 	});
-	
+
 	test('SVGSanitizer → handles very large SVG content', function (): void {
 		// Create a large SVG with many elements
 		$largeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">';
@@ -252,15 +251,15 @@ describe('SVGSanitizer', function (): void {
 			$largeSvg .= "<circle cx=\"$x\" cy=\"$y\" r=\"2\" fill=\"red\"/>";
 		}
 		$largeSvg .= '</svg>';
-		
+
 		$result = SVGSanitizer::sanitize($largeSvg);
-		
+
 		expect($result)->toBeString();
 		expect($result)->toContain('<svg');
 		expect($result)->toContain('<circle');
 		expect(SVGSanitizer::isValidSvg($result))->toBe(true);
 	});
-	
+
 	test('SVGSanitizer → handles SVG with CDATA sections', function (): void {
 		$svgWithCData = '
 			<svg xmlns="http://www.w3.org/2000/svg">
@@ -268,13 +267,13 @@ describe('SVGSanitizer', function (): void {
 				<circle cx="12" cy="12" r="10"/>
 			</svg>
 		';
-		
+
 		$result = SVGSanitizer::sanitize($svgWithCData);
-		
+
 		expect($result)->toBeString();
 		expect($result)->toContain('<circle');
 	});
-	
+
 	test('SVGSanitizer → handles SVG with comments', function (): void {
 		$svgWithComments = '
 			<svg xmlns="http://www.w3.org/2000/svg">
@@ -283,21 +282,21 @@ describe('SVGSanitizer', function (): void {
 				<!-- Another comment -->
 			</svg>
 		';
-		
+
 		$result = SVGSanitizer::sanitize($svgWithComments);
-		
+
 		expect($result)->toBeString();
 		expect($result)->toContain('<circle');
 	});
-	
+
 	test('SVGSanitizer → singleton sanitizer instance is reused', function (): void {
 		// This test verifies the singleton pattern works by calling sanitize multiple times
 		// The sanitizer should be created once and reused
 		$svg = '<svg><circle cx="12" cy="12" r="10"/></svg>';
-		
+
 		$result1 = SVGSanitizer::sanitize($svg);
 		$result2 = SVGSanitizer::sanitize($svg);
-		
+
 		expect($result1)->toBe($result2);
 		expect($result1)->toContain('<circle');
 	});

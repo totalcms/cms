@@ -1,12 +1,12 @@
 <?php
 
-use TotalCMS\Domain\Property\Data\FolderData;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\FolderData;
 
 describe('FolderData', function (): void {
 	test('FolderData → creates with name and empty files', function (): void {
 		$folder = new FolderData('my-folder');
-		
+
 		expect($folder->name)->toBe('my-folder');
 		expect($folder->files)->toBe([]);
 	});
@@ -24,9 +24,9 @@ describe('FolderData', function (): void {
 				'size' => 2048,
 			],
 		];
-		
+
 		$folder = new FolderData('documents', $filesData);
-		
+
 		expect($folder->name)->toBe('documents');
 		expect(count($folder->files))->toBe(2);
 		expect($folder->files[0])->toBeInstanceOf(FileData::class);
@@ -48,9 +48,9 @@ describe('FolderData', function (): void {
 				'size' => 1500,
 			],
 		];
-		
+
 		$files = FolderData::buildFolder($filesData);
-		
+
 		expect(count($files))->toBe(2);
 		expect($files[0])->toBeInstanceOf(FileData::class);
 		expect($files[1])->toBeInstanceOf(FileData::class);
@@ -65,8 +65,8 @@ describe('FolderData', function (): void {
 				'mime' => 'text/plain',
 			],
 			[
-				'name' => 'subfolder',
-				'mime' => 'folder',
+				'name'  => 'subfolder',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'nested-file.jpg',
@@ -75,9 +75,9 @@ describe('FolderData', function (): void {
 				],
 			],
 		];
-		
+
 		$files = FolderData::buildFolder($filesData);
-		
+
 		expect(count($files))->toBe(2);
 		expect($files[0])->toBeInstanceOf(FileData::class);
 		expect($files[1])->toBeInstanceOf(FolderData::class);
@@ -103,9 +103,9 @@ describe('FolderData', function (): void {
 				'mime' => 'image/jpeg',
 			],
 		];
-		
+
 		$files = FolderData::buildFolder($filesData);
-		
+
 		expect(count($files))->toBe(2);
 		expect($files[0]->name)->toBe('valid-file.txt');
 		expect($files[1]->name)->toBe('another-valid.jpg');
@@ -113,7 +113,7 @@ describe('FolderData', function (): void {
 
 	test('FolderData → buildFolder handles empty array', function (): void {
 		$files = FolderData::buildFolder([]);
-		
+
 		expect($files)->toBe([]);
 	});
 
@@ -125,8 +125,8 @@ describe('FolderData', function (): void {
 				'size' => 2048,
 			],
 			[
-				'name' => 'images',
-				'mime' => 'folder',
+				'name'  => 'images',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'photo1.jpg',
@@ -144,14 +144,14 @@ describe('FolderData', function (): void {
 				'size' => 10240,
 			],
 		];
-		
+
 		$files = FolderData::buildFolder($filesData);
-		
+
 		expect(count($files))->toBe(3);
 		expect($files[0])->toBeInstanceOf(FileData::class);
 		expect($files[1])->toBeInstanceOf(FolderData::class);
 		expect($files[2])->toBeInstanceOf(FileData::class);
-		
+
 		// Check the nested folder
 		$imagesFolder = $files[1];
 		expect($imagesFolder->name)->toBe('images');
@@ -168,10 +168,10 @@ describe('FolderData', function (): void {
 				'size' => 100,
 			],
 		];
-		
+
 		$folder = new FolderData('test-folder', $filesData);
 		$result = $folder->transform();
-		
+
 		expect($result)->toHaveKey('name', 'test-folder');
 		expect($result)->toHaveKey('mime', 'folder');
 		expect($result)->toHaveKey('files');
@@ -187,8 +187,8 @@ describe('FolderData', function (): void {
 				'mime' => 'text/plain',
 			],
 			[
-				'name' => 'subfolder',
-				'mime' => 'folder',
+				'name'  => 'subfolder',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'nested.jpg',
@@ -197,14 +197,14 @@ describe('FolderData', function (): void {
 				],
 			],
 		];
-		
+
 		$folder = new FolderData('root', $filesData);
 		$result = $folder->transform();
-		
+
 		expect($result['name'])->toBe('root');
 		expect($result['mime'])->toBe('folder');
 		expect(count($result['files']))->toBe(2);
-		
+
 		// Check nested folder transformation
 		$nestedFolder = $result['files'][1];
 		expect($nestedFolder['name'])->toBe('subfolder');
@@ -216,7 +216,7 @@ describe('FolderData', function (): void {
 	test('FolderData → transform handles empty folder', function (): void {
 		$folder = new FolderData('empty-folder');
 		$result = $folder->transform();
-		
+
 		expect($result)->toHaveKey('name', 'empty-folder');
 		expect($result)->toHaveKey('mime', 'folder');
 		expect($result)->toHaveKey('files', []);
@@ -229,16 +229,16 @@ describe('FolderData', function (): void {
 				'mime' => 'text/plain',
 			],
 			[
-				'name' => 'level1',
-				'mime' => 'folder',
+				'name'  => 'level1',
+				'mime'  => 'folder',
 				'files' => [
 					[
 						'name' => 'level1-file.pdf',
 						'mime' => 'application/pdf',
 					],
 					[
-						'name' => 'level2',
-						'mime' => 'folder',
+						'name'  => 'level2',
+						'mime'  => 'folder',
 						'files' => [
 							[
 								'name' => 'deep-file.jpg',
@@ -249,18 +249,18 @@ describe('FolderData', function (): void {
 				],
 			],
 		];
-		
+
 		$folder = new FolderData('root', $complexStructure);
-		
+
 		expect(count($folder->files))->toBe(2);
 		expect($folder->files[0]->name)->toBe('root-file.txt');
 		expect($folder->files[1]->name)->toBe('level1');
-		
+
 		$level1Folder = $folder->files[1];
 		expect(count($level1Folder->files))->toBe(2);
 		expect($level1Folder->files[0]->name)->toBe('level1-file.pdf');
 		expect($level1Folder->files[1]->name)->toBe('level2');
-		
+
 		$level2Folder = $level1Folder->files[1];
 		expect(count($level2Folder->files))->toBe(1);
 		expect($level2Folder->files[0]->name)->toBe('deep-file.jpg');
@@ -273,10 +273,10 @@ describe('FolderData', function (): void {
 		$filesData2 = [
 			['name' => 'file2.jpg', 'mime' => 'image/jpeg'],
 		];
-		
+
 		$files1 = FolderData::buildFolder($filesData1);
 		$files2 = FolderData::buildFolder($filesData2);
-		
+
 		expect(count($files1))->toBe(1);
 		expect(count($files2))->toBe(1);
 		expect($files1[0]->name)->toBe('file1.txt');
@@ -292,7 +292,7 @@ describe('FolderData', function (): void {
 			'with.dots',
 			'123-numeric',
 		];
-		
+
 		foreach ($folderNames as $name) {
 			$folder = new FolderData($name);
 			expect($folder->name)->toBe($name);

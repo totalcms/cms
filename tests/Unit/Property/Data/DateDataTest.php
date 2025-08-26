@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Data;
 
@@ -12,7 +12,7 @@ final class DateDataTest extends TestCase
 	public function testConstructorWithEmptyDate(): void
 	{
 		$dateData = new DateData();
-		
+
 		$this->assertEquals('', $dateData->date);
 		$this->assertEquals([], $dateData->settings);
 	}
@@ -20,7 +20,7 @@ final class DateDataTest extends TestCase
 	public function testConstructorWithValidDate(): void
 	{
 		$dateData = new DateData('2024-01-15');
-		
+
 		$this->assertNotEmpty($dateData->date);
 		$this->assertStringContainsString('2024-01-15', $dateData->date);
 	}
@@ -29,7 +29,7 @@ final class DateDataTest extends TestCase
 	{
 		$settings = ['onCreate' => true, 'readonly' => true];
 		$dateData = new DateData('2024-01-15', $settings);
-		
+
 		$this->assertEquals($settings, $dateData->settings);
 		$this->assertStringContainsString('2024-01-15', $dateData->date);
 	}
@@ -47,7 +47,7 @@ final class DateDataTest extends TestCase
 	public function testDefaultValueWithValidDate(): void
 	{
 		$result = DateData::defaultValue('2024-01-01', '2024-12-31');
-		
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('2024-01-01', $result);
 	}
@@ -55,35 +55,35 @@ final class DateDataTest extends TestCase
 	public function testDefaultValueWithEmptyValue(): void
 	{
 		$result = DateData::defaultValue('', '2024-12-31');
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testDefaultValueWithNullValue(): void
 	{
 		$result = DateData::defaultValue(null, '2024-12-31');
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testCleanDateWithEmptyString(): void
 	{
 		$result = DateData::cleanDate('');
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testCleanDateWithNull(): void
 	{
 		$result = DateData::cleanDate(null);
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testCleanDateWithNow(): void
 	{
 		$result = DateData::cleanDate('now');
-		
+
 		$this->assertNotEmpty($result);
 		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $result);
 	}
@@ -91,7 +91,7 @@ final class DateDataTest extends TestCase
 	public function testCleanDateWithSpecificDate(): void
 	{
 		$result = DateData::cleanDate('2024-01-15 10:30:00');
-		
+
 		$this->assertNotEmpty($result);
 		$this->assertStringContainsString('2024-01-15', $result);
 		$this->assertStringContainsString('10:30:00', $result);
@@ -100,7 +100,7 @@ final class DateDataTest extends TestCase
 	public function testCleanDateWithNaturalLanguage(): void
 	{
 		$result = DateData::cleanDate('yesterday');
-		
+
 		$this->assertNotEmpty($result);
 		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $result);
 	}
@@ -108,22 +108,22 @@ final class DateDataTest extends TestCase
 	public function testCleanDateWithCustomFormat(): void
 	{
 		$result = DateData::cleanDate('2024-01-15', 'Y-m-d');
-		
+
 		$this->assertEquals('2024-01-15', $result);
 	}
 
 	public function testCleanDateWithInvalidDate(): void
 	{
 		$result = DateData::cleanDate('invalid-date-string');
-		
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testTransformReturnsString(): void
 	{
 		$dateData = new DateData('2024-01-15');
-		$result = $dateData->transform();
-		
+		$result   = $dateData->transform();
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('2024-01-15', $result);
 	}
@@ -131,8 +131,8 @@ final class DateDataTest extends TestCase
 	public function testToStringReturnsDate(): void
 	{
 		$dateData = new DateData('2024-01-15T10:30:00+00:00');
-		$result = (string) $dateData;
-		
+		$result   = (string)$dateData;
+
 		$this->assertIsString($result);
 		$this->assertStringContainsString('2024-01-15', $result);
 	}
@@ -140,15 +140,15 @@ final class DateDataTest extends TestCase
 	public function testToStringWithEmptyDate(): void
 	{
 		$dateData = new DateData('');
-		$result = (string) $dateData;
-		
+		$result   = (string)$dateData;
+
 		$this->assertEquals('', $result);
 	}
 
 	public function testISODateFormatDefault(): void
 	{
 		$dateData = new DateData('2024-01-15 15:30:45');
-		
+
 		// Default format should be ISO 8601 (c format)
 		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $dateData->date);
 	}
@@ -156,7 +156,7 @@ final class DateDataTest extends TestCase
 	public function testTimezoneHandling(): void
 	{
 		$dateData = new DateData('2024-01-15 12:00:00 UTC');
-		
+
 		$this->assertNotEmpty($dateData->date);
 		$this->assertStringContainsString('2024-01-15', $dateData->date);
 		$this->assertStringContainsString('12:00:00', $dateData->date);
@@ -182,12 +182,12 @@ final class DateDataTest extends TestCase
 	{
 		$settings = [
 			DateData::CREATION_DATE => true,
-			DateData::UPDATE_DATE => false,
-			'customSetting' => 'value'
+			DateData::UPDATE_DATE   => false,
+			'customSetting'         => 'value',
 		];
-		
+
 		$dateData = new DateData('2024-01-15', $settings);
-		
+
 		$this->assertEquals($settings, $dateData->settings);
 		$this->assertTrue($dateData->settings[DateData::CREATION_DATE]);
 		$this->assertFalse($dateData->settings[DateData::UPDATE_DATE]);

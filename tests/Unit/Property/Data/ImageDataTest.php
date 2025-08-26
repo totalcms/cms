@@ -1,13 +1,13 @@
 <?php
 
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\ListData;
-use TotalCMS\Domain\Property\Data\DateData;
 
 describe('ImageData', function (): void {
 	test('ImageData → creates with empty data', function (): void {
 		$image = new ImageData();
-		
+
 		expect($image->alt)->toBe('');
 		expect($image->exif)->toBe(['nodata' => '']);
 		expect($image->featured)->toBe(false);
@@ -26,30 +26,30 @@ describe('ImageData', function (): void {
 
 	test('ImageData → uses default focalpoint constant', function (): void {
 		$image = new ImageData();
-		
+
 		expect(ImageData::DEFAULT_FOCALPOINT)->toBe(['x' => 50, 'y' => 50]);
 		expect($image->focalpoint)->toBe(['x' => 50, 'y' => 50]);
 	});
 
 	test('ImageData → creates with complete image data', function (): void {
 		$imageData = [
-			'alt' => 'Beautiful landscape photo',
-			'exif' => ['camera' => 'Canon EOS R5', 'iso' => '100'],
-			'featured' => true,
+			'alt'        => 'Beautiful landscape photo',
+			'exif'       => ['camera' => 'Canon EOS R5', 'iso' => '100'],
+			'featured'   => true,
 			'focalpoint' => ['x' => 75, 'y' => 25],
-			'height' => 2048,
-			'link' => 'https://example.com/photo',
-			'mime' => 'image/jpeg',
-			'name' => 'landscape.jpg',
-			'palette' => ['#ff0000', '#00ff00', '#0000ff'],
-			'size' => 1024000,
-			'tags' => ['landscape', 'nature', 'photography'],
+			'height'     => 2048,
+			'link'       => 'https://example.com/photo',
+			'mime'       => 'image/jpeg',
+			'name'       => 'landscape.jpg',
+			'palette'    => ['#ff0000', '#00ff00', '#0000ff'],
+			'size'       => 1024000,
+			'tags'       => ['landscape', 'nature', 'photography'],
 			'uploadDate' => '2024-01-15T10:30:00+00:00',
-			'width' => 3072,
+			'width'      => 3072,
 		];
-		
+
 		$image = new ImageData($imageData);
-		
+
 		expect($image->alt)->toBe('Beautiful landscape photo');
 		expect($image->exif)->toBe(['camera' => 'Canon EOS R5', 'iso' => '100']);
 		expect($image->featured)->toBe(true);
@@ -67,20 +67,20 @@ describe('ImageData', function (): void {
 
 	test('ImageData → creates with settings', function (): void {
 		$settings = ['maxWidth' => 4000, 'quality' => 85];
-		$image = new ImageData([], $settings);
-		
+		$image    = new ImageData([], $settings);
+
 		expect($image->settings)->toBe($settings);
 	});
 
 	test('ImageData → converts string numbers to integers', function (): void {
 		$imageData = [
 			'height' => '1080',
-			'size' => '2048000',
-			'width' => '1920',
+			'size'   => '2048000',
+			'width'  => '1920',
 		];
-		
+
 		$image = new ImageData($imageData);
-		
+
 		expect($image->height)->toBe(1080);
 		expect($image->size)->toBe(2048000);
 		expect($image->width)->toBe(1920);
@@ -89,12 +89,12 @@ describe('ImageData', function (): void {
 	test('ImageData → handles invalid numeric values', function (): void {
 		$imageData = [
 			'height' => 'invalid',
-			'size' => 'also-invalid',
-			'width' => 'bad-value',
+			'size'   => 'also-invalid',
+			'width'  => 'bad-value',
 		];
-		
+
 		$image = new ImageData($imageData);
-		
+
 		expect($image->height)->toBe(0);
 		expect($image->size)->toBe(0);
 		expect($image->width)->toBe(0);
@@ -102,15 +102,15 @@ describe('ImageData', function (): void {
 
 	test('ImageData → sets default upload date when empty', function (): void {
 		$image = new ImageData(['uploadDate' => '']);
-		
+
 		// Should be today's date in ISO format
 		expect($image->uploadDate->date)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+\-]\d{2}:\d{2}$/');
 	});
 
 	test('ImageData → preserves provided upload date', function (): void {
 		$specificDate = '2023-12-25T15:45:30+00:00';
-		$image = new ImageData(['uploadDate' => $specificDate]);
-		
+		$image        = new ImageData(['uploadDate' => $specificDate]);
+
 		expect($image->uploadDate->date)->toBe($specificDate);
 	});
 
@@ -118,13 +118,13 @@ describe('ImageData', function (): void {
 		$imageData = [
 			'exif' => [
 				'camera' => 'Nikon D850',
-				'date' => '2024-06-15T14:30:00+00:00',
-				'lens' => '24-70mm f/2.8',
+				'date'   => '2024-06-15T14:30:00+00:00',
+				'lens'   => '24-70mm f/2.8',
 			],
 		];
-		
+
 		$image = new ImageData($imageData);
-		
+
 		// EXIF date should be processed through DateData
 		expect($image->exif['camera'])->toBe('Nikon D850');
 		expect($image->exif['date'])->toBe('2024-06-15T14:30:00+00:00');
@@ -135,12 +135,12 @@ describe('ImageData', function (): void {
 		$imageData = [
 			'exif' => [
 				'camera' => 'Sony A7R IV',
-				'iso' => '200',
+				'iso'    => '200',
 			],
 		];
-		
+
 		$image = new ImageData($imageData);
-		
+
 		expect($image->exif)->toBe(['camera' => 'Sony A7R IV', 'iso' => '200']);
 	});
 
@@ -152,7 +152,7 @@ describe('ImageData', function (): void {
 			'image/webp',
 			'image/svg+xml',
 		];
-		
+
 		foreach ($mimeTypes as $mime) {
 			$image = new ImageData(['mime' => $mime]);
 			expect($image->mime)->toBe($mime);
@@ -161,30 +161,30 @@ describe('ImageData', function (): void {
 
 	test('ImageData → processes tags through ListData', function (): void {
 		$image = new ImageData(['tags' => ['photo', 'nature', 'photo', '', 'outdoor']]);
-		
+
 		// ListData removes empty values and duplicates
 		expect($image->tags->list)->toBe(['photo', 'nature', 'outdoor']);
 	});
 
 	test('ImageData → handles custom focalpoint', function (): void {
 		$customFocalpoint = ['x' => 10, 'y' => 90];
-		$image = new ImageData(['focalpoint' => $customFocalpoint]);
-		
+		$image            = new ImageData(['focalpoint' => $customFocalpoint]);
+
 		expect($image->focalpoint)->toBe($customFocalpoint);
 	});
 
 	test('ImageData → handles color palette', function (): void {
 		$palette = ['#ff5733', '#33ff57', '#3357ff', '#ffff33'];
-		$image = new ImageData(['palette' => $palette]);
-		
+		$image   = new ImageData(['palette' => $palette]);
+
 		expect($image->palette)->toBe($palette);
 	});
 
 	test('ImageData → handles boolean featured field', function (): void {
 		$featuredImage = new ImageData(['featured' => true]);
-		$regularImage = new ImageData(['featured' => false]);
-		$defaultImage = new ImageData();
-		
+		$regularImage  = new ImageData(['featured' => false]);
+		$defaultImage  = new ImageData();
+
 		expect($featuredImage->featured)->toBe(true);
 		expect($regularImage->featured)->toBe(false);
 		expect($defaultImage->featured)->toBe(false);
@@ -192,24 +192,24 @@ describe('ImageData', function (): void {
 
 	test('ImageData → transforms to array correctly', function (): void {
 		$imageData = [
-			'alt' => 'Test image',
-			'exif' => ['camera' => 'Test Camera'],
-			'featured' => true,
+			'alt'        => 'Test image',
+			'exif'       => ['camera' => 'Test Camera'],
+			'featured'   => true,
 			'focalpoint' => ['x' => 25, 'y' => 75],
-			'height' => 800,
-			'link' => 'https://test.com',
-			'mime' => 'image/png',
-			'name' => 'test.png',
-			'palette' => ['#000000', '#ffffff'],
-			'size' => 500000,
-			'tags' => ['test', 'image'],
+			'height'     => 800,
+			'link'       => 'https://test.com',
+			'mime'       => 'image/png',
+			'name'       => 'test.png',
+			'palette'    => ['#000000', '#ffffff'],
+			'size'       => 500000,
+			'tags'       => ['test', 'image'],
 			'uploadDate' => '2024-01-01T00:00:00+00:00',
-			'width' => 1200,
+			'width'      => 1200,
 		];
-		
-		$image = new ImageData($imageData);
+
+		$image  = new ImageData($imageData);
 		$result = $image->transform();
-		
+
 		expect($result)->toHaveKey('alt', 'Test image');
 		expect($result)->toHaveKey('exif', ['camera' => 'Test Camera']);
 		expect($result)->toHaveKey('featured', true);
@@ -227,18 +227,18 @@ describe('ImageData', function (): void {
 
 	test('ImageData → converts to JSON string', function (): void {
 		$imageData = [
-			'name' => 'photo.jpg',
-			'mime' => 'image/jpeg',
-			'width' => 1920,
+			'name'   => 'photo.jpg',
+			'mime'   => 'image/jpeg',
+			'width'  => 1920,
 			'height' => 1080,
 		];
-		
+
 		$image = new ImageData($imageData);
-		$json = (string)$image;
-		
+		$json  = (string)$image;
+
 		expect($json)->toBeString();
 		expect($json)->not->toBe('');
-		
+
 		$decoded = json_decode($json, true);
 		expect($decoded)->toBeArray();
 		expect($decoded['name'])->toBe('photo.jpg');
@@ -249,30 +249,30 @@ describe('ImageData', function (): void {
 
 	test('ImageData → handles complex image scenario', function (): void {
 		$complexImage = [
-			'name' => 'wedding-portrait-2024.jpg',
-			'alt' => 'Beautiful wedding portrait with natural lighting',
-			'mime' => 'image/jpeg',
-			'width' => 6000,
-			'height' => 4000,
-			'size' => 15728640, // 15MB
-			'featured' => true,
+			'name'       => 'wedding-portrait-2024.jpg',
+			'alt'        => 'Beautiful wedding portrait with natural lighting',
+			'mime'       => 'image/jpeg',
+			'width'      => 6000,
+			'height'     => 4000,
+			'size'       => 15728640, // 15MB
+			'featured'   => true,
 			'focalpoint' => ['x' => 62, 'y' => 38], // Focus on faces
-			'palette' => ['#f8f4e6', '#d4af37', '#8b4513', '#ffffff', '#2f1b14'],
-			'tags' => ['wedding', 'portrait', 'professional', 'natural-light', '2024'],
-			'link' => 'https://photographer.com/gallery/wedding-2024',
+			'palette'    => ['#f8f4e6', '#d4af37', '#8b4513', '#ffffff', '#2f1b14'],
+			'tags'       => ['wedding', 'portrait', 'professional', 'natural-light', '2024'],
+			'link'       => 'https://photographer.com/gallery/wedding-2024',
 			'uploadDate' => '2024-08-15T18:30:00+00:00',
-			'exif' => [
-				'camera' => 'Canon EOS R5',
-				'lens' => 'Canon RF 85mm f/1.2L',
-				'iso' => '400',
+			'exif'       => [
+				'camera'   => 'Canon EOS R5',
+				'lens'     => 'Canon RF 85mm f/1.2L',
+				'iso'      => '400',
 				'aperture' => 'f/1.8',
-				'shutter' => '1/200',
-				'date' => '2024-08-15T15:45:00+00:00',
+				'shutter'  => '1/200',
+				'date'     => '2024-08-15T15:45:00+00:00',
 			],
 		];
-		
+
 		$image = new ImageData($complexImage);
-		
+
 		expect($image->name)->toBe('wedding-portrait-2024.jpg');
 		expect($image->alt)->toBe('Beautiful wedding portrait with natural lighting');
 		expect($image->width)->toBe(6000);
@@ -287,17 +287,17 @@ describe('ImageData', function (): void {
 
 	test('ImageData → handles empty alt text', function (): void {
 		$image = new ImageData(['alt' => '']);
-		
+
 		expect($image->alt)->toBe('');
 	});
 
 	test('ImageData → handles zero dimensions', function (): void {
 		$image = new ImageData([
-			'width' => 0,
+			'width'  => 0,
 			'height' => 0,
-			'size' => 0,
+			'size'   => 0,
 		]);
-		
+
 		expect($image->width)->toBe(0);
 		expect($image->height)->toBe(0);
 		expect($image->size)->toBe(0);
@@ -311,7 +311,7 @@ describe('ImageData', function (): void {
 			['width' => 2560, 'height' => 1440], // 16:9 (2K)
 			['width' => 3840, 'height' => 2160], // 16:9 (4K)
 		];
-		
+
 		foreach ($aspectRatios as $dimensions) {
 			$image = new ImageData($dimensions);
 			expect($image->width)->toBe($dimensions['width']);

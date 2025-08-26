@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Tests\Unit\Property\Repository;
 
@@ -18,7 +18,7 @@ class PropertyRepositoryTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->mockFilesystem = $this->createMock(StorageAdapterInterface::class);
+		$this->mockFilesystem     = $this->createMock(StorageAdapterInterface::class);
 		$this->propertyRepository = new PropertyRepository($this->mockFilesystem);
 	}
 
@@ -428,8 +428,8 @@ class PropertyRepositoryTest extends TestCase
 	{
 		// Create a simple temporary test image
 		$tempImage = tempnam(sys_get_temp_dir(), 'test_image') . '.jpg';
-		$image = imagecreate(100, 50);
-		$white = imagecolorallocate($image, 255, 255, 255);
+		$image     = imagecreate(100, 50);
+		$white     = imagecolorallocate($image, 255, 255, 255);
 		imagefill($image, 0, 0, $white);
 		imagejpeg($image, $tempImage);
 		imagedestroy($image);
@@ -484,8 +484,8 @@ class PropertyRepositoryTest extends TestCase
 	{
 		// Create a simple test image
 		$tempImage = tempnam(sys_get_temp_dir(), 'test_image') . '.jpg';
-		$image = imagecreate(10, 10);
-		$white = imagecolorallocate($image, 255, 255, 255);
+		$image     = imagecreate(10, 10);
+		$white     = imagecolorallocate($image, 255, 255, 255);
 		imagefill($image, 0, 0, $white);
 		imagejpeg($image, $tempImage);
 		imagedestroy($image);
