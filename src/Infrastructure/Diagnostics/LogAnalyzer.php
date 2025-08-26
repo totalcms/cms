@@ -18,7 +18,7 @@ class LogAnalyzer
 	/** @return array<string,string> */
 	public function logfiles(): array
 	{
-		if (!empty($this->logfiles)) {
+		if ($this->logfiles !== []) {
 			return $this->logfiles;
 		}
 
@@ -104,17 +104,13 @@ class LogAnalyzer
 			$chunkLines = explode("\n", $buffer);
 			
 			// Keep the first line as it might be incomplete (unless we're at file start)
-			if ($chunkStart > 0) {
-				$buffer = array_shift($chunkLines);
-			} else {
-				$buffer = '';
-			}
+			$buffer = $chunkStart > 0 ? array_shift($chunkLines) : '';
 			
 			// Add lines to the beginning of our array (since we're reading backwards)
 			$lines = array_merge($chunkLines, $lines);
 			
 			// Remove empty lines and limit to maxLines
-			$lines = array_filter($lines, fn($line) => trim($line) !== '');
+			$lines = array_filter($lines, fn(string $line): bool => trim($line) !== '');
 			$lines = array_slice($lines, -$maxLines);
 		}
 
