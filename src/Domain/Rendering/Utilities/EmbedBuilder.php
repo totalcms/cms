@@ -111,7 +111,7 @@ class EmbedBuilder
 				'loop'        => $options['loop'],
 				'color'       => $options['ycolor'],
 				'theme'       => $options['ytheme'],
-				'origin'      => $_SERVER['HTTP_HOST'],   // or $_SERVER["SERVER_NAME"]
+				'origin'      => $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost',
 				'enablejsapi' => 1,
 				'rel'         => 0,
 				'showinfo'    => 0,
