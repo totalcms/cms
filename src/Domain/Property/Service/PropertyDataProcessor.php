@@ -37,7 +37,7 @@ class PropertyDataProcessor implements PropertyDataProcessorInterface
 	private function processDateData(DateData $dateData): DateData
 	{
 		if (isset($dateData->settings[DateData::CREATION_DATE]) && $dateData->settings[DateData::CREATION_DATE] === true) {
-			if (empty($dateData->date) || $dateData->date === DateData::CREATION_DATE) {
+			if ($dateData->date === '' || $dateData->date === DateData::CREATION_DATE) {
 				$dateData->date = DateData::cleanDate();
 			}
 		} elseif (isset($dateData->settings[DateData::UPDATE_DATE]) && $dateData->settings[DateData::UPDATE_DATE] === true) {

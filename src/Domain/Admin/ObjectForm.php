@@ -13,7 +13,7 @@ class ObjectForm extends TotalForm
 
 		$this->route = "/collections/{$this->collection}";
 
-		if (!empty($this->id) && $this->objectFetcher->existsObject($this->collection, $this->id)) {
+		if ($this->id !== '' && $this->objectFetcher->existsObject($this->collection, $this->id)) {
 			// If the form is for editing an existing item, change the method to PUT
 			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
@@ -47,7 +47,7 @@ class ObjectForm extends TotalForm
 		}
 
 		// Get the value from the object data if it exists
-		if (!empty($this->id)) {
+		if ($this->id !== '') {
 			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
 
 			// A DeckItem will set the deck_context option if it is a deck field
@@ -69,9 +69,7 @@ class ObjectForm extends TotalForm
 			}
 		}
 
-		$options = array_merge($defaults, $options);
-
-		return $options;
+		return array_merge($defaults, $options);
 	}
 
 	/** @return array<string,mixed> */
@@ -118,7 +116,7 @@ class ObjectForm extends TotalForm
 	 * */
 	private function objectFieldProperties(string $property): array
 	{
-		if (empty($this->id)) {
+		if ($this->id === '') {
 			return [];
 		}
 

@@ -23,16 +23,10 @@ class ProLicenseMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// TODO: Create a license object that actually check for a license
-		$isProLicensed = true;
-
 		// If valid Lite license call next and return.
-		/** @phpstan-ignore-next-line */
-		if ($isProLicensed) {
-			return $handler->handle($request);
-		}
-
-		// Set response headers before giving it to error callback
+        /** @phpstan-ignore-next-line */
+        return $handler->handle($request);
+        // Set response headers before giving it to error callback
 		// $response = (new ResponseFactory())->createResponse(401, 'Unauthorized');
 		// $response->getBody()->write('Invalid License Found');
 		// return $response;

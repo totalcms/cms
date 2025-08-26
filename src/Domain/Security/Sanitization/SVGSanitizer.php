@@ -13,7 +13,7 @@ class SVGSanitizer
 
 	public static function sanitize(string $svg): string
 	{
-		if (empty($svg)) {
+		if ($svg === '') {
 			return '';
 		}
 		$sanitizer = self::getSanitizer();
@@ -24,7 +24,7 @@ class SVGSanitizer
 
 			// Return empty string if sanitization failed
 			return $cleanSvg ?: '';
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// If sanitization fails, return empty string
 			return '';
 		}
@@ -35,7 +35,7 @@ class SVGSanitizer
 	 */
 	public static function isValidSvg(string $svg): bool
 	{
-		if (empty($svg)) {
+		if ($svg === '') {
 			return false;
 		}
 
@@ -49,13 +49,13 @@ class SVGSanitizer
 
 			// Check for XML errors
 			$errors = libxml_get_errors();
-			if (!empty($errors)) {
+			if ($errors !== []) {
 				return false;
 			}
 
 			// Must contain at least one SVG element
 			return $doc->getElementsByTagName('svg')->length > 0;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		} finally {
 			// Restore previous settings
@@ -66,7 +66,7 @@ class SVGSanitizer
 
 	public static function sanitizeAndValidate(string $svg): string
 	{
-		if (empty($svg)) {
+		if ($svg === '') {
 			return '';
 		}
 		$sanitized = self::sanitize($svg);
@@ -84,7 +84,7 @@ class SVGSanitizer
 	 */
 	private static function getSanitizer(): Sanitizer
 	{
-		if (self::$sanitizer === null) {
+		if (!self::$sanitizer instanceof Sanitizer) {
 			self::$sanitizer = new Sanitizer();
 
 			// Configure sanitizer for security

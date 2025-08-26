@@ -180,7 +180,7 @@ final class UserValidationServiceTest extends TestCase
 
 		// Mock object existence checks - user doesn't exist in customers, but exists in users
 		$objectFetcher->method('existsObject')
-			->willReturnCallback(function ($collection, $userId) {
+			->willReturnCallback(function ($collection, $userId): bool {
 				if ($collection === 'customers' && $userId === 'super-admin') {
 					return false; // User doesn't exist in customers collection
 				}

@@ -19,13 +19,13 @@ use TotalCMS\Factory\LoggerFactory;
 final class CsvImporterTest extends TestCase
 {
 	private CsvImporter $csvImporter;
-	private CollectionFetcher $collectionFetcher;
-	private ObjectFetcher $objectFetcher;
-	private ObjectImporter $objectImporter;
-	private IndexBuilder $indexBuilder;
-	private JobQueuer $jobQueuer;
-	private LoggerInterface $logger;
-	private LoggerFactory $loggerFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectImporter;
+	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
+	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
+	private \PHPUnit\Framework\MockObject\MockObject $logger;
+	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{

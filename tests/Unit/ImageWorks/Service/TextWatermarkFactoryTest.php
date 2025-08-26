@@ -152,7 +152,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Test the color parsing functionality through reflection since it's private
 		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
-		$parseColorMethod->setAccessible(true);
 
 		$result = $parseColorMethod->invoke($this->factory, 'ff0000');
 
@@ -165,7 +164,6 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
-		$parseColorMethod->setAccessible(true);
 
 		$result = $parseColorMethod->invoke($this->factory, 'f00');
 
@@ -177,7 +175,6 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
-		$parseColorMethod->setAccessible(true);
 
 		$result = $parseColorMethod->invoke($this->factory, '#00ff00');
 
@@ -189,7 +186,6 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		$reflection       = new \ReflectionClass($this->factory);
 		$parseColorMethod = $reflection->getMethod('parseColor');
-		$parseColorMethod->setAccessible(true);
 
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage('Invalid color format');
@@ -201,7 +197,6 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		$reflection             = new \ReflectionClass($this->factory);
 		$generateCacheKeyMethod = $reflection->getMethod('generateCacheKey');
-		$generateCacheKeyMethod->setAccessible(true);
 
 		$text            = 'Test Text';
 		$fontSize        = 100;
@@ -242,7 +237,6 @@ class TextWatermarkFactoryTest extends TestCase
 	{
 		$reflection             = new \ReflectionClass($this->factory);
 		$generateCacheKeyMethod = $reflection->getMethod('generateCacheKey');
-		$generateCacheKeyMethod->setAccessible(true);
 
 		$baseParams     = ['Test', 100, [255, 255, 255], 'Arial', [0, 0, 0], 10, 0];
 		$modifiedParams = ['Different Text', 100, [255, 255, 255], 'Arial', [0, 0, 0], 10, 0];

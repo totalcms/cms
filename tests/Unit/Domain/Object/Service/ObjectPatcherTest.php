@@ -16,8 +16,8 @@ use TotalCMS\Domain\Property\Data\PropertyData;
 final class ObjectPatcherTest extends TestCase
 {
 	private ObjectPatcher $patcher;
-	private ObjectFetcher $objectFetcher;
-	private ObjectUpdater $objectUpdater;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
 
 	protected function setUp(): void
 	{

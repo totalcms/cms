@@ -11,7 +11,7 @@ use TotalCMS\Support\Config;
 final class CollectionZipperTest extends TestCase
 {
 	private CollectionZipper $collectionZipper;
-	private Config $config;
+	private \PHPUnit\Framework\MockObject\MockObject $config;
 	private string $tempDir;
 
 	protected function setUp(): void

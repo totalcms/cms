@@ -60,7 +60,7 @@ class SchemaTransformer
 	private function isDeckProperty(array $property): bool
 	{
 		return isset($property['$ref'])
-			   && str_contains($property['$ref'], '/properties/deck.json');
+			   && str_contains((string) $property['$ref'], '/properties/deck.json');
 	}
 
 	/**

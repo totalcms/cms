@@ -92,7 +92,7 @@ describe('FileUploadValidator', function (): void {
 		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
-		foreach ($categories as $category => $config) {
+		foreach ($categories as $config) {
 			$extensions = $config['extensions'];
 
 			// Should not contain dangerous extensions
@@ -189,10 +189,10 @@ describe('FileUploadValidator', function (): void {
 	): UploadedFileInterface {
 		return new class($filename, $size, $error, $mimeType) implements UploadedFileInterface {
 			public function __construct(
-				private string $filename,
-				private int $size,
-				private int $error,
-				private string $mimeType,
+				private readonly string $filename,
+				private readonly int $size,
+				private readonly int $error,
+				private readonly string $mimeType,
 			) {
 			}
 
@@ -407,7 +407,7 @@ describe('FileUploadValidator', function (): void {
 		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
-		foreach ($categories as $category => $config) {
+		foreach ($categories as $config) {
 			expect($config)->toHaveKey('max_size');
 			expect($config)->toHaveKey('max_size_formatted');
 			expect($config)->toHaveKey('extensions');

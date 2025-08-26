@@ -44,14 +44,9 @@ final class AccessManagerBasicTest extends TestCase
 		// Case 1: No session - should return false
 		$accessManager->method('sessionHasUser')->willReturn(false);
 		$accessManager->method('userLoggedIn')->willReturnCallback(
-			function ($collection = '') use ($accessManager) {
-				// Simulate the actual method logic
-				if (!$accessManager->sessionHasUser()) {
-					return false;
-				}
-
-				return true;
-			}
+			fn($collection = '') =>
+                // Simulate the actual method logic
+                $accessManager->sessionHasUser()
 		);
 
 		$result = $accessManager->userLoggedIn();
@@ -70,14 +65,9 @@ final class AccessManagerBasicTest extends TestCase
 
 		// Mock userHasAccess to simulate actual logic
 		$accessManager->method('userHasAccess')->willReturnCallback(
-			function ($groups, $collection = '') use ($accessManager) {
-				// Simulate the actual method logic - should return false if not logged in
-				if (!$accessManager->userLoggedIn($collection)) {
-					return false;
-				}
-
-				return true;
-			}
+			fn($groups, $collection = '') =>
+                // Simulate the actual method logic - should return false if not logged in
+                $accessManager->userLoggedIn($collection)
 		);
 
 		$result = $accessManager->userHasAccess(['admin']);
@@ -96,7 +86,7 @@ final class AccessManagerBasicTest extends TestCase
 
 		// Mock userData to simulate actual logic
 		$accessManager->method('userData')->willReturnCallback(
-			function () use ($accessManager) {
+			function () use ($accessManager): array {
 				// Simulate the actual method logic
 				if (!$accessManager->sessionHasUser()) {
 					return [];
@@ -117,21 +107,17 @@ final class AccessManagerBasicTest extends TestCase
 		$arrayGroup  = [$stringGroup];
 
 		// Simulate the logic from userHasAccess method
-		if (is_string($stringGroup)) {
-			$groups = [$stringGroup];
-		} else {
-			$groups = $stringGroup;
-		}
+		$groups = is_string($stringGroup) ? [$stringGroup] : $stringGroup;
 
 		expect($groups)->toBe($arrayGroup);
 
 		// Test empty groups
 		$emptyGroups = [];
-		expect(empty($emptyGroups))->toBeTrue();
+		expect($emptyGroups === [])->toBeTrue();
 
 		// Test non-empty groups
 		$nonEmptyGroups = ['admin', 'editor'];
-		expect(empty($nonEmptyGroups))->toBeFalse();
+		expect($nonEmptyGroups === [])->toBeFalse();
 	}
 
 	public function testCollectionDefaultingLogic(): void
@@ -164,9 +150,7 @@ final class AccessManagerBasicTest extends TestCase
 		expect($loginUrl1)->toBe('/api/login');
 
 		$loginUrl2 = $apiBase . '/login';
-		if ($collection !== '') {
-			$loginUrl2 .= "/$collection";
-		}
+		$loginUrl2 .= "/$collection";
 		expect($loginUrl2)->toBe('/api/login/customers');
 
 		// Access denied URL
@@ -234,11 +218,7 @@ final class AccessManagerBasicTest extends TestCase
 		];
 
 		$userID2         = $mockSessionData2['user'] ?? '';
-		$userCollection2 = $mockSessionData2['collection'] ?? '';
-
-		if ($userCollection2 === '') {
-			$userCollection2 = $defaultAuthCollection;
-		}
+        $userCollection2 = $defaultAuthCollection;
 
 		expect($userID2)->toBe('jane-doe');
 		expect($userCollection2)->toBe($defaultAuthCollection);

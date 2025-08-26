@@ -18,12 +18,12 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 final class ObjectRemoverTest extends TestCase
 {
 	private ObjectRemover $remover;
-	private PropertyRepository $propStorage;
-	private ObjectRepository $storage;
-	private ObjectFetcher $objectFetcher;
-	private ObjectUpdater $objectUpdater;
-	private IndexBuilder $indexBuilder;
-	private CollectionFetcher $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $propStorage;
+	private \PHPUnit\Framework\MockObject\MockObject $storage;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
+	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 
 	protected function setUp(): void
 	{

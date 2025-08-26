@@ -27,15 +27,15 @@ class CmsGridNode extends Node
 			'template' => $template,
 		];
 
-		if ($collection !== null) {
+		if ($collection instanceof Node) {
 			$nodes['collection'] = $collection;
 		}
 
-		if ($classes !== null) {
+		if ($classes instanceof Node) {
 			$nodes['classes'] = $classes;
 		}
 
-		if ($itemTag !== null) {
+		if ($itemTag instanceof Node) {
 			$nodes['itemTag'] = $itemTag;
 		}
 

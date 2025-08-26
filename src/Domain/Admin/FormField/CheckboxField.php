@@ -14,7 +14,7 @@ class CheckboxField extends FormField
 		$input = $this->buildFormField();
 		$label = HTMLUtils::element('label', $this->label, ['for' => "field-{$this->uuid}"]);
 		$group = HTMLUtils::element('div', $input . $label, ['class' => 'form-group']);
-		$help  = empty($this->help) ? '' : HTMLUtils::element('p', $this->help, [
+		$help  = $this->help === '' ? '' : HTMLUtils::element('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
@@ -42,12 +42,12 @@ class CheckboxField extends FormField
 			'name'             => $this->name,
 			'type'             => $this->inputType,
 			'required'         => null, // this has to be false or else you cannot save an unchecked box
-			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
+			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
 			'checked'          => boolval($this->value) ? '' : null,
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn (?string $x): bool => !is_null($x));
 
 		return $attributes;
 	}

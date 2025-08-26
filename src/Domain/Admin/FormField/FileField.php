@@ -41,7 +41,7 @@ class FileField extends FormField
 		$ext       = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 		$iconClass = 'icon-' . $ext;
 
-		$notFound = empty($name) ? 'not-found' : '';
+		$notFound = $name === '' ? 'not-found' : '';
 
 		return <<<HTML
 		<div class="dz-preview dz-file-preview {$notFound}">
@@ -77,12 +77,11 @@ class FileField extends FormField
 			// 'name'       => $filename,
 		]);
 		// 	The cms.api may have a ? because of the Stacks Preview server
-		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
+		$join = str_contains($this->form->api, '?') ? '&' : '?';
 
 		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/filelinks{$join}{$query}");
-		$dialog = HTMLUtils::dialog($iframe, 'file-links-dialog');
 
-		return $dialog;
+		return HTMLUtils::dialog($iframe, 'file-links-dialog');
 	}
 
 	/** @param array<string,mixed> $fileData */
@@ -91,9 +90,7 @@ class FileField extends FormField
 		$content = $this->fileFieldsSection($fileData);
 		$content .= $this->closeSection();
 
-		$dialog = HTMLUtils::dialog($content, 'file-edit-dialog');
-
-		return $dialog;
+		return HTMLUtils::dialog($content, 'file-edit-dialog');
 	}
 
 	/** @param array<string,mixed> $fileData */

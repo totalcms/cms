@@ -60,9 +60,7 @@ class FileSaverTest extends TestCase
 		// Expect object creation
 		$this->mockObjectSaver->expects($this->once())
 			->method('saveObject')
-			->with($collection, $this->callback(function ($data) use ($objectID, $property) {
-				return $data['id'] === $objectID && isset($data[$property]);
-			}));
+			->with($collection, $this->callback(fn($data): bool => $data['id'] === $objectID && isset($data[$property])));
 
 		// Clean up existing files
 		$this->mockStorage->expects($this->once())
@@ -85,7 +83,7 @@ class FileSaverTest extends TestCase
 		$expectedResult = new ObjectData($objectID, []);
 		$this->mockObjectPatcher->expects($this->once())
 			->method('patchObject')
-			->with($collection, $objectID, $this->callback(function ($data) use ($property, $fileInfo) {
+			->with($collection, $objectID, $this->callback(function (array $data) use ($property, $fileInfo): bool {
 				$propData = $data[$property];
 
 				// FileData.transform() includes the file info plus default properties
@@ -157,7 +155,7 @@ class FileSaverTest extends TestCase
 		$expectedResult = new ObjectData($objectID, []);
 		$this->mockObjectPatcher->expects($this->once())
 			->method('patchObject')
-			->with($collection, $objectID, $this->callback(function ($data) use ($property) {
+			->with($collection, $objectID, $this->callback(function (array $data) use ($property): bool {
 				$propData = $data[$property];
 
 				// Should merge existing data with new file info
@@ -218,7 +216,7 @@ class FileSaverTest extends TestCase
 		// Should update extension in download name
 		$this->mockObjectPatcher->expects($this->once())
 			->method('patchObject')
-			->with($collection, $objectID, $this->callback(function ($data) use ($property) {
+			->with($collection, $objectID, $this->callback(function (array $data) use ($property): bool {
 				$propData = $data[$property];
 
 				// Download name should have updated extension

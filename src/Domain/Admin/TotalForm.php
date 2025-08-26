@@ -21,7 +21,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
-abstract class TotalForm
+abstract class TotalForm implements \Stringable
 {
 	/** @var array<string,FormField> */
 	protected array $fields = [];
@@ -174,7 +174,7 @@ abstract class TotalForm
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	protected function init(): void
 	{
-		if (empty($this->id) && isset($_GET['id'])) {
+		if ($this->id === '' && isset($_GET['id'])) {
 			$this->id = $_GET['id'];
 		}
 	}
@@ -186,16 +186,16 @@ abstract class TotalForm
 
 	protected function initClass(): void
 	{
-		if ($this->autosave === true) {
+		if ($this->autosave) {
 			$this->class .= ' autosave';
 		}
-		if ($this->helpOnHover === true) {
+		if ($this->helpOnHover) {
 			$this->class .= ' help-on-hover';
 		}
-		if ($this->helpOnFocus === true) {
+		if ($this->helpOnFocus) {
 			$this->class .= ' help-on-focus';
 		}
-		if (!empty($this->helpStyle)) {
+		if ($this->helpStyle !== '' && $this->helpStyle !== '0') {
 			$this->class .= " help-{$this->helpStyle}";
 		}
 		if ($this->method !== 'POST') {
@@ -212,7 +212,7 @@ abstract class TotalForm
 
 	protected function buildError(): string
 	{
-		if (empty($this->buildError)) {
+		if ($this->buildError === '') {
 			return '';
 		}
 
@@ -222,7 +222,7 @@ abstract class TotalForm
 	public function build(string $content = ''): string
 	{
 		$formgrid = null;
-		if (!empty($this->schemaData->formgrid) && $this->useFormGrid) {
+		if ($this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$this->class .= ' formgrid';
 			$gridBuilder  = new FormGridBuilder($this->schemaData->formgrid);
 			$formgrid     = $gridBuilder->toCssGridAreas();
@@ -232,13 +232,13 @@ abstract class TotalForm
 			'class'                 => "totalform {$this->class}",
 			'data-form'             => $this->formType,
 			'data-schema'           => $this->schema,
-			'data-collection'       => empty($this->collection) ? null : $this->collection,
+			'data-collection'       => $this->collection === '' ? null : $this->collection,
 			'data-collection-count' => isset($this->collectionData) ? $this->collectionData->count : null,
 			'data-method'           => $this->method,
 			'data-api'              => $this->api,
 			'data-route'            => $this->route,
-			'data-id'               => empty($this->id) ? null : $this->id,
-			'style'                 => empty($formgrid) ? null : $formgrid,
+			'data-id'               => $this->id === '' ? null : $this->id,
+			'style'                 => $formgrid === null || $formgrid === '' ? null : $formgrid,
 		]);
 
 		$actions = [
@@ -247,7 +247,7 @@ abstract class TotalForm
 			'deleteAction' => 'data-delete-action',
 		];
 		foreach ($actions as $action => $attribute) {
-			if (!empty($this->$action)) {
+			if ($this->$action !== []) {
 				$json = json_encode($this->$action);
 				if ($json) {
 					$attributes[$attribute] = $json;
@@ -257,7 +257,7 @@ abstract class TotalForm
 		$content  = $this->buildError() . $content;
 		$content .= $this->fieldContent();
 
-		if (!empty($this->save) || !empty($this->delete)) {
+		if ($this->save !== '' && $this->delete !== '') {
 			$save     = $this->saveButton();
 			$delete   = $this->deleteButton();
 			$content .= HTMLUtils::element('div', $save . $delete, [
@@ -272,23 +272,20 @@ abstract class TotalForm
 	{
 		$col1   = HTMLUtils::element('section', $col1);
 		$col2   = HTMLUtils::element('section', $col2);
-		$layout = HTMLUtils::element('div', $col1 . $col2, ['class' => 'form-columns col-2']);
 
-		return $layout;
+		return HTMLUtils::element('div', $col1 . $col2, ['class' => 'form-columns col-2']);
 	}
 
 	public function layoutInline(string $content): string
 	{
-		$layout = HTMLUtils::element('div', $content, ['class' => 'form-inline-fields']);
-
-		return $layout;
+		return HTMLUtils::element('div', $content, ['class' => 'form-inline-fields']);
 	}
 
 	// Get a list of all values from a property in a collection
 	/** @return array<string> */
 	public function propertyListForCollection(string $property, string $collection = ''): array
 	{
-		if (empty($collection)) {
+		if ($collection === '') {
 			$collection = $this->collection;
 		}
 
@@ -305,22 +302,18 @@ abstract class TotalForm
 	 */
 	public function propertiesForCollection(array $properties, string $collection = ''): array
 	{
-		if (empty($collection)) {
+		if ($collection === '') {
 			$collection = $this->collection;
 		}
 
 		$collection = $this->collectionReader->fetchIndex($collection);
 
-		$filteredArray = $collection->objects->map(function ($item) use ($properties) {
-			return collect($item)->only($properties)->toArray();
-		})->toArray();
-
-		return $filteredArray;
+		return $collection->objects->map(fn($item) => collect($item)->only($properties)->toArray())->toArray();
 	}
 
 	private function saveButton(): string
 	{
-		if (empty($this->save)) {
+		if ($this->save === '') {
 			return '';
 		}
 		$button = new SaveButton($this->save);
@@ -330,7 +323,7 @@ abstract class TotalForm
 
 	private function deleteButton(): string
 	{
-		if (empty($this->delete)) {
+		if ($this->delete === '') {
 			return '';
 		}
 		$button = new DeleteButton($this->delete);
@@ -340,7 +333,7 @@ abstract class TotalForm
 
 	protected function fieldContent(): string
 	{
-		if (!empty($this->fields) && !isset($this->fields['id'])) {
+		if ($this->fields !== [] && !isset($this->fields['id'])) {
 			// Add the ID field if it does not exist
 			$this->addField('id', ['required' => true]);
 		}
@@ -348,7 +341,7 @@ abstract class TotalForm
 		$content = '';
 
 		// If using formgrid, inject section headers and dividers
-		if (!empty($this->schemaData->formgrid) && $this->useFormGrid) {
+		if ($this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
 			$content .= $gridBuilder->buildGridSectionHtml();
 		}
@@ -369,7 +362,7 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key): bool => in_array($key, self::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -381,7 +374,7 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($attributes, fn ($key) => in_array($key, self::ATTRIBUTE_SETTINGS), ARRAY_FILTER_USE_KEY);
+		return array_filter($attributes, fn ($key): bool => in_array($key, self::ATTRIBUTE_SETTINGS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -406,7 +399,7 @@ abstract class TotalForm
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key): bool => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -481,7 +474,7 @@ abstract class TotalForm
 		return $properties;
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->build();
 	}

@@ -87,7 +87,7 @@ describe('AuthLoginAction Feature Tests', function (): void {
 
 		$contentType = $response->getHeaderLine('Content-Type');
 		// Content-Type should be set and be HTML-related, or empty (which is also acceptable)
-		if (!empty($contentType)) {
+		if ($contentType !== '' && $contentType !== '0') {
 			expect($contentType)->toMatch('/(text\/html|html)/i');
 		} else {
 			// If no Content-Type is set, that's also acceptable for this test

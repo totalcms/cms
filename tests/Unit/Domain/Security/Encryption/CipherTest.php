@@ -85,7 +85,7 @@ describe('Cipher', function (): void {
 	});
 
 	test('Cipher → deobfuscate throws exception for invalid data', function (): void {
-		expect(fn () => Cipher::deobfuscate('invalid-base64-data!!!'))
+		expect(fn (): string => Cipher::deobfuscate('invalid-base64-data!!!'))
 			->toThrow(Exception::class, 'Invalid obfuscated data');
 	});
 
@@ -233,12 +233,12 @@ describe('Cipher', function (): void {
 
 		$encrypted = Cipher::encrypt($data, $correctKey);
 
-		expect(fn () => Cipher::decrypt($encrypted, $wrongKey))
+		expect(fn (): string => Cipher::decrypt($encrypted, $wrongKey))
 			->toThrow(Exception::class, 'Decryption failed');
 	});
 
 	test('Cipher → decrypt throws exception for invalid data', function (): void {
-		expect(fn () => Cipher::decrypt('invalid-encrypted-data'))
+		expect(fn (): string => Cipher::decrypt('invalid-encrypted-data'))
 			->toThrow(Exception::class);
 	});
 
@@ -246,7 +246,7 @@ describe('Cipher', function (): void {
 		// Too short to contain IV + ciphertext
 		$shortData = base64_encode('short');
 
-		expect(fn () => Cipher::decrypt($shortData))
+		expect(fn (): string => Cipher::decrypt($shortData))
 			->toThrow(Exception::class, 'Invalid encrypted data: insufficient length');
 	});
 

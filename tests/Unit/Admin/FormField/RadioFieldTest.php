@@ -79,7 +79,7 @@ describe('RadioField', function (): void {
 
 		// Should contain field-{uuid}-1 and field-{uuid}-2
 		$matches = [];
-		preg_match_all('/id="field-([a-zA-Z0-9]+)-([0-9]+)"/', $html, $matches);
+		preg_match_all('/id="field-([a-zA-Z0-9]+)-(\d+)"/', $html, $matches);
 
 		expect($matches[2])->toContain('1', '2'); // Index numbers
 	});
@@ -98,7 +98,7 @@ describe('RadioField', function (): void {
 	});
 
 	test('RadioField → applies required attribute to all radio buttons when required', function (): void {
-		$field = new RadioField($this->form, 'choice', required: true, options: ['A', 'B']);
+		$field = new RadioField($this->form, 'choice', options: ['A', 'B'], required: true);
 
 		$html = $field->build();
 
@@ -108,7 +108,7 @@ describe('RadioField', function (): void {
 	});
 
 	test('RadioField → applies disabled attribute when disabled', function (): void {
-		$field = new RadioField($this->form, 'choice', disabled: true, options: ['A', 'B']);
+		$field = new RadioField($this->form, 'choice', options: ['A', 'B'], disabled: true);
 
 		$html = $field->build();
 

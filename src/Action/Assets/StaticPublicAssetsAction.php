@@ -41,7 +41,7 @@ class StaticPublicAssetsAction
 		$assetsDir    = realpath(__DIR__ . '/../../../public/assets');
 		$resolvedPath = realpath($assetPath);
 
-		if ($resolvedPath === false || $assetsDir === false || strpos($resolvedPath, $assetsDir) !== 0) {
+		if ($resolvedPath === false || $assetsDir === false || !str_starts_with($resolvedPath, $assetsDir)) {
 			throw new HttpNotFoundException($request, 'Asset not found');
 		}
 

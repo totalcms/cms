@@ -32,7 +32,7 @@ class ImageSaver extends FileSaver
 
 		// Only keep certain existing data, but allow EXIF to populate alt and tags if they're empty
 		$keep         = ['featured', 'link'];
-		$existingData = array_filter($imageProp->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+		$existingData = array_filter($imageProp->transform(), fn ($key): bool => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
 
 		// Keep existing alt and tags only if they have values
 		$existingAlt  = trim($imageProp->alt ?? '');

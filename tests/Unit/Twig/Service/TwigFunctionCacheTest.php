@@ -24,7 +24,7 @@ final class TwigFunctionCacheTest extends TestCase
 	public function testRememberCachesFunction(): void
 	{
 		$callCount = 0;
-		$function  = function () use (&$callCount) {
+		$function  = function () use (&$callCount): string {
 			$callCount++;
 
 			return 'test_result';
@@ -43,9 +43,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testRememberWithArguments(): void
 	{
-		$function = function ($a, $b) {
-			return $a + $b;
-		};
+		$function = (fn($a, $b): float|int|array => $a + $b);
 
 		$result1 = TwigFunctionCache::remember('math', $function, [5, 3]);
 		$result2 = TwigFunctionCache::remember('math', $function, [10, 2]);
@@ -58,9 +56,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testRememberWithComplexArguments(): void
 	{
-		$function = function ($data) {
-			return count($data);
-		};
+		$function = (fn($data): int => count($data));
 
 		$args1 = [['a', 'b', 'c']];
 		$args2 = [['x', 'y']];
@@ -76,9 +72,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testHasReturnsTrueForCachedItems(): void
 	{
-		$function = function () {
-			return 'cached_value';
-		};
+		$function = (fn(): string => 'cached_value');
 
 		$this->assertFalse(TwigFunctionCache::has('test_key'));
 
@@ -94,9 +88,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testHasWithArguments(): void
 	{
-		$function = function ($value) {
-			return $value * 2;
-		};
+		$function = (fn($value): int|float => $value * 2);
 
 		$this->assertFalse(TwigFunctionCache::has('multiply', [5]));
 
@@ -108,9 +100,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testClearRemovesAllCachedItems(): void
 	{
-		$function = function ($value) {
-			return $value;
-		};
+		$function = (fn($value) => $value);
 
 		TwigFunctionCache::remember('key1', $function, ['value1']);
 		TwigFunctionCache::remember('key2', $function, ['value2']);
@@ -126,9 +116,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testForgetRemovesSpecificKey(): void
 	{
-		$function = function ($value) {
-			return $value;
-		};
+		$function = (fn($value) => $value);
 
 		TwigFunctionCache::remember('key1', $function, ['a']);
 		TwigFunctionCache::remember('key1', $function, ['b']);
@@ -147,9 +135,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testGetStatsReturnsCorrectCount(): void
 	{
-		$function = function ($value) {
-			return $value;
-		};
+		$function = (fn($value) => $value);
 
 		$stats = TwigFunctionCache::getStats();
 		$this->assertEquals(0, $stats['count']);
@@ -165,10 +151,6 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testGetStatsIncludesMemoryUsage(): void
 	{
-		$function = function ($value) {
-			return $value;
-		};
-
 		$stats = TwigFunctionCache::getStats();
 		$this->assertArrayHasKey('memory', $stats);
 		$this->assertIsInt($stats['memory']);
@@ -178,7 +160,7 @@ final class TwigFunctionCacheTest extends TestCase
 	public function testRememberWithNoArguments(): void
 	{
 		$callCount = 0;
-		$function  = function () use (&$callCount) {
+		$function  = function () use (&$callCount): string {
 			$callCount++;
 
 			return 'no_args_result';
@@ -194,9 +176,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testRememberWithEmptyArgumentsArray(): void
 	{
-		$function = function () {
-			return 'empty_args';
-		};
+		$function = (fn(): string => 'empty_args');
 
 		$result1 = TwigFunctionCache::remember('test', $function, []);
 		$result2 = TwigFunctionCache::remember('test', $function, []);
@@ -207,9 +187,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testCacheKeyGeneration(): void
 	{
-		$function = function ($value) {
-			return $value;
-		};
+		$function = (fn($value) => $value);
 
 		// Same key, different args should create different cache entries
 		TwigFunctionCache::remember('test', $function, ['a']);
@@ -224,9 +202,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testCacheWithDifferentDataTypes(): void
 	{
-		$function = function ($value) {
-			return gettype($value);
-		};
+		$function = (fn($value): string => gettype($value));
 
 		$result1 = TwigFunctionCache::remember('type', $function, [123]);
 		$result2 = TwigFunctionCache::remember('type', $function, ['123']);
@@ -241,9 +217,7 @@ final class TwigFunctionCacheTest extends TestCase
 
 	public function testCacheWithNestedArrayArguments(): void
 	{
-		$function = function ($data) {
-			return json_encode($data);
-		};
+		$function = (fn($data) => json_encode($data));
 
 		$complexData = [
 			'user' => ['name' => 'John', 'age' => 30],
@@ -263,7 +237,7 @@ final class TwigFunctionCacheTest extends TestCase
 	public function testExceptionInFunctionIsNotCached(): void
 	{
 		$callCount = 0;
-		$function  = function () use (&$callCount) {
+		$function  = function () use (&$callCount): never {
 			$callCount++;
 			throw new \RuntimeException('Test exception');
 		};
@@ -283,9 +257,7 @@ final class TwigFunctionCacheTest extends TestCase
 	public function testMultipleInstancesShareCache(): void
 	{
 		// Since TwigFunctionCache uses static methods, all instances share the same cache
-		$function = function () {
-			return 'shared_result';
-		};
+		$function = (fn(): string => 'shared_result');
 
 		TwigFunctionCache::remember('shared', $function);
 
@@ -302,7 +274,7 @@ final class TwigFunctionCacheTest extends TestCase
 		$largeData = array_fill(0, 10000, 'large_data_item_with_more_content');
 
 		// Use a more computationally expensive function to make timing differences more apparent
-		$expensiveFunction = function ($data) {
+		$expensiveFunction = function ($data): int {
 			$result = 0;
 			foreach ($data as $item) {
 				// Add some computational work

@@ -12,7 +12,7 @@ class HTMLSanitizer
 	 */
 	public static function sanitizeRichContent(string $html, array $config = []): string
 	{
-		if (empty($html)) {
+		if ($html === '') {
 			return '';
 		}
 
@@ -25,9 +25,8 @@ class HTMLSanitizer
 		$html = self::removeComments($html);
 		$html = self::sanitizeStyles($html, $config);
 		$html = self::handleAllowedTags($html, $config);
-		$html = self::removeAlertCalls($html);
 
-		return $html;
+		return self::removeAlertCalls($html);
 	}
 
 	/**
@@ -69,9 +68,8 @@ class HTMLSanitizer
 	{
 		$html = (string)preg_replace('/javascript:/i', '', $html);
 		$html = (string)preg_replace('/vbscript:/i', '', $html);
-		$html = (string)preg_replace('/data:text\/html/i', '', $html);
 
-		return $html;
+		return (string)preg_replace('/data:text\/html/i', '', $html);
 	}
 
 	private static function removeDangerousAttributes(string $html): string
@@ -136,9 +134,8 @@ class HTMLSanitizer
 
 		// Remove all iframes first, then add back allowed ones
 		$html = (string)preg_replace('/<iframe[^>]*>.*?<\/iframe>/is', '', $html);
-		$html .= implode('', $allowedIframes);
 
-		return $html;
+		return $html . implode('', $allowedIframes);
 	}
 
 	private static function removeComments(string $html): string

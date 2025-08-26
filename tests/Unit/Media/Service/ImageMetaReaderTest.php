@@ -112,9 +112,9 @@ final class ImageMetaReaderTest extends TestCase
 	public function testFractionProcessing(): void
 	{
 		// Test with a mock EXIF data that includes fractions
-		$testImageWithFractions = $this->createTestImageWithMockExif();
+		$testImageWithFractions = $this->testImagePath;
 
-		if ($testImageWithFractions) {
+		if ($testImageWithFractions !== '' && $testImageWithFractions !== '0') {
 			$metadata = ImageMetaReader::getMetaData($testImageWithFractions);
 
 			if (isset($metadata['exif']['focalLength'])) {
@@ -139,9 +139,9 @@ final class ImageMetaReaderTest extends TestCase
 	public function testGPSCoordinateFormatting(): void
 	{
 		// Test GPS coordinate processing returns strings
-		$testImageWithGPS = $this->createTestImageWithMockGPS();
+		$testImageWithGPS = $this->testImagePath;
 
-		if ($testImageWithGPS) {
+		if ($testImageWithGPS !== '' && $testImageWithGPS !== '0') {
 			$metadata = ImageMetaReader::getMetaData($testImageWithGPS);
 
 			// GPS coordinates should be strings for schema compliance
@@ -167,9 +167,9 @@ final class ImageMetaReaderTest extends TestCase
 	public function testKeywordExtraction(): void
 	{
 		// Test keyword extraction from various sources
-		$testImageWithKeywords = $this->createTestImageWithKeywords();
+		$testImageWithKeywords = $this->testImagePath;
 
-		if ($testImageWithKeywords) {
+		if ($testImageWithKeywords !== '' && $testImageWithKeywords !== '0') {
 			$metadata = ImageMetaReader::getMetaData($testImageWithKeywords);
 
 			$this->assertIsArray($metadata['tags'], 'Tags should be an array');
@@ -217,9 +217,9 @@ final class ImageMetaReaderTest extends TestCase
 	public function testXMPLensExtraction(): void
 	{
 		// Test XMP lens data extraction
-		$testImageWithXMP = $this->createTestImageWithMockXMP();
+		$testImageWithXMP = $this->testImagePath;
 
-		if ($testImageWithXMP) {
+		if ($testImageWithXMP !== '' && $testImageWithXMP !== '0') {
 			$metadata = ImageMetaReader::getMetaData($testImageWithXMP);
 
 			// Check if lens information is extracted
@@ -235,9 +235,9 @@ final class ImageMetaReaderTest extends TestCase
 	public function testIPTCLocationExtraction(): void
 	{
 		// Test IPTC location data extraction
-		$testImageWithIPTC = $this->createTestImageWithMockIPTC();
+		$testImageWithIPTC = $this->testImagePath;
 
-		if ($testImageWithIPTC) {
+		if ($testImageWithIPTC !== '' && $testImageWithIPTC !== '0') {
 			$metadata = ImageMetaReader::getMetaData($testImageWithIPTC);
 
 			$locationFields = ['country', 'state', 'city', 'sublocation'];
@@ -314,36 +314,6 @@ final class ImageMetaReaderTest extends TestCase
 		imagedestroy($image);
 
 		return $imagePath;
-	}
-
-	private function createTestImageWithMockExif(): ?string
-	{
-		// Use the real EXIF test image since it has all the data we need
-		return $this->testImagePath;
-	}
-
-	private function createTestImageWithMockGPS(): ?string
-	{
-		// Use the real EXIF test image since it has GPS coordinates
-		return $this->testImagePath;
-	}
-
-	private function createTestImageWithKeywords(): ?string
-	{
-		// Use the real EXIF test image for keyword extraction testing
-		return $this->testImagePath;
-	}
-
-	private function createTestImageWithMockXMP(): ?string
-	{
-		// Use the real EXIF test image for XMP testing
-		return $this->testImagePath;
-	}
-
-	private function createTestImageWithMockIPTC(): ?string
-	{
-		// Use the real EXIF test image for IPTC testing
-		return $this->testImagePath;
 	}
 
 	private function recursiveRemoveDirectory(string $dir): void

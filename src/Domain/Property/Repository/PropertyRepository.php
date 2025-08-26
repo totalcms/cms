@@ -16,7 +16,7 @@ class PropertyRepository extends StorageRepository
 
 		try {
 			$this->filesystem->deleteDirectory($path);
-		} catch (\Exception $exception) {
+		} catch (\Exception) {
 			throw new \RuntimeException('Unable to delete directory');
 		}
 	}
@@ -27,7 +27,7 @@ class PropertyRepository extends StorageRepository
 
 		try {
 			$this->filesystem->deleteDirectory($path);
-		} catch (\Exception $exception) {
+		} catch (\Exception) {
 			throw new \RuntimeException('Unable to delete cache directory');
 		}
 
@@ -40,7 +40,7 @@ class PropertyRepository extends StorageRepository
 
 		try {
 			$this->filesystem->deleteDirectory($path);
-		} catch (\Exception $exception) {
+		} catch (\Exception) {
 			throw new \RuntimeException('Unable to delete cache directory');
 		}
 
@@ -53,7 +53,7 @@ class PropertyRepository extends StorageRepository
 
 		try {
 			$this->filesystem->delete($path);
-		} catch (\Exception $exception) {
+		} catch (\Exception) {
 			throw new \RuntimeException("Unable to delete file $filename");
 		}
 		$this->deleteFileCache($collection, $objectID, $property, $filename);
@@ -67,7 +67,7 @@ class PropertyRepository extends StorageRepository
 
 		// File already exists, rename it
 		if ($this->filesystem->fileExists($newpath)) {
-			$newname  = self::getUniqueFilename($filename);
+			$newname  = $this->getUniqueFilename($filename);
 			$newpath  = PathUtils::buildPath($collection, $objectID, $property, $newname, $subpath);
 		}
 
@@ -141,7 +141,7 @@ class PropertyRepository extends StorageRepository
 		];
 	}
 
-	private static function getUniqueFilename(string $filename): string
+	private function getUniqueFilename(string $filename): string
 	{
 		$parts = pathinfo($filename);
 		$ext   = isset($parts['extension']) ? '.' . $parts['extension'] : '';

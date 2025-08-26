@@ -46,8 +46,8 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 	it('handles ANY HTTP method due to route configuration', function (): void {
 		// Test various HTTP methods that should all work per route config
 		$methods = [
-			fn () => get('/denied'),
-			fn () => post('/denied'),
+			fn (): \Nekofar\Slim\Test\TestResponse => get('/denied'),
+			fn (): \Nekofar\Slim\Test\TestResponse => post('/denied'),
 		];
 
 		foreach ($methods as $methodCall) {
@@ -124,7 +124,7 @@ describe('AuthDeniedAction Feature Tests', function (): void {
 
 		// Content-Type may or may not be explicitly set, but if it is, should be HTML-related
 		$contentType = $response->getHeaderLine('Content-Type');
-		if (!empty($contentType)) {
+		if ($contentType !== '' && $contentType !== '0') {
 			expect($contentType)->toMatch('/(text\/html|html)/i');
 		}
 	});

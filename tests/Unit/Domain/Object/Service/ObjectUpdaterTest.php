@@ -19,11 +19,11 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 final class ObjectUpdaterTest extends TestCase
 {
 	private ObjectUpdater $updater;
-	private ObjectFetcher $objectFetcher;
-	private ObjectRepository $repository;
-	private ObjectFactory $factory;
-	private IndexBuilder $indexBuilder;
-	private PropertyDataProcessorInterface $propertyProcessor;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $repository;
+	private \PHPUnit\Framework\MockObject\MockObject $factory;
+	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
+	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
 
 	protected function setUp(): void
 	{

@@ -16,7 +16,6 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		// Use reflection to access private method
 		$reflection = new \ReflectionClass(TotalCMSTwigAdapter::class);
 		$method     = $reflection->getMethod('isEncryptedPassword');
-		$method->setAccessible(true);
 
 		// Test plain password (should not be detected as encrypted)
 		$result = $method->invoke($adapter, 'plainpassword');

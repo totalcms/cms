@@ -19,12 +19,12 @@ use TotalCMS\Factory\LoggerFactory;
 class AlloyImporterTest extends TestCase
 {
 	private AlloyImporter $alloyImporter;
-	private CollectionFetcher $collectionFetcher;
-	private CollectionFactory $collectionFactory;
-	private CollectionRepository $collectionRepository;
-	private JobQueuer $jobQueuer;
-	private LoggerFactory $loggerFactory;
-	private LoggerInterface $logger;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
+	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $logger;
 	private string $tempDir;
 
 	protected function setUp(): void

@@ -102,7 +102,7 @@ class EmbedBuilder
 			parse_str((string)$queryString, $queryParams);
 			$videoId = is_string($queryParams['v']) ? $queryParams['v'] : '';
 
-			if (empty($videoId)) {
+			if ($videoId === '') {
 				return self::link($url);
 			}
 
@@ -117,7 +117,7 @@ class EmbedBuilder
 				'showinfo'    => 0,
 			];
 
-			if (strpos($url, 'list') !== false) {
+			if (str_contains($url, 'list')) {
 				// playlist
 				$query['listType'] = 'playlist';
 				$query['list']     = $videoId;

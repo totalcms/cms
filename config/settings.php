@@ -12,7 +12,7 @@ if (file_exists(__DIR__ . '/tcms.php')) {
 // Unit-test and integration environment (Travis CI)
 $environment = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
 if ($environment) {
-	$envSettings = __DIR__ . '/local.' . strtolower($environment) . '.php';
+	$envSettings = __DIR__ . '/local.' . strtolower((string) $environment) . '.php';
 	if (file_exists($envSettings)) {
 		require $envSettings;
 	}

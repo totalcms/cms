@@ -28,12 +28,12 @@ class ColorField extends FormField
 			'id'               => "field-{$this->uuid}",
 			'name'             => $this->name,
 			'type'             => $this->inputType,
-			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
+			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
 			'value'            => $this->value,
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn ($x): bool => !is_null($x));
 
 		return $attributes;
 	}

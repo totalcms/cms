@@ -147,7 +147,7 @@ describe('ListData', function (): void {
 	});
 
 	test('ListData → handles very large lists', function (): void {
-		$items = array_map(fn ($i) => "item_$i", range(1, 1000));
+		$items = array_map(fn (int $i): string => "item_$i", range(1, 1000));
 		$list  = new ListData($items);
 
 		expect(count($list->list))->toBe(1000);

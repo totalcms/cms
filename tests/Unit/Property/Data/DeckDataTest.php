@@ -47,7 +47,7 @@ describe('DeckData', function (): void {
 			'item-1' => ['value' => 1], // Dash not allowed
 		];
 
-		expect(fn () => new DeckData($invalidNames))
+		expect(fn (): \TotalCMS\Domain\Property\Data\DeckData => new DeckData($invalidNames))
 			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
 	});
 
@@ -57,7 +57,7 @@ describe('DeckData', function (): void {
 			['name' => 'Second Item'],
 		];
 
-		expect(fn () => new DeckData($indexedArray))
+		expect(fn (): \TotalCMS\Domain\Property\Data\DeckData => new DeckData($indexedArray))
 			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
 	});
 
@@ -66,7 +66,7 @@ describe('DeckData', function (): void {
 			'item1' => 'string value', // Must be array
 		];
 
-		expect(fn () => new DeckData($invalidItems))
+		expect(fn (): \TotalCMS\Domain\Property\Data\DeckData => new DeckData($invalidItems))
 			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
 	});
 
@@ -85,7 +85,7 @@ describe('DeckData', function (): void {
 			'item1' => ['id' => 'different_id', 'name' => 'Item'],
 		];
 
-		expect(fn () => new DeckData($invalidId))
+		expect(fn (): \TotalCMS\Domain\Property\Data\DeckData => new DeckData($invalidId))
 			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
 	});
 

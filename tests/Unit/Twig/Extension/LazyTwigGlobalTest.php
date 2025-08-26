@@ -12,13 +12,13 @@ final class LazyTwigGlobalTest extends TestCase
 	public function testFactoryNotCalledUntilAccess(): void
 	{
 		$factoryCalled = false;
-		$factory       = function () use (&$factoryCalled) {
+		$factory       = function () use (&$factoryCalled): \stdClass {
 			$factoryCalled = true;
 
 			return new \stdClass();
 		};
 
-		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
+		new LazyTwigGlobal(\Closure::fromCallable($factory));
 
 		$this->assertFalse($factoryCalled);
 	}
@@ -26,7 +26,7 @@ final class LazyTwigGlobalTest extends TestCase
 	public function testFactoryCalledOnFirstAccess(): void
 	{
 		$factoryCalled = false;
-		$factory       = function () use (&$factoryCalled) {
+		$factory       = function () use (&$factoryCalled): \stdClass {
 			$factoryCalled = true;
 			$obj           = new \stdClass();
 			$obj->value    = 'test';
@@ -46,7 +46,7 @@ final class LazyTwigGlobalTest extends TestCase
 	public function testFactoryCalledOnlyOnce(): void
 	{
 		$factoryCallCount = 0;
-		$factory          = function () use (&$factoryCallCount) {
+		$factory          = function () use (&$factoryCallCount): \stdClass {
 			$factoryCallCount++;
 			$obj        = new \stdClass();
 			$obj->value = 'test';
@@ -67,7 +67,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testPropertyAccess(): void
 	{
-		$factory = function () {
+		$factory = function (): \stdClass {
 			$obj       = new \stdClass();
 			$obj->name = 'John';
 			$obj->age  = 30;
@@ -83,9 +83,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testPropertySetting(): void
 	{
-		$factory = function () {
-			return new \stdClass();
-		};
+		$factory = (fn(): \stdClass => new \stdClass());
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -96,7 +94,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testPropertyIsset(): void
 	{
-		$factory = function () {
+		$factory = function (): \stdClass {
 			$obj                   = new \stdClass();
 			$obj->existingProperty = 'exists';
 
@@ -111,8 +109,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testMethodCalls(): void
 	{
-		$factory = function () {
-			return new class {
+		$factory = (fn(): object => new class {
 				public function getName(): string
 				{
 					return 'TestObject';
@@ -122,8 +119,7 @@ final class LazyTwigGlobalTest extends TestCase
 				{
 					return $a + $b;
 				}
-			};
-		};
+			});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -133,8 +129,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testMethodCallsWithComplexArguments(): void
 	{
-		$factory = function () {
-			return new class {
+		$factory = (fn(): object => new class {
 				public function processArray(array $data): int
 				{
 					return count($data);
@@ -144,8 +139,7 @@ final class LazyTwigGlobalTest extends TestCase
 				{
 					return $obj->name ?? 'unknown';
 				}
-			};
-		};
+			});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -158,14 +152,12 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testStringableInterface(): void
 	{
-		$factory = function () {
-			return new class implements \Stringable {
+		$factory = (fn(): \Stringable => new class implements \Stringable {
 				public function __toString(): string
 				{
 					return 'StringableObject';
 				}
-			};
-		};
+			});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -174,9 +166,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testToStringWithNonStringableObject(): void
 	{
-		$factory = function () {
-			return new \stdClass();
-		};
+		$factory = (fn(): \stdClass => new \stdClass());
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -188,14 +178,12 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testToStringWithObjectThatHasToStringMethod(): void
 	{
-		$factory = function () {
-			return new class {
+		$factory = (fn(): object => new class {
 				public function __toString(): string
 				{
 					return 'CustomToString';
 				}
-			};
-		};
+			});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -204,8 +192,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testWithComplexObject(): void
 	{
-		$factory = function () {
-			return new class {
+		$factory = (fn(): object => new class {
 				public string $name = 'Complex';
 				public array $data  = ['key' => 'value'];
 
@@ -218,8 +205,7 @@ final class LazyTwigGlobalTest extends TestCase
 				{
 					$this->data[$key] = $value;
 				}
-			};
-		};
+			});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -237,7 +223,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testWithFactoryThatThrowsException(): void
 	{
-		$factory = function () {
+		$factory = function (): never {
 			throw new \RuntimeException('Factory failed');
 		};
 
@@ -252,7 +238,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testWithFactoryReturningSimpleObject(): void
 	{
-		$factory = function () {
+		$factory = function (): \stdClass {
 			$obj               = new \stdClass();
 			$obj->testProperty = 'test_value';
 
@@ -267,7 +253,7 @@ final class LazyTwigGlobalTest extends TestCase
 	public function testMultiplePropertyAccessAfterLoad(): void
 	{
 		$factoryCallCount = 0;
-		$factory          = function () use (&$factoryCallCount) {
+		$factory          = function () use (&$factoryCallCount): \stdClass {
 			$factoryCallCount++;
 			$obj        = new \stdClass();
 			$obj->prop1 = 'value1';
@@ -290,8 +276,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testMixedAccessPatterns(): void
 	{
-		$factory = function () {
-			return new class {
+		$factory = (fn(): object => new class {
 				public string $name = 'TestObject';
 
 				public function getName(): string
@@ -303,8 +288,7 @@ final class LazyTwigGlobalTest extends TestCase
 				{
 					$this->name = $name;
 				}
-			};
-		};
+			});
 
 		$lazy = new LazyTwigGlobal(\Closure::fromCallable($factory));
 
@@ -319,7 +303,7 @@ final class LazyTwigGlobalTest extends TestCase
 
 	public function testImplementsStringableInterface(): void
 	{
-		$lazy = new LazyTwigGlobal(fn () => new \stdClass());
+		$lazy = new LazyTwigGlobal(fn (): \stdClass => new \stdClass());
 
 		$this->assertInstanceOf(\Stringable::class, $lazy);
 	}
@@ -328,9 +312,9 @@ final class LazyTwigGlobalTest extends TestCase
 	{
 		// Test with different object types
 		$factories = [
-			fn () => new \stdClass(),
-			fn () => new \DateTime(),
-			fn () => new \ArrayObject(['test' => 'data']),
+			fn (): \stdClass => new \stdClass(),
+			fn (): \DateTime => new \DateTime(),
+			fn (): \ArrayObject => new \ArrayObject(['test' => 'data']),
 		];
 
 		foreach ($factories as $factory) {

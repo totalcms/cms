@@ -82,7 +82,7 @@ class RadioField extends FormField
 		];
 
 		// Remove null values from the attributes array
-		$inputAttributes = array_filter($inputAttributes, fn ($x) => !is_null($x));
+		$inputAttributes = array_filter($inputAttributes, fn (?string $x): bool => !is_null($x));
 
 		$input = HTMLUtils::inlineElement('input', $inputAttributes);
 		$label = HTMLUtils::element('label', $option['label'], [
@@ -100,7 +100,7 @@ class RadioField extends FormField
 
 	protected function buildHelpText(): string
 	{
-		if (empty($this->help)) {
+		if ($this->help === '') {
 			return '';
 		}
 
@@ -116,7 +116,7 @@ class RadioField extends FormField
 		$this->buildOptions();
 
 		// Ensure options are in the correct format
-		if (!empty($this->options) && !self::isMultiDimensionalArray($this->options)) {
+		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
 			// Convert simple array to key-value pairs
 			$processedOptions = [];
 			foreach ($this->options as $key => $value) {

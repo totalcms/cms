@@ -80,13 +80,7 @@ final class FileAccessManagerTest extends TestCase
 		// Case 1: No session - should return false
 		$fileAccessManager->method('sessionHasUser')->willReturn(false);
 		$fileAccessManager->method('userHasAccess')->willReturnCallback(
-			function () use ($fileAccessManager) {
-				if (!$fileAccessManager->sessionHasUser()) {
-					return false;
-				}
-
-				return true;
-			}
+			fn() => $fileAccessManager->sessionHasUser()
 		);
 
 		expect($fileAccessManager->userHasAccess())->toBeFalse();
@@ -225,9 +219,9 @@ final class FileAccessManagerTest extends TestCase
 		$nullUserId  = null;
 
 		// Super admin check logic: user ID must not be empty
-		$canBeSuperAdmin1 = !empty($emptyUserId);
-		$canBeSuperAdmin2 = !empty($validUserId);
-		$canBeSuperAdmin3 = !empty($nullUserId);
+		$canBeSuperAdmin1 = $emptyUserId !== '' && $emptyUserId !== '0';
+		$canBeSuperAdmin2 = $validUserId !== '' && $validUserId !== '0';
+		$canBeSuperAdmin3 = $nullUserId !== null;
 
 		expect($canBeSuperAdmin1)->toBeFalse();
 		expect($canBeSuperAdmin2)->toBeTrue();

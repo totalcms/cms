@@ -54,7 +54,7 @@ class CollectionForm extends TotalForm
 
 		$this->route = '/collections';
 
-		if (!empty($this->id)) {
+		if ($this->id !== '') {
 			$this->initCollectionData();
 			$this->route  = '/collections/' . $this->id;
 			$this->method = 'PUT';
@@ -67,7 +67,7 @@ class CollectionForm extends TotalForm
 	public function getCollectionSchema(): ?SchemaData
 	{
 		$schema = (string)$this->fields['schema']->getValue();
-		if (empty($schema)) {
+		if ($schema === '') {
 			return null;
 		}
 
@@ -116,15 +116,15 @@ class CollectionForm extends TotalForm
 	private function reservedSchemas(): array
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
-		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
+		$schemas = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 		$ignore  = ['collection', 'schema'];
 
-		if (empty($this->id)) {
+		if ($this->id === '') {
 			// Do not allow a new collection to be created with the blog-legacy schema
 			$ignore[] = 'blog-legacy';
 		}
 
-		return array_filter($schemas, fn ($schema) => !in_array($schema, $ignore));
+		return array_filter($schemas, fn (string $schema): bool => !in_array($schema, $ignore));
 	}
 
 	/** @return array<string> */
@@ -132,7 +132,7 @@ class CollectionForm extends TotalForm
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn ($schema) => $schema->id, $schemas);
+		return array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 	}
 
 	/**

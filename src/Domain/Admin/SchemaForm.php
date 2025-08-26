@@ -54,7 +54,7 @@ class SchemaForm extends TotalForm
 
 		$this->route = '/schemas';
 
-		if (!empty($this->id)) {
+		if ($this->id !== '') {
 			$this->route            = '/schemas/' . $this->id;
 			$this->method           = 'PUT';
 			$this->reserved         = $this->isReservedSchema($this->id);
@@ -62,7 +62,7 @@ class SchemaForm extends TotalForm
 			$this->schemaObjectData = $this->schemaFetcher->fetchSchema($this->id);
 		}
 		// Duplicate Schema
-		if (empty($this->id) && !empty($this->data)) {
+		if ($this->id === '' && $this->data !== []) {
 			// Convert property types to refs for the properties field
 			$this->data['properties'] = SchemaSaver::propertyTypeToRef($this->data['properties']);
 			$this->schemaObjectData   = $this->schemaFactory->generateSchema($this->data);
@@ -95,7 +95,7 @@ class SchemaForm extends TotalForm
 	private function isReservedSchema(string $id): bool
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
-		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
+		$schemas = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 
 		return in_array($id, $schemas);
 	}
@@ -119,7 +119,7 @@ class SchemaForm extends TotalForm
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
-		if (!empty($this->id) && ($name === 'required' || $name === 'index')) {
+		if ($this->id !== '' && ($name === 'required' || $name === 'index')) {
 			// Set all of the properties as options for the required and index fields
 			$options['options'] = array_keys($this->schemaObjectData->toArray()['properties']);
 		}

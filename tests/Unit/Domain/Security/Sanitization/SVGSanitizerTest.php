@@ -164,7 +164,7 @@ describe('SVGSanitizer', function (): void {
 		// Content that might become invalid after sanitization
 		$problematicSvg = '<not-svg>This will be cleaned to invalid content</not-svg>';
 
-		expect(fn () => SVGSanitizer::sanitizeAndValidate($problematicSvg))
+		expect(fn (): string => SVGSanitizer::sanitizeAndValidate($problematicSvg))
 			->toThrow(InvalidArgumentException::class, 'Invalid SVG content after sanitization');
 	});
 

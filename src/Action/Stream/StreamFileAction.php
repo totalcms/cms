@@ -35,7 +35,7 @@ class StreamFileAction extends StreamAction
 
 	protected function incrementCount(FileData $file): void
 	{
-		$file->count = $file->count + 1;
+		$file->count += 1;
 		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform());
 	}
 

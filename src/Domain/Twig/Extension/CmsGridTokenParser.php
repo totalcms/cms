@@ -45,7 +45,7 @@ class CmsGridTokenParser extends AbstractTokenParser
 		$stream->expect(Token::BLOCK_END_TYPE);
 
 		// Parse the template content until {% endcmsgrid %}
-		$template = $this->parser->subparse([$this, 'decideBlockEnd'], true);
+		$template = $this->parser->subparse($this->decideBlockEnd(...), true);
 
 		$stream->expect(Token::BLOCK_END_TYPE);
 

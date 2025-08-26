@@ -34,8 +34,8 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	it('handles ANY HTTP method due to route configuration', function (): void {
 		// Test various HTTP methods that should all work per route config
 		$methods = [
-			fn () => get('/logout'),
-			fn () => post('/logout'),
+			fn (): \Nekofar\Slim\Test\TestResponse => get('/logout'),
+			fn (): \Nekofar\Slim\Test\TestResponse => post('/logout'),
 		];
 
 		foreach ($methods as $methodCall) {
@@ -142,7 +142,7 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 			'Content-Type'     => 'application/x-www-form-urlencoded',
 		];
 
-		foreach ($headers as $header => $value) {
+		foreach (array_keys($headers) as $header) {
 			$this->setUpApp(bootstrap());
 
 			$response = post('/logout', [], $headers);

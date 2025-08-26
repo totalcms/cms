@@ -11,11 +11,9 @@ use TotalCMS\Renderer\RedirectRenderer;
  */
 class DocRedirectAction
 {
-	public function __construct(
-		private RedirectRenderer $redirectRenderer,
-	) {
-		$this->redirectRenderer = $redirectRenderer;
-	}
+	public function __construct(private readonly RedirectRenderer $redirectRenderer)
+    {
+    }
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{

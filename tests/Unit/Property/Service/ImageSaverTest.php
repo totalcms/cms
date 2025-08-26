@@ -88,7 +88,6 @@ class ImageSaverTest extends TestCase
 		$this->assertTrue($reflection->hasProperty('loggerFactory'));
 
 		$loggerFactoryProperty = $reflection->getProperty('loggerFactory');
-		$loggerFactoryProperty->setAccessible(true);
 		$injectedFactory = $loggerFactoryProperty->getValue($this->imageSaver);
 
 		$this->assertInstanceOf(LoggerFactory::class, $injectedFactory);
@@ -99,7 +98,7 @@ class ImageSaverTest extends TestCase
 		// Test that the class inherits LoggerAwareTrait from FileSaver
 		$reflection = new \ReflectionClass($this->imageSaver);
 		$allTraits  = $this->getAllTraitsFromClass($reflection);
-		$this->assertContains('TotalCMS\Traits\LoggerAwareTrait', $allTraits);
+		$this->assertContains(\TotalCMS\Traits\LoggerAwareTrait::class, $allTraits);
 	}
 
 	private function getAllTraitsFromClass(\ReflectionClass $class): array

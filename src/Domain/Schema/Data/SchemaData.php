@@ -120,12 +120,12 @@ class SchemaData
 		];
 
 		// Only include formgrid if it's not empty
-		if (!empty($this->formgrid)) {
+		if ($this->formgrid !== '') {
 			$array['formgrid'] = $this->formgrid;
 		}
 
 		// Only include category if it's not empty
-		if (!empty($this->category)) {
+		if ($this->category !== '') {
 			$array['category'] = $this->category;
 		}
 

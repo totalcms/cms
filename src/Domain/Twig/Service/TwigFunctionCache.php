@@ -12,12 +12,11 @@ class TwigFunctionCache
 	private static array $cache = [];
 
 	/**
-	 * Get a cached result or execute the function and cache it.
-	 *
-	 * @param callable $function
-	 * @param array<mixed> $args
-	 */
-	public static function remember(string $key, callable $function, array $args = []): mixed
+     * Get a cached result or execute the function and cache it.
+     *
+     * @param array<mixed> $args
+     */
+    public static function remember(string $key, callable $function, array $args = []): mixed
 	{
 		$cacheKey = self::generateCacheKey($key, $args);
 
@@ -81,7 +80,7 @@ class TwigFunctionCache
 	 */
 	private static function generateCacheKey(string $key, array $args): string
 	{
-		if (empty($args)) {
+		if ($args === []) {
 			return $key;
 		}
 
