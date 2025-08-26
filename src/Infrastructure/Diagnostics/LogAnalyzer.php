@@ -48,7 +48,7 @@ class LogAnalyzer
 		}
 
 		$filePath = $this->logfiles[$logfile];
-		
+
 		// Check file size first - if it's very large, read from the end
 		$fileSize = filesize($filePath);
 		if ($fileSize === false) {
@@ -65,8 +65,8 @@ class LogAnalyzer
 	}
 
 	/**
-	 * Memory-efficient method to read last N lines from a file
-	 * 
+	 * Memory-efficient method to read last N lines from a file.
+	 *
 	 * @return array<string>
 	 */
 	private function readLastLines(string $filePath, int $maxLines): array
@@ -76,10 +76,10 @@ class LogAnalyzer
 			return [];
 		}
 
-		$lines = [];
-		$buffer = '';
+		$lines     = [];
+		$buffer    = '';
 		$chunkSize = 8192; // 8KB chunks
-		
+
 		// Start from the end of the file
 		fseek($handle, 0, SEEK_END);
 		$fileSize = ftell($handle);
@@ -88,34 +88,34 @@ class LogAnalyzer
 		while ($position > 0 && count($lines) < $maxLines) {
 			// Move back by chunk size or to beginning of file
 			$chunkStart = max(0, $position - $chunkSize);
-			$position = $chunkStart;
-			
+			$position   = $chunkStart;
+
 			fseek($handle, $chunkStart);
 			$chunk = fread($handle, $chunkSize);
-			
+
 			if ($chunk === false) {
 				break;
 			}
 
 			// Prepend to buffer
 			$buffer = $chunk . $buffer;
-			
+
 			// Split into lines
 			$chunkLines = explode("\n", $buffer);
-			
+
 			// Keep the first line as it might be incomplete (unless we're at file start)
 			$buffer = $chunkStart > 0 ? array_shift($chunkLines) : '';
-			
+
 			// Add lines to the beginning of our array (since we're reading backwards)
 			$lines = array_merge($chunkLines, $lines);
-			
+
 			// Remove empty lines and limit to maxLines
-			$lines = array_filter($lines, fn(string $line): bool => trim($line) !== '');
+			$lines = array_filter($lines, fn (string $line): bool => trim($line) !== '');
 			$lines = array_slice($lines, -$maxLines);
 		}
 
 		fclose($handle);
-		
+
 		// Return most recent lines first
 		return array_reverse(array_slice($lines, -$maxLines));
 	}

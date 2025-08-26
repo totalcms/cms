@@ -28,11 +28,11 @@ class FakerImageGD extends Base
 	}
 
 	/**
-     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-     * @SuppressWarnings("PHPMD.NPathComplexity")
-     * @SuppressWarnings("PHPMD.ElseExpression")
-     */
-    public static function imageText(?string $dir = null, int $width = 640, int $height = 480, ?string $text = null, int $textSize = 200, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 * @SuppressWarnings("PHPMD.ElseExpression")
+	 */
+	public static function imageText(?string $dir = null, int $width = 640, int $height = 480, ?string $text = null, int $textSize = 200, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
 	{
 		// Default to system temp dir
 		$dir ??= sys_get_temp_dir();
@@ -119,10 +119,10 @@ class FakerImageGD extends Base
 	}
 
 	/**
-     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-     * @SuppressWarnings("PHPMD.NPathComplexity")
-     */
-    public static function imageShapes(?string $dir = null, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 */
+	public static function imageShapes(?string $dir = null, int $width = 640, int $height = 480, string $bgColor = 'f8f8f8'): string
 	{
 		// Default to system temp dir
 		$dir ??= sys_get_temp_dir();

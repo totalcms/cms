@@ -13,9 +13,9 @@ class PropertyData implements PropertyDataInterface, \Stringable
 	}
 
 	/**
-     * transform the property data.
-     */
-    public function transform(): mixed
+	 * transform the property data.
+	 */
+	public function transform(): mixed
 	{
 		return null;
 	}
@@ -24,7 +24,7 @@ class PropertyData implements PropertyDataInterface, \Stringable
 	{
 		if (isset($default) && $value === null) {
 			// Set the value from the schema default
-            $value = $default;
+			$value = $default;
 		}
 
 		return $value;

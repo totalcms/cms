@@ -8,7 +8,7 @@ namespace TotalCMS\Domain\Property\Data;
 interface PropertyDataInterface
 {
 	/**
-     * Transform property data to serializable data.
-     */
-    public function transform(): mixed;
+	 * Transform property data to serializable data.
+	 */
+	public function transform(): mixed;
 }

@@ -13,10 +13,9 @@ class FakerPicsum extends Base
 	private static array $extensions = [self::JPG_IMAGE, self::WEBP_IMAGE];
 
 	/**
-     *
-     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-     */
-    public static function picsumUrl(int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public static function picsumUrl(int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
 	{
 		$url  = '';
 		$url .= "{$width}/{$height}";
@@ -26,17 +25,17 @@ class FakerPicsum extends Base
 	}
 
 	/**
-     * Download a remote random image to disk and return its location.
-     *
-     * Requires curl, or allow_url_fopen to be on in php.ini.
-     *
-     * @example '/path/to/dir/13b73edae8443990be1aa8f1a483bc27.jpg'
-     *
-     * @param string $dir
-     *
-     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-     */
-    public static function picsum(?string $dir = null, int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
+	 * Download a remote random image to disk and return its location.
+	 *
+	 * Requires curl, or allow_url_fopen to be on in php.ini.
+	 *
+	 * @example '/path/to/dir/13b73edae8443990be1aa8f1a483bc27.jpg'
+	 *
+	 * @param string $dir
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public static function picsum(?string $dir = null, int $width = 640, int $height = 480, bool $gray = false, int $blur = 0): string
 	{
 		$url = static::picsumUrl($width, $height, $gray, $blur);
 
@@ -44,10 +43,9 @@ class FakerPicsum extends Base
 	}
 
 	/**
-     *
-     * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-     */
-    private static function buildQueryString(bool $gray = false, int $blur = 0, bool $randomize = false): string
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	private static function buildQueryString(bool $gray = false, int $blur = 0, bool $randomize = false): string
 	{
 		$queryParams = [];
 		$queryString = '';

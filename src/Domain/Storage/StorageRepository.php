@@ -26,14 +26,15 @@ abstract class StorageRepository
 	}
 
 	/**
-     * fetch and deserialize a file.
-     *
-     * @template CLASS of object
-     *
-     * @param class-string<CLASS> $className
-     * @return CLASS|null
-     */
-    protected function fetchAndDeserialize(string $file, string $className): ?object
+	 * fetch and deserialize a file.
+	 *
+	 * @template CLASS of object
+	 *
+	 * @param class-string<CLASS> $className
+	 *
+	 * @return CLASS|null
+	 */
+	protected function fetchAndDeserialize(string $file, string $className): ?object
 	{
 		$contents = null;
 

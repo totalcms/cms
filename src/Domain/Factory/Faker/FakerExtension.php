@@ -195,12 +195,12 @@ class FakerExtension extends Base
 				// Ordered list
 				$content[] = self::generateList('ol');
 			} elseif ($includeHeadings && $i > 0) {
-                // Another heading if enabled
-                $level     = self::numberBetween(3, 5);
-                $content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 6)) . '</h' . $level . '>';
-            } else {
-					$content[] = self::generateStyledParagraph();
-				}
+				// Another heading if enabled
+				$level     = self::numberBetween(3, 5);
+				$content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 6)) . '</h' . $level . '>';
+			} else {
+				$content[] = self::generateStyledParagraph();
+			}
 		}
 
 		return implode("\n\n", $content);

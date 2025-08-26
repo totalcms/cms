@@ -18,7 +18,7 @@ class MultiselectField extends SelectField
 		if (empty($this->value)) {
 			$this->value = [];
 		} elseif (!is_array($this->value)) {
-			$this->value = explode(',', (string) $this->value);
+			$this->value = explode(',', (string)$this->value);
 		}
 	}
 

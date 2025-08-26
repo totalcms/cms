@@ -2,8 +2,6 @@
 
 namespace TotalCMS\Domain\Property\Data;
 
-use TotalCMS\Domain\Property\Data\ImageData;
-
 class GalleryData extends PropertyData
 {
 	/** @var array<ImageData> */

@@ -23,7 +23,7 @@ class CustomPropertiesField extends PropertiesField
 
 		$templateProperty = new CustomPropertyField(
 			form: $this->form,
-            object: ''
+			object: ''
 		);
 		$content .= $templateProperty->template();
 
@@ -35,7 +35,7 @@ class CustomPropertiesField extends PropertiesField
 	{
 		return new CustomPropertyField(
 			form       : $this->form,
-            object     : $objectID,
+			object     : $objectID,
 			properties : $properties
 		);
 	}

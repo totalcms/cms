@@ -50,7 +50,7 @@ class SchemaPropertiesField extends PropertiesField
 	protected function createPropertyField(string $property, array $options): SchemaField
 	{
 		if (isset($options['$ref'])) {
-			$options['type'] = basename((string) $options['$ref'], '.json');
+			$options['type'] = basename((string)$options['$ref'], '.json');
 			unset($options['$ref']);
 		}
 

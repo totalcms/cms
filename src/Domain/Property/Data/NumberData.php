@@ -28,7 +28,7 @@ class NumberData extends PropertyData
 	{
 		if (isset($default) && $value === null) {
 			// Set the value from the schema default
-            $value = floatval($default);
+			$value = floatval($default);
 		}
 
 		return $value;

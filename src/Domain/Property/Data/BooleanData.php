@@ -35,7 +35,7 @@ class BooleanData extends PropertyData
 	{
 		if (isset($default) && $value === null) {
 			// Set the value from the schema default
-            $value = boolval($default);
+			$value = boolval($default);
 		}
 
 		return $value;

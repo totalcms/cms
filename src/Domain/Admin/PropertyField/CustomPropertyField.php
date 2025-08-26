@@ -74,7 +74,7 @@ class CustomPropertyField
 	{
 		$templateProperty = new PropertyField(
 			form     : $this->form,
-            property : ''
+			property : ''
 		);
 
 		return $templateProperty->template();

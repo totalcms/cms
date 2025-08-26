@@ -68,22 +68,21 @@ class DeckData extends PropertyData
 	}
 
 	/**
-     * Get a specific deck item by name.
-     *
-     *
-     * @return array<string,mixed>|null
-     */
-    public function getItem(string $name): ?array
+	 * Get a specific deck item by name.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function getItem(string $name): ?array
 	{
 		return $this->deck[$name] ?? null;
 	}
 
 	/**
-     * Set a deck item by name.
-     *
-     * @param array<string,mixed> $item
-     */
-    public function setItem(string $name, array $item): void
+	 * Set a deck item by name.
+	 *
+	 * @param array<string,mixed> $item
+	 */
+	public function setItem(string $name, array $item): void
 	{
 		if (!preg_match('/^\w+$/', $name)) {
 			throw new \InvalidArgumentException('Deck item name must contain only alphanumeric characters and underscores');

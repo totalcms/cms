@@ -61,7 +61,7 @@ class FileSaver
 				$existingExt = pathinfo((string)$existingData['download'], PATHINFO_EXTENSION);
 
 				if ($newExt !== $existingExt) {
-					$existingData['download'] = pathinfo((string) $existingData['download'], PATHINFO_FILENAME) . '.' . $newExt;
+					$existingData['download'] = pathinfo((string)$existingData['download'], PATHINFO_FILENAME) . '.' . $newExt;
 				}
 			}
 			$newData = array_merge($fileProperty->transform(), $fileInfo, $existingData);

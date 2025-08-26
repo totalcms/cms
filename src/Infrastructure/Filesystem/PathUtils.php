@@ -15,11 +15,9 @@ class PathUtils
 	}
 
 	/**
-     * Build path to file.
-     *
-     *
-     */
-    public static function buildPath(
+	 * Build path to file.
+	 */
+	public static function buildPath(
 		string $collection,
 		?string $objectID = null,
 		?string $property = null,

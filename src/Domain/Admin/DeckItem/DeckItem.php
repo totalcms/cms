@@ -124,9 +124,9 @@ class DeckItem
 	}
 
 	/**
-     * Extract schema ID from deckref URL.
-     */
-    protected function extractSchemaId(string $deckref): string
+	 * Extract schema ID from deckref URL.
+	 */
+	protected function extractSchemaId(string $deckref): string
 	{
 		// Extract schema ID from URL like "https://www.totalcms.co/schemas/custom/features.json"
 		$path = parse_url($deckref, PHP_URL_PATH);

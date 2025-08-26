@@ -185,9 +185,9 @@ class HTMLUtils
 	}
 
 	// -------------------------
-    // CSS and Attribute Utilities
-    // -------------------------
-    public static function mergeClasses(string ...$classes): string
+	// CSS and Attribute Utilities
+	// -------------------------
+	public static function mergeClasses(string ...$classes): string
 	{
 		return implode(' ', array_filter(array_map('trim', $classes)));
 	}
@@ -237,12 +237,12 @@ class HTMLUtils
 	{
 		// Use existing Chronos date filters
 		$formatted = match ($format) {
-            'relative' => TotalCMSTwigFilters::dateRelative($date),
-            'short'    => TotalCMSTwigFilters::dateFormat($date, 'M j, Y'),
-            'long'     => TotalCMSTwigFilters::dateFormat($date, 'F j, Y'),
-            'iso'      => TotalCMSTwigFilters::dateFormat($date, 'c'),
-            default    => TotalCMSTwigFilters::dateFormat($date, $format),
-        };
+			'relative' => TotalCMSTwigFilters::dateRelative($date),
+			'short'    => TotalCMSTwigFilters::dateFormat($date, 'M j, Y'),
+			'long'     => TotalCMSTwigFilters::dateFormat($date, 'F j, Y'),
+			'iso'      => TotalCMSTwigFilters::dateFormat($date, 'c'),
+			default    => TotalCMSTwigFilters::dateFormat($date, $format),
+		};
 
 		// Get ISO datetime for the datetime attribute
 		$datetime = TotalCMSTwigFilters::dateFormat($date, 'c');

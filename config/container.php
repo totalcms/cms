@@ -101,7 +101,7 @@ use TotalCMS\Support\Config;
 
 return [
 	// Application settings
-	Config::class => fn(): Config => Config::init(),
+	Config::class => fn (): Config => Config::init(),
 
 	App::class => function (ContainerInterface $container): App {
 		AppFactory::setContainer($container);
@@ -109,24 +109,24 @@ return [
 		return AppFactory::create();
 	},
 
-	SessionStartMiddleware::class => fn(ContainerInterface $container): SessionStartMiddleware => new SessionStartMiddleware($container->get(PhpSession::class)),
+	SessionStartMiddleware::class => fn (ContainerInterface $container): SessionStartMiddleware => new SessionStartMiddleware($container->get(PhpSession::class)),
 
-	PhpSession::class => fn(ContainerInterface $container): PhpSession => new PhpSession($container->get(Config::class)->session),
+	PhpSession::class => fn (ContainerInterface $container): PhpSession => new PhpSession($container->get(Config::class)->session),
 
-	ResponseFactoryInterface::class => fn(ContainerInterface $container) => $container->get(App::class)->getResponseFactory(),
+	ResponseFactoryInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getResponseFactory(),
 
-	ServerRequestFactoryInterface::class => fn(ContainerInterface $container) => $container->get(Psr17Factory::class),
+	ServerRequestFactoryInterface::class => fn (ContainerInterface $container) => $container->get(Psr17Factory::class),
 
-	StreamFactoryInterface::class => fn(ContainerInterface $container) => $container->get(Psr17Factory::class),
+	StreamFactoryInterface::class => fn (ContainerInterface $container) => $container->get(Psr17Factory::class),
 
-	UploadedFileFactoryInterface::class => fn(ContainerInterface $container) => $container->get(Psr17Factory::class),
+	UploadedFileFactoryInterface::class => fn (ContainerInterface $container) => $container->get(Psr17Factory::class),
 
-	UriFactoryInterface::class => fn(ContainerInterface $container) => $container->get(Psr17Factory::class),
+	UriFactoryInterface::class => fn (ContainerInterface $container) => $container->get(Psr17Factory::class),
 
-	RouteParserInterface::class => fn(ContainerInterface $container) => $container->get(App::class)->getRouteCollector()->getRouteParser(),
+	RouteParserInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getRouteCollector()->getRouteParser(),
 
 	// The logger factory
-	LoggerFactory::class => fn(ContainerInterface $container): LoggerFactory => new LoggerFactory($container->get(Config::class)->logger),
+	LoggerFactory::class => fn (ContainerInterface $container): LoggerFactory => new LoggerFactory($container->get(Config::class)->logger),
 
 	// The data dir iterator factory
 	StorageFilesystemAdapter::class => function (ContainerInterface $container): StorageFilesystemAdapter {
@@ -136,7 +136,7 @@ return [
 		return new StorageFilesystemAdapter($filesystem);
 	},
 
-	StorageAdapterInterface::class => fn(ContainerInterface $container) => $container->get(StorageFilesystemAdapter::class),
+	StorageAdapterInterface::class => fn (ContainerInterface $container) => $container->get(StorageFilesystemAdapter::class),
 
 	BasePathMiddleware::class => function (ContainerInterface $container): BasePathMiddleware {
 		$app = $container->get(App::class);
@@ -188,265 +188,265 @@ return [
 		return $errorMiddleware;
 	},
 
-	DefaultErrorHandler::class => fn(ContainerInterface $container): DefaultErrorHandler => new DefaultErrorHandler(
-			$container->get(JsonRenderer::class),
-			$container->get(ResponseFactoryInterface::class),
-			$container->get(LoggerFactory::class),
-			$container->get(OPcacheService::class)
-		),
+	DefaultErrorHandler::class => fn (ContainerInterface $container): DefaultErrorHandler => new DefaultErrorHandler(
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(LoggerFactory::class),
+		$container->get(OPcacheService::class)
+	),
 
-	PhpRenderer::class => fn(ContainerInterface $container): PhpRenderer => new PhpRenderer($container->get(Config::class)->template),
+	PhpRenderer::class => fn (ContainerInterface $container): PhpRenderer => new PhpRenderer($container->get(Config::class)->template),
 
-	TrailingSlash::class => fn(ContainerInterface $container): TrailingSlash => new TrailingSlash(),
+	TrailingSlash::class => fn (ContainerInterface $container): TrailingSlash => new TrailingSlash(),
 
-	BufferController::class => fn(ContainerInterface $container): BufferController => new BufferController(),
+	BufferController::class => fn (ContainerInterface $container): BufferController => new BufferController(),
 
-	FakerFactory::class => fn(ContainerInterface $container): FakerFactory => new FakerFactory(
-			$container->get(Config::class)
-		),
+	FakerFactory::class => fn (ContainerInterface $container): FakerFactory => new FakerFactory(
+		$container->get(Config::class)
+	),
 
-	IndexReader::class => fn(ContainerInterface $container): IndexReader => new IndexReader(
-			$container->get(IndexRepository::class),
-			$container->get(IndexBuilder::class),
-		),
+	IndexReader::class => fn (ContainerInterface $container): IndexReader => new IndexReader(
+		$container->get(IndexRepository::class),
+		$container->get(IndexBuilder::class),
+	),
 
-	ObjectFetcher::class => fn(ContainerInterface $container): ObjectFetcher => new ObjectFetcher($container->get(ObjectRepository::class)),
+	ObjectFetcher::class => fn (ContainerInterface $container): ObjectFetcher => new ObjectFetcher($container->get(ObjectRepository::class)),
 
-	PropertyFetcher::class => fn(ContainerInterface $container): PropertyFetcher => new PropertyFetcher($container->get(ObjectFetcher::class)),
+	PropertyFetcher::class => fn (ContainerInterface $container): PropertyFetcher => new PropertyFetcher($container->get(ObjectFetcher::class)),
 
-	PropertyDataProcessorInterface::class => fn(ContainerInterface $container): PropertyDataProcessor => new PropertyDataProcessor(),
+	PropertyDataProcessorInterface::class => fn (ContainerInterface $container): PropertyDataProcessor => new PropertyDataProcessor(),
 
-	PropertyDataProcessor::class => fn(ContainerInterface $container) => $container->get(PropertyDataProcessorInterface::class),
+	PropertyDataProcessor::class => fn (ContainerInterface $container) => $container->get(PropertyDataProcessorInterface::class),
 
-	TotalFormFactory::class => fn(ContainerInterface $container): TotalFormFactory => new TotalFormFactory(
-			$container->get(Config::class),
-			$container->get(ObjectFetcher::class),
-			$container->get(CollectionFetcher::class),
-			$container->get(CollectionLister::class),
-			$container->get(IndexReader::class),
-			$container->get(SchemaFetcher::class),
-			$container->get(SchemaLister::class),
-			$container->get(SchemaFactory::class),
-			$container->get(CSRFTokenManager::class),
-		),
+	TotalFormFactory::class => fn (ContainerInterface $container): TotalFormFactory => new TotalFormFactory(
+		$container->get(Config::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionLister::class),
+		$container->get(IndexReader::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(SchemaLister::class),
+		$container->get(SchemaFactory::class),
+		$container->get(CSRFTokenManager::class),
+	),
 
-	GridRenderer::class => fn(ContainerInterface $container): GridRenderer => new GridRenderer(),
+	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
 
-	TotalCMSTwigAdapter::class => fn(ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
-			$container->get(Config::class),
-			$container->get(IndexReader::class),
-			$container->get(IndexSearcher::class),
-			$container->get(ObjectFetcher::class),
-			$container->get(CollectionLister::class),
-			$container->get(CollectionFetcher::class),
-			$container->get(SchemaLister::class),
-			$container->get(SchemaFetcher::class),
-			$container->get(DeckCompatibilityChecker::class),
-			$container->get(TotalFormFactory::class),
-			$container->get(ServerChecker::class),
-			$container->get(CacheReporter::class),
-			$container->get(LogAnalyzer::class),
-			$container->get(PhpSession::class),
-			$container->get(AccessManager::class),
-			$container->get(FileAccessManager::class),
-			$container->get(ImageCacheService::class),
-			$container->get(GridRenderer::class),
-			$container->get(DevModeManager::class),
-		),
+	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(
+		$container->get(Config::class),
+		$container->get(IndexReader::class),
+		$container->get(IndexSearcher::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(CollectionLister::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(SchemaLister::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(DeckCompatibilityChecker::class),
+		$container->get(TotalFormFactory::class),
+		$container->get(ServerChecker::class),
+		$container->get(CacheReporter::class),
+		$container->get(LogAnalyzer::class),
+		$container->get(PhpSession::class),
+		$container->get(AccessManager::class),
+		$container->get(FileAccessManager::class),
+		$container->get(ImageCacheService::class),
+		$container->get(GridRenderer::class),
+		$container->get(DevModeManager::class),
+	),
 
-	TotalCMSTwigPatterns::class => fn(ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
+	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
 
-	TotalCMSTwigExtension::class => fn(ContainerInterface $container): TotalCMSTwigExtension => new TotalCMSTwigExtension(
-			$container->get(TotalCMSTwigAdapter::class),
-			$container->get(TotalCMSTwigPatterns::class),
-			$container->get(FakerFactory::class),
-			$container->get(QRCodeTwigAdapter::class),
-			$container->get(BarcodeTwigAdapter::class),
-			$container->get(PhpSession::class),
-			$container->get(CSRFTokenManager::class),
-		),
+	TotalCMSTwigExtension::class => fn (ContainerInterface $container): TotalCMSTwigExtension => new TotalCMSTwigExtension(
+		$container->get(TotalCMSTwigAdapter::class),
+		$container->get(TotalCMSTwigPatterns::class),
+		$container->get(FakerFactory::class),
+		$container->get(QRCodeTwigAdapter::class),
+		$container->get(BarcodeTwigAdapter::class),
+		$container->get(PhpSession::class),
+		$container->get(CSRFTokenManager::class),
+	),
 
-	QRCodeTwigAdapter::class => fn(ContainerInterface $container): QRCodeTwigAdapter => new QRCodeTwigAdapter($container->get(QRGenerator::class)),
+	QRCodeTwigAdapter::class => fn (ContainerInterface $container): QRCodeTwigAdapter => new QRCodeTwigAdapter($container->get(QRGenerator::class)),
 
-	QRGenerator::class => fn(ContainerInterface $container): QRGenerator => new QRGenerator(),
+	QRGenerator::class => fn (ContainerInterface $container): QRGenerator => new QRGenerator(),
 
-	BarcodeGenerator::class => fn(ContainerInterface $container): BarcodeGenerator => new BarcodeGenerator(),
+	BarcodeGenerator::class => fn (ContainerInterface $container): BarcodeGenerator => new BarcodeGenerator(),
 
-	BarcodeTwigAdapter::class => fn(ContainerInterface $container): BarcodeTwigAdapter => new BarcodeTwigAdapter($container->get(BarcodeGenerator::class)),
+	BarcodeTwigAdapter::class => fn (ContainerInterface $container): BarcodeTwigAdapter => new BarcodeTwigAdapter($container->get(BarcodeGenerator::class)),
 
-	FileUploadValidator::class => fn(ContainerInterface $container): FileUploadValidator => new FileUploadValidator(),
+	FileUploadValidator::class => fn (ContainerInterface $container): FileUploadValidator => new FileUploadValidator(),
 
-	Cipher::class => fn(ContainerInterface $container): Cipher => new Cipher(),
+	Cipher::class => fn (ContainerInterface $container): Cipher => new Cipher(),
 
-	CSRFTokenManager::class => fn(ContainerInterface $container): CSRFTokenManager => new CSRFTokenManager(
-			$container->get(PhpSession::class)
-		),
+	CSRFTokenManager::class => fn (ContainerInterface $container): CSRFTokenManager => new CSRFTokenManager(
+		$container->get(PhpSession::class)
+	),
 
-	CSRFProtectionMiddleware::class => fn(ContainerInterface $container): CSRFProtectionMiddleware => new CSRFProtectionMiddleware(
-			$container->get(CSRFTokenManager::class)
-		),
+	CSRFProtectionMiddleware::class => fn (ContainerInterface $container): CSRFProtectionMiddleware => new CSRFProtectionMiddleware(
+		$container->get(CSRFTokenManager::class)
+	),
 
-	DevModeMiddleware::class => fn(ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(
-			$container->get(DevModeManager::class),
-			$container->get(OPcacheService::class)
-		),
+	DevModeMiddleware::class => fn (ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(
+		$container->get(DevModeManager::class),
+		$container->get(OPcacheService::class)
+	),
 
-	TwigEngine::class => fn(ContainerInterface $container): TwigEngine => new TwigEngine(
-			$container->get(Config::class),
-			$container->get(TotalCMSTwigExtension::class),
-			$container->get(DevModeManager::class)
-		),
+	TwigEngine::class => fn (ContainerInterface $container): TwigEngine => new TwigEngine(
+		$container->get(Config::class),
+		$container->get(TotalCMSTwigExtension::class),
+		$container->get(DevModeManager::class)
+	),
 
 	// Cache Services
-	FilesystemService::class => fn(ContainerInterface $container): FilesystemService => new FilesystemService($container->get(Config::class)),
+	FilesystemService::class => fn (ContainerInterface $container): FilesystemService => new FilesystemService($container->get(Config::class)),
 
-	OPcacheService::class => fn(ContainerInterface $container): OPcacheService => new OPcacheService(),
+	OPcacheService::class => fn (ContainerInterface $container): OPcacheService => new OPcacheService(),
 
-	RedisService::class => fn(ContainerInterface $container): RedisService => new RedisService($container->get(Config::class)),
+	RedisService::class => fn (ContainerInterface $container): RedisService => new RedisService($container->get(Config::class)),
 
-	MemcachedService::class => fn(ContainerInterface $container): MemcachedService => new MemcachedService($container->get(Config::class)),
+	MemcachedService::class => fn (ContainerInterface $container): MemcachedService => new MemcachedService($container->get(Config::class)),
 
-	APCuService::class => fn(ContainerInterface $container): APCuService => new APCuService($container->get(Config::class)),
+	APCuService::class => fn (ContainerInterface $container): APCuService => new APCuService($container->get(Config::class)),
 
-	CacheReporter::class => fn(ContainerInterface $container): CacheReporter => new CacheReporter(
-			$container->get(FilesystemService::class),
-			$container->get(OPcacheService::class),
-			$container->get(RedisService::class),
-			$container->get(MemcachedService::class),
-			$container->get(APCuService::class),
-			$container->get(DevModeManager::class),
-		),
+	CacheReporter::class => fn (ContainerInterface $container): CacheReporter => new CacheReporter(
+		$container->get(FilesystemService::class),
+		$container->get(OPcacheService::class),
+		$container->get(RedisService::class),
+		$container->get(MemcachedService::class),
+		$container->get(APCuService::class),
+		$container->get(DevModeManager::class),
+	),
 
-	CacheManager::class => fn(ContainerInterface $container): CacheManager => new CacheManager(
-			$container->get(FilesystemService::class),
-			$container->get(OPcacheService::class),
-			$container->get(RedisService::class),
-			$container->get(MemcachedService::class),
-			$container->get(APCuService::class),
-			$container->get(TextWatermarkFactory::class),
-			$container->get(DevModeManager::class)
-		),
+	CacheManager::class => fn (ContainerInterface $container): CacheManager => new CacheManager(
+		$container->get(FilesystemService::class),
+		$container->get(OPcacheService::class),
+		$container->get(RedisService::class),
+		$container->get(MemcachedService::class),
+		$container->get(APCuService::class),
+		$container->get(TextWatermarkFactory::class),
+		$container->get(DevModeManager::class)
+	),
 
-	DevModeManager::class => fn(ContainerInterface $container): DevModeManager => new DevModeManager(),
+	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),
 
-	SchemaRepository::class => fn(ContainerInterface $container): SchemaRepository => new SchemaRepository(
-			$container->get(StorageAdapterInterface::class),
-			$container->get(SchemaFactory::class),
-			$container->get(CacheManager::class),
-			$container->get(Config::class),
-		),
+	SchemaRepository::class => fn (ContainerInterface $container): SchemaRepository => new SchemaRepository(
+		$container->get(StorageAdapterInterface::class),
+		$container->get(SchemaFactory::class),
+		$container->get(CacheManager::class),
+		$container->get(Config::class),
+	),
 
-	ImageCacheService::class => fn(ContainerInterface $container): ImageCacheService => new ImageCacheService(
-			$container->get(Config::class)
-		),
+	ImageCacheService::class => fn (ContainerInterface $container): ImageCacheService => new ImageCacheService(
+		$container->get(Config::class)
+	),
 
-	IndexSearcher::class => fn(ContainerInterface $container): IndexSearcher => new IndexSearcher($container->get(IndexReader::class)),
+	IndexSearcher::class => fn (ContainerInterface $container): IndexSearcher => new IndexSearcher($container->get(IndexReader::class)),
 
-	UserValidationService::class => fn(ContainerInterface $container): UserValidationService => new UserValidationService(
-			$container->get(IndexSearcher::class),
-			$container->get(ObjectFetcher::class),
-			$container->get(Config::class),
-		),
+	UserValidationService::class => fn (ContainerInterface $container): UserValidationService => new UserValidationService(
+		$container->get(IndexSearcher::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(Config::class),
+	),
 
-	AccessManager::class => fn(ContainerInterface $container): AccessManager => new AccessManager(
-			$container->get(PhpSession::class),
-			$container->get(Config::class),
-			$container->get(UserValidationService::class),
-			$container->get(LoggerFactory::class),
-		),
+	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(
+		$container->get(PhpSession::class),
+		$container->get(Config::class),
+		$container->get(UserValidationService::class),
+		$container->get(LoggerFactory::class),
+	),
 
-	TotalCmsOneImporter::class => fn(ContainerInterface $container): TotalCmsOneImporter => new TotalCmsOneImporter(
-			$container->get(CollectionFetcher::class),
-			$container->get(CollectionFactory::class),
-			$container->get(CollectionRepository::class),
-			$container->get(IndexReader::class),
-			$container->get(JobQueuer::class),
-			$container->get(LoggerFactory::class),
-		),
+	TotalCmsOneImporter::class => fn (ContainerInterface $container): TotalCmsOneImporter => new TotalCmsOneImporter(
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionFactory::class),
+		$container->get(CollectionRepository::class),
+		$container->get(IndexReader::class),
+		$container->get(JobQueuer::class),
+		$container->get(LoggerFactory::class),
+	),
 
-	JumpStartExporter::class => fn(ContainerInterface $container): JumpStartExporter => new JumpStartExporter(
-			$container->get(CollectionLister::class),
-			$container->get(SchemaLister::class),
-			$container->get(SchemaFetcher::class),
-			$container->get(ObjectFetcher::class),
-			$container->get(IndexReader::class),
-			new JumpStartData(),
-			$container->get(CacheManager::class),
-			$container->get(LoggerFactory::class),
-		),
+	JumpStartExporter::class => fn (ContainerInterface $container): JumpStartExporter => new JumpStartExporter(
+		$container->get(CollectionLister::class),
+		$container->get(SchemaLister::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(IndexReader::class),
+		new JumpStartData(),
+		$container->get(CacheManager::class),
+		$container->get(LoggerFactory::class),
+	),
 
-	FactoryImporter::class => fn(ContainerInterface $container): FactoryImporter => new FactoryImporter(
-			$container->get(ObjectFactory::class),
-			$container->get(ObjectRepository::class),
-			$container->get(IndexBuilder::class),
-			$container->get(CollectionFetcher::class),
-			$container->get(SchemaFetcher::class),
-			$container->get(PropertyRepository::class),
-			$container->get(CacheManager::class),
-			$container->get(FakerFactory::class),
-			$container->get(LoggerFactory::class),
-		),
+	FactoryImporter::class => fn (ContainerInterface $container): FactoryImporter => new FactoryImporter(
+		$container->get(ObjectFactory::class),
+		$container->get(ObjectRepository::class),
+		$container->get(IndexBuilder::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(PropertyRepository::class),
+		$container->get(CacheManager::class),
+		$container->get(FakerFactory::class),
+		$container->get(LoggerFactory::class),
+	),
 
-	JumpStartImporter::class => fn(ContainerInterface $container): JumpStartImporter => new JumpStartImporter(
-			$container->get(CollectionFetcher::class),
-			$container->get(CollectionSaver::class),
-			$container->get(ObjectFetcher::class),
-			$container->get(ObjectSaver::class),
-			$container->get(SchemaSaver::class),
-			$container->get(FactoryImporter::class),
-			$container->get(LoggerFactory::class),
-		),
+	JumpStartImporter::class => fn (ContainerInterface $container): JumpStartImporter => new JumpStartImporter(
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionSaver::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectSaver::class),
+		$container->get(SchemaSaver::class),
+		$container->get(FactoryImporter::class),
+		$container->get(LoggerFactory::class),
+	),
 
-	TextWatermarkFactory::class => fn(ContainerInterface $container): TextWatermarkFactory => new TextWatermarkFactory(
-			$container->get(StorageAdapterInterface::class),
-			$container->get(Config::class)
-		),
+	TextWatermarkFactory::class => fn (ContainerInterface $container): TextWatermarkFactory => new TextWatermarkFactory(
+		$container->get(StorageAdapterInterface::class),
+		$container->get(Config::class)
+	),
 
-	GlideFactory::class => fn(ContainerInterface $container): GlideFactory => new GlideFactory(
-			$container->get(StorageAdapterInterface::class),
-			$container->get(Config::class),
-		),
+	GlideFactory::class => fn (ContainerInterface $container): GlideFactory => new GlideFactory(
+		$container->get(StorageAdapterInterface::class),
+		$container->get(Config::class),
+	),
 
 	// Property and Object Factories
-	PropertyFactory::class => fn(ContainerInterface $container): PropertyFactory => new PropertyFactory(
-			$container->get(SchemaFetcher::class),
-			$container->get(DeckCompatibilityChecker::class),
-		),
+	PropertyFactory::class => fn (ContainerInterface $container): PropertyFactory => new PropertyFactory(
+		$container->get(SchemaFetcher::class),
+		$container->get(DeckCompatibilityChecker::class),
+	),
 
-	AutogenIdService::class => fn(ContainerInterface $container): AutogenIdService => new AutogenIdService(
-			$container->get(CollectionFetcher::class),
-		),
+	AutogenIdService::class => fn (ContainerInterface $container): AutogenIdService => new AutogenIdService(
+		$container->get(CollectionFetcher::class),
+	),
 
-	ObjectFactory::class => fn(ContainerInterface $container): ObjectFactory => new ObjectFactory(
-			$container->get(SchemaFetcher::class),
-			$container->get(PropertyFactory::class),
-			$container->get(AutogenIdService::class),
-		),
+	ObjectFactory::class => fn (ContainerInterface $container): ObjectFactory => new ObjectFactory(
+		$container->get(SchemaFetcher::class),
+		$container->get(PropertyFactory::class),
+		$container->get(AutogenIdService::class),
+	),
 
 	// Deck Services
-	DeckItemFetcher::class => fn(ContainerInterface $container): DeckItemFetcher => new DeckItemFetcher(
-			$container->get(ObjectFetcher::class),
-		),
+	DeckItemFetcher::class => fn (ContainerInterface $container): DeckItemFetcher => new DeckItemFetcher(
+		$container->get(ObjectFetcher::class),
+	),
 
-	DeckItemSaver::class => fn(ContainerInterface $container): DeckItemSaver => new DeckItemSaver(
-			$container->get(ObjectFetcher::class),
-			$container->get(ObjectUpdater::class),
-			$container->get(PropertyFactory::class),
-		),
+	DeckItemSaver::class => fn (ContainerInterface $container): DeckItemSaver => new DeckItemSaver(
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(PropertyFactory::class),
+	),
 
-	DeckItemUpdater::class => fn(ContainerInterface $container): DeckItemUpdater => new DeckItemUpdater(
-			$container->get(ObjectFetcher::class),
-			$container->get(ObjectUpdater::class),
-			$container->get(PropertyFactory::class),
-		),
+	DeckItemUpdater::class => fn (ContainerInterface $container): DeckItemUpdater => new DeckItemUpdater(
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(PropertyFactory::class),
+	),
 
-	DeckItemRemover::class => fn(ContainerInterface $container): DeckItemRemover => new DeckItemRemover(
-			$container->get(ObjectFetcher::class),
-			$container->get(ObjectUpdater::class),
-		),
+	DeckItemRemover::class => fn (ContainerInterface $container): DeckItemRemover => new DeckItemRemover(
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUpdater::class),
+	),
 
 	// Schema Services
-	DeckCompatibilityChecker::class => fn(ContainerInterface $container): DeckCompatibilityChecker => new DeckCompatibilityChecker(
-			$container->get(SchemaFetcher::class),
-		),
+	DeckCompatibilityChecker::class => fn (ContainerInterface $container): DeckCompatibilityChecker => new DeckCompatibilityChecker(
+		$container->get(SchemaFetcher::class),
+	),
 ];
