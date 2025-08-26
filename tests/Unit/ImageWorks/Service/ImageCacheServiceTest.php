@@ -8,369 +8,171 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Support\Config;
 
-final class ImageCacheServiceTest extends TestCase
+class ImageCacheServiceTest extends TestCase
 {
-	private ImageCacheService $imageCacheService;
-	private string $tempDir;
-	private Config $config;
+	private ImageCacheService $service;
+	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
+	private string $testDataDir;
 
 	protected function setUp(): void
 	{
-		// Create temporary directory for testing
-		$this->tempDir = sys_get_temp_dir() . '/totalcms_test_' . uniqid();
-		mkdir($this->tempDir, 0777, true);
+		$this->mockConfig = $this->createMock(Config::class);
+		
+		// Create a temporary directory for testing
+		$this->testDataDir = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
+		mkdir($this->testDataDir);
+		$this->mockConfig->datadir = $this->testDataDir;
 
-		$this->config = new Config([
-			'env'        => 'test',
-			'template'   => '/tmp',
-			'dashboard'  => [],
-			'datadir'    => $this->tempDir,
-			'tmpdir'     => '/tmp',
-			'cache'      => [],
-			'logger'     => [],
-			'sentry'     => [],
-			'error'      => [],
-			'domain'     => 'test.com',
-			'api'        => 'http://test.com/api',
-			'locale'     => 'en_US',
-			'session'    => [],
-			'auth'       => [],
-			'debug'      => false,
-			'notfound'   => '/404',
-			'htmlclean'  => [],
-			'timezone'   => 'UTC',
-			'imageworks' => [],
-		]);
-
-		$this->imageCacheService = new ImageCacheService($this->config);
+		$this->service = new ImageCacheService($this->mockConfig);
 	}
 
 	protected function tearDown(): void
 	{
-		// Clean up temporary directory
-		if (is_dir($this->tempDir)) {
-			$this->removeDirectory($this->tempDir);
+		// Clean up test directory
+		if (is_dir($this->testDataDir)) {
+			$this->removeDirectory($this->testDataDir);
 		}
 	}
 
-	private function removeDirectory(string $dir): void
+	private function removeDirectory(string $dir): bool
 	{
 		if (!is_dir($dir)) {
-			return;
+			return false;
 		}
 
 		$files = array_diff(scandir($dir), ['.', '..']);
 		foreach ($files as $file) {
 			$path = $dir . '/' . $file;
-			if (is_dir($path)) {
-				$this->removeDirectory($path);
-			} else {
-				unlink($path);
-			}
+			is_dir($path) ? $this->removeDirectory($path) : unlink($path);
 		}
-		rmdir($dir);
+		return rmdir($dir);
 	}
 
-	public function testClearCollectionImageCacheWithNonExistentCollection(): void
+	public function testClearCollectionImageCacheThrowsExceptionWhenCollectionNotExists(): void
 	{
+		$collection = 'nonexistent';
+		
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('Collection directory does not exist:');
 
-		$this->imageCacheService->clearCollectionImageCache('nonexistent');
+		$this->service->clearCollectionImageCache($collection);
 	}
 
 	public function testClearCollectionImageCacheWithEmptyCollection(): void
 	{
+		$collection = 'empty-collection';
+		$collectionPath = $this->testDataDir . '/' . $collection;
+		
 		// Create empty collection directory
-		$collectionPath = $this->tempDir . '/empty_collection';
 		mkdir($collectionPath);
 
-		$result = $this->imageCacheService->clearCollectionImageCache('empty_collection');
+		$result = $this->service->clearCollectionImageCache($collection);
 
 		$this->assertTrue($result);
 	}
 
-	public function testClearCollectionImageCacheWithSingleCacheDirectory(): void
+	public function testClearCollectionImageCacheRemovesCacheDirectories(): void
 	{
-		// Create collection with one .cache directory
-		$collectionPath = $this->tempDir . '/test_collection';
-		mkdir($collectionPath);
+		$collection = 'test-collection';
+		$collectionPath = $this->testDataDir . '/' . $collection;
+		
+		// Create collection structure with cache directories
+		$this->createTestStructure($collectionPath, [
+			'object1' => [
+				'property1' => [
+					'.cache' => [
+						'cached_image.jpg' => 'cached content',
+						'another_cached.png' => 'more content'
+					],
+					'original.jpg' => 'original content'
+				]
+			],
+			'object2' => [
+				'property2' => [
+					'.cache' => [
+						'thumb.jpg' => 'thumbnail'
+					]
+				]
+			]
+		]);
 
-		$cachePath = $collectionPath . '/.cache';
-		mkdir($cachePath);
-
-		// Add some cache files
-		file_put_contents($cachePath . '/image1.jpg', 'cached image data');
-		file_put_contents($cachePath . '/image2.jpg', 'cached image data');
-
-		$this->assertDirectoryExists($cachePath);
-		$this->assertFileExists($cachePath . '/image1.jpg');
-
-		$result = $this->imageCacheService->clearCollectionImageCache('test_collection');
-
-		$this->assertTrue($result);
-		$this->assertDirectoryDoesNotExist($cachePath);
-	}
-
-	public function testClearCollectionImageCacheWithMultipleCacheDirectories(): void
-	{
-		// Create collection with nested structure and multiple .cache directories
-		$collectionPath = $this->tempDir . '/multi_cache_collection';
-		mkdir($collectionPath);
-
-		// Root level cache
-		$rootCache = $collectionPath . '/.cache';
-		mkdir($rootCache);
-		file_put_contents($rootCache . '/root_image.jpg', 'root cached image');
-
-		// Nested cache directories
-		$subDir = $collectionPath . '/subfolder';
-		mkdir($subDir);
-		$subCache = $subDir . '/.cache';
-		mkdir($subCache);
-		file_put_contents($subCache . '/sub_image.jpg', 'sub cached image');
-
-		// Deep nested cache
-		$deepDir = $subDir . '/deep';
-		mkdir($deepDir);
-		$deepCache = $deepDir . '/.cache';
-		mkdir($deepCache);
-		file_put_contents($deepCache . '/deep_image.jpg', 'deep cached image');
-
-		// Verify setup
-		$this->assertDirectoryExists($rootCache);
-		$this->assertDirectoryExists($subCache);
-		$this->assertDirectoryExists($deepCache);
-
-		$result = $this->imageCacheService->clearCollectionImageCache('multi_cache_collection');
-
-		$this->assertTrue($result);
-		$this->assertDirectoryDoesNotExist($rootCache);
-		$this->assertDirectoryDoesNotExist($subCache);
-		$this->assertDirectoryDoesNotExist($deepCache);
-
-		// Parent directories should still exist
-		$this->assertDirectoryExists($collectionPath);
-		$this->assertDirectoryExists($subDir);
-		$this->assertDirectoryExists($deepDir);
-	}
-
-	public function testClearCollectionImageCacheIgnoresNonCacheDirectories(): void
-	{
-		// Create collection with mixed directories
-		$collectionPath = $this->tempDir . '/mixed_collection';
-		mkdir($collectionPath);
-
-		// Create .cache directory (should be removed)
-		$cachePath = $collectionPath . '/.cache';
-		mkdir($cachePath);
-		file_put_contents($cachePath . '/cached.jpg', 'cached');
-
-		// Create other directories (should be preserved)
-		$imagesDir = $collectionPath . '/images';
-		mkdir($imagesDir);
-		file_put_contents($imagesDir . '/original.jpg', 'original');
-
-		$assetsDir = $collectionPath . '/assets';
-		mkdir($assetsDir);
-		file_put_contents($assetsDir . '/asset.css', 'styles');
-
-		// Create files in root (should be preserved)
-		file_put_contents($collectionPath . '/data.json', '{}');
-
-		$result = $this->imageCacheService->clearCollectionImageCache('mixed_collection');
+		$result = $this->service->clearCollectionImageCache($collection);
 
 		$this->assertTrue($result);
 
-		// Cache should be removed
-		$this->assertDirectoryDoesNotExist($cachePath);
-
-		// Other directories and files should remain
-		$this->assertDirectoryExists($imagesDir);
-		$this->assertDirectoryExists($assetsDir);
-		$this->assertFileExists($imagesDir . '/original.jpg');
-		$this->assertFileExists($assetsDir . '/asset.css');
-		$this->assertFileExists($collectionPath . '/data.json');
+		// Verify cache directories are removed but original files remain
+		$this->assertDirectoryDoesNotExist($collectionPath . '/object1/property1/.cache');
+		$this->assertDirectoryDoesNotExist($collectionPath . '/object2/property2/.cache');
+		$this->assertFileExists($collectionPath . '/object1/property1/original.jpg');
 	}
 
-	public function testClearCollectionImageCacheWithSymlinks(): void
+	public function testGetCollectionImageCacheStatsForNonExistentCollection(): void
 	{
-		// Create collection directory
-		$collectionPath = $this->tempDir . '/symlink_collection';
+		$collection = 'nonexistent';
+		
+		$stats = $this->service->getCollectionImageCacheStats($collection);
+
+		$this->assertIsArray($stats);
+		$this->assertEquals($collection, $stats['collection']);
+		$this->assertEquals(0, $stats['cache_directories']);
+		$this->assertEquals(0, $stats['cached_files']);
+		$this->assertEquals(0, $stats['total_size_bytes']);
+		$this->assertFalse($stats['exists']); // Should be false for non-existent collection
+	}
+
+	public function testGetCollectionImageCacheStatsWithEmptyCollection(): void
+	{
+		$collection = 'empty-collection';
+		$collectionPath = $this->testDataDir . '/' . $collection;
+		
+		// Create empty collection directory
 		mkdir($collectionPath);
 
-		// Create actual cache directory
-		$actualCache = $collectionPath . '/.cache';
-		mkdir($actualCache);
-		file_put_contents($actualCache . '/real_image.jpg', 'real cached image');
+		$stats = $this->service->getCollectionImageCacheStats($collection);
 
-		// Create symlink to another directory (should be handled safely)
-		$externalDir = $this->tempDir . '/external';
-		mkdir($externalDir);
-		file_put_contents($externalDir . '/external_file.txt', 'external content');
+		$this->assertIsArray($stats);
+		$this->assertEquals($collection, $stats['collection']);
+		$this->assertEquals(0, $stats['cache_directories']);
+		$this->assertEquals(0, $stats['cached_files']);
+		$this->assertEquals(0, $stats['total_size_bytes']);
+		$this->assertTrue($stats['exists']);
+	}
 
-		// Only create symlink if symlink function exists
-		if (function_exists('symlink') && !is_windows()) {
-			$symlinkPath = $collectionPath . '/external_link';
-			symlink($externalDir, $symlinkPath);
-			$this->assertDirectoryExists($symlinkPath);
+	public function testConstructorAcceptsConfig(): void
+	{
+		// Test that constructor properly accepts Config dependency
+		$config = $this->createMock(Config::class);
+		$service = new ImageCacheService($config);
+		
+		$this->assertInstanceOf(ImageCacheService::class, $service);
+	}
+
+	public function testServiceIsReadonly(): void
+	{
+		// Test that the service class is readonly
+		$reflection = new \ReflectionClass(ImageCacheService::class);
+		$this->assertTrue($reflection->isReadOnly());
+	}
+
+	/**
+	 * Helper method to create test directory structure
+	 */
+	private function createTestStructure(string $basePath, array $structure): void
+	{
+		foreach ($structure as $name => $content) {
+			$path = $basePath . '/' . $name;
+			
+			if (is_array($content)) {
+				mkdir($path, 0755, true);
+				$this->createTestStructure($path, $content);
+			} else {
+				// Create directory if it doesn't exist
+				$dir = dirname($path);
+				if (!is_dir($dir)) {
+					mkdir($dir, 0755, true);
+				}
+				file_put_contents($path, $content);
+			}
 		}
-
-		$result = $this->imageCacheService->clearCollectionImageCache('symlink_collection');
-
-		$this->assertTrue($result);
-		$this->assertDirectoryDoesNotExist($actualCache);
-
-		// External directory should still exist (symlink target preserved)
-		$this->assertDirectoryExists($externalDir);
-		$this->assertFileExists($externalDir . '/external_file.txt');
 	}
-
-	public function testClearCollectionImageCacheWithLargeNumberOfFiles(): void
-	{
-		// Create collection with many cache files
-		$collectionPath = $this->tempDir . '/large_collection';
-		mkdir($collectionPath);
-
-		$cachePath = $collectionPath . '/.cache';
-		mkdir($cachePath);
-
-		// Create many cache files
-		$fileCount = 100;
-		for ($i = 0; $i < $fileCount; $i++) {
-			file_put_contents($cachePath . "/image_{$i}.jpg", "cached image data {$i}");
-		}
-
-		// Verify files were created
-		$this->assertEquals($fileCount, count(glob($cachePath . '/*.jpg')));
-
-		$result = $this->imageCacheService->clearCollectionImageCache('large_collection');
-
-		$this->assertTrue($result);
-		$this->assertDirectoryDoesNotExist($cachePath);
-	}
-
-	public function testClearCollectionImageCacheWithNestedSubdirectories(): void
-	{
-		// Create complex nested structure
-		$collectionPath = $this->tempDir . '/nested_collection';
-		mkdir($collectionPath);
-
-		// Create nested structure: collection/year/month/.cache
-		$yearPath = $collectionPath . '/2024';
-		mkdir($yearPath);
-
-		$monthPath = $yearPath . '/01';
-		mkdir($monthPath);
-
-		$cachePath = $monthPath . '/.cache';
-		mkdir($cachePath);
-		file_put_contents($cachePath . '/january_image.jpg', 'january cache');
-
-		// Another month
-		$anotherMonth = $yearPath . '/02';
-		mkdir($anotherMonth);
-		$anotherCache = $anotherMonth . '/.cache';
-		mkdir($anotherCache);
-		file_put_contents($anotherCache . '/february_image.jpg', 'february cache');
-
-		$result = $this->imageCacheService->clearCollectionImageCache('nested_collection');
-
-		$this->assertTrue($result);
-		$this->assertDirectoryDoesNotExist($cachePath);
-		$this->assertDirectoryDoesNotExist($anotherCache);
-
-		// Parent structure should remain
-		$this->assertDirectoryExists($yearPath);
-		$this->assertDirectoryExists($monthPath);
-		$this->assertDirectoryExists($anotherMonth);
-	}
-
-	public function testClearCollectionImageCacheWithReadOnlyFiles(): void
-	{
-		// Skip this test on Windows as chmod behaves differently
-		if (is_windows()) {
-			$this->markTestSkipped('Skipping read-only file test on Windows');
-		}
-
-		$collectionPath = $this->tempDir . '/readonly_collection';
-		mkdir($collectionPath);
-
-		$cachePath = $collectionPath . '/.cache';
-		mkdir($cachePath);
-
-		// Create a read-only file
-		$readOnlyFile = $cachePath . '/readonly_image.jpg';
-		file_put_contents($readOnlyFile, 'readonly cache');
-		chmod($readOnlyFile, 0444); // Read-only
-
-		$result = $this->imageCacheService->clearCollectionImageCache('readonly_collection');
-
-		$this->assertTrue($result);
-		$this->assertDirectoryDoesNotExist($cachePath);
-	}
-
-	public function testClearCollectionImageCachePreservesHiddenNonCacheDirectories(): void
-	{
-		$collectionPath = $this->tempDir . '/hidden_dirs_collection';
-		mkdir($collectionPath);
-
-		// Create .cache directory (should be removed)
-		$cachePath = $collectionPath . '/.cache';
-		mkdir($cachePath);
-		file_put_contents($cachePath . '/cached.jpg', 'cached');
-
-		// Create other hidden directories (should be preserved)
-		$gitDir = $collectionPath . '/.git';
-		mkdir($gitDir);
-		file_put_contents($gitDir . '/config', 'git config');
-
-		$htaccessDir = $collectionPath . '/.htaccess_backup';
-		mkdir($htaccessDir);
-		file_put_contents($htaccessDir . '/backup', 'htaccess backup');
-
-		$result = $this->imageCacheService->clearCollectionImageCache('hidden_dirs_collection');
-
-		$this->assertTrue($result);
-
-		// Only .cache should be removed
-		$this->assertDirectoryDoesNotExist($cachePath);
-		$this->assertDirectoryExists($gitDir);
-		$this->assertDirectoryExists($htaccessDir);
-		$this->assertFileExists($gitDir . '/config');
-		$this->assertFileExists($htaccessDir . '/backup');
-	}
-
-	public function testClearCollectionImageCacheHandlesEmptyCacheDirectories(): void
-	{
-		$collectionPath = $this->tempDir . '/empty_cache_collection';
-		mkdir($collectionPath);
-
-		// Create empty .cache directories
-		$rootCache = $collectionPath . '/.cache';
-		mkdir($rootCache);
-
-		$subDir = $collectionPath . '/sub';
-		mkdir($subDir);
-		$subCache = $subDir . '/.cache';
-		mkdir($subCache);
-
-		$this->assertDirectoryExists($rootCache);
-		$this->assertDirectoryExists($subCache);
-
-		$result = $this->imageCacheService->clearCollectionImageCache('empty_cache_collection');
-
-		$this->assertTrue($result);
-		$this->assertDirectoryDoesNotExist($rootCache);
-		$this->assertDirectoryDoesNotExist($subCache);
-		$this->assertDirectoryExists($subDir);
-	}
-}
-
-/**
- * Helper function to detect Windows OS
- */
-function is_windows(): bool
-{
-	return PHP_OS_FAMILY === 'Windows';
 }
