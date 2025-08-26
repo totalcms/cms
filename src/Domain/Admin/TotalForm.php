@@ -25,10 +25,10 @@ abstract class TotalForm implements \Stringable
 {
 	/** @var array<string,FormField> */
 	protected array $fields = [];
-	protected string $route;
-	public CollectionData $collectionData;
-	public ObjectData $objectData;
-	public SchemaData $schemaData;
+	protected string $route = '';
+	public ?CollectionData $collectionData = null;
+	public ?ObjectData $objectData = null;
+	public ?SchemaData $schemaData = null;
 
 	public const FIELDS_BY_TYPE = [
 		'Text (String) Fields' => [

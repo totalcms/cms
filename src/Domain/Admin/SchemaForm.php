@@ -2,6 +2,9 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -26,26 +29,64 @@ class SchemaForm extends TotalForm
 	 * @param array<string,mixed>  $data
 	 */
 	public function __construct(
+		protected ObjectFetcher $objectFetcher,
+		protected CollectionFetcher $collectionFetcher,
+		protected IndexReader $collectionReader,
 		protected SchemaFetcher $schemaFetcher,
 		public SchemaLister $schemaLister,
 		protected SchemaFactory $schemaFactory,
 		public string $api,
+		public string $collection = '',
 		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
+		protected string $buildError  = '',
 		protected string $helpStyle   = '',
 		protected string $save        = '',
 		protected string $delete      = '',
+		protected string $formType    = '',
+		protected string $schema      = '',
+		protected array $newAction    = [],
 		protected array $editAction   = [],
 		protected array $deleteAction = [],
-		protected array $newAction    = [],
 		protected array $data         = [],
 		protected bool $autosave      = false,
 		protected bool $helpOnHover   = false,
 		protected bool $helpOnFocus   = false,
+		protected bool $hideID        = false,
+		protected bool $useFormGrid   = true,
 	) {
-		$this->init();
-		$this->initClass();
+		// CRITICAL: Must call parent constructor to initialize typed properties
+		// TotalForm::__construct() calls init() which properly sets:
+		// - $this->collectionData, $this->objectData, $this->schemaData
+		// Without this, template access to these properties fails with 
+		// "Typed property must not be accessed before initialization" errors
+		parent::__construct(
+			$objectFetcher,
+			$collectionFetcher,
+			$collectionReader,
+			$schemaFetcher,
+			$schemaLister,
+			$api,
+			$collection,
+			$id,
+			$method,
+			$class,
+			$buildError,
+			$helpStyle,
+			$save,
+			$delete,
+			$formType,
+			$schema,
+			$newAction,
+			$editAction,
+			$deleteAction,
+			$autosave,
+			$helpOnHover,
+			$helpOnFocus,
+			$hideID,
+			$useFormGrid
+		);
 	}
 
 	protected function init(): void

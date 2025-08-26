@@ -190,13 +190,17 @@ readonly class TotalFormFactory
 	public function schema(array $options = []): string
 	{
 		$options = array_merge([
-			'id'   => '',
+			'id'         => '',
+			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'           => $this->api,
-			'schemaFetcher' => $this->schemaFetcher,
-			'schemaLister'  => $this->schemaLister,
-			'schemaFactory' => $this->schemaFactory,
+			'api'               => $this->api,
+			'objectFetcher'     => $this->objectFetcher,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+			'schemaFactory'     => $this->schemaFactory,
 		]);
 
 		$form = new SchemaForm(...$options);
@@ -239,11 +243,14 @@ readonly class TotalFormFactory
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([
-			'id'   => '',
+			'id'         => '',
+			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
 			'api'               => $this->api,
+			'objectFetcher'     => $this->objectFetcher,
 			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
 		]);
