@@ -8,7 +8,11 @@
 
 {% macro collectionHeader(collection, page) %}
 	<header>
+		{% if page %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page | lower }}</span></h1>
+		{% else %}
+		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}"><span>{{ collection }}</span></a></h1>
+		{% endif %}
 		<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="Edit Collection">Edit Collection</a>
 		{% set labelSingular = cms.collection(collection).labelSingular|default('object') %}
 		<a class="dash-button" href="collections/{{ collection }}/add" title="Add new {{ labelSingular | lower }} to collection">+ New {{ labelSingular|title }}</a>
@@ -57,6 +61,10 @@
 </aside>
 
 <main class="dash-main-content">
+	{% set collection = cms.collection(url.collection) %}
+	{% set labelPlural = collection.labelPlural|default('objects') %}
+	{% set labelSingular = collection.labelSingular|default('object') %}
+
 	{% if url.collection is empty %}
 		{% include "admin/collection/home.twig" %}
 
@@ -64,11 +72,15 @@
 		{% include "admin/collection/new.twig" %}
 
 	{% elseif url.id is empty %}
-		{% set labelPlural = cms.collection(url.collection).labelPlural|default('objects') %}
 		{{ _self.collectionHeader(url.collection, labelPlural) }}
 		{% include "admin/collection/index.twig" %}
 
-	{% elseif url.id in ["add", "edit"] %}
+	{% elseif url.id in ["add"] %}
+		{{ _self.collectionHeader(url.collection, "new " ~ labelSingular) }}
+		{% include "admin/collection/" ~ url.id ~ ".twig" %}
+
+	{% elseif url.id in ["edit"] %}
+		{{ _self.collectionHeader(url.collection) }}
 		{% include "admin/collection/" ~ url.id ~ ".twig" %}
 
 	{% elseif url.id in ["-factory", "-import", "-export", "-sitemap", "-feeds"] %}
@@ -77,6 +89,7 @@
 		{% include "admin/collection/" ~ pageName ~ ".twig" %}
 
 	{% else %}
+		{{ _self.collectionHeader(url.collection, url.id) }}
 		{% include "admin/collection/object.twig" %}
 
 	{% endif %}
