@@ -24,7 +24,7 @@ use Twig\RuntimeLoader\RuntimeLoaderInterface;
  */
 readonly class TwigEngine
 {
-	private TwigEnvironment $twig;
+	private readonly TwigEnvironment $twig;
 
 	public function __construct(
 		Config $config,

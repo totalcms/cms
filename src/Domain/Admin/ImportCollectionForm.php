@@ -6,7 +6,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 readonly class ImportCollectionForm implements \Stringable
 {
-	private SimpleForm $simpleform;
+	private readonly SimpleForm $simpleform;
 
 	public function __construct(
 		private string $api,

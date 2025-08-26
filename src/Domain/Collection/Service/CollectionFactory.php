@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 
 readonly class CollectionFactory
 {
-	private Serializer $serializer;
+	private readonly Serializer $serializer;
 
 	public function __construct()
 	{

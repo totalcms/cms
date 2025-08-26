@@ -19,7 +19,7 @@ use TotalCMS\Support\Config;
  */
 readonly class AuthMiddleware implements MiddlewareInterface
 {
-	private string $defaultAuthCollection;
+	private readonly string $defaultAuthCollection;
 
 	public function __construct(
 		private ResponseFactoryInterface $responseFactory,

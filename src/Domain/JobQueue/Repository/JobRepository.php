@@ -7,7 +7,7 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
 readonly class JobRepository
 {
-	private \PDO $db;
+	private readonly \PDO $db;
 	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue';
 
 	public function __construct()

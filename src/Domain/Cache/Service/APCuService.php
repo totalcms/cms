@@ -11,8 +11,8 @@ use TotalCMS\Support\Config;
  */
 readonly class APCuService implements CacheInterface
 {
-	private bool $enabled;
-	private string $prefix;
+	private readonly bool $enabled;
+	private readonly string $prefix;
 
 	public function __construct(
 		Config $config,
