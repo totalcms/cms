@@ -74,19 +74,25 @@ export default class ListField extends MultiSelectField {
 	getValue() {
 		let value;
 		
-		// If Choices.js is initialized, get values from it
-		if (this.choices && this.choices.getValue) {
-			const choicesValue = this.choices.getValue();
-			// Choices.js returns different formats depending on single/multi select
-			if (Array.isArray(choicesValue) && choicesValue.value !== undefined) {
-				// Single object with value property (not an array of objects)
-				value = [choicesValue.value];
-			} else if (Array.isArray(choicesValue)) {
-				// Array of items (objects or strings)
-				value = choicesValue.map(item => typeof item === 'object' && item.value !== undefined ? item.value : item);
+		// If Choices.js is initialized, get values from the actual DOM order
+		if (this.choices) {
+			const select = this.container.querySelector('select.choices__input');
+			if (select) {
+				// Read values from the select options in their current DOM order
+				// This ensures we get the order that reflects drag-and-drop changes
+				value = Array.from(select.options)
+					.filter(option => option.selected)
+					.map(option => option.value);
 			} else {
-				// Single value or null
-				value = choicesValue ? [choicesValue] : [];
+				// Fall back to Choices.js getValue if select not found
+				const choicesValue = this.choices.getValue();
+				if (Array.isArray(choicesValue) && choicesValue.value !== undefined) {
+					value = [choicesValue.value];
+				} else if (Array.isArray(choicesValue)) {
+					value = choicesValue.map(item => typeof item === 'object' && item.value !== undefined ? item.value : item);
+				} else {
+					value = choicesValue ? [choicesValue] : [];
+				}
 			}
 		} else {
 			// Fall back to parent method if Choices.js not ready
