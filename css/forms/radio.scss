@@ -21,15 +21,16 @@
 		font-size   : 1.1rem;
 
 		// Allow wrapping if text is too long for grid cell
-		word-wrap: break-word;
-		overflow-wrap: break-word;
+		word-wrap     : break-word;
+		overflow-wrap : break-word;
 
 		// But prefer not to wrap
-		white-space: nowrap;
+		white-space : nowrap;
 
 		// Truncate with ellipsis if absolutely necessary
-		text-overflow: ellipsis;
-		overflow: hidden;
+		text-overflow : ellipsis;
+		overflow      : hidden;
+		cursor        : pointer;
 	}
 
 	.radio {
