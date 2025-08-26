@@ -8,6 +8,8 @@ use TotalCMS\Domain\Property\Data\FileData;
 
 class DepotSaver extends FileSaver
 {
+	public string $type = 'depot';
+
 	public function save(
 		string $collection,
 		string $objectID,
