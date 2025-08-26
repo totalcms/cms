@@ -562,7 +562,13 @@ export default class TotalForm {
     // post request to create the object has been saved
     saveDroplets(callback) {
 
-        let dropletCount = this.droplets.length;
+        let dropletCount = this.droplets.filter(field => field.isUnsaved()).length;
+
+        // If no unsaved droplets, execute callback immediately
+        if (dropletCount === 0) {
+            if (typeof callback === "function") callback();
+            return;
+        }
 
         const dropletComplete = (callback) => {
             // When there are multiple droplets, we need to ensure that the callback
