@@ -4,9 +4,9 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
-use TotalCMS\Domain\Session\SessionKeys;
 
 class AccessManager
 {
@@ -39,11 +39,13 @@ class AccessManager
 
 		if (!$this->sessionHasUser()) {
 			$this->redirectToLogin($collection);
+
 			return true;
 		}
 
 		if (!$this->userHasAccess($groups, $collection)) {
 			$this->redirectToAccessDenied();
+
 			return true;
 		}
 

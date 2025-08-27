@@ -55,7 +55,7 @@ class TotalCMS
 		}
 
 		$preservedSessionData = [];
-		$sessionStarted = false;
+		$sessionStarted       = false;
 
 		try {
 			$this->buffer       = $this->container->get(BufferController::class);
@@ -74,7 +74,7 @@ class TotalCMS
 				$this->session->start();
 				$sessionStarted = true;
 
-				if (!empty($preservedSessionData)) {
+				if ($preservedSessionData !== []) {
 					$this->restorePreservedSessionData($preservedSessionData);
 				}
 			}
@@ -94,6 +94,7 @@ class TotalCMS
 
 	/**
 	 * Handle existing session conflicts based on configuration strategy.
+	 *
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
 	 * @return array<string,mixed> Preserved session data (if any)
@@ -106,12 +107,12 @@ class TotalCMS
 		}
 
 		$existingData = $_SESSION ?? [];
-		$strategy = $this->config->session['conflictStrategy'] ?? 'preserve';
+		$strategy     = $this->config->session['conflictStrategy'] ?? 'preserve';
 
 		// Log the conflict for debugging
 		$this->logger->debug('Session conflict detected', [
 			'strategy'     => $strategy,
-			'existingKeys' => array_keys($existingData)
+			'existingKeys' => array_keys($existingData),
 		]);
 
 		// Always destroy existing session so PhpSession can start cleanly
@@ -120,8 +121,8 @@ class TotalCMS
 		// Return data based on strategy
 		return match ($strategy) {
 			'preserve' => $existingData,
-			'replace' => [],
-			default => [],
+			'replace'  => [],
+			default    => [],
 		};
 	}
 
@@ -139,7 +140,7 @@ class TotalCMS
 		}
 
 		$this->logger->debug('Session data restored', [
-			'restoredKeys' => array_keys($preservedData)
+			'restoredKeys' => array_keys($preservedData),
 		]);
 	}
 

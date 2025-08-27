@@ -8,8 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
-use TotalCMS\Support\Config;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Support\Config;
 
 /**
  * Action.

@@ -4,8 +4,8 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 
 readonly class LogoutService
 {

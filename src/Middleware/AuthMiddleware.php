@@ -10,8 +10,8 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Support\Config;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Support\Config;
 
 /**
  * Auth middleware.

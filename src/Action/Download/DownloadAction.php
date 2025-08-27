@@ -12,8 +12,8 @@ use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Security\Encryption\Cipher;
-use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Renderer\TwigRenderer;
 
 abstract class DownloadAction
 {
