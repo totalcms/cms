@@ -2,6 +2,77 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.38] - 2025-08-26
+
+### Added
+- **NEW**: Radio field type with enhanced grid display support
+  - Comprehensive radio field implementation with JavaScript integration
+  - Grid-specific radio field rendering and styling
+  - Complete documentation for radio field configuration
+- **NEW**: Price field type for e-commerce and pricing data
+  - Dedicated price field with currency support
+  - New currency icons and formatting options
+  - Enhanced documentation for price field usage
+- **NEW**: Auto-generated ID service for objects
+  - `autogen` setting for automatic ID generation on object creation
+  - Object creation counters for collections with unique ID generation
+  - Better handling of ID fields in deck systems
+
+### Enhanced
+- **Testing & Code Quality**: Comprehensive test suite improvements
+  - Extensive test coverage for authentication, properties, ImageWorks, and Twig systems
+  - PHPStan Level 8 compliance improvements throughout codebase
+  - Rector-based code modernization and cleanup
+  - Enhanced CI/CD pipeline with improved test reliability
+- **Form System**: Major improvements to form handling and validation
+  - Fixed schema default values not populating in new object forms
+  - Enhanced multi-file upload reliability with improved state management
+  - Better form state handling for file upload processes
+  - Improved droplet count logic and queue processing
+- **Cache System**: APCu integration as primary cache backend
+  - APCu cache service with zero-configuration setup
+  - Optimized cache priority for single-server deployments
+  - Enhanced cache management with detailed statistics
+  - Better error handling and cache clearing mechanisms
+- **Image Processing**: Enhanced EXIF metadata extraction
+  - Native PHP EXIF implementation for PHP 8.4 compatibility
+  - Improved camera info and location data extraction
+  - Better image metadata processing with automatic alt text population
+
+### Fixed
+- **Browser Compatibility**: Safari dialog text selection issues
+  - Fixed SortableJS interference with text selection in dialogs
+  - Added proper drag handles to prevent unwanted drag behavior
+  - Improved dialog interaction and form field accessibility
+- **File Uploads**: Multi-file upload reliability improvements
+  - Fixed gallery uploads stopping after first file
+  - Enhanced Dropzone event handling from "success" to "queuecomplete"
+  - Better parallel upload handling with data integrity protection
+- **CI/CD**: GitHub Actions test environment fixes
+  - Resolved session permission errors in CI environment
+  - Fixed readonly class property initialization issues
+  - Improved test environment compatibility
+- **Code Quality**: PHPCBF and PHPCS configuration alignment
+  - Separate PHPCBF configuration to prevent spacing conflicts
+  - Better code formatting consistency across development environments
+  - Enhanced development workflow with proper linting rules
+
+### Changed
+- **Color System**: Migration to enhanced Couleur library fork
+  - Custom fork with improved OKLCH hue wraparound calculations
+  - Better color manipulation and hex conversion reliability
+  - Enhanced color data processing with proper mathematical operations
+- **Development Workflow**: Improved build and publishing processes
+  - Reduced publishing footprint for better deployment efficiency
+  - Enhanced bundle creation and asset management
+  - Better development mode handling and cache management
+
+### Developer Notes
+- Enhanced test coverage across core systems with focus on reliability
+- Rector-based code modernization improving PHP 8+ compatibility
+- Comprehensive CI/CD improvements for better development workflow
+- Enhanced debugging and error handling throughout the system
+
 ## [3.0.36] - 2025-08-11
 
 ### Added
