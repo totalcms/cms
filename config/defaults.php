@@ -125,6 +125,7 @@ $settings['session'] = [
 	'use_only_cookies'       => true,
 	// 'sid_length'             => 64,
 	// 'sid_bits_per_character' => 6,
+	'conflictStrategy'       => 'preserve', // How to handle existing sessions: 'preserve', 'replace'
 ];
 
 // E-Mail settings

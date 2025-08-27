@@ -1,0 +1,105 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TotalCMS\Domain\Session;
+
+/**
+ * Central registry for all Total CMS session keys.
+ * 
+ * All session keys used by Total CMS are defined here as constants
+ * to provide a single source of truth and prevent typos.
+ * 
+ * Session keys use the 'totalcms.' namespace to avoid conflicts 
+ * with external application session data.
+ */
+final class SessionKeys
+{
+	// Authentication Keys
+	public const AUTH_USER = 'totalcms.auth.user';
+	public const AUTH_COLLECTION = 'totalcms.auth.collection';
+	public const AUTH_PERSISTENT_LOGIN = 'totalcms.auth.persistent_login';
+	
+	// Request Tracking Keys
+	public const REQUEST_ORIGIN_URL = 'totalcms.requestOriginUrl';
+	public const REQUEST_REFERER_URL = 'totalcms.requestRefererUrl';
+	
+	// Activity & Attempts Keys
+	public const LAST_ACTIVITY = 'totalcms.lastActivity';
+	public const LOGIN_ATTEMPTS = 'totalcms.loginAttempts';
+	public const DOWNLOAD_ATTEMPTS = 'totalcms.downloadAttempts';
+	
+	// Security Keys (Note: CSRF uses its own SESSION_KEY constant)
+	// public const CSRF_TOKENS = '_csrf'; // Managed by CSRFTokenManager
+	
+	/**
+	 * Get all Total CMS session keys.
+	 * 
+	 * @return array<string> List of all session keys used by Total CMS
+	 */
+	public static function getAllKeys(): array
+	{
+		return [
+			self::AUTH_USER,
+			self::AUTH_COLLECTION,
+			self::AUTH_PERSISTENT_LOGIN,
+			self::REQUEST_ORIGIN_URL,
+			self::REQUEST_REFERER_URL,
+			self::LAST_ACTIVITY,
+			self::LOGIN_ATTEMPTS,
+			self::DOWNLOAD_ATTEMPTS,
+		];
+	}
+	
+	/**
+	 * Check if a session key belongs to Total CMS.
+	 * 
+	 * @param string $key Session key to check
+	 * @return bool True if the key is managed by Total CMS
+	 */
+	public static function isTotalCMSKey(string $key): bool
+	{
+		return str_starts_with($key, 'totalcms.');
+	}
+	
+	/**
+	 * Get all authentication-related keys.
+	 * 
+	 * @return array<string> Authentication session keys
+	 */
+	public static function getAuthKeys(): array
+	{
+		return [
+			self::AUTH_USER,
+			self::AUTH_COLLECTION,
+			self::AUTH_PERSISTENT_LOGIN,
+		];
+	}
+	
+	/**
+	 * Get all request tracking keys.
+	 * 
+	 * @return array<string> Request tracking session keys
+	 */
+	public static function getRequestKeys(): array
+	{
+		return [
+			self::REQUEST_ORIGIN_URL,
+			self::REQUEST_REFERER_URL,
+		];
+	}
+	
+	/**
+	 * Get all activity and attempt tracking keys.
+	 * 
+	 * @return array<string> Activity tracking session keys
+	 */
+	public static function getActivityKeys(): array
+	{
+		return [
+			self::LAST_ACTIVITY,
+			self::LOGIN_ATTEMPTS,
+			self::DOWNLOAD_ATTEMPTS,
+		];
+	}
+}

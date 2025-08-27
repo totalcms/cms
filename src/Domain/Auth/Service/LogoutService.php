@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Domain\Session\SessionKeys;
 
 readonly class LogoutService
 {
@@ -19,8 +20,8 @@ readonly class LogoutService
 
 	public function logout(): bool
 	{
-		$user            = $this->session->get('user') ?? 'unknown';
-		$persistentLogin = $this->session->get('persistent_login', false);
+		$user            = $this->session->get(SessionKeys::AUTH_USER) ?? 'unknown';
+		$persistentLogin = $this->session->get(SessionKeys::AUTH_PERSISTENT_LOGIN, false);
 
 		$this->logger->info("User $user logged out");
 

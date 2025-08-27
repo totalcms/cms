@@ -10,6 +10,7 @@ use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Domain\Session\SessionKeys;
 
 class FileAccessManager
 {
@@ -82,8 +83,8 @@ class FileAccessManager
 			return true;
 		}
 
-		$userID         = $this->session->get('user') ?? '';
-		$userCollection = $this->session->get('collection') ?? '';
+		$userID         = $this->session->get(SessionKeys::AUTH_USER) ?? '';
+		$userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? '';
 
 		try {
 			if ($this->userValidator->validateUserInGroups($userID, $this->collection->groups, $userCollection)) {
@@ -117,7 +118,7 @@ class FileAccessManager
 
 	private function isSuperAdmin(): bool
 	{
-		$userID = $this->session->get('user') ?? '';
+		$userID = $this->session->get(SessionKeys::AUTH_USER) ?? '';
 
 		return !empty($userID) && $this->userValidator->isSuperAdmin($userID);
 	}

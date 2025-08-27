@@ -40,7 +40,8 @@ class TotalCMS
 	private AccessManager $access;
 	public Config $config;
 
-	public function __construct()
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function __construct(bool $autoStartBuffer = true)
 	{
 		// Build PHP-DI Container instance
 		$this->container = new Container(require __DIR__ . '/../config/container.php');
@@ -53,35 +54,93 @@ class TotalCMS
 			return;
 		}
 
+		$preservedSessionData = [];
+		$sessionStarted = false;
+
 		try {
 			$this->buffer       = $this->container->get(BufferController::class);
 			$this->twigEngine   = $this->container->get(TwigEngine::class);
 			$this->cacheManager = $this->container->get(CacheManager::class);
-			$this->session      = $this->container->get(PhpSession::class);
-			$this->access       = $this->container->get(AccessManager::class);
 			$this->config       = $this->container->get(Config::class);
+
+			// Handle any existing session conflicts before creating PhpSession
+			$preservedSessionData = $this->handleSessionConflict();
+
+			$this->session = $this->container->get(PhpSession::class);
+			$this->access  = $this->container->get(AccessManager::class);
+
+			// Start session and restore data if needed
+			if (!self::isPreview()) {
+				$this->session->start();
+				$sessionStarted = true;
+
+				if (!empty($preservedSessionData)) {
+					$this->restorePreservedSessionData($preservedSessionData);
+				}
+			}
 		} catch (\Throwable $th) {
 			$this->logger->error($th->getMessage(), ['exception' => $th]);
 		}
-		if (!self::isPreview()) {
+
+		// Start session if it wasn't started during preservation
+		if (!self::isPreview() && !$sessionStarted) {
 			$this->session->start();
+		}
+
+		if ($autoStartBuffer) {
+			$this->startBuffer();
 		}
 	}
 
-	/** @param array<string,mixed> $vars */
-	public function restoreSessionVariables(array $vars): void
+	/**
+	 * Handle existing session conflicts based on configuration strategy.
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 *
+	 * @return array<string,mixed> Preserved session data (if any)
+	 */
+	private function handleSessionConflict(): array
 	{
-		if (!$this->session->isStarted()) {
-			return;
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			// No conflict, proceed normally
+			return [];
 		}
-		// Restore session variables
-		// Only set the variables if they are not already set
-		// This is to prevent overwriting existing session variables
-		foreach ($vars as $key => $value) {
-			if (!$this->session->has($key)) {
-				$this->session->set($key, $value);
-			}
+
+		$existingData = $_SESSION ?? [];
+		$strategy = $this->config->session['conflictStrategy'] ?? 'preserve';
+
+		// Log the conflict for debugging
+		$this->logger->debug('Session conflict detected', [
+			'strategy'     => $strategy,
+			'existingKeys' => array_keys($existingData)
+		]);
+
+		// Always destroy existing session so PhpSession can start cleanly
+		session_destroy();
+
+		// Return data based on strategy
+		return match ($strategy) {
+			'preserve' => $existingData,
+			'replace' => [],
+			default => [],
+		};
+	}
+
+	/**
+	 * Restore preserved session data as-is.
+	 * External session data keeps its original keys.
+	 * Total CMS will use namespaced keys (e.g., 'totalcms.auth.user') to avoid conflicts.
+	 *
+	 * @param array<string,mixed> $preservedData
+	 */
+	private function restorePreservedSessionData(array $preservedData): void
+	{
+		foreach ($preservedData as $key => $value) {
+			$this->session->set($key, $value);
 		}
+
+		$this->logger->debug('Session data restored', [
+			'restoredKeys' => array_keys($preservedData)
+		]);
 	}
 
 	// ---------------------------------------------------------------------------------
@@ -126,10 +185,18 @@ class TotalCMS
 	// Public methods for page access
 	// ---------------------------------------------------------------------------------
 
-	/** @param string|array<string> $groups */
+	/**
+	 * @SuppressWarnings("PHPMD.ExitExpression")
+	 *
+	 * @param string|array<string> $groups
+	 */
 	public function restrictPageAccess(array|string $groups = [], string $collection = ''): void
 	{
-		$this->access->restrictPageAccess($groups, $collection);
+		$restricted = $this->access->restrictPageAccess($groups, $collection);
+		if ($restricted) {
+			$this->endBuffer();
+			exit(0);
+		}
 	}
 
 	// ---------------------------------------------------------------------------------

@@ -9,6 +9,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Support\Config;
+use TotalCMS\Domain\Session\SessionKeys;
 
 /**
  * Action.
@@ -36,8 +37,8 @@ readonly class AuthLoginSubmitAction
 		$flash = $this->session->getFlash();
 		$flash->clear();
 
-		$attempts = $this->session->get('loginAttempts', 0);
-		$this->session->set('loginAttempts', $attempts + 1);
+		$attempts = $this->session->get(SessionKeys::LOGIN_ATTEMPTS, 0);
+		$this->session->set(SessionKeys::LOGIN_ATTEMPTS, $attempts + 1);
 
 		$maxAttempts = $this->config->auth['maxAttempts'] ?? self::MAX_LOGIN_ATTEMPTS;
 
@@ -74,17 +75,17 @@ readonly class AuthLoginSubmitAction
 		}
 
 		if (isset($user, $user['id'])) {
-			$url = $this->session->get('requestOriginUrl', $router->urlFor('admin-index'));
+			$url = $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
 
 			$this->session->destroy();
 			$this->session->start();
 			$this->session->regenerateId();
 
 			// Set session data
-			$this->session->set('user', $user['id']);
-			$this->session->set('collection', $collection);
-			$this->session->set('persistent_login', $persistentLogin);
-			$this->session->delete('loginAttempts');
+			$this->session->set(SessionKeys::AUTH_USER, $user['id']);
+			$this->session->set(SessionKeys::AUTH_COLLECTION, $collection);
+			$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
+			$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
 
 			// If persistent login is checked, set session cookie to persist longer
 			if ($persistentLogin) {
