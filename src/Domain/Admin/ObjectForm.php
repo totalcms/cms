@@ -16,7 +16,8 @@ class ObjectForm extends TotalForm
 
 		$this->route = "/collections/{$this->collection}";
 
-		if ($this->id !== '' && $this->objectFetcher->existsObject($this->collection, $this->id)) {
+		// For addOnly forms, never load existing objects even if an ID is somehow present
+		if (!$this->addOnly && $this->id !== '' && $this->objectFetcher->existsObject($this->collection, $this->id)) {
 			// If the form is for editing an existing item, change the method to PUT
 			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
 			$this->route      = "/collections/{$this->collection}/{$this->id}";

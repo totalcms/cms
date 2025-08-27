@@ -166,6 +166,7 @@ abstract class TotalForm implements \Stringable
 		protected bool $helpOnFocus   = false,
 		protected bool $hideID        = false,
 		protected bool $useFormGrid   = true,
+		protected bool $addOnly       = false,
 	) {
 		$this->init();
 		$this->initClass();
@@ -174,7 +175,10 @@ abstract class TotalForm implements \Stringable
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	protected function init(): void
 	{
-		if ($this->id === '' && isset($_GET['id'])) {
+		// For addOnly forms, never allow editing existing objects - ignore any ID parameter
+		if ($this->addOnly) {
+			$this->id = '';
+		} elseif ($this->id === '' && isset($_GET['id'])) {
 			$this->id = $_GET['id'];
 		}
 	}
