@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\JumpStart\Data;
 
-final class JumpStartData
+class JumpStartData
 {
 	public string $version = '1.0.0';
 
@@ -123,9 +123,9 @@ final class JumpStartData
 	{
 		return empty($this->collections['reserved'])
 			&& empty($this->collections['custom'])
-			&& empty($this->schemas)
-			&& empty($this->objects)
-			&& empty($this->factory);
+			&& $this->schemas === []
+			&& $this->objects === []
+			&& $this->factory === [];
 	}
 
 	public function getTotalObjectCount(): int

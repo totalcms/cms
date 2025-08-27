@@ -14,9 +14,9 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LoggerFactory;
 
-final class UrlImporter
+readonly class UrlImporter
 {
-	private LoggerInterface $logger;
+	public LoggerInterface $logger;
 
 	public function __construct(
 		private ObjectRepository $storage,

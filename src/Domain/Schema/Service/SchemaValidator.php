@@ -11,24 +11,18 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 /**
  * Service.
  */
-final class SchemaValidator
+readonly class SchemaValidator
 {
-	private SchemaRepository $schemaRepository;
-
-	public function __construct(SchemaRepository $schemaRepository)
+	public function __construct(private SchemaRepository $schemaRepository)
 	{
-		$this->schemaRepository = $schemaRepository;
 	}
 
 	/**
 	 * Validate a schema.
 	 *
 	 * @param array<string,mixed> $object
-	 * @param string $schemaType
 	 *
 	 * @throws \DomainException
-	 *
-	 * @return bool
 	 */
 	public function validateSchema(array $object, string $schemaType = 'schema'): bool
 	{
@@ -60,7 +54,7 @@ final class SchemaValidator
 			$formatter = new ErrorFormatter();
 			/* @phpstan-ignore-next-line */
 			$error = $formatter->format($result->error(), false);
-			$msg   = implode(';', array_map(fn ($k, $v) => "($k) $v", array_keys($error), $error));
+			$msg   = implode(';', array_map(fn ($k, $v): string => "($k) $v", array_keys($error), $error));
 			throw new \DomainException("Schema Validation Failed. $msg");
 		}
 

@@ -226,13 +226,13 @@ final class DeckFieldErrorHandlingTest extends TestCase
 		$itemIds   = [];
 		$errors    = [];
 		$deckField = $this->createMockDeckField();
-		$items     = array_map(fn () => $this->createMockDeckItem(), $deckItems);
+		$items     = array_map(fn (): MockDeckItem => $this->createMockDeckItem(), $deckItems);
 
 		foreach ($deckItems as $index => $item) {
 			$itemId   = $item['id'] ?? '';
 			$deckItem = $items[$index];
 
-			if (strlen($itemId) === 0) {
+			if ((string)$itemId === '') {
 				$errorMessage = 'ID is required for deck items';
 				$deckField->setError($errorMessage);
 				$deckItem->setError($errorMessage);
@@ -333,11 +333,9 @@ class MockDeckItem
 {
 	private string $idFieldError  = '';
 	private bool $idFieldErrorSet = false;
-	private bool $hasIdField;
 
-	public function __construct(bool $hasIdField = true)
+	public function __construct(private readonly bool $hasIdField = true)
 	{
-		$this->hasIdField = $hasIdField;
 	}
 
 	public function setError(string $message): void

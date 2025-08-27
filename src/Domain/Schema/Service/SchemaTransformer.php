@@ -21,7 +21,7 @@ namespace TotalCMS\Domain\Schema\Service;
  *     "$ref": "https://www.totalcms.co/schemas/properties/deck.json"
  * }
  */
-final class SchemaTransformer
+class SchemaTransformer
 {
 	/**
 	 * Transform a schema to expand simplified deck syntax into full JSON Schema format.
@@ -60,7 +60,7 @@ final class SchemaTransformer
 	private function isDeckProperty(array $property): bool
 	{
 		return isset($property['$ref'])
-			   && str_contains($property['$ref'], '/properties/deck.json');
+			   && str_contains((string)$property['$ref'], '/properties/deck.json');
 	}
 
 	/**

@@ -8,14 +8,14 @@ use TotalCMS\Support\Config;
 /**
  * Redis cache service.
  */
-final class RedisService implements CacheInterface
+class RedisService implements CacheInterface
 {
-	private bool $enabled;
-	private string $host;
-	private int $port;
-	private int $timeout;
-	private ?string $password;
-	private int $database;
+	private readonly bool $enabled;
+	private readonly string $host;
+	private readonly int $port;
+	private readonly int $timeout;
+	private readonly ?string $password;
+	private readonly int $database;
 	private ?\Redis $redis = null;
 
 	public function __construct(
@@ -42,7 +42,7 @@ final class RedisService implements CacheInterface
 			$redis->ping();
 
 			return true;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -68,7 +68,7 @@ final class RedisService implements CacheInterface
 			$value = $redis->get($key);
 
 			return $value !== false ? unserialize($value) : null;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return null;
 		}
 	}
@@ -88,7 +88,7 @@ final class RedisService implements CacheInterface
 			}
 
 			return $redis->set($key, $serialized);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -104,7 +104,7 @@ final class RedisService implements CacheInterface
 			$result = $redis->del($key);
 
 			return is_int($result) && $result > 0;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -119,7 +119,7 @@ final class RedisService implements CacheInterface
 			$redis = $this->getConnection();
 
 			return $redis->flushDB();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -140,7 +140,7 @@ final class RedisService implements CacheInterface
 
 			// Use SCAN to find keys matching the pattern
 			while (($keys = $redis->scan($iterator, $pattern)) !== false) {
-				if (!empty($keys)) {
+				if ($keys !== []) {
 					$deleted += $redis->del($keys);
 				}
 				if ($iterator === 0) {
@@ -149,7 +149,7 @@ final class RedisService implements CacheInterface
 			}
 
 			return true;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// Fall back to clearing everything if pattern clearing fails
 			return $this->clear();
 		}
@@ -181,7 +181,7 @@ final class RedisService implements CacheInterface
 				'port'              => $this->port,
 				'memory_usage'      => $info['used_memory_human'] ?? 'Unknown',
 				'connected_clients' => $info['connected_clients'] ?? 0,
-				'hit_rate'          => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
+				'hit_rate'          => $total > 0 ? round(($hits / $total) * 100, 1) : 0,
 				'keys'              => $redis->dbSize(),
 			];
 		} catch (\Exception $e) {
@@ -209,7 +209,7 @@ final class RedisService implements CacheInterface
 
 	private function getConnection(): \Redis
 	{
-		if ($this->redis === null) {
+		if (!$this->redis instanceof \Redis) {
 			$this->redis = new \Redis();
 			$this->redis->connect($this->host, $this->port, $this->timeout);
 

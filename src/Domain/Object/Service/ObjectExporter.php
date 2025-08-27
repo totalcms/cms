@@ -3,9 +3,10 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final class ObjectExporter
+readonly class ObjectExporter
 {
 	public function __construct(
 		private IndexRepository $storage,
@@ -31,10 +32,16 @@ final class ObjectExporter
 	/** @return array<array<int,string>> */
 	public function exportAllObjectsForCSv(string $collection): array
 	{
-		$schema     = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		$properties = array_keys($schema->properties);
+		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-		$objects   = [$properties];
+		// Filter out deck properties from CSV export - they're too complex for CSV format
+		$properties = array_filter(
+			array_keys($schema->properties),
+			fn (string $propertyName): bool => !isset($schema->properties[$propertyName]['$ref'])
+				|| $schema->properties[$propertyName]['$ref'] !== SchemaData::PROPERTY_TYPE_TO_REF['deck']
+		);
+
+		$objects   = [array_values($properties)];
 		$objectIds = $this->storage->fetchObjectIds($collection);
 
 		foreach ($objectIds as $id) {

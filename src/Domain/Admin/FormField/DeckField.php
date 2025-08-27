@@ -8,7 +8,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 /**
  * Deck Form Field - Manages a collection of deck items.
  */
-final class DeckField extends FormField
+class DeckField extends FormField
 {
 	protected string $defaultInputType = 'deck';
 	protected string $defaultFieldType = 'deck';
@@ -54,7 +54,7 @@ final class DeckField extends FormField
 		}
 
 		// Add template for new items
-		if (!empty($this->deckref)) {
+		if ($this->deckref !== '') {
 			$template = $this->createDeckItem('', []);
 			$content .= HTMLUtils::element('template', $template->build(), ['class' => 'deck-template']);
 		}
@@ -71,7 +71,7 @@ final class DeckField extends FormField
 		$attributes = parent::formFieldAttributes();
 
 		// Add deckref as a data attribute
-		if (!empty($this->deckref)) {
+		if ($this->deckref !== '') {
 			$attributes['data-deckref'] = $this->deckref;
 		}
 
@@ -81,10 +81,7 @@ final class DeckField extends FormField
 	/**
 	 * Create a new DeckItem instance.
 	 *
-	 * @param string $itemId
 	 * @param array<string,mixed> $itemData
-	 *
-	 * @return DeckItem
 	 */
 	protected function createDeckItem(string $itemId, array $itemData): DeckItem
 	{

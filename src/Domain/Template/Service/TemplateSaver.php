@@ -8,24 +8,16 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 /**
  * Service.
  */
-final class TemplateSaver
+readonly class TemplateSaver
 {
-	private TemplateRepository $storage;
-
-	public function __construct(TemplateRepository $storage)
+	public function __construct(private TemplateRepository $storage)
 	{
-		$this->storage = $storage;
 	}
 
 	/**
 	 * Save a Template.
 	 *
-	 * @param string $id
-	 * @param string $contents
-	 *
 	 * @throws \DomainException
-	 *
-	 * @return TemplateData
 	 */
 	public function saveTemplate(string $id, string $contents): TemplateData
 	{

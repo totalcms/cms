@@ -7,9 +7,9 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
 
-final class FirstLoginChecker
+readonly class FirstLoginChecker
 {
-	private string $collection;
+	public string $collection;
 
 	public function __construct(
 		private ObjectSaver $objectSaver,
@@ -28,7 +28,7 @@ final class FirstLoginChecker
 			$index = $this->indexReader->fetchIndex($this->collection);
 
 			return $index->objects->isEmpty();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// If collection doesn't exist and can't be created, it's a new installation
 			return true;
 		}

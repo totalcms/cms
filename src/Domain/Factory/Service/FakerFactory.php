@@ -10,7 +10,7 @@ use TotalCMS\Support\Config;
 /**
  * Factory.
  */
-final class FakerFactory
+class FakerFactory
 {
 	public string $cacheDir;
 

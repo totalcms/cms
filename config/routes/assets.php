@@ -3,6 +3,6 @@
 use Slim\App;
 use TotalCMS\Action\Assets\StaticPublicAssetsAction;
 
-return function (App $app) {
+return function (App $app): void {
 	$app->get('/assets/{asset:.*}', StaticPublicAssetsAction::class)->setName('pubic-asset');
 };

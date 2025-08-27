@@ -9,15 +9,10 @@ use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Domain\Import\CsvImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class ImportCsvAction
+readonly class ImportCsvAction
 {
-	private CsvImporter $csvImporter;
-	private JsonRenderer $renderer;
-
-	public function __construct(CsvImporter $csvImporter, JsonRenderer $renderer)
+	public function __construct(private CsvImporter $csvImporter, private JsonRenderer $renderer)
 	{
-		$this->csvImporter = $csvImporter;
-		$this->renderer    = $renderer;
 	}
 
 	/**

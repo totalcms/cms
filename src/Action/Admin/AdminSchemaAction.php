@@ -9,7 +9,7 @@ use TotalCMS\Renderer\TwigRenderer;
 /**
  * Action.
  */
-final class AdminSchemaAction
+readonly class AdminSchemaAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,

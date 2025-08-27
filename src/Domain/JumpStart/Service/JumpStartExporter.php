@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\JumpStart\Service;
 
@@ -16,7 +16,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Factory\LoggerFactory;
 
-final class JumpStartExporter
+readonly class JumpStartExporter
 {
 	private LoggerInterface $logger;
 
@@ -35,10 +35,10 @@ final class JumpStartExporter
 
 	public function setMetadata(string $name = '', string $description = ''): void
 	{
-		if (!empty($name)) {
+		if ($name !== '') {
 			$this->jumpstart->setName($name);
 		}
-		if (!empty($description)) {
+		if ($description !== '') {
 			$this->jumpstart->setDescription($description);
 		}
 	}

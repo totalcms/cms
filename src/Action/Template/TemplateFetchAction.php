@@ -7,22 +7,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Renderer\RawRenderer;
 
-final class TemplateFetchAction
+readonly class TemplateFetchAction
 {
-	private RawRenderer $renderer;
-	private TemplateFetcher $templateFetcher;
-
-	public function __construct(RawRenderer $renderer, TemplateFetcher $service)
+	public function __construct(private RawRenderer $renderer, private TemplateFetcher $templateFetcher)
 	{
-		$this->renderer        = $renderer;
-		$this->templateFetcher = $service;
 	}
 
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The routing arguments
 	 *
 	 * @return ResponseInterface the response

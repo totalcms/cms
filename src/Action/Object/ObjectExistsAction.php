@@ -7,20 +7,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
-final class ObjectExistsAction
+readonly class ObjectExistsAction
 {
-	private ObjectFetcher $objectFetcher;
-
-	public function __construct(ObjectFetcher $fetcher)
+	public function __construct(private ObjectFetcher $objectFetcher)
 	{
-		$this->objectFetcher = $fetcher;
 	}
 
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The routing arguments
 	 *
 	 * @throws HttpNotFoundException

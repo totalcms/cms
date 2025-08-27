@@ -8,22 +8,14 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 /**
  * Service.
  */
-final class ObjectFetcher
+readonly class ObjectFetcher
 {
-	private ObjectRepository $storage;
-
-	public function __construct(ObjectRepository $storage)
+	public function __construct(private ObjectRepository $storage)
 	{
-		$this->storage = $storage;
 	}
 
 	/**
 	 * get a collection object.
-	 *
-	 * @param string $collection
-	 * @param string $id
-	 *
-	 * @return ObjectData
 	 */
 	public function fetchObject(string $collection, string $id): ObjectData
 	{
@@ -38,11 +30,6 @@ final class ObjectFetcher
 
 	/**
 	 * get a collection object.
-	 *
-	 * @param string $collection
-	 * @param string $id
-	 *
-	 * @return bool
 	 */
 	public function existsObject(string $collection, string $id): bool
 	{

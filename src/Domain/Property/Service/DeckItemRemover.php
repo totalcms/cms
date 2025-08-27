@@ -10,7 +10,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 /**
  * Service for removing deck items.
  */
-final class DeckItemRemover
+readonly class DeckItemRemover
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,
@@ -20,13 +20,6 @@ final class DeckItemRemover
 
 	/**
 	 * Delete a deck item from an object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectId
-	 * @param string $propertyName
-	 * @param string $itemId
-	 *
-	 * @return ObjectData
 	 */
 	public function removeDeckItem(
 		string $collection,

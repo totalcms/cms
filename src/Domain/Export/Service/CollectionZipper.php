@@ -7,7 +7,7 @@ use TotalCMS\Support\Config;
 /**
  * Service for creating zip files of collection data including all files and folders.
  */
-final class CollectionZipper
+readonly class CollectionZipper
 {
 	public function __construct(
 		private Config $config,
@@ -50,10 +50,6 @@ final class CollectionZipper
 
 	/**
 	 * Recursively add directory contents to zip, excluding .cache folders.
-	 *
-	 * @param \ZipArchive $zip
-	 * @param string $realPath
-	 * @param string $zipPath
 	 */
 	private function addDirectoryToZip(\ZipArchive $zip, string $realPath, string $zipPath): void
 	{
@@ -64,7 +60,7 @@ final class CollectionZipper
 
 		foreach ($iterator as $file) {
 			$filePath     = $file->getRealPath();
-			$relativePath = substr($filePath, strlen($realPath) + 1);
+			$relativePath = substr((string)$filePath, strlen($realPath) + 1);
 
 			// Skip .cache directories and their contents
 			if (str_contains($relativePath, '.cache')) {
@@ -83,10 +79,6 @@ final class CollectionZipper
 
 	/**
 	 * Get the filename for the zip download.
-	 *
-	 * @param string $collection
-	 *
-	 * @return string
 	 */
 	public function getZipFilename(string $collection): string
 	{

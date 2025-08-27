@@ -15,8 +15,8 @@ class BundleChecker
 	private BundleData $bundle;
 
 	public function __construct(
-		private BundleRepository $bundleRepository,
-		private SchemaLister $schemaLister,
+		private readonly BundleRepository $bundleRepository,
+		private readonly SchemaLister $schemaLister,
 	) {
 	}
 
@@ -26,14 +26,8 @@ class BundleChecker
 			$this->verify();
 		}
 
-		if (
-			$this->bundleRepository->bundleExists()
-			&& $this->bundleRepository->localBundleExists()
-		) {
-			return true;
-		}
-
-		return false;
+		return $this->bundleRepository->bundleExists()
+			&& $this->bundleRepository->localBundleExists();
 	}
 
 	public function verify(): bool

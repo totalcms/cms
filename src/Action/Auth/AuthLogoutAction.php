@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\LogoutService;
 
-final class AuthLogoutAction
+readonly class AuthLogoutAction
 {
 	public function __construct(
 		private LogoutService $logoutService,

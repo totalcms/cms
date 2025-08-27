@@ -8,22 +8,15 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\SchemaMetaTransformer;
 
-final class SchemaFetchAction
+readonly class SchemaFetchAction
 {
-	private JsonRenderer $renderer;
-	private SchemaFetcher $schemaFetcher;
-
-	public function __construct(JsonRenderer $renderer, SchemaFetcher $service)
+	public function __construct(private JsonRenderer $renderer, private SchemaFetcher $schemaFetcher)
 	{
-		$this->renderer      = $renderer;
-		$this->schemaFetcher = $service;
 	}
 
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The routing arguments
 	 *
 	 * @return ResponseInterface the response

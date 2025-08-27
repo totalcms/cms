@@ -23,13 +23,13 @@ class TextareaField extends FormField
 			'disabled'         => $this->disabled ? '' : null,
 			'readonly'         => $this->readonly ? '' : null,
 			'rows'             => $this->rows > 0 ? strval($this->rows) : '8',
-			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
+			'placeholder'      => $this->placeholder === '' ? null : $this->placeholder,
 			'autocomplete'     => 'off', // Stop 1Password Managers from filling in the field
-			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
+			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn (?string $x): bool => !is_null($x));
 
 		return $attributes;
 	}

@@ -10,7 +10,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 /**
  * Service for updating existing deck items.
  */
-final class DeckItemUpdater
+readonly class DeckItemUpdater
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,
@@ -22,13 +22,7 @@ final class DeckItemUpdater
 	/**
 	 * Update an existing deck item in an object property.
 	 *
-	 * @param string $collection
-	 * @param string $objectId
-	 * @param string $propertyName
-	 * @param string $itemId
 	 * @param array<string,mixed> $itemData
-	 *
-	 * @return ObjectData
 	 */
 	public function updateDeckItem(
 		string $collection,

@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Playground\Service;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 
-final class PlaygroundRemover
+readonly class PlaygroundRemover
 {
 	public function __construct(
 		private ObjectRemover $objectRemover,

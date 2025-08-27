@@ -6,13 +6,13 @@ namespace TotalCMS\Domain\Twig\Extension;
  * Lazy loading proxy for Twig global variables.
  * Only instantiates the wrapped object when actually accessed.
  */
-final class LazyTwigGlobal
+class LazyTwigGlobal implements \Stringable
 {
 	private mixed $instance = null;
 	private bool $loaded    = false;
 
 	public function __construct(
-		private \Closure $factory,
+		private readonly \Closure $factory,
 	) {
 	}
 
@@ -60,7 +60,7 @@ final class LazyTwigGlobal
 			return (string)$instance;
 		}
 
-		return get_class($instance) . '@' . spl_object_hash($instance);
+		return $instance::class . '@' . spl_object_hash($instance);
 	}
 
 	/**

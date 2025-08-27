@@ -6,28 +6,21 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 
-final class TemplateDeleteAction
+readonly class TemplateDeleteAction
 {
-	private TemplateRemover $service;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param TemplateRemover $service Template save service
 	 */
-	public function __construct(TemplateRemover $service)
+	public function __construct(private TemplateRemover $service)
 	{
-		$this->service  = $service;
 	}
 
 	/**
 	 * Invokable Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @return ResponseInterface
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{

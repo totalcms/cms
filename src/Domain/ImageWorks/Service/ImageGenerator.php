@@ -12,7 +12,7 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
-final class ImageGenerator
+class ImageGenerator
 {
 	private string $collection;
 	private string $id;
@@ -21,10 +21,10 @@ final class ImageGenerator
 	private array $params;
 
 	public function __construct(
-		private StorageAdapterInterface $filesystem,
-		private PropertyFetcher $propertyFetcher,
-		private GlideFactory $glideFactory,
-		private WatermarkFactory $watermarkFactory,
+		private readonly StorageAdapterInterface $filesystem,
+		private readonly PropertyFetcher $propertyFetcher,
+		private readonly GlideFactory $glideFactory,
+		private readonly WatermarkFactory $watermarkFactory,
 	) {
 	}
 
@@ -63,26 +63,17 @@ final class ImageGenerator
 			throw new \UnexpectedValueException('Invalid gallery property found');
 		}
 
-		if (empty($galleryData->images)) {
+		if ($galleryData->images === []) {
 			throw new \UnexpectedValueException('Gallery has no images');
 		}
 
-		switch ($name) {
-			case 'first':
-				$imageData = array_shift($galleryData->images);
-				break;
-			case 'last':
-				$imageData = array_pop($galleryData->images);
-				break;
-			case 'random':
-				$imageData = $this->getRandomImage($galleryData->images);
-				break;
-			case 'featured':
-				$imageData = $this->getFeaturedImage($galleryData->images);
-				break;
-			default:
-				$imageData = $this->getImageByName($galleryData->images, $name);
-		}
+		$imageData = match ($name) {
+			'first'    => array_shift($galleryData->images),
+			'last'     => array_pop($galleryData->images),
+			'random'   => $this->getRandomImage($galleryData->images),
+			'featured' => $this->getFeaturedImage($galleryData->images),
+			default    => $this->getImageByName($galleryData->images, $name),
+		};
 
 		if (empty($imageData)) {
 			throw new \UnexpectedValueException('Gallery Image not found');
@@ -121,9 +112,9 @@ final class ImageGenerator
 	/** @param array<ImageData> $images */
 	private function getImageByName(array $images, string $name): ?ImageData
 	{
-		$imageData = array_filter($images, fn ($image) => pathinfo($image->name)['filename'] === $name);
+		$imageData = array_filter($images, fn (ImageData $image): bool => pathinfo($image->name)['filename'] === $name);
 
-		if (empty($imageData)) {
+		if ($imageData === []) {
 			return null;
 		}
 
@@ -147,7 +138,7 @@ final class ImageGenerator
 	/** @param array<ImageData> $images */
 	private function getFeaturedImage(array $images): ImageData
 	{
-		$featured = array_filter($images, fn ($image) => $image->featured === true);
+		$featured = array_filter($images, fn (ImageData $image): bool => $image->featured);
 		$count    = count($featured);
 		if ($count === 0) {
 			// if no featured images are found, return a random image
@@ -172,7 +163,7 @@ final class ImageGenerator
 	{
 		// If no params are provided, return the original image
 		// The Action class automatically adds the format to the params so we need to check for that
-		if (empty($params) || (count($params) === 1 && isset($params['fm']) && str_ends_with($params['fm'], $imageData->name))) {
+		if ($params === [] || (count($params) === 1 && isset($params['fm']) && str_ends_with((string)$params['fm'], $imageData->name))) {
 			return [];
 		}
 
@@ -239,11 +230,11 @@ final class ImageGenerator
 	 */
 	private function filterWatermarkParams(array $params = []): array
 	{
-		$params = empty($params) ? $this->params : $params;
+		$params = $params === [] ? $this->params : $params;
 
 		return array_filter(
 			$params,
-			fn ($param) => !str_starts_with($param, 'mark'),
+			fn ($param): bool => !str_starts_with($param, 'mark'),
 			ARRAY_FILTER_USE_KEY
 		);
 	}
@@ -292,7 +283,7 @@ final class ImageGenerator
 
 	private function responseFromImageData(ImageData $imageData): ResponseInterface
 	{
-		if (empty($this->params)) {
+		if ($this->params === []) {
 			return $this->returnOriginalImage($imageData);
 		}
 

@@ -7,7 +7,7 @@ use TotalCMS\Support\Config;
 /**
  * Filesystem cache service.
  */
-final class FilesystemService implements CacheInterface
+readonly class FilesystemService implements CacheInterface
 {
 	private bool $enabled;
 	private string $cacheDir;
@@ -24,7 +24,7 @@ final class FilesystemService implements CacheInterface
 
 	public function isAvailable(): bool
 	{
-		if (!$this->enabled || empty($this->cacheDir)) {
+		if (!$this->enabled || $this->cacheDir === '') {
 			return false;
 		}
 
@@ -44,7 +44,7 @@ final class FilesystemService implements CacheInterface
 
 	private function createCacheDir(): bool
 	{
-		if (empty($this->cacheDir)) {
+		if ($this->cacheDir === '') {
 			return false;
 		}
 
@@ -54,7 +54,7 @@ final class FilesystemService implements CacheInterface
 				if (!mkdir($this->cacheDir, 0755, true) && !is_dir($this->cacheDir)) {
 					return false;
 				}
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				return false;
 			}
 		}
@@ -83,7 +83,7 @@ final class FilesystemService implements CacheInterface
 			if ($content === false) {
 				return null;
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return null;
 		}
 
@@ -96,7 +96,7 @@ final class FilesystemService implements CacheInterface
 		if ($data['expires'] > 0 && time() > $data['expires']) {
 			try {
 				unlink($filePath);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Ignore unlink failures for expired files
 			}
 
@@ -122,7 +122,7 @@ final class FilesystemService implements CacheInterface
 
 		try {
 			return file_put_contents($filePath, serialize($data), LOCK_EX) !== false;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -140,7 +140,7 @@ final class FilesystemService implements CacheInterface
 
 		try {
 			return unlink($filePath);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -172,7 +172,7 @@ final class FilesystemService implements CacheInterface
 			// For now, fall back to clearing all cache to ensure pattern is cleared.
 			// TODO: Implement key tracking for more precise pattern clearing
 			return $this->clear();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -234,7 +234,7 @@ final class FilesystemService implements CacheInterface
 		if (!is_dir($dir)) {
 			try {
 				mkdir($dir, 0755, true);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Directory creation failed, will use parent dir
 			}
 		}
@@ -251,7 +251,7 @@ final class FilesystemService implements CacheInterface
 		if (!is_dir($dir)) {
 			try {
 				return unlink($dir);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				return false;
 			}
 		}
@@ -261,7 +261,7 @@ final class FilesystemService implements CacheInterface
 			if ($items === false) {
 				return false;
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 
@@ -282,7 +282,7 @@ final class FilesystemService implements CacheInterface
 
 		try {
 			return rmdir($dir);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}

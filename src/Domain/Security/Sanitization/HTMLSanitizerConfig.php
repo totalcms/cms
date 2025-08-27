@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Security\Sanitization;
 /**
  * Configuration constants for HTML sanitization.
  */
-final class HTMLSanitizerConfig
+class HTMLSanitizerConfig
 {
 	public const RICH_CONTENT_ALLOWED_TAGS = [
 		'p', 'br', 'hr', 'strong', 'b', 'em', 'i', 'u', 's', 'small', 'mark', 'del', 'ins', 'sub', 'sup',

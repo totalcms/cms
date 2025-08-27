@@ -7,7 +7,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 /**
  * Service.
  */
-final class CollectionRemover
+readonly class CollectionRemover
 {
 	public function __construct(
 		private CollectionRepository $storage,

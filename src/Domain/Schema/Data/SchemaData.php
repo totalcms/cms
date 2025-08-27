@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Service\SchemaTransformer;
 /**
  * Schema Data object.
  */
-final class SchemaData
+class SchemaData
 {
 	public const SCHEMA_PREFIX        = 'https://www.totalcms.co/schemas/';
 	public const SCHEMA_CUSTOM_PREFIX = 'https://www.totalcms.co/schemas/custom/';
@@ -120,12 +120,12 @@ final class SchemaData
 		];
 
 		// Only include formgrid if it's not empty
-		if (!empty($this->formgrid)) {
+		if ($this->formgrid !== '') {
 			$array['formgrid'] = $this->formgrid;
 		}
 
 		// Only include category if it's not empty
-		if (!empty($this->category)) {
+		if ($this->category !== '') {
 			$array['category'] = $this->category;
 		}
 

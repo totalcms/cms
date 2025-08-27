@@ -5,13 +5,10 @@ namespace TotalCMS\Domain\Collection\Service;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 
-final class CollectionLister
+readonly class CollectionLister
 {
-	private CollectionRepository $storage;
-
-	public function __construct(CollectionRepository $storage)
+	public function __construct(private CollectionRepository $storage)
 	{
-		$this->storage = $storage;
 	}
 
 	/** @return array<CollectionData> */
@@ -25,9 +22,7 @@ final class CollectionLister
 	{
 		$collections = $this->storage->listAllCollections();
 
-		return array_filter($collections, function (CollectionData $collection) {
-			return $this->storage->isReservedCollection($collection->id) === false;
-		});
+		return array_filter($collections, fn (CollectionData $collection): bool => $this->storage->isReservedCollection($collection->id) === false);
 	}
 
 	/** @return array<CollectionData> */
@@ -35,8 +30,6 @@ final class CollectionLister
 	{
 		$collections = $this->storage->listAllCollections();
 
-		return array_filter($collections, function (CollectionData $collection) use ($schemaId) {
-			return $collection->schema === $schemaId;
-		});
+		return array_filter($collections, fn (CollectionData $collection): bool => $collection->schema === $schemaId);
 	}
 }

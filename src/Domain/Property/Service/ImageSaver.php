@@ -7,7 +7,7 @@ use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\ImageData;
 
-final class ImageSaver extends FileSaver
+class ImageSaver extends FileSaver
 {
 	public string $type = 'image';
 
@@ -30,9 +30,19 @@ final class ImageSaver extends FileSaver
 		// Update the object with the new file data
 		$imageProp = $this->fetchProperty($collection, $objectID, $property);
 
-		// Only keep the data for alt, featrued, link, and tags
-		$keep         = ['alt', 'featured', 'link', 'tags'];
-		$existingData = array_filter($imageProp->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+		// Only keep certain existing data, but allow EXIF to populate alt and tags if they're empty
+		$keep         = ['featured', 'link'];
+		$existingData = array_filter($imageProp->transform(), fn ($key): bool => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+
+		// Keep existing alt and tags only if they have values
+		$existingAlt  = trim($imageProp->alt ?? '');
+		$existingTags = $imageProp->tags->list ?? [];
+		if (strlen($existingAlt) > 0) {
+			$existingData['alt'] = $existingAlt;
+		}
+		if (count($existingTags) > 0) {
+			$existingData['tags'] = $existingTags;
+		}
 
 		$fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 
@@ -52,14 +62,11 @@ final class ImageSaver extends FileSaver
 			$colorData = ['palette' => []];
 		}
 
+		// Extract EXIF metadata (includes alt text and tags from IPTC/XMP)
 		$metaData  = ImageMetaReader::getMetaData($filePath);
 
-		$newImage = array_merge($existingData, $fileData, $metaData, $colorData);
-
-		if ($objectExists) {
-			// If the object existed before, we will keep the existing data
-			$newImage = array_merge($newImage, $existingData);
-		}
+		// Merge data with EXIF taking precedence for alt and tags if they're empty in existing data
+		$newImage = array_merge($fileData, $metaData, $colorData, $existingData);
 
 		return $this->updateObject($collection, $objectID, $property, new ImageData($newImage));
 	}

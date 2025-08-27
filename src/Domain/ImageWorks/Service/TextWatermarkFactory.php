@@ -10,7 +10,7 @@ use TotalCMS\Support\Config;
  *
  * Generates text watermarks as images that can be applied to images
  */
-final class TextWatermarkFactory
+readonly class TextWatermarkFactory
 {
 	public const WATERMARK_DIR = '.watermarks';
 	private const FONT_PATH    = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
@@ -62,17 +62,9 @@ final class TextWatermarkFactory
 	/**
 	 * Create a text image using GD (based on FakerImageGD approach).
 	 *
-	 * @param string $text
-	 * @param int $fontSize
 	 * @param array<int> $fontColor RGB array
-	 * @param string|null $fontFamily
 	 * @param array<int>|null $backgroundColor RGB array or null for transparent
-	 * @param int $padding
-	 * @param int $angle
-	 * @param int $opacity
 	 * @param string|null $cacheKey Optional cache key, if null generates temp name
-	 *
-	 * @return string
 	 */
 	private function createTextImage(
 		string $text,
@@ -225,7 +217,7 @@ final class TextWatermarkFactory
 			$fontId = min(5, max(1, (int)($fontSize / 10)));
 			$x      = $padding;
 			$y      = ($height - imagefontheight($fontId)) / 2;
-			imagestring($image, $fontId, (int)$x, (int)$y, $text, $textColor);
+			imagestring($image, $fontId, $x, (int)$y, $text, $textColor);
 		}
 
 		// Determine filename
@@ -261,15 +253,8 @@ final class TextWatermarkFactory
 	/**
 	 * Generate cache key based on text watermark parameters (excluding opacity).
 	 *
-	 * @param string $text
-	 * @param int $fontSize
 	 * @param array<int> $fontColor
-	 * @param string|null $fontFamily
 	 * @param array<int>|null $backgroundColor
-	 * @param int $padding
-	 * @param int $angle
-	 *
-	 * @return string
 	 */
 	private function generateCacheKey(
 		string $text,
@@ -327,10 +312,6 @@ final class TextWatermarkFactory
 
 	/**
 	 * Get font path for custom fonts.
-	 *
-	 * @param string|null $fontFamily
-	 *
-	 * @return string|null
 	 */
 	private function getFontPath(?string $fontFamily): ?string
 	{
@@ -389,7 +370,7 @@ final class TextWatermarkFactory
 						$fontExtension = $ext;
 						break;
 					}
-				} catch (\Exception $e) {
+				} catch (\Exception) {
 					// Continue trying other extensions
 				}
 			}
@@ -416,8 +397,6 @@ final class TextWatermarkFactory
 
 	/**
 	 * Generate temporary file path.
-	 *
-	 * @return string
 	 */
 	private function generateTempPath(): string
 	{
@@ -426,10 +405,6 @@ final class TextWatermarkFactory
 
 	/**
 	 * Clean up temporary watermark files (for backwards compatibility).
-	 *
-	 * @param string $watermarkPath
-	 *
-	 * @return void
 	 */
 	public function cleanup(string $watermarkPath): void
 	{

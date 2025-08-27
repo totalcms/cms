@@ -8,8 +8,6 @@ interface StorageAdapterInterface
 {
 	/**
 	 * Access the flysystem filesystem.
-	 *
-	 * @return FilesystemOperator
 	 */
 	public function flysystem(): FilesystemOperator;
 
@@ -65,8 +63,6 @@ interface StorageAdapterInterface
 	 *
 	 * @param string $location The path of file to write to
 	 * @param string $contents The data to write to the file
-	 *
-	 * @return bool
 	 */
 	public function write(string $location, string $contents): bool;
 
@@ -75,8 +71,6 @@ interface StorageAdapterInterface
 	 *
 	 * @param string $import Path to the file to import
 	 * @param string $dest Path to put the file
-	 *
-	 * @return bool
 	 */
 	public function import(string $import, string $dest): bool;
 
@@ -85,8 +79,6 @@ interface StorageAdapterInterface
 	 *
 	 * @param string $old Existing path
 	 * @param string $new New location
-	 *
-	 * @return bool
 	 */
 	public function move(string $old, string $new): bool;
 
@@ -96,8 +88,6 @@ interface StorageAdapterInterface
 	 * Delete file.
 	 *
 	 * @param string $location The path of file to write to
-	 *
-	 * @return bool
 	 */
 	public function delete(string $location): bool;
 
@@ -105,8 +95,6 @@ interface StorageAdapterInterface
 	 * Delete directory.
 	 *
 	 * @param string $location The path of directory to delete
-	 *
-	 * @return bool
 	 */
 	public function deleteDirectory(string $location): bool;
 

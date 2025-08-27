@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Infrastructure\Diagnostics;
 
+use Memcached;
+use Redis;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Support\Config;
 
@@ -24,14 +26,15 @@ class ServerChecker
 	private const OPTIONAL_SOFTWARE = [
 		'imagick',
 		'opcache',
-		'memcached',
+		'apcu',
 		'redis',
+		'memcached',
 	];
 	private const PHP_VERSION = '8.2.0';
 
 	public function __construct(
-		private BundleChecker $bundleChecker,
-		private Config $config,
+		private readonly BundleChecker $bundleChecker,
+		private readonly Config $config,
 	) {
 	}
 
@@ -172,8 +175,9 @@ class ServerChecker
 		return match ($extension) {
 			'imagick'   => 'Advanced image processing library with support for 200+ image formats',
 			'opcache'   => 'PHP bytecode cache that dramatically improves performance',
-			'memcached' => 'High-performance, distributed memory object caching system',
+			'apcu'      => 'Fast in-memory user cache for single-server applications',
 			'redis'     => 'In-memory data structure store for caching and session storage',
+			'memcached' => 'High-performance, distributed memory object caching system',
 			default     => 'Optional PHP extension',
 		};
 	}
@@ -185,9 +189,10 @@ class ServerChecker
 	{
 		return match ($extension) {
 			'imagick'   => 'Recommended for sites with heavy image processing, advanced image effects, or PDF generation needs',
-			'opcache'   => 'HIGHLY RECOMMENDED for all production sites - provides 2-5x performance improvement with no downsides',
-			'memcached' => 'Recommended for high-traffic sites (1000+ daily visitors) or multi-server setups requiring shared caching',
+			'opcache'   => 'Recommended for all production sites - provides 2-5x performance improvement with no downsides',
+			'apcu'      => 'Recommended for most sites - zero-config caching that works immediately on single-server setups',
 			'redis'     => 'Recommended for high-traffic sites needing advanced caching, session clustering, or real-time features',
+			'memcached' => 'Recommended for high-traffic sites (1000+ daily visitors) or multi-server setups requiring shared caching',
 			default     => 'Check documentation for specific use cases',
 		};
 	}
@@ -200,8 +205,9 @@ class ServerChecker
 		return match ($extension) {
 			'imagick'   => 'High impact for image operations, no impact if not used',
 			'opcache'   => 'Very high impact: 2-5x faster page loads, 50% less memory usage',
-			'memcached' => 'Medium impact: Faster template caching, reduced database load',
+			'apcu'      => 'Medium-high impact: Much faster than filesystem cache, instant setup',
 			'redis'     => 'Medium-high impact: Fast caching, improved session performance',
+			'memcached' => 'Medium impact: Faster template caching, reduced database load',
 			default     => 'Varies by usage',
 		};
 	}
@@ -211,25 +217,16 @@ class ServerChecker
 	 */
 	private function checkExtension(string $extension): bool
 	{
-		switch ($extension) {
-			case 'opcache':
-				// OPcache has specific detection requirements and naming variations
-				return (extension_loaded('opcache') || extension_loaded('Zend OPcache'))
+		return match ($extension) {
+			// OPcache has specific detection requirements and naming variations
+			'opcache' => (extension_loaded('opcache') || extension_loaded('Zend OPcache'))
 					   && function_exists('opcache_get_status')
-					   && opcache_get_status() !== false;
-
-			case 'redis':
-				// Redis requires both extension and class
-				return extension_loaded('redis') && class_exists('Redis');
-
-			case 'memcached':
-				// Memcached requires both extension and class
-				return extension_loaded('memcached') && class_exists('Memcached');
-
-			default:
-				// Standard extension check for others
-				return extension_loaded($extension);
-		}
+					   && opcache_get_status() !== false,
+			'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
+			'redis'     => extension_loaded('redis') && class_exists('Redis'),
+			'memcached' => extension_loaded('memcached') && class_exists('Memcached'),
+			default     => extension_loaded($extension),
+		};
 	}
 
 	/**
@@ -243,6 +240,8 @@ class ServerChecker
 
 		// OPcache information
 		if (function_exists('opcache_get_status')) {
+			$cacheInfo['OPcache Status'] = 'Available but not functioning';
+
 			$status = opcache_get_status(false);
 			if ($status !== false) {
 				$cacheInfo['OPcache Status'] = $status['opcache_enabled'] ? 'Enabled' : 'Disabled';
@@ -254,8 +253,41 @@ class ServerChecker
 					$usedMemory                       = round($status['memory_usage']['used_memory'] / 1024 / 1024, 2);
 					$cacheInfo['OPcache Memory Used'] = $usedMemory . ' MB';
 				}
-			} else {
-				$cacheInfo['OPcache Status'] = 'Available but not functioning';
+			}
+		}
+
+		// APCu information
+		if ($this->checkExtension('apcu')) {
+			try {
+				$testKey   = 'tcms_server_check_' . uniqid();
+				$testValue = 'test';
+
+				$cacheInfo['APCu Status'] = 'Extension available, store failed';
+
+				if (apcu_store($testKey, $testValue, 1)) {
+					$retrieved = apcu_fetch($testKey, $success);
+					apcu_delete($testKey);
+
+					$cacheInfo['APCu Status'] = 'Extension available, functionality failed';
+
+					if ($success && $retrieved === $testValue) {
+						$cacheInfo['APCu Status'] = 'Working';
+
+						// Get APCu cache info if available
+						if (function_exists('apcu_cache_info')) {
+							$info = apcu_cache_info(true); // Get info without entries list
+							if (is_array($info) && isset($info['num_hits'], $info['num_misses'])) {
+								$total = (int)$info['num_hits'] + (int)$info['num_misses'];
+								if ($total > 0) {
+									$hitRate                    = round(((int)$info['num_hits'] / $total) * 100, 2);
+									$cacheInfo['APCu Hit Rate'] = $hitRate . '%';
+								}
+							}
+						}
+					}
+				}
+			} catch (\Exception) {
+				$cacheInfo['APCu Status'] = 'Extension available, test failed';
 			}
 		}
 
@@ -267,7 +299,7 @@ class ServerChecker
 				$redis->ping();
 				$cacheInfo['Redis Connection'] = 'Connected';
 				$redis->close();
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				$cacheInfo['Redis Connection'] = 'Extension available, connection failed';
 			}
 		}
@@ -275,15 +307,14 @@ class ServerChecker
 		// Memcached information
 		if ($this->checkExtension('memcached')) {
 			try {
-				$memcached = new \Memcached();
+				$cacheInfo['Memcached Connection'] = 'Extension available, connection failed';
+				$memcached                         = new \Memcached();
 				$memcached->addServer('127.0.0.1', 11211);
 				$memcached->set('test', 'test', 1);
 				if ($memcached->get('test') === 'test') {
 					$cacheInfo['Memcached Connection'] = 'Connected';
-				} else {
-					$cacheInfo['Memcached Connection'] = 'Extension available, connection failed';
 				}
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				$cacheInfo['Memcached Connection'] = 'Extension available, connection failed';
 			}
 		}
@@ -354,7 +385,7 @@ class ServerChecker
 	{
 		try {
 			$this->bundleChecker->check();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 

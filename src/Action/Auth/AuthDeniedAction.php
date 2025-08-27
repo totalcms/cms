@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Renderer\TwigRenderer;
 
-final class AuthDeniedAction
+readonly class AuthDeniedAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,

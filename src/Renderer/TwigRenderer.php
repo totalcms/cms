@@ -8,7 +8,7 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
 /**
  * A HTML template renderer.
  */
-final class TwigRenderer
+readonly class TwigRenderer
 {
 	public function __construct(
 		private TwigEngine $twigEngine,

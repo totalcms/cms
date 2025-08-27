@@ -8,7 +8,7 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 /**
  * Service.
  */
-final class SchemaRemover
+readonly class SchemaRemover
 {
 	public function __construct(
 		private SchemaRepository $storage,
@@ -18,8 +18,6 @@ final class SchemaRemover
 
 	/**
 	 * delete a schema.
-	 *
-	 * @param string $id
 	 *
 	 * @throws \UnexpectedValueException
 	 */

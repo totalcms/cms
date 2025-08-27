@@ -83,9 +83,14 @@ export default class StyledTextField extends TotalField {
     }
 
     getValue() {
-        let content = this.froala.html.get();
-        content = content.replace(/\%25/g, "%"); // fix for double encoding of many characters such as colon
-        return content;
+        // Check if Froala is initialized before trying to get the value
+        if (this.froala && this.froala.html) {
+            let content = this.froala.html.get();
+            content = content.replace(/\%25/g, "%"); // fix for double encoding of many characters such as colon
+            return content;
+        }
+        // Fall back to input value if Froala is not ready
+        return this.input.value;
     }
 
     uploadAPI() {

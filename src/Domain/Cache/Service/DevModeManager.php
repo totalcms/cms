@@ -1,15 +1,15 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TotalCMS\Domain\Cache\Service;
 
 /**
  * Manages temporary development mode state.
  */
-final class DevModeManager
+class DevModeManager
 {
-	private string $devModeFile;
+	private readonly string $devModeFile;
 	private int $devModeDuration = 10800; // 3 hours in seconds
 
 	public function __construct()
@@ -150,7 +150,7 @@ final class DevModeManager
 	{
 		$hours   = intval($seconds / 3600);
 		$minutes = intval(($seconds % 3600) / 60);
-		$seconds = $seconds % 60;
+		$seconds %= 60;
 
 		return sprintf('%d:%02d:%02d', $hours, $minutes, $seconds);
 	}

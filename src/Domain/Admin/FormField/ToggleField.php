@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class ToggleField extends CheckboxField
+class ToggleField extends CheckboxField
 {
 	protected string $defaultInputType = 'checkbox';
 	protected string $defaultFieldType = 'toggle';
@@ -21,7 +21,7 @@ final class ToggleField extends CheckboxField
 
 		$group = HTMLUtils::element('div', $switch, ['class' => 'form-group']);
 		$label = HTMLUtils::element('label', $this->label, ['for' => "field-{$this->uuid}"]);
-		$help  = empty($this->help) ? '' : HTMLUtils::element('p', $this->help, [
+		$help  = $this->help === '' ? '' : HTMLUtils::element('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
@@ -31,15 +31,13 @@ final class ToggleField extends CheckboxField
 			'data-type' => $this->field,
 			'style'     => "grid-area: {$this->name};",
 		];
-		if (!empty($this->settings)) {
+		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
 				$formFieldAtrributes['data-options'] = $json;
 			}
 		}
 
-		$formField = HTMLUtils::element('div', $label . $group . $help, $formFieldAtrributes);
-
-		return $formField;
+		return HTMLUtils::element('div', $label . $group . $help, $formFieldAtrributes);
 	}
 }

@@ -6,7 +6,7 @@ use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
-final class DepotFileFetcher
+readonly class DepotFileFetcher
 {
 	public function __construct(
 		private PropertyRepository $storage,

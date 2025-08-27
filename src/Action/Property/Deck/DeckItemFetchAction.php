@@ -10,7 +10,7 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Fetches a specific item from a deck property.
  */
-final class DeckItemFetchAction
+readonly class DeckItemFetchAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

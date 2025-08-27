@@ -2,8 +2,8 @@
 
 use TotalCMS\Domain\Security\Encryption\Cipher;
 
-describe('Cipher Obfuscation Analysis', function () {
-	it('confirms obfuscation is deterministic by design', function () {
+describe('Cipher Obfuscation Analysis', function (): void {
+	it('confirms obfuscation is deterministic by design', function (): void {
 		// Obfuscation is SUPPOSED to be deterministic for consistency
 		$configData  = 'sentry_dsn_example';
 		$obfuscated1 = Cipher::obfuscate($configData);
@@ -16,7 +16,7 @@ describe('Cipher Obfuscation Analysis', function () {
 		expect(Cipher::deobfuscate($obfuscated1))->toBe($configData);
 	});
 
-	it('confirms hardcoded salt enables portable obfuscation', function () {
+	it('confirms hardcoded salt enables portable obfuscation', function (): void {
 		// Hardcoded salt allows obfuscated data to work across installations
 		$hardcodedSalt = Cipher::SALT;
 		expect($hardcodedSalt)->toBe('YTFiMmMzZDRlNWY2ZzdoOGk5ajA=');
@@ -27,7 +27,7 @@ describe('Cipher Obfuscation Analysis', function () {
 		expect(Cipher::deobfuscate($obfuscated, $hardcodedSalt))->toBe($data);
 	});
 
-	it('shows encryption vs obfuscation differences', function () {
+	it('shows encryption vs obfuscation differences', function (): void {
 		$data = 'test_data_123';
 
 		// OBFUSCATION: Deterministic, for hiding config from casual viewing
@@ -46,7 +46,7 @@ describe('Cipher Obfuscation Analysis', function () {
 		expect(Cipher::decrypt($enc2))->toBe($data);
 	});
 
-	it('documents proper usage patterns', function () {
+	it('documents proper usage patterns', function (): void {
 		// Use OBFUSCATION for:
 		$configValue = 'api_endpoint_or_dsn';
 		$obfuscated  = Cipher::obfuscate($configValue);
@@ -62,7 +62,7 @@ describe('Cipher Obfuscation Analysis', function () {
 		expect(true)->toBe(true);
 	});
 
-	it('shows context-specific obfuscation capabilities', function () {
+	it('shows context-specific obfuscation capabilities', function (): void {
 		$data = 'context_sensitive_data';
 
 		// Different contexts can use different keys
@@ -80,7 +80,7 @@ describe('Cipher Obfuscation Analysis', function () {
 		expect(Cipher::deobfuscate($configObfuscated, $configKey))->toBe($data);
 	});
 
-	it('confirms enhanced obfuscation is now active', function () {
+	it('confirms enhanced obfuscation is now active', function (): void {
 		// Enhanced obfuscation is now active and provides better obscurity while maintaining
 		// the deterministic behavior required for configuration consistency
 

@@ -7,7 +7,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
-final class SchemaSaver
+readonly class SchemaSaver
 {
 	public function __construct(
 		private SchemaRepository $storage,
@@ -16,17 +16,12 @@ final class SchemaSaver
 		private IndexBuilder $indexBuilder,
 		private CollectionLister $collectionLister,
 	) {
-		$this->storage   = $storage;
-		$this->factory   = $factory;
-		$this->validator = $validator;
 	}
 
 	/**
 	 * @param array<string,mixed> $schemaData
 	 *
 	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
 	 */
 	public function updateSchema(string $schemaId, array $schemaData): SchemaData
 	{
@@ -48,12 +43,20 @@ final class SchemaSaver
 	 *
 	 * @param array<string,mixed> $schemaData
 	 *
+	 * @throws \InvalidArgumentException
 	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
 	 */
 	public function saveSchema(array $schemaData): SchemaData
 	{
+		// Validate required input structure
+		if (!isset($schemaData['properties'])) {
+			throw new \InvalidArgumentException('Schema data must contain a "properties" key');
+		}
+
+		if (!is_array($schemaData['properties'])) {
+			throw new \InvalidArgumentException('Schema "properties" must be an array');
+		}
+
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schema                   = $this->factory->generateSchema($schemaData);
 

@@ -297,16 +297,11 @@ final class ImageProcessingSecurityTest extends TestCase
 	{
 		$hasDangerousContent = false;
 
-		foreach ($exifData as $field => $value) {
+		foreach ($exifData as $value) {
 			// Application should detect dangerous patterns in EXIF data
-			if (is_string($value)) {
-				if (str_contains($value, '<script>')
-					|| str_contains($value, 'javascript:')
-					|| str_contains($value, 'DROP TABLE')
-					|| str_contains($value, '../')) {
-					$hasDangerousContent = true;
-					break;
-				}
+			if (is_string($value) && (str_contains($value, '<script>') || str_contains($value, 'javascript:') || str_contains($value, 'DROP TABLE') || str_contains($value, '../'))) {
+				$hasDangerousContent = true;
+				break;
 			}
 		}
 
@@ -461,10 +456,8 @@ final class ImageProcessingSecurityTest extends TestCase
 		$unsafeFormats       = ['ps', 'eps', 'pdf'];
 		$hasDangerousContent = false;
 
-		if (in_array($format, $unsafeFormats)) {
-			if (str_contains($content, 'command') || str_contains($content, 'system')) {
-				$hasDangerousContent = true;
-			}
+		if (in_array($format, $unsafeFormats) && (str_contains($content, 'command') || str_contains($content, 'system'))) {
+			$hasDangerousContent = true;
 		}
 
 		if (str_contains($content, '<script>')) {
@@ -565,10 +558,8 @@ final class ImageProcessingSecurityTest extends TestCase
 			}
 		}
 
-		if (isset($test['quality'])) {
-			if ($test['quality'] < 0 || $test['quality'] > 100) {
-				$isSuspicious = true;
-			}
+		if (isset($test['quality']) && ($test['quality'] < 0 || $test['quality'] > 100)) {
+			$isSuspicious = true;
 		}
 
 		if ($isSuspicious) {

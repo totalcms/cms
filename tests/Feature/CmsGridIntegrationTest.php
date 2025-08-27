@@ -5,7 +5,7 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 
-beforeEach(function () {
+beforeEach(function (): void {
 	$this->sampleObjects = [
 		[
 			'id'      => '1',
@@ -26,7 +26,7 @@ beforeEach(function () {
 	];
 });
 
-test('cmsgrid renders basic grid without errors', function () {
+test('cmsgrid renders basic grid without errors', function (): void {
 	$template = '{% cmsgrid objects %}
 		<h3>{{ object.title }}</h3>
 		<p>{{ object.summary }}</p>
@@ -44,7 +44,7 @@ test('cmsgrid renders basic grid without errors', function () {
 	expect($result)->toContain('cms-grid-item');
 });
 
-test('cmsgrid renders with collection context', function () {
+test('cmsgrid renders with collection context', function (): void {
 	$template = '{% cmsgrid objects from "blog" %}
 		<h3>{{ object.title }}</h3>
 		<p>Collection: {{ collection }}</p>
@@ -60,7 +60,7 @@ test('cmsgrid renders with collection context', function () {
 	expect($result)->toContain('First Blog Post');
 });
 
-test('cmsgrid renders with CSS classes', function () {
+test('cmsgrid renders with CSS classes', function (): void {
 	$template = '{% cmsgrid objects with "blog compact" %}
 		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
@@ -74,7 +74,7 @@ test('cmsgrid renders with CSS classes', function () {
 	expect($result)->toContain('cms-grid blog compact');
 });
 
-test('cmsgrid renders with custom item tag', function () {
+test('cmsgrid renders with custom item tag', function (): void {
 	$template = '{% cmsgrid objects as "article" %}
 		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
@@ -89,7 +89,7 @@ test('cmsgrid renders with custom item tag', function () {
 	expect($result)->toContain('</article>');
 });
 
-test('cmsgrid renders with full syntax', function () {
+test('cmsgrid renders with full syntax', function (): void {
 	$template = '{% cmsgrid objects from "products" with "grid wide" as "section" %}
 		<h4>{{ object.title }}</h4>
 		<p>From: {{ collection }}</p>
@@ -106,7 +106,7 @@ test('cmsgrid renders with full syntax', function () {
 	expect($result)->toContain('From: products');
 });
 
-test('cmsgrid works with grid helper methods via mock', function () {
+test('cmsgrid works with grid helper methods via mock', function (): void {
 	$template = '{% cmsgrid objects from "blog" %}
 		<h3>{{ object.title }}</h3>
 		<div class="meta">{{ object.date }}</div>
@@ -122,7 +122,7 @@ test('cmsgrid works with grid helper methods via mock', function () {
 	expect($result)->toContain('2024-06-16');
 });
 
-test('cmsgrid handles empty objects array', function () {
+test('cmsgrid handles empty objects array', function (): void {
 	$template = '{% cmsgrid objects %}
 		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
@@ -137,7 +137,7 @@ test('cmsgrid handles empty objects array', function () {
 	expect(trim($result))->toBe('');
 });
 
-test('cmsgrid handles null objects', function () {
+test('cmsgrid handles null objects', function (): void {
 	$template = '{% cmsgrid objects %}
 		<h3>{{ object.title }}</h3>
 	{% endcmsgrid %}';
@@ -152,7 +152,7 @@ test('cmsgrid handles null objects', function () {
 	expect(trim($result))->toBe('');
 });
 
-test('cmsgrid renders complex templates', function () {
+test('cmsgrid renders complex templates', function (): void {
 	$template = '{% cmsgrid objects from "blog" with "blog list" %}
 		{% if object.image %}
 			<div class="image">Image: {{ object.image.src }}</div>
@@ -184,7 +184,7 @@ test('cmsgrid renders complex templates', function () {
 	expect($result)->toContain('Collection: blog');
 });
 
-test('price filter integration works', function () {
+test('price filter integration works', function (): void {
 	$products = [
 		['name' => 'Product 1', 'price' => 19.99],
 		['name' => 'Product 2', 'price' => 29.99],
@@ -200,7 +200,7 @@ test('price filter integration works', function () {
 	$twig->addTokenParser(new CmsGridTokenParser());
 
 	// Add the price filter
-	$twig->addFilter(new Twig\TwigFilter('price', [TotalCMSTwigFilters::class, 'price']));
+	$twig->addFilter(new Twig\TwigFilter('price', TotalCMSTwigFilters::price(...)));
 
 	$result = $twig->render('test', ['products' => $products]);
 

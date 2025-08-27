@@ -10,7 +10,7 @@ use League\Flysystem\StorageAttributes;
  *
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
-final class StorageFilesystemAdapter implements StorageAdapterInterface
+readonly class StorageFilesystemAdapter implements StorageAdapterInterface
 {
 	/**
 	 * The constructor.
@@ -23,8 +23,6 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 
 	/**
 	 * Access the flysystem filesystem.
-	 *
-	 * @return FilesystemOperator
 	 */
 	public function flysystem(): FilesystemOperator
 	{
@@ -35,8 +33,6 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	 * Read file.
 	 *
 	 * @param string $location The path of file to read
-	 *
-	 * @return string
 	 */
 	public function read(string $location): string
 	{
@@ -59,8 +55,6 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	 * Delete file.
 	 *
 	 * @param string $location The path of file to delete
-	 *
-	 * @return bool
 	 */
 	public function delete(string $location): bool
 	{
@@ -73,8 +67,6 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	 * Delete directory.
 	 *
 	 * @param string $location The path of directory to delete
-	 *
-	 * @return bool
 	 */
 	public function deleteDirectory(string $location): bool
 	{
@@ -129,8 +121,6 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	 *
 	 * @param string $location The path of file to write to
 	 * @param string $contents The data to write to the file
-	 *
-	 * @return bool
 	 */
 	public function write(string $location, string $contents): bool
 	{
@@ -144,8 +134,6 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	 *
 	 * @param string $import Path to the file to import
 	 * @param string $dest Path to put the file
-	 *
-	 * @return bool
 	 */
 	public function import(string $import, string $dest): bool
 	{
@@ -160,8 +148,6 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	 *
 	 * @param string $old Existing path
 	 * @param string $new New location
-	 *
-	 * @return bool
 	 */
 	public function move(string $old, string $new): bool
 	{
@@ -202,8 +188,8 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	public function listDirectories(string $path): array
 	{
 		return $this->filesystem->listContents($path)
-			->filter(fn (StorageAttributes $attributes) => !$attributes->isFile())
-			->map(fn (StorageAttributes $attributes) => $attributes->path())
+			->filter(fn (StorageAttributes $attributes): bool => !$attributes->isFile())
+			->map(fn (StorageAttributes $attributes): string => $attributes->path())
 			->toArray();
 	}
 
@@ -217,9 +203,9 @@ final class StorageFilesystemAdapter implements StorageAdapterInterface
 	public function listFiles(string $path): array
 	{
 		return $this->filesystem->listContents($path)
-			->filter(fn (StorageAttributes $attributes) => $attributes->isFile())
-			->filter(fn (StorageAttributes $attributes) => !str_starts_with(basename($attributes->path()), '.'))
-			->map(fn (StorageAttributes $attributes) => $attributes->path())
+			->filter(fn (StorageAttributes $attributes): bool => $attributes->isFile())
+			->filter(fn (StorageAttributes $attributes): bool => !str_starts_with(basename($attributes->path()), '.'))
+			->map(fn (StorageAttributes $attributes): string => $attributes->path())
 			->toArray();
 	}
 }

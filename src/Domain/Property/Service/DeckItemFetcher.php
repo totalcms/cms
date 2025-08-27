@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Data\DeckData;
 /**
  * Service for fetching deck items.
  */
-final class DeckItemFetcher
+readonly class DeckItemFetcher
 {
 	public function __construct(
 		private ObjectFetcher $objectFetcher,
@@ -17,11 +17,6 @@ final class DeckItemFetcher
 
 	/**
 	 * Get a specific deck item from an object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectId
-	 * @param string $propertyName
-	 * @param string $itemId
 	 *
 	 * @return array<string,mixed>|null
 	 */
@@ -40,10 +35,6 @@ final class DeckItemFetcher
 	/**
 	 * Get all deck items from an object property.
 	 *
-	 * @param string $collection
-	 * @param string $objectId
-	 * @param string $propertyName
-	 *
 	 * @return array<int|string,array<string,mixed>>
 	 */
 	public function fetchAllDeckItems(string $collection, string $objectId, string $propertyName): array
@@ -60,10 +51,6 @@ final class DeckItemFetcher
 
 	/**
 	 * Get the IDs of all deck items in an object property.
-	 *
-	 * @param string $collection
-	 * @param string $objectId
-	 * @param string $propertyName
 	 *
 	 * @return array<int|string>
 	 */

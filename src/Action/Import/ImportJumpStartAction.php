@@ -9,15 +9,10 @@ use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class ImportJumpStartAction
+readonly class ImportJumpStartAction
 {
-	private JumpStartImporter $jumpStartImporter;
-	private JsonRenderer $renderer;
-
-	public function __construct(JumpStartImporter $jumpStartImporter, JsonRenderer $renderer)
+	public function __construct(private JumpStartImporter $jumpStartImporter, private JsonRenderer $renderer)
 	{
-		$this->jumpStartImporter = $jumpStartImporter;
-		$this->renderer          = $renderer;
 	}
 
 	/**
@@ -28,14 +23,14 @@ final class ImportJumpStartAction
 		$params = $request->getQueryParams();
 
 		if (isset($params['demo']) && $params['demo'] === 'true') {
-			return $this->importDemoDefinition($request, $response);
+			return $this->importDemoDefinition($response);
 		}
 
 		// Handle custom import from uploaded file
 		return $this->importFromUploadedFile($request, $response);
 	}
 
-	private function importDemoDefinition(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	private function importDemoDefinition(ResponseInterface $response): ResponseInterface
 	{
 		$definition = $this->jumpStartImporter->importDemoDefinition();
 

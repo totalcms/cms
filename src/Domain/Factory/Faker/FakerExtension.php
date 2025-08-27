@@ -57,7 +57,7 @@ class FakerExtension extends Base
 		$colorChoices = array_slice($args, 3);
 
 		// If color choices were provided, randomly pick one
-		if (!empty($colorChoices)) {
+		if ($colorChoices !== []) {
 			$bgColor = $colorChoices[array_rand($colorChoices)];
 		}
 
@@ -131,7 +131,7 @@ class FakerExtension extends Base
 		for ($i = 0; $i < $count; $i++) {
 			// If color choices were provided, randomly pick one for each image
 			$currentBgColor = $bgColor;
-			if (!empty($colorChoices)) {
+			if ($colorChoices !== []) {
 				$currentBgColor = $colorChoices[array_rand($colorChoices)];
 			}
 			$images[] = self::imageShapes($width, $height, $currentBgColor);
@@ -154,7 +154,7 @@ class FakerExtension extends Base
 		$choices = array_slice($args, 2);
 
 		// If choices were provided, use them
-		if (!empty($choices)) {
+		if ($choices !== []) {
 			shuffle($choices);
 			$count = self::numberBetween($min, min($max, count($choices)));
 
@@ -194,14 +194,12 @@ class FakerExtension extends Base
 			} elseif ($rand == 9) {
 				// Ordered list
 				$content[] = self::generateList('ol');
-			} else {
+			} elseif ($includeHeadings && $i > 0) {
 				// Another heading if enabled
-				if ($includeHeadings && $i > 0) {
-					$level     = self::numberBetween(3, 5);
-					$content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 6)) . '</h' . $level . '>';
-				} else {
-					$content[] = self::generateStyledParagraph();
-				}
+				$level     = self::numberBetween(3, 5);
+				$content[] = '<h' . $level . '>' . Lorem::sentence(self::numberBetween(3, 6)) . '</h' . $level . '>';
+			} else {
+				$content[] = self::generateStyledParagraph();
 			}
 		}
 
@@ -280,8 +278,6 @@ class FakerExtension extends Base
 			$list .= "\n\t<li>" . $itemText . '</li>';
 		}
 
-		$list .= "\n</" . $type . '>';
-
-		return $list;
+		return $list . ("\n</" . $type . '>');
 	}
 }

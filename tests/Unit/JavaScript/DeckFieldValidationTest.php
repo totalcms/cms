@@ -222,7 +222,7 @@ final class DeckFieldValidationTest extends TestCase
 			$itemId = $item['id'] ?? '';
 
 			// Simulate JavaScript: if (itemId.length == 0)
-			if (strlen(trim($itemId)) === 0) {
+			if (trim($itemId) === '') {
 				$errors[] = 'ID is required for deck items';
 				$isValid  = false;
 				continue; // Skip duplicate checking for empty IDs

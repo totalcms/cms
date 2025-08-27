@@ -2,10 +2,13 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+
 /**
  * Total Form Builder.
  */
-final class ObjectForm extends TotalForm
+class ObjectForm extends TotalForm
 {
 	protected function init(): void
 	{
@@ -13,7 +16,7 @@ final class ObjectForm extends TotalForm
 
 		$this->route = "/collections/{$this->collection}";
 
-		if (!empty($this->id) && $this->objectFetcher->existsObject($this->collection, $this->id)) {
+		if ($this->id !== '' && $this->objectFetcher->existsObject($this->collection, $this->id)) {
 			// If the form is for editing an existing item, change the method to PUT
 			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
@@ -47,7 +50,7 @@ final class ObjectForm extends TotalForm
 		}
 
 		// Get the value from the object data if it exists
-		if (!empty($this->id)) {
+		if ($this->id !== '') {
 			$defaults = array_merge($defaults, $this->objectFieldProperties($name));
 
 			// A DeckItem will set the deck_context option if it is a deck field
@@ -60,17 +63,16 @@ final class ObjectForm extends TotalForm
 			}
 
 			// if the value is not already set, try to get it from the object data
-			if (!isset($options['value']) && isset($this->objectData)) {
-				$value = $this->objectData->toArray()[$name] ?? '';
-				if (!empty($value)) {
+			if (!isset($options['value']) && $this->objectData instanceof ObjectData) {
+				$value = $this->objectData->toArray()[$name] ?? null;
+				// Use strict checks to preserve zero values (0, 0.0, '0')
+				if ($value !== '' && $value !== null) {
 					$options['value'] = $value;
 				}
 			}
 		}
 
-		$options = array_merge($defaults, $options);
-
-		return $options;
+		return array_merge($defaults, $options);
 	}
 
 	/** @return array<string,mixed> */
@@ -94,7 +96,7 @@ final class ObjectForm extends TotalForm
 	}
 
 	/** @return array<string,mixed> */
-	private function fieldAttributeSettings(string $property): array
+	protected function fieldAttributeSettings(string $property): array
 	{
 		// Get the schema and collection settings for a property
 		$schema     = $this->schemaData->properties[$property]['settings'] ?? [];
@@ -102,11 +104,15 @@ final class ObjectForm extends TotalForm
 
 		$attributes = array_merge($schema, $collection);
 
-		return TotalForm::filterFieldAttributes($attributes);
+		return self::filterFieldAttributes($attributes);
 	}
 
 	private function isRequired(string $property): bool
 	{
+		if (!$this->schemaData instanceof SchemaData) {
+			return false;
+		}
+
 		return in_array($property, $this->schemaData->required);
 	}
 
@@ -117,7 +123,7 @@ final class ObjectForm extends TotalForm
 	 * */
 	private function objectFieldProperties(string $property): array
 	{
-		if (empty($this->id)) {
+		if ($this->id === '') {
 			return [];
 		}
 

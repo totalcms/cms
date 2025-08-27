@@ -10,7 +10,8 @@
   "license": "proprietary",
   "repositories": [
 	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
+	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" },
+	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/couleur.git" }
   ],
   "require": {
     "php": "^8.2",
@@ -19,7 +20,7 @@
     "cakephp/validation": "^5.0",
     "cocur/slugify": "^4.0",
     "embed/embed": "^4.3",
-    "enshrined/svg-sanitize": "^0.21.0",
+    "enshrined/svg-sanitize": "^0.22.0",
     "erusev/parsedown": "^1.7",
     "erusev/parsedown-extra": "^0.8.1",
     "fakerphp/faker": "^1.23",
@@ -29,6 +30,7 @@
     "guzzlehttp/guzzle": "^7",
     "halaxa/json-machine": "^1.1",
     "illuminate/collections": "^11.45",
+    "joeworkman-forks/couleur": "dev-main",
     "khanzadimahdi/uploadmanager": "^1.0",
     "ksubileau/color-thief-php": "^2.0",
     "league/commonmark": "^2.7",
@@ -37,8 +39,6 @@
     "league/fractal": "^0.20.1",
     "league/glide": "^3.0",
     "league/uri": "^7.4",
-    "lychee-org/php-exif": "^1.0",
-    "matthieumastadenis/couleur": "^0.1.2",
     "mibe/feedwriter": "dev-master#f838297f67dfb96ab69983000b404183b957b625",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
@@ -68,6 +68,7 @@
     "webuni/front-matter": "^2.0"
   },
   "require-dev": {
+    "cweagans/composer-patches": "*",
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "nekofar/pest-plugin-slim": "dev-develop#f55ba25333d964257a24a3c1206948fcf454cb01",
@@ -80,6 +81,7 @@
     "phpmd/phpmd": "^2.12",
     "phpstan/phpstan": "^2.0",
     "phpunit/phpunit": "^11.0",
+    "rector/rector": "^2.1",
     "selective/test-traits": "^4.1",
     "spatie/pest-plugin-snapshots": "^2.0",
     "squizlabs/php_codesniffer": "^3.5",
@@ -89,7 +91,8 @@
     "process-timeout": 0,
     "sort-packages": true,
     "allow-plugins": {
-      "pestphp/pest-plugin": true
+      "pestphp/pest-plugin": true,
+      "cweagans/composer-patches": true
     },
     "platform": {
       "php": "8.2.0"
@@ -111,15 +114,24 @@
     "cs": "php-cs-fixer fix --dry-run --format=txt --verbose --diff --config=.php-cs-fixer.php",
     "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
     "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
-    "stan": "phpstan analyse -c phpstan.neon --no-ansi --no-progress --memory-limit 1G",
+    "stan": "phpstan analyse -c phpstan.neon --no-ansi --no-progress --memory-limit 2G",
     "md:src": "phpmd src ansi phpmd.xml",
     "md:config": "phpmd config ansi phpmd.xml",
     "md:tests": "phpmd tests ansi phpmd.xml",
     "schema:dump": "php bin/console.php schema-dump",
-    "sniffer:check": "phpcs --standard=phpcs.xml",
-    "sniffer:fix": "phpcbf --standard=phpcs.xml",
-    "test": "pest --display-notices --display-warnings --display-errors --display-deprecations",
-    "test:coverage": "pest --type-coverage",
+    "sniffer:check": "phpcs --standard=phpcbf.xml",
+    "sniffer:fix": "phpcbf --standard=phpcbf.xml",
+    "rector": "rector --dry-run",
+    "rector:fix": "rector",
+    "test": [
+		"@bundle",
+		"php -c php-test.ini vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations"
+	],
+    "test:coverage": [
+		"@bundle",
+		"php -c php-test.ini vendor/bin/pest --coverage --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage --coverage-text --display-notices --display-warnings --display-errors --display-deprecations"
+	],
+    "test:coverage:type": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
     "bundle": "php bin/make-bundle.php",
     "docs:api": "open API_DOCUMENTATION.md",
@@ -141,6 +153,30 @@
     "test:build": [
       "@stan",
       "@test"
+    ],
+    "quality": [
+      "@cs",
+      "@stan",
+      "@rector",
+      "@sniffer:check"
+    ],
+    "quality:full": [
+      "@cs",
+      "@stan",
+      "@rector",
+      "@sniffer:check",
+      "@md"
     ]
+  },
+  "extra": {
+    "patches": {
+      "erusev/parsedown": [
+        "patches/parsedown-php84-nullable-fix.patch"
+      ],
+      "erusev/parsedown-extra": [
+        "patches/parsedown-extra-php84-nullable-fix.patch",
+        "patches/parsedown-extra-php84-callable-fix.patch"
+      ]
+    }
   }
 }

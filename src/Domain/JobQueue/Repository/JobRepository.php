@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\JobQueue\Repository;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
-final class JobRepository
+readonly class JobRepository
 {
 	private \PDO $db;
 	private const DB_PATH = __DIR__ . '/../../../../resources/jobqueue';
@@ -285,8 +285,6 @@ final class JobRepository
 	/**
 	 * Fetch all pending jobs.
 	 *
-	 * @param int|null $limit
-	 *
 	 * @return array<JobData>
 	 */
 	public function fetchPendingJobs(?int $limit = null): array
@@ -318,8 +316,6 @@ final class JobRepository
 
 	/**
 	 * Fetch all failed jobs.
-	 *
-	 * @param int|null $limit
 	 *
 	 * @return array<JobData>
 	 */

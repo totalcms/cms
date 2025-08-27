@@ -7,8 +7,8 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Authentication Security Vulnerabilities', function () {
-	it('identifies missing rate limiting on login attempts', function () {
+describe('Authentication Security Vulnerabilities', function (): void {
+	it('identifies missing rate limiting on login attempts', function (): void {
 		// Test rate limiting logic
 		$maxAttempts     = 5;
 		$timeWindow      = 900; // 15 minutes
@@ -30,7 +30,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		expect($timeWindow)->toBeGreaterThan(300); // At least 5 minutes
 	});
 
-	it('identifies missing session regeneration', function () {
+	it('identifies missing session regeneration', function (): void {
 		// Test session regeneration logic
 		session_start();
 		$originalSessionId = session_id();
@@ -48,7 +48,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		session_destroy();
 	});
 
-	it('identifies weak password requirements', function () {
+	it('identifies weak password requirements', function (): void {
 		// Test password strength validation
 		$weakPasswords = [
 			'123456',
@@ -70,7 +70,7 @@ describe('Authentication Security Vulnerabilities', function () {
 			// Validate password strength criteria
 			$hasUpper     = preg_match('/[A-Z]/', $password);
 			$hasLower     = preg_match('/[a-z]/', $password);
-			$hasNumber    = preg_match('/[0-9]/', $password);
+			$hasNumber    = preg_match('/\d/', $password);
 			$hasSpecial   = preg_match('/[^A-Za-z0-9]/', $password);
 			$isLongEnough = strlen($password) >= 12;
 
@@ -81,7 +81,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		foreach ($strongPasswords as $password) {
 			$hasUpper     = preg_match('/[A-Z]/', $password);
 			$hasLower     = preg_match('/[a-z]/', $password);
-			$hasNumber    = preg_match('/[0-9]/', $password);
+			$hasNumber    = preg_match('/\d/', $password);
 			$hasSpecial   = preg_match('/[^A-Za-z0-9]/', $password);
 			$isLongEnough = strlen($password) >= 12;
 
@@ -90,7 +90,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies missing password hashing verification', function () {
+	it('identifies missing password hashing verification', function (): void {
 		// Ensure passwords are properly hashed
 		$plainPassword  = 'user_password_123';
 		$hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
@@ -100,7 +100,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		expect($plainPassword !== $hashedPassword)->toBe(true);
 	});
 
-	it('identifies potential timing attack vulnerability', function () {
+	it('identifies potential timing attack vulnerability', function (): void {
 		// Test timing attack mitigation
 		$validUsername   = 'admin';
 		$invalidUsername = 'nonexistent_user_12345';
@@ -119,7 +119,7 @@ describe('Authentication Security Vulnerabilities', function () {
 		expect(strlen($dummyHash))->toBeGreaterThan(50);
 	});
 
-	it('identifies missing account lockout mechanism', function () {
+	it('identifies missing account lockout mechanism', function (): void {
 		// Test account lockout logic
 		$maxAttempts     = 5;
 		$lockoutDuration = 900; // 15 minutes

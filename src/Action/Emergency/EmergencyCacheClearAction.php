@@ -14,7 +14,7 @@ use TotalCMS\Renderer\JsonRenderer;
  * Publicly accessible so customers can fix their sites when cached errors prevent admin access.
  * Cache clearing is not a security-sensitive operation and helps prevent support requests.
  */
-final class EmergencyCacheClearAction
+readonly class EmergencyCacheClearAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

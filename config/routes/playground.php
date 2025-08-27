@@ -4,8 +4,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Playground;
 
-return function (App $app) {
-	$app->group('/playground', function (RouteCollectorProxy $group) {
+return function (App $app): void {
+	$app->group('/playground', function (RouteCollectorProxy $group): void {
 		$group->get('', Playground\PlaygroundListAction::class)->setName('playground-list');
 		$group->post('', Playground\PlaygroundSaveAction::class)->setName('playground-save');
 		$group->get('/{id}', Playground\PlaygroundFetchAction::class)->setName('playground-fetch');

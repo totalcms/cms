@@ -18,7 +18,7 @@ use TotalCMS\Middleware\RobotsTagMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\TotalCMS;
 
-return function (App $app) {
+return function (App $app): void {
 	$app->addBodyParsingMiddleware();
 	$app->add(DevModeMiddleware::class);
 	$app->add(BetaMiddleware::class);

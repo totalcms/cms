@@ -6,8 +6,10 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
 
-final class DepotSaver extends FileSaver
+class DepotSaver extends FileSaver
 {
+	public string $type = 'depot';
+
 	public function save(
 		string $collection,
 		string $objectID,

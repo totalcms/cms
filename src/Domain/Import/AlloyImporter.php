@@ -10,18 +10,18 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 use Webuni\FrontMatter\FrontMatter;
 
-final class AlloyImporter
+class AlloyImporter
 {
-	private LoggerInterface $logger;
-	private FrontMatter $frontMatterParser;
-	private \Parsedown $markdownParser;
+	private readonly LoggerInterface $logger;
+	private readonly FrontMatter $frontMatterParser;
+	private readonly \Parsedown $markdownParser;
 	private int $importCount = 0;
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private CollectionFactory $collectionFactory,
-		private CollectionRepository $collectionRepository,
-		private JobQueuer $jobQueuer,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionFactory $collectionFactory,
+		private readonly CollectionRepository $collectionRepository,
+		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger            = $loggerFactory->addFileHandler('importer.log')->createLogger('alloy-importer');
@@ -288,12 +288,12 @@ final class AlloyImporter
 
 			// Handle summary
 			if (isset($frontMatter['summary'])) {
-				$data['summary'] = '<p>' . trim($frontMatter['summary']) . '</p>';
+				$data['summary'] = '<p>' . trim((string)$frontMatter['summary']) . '</p>';
 			}
 
 			// Handle image (topper field)
 			if (isset($frontMatter['topper'])) {
-				$urlPath = parse_url($frontMatter['topper'], PHP_URL_PATH);
+				$urlPath = parse_url((string)$frontMatter['topper'], PHP_URL_PATH);
 				if ($urlPath !== null && $urlPath !== false) {
 					$imageFilename = basename($urlPath);
 					$imagePath     = $imageUploadsPath . '/' . $imageFilename;

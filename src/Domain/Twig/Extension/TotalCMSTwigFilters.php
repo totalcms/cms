@@ -19,7 +19,7 @@ use Twig\TwigFilter;
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyMethods")
  */
-final class TotalCMSTwigFilters
+class TotalCMSTwigFilters
 {
 	/** @var array<string> */
 	public static array $phpFunctions = [
@@ -192,7 +192,7 @@ final class TotalCMSTwigFilters
 	{
 		$phone = self::digitsOnly($string);
 
-		if ($countryCode === 'GB' and str_starts_with($phone, '07')) {
+		if ($countryCode === 'GB' && str_starts_with($phone, '07')) {
 			$countryCode = 'GBM'; // Use 'GBM' for mobile numbers in Great Britain
 		}
 
@@ -245,10 +245,9 @@ final class TotalCMSTwigFilters
 		$phone = preg_replace($format['regex'], $format['format'], $phone);
 		if ($phone === null) {
 			return ''; // Return an empty string if the regex replacement fails
-		}
-		$phone = trim($phone); // Trim any extra spaces
+		} // Trim any extra spaces
 
-		return $phone;
+		return trim($phone);
 	}
 
 	// -------------------------
@@ -416,7 +415,7 @@ final class TotalCMSTwigFilters
 	 */
 	public static function truncate(?string $string, int $length, bool $keepWords = false): string
 	{
-		if (empty($string)) {
+		if ($string === null || $string === '') {
 			return '';
 		}
 
@@ -466,7 +465,7 @@ final class TotalCMSTwigFilters
 		$text  = strip_tags($text); // strip HTML
 		$words = preg_split('/[\s,:?!]+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
 
-		return is_array($words) ? sizeof($words) : 0;
+		return is_array($words) ? count($words) : 0;
 	}
 
 	public static function readtime(string $text, int $wpm = 180): float
@@ -486,10 +485,10 @@ final class TotalCMSTwigFilters
 	 */
 	public static function sortBy(array $array, string $key): array
 	{
-		if (empty($array) || empty($key)) {
+		if ($array === [] || $key === '') {
 			return $array;
 		}
-		usort($array, function ($a, $b) use ($key) {
+		usort($array, function (array $a, array $b) use ($key): int {
 			if (!isset($a[$key]) || !isset($b[$key])) {
 				return 0; // If key doesn't exist, consider them equal
 			}
@@ -544,7 +543,7 @@ final class TotalCMSTwigFilters
 	 */
 	public static function filterCollection(array $collection, array $rules): array
 	{
-		if (empty($rules)) {
+		if ($rules === []) {
 			return $collection;
 		}
 
@@ -561,7 +560,7 @@ final class TotalCMSTwigFilters
 	 */
 	public static function sortCollection(array $collection, array $rules): array
 	{
-		if (empty($rules)) {
+		if ($rules === []) {
 			return $collection;
 		}
 
@@ -684,7 +683,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->diffForHumans();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return (string)$date;
 		}
 	}
@@ -698,7 +697,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->format($format);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return (string)$date;
 		}
 	}
@@ -712,7 +711,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->modify($interval)->format('c');
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return (string)$date;
 		}
 	}
@@ -730,7 +729,7 @@ final class TotalCMSTwigFilters
 			}
 
 			return $chronos->modify($interval)->format('c');
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return (string)$date;
 		}
 	}
@@ -745,7 +744,7 @@ final class TotalCMSTwigFilters
 			$chronos2 = self::parseDate($date2);
 
 			return $chronos1->diffForHumans($chronos2);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return '';
 		}
 	}
@@ -758,19 +757,14 @@ final class TotalCMSTwigFilters
 		try {
 			$chronos = self::parseDate($date);
 
-			switch ($unit) {
-				case 'day':
-					return $chronos->startOfDay()->format('c');
-				case 'week':
-					return $chronos->startOfWeek()->format('c');
-				case 'month':
-					return $chronos->startOfMonth()->format('c');
-				case 'year':
-					return $chronos->startOfYear()->format('c');
-				default:
-					return $chronos->format('c');
-			}
-		} catch (\Exception $e) {
+			return match ($unit) {
+				'day'   => $chronos->startOfDay()->format('c'),
+				'week'  => $chronos->startOfWeek()->format('c'),
+				'month' => $chronos->startOfMonth()->format('c'),
+				'year'  => $chronos->startOfYear()->format('c'),
+				default => $chronos->format('c'),
+			};
+		} catch (\Exception) {
 			return (string)$date;
 		}
 	}
@@ -783,19 +777,14 @@ final class TotalCMSTwigFilters
 		try {
 			$chronos = self::parseDate($date);
 
-			switch ($unit) {
-				case 'day':
-					return $chronos->endOfDay()->format('c');
-				case 'week':
-					return $chronos->endOfWeek()->format('c');
-				case 'month':
-					return $chronos->endOfMonth()->format('c');
-				case 'year':
-					return $chronos->endOfYear()->format('c');
-				default:
-					return $chronos->format('c');
-			}
-		} catch (\Exception $e) {
+			return match ($unit) {
+				'day'   => $chronos->endOfDay()->format('c'),
+				'week'  => $chronos->endOfWeek()->format('c'),
+				'month' => $chronos->endOfMonth()->format('c'),
+				'year'  => $chronos->endOfYear()->format('c'),
+				default => $chronos->format('c'),
+			};
+		} catch (\Exception) {
 			return (string)$date;
 		}
 	}
@@ -809,7 +798,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->isWeekend();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -823,7 +812,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return !$chronos->isWeekend();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -837,7 +826,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->isPast();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -851,7 +840,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->isFuture();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -865,7 +854,7 @@ final class TotalCMSTwigFilters
 			$chronos = self::parseDate($date);
 
 			return $chronos->isToday();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -891,15 +880,11 @@ final class TotalCMSTwigFilters
 
 		$numericPrice = is_numeric($price) ? floatval($price) : 0;
 
-		switch ($format) {
-			case 'prepend':
-				return $currency . number_format($numericPrice, 2);
-			case 'append':
-				return number_format($numericPrice, 2) . $currency;
-			case 'none':
-				return number_format($numericPrice, 2);
-			default:
-				return $currency . number_format($numericPrice, 2);
-		}
+		return match ($format) {
+			'prepend' => $currency . number_format($numericPrice, 2),
+			'append'  => number_format($numericPrice, 2) . $currency,
+			'none'    => number_format($numericPrice, 2),
+			default   => $currency . number_format($numericPrice, 2),
+		};
 	}
 }

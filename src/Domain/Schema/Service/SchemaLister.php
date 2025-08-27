@@ -8,13 +8,10 @@ use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 /**
  * Service.
  */
-final class SchemaLister
+readonly class SchemaLister
 {
-	private SchemaRepository $storage;
-
-	public function __construct(SchemaRepository $storage)
+	public function __construct(private SchemaRepository $storage)
 	{
-		$this->storage = $storage;
 	}
 
 	/**

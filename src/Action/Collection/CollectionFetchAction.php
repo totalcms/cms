@@ -5,25 +5,21 @@ namespace TotalCMS\Action\Collection;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final class CollectionFetchAction
+readonly class CollectionFetchAction
 {
-	private JsonRenderer $renderer;
-	private CollectionFetcher $service;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param JsonRenderer $renderer The renderer
 	 * @param CollectionFetcher $service Collection service
 	 */
-	public function __construct(JsonRenderer $renderer, CollectionFetcher $service)
+	public function __construct(private JsonRenderer $renderer, private CollectionFetcher $service)
 	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
 	}
 
 	/**
@@ -41,7 +37,7 @@ final class CollectionFetchAction
 	{
 		$collection = $this->service->fetchCollection($args['collection']);
 
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			throw new HttpNotFoundException($request, 'Collection not found');
 		}
 

@@ -7,23 +7,16 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 /**
  * Service.
  */
-final class TemplateRemover
+readonly class TemplateRemover
 {
-	private TemplateRepository $storage;
-
-	public function __construct(TemplateRepository $storage)
+	public function __construct(private TemplateRepository $storage)
 	{
-		$this->storage = $storage;
 	}
 
 	/**
 	 * Delete a Template.
 	 *
-	 * @param string $id
-	 *
 	 * @throws \DomainException
-	 *
-	 * @return bool
 	 */
 	public function deleteTemplate(string $id): bool
 	{

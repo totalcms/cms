@@ -18,7 +18,7 @@ class MultiselectField extends SelectField
 		if (empty($this->value)) {
 			$this->value = [];
 		} elseif (!is_array($this->value)) {
-			$this->value = explode(',', $this->value);
+			$this->value = explode(',', (string)$this->value);
 		}
 	}
 
@@ -35,7 +35,7 @@ class MultiselectField extends SelectField
 
 	protected function placeholderOption(): string
 	{
-		if (empty($this->placeholder)) {
+		if ($this->placeholder === '') {
 			return '';
 		}
 

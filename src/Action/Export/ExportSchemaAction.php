@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final class ExportSchemaAction
+readonly class ExportSchemaAction
 {
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,

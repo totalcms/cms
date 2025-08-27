@@ -6,7 +6,7 @@ use TotalCMS\Domain\Rendering\Utilities\EmbedBuilder;
 use Twig\TwigFunction;
 
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
-final class TotalCMSTwigFunctions
+class TotalCMSTwigFunctions
 {
 	/** @var array<string> */
 	public static array $phpFunctions = [
@@ -75,16 +75,16 @@ final class TotalCMSTwigFunctions
 	 */
 	public static function selectOptions(?array $data, string $label = '', string $value = ''): array
 	{
-		if (empty($data)) {
+		if ($data === null || $data === []) {
 			return [];
 		}
 		// this takes a normal array and converts it to an array of arrays with label and value keys
 		// the resulting array can be used for select options in a form
-		if (empty($value) || empty($label)) {
+		if ($value === '' || $label === '') {
 			return array_map(fn ($value): array => ['label' => $value, 'value' => $value], $data);
 		}
 
-		return array_map(fn ($item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
+		return array_map(fn (array $item): array => ['label' => $item[$label], 'value' => $item[$value]], $data);
 	}
 
 	public static function istype(mixed $variable, string $type): bool
@@ -99,7 +99,7 @@ final class TotalCMSTwigFunctions
 	 */
 	public static function sortByKey(array $array, string $key = 'id'): array
 	{
-		usort($array, function ($a, $b) use ($key) {
+		usort($array, function ($a, $b) use ($key): int {
 			if ((!is_array($a) && !is_object($a)) || (!is_array($b) && !is_object($b))) {
 				return 0;
 			}
@@ -218,7 +218,7 @@ final class TotalCMSTwigFunctions
 	/** @SuppressWarnings("PHPMD.CamelCaseMethodName") */
 	public static function print_r(mixed $variable): string
 	{
-		return '<pre>' . (string)print_r($variable, true) . '</pre>';
+		return '<pre>' . print_r($variable, true) . '</pre>';
 	}
 
 	/** @SuppressWarnings("PHPMD.CamelCaseMethodName") */

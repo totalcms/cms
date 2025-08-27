@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
-final class JobQueueForm
+readonly class JobQueueForm implements \Stringable
 {
 	public function __construct(
 		private string $api,
@@ -13,7 +13,7 @@ final class JobQueueForm
 
 	private function clearQueueForm(): string
 	{
-		$route = empty($this->collection)
+		$route = $this->collection === ''
 			? '/jobqueue'
 			: "/jobqueue/{$this->collection}";
 
@@ -31,12 +31,10 @@ final class JobQueueForm
 
 	public function build(): string
 	{
-		$form = $this->clearQueueForm();
-
-		return $form;
+		return $this->clearQueueForm();
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->build();
 	}

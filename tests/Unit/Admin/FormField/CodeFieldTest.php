@@ -16,7 +16,6 @@ describe('CodeField', function (): void {
 		// Test that the class has the correct default input type using reflection
 		$reflection = new ReflectionClass(CodeField::class);
 		$property   = $reflection->getProperty('defaultInputType');
-		$property->setAccessible(true);
 
 		// Since we can't easily create an instance without dependencies,
 		// we verify the property exists and can be accessed

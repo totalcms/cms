@@ -14,7 +14,7 @@ use Twig\TokenParser\AbstractTokenParser;
  *   template content with {{ object }} and {{ collection }} variables
  * {% endcmsgrid %}
  */
-final class CmsGridTokenParser extends AbstractTokenParser
+class CmsGridTokenParser extends AbstractTokenParser
 {
 	public function parse(Token $token): Node
 	{
@@ -45,7 +45,7 @@ final class CmsGridTokenParser extends AbstractTokenParser
 		$stream->expect(Token::BLOCK_END_TYPE);
 
 		// Parse the template content until {% endcmsgrid %}
-		$template = $this->parser->subparse([$this, 'decideBlockEnd'], true);
+		$template = $this->parser->subparse($this->decideBlockEnd(...), true);
 
 		$stream->expect(Token::BLOCK_END_TYPE);
 

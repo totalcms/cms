@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Service\RemoverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class FileDeleteAction
+readonly class FileDeleteAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

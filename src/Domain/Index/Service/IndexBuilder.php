@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Index\Service;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
@@ -10,7 +11,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final class IndexBuilder
+readonly class IndexBuilder
 {
 	public function __construct(
 		private IndexRepository $storage,
@@ -35,8 +36,8 @@ final class IndexBuilder
 				// The reject method is used to filter out properties that are not in the index
 				// The map method is used to transform the properties into an array
 				$summary = $object->properties
-					->reject(fn ($value, $key) => !in_array($key, $indexProps, true))
-					->map(fn ($property) => $property->transform());
+					->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
+					->map(fn ($property): mixed => $property->transform());
 				$summary->put('id', $id);
 				$index->objects->push($summary->toArray());
 			}
@@ -57,7 +58,7 @@ final class IndexBuilder
 		$index = $this->storage->fetchIndex($collection) ?? new IndexData();
 
 		// Remove existing entry with same ID (for updates) and append new one
-		$index->objects = $index->objects->reject(fn ($item) => $item['id'] === $object->id);
+		$index->objects = $index->objects->reject(fn ($item): bool => $item['id'] === $object->id);
 		$index->objects->push($object->toArray());
 
 		// Save the updated index
@@ -70,12 +71,12 @@ final class IndexBuilder
 	public function removeObjectFromIndex(string $collection, string $objectId): void
 	{
 		$index = $this->storage->fetchIndex($collection);
-		if ($index === null) {
+		if (!$index instanceof IndexData) {
 			return; // No index exists, nothing to remove
 		}
 
 		// Remove the object from the index
-		$index->objects = $index->objects->reject(fn ($item) => $item['id'] === $objectId);
+		$index->objects = $index->objects->reject(fn ($item): bool => $item['id'] === $objectId);
 
 		// Save the updated index
 		$this->storage->saveIndex($collection, $index);
@@ -85,14 +86,14 @@ final class IndexBuilder
 	public function smartBuildIndex(string $collection, ?ObjectData $newObject = null): void
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if ($collectionData === null) {
+		if (!$collectionData instanceof CollectionData) {
 			throw new \DomainException(sprintf('Collection %s not found', $collection));
 		}
 		$queueReindex = $collectionData->queueRebuildOnSave ?? false;
 
 		// If we have a new object and queueRebuildOnSave is enabled,
 		// append the object immediately for visibility, then queue full rebuild
-		if ($queueReindex && $newObject !== null) {
+		if ($queueReindex && $newObject instanceof ObjectData) {
 			$this->appendObjectToIndex($collection, $newObject);
 			$this->jobQueuer->queueBuildIndex($collection);
 		} elseif ($queueReindex) {

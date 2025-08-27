@@ -218,6 +218,37 @@
 }
 
 //------------------------------
+// Price Field
+//------------------------------
+.price-field .form-group-icon {
+	&:after {
+		mask-image : var(--icon-dollar);
+	}
+}
+
+// Currency Icon Classes
+.form-field.icon-dollar .form-group-icon {
+	&:after {
+		mask-image : var(--icon-dollar);
+	}
+}
+.form-field.icon-pound .form-group-icon {
+	&:after {
+		mask-image : var(--icon-pound);
+	}
+}
+.form-field.icon-euro .form-group-icon {
+	&:after {
+		mask-image : var(--icon-euro);
+	}
+}
+.form-field.icon-yen .form-group-icon {
+	&:after {
+		mask-image : var(--icon-yen);
+	}
+}
+
+//------------------------------
 // Markdown Field
 //------------------------------
 .markdown-field .form-group-icon {

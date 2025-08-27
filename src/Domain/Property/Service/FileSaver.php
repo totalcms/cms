@@ -54,14 +54,14 @@ class FileSaver
 			// If the object existed before, we will keep the existing data
 			$fileProperty = $this->fetchProperty($collection, $objectID, $property);
 			$keep         = ['download', 'comments', 'tags', 'protected', 'password'];
-			$existingData = array_filter($fileProperty->transform(), fn ($key) => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
+			$existingData = array_filter($fileProperty->transform(), fn ($key): bool => in_array($key, $keep), ARRAY_FILTER_USE_KEY);
 			if (!empty($existingData['download'])) {
 				// Update the extension of the name if the new file has a different extension
 				$newExt      = pathinfo((string)$fileInfo['name'], PATHINFO_EXTENSION);
 				$existingExt = pathinfo((string)$existingData['download'], PATHINFO_EXTENSION);
 
 				if ($newExt !== $existingExt) {
-					$existingData['download'] = pathinfo($existingData['download'], PATHINFO_FILENAME) . '.' . $newExt;
+					$existingData['download'] = pathinfo((string)$existingData['download'], PATHINFO_FILENAME) . '.' . $newExt;
 				}
 			}
 			$newData = array_merge($fileProperty->transform(), $fileInfo, $existingData);
@@ -86,7 +86,7 @@ class FileSaver
 			]);
 		} catch (\Exception $e) {
 			$msg = "Object $objectID does not exist in collection $collection to save file ($property) to.";
-			throw new \UnexpectedValueException($msg . $e->getMessage());
+			throw new \UnexpectedValueException($msg . $e->getMessage(), $e->getCode(), $e);
 		}
 	}
 
@@ -113,7 +113,7 @@ class FileSaver
 		try {
 			// Get the existing object property data
 			$fileProperty = $this->propFetcher->fetchProperty($collection, $objectID, $property);
-		} catch (\UnexpectedValueException $e) {
+		} catch (\UnexpectedValueException) {
 			$fileProperty = $this->createPropertyObject($collection, $property);
 		}
 

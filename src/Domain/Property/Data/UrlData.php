@@ -11,12 +11,12 @@ class UrlData extends PropertyData
 
 	public function __construct(string $url, public array $settings = [])
 	{
-		$this->url = self::cleanUrl($url);
+		$this->url = $this->cleanUrl($url);
 	}
 
-	private static function cleanUrl(string $url): string
+	private function cleanUrl(string $url): string
 	{
-		if (empty($url)) {
+		if ($url === '') {
 			return $url;
 		}
 

@@ -7,20 +7,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 
-final class TemplateExistsAction
+readonly class TemplateExistsAction
 {
-	private TemplateFetcher $templateFetcher;
-
-	public function __construct(TemplateFetcher $service)
+	public function __construct(private TemplateFetcher $templateFetcher)
 	{
-		$this->templateFetcher = $service;
 	}
 
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The routing arguments
 	 *
 	 * @return ResponseInterface the response

@@ -103,9 +103,9 @@ abstract class StreamAction
 			->withHeader('Cache-Control', 'no-cache');
 
 		// Handle range requests for Safari video streaming
-		if (!empty($rangeHeader) && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
+		if ($rangeHeader !== '' && preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
 			$start = (int)$matches[1];
-			$end   = !empty($matches[2]) ? (int)$matches[2] : $fileSize - 1;
+			$end   = empty($matches[2]) ? $fileSize - 1 : (int)$matches[2];
 
 			// Ensure valid range
 			if ($start >= $fileSize || $end >= $fileSize || $start > $end) {

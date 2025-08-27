@@ -9,7 +9,7 @@ use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class FileSaveAction
+readonly class FileSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
@@ -23,11 +23,7 @@ final class FileSaveAction
 	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
@@ -44,7 +40,7 @@ final class FileSaveAction
 				$fileUrl = trim($body[$args['property']]);
 
 				// Validate that it's a valid URL and not empty
-				if (empty($fileUrl) || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
+				if ($fileUrl === '' || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
 					throw new \RuntimeException('Invalid URL provided for property: ' . $args['property']);
 				}
 
@@ -114,9 +110,7 @@ final class FileSaveAction
 	/**
 	 * Handle normal file upload with chunking support.
 	 *
-	 * @param \Psr\Http\Message\UploadedFileInterface $file
 	 * @param array<string,mixed> $body
-	 * @param ResponseInterface $response
 	 *
 	 * @throws \RuntimeException If upload processing fails
 	 *
@@ -185,7 +179,7 @@ final class FileSaveAction
 		$error       = curl_error($ch);
 		curl_close($ch);
 
-		if ($fileContent === false || !empty($error)) {
+		if ($fileContent === false || $error !== '') {
 			throw new \RuntimeException('Failed to download file from URL: ' . $error);
 		}
 
@@ -219,7 +213,7 @@ final class FileSaveAction
 		$filename = basename($path);
 
 		// If no filename or it doesn't have an extension, generate one
-		if (empty($filename) || !pathinfo($filename, PATHINFO_EXTENSION)) {
+		if ($filename === '' || !pathinfo($filename, PATHINFO_EXTENSION)) {
 			$filename = 'downloaded_file_' . uniqid() . '.tmp';
 		}
 

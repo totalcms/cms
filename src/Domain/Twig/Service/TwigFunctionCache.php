@@ -6,7 +6,7 @@ namespace TotalCMS\Domain\Twig\Service;
  * Simple in-memory cache for expensive Twig function results.
  * Caches results for the duration of a single request.
  */
-final class TwigFunctionCache
+class TwigFunctionCache
 {
 	/** @var array<string,mixed> */
 	private static array $cache = [];
@@ -14,7 +14,6 @@ final class TwigFunctionCache
 	/**
 	 * Get a cached result or execute the function and cache it.
 	 *
-	 * @param callable $function
 	 * @param array<mixed> $args
 	 */
 	public static function remember(string $key, callable $function, array $args = []): mixed
@@ -81,7 +80,7 @@ final class TwigFunctionCache
 	 */
 	private static function generateCacheKey(string $key, array $args): string
 	{
-		if (empty($args)) {
+		if ($args === []) {
 			return $key;
 		}
 

@@ -3,8 +3,10 @@ import TotalField from './totalfield';
 import TotalDispatcher from './dispatcher';
 import Identifier from './identifier';
 import Checkbox from './checkbox';
+import RadioField from './radio';
 import Textarea from './textarea';
 import NumberField from './number';
+import PriceField from './price';
 import ColorField from './color';
 import DateField from './date';
 import DeckField from './deck';
@@ -230,8 +232,14 @@ export default class TotalForm {
             case "toggle":
                 return new Checkbox(field, options);
 
+            case "radio":
+                return new RadioField(field, options);
+
             case "number":
                 return new NumberField(field, options);
+
+            case "price":
+                return new PriceField(field, options);
 
             case "color":
                 return new ColorField(field, options);
@@ -278,9 +286,6 @@ export default class TotalForm {
 
 			case "code":
 				return new CodeField(field,options);
-
-			// case "radio":
-			// 	return new RadioField(field, options);
 
 			case "deck":
                 return new DeckField(field, options);
@@ -557,7 +562,13 @@ export default class TotalForm {
     // post request to create the object has been saved
     saveDroplets(callback) {
 
-        let dropletCount = this.droplets.length;
+        let dropletCount = this.droplets.filter(field => field.isUnsaved()).length;
+
+        // If no unsaved droplets, execute callback immediately
+        if (dropletCount === 0) {
+            if (typeof callback === "function") callback();
+            return;
+        }
 
         const dropletComplete = (callback) => {
             // When there are multiple droplets, we need to ensure that the callback
@@ -578,6 +589,7 @@ export default class TotalForm {
                 return;
             }
             droplet.onQueueComplete(() => dropletComplete(callback));
+            droplet.autoProcessQueue(); // Enable auto processing for all queued files
             droplet.processQueue();
 		});
     }

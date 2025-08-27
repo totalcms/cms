@@ -17,7 +17,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Image Operations', function () {
+describe('Image Operations', function (): void {
 	beforeEach(function (): void {
 		// Create test collection for image operations
 		$collection = [

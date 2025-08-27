@@ -11,14 +11,14 @@ use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 
-final class StreamFileFromDepotAction extends StreamAction
+class StreamFileFromDepotAction extends StreamAction
 {
 	public function __construct(
-		protected DepotFileFetcher $fileFetcher,
+		private readonly DepotFileFetcher $fileFetcher,
 		protected FileAccessManager $accessManager,
 		protected ObjectUpdater $objectUpdater,
 		protected PhpSession $session,
-		protected PropertyFetcher $propFetcher,
+		private readonly PropertyFetcher $propFetcher,
 	) {
 	}
 
@@ -34,7 +34,7 @@ final class StreamFileFromDepotAction extends StreamAction
 
 	protected function loadFile(): void
 	{
-		$this->accessManager->loadDepotFile($this->collection, $this->id, $this->property, $this->name, $this->subpath);
+		$this->accessManager->loadDepotFile($this->collection, $this->id, $this->property);
 	}
 
 	protected function incrementCount(FileData $file): void

@@ -6,19 +6,19 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
-final class LoginService
+class LoginService
 {
 	public const ACCESS_LOG = 'totalcms-access.log';
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 	private string $account = '';
 
 	public function __construct(
-		private UserValidationService $validator,
-		private LastLoginUpdateService $updateService,
-		private FirstLoginChecker $firstLoginChecker,
-		private LoggerFactory $loggerFactory,
-		private Config $config,
+		private readonly UserValidationService $validator,
+		private readonly LastLoginUpdateService $updateService,
+		private readonly FirstLoginChecker $firstLoginChecker,
+		private readonly LoggerFactory $loggerFactory,
+		private readonly Config $config,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::ACCESS_LOG)->createLogger('login');
 	}
@@ -46,7 +46,7 @@ final class LoginService
 		$this->testUserExpiration($user);
 		$this->testUserMaxLoginCount($user);
 
-		if (!password_verify($password, $user['password'])) {
+		if (!password_verify($password, (string)$user['password'])) {
 			$error = "{$this->account}: Invalid password";
 			$this->logger->error($error);
 			throw new \Exception($error);
@@ -76,7 +76,7 @@ final class LoginService
 		if (
 			isset($user['expiration'])
 			&& !empty($user['expiration'])
-			&& strtotime($user['expiration']) < time()
+			&& strtotime((string)$user['expiration']) < time()
 		) {
 			$error = "User account {$this->account} has expired";
 			$this->logger->error($error);

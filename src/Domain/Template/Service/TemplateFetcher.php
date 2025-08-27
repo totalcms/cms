@@ -8,21 +8,14 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 /**
  * Service.
  */
-final class TemplateFetcher
+readonly class TemplateFetcher
 {
-	private TemplateRepository $storage;
-
-	public function __construct(TemplateRepository $storage)
+	public function __construct(private TemplateRepository $storage)
 	{
-		$this->storage = $storage;
 	}
 
 	/**
 	 * fetch a template.
-	 *
-	 * @param string $id
-	 *
-	 * @return TemplateData
 	 */
 	public function fetchTemplate(string $id): TemplateData
 	{
@@ -33,8 +26,6 @@ final class TemplateFetcher
 	 * check if a template exists.
 	 *
 	 * @param string $id Template ID
-	 *
-	 * @return bool
 	 */
 	public function templateExists(string $id): bool
 	{

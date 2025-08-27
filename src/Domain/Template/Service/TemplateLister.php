@@ -7,13 +7,10 @@ use TotalCMS\Domain\Template\Repository\TemplateRepository;
 /**
  * Service.
  */
-final class TemplateLister
+readonly class TemplateLister
 {
-	private TemplateRepository $storage;
-
-	public function __construct(TemplateRepository $storage)
+	public function __construct(private TemplateRepository $storage)
 	{
-		$this->storage = $storage;
 	}
 
 	/**

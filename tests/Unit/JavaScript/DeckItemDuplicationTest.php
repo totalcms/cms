@@ -295,9 +295,7 @@ final class DeckItemDuplicationTest extends TestCase
  */
 class MockDeckItemForDuplication
 {
-	private string $deckItemId;
-	private string $dialogId;
-	private string $title;
+	private readonly string $dialogId;
 	private bool $deckItemIdReadonly     = false;
 	private bool $deckItemIdDisabled     = false;
 	private bool $dialogIdFieldLocked    = false;
@@ -310,11 +308,9 @@ class MockDeckItemForDuplication
 	private array $froalaEditors         = [];
 	private array $domElements           = [];
 
-	public function __construct(string $id, string $title)
+	public function __construct(private readonly string $deckItemId, private readonly string $title)
 	{
-		$this->deckItemId = $id;
-		$this->dialogId   = $id; // Initially synchronized
-		$this->title      = $title;
+		$this->dialogId   = $this->deckItemId;
 	}
 
 	public function duplicate(): self

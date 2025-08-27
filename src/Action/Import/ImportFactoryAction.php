@@ -7,21 +7,16 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class ImportFactoryAction
+readonly class ImportFactoryAction
 {
-	private JsonRenderer $renderer;
-	private FactoryImporter $importer;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param JsonRenderer $renderer The renderer
 	 * @param FactoryImporter $importer Factory import service
 	 */
-	public function __construct(JsonRenderer $renderer, FactoryImporter $importer)
+	public function __construct(private JsonRenderer $renderer, private FactoryImporter $importer)
 	{
-		$this->renderer  = $renderer;
-		$this->importer  = $importer;
 	}
 
 	/**

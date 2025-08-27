@@ -86,12 +86,11 @@ class ImageField extends FormField
 			'w'          => self::PREVIEW_WIDTH,
 		]);
 		// 	The cms.api may have a ? because of the Stacks Preview server
-		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
+		$join = str_contains($this->form->api, '?') ? '&' : '?';
 
 		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/imageworks{$join}{$query}");
-		$dialog = HTMLUtils::dialog($iframe, 'image-link-dialog');
 
-		return $dialog;
+		return HTMLUtils::dialog($iframe, 'image-link-dialog');
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -101,9 +100,7 @@ class ImageField extends FormField
 		$content .= $this->imageFieldsSection($imageData);
 		$content .= $this->closeSection();
 
-		$dialog = HTMLUtils::dialog($content, 'split-view image-edit-dialog');
-
-		return $dialog;
+		return HTMLUtils::dialog($content, 'split-view image-edit-dialog');
 	}
 
 	/** @param array<string,mixed> $imageData */

@@ -3,7 +3,7 @@
 use TotalCMS\Domain\Property\Data\DateData;
 
 // Test that DateData processes dates correctly (the core functionality tested in deck processing)
-it('DateData converts date field from HTML datetime-local to ISO format', function () {
+it('DateData converts date field from HTML datetime-local to ISO format', function (): void {
 	// HTML datetime-local format (what comes from forms)
 	$htmlDateValue = '2025-08-11T00:00';
 
@@ -25,7 +25,7 @@ it('DateData converts date field from HTML datetime-local to ISO format', functi
 });
 
 // Test that DateData processes datetime fields correctly
-it('DateData converts datetime field from HTML datetime-local to ISO format', function () {
+it('DateData converts datetime field from HTML datetime-local to ISO format', function (): void {
 	// HTML datetime-local format
 	$htmlDatetimeValue = '2025-08-11T14:30';
 
@@ -47,7 +47,7 @@ it('DateData converts datetime field from HTML datetime-local to ISO format', fu
 });
 
 // Test DateData cleanDate with different formats
-it('DateData cleanDate supports different output formats', function () {
+it('DateData cleanDate supports different output formats', function (): void {
 	$testDate = '2025-08-30T18:54:00-07:00';
 
 	// Test default ISO 8601 format

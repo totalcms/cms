@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Schema\Repository;
 
-use Dynamics\Schema;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
@@ -14,7 +13,7 @@ use TotalCMS\Support\Config;
 /**
  * Repository.
  */
-final class SchemaRepository extends StorageRepository
+class SchemaRepository extends StorageRepository
 {
 	public const DEFAULT_SCHEMA_DIR = __DIR__ . '/../../../../resources/schemas/';
 	private const CUSTOM_SCHEMA_DIR = '.schemas/';
@@ -23,14 +22,12 @@ final class SchemaRepository extends StorageRepository
 	 * The constructor.
 	 *
 	 * @param StorageFilesystemAdapter $filesystem The filesystem factory
-	 * @param SchemaFactory $factory
-	 * @param CacheManager $cacheManager
 	 */
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		private SchemaFactory $factory,
-		private CacheManager $cacheManager,
-		private Config $config,
+		private readonly SchemaFactory $factory,
+		private readonly CacheManager $cacheManager,
+		private readonly Config $config,
 	) {
 		parent::__construct($filesystem);
 	}
@@ -56,7 +53,7 @@ final class SchemaRepository extends StorageRepository
 		foreach ($files as $file) {
 			$id     = basename($file, self::FILE_EXT);
 			$schema = $this->fetchCustomSchema($id);
-			if ($schema !== null) {
+			if ($schema instanceof SchemaData) {
 				$schemas[] = $schema;
 			}
 		}
@@ -79,7 +76,7 @@ final class SchemaRepository extends StorageRepository
 
 		if ($cached !== null && is_array($cached)) {
 			$schemas = $this->hydrateSchemasFromCache($cached);
-			if (!empty($schemas)) {
+			if ($schemas !== []) {
 				return $schemas;
 			}
 		}
@@ -90,18 +87,18 @@ final class SchemaRepository extends StorageRepository
 
 		foreach ($ids as $id) {
 			$schema = $this->fetchDefaultSchema($id);
-			if ($schema !== null) {
+			if ($schema instanceof SchemaData) {
 				$schemas[] = $schema;
 			}
 		}
 
 		// Cache the schemas as arrays for 1 hour (reserved schemas never change)
-		if (empty($schemas)) {
+		if ($schemas === []) {
 			// Clear cache if no schemas to prevent serving stale data
 			$this->cacheManager->clearComputedData($cacheKey);
 		} else {
 			// Cache non-empty schemas
-			$schemasArray = array_map(fn ($schema) => $schema->toArray(), $schemas);
+			$schemasArray = array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
 			$this->cacheManager->storeComputedData($cacheKey, $schemasArray, CacheManager::TTL_RESERVED_SCHEMAS);
 		}
 
@@ -122,10 +119,6 @@ final class SchemaRepository extends StorageRepository
 
 	/**
 	 * fetch a schema for one of the default schema types.
-	 *
-	 * @param string $id
-	 *
-	 * @return ?SchemaData
 	 */
 	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
@@ -136,7 +129,7 @@ final class SchemaRepository extends StorageRepository
 		if ($cached !== null && is_array($cached)) {
 			try {
 				return $this->factory->generateSchema($cached);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Cache contains invalid data, fall through to filesystem
 			}
 		}
@@ -151,7 +144,7 @@ final class SchemaRepository extends StorageRepository
 			$contents = file_get_contents($schemaFile);
 		}
 
-		if (empty($contents)) {
+		if ($contents === '' || $contents === null || $contents === false) {
 			return null;
 		}
 
@@ -165,10 +158,6 @@ final class SchemaRepository extends StorageRepository
 
 	/**
 	 * fetch a schema for a custom schema type.
-	 *
-	 * @param string $id
-	 *
-	 * @return ?SchemaData
 	 */
 	public function fetchCustomSchema(string $id): ?SchemaData
 	{
@@ -179,7 +168,7 @@ final class SchemaRepository extends StorageRepository
 		if ($cached !== null && is_array($cached)) {
 			try {
 				return $this->factory->generateSchema($cached);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Cache contains invalid data, fall through to filesystem
 			}
 		}
@@ -198,20 +187,16 @@ final class SchemaRepository extends StorageRepository
 
 	/**
 	 * fetch a schema for one of the default schema types.
-	 *
-	 * @param string $id
-	 *
-	 * @return SchemaData
 	 */
 	public function getSchema(string $id): SchemaData
 	{
 		$schema = $this->fetchDefaultSchema($id);
 
-		if ($schema === null) {
+		if (!$schema instanceof SchemaData) {
 			$schema = $this->fetchCustomSchema($id);
 		}
 
-		if ($schema === null) {
+		if (!$schema instanceof SchemaData) {
 			throw new \DomainException(sprintf('Schema type does not exist: %s', $id));
 		}
 
@@ -222,30 +207,22 @@ final class SchemaRepository extends StorageRepository
 	{
 		$schema = $this->fetchDefaultSchema($id);
 
-		if ($schema === null) {
+		if (!$schema instanceof SchemaData) {
 			$schema = $this->fetchCustomSchema($id);
 		}
 
-		if ($schema === null) {
-			return false;
-		}
-
-		return true;
+		return $schema instanceof SchemaData;
 	}
 
 	/**
 	 * save a collection schema.
-	 *
-	 * @param SchemaData $schema
-	 *
-	 * @return void
 	 */
 	public function saveSchema(SchemaData $schema): void
 	{
 		$schemaFile = self::CUSTOM_SCHEMA_DIR . $schema->id . self::FILE_EXT;
 		$schemaJSON = $schema->toJson();
 
-		if (empty($schemaJSON)) {
+		if ($schemaJSON === '') {
 			throw new \DomainException(sprintf('Failed to encode schema for type: %s', $schema->id));
 		}
 
@@ -291,7 +268,7 @@ final class SchemaRepository extends StorageRepository
 		foreach ($cachedSchemas as $schemaArray) {
 			try {
 				$schemas[] = $this->factory->generateSchema($schemaArray);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Skip invalid cached schema, will be refreshed from source
 			}
 		}

@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
-final class DepotField extends FormField
+class DepotField extends FormField
 {
 	protected string $defaultFieldType = 'file';
 	protected string $defaultInputType = 'file';
@@ -39,9 +39,8 @@ final class DepotField extends FormField
 		$preview    = $this->depotPreview();
 		$layout     = HTMLUtils::element('div', $browser . $preview, ['class' => 'depot-layout']);
 		$editButton = HTMLUtils::button('', ['class' => 'protect', 'title' => 'Edit Depot Protection']);
-		$container  = HTMLUtils::element('div', $editButton . $layout, ['class' => 'depot-layout-container']);
 
-		return $container;
+		return HTMLUtils::element('div', $editButton . $layout, ['class' => 'depot-layout-container']);
 	}
 
 	/** @param array<string,mixed> $depot */
@@ -68,16 +67,15 @@ final class DepotField extends FormField
 	private function buildBrowser(array $files): string
 	{
 		$browser = HTMLUtils::element('ul', $this->buildFolder($files), ['class' => 'depot-browser']);
-		$wrapper = HTMLUtils::element('div', $browser, ['class' => 'depot-browser-wrapper']);
 
-		return $wrapper;
+		return HTMLUtils::element('div', $browser, ['class' => 'depot-browser-wrapper']);
 	}
 
 	/** @param array<array<string,mixed>> $files */
 	private function buildFolder(array $files, string $path = ''): string
 	{
 		$content = '';
-		$files   = self::sortFiles($files);
+		$files   = $this->sortFiles($files);
 
 		foreach ($files as $file) {
 			if ($file['mime'] === 'folder') {
@@ -116,9 +114,7 @@ final class DepotField extends FormField
 		$linkDialog = $this->linkDialog($name, $path);
 		$fileDialog = $this->fileDialog($file);
 
-		$content = HTMLUtils::element('li', $fileName . $size . $linkDialog . $fileDialog);
-
-		return $content;
+		return HTMLUtils::element('li', $fileName . $size . $linkDialog . $fileDialog);
 	}
 
 	protected function depotPreview(): string
@@ -203,9 +199,8 @@ final class DepotField extends FormField
 		]);
 		$button   = HTMLUtils::button('Add Folder');
 		$content .= HTMLUtils::element('section', $button);
-		$dialog   = HTMLUtils::dialog($content, 'folder-add-dialog');
 
-		return $dialog;
+		return HTMLUtils::dialog($content, 'folder-add-dialog');
 	}
 
 	protected function linkDialog(string $filename, string $path = ''): string
@@ -218,12 +213,11 @@ final class DepotField extends FormField
 			'path'       => trim($path, '/'),
 		]));
 		// 	The cms.api may have a ? because of the Stacks Preview server
-		$join = strpos($this->form->api, '?') !== false ? '&' : '?';
+		$join = str_contains($this->form->api, '?') ? '&' : '?';
 
 		$iframe = HTMLUtils::iframe("{$this->form->api}/admin/filelinks{$join}{$query}");
-		$dialog = HTMLUtils::dialog($iframe, 'file-links-dialog');
 
-		return $dialog;
+		return HTMLUtils::dialog($iframe, 'file-links-dialog');
 	}
 
 	/** @param array<string,mixed> $data */
@@ -238,9 +232,7 @@ final class DepotField extends FormField
 
 		$content .= $this->closeSection();
 
-		$dialog = HTMLUtils::dialog($content, 'folder-edit-dialog');
-
-		return $dialog;
+		return HTMLUtils::dialog($content, 'folder-edit-dialog');
 	}
 
 	/** @param array<string,mixed> $fileData */
@@ -249,9 +241,7 @@ final class DepotField extends FormField
 		$content = $this->fileFieldsSection($fileData);
 		$content .= $this->closeSection();
 
-		$dialog = HTMLUtils::dialog($content, 'file-edit-dialog');
-
-		return $dialog;
+		return HTMLUtils::dialog($content, 'file-edit-dialog');
 	}
 
 	/** @param array<string,mixed> $fileData */
@@ -343,17 +333,17 @@ final class DepotField extends FormField
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	private static function sortFiles(array $files): array
+	private function sortFiles(array $files): array
 	{
 		// Sort folders first, then files by name
-		usort($files, function ($a, $b) {
+		usort($files, function (array $a, array $b): int {
 			if ($a['mime'] === 'folder' && $b['mime'] !== 'folder') {
 				return -1;
 			} elseif ($a['mime'] !== 'folder' && $b['mime'] === 'folder') {
 				return 1;
 			}
 
-			return strcmp($a['name'], $b['name']);
+			return strcmp((string)$a['name'], (string)$b['name']);
 		});
 
 		return $files;

@@ -15,7 +15,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Factory Operations', function () {
+describe('Factory Operations', function (): void {
 	it('can create fake data for a collection', function (): void {
 		// Create test collection first
 		$collection = [

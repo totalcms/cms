@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class RangeField extends FormField
+class RangeField extends FormField
 {
 	protected string $defaultInputType = 'range';
 	protected string $defaultFieldType = 'range';

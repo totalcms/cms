@@ -2,7 +2,7 @@
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 
-test('price filter with default prepend format', function () {
+test('price filter with default prepend format', function (): void {
 	$result = TotalCMSTwigFilters::price(19.99);
 	expect($result)->toBe('$19.99');
 
@@ -13,7 +13,7 @@ test('price filter with default prepend format', function () {
 	expect($result3)->toBe('$0.00');
 });
 
-test('price filter with custom currency', function () {
+test('price filter with custom currency', function (): void {
 	$result = TotalCMSTwigFilters::price(19.99, '€');
 	expect($result)->toBe('€19.99');
 
@@ -21,7 +21,7 @@ test('price filter with custom currency', function () {
 	expect($result2)->toBe('USD19.99');
 });
 
-test('price filter with prepend format', function () {
+test('price filter with prepend format', function (): void {
 	$result = TotalCMSTwigFilters::price(19.99, '$', 'prepend');
 	expect($result)->toBe('$19.99');
 
@@ -29,7 +29,7 @@ test('price filter with prepend format', function () {
 	expect($result2)->toBe('EUR19.99');
 });
 
-test('price filter with append format', function () {
+test('price filter with append format', function (): void {
 	$result = TotalCMSTwigFilters::price(19.99, ' USD', 'append');
 	expect($result)->toBe('19.99 USD');
 
@@ -37,7 +37,7 @@ test('price filter with append format', function () {
 	expect($result2)->toBe('19.99€');
 });
 
-test('price filter with none format', function () {
+test('price filter with none format', function (): void {
 	$result = TotalCMSTwigFilters::price(19.99, '$', 'none');
 	expect($result)->toBe('19.99');
 
@@ -45,12 +45,12 @@ test('price filter with none format', function () {
 	expect($result2)->toBe('19.99');
 });
 
-test('price filter with invalid format defaults to prepend', function () {
+test('price filter with invalid format defaults to prepend', function (): void {
 	$result = TotalCMSTwigFilters::price(19.99, '$', 'invalid');
 	expect($result)->toBe('$19.99');
 });
 
-test('price filter handles empty and zero values', function () {
+test('price filter handles empty and zero values', function (): void {
 	// Empty values should return empty string
 	expect(TotalCMSTwigFilters::price(''))->toBe('');
 	expect(TotalCMSTwigFilters::price(null))->toBe('');
@@ -60,7 +60,7 @@ test('price filter handles empty and zero values', function () {
 	expect(TotalCMSTwigFilters::price('0'))->toBe('$0.00');
 });
 
-test('price filter handles non-numeric values', function () {
+test('price filter handles non-numeric values', function (): void {
 	$result = TotalCMSTwigFilters::price('not a number');
 	expect($result)->toBe('$0.00');
 
@@ -68,7 +68,7 @@ test('price filter handles non-numeric values', function () {
 	expect($result2)->toBe('$0.00');
 });
 
-test('price filter formats decimals correctly', function () {
+test('price filter formats decimals correctly', function (): void {
 	$result = TotalCMSTwigFilters::price(19.999);
 	expect($result)->toBe('$20.00'); // Should round to 2 decimal places
 
@@ -79,7 +79,7 @@ test('price filter formats decimals correctly', function () {
 	expect($result3)->toBe('$19.00');
 });
 
-test('price filter works with string numbers', function () {
+test('price filter works with string numbers', function (): void {
 	$result = TotalCMSTwigFilters::price('19.99');
 	expect($result)->toBe('$19.99');
 

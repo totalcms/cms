@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 
-final class FroalaGetFileAction
+readonly class FroalaGetFileAction
 {
 	public function __construct(
 		private UploadFetcher $uploadFetcher,

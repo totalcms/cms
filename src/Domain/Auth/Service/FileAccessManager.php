@@ -11,26 +11,26 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
 
-final class FileAccessManager
+class FileAccessManager
 {
 	public const DOWNLOAD_LOG = 'totalcms-download.log';
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 
 	private FileData|DepotData $file;
 	private CollectionData $collection;
 
 	public function __construct(
-		private PhpSession $session,
-		private UserValidationService $userValidator,
-		private LoggerFactory $loggerFactory,
-		private PropertyFetcher $propertyFetcher,
-		private CollectionFetcher $collectionFetcher,
+		private readonly PhpSession $session,
+		private readonly UserValidationService $userValidator,
+		private readonly LoggerFactory $loggerFactory,
+		private readonly PropertyFetcher $propertyFetcher,
+		private readonly CollectionFetcher $collectionFetcher,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(self::DOWNLOAD_LOG)->createLogger('fileaccess');
 	}
 
-	public function loadDepotFile(string $collection, string $object, string $property, string $name, ?string $subpath = null): void
+	public function loadDepotFile(string $collection, string $object, string $property): void
 	{
 		$depot      = $this->propertyFetcher->fetchProperty($collection, $object, $property);
 		$collection = $this->collectionFetcher->fetchCollection($collection);
@@ -64,7 +64,7 @@ final class FileAccessManager
 	public function isProtectedByGroups(): bool
 	{
 		// if the file is protected and the collection has groups, then it is protected by groups
-		return $this->file->protected && !empty($this->collection->groups);
+		return $this->file->protected && $this->collection->groups !== [];
 	}
 
 	public function userHasAccess(): bool
@@ -77,7 +77,7 @@ final class FileAccessManager
 			return true;
 		}
 
-		if (empty($this->collection->groups)) {
+		if ($this->collection->groups === []) {
 			// if the collection groups are empty, grant access
 			return true;
 		}
@@ -98,7 +98,7 @@ final class FileAccessManager
 
 	public function isPasswordProtected(): bool
 	{
-		return !empty($this->file->password->hash);
+		return $this->file->password->hash !== '';
 	}
 
 	public function verfiyPassword(string $password): bool

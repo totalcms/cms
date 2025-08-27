@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class ObjectPatchPropertyMetaAction
+readonly class ObjectPatchPropertyMetaAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

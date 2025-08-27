@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Renderer\XmlRenderer;
 
-final class RssFeedAction
+readonly class RssFeedAction
 {
 	public function __construct(
 		private XmlRenderer $xmlRenderer,

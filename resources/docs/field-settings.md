@@ -39,10 +39,83 @@ a few special variables that you can use below.
 
 special autogen vars
 
-* now
-* timestamp
-* uuid
+* **now** - Current timestamp in milliseconds (e.g., 1692123456789)
+* **timestamp** - Current date/time in ISO format without colons/dashes (e.g., 20230815T143056)
+* **uuid** - Real UUID v4 format (e.g., 550e8400-e29b-41d4-a716-446655440000)
+* **uid** - Short random alphanumeric string (e.g., a4k7m2x)
+* **oid** - Object ID counter (increments with each new object in collection)
+* **oid-00000** - Zero-padded Object ID (e.g., oid-00001, oid-12345)
 
+### Autogen Special Variables Examples
+
+**Using timestamp for date-based IDs:**
+```json
+{
+	"autogen" : "${title}-${timestamp}"
+}
+```
+Generates: `my-post-20230815T143056`
+
+**Using now for unique numeric IDs:**
+```json
+{
+	"autogen" : "item-${now}"
+}
+```
+Generates: `item-1692123456789`
+
+**Using uuid for unique IDs:**
+```json
+{
+	"autogen" : "${title}-${uuid}"
+}
+```
+Generates: `my-post-550e8400-e29b-41d4-a716-446655440000`
+
+**Using uid for short random IDs:**
+```json
+{
+	"autogen" : "${title}-${uid}"
+}
+```
+Generates: `my-post-a4k7m2x`
+
+### OID (Object ID) Examples
+
+The `oid` placeholder provides automatic sequential numbering based on the collection's object count:
+
+```json
+{
+	"autogen" : "item-${oid}"
+}
+```
+Generates: `item-1`, `item-2`, `item-3`, etc.
+
+**Zero-padded OID:**
+```json
+{
+	"autogen" : "product-${oid-00000}"
+}
+```
+Generates: `product-00001`, `product-00002`, `product-00003`, etc.
+
+**Different padding lengths:**
+```json
+{
+	"autogen" : "${oid-000}"
+}
+```
+Generates: `001`, `002`, `003`, etc.
+
+**Combined with other placeholders:**
+```json
+{
+	"autogen" : "${title}-${oid-00}"
+}
+```
+Generates: `my-title-01`, `another-title-02`, etc.
+
+The OID counter automatically increments each time a new object is created in the collection, ensuring unique sequential IDs.
 
 ## Sorting Options
 
@@ -299,3 +372,55 @@ The code field provides a syntax-highlighted code editor powered by CodeMirror. 
     }
   }
 }
+```
+
+## Radio Field
+
+Radio fields allow users to select a single option from multiple choices. They support grid layouts for better organization when you have many options.
+
+### Grid Layout Settings
+
+Use the `fieldGrid` setting to specify the minimum width for each radio option in the grid. By default, radio options display in a single column (full width). When you specify a `fieldGrid` value, the options will automatically flow into a responsive grid layout.
+
+```json
+{
+    "fieldGrid": "250px"
+}
+```
+
+This creates a responsive grid where:
+- Each radio option has a minimum width of `250px`
+- Options automatically wrap to new rows when needed
+- Grid adjusts based on container width
+
+## Price Field
+
+Price fields are specialized number fields for monetary values. They automatically have a step of `0.01` (hardcoded) for proper decimal handling and display with a currency icon.
+
+### Currency Icons
+
+Price fields display with a dollar sign icon by default. You can change the currency icon using the `class` setting with one of the supported currency icon classes:
+
+```json
+{
+	"class": "icon-dollar"
+}
+```
+
+```json
+{
+	"class": "icon-euro"
+}
+```
+
+```json
+{
+	"class": "icon-pound"
+}
+```
+
+```json
+{
+	"class": "icon-yen"
+}
+```

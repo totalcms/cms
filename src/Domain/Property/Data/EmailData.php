@@ -11,12 +11,12 @@ class EmailData extends PropertyData
 
 	public function __construct(string $email, public array $settings = [])
 	{
-		$this->email = self::cleanEmail($email);
+		$this->email = $this->cleanEmail($email);
 	}
 
-	private static function cleanEmail(string $email): string
+	private function cleanEmail(string $email): string
 	{
-		if (empty($email)) {
+		if ($email === '') {
 			return $email;
 		}
 

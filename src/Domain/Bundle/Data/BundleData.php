@@ -6,11 +6,11 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
-final class BundleData
+class BundleData implements \Stringable
 {
 	/** @var array<string,string> */
 	public array $bundle;
-	private Serializer $serializer;
+	private readonly Serializer $serializer;
 
 	public function __construct()
 	{

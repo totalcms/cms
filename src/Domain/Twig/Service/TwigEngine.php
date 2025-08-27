@@ -22,7 +22,7 @@ use Twig\RuntimeLoader\RuntimeLoaderInterface;
  *
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
-final class TwigEngine
+readonly class TwigEngine
 {
 	private TwigEnvironment $twig;
 

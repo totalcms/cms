@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
-final class SchemaExistsAction
+readonly class SchemaExistsAction
 {
 	public function __construct(private SchemaFetcher $schemaFetcher)
 	{
@@ -16,8 +16,6 @@ final class SchemaExistsAction
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The routing arguments
 	 *
 	 * @throws HttpNotFoundException

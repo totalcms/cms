@@ -11,27 +11,21 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 /**
  * Repository.
  */
-final class IndexRepository extends StorageRepository
+class IndexRepository extends StorageRepository
 {
 	private const INDEX_FILE = '.index.json';
-	private CacheManager $cacheManager;
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		CacheManager $cacheManager,
+		private readonly CacheManager $cacheManager,
 	) {
 		parent::__construct($filesystem);
-		$this->cacheManager = $cacheManager;
 	}
 
 	/**
 	 * get the index.
 	 *
-	 * @param string $collection
-	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
-	 *
-	 * @return ?IndexData
 	 */
 	public function fetchIndex(string $collection): ?IndexData
 	{
@@ -43,7 +37,7 @@ final class IndexRepository extends StorageRepository
 			// Reconstruct IndexData from cached array of objects
 			try {
 				return new IndexData($cached);
-			} catch (\Exception $e) {
+			} catch (\Exception) {
 				// Cache contains invalid data, fall through to filesystem
 			}
 		}
@@ -74,8 +68,6 @@ final class IndexRepository extends StorageRepository
 	/**
 	 * Get an array of object IDs in.
 	 *
-	 * @param string $collection
-	 *
 	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @return array<string>
@@ -94,11 +86,11 @@ final class IndexRepository extends StorageRepository
 		$files = $this->filesystem->listFiles($collection);
 
 		// Filter for object json files
-		$files = array_filter($files, fn (string $path) => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
+		$files = array_filter($files, fn (string $path): bool => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
 
-		$objectIds = array_map(fn (string $path) => basename($path, StorageRepository::FILE_EXT), $files);
+		$objectIds = array_map(fn (string $path): string => basename($path, StorageRepository::FILE_EXT), $files);
 
-		if (empty($objectIds)) {
+		if ($objectIds === []) {
 			// Clear cache if no objects to prevent serving stale data
 			$this->cacheManager->clearComputedData($cacheKey);
 		} else {
@@ -111,11 +103,6 @@ final class IndexRepository extends StorageRepository
 
 	/**
 	 * save the index.
-	 *
-	 * @param string $collection
-	 * @param IndexData $index
-	 *
-	 * @return void
 	 */
 	public function saveIndex(string $collection, IndexData $index): void
 	{

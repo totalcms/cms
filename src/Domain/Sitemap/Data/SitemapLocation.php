@@ -7,15 +7,15 @@ use Thepixeldeveloper\Sitemap\Extensions\Link;
 use Thepixeldeveloper\Sitemap\Extensions\Video;
 use Thepixeldeveloper\Sitemap\Url;
 
-final class SitemapLocation
+readonly class SitemapLocation
 {
 	private Url $location;
 
 	/** @param array<string,string> $options */
 	public function __construct(string $url, array $options = [])
 	{
-		if (strlen($url) === 0) {
-			return;
+		if ($url === '') {
+			$url = 'about:blank'; // Fallback for empty URLs
 		}
 		$this->location = new Url(trim($url));
 
@@ -40,7 +40,7 @@ final class SitemapLocation
 	public function addImage(string $imageUrl): void
 	{
 		$imageUrl = trim($imageUrl);
-		if (empty($imageUrl)) {
+		if ($imageUrl === '') {
 			return;
 		}
 

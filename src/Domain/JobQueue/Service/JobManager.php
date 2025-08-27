@@ -2,9 +2,10 @@
 
 namespace TotalCMS\Domain\JobQueue\Service;
 
+use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 
-final class JobManager
+readonly class JobManager
 {
 	public function __construct(
 		private JobRepository $jobRepository,
@@ -64,9 +65,7 @@ final class JobManager
 	}
 
 	/**
-	 * @param int|null $limit
-	 *
-	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
+	 * @return array<JobData>
 	 */
 	public function getPendingJobs(?int $limit = null): array
 	{
@@ -74,9 +73,7 @@ final class JobManager
 	}
 
 	/**
-	 * @param int|null $limit
-	 *
-	 * @return array<\TotalCMS\Domain\JobQueue\Data\JobData>
+	 * @return array<JobData>
 	 */
 	public function getFailedJobs(?int $limit = null): array
 	{

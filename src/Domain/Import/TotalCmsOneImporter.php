@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Import;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -10,18 +11,18 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 
-final class TotalCmsOneImporter
+class TotalCmsOneImporter
 {
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 	private string $cmsDataPath;
 	private int $importCount = 0;
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private CollectionFactory $collectionFactory,
-		private CollectionRepository $collectionRepository,
-		private IndexReader $indexReader,
-		private JobQueuer $jobQueuer,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionFactory $collectionFactory,
+		private readonly CollectionRepository $collectionRepository,
+		private readonly IndexReader $indexReader,
+		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('totalcms-one-importer');
@@ -110,9 +111,9 @@ final class TotalCmsOneImporter
 		$posturlFile = $blogDir . '/' . $blogId . '.posturl';
 		if (file_exists($posturlFile)) {
 			$url = trim((string)file_get_contents($posturlFile));
-			if ($url) {
+			if ($url !== '') {
 				$collection = $this->collectionFetcher->fetchCollection($blogId);
-				if ($collection !== null) {
+				if ($collection instanceof CollectionData) {
 					$collectionData              = $collection->toArray();
 					$collectionData['url']       = $url;
 					$collectionData['prettyUrl'] = !str_contains($url, '?permalink=');

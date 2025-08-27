@@ -14,8 +14,8 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('Persistent Login Functionality', function () {
-	it('can login with persistent login checkbox', function () {
+describe('Persistent Login Functionality', function (): void {
+	it('can login with persistent login checkbox', function (): void {
 		// Test that persistent login checkbox can be submitted
 		$credentials = [
 			'email'            => 'admin@example.com',
@@ -34,7 +34,7 @@ describe('Persistent Login Functionality', function () {
 		expect($body)->not->toContain('Parse error');
 	});
 
-	it('can login without persistent login checkbox', function () {
+	it('can login without persistent login checkbox', function (): void {
 		// Test normal login without persistent login
 		$credentials = [
 			'email'    => 'admin@example.com',
@@ -52,7 +52,7 @@ describe('Persistent Login Functionality', function () {
 		expect($body)->not->toContain('Parse error');
 	});
 
-	it('shows login form with persistent login checkbox', function () {
+	it('shows login form with persistent login checkbox', function (): void {
 		// Test that the login form displays correctly with the persistent login option
 		$response = get('/auth/login');
 
@@ -70,7 +70,7 @@ describe('Persistent Login Functionality', function () {
 		}
 	});
 
-	it('handles persistent login form submission gracefully', function () {
+	it('handles persistent login form submission gracefully', function (): void {
 		// Test that the form processes persistent login data without errors
 		$credentials = [
 			'email'            => 'test@example.com',

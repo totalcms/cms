@@ -9,7 +9,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
-final class DownloadFileAction extends DownloadAction
+class DownloadFileAction extends DownloadAction
 {
 	public function __construct(
 		protected FileFetcher $fileFetcher,
@@ -37,7 +37,7 @@ final class DownloadFileAction extends DownloadAction
 
 	protected function incrementCount(FileData $file): void
 	{
-		$file->count = $file->count + 1;
+		$file->count++;
 		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform());
 	}
 

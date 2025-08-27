@@ -19,7 +19,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  *
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
-final class ObjectImporter
+class ObjectImporter
 {
 	/** @var array<string,string> */
 	private array $images = [];
@@ -34,14 +34,14 @@ final class ObjectImporter
 	private string $objectID;
 
 	public function __construct(
-		private SchemaFetcher $schemaFetcher,
-		private ObjectSaver $objectSaver,
-		private ObjectPatcher $objectPatcher,
-		private ObjectFetcher $objectFetcher,
-		private ImageSaver $imageSaver,
-		private GallerySaver $gallerySaver,
-		private FileSaver $fileSaver,
-		private DepotSaver $depotSaver,
+		private readonly SchemaFetcher $schemaFetcher,
+		private readonly ObjectSaver $objectSaver,
+		private readonly ObjectPatcher $objectPatcher,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly ImageSaver $imageSaver,
+		private readonly GallerySaver $gallerySaver,
+		private readonly FileSaver $fileSaver,
+		private readonly DepotSaver $depotSaver,
 	) {
 	}
 
@@ -115,11 +115,18 @@ final class ObjectImporter
 		// Filter out properties that are not in the schema
 		$objectData = array_filter(
 			$objectData,
-			fn ($value, $name) => isset($schema->properties[$name]),
+			fn ($value, $name): bool => isset($schema->properties[$name]),
 			ARRAY_FILTER_USE_BOTH
 		);
 
 		foreach ($schema->properties as $name => $property) {
+			// Handle string properties that might have escaped newlines from CSV
+			if (isset($property['type']) && $property['type'] === 'string' && isset($objectData[$name]) && is_string($objectData[$name])) {
+				// Convert literal \n back to actual newlines for proper display
+				$objectData[$name] = str_replace('\\n', "\n", $objectData[$name]);
+				continue;
+			}
+
 			// Skip properties that are not references or if the data is not set
 			if (!isset($property['$ref'], $objectData[$name]) || !is_string($objectData[$name])) {
 				continue;
@@ -132,33 +139,30 @@ final class ObjectImporter
 				SchemaData::PROPERTY_TYPE_TO_REF['gallery'],
 				SchemaData::PROPERTY_TYPE_TO_REF['file'],
 				SchemaData::PROPERTY_TYPE_TO_REF['depot'],
-			], true)
-			) {
-				if (self::isJson($objectData[$name])) {
-					$objectData[$name] = json_decode($objectData[$name], true);
-					continue;
-				}
+			], true) && $this->isJson($objectData[$name])) {
+				$objectData[$name] = json_decode($objectData[$name], true);
+				continue;
 			}
 
 			switch ($property['$ref']) {
 				case SchemaData::PROPERTY_TYPE_TO_REF['image']:
-					$this->images[$name] = self::replacePathTemplates($objectData[$name]);
+					$this->images[$name] = $this->replacePathTemplates($objectData[$name]);
 					$objectData[$name]   = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['gallery']:
-					$this->galleries[$name] = self::replacePathTemplates($objectData[$name]);
+					$this->galleries[$name] = $this->replacePathTemplates($objectData[$name]);
 					$objectData[$name]      = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['file']:
-					$this->files[$name] = self::replacePathTemplates($objectData[$name]);
+					$this->files[$name] = $this->replacePathTemplates($objectData[$name]);
 					$objectData[$name]  = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['depot']:
-					$this->depots[$name] = self::replacePathTemplates($objectData[$name]);
+					$this->depots[$name] = $this->replacePathTemplates($objectData[$name]);
 					$objectData[$name]   = [];
 					break;
 				case SchemaData::PROPERTY_TYPE_TO_REF['list']:
-					$objectData[$name] = self::convertList($objectData[$name]);
+					$objectData[$name] = $this->convertList($objectData[$name]);
 					break;
 			}
 		}
@@ -166,7 +170,7 @@ final class ObjectImporter
 		return $objectData;
 	}
 
-	private static function isJson(string $data): bool
+	private function isJson(string $data): bool
 	{
 		// Check if the data is valid JSON
 		json_decode($data);
@@ -182,7 +186,7 @@ final class ObjectImporter
 
 				// Check for alt text file and update the image item if found
 				$altContent = $this->getImageAltText($path);
-				if (!empty($altContent)) {
+				if ($altContent !== '' && $altContent !== false) {
 					$this->objectPatcher->patchObjectProperty(
 						$this->collection,
 						$this->objectID,
@@ -243,7 +247,7 @@ final class ObjectImporter
 
 					// Check for alt text file and update the gallery item if found
 					$altContent = $this->getImageAltText($imagePath);
-					if (!empty($altContent)) {
+					if ($altContent !== '' && $altContent !== false) {
 						// Get the filename to use as the identifier for the gallery item
 						$filename = $fileInfo->getFilename();
 						$this->objectPatcher->patchObjectPropertyMeta(
@@ -278,15 +282,13 @@ final class ObjectImporter
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
-	private static function replacePathTemplates(string $path = ''): string
+	private function replacePathTemplates(string $path = ''): string
 	{
-		$path = str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
-
-		return $path;
+		return str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
 	}
 
 	/** @return array<string> */
-	private static function convertList(string $list): array
+	private function convertList(string $list): array
 	{
 		$list = explode(',', $list);
 		$list = array_map('trim', $list);

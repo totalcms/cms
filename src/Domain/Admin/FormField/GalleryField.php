@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 
-final class GalleryField extends ImageField
+class GalleryField extends ImageField
 {
 	protected string $defaultFieldType = 'gallery';
 	protected string $defaultInputType = 'gallery';

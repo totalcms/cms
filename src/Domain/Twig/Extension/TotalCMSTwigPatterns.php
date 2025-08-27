@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Twig\Extension;
  *
  * @SuppressWarnings("PHPMD.TooManyFields")
  */
-final class TotalCMSTwigPatterns
+class TotalCMSTwigPatterns
 {
 	public string $alphaNumeric             = '[a-zA-Z0-9]+';
 	public string $notBlank                 = '\S+';

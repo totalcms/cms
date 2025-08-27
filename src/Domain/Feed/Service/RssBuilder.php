@@ -9,7 +9,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Support\Config;
 
-final class RssBuilder
+class RssBuilder
 {
 	public const DEFAULT_FIELD_MAP = [
 		'title'   => 'title',
@@ -22,12 +22,12 @@ final class RssBuilder
 
 	/** @var array<string,string> */
 	private array $fieldMap = self::DEFAULT_FIELD_MAP;
-	private RSS2 $feed;
+	private readonly RSS2 $feed;
 
 	public function __construct(
-		private IndexReader $indexReader,
-		private CollectionFetcher $collectionFetcher,
-		private Config $config,
+		private readonly IndexReader $indexReader,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly Config $config,
 	) {
 		$this->feed = new RSS2();
 	}
@@ -135,20 +135,15 @@ final class RssBuilder
 	private function mimeType(string $media): string
 	{
 		$extension = pathinfo($media, PATHINFO_EXTENSION);
-		switch ($extension) {
-			case 'mp3':
-				return 'audio/mpeg';
-			case 'ogg':
-				return 'audio/ogg';
-			case 'wav':
-				return 'audio/wav';
-			case 'mp4':
-				return 'video/mp4';
-			case 'webm':
-				return 'video/webm';
-		}
 
-		return 'application/octet-stream';
+		return match ($extension) {
+			'mp3'   => 'audio/mpeg',
+			'ogg'   => 'audio/ogg',
+			'wav'   => 'audio/wav',
+			'mp4'   => 'video/mp4',
+			'webm'  => 'video/webm',
+			default => 'application/octet-stream',
+		};
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

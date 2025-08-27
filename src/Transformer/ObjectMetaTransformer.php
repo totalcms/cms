@@ -5,7 +5,7 @@ namespace TotalCMS\Transformer;
 use League\Fractal;
 use TotalCMS\Domain\Object\Data\ObjectData;
 
-final class ObjectMetaTransformer extends Fractal\TransformerAbstract
+class ObjectMetaTransformer extends Fractal\TransformerAbstract
 {
 	/**
 	 * Fractal transform for a object.

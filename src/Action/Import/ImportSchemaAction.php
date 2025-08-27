@@ -9,7 +9,7 @@ use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class ImportSchemaAction
+readonly class ImportSchemaAction
 {
 	public function __construct(
 		private SchemaSaver $schemaSaver,
@@ -28,9 +28,19 @@ final class ImportSchemaAction
 			throw new HttpBadRequestException($request, 'Upload failed');
 		}
 
-		$schema = $this->schemaSaver->saveSchema(
-			json_decode($files['schema']->getStream()->getContents(), true)
-		);
+		$jsonContent = $files['schema']->getStream()->getContents();
+		$schemaData  = json_decode($jsonContent, true);
+
+		// Handle JSON decode errors
+		if ($schemaData === null && json_last_error() !== JSON_ERROR_NONE) {
+			throw new HttpBadRequestException($request, 'Invalid JSON: ' . json_last_error_msg());
+		}
+
+		try {
+			$schema = $this->schemaSaver->saveSchema($schemaData);
+		} catch (\InvalidArgumentException $e) {
+			throw new HttpBadRequestException($request, 'Invalid schema data: ' . $e->getMessage());
+		}
 
 		return $this->renderer->json($response, $schema->toArray());
 	}

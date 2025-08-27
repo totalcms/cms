@@ -28,7 +28,7 @@ use TotalCMS\Support\Config;
  * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
  * This encapsulates the creation of the TotalForm object without depencency injection here.
  */
-final class TotalFormFactory
+readonly class TotalFormFactory
 {
 	private string $api;
 
@@ -190,13 +190,17 @@ final class TotalFormFactory
 	public function schema(array $options = []): string
 	{
 		$options = array_merge([
-			'id'   => '',
+			'id'         => '',
+			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
-			'api'           => $this->api,
-			'schemaFetcher' => $this->schemaFetcher,
-			'schemaLister'  => $this->schemaLister,
-			'schemaFactory' => $this->schemaFactory,
+			'api'               => $this->api,
+			'objectFetcher'     => $this->objectFetcher,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+			'schemaFactory'     => $this->schemaFactory,
 		]);
 
 		$form = new SchemaForm(...$options);
@@ -239,11 +243,14 @@ final class TotalFormFactory
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([
-			'id'   => '',
+			'id'         => '',
+			'collection' => '',
 		], $options, [
 			// These options cannot be overridden
 			'api'               => $this->api,
+			'objectFetcher'     => $this->objectFetcher,
 			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
 		]);
@@ -623,13 +630,13 @@ final class TotalFormFactory
 		// This is a dummy form to satisfy the type hinting in the field method.
 		// It will not be used, but it is required to create a FormField instance.
 		return new ObjectForm(
-			collection        : 'text',
-			api               : $this->api,
+			objectFetcher     : $this->objectFetcher,
 			collectionFetcher : $this->collectionFetcher,
 			collectionReader  : $this->collectionReader,
-			objectFetcher     : $this->objectFetcher,
 			schemaFetcher     : $this->schemaFetcher,
 			schemaLister      : $this->schemaLister,
+			api               : $this->api,
+			collection        : 'text',
 		);
 	}
 

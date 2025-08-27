@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Playground\Data;
 /**
  * Data object for Playground domain constants and utilities.
  */
-final class PlaygroundData
+class PlaygroundData
 {
 	/**
 	 * The collection ID for playground snippets.

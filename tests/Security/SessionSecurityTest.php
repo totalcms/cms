@@ -98,12 +98,9 @@ final class SessionSecurityTest extends TestCase
 		$isExpired = (time() - $_SESSION['last_activity']) > $timeout;
 
 		$this->assertTrue($isExpired, 'Session should be expired');
-
 		// Session should be invalidated when expired
-		if ($isExpired) {
-			session_destroy();
-			$this->assertSame(PHP_SESSION_NONE, session_status(), 'Expired session should be destroyed');
-		}
+		session_destroy();
+		$this->assertSame(PHP_SESSION_NONE, session_status(), 'Expired session should be destroyed');
 	}
 
 	public function testSessionCookieSecurity(): void
@@ -191,13 +188,9 @@ final class SessionSecurityTest extends TestCase
 		}
 
 		// Test brute force detection
-		$recentAttempts = array_filter($attempts, function ($attempt) use ($currentTime, $timeWindow) {
-			return ($currentTime - $attempt['timestamp']) <= $timeWindow;
-		});
+		$recentAttempts = array_filter($attempts, fn (array $attempt): bool => ($currentTime - $attempt['timestamp']) <= $timeWindow);
 
-		$failedAttempts = array_filter($recentAttempts, function ($attempt) {
-			return !$attempt['success'];
-		});
+		$failedAttempts = array_filter($recentAttempts, fn (array $attempt): true => !$attempt['success']);
 
 		$this->assertGreaterThan($maxAttempts, count($failedAttempts), 'Should detect excessive failed attempts');
 
@@ -245,9 +238,9 @@ final class SessionSecurityTest extends TestCase
 			'private_key' => '-----BEGIN PRIVATE KEY-----',
 		];
 
-		foreach ($sensitiveData as $key => $value) {
+		foreach (array_keys($sensitiveData) as $key) {
 			// Sensitive data should never be stored in sessions
-			$this->assertSensitiveDataNotInSession($key, $value);
+			$this->assertSensitiveDataNotInSession($key);
 		}
 	}
 
@@ -284,7 +277,7 @@ final class SessionSecurityTest extends TestCase
 	private function assertInvalidSessionId(mixed $sessionId): void
 	{
 		// Session ID should be a valid format
-		if (!is_string($sessionId) || empty($sessionId)) {
+		if (!is_string($sessionId) || ($sessionId === '' || $sessionId === '0')) {
 			$this->assertFalse($this->isValidSessionId($sessionId), 'Invalid session ID should be rejected');
 
 			return;
@@ -436,11 +429,8 @@ final class SessionSecurityTest extends TestCase
 	/**
 	 * Helper method to test sensitive data not in session.
 	 */
-	private function assertSensitiveDataNotInSession(string $key, string $value): void
+	private function assertSensitiveDataNotInSession(string $key): void
 	{
-		// Application should detect when sensitive data is being stored in sessions
-		$sessionData = [$key => $value];
-
 		// These patterns indicate sensitive data that shouldn't be in sessions
 		$sensitivePatterns = [
 			'password', 'credit_card', 'ssn', 'social_security',

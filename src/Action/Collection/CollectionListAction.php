@@ -8,21 +8,16 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final class CollectionListAction
+readonly class CollectionListAction
 {
-	private JsonRenderer $renderer;
-	private CollectionLister $collectionListService;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param JsonRenderer $renderer The renderer
-	 * @param CollectionLister $service The service
+	 * @param CollectionLister $collectionListService The service
 	 */
-	public function __construct(JsonRenderer $renderer, CollectionLister $service)
+	public function __construct(private JsonRenderer $renderer, private CollectionLister $collectionListService)
 	{
-		$this->renderer              = $renderer;
-		$this->collectionListService = $service;
 	}
 
 	/**

@@ -2,6 +2,9 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -11,7 +14,7 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 /**
  * Total Form Builder.
  */
-final class SchemaForm extends TotalForm
+class SchemaForm extends TotalForm
 {
 	public bool $reserved = false;
 	public SchemaData $schemaObjectData;
@@ -26,26 +29,64 @@ final class SchemaForm extends TotalForm
 	 * @param array<string,mixed>  $data
 	 */
 	public function __construct(
+		protected ObjectFetcher $objectFetcher,
+		protected CollectionFetcher $collectionFetcher,
+		protected IndexReader $collectionReader,
 		protected SchemaFetcher $schemaFetcher,
 		public SchemaLister $schemaLister,
 		protected SchemaFactory $schemaFactory,
 		public string $api,
+		public string $collection = '',
 		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
+		protected string $buildError  = '',
 		protected string $helpStyle   = '',
 		protected string $save        = '',
 		protected string $delete      = '',
+		protected string $formType    = '',
+		protected string $schema      = '',
+		protected array $newAction    = [],
 		protected array $editAction   = [],
 		protected array $deleteAction = [],
-		protected array $newAction    = [],
 		protected array $data         = [],
 		protected bool $autosave      = false,
 		protected bool $helpOnHover   = false,
 		protected bool $helpOnFocus   = false,
+		protected bool $hideID        = false,
+		protected bool $useFormGrid   = true,
 	) {
-		$this->init();
-		$this->initClass();
+		// CRITICAL: Must call parent constructor to initialize typed properties
+		// TotalForm::__construct() calls init() which properly sets:
+		// - $this->collectionData, $this->objectData, $this->schemaData
+		// Without this, template access to these properties fails with
+		// "Typed property must not be accessed before initialization" errors
+		parent::__construct(
+			$objectFetcher,
+			$collectionFetcher,
+			$collectionReader,
+			$schemaFetcher,
+			$schemaLister,
+			$api,
+			$collection,
+			$id,
+			$method,
+			$class,
+			$buildError,
+			$helpStyle,
+			$save,
+			$delete,
+			$formType,
+			$schema,
+			$newAction,
+			$editAction,
+			$deleteAction,
+			$autosave,
+			$helpOnHover,
+			$helpOnFocus,
+			$hideID,
+			$useFormGrid
+		);
 	}
 
 	protected function init(): void
@@ -54,7 +95,7 @@ final class SchemaForm extends TotalForm
 
 		$this->route = '/schemas';
 
-		if (!empty($this->id)) {
+		if ($this->id !== '') {
 			$this->route            = '/schemas/' . $this->id;
 			$this->method           = 'PUT';
 			$this->reserved         = $this->isReservedSchema($this->id);
@@ -62,7 +103,7 @@ final class SchemaForm extends TotalForm
 			$this->schemaObjectData = $this->schemaFetcher->fetchSchema($this->id);
 		}
 		// Duplicate Schema
-		if (empty($this->id) && !empty($this->data)) {
+		if ($this->id === '' && $this->data !== []) {
 			// Convert property types to refs for the properties field
 			$this->data['properties'] = SchemaSaver::propertyTypeToRef($this->data['properties']);
 			$this->schemaObjectData   = $this->schemaFactory->generateSchema($this->data);
@@ -95,7 +136,7 @@ final class SchemaForm extends TotalForm
 	private function isReservedSchema(string $id): bool
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
-		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
+		$schemas = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 
 		return in_array($id, $schemas);
 	}
@@ -119,7 +160,7 @@ final class SchemaForm extends TotalForm
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
-		if (!empty($this->id) && ($name === 'required' || $name === 'index')) {
+		if ($this->id !== '' && ($name === 'required' || $name === 'index')) {
 			// Set all of the properties as options for the required and index fields
 			$options['options'] = array_keys($this->schemaObjectData->toArray()['properties']);
 		}

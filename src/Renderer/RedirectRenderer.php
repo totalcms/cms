@@ -8,7 +8,7 @@ use Slim\Interfaces\RouteParserInterface;
 /**
  * A redirect response renderer.
  */
-final class RedirectRenderer
+readonly class RedirectRenderer
 {
 	public function __construct(
 		private RouteParserInterface $routeParser,
@@ -32,7 +32,7 @@ final class RedirectRenderer
 		string $destination,
 		array $queryParams = [],
 	): ResponseInterface {
-		if ($queryParams) {
+		if ($queryParams !== []) {
 			$destination = sprintf('%s?%s', $destination, \http_build_query($queryParams));
 		}
 

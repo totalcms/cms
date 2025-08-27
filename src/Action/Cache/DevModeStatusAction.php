@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TotalCMS\Action\Cache;
 
@@ -12,11 +12,11 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Get development mode status.
  */
-final class DevModeStatusAction
+readonly class DevModeStatusAction
 {
 	public function __construct(
-		private readonly DevModeManager $devModeManager,
-		private readonly JsonRenderer $jsonRenderer,
+		private DevModeManager $devModeManager,
+		private JsonRenderer $jsonRenderer,
 	) {
 	}
 

@@ -43,9 +43,8 @@ class PropertiesField extends FormField
 		}
 
 		$content .= $this->createAddPropertyField();
-		$content .= $this->createNewPropertyTemplate();
 
-		return $content;
+		return $content . $this->createNewPropertyTemplate();
 	}
 
 	protected function createAddPropertyField(): string
@@ -64,7 +63,7 @@ class PropertiesField extends FormField
 		$localProperties  = array_keys($this->properties);
 		$propertiesToAdd  = array_diff($schemaProperties, $localProperties);
 
-		if (empty($propertiesToAdd)) {
+		if ($propertiesToAdd === []) {
 			return '';
 		}
 
@@ -81,16 +80,14 @@ class PropertiesField extends FormField
 			]);
 		}
 
-		$select = HTMLUtils::element('select', $options, ['name' => 'addProperty']);
-
-		return $select;
+		return HTMLUtils::element('select', $options, ['name' => 'addProperty']);
 	}
 
 	protected function createNewPropertyTemplate(): string
 	{
 		$templateProperty = new PropertyField(
-			property : '',
-			form     : $this->form
+			form     : $this->form,
+			property : ''
 		);
 
 		return $templateProperty->template();

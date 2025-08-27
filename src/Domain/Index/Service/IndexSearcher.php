@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Index\Service;
 
 use Illuminate\Support\Collection;
 
-final class IndexSearcher
+readonly class IndexSearcher
 {
 	public function __construct(
 		private IndexReader $reader,
@@ -16,11 +16,7 @@ final class IndexSearcher
 	{
 		$index = $this->reader->fetchIndex($collection);
 
-		$objects = $index->objects->filter(function ($object) use ($property, $query) {
-			return self::searchProperty($object, $property, $query);
-		});
-
-		return $objects;
+		return $index->objects->filter(fn ($object): bool => $this->searchProperty($object, $property, $query));
 	}
 
 	/**
@@ -32,11 +28,11 @@ final class IndexSearcher
 	{
 		$index = $this->reader->fetchIndex($collection);
 
-		if (empty($query)) {
+		if ($query === '') {
 			return collect([]);
 		}
 
-		$queries = self::splitQuery($query);
+		$queries = $this->splitQuery($query);
 		$queries = array_diff($queries, ['and']);
 		$results = $index->objects;
 		$matchOR = false;
@@ -46,18 +42,18 @@ final class IndexSearcher
 			$queries = array_diff($queries, ['or']);
 		}
 
-		if (empty($queries)) {
+		if ($queries === []) {
 			// edge case if someone searches for "and" or "or"
 			return collect([]);
 		}
 
 		// Filter the collection based on match logic
-		$results = $results->filter(function ($object) use ($queries, $matchOR) {
+		$results = $results->filter(function ($object) use ($queries, $matchOR): bool {
 			if ($matchOR) {
-				return self::filterOR($object, $queries);
+				return $this->filterOR($object, $queries);
 			}
 
-			return self::filterAND($object, $queries);
+			return $this->filterAND($object, $queries);
 		});
 
 		if (!empty($priorityProperties)) {
@@ -66,9 +62,9 @@ final class IndexSearcher
 			}
 			$priorityProperties = array_map('trim', $priorityProperties);
 			// Sort the filtered collection by priority
-			$results = $results->sort(function ($a, $b) use ($priorityProperties, $queries) {
-				$priorityA = self::getPriorityScore($a, $priorityProperties, $queries);
-				$priorityB = self::getPriorityScore($b, $priorityProperties, $queries);
+			$results = $results->sort(function ($a, $b) use ($priorityProperties, $queries): int {
+				$priorityA = $this->getPriorityScore($a, $priorityProperties, $queries);
+				$priorityB = $this->getPriorityScore($b, $priorityProperties, $queries);
 
 				return $priorityA <=> $priorityB;
 			})->values(); // Reindex the sorted collection
@@ -83,19 +79,16 @@ final class IndexSearcher
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
 	 */
-	private static function filterOR(array $object, array $queries): bool
+	private function filterOR(array $object, array $queries): bool
 	{
 		foreach ($queries as $query) {
-			if (self::matchPropertyQuery($query)) {
-				[$property, $searchTerm] = self::extractPropertyQuery($query);
-
-				if (self::searchProperty($object, $property, $searchTerm)) {
+			if ($this->matchPropertyQuery($query)) {
+				[$property, $searchTerm] = $this->extractPropertyQuery($query);
+				if ($this->searchProperty($object, $property, $searchTerm)) {
 					return true;
 				}
-			} else {
-				if (self::searchArray($object, $query)) {
-					return true;
-				}
+			} elseif (self::searchArray($object, $query)) {
+				return true;
 			}
 		}
 
@@ -108,32 +101,30 @@ final class IndexSearcher
 	 * @param array<mixed> $object
 	 * @param array<string> $queries
 	 */
-	private static function filterAND(array $object, array $queries): bool
+	private function filterAND(array $object, array $queries): bool
 	{
 		foreach ($queries as $query) {
-			if (self::matchPropertyQuery($query)) {
-				[$property, $searchTerm] = self::extractPropertyQuery($query);
-
-				if (!self::searchProperty($object, $property, $searchTerm)) {
+			if ($this->matchPropertyQuery($query)) {
+				[$property, $searchTerm] = $this->extractPropertyQuery($query);
+				if (!$this->searchProperty($object, $property, $searchTerm)) {
 					return false; // If any query does not match, exclude the object
 				}
-			} else {
-				if (!self::searchArray($object, $query)) {
-					return false; // If any query does not match, exclude the object
-				}
+			} elseif (!self::searchArray($object, $query)) {
+				return false;
+				// If any query does not match, exclude the object
 			}
 		}
 
 		return true; // All queries matched
 	}
 
-	private static function matchPropertyQuery(string $query): bool
+	private function matchPropertyQuery(string $query): bool
 	{
-		return strpos($query, ':') !== false;
+		return str_contains($query, ':');
 	}
 
 	/** @return array<string> */
-	private static function extractPropertyQuery(string $query): array
+	private function extractPropertyQuery(string $query): array
 	{
 		return explode(':', $query, 2);
 	}
@@ -163,11 +154,9 @@ final class IndexSearcher
 				if (self::searchArray($value, $query)) {
 					return true;
 				}
-			} else {
+			} elseif (self::searchValue($value, $query)) {
 				// Perform case-insensitive search for string values
-				if (self::searchValue($value, $query)) {
-					return true;
-				}
+				return true;
 			}
 		}
 
@@ -175,7 +164,7 @@ final class IndexSearcher
 	}
 
 	/** @param array<mixed> $object */
-	private static function searchProperty(array $object, string $property, string $query): bool
+	private function searchProperty(array $object, string $property, string $query): bool
 	{
 		if (array_key_exists($property, $object)) {
 			return self::searchValue($object[$property], $query);
@@ -185,14 +174,14 @@ final class IndexSearcher
 	}
 
 	/** @return array<string> */
-	private static function splitQuery(string $query): array
+	private function splitQuery(string $query): array
 	{
 		$query = trim(mb_strtolower($query));
 		// Modified regex to capture terms without quotes
 		preg_match_all('/"([^"]+)"|(\S+)/', $query, $matches);
 
 		// Extract the terms from the matches, removing quotes
-		$terms = array_map(function ($term1, $term2) {
+		$terms = array_map(function ($term1, $term2): string {
 			return $term1 ?: $term2; // Use non-empty value
 		}, $matches[1], $matches[2]);
 
@@ -208,7 +197,7 @@ final class IndexSearcher
 	 * @param array<string> $properties
 	 * @param array<string> $queries
 	 */
-	private static function getPriorityScore(array $object, array $properties, array $queries): int
+	private function getPriorityScore(array $object, array $properties, array $queries): int
 	{
 		foreach ($properties as $index => $property) {
 			if (!array_key_exists($property, $object)) {
@@ -220,10 +209,8 @@ final class IndexSearcher
 					if (self::searchArray($value, $query)) {
 						return $index;
 					}
-				} else {
-					if (self::searchValue($value, $query)) {
-						return $index;
-					}
+				} elseif (self::searchValue($value, $query)) {
+					return $index;
 				}
 			}
 		}

@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Object\Repository;
 
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
@@ -11,35 +12,20 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
-final class ObjectRepository extends StorageRepository
+class ObjectRepository extends StorageRepository
 {
-	private ObjectFactory $factory;
-	private SchemaValidator $validator;
-	private CollectionFetcher $collectionFetcher;
-	private CacheManager $cacheManager;
-
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		ObjectFactory $factory,
-		SchemaValidator $validator,
-		CollectionFetcher $collectionFetcher,
-		CacheManager $cacheManager,
+		private readonly ObjectFactory $factory,
+		private readonly SchemaValidator $validator,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CacheManager $cacheManager,
 	) {
 		parent::__construct($filesystem);
-
-		$this->factory           = $factory;
-		$this->validator         = $validator;
-		$this->collectionFetcher = $collectionFetcher;
-		$this->cacheManager      = $cacheManager;
 	}
 
 	/**
 	 * Save an object.
-	 *
-	 * @param string $collection
-	 * @param ObjectData $object
-	 *
-	 * @return void
 	 */
 	public function saveObject(string $collection, ObjectData $object): void
 	{
@@ -49,7 +35,7 @@ final class ObjectRepository extends StorageRepository
 
 		$collectionInfo = $this->collectionFetcher->fetchCollection($collection);
 
-		if ($collectionInfo === null) {
+		if (!$collectionInfo instanceof CollectionData) {
 			throw new \UnexpectedValueException('Collection not found: ' . $collection);
 		}
 
@@ -93,9 +79,7 @@ final class ObjectRepository extends StorageRepository
 				// Cache the raw data (not the ObjectData instance) for 1 hour
 				$this->cacheManager->storeComputedData($cacheKey, $contents, CacheManager::TTL_OBJECT_DATA);
 
-				$object = $this->factory->generateObject($collection, $contents);
-
-				return $object;
+				return $this->factory->generateObject($collection, $contents);
 			}
 		}
 

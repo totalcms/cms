@@ -58,9 +58,8 @@ class SchemaField extends PropertyField
 			'value'       => $this->type,
 			'options'     => SchemaData::PROPERTY_TYPES,
 		]);
-		$content .= parent::topFieldInfo();
 
-		return $content;
+		return $content . parent::topFieldInfo();
 	}
 
 	protected function buildPropertyInfo(): string
@@ -95,7 +94,7 @@ class SchemaField extends PropertyField
 			'placeholder' => '{ "key": "value" }',
 			'settings'    => ['rows' => 3],
 			'help'        => 'Extra schema definitions for this property in valid JSON format',
-			'value'       => empty($this->extra) ? '' : json_encode($this->extra, JSON_PRETTY_PRINT),
+			'value'       => $this->extra === [] ? '' : json_encode($this->extra, JSON_PRETTY_PRINT),
 		]);
 
 		return HTMLUtils::details('Property Info', $content);
@@ -141,11 +140,9 @@ class SchemaField extends PropertyField
 			$buttons .= HTMLUtils::button('', ['class' => 'trash', 'title' => "Delete {$this->property} property"]);
 		}
 
-		$field  = HTMLUtils::element('div', $input . $buttons . $dialog, [
+		return HTMLUtils::element('div', $input . $buttons . $dialog, [
 			'class' => "schema-field {$this->field}-field {$this->type}-type",
 		]);
-
-		return $field;
 	}
 
 	/**
@@ -157,7 +154,7 @@ class SchemaField extends PropertyField
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key): bool => in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -169,7 +166,7 @@ class SchemaField extends PropertyField
 	{
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
-		return array_filter($properties, fn ($key) => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+		return array_filter($properties, fn ($key): bool => !in_array($key, self::SCHEMA_PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
 	}
 
 	/**
@@ -206,7 +203,7 @@ class SchemaField extends PropertyField
 					];
 				}
 			}
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// If there's an error, just return the empty select option
 			// This prevents breaking the form if services aren't available
 		}

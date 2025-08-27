@@ -4,8 +4,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Schema;
 
-return function (App $app) {
-	$app->group('/schemas', function (RouteCollectorProxy $group) {
+return function (App $app): void {
+	$app->group('/schemas', function (RouteCollectorProxy $group): void {
 		// Collection Schema
 		$group->get('', Schema\SchemaListAction::class)->setName('schema-list');
 		$group->get('/{id}', Schema\SchemaFetchAction::class)->setName('schema-fetch');

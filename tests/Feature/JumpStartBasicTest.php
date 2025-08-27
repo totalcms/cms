@@ -13,8 +13,8 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('JumpStart Basic Functionality', function () {
-	it('can create and manipulate JumpStart data structures', function () {
+describe('JumpStart Basic Functionality', function (): void {
+	it('can create and manipulate JumpStart data structures', function (): void {
 		$jumpStart = new JumpStartData('Test JumpStart', 'Test description');
 
 		expect($jumpStart->name)->toBe('Test JumpStart');
@@ -48,7 +48,7 @@ describe('JumpStart Basic Functionality', function () {
 		expect($restored->getTotalObjectCount())->toBe(1);
 	});
 
-	it('can handle factory definitions', function () {
+	it('can handle factory definitions', function (): void {
 		$jumpStart = new JumpStartData();
 
 		// Add factory definitions
@@ -77,7 +77,7 @@ describe('JumpStart Basic Functionality', function () {
 		expect($array['factory'][1]['id'])->toBe('specific-text');
 	});
 
-	it('can handle custom schemas and collections', function () {
+	it('can handle custom schemas and collections', function (): void {
 		$jumpStart = new JumpStartData();
 
 		// Add custom schema
@@ -106,7 +106,7 @@ describe('JumpStart Basic Functionality', function () {
 		expect($array['collections']['custom'][0]['id'])->toBe('products');
 	});
 
-	it('validates demo file can be loaded and parsed', function () {
+	it('validates demo file can be loaded and parsed', function (): void {
 		$demoPath = jumpstartResourcePath('demo.json');
 		expect(file_exists($demoPath))->toBeTrue();
 

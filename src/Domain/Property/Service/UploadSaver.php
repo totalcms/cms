@@ -8,7 +8,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 class UploadSaver
 {
 	public function __construct(
-		private PropertyRepository $storage,
+		private readonly PropertyRepository $storage,
 	) {
 	}
 

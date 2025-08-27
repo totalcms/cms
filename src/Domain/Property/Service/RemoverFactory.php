@@ -8,7 +8,7 @@ use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageRepository;
 
-final class RemoverFactory
+readonly class RemoverFactory
 {
 	public function __construct(
 		private PropertyRepository $storage,
@@ -25,7 +25,7 @@ final class RemoverFactory
 
 		$className = 'TotalCMS\\Domain\\Property\\Service\\' . ucfirst($type) . 'Remover';
 		if (!class_exists($className)) {
-			$className = 'TotalCMS\\Domain\\Property\\Service\\FileRemover';
+			$className = FileRemover::class;
 		}
 
 		$remover = new $className(
@@ -46,6 +46,6 @@ final class RemoverFactory
 	{
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
-		return basename($schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
+		return basename((string)$schema->properties[$property]['$ref'], StorageRepository::FILE_EXT);
 	}
 }

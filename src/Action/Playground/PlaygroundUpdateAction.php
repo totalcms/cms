@@ -8,7 +8,7 @@ use TotalCMS\Domain\Playground\Service\PlaygroundUpdater;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class PlaygroundUpdateAction
+readonly class PlaygroundUpdateAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

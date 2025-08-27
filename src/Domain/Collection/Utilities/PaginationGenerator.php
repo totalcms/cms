@@ -38,12 +38,10 @@ class PaginationGenerator
 		$totalPages  = HTMLUtils::element('span', strval($totalPages), ['class' => 'pagination-total']);
 		$counters    = HTMLUtils::element('span', "$currentPage / $totalPages", ['class' => 'pagination-counters']);
 
-		$pagination = HTMLUtils::element('nav', $prevLink . $counters . $nextLink, [
+		return HTMLUtils::element('nav', $prevLink . $counters . $nextLink, [
 			'class'         => 'cms-pagination simple',
 			'data-page-key' => $pageKey,
 		]);
-
-		return $pagination;
 	}
 
 	/** @param array<string,string> $getData */
@@ -88,9 +86,7 @@ class PaginationGenerator
 
 		$pages = HTMLUtils::element('ul', $pages, ['class' => 'pagination-pages']);
 
-		$pagination = HTMLUtils::element('nav', $prevLink . $pages . $nextLink, ['class' => 'cms-pagination full']);
-
-		return $pagination;
+		return HTMLUtils::element('nav', $prevLink . $pages . $nextLink, ['class' => 'cms-pagination full']);
 	}
 
 	/** @param array<string,string> $getData */

@@ -32,7 +32,11 @@
       "Bash(python3:*)",
       "WebFetch(domain:glide.thephpleague.com)",
       "Bash(curl:*)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "WebSearch",
+      "WebFetch(domain:packagist.org)",
+      "WebFetch(domain:image.intervention.io)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }

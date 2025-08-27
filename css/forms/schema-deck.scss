@@ -373,6 +373,13 @@
 		display : none;
 	}
 }
+.price-field {
+	--schema-icon : var(--icon-dollar);
+
+	&.number-type:after {
+		display : none;
+	}
+}
 .number-field {
 	--schema-icon : var(--icon-number);
 

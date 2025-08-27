@@ -292,7 +292,7 @@ final class IdentifierDeckContextTest extends TestCase
 		$this->assertLessThan(0.1, $time); // Should be fast
 
 		// Check that all IDs are unique
-		$ids = array_map(fn ($id) => $id->getValue(), $identifiers);
+		$ids = array_map(fn (MockIdentifierForDeckContext $id): string => $id->getValue(), $identifiers);
 		$this->assertEquals(50, count(array_unique($ids)));
 	}
 
@@ -310,7 +310,6 @@ final class IdentifierDeckContextTest extends TestCase
  */
 class MockIdentifierForDeckContext
 {
-	private bool $isInDeck;
 	private string $value           = '';
 	private string $autogenTemplate = '';
 	private array $deckItemFields   = [];
@@ -320,9 +319,8 @@ class MockIdentifierForDeckContext
 	private bool $apiCheckTriggered = false;
 	private string $timestamp       = '';
 
-	public function __construct(bool $isInDeck)
+	public function __construct(private readonly bool $isInDeck)
 	{
-		$this->isInDeck = $isInDeck;
 	}
 
 	public function isInDeck(): bool
@@ -402,7 +400,7 @@ class MockIdentifierForDeckContext
 
 	public function triggerFieldChange(string $fieldName): void
 	{
-		if ($this->autogenTemplate !== '' && strpos($this->autogenTemplate, '${' . $fieldName . '}') !== false) {
+		if ($this->autogenTemplate !== '' && str_contains($this->autogenTemplate, '${' . $fieldName . '}')) {
 			$this->generateAutoId();
 		}
 	}
@@ -445,8 +443,7 @@ class MockIdentifierForDeckContext
 		// Simulate slugification - matches JavaScript behavior with underscores
 		$value = strtolower($value);
 		$value = preg_replace('/[^a-z0-9]+/', '_', $value);
-		$value = trim($value, '_');
 
-		return $value;
+		return trim((string)$value, '_');
 	}
 }

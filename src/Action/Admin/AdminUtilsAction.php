@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
 
-final class AdminUtilsAction
+readonly class AdminUtilsAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
@@ -27,25 +27,12 @@ final class AdminUtilsAction
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();
 
-			switch ($page) {
-				case 'twig-playground':
-					if (isset($post['twig'])) {
-						try {
-							$results = $this->twigEngine->renderString($post['twig']);
-						} catch (\Throwable $e) {
-							$results = sprintf('<div class="error"><pre><code>%s</code></pre></div>', htmlspecialchars($e->getMessage()));
-						}
-					}
-					break;
-				case 'pretty-url-builder':
-					// nothing to do yet
-					break;
-				case 'image-batcher':
-					// Handle image batcher form submissions - steps are processed via POST data
-					break;
-				case 'import-alloy':
-					// Handle alloy import form submissions
-					break;
+			if ($page === 'twig-playground' && isset($post['twig'])) {
+				try {
+					$results = $this->twigEngine->renderString((string)$post['twig']);
+				} catch (\Throwable $e) {
+					$results = sprintf('<div class="error"><pre><code>%s</code></pre></div>', htmlspecialchars($e->getMessage()));
+				}
 			}
 		}
 
@@ -69,7 +56,11 @@ final class AdminUtilsAction
 		]);
 	}
 
-	/** @return array<string,string>|null */
+	/**
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 *
+	 * @return array<string,string>|null
+	 */
 	private function detectTotalCms1Data(): ?array
 	{
 		// Check production location first

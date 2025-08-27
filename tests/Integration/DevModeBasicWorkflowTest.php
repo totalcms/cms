@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Tests\Integration;
 
@@ -170,7 +170,7 @@ final class DevModeBasicWorkflowTest extends TestCase
 		$status = $this->devModeManager->getDevModeStatus();
 
 		// Parse the formatted time
-		$parts = explode(':', $status['remaining_formatted']);
+		$parts = explode(':', (string)$status['remaining_formatted']);
 		$this->assertCount(3, $parts);
 
 		$hours   = (int)$parts[0];

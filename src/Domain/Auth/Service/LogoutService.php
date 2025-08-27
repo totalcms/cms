@@ -6,9 +6,9 @@ use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 
-final class LogoutService
+readonly class LogoutService
 {
-	private LoggerInterface $logger;
+	public LoggerInterface $logger;
 
 	public function __construct(
 		private PhpSession $session,

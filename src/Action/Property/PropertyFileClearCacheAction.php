@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\PropertyCacheCleaner;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class PropertyFileClearCacheAction
+readonly class PropertyFileClearCacheAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

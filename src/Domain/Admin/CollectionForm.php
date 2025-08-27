@@ -3,7 +3,10 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Admin\FormField\SelectField;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -11,7 +14,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 /**
  * Total Form Builder.
  */
-final class CollectionForm extends TotalForm
+class CollectionForm extends TotalForm
 {
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
@@ -22,30 +25,65 @@ final class CollectionForm extends TotalForm
 	 * @param array<string,string> $deleteAction
 	 */
 	public function __construct(
+		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
+		protected IndexReader $collectionReader,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
+		public string $collection = '',
 		public string $id          = '',
 		protected string $method      = 'POST',
 		protected string $class       = '',
+		protected string $buildError  = '',
 		protected string $helpStyle   = '',
 		protected string $save        = '',
 		protected string $delete      = '',
-		protected array $deleteAction = [],
-		protected array $editAction   = [],
+		protected string $formType    = '',
+		protected string $schema      = '',
 		protected array $newAction    = [
 			'action' => 'redirect-object',
 			'link'   => '?id=',
 		],
+		protected array $editAction   = [],
+		protected array $deleteAction = [],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
 		protected bool $helpOnFocus = false,
 		protected bool $hideID      = false,
 		protected bool $useFormGrid = true,
 	) {
-		$this->init();
-		$this->initClass();
+		// CRITICAL: Must call parent constructor to initialize typed properties
+		// TotalForm::__construct() calls init() which properly sets:
+		// - $this->collectionData, $this->objectData, $this->schemaData
+		// Without this, template access to these properties fails with
+		// "Typed property must not be accessed before initialization" errors
+		parent::__construct(
+			$objectFetcher,
+			$collectionFetcher,
+			$collectionReader,
+			$schemaFetcher,
+			$schemaLister,
+			$api,
+			$collection,
+			$id,
+			$method,
+			$class,
+			$buildError,
+			$helpStyle,
+			$save,
+			$delete,
+			$formType,
+			$schema,
+			$newAction,
+			$editAction,
+			$deleteAction,
+			$autosave,
+			$helpOnHover,
+			$helpOnFocus,
+			$hideID,
+			$useFormGrid
+		);
 	}
 
 	protected function init(): void
@@ -54,7 +92,7 @@ final class CollectionForm extends TotalForm
 
 		$this->route = '/collections';
 
-		if (!empty($this->id)) {
+		if ($this->id !== '') {
 			$this->initCollectionData();
 			$this->route  = '/collections/' . $this->id;
 			$this->method = 'PUT';
@@ -67,7 +105,7 @@ final class CollectionForm extends TotalForm
 	public function getCollectionSchema(): ?SchemaData
 	{
 		$schema = (string)$this->fields['schema']->getValue();
-		if (empty($schema)) {
+		if ($schema === '') {
 			return null;
 		}
 
@@ -102,7 +140,7 @@ final class CollectionForm extends TotalForm
 			}
 		}
 		$sortField = $this->fields['sortBy'];
-		if (isset($this->collectionData) && $sortField instanceof SelectField) {
+		if ($this->collectionData instanceof CollectionData && $sortField instanceof SelectField) {
 			$schema     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
 			$properties = $schema->properties ?? [];
 			$options    = count($properties) > 0 ? array_keys($properties) : ['id'];
@@ -116,15 +154,15 @@ final class CollectionForm extends TotalForm
 	private function reservedSchemas(): array
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
-		$schemas = array_map(fn ($schema) => $schema->id, $schemas);
+		$schemas = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 		$ignore  = ['collection', 'schema'];
 
-		if (empty($this->id)) {
+		if ($this->id === '') {
 			// Do not allow a new collection to be created with the blog-legacy schema
 			$ignore[] = 'blog-legacy';
 		}
 
-		return array_filter($schemas, fn ($schema) => !in_array($schema, $ignore));
+		return array_filter($schemas, fn (string $schema): bool => !in_array($schema, $ignore));
 	}
 
 	/** @return array<string> */
@@ -132,7 +170,7 @@ final class CollectionForm extends TotalForm
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		return array_map(fn ($schema) => $schema->id, $schemas);
+		return array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 	}
 
 	/**
@@ -145,6 +183,7 @@ final class CollectionForm extends TotalForm
 		// Get the schema settings for a property
 		$defaults = $this->schemaData->properties[$name] ?? [];
 		$defaults = TotalForm::filterFieldProperties($defaults);
+		$defaults = array_merge($defaults, $this->fieldAttributeSettings($name));
 
 		$options  = array_merge($defaults, $options);
 
@@ -154,7 +193,7 @@ final class CollectionForm extends TotalForm
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
-		if (isset($this->collectionData)) {
+		if ($this->collectionData instanceof CollectionData) {
 			$value = $this->collectionData->toArray()[$name] ?? '';
 			if (!empty($value)) {
 				$options['value'] = $value;

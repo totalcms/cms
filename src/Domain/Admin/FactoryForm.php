@@ -7,7 +7,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 /**
  * Factory Form Builder.
  */
-final class FactoryForm
+readonly class FactoryForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 
@@ -80,7 +80,7 @@ final class FactoryForm
 		return $this->simpleform->build($qty . $rules);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->build();
 	}

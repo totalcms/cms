@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TotalCMS\Action\Cache;
 
@@ -12,11 +12,11 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Disable development mode.
  */
-final class DevModeDisableAction
+readonly class DevModeDisableAction
 {
 	public function __construct(
-		private readonly DevModeManager $devModeManager,
-		private readonly JsonRenderer $jsonRenderer,
+		private DevModeManager $devModeManager,
+		private JsonRenderer $jsonRenderer,
 	) {
 	}
 

@@ -88,7 +88,7 @@
 	.image-field > .help {
 		text-align: center;
 	}
-    .checkbox-field > .help {
+	.checkbox-field > .help {
         translate: 1.3rem 1rem;
     }
 }
@@ -159,6 +159,8 @@
     opacity: 1 !important;
 }
 
+.help-on-focus.help-label .form-field.radio-field:has(input:focus):has(.help:not(:empty)) legend,
+.help-on-hover.help-label .form-field.radio-field:has(.help:not(:empty)):hover legend,
 .help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):has(input:focus):has(.help:not(:empty)) > label,
 .help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):has(.help:not(:empty)):hover > label {
     opacity: 0;

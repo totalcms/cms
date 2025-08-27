@@ -19,9 +19,9 @@ use TotalCMS\Renderer\TwigRenderer;
 #[CoversClass(StaticPublicAssetsAction::class)]
 final class PathTraversalProtectionTest extends TestCase
 {
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
-	private UriInterface $uri;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private \PHPUnit\Framework\MockObject\MockObject $uri;
 
 	protected function setUp(): void
 	{

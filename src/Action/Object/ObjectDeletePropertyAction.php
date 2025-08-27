@@ -8,7 +8,7 @@ use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class ObjectDeletePropertyAction
+readonly class ObjectDeletePropertyAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

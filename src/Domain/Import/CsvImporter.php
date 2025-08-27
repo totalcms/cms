@@ -12,18 +12,18 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
 
-final class CsvImporter
+class CsvImporter
 {
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 	private string $collection;
 	private bool $queueJobs = false;
 
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
-		private ObjectFetcher $objectFetcher,
-		private ObjectImporter $objectImporter,
-		private IndexBuilder $indexBuilder,
-		private JobQueuer $jobQueuer,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly ObjectImporter $objectImporter,
+		private readonly IndexBuilder $indexBuilder,
+		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->addFileHandler('importer.log')->createLogger('csv-importer');
@@ -47,9 +47,7 @@ final class CsvImporter
 		$records = $csv->getRecords(); // Get the records
 
 		// Filter out empty headers
-		$headers = array_filter($headers, function ($header) {
-			return !empty(trim($header));
-		});
+		$headers = array_filter($headers, fn (string $header): bool => (trim($header) === ''));
 
 		$cleanedRecords = [];
 		foreach ($records as $record) {
@@ -88,7 +86,7 @@ final class CsvImporter
 
 		foreach ($cleanedRecords as $offset => $record) {
 			try {
-				$imported = $updateObject === true ?
+				$imported = $updateObject ?
 					$this->updateObject($offset, $record) :
 					$this->importNewObject($offset, $record);
 
@@ -115,11 +113,11 @@ final class CsvImporter
 	 */
 	public function importNewObject(int $offset, array $record): bool
 	{
-		if (!isset($record['id'])) {
-			$this->logger->warning('Skipping import of record without ID');
+		// if (!isset($record['id'])) {
+		// 	$this->logger->warning('Skipping import of record without ID');
 
-			return false;
-		}
+		// 	return false;
+		// }
 		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
 			$this->logger->warning($error);

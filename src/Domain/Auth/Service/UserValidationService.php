@@ -6,7 +6,7 @@ use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
 
-final class UserValidationService
+readonly class UserValidationService
 {
 	public const ADMINGROUP = 'admin';
 
@@ -20,7 +20,7 @@ final class UserValidationService
 	/** @return array<string,mixed> */
 	public function validateUserByEmail(string $email, string $collection = ''): array
 	{
-		if (empty($collection)) {
+		if ($collection === '') {
 			$collection = $this->config->auth['collection'];
 		}
 
@@ -37,11 +37,11 @@ final class UserValidationService
 	/** @return array<string,mixed> */
 	public function validateUserById(string $userId, string $collection = ''): array
 	{
-		if (empty($collection)) {
+		if ($collection === '') {
 			$collection = $this->config->auth['collection'];
 		}
 
-		if (empty($userId)) {
+		if ($userId === '') {
 			throw new \InvalidArgumentException('No User ID provided');
 		}
 
@@ -53,9 +53,7 @@ final class UserValidationService
 			throw new \Exception("User $userId does not exist");
 		}
 
-		$user = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
-
-		return $user;
+		return $this->objectFetcher->fetchObject($collection, $userId)->toArray();
 	}
 
 	/** @param string|array<string> $groups */
@@ -67,14 +65,14 @@ final class UserValidationService
 
 		try {
 			$user = $this->validateUserById($userId, $collection);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 		// Admin users are always allowed
 		$groups[] = self::ADMINGROUP;
 		$found    = array_intersect($groups, $user['groups']);
 
-		return !empty($found);
+		return $found !== [];
 	}
 
 	public function isSuperAdmin(string $userId): bool

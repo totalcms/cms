@@ -14,7 +14,7 @@ class SvgData extends PropertyData
 {
 	public function __construct(public string $svg = '', public array $settings = [])
 	{
-		if (!empty($svg)) {
+		if ($svg !== '') {
 			if ($settings['svgclean'] ?? true) {
 				// Sanitize the SVG content before validation
 				$this->svg = SVGSanitizer::sanitizeAndValidate($svg);

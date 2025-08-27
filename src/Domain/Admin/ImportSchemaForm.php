@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class ImportSchemaForm
+readonly class ImportSchemaForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 
@@ -37,7 +37,7 @@ final class ImportSchemaForm
 		return $this->simpleform->build($file);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->build();
 	}

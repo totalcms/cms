@@ -11,7 +11,7 @@ use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
-final class GlideFactory
+readonly class GlideFactory
 {
 	public const CACHEDIR  = '.cache';
 	public const PALETTE   = 'palette';
@@ -25,8 +25,6 @@ final class GlideFactory
 
 	/**
 	 * Get the original image.
-	 *
-	 * @param string $imagePath
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -58,7 +56,7 @@ final class GlideFactory
 			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
 			'defaults'               => $this->config->imageworks['defaults'],
 			'presets'                => $this->presets($imageData),
-			'response'               => new PsrResponseFactory(new Response(), fn ($stream) => new Stream($stream)),
+			'response'               => new PsrResponseFactory(new Response(), fn ($stream): Stream => new Stream($stream)),
 		]);
 
 		return $glide;
@@ -104,11 +102,11 @@ final class GlideFactory
 
 		$size = intval($size);
 
-		if (empty($border)) {
+		if ($border === '') {
 			$border = 'ffffff';
 		}
 
-		if (empty($method)) {
+		if ($method === '') {
 			$method = 'overlay';
 		}
 

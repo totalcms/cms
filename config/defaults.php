@@ -59,6 +59,7 @@ $settings['schemas']  = $settings['root'] . '/resources/schemas';
 $settings['debug'] = false; // Set to true for development
 
 // Cache configuration
+// Priority: APCu > Redis > Memcached > Filesystem (optimized for single-server deployments)
 $settings['cache'] = [
 	'filesystem' => [
 		'enabled'   => true,
@@ -77,10 +78,14 @@ $settings['cache'] = [
 		'host'    => '127.0.0.1',
 		'port'    => 11211,
 	],
+	'apcu' => [
+		'enabled' => true,
+		'prefix'  => 'tcms_',
+	],
 ];
 
 // Clean up trailing slashes in DOCUMENT_ROOT
-$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR);
+$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
 
 // Path to cms data folder
 $settings['datadir'] = $settings['docroot'] . '/tcms-data';

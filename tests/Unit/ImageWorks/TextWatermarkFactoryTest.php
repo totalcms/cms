@@ -13,7 +13,7 @@ use TotalCMS\Support\Config;
 class TextWatermarkFactoryTest extends TestCase
 {
 	private TextWatermarkFactory $textWatermarkFactory;
-	private StorageAdapterInterface $mockFilesystem;
+	private \PHPUnit\Framework\MockObject\MockObject $mockFilesystem;
 	private Config $mockConfig;
 
 	protected function setUp(): void
@@ -75,7 +75,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('loadFontFromDepot');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'Dorsa-Regular.ttf');
 
@@ -108,7 +107,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('loadFontFromDepot');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'CustomFont.otf');
 
@@ -141,7 +139,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('loadFontFromDepot');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'MyFont');
 
@@ -162,15 +159,12 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->mockFilesystem
 			->expects($this->exactly(3))
 			->method('fileExists')
-			->willReturnCallback(function ($path) {
+			->willReturnCallback(function ($path): bool {
 				if ($path === 'depot/watermark-fonts/depot/ModernFont.ttf') {
 					return false;
 				}
-				if ($path === 'depot/watermark-fonts/depot/ModernFont.otf') {
-					return true;
-				}
 
-				return false;
+				return $path === 'depot/watermark-fonts/depot/ModernFont.otf';
 			});
 
 		$this->mockFilesystem
@@ -182,7 +176,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('loadFontFromDepot');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'ModernFont');
 
@@ -200,9 +193,7 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->mockFilesystem
 			->expects($this->exactly(3))
 			->method('fileExists')
-			->willReturnCallback(function ($path) {
-				return str_contains($path, 'NonExistent') ? false : true;
-			});
+			->willReturnCallback(fn ($path): bool => !str_contains((string)$path, 'NonExistent'));
 
 		$this->mockFilesystem
 			->expects($this->never())
@@ -211,7 +202,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('loadFontFromDepot');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'NonExistent');
 
@@ -232,14 +222,11 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->mockFilesystem
 			->expects($this->exactly(3))
 			->method('fileExists')
-			->willReturnCallback(function ($path) {
-				return str_contains($path, 'custom-fonts') && str_contains($path, 'TestFont') ? false : true;
-			});
+			->willReturnCallback(fn ($path): bool => str_contains((string)$path, 'custom-fonts') && str_contains((string)$path, 'TestFont') ? false : true);
 
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($customFactory);
 		$method     = $reflection->getMethod('loadFontFromDepot');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($customFactory, 'TestFont');
 
@@ -254,10 +241,9 @@ class TextWatermarkFactoryTest extends TestCase
 		$this->mockFilesystem
 			->expects($this->exactly(2))
 			->method('fileExists')
-			->willReturnCallback(function ($path) {
+			->willReturnCallback(fn ($path): bool =>
 				// Return true for both the extension check and final path check
-				return str_contains($path, 'Dorsa.ttf');
-			});
+				str_contains((string)$path, 'Dorsa.ttf'));
 
 		$this->mockFilesystem
 			->expects($this->once())
@@ -268,7 +254,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('getFontPath');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'Dorsa');
 
@@ -292,7 +277,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('getFontPath');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, 'NonExistent');
 
@@ -305,7 +289,6 @@ class TextWatermarkFactoryTest extends TestCase
 		// Use reflection to call the private method
 		$reflection = new \ReflectionClass($this->textWatermarkFactory);
 		$method     = $reflection->getMethod('getFontPath');
-		$method->setAccessible(true);
 
 		$result = $method->invoke($this->textWatermarkFactory, null);
 

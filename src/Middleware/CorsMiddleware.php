@@ -13,7 +13,7 @@ use Slim\Routing\RouteContext;
  *
  * Allows CORS preflight from any domain.
  */
-final class CorsMiddleware implements MiddlewareInterface
+class CorsMiddleware implements MiddlewareInterface
 {
 	/**
 	 * Invoke middleware.

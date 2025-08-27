@@ -4,7 +4,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-final class StyledtextField extends TextareaField
+class StyledtextField extends TextareaField
 {
 	protected string $defaultFieldType = 'styledtext';
 	protected string $defaultInputType = 'textarea';

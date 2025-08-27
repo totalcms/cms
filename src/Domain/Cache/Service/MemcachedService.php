@@ -8,11 +8,11 @@ use TotalCMS\Support\Config;
 /**
  * Memcached cache service.
  */
-final class MemcachedService implements CacheInterface
+class MemcachedService implements CacheInterface
 {
-	private bool $enabled;
-	private string $host;
-	private int $port;
+	private readonly bool $enabled;
+	private readonly string $host;
+	private readonly int $port;
 	private ?\Memcached $memcached = null;
 
 	public function __construct(
@@ -36,7 +36,7 @@ final class MemcachedService implements CacheInterface
 			$memcached->set('test_key', 'test_value', 1);
 
 			return $memcached->get('test_key') === 'test_value';
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -62,7 +62,7 @@ final class MemcachedService implements CacheInterface
 			$value     = $memcached->get($key);
 
 			return $value !== false ? $value : null;
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return null;
 		}
 	}
@@ -77,7 +77,7 @@ final class MemcachedService implements CacheInterface
 			$memcached = $this->getConnection();
 
 			return $memcached->set($key, $value, $ttl);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -92,7 +92,7 @@ final class MemcachedService implements CacheInterface
 			$memcached = $this->getConnection();
 
 			return $memcached->delete($key);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -107,7 +107,7 @@ final class MemcachedService implements CacheInterface
 			$memcached = $this->getConnection();
 
 			return $memcached->flush();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -131,7 +131,7 @@ final class MemcachedService implements CacheInterface
 			$memcached = $this->getConnection();
 
 			return $memcached->flush();
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false;
 		}
 	}
@@ -164,7 +164,7 @@ final class MemcachedService implements CacheInterface
 				'memory_usage' => isset($serverStats['bytes'])
 					? round($serverStats['bytes'] / 1024 / 1024, 2) . 'MB'
 					: 'Unknown',
-				'hit_rate' => $total > 0 ? round(($hits / $total) * 100, 2) : 0,
+				'hit_rate' => $total > 0 ? round(($hits / $total) * 100, 1) : 0,
 				'items'    => $serverStats['curr_items'] ?? 0,
 			];
 		} catch (\Exception $e) {
@@ -192,7 +192,7 @@ final class MemcachedService implements CacheInterface
 
 	private function getConnection(): \Memcached
 	{
-		if ($this->memcached === null) {
+		if (!$this->memcached instanceof \Memcached) {
 			$this->memcached = new \Memcached();
 			$this->memcached->addServer($this->host, $this->port);
 		}

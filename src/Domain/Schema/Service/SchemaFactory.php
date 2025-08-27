@@ -10,7 +10,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 /**
  * Service.
  */
-final class SchemaFactory
+readonly class SchemaFactory
 {
 	private Serializer $serializer;
 
@@ -25,8 +25,6 @@ final class SchemaFactory
 	 * @param array<string,mixed> $schemaData
 	 *
 	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
 	 */
 	public function generateSchema(array $schemaData): SchemaData
 	{
@@ -42,16 +40,10 @@ final class SchemaFactory
 	/**
 	 * create a schema object.
 	 *
-	 * @param string $schemaJson
-	 *
 	 * @throws \UnexpectedValueException
-	 *
-	 * @return SchemaData
 	 */
 	public function generateSchemaFromJson(string $schemaJson): SchemaData
 	{
-		$schema = $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
-
-		return $schema;
+		return $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
 	}
 }

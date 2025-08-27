@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 
-final class CollectionExistsAction
+readonly class CollectionExistsAction
 {
 	public function __construct(private CollectionFetcher $collectionFetcher)
 	{

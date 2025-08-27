@@ -66,7 +66,7 @@ export default class Dialog  {
 		this.dialog.showModal();
 
 		if (!this.closeClickListener) {
-			this.dialog.addEventListener('click', event => {
+			this.dialog.addEventListener('pointerdown', event => {
 				// only checking for clicks on the dialog backgdrop itself
 				if (event.target.tagName !== "DIALOG") return;
 				const rect = this.dialog.getBoundingClientRect();

@@ -8,7 +8,7 @@ namespace TotalCMS\Domain\Schema\Service;
  * Deck-compatible schemas must only contain properties that don't require file uploads
  * or complex data structures that aren't supported in the deck format.
  */
-final class DeckCompatibilityChecker
+readonly class DeckCompatibilityChecker
 {
 	public function __construct(
 		private ?SchemaFetcher $schemaFetcher = null,
@@ -52,7 +52,7 @@ final class DeckCompatibilityChecker
 		}
 
 		// Check each property for compatibility
-		foreach ($schema['properties'] as $propertyName => $property) {
+		foreach ($schema['properties'] as $property) {
 			if (!$this->isPropertyCompatible($property)) {
 				return false;
 			}
@@ -94,13 +94,7 @@ final class DeckCompatibilityChecker
 		}
 
 		// Check array items
-		if (isset($property['items']) && is_array($property['items'])) {
-			if (!$this->isPropertyCompatible($property['items'])) {
-				return false;
-			}
-		}
-
-		return true;
+		return !(isset($property['items']) && is_array($property['items']) && !$this->isPropertyCompatible($property['items']));
 	}
 
 	/**
@@ -184,7 +178,7 @@ final class DeckCompatibilityChecker
 	 */
 	public function isDeckSchemaCompatible(string $schemaName): bool
 	{
-		if ($this->schemaFetcher === null) {
+		if (!$this->schemaFetcher instanceof SchemaFetcher) {
 			return false; // Cannot validate without SchemaFetcher
 		}
 
@@ -192,7 +186,7 @@ final class DeckCompatibilityChecker
 			$schema = $this->schemaFetcher->fetchSchema($schemaName);
 
 			return $this->isCompatible($schema->toArray());
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			return false; // Schema not found or invalid
 		}
 	}
@@ -206,7 +200,7 @@ final class DeckCompatibilityChecker
 	 */
 	public function getDeckSchemaIncompatibleProperties(string $schemaName): array
 	{
-		if ($this->schemaFetcher === null) {
+		if (!$this->schemaFetcher instanceof SchemaFetcher) {
 			return []; // Cannot validate without SchemaFetcher
 		}
 

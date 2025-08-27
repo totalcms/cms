@@ -8,7 +8,7 @@ use Psr\Http\Message\UploadedFileInterface;
  * Comprehensive file upload security validator.
  * Prevents malicious file uploads, path traversal, and other security issues.
  */
-final class FileUploadValidator
+class FileUploadValidator
 {
 	/**
 	 * Maximum file sizes by category (in bytes).
@@ -97,7 +97,7 @@ final class FileUploadValidator
 		if ($file->getSize() > $maxSize) {
 			$errors[] = sprintf(
 				'File size (%s) exceeds maximum allowed size (%s)',
-				$this->formatBytes($file->getSize() ?? 0),
+				$this->formatBytes($file->getSize() ?: 0),
 				$this->formatBytes($maxSize)
 			);
 		}

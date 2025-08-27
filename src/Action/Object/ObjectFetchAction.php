@@ -9,22 +9,15 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
-final class ObjectFetchAction
+readonly class ObjectFetchAction
 {
-	private JsonRenderer $renderer;
-	private ObjectFetcher $objectFetcher;
-
-	public function __construct(JsonRenderer $renderer, ObjectFetcher $fetcher)
+	public function __construct(private JsonRenderer $renderer, private ObjectFetcher $objectFetcher)
 	{
-		$this->renderer      = $renderer;
-		$this->objectFetcher = $fetcher;
 	}
 
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The routing arguments
 	 *
 	 * @throws HttpNotFoundException

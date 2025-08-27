@@ -11,18 +11,18 @@ class PasswordData extends PropertyData
 
 	public function __construct(string $password, public array $settings = [])
 	{
-		if (!empty($password)) {
+		if ($password !== '') {
 			// Only set the hash if a password is defined
-			$this->hash = self::isPasswordHash($password) ? $password : self::hashPassword($password);
+			$this->hash = $this->isPasswordHash($password) ? $password : $this->hashPassword($password);
 		}
 	}
 
-	private static function hashPassword(string $password): string
+	private function hashPassword(string $password): string
 	{
 		return password_hash($password, PASSWORD_DEFAULT);
 	}
 
-	private static function isPasswordHash(string $password): bool
+	private function isPasswordHash(string $password): bool
 	{
 		$info = password_get_info($password);
 

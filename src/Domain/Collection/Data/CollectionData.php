@@ -9,7 +9,7 @@ use Symfony\Component\Serializer\Serializer;
 /**
  * Data object.
  */
-final class CollectionData
+class CollectionData
 {
 	// Reserved names that cannot be used for collections
 	public const RESERVED_NAMES = [
@@ -19,29 +19,30 @@ final class CollectionData
 		'schemas',
 	];
 
-	private Serializer $serializer;
+	private readonly Serializer $serializer;
 
 	public string $id;                        // collection id
 	public string $name;                      // collection name
-	public string $description;               // collection description
 	public string $schema;                    // schema name
-	public string $url;                       // collection url to object page minus the slug
-	public string $category;                  // collection category for grouping in the admin
-	public string $labelPlural;              // custom plural label for collection items
-	public string $labelSingular;            // custom singular label for collection items
+	public string $category         = '';             // collection category for grouping in the admin
+	public string $url              = '';                  // collection url to object page minus the slug
+	public string $description      = '';          // collection description
+	public string $labelPlural      = '';          // custom plural label for collection items
+	public string $labelSingular    = '';        // custom singular label for collection items
 	public string $sortBy           = 'id';             // the property to sort the collection by
 	public bool $reverseSort        = false;         // reverse the sort order
 	public bool $queueRebuildOnSave = false;  // queue a rebuild of the collection
 	public bool $prettyUrl          = false;           // use pretty URLs for the collection
+	public int $count               = 0;                    // total number of objects created in this collection
 
 	/** @var array<string> */
-	public array $groups;        // access groups that can access this collection
+	public array $groups = [];        // access groups that can access this collection
 
 	/** @var array<string,array<string,mixed>> */
-	public array $properties;        // Rules for fields defined in schemaToMetaProps
+	public array $properties = [];        // Rules for fields defined in schemaToMetaProps
 
 	/** @var array<string,array<string,mixed>> */
-	public array $customProperties;  // Custom properties for specific objects
+	public array $customProperties = [];  // Custom properties for specific objects
 
 	public function __construct()
 	{
@@ -59,27 +60,32 @@ final class CollectionData
 		// Get default labels for the schema if not explicitly set
 		$defaultLabels = self::getDefaultLabelsForSchema($this->schema);
 
+		$description   = $this->description === '' ? $defaultDescription : $this->description;
+		$labelPlural   = $this->labelPlural === '' ? $defaultLabels['labelPlural'] : $this->labelPlural;
+		$labelSingular = $this->labelSingular === '' ? $defaultLabels['labelSingular'] : $this->labelSingular;
+
 		$collection         = [
 			'id'                 => $this->id,
 			'schema'             => $this->schema,
 			'name'               => $this->name ?? ucfirst($this->id),
-			'description'        => empty($this->description) ? $defaultDescription : $this->description,
+			'description'        => $description,
 			'url'                => $this->url ?? '',
 			'category'           => $this->category ?? '',
-			'labelPlural'        => !empty($this->labelPlural) ? $this->labelPlural : $defaultLabels['labelPlural'],
-			'labelSingular'      => !empty($this->labelSingular) ? $this->labelSingular : $defaultLabels['labelSingular'],
+			'labelPlural'        => $labelPlural,
+			'labelSingular'      => $labelSingular,
 			'groups'             => $this->groups ?? [],
 			'sortBy'             => $this->sortBy ?? 'id',
 			'reverseSort'        => $this->reverseSort ?? false,
 			'prettyUrl'          => $this->prettyUrl ?? false,
 			'queueRebuildOnSave' => $this->queueRebuildOnSave ?? false,
+			'count'              => $this->count ?? 0,
 		];
 
-		if (!empty($this->properties)) {
+		if ($this->properties !== []) {
 			$collection['properties'] = $this->properties;
 		}
 
-		if (!empty($this->customProperties)) {
+		if ($this->customProperties !== []) {
 			$collection['customProperties'] = $this->customProperties;
 		}
 
@@ -107,9 +113,7 @@ final class CollectionData
 
 		foreach ($schema as $key => $prop) {
 			// Only keep the meta properties that we need from the schema
-			$schema[$key] = array_filter($prop, function ($key) use ($metaProps) {
-				return in_array($key, $metaProps);
-			}, ARRAY_FILTER_USE_KEY);
+			$schema[$key] = array_filter($prop, fn ($key): bool => in_array($key, $metaProps), ARRAY_FILTER_USE_KEY);
 		}
 
 		return $schema;
@@ -117,7 +121,7 @@ final class CollectionData
 
 	public static function objectUrl(CollectionData $collectionData, string $id): string
 	{
-		if (empty($collectionData->url)) {
+		if ($collectionData->url === '') {
 			return '';
 		}
 

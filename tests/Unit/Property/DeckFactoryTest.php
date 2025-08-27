@@ -5,7 +5,7 @@ use TotalCMS\Domain\Property\Service\PropertyFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 // Simple test that PropertyFactory integration works for deck properties
-it('PropertyFactory processes deck properties correctly', function () {
+it('PropertyFactory processes deck properties correctly', function (): void {
 	// This test is now redundant since DeckFactory logic is integrated into PropertyFactory
 	// and we can't mock final SchemaFetcher class for unit tests.
 	// The functionality is covered by integration tests that use real dependencies.

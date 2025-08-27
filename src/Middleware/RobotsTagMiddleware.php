@@ -10,7 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * Allow indexing of images.
  */
-final class RobotsTagMiddleware implements MiddlewareInterface
+class RobotsTagMiddleware implements MiddlewareInterface
 {
 	/**
 	 * Invoke middleware.

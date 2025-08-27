@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Support;
 
-final class Config
+class Config
 {
 	public string $env      = 'prod';
 	public string $template = '';

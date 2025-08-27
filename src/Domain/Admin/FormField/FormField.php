@@ -44,6 +44,7 @@ class FormField
 		protected bool $icon          = true,
 		protected bool $multiple      = false,
 		protected int $minlength      = 0,
+		protected int $maxlength      = 0,
 		protected int $rows           = 0,
 		protected ?int $min           = null,
 		protected ?int $max           = null,
@@ -55,8 +56,8 @@ class FormField
 	public function init(): void
 	{
 		$this->uuid      = uniqid();
-		$this->field     = empty($this->field) ? $this->defaultFieldType : $this->field;
-		$this->inputType = empty($this->inputType) ? $this->defaultInputType : $this->inputType;
+		$this->field     = $this->field === '' ? $this->defaultFieldType : $this->field;
+		$this->inputType = $this->inputType === '' ? $this->defaultInputType : $this->inputType;
 
 		$this->datalist = (isset($this->settings['propertyOptions'])
 			|| isset($this->settings['relationalOptions'])
@@ -85,10 +86,10 @@ class FormField
 
 	public function createFormField(string $content): string
 	{
-		$label = empty($this->label) ? '' : HTMLUtils::element('label', $this->label, [
+		$label = $this->label === '' ? '' : HTMLUtils::element('label', $this->label, [
 			'for' => "field-{$this->uuid}",
 		]);
-		$help  = empty($this->help) ? '' : HTMLUtils::element('p', $this->help, [
+		$help  = $this->help === '' ? '' : HTMLUtils::element('p', $this->help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
@@ -98,16 +99,14 @@ class FormField
 			'data-type' => $this->field,
 			'style'     => "grid-area: {$this->name};",
 		];
-		if (!empty($this->settings)) {
+		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
 				$formFieldAtrributes['data-options'] = $json;
 			}
 		}
 
-		$formField = HTMLUtils::element('div', $label . $content . $help, $formFieldAtrributes);
-
-		return $formField;
+		return HTMLUtils::element('div', $label . $content . $help, $formFieldAtrributes);
 	}
 
 	/**
@@ -130,10 +129,11 @@ class FormField
 			'disabled'         => $this->disabled ? '' : null,
 			'readonly'         => $this->readonly ? '' : null,
 			'minlength'        => $this->minlength > 0 ? (string)$this->minlength : null,
-			'pattern'          => empty($this->pattern) ? null : $this->pattern,
-			'placeholder'      => empty($this->placeholder) ? null : $this->placeholder,
-			'aria-describedby' => empty($this->help) ? null : "help-{$this->uuid}",
-			'value'            => empty($this->value) ? null : $this->value,
+			'maxlength'        => $this->maxlength > 0 ? (string)$this->maxlength : null,
+			'pattern'          => $this->pattern === '' ? null : $this->pattern,
+			'placeholder'      => $this->placeholder === '' ? null : $this->placeholder,
+			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
+			'value'            => ($this->value === null || $this->value === '') ? null : $this->value,
 			'min'              => is_null($this->min) ? null : (string)$this->min,
 			'max'              => is_null($this->max) ? null : (string)$this->max,
 			'step'             => is_null($this->step) ? null : (string)$this->step,
@@ -142,7 +142,7 @@ class FormField
 		];
 
 		// Remove null values from the attributes array
-		$attributes = array_filter($attributes, fn ($x) => !is_null($x));
+		$attributes = array_filter($attributes, fn ($x): bool => !is_null($x));
 
 		return $attributes;
 	}
@@ -233,10 +233,10 @@ class FormField
 		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection);
 
 		// Build the label from multiple properties if specified
-		return array_map(function ($o) use ($valueProperty, $labelProperties, $labelJoin) {
+		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {
 			// If multiple label properties, concatenate them with spaces
 			if (count($labelProperties) > 1) {
-				$labelParts = array_map(fn ($prop) => $o[$prop] ?? '', $labelProperties);
+				$labelParts = array_map(fn (string $prop) => $o[$prop] ?? '', $labelProperties);
 				$label      = implode($labelJoin, array_filter($labelParts)); // Filter out empty values
 			} else {
 				$label = $o[$labelProperties[0]] ?? '';
@@ -258,11 +258,11 @@ class FormField
 		if (isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->options, $this->buildRelationalOptions());
 		}
-		if (is_array($this->value) && !empty($this->value) && !isset($this->settings['relationalOptions'])) {
+		if (is_array($this->value) && $this->value !== [] && !isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->value, $this->options); // value is first to maintain order
 		}
 
-		if (!empty($this->options) && !self::isMultiDimensionalArray($this->options)) {
+		if ($this->options !== [] && !self::isMultiDimensionalArray($this->options)) {
 			// Ensure that duplicate options are not created
 			// array_unique will not work with multi-dimensional arrays
 			$this->options = array_unique($this->options);

@@ -11,7 +11,7 @@ use TotalCMS\Domain\Property\Data\PropertyData;
  * This service handles business logic that was previously embedded
  * in property data classes, improving separation of concerns.
  */
-final class PropertyDataProcessor implements PropertyDataProcessorInterface
+class PropertyDataProcessor implements PropertyDataProcessorInterface
 {
 	/**
 	 * Process property data before save operations.
@@ -37,7 +37,7 @@ final class PropertyDataProcessor implements PropertyDataProcessorInterface
 	private function processDateData(DateData $dateData): DateData
 	{
 		if (isset($dateData->settings[DateData::CREATION_DATE]) && $dateData->settings[DateData::CREATION_DATE] === true) {
-			if (empty($dateData->date) || $dateData->date === DateData::CREATION_DATE) {
+			if ($dateData->date === '' || $dateData->date === DateData::CREATION_DATE) {
 				$dateData->date = DateData::cleanDate();
 			}
 		} elseif (isset($dateData->settings[DateData::UPDATE_DATE]) && $dateData->settings[DateData::UPDATE_DATE] === true) {

@@ -21,7 +21,12 @@ export default class SVGField extends TotalField {
     }
 
     getValue() {
-        return this.froala.html.get();
+        // Check if Froala is initialized before trying to get the value
+        if (this.froala && this.froala.html) {
+            return this.froala.html.get();
+        }
+        // Fall back to input value if Froala is not ready
+        return this.input.value;
     }
 
     initFroala() {

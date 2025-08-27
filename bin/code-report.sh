@@ -95,3 +95,12 @@ for type in "${types[@]}"; do
 done
 echo "
 Total Lines of Code: $total"
+
+echo "
+Distribution Stats:"
+if [ -d "dist" ]; then
+	dist_files=$(find "dist" -type f | wc -l)
+	printf "\tDist Files: %s\n" "$dist_files"
+else
+	printf "\tDist Files: N/A (dist folder not found)\n"
+fi

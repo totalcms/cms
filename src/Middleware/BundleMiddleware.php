@@ -13,7 +13,7 @@ use TotalCMS\Domain\Bundle\Service\BundleChecker;
  *
  * A special middleware that allows to preview a page by passing the "route" query parameter.
  */
-final class BundleMiddleware implements MiddlewareInterface
+readonly class BundleMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private BundleChecker $bundleChecker,
@@ -28,8 +28,6 @@ final class BundleMiddleware implements MiddlewareInterface
 			$this->bundleChecker->check();
 		}
 
-		$response = $handler->handle($request);
-
-		return $response;
+		return $handler->handle($request);
 	}
 }

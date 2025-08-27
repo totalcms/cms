@@ -10,7 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * License middleware.
  */
-final class StandardLicenseMiddleware implements MiddlewareInterface
+class StandardLicenseMiddleware implements MiddlewareInterface
 {
 	/**
 	 * Invoke middleware.
@@ -22,15 +22,9 @@ final class StandardLicenseMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// TODO: Create a license object that actually check for a license
-		$isStandardLicensed = true;
-
 		// If valid Lite license call next and return.
 		/** @phpstan-ignore-next-line */
-		if ($isStandardLicensed) {
-			return $handler->handle($request);
-		}
-
+		return $handler->handle($request);
 		// Set response headers before giving it to error callback
 		// $response = (new ResponseFactory())->createResponse(401, 'Unauthorized');
 		// $response->getBody()->write('Invalid License Found');

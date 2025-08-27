@@ -15,12 +15,9 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Default Error Renderer.
  */
-final class DefaultErrorHandler
+readonly class DefaultErrorHandler
 {
-	private JsonRenderer $renderer;
-	private ResponseFactoryInterface $responseFactory;
 	private LoggerInterface $logger;
-	private OPcacheService $opcacheService;
 
 	/**
 	 * The constructor.
@@ -31,14 +28,11 @@ final class DefaultErrorHandler
 	 * @param OPcacheService $opcacheService The OPcache service
 	 */
 	public function __construct(
-		JsonRenderer $renderer,
-		ResponseFactoryInterface $responseFactory,
+		private JsonRenderer $renderer,
+		private ResponseFactoryInterface $responseFactory,
 		LoggerFactory $loggerFactory,
-		OPcacheService $opcacheService,
+		private OPcacheService $opcacheService,
 	) {
-		$this->renderer        = $renderer;
-		$this->responseFactory = $responseFactory;
-		$this->opcacheService  = $opcacheService;
 		$this->logger          = $loggerFactory
 			->addFileHandler('totalcms.log')
 			->createLogger('totalcms');
@@ -149,7 +143,7 @@ final class DefaultErrorHandler
 		$reasonPhrase = $this->responseFactory->createResponse()->withStatus($statusCode)->getReasonPhrase();
 		$errorMessage = sprintf('%s %s', $statusCode, $reasonPhrase);
 
-		if ($displayErrorDetails === true) {
+		if ($displayErrorDetails) {
 			$errorMessage = sprintf(
 				'%s - %s',
 				$errorMessage,
@@ -165,7 +159,6 @@ final class DefaultErrorHandler
 	 *
 	 * @param \Throwable $exception Error
 	 * @param int $maxLength The max length of the error message
-	 * @param bool $backtrace
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *

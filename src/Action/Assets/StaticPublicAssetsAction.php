@@ -10,7 +10,7 @@ use TotalCMS\Infrastructure\Filesystem\MimeLookup;
 
 // This Action is used to serve static assets from the public/assets directory
 // This should really only ever be used with using the PHP built-in server
-final class StaticPublicAssetsAction
+class StaticPublicAssetsAction
 {
 	/**
 	 * @param array<string,mixed> $args The routing arguments
@@ -41,7 +41,7 @@ final class StaticPublicAssetsAction
 		$assetsDir    = realpath(__DIR__ . '/../../../public/assets');
 		$resolvedPath = realpath($assetPath);
 
-		if ($resolvedPath === false || $assetsDir === false || strpos($resolvedPath, $assetsDir) !== 0) {
+		if ($resolvedPath === false || $assetsDir === false || !str_starts_with($resolvedPath, $assetsDir)) {
 			throw new HttpNotFoundException($request, 'Asset not found');
 		}
 

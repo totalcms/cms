@@ -6,8 +6,8 @@ use TotalCMS\Support\Config;
 
 // Workaround for routes with a dot in local php server
 if (php_sapi_name() == 'cli-server') {
-	$_SERVER['SCRIPT_NAME'] = basename($_SERVER['SCRIPT_FILENAME']);
-	$file                   = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+	$_SERVER['SCRIPT_NAME'] = basename((string)$_SERVER['SCRIPT_FILENAME']);
+	$file                   = parse_url((string)$_SERVER['REQUEST_URI'], PHP_URL_PATH);
 	if (file_exists(__DIR__ . $file)) {
 		/* Return contents of the static file. */
 		return false;

@@ -8,7 +8,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\FirstLoginChecker;
 use TotalCMS\Renderer\TwigRenderer;
 
-final class AuthLoginAction
+readonly class AuthLoginAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,

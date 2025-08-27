@@ -7,19 +7,19 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
-final class AccessManager
+class AccessManager
 {
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
 
-	private string $defaultAuthCollection;
+	private readonly string $defaultAuthCollection;
 	private string $userID;
 	private string $userCollection;
 
 	public function __construct(
-		private PhpSession $session,
-		private Config $config,
-		private UserValidationService $userValidator,
-		private LoggerFactory $loggerFactory,
+		private readonly PhpSession $session,
+		private readonly Config $config,
+		private readonly UserValidationService $userValidator,
+		private readonly LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('access');
 
@@ -86,7 +86,7 @@ final class AccessManager
 			return true;
 		}
 
-		if (empty($collection)) {
+		if ($collection === '') {
 			$collection = $this->defaultAuthCollection;
 		}
 
@@ -116,7 +116,7 @@ final class AccessManager
 
 		try {
 			$userData = $this->userValidator->validateUserById($this->userID, $this->userCollection);
-		} catch (\Throwable $th) {
+		} catch (\Throwable) {
 			// Current session user could be in a different user collection
 			// $this->session->delete('user');
 			return [];
@@ -144,7 +144,7 @@ final class AccessManager
 		$this->userID         = $this->session->get('user') ?? '';
 		$this->userCollection = $this->session->get('collection') ?? '';
 
-		if (empty($this->userCollection)) {
+		if ($this->userCollection === '') {
 			$this->userCollection = $this->defaultAuthCollection;
 		}
 	}
@@ -157,7 +157,7 @@ final class AccessManager
 	private function redirectToLogin(string $collection = ''): void
 	{
 		$loginUrl = $this->config->api . '/login';
-		if (!empty($collection)) {
+		if ($collection !== '') {
 			$loginUrl .= "/$collection";
 		}
 		header("Location: $loginUrl");

@@ -7,24 +7,16 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\PropertyCacheCleaner;
 use TotalCMS\Renderer\JsonRenderer;
 
-final class PropertyClearCacheAction
+class PropertyClearCacheAction
 {
-	public function __construct(
-		private JsonRenderer $renderer,
-		private PropertyCacheCleaner $service,
-	) {
-		$this->renderer = $renderer;
-		$this->service  = $service;
+	public function __construct(private readonly JsonRenderer $renderer, private readonly PropertyCacheCleaner $service)
+	{
 	}
 
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args
-	 *
-	 * @return ResponseInterface
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{

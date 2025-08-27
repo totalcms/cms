@@ -6,7 +6,7 @@ use Thepixeldeveloper\Sitemap\Drivers\XmlWriterDriver;
 use Thepixeldeveloper\Sitemap\Sitemap as SitemapBase;
 use Thepixeldeveloper\Sitemap\SitemapIndex as SitemapIndexBase;
 
-final class SitemapIndex
+readonly class SitemapIndex implements \Stringable
 {
 	private SitemapIndexBase $index;
 
@@ -18,7 +18,7 @@ final class SitemapIndex
 	public function addSitemap(string $url): void
 	{
 		$url = trim($url);
-		if (strpos($url, 'http') !== 0) {
+		if (!str_starts_with($url, 'http')) {
 			return;
 		}
 

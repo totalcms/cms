@@ -33,7 +33,7 @@ class SchemaPropertiesField extends PropertiesField
 	{
 		$content = parent::buildFormField();
 
-		if (!empty($this->properties)) {
+		if ($this->properties !== []) {
 			$template = $this->createPropertyField('', []);
 			$content .= HTMLUtils::element('template', $template->build(), ['class' => 'schema-template']);
 		}
@@ -50,7 +50,7 @@ class SchemaPropertiesField extends PropertiesField
 	protected function createPropertyField(string $property, array $options): SchemaField
 	{
 		if (isset($options['$ref'])) {
-			$options['type'] = basename($options['$ref'], '.json');
+			$options['type'] = basename((string)$options['$ref'], '.json');
 			unset($options['$ref']);
 		}
 
@@ -62,7 +62,7 @@ class SchemaPropertiesField extends PropertiesField
 			$options['deckref'] = $extra['patternProperties']['^[a-zA-Z]\\w*$']['$ref'];
 			// Remove the patternProperties from extra since we've extracted the deckref
 			unset($extra['patternProperties']);
-			if (empty($extra)) {
+			if ($extra === []) {
 				$extra = [];
 			}
 		}
@@ -70,7 +70,7 @@ class SchemaPropertiesField extends PropertiesField
 		$options['property'] = $property;
 		$options['form']     = $this->form;
 
-		if (!empty($extra)) {
+		if ($extra !== []) {
 			$options['extra'] = $extra;
 		}
 

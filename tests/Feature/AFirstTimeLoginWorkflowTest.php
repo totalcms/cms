@@ -14,7 +14,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-describe('First Time Login Workflow', function () {
+describe('First Time Login Workflow', function (): void {
 	it('detects new installation correctly when no users exist', function (): void {
 		// Ensure clean state for the start of the workflow tests
 		recursiveDelete(cmsDataDir());
@@ -32,7 +32,7 @@ describe('First Time Login Workflow', function () {
 		$container         = $this->app->getContainer();
 		$collectionFetcher = $container->get(CollectionFetcher::class);
 		$firstLoginChecker = $container->get(FirstLoginChecker::class);
-		$config            = $container->get('TotalCMS\Support\Config');
+		$config            = $container->get(TotalCMS\Support\Config::class);
 		$authCollection    = $config->auth['collection'];
 
 		// Check for new installation - this should trigger auth collection creation
@@ -62,7 +62,7 @@ describe('First Time Login Workflow', function () {
 		expect($user['email'])->toBe($email);
 		expect($user['active'])->toBe(true);
 		expect($user['groups'])->toContain(UserValidationService::ADMINGROUP);
-		expect(password_verify($password, $user['password']))->toBeTrue();
+		expect(password_verify($password, (string)$user['password']))->toBeTrue();
 	});
 
 	it('does not create duplicate users on subsequent logins', function (): void {
@@ -70,7 +70,7 @@ describe('First Time Login Workflow', function () {
 		$loginService      = $container->get(LoginService::class);
 		$firstLoginChecker = $container->get(FirstLoginChecker::class);
 		$indexReader       = $container->get(IndexReader::class);
-		$config            = $container->get('TotalCMS\Support\Config');
+		$config            = $container->get(TotalCMS\Support\Config::class);
 		$authCollection    = $config->auth['collection'];
 
 		$email    = 'admin@test.com';

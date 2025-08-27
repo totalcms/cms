@@ -102,7 +102,7 @@ class EmbedBuilder
 			parse_str((string)$queryString, $queryParams);
 			$videoId = is_string($queryParams['v']) ? $queryParams['v'] : '';
 
-			if (empty($videoId)) {
+			if ($videoId === '') {
 				return self::link($url);
 			}
 
@@ -111,13 +111,13 @@ class EmbedBuilder
 				'loop'        => $options['loop'],
 				'color'       => $options['ycolor'],
 				'theme'       => $options['ytheme'],
-				'origin'      => $_SERVER['HTTP_HOST'],   // or $_SERVER["SERVER_NAME"]
+				'origin'      => $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost',
 				'enablejsapi' => 1,
 				'rel'         => 0,
 				'showinfo'    => 0,
 			];
 
-			if (strpos($url, 'list') !== false) {
+			if (str_contains($url, 'list')) {
 				// playlist
 				$query['listType'] = 'playlist';
 				$query['list']     = $videoId;

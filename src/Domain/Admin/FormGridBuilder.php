@@ -10,7 +10,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  * Handles the conversion of text-based grid layouts to CSS Grid properties
  * and generates section headers/dividers for visual organization.
  */
-final class FormGridBuilder
+class FormGridBuilder
 {
 	private const HEADER_REGEX = '/^---(.+?)---$/';
 	private const DIVIDER      = '---';
@@ -18,7 +18,7 @@ final class FormGridBuilder
 	/** @var array<string> */
 	private array $lines = [];
 
-	public function __construct(private string $formgrid = '')
+	public function __construct(private readonly string $formgrid = '')
 	{
 		$this->lines = $this->cleanupFormGrid();
 	}
@@ -64,16 +64,14 @@ final class FormGridBuilder
 			}
 
 			// Escape area names for CSS
-			$escapedAreas = array_map(function ($area) {
-				return htmlspecialchars($area, ENT_QUOTES, 'UTF-8');
-			}, $columns);
+			$escapedAreas = array_map(fn (string $area): string => htmlspecialchars($area, ENT_QUOTES, 'UTF-8'), $columns);
 
 			$gridLines[]   = "'" . implode(' ', $escapedAreas) . "'";
 			$columnCount   = max($columnCount, count($columns));
 		}
 
 		// Return empty string if no valid lines
-		if (empty($gridLines)) {
+		if ($gridLines === []) {
 			return '';
 		}
 
@@ -167,11 +165,10 @@ final class FormGridBuilder
 	{
 		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
 		$lines = $lines === false ? [] : array_map('trim', $lines);
-		$lines = array_filter($lines, function ($line) {
-			return !empty($line); // Filter out empty lines
-		});
 
-		return $lines;
+		return array_filter($lines, function (string $line): bool {
+			return $line !== '' && $line !== '0'; // Filter out empty lines
+		});
 	}
 
 	private function getColumnCount(): int

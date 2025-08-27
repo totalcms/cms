@@ -42,7 +42,7 @@ class ObjectData
 		$base = ['id' => $this->id];
 
 		// Transform properties
-		$properties = $this->properties->map(fn ($property) => $property->transform());
+		$properties = $this->properties->map(fn ($property): mixed => $property->transform());
 
 		return array_merge($base, $properties->toArray());
 	}
@@ -55,7 +55,13 @@ class ObjectData
 	/** @return array<string> */
 	public function forCsv(): array
 	{
-		$properties       = $this->properties->map(fn ($property) => strval($property));
+		$properties = $this->properties->map(function ($property): string {
+			$value = strval($property);
+
+			// Escape newlines for CSV compatibility by converting to literal \n
+			// This preserves newlines in a CSV-safe format that can be parsed back
+			return str_replace(["\r\n", "\r", "\n"], ['\\n', '\\n', '\\n'], $value);
+		});
 		$properties['id'] = $this->id;
 
 		return $properties->toArray();

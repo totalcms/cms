@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 
-final class ImageWorksGalleryFetchDynamicAction
+readonly class ImageWorksGalleryFetchDynamicAction
 {
 	public function __construct(private ImageGenerator $imageGenerator)
 	{
@@ -16,13 +16,9 @@ final class ImageWorksGalleryFetchDynamicAction
 	/**
 	 * Action.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
 	 * @param array<string,string> $args The arguments
 	 *
 	 * @throws HttpNotFoundException
-	 *
-	 * @return ResponseInterface
 	 */
 	public function __invoke(
 		ServerRequestInterface $request,

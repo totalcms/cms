@@ -8,7 +8,7 @@ use Twig\Extra\Markdown\MarkdownInterface;
  * Parsedown adapter for Twig Markdown extension.
  * Based on the CommonMark integration pattern from https://github.com/twigphp/Twig/pull/3737.
  */
-final class ParsedownMarkdown implements MarkdownInterface
+readonly class ParsedownMarkdown implements MarkdownInterface
 {
 	private \ParsedownExtra $parsedown;
 

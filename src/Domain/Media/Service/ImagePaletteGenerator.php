@@ -57,8 +57,6 @@ class ImagePaletteGenerator
 			throw new \RuntimeException("ColorThief returned empty palette for: {$imagepath}");
 		}
 
-		$palette = array_slice($palette, 0, 5);
-
-		return $palette;
+		return array_slice($palette, 0, 5);
 	}
 }

@@ -10,7 +10,7 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
  *
  * Handles grid template generation, auto-detection, and processing
  */
-final class GridRenderer
+class GridRenderer
 {
 	// -------------------------
 	// Grid Helper Methods (accessible via cms.grid.*)
@@ -25,7 +25,7 @@ final class GridRenderer
 	 */
 	public function meta(string $data): string
 	{
-		if (empty($data)) {
+		if ($data === '') {
 			return '';
 		}
 
@@ -63,7 +63,7 @@ final class GridRenderer
 	 */
 	public function date(string $date, string $format = 'relative'): string
 	{
-		if (empty($date)) {
+		if ($date === '') {
 			return '';
 		}
 
@@ -98,7 +98,7 @@ final class GridRenderer
 	{
 		$formatted = TotalCMSTwigFilters::price($price, $currency, $format);
 
-		if (empty($formatted)) {
+		if ($formatted === '') {
 			return '';
 		}
 

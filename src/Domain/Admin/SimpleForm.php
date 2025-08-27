@@ -8,7 +8,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 /**
  * Simple Form Builder.
  */
-final class SimpleForm
+readonly class SimpleForm implements \Stringable
 {
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function __construct(
@@ -45,12 +45,11 @@ final class SimpleForm
 			'data-refresh' => $this->refresh ? 'true' : 'false',
 			'data-ajax'    => $this->ajax ? 'true' : 'false',
 		];
-		$form = HTMLUtils::element('form', $csrfField . $content . $buttonWrapper, $formAttrs);
 
-		return $form;
+		return HTMLUtils::element('form', $csrfField . $content . $buttonWrapper, $formAttrs);
 	}
 
-	public function __toString()
+	public function __toString(): string
 	{
 		return $this->build();
 	}

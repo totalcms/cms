@@ -9,7 +9,7 @@ use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
-final class FroalaUploadFileAction
+readonly class FroalaUploadFileAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
@@ -26,11 +26,11 @@ final class FroalaUploadFileAction
 
 		$type = null;
 		// possible file types: image, video, file
-		if (key_exists('image', $files)) {
+		if (array_key_exists('image', $files)) {
 			$type = 'image';
-		} elseif (key_exists('video', $files)) {
+		} elseif (array_key_exists('video', $files)) {
 			$type = 'video';
-		} elseif (key_exists('file', $files)) {
+		} elseif (array_key_exists('file', $files)) {
 			$type = 'file';
 		}
 
@@ -46,11 +46,9 @@ final class FroalaUploadFileAction
 		$sanitizedFilename = $validation['sanitized_filename'];
 
 		// Filter out filename safety errors - we'll use the sanitized version
-		$criticalErrors = array_filter($validation['errors'], function ($error) {
-			return $error !== 'Filename contains unsafe characters';
-		});
+		$criticalErrors = array_filter($validation['errors'], fn ($error): bool => $error !== 'Filename contains unsafe characters');
 
-		if (!empty($criticalErrors)) {
+		if ($criticalErrors !== []) {
 			return $this->renderer->json($response, [
 				'error'   => 'File upload validation failed',
 				'details' => $criticalErrors,

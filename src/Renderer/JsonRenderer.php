@@ -11,7 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * A JSON response renderer.
  */
-final class JsonRenderer
+class JsonRenderer
 {
 	/**
 	 * Write JSON to the response body.
@@ -33,7 +33,10 @@ final class JsonRenderer
 		$json = json_encode($data, $options);
 
 		$response = $response->withHeader('Content-Type', 'application/json');
-		$response->getBody()->write((string)$json);
+		$body     = $response->getBody();
+		$body->rewind();
+		$body->write((string)$json);
+		$body->rewind();
 
 		return $response;
 	}

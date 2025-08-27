@@ -7,7 +7,7 @@ use Illuminate\Support\Collection;
 /**
  * Data object.
  */
-final class IndexData
+class IndexData
 {
 	/** @var Collection<int,array<string,mixed>> */
 	public Collection $objects;

@@ -8,7 +8,7 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\SchemaMetaTransformer;
 
-final class SchemaSaveAction
+readonly class SchemaSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
@@ -18,14 +18,8 @@ final class SchemaSaveAction
 
 	/**
 	 * Invokable Action.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param ResponseInterface $response
-	 * @param array<string,string> $args The routing arguments
-	 *
-	 * @return ResponseInterface
 	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$data = (array)$request->getParsedBody();
 

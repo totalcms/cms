@@ -8,21 +8,16 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\CollectionMetaTransformer;
 
-final class CollectionUpdateAction
+readonly class CollectionUpdateAction
 {
-	private JsonRenderer $renderer;
-	private CollectionSaver $service;
-
 	/**
 	 * The constructor.
 	 *
 	 * @param JsonRenderer $renderer The renderer
 	 * @param CollectionSaver $service Collection save service
 	 */
-	public function __construct(JsonRenderer $renderer, CollectionSaver $service)
+	public function __construct(private JsonRenderer $renderer, private CollectionSaver $service)
 	{
-		$this->renderer = $renderer;
-		$this->service  = $service;
 	}
 
 	/**

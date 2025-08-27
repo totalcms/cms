@@ -73,14 +73,14 @@
 			</td>
 			<td>{{ details.description }}</td>
 			<td>
-				{% if extension == 'opcache' %}
+				{% if extension == 'opcache' and not details.available %}
 					<strong style="color: #d63031;">{{ details.recommendation }}</strong>
 				{% else %}
 					{{ details.recommendation }}
 				{% endif %}
 			</td>
 			<td>
-				{% if extension == 'opcache' %}
+				{% if extension == 'opcache' and not details.available %}
 					<strong style="color: #00b894;">{{ details.performance_impact }}</strong>
 				{% else %}
 					{{ details.performance_impact }}

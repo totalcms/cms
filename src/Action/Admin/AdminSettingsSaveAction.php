@@ -10,7 +10,7 @@ use TotalCMS\Renderer\JsonRenderer;
 /**
  * Action.
  */
-final class AdminSettingsSaveAction
+readonly class AdminSettingsSaveAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,

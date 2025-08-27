@@ -8,7 +8,7 @@ use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
-final class CollectionFactory
+readonly class CollectionFactory
 {
 	private Serializer $serializer;
 
@@ -23,8 +23,6 @@ final class CollectionFactory
 	 * @param array<string,mixed> $data The collection data to save
 	 *
 	 * @throws \UnexpectedValueException
-	 *
-	 * @return CollectionData
 	 */
 	public function generateCollection(array $data): CollectionData
 	{
@@ -43,8 +41,6 @@ final class CollectionFactory
 	 * @param string $json The collection data to save. This should be json encoded.
 	 *
 	 * @throws \UnexpectedValueException
-	 *
-	 * @return CollectionData
 	 */
 	public function generateCollectionFromJson(string $json): CollectionData
 	{
@@ -63,8 +59,6 @@ final class CollectionFactory
 	 * @param string $collectionId The collection id to save
 	 *
 	 * @throws \DomainException
-	 *
-	 * @return CollectionData
 	 */
 	public function generateReservedCollection(string $collectionId): CollectionData
 	{

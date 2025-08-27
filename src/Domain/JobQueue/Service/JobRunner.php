@@ -10,9 +10,9 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
 
-final class JobRunner
+readonly class JobRunner
 {
-	private LoggerInterface $logger;
+	public LoggerInterface $logger;
 
 	/**
 	 * Maximum number of retry attempts for failed jobs.

@@ -86,7 +86,7 @@ body {
 
 .dash-content-sidebar {
 	display            : grid;
-	grid-template-rows : min-content 1fr min-content;
+	grid-template-rows : min-content 1fr;
 	gap                : 1rem;
 	align-content      : start;
 	border-right       : 1px solid oklch(var(--totalform-lightgray));
@@ -187,8 +187,17 @@ body {
 		}
 	}
 
+	&:has(footer .dash-button) {
+		grid-template-rows: min-content 1fr min-content;
+	}
+
 	footer {
-		padding : 2rem 1rem;
+		display : none;
+
+		&:has(.dash-button) {
+			display : block;
+			padding : 1rem;
+		}
 	}
 }
 

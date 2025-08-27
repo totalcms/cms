@@ -17,7 +17,7 @@ use TotalCMS\Support\Config;
  *
  * Redirects to the login page if the user is not authenticated.
  */
-final class AuthMiddleware implements MiddlewareInterface
+readonly class AuthMiddleware implements MiddlewareInterface
 {
 	private string $defaultAuthCollection;
 
@@ -64,7 +64,7 @@ final class AuthMiddleware implements MiddlewareInterface
 	{
 		// Set the current request URL in the session so we can send the user back to it after login
 		$this->session->set('requestOriginUrl', (string)$request->getUri());
-		$this->session->set('requestRefererUrl', (string)$request->getHeaderLine('referer'));
+		$this->session->set('requestRefererUrl', $request->getHeaderLine('referer'));
 
 		// User is not logged in. Redirect to login page.
 		$routeParser = RouteContext::fromRequest($request)->getRouteParser();

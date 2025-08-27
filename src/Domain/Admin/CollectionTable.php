@@ -13,7 +13,7 @@ use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Support\Config;
 
 /** @SuppressWarnings("PHPMD.CouplingBetweenObjects") */
-final class CollectionTable
+readonly class CollectionTable
 {
 	private CollectionData $collectionData;
 	private SchemaData $schemaData;
@@ -228,7 +228,7 @@ final class CollectionTable
 
 		$objects = $this->objects;
 
-		usort($objects, function ($a, $b) use ($sortBy, $reverseSort) {
+		usort($objects, function (array $a, array $b) use ($sortBy, $reverseSort): int {
 			$aValue = $a[$sortBy] ?? '';
 			$bValue = $b[$sortBy] ?? '';
 
@@ -249,7 +249,7 @@ final class CollectionTable
 	private function buildObjectActionButton(string $id): string
 	{
 		$link = '';
-		if (!empty($this->collectionData->url)) {
+		if ($this->collectionData->url !== '') {
 			$link = HTMLUtils::element('a', 'Link to Webpage', [
 				'target' => '_blank',
 				'href'   => CollectionData::objectUrl($this->collectionData, $id),

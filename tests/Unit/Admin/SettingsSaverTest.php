@@ -22,12 +22,12 @@ beforeEach(function (): void {
 	$_SERVER['DOCUMENT_ROOT']   = vfsStream::url('root');
 });
 
-afterEach(function () {
+afterEach(function (): void {
 	// Restore original DOCUMENT_ROOT
 	$_SERVER['DOCUMENT_ROOT'] = $this->originalDocumentRoot;
 });
 
-test('saves basic settings when no existing config', function () {
+test('saves basic settings when no existing config', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -48,7 +48,7 @@ test('saves basic settings when no existing config', function () {
 	expect($savedConfig['sentry'])->toBeTrue();
 });
 
-test('removes csrf tokens', function () {
+test('removes csrf tokens', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -66,7 +66,7 @@ test('removes csrf tokens', function () {
 	expect($savedConfig['timezone'])->toBe('UTC');
 });
 
-test('filters empty values', function () {
+test('filters empty values', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -84,7 +84,7 @@ test('filters empty values', function () {
 	expect($savedConfig['notfound'])->toBe('page.html');
 });
 
-test('handles sentry checkbox', function () {
+test('handles sentry checkbox', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -103,7 +103,7 @@ test('handles sentry checkbox', function () {
 	expect($savedConfig['sentry'])->toBeFalse();
 });
 
-test('transforms pagination to dashboard', function () {
+test('transforms pagination to dashboard', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -120,7 +120,7 @@ test('transforms pagination to dashboard', function () {
 	expect($savedConfig['dashboard']['pagination'])->toBe(100);
 });
 
-test('handles json presets', function () {
+test('handles json presets', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -136,7 +136,7 @@ test('handles json presets', function () {
 	expect($savedConfig['presets'])->toBe($presets);
 });
 
-test('preserves existing custom settings', function () {
+test('preserves existing custom settings', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -178,7 +178,7 @@ test('preserves existing custom settings', function () {
 	expect($savedConfig['custom_feature'])->toBe(['enabled' => true, 'options' => ['a', 'b', 'c']]);
 });
 
-test('deep merges nested settings', function () {
+test('deep merges nested settings', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -220,7 +220,7 @@ test('deep merges nested settings', function () {
 	expect($savedConfig['dashboard']['nested'])->toBe(['deep' => 'value', 'other' => 'data']); // Preserved
 });
 
-test('returns processed settings', function () {
+test('returns processed settings', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -240,7 +240,7 @@ test('returns processed settings', function () {
 	expect($result)->not->toHaveKey('csrf_token');
 });
 
-test('handles invalid existing config', function () {
+test('handles invalid existing config', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 
@@ -255,7 +255,7 @@ test('handles invalid existing config', function () {
 	expect($savedConfig['timezone'])->toBe('UTC');
 });
 
-test('creates readable json format', function () {
+test('creates readable json format', function (): void {
 	$container     = $this->app->getContainer();
 	$settingsSaver = $container->get(SettingsSaver::class);
 

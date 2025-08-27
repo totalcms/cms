@@ -2,8 +2,8 @@
 
 use TotalCMS\Domain\Security\Sanitization\HTMLSanitizer;
 
-describe('XSS Vulnerabilities', function () {
-	it('identifies disabled Twig autoescaping', function () {
+describe('XSS Vulnerabilities', function (): void {
+	it('identifies disabled Twig autoescaping', function (): void {
 		// Test that HTML sanitizer exists and works
 		$sanitizer = new HTMLSanitizer();
 		expect($sanitizer)->toBeInstanceOf(HTMLSanitizer::class);
@@ -30,7 +30,7 @@ describe('XSS Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies missing input sanitization', function () {
+	it('identifies missing input sanitization', function (): void {
 		$sanitizer = new HTMLSanitizer();
 
 		// Form inputs that could contain XSS
@@ -55,7 +55,7 @@ describe('XSS Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies potential DOM-based XSS', function () {
+	it('identifies potential DOM-based XSS', function (): void {
 		// Test that we can detect unsafe JavaScript patterns
 		$unsafeJsPatterns = [
 			'innerHTML',
@@ -84,7 +84,7 @@ describe('XSS Vulnerabilities', function () {
 		}
 	});
 
-	it('identifies missing Content Security Policy', function () {
+	it('identifies missing Content Security Policy', function (): void {
 		// Test CSP directive validation
 		$cspDirectives = [
 			"default-src 'self'",
@@ -104,7 +104,7 @@ describe('XSS Vulnerabilities', function () {
 		expect($blockedByCSP)->toBeTrue();
 	});
 
-	it('identifies unsafe URL parameters processing', function () {
+	it('identifies unsafe URL parameters processing', function (): void {
 		$sanitizer = new HTMLSanitizer();
 
 		// URL parameters that could be reflected without escaping
@@ -114,7 +114,7 @@ describe('XSS Vulnerabilities', function () {
 			'redirect' => 'javascript:alert("XSS")',
 		];
 
-		foreach ($urlParams as $param => $value) {
+		foreach ($urlParams as $value) {
 			$sanitized = $sanitizer->sanitizeRichContent($value);
 
 			// These should be escaped/sanitized before reflecting in response

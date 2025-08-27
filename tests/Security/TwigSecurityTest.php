@@ -47,8 +47,8 @@ final class TwigSecurityTest extends TestCase
 		// Test _context separately since it returns an array and causes conversion warning
 		try {
 			// Suppress the expected warning for this specific test
-			set_error_handler(function ($errno, $errstr) {
-				if (strpos($errstr, 'Array to string conversion') !== false) {
+			set_error_handler(function ($errno, $errstr): bool {
+				if (str_contains($errstr, 'Array to string conversion')) {
 					return true; // Suppress this specific warning
 				}
 

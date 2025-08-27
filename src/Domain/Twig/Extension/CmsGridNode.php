@@ -12,7 +12,7 @@ use Twig\Node\Node;
  * Compiles to PHP code that generates grid HTML
  */
 #[YieldReady]
-final class CmsGridNode extends Node
+class CmsGridNode extends Node
 {
 	public function __construct(
 		Node $objects,
@@ -27,15 +27,15 @@ final class CmsGridNode extends Node
 			'template' => $template,
 		];
 
-		if ($collection !== null) {
+		if ($collection instanceof Node) {
 			$nodes['collection'] = $collection;
 		}
 
-		if ($classes !== null) {
+		if ($classes instanceof Node) {
 			$nodes['classes'] = $classes;
 		}
 
-		if ($itemTag !== null) {
+		if ($itemTag instanceof Node) {
 			$nodes['itemTag'] = $itemTag;
 		}
 
