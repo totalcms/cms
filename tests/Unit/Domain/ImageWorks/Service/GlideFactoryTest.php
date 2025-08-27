@@ -239,7 +239,7 @@ describe('GlideFactory', function (): void {
 		expect($result)->toContain('0'); // Size converted to int from 'justsize'
 		expect($result)->toContain('ffffff'); // Default color
 		expect($result)->toContain('overlay'); // Default method
-	})->skip('Malformed border string causes null parameter error - edge case not handled gracefully');
+	});
 
 	test('GlideFactory → color manipulation preserves case', function (): void {
 		$imageColors = ['AABBCC', 'DDEEFF'];
