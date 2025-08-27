@@ -59,6 +59,11 @@ class AccessManager
 			return false;
 		}
 
+		// SuperAdmins have access to everything regardless of collection
+		if ($this->isSuperAdmin()) {
+			return true;
+		}
+
 		if (empty($groups)) {
 			return $this->userLoggedIn($collection);
 		}
@@ -136,8 +141,7 @@ class AccessManager
 	{
 		$this->getSessionData();
 
-		return $this->userCollection === $this->defaultAuthCollection
-			&& $this->userValidator->isSuperAdmin($this->userID);
+		return $this->userValidator->isSuperAdmin($this->userID);
 	}
 
 	private function getSessionData(): void

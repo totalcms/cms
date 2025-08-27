@@ -81,9 +81,12 @@ readonly class AuthLoginSubmitAction
 			$this->session->start();
 			$this->session->regenerateId();
 
+			// For SuperAdmin cross-collection authentication, use the collection they were authenticated against
+			$sessionCollection = $user['_authenticated_collection'] ?? $collection;
+
 			// Set session data
 			$this->session->set(SessionKeys::AUTH_USER, $user['id']);
-			$this->session->set(SessionKeys::AUTH_COLLECTION, $collection);
+			$this->session->set(SessionKeys::AUTH_COLLECTION, $sessionCollection);
 			$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
 			$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
 
