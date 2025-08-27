@@ -169,13 +169,13 @@ class AccessManager
 		if ($collection !== '') {
 			$loginUrl .= "/$collection";
 		}
-		
+
 		// Add the original requested URL as a redirect parameter
 		$originUrl = $this->session->get(SessionKeys::REQUEST_ORIGIN_URL);
 		if (!empty($originUrl)) {
 			$loginUrl .= '?' . http_build_query(['redirect' => $originUrl]);
 		}
-		
+
 		header("Location: $loginUrl");
 	}
 

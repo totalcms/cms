@@ -80,10 +80,10 @@ readonly class AuthLoginSubmitAction
 			// 2. Query parameter (for direct links)
 			// 3. Session storage (for direct login)
 			// 4. Default to admin index
-			$postData = (array)$request->getParsedBody();
+			$postData    = (array)$request->getParsedBody();
 			$queryParams = $request->getQueryParams();
 			$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
-			$url = $redirectUrl;
+			$url         = $redirectUrl;
 
 			$this->session->destroy();
 			$this->session->start();

@@ -99,8 +99,8 @@ readonly class GlideFactory
 	public static function updateBorderColor(string $border, array $imageColors): string
 	{
 		$parts = explode(',', $border);
-		
-		$size = intval($parts[0]);
+
+		$size   = intval($parts[0]);
 		$border = $parts[1] ?? '';
 		$method = $parts[2] ?? '';
 

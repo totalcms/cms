@@ -13,182 +13,174 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  * when forms are placed on the public side of websites.
  */
 describe('Form AddOnly Security Feature', function (): void {
-    beforeEach(function (): void {
-        // Mock dependencies
-        $this->objectFetcher = $this->createMock(ObjectFetcher::class);
-        $this->collectionFetcher = $this->createMock(CollectionFetcher::class);  
-        $this->indexReader = $this->createMock(IndexReader::class);
-        $this->schemaFetcher = $this->createMock(SchemaFetcher::class);
-        $this->schemaLister = $this->createMock(SchemaLister::class);
-        
-        // Mock existing object
-        $this->existingObject = $this->createMock(ObjectData::class);
-        $this->existingObject->method('toArray')->willReturn(['id' => 'existing-123', 'name' => 'Existing Object']);
-    });
-    
-    afterEach(function (): void {
-        // Clean up any $_GET modifications
-        unset($_GET['id']);
-    });
+	beforeEach(function (): void {
+		// Mock dependencies
+		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
+		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->indexReader       = $this->createMock(IndexReader::class);
+		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
+		$this->schemaLister      = $this->createMock(SchemaLister::class);
 
-    test('regular form uses ID from URL parameter', function (): void {
-        $_GET['id'] = 'test-id-123';
-        
-        $this->objectFetcher->method('existsObject')->willReturn(true);
-        $this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
-        
-        $form = new ObjectForm(
-            objectFetcher: $this->objectFetcher,
-            collectionFetcher: $this->collectionFetcher,
-            collectionReader: $this->indexReader,
-            schemaFetcher: $this->schemaFetcher,
-            schemaLister: $this->schemaLister,
-            api: '/api',
-            collection: 'users',
-            addOnly: false  // Regular form behavior
-        );
-        
-        // Access the protected id property using reflection
-        $reflection = new \ReflectionClass($form);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setAccessible(true);
-        
-        expect($idProperty->getValue($form))->toBe('test-id-123');
-        expect($form->objectData)->not()->toBeNull();
-    });
+		// Mock existing object
+		$this->existingObject = $this->createMock(ObjectData::class);
+		$this->existingObject->method('toArray')->willReturn(['id' => 'existing-123', 'name' => 'Existing Object']);
+	});
 
-    test('addOnly form ignores ID from URL parameter', function (): void {
-        $_GET['id'] = 'malicious-id-456';
-        
-        // Even if object exists, it should not be loaded
-        $this->objectFetcher->method('existsObject')->willReturn(true);
-        $this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
-        
-        $form = new ObjectForm(
-            objectFetcher: $this->objectFetcher,
-            collectionFetcher: $this->collectionFetcher,
-            collectionReader: $this->indexReader,
-            schemaFetcher: $this->schemaFetcher,
-            schemaLister: $this->schemaLister,
-            api: '/api',
-            collection: 'users',
-            addOnly: true  // Security: Add only mode
-        );
-        
-        // Access the protected id property using reflection
-        $reflection = new \ReflectionClass($form);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setAccessible(true);
-        
-        expect($idProperty->getValue($form))->toBe('');
-        expect($form->objectData)->toBeNull();
-    });
+	afterEach(function (): void {
+		// Clean up any $_GET modifications
+		unset($_GET['id']);
+	});
 
-    test('addOnly form ignores explicit ID parameter', function (): void {
-        $this->objectFetcher->method('existsObject')->willReturn(true);
-        $this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
-        
-        $form = new ObjectForm(
-            objectFetcher: $this->objectFetcher,
-            collectionFetcher: $this->collectionFetcher,
-            collectionReader: $this->indexReader,
-            schemaFetcher: $this->schemaFetcher,
-            schemaLister: $this->schemaLister,
-            api: '/api',
-            collection: 'users',
-            id: 'explicit-id-789',  // Explicitly passed ID
-            addOnly: true
-        );
-        
-        // Access the protected id property using reflection
-        $reflection = new \ReflectionClass($form);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setAccessible(true);
-        
-        expect($idProperty->getValue($form))->toBe('');
-        expect($form->objectData)->toBeNull();
-    });
+	test('regular form uses ID from URL parameter', function (): void {
+		$_GET['id'] = 'test-id-123';
 
-    test('addOnly form creates POST route not PUT route', function (): void {
-        $_GET['id'] = 'some-id';
-        
-        $this->objectFetcher->method('existsObject')->willReturn(true);
-        $this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
-        
-        $form = new ObjectForm(
-            objectFetcher: $this->objectFetcher,
-            collectionFetcher: $this->collectionFetcher,
-            collectionReader: $this->indexReader,
-            schemaFetcher: $this->schemaFetcher,
-            schemaLister: $this->schemaLister,
-            api: '/api',
-            collection: 'users',
-            addOnly: true
-        );
-        
-        // Access the protected route and method properties using reflection
-        $reflection = new \ReflectionClass($form);
-        
-        $routeProperty = $reflection->getProperty('route');
-        $routeProperty->setAccessible(true);
-        
-        $methodProperty = $reflection->getProperty('method');
-        $methodProperty->setAccessible(true);
-        
-        // Should be POST route for new objects, not PUT route for editing
-        expect($routeProperty->getValue($form))->toBe('/collections/users');
-        expect($methodProperty->getValue($form))->toBe('POST');
-    });
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
-    test('regular form with existing ID creates PUT route', function (): void {
-        $_GET['id'] = 'existing-user-123';
-        
-        $this->objectFetcher->method('existsObject')->willReturn(true);
-        $this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
-        
-        $form = new ObjectForm(
-            objectFetcher: $this->objectFetcher,
-            collectionFetcher: $this->collectionFetcher,
-            collectionReader: $this->indexReader,
-            schemaFetcher: $this->schemaFetcher,
-            schemaLister: $this->schemaLister,
-            api: '/api',
-            collection: 'users',
-            addOnly: false  // Regular form
-        );
-        
-        // Access the protected route and method properties using reflection
-        $reflection = new \ReflectionClass($form);
-        
-        $routeProperty = $reflection->getProperty('route');
-        $routeProperty->setAccessible(true);
-        
-        $methodProperty = $reflection->getProperty('method');
-        $methodProperty->setAccessible(true);
-        
-        // Should be PUT route for editing existing objects
-        expect($routeProperty->getValue($form))->toBe('/collections/users/existing-user-123');
-        expect($methodProperty->getValue($form))->toBe('PUT');
-    });
+		$form = new ObjectForm(
+			objectFetcher: $this->objectFetcher,
+			collectionFetcher: $this->collectionFetcher,
+			collectionReader: $this->indexReader,
+			schemaFetcher: $this->schemaFetcher,
+			schemaLister: $this->schemaLister,
+			api: '/api',
+			collection: 'users',
+			addOnly: false  // Regular form behavior
+		);
 
-    test('addOnly defaults to false for backwards compatibility', function (): void {
-        // Create form without specifying addOnly parameter
-        $form = new ObjectForm(
-            objectFetcher: $this->objectFetcher,
-            collectionFetcher: $this->collectionFetcher,
-            collectionReader: $this->indexReader,
-            schemaFetcher: $this->schemaFetcher,
-            schemaLister: $this->schemaLister,
-            api: '/api',
-            collection: 'users'
-            // No addOnly parameter - should default to false
-        );
-        
-        // Access the protected addOnly property using reflection
-        $reflection = new \ReflectionClass($form);
-        $addOnlyProperty = $reflection->getProperty('addOnly');
-        $addOnlyProperty->setAccessible(true);
-        
-        expect($addOnlyProperty->getValue($form))->toBeFalse();
-    });
+		// Access the protected id property using reflection
+		$reflection = new ReflectionClass($form);
+		$idProperty = $reflection->getProperty('id');
+
+		expect($idProperty->getValue($form))->toBe('test-id-123');
+		expect($form->objectData)->not()->toBeNull();
+	});
+
+	test('addOnly form ignores ID from URL parameter', function (): void {
+		$_GET['id'] = 'malicious-id-456';
+
+		// Even if object exists, it should not be loaded
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
+
+		$form = new ObjectForm(
+			objectFetcher: $this->objectFetcher,
+			collectionFetcher: $this->collectionFetcher,
+			collectionReader: $this->indexReader,
+			schemaFetcher: $this->schemaFetcher,
+			schemaLister: $this->schemaLister,
+			api: '/api',
+			collection: 'users',
+			addOnly: true  // Security: Add only mode
+		);
+
+		// Access the protected id property using reflection
+		$reflection = new ReflectionClass($form);
+		$idProperty = $reflection->getProperty('id');
+
+		expect($idProperty->getValue($form))->toBe('');
+		expect($form->objectData)->toBeNull();
+	});
+
+	test('addOnly form ignores explicit ID parameter', function (): void {
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
+
+		$form = new ObjectForm(
+			objectFetcher: $this->objectFetcher,
+			collectionFetcher: $this->collectionFetcher,
+			collectionReader: $this->indexReader,
+			schemaFetcher: $this->schemaFetcher,
+			schemaLister: $this->schemaLister,
+			api: '/api',
+			collection: 'users',
+			id: 'explicit-id-789',  // Explicitly passed ID
+			addOnly: true
+		);
+
+		// Access the protected id property using reflection
+		$reflection = new ReflectionClass($form);
+		$idProperty = $reflection->getProperty('id');
+
+		expect($idProperty->getValue($form))->toBe('');
+		expect($form->objectData)->toBeNull();
+	});
+
+	test('addOnly form creates POST route not PUT route', function (): void {
+		$_GET['id'] = 'some-id';
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
+
+		$form = new ObjectForm(
+			objectFetcher: $this->objectFetcher,
+			collectionFetcher: $this->collectionFetcher,
+			collectionReader: $this->indexReader,
+			schemaFetcher: $this->schemaFetcher,
+			schemaLister: $this->schemaLister,
+			api: '/api',
+			collection: 'users',
+			addOnly: true
+		);
+
+		// Access the protected route and method properties using reflection
+		$reflection = new ReflectionClass($form);
+
+		$routeProperty = $reflection->getProperty('route');
+
+		$methodProperty = $reflection->getProperty('method');
+
+		// Should be POST route for new objects, not PUT route for editing
+		expect($routeProperty->getValue($form))->toBe('/collections/users');
+		expect($methodProperty->getValue($form))->toBe('POST');
+	});
+
+	test('regular form with existing ID creates PUT route', function (): void {
+		$_GET['id'] = 'existing-user-123';
+
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
+
+		$form = new ObjectForm(
+			objectFetcher: $this->objectFetcher,
+			collectionFetcher: $this->collectionFetcher,
+			collectionReader: $this->indexReader,
+			schemaFetcher: $this->schemaFetcher,
+			schemaLister: $this->schemaLister,
+			api: '/api',
+			collection: 'users',
+			addOnly: false  // Regular form
+		);
+
+		// Access the protected route and method properties using reflection
+		$reflection = new ReflectionClass($form);
+
+		$routeProperty = $reflection->getProperty('route');
+
+		$methodProperty = $reflection->getProperty('method');
+
+		// Should be PUT route for editing existing objects
+		expect($routeProperty->getValue($form))->toBe('/collections/users/existing-user-123');
+		expect($methodProperty->getValue($form))->toBe('PUT');
+	});
+
+	test('addOnly defaults to false for backwards compatibility', function (): void {
+		// Create form without specifying addOnly parameter
+		$form = new ObjectForm(
+			objectFetcher: $this->objectFetcher,
+			collectionFetcher: $this->collectionFetcher,
+			collectionReader: $this->indexReader,
+			schemaFetcher: $this->schemaFetcher,
+			schemaLister: $this->schemaLister,
+			api: '/api',
+			collection: 'users'
+			// No addOnly parameter - should default to false
+		);
+
+		// Access the protected addOnly property using reflection
+		$reflection      = new ReflectionClass($form);
+		$addOnlyProperty = $reflection->getProperty('addOnly');
+
+		expect($addOnlyProperty->getValue($form))->toBeFalse();
+	});
 });
