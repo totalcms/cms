@@ -38,6 +38,27 @@ export default class AdminTable {
 		this.initActionListner();
 		this.initQuickActionListner();
 		this.focusSearchInput();
+		this.fixPaginationIssues();
+	}
+
+	/**
+	 * Force re-render to fix pagination issues with large datasets
+	 * This addresses the GridJS bug where pagination breaks on initial render
+	 */
+	fixPaginationIssues() {
+		const rowCount = this.table.querySelectorAll('tbody tr').length;
+
+		// Only apply fix for large datasets where the issue occurs (aligns with throttle threshold)
+		if (rowCount > 400 && this.pagination) {
+			const rerender = () => {
+				setTimeout(() => {
+					console.log(`AdminTable: Applying pagination fix for ${rowCount} rows`);
+					this.grid.forceRender();
+				}, 100);
+			}
+			// Wait for window load to ensure all resources are loaded, then add small delay
+			document.readyState === 'complete' ? rerender() : window.addEventListener('load', rerender, { once: true });
+		}
 	}
 
 	initCloneDialog() {
@@ -127,7 +148,16 @@ export default class AdminTable {
 	}
 
 	initGrid() {
-		const grid = new Grid({
+		const rowCount = this.table.querySelectorAll('tbody tr').length;
+
+		// Dynamic throttle based on data size to prevent pagination issues
+		// Formula: rowCount / 4, max 2000ms, no throttle if < 400ms
+		let processingThrottleMs = 0; // Default: no throttle
+		if (rowCount > 400) { // 400/4 = 100ms minimum threshold
+			processingThrottleMs = Math.min(Math.floor(rowCount / 4), 2000);
+		}
+
+		const gridConfig = {
 			from        : this.table,
 			pagination  : this.pagination,
 			search      : this.options.search,
@@ -140,7 +170,15 @@ export default class AdminTable {
 					placeholder : this.options.placeholder,
 				},
 			},
-		});
+		};
+
+		// Only add throttle if needed (keeps config clean for small datasets)
+		if (processingThrottleMs > 0) {
+			gridConfig.processingThrottleMs = processingThrottleMs;
+			console.log(`AdminTable: Applied ${processingThrottleMs}ms throttle for ${rowCount} rows`);
+		}
+
+		const grid = new Grid(gridConfig);
 
 		grid.config.store.subscribe((state, prevState) => {
 			if (prevState.status < state.status) {
