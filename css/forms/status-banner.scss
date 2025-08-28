@@ -63,6 +63,7 @@
         background-color : oklch(var(--totalform-success) / 0.8);
 
         &:after {
+			animation  : none;
 			mask-image : var(--icon-success);
 			opacity    : 1;
 			scale      : 1.2;
@@ -73,6 +74,7 @@
 		pointer-events    : auto;
 
         &:after {
+			animation  : none;
 			mask-image : var(--icon-error);
 			opacity    : 1;
 			scale      : 1.2;

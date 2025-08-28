@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -31,20 +32,24 @@ class AccessManager
 	 *
 	 * @param string|array<string> $groups
 	 */
-	public function restrictPageAccess(array|string $groups = [], string $collection = ''): void
+	public function restrictPageAccess(array|string $groups = [], string $collection = ''): bool
 	{
-		$this->session->set('requestRefererUrl', $_SERVER['HTTP_REFERER'] ?? '');
-		$this->session->set('requestOriginUrl', $_SERVER['REQUEST_URI']);
+		$this->session->set(SessionKeys::REQUEST_REFERER_URL, $_SERVER['HTTP_REFERER'] ?? '');
+		$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, $_SERVER['REQUEST_URI']);
 
 		if (!$this->sessionHasUser()) {
 			$this->redirectToLogin($collection);
 
-			return;
+			return true;
 		}
 
 		if (!$this->userHasAccess($groups, $collection)) {
 			$this->redirectToAccessDenied();
+
+			return true;
 		}
+
+		return false;
 	}
 
 	/** @param string|array<string> $groups */
@@ -52,6 +57,11 @@ class AccessManager
 	{
 		if (!$this->userLoggedIn($collection)) {
 			return false;
+		}
+
+		// SuperAdmins have access to everything regardless of collection
+		if ($this->isSuperAdmin()) {
+			return true;
 		}
 
 		if (empty($groups)) {
@@ -131,8 +141,7 @@ class AccessManager
 	{
 		$this->getSessionData();
 
-		return $this->userCollection === $this->defaultAuthCollection
-			&& $this->userValidator->isSuperAdmin($this->userID);
+		return $this->userValidator->isSuperAdmin($this->userID);
 	}
 
 	private function getSessionData(): void
@@ -141,8 +150,8 @@ class AccessManager
 			return;
 		}
 
-		$this->userID         = $this->session->get('user') ?? '';
-		$this->userCollection = $this->session->get('collection') ?? '';
+		$this->userID         = $this->session->get(SessionKeys::AUTH_USER) ?? '';
+		$this->userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? '';
 
 		if ($this->userCollection === '') {
 			$this->userCollection = $this->defaultAuthCollection;
@@ -151,7 +160,7 @@ class AccessManager
 
 	public function sessionHasUser(): bool
 	{
-		return $this->session->has('user') && $this->session->has('collection');
+		return $this->session->has(SessionKeys::AUTH_USER) && $this->session->has(SessionKeys::AUTH_COLLECTION);
 	}
 
 	private function redirectToLogin(string $collection = ''): void
@@ -160,6 +169,13 @@ class AccessManager
 		if ($collection !== '') {
 			$loginUrl .= "/$collection";
 		}
+
+		// Add the original requested URL as a redirect parameter
+		$originUrl = $this->session->get(SessionKeys::REQUEST_ORIGIN_URL);
+		if (!empty($originUrl)) {
+			$loginUrl .= '?' . http_build_query(['redirect' => $originUrl]);
+		}
+
 		header("Location: $loginUrl");
 	}
 

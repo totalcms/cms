@@ -12,6 +12,7 @@ use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\TwigRenderer;
 
 abstract class DownloadAction
@@ -69,8 +70,8 @@ abstract class DownloadAction
 		$flash = $this->session->getFlash();
 		$flash->clear();
 
-		$attempts = $this->session->get('downloadAttempts', 0);
-		$this->session->set('downloadAttempts', $attempts + 1);
+		$attempts = $this->session->get(SessionKeys::DOWNLOAD_ATTEMPTS, 0);
+		$this->session->set(SessionKeys::DOWNLOAD_ATTEMPTS, $attempts + 1);
 
 		$maxAttempts = self::MAX_ATTEMPTS;
 

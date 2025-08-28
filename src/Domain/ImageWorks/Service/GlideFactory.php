@@ -98,9 +98,11 @@ readonly class GlideFactory
 	/** @param array<string> $imageColors */
 	public static function updateBorderColor(string $border, array $imageColors): string
 	{
-		[$size, $border, $method] = explode(',', $border);
+		$parts = explode(',', $border);
 
-		$size = intval($size);
+		$size   = intval($parts[0]);
+		$border = $parts[1] ?? '';
+		$method = $parts[2] ?? '';
 
 		if ($border === '') {
 			$border = 'ffffff';

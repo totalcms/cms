@@ -147,7 +147,7 @@ body {
 			&.schema-url { --collection-icon : var(--icon-link) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
-			&.cache-cleaner { --collection-icon : var(--icon-clean-o) }
+			&.cache-manager { --collection-icon : var(--icon-clean-o) }
 			&.project-setup { --collection-icon : var(--icon-flag) }
 			&.macro-builder { --collection-icon : var(--icon-build) }
 			&.pretty-url-builder { --collection-icon : var(--icon-link) }

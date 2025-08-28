@@ -10,6 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
 /**
@@ -63,8 +64,8 @@ readonly class AuthMiddleware implements MiddlewareInterface
 	private function redirectToRoute(ServerRequestInterface $request, string $route): ResponseInterface
 	{
 		// Set the current request URL in the session so we can send the user back to it after login
-		$this->session->set('requestOriginUrl', (string)$request->getUri());
-		$this->session->set('requestRefererUrl', $request->getHeaderLine('referer'));
+		$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, (string)$request->getUri());
+		$this->session->set(SessionKeys::REQUEST_REFERER_URL, $request->getHeaderLine('referer'));
 
 		// User is not logged in. Redirect to login page.
 		$routeParser = RouteContext::fromRequest($request)->getRouteParser();
@@ -78,10 +79,10 @@ readonly class AuthMiddleware implements MiddlewareInterface
 	private function trackSessionActivity(): void
 	{
 		$now  = time();
-		$last = $this->session->get('last_activity') ?? $now;
+		$last = $this->session->get(SessionKeys::LAST_ACTIVITY) ?? $now;
 		$max  = $this->config->session['gc_maxlifetime'];
 
-		$this->session->set('last_activity', $now);
+		$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
 
 		if ($now - $last > $max / 4) {
 			// Regenerate session ID every 4th of the max session lifetime

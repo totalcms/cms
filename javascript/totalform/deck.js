@@ -35,9 +35,9 @@ export default class DeckField extends TotalField {
     manualIdSync(deckItem) {
         const deckItemIdField = deckItem.container.querySelector("input[name='deck-item-id']");
         const dialogIdField = deckItem.dialog.dialog.querySelector("input[name='id']");
-        
+
         if (!deckItemIdField || !dialogIdField) return;
-        
+
         // If dialog ID field has a value (from autogen) but deck-item-id doesn't, sync it
         if (dialogIdField.value && !deckItemIdField.value) {
             const sanitizedValue = dialogIdField.value.replace(/-/g, '_');
@@ -49,8 +49,10 @@ export default class DeckField extends TotalField {
         if (deckItems.length === 0) return;
         // Make the items sortable
         Sortable.create(deckItems[0].parentNode, {
-            animation: 150,
-            ghostClass: 'drag-ghost',
+			animation     : 150,
+			handle        : '.sort-handle',
+			ghostClass    : 'drag-ghost',
+			forceFallback : true,
         });
     }
 
@@ -90,12 +92,12 @@ export default class DeckField extends TotalField {
 		this.items.push(newItem);
         this.initActionbar(itemElement);
         this.form?.processFields();
-        
+
         // After processing fields (which may trigger autogen), manually sync any generated ID
         setTimeout(() => {
             this.manualIdSync(newItem);
         }, 0);
-        
+
 		return newItem;
     }
 
@@ -234,7 +236,7 @@ export default class DeckField extends TotalField {
 		this.input.setCustomValidity(""); // Clear previous custom validity message
 
 		let isValid = true;
-        
+
         // Check if deck is required and empty
         if (this.input.required) {
             const deckItems = this.container.getElementsByClassName(this.fieldClass);

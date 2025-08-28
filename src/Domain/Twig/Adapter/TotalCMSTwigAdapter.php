@@ -349,13 +349,27 @@ NGINX;
 		];
 	}
 
-	public function login(string $collection = ''): string
+	/**
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	public function login(string $collection = '', ?string $redirect = null): string
 	{
-		if ($collection === '') {
-			return sprintf('%s/%s', $this->api, 'login');
+		$loginUrl = $collection === ''
+			? sprintf('%s/%s', $this->api, 'login')
+			: sprintf('%s/%s/%s', $this->api, 'login', $collection);
+
+		// If redirect is null, default to current page
+		// If redirect is empty string, no redirect parameter
+		// If redirect has value, use that value
+		if ($redirect === null) {
+			$redirect = $_SERVER['REQUEST_URI'] ?? '';
 		}
 
-		return sprintf('%s/%s/%s', $this->api, 'login', $collection);
+		if ($redirect !== '') {
+			$loginUrl .= '?' . http_build_query(['redirect' => $redirect]);
+		}
+
+		return $loginUrl;
 	}
 
 	/** @return array<string,mixed> */

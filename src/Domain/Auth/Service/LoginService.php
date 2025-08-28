@@ -33,10 +33,22 @@ class LoginService
 			$collection = $this->config->auth['collection'];
 		}
 
-		if (empty($collection)) {
-			$collection = $this->config->auth['collection'];
+		$defaultCollection = $this->config->auth['collection'];
+
+		// SuperAdmin Authentication: Check if this user is a SuperAdmin in the default collection
+		// If they are, authenticate them against the default collection regardless of the requested collection
+		if ($collection !== $defaultCollection) {
+			$superAdminUser = $this->tryAuthenticateSuperAdmin($email, $password);
+			if ($superAdminUser !== null) {
+				return $superAdminUser;
+			}
 		}
 
+		if ($collection === '') {
+			$collection = $defaultCollection;
+		}
+
+		// Normal authentication flow for the requested collection
 		$user   = $this->validator->validateUserByEmail($email, $collection);
 		$userId = $user['id'];
 
@@ -58,6 +70,53 @@ class LoginService
 		$this->logger->info("User {$this->account} logged in");
 
 		return $user;
+	}
+
+	/**
+	 * Try to authenticate a user as SuperAdmin against the default collection.
+	 *
+	 * @return array<string,mixed>|null User data if SuperAdmin authentication succeeds, null otherwise
+	 */
+	private function tryAuthenticateSuperAdmin(string $email, string $password): ?array
+	{
+		try {
+			$defaultCollection = $this->config->auth['collection'];
+
+			// Try to find and validate the user in the default collection
+			$user   = $this->validator->validateUserByEmail($email, $defaultCollection);
+			$userId = $user['id'];
+
+			// Check if this user is a SuperAdmin
+			if (!$this->validator->isSuperAdmin($userId)) {
+				return null; // Not a SuperAdmin
+			}
+
+			// Set account for logging
+			$this->account = "$defaultCollection/$userId";
+
+			// Run all the standard validation tests
+			$this->testUserActive($user);
+			$this->testUserExpiration($user);
+			$this->testUserMaxLoginCount($user);
+
+			// Verify password
+			if (!password_verify($password, (string)$user['password'])) {
+				return null; // Invalid password - fall back to normal auth
+			}
+
+			// Update the last login date
+			$this->updateService->updateLoginDate($defaultCollection, $user['id']);
+
+			$this->logger->info("SuperAdmin {$this->account} logged in via cross-collection authentication");
+
+			// Mark this user data to indicate it was authenticated as SuperAdmin from default collection
+			$user['_authenticated_collection'] = $defaultCollection;
+
+			return $user;
+		} catch (\Throwable) {
+			// If any step fails, return null to fall back to normal authentication
+			return null;
+		}
 	}
 
 	/** @param array<string,mixed> $user */

@@ -191,8 +191,29 @@ All Total CMS form methods accept `formOptions` to control form behavior, appear
     helpOnHover: true,             # Show help on hover (bool, default: false)
     helpOnFocus: false,            # Show help on focus (bool, default: false)
     hideID: false,                 # Hide the ID field (bool, default: false)
+    addOnly: true,                 # Security: Only allow creating new objects, never editing (bool, default: false)
 }) }}
 ```
+
+#### Security: Add Only Forms
+
+Use `addOnly: true` for forms on the public side of your website to prevent users from editing existing objects by manipulating URL parameters:
+
+```twig
+{# Public registration form - secure against ID manipulation #}
+{{ cms.form.builder('users', {
+    addOnly: true,
+    newAction: {
+        action: 'redirect',
+        link: '/login'
+    }
+}).addField('name').addField('email').addField('password', {field: 'password'}).build() }}
+```
+
+**Security Note:** When `addOnly` is enabled:
+- Any ID parameter in the URL or form is ignored
+- The form will always create a new object, never update existing ones
+- Protects against malicious users passing `?id=123` to edit other users' data
 
 #### Action Configuration Options
 

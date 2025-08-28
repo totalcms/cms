@@ -44,7 +44,7 @@ class DeckItem
 
 		$dialog  = $this->buildDialog();
 		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
-		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$this->itemId} item"]);
+		$buttons = HTMLUtils::button('', ['class' => 'edit sort-handle', 'title' => "Edit {$this->itemId} item"]);
 
 		// Add duplicate and delete buttons
 		$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => "Duplicate {$this->itemId} item"]);

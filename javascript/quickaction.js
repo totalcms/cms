@@ -50,7 +50,8 @@ export default class QuickAction {
                 url    : this.url,
                 method : this.method,
                 ...detail
-            }
+            },
+            bubbles : true,
         });
         this.link.dispatchEvent(event);
     }

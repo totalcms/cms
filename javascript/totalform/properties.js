@@ -11,10 +11,11 @@ export default class PropertiesField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
-		this.fieldClass = options?.fieldClass || "property-field";
+		this.fieldClass = (options && options.fieldClass) || "property-field";
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		const propertyFields = this.container.getElementsByClassName(this.fieldClass);
+
 		for (const field of propertyFields) {
 			new PropertyField(field, this.fieldClass);
 			this.initActionbar(field);
@@ -29,15 +30,21 @@ export default class PropertiesField extends TotalField {
 
 	sortableProperties(propertyFields) {
 		if (propertyFields.length === 0) return;
+
+		const formGroup = propertyFields[0].parentNode;
+
 		// Make the fields sortable
-		Sortable.create(propertyFields[0].parentNode, {
-			animation  : 150,
-			ghostClass : 'drag-ghost',
+		this.sortable = Sortable.create(formGroup, {
+			animation     : 150,
+			handle        : '.sort-handle',
+			ghostClass    : 'drag-ghost',
+			forceFallback : true,
 		});
 	}
 
 	initAddProperty() {
-		this.addSelect?.addEventListener("change", () => {
+		if (this.addSelect) {
+			this.addSelect.addEventListener("change", () => {
 			const selectedOption = this.addSelect.selectedOptions[0];
 			const selectedValue  = this.addSelect.value;
     		if (!selectedValue) return;
@@ -57,18 +64,16 @@ export default class PropertiesField extends TotalField {
 			if (this.addSelect.children.length === 1) {
 				this.addSelect.remove();
 			}
-		});
+			});
+		}
 	}
 
 	addProperty(property) {
-		console.log("Adding property", property);
-
 		const clone = this.template.content.cloneNode(true);
 		const parent = this.addSelect.parentNode;
 		parent.insertBefore(clone, this.addSelect);
 
 		const propertyField = Array.from(parent.getElementsByClassName(this.fieldClass)).pop();
-		console.log(propertyField, property);
 
 		propertyField.classList.remove('-field');
 		propertyField.classList.add(`${property.field}-field`);
@@ -90,7 +95,9 @@ export default class PropertiesField extends TotalField {
 
 	initActionbar(field) {
 		const trash = field.querySelector("button.trash");
-		trash?.addEventListener("click", () => this.removeField(field));
+		if (trash) {
+			trash.addEventListener("click", () => this.removeField(field));
+		}
 	}
 
 	removeField(field) {

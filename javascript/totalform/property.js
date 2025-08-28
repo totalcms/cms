@@ -15,9 +15,10 @@ export default class PropertyField {
     }
 
 	setupDialog() {
+		const openButton = this.container.querySelector("button.edit");
 		return new Dialog(this.container.querySelector("dialog"), {
-			open  : this.container.querySelector("button"),
-			close : ".close",
+			open   : openButton,
+			close  : ".close",
 			onOpen : () => {
 				if (this.dialogOpened) return;
 				this.dialogOpened = true;

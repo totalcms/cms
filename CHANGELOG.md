@@ -2,6 +2,44 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.39] - 2025-08-28
+
+### Enhanced
+
+- **Admin Interface Performance**: Major AdminTable optimizations for large datasets
+  - Event delegation reduces memory usage from hundreds to just 2 event listeners per table
+  - Added grid initialization guards to prevent multiple executions
+  - Dynamic throttling based on dataset size (rowCount/4, max 2000ms, no throttle <400 rows)
+  - Event-driven pagination fixes using GridJS state transitions
+- **Schema Property Management**: Improved sortable behavior in schema forms
+  - Fixed drag-and-drop interference with text selection in Firefox, Chrome, and Safari
+  - Long-press detection prevents accidental dialog opening after drag operations
+  - Cross-browser compatibility with `forceFallback: true` for consistent drag behavior
+- **Cache Management**: Renamed and improved cache interface
+  - "Cache Cleaner" renamed to "Cache Manager" throughout admin interface
+  - Updated navigation, templates, and documentation references
+  - Better reflects comprehensive cache management capabilities
+
+### Fixed
+- **Browser Compatibility**: Fixed text selection issues in dialogs across all major browsers
+  - Resolved SortableJS interference with form inputs in schema property dialogs
+  - Implemented browser-specific workarounds for consistent drag-and-drop behavior
+  - Long-press detection prevents unintended dialog triggers after dragging
+- **AdminTable Performance**: Eliminated performance bottlenecks in large data grids
+  - Fixed multiple grid initialization causing hundreds of redundant event listeners
+  - Resolved pagination breaking issue with large datasets through event-based re-rendering
+  - GridJS state management improvements for reliable initialization timing
+- **Authentication & Session Management**: Enhanced login system reliability
+  - Improved session handling and access control
+  - Better redirect parameter support for login flows
+  - Enhanced super admin access capabilities across auth collections
+  - Fixed status banner animation issues
+
+### Added
+- **Form Enhancement**: New "addonly" form mode for restricted editing scenarios
+- **ImageWorks**: Fixed border handling issues in image processing
+- **Testing**: Expanded test coverage for login, session, and authentication workflows
+
 ## [3.0.38] - 2025-08-26
 
 ### Added

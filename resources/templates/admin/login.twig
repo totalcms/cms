@@ -27,6 +27,11 @@
 		{% endif %}
 		<form class="totalform" method="post" action="{{ action }}" data-disabled="true">
 			{{ csrf_field() }}
+
+			{# Preserve redirect parameter if present #}
+			{% if getData.redirect %}
+				<input type="hidden" name="redirect" value="{{ getData.redirect }}">
+			{% endif %}
 			<div class="form-field email-field" data-type="email">
 				<label for="field-66e386299df7c">Email</label>
 				<div class="form-group">
