@@ -29,9 +29,11 @@ export default class CustomPropertiesField extends TotalField {
 		// Make the object fields sortable
 		const objects = this.container.querySelector(".form-group");
 		Sortable.create(objects, {
-			animation  : 150,
-			ghostClass : 'drag-ghost',
-			filter     : 'button',
+			animation     : 150,
+			ghostClass    : 'drag-ghost',
+			handle        : 'summary',
+			filter        : 'button',
+			forceFallback : true,
 		});
 	}
 
