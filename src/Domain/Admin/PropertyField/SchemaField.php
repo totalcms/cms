@@ -133,7 +133,10 @@ class SchemaField extends PropertyField
 
 		$dialog  = $this->buildDialog();
 		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
-		$buttons = HTMLUtils::button('', ['class' => 'edit', 'title' => "Edit {$this->property} property"]);
+		$buttons = HTMLUtils::button('', [
+			'class' => 'edit sort-handle',
+			'title' => "Edit {$this->property} property"
+		]);
 
 		if ($this->form instanceof SchemaForm && !$this->form->reserved) {
 			$buttons .= HTMLUtils::button('', ['class' => 'duplicate', 'title' => "Duplicate {$this->property} property"]);

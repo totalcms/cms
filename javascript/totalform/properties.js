@@ -11,10 +11,15 @@ export default class PropertiesField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
-		this.fieldClass = options?.fieldClass || "property-field";
+		console.log('PropertiesField constructor called in:', navigator.userAgent);
+		console.log('Container:', container, 'Options:', options);
+
+		this.fieldClass = (options && options.fieldClass) || "property-field";
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		const propertyFields = this.container.getElementsByClassName(this.fieldClass);
+		console.log('Property fields found:', propertyFields.length);
+
 		for (const field of propertyFields) {
 			new PropertyField(field, this.fieldClass);
 			this.initActionbar(field);
@@ -29,15 +34,23 @@ export default class PropertiesField extends TotalField {
 
 	sortableProperties(propertyFields) {
 		if (propertyFields.length === 0) return;
+
+		const container = propertyFields[0].parentNode;
+		console.log('Sortable container:', container);
+		console.log('Handle elements found:', container.querySelectorAll('.sort-handle').length);
+
 		// Make the fields sortable
-		Sortable.create(propertyFields[0].parentNode, {
-			animation  : 150,
-			ghostClass : 'drag-ghost',
+		this.sortable = Sortable.create(container, {
+			animation     : 150,
+			handle        : '.sort-handle',
+			ghostClass    : 'drag-ghost',
+			forceFallback : true,
 		});
 	}
 
 	initAddProperty() {
-		this.addSelect?.addEventListener("change", () => {
+		if (this.addSelect) {
+			this.addSelect.addEventListener("change", () => {
 			const selectedOption = this.addSelect.selectedOptions[0];
 			const selectedValue  = this.addSelect.value;
     		if (!selectedValue) return;
@@ -57,7 +70,8 @@ export default class PropertiesField extends TotalField {
 			if (this.addSelect.children.length === 1) {
 				this.addSelect.remove();
 			}
-		});
+			});
+		}
 	}
 
 	addProperty(property) {
@@ -90,7 +104,9 @@ export default class PropertiesField extends TotalField {
 
 	initActionbar(field) {
 		const trash = field.querySelector("button.trash");
-		trash?.addEventListener("click", () => this.removeField(field));
+		if (trash) {
+			trash.addEventListener("click", () => this.removeField(field));
+		}
 	}
 
 	removeField(field) {
