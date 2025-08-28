@@ -135,7 +135,7 @@ class SchemaField extends PropertyField
 		$input   = HTMLUtils::inlineElement('input', $inputAttributes);
 		$buttons = HTMLUtils::button('', [
 			'class' => 'edit sort-handle',
-			'title' => "Edit {$this->property} property"
+			'title' => "Edit {$this->property} property",
 		]);
 
 		if ($this->form instanceof SchemaForm && !$this->form->reserved) {
