@@ -50,14 +50,11 @@ export default class AdminTable {
 
 		// Only apply fix for large datasets where the issue occurs (aligns with throttle threshold)
 		if (rowCount > 400 && this.pagination) {
-			const rerender = () => {
-				setTimeout(() => {
-					console.log(`AdminTable: Applying pagination fix for ${rowCount} rows`);
-					this.grid.forceRender();
-				}, 100);
-			}
-			// Wait for window load to ensure all resources are loaded, then add small delay
-			document.readyState === 'complete' ? rerender() : window.addEventListener('load', rerender, { once: true });
+			// Grid is fully rendered at this point, just add small delay for safety
+			setTimeout(() => {
+				console.log(`AdminTable: Applying pagination fix for ${rowCount} rows`);
+				this.grid.forceRender();
+			}, 100); // Reduced delay since grid is already ready
 		}
 	}
 
@@ -184,6 +181,8 @@ export default class AdminTable {
 			if (prevState.status < state.status) {
 				if (prevState.status === 2 && state.status === 3) {
 					this.gridReady();
+					// Always force re-render for large datasets to fix pagination issues
+					this.fixPaginationIssues();
 				}
 			}
 		});
