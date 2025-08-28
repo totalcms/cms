@@ -11,14 +11,10 @@ export default class PropertiesField extends TotalField {
     constructor(container, options) {
         super(container, options);
 
-		console.log('PropertiesField constructor called in:', navigator.userAgent);
-		console.log('Container:', container, 'Options:', options);
-
 		this.fieldClass = (options && options.fieldClass) || "property-field";
 
 		// not storing this as an array so that it can be updated simply through the DOM
 		const propertyFields = this.container.getElementsByClassName(this.fieldClass);
-		console.log('Property fields found:', propertyFields.length);
 
 		for (const field of propertyFields) {
 			new PropertyField(field, this.fieldClass);
@@ -35,12 +31,10 @@ export default class PropertiesField extends TotalField {
 	sortableProperties(propertyFields) {
 		if (propertyFields.length === 0) return;
 
-		const container = propertyFields[0].parentNode;
-		console.log('Sortable container:', container);
-		console.log('Handle elements found:', container.querySelectorAll('.sort-handle').length);
+		const formGroup = propertyFields[0].parentNode;
 
 		// Make the fields sortable
-		this.sortable = Sortable.create(container, {
+		this.sortable = Sortable.create(formGroup, {
 			animation     : 150,
 			handle        : '.sort-handle',
 			ghostClass    : 'drag-ghost',
@@ -75,14 +69,11 @@ export default class PropertiesField extends TotalField {
 	}
 
 	addProperty(property) {
-		console.log("Adding property", property);
-
 		const clone = this.template.content.cloneNode(true);
 		const parent = this.addSelect.parentNode;
 		parent.insertBefore(clone, this.addSelect);
 
 		const propertyField = Array.from(parent.getElementsByClassName(this.fieldClass)).pop();
-		console.log(propertyField, property);
 
 		propertyField.classList.remove('-field');
 		propertyField.classList.add(`${property.field}-field`);
