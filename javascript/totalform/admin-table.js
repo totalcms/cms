@@ -9,6 +9,7 @@ export default class AdminTable {
 
     constructor(table, options = {}) {
 		this.table = table;
+		this.gridInitialized = false; // Flag to prevent multiple gridReady executions
 
 		this.options = Object.assign({
 			pagination  : table.dataset.limit !== undefined,
@@ -33,10 +34,14 @@ export default class AdminTable {
 	}
 
 	gridReady() {
+		// Prevent multiple executions
+		if (this.gridInitialized) return;
+		this.gridInitialized = true;
+
+		console.log('AdminTable: Grid ready - initializing once');
 		this.initCloneDialog();
-		this.initCellListner();
-		this.initActionListner();
-		this.initQuickActionListner();
+		this.initDelegatedEventListeners(); // Replace individual listeners with delegation
+		this.initCellClickListener(); // GridJS cellClick is already efficient
 		this.focusSearchInput();
 		this.fixPaginationIssues();
 	}
@@ -66,44 +71,75 @@ export default class AdminTable {
 		// });
 	}
 
-	initActionListner() {
-		// Popovers
-		const buttons = this.wrapper.querySelectorAll("button[popovertarget]");
-		buttons.forEach(button => {
-			button.addEventListener("pointerdown", e => {
-				const popover = button.parentNode.querySelector(".object-action-popover");
-				const rect = button.getBoundingClientRect();
-				const offset = 10;
-				popover.style.top = `${rect.top + window.scrollY - offset}px`;
-				popover.style.left = `${rect.left + window.scrollX + offset}px`;
-			});
-		});
-		// Delete Objects
-		const deletes = this.wrapper.querySelectorAll(".delete>a");
-		deletes.forEach(link => {
-			link.addEventListener("quickaction-success", e => {
-				const row = link.closest(".gridjs-tr");
-				row.remove();
-				this.grid.updateConfig({
-					data: this.grid.config.data.filter(item => item[0] !== data.id),
-				}).forceRender();
-			});
-		});
-		const clones = this.wrapper.querySelectorAll(".clone>a");
-		clones.forEach(link => {
-			link.addEventListener("pointerdown", e => {
-				const row = link.closest(".gridjs-tr");
-				const id = row.querySelector("td[data-column-id='id']").innerText;
-				this.dialog.dialog.querySelector("input[name='id']").value = `${id}-copy`;
-				this.dialog.dialog.querySelector("form").simpleform.route = link.getAttribute("href");
-				this.dialog.open();
-			});
-		});
+	initDelegatedEventListeners() {
+		// Single delegated listener for all grid interactions
+		this.wrapper.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
+		this.wrapper.addEventListener('quickaction-success', (e) => this.handleDeleteActionSuccess(e));
 	}
 
-	initQuickActionListner() {
-		const buttons = Array.from(this.wrapper.getElementsByClassName("cms-quick-action"));
-		buttons.forEach(link => new QuickAction(link));
+	handlePointerDown(e) {
+		const target = e.target;
+
+		// Handle popover buttons
+		if (target.matches("button[popovertarget]")) {
+			this.openPopover(target);
+			return;
+		}
+
+		// Handle clone links
+		if (target.matches(".clone > a")) {
+			this.openCloneDialog(target);
+			return;
+		}
+	}
+
+	handleDeleteActionSuccess(e) {
+		const target = e.target;
+		// Handle delete success
+		if (target.matches(".delete-action")) {
+			const row = target.closest(".gridjs-tr");
+			if (row) {
+				row.remove();
+				// Update grid data if needed
+				this.grid.updateConfig({
+					data: this.grid.config.data.filter(item => item[0] !== e.detail?.id),
+				}).forceRender();
+			}
+		}
+	}
+
+	openCloneDialog(target) {
+		const row = target.closest(".gridjs-tr");
+		if (row) {
+			const idCell = row.querySelector("td[data-column-id='id']");
+			if (idCell) {
+				const id = idCell.innerText;
+				const dialogInput = this.dialog.dialog.querySelector("input[name='id']");
+				const dialogForm = this.dialog.dialog.querySelector("form");
+
+				if (dialogInput) dialogInput.value = `${id}-copy`;
+				if (dialogForm && dialogForm.simpleform) {
+					dialogForm.simpleform.route = target.getAttribute("href");
+				}
+				this.dialog.open();
+			}
+		}
+	}
+
+	openPopover(target) {
+		const popover = target.parentNode.querySelector(".object-action-popover");
+		if (popover) {
+			const rect = target.getBoundingClientRect();
+			const offset = 10;
+			popover.style.top = `${rect.top + window.scrollY - offset}px`;
+			popover.style.left = `${rect.left + window.scrollX + offset}px`;
+			this.initDeleteActions(popover);
+		}
+	}
+
+	initDeleteActions(target) {
+		// Initialize Delete Action QuickAction
+		new QuickAction(target.querySelector(".delete-action"));
 	}
 
 	focusSearchInput() {
@@ -119,20 +155,20 @@ export default class AdminTable {
 		}
 	}
 
-	initCellListner() {
+	initCellClickListener() {
+		// Use GridJS's built-in cellClick event (this is already efficient)
 		this.grid.on('cellClick', e => {
 			const cell = e.currentTarget;
 			// Ignore clicks on buttons and links
 			if (cell.querySelector("button,a")) return;
 
 			const row = cell.closest(".gridjs-tr");
-			const cells = Array.from(row.querySelectorAll("td"));
-			let id = '';
-			cells.forEach(cell => {
-				if (cell.dataset.columnId === 'id') id = cell.innerText;
-			});
-			if (id) {
-				window.location.href = `${window.location.href}/${id}`;
+			const idCell = row.querySelector("td[data-column-id='id']");
+			if (idCell) {
+				const id = idCell.innerText;
+				if (id) {
+					window.location.href = `${window.location.href}/${id}`;
+				}
 			}
 		});
 	}
@@ -178,12 +214,10 @@ export default class AdminTable {
 		const grid = new Grid(gridConfig);
 
 		grid.config.store.subscribe((state, prevState) => {
-			if (prevState.status < state.status) {
-				if (prevState.status === 2 && state.status === 3) {
-					this.gridReady();
-					// Always force re-render for large datasets to fix pagination issues
-					this.fixPaginationIssues();
-				}
+			// GridJS status transitions: typically 0=init, 1=loading, 2=loaded, 3=rendered
+			// We wait for 2→3 transition to ensure grid is fully rendered before initializing
+			if (prevState.status === 2 && state.status === 3) {
+				this.gridReady();
 			}
 		});
 

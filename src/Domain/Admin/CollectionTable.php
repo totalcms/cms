@@ -259,7 +259,7 @@ readonly class CollectionTable
 
 		$labelSingular = $this->collectionData->labelSingular ?? 'Object';
 		$delete        = HTMLUtils::element('a', 'Delete ' . $labelSingular, [
-			'class'        => 'cms-quick-action',
+			'class'        => 'delete-action',
 			'data-method'  => 'DELETE',
 			'data-confirm' => 'Are you sure you want to delete this ' . strtolower($labelSingular) . '?',
 			'href'         => implode('/', [
