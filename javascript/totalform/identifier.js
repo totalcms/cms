@@ -141,7 +141,7 @@ export default class Identifier extends TotalField {
 	}
 
     slugify(id) {
-		id = id.replace('@', '-at-').replace('.', '-');
+		id = id.replace('@', '-at-').replace(/\./g, '-');
         return slugify(id, {
 			replacement : '-', // replace spaces with replacement character, defaults to `-`
 			remove      : /[*+~.()'"!:@]/g, // remove characters that match regex, defaults to `undefined`
