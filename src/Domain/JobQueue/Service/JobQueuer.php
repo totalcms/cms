@@ -45,4 +45,17 @@ readonly class JobQueuer
 		}
 		$this->queueJob(JobData::TYPE_REBUILD, $collection);
 	}
+
+	/** @param array<string,string> $rules */
+	public function queueFactory(string $collection, int $quantity, array $rules = []): string
+	{
+		$data = [
+			'quantity' => $quantity,
+			'rules' => $rules,
+		];
+		
+		$job = $this->queueJob(JobData::TYPE_FACTORY, $collection, $data);
+		
+		return $job->id;
+	}
 }

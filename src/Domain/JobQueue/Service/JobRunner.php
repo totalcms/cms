@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\JobQueue\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
@@ -24,6 +25,7 @@ readonly class JobRunner
 		private ObjectImporter $objectImporter,
 		private ObjectExporter $objectExporter,
 		private IndexBuilder $indexBuilder,
+		private FactoryImporter $factoryImporter,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
@@ -121,6 +123,9 @@ readonly class JobRunner
 			case JobData::TYPE_UPDATE:
 				$this->processUpdateJob($job);
 				break;
+			case JobData::TYPE_FACTORY:
+				$this->processFactoryJob($job);
+				break;
 			default:
 				$error = 'Unknown job type: ' . $job->type;
 				$this->logger->error($error, $job->toArray());
@@ -154,6 +159,29 @@ readonly class JobRunner
 			return;
 		}
 		$this->objectImporter->updateObject($job->collection, $data);
+	}
+
+	private function processFactoryJob(JobData $job): void
+	{
+		$data = json_decode($job->payload, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			$error = 'Invalid JSON payload: ' . json_last_error_msg();
+			$this->logger->error($error, $job->toArray());
+
+			return;
+		}
+
+		$quantity = intval($data['quantity'] ?? 1);
+		$rules = $data['rules'] ?? [];
+
+		$importCount = $this->factoryImporter->import($job->collection, $quantity, $rules);
+
+		$this->logger->info("Factory job completed", [
+			'collection' => $job->collection,
+			'quantity' => $quantity,
+			'imported' => $importCount,
+			'rules' => $rules,
+		]);
 	}
 
 	/**

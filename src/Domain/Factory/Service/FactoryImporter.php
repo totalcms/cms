@@ -143,21 +143,54 @@ readonly class FactoryImporter
 			if (str_starts_with((string)$method, 'image')) {
 				// Save image and store path in object data
 				// Not using the ImageSaver here to avoid unnecessary complexity
-				$path                  = $this->faker->$method(...$args);
-				$objectData[$property] = $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path);
+				try {
+					$path                  = $this->faker->$method(...$args);
+					$objectData[$property] = $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path);
+				} catch (\Exception $e) {
+					$this->logger->warning('Failed to generate image for property, skipping', [
+						'property' => $property,
+						'method' => $method,
+						'args' => $args,
+						'error' => $e->getMessage(),
+						'object_id' => $objectData['id']
+					]);
+					// Skip this property but continue with the rest of the object
+				}
 				continue;
 			}
 			if (str_starts_with((string)$method, 'gallery')) {
 				// Save images and store path in object data
 				// Not using the GallerySaver here to avoid unnecessary complexity
-				$paths                 = $this->faker->$method(...$args);
-				$objectData[$property] = array_map(
-					fn ($path): array => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
-					$paths
-				);
+				try {
+					$paths                 = $this->faker->$method(...$args);
+					$objectData[$property] = array_map(
+						fn ($path): array => $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path),
+						$paths
+					);
+				} catch (\Exception $e) {
+					$this->logger->warning('Failed to generate gallery images for property, skipping', [
+						'property' => $property,
+						'method' => $method,
+						'args' => $args,
+						'error' => $e->getMessage(),
+						'object_id' => $objectData['id']
+					]);
+					// Skip this property but continue with the rest of the object
+				}
 				continue;
 			}
-			$objectData[$property] = $this->faker->$method(...$args);
+			try {
+				$objectData[$property] = $this->faker->$method(...$args);
+			} catch (\Exception $e) {
+				$this->logger->warning('Failed to generate fake data for property, skipping', [
+					'property' => $property,
+					'method' => $method,
+					'args' => $args,
+					'error' => $e->getMessage(),
+					'object_id' => $objectData['id']
+				]);
+				// Skip this property but continue with the rest of the object
+			}
 		}
 
 		return $objectData;
