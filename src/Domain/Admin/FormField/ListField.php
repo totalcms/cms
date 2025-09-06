@@ -13,4 +13,57 @@ class ListField extends MultiselectField
 
 		$this->rows = 1;
 	}
+
+	protected function buildOptions(string $options = ''): string
+	{
+		parent::buildOptions($options);
+
+		if ($this->value !== []) {
+			// Reorder options to put selected values first, maintaining their order from $this->value
+			$valueOptions = [];
+			$remainingOptions = [];
+
+			// Parse $this->value - it could be array or JSON string
+			$selectedValues = is_string($this->value) ? json_decode($this->value, true) : $this->value;
+			if (!is_array($selectedValues)) {
+				$selectedValues = [];
+			}
+
+			// Create a map of option values to options for quick lookup
+			$optionsMap = [];
+			foreach ($this->options as $key => $option) {
+				if (is_string($option)) {
+					$optionsMap[$option] = $this->optionFromString($option);
+				} elseif (is_array($option) && isset($option['value'])) {
+					$optionsMap[$option['value']] = $option;
+				}
+			}
+
+			// First, add options in the exact order they appear in $this->value
+			foreach ($selectedValues as $selectedValue) {
+				if (isset($optionsMap[$selectedValue])) {
+					$valueOptions[] = $optionsMap[$selectedValue];
+					// Remove from map so we don't add it again
+					unset($optionsMap[$selectedValue]);
+				}
+			}
+
+			// Add remaining options that weren't in $this->value
+			$remainingOptions = array_values($optionsMap);
+
+			// Rebuild $this->options with selected values first, then remaining options
+			$this->options = array_merge($valueOptions, $remainingOptions);
+		}
+
+		foreach ($this->options as $key => $option) {
+			if (is_string($option)) {
+				$option = $this->optionFromString($option);
+			}
+			if (is_array($option)) {
+				$options .= is_string($key) ? $this->buildOptionGroup($key, $option) : $this->buildOption($option);
+			}
+		}
+
+		return $options;
+	}
 }

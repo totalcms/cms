@@ -7,9 +7,17 @@ namespace TotalCMS\Domain\Property\Data;
  */
 class ListData extends PropertyData
 {
-	/** @param array<string> $list */
-	public function __construct(public array $list = [], public array $settings = [])
+	/** @var array<string> */
+	public array $list;
+
+	/** @param array<string>|string $list */
+	public function __construct(array|string $list = [], public array $settings = [])
 	{
+		// Convert string input to array if needed
+		if (is_string($list)) {
+			$list = $list === '' ? [] : explode(',', $list);
+		}
+		
 		$this->list = $this->repairList($list);
 	}
 
