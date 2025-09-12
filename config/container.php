@@ -111,7 +111,16 @@ return [
 
 	SessionStartMiddleware::class => fn (ContainerInterface $container): SessionStartMiddleware => new SessionStartMiddleware($container->get(PhpSession::class)),
 
-	PhpSession::class => fn (ContainerInterface $container): PhpSession => new PhpSession($container->get(Config::class)->session),
+	PhpSession::class => function (ContainerInterface $container): PhpSession {
+		$sessionConfig = $container->get(Config::class)->session;
+		
+		// Ensure session directory exists
+		if (isset($sessionConfig['save_path']) && !is_dir($sessionConfig['save_path'])) {
+			@mkdir($sessionConfig['save_path'], 0755, true);
+		}
+		
+		return new PhpSession($sessionConfig);
+	},
 
 	ResponseFactoryInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getResponseFactory(),
 
