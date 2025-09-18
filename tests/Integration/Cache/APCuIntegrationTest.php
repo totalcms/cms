@@ -44,7 +44,8 @@ final class APCuIntegrationTest extends TestCase
 			$memcachedService,
 			$this->apcuService,
 			$textWatermarkFactory,
-			$devModeManager
+			$devModeManager,
+			$this->config
 		);
 
 		$this->cacheReporter = new CacheReporter(

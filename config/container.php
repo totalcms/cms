@@ -113,12 +113,26 @@ return [
 
 	PhpSession::class => function (ContainerInterface $container): PhpSession {
 		$sessionConfig = $container->get(Config::class)->session;
-		
+
 		// Ensure session directory exists
 		if (isset($sessionConfig['save_path']) && !is_dir($sessionConfig['save_path'])) {
 			@mkdir($sessionConfig['save_path'], 0755, true);
 		}
-		
+
+		// Force session settings to prevent hosting provider overrides
+		if (isset($sessionConfig['name']) && $sessionConfig['name'] !== null) {
+			ini_set('session.name', $sessionConfig['name']);
+		}
+		if (isset($sessionConfig['save_path'])) {
+			ini_set('session.save_path', $sessionConfig['save_path']);
+		}
+		if (isset($sessionConfig['cookie_domain'])) {
+			ini_set('session.cookie_domain', $sessionConfig['cookie_domain']);
+		}
+		if (isset($sessionConfig['cookie_path'])) {
+			ini_set('session.cookie_path', $sessionConfig['cookie_path']);
+		}
+
 		return new PhpSession($sessionConfig);
 	},
 
@@ -333,7 +347,8 @@ return [
 		$container->get(MemcachedService::class),
 		$container->get(APCuService::class),
 		$container->get(TextWatermarkFactory::class),
-		$container->get(DevModeManager::class)
+		$container->get(DevModeManager::class),
+		$container->get(Config::class)
 	),
 
 	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),

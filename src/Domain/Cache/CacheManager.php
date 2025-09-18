@@ -10,6 +10,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Support\Config;
 
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
@@ -45,6 +46,7 @@ class CacheManager
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer
 
 	private string $versionFile = '.cache_version';
+	private string $domainPrefix;
 
 	/** @var array<string,CacheInterface> Available cache services */
 	private array $cacheServices = [];
@@ -57,6 +59,7 @@ class CacheManager
 		private readonly APCuService $apcuService,
 		private readonly TextWatermarkFactory $textWatermarkFactory,
 		private readonly DevModeManager $devModeManager,
+		private readonly Config $config,
 	) {
 		// Initialize cache services and version
 		$this->cacheServices = [
@@ -67,6 +70,17 @@ class CacheManager
 			'apcu'       => $this->apcuService,
 		];
 		$this->versionFile  = $this->filesystemService->getCachDir() . '/' . $this->versionFile;
+
+		// Create domain-specific prefix to prevent cache collisions between installations
+		$this->domainPrefix = md5($this->config->domain);
+	}
+
+	/**
+	 * Create a domain-specific cache key to prevent collisions between installations.
+	 */
+	private function createDomainKey(string $key): string
+	{
+		return $this->domainPrefix . ':' . $key;
 	}
 
 	/**
@@ -77,7 +91,7 @@ class CacheManager
 	 */
 	public function storeCollectionIndex(string $collectionName, array $index, int $ttl = self::TTL_INDEX_DATA): bool
 	{
-		$key = self::PREFIX_COLLECTION . ":{$collectionName}";
+		$key = $this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}");
 
 		return $this->storeData($key, $index, $ttl);
 	}
@@ -94,7 +108,7 @@ class CacheManager
 	 */
 	public function getCollectionIndex(string $collectionName): ?array
 	{
-		return $this->getData(self::PREFIX_COLLECTION . ":{$collectionName}");
+		return $this->getData($this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
 	}
 
 	/**
@@ -105,7 +119,7 @@ class CacheManager
 	 */
 	public function storeApiResponse(string $endpoint, array $params, mixed $response, int $ttl = self::TTL_API_RESPONSE): bool
 	{
-		$key = self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params));
+		$key = $this->createDomainKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
 
 		return $this->storeData($key, $response, $ttl);
 	}
@@ -117,7 +131,7 @@ class CacheManager
 	 */
 	public function getApiResponse(string $endpoint, array $params): mixed
 	{
-		$key = self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params));
+		$key = $this->createDomainKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
 
 		return $this->getData($key);
 	}
@@ -125,7 +139,7 @@ class CacheManager
 	/** Store computed/expensive operations (can be large, longer TTL). */
 	public function storeComputedData(string $key, mixed $data, int $ttl = self::TTL_CUSTOM_SCHEMA): bool
 	{
-		$cacheKey = self::PREFIX_COMPUTED . ":{$key}";
+		$cacheKey = $this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}");
 
 		return $this->storeData($cacheKey, $data, $ttl);
 	}
@@ -227,7 +241,7 @@ class CacheManager
 	 */
 	public function getComputedData(string $key): mixed
 	{
-		return $this->getData(self::PREFIX_COMPUTED . ":{$key}");
+		return $this->getData($this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}"));
 	}
 
 	/**
@@ -235,7 +249,7 @@ class CacheManager
 	 */
 	public function clearComputedData(string $key): bool
 	{
-		return $this->clearData(self::PREFIX_COMPUTED . ":{$key}");
+		return $this->clearData($this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}"));
 	}
 
 	/**
@@ -251,7 +265,7 @@ class CacheManager
 	 */
 	public function clearCollectionIndex(string $collectionName): bool
 	{
-		return $this->clearData(self::PREFIX_COLLECTION . ":{$collectionName}");
+		return $this->clearData($this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
 	}
 
 	/**
@@ -262,7 +276,7 @@ class CacheManager
 	 */
 	public function storeSessionData(string $sessionId, array $data, int $ttl = self::TTL_SESSION_DATA): bool
 	{
-		$key = self::PREFIX_SESSION . ":{$sessionId}";
+		$key = $this->createDomainKey(self::PREFIX_SESSION . ":{$sessionId}");
 
 		return $this->storeData($key, $data, $ttl);
 	}
@@ -274,7 +288,7 @@ class CacheManager
 	 */
 	public function getSessionData(string $sessionId): ?array
 	{
-		return $this->getData(self::PREFIX_SESSION . ":{$sessionId}");
+		return $this->getData($this->createDomainKey(self::PREFIX_SESSION . ":{$sessionId}"));
 	}
 
 	/**
@@ -289,7 +303,7 @@ class CacheManager
 		}
 
 		if ($this->filesystemService->isAvailable()) {
-			$key = self::PREFIX_TEMPLATE . ":{$templateName}";
+			$key = $this->createDomainKey(self::PREFIX_TEMPLATE . ":{$templateName}");
 
 			return $this->filesystemService->set($key, $compiledCode, 0); // No TTL for templates
 		}
@@ -312,7 +326,7 @@ class CacheManager
 		}
 
 		$success = true;
-		$pattern = $type . ':*';
+		$pattern = $this->domainPrefix . ':' . $type . ':*';
 
 		// Clear from APCu
 		if ($this->apcuService->isAvailable()) {

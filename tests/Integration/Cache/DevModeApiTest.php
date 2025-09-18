@@ -84,7 +84,8 @@ final class DevModeApiTest extends TestCase
 			$memcachedService,
 			$apcuService,
 			$textWatermarkFactory,
-			$this->devModeManager
+			$this->devModeManager,
+			$config
 		);
 
 		$this->jsonRenderer    = new JsonRenderer();
