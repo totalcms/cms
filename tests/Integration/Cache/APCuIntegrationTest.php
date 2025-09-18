@@ -175,28 +175,36 @@ final class APCuIntegrationTest extends TestCase
 			$this->markTestSkipped('APCu is not available for testing');
 		}
 
-		$testData = [
-			'collection:blog' => 'blog_data',
-			'collection:news' => 'news_data',
-			'api:endpoint1'   => 'api_data',
-			'computed:schema' => 'schema_data',
-		];
+		// Use the appropriate cache manager methods to test type clearing
+		// These methods handle domain prefixing internally
 
-		// Store test data with different prefixes
-		foreach ($testData as $key => $value) {
-			$this->assertTrue($this->cacheManager->storeData($key, $value, 60));
-		}
+		// Store collection data
+		$this->assertTrue($this->cacheManager->storeCollectionIndex('blog', ['data' => 'blog_data'], 60));
+		$this->assertTrue($this->cacheManager->storeCollectionIndex('news', ['data' => 'news_data'], 60));
+
+		// Store API response data
+		$this->assertTrue($this->cacheManager->storeApiResponse('endpoint1', [], 'api_data', 60));
+
+		// Store computed data
+		$this->assertTrue($this->cacheManager->storeComputedData('schema', 'schema_data', 60));
+
+		// Verify data is stored
+		$this->assertNotNull($this->cacheManager->getCollectionIndex('blog'));
+		$this->assertNotNull($this->cacheManager->getCollectionIndex('news'));
+		$this->assertNotNull($this->cacheManager->getApiResponse('endpoint1', []));
+		$this->assertNotNull($this->cacheManager->getComputedData('schema'));
 
 		// Clear collection cache type
 		$result = $this->cacheManager->clearByType(CacheManager::PREFIX_COLLECTION);
 		$this->assertTrue($result, 'Should successfully clear collection cache type');
 
 		// Verify collection data is cleared but others remain
-		$this->assertNull($this->cacheManager->getData('collection:blog'));
-		$this->assertNull($this->cacheManager->getData('collection:news'));
+		$this->assertNull($this->cacheManager->getCollectionIndex('blog'));
+		$this->assertNull($this->cacheManager->getCollectionIndex('news'));
 
-		// API and computed data should remain (though this depends on APCu pattern matching implementation)
-		// Note: The actual behavior may vary based on pattern clearing implementation
+		// API and computed data should remain
+		$this->assertNotNull($this->cacheManager->getApiResponse('endpoint1', []));
+		$this->assertNotNull($this->cacheManager->getComputedData('schema'));
 	}
 
 	public function testCacheReporterWithAPCu(): void
