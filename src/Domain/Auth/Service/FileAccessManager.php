@@ -116,6 +116,31 @@ class FileAccessManager
 		return password_verify($password, $this->file->password);
 	}
 
+	public function logDownload(string $collection, string $objectId, string $property, string $filename, ?string $subpath = null): void
+	{
+		if (!$this->sessionHasUser()) {
+			return;
+		}
+
+		$userID = $this->session->get(SessionKeys::AUTH_USER) ?? 'unknown';
+		$userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? 'unknown';
+
+		$logData = [
+			'user_id' => $userID,
+			'user_collection' => $userCollection,
+			'collection' => $collection,
+			'object_id' => $objectId,
+			'property' => $property,
+			'filename' => $filename,
+			'subpath' => $subpath,
+			'timestamp' => date('Y-m-d H:i:s'),
+			'is_super_admin' => $this->isSuperAdmin(),
+			'user_groups' => $this->collection->groups,
+		];
+
+		$this->logger->info('Protected file downloaded', $logData);
+	}
+
 	private function isSuperAdmin(): bool
 	{
 		$userID = $this->session->get(SessionKeys::AUTH_USER) ?? '';

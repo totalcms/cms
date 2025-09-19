@@ -109,6 +109,11 @@ abstract class DownloadAction
 		$file = $this->fetchFile();
 		$this->incrementCount($file);
 
+		// Log download if file is protected by groups
+		if ($this->accessManager->isProtectedByGroups()) {
+			$this->accessManager->logDownload($this->collection, $this->id, $this->property, $this->name, $this->subpath);
+		}
+
 		$this->session->delete('downloadAttempts');
 
 		$response = $response->withHeader('Content-Type', $file->mime)
