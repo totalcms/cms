@@ -45,9 +45,9 @@ $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
 $settings['domain']   = $_SERVER['HTTP_HOST'] ?? 'unknown';
-$settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ||
-                       isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' ||
-                       (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+$settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
+					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
 $settings['url']      = ($settings['is_https'] ? 'https://' : 'http://') . $settings['domain'];
 $settings['api']      = $settings['url'] . '/api';
 $settings['notfound'] = '/404';
@@ -117,7 +117,8 @@ $settings['logger'] = [
 
 // Session
 $settings['session'] = [
-	'name'                   => 'tcms_' . md5($settings['domain']), // Domain-specific session name for isolation
+	// 'name'                   => 'tcms_' . md5($settings['domain']), // Domain-specific session name for isolation
+	'name'                   => null, // Use PHP default session name
 	'cookie_domain'          => $settings['domain'], // Explicit domain for cookie isolation
 	'cookie_path'            => '/', // Explicit path for cookie isolation
 	'cookie_samesite'        => 'Lax',
