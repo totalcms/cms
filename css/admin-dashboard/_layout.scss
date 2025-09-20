@@ -227,6 +227,11 @@ body {
 		span {
 			color : oklch(var(--totalform-darkgray));
 		}
+		small {
+			font-weight : normal;
+			color       : oklch(var(--totalform-mediumgray));
+			font-size   : 0.45em;
+		}
 	}
 	p, ul, ol {
 		max-width  : 65ch;

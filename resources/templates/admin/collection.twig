@@ -7,9 +7,11 @@
 
 
 {% macro collectionHeader(collection, page) %}
+	{% set collectionData = cms.collection(collection) %}
 	<header>
 		{% if page %}
-		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page | lower }}</span></h1>
+		{% set actualObjectCount = cms.objects(collection) | length %}
+		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page | lower }}</span> <small>{{ actualObjectCount | number_format }}</small></h1>
 		{% else %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}"><span>{{ collection }}</span></a></h1>
 		{% endif %}
