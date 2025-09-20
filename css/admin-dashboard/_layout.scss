@@ -305,3 +305,19 @@ pre {
 		font-family : 'Fira Code', 'Source Code Pro', monospace;
 	}
 }
+
+.performance-warning {
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-warning));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+	color         : oklch(var(--totalform-darkgray));
+	display       : grid;
+	gap           : 0.5rem;
+	align-self    : start;
+
+	h4 {
+		margin-top : 0;
+		color      : oklch(var(--totalform-warning));
+	}
+}
