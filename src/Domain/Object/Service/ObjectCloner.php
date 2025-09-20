@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -14,6 +15,7 @@ readonly class ObjectCloner
 		private ObjectRepository $storage,
 		private IndexBuilder $indexBuilder,
 		private SchemaFetcher $schemaFetcher,
+		private CollectionSaver $collectionSaver,
 	) {
 	}
 
@@ -44,6 +46,9 @@ readonly class ObjectCloner
 
 		// Pass the cloned object for immediate index append when queueRebuildOnSave is enabled
 		$this->indexBuilder->smartBuildIndex($to['collection'], $object);
+
+		// Increment the collection count since we've added a new object
+		$this->collectionSaver->incrementCount($to['collection']);
 
 		return $object;
 	}
