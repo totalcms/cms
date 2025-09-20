@@ -24,6 +24,9 @@ use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Auth\Service\LoginService;
+use TotalCMS\Domain\Auth\Service\LogoutService;
+use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
@@ -90,6 +93,7 @@ use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
+use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
@@ -309,6 +313,14 @@ return [
 		$container->get(CSRFTokenManager::class)
 	),
 
+	AuthMiddleware::class => fn (ContainerInterface $container): AuthMiddleware => new AuthMiddleware(
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(PhpSession::class),
+		$container->get(Config::class),
+		$container->get(AccessManager::class),
+		$container->get(PersistentLoginService::class),
+	),
+
 	DevModeMiddleware::class => fn (ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(
 		$container->get(DevModeManager::class),
 		$container->get(OPcacheService::class)
@@ -370,6 +382,18 @@ return [
 		$container->get(IndexSearcher::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(Config::class),
+	),
+
+	PersistentLoginService::class => fn (ContainerInterface $container): PersistentLoginService => new PersistentLoginService(
+		$container->get(PhpSession::class),
+		$container->get(Config::class),
+		$container->get(UserValidationService::class),
+	),
+
+	LogoutService::class => fn (ContainerInterface $container): LogoutService => new LogoutService(
+		$container->get(PhpSession::class),
+		$container->get(LoggerFactory::class),
+		$container->get(PersistentLoginService::class),
 	),
 
 	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(

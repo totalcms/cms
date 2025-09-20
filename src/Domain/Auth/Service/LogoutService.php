@@ -14,6 +14,7 @@ readonly class LogoutService
 	public function __construct(
 		private PhpSession $session,
 		private LoggerFactory $loggerFactory,
+		private PersistentLoginService $persistentLoginService,
 	) {
 		$this->logger = $this->loggerFactory->addFileHandler(LoginService::ACCESS_LOG)->createLogger('logout');
 	}
@@ -25,9 +26,9 @@ readonly class LogoutService
 
 		$this->logger->info("User $user logged out");
 
-		// If this was a persistent login session, clear the persistent cookie
+		// If this was a persistent login session, clear the persistent login
 		if ($persistentLogin) {
-			$this->clearPersistentCookie();
+			$this->persistentLoginService->clearPersistentLogin();
 		}
 
 		$this->session->clear();
@@ -47,26 +48,4 @@ readonly class LogoutService
 		return session_status() !== PHP_SESSION_ACTIVE;
 	}
 
-	/**
-	 * Clear persistent session cookie by setting it to expire in the past.
-	 */
-	private function clearPersistentCookie(): void
-	{
-		$sessionName  = $this->session->getName();
-		$cookieParams = session_get_cookie_params();
-
-		// Set cookie to expire in the past to delete it
-		setcookie(
-			$sessionName,
-			'',
-			[
-				'expires'  => time() - 3600, // 1 hour ago
-				'path'     => $cookieParams['path'],
-				'domain'   => $cookieParams['domain'],
-				'secure'   => $cookieParams['secure'],
-				'httponly' => $cookieParams['httponly'],
-				'samesite' => $cookieParams['samesite'],
-			]
-		);
-	}
 }
