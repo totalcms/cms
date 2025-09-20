@@ -32,7 +32,15 @@ readonly class SitemapBuilder
 		$dateProperty = $options['date'] ?? 'updated';
 		unset($options['date']);
 
+		// Extract filter options
+		$filterOptions = $this->extractFilterOptions($options);
+
 		foreach ($index->objects as $object) {
+			// Skip objects that don't match the filter criteria
+			if (!$this->matchesFilter($object, $filterOptions)) {
+				continue;
+			}
+
 			$url = CollectionData::objectUrl($collectionData, $object['id']);
 
 			if (!str_starts_with($url, 'http')) {
@@ -48,5 +56,115 @@ readonly class SitemapBuilder
 		}
 
 		return $sitemap->toXML();
+	}
+
+	/**
+	 * Extract and remove filter options from the main options array.
+	 *
+	 * @param array<string,string> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function extractFilterOptions(array &$options): array
+	{
+		$filterOptions = [];
+
+		// Extract filter parameters and remove them from the main options
+		$filterKeys = ['filter', 'exclude'];
+
+		foreach ($filterKeys as $key) {
+			if (isset($options[$key])) {
+				$filterOptions[$key] = $options[$key];
+				unset($options[$key]);
+			}
+		}
+
+		return $filterOptions;
+	}
+
+	/**
+	 * Check if an object matches the filter criteria.
+	 *
+	 * @param array<string,mixed> $object
+	 * @param array<string,mixed> $filterOptions
+	 */
+	private function matchesFilter(array $object, array $filterOptions): bool
+	{
+		// If no filters are specified, include all objects
+		if (empty($filterOptions)) {
+			return true;
+		}
+
+		// Check exclude filters first (early return if excluded)
+		if (isset($filterOptions['exclude']) && $this->isExcluded($object, $filterOptions['exclude'])) {
+			return false;
+		}
+
+		// Check include filters
+		if (isset($filterOptions['filter']) && !$this->isIncluded($object, $filterOptions['filter'])) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if an object should be excluded based on exclude filters.
+	 *
+	 * @param array<string,mixed> $object
+	 * @param string $excludeString
+	 */
+	private function isExcluded(array $object, string $excludeString): bool
+	{
+		$excludeFields = explode(',', $excludeString);
+
+		foreach ($excludeFields as $excludeField) {
+			$parts = explode(':', trim($excludeField), 2);
+			$field = trim($parts[0]);
+			$value = count($parts) === 2 ? trim($parts[1]) : 'true'; // Default to 'true' if no value provided
+
+			// Convert 'true'/'false' strings to boolean for comparison
+			if ($value === 'true') {
+				$value = true;
+			} elseif ($value === 'false') {
+				$value = false;
+			}
+
+			if (isset($object[$field]) && $object[$field] === $value) {
+				return true; // Object matches exclusion criteria
+			}
+		}
+
+		return false; // Object doesn't match any exclusion criteria
+	}
+
+	/**
+	 * Check if an object should be included based on filter criteria.
+	 *
+	 * @param array<string,mixed> $object
+	 * @param string $filterString
+	 */
+	private function isIncluded(array $object, string $filterString): bool
+	{
+		$includeFields = explode(',', $filterString);
+
+		foreach ($includeFields as $includeField) {
+			$parts = explode(':', trim($includeField), 2);
+			$field = trim($parts[0]);
+			$value = count($parts) === 2 ? trim($parts[1]) : 'true'; // Default to 'true' if no value provided
+
+			// Convert 'true'/'false' strings to boolean for comparison
+			if ($value === 'true') {
+				$value = true;
+			} elseif ($value === 'false') {
+				$value = false;
+			}
+
+			if (!isset($object[$field]) || $object[$field] !== $value) {
+				return false; // Object doesn't match this include criteria
+			}
+		}
+
+		return true; // Object matches all include criteria
 	}
 }
