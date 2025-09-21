@@ -1,15 +1,16 @@
 {# Collection Object Table #}
 {% set objects = cms.objects(url.collection) %}
 {% set collection = cms.collection(url.collection) %}
+{% set labelPlural = cms.collection(url.collection).labelPlural|default('objects') %}
 
 {# Performance warning for large collections without queue rebuild enabled #}
-{% set performanceThreshold = 1500 %}
+{% set performanceThreshold = 2500 %}
 {% set actualObjectCount = objects | length %}
-{# Debug output - remove after testing #}
+
 {% if actualObjectCount >= performanceThreshold and not collection.queueRebuildOnSave %}
 	<div class="performance-warning">
 		<h4>⚠️ Performance Recommendation</h4>
-		<p>This collection has <strong>{{ actualObjectCount | number_format }}</strong> objects. Consider enabling
+		<p>This collection has <strong>{{ actualObjectCount | number_format }}</strong> {{ labelPlural | lower }}. Consider enabling
 		<strong>"Queue Rebuild on Save"</strong> in the
 		<a href="collections/{{ url.collection }}/edit">collection settings</a> to prevent slow saves.</p>
 	</div>
@@ -21,7 +22,6 @@
 
 {% else %}
 
-	{% set labelPlural = cms.collection(url.collection).labelPlural|default('objects') %}
 	<p>No {{ labelPlural }} in this collection yet.</p>
 
 {% endif %}
