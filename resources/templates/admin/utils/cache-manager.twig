@@ -128,7 +128,8 @@
 	<h2 style="margin-top:3rem">Clear Collection Image Cache</h2>
 
 	<p><strong>Clear Collection Image Cache</strong> will remove all cached images (.cache directories)
-		for a specific collection.</p>
+		for a specific collection. The statistics below could be cached to improve performance.
+		You can refresh them manually if needed.</p>
 
 	{% set formfields %}
 		{{ cms.form.field("select", "collection", {
@@ -145,7 +146,8 @@
 		refresh : true,
 	}) }}
 
-	{% set imageCacheStats = cms.imageCacheService.getAllCollectionImageCacheStats() %}
+	{% set forceRefresh = getData.refreshStats is defined %}
+	{% set imageCacheStats = cms.imageCacheService.getAllCollectionImageCacheStats(forceRefresh) %}
 	{% if imageCacheStats|length > 0 %}
 		<h3 style="margin-top:2rem">Image Cache Statistics</h3>
 		<table class="admin-table">
@@ -166,6 +168,10 @@
 				{% endfor %}
 			</tbody>
 		</table>
+
+		<div style="text-align:right;">
+			<a href="?refreshStats=1">↻ Refresh Statistics</a>
+		</div>
 	{% else %}
 		<p style="margin-top:2rem"><em>No image cache data found in any collections.</em></p>
 	{% endif %}

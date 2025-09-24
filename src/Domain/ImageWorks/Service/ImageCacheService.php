@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Support\Config;
 
 /**
@@ -10,8 +11,12 @@ use TotalCMS\Support\Config;
  */
 readonly class ImageCacheService
 {
+	private const CACHE_STATS_KEY = 'image_cache_stats';
+	private const CACHE_STATS_TTL = 60 * 60; // 60 minutes
+
 	public function __construct(
 		private Config $config,
+		private CacheManager $cacheManager,
 	) {
 	}
 
@@ -56,6 +61,9 @@ readonly class ImageCacheService
 				$cachesCleared++;
 			}
 		}
+
+		// Clear the cached stats since the image cache has changed
+		$this->clearCachedStats();
 
 		return true;
 	}
@@ -118,10 +126,44 @@ readonly class ImageCacheService
 
 	/**
 	 * Get image cache statistics for all collections.
+	 * Results are cached for performance and refreshed every 5 minutes.
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 *
+	 * @param bool $forceRefresh Force refresh by bypassing cache
 	 *
 	 * @return array<array<string,mixed>> Array of collection cache statistics
 	 */
-	public function getAllCollectionImageCacheStats(): array
+	public function getAllCollectionImageCacheStats(bool $forceRefresh = false): array
+	{
+		// If force refresh is requested, clear cached stats first
+		if ($forceRefresh) {
+			$this->clearCachedStats();
+		}
+
+		// Try to get cached stats first (unless force refresh)
+		if (!$forceRefresh) {
+			$cachedStats = $this->cacheManager->getComputedData(self::CACHE_STATS_KEY);
+			if ($cachedStats !== null && is_array($cachedStats)) {
+				return $cachedStats;
+			}
+		}
+
+		// Calculate fresh stats
+		$results = $this->calculateAllCollectionImageCacheStats();
+
+		// Cache the results
+		$this->cacheManager->storeComputedData(self::CACHE_STATS_KEY, $results, self::CACHE_STATS_TTL);
+
+		return $results;
+	}
+
+	/**
+	 * Calculate fresh image cache statistics for all collections (bypassing cache).
+	 *
+	 * @return array<array<string,mixed>> Array of collection cache statistics
+	 */
+	private function calculateAllCollectionImageCacheStats(): array
 	{
 		$datadir = $this->config->datadir;
 		$results = [];
@@ -183,7 +225,18 @@ readonly class ImageCacheService
 			}
 		}
 
+		// Clear the cached stats since image caches have changed
+		$this->clearCachedStats();
+
 		return $results;
+	}
+
+	/**
+	 * Clear the cached statistics.
+	 */
+	public function clearCachedStats(): bool
+	{
+		return $this->cacheManager->clearComputedData(self::CACHE_STATS_KEY);
 	}
 
 	/**

@@ -373,7 +373,8 @@ return [
 	),
 
 	ImageCacheService::class => fn (ContainerInterface $container): ImageCacheService => new ImageCacheService(
-		$container->get(Config::class)
+		$container->get(Config::class),
+		$container->get(CacheManager::class)
 	),
 
 	IndexSearcher::class => fn (ContainerInterface $container): IndexSearcher => new IndexSearcher($container->get(IndexReader::class)),
