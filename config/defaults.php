@@ -131,7 +131,7 @@ $settings['session'] = [
 	'use_only_cookies'       => true,
 	// 'sid_length'             => 64,
 	// 'sid_bits_per_character' => 6,
-	'save_path'              => $settings['tmpdir'] . '/sessions/' . md5($settings['domain']), // Domain-specific session path
+	// 'save_path'              => $settings['tmpdir'] . '/sessions/' . md5($settings['domain']), // Domain-specific session path
 	'conflictStrategy'       => 'preserve', // How to handle existing sessions: 'preserve', 'replace'
 ];
 
