@@ -12,7 +12,7 @@ use TotalCMS\Factory\LoggerFactory;
  */
 readonly class LicenseStatus
 {
-	private readonly LoggerInterface $logger;
+	private LoggerInterface $logger;
 
 	public function __construct(
 		private LicenseValidator $licenseValidator,
@@ -75,7 +75,7 @@ readonly class LicenseStatus
 
 			// Fallback - show nothing if status unclear
 			return new LicenseStatusData(showIcon: false);
-		} catch (\Exception $e) {
+		} catch (\Exception) {
 			// Network error or cache issue - show offline warning
 			return new LicenseStatusData(
 				showIcon: true,

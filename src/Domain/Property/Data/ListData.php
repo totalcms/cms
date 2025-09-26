@@ -17,7 +17,7 @@ class ListData extends PropertyData
 		if (is_string($list)) {
 			$list = $list === '' ? [] : explode(',', $list);
 		}
-		
+
 		$this->list = $this->repairList($list);
 	}
 

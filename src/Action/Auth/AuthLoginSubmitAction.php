@@ -110,5 +110,4 @@ readonly class AuthLoginSubmitAction
 
 		return $response->withStatus(302)->withHeader('Location', $url);
 	}
-
 }

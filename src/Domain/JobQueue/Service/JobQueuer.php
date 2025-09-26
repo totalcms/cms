@@ -51,11 +51,11 @@ readonly class JobQueuer
 	{
 		$data = [
 			'quantity' => $quantity,
-			'rules' => $rules,
+			'rules'    => $rules,
 		];
-		
+
 		$job = $this->queueJob(JobData::TYPE_FACTORY, $collection, $data);
-		
+
 		return $job->id;
 	}
 }

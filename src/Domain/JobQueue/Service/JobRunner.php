@@ -172,15 +172,15 @@ readonly class JobRunner
 		}
 
 		$quantity = intval($data['quantity'] ?? 1);
-		$rules = $data['rules'] ?? [];
+		$rules    = $data['rules'] ?? [];
 
 		$importCount = $this->factoryImporter->import($job->collection, $quantity, $rules);
 
-		$this->logger->info("Factory job completed", [
+		$this->logger->info('Factory job completed', [
 			'collection' => $job->collection,
-			'quantity' => $quantity,
-			'imported' => $importCount,
-			'rules' => $rules,
+			'quantity'   => $quantity,
+			'imported'   => $importCount,
+			'rules'      => $rules,
 		]);
 	}
 

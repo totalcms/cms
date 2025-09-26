@@ -148,11 +148,11 @@ readonly class FactoryImporter
 					$objectData[$property] = $this->propertyRepository->saveImage($collection, $objectData['id'], $property, $path);
 				} catch (\Exception $e) {
 					$this->logger->warning('Failed to generate image for property, skipping', [
-						'property' => $property,
-						'method' => $method,
-						'args' => $args,
-						'error' => $e->getMessage(),
-						'object_id' => $objectData['id']
+						'property'  => $property,
+						'method'    => $method,
+						'args'      => $args,
+						'error'     => $e->getMessage(),
+						'object_id' => $objectData['id'],
 					]);
 					// Skip this property but continue with the rest of the object
 				}
@@ -169,11 +169,11 @@ readonly class FactoryImporter
 					);
 				} catch (\Exception $e) {
 					$this->logger->warning('Failed to generate gallery images for property, skipping', [
-						'property' => $property,
-						'method' => $method,
-						'args' => $args,
-						'error' => $e->getMessage(),
-						'object_id' => $objectData['id']
+						'property'  => $property,
+						'method'    => $method,
+						'args'      => $args,
+						'error'     => $e->getMessage(),
+						'object_id' => $objectData['id'],
 					]);
 					// Skip this property but continue with the rest of the object
 				}
@@ -183,11 +183,11 @@ readonly class FactoryImporter
 				$objectData[$property] = $this->faker->$method(...$args);
 			} catch (\Exception $e) {
 				$this->logger->warning('Failed to generate fake data for property, skipping', [
-					'property' => $property,
-					'method' => $method,
-					'args' => $args,
-					'error' => $e->getMessage(),
-					'object_id' => $objectData['id']
+					'property'  => $property,
+					'method'    => $method,
+					'args'      => $args,
+					'error'     => $e->getMessage(),
+					'object_id' => $objectData['id'],
 				]);
 				// Skip this property but continue with the rest of the object
 			}

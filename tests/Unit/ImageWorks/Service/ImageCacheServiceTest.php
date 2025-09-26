@@ -18,7 +18,7 @@ class ImageCacheServiceTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->mockConfig = $this->createMock(Config::class);
+		$this->mockConfig       = $this->createMock(Config::class);
 		$this->mockCacheManager = $this->createMock(CacheManager::class);
 
 		// Create a temporary directory for testing

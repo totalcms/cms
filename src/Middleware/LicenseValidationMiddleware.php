@@ -130,11 +130,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		}
 
 		// Check testing domains
-		if (in_array($currentDomain, $licenseData->testingDomains, true)) {
-			return true;
-		}
-
-		return false;
+		return in_array($currentDomain, $licenseData->testingDomains, true);
 	}
 
 	/**

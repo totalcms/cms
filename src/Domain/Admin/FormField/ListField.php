@@ -20,7 +20,7 @@ class ListField extends MultiselectField
 
 		if ($this->value !== []) {
 			// Reorder options to put selected values first, maintaining their order from $this->value
-			$valueOptions = [];
+			$valueOptions     = [];
 			$remainingOptions = [];
 
 			// Parse $this->value - it could be array or JSON string
@@ -31,7 +31,7 @@ class ListField extends MultiselectField
 
 			// Create a map of option values to options for quick lookup
 			$optionsMap = [];
-			foreach ($this->options as $key => $option) {
+			foreach ($this->options as $option) {
 				if (is_string($option)) {
 					$optionsMap[$option] = $this->optionFromString($option);
 				} elseif (is_array($option) && isset($option['value'])) {

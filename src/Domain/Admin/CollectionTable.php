@@ -37,9 +37,9 @@ readonly class CollectionTable
 		}
 		$this->collectionData = $collectionData;
 
-		$this->schemaData = $this->schemaFetcher->fetchSchema($collectionData->schema);
-		$index            = $this->collectionReader->fetchIndex($this->collection);
-		$this->objects    = $index->objects->toArray();
+		$this->schemaData  = $this->schemaFetcher->fetchSchema($collectionData->schema);
+		$index             = $this->collectionReader->fetchIndex($this->collection);
+		$this->objects     = $index->objects->toArray();
 		$this->objectCount = count($this->objects);
 	}
 

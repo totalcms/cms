@@ -18,9 +18,9 @@ readonly class ImportFactoryAction
 	 * @param JobQueuer $jobQueuer Job queue service
 	 */
 	public function __construct(
-		private JsonRenderer $renderer, 
+		private JsonRenderer $renderer,
 		private FactoryImporter $importer,
-		private JobQueuer $jobQueuer
+		private JobQueuer $jobQueuer,
 	) {
 	}
 
@@ -53,12 +53,12 @@ readonly class ImportFactoryAction
 		// Use job queue for large quantities or when explicitly requested
 		if ($useQueue || $quantity > 50) {
 			$jobId = $this->jobQueuer->queueFactory($collection, $quantity, $rules);
-			
+
 			return $this->renderer->json($response, [
 				'job_queued' => true,
-				'job_id' => $jobId,
-				'quantity' => $quantity,
-				'message' => "Queued factory job to generate {$quantity} objects"
+				'job_id'     => $jobId,
+				'quantity'   => $quantity,
+				'message'    => "Queued factory job to generate {$quantity} objects",
 			]);
 		}
 

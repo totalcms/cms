@@ -91,7 +91,7 @@ readonly class SitemapBuilder
 	private function matchesFilter(array $object, array $filterOptions): bool
 	{
 		// If no filters are specified, include all objects
-		if (empty($filterOptions)) {
+		if ($filterOptions === []) {
 			return true;
 		}
 
@@ -101,18 +101,13 @@ readonly class SitemapBuilder
 		}
 
 		// Check include filters
-		if (isset($filterOptions['filter']) && !$this->isIncluded($object, $filterOptions['filter'])) {
-			return false;
-		}
-
-		return true;
+		return !(isset($filterOptions['filter']) && !$this->isIncluded($object, $filterOptions['filter']));
 	}
 
 	/**
 	 * Check if an object should be excluded based on exclude filters.
 	 *
 	 * @param array<string,mixed> $object
-	 * @param string $excludeString
 	 */
 	private function isExcluded(array $object, string $excludeString): bool
 	{
@@ -142,7 +137,6 @@ readonly class SitemapBuilder
 	 * Check if an object should be included based on filter criteria.
 	 *
 	 * @param array<string,mixed> $object
-	 * @param string $filterString
 	 */
 	private function isIncluded(array $object, string $filterString): bool
 	{

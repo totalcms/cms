@@ -409,7 +409,7 @@ class ServerChecker
 		try {
 			$licenseData = $this->licenseValidator->validateLicense();
 
-			$info['License Status'] = $licenseData->valid ? 'Valid' : 'Invalid';
+			$info['License Status']  = $licenseData->valid ? 'Valid' : 'Invalid';
 			$info['License Edition'] = ucfirst($licenseData->edition);
 			$info['Licensed Domain'] = $licenseData->mainDomain ?: 'Not Set';
 
@@ -432,21 +432,20 @@ class ServerChecker
 
 			$info['Allowed Version'] = $licenseData->allowedVersion ?: 'Not Specified';
 
-			if (!empty($licenseData->testingDomains)) {
+			if ($licenseData->testingDomains !== []) {
 				$info['Testing Domains'] = implode(', ', $licenseData->testingDomains);
 			}
 
-			$info['DNS Verified'] = $licenseData->dnsVerified ? 'Yes' : 'No';
+			$info['DNS Verified']  = $licenseData->dnsVerified ? 'Yes' : 'No';
 			$info['Has JWT Token'] = $licenseData->validationToken ? 'Yes' : 'No';
 
 			// Cache information
 			$info['License Cache Valid'] = $licenseData->isCacheValid() ? 'Yes' : 'No';
-			$cacheAge = time() - $licenseData->timestamp;
-			$info['License Cache Age'] = $this->formatDuration($cacheAge);
-
+			$cacheAge                    = time() - $licenseData->timestamp;
+			$info['License Cache Age']   = $this->formatDuration($cacheAge);
 		} catch (\Exception $e) {
 			$info['License Status'] = 'Error';
-			$info['License Error'] = $e->getMessage();
+			$info['License Error']  = $e->getMessage();
 		}
 
 		return $info;
@@ -466,14 +465,14 @@ class ServerChecker
 			return $minutes . ' minutes';
 		}
 
-		$hours = floor($minutes / 60);
+		$hours            = floor($minutes / 60);
 		$remainingMinutes = $minutes % 60;
 
 		if ($hours < 24) {
 			return $hours . ' hours' . ($remainingMinutes > 0 ? ', ' . $remainingMinutes . ' minutes' : '');
 		}
 
-		$days = floor($hours / 24);
+		$days           = floor($hours / 24);
 		$remainingHours = $hours % 24;
 
 		return $days . ' days' . ($remainingHours > 0 ? ', ' . $remainingHours . ' hours' : '');

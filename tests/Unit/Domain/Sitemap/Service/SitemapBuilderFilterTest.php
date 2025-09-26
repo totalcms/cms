@@ -19,15 +19,15 @@ use TotalCMS\Support\Config;
 final class SitemapBuilderFilterTest extends TestCase
 {
 	private SitemapBuilder $sitemapBuilder;
-	private IndexReader $mockIndexReader;
-	private CollectionFetcher $mockCollectionFetcher;
-	private Config $mockConfig;
+	private \PHPUnit\Framework\MockObject\MockObject $mockIndexReader;
+	private \PHPUnit\Framework\MockObject\MockObject $mockCollectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
 
 	protected function setUp(): void
 	{
-		$this->mockIndexReader = $this->createMock(IndexReader::class);
+		$this->mockIndexReader       = $this->createMock(IndexReader::class);
 		$this->mockCollectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->mockConfig = $this->createMock(Config::class);
+		$this->mockConfig            = $this->createMock(Config::class);
 
 		$this->sitemapBuilder = new SitemapBuilder(
 			$this->mockIndexReader,
@@ -168,8 +168,8 @@ final class SitemapBuilderFilterTest extends TestCase
 		]);
 
 		$result = $this->sitemapBuilder->buildSitemap('blog', [
-			'filter' => 'published',
-			'exclude' => 'draft'
+			'filter'  => 'published',
+			'exclude' => 'draft',
 		]);
 
 		expect($result)->toContain('post1'); // Included (published: true, draft: false)
@@ -186,7 +186,7 @@ final class SitemapBuilderFilterTest extends TestCase
 		]);
 
 		$result = $this->sitemapBuilder->buildSitemap('blog', [
-			'filter' => 'featured,category:tech'
+			'filter' => 'featured,category:tech',
 		]);
 
 		expect($result)->toContain('post1'); // Included (featured: true, category: tech)
@@ -229,7 +229,7 @@ final class SitemapBuilderFilterTest extends TestCase
 	private function setupMocksWithTestData(array $objects): void
 	{
 		// Mock IndexData
-		$indexData = new IndexData();
+		$indexData          = new IndexData();
 		$indexData->objects = new Collection($objects);
 
 		$this->mockIndexReader
@@ -237,11 +237,11 @@ final class SitemapBuilderFilterTest extends TestCase
 			->willReturn($indexData);
 
 		// Mock CollectionData
-		$collectionData = new CollectionData();
-		$collectionData->id = 'blog';
-		$collectionData->name = 'Blog';
+		$collectionData         = new CollectionData();
+		$collectionData->id     = 'blog';
+		$collectionData->name   = 'Blog';
 		$collectionData->schema = 'blog';
-		$collectionData->url = '/blog';
+		$collectionData->url    = '/blog';
 
 		$this->mockCollectionFetcher
 			->method('fetchCollection')

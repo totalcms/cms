@@ -47,7 +47,7 @@ readonly class LicenseValidator
 		} catch (\Exception $e) {
 			// Try cached data as fallback, even if expired
 			$cached = $this->getCachedLicense();
-			if ($cached) {
+			if ($cached instanceof LicenseData) {
 				return $cached;
 			}
 
@@ -119,7 +119,7 @@ readonly class LicenseValidator
 		// Extract days remaining from message
 		$daysRemaining = null;
 		if (isset($response['message'])) {
-			preg_match('/(\d+) days remaining/', $response['message'], $matches);
+			preg_match('/(\d+) days remaining/', (string)$response['message'], $matches);
 			$daysRemaining = isset($matches[1]) ? (int)$matches[1] : null;
 		}
 
@@ -153,20 +153,20 @@ readonly class LicenseValidator
 		// In development environment, provide a mock trial license
 		if ($this->config->env === 'dev') {
 			$licenseResponse = [
-				'valid' => true,
-				'edition' => 'trial',
-				'main_domain' => $this->config->domain,
-				'updates_valid' => true,
-				'updates_expire_date' => null,
-				'allowed_version' => $this->getCurrentVersion(),
-				'testing_domains' => [],
-				'message' => 'Development mode - API unavailable',
-				'validation_token' => null,
-				'dns_verified' => true,
-				'dns_record' => null,
-				'verification_token' => null,
-				'trial_active' => true,
-				'trial_expires_date' => date('Y-m-d\TH:i:s\Z', strtotime('+30 days')),
+				'valid'                => true,
+				'edition'              => 'trial',
+				'main_domain'          => $this->config->domain,
+				'updates_valid'        => true,
+				'updates_expire_date'  => null,
+				'allowed_version'      => $this->getCurrentVersion(),
+				'testing_domains'      => [],
+				'message'              => 'Development mode - API unavailable',
+				'validation_token'     => null,
+				'dns_verified'         => true,
+				'dns_record'           => null,
+				'verification_token'   => null,
+				'trial_active'         => true,
+				'trial_expires_date'   => date('Y-m-d\TH:i:s\Z', strtotime('+30 days')),
 				'trial_days_remaining' => 30,
 			];
 
@@ -226,7 +226,7 @@ readonly class LicenseValidator
 	 */
 	private function makeHttpRequest(string $endpoint, array $payload): array
 	{
-		$url = $this->getApiBaseUrl() . $endpoint;
+		$url         = $this->getApiBaseUrl() . $endpoint;
 		$jsonPayload = json_encode($payload);
 
 		if ($jsonPayload === false) {
@@ -240,25 +240,25 @@ readonly class LicenseValidator
 
 		try {
 			curl_setopt_array($curl, [
-				CURLOPT_URL => $url,
+				CURLOPT_URL            => $url,
 				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_POST => true,
-				CURLOPT_POSTFIELDS => $jsonPayload,
-				CURLOPT_HTTPHEADER => [
+				CURLOPT_POST           => true,
+				CURLOPT_POSTFIELDS     => $jsonPayload,
+				CURLOPT_HTTPHEADER     => [
 					'Content-Type: application/json',
 					'User-Agent: Total CMS/' . $this->getCurrentVersion(),
 				],
-				CURLOPT_TIMEOUT => 30,
+				CURLOPT_TIMEOUT        => 30,
 				CURLOPT_CONNECTTIMEOUT => 10,
 				CURLOPT_FOLLOWLOCATION => true,
-				CURLOPT_MAXREDIRS => 3,
+				CURLOPT_MAXREDIRS      => 3,
 				CURLOPT_SSL_VERIFYPEER => true,
 				CURLOPT_SSL_VERIFYHOST => 2,
-				CURLOPT_USERAGENT => 'Total CMS/' . $this->getCurrentVersion(),
+				CURLOPT_USERAGENT      => 'Total CMS/' . $this->getCurrentVersion(),
 			]);
 
-			$response = curl_exec($curl);
-			$httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+			$response  = curl_exec($curl);
+			$httpCode  = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 			$curlError = curl_error($curl);
 
 			if ($response === false || $curlError !== '') {

@@ -47,5 +47,4 @@ readonly class LogoutService
 
 		return session_status() !== PHP_SESSION_ACTIVE;
 	}
-
 }

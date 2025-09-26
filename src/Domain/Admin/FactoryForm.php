@@ -84,14 +84,14 @@ readonly class FactoryForm implements \Stringable
 			'value'   => '1',
 			'checked' => $this->quantity > 50 ? '' : null,
 		];
-		$checkbox = HTMLUtils::inlineElement('input', array_filter($queueAttrs, fn($v) => $v !== null));
+		$checkbox = HTMLUtils::inlineElement('input', array_filter($queueAttrs, fn (?string $v): bool => $v !== null));
 
 		return HTMLUtils::element('div', $checkbox . $label, ['class' => 'checkbox-field']);
 	}
 
 	public function build(): string
 	{
-		$qty = $this->hidden ? $this->hiddenQuantityField() : $this->inputQuantityField();
+		$qty      = $this->hidden ? $this->hiddenQuantityField() : $this->inputQuantityField();
 		$jobQueue = $this->hidden ? '' : $this->jobQueueField();
 
 		$rules = '';

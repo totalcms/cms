@@ -16,7 +16,7 @@ class PersistentLoginService
 {
 	public const PERSISTENT_COOKIE_NAME = 'tcms_persistent_token';
 
-	private string $tokenDir;
+	private readonly string $tokenDir;
 
 	public function __construct(
 		private readonly PhpSession $session,
@@ -34,7 +34,7 @@ class PersistentLoginService
 	 */
 	public function createPersistentToken(): void
 	{
-		$userId = $this->session->get(SessionKeys::AUTH_USER);
+		$userId     = $this->session->get(SessionKeys::AUTH_USER);
 		$collection = $this->session->get(SessionKeys::AUTH_COLLECTION);
 
 		if (!$userId || !$collection) {
@@ -42,13 +42,13 @@ class PersistentLoginService
 		}
 
 		// Generate secure random token
-		$token = bin2hex(random_bytes(32));
-		$selector = bin2hex(random_bytes(16));
+		$token       = bin2hex(random_bytes(32));
+		$selector    = bin2hex(random_bytes(16));
 		$hashedToken = password_hash($token, PASSWORD_DEFAULT);
 
 		// Store token data
 		$tokenData = [
-			'user_id' => $userId,
+			'user_id'    => $userId,
 			'collection' => $collection,
 			'token_hash' => $hashedToken,
 			'created_at' => time(),
@@ -59,19 +59,19 @@ class PersistentLoginService
 		file_put_contents($tokenFile, json_encode($tokenData, JSON_THROW_ON_ERROR));
 
 		// Set persistent cookie with selector:token
-		$cookieValue = $selector . ':' . $token;
+		$cookieValue    = $selector . ':' . $token;
 		$persistentDays = $this->config->auth['persistentLoginDays'] ?? 30;
-		$expiry = time() + ($persistentDays * 24 * 60 * 60);
+		$expiry         = time() + ($persistentDays * 24 * 60 * 60);
 
 		$cookieParams = session_get_cookie_params();
 		setcookie(
 			self::PERSISTENT_COOKIE_NAME,
 			$cookieValue,
 			[
-				'expires' => $expiry,
-				'path' => $cookieParams['path'],
-				'domain' => $cookieParams['domain'],
-				'secure' => $cookieParams['secure'],
+				'expires'  => $expiry,
+				'path'     => $cookieParams['path'],
+				'domain'   => $cookieParams['domain'],
+				'secure'   => $cookieParams['secure'],
 				'httponly' => true, // Always httponly for security
 				'samesite' => $cookieParams['samesite'],
 			]
@@ -96,19 +96,21 @@ class PersistentLoginService
 		}
 
 		$cookieValue = $_COOKIE[self::PERSISTENT_COOKIE_NAME];
-		$parts = explode(':', $cookieValue, 2);
+		$parts       = explode(':', (string)$cookieValue, 2);
 
 		if (count($parts) !== 2) {
 			$this->clearPersistentCookie();
+
 			return false;
 		}
 
 		[$selector, $token] = $parts;
-		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
+		$tokenFile          = $this->tokenDir . '/' . $selector . '.json';
 
 		// Check if token file exists
 		if (!file_exists($tokenFile)) {
 			$this->clearPersistentCookie();
+
 			return false;
 		}
 
@@ -116,24 +118,28 @@ class PersistentLoginService
 		$tokenFileContents = file_get_contents($tokenFile);
 		if ($tokenFileContents === false) {
 			$this->clearPersistentToken($selector);
+
 			return false;
 		}
 		$tokenData = json_decode($tokenFileContents, true);
 
 		if (!$tokenData || !$this->isValidTokenData($tokenData)) {
 			$this->clearPersistentToken($selector);
+
 			return false;
 		}
 
 		// Verify token
-		if (!password_verify($token, $tokenData['token_hash'])) {
+		if (!password_verify($token, (string)$tokenData['token_hash'])) {
 			$this->clearPersistentToken($selector);
+
 			return false;
 		}
 
 		// Check if token has expired
 		if (time() > $tokenData['expires_at']) {
 			$this->clearPersistentToken($selector);
+
 			return false;
 		}
 
@@ -144,12 +150,14 @@ class PersistentLoginService
 				$tokenData['collection']
 			);
 
-			if (!$userExists) {
+			if ($userExists === []) {
 				$this->clearPersistentToken($selector);
+
 				return false;
 			}
 		} catch (\Throwable) {
 			$this->clearPersistentToken($selector);
+
 			return false;
 		}
 
@@ -176,7 +184,7 @@ class PersistentLoginService
 
 		// Try to clear token file if we can identify it
 		if (isset($_COOKIE[self::PERSISTENT_COOKIE_NAME])) {
-			$parts = explode(':', $_COOKIE[self::PERSISTENT_COOKIE_NAME], 2);
+			$parts = explode(':', (string)$_COOKIE[self::PERSISTENT_COOKIE_NAME], 2);
 			if (count($parts) === 2) {
 				$this->clearPersistentToken($parts[0]);
 			}
@@ -196,7 +204,7 @@ class PersistentLoginService
 	 */
 	public function cleanupExpiredTokens(): void
 	{
-		$now = time();
+		$now   = time();
 		$files = glob($this->tokenDir . '/*.json') ?: [];
 
 		foreach ($files as $file) {
@@ -240,10 +248,10 @@ class PersistentLoginService
 				self::PERSISTENT_COOKIE_NAME,
 				'',
 				[
-					'expires' => time() - 3600,
-					'path' => $cookieParams['path'],
-					'domain' => $cookieParams['domain'],
-					'secure' => $cookieParams['secure'],
+					'expires'  => time() - 3600,
+					'path'     => $cookieParams['path'],
+					'domain'   => $cookieParams['domain'],
+					'secure'   => $cookieParams['secure'],
 					'httponly' => true,
 					'samesite' => $cookieParams['samesite'],
 				]

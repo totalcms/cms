@@ -43,6 +43,7 @@ class ColorData extends PropertyData
 		if (isset($color['oklch']) && is_array($color['oklch'])) {
 			$this->oklch = $color['oklch'];
 			$this->hex   = self::oklchToHex($this->oklch);
+
 			return;
 		}
 

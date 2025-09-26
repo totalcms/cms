@@ -167,7 +167,12 @@
       "@rector",
       "@sniffer:check",
       "@md"
-    ]
+    ],
+	"clean": [
+		"@rector:fix",
+		"@cs:fix",
+		"@sniffer:fix"
+	]
   },
   "extra": {
     "patches": {

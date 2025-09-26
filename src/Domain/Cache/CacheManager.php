@@ -46,7 +46,7 @@ class CacheManager
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer
 
 	private string $versionFile = '.cache_version';
-	private string $domainPrefix;
+	private readonly string $domainPrefix;
 
 	/** @var array<string,CacheInterface> Available cache services */
 	private array $cacheServices = [];
