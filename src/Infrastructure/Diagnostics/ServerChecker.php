@@ -5,6 +5,7 @@ namespace TotalCMS\Infrastructure\Diagnostics;
 use Memcached;
 use Redis;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Support\Config;
 
 /**
@@ -35,6 +36,7 @@ class ServerChecker
 	public function __construct(
 		private readonly BundleChecker $bundleChecker,
 		private readonly Config $config,
+		private readonly LicenseValidator $licenseValidator,
 	) {
 	}
 
@@ -69,6 +71,9 @@ class ServerChecker
 
 		// Add GD-specific information
 		$info = array_merge($info, $this->getGDInfo());
+
+		// Add license information
+		$info = array_merge($info, $this->getLicenseInfo());
 
 		return $info;
 	}
@@ -390,6 +395,88 @@ class ServerChecker
 		}
 
 		return true;
+	}
+
+	/**
+	 * Get license information for display in server checker.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function getLicenseInfo(): array
+	{
+		$info = [];
+
+		try {
+			$licenseData = $this->licenseValidator->validateLicense();
+
+			$info['License Status'] = $licenseData->valid ? 'Valid' : 'Invalid';
+			$info['License Edition'] = ucfirst($licenseData->edition);
+			$info['Licensed Domain'] = $licenseData->mainDomain ?: 'Not Set';
+
+			if ($licenseData->trialActive) {
+				$info['Trial Active'] = 'Yes';
+				if ($licenseData->trialDaysRemaining !== null) {
+					$info['Trial Days Remaining'] = $licenseData->trialDaysRemaining;
+				}
+				if ($licenseData->trialExpiresDate) {
+					$info['Trial Expires'] = $licenseData->trialExpiresDate;
+				}
+			} else {
+				$info['Trial Active'] = 'No';
+			}
+
+			$info['Updates Valid'] = $licenseData->updatesValid ? 'Yes' : 'No';
+			if ($licenseData->updatesExpireDate) {
+				$info['Updates Expire'] = $licenseData->updatesExpireDate;
+			}
+
+			$info['Allowed Version'] = $licenseData->allowedVersion ?: 'Not Specified';
+
+			if (!empty($licenseData->testingDomains)) {
+				$info['Testing Domains'] = implode(', ', $licenseData->testingDomains);
+			}
+
+			$info['DNS Verified'] = $licenseData->dnsVerified ? 'Yes' : 'No';
+			$info['Has JWT Token'] = $licenseData->validationToken ? 'Yes' : 'No';
+
+			// Cache information
+			$info['License Cache Valid'] = $licenseData->isCacheValid() ? 'Yes' : 'No';
+			$cacheAge = time() - $licenseData->timestamp;
+			$info['License Cache Age'] = $this->formatDuration($cacheAge);
+
+		} catch (\Exception $e) {
+			$info['License Status'] = 'Error';
+			$info['License Error'] = $e->getMessage();
+		}
+
+		return $info;
+	}
+
+	/**
+	 * Format duration in seconds to human readable format.
+	 */
+	private function formatDuration(int $seconds): string
+	{
+		if ($seconds < 60) {
+			return $seconds . ' seconds';
+		}
+
+		$minutes = floor($seconds / 60);
+		if ($minutes < 60) {
+			return $minutes . ' minutes';
+		}
+
+		$hours = floor($minutes / 60);
+		$remainingMinutes = $minutes % 60;
+
+		if ($hours < 24) {
+			return $hours . ' hours' . ($remainingMinutes > 0 ? ', ' . $remainingMinutes . ' minutes' : '');
+		}
+
+		$days = floor($hours / 24);
+		$remainingHours = $hours % 24;
+
+		return $days . ' days' . ($remainingHours > 0 ? ', ' . $remainingHours . ' hours' : '');
 	}
 
 	public function getVersion(): string
