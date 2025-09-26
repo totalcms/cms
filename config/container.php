@@ -56,6 +56,8 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -279,6 +281,7 @@ return [
 		$container->get(ImageCacheService::class),
 		$container->get(GridRenderer::class),
 		$container->get(DevModeManager::class),
+		$container->get(LicenseStatus::class),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
@@ -395,6 +398,16 @@ return [
 		$container->get(PhpSession::class),
 		$container->get(LoggerFactory::class),
 		$container->get(PersistentLoginService::class),
+	),
+
+	// License Services
+	LicenseValidator::class => fn (ContainerInterface $container): LicenseValidator => new LicenseValidator(
+		$container->get(Config::class),
+		$container->get(CacheManager::class),
+	),
+
+	LicenseStatus::class => fn (ContainerInterface $container): LicenseStatus => new LicenseStatus(
+		$container->get(LicenseValidator::class),
 	),
 
 	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(

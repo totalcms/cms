@@ -18,6 +18,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -71,6 +72,7 @@ class TotalCMSTwigAdapter
 		public ImageCacheService $imageCacheService,
 		public GridRenderer $grid,
 		private readonly DevModeManager $devModeManager,
+		public LicenseStatus $license,
 	) {
 		$this->env        = $this->config->env;
 		$this->api        = $this->config->api;

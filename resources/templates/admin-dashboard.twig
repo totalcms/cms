@@ -48,7 +48,9 @@
 
             {% set licenseStatus = cms.license.getSidebarStatus() %}
             {% if licenseStatus.showIcon %}
-            <a href="{{ cms.api }}/admin/utils/license-manager" class="license-status {{ licenseStatus.getSeverityClass() }}" title="{{ licenseStatus.tooltip }}">License Status</a>
+            <a href="utils/license-manager"
+				class="license-status license-{{ licenseStatus.severity }}"
+				title="{{ licenseStatus.tooltip }}">License Status</a>
             {% endif %}
 
             <div class="user-profile" >
