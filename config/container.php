@@ -100,6 +100,7 @@ use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
+use TotalCMS\Middleware\LicenseValidationMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -126,7 +127,7 @@ return [
 		}
 
 		// Force session settings to prevent hosting provider overrides
-		if (isset($sessionConfig['name']) && $sessionConfig['name'] !== null) {
+		if (isset($sessionConfig['name'])) {
 			ini_set('session.name', $sessionConfig['name']);
 		}
 		if (isset($sessionConfig['save_path'])) {
@@ -329,6 +330,12 @@ return [
 		$container->get(OPcacheService::class)
 	),
 
+	LicenseValidationMiddleware::class => fn (ContainerInterface $container): LicenseValidationMiddleware => new LicenseValidationMiddleware(
+		$container->get(LicenseValidator::class),
+		$container->get(Config::class),
+		$container->get(ResponseFactoryInterface::class),
+	),
+
 	TwigEngine::class => fn (ContainerInterface $container): TwigEngine => new TwigEngine(
 		$container->get(Config::class),
 		$container->get(TotalCMSTwigExtension::class),
@@ -408,6 +415,7 @@ return [
 
 	LicenseStatus::class => fn (ContainerInterface $container): LicenseStatus => new LicenseStatus(
 		$container->get(LicenseValidator::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(

@@ -113,11 +113,21 @@ readonly class LicenseValidator
 		$payload  = ['domain' => $domain];
 		$response = $this->makeHttpRequest('/trial', $payload);
 
+		// Handle new trial response format
+		$isValid = ($response['valid'] ?? false) === 'true' || ($response['valid'] ?? false) === true;
+
+		// Extract days remaining from message
+		$daysRemaining = null;
+		if (isset($response['message'])) {
+			preg_match('/(\d+) days remaining/', $response['message'], $matches);
+			$daysRemaining = isset($matches[1]) ? (int)$matches[1] : null;
+		}
+
 		// Convert trial response to LicenseData format
 		$licenseResponse = [
-			'valid'                => $response['valid'] ?? false,
+			'valid'                => $isValid,
 			'edition'              => 'trial',
-			'main_domain'          => $domain,
+			'main_domain'          => $response['domain'] ?? $domain,
 			'updates_valid'        => true,
 			'updates_expire_date'  => null,
 			'allowed_version'      => $this->getCurrentVersion(),
@@ -127,9 +137,9 @@ readonly class LicenseValidator
 			'dns_verified'         => true,
 			'dns_record'           => null,
 			'verification_token'   => null,
-			'trial_active'         => true,
-			'trial_expires_date'   => $response['trialExpiresDate'] ?? null,
-			'trial_days_remaining' => $response['daysRemaining'] ?? null,
+			'trial_active'         => $isValid,
+			'trial_expires_date'   => $response['expires'] ?? null,
+			'trial_days_remaining' => $daysRemaining,
 		];
 
 		return LicenseData::fromApiResponse($licenseResponse);

@@ -11,7 +11,7 @@ use TotalCMS\Middleware\BetaMiddleware;
 use TotalCMS\Middleware\BundleMiddleware;
 use TotalCMS\Middleware\CorsMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
-use TotalCMS\Middleware\LiteLicenseMiddleware;
+use TotalCMS\Middleware\LicenseValidationMiddleware;
 use TotalCMS\Middleware\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\RobotsTagMiddleware;
@@ -26,7 +26,7 @@ return function (App $app): void {
 	$app->add(SessionStartMiddleware::class);
 	$app->add(CorsMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
-	$app->add(LiteLicenseMiddleware::class);
+	$app->add(LicenseValidationMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
 	$app->add(NoCacheErrorMiddleware::class);
 	$app->addRoutingMiddleware();

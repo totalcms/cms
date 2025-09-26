@@ -113,7 +113,12 @@ class PersistentLoginService
 		}
 
 		// Load and validate token data
-		$tokenData = json_decode(file_get_contents($tokenFile), true);
+		$tokenFileContents = file_get_contents($tokenFile);
+		if ($tokenFileContents === false) {
+			$this->clearPersistentToken($selector);
+			return false;
+		}
+		$tokenData = json_decode($tokenFileContents, true);
 
 		if (!$tokenData || !$this->isValidTokenData($tokenData)) {
 			$this->clearPersistentToken($selector);
@@ -134,7 +139,7 @@ class PersistentLoginService
 
 		// Validate user still exists and is active
 		try {
-			$userExists = $this->userValidator->validateUser(
+			$userExists = $this->userValidator->validateUserById(
 				$tokenData['user_id'],
 				$tokenData['collection']
 			);
@@ -195,7 +200,11 @@ class PersistentLoginService
 		$files = glob($this->tokenDir . '/*.json') ?: [];
 
 		foreach ($files as $file) {
-			$tokenData = json_decode(file_get_contents($file), true);
+			$fileContents = file_get_contents($file);
+			if ($fileContents === false) {
+				continue;
+			}
+			$tokenData = json_decode($fileContents, true);
 			if ($tokenData && isset($tokenData['expires_at']) && $now > $tokenData['expires_at']) {
 				unlink($file);
 			}
@@ -204,6 +213,8 @@ class PersistentLoginService
 
 	/**
 	 * Validate token data structure.
+	 *
+	 * @param array<string,mixed> $tokenData
 	 */
 	private function isValidTokenData(array $tokenData): bool
 	{
