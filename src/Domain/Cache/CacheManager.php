@@ -387,23 +387,25 @@ class CacheManager
 	public function storeLicenseData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
 	{
 		// Always cache license data regardless of dev mode - performance is critical
+		// Use domain-specific key to prevent license data sharing between sites
+		$domainKey = $this->createDomainKey($key);
 
 		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
 		if ($this->apcuService->isAvailable()) {
-			return $this->apcuService->set($key, $data, $ttl);
+			return $this->apcuService->set($domainKey, $data, $ttl);
 		}
 
 		if ($this->redisService->isAvailable()) {
-			return $this->redisService->set($key, $data, $ttl);
+			return $this->redisService->set($domainKey, $data, $ttl);
 		}
 
 		if ($this->memcachedService->isAvailable()) {
-			return $this->memcachedService->set($key, $data, $ttl);
+			return $this->memcachedService->set($domainKey, $data, $ttl);
 		}
 
 		// Fallback to filesystem cache only if no memory caches available
 		if ($this->filesystemService->isAvailable()) {
-			return $this->filesystemService->set($key, $data, $ttl);
+			return $this->filesystemService->set($domainKey, $data, $ttl);
 		}
 
 		return false;
@@ -414,23 +416,26 @@ class CacheManager
 	 */
 	public function getLicenseData(string $key): mixed
 	{
+		// Use domain-specific key to prevent license data sharing between sites
+		$domainKey = $this->createDomainKey($key);
+
 		// Check memory caches first (fastest)
 		if ($this->apcuService->isAvailable()) {
-			$result = $this->apcuService->get($key);
+			$result = $this->apcuService->get($domainKey);
 			if ($result !== null) {
 				return $result;
 			}
 		}
 
 		if ($this->redisService->isAvailable()) {
-			$result = $this->redisService->get($key);
+			$result = $this->redisService->get($domainKey);
 			if ($result !== null) {
 				return $result;
 			}
 		}
 
 		if ($this->memcachedService->isAvailable()) {
-			$result = $this->memcachedService->get($key);
+			$result = $this->memcachedService->get($domainKey);
 			if ($result !== null) {
 				return $result;
 			}
@@ -438,7 +443,7 @@ class CacheManager
 
 		// Check filesystem cache
 		if ($this->filesystemService->isAvailable()) {
-			$result = $this->filesystemService->get($key);
+			$result = $this->filesystemService->get($domainKey);
 			if ($result !== null) {
 				return $result;
 			}
@@ -452,23 +457,25 @@ class CacheManager
 	 */
 	public function clearLicenseData(string $key): bool
 	{
+		// Use domain-specific key to prevent license data sharing between sites
+		$domainKey = $this->createDomainKey($key);
 		$success = true;
 
 		// Delete from all available cache backends
 		if ($this->apcuService->isAvailable()) {
-			$success &= $this->apcuService->delete($key);
+			$success &= $this->apcuService->delete($domainKey);
 		}
 
 		if ($this->redisService->isAvailable()) {
-			$success &= $this->redisService->delete($key);
+			$success &= $this->redisService->delete($domainKey);
 		}
 
 		if ($this->memcachedService->isAvailable()) {
-			$success &= $this->memcachedService->delete($key);
+			$success &= $this->memcachedService->delete($domainKey);
 		}
 
 		if ($this->filesystemService->isAvailable()) {
-			$success &= $this->filesystemService->delete($key);
+			$success &= $this->filesystemService->delete($domainKey);
 		}
 
 		return (bool)$success;
