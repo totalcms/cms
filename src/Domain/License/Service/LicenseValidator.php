@@ -61,7 +61,7 @@ readonly class LicenseValidator
 	 */
 	private function getCachedLicense(): ?LicenseData
 	{
-		$cached = $this->cacheManager->getComputedData(self::CACHE_KEY);
+		$cached = $this->cacheManager->getLicenseData(self::CACHE_KEY);
 
 		return $cached instanceof LicenseData ? $cached : null;
 	}
@@ -71,7 +71,7 @@ readonly class LicenseValidator
 	 */
 	private function cacheLicense(LicenseData $licenseData): void
 	{
-		$this->cacheManager->storeComputedData(self::CACHE_KEY, $licenseData, self::CACHE_TTL);
+		$this->cacheManager->storeLicenseData(self::CACHE_KEY, $licenseData, self::CACHE_TTL);
 	}
 
 	/**
@@ -79,7 +79,7 @@ readonly class LicenseValidator
 	 */
 	public function clearCache(): void
 	{
-		$this->cacheManager->clearComputedData(self::CACHE_KEY);
+		$this->cacheManager->clearLicenseData(self::CACHE_KEY);
 	}
 
 	/**

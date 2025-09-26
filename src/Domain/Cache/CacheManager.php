@@ -381,6 +381,100 @@ class CacheManager
 	}
 
 	/**
+	 * Store license data - bypasses dev mode since license validation should always be cached.
+	 * License data doesn't change frequently and hitting license server on every request is bad for performance.
+	 */
+	public function storeLicenseData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
+	{
+		// Always cache license data regardless of dev mode - performance is critical
+
+		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
+		if ($this->apcuService->isAvailable()) {
+			return $this->apcuService->set($key, $data, $ttl);
+		}
+
+		if ($this->redisService->isAvailable()) {
+			return $this->redisService->set($key, $data, $ttl);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			return $this->memcachedService->set($key, $data, $ttl);
+		}
+
+		// Fallback to filesystem cache only if no memory caches available
+		if ($this->filesystemService->isAvailable()) {
+			return $this->filesystemService->set($key, $data, $ttl);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get license data - bypasses dev mode since license validation should always be cached.
+	 */
+	public function getLicenseData(string $key): mixed
+	{
+		// Check memory caches first (fastest)
+		if ($this->apcuService->isAvailable()) {
+			$result = $this->apcuService->get($key);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		if ($this->redisService->isAvailable()) {
+			$result = $this->redisService->get($key);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$result = $this->memcachedService->get($key);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		// Check filesystem cache
+		if ($this->filesystemService->isAvailable()) {
+			$result = $this->filesystemService->get($key);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Clear license data - bypasses dev mode.
+	 */
+	public function clearLicenseData(string $key): bool
+	{
+		$success = true;
+
+		// Delete from all available cache backends
+		if ($this->apcuService->isAvailable()) {
+			$success &= $this->apcuService->delete($key);
+		}
+
+		if ($this->redisService->isAvailable()) {
+			$success &= $this->redisService->delete($key);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$success &= $this->memcachedService->delete($key);
+		}
+
+		if ($this->filesystemService->isAvailable()) {
+			$success &= $this->filesystemService->delete($key);
+		}
+
+		return (bool)$success;
+	}
+
+	/**
 	 * Clear all caches including OPcache and text watermark cache.
 	 */
 	public function clearAllCaches(): bool
