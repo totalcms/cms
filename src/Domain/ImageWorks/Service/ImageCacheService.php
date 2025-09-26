@@ -12,7 +12,7 @@ use TotalCMS\Support\Config;
 readonly class ImageCacheService
 {
 	private const CACHE_STATS_KEY = 'image_cache_stats';
-	private const CACHE_STATS_TTL = 60 * 60; // 60 minutes
+	private const CACHE_STATS_TTL = 3 * 60 * 60; // 3 hours
 
 	public function __construct(
 		private Config $config,
