@@ -1,3 +1,5 @@
+{% do cms.license.forceRefresh() %}
+
 {% if cms.env == "dev" %}
 	{% set licenseUrl = "https://license.totalcms.test/store/" ~ cms.domain %}
 {% else %}

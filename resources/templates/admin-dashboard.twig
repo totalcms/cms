@@ -45,6 +45,12 @@
                     </li>
                 </ul>
             </nav>
+
+            {% set licenseStatus = cms.license.getSidebarStatus() %}
+            {% if licenseStatus.showIcon %}
+            <a href="{{ cms.api }}/admin/utils/license-manager" class="license-status {{ licenseStatus.getSeverityClass() }}" title="{{ licenseStatus.tooltip }}">License Status</a>
+            {% endif %}
+
             <div class="user-profile" >
                 {% if cms.userLoggedIn %}
                 <button popovertarget="user-actions">
@@ -55,6 +61,16 @@
                 <nav popover id="user-actions">
                     <ul>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ user.name }}</a></li>
+                        <li class="edit"><a href="profile">Edit Profile</a></li>
+                        <li class="logout"><a href="../logout">Logout</a></li>
+                    </ul>
+                </nav>
+                {% elseif cms.env == 'dev' %}
+                {# Show default profile in dev mode for styling verification #}
+                <button popovertarget="user-actions"></button>
+                <nav popover id="user-actions">
+                    <ul>
+                        <li class="profile"><a href="javascript:void(0)" style="cursor:default">Dev User</a></li>
                         <li class="edit"><a href="profile">Edit Profile</a></li>
                         <li class="logout"><a href="../logout">Logout</a></li>
                     </ul>
