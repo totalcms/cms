@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\ImageWorks\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Support\Config;
 
@@ -12,18 +13,20 @@ class ImageCacheServiceTest extends TestCase
 {
 	private ImageCacheService $service;
 	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
+	private \PHPUnit\Framework\MockObject\MockObject $mockCacheManager;
 	private string $testDataDir;
 
 	protected function setUp(): void
 	{
 		$this->mockConfig = $this->createMock(Config::class);
+		$this->mockCacheManager = $this->createMock(CacheManager::class);
 
 		// Create a temporary directory for testing
 		$this->testDataDir = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		mkdir($this->testDataDir);
 		$this->mockConfig->datadir = $this->testDataDir;
 
-		$this->service = new ImageCacheService($this->mockConfig);
+		$this->service = new ImageCacheService($this->mockConfig, $this->mockCacheManager);
 	}
 
 	protected function tearDown(): void
@@ -141,9 +144,10 @@ class ImageCacheServiceTest extends TestCase
 
 	public function testConstructorAcceptsConfig(): void
 	{
-		// Test that constructor properly accepts Config dependency
-		$config  = $this->createMock(Config::class);
-		$service = new ImageCacheService($config);
+		// Test that constructor properly accepts Config and CacheManager dependencies
+		$config       = $this->createMock(Config::class);
+		$cacheManager = $this->createMock(CacheManager::class);
+		$service      = new ImageCacheService($config, $cacheManager);
 
 		$this->assertInstanceOf(ImageCacheService::class, $service);
 	}

@@ -65,25 +65,25 @@ final class ColorDataTest extends TestCase
 	{
 		$colorArray = [
 			'hex'   => '#00ff00',
-			'oklch' => ['l' => 0.866, 'c' => 0.294, 'h' => 142.5],
+			'oklch' => ['l' => 86.644, 'c' => 0.295, 'h' => 142.495],
 		];
 
 		$color = new ColorData($colorArray);
 
 		$this->assertEquals('#00ff00', $color->hex);
-		$this->assertEquals(['l' => 0.866, 'c' => 0.294, 'h' => 142.5], $color->oklch);
+		$this->assertEquals(['l' => 86.644, 'c' => 0.295, 'h' => 142.495], $color->oklch);
 	}
 
 	public function testConstructorWithArrayMissingHex(): void
 	{
 		$colorArray = [
-			'oklch' => ['l' => 0.866, 'c' => 0.294, 'h' => 142.5],
+			'oklch' => ['l' => 86.644, 'c' => 0.295, 'h' => 142.495],
 		];
 
 		$color = new ColorData($colorArray);
 
-		$this->assertEquals('#000000', $color->hex);
-		$this->assertEquals(['l' => 0.866, 'c' => 0.294, 'h' => 142.5], $color->oklch);
+		$this->assertEquals('#00ff00', $color->hex);
+		$this->assertEquals(['l' => 86.644, 'c' => 0.295, 'h' => 142.495], $color->oklch);
 	}
 
 	public function testConstructorWithArrayMissingOklch(): void

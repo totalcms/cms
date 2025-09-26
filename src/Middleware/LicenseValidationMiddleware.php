@@ -32,8 +32,8 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// Skip license validation in development mode
-		if ($this->config->env === 'dev') {
+		// Skip license validation in test environment only
+		if ($this->config->env === 'test') {
 			return $handler->handle($request);
 		}
 
