@@ -103,7 +103,6 @@ readonly class LicenseValidator
 		return LicenseData::fromApiResponse($response);
 	}
 
-
 	/**
 	 * Get current CMS version from version.txt file.
 	 */

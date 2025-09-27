@@ -459,7 +459,7 @@ class CacheManager
 	{
 		// Use domain-specific key to prevent license data sharing between sites
 		$domainKey = $this->createDomainKey($key);
-		$success = true;
+		$success   = true;
 
 		// Delete from all available cache backends
 		if ($this->apcuService->isAvailable()) {
