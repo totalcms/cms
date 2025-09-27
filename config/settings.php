@@ -48,6 +48,30 @@ if (file_exists(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php')) {
 	}
 }
 
+// Validate test environment - prevent production bypass attempts
+if (($settings['env'] ?? '') === 'test') {
+	// Check multiple indicators that this is a legitimate test environment
+	$testIndicators = [
+		// PHPUnit/Pest testing frameworks are active
+		defined('PHPUNIT_RUNNING') || class_exists('PHPUnit\\Framework\\TestCase'),
+		function_exists('test') || function_exists('describe'),
+		// CLI environment (tests typically run from command line)
+		php_sapi_name() === 'cli',
+		// Test-specific domain
+		($settings['domain'] ?? '') === 'totalcms.test',
+		// Test data directory is being used
+		str_contains($settings['datadir'] ?? '', '/tests/'),
+	];
+
+	// If less than 2 indicators confirm this is a test environment, force to production
+	$confirmedIndicators = array_filter($testIndicators);
+	if (count($confirmedIndicators) < 2) {
+		$settings['env'] = 'prod';
+		// Log the security event
+		error_log('Security: Attempted test environment bypass detected, forced to production mode');
+	}
+}
+
 // echo "<pre>";
 // print_r($settings);
 // echo "</pre>";
