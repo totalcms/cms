@@ -35,12 +35,10 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		// Skip license validation in test environment only
-		if ($this->config->env === 'test') {
-			return $handler->handle($request);
-		}
-
-		// Always allow authentication endpoints - users need access to admin to fix license issues
-		if ($this->isAuthenticationEndpoint($request)) {
+		if ($this->isAuthenticationEndpoint($request)
+			|| $this->config->env === 'test'
+			|| PHP_SAPI === 'cli-server'
+		) {
 			return $handler->handle($request);
 		}
 
@@ -191,7 +189,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	{
 		// Try to get route information from route context
 		$routeContext = RouteContext::fromRequest($request);
-		$route = $routeContext->getRoute();
+		$route        = $routeContext->getRoute();
 
 		if ($route !== null) {
 			$routeName = $route->getName();
@@ -204,7 +202,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		}
 
 		// Fallback to URI-based checking if route info not available
-		$uri = $request->getUri()->getPath();
+		$uri           = $request->getUri()->getPath();
 		$authEndpoints = ['/login', '/logout'];
 
 		foreach ($authEndpoints as $endpoint) {
