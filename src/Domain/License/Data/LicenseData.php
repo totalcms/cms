@@ -24,6 +24,8 @@ readonly class LicenseData
 		public bool $trialActive,
 		public ?string $trialExpiresDate,
 		public ?int $trialDaysRemaining,
+		public ?string $type,
+		public ?bool $expired,
 		public int $timestamp = 0,
 	) {
 	}
@@ -51,6 +53,8 @@ readonly class LicenseData
 			trialActive        : $response['trial_active'] ?? false,
 			trialExpiresDate   : $response['trial_expires_date'] ?? null,
 			trialDaysRemaining : $response['trial_days_remaining'] ?? null,
+			type               : $response['type'] ?? null,
+			expired            : $response['expired'] ?? null,
 			timestamp          : time(),
 		);
 	}

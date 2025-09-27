@@ -101,6 +101,8 @@ describe('LicenseData', function (): void {
 			trialActive: false,
 			trialExpiresDate: null,
 			trialDaysRemaining: null,
+			type: null,
+			expired: null,
 			timestamp: time() - (25 * 60 * 60) // 25 hours ago
 		);
 

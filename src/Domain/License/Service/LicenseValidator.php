@@ -51,8 +51,9 @@ readonly class LicenseValidator
 				return $cached;
 			}
 
-			// If no cache available, return development fallback
-			return $this->createDevelopmentFallback($e);
+			// If no cache available and API fails, re-throw the exception
+			// The middleware will handle this gracefully with read-only mode
+			throw new LicenseException('License validation failed and no cached data available: ' . $e->getMessage(), 0, $e);
 		}
 	}
 
@@ -83,7 +84,7 @@ readonly class LicenseValidator
 	}
 
 	/**
-	 * Call license validation API.
+	 * Call license validation API with auto trial creation.
 	 */
 	private function callLicenseApi(): LicenseData
 	{
@@ -95,96 +96,13 @@ readonly class LicenseValidator
 			'version' => $version,
 		];
 
-		$response = $this->makeHttpRequest('/license/validate', $payload);
+		// Use auto_trial=true parameter - server will create trial if no license exists
+		$response = $this->makeHttpRequest('/license/validate?auto_trial=true', $payload);
 
-		// If no license found, try to create trial
-		if (!$response['valid'] && isset($response['code']) && $response['code'] === 404) {
-			return $this->createTrial($domain);
-		}
-
+		// With auto_trial=true, response should always be valid (either license or trial)
 		return LicenseData::fromApiResponse($response);
 	}
 
-	/**
-	 * Create trial for domain.
-	 */
-	private function createTrial(string $domain): LicenseData
-	{
-		$payload  = ['domain' => $domain];
-		$response = $this->makeHttpRequest('/trial', $payload);
-
-		// Handle new trial response format
-		$isValid = ($response['valid'] ?? false) === 'true' || ($response['valid'] ?? false) === true;
-
-		// Extract days remaining from message
-		$daysRemaining = null;
-		if (isset($response['message'])) {
-			preg_match('/(\d+) days remaining/', (string)$response['message'], $matches);
-			$daysRemaining = isset($matches[1]) ? (int)$matches[1] : null;
-		}
-
-		// Convert trial response to LicenseData format
-		$licenseResponse = [
-			'valid'                => $isValid,
-			'edition'              => 'trial',
-			'main_domain'          => $response['domain'] ?? $domain,
-			'updates_valid'        => true,
-			'updates_expire_date'  => null,
-			'allowed_version'      => $this->getCurrentVersion(),
-			'testing_domains'      => [],
-			'message'              => $response['message'] ?? 'Trial created',
-			'validation_token'     => $response['jwtToken'] ?? null,
-			'dns_verified'         => true,
-			'dns_record'           => null,
-			'verification_token'   => null,
-			'trial_active'         => $isValid,
-			'trial_expires_date'   => $response['expires'] ?? null,
-			'trial_days_remaining' => $daysRemaining,
-		];
-
-		return LicenseData::fromApiResponse($licenseResponse);
-	}
-
-	/**
-	 * Create development fallback when API is unavailable.
-	 */
-	private function createDevelopmentFallback(\Exception $exception): LicenseData
-	{
-		// In development environment, provide a mock trial license
-		if ($this->config->env === 'dev') {
-			$licenseResponse = [
-				'valid'                => true,
-				'edition'              => 'trial',
-				'main_domain'          => $this->config->domain,
-				'updates_valid'        => true,
-				'updates_expire_date'  => null,
-				'allowed_version'      => $this->getCurrentVersion(),
-				'testing_domains'      => [],
-				'message'              => 'Development mode - API unavailable',
-				'validation_token'     => null,
-				'dns_verified'         => true,
-				'dns_record'           => null,
-				'verification_token'   => null,
-				'trial_active'         => true,
-				'trial_expires_date'   => date('Y-m-d\TH:i:s\Z', strtotime('+30 days')),
-				'trial_days_remaining' => 30,
-			];
-
-			$fallback = LicenseData::fromApiResponse($licenseResponse);
-
-			// Cache the fallback for a short time to avoid repeated errors
-			$this->cacheLicense($fallback);
-
-			return $fallback;
-		}
-
-		// In production, throw the original exception
-		throw new LicenseException(
-			'License validation failed and no cached data available: ' . $exception->getMessage(),
-			$exception->getCode(),
-			$exception
-		);
-	}
 
 	/**
 	 * Get current CMS version from version.txt file.

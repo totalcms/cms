@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Support\Config;
@@ -43,6 +44,16 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 
 			// Check if license is valid
 			if (!$licenseData->valid) {
+				// For expired trials, block ALL requests (purchase required)
+				if ($licenseData->type === 'trial' || ($licenseData->trialActive && $licenseData->expired === true)) {
+					return $this->createUnauthorizedResponse('Trial has expired. Please purchase a license to continue using Total CMS.');
+				}
+
+				// For other invalid/missing licenses, allow GET requests but block write operations
+				if ($this->isReadOnlyRequest($request)) {
+					return $handler->handle($request);
+				}
+
 				return $this->createUnauthorizedResponse('Invalid license: ' . $licenseData->message);
 			}
 
@@ -53,17 +64,32 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 
 			// Check version compatibility
 			if (!$this->isVersionAllowed($licenseData->allowedVersion)) {
+				// For version issues, allow GET requests but block write operations
+				if ($this->isReadOnlyRequest($request)) {
+					return $handler->handle($request);
+				}
+
 				return $this->createUnauthorizedResponse('CMS version not allowed by license');
 			}
 
 			// Check domain authorization
 			if (!$this->isDomainAuthorized($licenseData)) {
+				// For domain issues, allow GET requests but block write operations
+				if ($this->isReadOnlyRequest($request)) {
+					return $handler->handle($request);
+				}
+
 				return $this->createUnauthorizedResponse('Domain not authorized by license');
 			}
 
 			// License is valid, continue with request
 			return $handler->handle($request);
 		} catch (LicenseException $e) {
+			// For license exceptions, allow GET requests but block write operations
+			if ($this->isReadOnlyRequest($request)) {
+				return $handler->handle($request);
+			}
+
 			return $this->createUnauthorizedResponse('License validation failed: ' . $e->getMessage());
 		} catch (\Exception $e) {
 			// Log the error but don't block in case of unexpected issues
@@ -120,7 +146,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	/**
 	 * Check if current domain is authorized by license.
 	 */
-	private function isDomainAuthorized(\TotalCMS\Domain\License\Data\LicenseData $licenseData): bool
+	private function isDomainAuthorized(LicenseData $licenseData): bool
 	{
 		$currentDomain = $this->config->domain;
 
@@ -150,6 +176,16 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		}
 
 		return '3.0.0'; // fallback version
+	}
+
+	/**
+	 * Check if request is read-only (GET, HEAD, OPTIONS).
+	 */
+	private function isReadOnlyRequest(ServerRequestInterface $request): bool
+	{
+		$method = strtoupper($request->getMethod());
+
+		return in_array($method, ['GET', 'HEAD', 'OPTIONS'], true);
 	}
 
 	/**
