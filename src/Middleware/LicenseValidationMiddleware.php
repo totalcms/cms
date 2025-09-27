@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Routing\RouteContext;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\License\Service\LicenseValidator;
@@ -35,6 +36,11 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	{
 		// Skip license validation in test environment only
 		if ($this->config->env === 'test') {
+			return $handler->handle($request);
+		}
+
+		// Always allow authentication endpoints - users need access to admin to fix license issues
+		if ($this->isAuthenticationEndpoint($request)) {
 			return $handler->handle($request);
 		}
 
@@ -176,6 +182,38 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		}
 
 		return '3.0.0'; // fallback version
+	}
+
+	/**
+	 * Check if this is an authentication endpoint that should always be accessible.
+	 */
+	private function isAuthenticationEndpoint(ServerRequestInterface $request): bool
+	{
+		// Try to get route information from route context
+		$routeContext = RouteContext::fromRequest($request);
+		$route = $routeContext->getRoute();
+
+		if ($route !== null) {
+			$routeName = $route->getName();
+
+			// Allow authentication routes by name
+			$authRoutes = ['login', 'logout'];
+			if (in_array($routeName, $authRoutes, true)) {
+				return true;
+			}
+		}
+
+		// Fallback to URI-based checking if route info not available
+		$uri = $request->getUri()->getPath();
+		$authEndpoints = ['/login', '/logout'];
+
+		foreach ($authEndpoints as $endpoint) {
+			if ($uri === $endpoint || str_ends_with($uri, $endpoint)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
