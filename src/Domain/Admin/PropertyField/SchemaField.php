@@ -62,6 +62,41 @@ class SchemaField extends PropertyField
 		return $content . parent::topFieldInfo();
 	}
 
+	protected function buildFormInfo(): string
+	{
+		$formInfo = $this->form->field('label', [
+			'field'       => 'text',
+			'label'       => 'Label',
+			'placeholder' => 'Enter a label',
+			'help'        => 'The label that will be added to the field form',
+			'value'       => $this->label,
+		]);
+		$formInfo .= $this->form->field('placeholder', [
+			'field'       => 'text',
+			'label'       => 'Placeholder',
+			'placeholder' => 'Enter a placeholder',
+			'help'        => 'The placeholder text that will be added to the field form',
+			'value'       => $this->placeholder,
+		]);
+		$formInfo .= $this->form->field('help', [
+			'field'       => 'textarea',
+			'label'       => 'Help',
+			'rows'        => 2,
+			'placeholder' => 'Enter help text',
+			'help'        => 'The help text that will be added to the field form',
+			'value'       => $this->help,
+		]);
+		$formInfo .= $this->form->field('default', [
+			'field'       => 'text',
+			'label'       => 'Default Value',
+			'placeholder' => '',
+			'help'        => 'The default value for this property when an object is saved without a value',
+			'value'       => $this->default,
+		]);
+
+		return HTMLUtils::details('Form Info', $formInfo, '', ['open' => '']);
+	}
+
 	protected function buildPropertyInfo(): string
 	{
 		$content = $this->form->field('factory', [
@@ -72,13 +107,6 @@ class SchemaField extends PropertyField
 			'value'       => $this->factory,
 			'settings'    => ['datalistOptions' => true],
 			'options'     => FakerExamples::FAKER_EXAMPLES,
-		]);
-		$content .= $this->form->field('default', [
-			'field'       => 'text',
-			'label'       => 'Default Value',
-			'placeholder' => '',
-			'help'        => 'The default value for this property when an object is saved without a value',
-			'value'       => $this->default,
 		]);
 		$content .= $this->form->field('deckref', [
 			'field'       => 'select',
