@@ -34,10 +34,11 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// Skip license validation in test environment only
-		if ($this->isAuthenticationEndpoint($request)
+		// Skip license validation
+		if ( PHP_SAPI === 'cli-server'
 			|| $this->config->env === 'test'
-			|| PHP_SAPI === 'cli-server'
+			|| $this->isAuthenticationEndpoint($request)
+			|| $this->isReadOnlyRequest($request)
 		) {
 			return $handler->handle($request);
 		}
@@ -48,17 +49,14 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 
 			// Check if license is valid
 			if (!$licenseData->valid) {
+				$message = 'Invalid license: ' . $licenseData->message;
+
 				// For expired trials, block ALL requests (purchase required)
 				if ($licenseData->type === 'trial' || ($licenseData->trialActive && $licenseData->expired === true)) {
-					return $this->createUnauthorizedResponse('Trial has expired. Please purchase a license to continue using Total CMS.');
+					$message = 'Trial has expired. Please purchase a license to continue using Total CMS.';
 				}
 
-				// For other invalid/missing licenses, allow GET requests but block write operations
-				if ($this->isReadOnlyRequest($request)) {
-					return $handler->handle($request);
-				}
-
-				return $this->createUnauthorizedResponse('Invalid license: ' . $licenseData->message);
+				return $this->createUnauthorizedResponse($message);
 			}
 
 			// If we have a JWT validation token, verify it
@@ -67,33 +65,19 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 			}
 
 			// Check version compatibility
-			if (!$this->isVersionAllowed($licenseData->allowedVersion)) {
-				// For version issues, allow GET requests but block write operations
-				if ($this->isReadOnlyRequest($request)) {
-					return $handler->handle($request);
-				}
-
-				return $this->createUnauthorizedResponse('CMS version not allowed by license');
-			}
+			// Disabled for now until we have a proper versions setup on the license server
+			// if (!$this->isVersionAllowed($licenseData->allowedVersion)) {
+			// 	return $this->createUnauthorizedResponse('CMS version not allowed by license');
+			// }
 
 			// Check domain authorization
 			if (!$this->isDomainAuthorized($licenseData)) {
-				// For domain issues, allow GET requests but block write operations
-				if ($this->isReadOnlyRequest($request)) {
-					return $handler->handle($request);
-				}
-
 				return $this->createUnauthorizedResponse('Domain not authorized by license');
 			}
 
 			// License is valid, continue with request
 			return $handler->handle($request);
 		} catch (LicenseException $e) {
-			// For license exceptions, allow GET requests but block write operations
-			if ($this->isReadOnlyRequest($request)) {
-				return $handler->handle($request);
-			}
-
 			return $this->createUnauthorizedResponse('License validation failed: ' . $e->getMessage());
 		} catch (\Exception $e) {
 			// Log the error but don't block in case of unexpected issues
@@ -138,14 +122,14 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	/**
 	 * Check if current version is allowed by license.
 	 */
-	private function isVersionAllowed(string $allowedVersion): bool
-	{
-		$currentVersion = $this->getCurrentVersion();
+	// private function isVersionAllowed(string $allowedVersion): bool
+	// {
+	// 	$currentVersion = $this->getCurrentVersion();
 
-		// For now, just check if versions match
-		// TODO: Implement semantic version comparison
-		return version_compare($currentVersion, $allowedVersion, '<=');
-	}
+	// 	// For now, just check if versions match
+	// 	// TODO: Implement semantic version comparison
+	// 	return version_compare($currentVersion, $allowedVersion, '<=');
+	// }
 
 	/**
 	 * Check if current domain is authorized by license.
@@ -166,21 +150,21 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	/**
 	 * Get current CMS version.
 	 */
-	private function getCurrentVersion(): string
-	{
-		$versionFile = __DIR__ . '/../../version.txt';
-		if (file_exists($versionFile)) {
-			$content = file_get_contents($versionFile);
-			if ($content !== false) {
-				// Extract version from "3.0.39 (24a576e9)" format
-				preg_match('/^(\d+\.\d+\.\d+)/', trim($content), $matches);
+	// private function getCurrentVersion(): string
+	// {
+	// 	$versionFile = __DIR__ . '/../../version.txt';
+	// 	if (file_exists($versionFile)) {
+	// 		$content = file_get_contents($versionFile);
+	// 		if ($content !== false) {
+	// 			// Extract version from "3.0.39 (24a576e9)" format
+	// 			preg_match('/^(\d+\.\d+\.\d+)/', trim($content), $matches);
 
-				return $matches[1] ?? '3.0.0';
-			}
-		}
+	// 			return $matches[1] ?? '3.0.0';
+	// 		}
+	// 	}
 
-		return '3.0.0'; // fallback version
-	}
+	// 	return '3.0.0'; // fallback version
+	// }
 
 	/**
 	 * Check if this is an authentication endpoint that should always be accessible.
@@ -225,13 +209,21 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	}
 
 	/**
-	 * Create unauthorized response.
+	 * Create unauthorized JSON response.
 	 */
 	private function createUnauthorizedResponse(string $message): ResponseInterface
 	{
 		$response = $this->responseFactory->createResponse(401, 'Unauthorized');
-		$response->getBody()->write($message);
 
-		return $response->withHeader('Content-Type', 'text/plain');
+		$errorResponse = [
+			'error' => [
+				'message' => $message,
+			],
+		];
+
+		$jsonResponse = json_encode($errorResponse, JSON_THROW_ON_ERROR);
+		$response->getBody()->write($jsonResponse);
+
+		return $response->withHeader('Content-Type', 'application/json');
 	}
 }
