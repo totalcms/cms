@@ -333,6 +333,7 @@ return [
 		$container->get(LicenseValidator::class),
 		$container->get(Config::class),
 		$container->get(ResponseFactoryInterface::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	TwigEngine::class => fn (ContainerInterface $container): TwigEngine => new TwigEngine(

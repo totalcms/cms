@@ -2,6 +2,8 @@
 
 namespace TotalCMS\Domain\License\Service;
 
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
@@ -13,7 +15,7 @@ use TotalCMS\Support\Config;
 readonly class LicenseValidator
 {
 	private const CACHE_KEY = 'license_validation';
-	private const CACHE_TTL = 24 * 60 * 60; // 24 hours
+	private const JWT_SECRET = 'VwRmMdlSNBD1soVXlNklfzKTkXpU5Bnc4cAiQrCi3tvsHfVpz3L2XDrCxv3UImAj';
 
 	public function __construct(
 		private Config $config,
@@ -72,7 +74,7 @@ readonly class LicenseValidator
 	 */
 	private function cacheLicense(LicenseData $licenseData): void
 	{
-		$this->cacheManager->storeLicenseData(self::CACHE_KEY, $licenseData, self::CACHE_TTL);
+		$this->cacheManager->storeLicenseData(self::CACHE_KEY, $licenseData, LicenseData::CACHE_TTL);
 	}
 
 	/**
@@ -120,6 +122,34 @@ readonly class LicenseValidator
 		}
 
 		return '3.0.0'; // fallback version
+	}
+
+	/**
+	 * Validate JWT token from license server.
+	 *
+	 * @throws LicenseException
+	 */
+	public function validateJwtToken(string $token): void
+	{
+		try {
+			// Validate JWT token with shared secret
+			$decoded = JWT::decode($token, new Key(self::JWT_SECRET, 'HS256'));
+
+			// Basic token validation - expires_at is in ISO format
+			if (isset($decoded->expires_at)) {
+				$expiresAt = new \DateTime($decoded->expires_at);
+				if ($expiresAt < new \DateTime()) {
+					throw new LicenseException('JWT token has expired');
+				}
+			} elseif (isset($decoded->exp) && $decoded->exp < time()) {
+				// Fallback for old-style exp claim
+				throw new LicenseException('JWT token has expired');
+			}
+
+			// JWT token validation passed
+		} catch (\Exception $e) {
+			throw new LicenseException('JWT token validation failed: ' . $e->getMessage());
+		}
 	}
 
 	/**

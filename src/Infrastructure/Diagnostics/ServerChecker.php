@@ -410,39 +410,27 @@ class ServerChecker
 			$licenseData = $this->licenseValidator->validateLicense();
 
 			$info['License Status']  = $licenseData->valid ? 'Valid' : 'Invalid';
+			$info['License Type']    = $licenseData->trial ? 'Trial' : 'Licensed';
 			$info['License Edition'] = ucfirst($licenseData->edition);
-			$info['Licensed Domain'] = $licenseData->mainDomain ?: 'Not Set';
+			$info['Licensed Domain'] = $licenseData->domain ?: 'Not Set';
+			$info['Updates Valid']   = $licenseData->updatesValid ? 'Yes' : 'No';
+			$info['Has JWT Token']   = $licenseData->validationToken ? 'Yes' : 'No';
 
-			if ($licenseData->trialActive) {
-				$info['Trial Active'] = 'Yes';
-				if ($licenseData->trialDaysRemaining !== null) {
-					$info['Trial Days Remaining'] = $licenseData->trialDaysRemaining;
-				}
-				if ($licenseData->trialExpiresDate) {
-					$info['Trial Expires'] = $licenseData->trialExpiresDate;
-				}
-			} else {
-				$info['Trial Active'] = 'No';
+			if ($licenseData->trial && $licenseData->trialDaysRemaining !== null) {
+				$info['Trial Days Remaining'] = $licenseData->trialDaysRemaining;
 			}
-
-			$info['Updates Valid'] = $licenseData->updatesValid ? 'Yes' : 'No';
-			if ($licenseData->updatesExpireDate) {
-				$info['Updates Expire'] = $licenseData->updatesExpireDate;
-			}
-
-			$info['Allowed Version'] = $licenseData->allowedVersion ?: 'Not Specified';
-
-			if ($licenseData->testingDomains !== []) {
-				$info['Testing Domains'] = implode(', ', $licenseData->testingDomains);
-			}
-
-			$info['DNS Verified']  = $licenseData->dnsVerified ? 'Yes' : 'No';
-			$info['Has JWT Token'] = $licenseData->validationToken ? 'Yes' : 'No';
 
 			// Cache information
 			$info['License Cache Valid'] = $licenseData->isCacheValid() ? 'Yes' : 'No';
 			$cacheAge                    = time() - $licenseData->timestamp;
 			$info['License Cache Age']   = $this->formatDuration($cacheAge);
+
+			if (!empty($licenseData->message)) {
+				$info['License Message'] = $licenseData->message;
+			}
+
+			// Note to direct users to license manager for detailed information
+			$info['Note'] = 'Visit License Manager for detailed license information';
 		} catch (\Exception $e) {
 			$info['License Status'] = 'Error';
 			$info['License Error']  = $e->getMessage();

@@ -51,7 +51,7 @@ readonly class LicenseStatus
 			}
 
 			// Trial logic
-			if ($license->trialActive && $license->trialDaysRemaining !== null) {
+			if ($license->trial && $license->trialDaysRemaining !== null) {
 				return $this->getTrialStatus($license->trialDaysRemaining);
 			}
 
@@ -92,7 +92,7 @@ readonly class LicenseStatus
 	{
 		return $license->valid
 			&& $license->updatesValid
-			&& !$license->trialActive;
+			&& !$license->trial;
 	}
 
 	/**
@@ -126,4 +126,5 @@ readonly class LicenseStatus
 			tooltip: "Trial expires in {$daysRemaining} days. Click for license options."
 		);
 	}
+
 }
