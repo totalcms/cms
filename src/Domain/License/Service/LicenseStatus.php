@@ -50,6 +50,15 @@ readonly class LicenseStatus
 				return new LicenseStatusData(showIcon: false);
 			}
 
+			// Updates expired but license valid
+			if ($license->edition === 'development') {
+				return new LicenseStatusData(
+					showIcon : true,
+					severity : 'info',
+					tooltip  : 'Development license in use. Not for production sites.'
+				);
+			}
+
 			// Trial logic
 			if ($license->trial && $license->trialDaysRemaining !== null) {
 				return $this->getTrialStatus($license->trialDaysRemaining);
@@ -58,18 +67,18 @@ readonly class LicenseStatus
 			// Updates expired but license valid
 			if ($license->valid && !$license->updatesValid) {
 				return new LicenseStatusData(
-					showIcon: true,
-					severity: 'warning',
-					tooltip: 'License updates have expired. Some features may be limited.'
+					showIcon : true,
+					severity : 'warning',
+					tooltip  : 'License updates have expired. Some features may be limited.'
 				);
 			}
 
 			// License blocked/invalid
 			if (!$license->valid) {
 				return new LicenseStatusData(
-					showIcon: true,
-					severity: 'error',
-					tooltip: 'License validation failed: ' . $license->message
+					showIcon : true,
+					severity : 'error',
+					tooltip  : 'License validation failed: ' . $license->message
 				);
 			}
 
@@ -78,9 +87,9 @@ readonly class LicenseStatus
 		} catch (\Exception) {
 			// Network error or cache issue - show offline warning
 			return new LicenseStatusData(
-				showIcon: true,
-				severity: 'warning',
-				tooltip: 'Unable to verify license status. Using cached data.'
+				showIcon : true,
+				severity : 'warning',
+				tooltip  : 'Unable to verify license status. Using cached data.'
 			);
 		}
 	}

@@ -5,60 +5,47 @@ use TotalCMS\Domain\License\Data\LicenseData;
 describe('LicenseData', function (): void {
 	test('creates from API response with valid license', function (): void {
 		$response = [
-			'valid'                => true,
-			'edition'              => 'pro',
-			'main_domain'          => 'example.com',
-			'updates_valid'        => true,
-			'updates_expire_date'  => '2025-12-31',
-			'allowed_version'      => '3.1.0',
-			'testing_domains'      => ['test.example.com'],
-			'message'              => 'License valid',
-			'validation_token'     => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
-			'dns_verified'         => true,
-			'dns_record'           => null,
-			'verification_token'   => null,
-			'trial_active'         => false,
-			'trial_expires_date'   => null,
-			'trial_days_remaining' => null,
+			'valid'              => true,
+			'trial'              => false,
+			'domain'             => 'example.com',
+			'edition'            => 'pro',
+			'message'            => 'License valid',
+			'validationToken'    => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+			'updatesValid'       => true,
+			'trialDaysRemaining' => null,
 		];
 
 		$licenseData = LicenseData::fromApiResponse($response);
 
 		expect($licenseData->valid)->toBe(true);
+		expect($licenseData->trial)->toBe(false);
+		expect($licenseData->domain)->toBe('example.com');
 		expect($licenseData->edition)->toBe('pro');
-		expect($licenseData->mainDomain)->toBe('example.com');
+		expect($licenseData->message)->toBe('License valid');
+		expect($licenseData->validationToken)->toBe('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...');
 		expect($licenseData->updatesValid)->toBe(true);
-		expect($licenseData->allowedVersion)->toBe('3.1.0');
-		expect($licenseData->testingDomains)->toBe(['test.example.com']);
-		expect($licenseData->trialActive)->toBe(false);
+		expect($licenseData->trialDaysRemaining)->toBe(null);
 	});
 
 	test('creates from API response with trial', function (): void {
 		$response = [
-			'valid'                => true,
-			'edition'              => 'trial',
-			'main_domain'          => 'trial.com',
-			'updates_valid'        => true,
-			'updates_expire_date'  => null,
-			'allowed_version'      => '3.0.39',
-			'testing_domains'      => [],
-			'message'              => 'Trial created',
-			'validation_token'     => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
-			'dns_verified'         => true,
-			'dns_record'           => null,
-			'verification_token'   => null,
-			'trial_active'         => true,
-			'trial_expires_date'   => '2025-01-26',
-			'trial_days_remaining' => 30,
+			'valid'              => true,
+			'trial'              => true,
+			'domain'             => 'trial.com',
+			'edition'            => 'trial',
+			'message'            => 'Trial created',
+			'validationToken'    => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+			'updatesValid'       => true,
+			'trialDaysRemaining' => 30,
 		];
 
 		$licenseData = LicenseData::fromApiResponse($response);
 
 		expect($licenseData->valid)->toBe(true);
+		expect($licenseData->trial)->toBe(true);
+		expect($licenseData->domain)->toBe('trial.com');
 		expect($licenseData->edition)->toBe('trial');
-		expect($licenseData->trialActive)->toBe(true);
 		expect($licenseData->trialDaysRemaining)->toBe(30);
-		expect($licenseData->trialExpiresDate)->toBe('2025-01-26');
 	});
 
 	test('handles missing fields with defaults', function (): void {
@@ -70,11 +57,13 @@ describe('LicenseData', function (): void {
 		$licenseData = LicenseData::fromApiResponse($response);
 
 		expect($licenseData->valid)->toBe(false);
+		expect($licenseData->trial)->toBe(false);
+		expect($licenseData->domain)->toBe('');
 		expect($licenseData->edition)->toBe('unknown');
-		expect($licenseData->mainDomain)->toBe('');
+		expect($licenseData->message)->toBe('License not found');
+		expect($licenseData->validationToken)->toBe(null);
 		expect($licenseData->updatesValid)->toBe(false);
-		expect($licenseData->testingDomains)->toBe([]);
-		expect($licenseData->trialActive)->toBe(false);
+		expect($licenseData->trialDaysRemaining)->toBe(null);
 	});
 
 	test('validates cache properly', function (): void {
@@ -87,25 +76,44 @@ describe('LicenseData', function (): void {
 		// Create expired license data
 		$expiredData = new LicenseData(
 			valid: true,
+			trial: false,
+			domain: 'example.com',
 			edition: 'pro',
-			mainDomain: 'example.com',
-			updatesValid: true,
-			updatesExpireDate: null,
-			allowedVersion: '3.0.39',
-			testingDomains: [],
 			message: 'Valid',
 			validationToken: null,
-			dnsVerified: true,
-			dnsRecord: null,
-			verificationToken: null,
-			trialActive: false,
-			trialExpiresDate: null,
+			updatesValid: true,
 			trialDaysRemaining: null,
-			type: null,
-			expired: null,
 			timestamp: time() - (25 * 60 * 60) // 25 hours ago
 		);
 
 		expect($expiredData->isCacheValid())->toBe(false);
+	});
+
+	test('converts to array for caching', function (): void {
+		$licenseData = new LicenseData(
+			valid: true,
+			trial: true,
+			domain: 'test.com',
+			edition: 'trial',
+			message: 'Trial active',
+			validationToken: 'token123',
+			updatesValid: false,
+			trialDaysRemaining: 15,
+			timestamp: 1234567890
+		);
+
+		$array = $licenseData->toArray();
+
+		expect($array)->toBe([
+			'valid'              => true,
+			'trial'              => true,
+			'domain'             => 'test.com',
+			'edition'            => 'trial',
+			'message'            => 'Trial active',
+			'validationToken'    => 'token123',
+			'updatesValid'       => false,
+			'trialDaysRemaining' => 15,
+			'timestamp'          => 1234567890,
+		]);
 	});
 });

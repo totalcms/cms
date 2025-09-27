@@ -34,9 +34,9 @@ readonly class LicenseData
 			domain              : $response['domain'] ?? '',
 			edition             : $response['edition'] ?? 'unknown',
 			message             : $response['message'] ?? '',
-			validationToken     : $response['validation_token'] ?? null,
-			updatesValid        : $response['updates_valid'] ?? false,
-			trialDaysRemaining  : $response['trial_days_remaining'] ?? null,
+			validationToken     : $response['validationToken'] ?? null,
+			updatesValid        : $response['updatesValid'] ?? false,
+			trialDaysRemaining  : $response['trialDaysRemaining'] ?? null,
 			timestamp           : time(),
 		);
 	}
@@ -58,15 +58,15 @@ readonly class LicenseData
 	public function toArray(): array
 	{
 		return [
-			'valid'                 => $this->valid,
-			'trial'                 => $this->trial,
-			'domain'                => $this->domain,
-			'edition'               => $this->edition,
-			'message'               => $this->message,
-			'validation_token'      => $this->validationToken,
-			'updates_valid'         => $this->updatesValid,
-			'trial_days_remaining'  => $this->trialDaysRemaining,
-			'timestamp'             => $this->timestamp,
+			'valid'              => $this->valid,
+			'trial'              => $this->trial,
+			'domain'             => $this->domain,
+			'edition'            => $this->edition,
+			'message'            => $this->message,
+			'validationToken'    => $this->validationToken,
+			'updatesValid'       => $this->updatesValid,
+			'trialDaysRemaining' => $this->trialDaysRemaining,
+			'timestamp'          => $this->timestamp,
 		];
 	}
 }

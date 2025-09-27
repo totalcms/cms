@@ -135,9 +135,9 @@ readonly class LicenseValidator
 			// Validate JWT token with shared secret
 			$decoded = JWT::decode($token, new Key(self::JWT_SECRET, 'HS256'));
 
-			// Basic token validation - expires_at is in ISO format
-			if (isset($decoded->expires_at)) {
-				$expiresAt = new \DateTime($decoded->expires_at);
+			// Basic token validation - expiresAt is in ISO format
+			if (isset($decoded->expiresAt)) {
+				$expiresAt = new \DateTime($decoded->expiresAt);
 				if ($expiresAt < new \DateTime()) {
 					throw new LicenseException('JWT token has expired');
 				}
