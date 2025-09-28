@@ -136,13 +136,26 @@ bin/codecount.sh
 
 ## Recent Major Updates (2024)
 
+### License System Modernization (Latest)
+- **Simplified Data Structure**: Reduced from 15+ fields to 8 essential fields for performance
+- **CamelCase API**: Consistent camelCase throughout API responses and JWT tokens
+- **Service Architecture**: JWT validation moved from middleware to dedicated service
+- **Type Safety**: Config class protected against invalid configuration types
+- **Deep Merge Configuration**: Users can override specific nested settings without duplicating entire arrays
+
+### Configuration System Enhancements
+- **Deep Merge Support**: `deepMergeArrays()` function enables granular configuration overrides
+- **Type-Safe Config**: All array properties protected with `is_array()` validation
+- **Backward Compatibility**: Legacy `$settings[]` syntax still works alongside new return-array style
+- **User-Friendly**: tcms.php sample updated with examples and best practices
+
 ### APCu Cache Integration
 - **Primary Cache Backend**: APCu now first in priority for optimal single-server performance
-- **Zero Configuration**: Works immediately with APCu extension, no external services required  
+- **Zero Configuration**: Works immediately with APCu extension, no external services required
 - **UI Integration**: Server Checker and Cache Management fully support APCu with detailed statistics
 - **Performance Optimized**: Cache priority reflects real-world single-server deployment patterns
 
-### PHP 8.4 Compatibility & EXIF Enhancements  
+### PHP 8.4 Compatibility & EXIF Enhancements
 - **ImageMetaReader**: Native PHP EXIF implementation replacing lychee-org/php-exif
 - **Automatic Metadata**: Image uploads auto-populate alt text and tags from EXIF/XMP/IPTC data
 - **Enhanced Processing**: XMP lens extraction, location data, keyword processing, GPS coordinate formatting
@@ -150,7 +163,7 @@ bin/codecount.sh
 
 ### Enhanced Color System
 - **Couleur Library Fork**: Custom fork with OKLCH hue wraparound mathematics
-- **ColorData Integration**: Simplified using enhanced library functions  
+- **ColorData Integration**: Simplified using enhanced library functions
 - **Proper Color Operations**: Fixed 360° hue calculations for color wheel operations
 
 ## Security Architecture
@@ -547,3 +560,89 @@ Total CMS galleries now support semantic HTML5 figure/figcaption elements for im
 - **SEO**: Search engines better understand content structure
 - **Semantic HTML**: Proper HTML5 elements designed for images with captions
 - **CSS Styling**: Easier styling with semantic selectors like `figure.cms-gallery-item`
+
+## License System (Updated 2024)
+
+### Simplified License Data Structure
+
+The license system has been streamlined to focus on essential validation data while leaving detailed management to the license server.
+
+#### Core LicenseData Fields
+```php
+readonly class LicenseData {
+    public bool $valid;              // License validation status
+    public bool $trial;              // Is this a trial license
+    public string $domain;           // Licensed domain
+    public string $edition;          // License edition
+    public string $message;          // Error/status messages
+    public ?string $validationToken; // JWT token for additional validation
+    public bool $updatesValid;       // Update subscription status
+    public ?int $trialDaysRemaining; // Days remaining for trials
+}
+```
+
+#### Key Architecture Changes
+- **Simplified Data**: Reduced from 15+ fields to 8 essential fields
+- **CamelCase API**: All API responses and JWT properties use camelCase
+- **Service Separation**: JWT validation moved from middleware to `LicenseValidator`
+- **Cache Management**: TTL constant moved to `LicenseData` class
+- **Type Safety**: Config class protected against invalid configuration types
+
+#### License Validation Flow
+1. **Middleware Check**: `LicenseValidationMiddleware` handles HTTP validation flow
+2. **Service Validation**: `LicenseValidator` performs API calls and JWT validation
+3. **Caching**: Multi-backend cache with 24-hour TTL managed by `LicenseData::CACHE_TTL`
+4. **Status Display**: `LicenseStatus` provides sidebar status with progressive trial urgency
+
+#### JWT Token Validation
+- **Location**: Handled in `LicenseValidator::validateJwtToken()`
+- **Format**: CamelCase properties (`expiresAt` instead of `expires_at`)
+- **Security**: Shared secret validation with expiration checking
+- **Graceful Degradation**: Falls back to standard `exp` claim for compatibility
+
+#### Cache System Integration
+- **Priority**: APCu > Redis > Memcached > Filesystem
+- **Domain-Specific**: Cache keys include domain for multi-site deployments
+- **License-Specific**: `storeLicenseData()` bypasses dev mode restrictions
+- **Emergency Clearing**: `/emergency/cache/clear` endpoint for customer self-service
+
+## Configuration System Enhancements
+
+### Deep Merge Configuration
+
+Total CMS now supports deep merging of configuration arrays, allowing users to override specific nested settings without replacing entire configuration structures.
+
+#### Usage in tcms.php
+```php
+// Recommended: Return array for deep merging
+return [
+    'cache' => [
+        'redis' => [
+            'password' => 'your_password', // Only override the password
+            // Other redis settings remain from defaults
+        ],
+        'memcached' => [
+            'enabled' => false, // Disable specific backends
+        ],
+    ],
+    'imageworks' => [
+        'watermarksGallery' => 'custom-watermarks',
+        // Other imageworks settings preserved
+    ],
+];
+
+// Legacy style still works but not recommended:
+// $settings['cache']['redis']['password'] = 'password';
+```
+
+#### Deep Merge Implementation
+- **Function**: `deepMergeArrays()` in `config/settings.php`
+- **Recursive**: Handles nested arrays at any depth
+- **Precedence**: User settings override defaults
+- **Backward Compatible**: Legacy `$settings[]` syntax still works
+
+#### Type Safety Improvements
+- **Config Class**: All array properties protected with type checking
+- **Validation**: `is_array()` checks prevent type violations
+- **Fallbacks**: Invalid types converted to empty arrays
+- **PHPStan Compliance**: Maintains Level 8 static analysis compliance
