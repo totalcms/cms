@@ -18,24 +18,6 @@ if ($environment) {
 	}
 }
 
-/**
- * Recursively merge arrays, giving precedence to the second array.
- */
-function deepMergeArrays(array $array1, array $array2): array
-{
-	$merged = $array1;
-
-	foreach ($array2 as $key => $value) {
-		if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
-			$merged[$key] = deepMergeArrays($merged[$key], $value);
-		} else {
-			$merged[$key] = $value;
-		}
-	}
-
-	return $merged;
-}
-
 // User defined settings
 if (file_exists(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php')) {
 	$userSettings = require ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php';
@@ -47,8 +29,6 @@ if (file_exists(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php')) {
 			'watermarksGallery'   => 'imageworks/watermarksGallery',
 			'watermarkFontsDepot' => 'imageworks/watermarkFontsDepot',
 		];
-
-		// Handle mapped settings first
 		foreach ($userSettings as $key => $value) {
 			if (isset($userSettingsMap[$key])) {
 				$keys = explode('/', $userSettingsMap[$key]);
@@ -61,12 +41,10 @@ if (file_exists(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php')) {
 					$temp = &$temp[$key];
 				}
 				$temp = $value;
-				unset($userSettings[$key]); // Remove from userSettings to avoid double processing
+				continue;
 			}
+			$settings[$key] = $value;
 		}
-
-		// Deep merge remaining settings
-		$settings = deepMergeArrays($settings, $userSettings);
 	}
 }
 
