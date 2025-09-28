@@ -135,5 +135,4 @@ readonly class LicenseStatus
 			tooltip: "Trial expires in {$daysRemaining} days. Click for license options."
 		);
 	}
-
 }

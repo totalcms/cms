@@ -53,7 +53,7 @@ if (($settings['env'] ?? '') === 'test') {
 	// Check multiple indicators that this is a legitimate test environment
 	$testIndicators = [
 		// PHPUnit/Pest testing frameworks are active
-		defined('PHPUNIT_RUNNING') || class_exists('PHPUnit\\Framework\\TestCase'),
+		defined('PHPUNIT_RUNNING') || class_exists(PHPUnit\Framework\TestCase::class),
 		function_exists('test') || function_exists('describe'),
 		// CLI environment (tests typically run from command line)
 		php_sapi_name() === 'cli',

@@ -14,7 +14,7 @@ use TotalCMS\Support\Config;
  */
 readonly class LicenseValidator
 {
-	private const CACHE_KEY = 'license_validation';
+	private const CACHE_KEY  = 'license_validation';
 	private const JWT_SECRET = 'VwRmMdlSNBD1soVXlNklfzKTkXpU5Bnc4cAiQrCi3tvsHfVpz3L2XDrCxv3UImAj';
 
 	public function __construct(

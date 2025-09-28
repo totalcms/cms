@@ -8,6 +8,7 @@ namespace TotalCMS\Domain\License\Data;
 readonly class LicenseData
 {
 	public const CACHE_TTL = 24 * 60 * 60; // 24 hours
+
 	public function __construct(
 		public bool $valid,
 		public bool $trial,
@@ -48,7 +49,6 @@ readonly class LicenseData
 	{
 		return (time() - $this->timestamp) < self::CACHE_TTL;
 	}
-
 
 	/**
 	 * Convert to array for caching.

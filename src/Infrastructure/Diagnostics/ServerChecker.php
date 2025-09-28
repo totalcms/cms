@@ -425,7 +425,7 @@ class ServerChecker
 			$cacheAge                    = time() - $licenseData->timestamp;
 			$info['License Cache Age']   = $this->formatDuration($cacheAge);
 
-			if (!empty($licenseData->message)) {
+			if ($licenseData->message !== '') {
 				$info['License Message'] = $licenseData->message;
 			}
 
