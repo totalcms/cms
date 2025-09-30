@@ -370,7 +370,8 @@ return [
 		$container->get(APCuService::class),
 		$container->get(TextWatermarkFactory::class),
 		$container->get(DevModeManager::class),
-		$container->get(Config::class)
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class)
 	),
 
 	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),
@@ -469,7 +470,8 @@ return [
 
 	TextWatermarkFactory::class => fn (ContainerInterface $container): TextWatermarkFactory => new TextWatermarkFactory(
 		$container->get(StorageAdapterInterface::class),
-		$container->get(Config::class)
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class)
 	),
 
 	GlideFactory::class => fn (ContainerInterface $container): GlideFactory => new GlideFactory(

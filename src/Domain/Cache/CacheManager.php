@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Cache;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInterface;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
@@ -10,6 +11,7 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -47,6 +49,7 @@ class CacheManager
 
 	private string $versionFile = '.cache_version';
 	private readonly string $domainPrefix;
+	private readonly LoggerInterface $logger;
 
 	/** @var array<string,CacheInterface> Available cache services */
 	private array $cacheServices = [];
@@ -60,7 +63,11 @@ class CacheManager
 		private readonly TextWatermarkFactory $textWatermarkFactory,
 		private readonly DevModeManager $devModeManager,
 		private readonly Config $config,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory
+			->addFileHandler('totalcms.log')
+			->createLogger('cachemanager');
 		// Initialize cache services and version
 		$this->cacheServices = [
 			'filesystem' => $this->filesystemService,
@@ -501,7 +508,10 @@ class CacheManager
 			$this->textWatermarkFactory->clearOldCache(0); // Clear all watermarks regardless of age
 		} catch (\Exception $e) {
 			// Log error but don't fail the entire cache clear operation
-			error_log('Failed to clear text watermark cache: ' . $e->getMessage());
+			$this->logger->warning('Failed to clear text watermark cache', [
+				'error'     => $e->getMessage(),
+				'exception' => get_class($e),
+			]);
 			$success = false;
 		}
 

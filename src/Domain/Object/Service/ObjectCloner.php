@@ -72,8 +72,6 @@ readonly class ObjectCloner
 	{
 		$currentDate = DateData::cleanDate();
 
-		error_log("ObjectCloner: Found {$settingType} fields: " . implode(', ', $fields));
-
 		foreach ($fields as $fieldName) {
 			if ($object->properties->has($fieldName) && $object->properties->get($fieldName) instanceof DateData) {
 				/** @var DateData $dateProperty */
