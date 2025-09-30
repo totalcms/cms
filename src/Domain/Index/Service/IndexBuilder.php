@@ -56,7 +56,7 @@ readonly class IndexBuilder
 						'collection' => $collection,
 						'object_id'  => $id,
 						'error'      => $e->getMessage(),
-						'exception'  => get_class($e),
+						'exception'  => $e::class,
 					]);
 				}
 			}

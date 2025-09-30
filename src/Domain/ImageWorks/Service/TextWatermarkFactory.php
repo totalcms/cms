@@ -400,7 +400,7 @@ readonly class TextWatermarkFactory
 				'font'      => $fontFamily,
 				'depot'     => $depotId,
 				'error'     => $e->getMessage(),
-				'exception' => get_class($e),
+				'exception' => $e::class,
 			]);
 		}
 
@@ -458,7 +458,7 @@ readonly class TextWatermarkFactory
 			// Log error but don't fail
 			$this->logger->warning('Error cleaning watermark cache', [
 				'error'     => $e->getMessage(),
-				'exception' => get_class($e),
+				'exception' => $e::class,
 			]);
 		}
 

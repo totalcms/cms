@@ -19,7 +19,7 @@ readonly class DeckCompatibilityChecker
 		private ?SchemaFetcher $schemaFetcher = null,
 		?LoggerFactory $loggerFactory = null,
 	) {
-		$this->logger = $loggerFactory
+		$this->logger = $loggerFactory instanceof LoggerFactory
 			? $loggerFactory->addFileHandler('totalcms.log')->createLogger('deckcompatibility')
 			: null;
 	}
@@ -221,7 +221,7 @@ readonly class DeckCompatibilityChecker
 			$this->logger?->warning('Exception getting incompatible properties for deck schema', [
 				'schema'    => $schemaName,
 				'error'     => $e->getMessage(),
-				'exception' => get_class($e),
+				'exception' => $e::class,
 			]);
 
 			return []; // Schema not found or invalid

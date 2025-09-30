@@ -56,19 +56,19 @@ readonly class ObjectCloner
 	private function resetOnCreateDateFields(ObjectData $object, string $collection): void
 	{
 		$onCreateFields = $this->getDateFieldsBySetting($collection, DateData::CREATION_DATE);
-		$this->resetDateFields($object, $onCreateFields, 'onCreate');
+		$this->resetDateFields($object, $onCreateFields);
 	}
 
 	private function resetOnUpdateDateFields(ObjectData $object, string $collection): void
 	{
 		$onUpdateFields = $this->getDateFieldsBySetting($collection, DateData::UPDATE_DATE);
-		$this->resetDateFields($object, $onUpdateFields, 'onUpdate');
+		$this->resetDateFields($object, $onUpdateFields);
 	}
 
 	/**
 	 * @param array<string> $fields
 	 */
-	private function resetDateFields(ObjectData $object, array $fields, string $settingType): void
+	private function resetDateFields(ObjectData $object, array $fields): void
 	{
 		$currentDate = DateData::cleanDate();
 

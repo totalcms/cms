@@ -510,7 +510,7 @@ class CacheManager
 			// Log error but don't fail the entire cache clear operation
 			$this->logger->warning('Failed to clear text watermark cache', [
 				'error'     => $e->getMessage(),
-				'exception' => get_class($e),
+				'exception' => $e::class,
 			]);
 			$success = false;
 		}

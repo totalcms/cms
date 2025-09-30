@@ -285,7 +285,7 @@ class ImageGenerator
 			$this->logger->warning('Failed to clean up temporary watermark file', [
 				'path'      => $tempPath,
 				'error'     => $e->getMessage(),
-				'exception' => get_class($e),
+				'exception' => $e::class,
 			]);
 		}
 
