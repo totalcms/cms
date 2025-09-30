@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Index\Service;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Data\IndexData;
@@ -10,16 +11,23 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
 
 readonly class IndexBuilder
 {
+	private LoggerInterface $logger;
+
 	public function __construct(
 		private IndexRepository $storage,
 		private ObjectFetcher $objectFetcher,
 		private SchemaFetcher $schemaFetcher,
 		private CollectionFetcher $collectionFetcher,
 		private JobQueuer $jobQueuer,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory
+			->addFileHandler('totalcms.log')
+			->createLogger('indexbuilder');
 	}
 
 	public function buildIndex(string $collection): IndexData
@@ -32,14 +40,25 @@ readonly class IndexBuilder
 			$indexProps = $schema->index;
 
 			foreach ($objectIds as $id) {
-				$object  = $this->objectFetcher->fetchObject($collection, $id);
-				// The reject method is used to filter out properties that are not in the index
-				// The map method is used to transform the properties into an array
-				$summary = $object->properties
-					->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
-					->map(fn ($property): mixed => $property->transform());
-				$summary->put('id', $id);
-				$index->objects->push($summary->toArray());
+				try {
+					$object  = $this->objectFetcher->fetchObject($collection, $id);
+					// The reject method is used to filter out properties that are not in the index
+					// The map method is used to transform the properties into an array
+					$summary = $object->properties
+						->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
+						->map(fn ($property): mixed => $property->transform());
+					$summary->put('id', $id);
+					$index->objects->push($summary->toArray());
+				} catch (\Throwable $e) {
+					// Skip objects that fail to load (e.g., type mismatches after schema changes)
+					// Log the error but continue building index with remaining valid objects
+					$this->logger->warning('Skipping object during index build due to error', [
+						'collection' => $collection,
+						'object_id'  => $id,
+						'error'      => $e->getMessage(),
+						'exception'  => get_class($e),
+					]);
+				}
 			}
 		}
 
