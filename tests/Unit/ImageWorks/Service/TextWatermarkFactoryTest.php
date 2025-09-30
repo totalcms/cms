@@ -7,6 +7,7 @@ namespace Tests\Unit\ImageWorks\Service;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 class TextWatermarkFactoryTest extends TestCase
@@ -14,15 +15,18 @@ class TextWatermarkFactoryTest extends TestCase
 	private TextWatermarkFactory $factory;
 	private \PHPUnit\Framework\MockObject\MockObject $mockFilesystem;
 	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
+	private \PHPUnit\Framework\MockObject\MockObject $mockLoggerFactory;
 
 	protected function setUp(): void
 	{
-		$this->mockFilesystem = $this->createMock(StorageAdapterInterface::class);
-		$this->mockConfig     = $this->createMock(Config::class);
+		$this->mockFilesystem    = $this->createMock(StorageAdapterInterface::class);
+		$this->mockConfig        = $this->createMock(Config::class);
+		$this->mockLoggerFactory = $this->createMock(LoggerFactory::class);
 
 		$this->factory = new TextWatermarkFactory(
 			$this->mockFilesystem,
-			$this->mockConfig
+			$this->mockConfig,
+			$this->mockLoggerFactory
 		);
 	}
 

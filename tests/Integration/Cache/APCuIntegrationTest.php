@@ -35,9 +35,11 @@ final class APCuIntegrationTest extends TestCase
 
 		// Create real TextWatermarkFactory instance for testing
 		$mockStorage          = $this->createMock(\TotalCMS\Domain\Storage\StorageAdapterInterface::class);
-		$textWatermarkFactory = new TextWatermarkFactory($mockStorage, $this->config);
+		$mockLoggerFactory    = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$textWatermarkFactory = new TextWatermarkFactory($mockStorage, $this->config, $mockLoggerFactory);
 
-		$this->cacheManager = new CacheManager(
+		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$this->cacheManager        = new CacheManager(
 			$filesystemService,
 			$opcacheService,
 			$redisService,
@@ -45,7 +47,8 @@ final class APCuIntegrationTest extends TestCase
 			$this->apcuService,
 			$textWatermarkFactory,
 			$devModeManager,
-			$this->config
+			$this->config,
+			$mockLoggerFactoryForCache
 		);
 
 		$this->cacheReporter = new CacheReporter(
