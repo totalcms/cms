@@ -127,6 +127,18 @@ You can sort the options in all form inputs that support options or datalist wit
 }
 ```
 
+## Select Field Clear Button
+
+Select fields include a clear button (×) that appears when a value is selected, allowing users to quickly reset the selection. This feature is enabled by default but can be disabled using the `clearValue` setting.
+
+```json
+{
+	"clearValue" : false
+}
+```
+
+When enabled (default), a circular clear button appears on the right side of the select field whenever a value is selected. Clicking it clears the selection and returns to the placeholder state.
+
 ## Property Options
 
 Get all value of a field and populate as select options or datalist
