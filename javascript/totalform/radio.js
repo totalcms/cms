@@ -72,6 +72,28 @@ export default class RadioField extends TotalField {
         return true;
     }
 
+	sortOptions() {
+		// Get the fieldset container that holds all radio options
+		const fieldset = this.container.querySelector('fieldset');
+		if (!fieldset) return;
+
+		// Get all radio div containers (each contains input + label)
+		const radioContainers = Array.from(fieldset.querySelectorAll('.radio'));
+
+		// Sort by label text alphabetically (case-insensitive)
+		radioContainers.sort((a, b) => {
+			const labelA = a.querySelector('.radio-label')?.textContent?.trim() || '';
+			const labelB = b.querySelector('.radio-label')?.textContent?.trim() || '';
+			return labelA.toLowerCase().localeCompare(labelB.toLowerCase());
+		});
+
+		// Remove all radio containers from fieldset
+		radioContainers.forEach(container => container.remove());
+
+		// Re-append them in sorted order
+		radioContainers.forEach(container => fieldset.appendChild(container));
+	}
+
     schema() {
         return {
             "type"  : "string",
