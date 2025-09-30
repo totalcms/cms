@@ -555,6 +555,15 @@ readonly class TotalFormFactory
 	 * @param array<string,mixed> $formOptions
 	 * @param array<string,mixed> $fieldOptions
 	 */
+	public function price(string $id, array $formOptions = [], array $fieldOptions = []): string
+	{
+		return $this->singleFieldFormBuilder($id, 'number', 'number', 'price', $formOptions, $fieldOptions);
+	}
+
+	/**
+	 * @param array<string,mixed> $formOptions
+	 * @param array<string,mixed> $fieldOptions
+	 */
 	public function range(string $id, array $formOptions = [], array $fieldOptions = []): string
 	{
 		return $this->singleFieldFormBuilder($id, 'number', 'number', 'range', $formOptions, $fieldOptions);
