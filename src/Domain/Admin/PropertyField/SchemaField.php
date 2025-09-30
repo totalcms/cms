@@ -57,6 +57,7 @@ class SchemaField extends PropertyField
 			'help'        => 'The data type of the property will store in the CMS',
 			'value'       => $this->type,
 			'options'     => SchemaData::PROPERTY_TYPES,
+			'settings'    => ['clearValue' => false],
 		]);
 
 		return $content . parent::topFieldInfo();
