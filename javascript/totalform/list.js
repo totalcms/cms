@@ -89,7 +89,7 @@ export default class ListField extends MultiSelectField {
 		// For list fields, we need to check if there are items when the field is required
 		if (this.input.required) {
 			const items = this.getValue();
-			if (!Array.isArray(items) || items.length === 0) {
+			if ((this.options.asString === true && items === '') || (this.options.asString === false && (!Array.isArray(items) || items.length === 0))) {
 				this.input.setCustomValidity("Please add at least one item to the list.");
 				this.input.reportValidity();
 				this.error(this.input.validationMessage);
