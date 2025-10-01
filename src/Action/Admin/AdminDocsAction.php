@@ -32,7 +32,7 @@ readonly class AdminDocsAction
 		// Prevent path traversal attacks by sanitizing the page parameter
 		// Allow forward slashes for subdirectories but prevent ../ attacks
 		$page = str_replace('\\', '/', $page); // Normalize path separators
-		$page = (string) preg_replace('#/+#', '/', $page); // Remove duplicate slashes
+		$page = (string)preg_replace('#/+#', '/', $page); // Remove duplicate slashes
 		$page = trim($page, '/'); // Remove leading/trailing slashes
 
 		// Prevent directory traversal
@@ -52,7 +52,7 @@ readonly class AdminDocsAction
 
 		// If neither file exists, default to index
 		if (!file_exists($htmlFile) && !file_exists($markdownFile)) {
-			$page = 'index';
+			$page         = 'index';
 			$htmlFile     = "{$docsDir}/{$page}.html";
 			$markdownFile = "{$docsDir}/{$page}.md";
 		}
