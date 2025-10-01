@@ -10,6 +10,7 @@
 	font-weight      : bold;
 	cursor           : pointer;
 	width            : max-content;
+	text-wrap        : nowrap;
 
 	&.full {
 		display : block;

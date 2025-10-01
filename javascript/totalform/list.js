@@ -72,32 +72,11 @@ export default class ListField extends MultiSelectField {
 	}
 
 	getValue() {
-		let value;
-		
-		// If Choices.js is initialized, get values from the actual DOM order
-		if (this.choices) {
-			const select = this.container.querySelector('select.choices__input');
-			if (select) {
-				// Read values from the select options in their current DOM order
-				// This ensures we get the order that reflects drag-and-drop changes
-				value = Array.from(select.options)
-					.filter(option => option.selected)
-					.map(option => option.value);
-			} else {
-				// Fall back to Choices.js getValue if select not found
-				const choicesValue = this.choices.getValue();
-				if (Array.isArray(choicesValue) && choicesValue.value !== undefined) {
-					value = [choicesValue.value];
-				} else if (Array.isArray(choicesValue)) {
-					value = choicesValue.map(item => typeof item === 'object' && item.value !== undefined ? item.value : item);
-				} else {
-					value = choicesValue ? [choicesValue] : [];
-				}
-			}
-		} else {
-			// Fall back to parent method if Choices.js not ready
-			value = super.getValue();
-		}
+		let value = Array.from(this.input.options).filter(option => option.selected).map(option => option.value);
+
+		// If Choices.js is initialized, get values from the actual DOM order of items
+		const list = this.container.querySelector('.choices__list');
+		if (list) value = Array.from(list.children).map(item => item.dataset.value);
 
 		if (this.options.asString) {
 			return value.join(',');
@@ -110,7 +89,7 @@ export default class ListField extends MultiSelectField {
 		// For list fields, we need to check if there are items when the field is required
 		if (this.input.required) {
 			const items = this.getValue();
-			if (!Array.isArray(items) || items.length === 0) {
+			if ((this.options.asString === true && items === '') || (this.options.asString === false && (!Array.isArray(items) || items.length === 0))) {
 				this.input.setCustomValidity("Please add at least one item to the list.");
 				this.input.reportValidity();
 				this.error(this.input.validationMessage);

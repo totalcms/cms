@@ -24,14 +24,32 @@ class ColorData extends PropertyData
 	public function __construct(string|array $color, public array $settings = [])
 	{
 		if (is_string($color)) {
+			// If it's an OKLCH string, preserve the color space by extracting OKLCH directly
+			if (str_starts_with($color, 'oklch')) {
+				$this->oklch = $this->oklchStringToArray($color);
+				$this->hex   = self::oklchToHex($this->oklch);
+
+				return;
+			}
+
+			// For other color formats, convert to hex then derive OKLCH
 			$this->hex   = $this->stringToHex($color);
 			$this->oklch = self::hexToOklch($this->hex);
 
 			return;
 		}
 
+		// If OKLCH values are provided, use them to generate hex (preserving color space)
+		if (isset($color['oklch']) && is_array($color['oklch'])) {
+			$this->oklch = $color['oklch'];
+			$this->hex   = self::oklchToHex($this->oklch);
+
+			return;
+		}
+
+		// Fallback to hex-first approach
 		$this->hex   = $color['hex'] ?? '#000000';
-		$this->oklch = $color['oklch'] ?? self::hexToOklch($this->hex);
+		$this->oklch = self::hexToOklch($this->hex);
 	}
 
 	private function rgbToHex(string $color): ?string
@@ -63,21 +81,49 @@ class ColorData extends PropertyData
 		return null;
 	}
 
-	private function oklchStringToHex(string $color): ?string
+	/**
+	 * Extract OKLCH values from string to array format, preserving color space.
+	 * Supports both modern (space-separated) and legacy (comma-separated) syntax.
+	 *
+	 * @return array<string,float>
+	 */
+	private function oklchStringToArray(string $color): array
 	{
-		$oklch = preg_replace('/[^0-9,]/', '', $color);
-		if (is_string($oklch)) {
-			$oklch = explode(',', $oklch);
-			$rgb   = ColorFactory::newRgb($oklch, ColorSpace::OkLch);
-			if (!$rgb instanceof Rgb) {
-				return '#000000'; // black
-			}
-			$coordinates = $rgb->coordinates();
-
-			return sprintf('#%02x%02x%02x', ...$coordinates);
+		// Remove oklch() wrapper and trim
+		$values = preg_replace('/oklch\s*\(\s*|\s*\)/', '', $color);
+		if (!is_string($values)) {
+			return ['l' => 0, 'c' => 0, 'h' => 0]; // fallback
 		}
 
-		return null;
+		// Handle both modern (space/percentage) and legacy (comma) syntax
+		// Modern: "54.319% 0.098 153.311"
+		// Legacy: "54.319, 0.098, 153.311"
+		$parts = str_contains($values, ',') ? explode(',', $values) : preg_split('/\s+/', trim($values));
+
+		if (!is_array($parts) || count($parts) < 3) {
+			return ['l' => 0, 'c' => 0, 'h' => 0]; // fallback
+		}
+
+		// Parse values, handling percentages
+		$lightness = (float)str_replace('%', '', trim($parts[0]));
+		$chroma    = (float)trim($parts[1]);
+		$hue       = (float)trim($parts[2]);
+
+		// Keep lightness in 0-100 range for external library compatibility
+		// Don't convert percentages to 0-1 range - the library expects 0-100
+
+		return [
+			'l' => $lightness,
+			'c' => $chroma,
+			'h' => $hue,
+		];
+	}
+
+	private function oklchStringToHex(string $color): string
+	{
+		$oklchArray = $this->oklchStringToArray($color);
+
+		return self::oklchToHex($oklchArray);
 	}
 
 	private function stringToHex(string $color): string
@@ -98,10 +144,7 @@ class ColorData extends PropertyData
 			}
 		}
 		if (str_starts_with($color, 'oklch')) {
-			$hex = $this->oklchStringToHex($color);
-			if ($hex !== null) {
-				return $hex;
-			}
+			return $this->oklchStringToHex($color);
 		}
 		throw new \InvalidArgumentException('Invalid color format');
 	}
@@ -182,6 +225,6 @@ class ColorData extends PropertyData
 
 	public function __toString(): string
 	{
-		return sprintf('oklch(%0.3f%% %0.3f %0.3f)', $this->oklch['l'], $this->oklch['c'], $this->oklch['h']);
+		return sprintf('oklch(%s%% %s %s)', $this->oklch['l'], $this->oklch['c'], $this->oklch['h']);
 	}
 }

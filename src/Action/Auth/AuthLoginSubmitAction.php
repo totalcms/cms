@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\LoginService;
+use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
@@ -22,6 +23,7 @@ readonly class AuthLoginSubmitAction
 		private PhpSession $session,
 		private LoginService $loginService,
 		private Config $config,
+		private PersistentLoginService $persistentLoginService,
 	) {
 	}
 
@@ -98,45 +100,14 @@ readonly class AuthLoginSubmitAction
 			$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
 			$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
 
-			// If persistent login is checked, set session cookie to persist longer
+			// If persistent login is checked, create persistent token
 			if ($persistentLogin) {
-				$this->setPersistentSession();
+				$this->persistentLoginService->createPersistentToken();
 			}
 
 			$flash->add('success', 'Login successful');
 		}
 
 		return $response->withStatus(302)->withHeader('Location', $url);
-	}
-
-	/**
-	 * Set session cookie to persist for a longer duration when "Keep me signed in" is checked
-	 * This sets the session cookie to expire in configured days instead of when browser closes.
-	 */
-	private function setPersistentSession(): void
-	{
-		$sessionName = $this->session->getName();
-		$sessionId   = $this->session->getId();
-
-		// Get configured persistent login days from config (default 30 days)
-		$persistentDays = $this->config->auth['persistentLoginDays'] ?? 30;
-		$expiry         = time() + ($persistentDays * 24 * 60 * 60);
-
-		// Get session cookie parameters
-		$cookieParams = session_get_cookie_params();
-
-		// Set the session cookie with extended expiry
-		setcookie(
-			$sessionName,
-			$sessionId,
-			[
-				'expires'  => $expiry,
-				'path'     => $cookieParams['path'],
-				'domain'   => $cookieParams['domain'],
-				'secure'   => $cookieParams['secure'],
-				'httponly' => $cookieParams['httponly'],
-				'samesite' => $cookieParams['samesite'],
-			]
-		);
 	}
 }

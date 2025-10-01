@@ -68,23 +68,28 @@ final class DevModeApiTest extends TestCase
 		$redisService         = new RedisService($config);
 		$memcachedService     = new MemcachedService($config);
 		$apcuService          = new APCuService($config);
+		$mockLoggerFactory    = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
 		$textWatermarkFactory = new TextWatermarkFactory(
 			new \TotalCMS\Domain\Storage\StorageFilesystemAdapter(
 				new \League\Flysystem\Filesystem(
 					new \League\Flysystem\Local\LocalFilesystemAdapter('/tmp')
 				)
 			),
-			$config
+			$config,
+			$mockLoggerFactory
 		);
 
-		$this->cacheManager = new CacheManager(
+		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$this->cacheManager        = new CacheManager(
 			$filesystemService,
 			$opcacheService,
 			$redisService,
 			$memcachedService,
 			$apcuService,
 			$textWatermarkFactory,
-			$this->devModeManager
+			$this->devModeManager,
+			$config,
+			$mockLoggerFactoryForCache
 		);
 
 		$this->jsonRenderer    = new JsonRenderer();

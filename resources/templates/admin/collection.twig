@@ -7,6 +7,7 @@
 
 
 {% macro collectionHeader(collection, page) %}
+	{% set collectionData = cms.collection(collection) %}
 	<header>
 		{% if page %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}">{{ collection }}</a> / <span>{{ page | lower }}</span></h1>

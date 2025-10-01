@@ -4,6 +4,7 @@ echo "Building bundle...\n";
 
 const BASEDIR = __DIR__ . '/../';
 $folders      = [
+	'config',
 	'resources/schemas',
 	'src/Middleware',
 	'src/Domain',

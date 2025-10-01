@@ -3,7 +3,16 @@
 		refresh : false,
 		hidden  : false,
 	}) }}
-	<p style="margin-top:3rem">The factory rules that are defined in the schema for this
+	<div style="margin-top:2rem">
+		<h3>Factory Generation Options</h3>
+		<ul>
+			<li><strong>Small quantities (1-50):</strong> Generated immediately</li>
+			<li><strong>Large quantities (50+):</strong> Use job queue to avoid timeouts</li>
+			<li><strong>Job Queue:</strong> Allows generating thousands of objects in the background</li>
+			<li><strong>Monitor Progress:</strong> Check the <a href="/admin/utils/jobqueue">Job Queue Status</a> page</li>
+		</ul>
+	</div>
+	<p style="margin-top:2rem">The factory rules that are defined in the schema for this
 	collection will be used to generate new objects.</p>
 	<p>Make sure the check out the <a href="docs/factory">Factory Docs</a> to see all of the possibilities.</p>
 </section>

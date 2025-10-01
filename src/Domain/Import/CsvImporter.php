@@ -47,7 +47,7 @@ class CsvImporter
 		$records = $csv->getRecords(); // Get the records
 
 		// Filter out empty headers
-		$headers = array_filter($headers, fn (string $header): bool => (trim($header) === ''));
+		$headers = array_filter($headers, fn (string $header): bool => (trim($header) !== ''));
 
 		$cleanedRecords = [];
 		foreach ($records as $record) {
@@ -76,6 +76,7 @@ class CsvImporter
 		}
 		$this->collection = $collection;
 
+		$this->logger->info(sprintf('Starting CSV import for collection: %s', $collection));
 		$importCount = 0;
 
 		// Take the uploaded file and update object with related data
@@ -83,6 +84,8 @@ class CsvImporter
 		$csv->setHeaderOffset(0);
 
 		$cleanedRecords = $this->cleanCsvData($csv);
+		$totalRecords   = count($cleanedRecords);
+		$this->logger->info(sprintf('Found %d records to import', $totalRecords));
 
 		foreach ($cleanedRecords as $offset => $record) {
 			try {
@@ -102,6 +105,8 @@ class CsvImporter
 
 		// Rebuild index
 		$this->indexBuilder->buildIndex($collection);
+
+		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $importCount, $totalRecords, $collection));
 
 		return $importCount;
 	}

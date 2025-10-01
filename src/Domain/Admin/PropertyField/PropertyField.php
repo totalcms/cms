@@ -34,6 +34,7 @@ class PropertyField
 			'value'       => $this->field,
 			// 'disabled'    => ($this->property === 'id'), // Disable field type for id property
 			'options'     => TotalForm::FIELDS_BY_TYPE,
+			'settings'    => ['clearValue' => false],
 		]);
 	}
 

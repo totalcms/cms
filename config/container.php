@@ -24,6 +24,8 @@ use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Auth\Service\LogoutService;
+use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
@@ -53,6 +55,8 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -92,8 +96,10 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
+use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
+use TotalCMS\Middleware\LicenseValidationMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -111,7 +117,30 @@ return [
 
 	SessionStartMiddleware::class => fn (ContainerInterface $container): SessionStartMiddleware => new SessionStartMiddleware($container->get(PhpSession::class)),
 
-	PhpSession::class => fn (ContainerInterface $container): PhpSession => new PhpSession($container->get(Config::class)->session),
+	PhpSession::class => function (ContainerInterface $container): PhpSession {
+		$sessionConfig = $container->get(Config::class)->session;
+
+		// Ensure session directory exists
+		if (isset($sessionConfig['save_path']) && !is_dir($sessionConfig['save_path'])) {
+			@mkdir($sessionConfig['save_path'], 0755, true);
+		}
+
+		// Force session settings to prevent hosting provider overrides
+		if (isset($sessionConfig['name'])) {
+			ini_set('session.name', $sessionConfig['name']);
+		}
+		if (isset($sessionConfig['save_path'])) {
+			ini_set('session.save_path', $sessionConfig['save_path']);
+		}
+		if (isset($sessionConfig['cookie_domain'])) {
+			ini_set('session.cookie_domain', $sessionConfig['cookie_domain']);
+		}
+		if (isset($sessionConfig['cookie_path'])) {
+			ini_set('session.cookie_path', $sessionConfig['cookie_path']);
+		}
+
+		return new PhpSession($sessionConfig);
+	},
 
 	ResponseFactoryInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getResponseFactory(),
 
@@ -252,6 +281,7 @@ return [
 		$container->get(ImageCacheService::class),
 		$container->get(GridRenderer::class),
 		$container->get(DevModeManager::class),
+		$container->get(LicenseStatus::class),
 	),
 
 	TotalCMSTwigPatterns::class => fn (ContainerInterface $container): TotalCMSTwigPatterns => new TotalCMSTwigPatterns(),
@@ -286,9 +316,24 @@ return [
 		$container->get(CSRFTokenManager::class)
 	),
 
+	AuthMiddleware::class => fn (ContainerInterface $container): AuthMiddleware => new AuthMiddleware(
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(PhpSession::class),
+		$container->get(Config::class),
+		$container->get(AccessManager::class),
+		$container->get(PersistentLoginService::class),
+	),
+
 	DevModeMiddleware::class => fn (ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(
 		$container->get(DevModeManager::class),
 		$container->get(OPcacheService::class)
+	),
+
+	LicenseValidationMiddleware::class => fn (ContainerInterface $container): LicenseValidationMiddleware => new LicenseValidationMiddleware(
+		$container->get(LicenseValidator::class),
+		$container->get(Config::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	TwigEngine::class => fn (ContainerInterface $container): TwigEngine => new TwigEngine(
@@ -324,7 +369,9 @@ return [
 		$container->get(MemcachedService::class),
 		$container->get(APCuService::class),
 		$container->get(TextWatermarkFactory::class),
-		$container->get(DevModeManager::class)
+		$container->get(DevModeManager::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class)
 	),
 
 	DevModeManager::class => fn (ContainerInterface $container): DevModeManager => new DevModeManager(),
@@ -337,7 +384,8 @@ return [
 	),
 
 	ImageCacheService::class => fn (ContainerInterface $container): ImageCacheService => new ImageCacheService(
-		$container->get(Config::class)
+		$container->get(Config::class),
+		$container->get(CacheManager::class)
 	),
 
 	IndexSearcher::class => fn (ContainerInterface $container): IndexSearcher => new IndexSearcher($container->get(IndexReader::class)),
@@ -346,6 +394,29 @@ return [
 		$container->get(IndexSearcher::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(Config::class),
+	),
+
+	PersistentLoginService::class => fn (ContainerInterface $container): PersistentLoginService => new PersistentLoginService(
+		$container->get(PhpSession::class),
+		$container->get(Config::class),
+		$container->get(UserValidationService::class),
+	),
+
+	LogoutService::class => fn (ContainerInterface $container): LogoutService => new LogoutService(
+		$container->get(PhpSession::class),
+		$container->get(LoggerFactory::class),
+		$container->get(PersistentLoginService::class),
+	),
+
+	// License Services
+	LicenseValidator::class => fn (ContainerInterface $container): LicenseValidator => new LicenseValidator(
+		$container->get(Config::class),
+		$container->get(CacheManager::class),
+	),
+
+	LicenseStatus::class => fn (ContainerInterface $container): LicenseStatus => new LicenseStatus(
+		$container->get(LicenseValidator::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	AccessManager::class => fn (ContainerInterface $container): AccessManager => new AccessManager(
@@ -399,7 +470,8 @@ return [
 
 	TextWatermarkFactory::class => fn (ContainerInterface $container): TextWatermarkFactory => new TextWatermarkFactory(
 		$container->get(StorageAdapterInterface::class),
-		$container->get(Config::class)
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class)
 	),
 
 	GlideFactory::class => fn (ContainerInterface $container): GlideFactory => new GlideFactory(

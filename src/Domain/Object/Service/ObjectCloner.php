@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -14,6 +15,7 @@ readonly class ObjectCloner
 		private ObjectRepository $storage,
 		private IndexBuilder $indexBuilder,
 		private SchemaFetcher $schemaFetcher,
+		private CollectionSaver $collectionSaver,
 	) {
 	}
 
@@ -45,29 +47,30 @@ readonly class ObjectCloner
 		// Pass the cloned object for immediate index append when queueRebuildOnSave is enabled
 		$this->indexBuilder->smartBuildIndex($to['collection'], $object);
 
+		// Increment the collection count since we've added a new object
+		$this->collectionSaver->incrementCount($to['collection']);
+
 		return $object;
 	}
 
 	private function resetOnCreateDateFields(ObjectData $object, string $collection): void
 	{
 		$onCreateFields = $this->getDateFieldsBySetting($collection, DateData::CREATION_DATE);
-		$this->resetDateFields($object, $onCreateFields, 'onCreate');
+		$this->resetDateFields($object, $onCreateFields);
 	}
 
 	private function resetOnUpdateDateFields(ObjectData $object, string $collection): void
 	{
 		$onUpdateFields = $this->getDateFieldsBySetting($collection, DateData::UPDATE_DATE);
-		$this->resetDateFields($object, $onUpdateFields, 'onUpdate');
+		$this->resetDateFields($object, $onUpdateFields);
 	}
 
 	/**
 	 * @param array<string> $fields
 	 */
-	private function resetDateFields(ObjectData $object, array $fields, string $settingType): void
+	private function resetDateFields(ObjectData $object, array $fields): void
 	{
 		$currentDate = DateData::cleanDate();
-
-		error_log("ObjectCloner: Found {$settingType} fields: " . implode(', ', $fields));
 
 		foreach ($fields as $fieldName) {
 			if ($object->properties->has($fieldName) && $object->properties->get($fieldName) instanceof DateData) {

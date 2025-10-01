@@ -2,7 +2,9 @@
 
 namespace TotalCMS\Domain\ImageWorks\Service;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -14,11 +16,16 @@ readonly class TextWatermarkFactory
 {
 	public const WATERMARK_DIR = '.watermarks';
 	private const FONT_PATH    = __DIR__ . '/../../../../resources/fonts/RobotoRegular.ttf';
+	private LoggerInterface $logger;
 
 	public function __construct(
 		private StorageAdapterInterface $filesystem,
 		private Config $config,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory
+			->addFileHandler('totalcms.log')
+			->createLogger('textwatermark');
 	}
 
 	/**
@@ -389,7 +396,12 @@ readonly class TextWatermarkFactory
 			}
 		} catch (\Exception $e) {
 			// Log error but don't fail - fall back to default font
-			error_log("Failed to load font '{$fontFamily}' from depot '{$depotId}': " . $e->getMessage());
+			$this->logger->warning('Failed to load font from depot, falling back to default', [
+				'font'      => $fontFamily,
+				'depot'     => $depotId,
+				'error'     => $e->getMessage(),
+				'exception' => $e::class,
+			]);
 		}
 
 		return null;
@@ -444,7 +456,10 @@ readonly class TextWatermarkFactory
 			}
 		} catch (\Exception $e) {
 			// Log error but don't fail
-			error_log('Error cleaning watermark cache: ' . $e->getMessage());
+			$this->logger->warning('Error cleaning watermark cache', [
+				'error'     => $e->getMessage(),
+				'exception' => $e::class,
+			]);
 		}
 
 		return $cleaned;

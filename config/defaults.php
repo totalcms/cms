@@ -45,7 +45,10 @@ $settings['env']    = 'prod';
 $settings['locale'] = 'en_US';
 
 $settings['domain']   = $_SERVER['HTTP_HOST'] ?? 'unknown';
-$settings['url']      = 'https://' . $settings['domain'];
+$settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
+					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+$settings['url']      = ($settings['is_https'] ? 'https://' : 'http://') . $settings['domain'];
 $settings['api']      = $settings['url'] . '/api';
 $settings['notfound'] = '/404';
 
@@ -114,10 +117,13 @@ $settings['logger'] = [
 
 // Session
 $settings['session'] = [
-	'name'                   => null, // Setting this to null for conflict to other stacks. Otherwise use 'totalcms',
+	// 'name'                   => 'tcms_' . md5($settings['domain']), // Domain-specific session name for isolation
+	'name'                   => null, // Use PHP default session name
+	'cookie_domain'          => '', // Empty domain for maximum subdomain isolation
+	'cookie_path'            => '/', // Explicit path for cookie isolation
 	'cookie_samesite'        => 'Lax',
 	'cache_expire'           => 0,
-	'cookie_secure'          => true,
+	'cookie_secure'          => $settings['is_https'], // Only secure cookies over HTTPS
 	'cookie_httponly'        => true,
 	'cookie_lifetime'        => 0,
 	'gc_maxlifetime'         => 7200,
@@ -125,6 +131,7 @@ $settings['session'] = [
 	'use_only_cookies'       => true,
 	// 'sid_length'             => 64,
 	// 'sid_bits_per_character' => 6,
+	// 'save_path'              => $settings['tmpdir'] . '/sessions/' . md5($settings['domain']), // Domain-specific session path
 	'conflictStrategy'       => 'preserve', // How to handle existing sessions: 'preserve', 'replace'
 ];
 

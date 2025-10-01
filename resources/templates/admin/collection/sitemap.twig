@@ -22,12 +22,32 @@
 		method="POST"
 		data-disabled>
 		<div>
-			<label for="date">Indexed Property that contains Date for Sitemap</label>
+			<label for="date">Date Property for Sitemap (must be indexed)</label>
 			<select name="date">
 				<option value="">Select a Property</option>
 				{% for property in schema.index %}
 					<option value="{{ property }}"
 						{% if postData.date == property %}selected{% endif %}>
+						{{ property }}
+					</option>
+				{% endfor %}
+			</select>
+			<label for="filter">Filter Property for Sitemap (must be indexed)</label>
+			<select name="filter">
+				<option value="">Select a Property</option>
+				{% for property in schema.index %}
+					<option value="{{ property }}"
+						{% if postData.filter == property %}selected{% endif %}>
+						{{ property }}
+					</option>
+				{% endfor %}
+			</select>
+			<label for="exclude">Exclude Property for Sitemap (must be indexed)</label>
+			<select name="exclude">
+				<option value="">Select a Property</option>
+				{% for property in schema.index %}
+					<option value="{{ property }}"
+						{% if postData.exclude == property %}selected{% endif %}>
 						{{ property }}
 					</option>
 				{% endfor %}

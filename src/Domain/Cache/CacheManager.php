@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Cache;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInterface;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
@@ -10,6 +11,8 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 /**
  * Strategic cache manager that routes different data types to optimal cache services.
@@ -45,6 +48,8 @@ class CacheManager
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer
 
 	private string $versionFile = '.cache_version';
+	private readonly string $domainPrefix;
+	private readonly LoggerInterface $logger;
 
 	/** @var array<string,CacheInterface> Available cache services */
 	private array $cacheServices = [];
@@ -57,7 +62,12 @@ class CacheManager
 		private readonly APCuService $apcuService,
 		private readonly TextWatermarkFactory $textWatermarkFactory,
 		private readonly DevModeManager $devModeManager,
+		private readonly Config $config,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory
+			->addFileHandler('totalcms.log')
+			->createLogger('cachemanager');
 		// Initialize cache services and version
 		$this->cacheServices = [
 			'filesystem' => $this->filesystemService,
@@ -67,6 +77,17 @@ class CacheManager
 			'apcu'       => $this->apcuService,
 		];
 		$this->versionFile  = $this->filesystemService->getCachDir() . '/' . $this->versionFile;
+
+		// Create domain-specific prefix to prevent cache collisions between installations
+		$this->domainPrefix = md5($this->config->domain);
+	}
+
+	/**
+	 * Create a domain-specific cache key to prevent collisions between installations.
+	 */
+	private function createDomainKey(string $key): string
+	{
+		return $this->domainPrefix . ':' . $key;
 	}
 
 	/**
@@ -77,7 +98,7 @@ class CacheManager
 	 */
 	public function storeCollectionIndex(string $collectionName, array $index, int $ttl = self::TTL_INDEX_DATA): bool
 	{
-		$key = self::PREFIX_COLLECTION . ":{$collectionName}";
+		$key = $this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}");
 
 		return $this->storeData($key, $index, $ttl);
 	}
@@ -94,7 +115,7 @@ class CacheManager
 	 */
 	public function getCollectionIndex(string $collectionName): ?array
 	{
-		return $this->getData(self::PREFIX_COLLECTION . ":{$collectionName}");
+		return $this->getData($this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
 	}
 
 	/**
@@ -105,7 +126,7 @@ class CacheManager
 	 */
 	public function storeApiResponse(string $endpoint, array $params, mixed $response, int $ttl = self::TTL_API_RESPONSE): bool
 	{
-		$key = self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params));
+		$key = $this->createDomainKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
 
 		return $this->storeData($key, $response, $ttl);
 	}
@@ -117,7 +138,7 @@ class CacheManager
 	 */
 	public function getApiResponse(string $endpoint, array $params): mixed
 	{
-		$key = self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params));
+		$key = $this->createDomainKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
 
 		return $this->getData($key);
 	}
@@ -125,7 +146,7 @@ class CacheManager
 	/** Store computed/expensive operations (can be large, longer TTL). */
 	public function storeComputedData(string $key, mixed $data, int $ttl = self::TTL_CUSTOM_SCHEMA): bool
 	{
-		$cacheKey = self::PREFIX_COMPUTED . ":{$key}";
+		$cacheKey = $this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}");
 
 		return $this->storeData($cacheKey, $data, $ttl);
 	}
@@ -227,7 +248,7 @@ class CacheManager
 	 */
 	public function getComputedData(string $key): mixed
 	{
-		return $this->getData(self::PREFIX_COMPUTED . ":{$key}");
+		return $this->getData($this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}"));
 	}
 
 	/**
@@ -235,7 +256,7 @@ class CacheManager
 	 */
 	public function clearComputedData(string $key): bool
 	{
-		return $this->clearData(self::PREFIX_COMPUTED . ":{$key}");
+		return $this->clearData($this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}"));
 	}
 
 	/**
@@ -251,7 +272,7 @@ class CacheManager
 	 */
 	public function clearCollectionIndex(string $collectionName): bool
 	{
-		return $this->clearData(self::PREFIX_COLLECTION . ":{$collectionName}");
+		return $this->clearData($this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
 	}
 
 	/**
@@ -262,7 +283,7 @@ class CacheManager
 	 */
 	public function storeSessionData(string $sessionId, array $data, int $ttl = self::TTL_SESSION_DATA): bool
 	{
-		$key = self::PREFIX_SESSION . ":{$sessionId}";
+		$key = $this->createDomainKey(self::PREFIX_SESSION . ":{$sessionId}");
 
 		return $this->storeData($key, $data, $ttl);
 	}
@@ -274,7 +295,7 @@ class CacheManager
 	 */
 	public function getSessionData(string $sessionId): ?array
 	{
-		return $this->getData(self::PREFIX_SESSION . ":{$sessionId}");
+		return $this->getData($this->createDomainKey(self::PREFIX_SESSION . ":{$sessionId}"));
 	}
 
 	/**
@@ -289,7 +310,7 @@ class CacheManager
 		}
 
 		if ($this->filesystemService->isAvailable()) {
-			$key = self::PREFIX_TEMPLATE . ":{$templateName}";
+			$key = $this->createDomainKey(self::PREFIX_TEMPLATE . ":{$templateName}");
 
 			return $this->filesystemService->set($key, $compiledCode, 0); // No TTL for templates
 		}
@@ -312,7 +333,7 @@ class CacheManager
 		}
 
 		$success = true;
-		$pattern = $type . ':*';
+		$pattern = $this->domainPrefix . ':' . $type . ':*';
 
 		// Clear from APCu
 		if ($this->apcuService->isAvailable()) {
@@ -367,6 +388,107 @@ class CacheManager
 	}
 
 	/**
+	 * Store license data - bypasses dev mode since license validation should always be cached.
+	 * License data doesn't change frequently and hitting license server on every request is bad for performance.
+	 */
+	public function storeLicenseData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
+	{
+		// Always cache license data regardless of dev mode - performance is critical
+		// Use domain-specific key to prevent license data sharing between sites
+		$domainKey = $this->createDomainKey($key);
+
+		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
+		if ($this->apcuService->isAvailable()) {
+			return $this->apcuService->set($domainKey, $data, $ttl);
+		}
+
+		if ($this->redisService->isAvailable()) {
+			return $this->redisService->set($domainKey, $data, $ttl);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			return $this->memcachedService->set($domainKey, $data, $ttl);
+		}
+
+		// Fallback to filesystem cache only if no memory caches available
+		if ($this->filesystemService->isAvailable()) {
+			return $this->filesystemService->set($domainKey, $data, $ttl);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get license data - bypasses dev mode since license validation should always be cached.
+	 */
+	public function getLicenseData(string $key): mixed
+	{
+		// Use domain-specific key to prevent license data sharing between sites
+		$domainKey = $this->createDomainKey($key);
+
+		// Check memory caches first (fastest)
+		if ($this->apcuService->isAvailable()) {
+			$result = $this->apcuService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		if ($this->redisService->isAvailable()) {
+			$result = $this->redisService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$result = $this->memcachedService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		// Check filesystem cache
+		if ($this->filesystemService->isAvailable()) {
+			$result = $this->filesystemService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Clear license data - bypasses dev mode.
+	 */
+	public function clearLicenseData(string $key): bool
+	{
+		// Use domain-specific key to prevent license data sharing between sites
+		$domainKey = $this->createDomainKey($key);
+		$success   = true;
+
+		// Delete from all available cache backends
+		if ($this->apcuService->isAvailable()) {
+			$success &= $this->apcuService->delete($domainKey);
+		}
+
+		if ($this->redisService->isAvailable()) {
+			$success &= $this->redisService->delete($domainKey);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$success &= $this->memcachedService->delete($domainKey);
+		}
+
+		if ($this->filesystemService->isAvailable()) {
+			$success &= $this->filesystemService->delete($domainKey);
+		}
+
+		return (bool)$success;
+	}
+
+	/**
 	 * Clear all caches including OPcache and text watermark cache.
 	 */
 	public function clearAllCaches(): bool
@@ -386,7 +508,10 @@ class CacheManager
 			$this->textWatermarkFactory->clearOldCache(0); // Clear all watermarks regardless of age
 		} catch (\Exception $e) {
 			// Log error but don't fail the entire cache clear operation
-			error_log('Failed to clear text watermark cache: ' . $e->getMessage());
+			$this->logger->warning('Failed to clear text watermark cache', [
+				'error'     => $e->getMessage(),
+				'exception' => $e::class,
+			]);
 			$success = false;
 		}
 

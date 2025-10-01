@@ -4,12 +4,14 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use League\Glide\Server;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 class ImageGenerator
@@ -19,13 +21,18 @@ class ImageGenerator
 	private string $property;
 	/** @var array<string,mixed> */
 	private array $params;
+	private readonly LoggerInterface $logger;
 
 	public function __construct(
 		private readonly StorageAdapterInterface $filesystem,
 		private readonly PropertyFetcher $propertyFetcher,
 		private readonly GlideFactory $glideFactory,
 		private readonly WatermarkFactory $watermarkFactory,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory
+			->addFileHandler('totalcms.log')
+			->createLogger('imagegenerator');
 	}
 
 	/** @param array<string,mixed> $params */
@@ -275,7 +282,11 @@ class ImageGenerator
 			$this->filesystem->delete($tempPath);
 		} catch (\Exception $e) {
 			// Log but don't fail if cleanup fails
-			error_log('Failed to clean up temporary watermark file: ' . $e->getMessage());
+			$this->logger->warning('Failed to clean up temporary watermark file', [
+				'path'      => $tempPath,
+				'error'     => $e->getMessage(),
+				'exception' => $e::class,
+			]);
 		}
 
 		return $finalResponse;

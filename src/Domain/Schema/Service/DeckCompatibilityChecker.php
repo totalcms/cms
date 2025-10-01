@@ -2,6 +2,9 @@
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use Psr\Log\LoggerInterface;
+use TotalCMS\Factory\LoggerFactory;
+
 /**
  * Service to check if a schema is compatible with deck usage.
  *
@@ -10,9 +13,15 @@ namespace TotalCMS\Domain\Schema\Service;
  */
 readonly class DeckCompatibilityChecker
 {
+	private ?LoggerInterface $logger;
+
 	public function __construct(
 		private ?SchemaFetcher $schemaFetcher = null,
+		?LoggerFactory $loggerFactory = null,
 	) {
+		$this->logger = $loggerFactory instanceof LoggerFactory
+			? $loggerFactory->addFileHandler('totalcms.log')->createLogger('deckcompatibility')
+			: null;
 	}
 	/**
 	 * Property types that are NOT compatible with deck usage.
@@ -209,7 +218,11 @@ readonly class DeckCompatibilityChecker
 
 			return $this->getIncompatibleProperties($schema->toArray());
 		} catch (\Exception $e) {
-			error_log("DeckCompatibilityChecker: Exception getting incompatible properties for '$schemaName': " . $e->getMessage());
+			$this->logger?->warning('Exception getting incompatible properties for deck schema', [
+				'schema'    => $schemaName,
+				'error'     => $e->getMessage(),
+				'exception' => $e::class,
+			]);
 
 			return []; // Schema not found or invalid
 		}

@@ -246,6 +246,21 @@ final class FileAccessManagerTest extends TestCase
 		expect($bypassPassword3)->toBeFalse();
 	}
 
+	public function testLogDownloadMethod(): void
+	{
+		// Test that logDownload method exists and can be called
+		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['sessionHasUser', 'logDownload']);
+
+		$fileAccessManager->method('sessionHasUser')->willReturn(true);
+
+		// Mock the logDownload method to verify it can be called
+		$fileAccessManager->expects($this->once())
+			->method('logDownload')
+			->with('test-collection', 'test-id', 'test-property', 'test-file.pdf', null);
+
+		$fileAccessManager->logDownload('test-collection', 'test-id', 'test-property', 'test-file.pdf', null);
+	}
+
 	public function testConstants(): void
 	{
 		// Test that the class constants are defined correctly

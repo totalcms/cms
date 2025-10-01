@@ -19,6 +19,7 @@ readonly class CollectionTable
 	private SchemaData $schemaData;
 	/** @var array<array<string,mixed>> */
 	private array $objects;
+	private int $objectCount;
 
 	public function __construct(
 		private Config $config,
@@ -36,9 +37,10 @@ readonly class CollectionTable
 		}
 		$this->collectionData = $collectionData;
 
-		$this->schemaData = $this->schemaFetcher->fetchSchema($collectionData->schema);
-		$index            = $this->collectionReader->fetchIndex($this->collection);
-		$this->objects    = $index->objects->toArray();
+		$this->schemaData  = $this->schemaFetcher->fetchSchema($collectionData->schema);
+		$index             = $this->collectionReader->fetchIndex($this->collection);
+		$this->objects     = $index->objects->toArray();
+		$this->objectCount = count($this->objects);
 	}
 
 	private function getPropertyType(string $property): string
@@ -332,7 +334,7 @@ readonly class CollectionTable
 			'class'            => 'admin-table',
 			'data-search'      => 'true',
 			'data-sort'        => 'true',
-			'data-placeholder' => 'Filter ' . $labelPlural,
+			'data-placeholder' => sprintf('Filter %s %s', number_format($this->objectCount), $labelPlural),
 		];
 
 		$pagination = $this->config->dashboard['pagination'] ?? null;

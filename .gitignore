@@ -1,5 +1,6 @@
 *.log
 .idea
+.claude
 composer.phar
 composer.lock
 .DS_STORE

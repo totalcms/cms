@@ -11,16 +11,65 @@
 	</div>
 	{% endif %}
 
+	<h2>License Information</h2>
+	<table class="admin-table">
+		<thead>
+			<tr><th>License Item</th><th>Value</th></tr>
+		</thead>
+		{% for key, value in cms.checker.serverInfo %}
+		{% if key starts with 'License' or key starts with 'Trial' or key starts with 'Updates' or key starts with 'Licensed' or key starts with 'DNS' or key starts with 'Has JWT' or key starts with 'Allowed' or key starts with 'Testing' %}
+		<tr>
+			<td>{{ key }}</td>
+			<td>
+				{% if key == 'License Status' %}
+					{% if value == 'Valid' %}
+						<span class="success">{{ value }}</span>
+					{% elseif value == 'Invalid' %}
+						<span class="error">❌ {{ value }}</span>
+					{% else %}
+						<span class="warning">⚠️ {{ value }}</span>
+					{% endif %}
+				{% elseif key == 'Trial Active' and value == 'Yes' %}
+					<span class="warning">⚠️ {{ value }}</span>
+				{% elseif key == 'Updates Valid' %}
+					{% if value == 'Yes' %}
+						<span class="success">{{ value }}</span>
+					{% else %}
+						<span class="warning">⚠️ {{ value }}</span>
+					{% endif %}
+				{% elseif key == 'DNS Verified' %}
+					{% if value == 'Yes' %}
+						<span class="success">{{ value }}</span>
+					{% else %}
+						<span class="warning">⚠️ {{ value }}</span>
+					{% endif %}
+				{% elseif key == 'License Cache Valid' %}
+					{% if value == 'Yes' %}
+						<span class="success">{{ value }}</span>
+					{% else %}
+						<span class="warning">⚠️ {{ value }}</span>
+					{% endif %}
+				{% else %}
+					{{ value }}
+				{% endif %}
+			</td>
+		</tr>
+		{% endif %}
+		{% endfor %}
+	</table>
+
 	<h2>Server Info</h2>
 	<table class="admin-table">
 		<thead>
 			<tr><th>Info</th><th>Value</th></tr>
 		</thead>
 		{% for key, value in cms.checker.serverInfo %}
+		{% if not (key starts with 'License' or key starts with 'Trial' or key starts with 'Updates' or key starts with 'Licensed' or key starts with 'DNS' or key starts with 'Has JWT' or key starts with 'Allowed' or key starts with 'Testing') %}
 		<tr>
 			<td>{{ key }}</td>
 			<td>{{ value }}</td>
 		</tr>
+		{% endif %}
 		{% endfor %}
 	</table>
 

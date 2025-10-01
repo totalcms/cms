@@ -27,11 +27,13 @@ class JobData
 	public const TYPE_UPDATE  = 'update';
 	public const TYPE_EXPORT  = 'export';
 	public const TYPE_REBUILD = 'rebuild';
+	public const TYPE_FACTORY = 'factory';
 	public const TYPE_LIST    = [
 		self::TYPE_IMPORT,
 		self::TYPE_EXPORT,
 		self::TYPE_REBUILD,
 		self::TYPE_UPDATE,
+		self::TYPE_FACTORY,
 	];
 
 	/** @return array<string,string|int> */

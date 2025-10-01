@@ -30,8 +30,20 @@ readonly class AdminDocsAction
 		$page = $args['page'] ?? 'index';
 
 		// Prevent path traversal attacks by sanitizing the page parameter
-		$page = basename($page); // Remove any directory components
-		$page = preg_replace('/[^a-zA-Z0-9_-]/', '', $page); // Allow only safe characters
+		// Allow forward slashes for subdirectories but prevent ../ attacks
+		$page = str_replace('\\', '/', $page); // Normalize path separators
+		$page = (string)preg_replace('#/+#', '/', $page); // Remove duplicate slashes
+		$page = trim($page, '/'); // Remove leading/trailing slashes
+
+		// Prevent directory traversal
+		if (str_contains($page, '..')) {
+			$page = 'index';
+		}
+
+		// Allow alphanumeric, hyphens, underscores, and forward slashes
+		if ($page !== '' && !preg_match('#^[a-zA-Z0-9_/-]+$#', $page)) {
+			$page = 'index';
+		}
 
 		// Validate that the requested documentation page exists
 		$docsDir      = __DIR__ . '/../../../resources/docs';
@@ -40,13 +52,12 @@ readonly class AdminDocsAction
 
 		// If neither file exists, default to index
 		if (!file_exists($htmlFile) && !file_exists($markdownFile)) {
-			$page = 'index';
+			$page         = 'index';
+			$htmlFile     = "{$docsDir}/{$page}.html";
+			$markdownFile = "{$docsDir}/{$page}.md";
 		}
 
 		$data = [];
-
-		$htmlFile     = __DIR__ . "/../../../resources/docs/{$page}.html";
-		$markdownFile = __DIR__ . "/../../../resources/docs/{$page}.md";
 
 		if (file_exists($markdownFile)) {
 			$contents = file_get_contents($markdownFile);
@@ -61,7 +72,12 @@ readonly class AdminDocsAction
 			$data            = $document->getData();
 			$data['content'] = $parsedown->text($document->getContent());
 		} elseif (file_exists($htmlFile)) {
-			$data['content'] = file_get_contents($htmlFile);
+			$htmlContents = file_get_contents($htmlFile);
+			if ($htmlContents !== false) {
+				$data['content'] = $htmlContents;
+			} else {
+				$data['content'] = 'Unable to read page';
+			}
 		} else {
 			$data['content'] = 'Page not found';
 		}

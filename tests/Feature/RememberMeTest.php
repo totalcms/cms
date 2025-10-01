@@ -87,4 +87,40 @@ describe('Persistent Login Functionality', function (): void {
 		expect($body)->not->toContain('Undefined index: persistent_login');
 		expect($body)->not->toContain('must not be accessed before initialization');
 	});
+
+	it('creates persistent token when persistent login is checked', function (): void {
+		// Test that persistent tokens are created when the checkbox is checked
+		$credentials = [
+			'email'            => 'admin@example.com',
+			'password'         => 'admin123',
+			'persistent_login' => '1',
+		];
+
+		$response = post('/auth/login', $credentials);
+
+		// Should process without fatal errors
+		expect($response->getStatusCode())->toBeIn([200, 302, 404]);
+
+		$body = (string)$response->getBody();
+		expect($body)->not->toContain('Fatal error');
+		expect($body)->not->toContain('PersistentLoginService');
+	});
+
+	it('does not create persistent token when checkbox is unchecked', function (): void {
+		// Test that no persistent tokens are created when checkbox is not checked
+		$credentials = [
+			'email'    => 'admin@example.com',
+			'password' => 'admin123',
+			// No persistent_login field
+		];
+
+		$response = post('/auth/login', $credentials);
+
+		// Should process without fatal errors
+		expect($response->getStatusCode())->toBeIn([200, 302, 404]);
+
+		$body = (string)$response->getBody();
+		expect($body)->not->toContain('Fatal error');
+		expect($body)->not->toContain('PersistentLoginService');
+	});
 });

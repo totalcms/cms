@@ -11,9 +11,10 @@ body {
 }
 
 .dash-sidebar {
-	display       : grid;
-	align-content : space-between;
-	border-right  : 1px solid oklch(var(--totalform-lightgray));
+	display            : grid;
+	align-content      : space-between;
+	border-right       : 1px solid oklch(var(--totalform-lightgray));
+	grid-template-rows : auto 1fr auto;
 
 	.menu {
 		display         : grid;
@@ -298,5 +299,90 @@ pre {
 
 	code {
 		font-family : 'Fira Code', 'Source Code Pro', monospace;
+	}
+}
+
+.performance-warning {
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-warning));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
+	color         : oklch(var(--totalform-darkgray));
+	display       : grid;
+	gap           : 0.5rem;
+	align-self    : start;
+
+	h4 {
+		margin-top : 0;
+		color      : oklch(var(--totalform-warning));
+	}
+}
+
+// License Status Sidebar Icon
+@keyframes license-attention {
+	0% {
+		transform : translate(-50%, -50%) scale(1.5);
+	}
+	100% {
+		transform : translate(-50%, -50%) scale(1);
+	}
+}
+
+.license-status {
+	display         : block;
+	width           : 3rem;
+	height          : 3rem;
+	margin          : 0 auto;
+	border-radius   : var(--totalform-radius);
+	transition      : all 0.2s ease;
+	align-self      : end;
+	text-decoration : none;
+	text-indent     : -9999px;
+	position        : relative;
+
+	&::before {
+		content          : " ";
+		display          : block;
+		width            : 2rem;
+		height           : 2rem;
+		position         : absolute;
+		top              : 50%;
+		left             : 50%;
+		transform        : translate(-50%, -50%);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+	}
+
+	&::after {
+		content          : " ";
+		display          : block;
+		inset            : 0;
+		border-radius    : inherit;
+		position         : absolute;
+		background-color : oklch(var(--totalform-icon-bg));
+		opacity          : 0;
+		transition       : opacity 200ms ease-in-out;
+		z-index          : -1;
+	}
+	&:hover::after {
+		opacity : 1;
+	}
+
+	&.license-info::before {
+		mask-image      : var(--icon-flask);
+		background-color : oklch(var(--totalform-info));
+	}
+
+	&.license-warning::before {
+		mask-image      : var(--icon-warn-fill);
+		background-color : oklch(var(--totalform-warning));
+		animation       : license-attention 0.6s ease-out 2s;
+	}
+
+	&.license-error::before {
+		mask-image      : var(--icon-error-fill);
+		background-color : oklch(var(--totalform-error));
+		animation       : license-attention 0.6s ease-out 2s;
 	}
 }

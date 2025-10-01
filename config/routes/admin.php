@@ -25,7 +25,7 @@ return function (App $app): void {
 		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema');
 		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate');
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection');
-		$group->get('/docs[/{page}]', AdminDocsAction::class)->setName('admin-docs');
+		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs');
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post');
 
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');

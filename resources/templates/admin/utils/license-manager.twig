@@ -1,0 +1,22 @@
+{% do cms.license.forceRefresh() %}
+
+{% if cms.env == "dev" %}
+	{% set licenseUrl = "https://license.totalcms.test/store/" ~ cms.domain %}
+{% else %}
+	{% set licenseUrl = "https://license.totalcms.co/store/" ~ cms.domain %}
+{% endif %}
+
+<style>
+.dash-main-content {
+	position: relative !important;
+}
+</style>
+
+<iframe src="{{ licenseUrl }}" 
+		width="100%" 
+		height="100%" 
+		frameborder="0"
+		allowtransparency="true"
+		style="border: none; background: transparent !important; background-color: transparent !important; display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
+	<p>Your browser does not support iframes. Please visit <a href="{{ licenseUrl }}" target="_blank">{{ licenseUrl }}</a> directly.</p>
+</iframe>
