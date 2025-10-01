@@ -2,6 +2,84 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.40] - 2025-09-30
+
+### Enhanced
+
+- **License System**: Streamlined license validation and display
+  - Simplified LicenseData structure reduced from 15+ to 8 essential fields
+  - Consistent camelCase throughout API responses and JWT tokens
+  - JWT validation moved to dedicated LicenseValidator service
+  - License status icon in sidebar with progressive trial urgency indicators
+  - Domain-specific license caching for multi-site deployments
+  - CLI and auth routes bypass license validation for better developer experience
+- **Form Fields**: Enhanced select and list field functionality
+  - Select fields now include clear button (×) that appears when value is selected
+  - Clear button can be disabled with `clearValue: false` setting
+  - Radio fields support `sortOptions` for alphabetical sorting
+  - Fixed list field asString + required validation
+  - Fixed list field data ordering with relational options
+  - Schema select fields properly disable clear button to prevent accidental deletion
+- **Session & Cache Management**: Improved isolation and security
+  - Fixed session and cache leakage between domains
+  - Fixed cookie leak between domains
+  - Better session save path handling for cPanel servers
+  - Cache license data stored outside devmode restrictions
+  - Deep merge support for configuration arrays (with revert and refinement)
+- **Logging & Debugging**: Replaced error_log with structured logging
+  - All error_log calls replaced with PSR LoggerInterface
+  - IndexBuilder now logs failed object loads instead of failing silently
+  - CacheManager, TextWatermarkFactory, ImageGenerator use LoggerFactory
+  - DeckCompatibilityChecker optional LoggerFactory integration
+- **Admin Interface**: UI and UX improvements
+  - New Total CMS logo in dashboard
+  - License status icon size adjustments
+  - Object count moved to collection header with better positioning
+  - Performance warning for queue processing on save
+  - Dashboard button no-wrap improvements
+  - Server checker includes license information
+  - Cache manager page performance optimizations
+
+### Added
+
+- **Sitemap Builder**: Filter and exclude capabilities
+  - New documentation for sitemap filtering (`sitemap-filtering.md`)
+  - Enhanced sitemap generation with filter options
+- **Factory & Testing**: Job queue integration
+  - Factory data generation uses job queue for better performance
+  - Factory form improvements with better queue integration
+- **Autogen Enhancements**: Special character handling
+  - Improved autogen to handle special characters properly
+  - Fixed autogen only replacing first dot occurrence
+
+### Fixed
+
+- **Authentication**: Login and session improvements
+  - Keep me signed in refactor for better reliability
+  - User download logging
+  - Fixed session tmp dir issues
+  - Better session path handling for problematic servers
+- **Data Integrity**: Object and property handling
+  - Fixed getvalue for list to preserve item order
+  - Fixed color import issues
+  - Duplicate objects now properly increment counters
+  - Fixed list data ordering with relational options
+- **Configuration**: Bundle and settings improvements
+  - Added config validation to bundle check
+  - Fixed setting hijack in test environment
+  - Improved embedded store handling
+- **Testing**: Test suite fixes
+  - Multiple test fixes for improved reliability
+  - License validation test coverage
+  - Session and authentication test improvements
+
+### Changed
+
+- **Configuration System**: Deep merge arrays support (experimental, reverted, then refined)
+  - Attempted deep merge for user configuration overrides
+  - Reverted due to complexity concerns
+  - Settings system remains with traditional override pattern
+
 ## [3.0.39] - 2025-08-28
 
 ### Enhanced
