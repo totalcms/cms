@@ -28,7 +28,7 @@ abstract class DownloadAction
 	protected string $name;
 	protected ?string $subpath = null;
 
-	protected const MAX_ATTEMPTS = 10;
+	protected const MAX_ATTEMPTS = 25;
 
 	abstract protected function fileExists(): bool;
 
