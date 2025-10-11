@@ -17,9 +17,9 @@ readonly class TemplateFetcher
 	/**
 	 * fetch a template.
 	 */
-	public function fetchTemplate(string $id): TemplateData
+	public function fetchTemplate(string $id, ?string $folder = null): TemplateData
 	{
-		return $this->storage->fetchTemplate($id);
+		return $this->storage->fetchTemplate($id, $folder);
 	}
 
 	/**
@@ -27,8 +27,8 @@ readonly class TemplateFetcher
 	 *
 	 * @param string $id Template ID
 	 */
-	public function templateExists(string $id): bool
+	public function templateExists(string $id, ?string $folder = null): bool
 	{
-		return $this->storage->templateExists($id);
+		return $this->storage->customTemplateExists($id, $folder) || $this->storage->reservedTemplateExists($id);
 	}
 }

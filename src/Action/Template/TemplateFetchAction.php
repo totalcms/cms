@@ -25,7 +25,9 @@ readonly class TemplateFetchAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$template = $this->templateFetcher->fetchTemplate($args['template']);
+		$params   = $request->getQueryParams();
+		$folder   = $params['folder'] ?? null;
+		$template = $this->templateFetcher->fetchTemplate($args['template'], $folder);
 
 		return $this->renderer->render($response, $template->contents);
 	}

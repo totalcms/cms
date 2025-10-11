@@ -20,9 +20,18 @@ class TemplateRepository extends StorageRepository
 	/**
 	 * generate a custom template path.
 	 */
-	public function customPath(string $template): string
+	public function customPath(string $template, ?string $folder = null): string
 	{
-		return self::CUSTOM_TEMPLATE_DIR . $template . self::FILE_EXT;
+		$basePath = self::CUSTOM_TEMPLATE_DIR;
+
+		if ($folder !== null && $folder !== '') {
+			// Sanitize folder path to prevent directory traversal
+			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
+			$folder = trim($folder, '/');
+			$basePath .= $folder . '/';
+		}
+
+		return $basePath . $template . self::FILE_EXT;
 	}
 
 	/**
@@ -48,9 +57,9 @@ class TemplateRepository extends StorageRepository
 	 *
 	 * @throws \DomainException
 	 */
-	public function customTemplateExists(string $template): bool
+	public function customTemplateExists(string $template, ?string $folder = null): bool
 	{
-		return $this->filesystem->fileExists($this->customPath($template));
+		return $this->filesystem->fileExists($this->customPath($template, $folder));
 	}
 
 	/**
@@ -68,10 +77,10 @@ class TemplateRepository extends StorageRepository
 	 *
 	 * @throws \DomainException
 	 */
-	public function fetchTemplate(string $template): TemplateData
+	public function fetchTemplate(string $template, ?string $folder = null): TemplateData
 	{
 		// Custom template takes precedence
-		$templateData = $this->fetchCustomTemplate($template) ?? $this->fetchReservedTemplate($template);
+		$templateData = $this->fetchCustomTemplate($template, $folder) ?? $this->fetchReservedTemplate($template);
 
 		if (!$templateData instanceof TemplateData) {
 			throw new \DomainException(sprintf('Template "%s" not found', $template));
@@ -102,9 +111,9 @@ class TemplateRepository extends StorageRepository
 	/**
 	 * fetch a custom template.
 	 */
-	public function fetchCustomTemplate(string $template): ?TemplateData
+	public function fetchCustomTemplate(string $template, ?string $folder = null): ?TemplateData
 	{
-		$templateFile = $this->customPath($template);
+		$templateFile = $this->customPath($template, $folder);
 		$contents     = null;
 
 		if ($this->filesystem->fileExists($templateFile)) {
@@ -121,9 +130,9 @@ class TemplateRepository extends StorageRepository
 	/**
 	 * save a template.
 	 */
-	public function saveTemplate(TemplateData $template): void
+	public function saveTemplate(TemplateData $template, ?string $folder = null): void
 	{
-		$templateFile = $this->customPath($template->id);
+		$templateFile = $this->customPath($template->id, $folder);
 
 		$this->filesystem->write($templateFile, $template->contents);
 	}
@@ -131,9 +140,9 @@ class TemplateRepository extends StorageRepository
 	/**
 	 * delete a template.
 	 */
-	public function deleteTemplate(string $template): bool
+	public function deleteTemplate(string $template, ?string $folder = null): bool
 	{
-		$templateFile = $this->customPath($template);
+		$templateFile = $this->customPath($template, $folder);
 
 		return $this->filesystem->delete($templateFile);
 	}
@@ -143,9 +152,18 @@ class TemplateRepository extends StorageRepository
 	 *
 	 * @return array<string>
 	 */
-	public function listCustomTemplates(): array
+	public function listCustomTemplates(?string $folder = null): array
 	{
-		$files = $this->filesystem->listFiles(self::CUSTOM_TEMPLATE_DIR);
+		$basePath = self::CUSTOM_TEMPLATE_DIR;
+
+		if ($folder !== null && $folder !== '') {
+			// Sanitize folder path to prevent directory traversal
+			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
+			$folder = trim($folder, '/');
+			$basePath .= $folder . '/';
+		}
+
+		$files = $this->filesystem->listFiles($basePath);
 
 		return array_map(fn (string $file): string => basename($file, self::FILE_EXT), $files);
 	}

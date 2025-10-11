@@ -22,11 +22,12 @@ readonly class TemplateListAction
 	{
 		$params = $request->getQueryParams();
 		$filter = $params['filter'] ?? 'all';
+		$folder = $params['folder'] ?? null;
 
 		$templates = match ($filter) {
 			'reserved' => $this->templateLister->listReservedTemplates(),
-			'custom'   => $this->templateLister->listCustomTemplates(),
-			default    => $this->templateLister->listAllTemplates(),
+			'custom'   => $this->templateLister->listCustomTemplates($folder),
+			default    => $this->templateLister->listAllTemplates($folder),
 		};
 
 		$json = json_encode($templates);

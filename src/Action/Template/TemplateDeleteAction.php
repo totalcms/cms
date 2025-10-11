@@ -24,7 +24,9 @@ readonly class TemplateDeleteAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$deleted = $this->service->deleteTemplate($args['template']);
+		$params  = $request->getQueryParams();
+		$folder  = $params['folder'] ?? null;
+		$deleted = $this->service->deleteTemplate($args['template'], $folder);
 
 		if ($deleted === false) {
 			return $response->withStatus(500);

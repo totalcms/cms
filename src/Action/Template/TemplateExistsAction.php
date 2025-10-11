@@ -22,7 +22,9 @@ readonly class TemplateExistsAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$exists = $this->templateFetcher->templateExists($args['template']);
+		$params = $request->getQueryParams();
+		$folder = $params['folder'] ?? null;
+		$exists = $this->templateFetcher->templateExists($args['template'], $folder);
 
 		if ($exists === false) {
 			throw new HttpNotFoundException($request);

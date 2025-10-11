@@ -28,6 +28,8 @@ readonly class TemplateSaveAction
 	{
 		$content = (string)$request->getBody();
 		$name    = $args['template'];
+		$params  = $request->getQueryParams();
+		$folder  = $params['folder'] ?? null;
 
 		// ! This is a horrible hack purely so that I can test this action.
 		// ! The pest slim post function does not allow for sending a plain text body with a post request.
@@ -35,7 +37,7 @@ readonly class TemplateSaveAction
 			$content = json_decode($content, true)[0];
 		}
 
-		$templateData = $this->service->saveTemplate($name, $content);
+		$templateData = $this->service->saveTemplate($name, $content, $folder);
 
 		return $this->renderer->render($response, $templateData->contents);
 	}

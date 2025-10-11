@@ -19,7 +19,7 @@ readonly class TemplateSaver
 	 *
 	 * @throws \DomainException
 	 */
-	public function saveTemplate(string $id, string $contents): TemplateData
+	public function saveTemplate(string $id, string $contents, ?string $folder = null): TemplateData
 	{
 		$template = TemplateFactory::generateTemplate($id, $contents);
 
@@ -27,7 +27,7 @@ readonly class TemplateSaver
 			throw new \DomainException("Cannot override a built-in template with the name $id.");
 		}
 
-		$this->storage->saveTemplate($template);
+		$this->storage->saveTemplate($template, $folder);
 
 		return $template;
 	}
