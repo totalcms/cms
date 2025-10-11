@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
 
 readonly class TemplateDeleteAction
@@ -24,9 +25,12 @@ readonly class TemplateDeleteAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$params  = $request->getQueryParams();
-		$folder  = $params['folder'] ?? null;
-		$deleted = $this->service->deleteTemplate($args['template'], $folder);
+		$path = $args['path'] ?? $args['template'] ?? '';
+
+		// Parse path into folder and template name
+		[$folder, $name] = TemplateRepository::parsePath($path);
+
+		$deleted = $this->service->deleteTemplate($name, $folder);
 
 		if ($deleted === false) {
 			return $response->withStatus(500);

@@ -59,9 +59,13 @@ function cmsDataDir(): string
 	return __DIR__ . '/tcms-data/';
 }
 
-function templatePath(string $id): string
+function templatePath(string $id, ?string $folder = null): string
 {
-	return cmsDataDir() . "templates/$id.twig";
+	$basePath = cmsDataDir() . 'templates/';
+	if ($folder !== null && $folder !== '') {
+		$basePath .= $folder . '/';
+	}
+	return $basePath . $id . '.twig';
 }
 
 function collectionPath(string $collection): string

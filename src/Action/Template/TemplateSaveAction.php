@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\RawRenderer;
 
@@ -27,9 +28,10 @@ readonly class TemplateSaveAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$content = (string)$request->getBody();
-		$name    = $args['template'];
-		$params  = $request->getQueryParams();
-		$folder  = $params['folder'] ?? null;
+		$path    = $args['path'] ?? $args['template'] ?? '';
+
+		// Parse path into folder and template name
+		[$folder, $name] = TemplateRepository::parsePath($path);
 
 		// ! This is a horrible hack purely so that I can test this action.
 		// ! The pest slim post function does not allow for sending a plain text body with a post request.

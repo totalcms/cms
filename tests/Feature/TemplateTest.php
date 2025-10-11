@@ -102,6 +102,33 @@ it('fetches a list of custom templates', function (): void {
 	}
 });
 
+it('fetches a recursive list of all templates including folders', function (): void {
+	// First create some templates in folders
+	$template = templateTestData();
+	postJson("/templates/custom-grids/grid-template", [$template])->assertOk();
+	postJson("/templates/level1/level2/nested-template", [$template])->assertOk();
+
+	// Get recursive list
+	$response = get('/templates?filter=custom')
+		->assertOk()
+		->assertJson();
+
+	// Decode JSON to check array contents
+	$body      = (string)$response->getBody();
+	$templates = json_decode($body, true);
+
+	// Should see root level template
+	expect($templates)->toContain('new-template');
+
+	// Should see folder templates with their full paths
+	expect($templates)->toContain('custom-grids/grid-template');
+	expect($templates)->toContain('level1/level2/nested-template');
+
+	// Clean up
+	delete("/templates/custom-grids/grid-template")->assertOk();
+	delete("/templates/level1/level2/nested-template")->assertOk();
+});
+
 it('can delete a template', function (): void {
 	$id = 'new-template';
 
@@ -110,4 +137,71 @@ it('can delete a template', function (): void {
 	delete("/templates/{$id}")->assertOk();
 
 	$this->assertFileDoesNotExist(templatePath($id));
+});
+
+// Folder-based template tests
+it('saves a new template to a folder', function (): void {
+	$template = templateTestData();
+	$id       = 'folder-template';
+	$folder   = 'custom-grids';
+	$verify   = 'Test Template';
+
+	postJson("/templates/{$folder}/{$id}", [$template])
+		->assertOk()
+		->assertSee($verify);
+
+	$this->assertFileExists(templatePath($id, $folder));
+});
+
+it('fetches a template from a folder', function (): void {
+	$id     = 'folder-template';
+	$folder = 'custom-grids';
+	$verify = 'Test Template';
+
+	get("/templates/{$folder}/{$id}")
+		->assertOk()
+		->assertSee($verify);
+});
+
+it('checks if a template exists in a folder', function (): void {
+	$folder = 'custom-grids';
+
+	head("/templates/{$folder}/folder-template")->assertOk();
+	head("/templates/{$folder}/does-not-exist")->assertNotFound();
+});
+
+it('fetches a list of templates in a folder', function (): void {
+	$folder = 'custom-grids';
+
+	get("/templates/_list/{$folder}?filter=custom")
+		->assertOk()
+		->assertJson()
+		->assertSee('folder-template');
+});
+
+it('can delete a template from a folder', function (): void {
+	$id     = 'folder-template';
+	$folder = 'custom-grids';
+
+	$this->assertFileExists(templatePath($id, $folder));
+
+	delete("/templates/{$folder}/{$id}")->assertOk();
+
+	$this->assertFileDoesNotExist(templatePath($id, $folder));
+});
+
+it('saves templates to nested folders', function (): void {
+	$template = templateTestData();
+	$id       = 'nested-template';
+	$folder   = 'level1/level2';
+	$verify   = 'Test Template';
+
+	postJson("/templates/{$folder}/{$id}", [$template])
+		->assertOk()
+		->assertSee($verify);
+
+	$this->assertFileExists(templatePath($id, $folder));
+
+	// Clean up
+	delete("/templates/{$folder}/{$id}")->assertOk();
 });

@@ -18,6 +18,27 @@ class TemplateRepository extends StorageRepository
 	public const CUSTOM_TEMPLATE_DIR      = 'templates/';
 
 	/**
+	 * Parse path into folder and template name.
+	 *
+	 * @return array{0: string|null, 1: string}
+	 */
+	public static function parsePath(string $path): array
+	{
+		$lastSlash = strrpos($path, '/');
+
+		if ($lastSlash === false) {
+			// No folder, just template name
+			return [null, $path];
+		}
+
+		// Split into folder and template
+		$folder   = substr($path, 0, $lastSlash);
+		$template = substr($path, $lastSlash + 1);
+
+		return [$folder, $template];
+	}
+
+	/**
 	 * generate a custom template path.
 	 */
 	public function customPath(string $template, ?string $folder = null): string
@@ -152,7 +173,7 @@ class TemplateRepository extends StorageRepository
 	 *
 	 * @return array<string>
 	 */
-	public function listCustomTemplates(?string $folder = null): array
+	public function listCustomTemplates(?string $folder = null, bool $recursive = false): array
 	{
 		$basePath = self::CUSTOM_TEMPLATE_DIR;
 
@@ -161,6 +182,22 @@ class TemplateRepository extends StorageRepository
 			$folder = str_replace(['..', '\\'], ['', '/'], $folder);
 			$folder = trim($folder, '/');
 			$basePath .= $folder . '/';
+		}
+
+		if ($recursive) {
+			// Use flysystem's listContents with recursive flag
+			$contents = $this->filesystem->flysystem()->listContents($basePath, true);
+
+			$files = [];
+			foreach ($contents as $item) {
+				if ($item->isFile() && str_ends_with($item->path(), self::FILE_EXT)) {
+					// Remove base path and .twig extension
+					$relativePath = str_replace(self::CUSTOM_TEMPLATE_DIR, '', $item->path());
+					$files[]      = substr($relativePath, 0, -strlen(self::FILE_EXT));
+				}
+			}
+
+			return $files;
 		}
 
 		$files = $this->filesystem->listFiles($basePath);
