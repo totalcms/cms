@@ -1,6 +1,6 @@
 import MultiSelectField from "./multiselect";
 import Choices from "choices.js";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 
 //-----------------------------------------------
 // Total CMS List Field
@@ -44,11 +44,9 @@ export default class ListField extends MultiSelectField {
 	initSortable() {
 		const list = this.container.querySelector('.choices__list');
 
-		this.sortable = new Sortable(list, {
-			animation  : 150,
-			draggable  : ".choices__item",
-			ghostClass : 'drag-ghost',
-			onEnd      : this.syncChoices.bind(this)
+		this.sortable = new TotalSortable(list, {
+			draggable : ".choices__item",
+			onEnd     : this.syncChoices.bind(this)
 		});
 	}
 

@@ -1,6 +1,6 @@
 import TotalField from "./totalfield";
 import DeckItem from "./deckItem";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 const slugify = require('slugify');
 
 //-----------------------------------------------
@@ -58,11 +58,9 @@ export default class DeckField extends TotalField {
         if (!formGroup) return;
 
         // Create sortable instance once - it will automatically handle new items
-        this.sortable = Sortable.create(formGroup, {
-			animation     : 150,
-			handle        : '.sort-handle',
-			ghostClass    : 'drag-ghost',
-			forceFallback : true,
+        this.sortable = new TotalSortable(formGroup, {
+			handle : '.sort-handle',
+			onEnd  : () => this.changed(),
         });
     }
 

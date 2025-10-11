@@ -1,6 +1,6 @@
 import Dialog from "./dialog";
 import Details from "./details";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -198,10 +198,7 @@ export default class ImagePreview {
 	sortablePalette() {
 		// Make the color palette sortable
 		const palette = this.editDialog.dialog.querySelector(".palette");
-		Sortable.create(palette, {
-			animation  : 150,
-			ghostClass : 'drag-ghost',
-		});
+		new TotalSortable(palette);
 	}
 
 	setupFocalPoint() {

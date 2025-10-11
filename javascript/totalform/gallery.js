@@ -1,7 +1,7 @@
 import ImageField from "./image";
 import ImagePreview from "./image-preview";
 import DropletArray from "./droplet-array";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 import Scrollable from "./scrollable";
 
 //-----------------------------------------------
@@ -68,22 +68,15 @@ export default class GalleryField extends ImageField {
 			return;
 		}
 
-		this.sortable = new Sortable(this.previewContainer, {
+		this.sortable = new TotalSortable(this.previewContainer, {
 			animation : 500,
 			handle    : ".move",
 			draggable : ".image-preview",
-			onStart   : (event) => {
-				// Add a class to the container to indicate sorting
-				this.previewContainer.classList.add('sorting');
-			},
-			onEnd : (event) => {
+			onEnd     : (event) => {
 				// Set the order of the preview data to match the new order
 				const moved = this.preview[event.oldIndex];
 				this.preview.splice(event.newIndex, 0, moved);
 				this.preview.splice(event.newIndex, 1);
-
-				// Remove the sorting class
-				this.previewContainer.classList.remove('sorting');
 
 				// Update the order of the images in the CMS
 				this.autosave(true);

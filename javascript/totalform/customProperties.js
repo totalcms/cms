@@ -1,6 +1,6 @@
 import PropertiesField from "./properties";
 import TotalField from "./totalfield";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 const slugify = require('slugify')
 
 //-----------------------------------------------
@@ -28,12 +28,10 @@ export default class CustomPropertiesField extends TotalField {
 
 		// Make the object fields sortable
 		const objects = this.container.querySelector(".form-group");
-		Sortable.create(objects, {
-			animation     : 150,
-			ghostClass    : 'drag-ghost',
-			handle        : 'summary',
-			filter        : 'button',
-			forceFallback : true,
+		new TotalSortable(objects, {
+			handle : 'summary',
+			filter : 'button',
+			onEnd  : () => this.changed(),
 		});
 	}
 
