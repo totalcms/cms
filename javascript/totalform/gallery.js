@@ -13,6 +13,7 @@ export default class GalleryField extends ImageField {
         super(container, options);
 
 		this.scrollable = new Scrollable(this.previewContainer);
+		this.sortable = null; // Store sortable instance
 		this.watchPreviews();
     }
 
@@ -21,7 +22,13 @@ export default class GalleryField extends ImageField {
 		const observer = new MutationObserver((mutationsList, observer) => {
 			for (const mutation of mutationsList) {
 				if (mutation.type === 'childList') {
-					this.setupPreview();
+					// Only setup if nodes were actually added or removed (not just moved by Sortable)
+					const hasAddedNodes = mutation.addedNodes.length > 0;
+					const hasRemovedNodes = mutation.removedNodes.length > 0;
+
+					if (hasAddedNodes || hasRemovedNodes) {
+						this.setupPreview();
+					}
 				}
 			}
 		});
@@ -56,6 +63,11 @@ export default class GalleryField extends ImageField {
 	}
 
 	setupReorder() {
+		// Only create Sortable once
+		if (this.sortable) {
+			return;
+		}
+
 		this.sortable = new Sortable(this.previewContainer, {
 			animation : 500,
 			handle    : ".move",
