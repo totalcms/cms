@@ -4,13 +4,13 @@ Total CMS sitemap builder supports simple property-based filtering using URL par
 
 ## URL Parameters
 
-### Filter (Include Only)
+### Include (Include Only)
 Include only objects where specified properties match values:
 
 ```
-?filter=property:value                    # Single filter
-?filter=property1:value1,property2:value2 # Multiple filters
-?filter=property                          # Shorthand for property:true
+?include=property:value                    # Single include filter
+?include=property1:value1,property2:value2 # Multiple include filters
+?include=property                          # Shorthand for property:true
 ```
 
 ### Exclude (Remove)
@@ -27,7 +27,7 @@ Exclude objects where specified properties match values:
 When no value is provided, the property defaults to `:true`:
 
 ```
-?filter=featured        # Same as ?filter=featured:true
+?include=featured       # Same as ?include=featured:true
 ?exclude=draft          # Same as ?exclude=draft:true
 ```
 
@@ -36,26 +36,26 @@ When no value is provided, the property defaults to `:true`:
 ### Blog Posts
 ```
 /sitemap/blog?exclude=draft              # Exclude draft posts
-/sitemap/blog?filter=featured            # Only featured posts
-/sitemap/blog?filter=published:true      # Only published posts
+/sitemap/blog?include=featured           # Only featured posts
+/sitemap/blog?include=published:true     # Only published posts
 ```
 
 ### Products
 ```
 /sitemap/products?exclude=discontinued   # Exclude discontinued products
-/sitemap/products?filter=instock         # Only in-stock products
-/sitemap/products?filter=category:electronics,featured:true # Electronics + featured
+/sitemap/products?include=instock        # Only in-stock products
+/sitemap/products?include=category:electronics,featured:true # Electronics + featured
 ```
 
 ### Events
 ```
 /sitemap/events?exclude=cancelled        # Exclude cancelled events
-/sitemap/events?filter=status:upcoming   # Only upcoming events
+/sitemap/events?include=status:upcoming  # Only upcoming events
 ```
 
 ### Portfolio
 ```
-/sitemap/portfolio?filter=published      # Only published work
+/sitemap/portfolio?include=published     # Only published work
 /sitemap/portfolio?exclude=private       # Exclude private projects
 ```
 
@@ -67,17 +67,17 @@ The system automatically converts common values:
 - Other values → String comparison
 
 ```
-?filter=featured:true     # Boolean true
-?filter=status:published  # String "published"
+?include=featured:true    # Boolean true
+?include=status:published # String "published"
 ?exclude=draft:false      # Boolean false
 ```
 
 ## Combining Filters
 
-You can combine both filter and exclude in the same URL:
+You can combine both include and exclude in the same URL:
 
 ```
-/sitemap/blog?filter=published&exclude=draft,private
+/sitemap/blog?include=published&exclude=draft,private
 ```
 
 This includes only published posts while excluding both draft and private posts.
@@ -85,3 +85,5 @@ This includes only published posts while excluding both draft and private posts.
 ## Backward Compatibility
 
 All existing sitemaps continue to work unchanged. Filtering is only applied when URL parameters are provided.
+
+The legacy `filter` parameter is still supported for backwards compatibility and is automatically mapped to `include`.

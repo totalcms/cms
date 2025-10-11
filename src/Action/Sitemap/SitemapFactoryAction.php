@@ -24,6 +24,12 @@ readonly class SitemapFactoryAction
 		$collection = $args['collection'];
 		$params     = $request->getQueryParams();
 
+		// Backwards compatibility: remap 'filter' to 'include'
+		if (isset($params['filter']) && !isset($params['include'])) {
+			$params['include'] = $params['filter'];
+			unset($params['filter']);
+		}
+
 		$xml = $this->sitemapBuilder->buildSitemap($collection, $params);
 
 		return $this->xmlRenderer->xml($response, $xml);

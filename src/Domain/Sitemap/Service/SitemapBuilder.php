@@ -70,7 +70,7 @@ readonly class SitemapBuilder
 		$filterOptions = [];
 
 		// Extract filter parameters and remove them from the main options
-		$filterKeys = ['filter', 'exclude'];
+		$filterKeys = ['include', 'exclude'];
 
 		foreach ($filterKeys as $key) {
 			if (isset($options[$key])) {
@@ -101,7 +101,7 @@ readonly class SitemapBuilder
 		}
 
 		// Check include filters
-		return !(isset($filterOptions['filter']) && !$this->isIncluded($object, $filterOptions['filter']));
+		return !(isset($filterOptions['include']) && !$this->isIncluded($object, $filterOptions['include']));
 	}
 
 	/**
