@@ -15,7 +15,7 @@
 		"folder": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"       : "Folder",
-			"help"        : "Optional folder path for organizing templates (e.g., 'grids' or 'pages/blog')",
+			"help"        : "Optional folder path for organizing templates (e.g., 'grids' or 'pages')",
 			"field"       : "id"
 		},
 		"template": {
