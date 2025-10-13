@@ -1,10 +1,11 @@
 {
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://www.totalcms.co/schemas/template.json",
-	"title": "Template",
-	"description": "A Twig template for rendering content",
-	"type": "object",
-	"properties": {
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/template.json",
+	"title"       : "Template",
+	"description" : "A Twig template for rendering content",
+	"id"          : "template",
+	"type"        : "object",
+	"properties"  : {
 		"id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"       : "ID",

@@ -116,7 +116,7 @@ readonly class DefaultErrorHandler
 			$statusCode = (int)$exception->getCode();
 		}
 
-		if ($exception instanceof \DomainException || $exception instanceof \InvalidArgumentException) {
+		if ($exception instanceof \DomainException || $exception instanceof \InvalidArgumentException || $exception instanceof \UnexpectedValueException) {
 			// Bad request
 			$statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
 		}

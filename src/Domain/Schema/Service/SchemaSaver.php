@@ -57,15 +57,18 @@ readonly class SchemaSaver
 			throw new \InvalidArgumentException('Schema "properties" must be an array');
 		}
 
+		// Check for reserved schema names early, before processing
+		if (isset($schemaData['id'])) {
+			if (in_array($schemaData['id'], SchemaData::RESERVED_SCHEMAS) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES)) {
+				throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
+			}
+		}
+
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schema                   = $this->factory->generateSchema($schemaData);
 
 		if (!isset($schema->id)) {
 			throw new \UnexpectedValueException('Schema ID is required: ' . json_encode($schemaData), 1);
-		}
-
-		if (in_array($schema->id, SchemaData::RESERVED_SCHEMAS) || in_array($schema->id, SchemaData::RESERVED_NAMES)) {
-			throw new \UnexpectedValueException("Schema type ({$schema->id}) is reserved", 1);
 		}
 
 		// Ensure that the ID is required and indexed
