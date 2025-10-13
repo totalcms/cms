@@ -93,11 +93,15 @@ const TotalCMSCodeMirror = {
 
 	/**
 	 * Create a Twig editor with proper configuration
+	 * Twig mode with HTML base enables syntax highlighting for both Twig and HTML
 	 */
 	createTwigEditor: function(element, options = {}) {
 		const config = {
 			...this.defaultConfig,
-			mode: 'twig',
+			mode: {
+				name: 'twig',
+				base: 'text/html'  // Enable HTML syntax highlighting within Twig
+			},
 			theme: options.theme || 'elegant',
 			placeholder: options.placeholder || '',
 			...options
