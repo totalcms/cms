@@ -26,6 +26,7 @@ use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
@@ -62,6 +63,7 @@ class TotalCMSTwigAdapter
 		private readonly SchemaLister $schemaLister,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
+		private readonly TemplateRepository $templateRepository,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
@@ -1428,5 +1430,56 @@ NGINX;
 		} catch (\Exception) {
 			return [];
 		}
+	}
+
+	/**
+	 * Group templates by folder for display in admin sidebar.
+	 *
+	 * @return array<string,array<array<string,string>>>
+	 */
+	public function templatesByFolder(): array
+	{
+		// Get all templates recursively
+		$templates = $this->templateRepository->listCustomTemplates(null, true);
+
+		$folders = [];
+
+		foreach ($templates as $path) {
+			// Parse path to get folder and template name
+			[$folder, $templateId] = TemplateRepository::parsePath($path);
+
+			// Determine group name
+			$groupName = 'Templates';
+			if ($folder !== null) {
+				// Convert folder path to group name (e.g., "pages/blog" -> "Pages / Blog")
+				$parts     = explode('/', str_replace('-', ' ', $folder));
+				$groupName = implode(' / ', array_map('ucwords', $parts));
+			}
+
+			// Create template entry
+			if (!array_key_exists($groupName, $folders)) {
+				$folders[$groupName] = [];
+			}
+
+			$folders[$groupName][] = [
+				'id'     => $templateId,
+				'folder' => $folder ?? '',
+				'path'   => $path, // Full path for linking
+			];
+		}
+
+		// Sort folders alphabetically, but keep "Templates" (root) at the bottom
+		uksort($folders, function ($a, $b): int {
+			if ($a === 'Templates') {
+				return 1;
+			}
+			if ($b === 'Templates') {
+				return -1;
+			}
+
+			return strcmp($a, $b);
+		});
+
+		return $folders;
 	}
 }

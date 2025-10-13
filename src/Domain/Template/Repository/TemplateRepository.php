@@ -170,6 +170,7 @@ class TemplateRepository extends StorageRepository
 
 	/**
 	 * List custom templates.
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @return array<string>
 	 */
@@ -196,6 +197,9 @@ class TemplateRepository extends StorageRepository
 					$files[]      = substr($relativePath, 0, -strlen(self::FILE_EXT));
 				}
 			}
+
+			// Sort alphabetically
+			sort($files);
 
 			return $files;
 		}

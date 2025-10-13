@@ -12,6 +12,7 @@ use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveAction;
+use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
 
@@ -24,6 +25,10 @@ return function (App $app): void {
 
 		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema');
 		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate');
+
+		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template');
+		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate');
+
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection');
 		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs');
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post');

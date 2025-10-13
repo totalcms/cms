@@ -1,0 +1,49 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" class="filter" placeholder="Filter templates" autofocus />
+	</header>
+
+	<nav class="links" id="template-links">
+		{% for folder, templates in cms.templatesByFolder() %}
+			<h3>{{ folder }}</h3>
+			{% for template in templates %}
+				<ul>
+					<li class="template-{{template.path}}">
+						<a {% if url.template == template.path %}class="active"{% endif %}
+							href="templates/{{ template.path }}"
+							title="{{ template.id }}">{{ template.id }}</a>
+					</li>
+				</ul>
+			{% endfor %}
+		{% endfor %}
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="templates/new" title="Create a new template">+ New Template</a>
+	</footer>
+</aside>
+
+<main class="dash-main-content">
+	{% if url.template is empty %}
+
+		{% include "admin/template/home.twig" %}
+
+	{% else %}
+		{% if url.template == "new" %}
+
+			{% include "admin/template/new.twig" %}
+
+		{% else %}
+
+			{% include "admin/template/edit.twig" %}
+
+		{% endif %}
+	{% endif %}
+</main>
+
+{% endblock %}
+

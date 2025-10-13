@@ -85,6 +85,7 @@ use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
@@ -256,6 +257,7 @@ return [
 		$container->get(SchemaFetcher::class),
 		$container->get(SchemaLister::class),
 		$container->get(SchemaFactory::class),
+		$container->get(TemplateRepository::class),
 		$container->get(CSRFTokenManager::class),
 	),
 
@@ -271,6 +273,7 @@ return [
 		$container->get(SchemaLister::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(DeckCompatibilityChecker::class),
+		$container->get(TemplateRepository::class),
 		$container->get(TotalFormFactory::class),
 		$container->get(ServerChecker::class),
 		$container->get(CacheReporter::class),
