@@ -23,8 +23,7 @@ it('saves a new template', function (): void {
 	$id       = 'new-template';
 	$verify   = 'Test Template';
 
-	// ! I had to add a hack to the TemplateSaveAction to allow for testing.
-	postJson("/templates/{$id}", [$template])
+	postJson("/templates", ['id' => $id, 'template' => $template])
 		->assertOk()
 		->assertSee($verify);
 
@@ -34,8 +33,7 @@ it('saves a new template', function (): void {
 it('cannot save a built-in template', function (): void {
 	$id = 'admin-layout';
 
-	// ! I had to add a hack to the TemplateSaveAction to allow for testing.
-	postJson("/templates/{$id}", ['dummy data'])->assertBadRequest();
+	postJson("/templates", ['id' => $id, 'template' => 'dummy data'])->assertBadRequest();
 
 	$this->assertFileDoesNotExist(templatePath($id));
 });
@@ -105,8 +103,8 @@ it('fetches a list of custom templates', function (): void {
 it('fetches a recursive list of all templates including folders', function (): void {
 	// First create some templates in folders
 	$template = templateTestData();
-	postJson("/templates/custom-grids/grid-template", [$template])->assertOk();
-	postJson("/templates/level1/level2/nested-template", [$template])->assertOk();
+	postJson("/templates", ['id' => 'custom-grids/grid-template', 'template' => $template])->assertOk();
+	postJson("/templates", ['id' => 'level1/level2/nested-template', 'template' => $template])->assertOk();
 
 	// Get recursive list
 	$response = get('/templates?filter=custom')
@@ -146,7 +144,7 @@ it('saves a new template to a folder', function (): void {
 	$folder   = 'custom-grids';
 	$verify   = 'Test Template';
 
-	postJson("/templates/{$folder}/{$id}", [$template])
+	postJson("/templates", ['id' => "{$folder}/{$id}", 'template' => $template])
 		->assertOk()
 		->assertSee($verify);
 
@@ -196,7 +194,7 @@ it('saves templates to nested folders', function (): void {
 	$folder   = 'level1/level2';
 	$verify   = 'Test Template';
 
-	postJson("/templates/{$folder}/{$id}", [$template])
+	postJson("/templates", ['id' => "{$folder}/{$id}", 'template' => $template])
 		->assertOk()
 		->assertSee($verify);
 
