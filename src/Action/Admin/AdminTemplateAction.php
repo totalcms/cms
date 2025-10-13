@@ -43,8 +43,8 @@ readonly class AdminTemplateAction
 		if ($request->getMethod() === 'POST') {
 			$postData = (array)$request->getParsedBody();
 
-			// Set the template ID to the one being duplicated
-			$postData['id'] .= '-duplicate';
+			// Remove the ID - user will set their own ID for the duplicate
+			unset($postData['id']);
 			$templateData['duplicateData'] = $postData;
 
 			// Force the path to be 'new' for duplication
