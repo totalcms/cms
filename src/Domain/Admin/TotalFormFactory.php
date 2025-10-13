@@ -14,6 +14,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 
 /**
@@ -41,6 +42,7 @@ readonly class TotalFormFactory
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
 		private SchemaFactory $schemaFactory,
+		private TemplateRepository $templateRepository,
 		private CSRFTokenManager $csrfManager,
 	) {
 		$this->api = $this->config->api;
@@ -204,6 +206,29 @@ readonly class TotalFormFactory
 		]);
 
 		$form = new SchemaForm(...$options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function template(array $options = []): string
+	{
+		$options = array_merge([
+			'path'       => '',
+			'collection' => '',
+			'id'         => '',
+		], $options, [
+			// These options cannot be overridden
+			'api'                => $this->api,
+			'objectFetcher'      => $this->objectFetcher,
+			'collectionFetcher'  => $this->collectionFetcher,
+			'collectionReader'   => $this->collectionReader,
+			'schemaFetcher'      => $this->schemaFetcher,
+			'schemaLister'       => $this->schemaLister,
+			'templateRepository' => $this->templateRepository,
+		]);
+
+		$form = new TemplateForm(...$options);
 
 		return $form->autoBuild();
 	}
