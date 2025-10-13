@@ -142,9 +142,20 @@ export default class Identifier extends TotalField {
 
     slugify(id) {
 		id = id.replace('@', '-at-').replace(/\./g, '-');
+
+		// Build the remove regex, allowing custom characters if specified
+		let removeRegex = /[*+~.()'"!:@{}\[\]\/\\]/g;
+		if (this.options.allowCharacters) {
+			// Escape special regex characters in the allowed string
+			const escaped = this.options.allowCharacters.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			// Remove allowed characters from the default remove pattern
+			const pattern = `[*+~.()'"!:@{}\\[\\]\\\\${escaped.includes('/') ? '' : '/'}]`;
+			removeRegex = new RegExp(pattern, 'g');
+		}
+
         return slugify(id, {
 			replacement : '-', // replace spaces with replacement character, defaults to `-`
-			remove      : /[*+~.()'"!:@{}\[\]\/\\]/g, // remove characters that match regex, defaults to `undefined`
+			remove      : removeRegex, // remove characters that match regex, defaults to `undefined`
 			lower       : true, // convert to lower case, defaults to `false`
 			strict      : false, // strip special characters except replacement, defaults to `false`
 			trim        : true, // trim leading and trailing replacement chars, defaults to `true`
@@ -214,6 +225,9 @@ export default class Identifier extends TotalField {
 		}
 		if (this.form.isSchemaForm()) {
 			api = `/schemas/${id}`;
+		}
+		if (this.form.isTemplateForm()) {
+			api = `/templates/${id}`;
 		}
 
         this.api.existsAPI(api).then(response => {

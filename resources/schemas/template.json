@@ -8,15 +8,12 @@
 		"id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"       : "ID",
-			"help"        : "The unique identifier for this template.",
+			"help"        : "The unique identifier for this template. Use forward slashes for folders (e.g., 'pages/header' or 'grids/blog').",
 			"placeholder" : "mytemplate",
-			"field"       : "id"
-		},
-		"folder": {
-			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"       : "Folder",
-			"help"        : "Optional folder path for organizing templates (e.g., 'grids' or 'pages')",
-			"field"       : "id"
+			"field"       : "id",
+			"settings"    : {
+				"allowCharacters": "/"
+			}
 		},
 		"template": {
 			"type"     : "string",
