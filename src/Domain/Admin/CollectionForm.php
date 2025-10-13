@@ -20,9 +20,9 @@ class CollectionForm extends TotalForm
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,string> $newAction
-	 * @param array<string,string> $editAction
-	 * @param array<string,string> $deleteAction
+	 * @param array<int,array<string,mixed>> $newActions
+	 * @param array<int,array<string,mixed>> $editActions
+	 * @param array<int,array<string,mixed>> $deleteActions
 	 */
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
@@ -41,12 +41,14 @@ class CollectionForm extends TotalForm
 		protected string $delete      = '',
 		protected string $formType    = '',
 		protected string $schema      = '',
-		protected array $newAction    = [
-			'action' => 'redirect-object',
-			'link'   => '?id=',
+		protected array $newActions    = [
+			[
+				'action' => 'redirect-object',
+				'link'   => '?id=',
+			],
 		],
-		protected array $editAction   = [],
-		protected array $deleteAction = [],
+		protected array $editActions   = [],
+		protected array $deleteActions = [],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
 		protected bool $helpOnFocus = false,
@@ -75,9 +77,9 @@ class CollectionForm extends TotalForm
 			$delete,
 			$formType,
 			$schema,
-			$newAction,
-			$editAction,
-			$deleteAction,
+			$newActions,
+			$editActions,
+			$deleteActions,
 			$autosave,
 			$helpOnHover,
 			$helpOnFocus,

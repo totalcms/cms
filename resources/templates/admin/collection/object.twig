@@ -5,9 +5,11 @@
 	delete       : "Delete",
 	helpStyle    : 'label',
 	helpOnFocus  : true,
-	deleteAction : {
-		"action" : "redirect",
-		"link"   : "collections/#{url.collection}"
-	},
+	deleteActions : [
+		{
+			"action" : "redirect",
+			"link"   : "collections/#{url.collection}"
+		}
+	],
 }) %}
 {{ form.autoBuild() }}

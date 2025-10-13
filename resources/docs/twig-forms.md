@@ -203,10 +203,12 @@ Use `addOnly: true` for forms on the public side of your website to prevent user
 {# Public registration form - secure against ID manipulation #}
 {{ cms.form.builder('users', {
     addOnly: true,
-    newAction: {
-        action: 'redirect',
-        link: '/login'
-    }
+    newActions: [
+        {
+            action: 'redirect',
+            link: '/login'
+        }
+    ]
 }).addField('name').addField('email').addField('password', {field: 'password'}).build() }}
 ```
 
@@ -217,24 +219,70 @@ Use `addOnly: true` for forms on the public side of your website to prevent user
 
 #### Action Configuration Options
 
-Configure form actions for different operations:
+Configure form actions for different operations. Actions are arrays that support multiple sequential operations:
 
 ```twig
 {{ cms.form.builder('products', {
-    newAction: {                   # Action for new items (array, default: [])
-        action: 'redirect-object',
-        link: '?id='
-    },
-    editAction: {                  # Action for editing (array, default: [])
-        action: 'redirect-object',
-        link: '?id='
-    },
-    deleteAction: {                # Action for deletion (array, default: [])
-        action: 'redirect',
-        link: '/admin/products'
-    }
+    newActions: [                   # Actions for new items (array, default: [])
+        {
+            action: 'redirect-object',
+            link: '?id='
+        }
+    ],
+    editActions: [                  # Actions for editing (array, default: [])
+        {
+            action: 'refresh'
+        }
+    ],
+    deleteActions: [                # Actions for deletion (array, default: [])
+        {
+            action: 'redirect',
+            link: '/admin/products'
+        }
+    ]
 }) }}
 ```
+
+##### Multiple Sequential Actions
+
+You can chain multiple actions that will execute sequentially. If one action fails, subsequent actions won't execute:
+
+```twig
+{{ cms.form.builder('products', {
+    newActions: [
+        {
+            action: 'message',
+            text: 'Product created successfully!'
+        },
+        {
+            action: 'redirect-object',
+            link: '?id='
+        }
+    ]
+}) }}
+```
+
+##### Available Action Types
+
+- **redirect**: Redirect to a specific URL
+  ```twig
+  {action: 'redirect', link: '/admin/products'}
+  ```
+
+- **redirect-object**: Redirect to URL with object ID substitution
+  ```twig
+  {action: 'redirect-object', link: '/admin/products/{id}'}
+  ```
+
+- **refresh**: Refresh the current page
+  ```twig
+  {action: 'refresh'}
+  ```
+
+- **message**: Display a message (future: combined with other actions)
+  ```twig
+  {action: 'message', text: 'Operation successful!'}
+  ```
 
 #### Auto-Applied CSS Classes
 

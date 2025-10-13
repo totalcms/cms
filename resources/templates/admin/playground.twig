@@ -71,14 +71,18 @@
 		If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
 
 		{{ cms.form.playground(url.id|default(''), {
-			deleteAction : {
-				"action" : "redirect",
-				"link"   : "playground"
-			},
-			newAction   : {
-				"action" : "redirect-object",
-				"link"   : "playground/{id}"
-			},
+			deleteActions : [
+				{
+					"action" : "redirect",
+					"link"   : "playground"
+				}
+			],
+			newActions   : [
+				{
+					"action" : "redirect-object",
+					"link"   : "playground/{id}"
+				}
+			],
 		}) }}
 
 		{% set twigfield %}

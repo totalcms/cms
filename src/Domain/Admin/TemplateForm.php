@@ -24,9 +24,9 @@ class TemplateForm extends TotalForm
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,string> $newAction
-	 * @param array<string,string> $deleteAction
-	 * @param array<string,string> $editAction
+	 * @param array<int,array<string,mixed>> $newActions
+	 * @param array<int,array<string,mixed>> $deleteActions
+	 * @param array<int,array<string,mixed>> $editActions
 	 * @param array<string,mixed>  $data
 	 */
 	public function __construct(
@@ -48,12 +48,14 @@ class TemplateForm extends TotalForm
 		protected string $delete      = '',
 		protected string $formType    = '',
 		protected string $schema      = '',
-		protected array $newAction    = [
-			'action' => 'redirect-object',
-			'link'   => 'templates/',
+		protected array $newActions    = [
+			[
+				'action' => 'redirect-object',
+				'link'   => 'templates/',
+			],
 		],
-		protected array $editAction   = [],
-		protected array $deleteAction = [],
+		protected array $editActions   = [],
+		protected array $deleteActions = [],
 		protected array $data         = [],
 		protected bool $autosave      = false,
 		protected bool $helpOnHover   = false,
@@ -78,9 +80,9 @@ class TemplateForm extends TotalForm
 			$delete,
 			$formType,
 			$schema,
-			$newAction,
-			$editAction,
-			$deleteAction,
+			$newActions,
+			$editActions,
+			$deleteActions,
 			$autosave,
 			$helpOnHover,
 			$helpOnFocus,

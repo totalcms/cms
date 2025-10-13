@@ -137,9 +137,9 @@ abstract class TotalForm implements \Stringable
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,string> $newAction
-	 * @param array<string,string> $editAction
-	 * @param array<string,string> $deleteAction
+	 * @param array<int,array<string,mixed>> $newActions Array of action objects
+	 * @param array<int,array<string,mixed>> $editActions Array of action objects
+	 * @param array<int,array<string,mixed>> $deleteActions Array of action objects
 	 */
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
@@ -149,24 +149,24 @@ abstract class TotalForm implements \Stringable
 		protected SchemaLister $schemaLister,
 		public string $api,
 		public string $collection,
-		public string $id          = '',
-		protected string $method      = 'POST',
-		protected string $class       = '',
-		protected string $buildError  = '',
-		protected string $helpStyle   = '',
-		protected string $save        = '',
-		protected string $delete      = '',
-		protected string $formType    = '',
-		protected string $schema      = '',
-		protected array $newAction    = [],
-		protected array $editAction   = [],
-		protected array $deleteAction = [],
-		protected bool $autosave      = false,
-		protected bool $helpOnHover   = false,
-		protected bool $helpOnFocus   = false,
-		protected bool $hideID        = false,
-		protected bool $useFormGrid   = true,
-		protected bool $addOnly       = false,
+		public string $id           = '',
+		protected string $method       = 'POST',
+		protected string $class        = '',
+		protected string $buildError   = '',
+		protected string $helpStyle    = '',
+		protected string $save         = '',
+		protected string $delete       = '',
+		protected string $formType     = '',
+		protected string $schema       = '',
+		protected array $newActions    = [],
+		protected array $editActions   = [],
+		protected array $deleteActions = [],
+		protected bool $autosave       = false,
+		protected bool $helpOnHover    = false,
+		protected bool $helpOnFocus    = false,
+		protected bool $hideID         = false,
+		protected bool $useFormGrid    = true,
+		protected bool $addOnly        = false,
 	) {
 		$this->init();
 		$this->initClass();
@@ -247,9 +247,9 @@ abstract class TotalForm implements \Stringable
 		]);
 
 		$actions = [
-			'newAction'    => 'data-new-action',
-			'editAction'   => 'data-edit-action',
-			'deleteAction' => 'data-delete-action',
+			'newActions'    => 'data-new-actions',
+			'editActions'   => 'data-edit-actions',
+			'deleteActions' => 'data-delete-actions',
 		];
 		foreach ($actions as $action => $attribute) {
 			if ($this->$action !== []) {

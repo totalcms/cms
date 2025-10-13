@@ -5,10 +5,12 @@
 		save        : "Save",
 		helpStyle   : 'label',
 		helpOnFocus : true,
-		newAction : {
-			"action" : "redirect-object",
-			"link"   : "schemas/"
-		},
+		newActions : [
+			{
+				"action" : "redirect-object",
+				"link"   : "schemas/"
+			}
+		],
 		data : duplicateData,
 	}) }}
 {% else %}
@@ -16,9 +18,11 @@
 		save        : "Save",
 		helpStyle   : 'label',
 		helpOnFocus : true,
-		newAction : {
-			"action" : "redirect-object",
-			"link"   : "schemas/"
-		},
+		newActions : [
+			{
+				"action" : "redirect-object",
+				"link"   : "schemas/"
+			}
+		],
 	}) }}
 {% endif %}

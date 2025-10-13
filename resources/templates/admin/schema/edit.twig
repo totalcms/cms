@@ -16,13 +16,17 @@
 	delete      : "Delete",
 	helpStyle   : 'label',
 	helpOnFocus : true,
-	deleteAction : {
-		"action" : "redirect",
-		"link"   : "schemas"
-	},
-	editAction : {
-		"action" : "refresh",
-	},
+	deleteActions : [
+		{
+			"action" : "redirect",
+			"link"   : "schemas"
+		}
+	],
+	editActions : [
+		{
+			"action" : "refresh",
+		}
+	],
 }) }}
 
 {% set isDeckCompatible = cms.isDeckCompatible(url.schema) %}

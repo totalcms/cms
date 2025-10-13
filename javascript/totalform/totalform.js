@@ -433,6 +433,7 @@ export default class TotalForm {
                 document.location = action.link;
                 break;
 			case "ajax":
+			case "webhook":
 				fetch(action.link, {
 					method : 'POST',
 					mode   : 'cors',

@@ -3,9 +3,11 @@
 	save        : "Save",
 	helpStyle   : 'label',
 	helpOnFocus : true,
-	newAction   : {
-		"action" : "redirect-object",
-		"link"   : "collections/#{url.collection}/{id}"
-	},
+	newActions   : [
+		{
+			"action" : "redirect-object",
+			"link"   : "collections/#{url.collection}/{id}"
+		}
+	],
 }) %}
 {{ form.autoBuild() }}
