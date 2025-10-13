@@ -58,10 +58,8 @@ readonly class SchemaSaver
 		}
 
 		// Check for reserved schema names early, before processing
-		if (isset($schemaData['id'])) {
-			if (in_array($schemaData['id'], SchemaData::RESERVED_SCHEMAS) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES)) {
-				throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
-			}
+		if (isset($schemaData['id']) && (in_array($schemaData['id'], SchemaData::RESERVED_SCHEMAS) || in_array($schemaData['id'], SchemaData::RESERVED_NAMES))) {
+			throw new \UnexpectedValueException("Schema type ({$schemaData['id']}) is reserved", 1);
 		}
 
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
