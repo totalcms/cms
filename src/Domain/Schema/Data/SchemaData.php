@@ -20,6 +20,7 @@ class SchemaData
 		'jumpstart',
 		'new', // not allowed for /admin url routes
 		'schema',
+		'template',
 	];
 	public const RESERVED_SCHEMAS = [
 		'auth',
