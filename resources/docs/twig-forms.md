@@ -245,7 +245,7 @@ Configure form actions for different operations. Actions are arrays that support
 
 ##### Multiple Sequential Actions
 
-You can chain multiple actions that will execute sequentially. If one action fails, subsequent actions won't execute:
+You can chain multiple actions that will execute sequentially. By default, if one action fails, subsequent actions won't execute:
 
 ```twig
 {{ cms.form.builder('products', {
@@ -260,6 +260,89 @@ You can chain multiple actions that will execute sequentially. If one action fai
         }
     ]
 }) }}
+```
+
+##### Continue on Failure
+
+Add `continue: true` to any action to continue executing subsequent actions even if that action fails. This is useful for optional actions like webhooks, analytics tracking, or notifications that shouldn't block critical user-facing actions.
+
+**Behavior:**
+- Failed actions with `continue: true` are logged to the browser console with warnings
+- Form state remains "success" - users won't see error messages
+- Subsequent actions continue executing normally
+- Perfect for fire-and-forget operations
+
+**Basic Example:**
+```twig
+{{ cms.form.builder('products', {
+    newActions: [
+        {
+            action: 'webhook',
+            link: 'https://api.example.com/notify',
+            continue: true  # If webhook fails, still redirect
+        },
+        {
+            action: 'redirect-object',
+            link: '?id='
+        }
+    ]
+}) }}
+```
+
+**Real-World Example - Analytics & Notifications:**
+```twig
+{{ cms.form.builder('orders', {
+    newActions: [
+        {
+            action: 'webhook',
+            link: 'https://analytics.example.com/track',
+            continue: true  # Don't block on analytics failure
+        },
+        {
+            action: 'webhook',
+            link: 'https://slack.example.com/notify',
+            continue: true  # Don't block on Slack notification failure
+        },
+        {
+            action: 'webhook',
+            link: 'https://email.example.com/send',
+            continue: true  # Don't block on email failure
+        },
+        {
+            action: 'redirect-object',
+            link: '/orders/{id}'  # Always redirect user to order page
+        }
+    ]
+}) }}
+```
+
+**Mixed Critical & Optional Actions:**
+```twig
+{{ cms.form.builder('products', {
+    newActions: [
+        {
+            action: 'webhook',
+            link: 'https://api.inventory.com/reserve'
+            # No continue - inventory reservation is critical
+        },
+        {
+            action: 'webhook',
+            link: 'https://api.analytics.com/track',
+            continue: true  # Analytics is optional
+        },
+        {
+            action: 'redirect-object',
+            link: '/products/{id}'
+        }
+    ]
+}) }}
+```
+
+**Console Output:**
+When an action with `continue: true` fails, you'll see:
+```
+Action execution failed: Error: Action webhook failed: 503 Service Unavailable
+Action failed but continuing due to continue: true {action: 'webhook', link: '...', continue: true}
 ```
 
 ##### Available Action Types

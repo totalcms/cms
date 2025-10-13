@@ -52,30 +52,21 @@ export default class TotalForm {
 		// Define option defaults
 		const defaults = {
 			actions : {
-				new : {
-					action : null,
-					link   : null,
-				},
-				edit : {
-					action : null,
-					link   : null,
-				},
-				delete : {
-					action : null,
-					link   : null,
-				},
+				new    : [],
+				edit   : [],
+				delete : [],
 			}
 		};
 		this.options = Object.assign({}, defaults, options);
 
-		if (this.form.dataset.newAction) {
-			this.options.actions.new = JSON.parse(this.form.dataset.newAction);
+		if (this.form.dataset.newActions) {
+			this.options.actions.new = JSON.parse(this.form.dataset.newActions);
 		}
-		if (this.form.dataset.editAction) {
-			this.options.actions.edit = JSON.parse(this.form.dataset.editAction);
+		if (this.form.dataset.editActions) {
+			this.options.actions.edit = JSON.parse(this.form.dataset.editActions);
 		}
-		if (this.form.dataset.deleteAction) {
-			this.options.actions.delete = JSON.parse(this.form.dataset.deleteAction);
+		if (this.form.dataset.deleteActions) {
+			this.options.actions.delete = JSON.parse(this.form.dataset.deleteActions);
 		}
 		this.delayActions = 2500;
 
@@ -367,10 +358,6 @@ export default class TotalForm {
         if (window.confirm("Are you sure that you want to delete this? This cannot be undone.")) {
             this.processing();
 
-            // After delete, redirect to current page without any URL parameters
-            this.options.editAction = "redirect";
-            this.options.editLink   = location.origin + location.pathname;
-
 			let deleteAPI = `/collections/${this.collection}/${this.id}`;
 
 			if (this.isSchemaForm()) {
@@ -384,7 +371,7 @@ export default class TotalForm {
 			}
 
             this.api.postAPI(deleteAPI, {}, "DELETE")
-                .then(response => this.runDeleteAction(response))
+                .then(response => this.runDeleteActions(response))
                 .catch(error => this.error(error));
         }
     }
@@ -400,7 +387,7 @@ export default class TotalForm {
     }
 
     afterSaveAction(response) {
-		const runEditAction = this.isEditMode();
+		const runEditActions = this.isEditMode();
         this.success();
         const waitUntilSaved = () => {
             // wait until all saving states have completed
@@ -408,7 +395,7 @@ export default class TotalForm {
 				// Mark all fields as saved
 				this.fields.forEach(field => field.saved());
                 // run actions
-                return runEditAction ? this.runEditAction() : this.runNewAction();
+                return runEditActions ? this.runEditActions() : this.runNewActions();
             }
             // Check again
             window.setTimeout(waitUntilSaved,250);
@@ -416,7 +403,7 @@ export default class TotalForm {
         waitUntilSaved();
     }
 
-    runAction(action) {
+    async runAction(action) {
         switch (action.action) {
             case "refresh":
                 location.reload(true);
@@ -434,11 +421,14 @@ export default class TotalForm {
                 break;
 			case "ajax":
 			case "webhook":
-				fetch(action.link, {
+				const response = await fetch(action.link, {
 					method : 'POST',
 					mode   : 'cors',
 					body   : JSON.stringify(this.generateData()),
-				 });
+				});
+				if (!response.ok) {
+					throw new Error(`Action ${action.action} failed: ${response.statusText}`);
+				}
 				break;
 			case "back":
 				const referrerUrl = new URL(document.referrer);
@@ -446,19 +436,52 @@ export default class TotalForm {
 					document.location = document.referrer;
 				}
 				break;
+			default:
+				console.warn(`Unknown action type: ${action.action}`);
         }
     }
 
-    runNewAction() {
-		setTimeout(() => this.runAction(this.options.actions.new), this.delayActions);
+	/**
+	 * Run an array of actions sequentially.
+	 * By default, if an action fails, subsequent actions won't execute.
+	 * Set `continue: true` on an action to continue execution even if it fails.
+	 *
+	 * @param {Array} actions - Array of action objects to execute
+	 */
+	async runActions(actions) {
+		if (!Array.isArray(actions) || actions.length === 0) {
+			return;
+		}
+
+		for (const action of actions) {
+			try {
+				await this.runAction(action);
+			} catch (error) {
+				console.error(`Action execution failed:`, error);
+
+				// If continue is true, log the error but keep going
+				if (action.continue === true) {
+					console.warn(`Action failed but continuing due to continue: true`, action);
+					continue;
+				}
+
+				// Otherwise, stop execution and show error
+				this.error(error.message || 'Action execution failed');
+				throw error; // Re-throw to prevent further execution
+			}
+		}
+	}
+
+    runNewActions() {
+		setTimeout(() => this.runActions(this.options.actions.new), this.delayActions);
     }
 
-    runEditAction() {
-		setTimeout(() => this.runAction(this.options.actions.edit), this.delayActions);
+    runEditActions() {
+		setTimeout(() => this.runActions(this.options.actions.edit), this.delayActions);
     }
 
-	runDeleteAction() {
-		setTimeout(() => this.runAction(this.options.actions.delete), 250);
+	runDeleteActions() {
+		setTimeout(() => this.runActions(this.options.actions.delete), 250);
     }
 
     //-------------------------
