@@ -13,6 +13,7 @@
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css"/>
 
 	{% block head %}{% endblock %}
+	{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 </head>
 <body>
     {% block content %}{% endblock %}
@@ -20,5 +21,6 @@
 	<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
 
 	{% block bodyBelow %}{% endblock %}
+	{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
 </body>
 </html>

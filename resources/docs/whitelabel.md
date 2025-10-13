@@ -10,7 +10,7 @@ White label templates let you inject custom content into specific areas of the a
 
 ## Available Templates
 
-Total CMS provides six white label template locations:
+Total CMS provides eight white label template locations:
 
 | Template File | Location | Description |
 |--------------|----------|-------------|
@@ -20,6 +20,8 @@ Total CMS provides six white label template locations:
 | `whitelabel/download-auth-below.twig` | Download auth page | Content displayed below the download authentication form |
 | `whitelabel/admin-logo.twig` | Admin header | Custom logo replacing the Total CMS logo |
 | `whitelabel/admin-home.twig` | Admin home page | Custom content for the dashboard home page |
+| `whitelabel/admin-head.twig` | Admin `<head>` section | Custom content injected before closing `</head>` tag |
+| `whitelabel/admin-body-below.twig` | Admin body bottom | Custom content injected before closing `</body>` tag |
 
 ## Setup
 
@@ -44,8 +46,12 @@ tcms-data/
     whitelabel/
       admin-logo.twig
       admin-home.twig
+      admin-head.twig
+      admin-body-below.twig
       login-above.twig
-      (etc.)
+      login-below.twig
+      download-auth-above.twig
+      download-auth-below.twig
 ```
 
 ### 2. Create Your Templates
@@ -126,6 +132,86 @@ Or with an SVG:
 	</p>
 </div>
 ```
+
+### Admin Head Section
+
+**File:** `whitelabel/admin-head.twig`
+
+Inject custom content into the `<head>` section of all admin pages. Perfect for custom CSS, analytics, or meta tags:
+
+```twig
+{# Custom CSS for branding #}
+<style>
+:root {
+	--totalform-accent: 45 0.15 220;  /* Custom brand color in OKLCH */
+}
+.dash-sidebar {
+	background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+}
+</style>
+
+{# Custom fonts #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+{# Analytics or tracking code #}
+<script>
+// Your analytics code here
+</script>
+
+{# Custom favicon #}
+<link rel="icon" type="image/png" href="/images/custom-favicon.png">
+```
+
+**Common Use Cases:**
+- Custom CSS for dashboard theming
+- Web fonts for consistent branding
+- Analytics/tracking scripts
+- Custom favicons
+- Meta tags for internal tools
+- Third-party service integrations
+
+### Admin Body Bottom
+
+**File:** `whitelabel/admin-body-below.twig`
+
+Inject content before the closing `</body>` tag. Ideal for chat widgets, help systems, or custom JavaScript:
+
+```twig
+{# Customer support chat widget #}
+<script>
+(function() {
+	// Chat widget initialization
+	window.ChatWidget = {
+		apiKey: 'your-api-key',
+		position: 'bottom-right'
+	};
+})();
+</script>
+<script src="https://chat.yourservice.com/widget.js" async></script>
+
+{# Custom admin functionality #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	// Add custom keyboard shortcuts
+	document.addEventListener('keydown', function(e) {
+		if (e.ctrlKey && e.key === 'k') {
+			// Open quick search
+			e.preventDefault();
+			// Your custom functionality
+		}
+	});
+});
+</script>
+```
+
+**Common Use Cases:**
+- Live chat widgets (Intercom, Drift, Help Scout)
+- Help documentation widgets
+- Custom JavaScript functionality
+- Keyboard shortcuts
+- Admin notifications system
+- Performance monitoring scripts
 
 ### Admin Home Page
 
