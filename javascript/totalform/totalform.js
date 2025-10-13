@@ -141,6 +141,9 @@ export default class TotalForm {
 	isSchemaForm() {
 		return this.type === "schema";
 	}
+	isTemplateForm() {
+		return this.type === "template";
+	}
     // Check to see if the object is a HTML node.
     isDomNode(node){
         return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
@@ -376,6 +379,9 @@ export default class TotalForm {
 			if (this.isCollectionForm()) {
 				deleteAPI = `/collections/${this.id}`;
 			}
+			if (this.isTemplateForm()) {
+				deleteAPI = this.route;
+			}
 
             this.api.postAPI(deleteAPI, {}, "DELETE")
                 .then(response => this.runDeleteAction(response))
@@ -418,9 +424,9 @@ export default class TotalForm {
             case "redirect-object":
 				const link = decodeURI(action.link);
 				if (link.match("{id}"))  {
-					document.location = link.replace("{id}",this.id);
+					document.location = link.replace("{id}", this.id);
 				} else {
-					document.location = link+this.id;
+					document.location = link + this.id;
 				}
                 break;
             case "redirect":

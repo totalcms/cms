@@ -1,0 +1,56 @@
+<header>
+	<h1><a href="templates">templates</a> / <span>{{ url.template }}</span></h1>
+	<button class="dash-action-dots" title="Template Actions" popovertarget="template-actions"></button>
+	<nav popover id="template-actions">
+		<ul>
+			<li class="duplicate"><a href="#" onclick="duplicateTemplate(event)">Duplicate</a></li>
+		</ul>
+	</nav>
+</header>
+
+{{ cms.form.template({
+	path        : url.template,
+	save        : "Save",
+	delete      : "Delete",
+	helpStyle   : 'label',
+	helpOnFocus : true,
+	deleteAction : {
+		"action" : "redirect",
+		"link"   : "templates"
+	},
+	editAction : {
+		"action" : "refresh",
+	},
+}) }}
+
+<script>
+function duplicateTemplate(event) {
+	event.preventDefault();
+	// Get the current form data
+	const form = document.querySelector('form[data-form="template"]');
+	if (!form || !form.totalform) {
+		console.error('Template form not found');
+		return;
+	}
+
+	const formData = form.totalform.generateData();
+
+	// Create a temporary form to POST the data to /admin/templates/new
+	const tempForm               = document.createElement('form');
+	      tempForm.method        = 'POST';
+	      tempForm.action        = 'templates/new';
+	      tempForm.style.display = 'none';
+
+	// Add form data as hidden inputs
+	for (const [key, value] of Object.entries(formData)) {
+		const input = document.createElement('input');
+		input.type = 'hidden';
+		input.name = key;
+		input.value = typeof value === 'object' ? JSON.stringify(value) : value;
+		tempForm.appendChild(input);
+	}
+
+	document.body.appendChild(tempForm);
+	tempForm.submit();
+}
+</script>

@@ -40,10 +40,12 @@ readonly class TemplateUpdateAction
 		// Parse path from URL to get current location
 		[$folder, $id] = TemplateRepository::parsePath($path);
 
-		// Get updated values from JSON body (allowing rename/move)
-		$newId       = (string)($data['id'] ?? $id);
-		$newFolder   = isset($data['folder']) && $data['folder'] !== '' ? (string)$data['folder'] : null;
+		// Get updated values from JSON body (ID now contains the full path)
+		$newPath     = (string)($data['id'] ?? $path);
 		$template    = (string)($data['template'] ?? '');
+
+		// Parse the new path
+		[$newFolder, $newId] = TemplateRepository::parsePath($newPath);
 
 		// If the template is being moved/renamed, delete the old one
 		if ($newId !== $id || $newFolder !== $folder) {
