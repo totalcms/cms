@@ -42,12 +42,23 @@ body {
 			display          : block;
 			width            : 3rem;
 			height           : 3rem;
+			position         : relative;
+			text-indent      : -9999px;
+		}
+		a:not(.custom-logo) {
 			background-color : oklch(var(--totalform-nearblack));
 			mask-size        : 1.5rem;
 			mask-repeat      : no-repeat;
 			mask-position    : center;
-			position         : relative;
-			text-indent      : -9999px;
+		}
+		.custom-logo {
+			display         : grid;
+			justify-content : center;
+			align-items     : center;
+
+			svg, img {
+				width : 1.5rem;
+			}
 		}
 	}
 	.home {

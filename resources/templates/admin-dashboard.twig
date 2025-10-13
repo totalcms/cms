@@ -23,7 +23,10 @@
             <nav>
                 <ul class="menu">
                     <li class="menu-item">
-                        <a class="home" href="" title="Home">Home</a>
+						{{ include([
+							'admin-logo.twig',
+							'admin-logo-default.twig'
+						], ignore_missing = true) }}
                     </li>
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
                         <a class="collections" href="collections" title="Collections">Collections</a>
