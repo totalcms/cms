@@ -4,50 +4,36 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
-use TotalCMS\Renderer\RawRenderer;
+use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\TemplateMetaTransformer;
 
 readonly class TemplateSaveAction
 {
 	/**
 	 * The constructor.
 	 *
-	 * @param RawRenderer $renderer The renderer
+	 * @param JsonRenderer $renderer The renderer
 	 * @param TemplateSaver $service Template save service
 	 */
-	public function __construct(private RawRenderer $renderer, private TemplateSaver $service)
+	public function __construct(private JsonRenderer $renderer, private TemplateSaver $service)
 	{
 	}
 
 	/**
 	 * Invokable Action.
-	 *
-	 * @param array<string,string> $args The routing arguments
+	 * Creates a new template from JSON request body.
 	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$content = (string)$request->getBody();
-		$path    = $args['path'] ?? $args['template'] ?? '';
+		$data = (array)$request->getParsedBody();
 
-		// Parse path into folder and template name
-		[$folder, $name] = TemplateRepository::parsePath($path);
+		$id       = (string)($data['id'] ?? '');
+		$folder   = isset($data['folder']) && $data['folder'] !== '' ? (string)$data['folder'] : null;
+		$template = (string)($data['template'] ?? '');
 
-		// ! This is a horrible hack purely so that I can test this action.
-		// ! The pest slim post function does not allow for sending a plain text body with a post request.
-		if ($this->isJson($content)) {
-			$content = json_decode($content, true)[0];
-		}
+		$templateData = $this->service->saveTemplate($id, $template, $folder);
 
-		$templateData = $this->service->saveTemplate($name, $content, $folder);
-
-		return $this->renderer->render($response, $templateData->contents);
-	}
-
-	private function isJson(string $string): bool
-	{
-		json_decode($string);
-
-		return json_last_error() === JSON_ERROR_NONE;
+		return $this->renderer->jsonItem($response, $templateData, new TemplateMetaTransformer());
 	}
 }
