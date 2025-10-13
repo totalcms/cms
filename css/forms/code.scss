@@ -8,23 +8,35 @@
 	display: none;
 }
 
+// Form field wrapper - constrain to form width
+.form-field[data-type="code"] {
+	max-width: 100%;
+	overflow: hidden; // Prevent expanding beyond form
+}
+
 // TotalForm code editor wrapper
 .totalform-code-editor {
 	border: 1px solid oklch(var(--totalform-border-color));
 	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius)!important;
-	overflow: hidden;
+	overflow: hidden; // Clip horizontal overflow
 	flex: 1; // Allow it to grow in flex containers
 	width: 100%; // Ensure full width
+	max-width: 100%; // Never exceed container width
 	min-width: 0; // Prevent flex shrinking below content size
 
 	// Auto-resize functionality for editors
 	.CodeMirror-scroll {
-		overflow: visible !important;
+		overflow-y: visible !important; // Allow vertical expansion
+		overflow-x: auto !important; // Enable horizontal scrolling
 	}
 
-	.CodeMirror-scrollbar-filler,
-	.CodeMirror-gutter-filler {
+	.CodeMirror-scrollbar-filler {
 		display: none;
+	}
+
+	// Show horizontal scrollbar gutter
+	.CodeMirror-gutter-filler {
+		background-color: oklch(var(--totalform-nearwhite));
 	}
 
 	// Ensure proper height and auto-resize
@@ -32,9 +44,32 @@
 		height: auto;
 		min-height: 250px;
 		width: 100%; // Ensure CodeMirror takes full width
+		max-width: 100%; // Never exceed wrapper width
 		font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
 		font-size: 14px;
 		line-height: 1.4;
+	}
+
+	// Style the horizontal scrollbar
+	.CodeMirror-hscrollbar {
+		height: 8px;
+
+		&::-webkit-scrollbar {
+			height: 8px;
+		}
+
+		&::-webkit-scrollbar-track {
+			background: oklch(var(--totalform-nearwhite));
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background: oklch(var(--totalform-mediumgray));
+			border-radius: 4px;
+
+			&:hover {
+				background: oklch(var(--totalform-darkgray));
+			}
+		}
 	}
 
 	// Line numbers styling
