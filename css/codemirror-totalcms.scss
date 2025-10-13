@@ -61,7 +61,7 @@
 	&.CodeMirror {
 		height        : auto;
 		min-height    : 250px; // Increased for better visibility (10+ lines)
-		font-size     : 14px;
+		// font-size     : 14px;
 		line-height   : 1.5;
 		border        : none;
 		border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
@@ -616,6 +616,7 @@
 }
 
 // Twig editor specific styling - Uses CSS variables for theming
+// Note: Twig mode includes HTML syntax highlighting for HTML tags within templates
 .twig-editor {
 	border: 1px solid oklch(var(--totalform-border-color));
 	border-radius: var(--totalform-radius);
@@ -626,10 +627,15 @@
 		background-color: oklch(var(--totalform-purewhite));
 		color: oklch(var(--totalform-nearblack));
 
-		// Twig delimiters {{ }} {% %} {# #}
+		// Both Twig delimiters {{ }} {% %} {# #} AND HTML tags <div> <p>
 		.cm-tag {
 			color: var(--twig-delimiter);
 			font-weight: 600;
+		}
+
+		// HTML attributes (class, id, href, etc.)
+		.cm-attribute {
+			color: var(--twig-variable-2);
 		}
 
 		// Twig variables and properties
@@ -645,7 +651,7 @@
 			color: var(--twig-variable-3);
 		}
 
-		// Strings and values
+		// Strings and values (both Twig and HTML attribute values)
 		.cm-string {
 			color: var(--twig-string);
 		}
@@ -678,7 +684,7 @@
 			color: var(--twig-bracket);
 		}
 
-		// Comments
+		// Comments (both Twig {# #} and HTML <!-- -->)
 		.cm-comment {
 			color: var(--twig-comment);
 			font-style: italic;
@@ -689,7 +695,7 @@
 			color: var(--twig-property);
 		}
 
-		// Meta information
+		// Meta information (HTML doctypes, etc.)
 		.cm-meta {
 			color: var(--twig-meta);
 		}
@@ -738,7 +744,7 @@
    Comments: #75715e (muted green)
 */
 
-// HTML output editor styling
+// HTML output editor styling - matches Twig editor color scheme
 .html-output-editor {
 	border: 1px solid oklch(var(--totalform-border-color));
 	border-radius: var(--totalform-radius);
@@ -748,11 +754,12 @@
 	&.CodeMirror {
 		height: auto;
 		min-height: 200px;
-		font-size: 14px;
+		// font-size: 14px;
 		line-height: 1.5;
 		border: none;
 		border-radius: var(--totalform-radius);
-		background-color: oklch(var(--totalform-nearwhite));
+		background-color: oklch(var(--totalform-purewhite));
+		color: oklch(var(--totalform-nearblack));
 
 		.CodeMirror-scroll {
 			min-height: 200px;
@@ -789,16 +796,78 @@
 			border-left-color: oklch(var(--totalform-accent));
 		}
 
+		// Use Twig color scheme for HTML - creates a consistent look
 		.cm-tag {
-			color: #569cd6; // HTML tags
+			color: var(--twig-delimiter);
+			font-weight: 600;
 		}
 
 		.cm-attribute {
-			color: #9cdcfe; // HTML attributes
+			color: var(--twig-variable-2);
 		}
 
 		.cm-string {
-			color: #ce9178; // Attribute values
+			color: var(--twig-string);
+		}
+
+		.cm-variable {
+			color: var(--twig-variable);
+		}
+
+		.cm-variable-2 {
+			color: var(--twig-variable-2);
+		}
+
+		.cm-variable-3 {
+			color: var(--twig-variable-3);
+		}
+
+		.cm-number {
+			color: var(--twig-number);
+		}
+
+		.cm-keyword {
+			color: var(--twig-keyword);
+			font-weight: 600;
+		}
+
+		.cm-builtin {
+			color: var(--twig-builtin);
+		}
+
+		.cm-atom {
+			color: var(--twig-atom);
+		}
+
+		.cm-operator {
+			color: var(--twig-operator);
+		}
+
+		.cm-bracket {
+			color: var(--twig-bracket);
+		}
+
+		.cm-comment {
+			color: var(--twig-comment);
+			font-style: italic;
+		}
+
+		.cm-property {
+			color: var(--twig-property);
+		}
+
+		.cm-meta {
+			color: var(--twig-meta);
+		}
+
+		.cm-qualifier {
+			color: var(--twig-qualifier);
+		}
+
+		.cm-error {
+			background-color: var(--twig-error-bg);
+			color: var(--twig-error-color);
+			border-bottom: 1px wavy var(--twig-error-color);
 		}
 	}
 }
@@ -808,7 +877,7 @@
 	margin-bottom: 2rem;
 
 	.CodeMirror {
-		font-size : 14px;
+		// font-size : 14px;
 	}
 
 	.editor-header {
@@ -873,7 +942,7 @@
 // Responsive adjustments
 @media (max-width: 768px) {
 	.totalcms-editor .CodeMirror {
-		font-size: 14px;
+		// font-size: 14px;
 	}
 
 	.editor-container .editor-header {
@@ -900,7 +969,7 @@
 	.CodeMirror {
 		height: auto;
 		min-height: 200px;
-		font-size: 14px;
+		// font-size: 14px;
 		line-height: 1.5;
 		border: none;
 		border-radius: var(--totalform-radius);
@@ -988,7 +1057,7 @@
 	.CodeMirror {
 		border: none;
 		border-radius: 0;
-		font-size: 14px;
+		// font-size: 14px;
 		line-height: 1.4;
 		height: auto;
 		min-height: 200px;
