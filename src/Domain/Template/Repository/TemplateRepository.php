@@ -170,6 +170,7 @@ class TemplateRepository extends StorageRepository
 
 	/**
 	 * List custom templates.
+	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @return array<string>

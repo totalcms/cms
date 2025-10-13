@@ -37,14 +37,14 @@ it('cannot save a reserved schema', function (): void {
 	$reservedSchemas = glob(reservedSchemaPath() . '*.json');
 	expect($reservedSchemas)->toBeArray()->not->toBeEmpty();
 	foreach ($reservedSchemas as $schema) {
-		$json = file_get_contents($schema);
+		$json     = file_get_contents($schema);
 		$response = postJson('/schemas', json_decode($json, true));
 
 		// Debug output
 		if ($response->getStatusCode() !== 400) {
 			echo "\nStatus: " . $response->getStatusCode() . "\n";
-			echo "Body: " . $response->getBody() . "\n";
-			echo "Schema: " . basename($schema) . "\n";
+			echo 'Body: ' . $response->getBody() . "\n";
+			echo 'Schema: ' . basename($schema) . "\n";
 		}
 
 		$response->assertBadRequest()

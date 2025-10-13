@@ -65,6 +65,7 @@ function templatePath(string $id, ?string $folder = null): string
 	if ($folder !== null && $folder !== '') {
 		$basePath .= $folder . '/';
 	}
+
 	return $basePath . $id . '.twig';
 }
 

@@ -18,7 +18,7 @@ readonly class TemplateDeleteAction
 	 */
 	public function __construct(
 		private JsonRenderer $renderer,
-		private TemplateRemover $service
+		private TemplateRemover $service,
 	) {
 	}
 

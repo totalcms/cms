@@ -22,7 +22,7 @@ readonly class TemplateUpdateAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private TemplateSaver $saver,
-		private TemplateRemover $remover
+		private TemplateRemover $remover,
 	) {
 	}
 

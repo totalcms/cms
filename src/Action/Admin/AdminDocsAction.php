@@ -72,12 +72,8 @@ readonly class AdminDocsAction
 			$data            = $document->getData();
 			$data['content'] = $parsedown->text($document->getContent());
 		} elseif (file_exists($htmlFile)) {
-			$htmlContents = file_get_contents($htmlFile);
-			if ($htmlContents !== false) {
-				$data['content'] = $htmlContents;
-			} else {
-				$data['content'] = 'Unable to read page';
-			}
+			$htmlContents    = file_get_contents($htmlFile);
+			$data['content'] = $htmlContents !== false ? $htmlContents : 'Unable to read page';
 		} else {
 			$data['content'] = 'Page not found';
 		}
