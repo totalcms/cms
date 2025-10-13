@@ -6,16 +6,20 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
+use TotalCMS\Renderer\JsonRenderer;
 
 readonly class TemplateDeleteAction
 {
 	/**
 	 * The constructor.
 	 *
-	 * @param TemplateRemover $service Template save service
+	 * @param JsonRenderer    $renderer JSON renderer
+	 * @param TemplateRemover $service  Template remover service
 	 */
-	public function __construct(private TemplateRemover $service)
-	{
+	public function __construct(
+		private JsonRenderer $renderer,
+		private TemplateRemover $service
+	) {
 	}
 
 	/**
@@ -36,6 +40,6 @@ readonly class TemplateDeleteAction
 			return $response->withStatus(500);
 		}
 
-		return $response;
+		return $this->renderer->json($response, ['deleted' => $deleted]);
 	}
 }
