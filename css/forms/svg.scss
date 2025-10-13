@@ -1,5 +1,55 @@
+// Form field wrapper - constrain to form width
+.form-field[data-type="svg"] {
+	max-width: 100%;
+	overflow: hidden; // Prevent expanding beyond form
+}
+
 .svg-field {
 	svg {
 		max-height : 300px;
+	}
+
+	// Froala editor wrapper
+	.fr-box {
+		max-width: 100%;
+		overflow: hidden;
+	}
+
+	// Code view (CodeMirror) constraints
+	.fr-code {
+		max-width: 100%;
+		overflow: hidden;
+
+		.CodeMirror {
+			max-width: 100%;
+			width: 100%;
+
+			.CodeMirror-scroll {
+				overflow-y: auto !important; // Vertical scrolling
+				overflow-x: auto !important; // Horizontal scrolling for long lines
+			}
+		}
+
+		// Style the horizontal scrollbar
+		.CodeMirror-hscrollbar {
+			height: 8px;
+
+			&::-webkit-scrollbar {
+				height: 8px;
+			}
+
+			&::-webkit-scrollbar-track {
+				background: oklch(var(--totalform-nearwhite));
+			}
+
+			&::-webkit-scrollbar-thumb {
+				background: oklch(var(--totalform-mediumgray));
+				border-radius: 4px;
+
+				&:hover {
+					background: oklch(var(--totalform-darkgray));
+				}
+			}
+		}
 	}
 }

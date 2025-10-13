@@ -23,10 +23,33 @@ export default class SVGField extends TotalField {
     getValue() {
         // Check if Froala is initialized before trying to get the value
         if (this.froala && this.froala.html) {
+            // If in code view, toggle out and back in to sync content
+            if (this.froala.codeView && this.froala.codeView.isActive()) {
+                // Froala automatically syncs when toggling
+                this.froala.codeView.toggle();
+                this.froala.codeView.toggle();
+            }
             return this.froala.html.get();
         }
         // Fall back to input value if Froala is not ready
         return this.input.value;
+    }
+
+    validate() {
+        // Sync the value from CodeMirror/Froala to the textarea before validation
+        if (this.froala && this.froala.html) {
+            // If in code view, toggle out and back in to sync content
+            if (this.froala.codeView && this.froala.codeView.isActive()) {
+                // Froala automatically syncs content when toggling code view
+                this.froala.codeView.toggle();
+                this.froala.codeView.toggle();
+            }
+            // Update the underlying textarea with Froala's content
+            this.input.value = this.froala.html.get();
+        }
+
+        // Call parent validate method
+        return super.validate();
     }
 
     initFroala() {
