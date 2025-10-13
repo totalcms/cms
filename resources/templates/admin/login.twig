@@ -7,7 +7,7 @@
 
 	<section class="login-above">
 		{{ include([
-			'login-above.twig',
+			'whitelabel/login-above.twig',
 			'login-above-default.twig'
 		], ignore_missing = true) }}
 	</section>
@@ -68,7 +68,7 @@
 	</section>
 
 	<section class="login-below">
-		{{ include('login-below.twig', ignore_missing = true) }}
+		{{ include('whitelabel/login-below.twig', ignore_missing = true) }}
 	</section>
 </main>
 {% endblock %}
