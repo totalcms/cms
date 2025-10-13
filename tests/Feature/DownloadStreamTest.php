@@ -80,7 +80,7 @@ describe('Download and Stream API', function (): void {
 
 		it('handles non-existent files appropriately', function (): void {
 			$response = get('/download/nonexistent/nonexistent/file');
-			expect($response->getStatusCode())->toBeIn([404, 500]); // 500 if collection doesn't exist
+			expect($response->getStatusCode())->toBeIn([400, 404, 500]); // 400 for validation, 404 for not found, 500 if other error
 		});
 
 		it('sets correct Content-Disposition header for downloads', function (): void {
@@ -163,7 +163,7 @@ describe('Download and Stream API', function (): void {
 
 		it('handles non-existent files appropriately', function (): void {
 			$response = get('/stream/nonexistent/nonexistent/file');
-			expect($response->getStatusCode())->toBeIn([404, 500]); // 500 if collection doesn't exist
+			expect($response->getStatusCode())->toBeIn([400, 404, 500]); // 400 for validation, 404 for not found, 500 if other error
 		});
 	});
 

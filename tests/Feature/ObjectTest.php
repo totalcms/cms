@@ -189,7 +189,7 @@ it('can update an object with new data', function (): void {
 	$post['id'] = 'broken-id';
 
 	putJson("/collections/{$collection}/{$id}", $post)
-		->assertInternalServerError()
+		->assertBadRequest()
 		->assertSee('Does not match object ID');
 });
 
@@ -337,7 +337,7 @@ it('can save an objects for every property type', function (): void {
 	$response = postJson('/collections', $schema);
 	if ($response->getStatusCode() !== 200) {
 		// Skip test if collection creation fails
-		expect($response->getStatusCode())->toBe(500); // Expected failure
+		expect($response->getStatusCode())->toBeIn([400, 500]); // 400 for validation, 500 for other errors
 
 		return;
 	}
