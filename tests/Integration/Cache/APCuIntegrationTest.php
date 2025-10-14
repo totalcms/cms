@@ -272,7 +272,9 @@ final class APCuIntegrationTest extends TestCase
 
 		// Clear all caches
 		$result = $this->cacheManager->clearAllCaches();
-		$this->assertTrue($result, 'Should successfully clear all caches');
+		$this->assertIsArray($result, 'Should return array with detailed status');
+		$this->assertArrayHasKey('success', $result);
+		$this->assertTrue($result['success'], 'Should successfully clear all caches');
 
 		// Note: clearAllCaches() might clear all of APCu, not just our prefixed data
 		// This is expected behavior for the "clear all" operation
