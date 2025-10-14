@@ -6,13 +6,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Domain\Security\Encryption\Cipher;
-use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpMethodNotAllowedException;
+use Slim\Exception\HttpNotFoundException;
+use TotalCMS\Domain\Security\Encryption\Cipher;
 
 class SentryMiddleware implements MiddlewareInterface
 {
-	public const SALT = 's3ntryR0cks';
+	public const SALT             = 's3ntryR0cks';
 	private const DEFAULT_OPTIONS = [
 		'dsn' => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
 		// Specify a fixed sample rate
@@ -26,7 +26,7 @@ class SentryMiddleware implements MiddlewareInterface
 	];
 
 	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
-	public function __construct(private bool $enable = true)
+	public function __construct(private readonly bool $enable = true)
 	{
 	}
 
@@ -34,7 +34,7 @@ class SentryMiddleware implements MiddlewareInterface
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
-		if ($this->enable === true) {
+		if ($this->enable) {
 			self::initSentry();
 		}
 

@@ -33,13 +33,11 @@ readonly class SettingsSaver
 		// General settings are saved at the top level, not under 'general' key
 		if ($section === 'general') {
 			$settings = $this->deepMergeArrays($settings, $sectionData);
-		} else {
+		} elseif (isset($settings[$section]) && is_array($settings[$section])) {
 			// Deep merge the section data
-			if (isset($settings[$section]) && is_array($settings[$section])) {
-				$settings[$section] = $this->deepMergeArrays($settings[$section], $sectionData);
-			} else {
-				$settings[$section] = $sectionData;
-			}
+			$settings[$section] = $this->deepMergeArrays($settings[$section], $sectionData);
+		} else {
+			$settings[$section] = $sectionData;
 		}
 
 		$this->writeSettings($settings);
