@@ -9,6 +9,31 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 ### Related Projects
 - **Total CMS License API** (`/Users/joeworkman/Websites/license.totalcms.co`): License validation and trial management with similar Slim 4 architecture
 
+### Development Priorities (Pre-3.1 Launch)
+
+**Current Phase**: Beta development with focus on stability and documentation
+
+**Primary Focus Areas**:
+1. **User Documentation Quality**: The biggest gap before public launch is comprehensive, well-organized documentation for end users
+2. **Feature Completion**: Core feature set is stable and production-ready
+3. **Code Quality**: Maintaining PHPStan Level 8, comprehensive test coverage, and clean architecture
+4. **Performance**: Memory management, caching, and optimization for large datasets
+
+**Documentation Priorities** (Target: 3.1 Launch):
+- Comprehensive user guides for all collection types
+- Template development documentation with practical examples
+- Field settings reference with visual examples
+- Import/export workflows including JumpStart system
+- Best practices for common use cases
+- Video tutorials for key features
+- Migration guides from other CMS platforms
+
+**Post-3.1 Goals**:
+- Dark mode support for admin interface
+- Additional import adapters for other CMS platforms
+- Performance optimizations based on production usage
+- Community-contributed templates and extensions
+
 ## Technology Stack
 
 - **Backend**: PHP 8.2+, Slim 4, Twig 3, PHP-DI 7, PSR-7/PSR-15
@@ -19,22 +44,21 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 
 ### Build and Development
 ```bash
-# Full application build
-composer run build
-bin/build.sh
-
-# Frontend asset building
+# Frontend asset building (primary development command)
 composer run esbuild
-bin/build-assets.sh
 yarn build
 
-# Development with file watching
+# Development with file watching (typically runs in background)
 bin/watch.sh
-bin/devserver.sh
 
-# Create distribution bundle
-bin/make-bundle.php
+# Full application build (manual release builds only)
+composer run build
+
+# Create distribution bundle (manual release builds only)
 composer run bundle
+
+# Note: Scripts in /bin/ are primarily for manual release builds.
+# During development, use composer commands or keep watch.sh running.
 ```
 
 ### Code Quality and Testing
@@ -134,9 +158,31 @@ bin/codecount.sh
 - **Modern PHP**: Strict typing, PSR standards, PHP 8.2+ features with PHP 8.4 compatibility
 - **Enhanced Libraries**: Custom couleur fork with OKLCH improvements, native EXIF processing
 
-## Recent Major Updates (2024)
+## Recent Major Updates (2024-2025)
 
-### License System Modernization (Latest)
+### Cache Management Enhancements (Latest)
+- **Detailed Status Arrays**: `CacheManager::clearAllCaches()` returns detailed per-backend status instead of boolean
+- **Emergency Cache Improvements**: Enhanced debugging with clear success/failure reasons for each cache backend
+- **Better Observability**: All cache operations return structured data for easier troubleshooting
+
+### Memory Management & Performance
+- **Streaming JSON Export**: JumpStart exports use streaming to handle large datasets without memory exhaustion
+- **Incremental Processing**: Objects written individually with immediate memory cleanup via `unset()`
+- **Helper Patterns**: Reusable `encodeJson()` pattern for JSON operations with proper error handling
+- **Large Dataset Support**: Can export thousands of objects within standard PHP memory limits
+
+### JumpStart System Enhancements
+- **Template Support**: Full import/export of custom Twig templates alongside collections and objects
+- **Streaming Architecture**: Memory-efficient export using `streamJsonToFile()` for large projects
+- **Enhanced Export Order**: schemas → collections → templates → objects → factory for proper dependencies
+
+### Admin Interface Improvements
+- **SimpleForm Extensibility**: Button class customization without modifying core form builder
+- **Method Attribute Handling**: TotalForm JavaScript properly reads `data-method` for DELETE/PUT/PATCH operations
+- **CSRF Integration**: Automatic CSRF token injection for POST/PUT/DELETE/PATCH methods
+- **Settings Forms**: Standardized `cms-save` class on save buttons for consistent styling
+
+### License System Modernization
 - **Simplified Data Structure**: Reduced from 15+ fields to 8 essential fields for performance
 - **CamelCase API**: Consistent camelCase throughout API responses and JWT tokens
 - **Service Architecture**: JWT validation moved from middleware to dedicated service
@@ -225,6 +271,83 @@ bin/codecount.sh
   - Border radius: `var(--totalform-radius)`
 - **Avoid**: Custom colors, hardcoded values, non-existent variables
 
+### Memory Management Best Practices
+
+When working with large datasets, Total CMS employs several patterns to prevent memory exhaustion:
+
+#### Streaming Pattern
+Instead of loading entire datasets into memory, use streaming to process data incrementally:
+
+```php
+// BAD: Loads everything into memory
+$json = json_encode($largeArray);
+file_put_contents($file, $json);
+
+// GOOD: Stream data incrementally
+$fileHandle = fopen($file, 'w');
+foreach ($largeArray as $item) {
+    fwrite($fileHandle, json_encode($item));
+    unset($item); // Free memory immediately
+}
+fclose($fileHandle);
+```
+
+#### Helper Method Pattern
+Create reusable helpers that handle errors and prevent false returns from entering the data stream:
+
+```php
+// Helper method with error checking
+private function encodeJson($data, int $flags = 0): string
+{
+    $json = json_encode($data, $flags);
+    if ($json === false) {
+        throw new \RuntimeException('Failed to encode data to JSON: ' . json_last_error_msg());
+    }
+    return $json;
+}
+```
+
+#### Immediate Cleanup Pattern
+Free memory immediately after processing each item in large loops:
+
+```php
+foreach ($largeCollection as $item) {
+    $processedItem = $this->processItem($item);
+    $this->saveItem($processedItem);
+
+    // Free memory immediately
+    unset($item, $processedItem);
+}
+```
+
+#### Temporary File Pattern
+Use PHP's `tmpfile()` for intermediate storage to avoid keeping data in memory:
+
+```php
+// Create temporary file for streaming
+$tempFile = tmpfile();
+if ($tempFile === false) {
+    throw new \RuntimeException('Failed to create temporary file');
+}
+
+// Stream data to temp file
+$this->streamDataToFile($tempFile);
+rewind($tempFile);
+
+// Use temp file as response (auto-cleaned on close)
+return $response->withBody(Stream::create($tempFile));
+```
+
+#### Real-World Example: JumpStart Export
+See `JumpStartData::streamJsonToFile()` for a complete implementation of streaming JSON export that:
+- Writes JSON structure incrementally
+- Processes objects one at a time
+- Uses `unset()` to free memory after each object
+- Handles errors with proper exceptions
+- Can export thousands of objects within standard PHP memory limits
+
+**Key Principle**: Always consider memory usage when working with collections, exports, or any operation that processes multiple items. Default to streaming patterns for any dataset that could potentially grow large.
+
 ## Frontend JavaScript
 - **TotalForm System**: Modular form system in `/javascript/totalform/` with field-specific components
 - **Choices.js**: Enhanced select/multiselect fields with custom initialization
@@ -235,46 +358,27 @@ bin/codecount.sh
 
 ## Performance & Caching
 
-### Cache System
-- **Multi-Backend Caching**: APCu-first priority system optimized for single-server deployments
-- **Cache Priority**: APCu > Redis > Memcached > Filesystem (OPcache runs automatically for PHP bytecode)
-- **APCu Integration**: Zero-config, fast in-memory caching for single-server setups
-- **TwigCacheManager**: Multi-backend caching with automatic detection and graceful fallbacks
-- **Development Mode**: `isCacheEnabled` property, no file operations when `cachedir: "false"`
-- **Cache Cleaner UI**: Admin interface showing cache status, hit rates (1 decimal precision), and performance recommendations
-- **Container Integration**: Full dependency injection support with APCuService, RedisService, MemcachedService, FilesystemService
+### Cache Architecture
 
-### Performance Optimizations
-- **CollectionRefiner**: 30-70% improvement via reflection caching, optimized array operations, loose comparisons
-- **CollectionSorter**: 50-70% improvement via property value caching and rule pre-processing
-- **ServerChecker**: Enhanced with detailed extension info, APCu + OPcache detection, and cache functionality testing
+Total CMS implements a multi-backend caching system with APCu-first priority for optimal single-server performance.
 
-### Emergency Cache Management
-- **Automatic OPcache Clearing**: `DefaultErrorHandler` automatically clears OPcache on every error to prevent cached errors
-- **No-Cache Headers**: Error responses include `Cache-Control: no-cache` headers to prevent browser/proxy caching
-- **Emergency Endpoint**: `/emergency/cache/clear` provides public cache clearing when admin interface is inaccessible
-- **Customer-Friendly**: No authentication required - customers can clear caches from any location without server access
-- **Test Script**: `bin/test-emergency-cache.php` verifies emergency cache clearing functionality
+**Cache Priority Order**: APCu → Redis → Memcached → Filesystem (OPcache runs automatically for PHP bytecode)
 
-### APCu Cache Integration
+#### Multi-Backend Support
+- **APCuService**: Zero-config in-memory caching with prefix support (`tcms_` default)
+- **RedisService**: Network-based caching for distributed deployments
+- **MemcachedService**: Alternative distributed caching backend
+- **FilesystemService**: File-based fallback caching always available
+- **TwigCacheManager**: Automatic backend detection with graceful fallbacks
+- **Container Integration**: Full dependency injection support for all cache services
 
-Total CMS prioritizes APCu as the primary cache backend for optimal single-server performance.
-
-**Priority Order**: APCu → Redis → Memcached → Filesystem (OPcache runs automatically)
-
-#### APCu Service Features
-- **APCuService**: Complete cache implementation with prefix support (`tcms_` default)
+#### APCu as Primary Backend
+- **Performance**: Faster than Redis for single-server deployments (no network overhead)
 - **Zero Configuration**: Works immediately when APCu extension is installed
-- **Pattern Clearing**: Uses APCu iterators for efficient cache pattern matching
-- **Statistics & Monitoring**: Hit rates, memory usage, entry counts with 1-decimal precision
-- **Graceful Fallbacks**: Auto-detects availability and falls back to Redis/Memcached
-
-#### Benefits for Single-Server Deployments
-- **Performance**: Faster than Redis for single-server (no network overhead)
-- **Simplicity**: No external services to configure, manage, or monitor
-- **Resource Efficiency**: Lower memory footprint than separate Redis daemon  
-- **Shared Hosting Friendly**: Most hosting providers have APCu pre-installed
-- **Immediate Setup**: Zero-config caching that "just works"
+- **Resource Efficiency**: Lower memory footprint than separate Redis daemon
+- **Shared Hosting Friendly**: Pre-installed on most hosting providers
+- **Pattern Clearing**: Efficient cache pattern matching via APCu iterators
+- **Statistics**: Hit rates, memory usage, entry counts with 1-decimal precision
 
 #### Configuration
 ```php
@@ -284,37 +388,137 @@ Total CMS prioritizes APCu as the primary cache backend for optimal single-serve
         'enabled' => true,
         'prefix'  => 'tcms_',
     ],
-    // Other cache backends remain available for advanced users
+    'redis' => [
+        'enabled' => false,
+        'host'    => '127.0.0.1',
+        'port'    => 6379,
+    ],
+    // Other cache backends available for advanced deployments
 ],
 ```
 
-#### UI Integration
-- **Server Checker**: APCu appears between OPcache and Redis with functionality testing
-- **Cache Management**: Shows APCu status, hit rates, and entry counts
-- **Admin Interface**: Clear APCu cache individually or as part of "Clear All Caches"
+#### Cache Management Features
+- **Development Mode**: `isCacheEnabled` property, no file operations when `cachedir: "false"`
+- **Admin UI**: Cache status dashboard with hit rates, memory usage, and performance recommendations
+- **Detailed Status**: `clearAllCaches()` returns per-backend status arrays for debugging
+- **Server Checker**: Extension detection and functionality testing for all backends
+- **Clear Operations**: Individual backend clearing or "Clear All Caches" convenience method
+
+#### Emergency Cache Management
+- **Emergency Endpoint**: `/emergency/cache/clear` provides public cache clearing when admin interface is inaccessible
+- **Detailed Response**: Returns structured status array showing success/failure for each cache backend
+- **Customer-Friendly**: No authentication required - customers can self-service cache issues
+- **Automatic OPcache Clearing**: `DefaultErrorHandler` clears OPcache on errors to prevent cached errors
+- **No-Cache Headers**: Error responses include `Cache-Control: no-cache` to prevent browser/proxy caching
+
+### Performance Optimizations
+- **CollectionRefiner**: 30-70% improvement via reflection caching, optimized array operations, loose comparisons
+- **CollectionSorter**: 50-70% improvement via property value caching and rule pre-processing
+- **ServerChecker**: Enhanced with detailed extension info, APCu + OPcache detection, cache functionality testing
+- **Streaming Export**: Memory-efficient JSON streaming for large dataset operations (JumpStart)
 
 ## JumpStart System
 
 ### Overview
-JumpStart is Total CMS's data import/export system for quick project setup with predefined content structures.
+JumpStart is Total CMS's data import/export system for quick project setup with predefined content structures. It supports streaming exports for large datasets and includes full template support.
 
 ### Key Components
-- **JumpStartData**: Core data structure containing collections, schemas, objects, and factory definitions
-- **JumpStartExporter**: Exports project data to JSON format, strips media files, retains object metadata
+- **JumpStartData**: Core data structure containing collections, schemas, objects, templates, and factory definitions
+- **JumpStartExporter**: Exports project data with streaming support for memory efficiency
 - **JumpStartImporter**: Imports JumpStart data, processes factory definitions for test data generation
 - **FactoryImporter**: Generates test data using Faker based on factory definitions
 
+### Data Structure
+JumpStart files contain the following sections (exported/imported in this order):
+1. **Schemas**: Custom schema definitions
+2. **Collections**: Both reserved collections (by type) and custom collections (full definition)
+3. **Templates**: Custom Twig templates (reserved templates excluded)
+4. **Objects**: Actual content objects with media references normalized
+5. **Factory**: Factory definitions for generating test data
+
+### Export Features
+- **Streaming Architecture**: Uses `streamJsonToFile()` to handle large datasets without memory exhaustion
+- **Memory Efficiency**: Objects written incrementally with immediate memory cleanup
+- **Media Handling**: Images, files, galleries, and depot files are normalized (not included in export)
+- **Template Export**: Custom Twig templates exported with full content
+- **Metadata Preservation**: Object structure and relationships preserved
+
+### Import Features
+- **Dependency Order**: Imports in correct order to ensure references exist (schemas → collections → templates → objects → factory)
+- **Template Recreation**: Custom templates recreated from export data
+- **Factory Processing**: Dynamic data generation using Faker for factory definitions
+- **Object Validation**: Checks for existing objects to avoid duplicates
+- **Error Handling**: Graceful handling with detailed error messages per item
+
 ### Usage Patterns
-- **Export**: Collections and objects are exported; images, files, galleries, and depot files are removed
-- **Import**: Objects can be imported directly or converted to factory definitions for dynamic data generation
-- **Factory System**: Use `factory` array instead of `objects` for generating test data with Faker
-- **Admin Interface**: Access via `/admin/utils/jumpstart` for import/export operations
-- **Project Setup**: Environment-specific demo data loading via `/admin/utils/project-setup`
+
+**Export Process:**
+```php
+$exporter = $container->get(JumpStartExporter::class);
+$exporter->setMetadata('Project Name', 'Description');
+$jumpstartData = $exporter->exportCurrentData();
+
+// Streaming export for large datasets
+$fileHandle = fopen($exportFile, 'w');
+$jumpstartData->streamJsonToFile($fileHandle);
+fclose($fileHandle);
+```
+
+**Import Process:**
+```php
+$importer = $container->get(JumpStartImporter::class);
+$result = $importer->importFromFile($jumpstartFile);
+
+// Check results
+if ($result['success']) {
+    echo "Imported: " . $result['summary']['objects_created'] . " objects\n";
+} else {
+    print_r($result['errors']);
+}
+```
+
+**Factory Definitions:**
+Instead of exporting actual objects, use factory definitions for dynamic test data:
+```json
+{
+    "factory": [
+        {
+            "collection": "blog",
+            "count": 50,
+            "data": {
+                "title": "sentence",
+                "content": "paragraphs:5",
+                "author": "name",
+                "featured": "image:1200:800"
+            }
+        }
+    ]
+}
+```
+
+### Admin Interface
+- **Export**: `/admin/utils/jumpstart` - Export current project data
+- **Import**: `/admin/utils/jumpstart` - Import JumpStart files
+- **Project Setup**: `/admin/utils/project-setup` - Load demo data or import from other CMS platforms
+
+### Memory Management
+The streaming export system handles large projects efficiently:
+- Objects streamed individually to disk
+- Memory freed immediately after each object
+- Can export thousands of objects within standard PHP memory limits
+- See "Memory Management Best Practices" section for implementation details
 
 ### Testing
 - **JumpStartBasicTest**: Core functionality tests without HTTP dependencies
-- **Simplified Testing**: Removed complex HTTP endpoint tests to focus on business logic
-- **24 Passing Tests**: Comprehensive test coverage for JumpStart functionality
+- **Simplified Testing**: Focused on business logic for reliable test results
+- **Comprehensive Coverage**: Tests for export, import, streaming, templates, and factory generation
+
+### Best Practices
+- Use streaming export for projects with more than 100 objects
+- Export templates alongside collections for complete project snapshots
+- Use factory definitions for test/demo data instead of real content
+- Always test imports on development environment first
+- Check import results array for detailed success/error information
 
 ## Twig Template System
 
@@ -349,7 +553,7 @@ ImageWorks is Total CMS's comprehensive image processing system providing dynami
 - **Native PHP Implementation**: Replaces lychee-org/php-exif for PHP 8.4 compatibility
 - **Comprehensive Extraction**: EXIF, XMP, and IPTC metadata from multiple sources
 - **Automatic Population**: Image upload auto-populates alt text and tags from metadata
-- **Enhanced Data Processing**: 
+- **Enhanced Data Processing**:
   - XMP lens extraction from `aux:Lens` field
   - IPTC location data (city, state, country, sublocation)
   - Keyword extraction from multiple metadata sources
@@ -382,7 +586,7 @@ ImageWorks is Total CMS's comprehensive image processing system providing dynami
     marktextalpha: 80
 }) }}
 
-{# Combined text and image watermarks #}  
+{# Combined text and image watermarks #}
 {{ cms.image('photo.jpg') | imageworks({
     marktext: 'Watermark',
     markimage: 'logo.png',
@@ -431,7 +635,7 @@ ImageWorks is Total CMS's comprehensive image processing system providing dynami
         "readonly": true
     }
 },
-"updated": {  
+"updated": {
     "$ref": "https://www.totalcms.co/schemas/properties/date.json",
     "settings": {
         "onUpdate": true,
@@ -452,6 +656,119 @@ ImageWorks is Total CMS's comprehensive image processing system providing dynami
 - **Documentation**: Comprehensive field settings documentation in `/resources/docs/field-settings.md`
 - **Examples**: Practical examples for complex relational field configurations
 - **Icon System**: Updated icon reference system with font and angle icon support
+
+## SimpleForm System
+
+### Overview
+SimpleForm provides a lightweight form builder for basic admin operations like cache clearing, settings forms, and simple actions that don't require full TotalForm complexity.
+
+### Key Features
+- **Minimal Configuration**: Create forms with just route, method, and button label
+- **CSRF Protection**: Automatic CSRF token injection for POST/PUT/DELETE/PATCH methods
+- **Method Override**: Supports full REST methods (GET, POST, PUT, DELETE, PATCH)
+- **AJAX Support**: Configurable AJAX submission with optional page refresh
+- **Button Customization**: Extensible button classes without modifying core class
+- **Data Attributes**: Automatic generation of data attributes for JavaScript handling
+
+### Constructor Parameters
+```php
+public function __construct(
+    private string $api,                        // API identifier for routing
+    private string $route,                      // Form submission route
+    private string $method = 'POST',            // HTTP method
+    private string $label = 'Submit',           // Button label
+    private string $class = '',                 // Form CSS classes
+    private bool $refresh = false,              // Refresh page after submission
+    private bool $ajax = true,                  // Enable AJAX submission
+    private ?CSRFTokenManager $csrfManager = null, // Optional CSRF manager
+    private string $buttonClass = '',           // Additional button classes
+)
+```
+
+### Usage Examples
+
+**Basic Form:**
+```php
+$form = new SimpleForm(
+    api: '/admin/cache',
+    route: '/admin/cache/clear',
+    method: 'DELETE',
+    label: 'Clear Cache'
+);
+echo $form->build();
+```
+
+**Settings Form with Custom Button Class:**
+```php
+$form = new SimpleForm(
+    api: '/admin/settings',
+    route: '/admin/settings/general',
+    method: 'POST',
+    label: 'Save Settings',
+    refresh: true,
+    buttonClass: 'cms-save'
+);
+echo $form->build($formFields);
+```
+
+**Non-AJAX Form:**
+```php
+$form = new SimpleForm(
+    api: '/admin/export',
+    route: '/admin/export/data',
+    method: 'GET',
+    label: 'Download Export',
+    ajax: false
+);
+```
+
+### JavaScript Integration
+SimpleForm works with `totalform.js` which automatically:
+- Reads `data-method` attribute for proper HTTP method handling
+- Handles AJAX submissions when `data-ajax="true"`
+- Refreshes page when `data-refresh="true"`
+- Processes CSRF tokens from the form
+
+### TotalFormFactory Integration
+`TotalFormFactory::settings()` uses SimpleForm with standardized settings:
+```php
+return $this->simple('/admin/settings/' . $section, $formfields, [
+    'method'      => 'POST',
+    'label'       => 'Save Settings',
+    'refresh'     => true,
+    'class'       => 'help-on-hover help-box',
+    'buttonClass' => 'cms-save',
+]);
+```
+
+### Generated HTML Structure
+```html
+<form class="simple-form totalform {custom-classes}"
+      data-route="{route}"
+      data-method="{method}"
+      data-api="{api}"
+      data-refresh="{true|false}"
+      data-ajax="{true|false}">
+
+    <!-- CSRF token (auto-injected for POST/PUT/DELETE/PATCH) -->
+    <input type="hidden" name="_csrf" value="{token}">
+
+    <!-- Form content -->
+    {content}
+
+    <!-- Submit button -->
+    <div class="form-inline-fields">
+        <button type="submit" class="dash-button {buttonClass}">{label}</button>
+    </div>
+</form>
+```
+
+### Best Practices
+- Use SimpleForm for single-action forms (clear cache, save settings, delete item)
+- Use full TotalForm for complex multi-field forms with validation
+- Always provide CSRF manager for forms that modify data
+- Use `buttonClass` for styling instead of modifying SimpleForm class
+- Set `ajax: false` for downloads or file operations
 
 ## Import Systems
 
@@ -477,7 +794,7 @@ Total CMS includes a complete import system for migrating content from Alloy CMS
    - Preserves formatting and structure
    - Maintains content relationships
 
-3. **Droplets**: Text and image content snippets  
+3. **Droplets**: Text and image content snippets
    - Handles both text and image droplet types
    - Converts image URLs to Total CMS image references
    - Preserves content structure and metadata
@@ -504,8 +821,8 @@ POST /import/alloy          // Queue import via job system
 ```
 
 #### Testing
-- **Comprehensive Test Coverage**: 10 passing tests covering API validation, data processing, error handling, and admin interface
-- **Test Data**: Complete Alloy test dataset with 37 blogs, 66 embeds, 57 droplets
+- **Comprehensive Test Coverage**: Full test suite covering API validation, data processing, error handling, and admin interface
+- **Test Data**: Complete Alloy test dataset with extensive blogs, embeds, and droplets for realistic testing
 - **Integration Testing**: Full workflow testing from analysis to import completion
 
 ## Gallery System Enhancements
