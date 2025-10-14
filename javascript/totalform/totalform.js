@@ -74,7 +74,7 @@ export default class TotalForm {
 			url: this.form.dataset.api,
 		});
 		this.route      = this.form.dataset.route;
-		this.method     = "POST";
+		this.method     = this.form.dataset.method || "POST";
 		this.id         = this.form.dataset.id||"";
 		this.collection = this.form.dataset.collection;
 		this.schema     = this.form.dataset.schema;
