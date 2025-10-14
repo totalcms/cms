@@ -12,6 +12,7 @@ use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveAction;
+use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
@@ -41,8 +42,9 @@ return function (App $app): void {
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground');
 		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post');
 
-		$group->get('/settings', AdminSettingsAction::class)->setName('admin-settings');
+		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings');
 		$group->post('/settings', AdminSettingsSaveAction::class)->setName('admin-settings-save');
+		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section');
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');

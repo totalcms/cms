@@ -259,6 +259,8 @@ return [
 		$container->get(SchemaFactory::class),
 		$container->get(TemplateRepository::class),
 		$container->get(CSRFTokenManager::class),
+		$container->get(TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher::class),
+		$container->get(TotalCMS\Domain\Settings\Services\SettingsFetcher::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -523,5 +525,21 @@ return [
 	// Schema Services
 	DeckCompatibilityChecker::class => fn (ContainerInterface $container): DeckCompatibilityChecker => new DeckCompatibilityChecker(
 		$container->get(SchemaFetcher::class),
+	),
+
+	// Settings Services
+	TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher::class => function (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher {
+		$settings = require __DIR__ . '/settings.php';
+
+		return new TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher(
+			$settings['schemas'] ?? __DIR__ . '/../resources/schemas',
+		);
+	},
+
+	TotalCMS\Domain\Settings\Services\SettingsFetcher::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsFetcher => new TotalCMS\Domain\Settings\Services\SettingsFetcher(),
+
+	TotalCMS\Domain\Settings\Services\SettingsSaver::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsSaver => new TotalCMS\Domain\Settings\Services\SettingsSaver(
+		$container->get(TotalCMS\Domain\Settings\Services\SettingsFetcher::class),
+		$container->get(CacheManager::class),
 	),
 ];

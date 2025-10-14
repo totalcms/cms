@@ -1,0 +1,32 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "HTML Sanitization Settings",
+	"description" : "HTML cleaning and sanitization rules",
+	"type"        : "object",
+	"properties"  : {
+		"enabled": {
+			"type"    : "toggle",
+			"label"   : "Enable HTML Sanitization",
+			"help"    : "Enable or disable HTML sanitization globally. When enabled, user-submitted HTML content will be cleaned to remove potentially dangerous tags and attributes.",
+			"default" : true
+		},
+		"allowed_css_properties": {
+			"type"        : "json",
+			"label"       : "Allowed CSS Properties",
+			"help"        : "Array of CSS properties that are allowed in inline styles. Any other CSS properties will be stripped during sanitization.",
+			"placeholder" : "[\"color\", \"background-color\", \"font-size\", \"font-weight\", \"text-align\", \"margin\", \"padding\"]"
+		},
+		"allowed_tags": {
+			"type"        : "json",
+			"label"       : "Allowed HTML Tags",
+			"help"        : "Optional: Specify an array of allowed HTML tags. If not set, a default safe list will be used. Example: <code>[\"p\", \"strong\", \"em\", \"a\", \"ul\", \"ol\", \"li\"]</code>",
+			"placeholder" : "[\"p\", \"strong\", \"em\", \"a\"]"
+		},
+		"allowed_iframe_domains": {
+			"type"        : "json",
+			"label"       : "Allowed iFrame Domains",
+			"help"        : "Optional: Specify an array of domains that are allowed for iframe embeds. Example: <code>[\"www.youtube.com\", \"player.vimeo.com\"]</code>",
+			"placeholder" : "[\"www.youtube.com\", \"player.vimeo.com\"]"
+		}
+	}
+}

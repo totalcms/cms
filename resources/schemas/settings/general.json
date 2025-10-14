@@ -1,0 +1,41 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "General Settings",
+	"description" : "Core application settings",
+	"type"        : "object",
+	"properties"  : {
+		"sentry": {
+			"type"    : "toggle",
+			"label"   : "Share Application Errors with Developer",
+			"help"    : "In the case any critical errors happen in Total CMS, the details of the error will be shared with the developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored. Only the error and where the error occurred in the code will be shared. If disabled, errors will only be logged locally on your server.",
+			"default" : true
+		},
+		"datadir": {
+			"type"        : "text",
+			"label"       : "CMS Data Directory",
+			"help"        : "The location where the CMS data will be saved on the server. The location must be writable by the server. When not set, the default location will be used: <code>&lt;docroot&gt;/tcms-data</code>. Any existing data that you might have will need to be manually migrated to the new location.",
+			"placeholder" : "<docroot>/tcms-data"
+		},
+		"api": {
+			"type"        : "text",
+			"label"       : "Custom API URL",
+			"help"        : "If you have a custom installation of Total CMS, you can set the URL of the API endpoint here.",
+			"placeholder" : "https://yourdomain.com/api"
+		},
+		"notfound": {
+			"type"        : "text",
+			"label"       : "404 - Page Not Found Path",
+			"help"        : "The path to the 404 page that will be used when a page is not found. This is used by the CMS to redirect when an object is not found.",
+			"placeholder" : "/404"
+		},
+		"timezone": {
+			"type"        : "select",
+			"label"       : "Timezone",
+			"placeholder" : "Select Timezone",
+			"help"        : "The timezone that all dates in the CMS will be saved as. If not set, then the default timezone that the server is configured with will be used.",
+			"settings"    : {
+				"timezoneOptions": true
+			}
+		}
+	}
+}

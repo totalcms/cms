@@ -1,0 +1,32 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Cache Settings",
+	"description" : "Cache backend configuration (APCu, Redis, Memcached, Filesystem)",
+	"type"        : "object",
+	"properties"  : {
+		"apcu": {
+			"type"        : "json",
+			"label"       : "APCu Configuration",
+			"help"        : "APCu is the primary cache backend for single-server deployments. Configuration options: <code>enabled</code> (bool), <code>prefix</code> (string).",
+			"placeholder" : "{\"enabled\": true, \"prefix\": \"tcms_\"}"
+		},
+		"redis": {
+			"type"        : "json",
+			"label"       : "Redis Configuration",
+			"help"        : "Redis cache backend configuration. Options: <code>enabled</code> (bool), <code>host</code> (string), <code>port</code> (int), <code>timeout</code> (int), <code>password</code> (string|null), <code>database</code> (int).",
+			"placeholder" : "{\"enabled\": true, \"host\": \"127.0.0.1\", \"port\": 6379, \"timeout\": 1, \"password\": null, \"database\": 0}"
+		},
+		"memcached": {
+			"type"        : "json",
+			"label"       : "Memcached Configuration",
+			"help"        : "Memcached cache backend configuration. Options: <code>enabled</code> (bool), <code>host</code> (string), <code>port</code> (int).",
+			"placeholder" : "{\"enabled\": true, \"host\": \"127.0.0.1\", \"port\": 11211}"
+		},
+		"filesystem": {
+			"type"        : "json",
+			"label"       : "Filesystem Cache Configuration",
+			"help"        : "Filesystem cache backend configuration. Options: <code>enabled</code> (bool), <code>directory</code> (string path).",
+			"placeholder" : "{\"enabled\": true, \"directory\": \"/path/to/cache\"}"
+		}
+	}
+}

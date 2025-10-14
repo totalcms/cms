@@ -14,6 +14,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 
@@ -44,6 +46,8 @@ readonly class TotalFormFactory
 		private SchemaFactory $schemaFactory,
 		private TemplateRepository $templateRepository,
 		private CSRFTokenManager $csrfManager,
+		private SettingsSchemaFetcher $settingsSchemaFetcher,
+		private SettingsFetcher $settingsFetcher,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -348,6 +352,81 @@ readonly class TotalFormFactory
 		$button = new DeleteButton($label);
 
 		return $button->build();
+	}
+
+	/**
+	 * Generate a settings form for a specific section.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function settings(string $section, array $options = []): string
+	{
+		// Load schema and data using injected services
+		$schema      = $this->settingsSchemaFetcher->getSchema($section);
+		$sectionData = $this->settingsFetcher->loadSection($section);
+		$defaults    = require __DIR__ . '/../../../config/defaults.php';
+		$timezones   = $options['timezones'] ?? timezone_identifiers_list();
+
+		if ($schema === null || !isset($schema['properties']) || !is_array($schema['properties'])) {
+			return '<p class="error">Schema not found for this settings section.</p>';
+		}
+
+		$formfields = '';
+
+		foreach ($schema['properties'] as $fieldName => $fieldSchema) {
+			// Get current value with priority: sectionData > defaults > schema default > empty string
+			$currentValue = '';
+			if (isset($fieldSchema['default'])) {
+				$currentValue = $fieldSchema['default'];
+			}
+			if (isset($defaults[$section][$fieldName])) {
+				$currentValue = $defaults[$section][$fieldName];
+			}
+			if (isset($sectionData[$fieldName])) {
+				$currentValue = $sectionData[$fieldName];
+			}
+
+			// Special handling for JSON fields - convert arrays to JSON strings for display
+			if ($fieldSchema['type'] === 'json' && is_array($currentValue)) {
+				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
+			}
+
+			// Build field options
+			$fieldOptions = [
+				'field'       => $fieldSchema['type'],
+				'label'       => $fieldSchema['label'] ?? '',
+				'help'        => $fieldSchema['help'] ?? '',
+				'placeholder' => $fieldSchema['placeholder'] ?? '',
+				'value'       => $currentValue,
+				'required'    => $fieldSchema['required'] ?? false,
+				'min'         => $fieldSchema['min'] ?? null,
+				'max'         => $fieldSchema['max'] ?? null,
+				'settings'    => $fieldSchema['settings'] ?? [],
+			];
+
+			// Special handling for select fields with options
+			if (isset($fieldSchema['options'])) {
+				$fieldOptions['options'] = $fieldSchema['options'];
+			}
+
+			// Special handling for timezone field
+			if (isset($fieldSchema['settings']['timezoneOptions']) && $fieldSchema['settings']['timezoneOptions']) {
+				$timezoneOptions = [];
+				foreach ($timezones as $tz) {
+					$timezoneOptions[] = ['value' => $tz, 'label' => $tz];
+				}
+				$fieldOptions['options'] = $timezoneOptions;
+			}
+
+			$formfields .= $this->field($fieldSchema['type'], $fieldName, $fieldOptions);
+		}
+
+		return $this->simple($this->api . '/admin/settings/' . $section, $formfields, [
+			'method'  => 'POST',
+			'label'   => 'Save Settings',
+			'refresh' => true,
+			'class'   => 'help-on-hover help-box',
+		]);
 	}
 
 	/**
