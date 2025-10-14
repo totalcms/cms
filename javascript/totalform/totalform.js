@@ -494,6 +494,10 @@ export default class TotalForm {
     setupEditMode() {
 		if (this.isEditMode()) return;
 
+		// Only setup edit mode for forms that have an ID (object/collection/schema forms)
+		// Simple forms without IDs should always use POST
+		if (!this.id || this.id.length === 0) return;
+
 		// Set the method to PUT or PATCH for editing existing objects
 		this.method = this.form.dataset.method||"PUT";
 		if (this.method.toUpperCase() === "POST") this.method = "PUT";

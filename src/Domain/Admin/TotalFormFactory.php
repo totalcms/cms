@@ -379,7 +379,10 @@ readonly class TotalFormFactory
 			if (isset($fieldSchema['default'])) {
 				$currentValue = $fieldSchema['default'];
 			}
-			if (isset($defaults[$section][$fieldName])) {
+			// General settings are stored at top level in defaults, not under 'general' key
+			if ($section === 'general' && isset($defaults[$fieldName])) {
+				$currentValue = $defaults[$fieldName];
+			} elseif (isset($defaults[$section][$fieldName])) {
 				$currentValue = $defaults[$section][$fieldName];
 			}
 			if (isset($sectionData[$fieldName])) {
