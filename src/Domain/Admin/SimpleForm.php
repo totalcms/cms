@@ -33,7 +33,7 @@ readonly class SimpleForm implements \Stringable
 
 		$button = HTMLUtils::button($this->label, [
 			'type'  => 'submit',
-			'class' => 'dash-button',
+			'class' => 'dash-button cms-save',
 		]);
 		$buttonWrapper = HTMLUtils::element('div', $button, ['class' => 'form-inline-fields']);
 
