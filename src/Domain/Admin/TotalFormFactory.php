@@ -425,10 +425,11 @@ readonly class TotalFormFactory
 		}
 
 		return $this->simple('/admin/settings/' . $section, $formfields, [
-			'method'  => 'POST',
-			'label'   => 'Save Settings',
-			'refresh' => true,
-			'class'   => 'help-on-hover help-box',
+			'method'      => 'POST',
+			'label'       => 'Save Settings',
+			'refresh'     => true,
+			'class'       => 'help-on-hover help-box',
+			'buttonClass' => 'cms-save',
 		]);
 	}
 
