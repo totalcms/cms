@@ -538,8 +538,11 @@ return [
 
 	TotalCMS\Domain\Settings\Services\SettingsFetcher::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsFetcher => new TotalCMS\Domain\Settings\Services\SettingsFetcher(),
 
+	TotalCMS\Domain\Settings\Services\SettingsValidator::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsValidator => new TotalCMS\Domain\Settings\Services\SettingsValidator(),
+
 	TotalCMS\Domain\Settings\Services\SettingsSaver::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsSaver => new TotalCMS\Domain\Settings\Services\SettingsSaver(
 		$container->get(TotalCMS\Domain\Settings\Services\SettingsFetcher::class),
+		$container->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
 		$container->get(CacheManager::class),
 	),
 ];

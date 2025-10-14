@@ -421,7 +421,7 @@ readonly class TotalFormFactory
 			$formfields .= $this->field($fieldSchema['type'], $fieldName, $fieldOptions);
 		}
 
-		return $this->simple($this->api . '/admin/settings/' . $section, $formfields, [
+		return $this->simple('/admin/settings/' . $section, $formfields, [
 			'method'  => 'POST',
 			'label'   => 'Save Settings',
 			'refresh' => true,
