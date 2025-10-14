@@ -90,13 +90,6 @@ readonly class SettingsValidator
 	 */
 	private function processGeneral(array $data): array
 	{
-		// Handle toggle field - convert to boolean
-		if (isset($data['sentry']) && $data['sentry'] === true) {
-			$data['sentry'] = ['enable' => true];
-		} else {
-			unset($data['sentry']);
-		}
-
 		return $data;
 	}
 

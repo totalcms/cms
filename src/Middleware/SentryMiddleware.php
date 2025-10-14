@@ -7,13 +7,26 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use Slim\Exception\HttpNotFoundException;
+use Slim\Exception\HttpMethodNotAllowedException;
 
 class SentryMiddleware implements MiddlewareInterface
 {
 	public const SALT = 's3ntryR0cks';
+	private const DEFAULT_OPTIONS = [
+		'dsn' => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
+		// Specify a fixed sample rate
+		'traces_sample_rate' => 1.0,
+		// Set a sampling rate for profiling - this is relative to traces_sample_rate
+		'profiles_sample_rate' => 1.0,
+		'ignore_exceptions'    => [
+			HttpNotFoundException::class,
+			HttpMethodNotAllowedException::class,
+		],
+	];
 
-	/** @param array<string,mixed> $options The sentry options */
-	public function __construct(private array $options)
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function __construct(private bool $enable = true)
 	{
 	}
 
@@ -21,20 +34,20 @@ class SentryMiddleware implements MiddlewareInterface
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
-		if ($this->options['enable'] === true && isset($this->options['init']['dsn'])) {
-			self::initSentry($this->options);
+		if ($this->enable === true) {
+			self::initSentry();
 		}
 
 		return $handler->handle($request);
 	}
 
-	/** @param array<string,mixed> $options The sentry options */
-	public static function initSentry(array $options): void
+	public static function initSentry(): void
 	{
-		$options['init']['dsn'] = Cipher::deobfuscate($options['init']['dsn'], self::SALT);
+		$options        = self::DEFAULT_OPTIONS;
+		$options['dsn'] = Cipher::deobfuscate($options['dsn'], self::SALT);
 
 		try {
-			\Sentry\init($options['init']);
+			\Sentry\init($options);
 		} catch (\Throwable $exception) {
 			\Sentry\captureException($exception);
 

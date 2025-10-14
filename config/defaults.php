@@ -25,20 +25,7 @@ if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
 // Settings
 $settings = [];
 
-$settings['sentry'] = [
-	'enable' => true,
-	'init'   => [
-		'dsn' => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
-		// Specify a fixed sample rate
-		'traces_sample_rate' => 1.0,
-		// Set a sampling rate for profiling - this is relative to traces_sample_rate
-		'profiles_sample_rate' => 1.0,
-		'ignore_exceptions'    => [
-			Slim\Exception\HttpNotFoundException::class,
-			Slim\Exception\HttpMethodNotAllowedException::class,
-		],
-	],
-];
+$settings['sentry'] = true;
 
 // Default env to production
 $settings['env']    = 'prod';

@@ -14,14 +14,13 @@ class Config
 	public string $timezone = '';
 	public string $notfound = '';
 	public bool $debug      = false;
+	public bool $sentry     = true;
 	/** @var array<string,mixed> */
 	public array $cache = [];
 	/** @var array<string,mixed> */
 	public array $session = [];
 	/** @var array<string,mixed> */
 	public array $logger = [];
-	/** @var array<string,mixed> */
-	public array $sentry = [];
 	/** @var array<string,mixed> */
 	public array $error = [];
 	/** @var array<string,mixed> */
@@ -43,7 +42,7 @@ class Config
 		$this->tmpdir     = $settings['tmpdir'];
 		$this->cache      = $settings['cache'];
 		$this->logger     = $settings['logger'];
-		$this->sentry     = $settings['sentry'];
+		$this->sentry     = (bool)($settings['sentry'] ?? true);
 		$this->error      = $settings['error'];
 		$this->imageworks = $settings['imageworks'];
 		$this->domain     = $settings['domain'];

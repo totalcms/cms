@@ -187,9 +187,9 @@ return [
 	},
 
 	SentryMiddleware::class => function (ContainerInterface $container): SentryMiddleware {
-		$config = (array)$container->get(Config::class)->sentry;
+		$enabled = $container->get(Config::class)->sentry;
 
-		return new SentryMiddleware($config);
+		return new SentryMiddleware($enabled);
 	},
 
 	ErrorMiddleware::class => function (ContainerInterface $container): ErrorMiddleware {

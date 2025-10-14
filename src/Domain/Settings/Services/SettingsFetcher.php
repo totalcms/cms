@@ -35,6 +35,19 @@ readonly class SettingsFetcher
 	{
 		$settings = $this->loadSettings();
 
+		// General settings are stored at the top level, not under 'general' key
+		if ($section === 'general') {
+			// Extract only the general settings fields from top level
+			$generalFields = ['sentry', 'datadir', 'api', 'notfound', 'timezone'];
+			$generalSettings = [];
+			foreach ($generalFields as $field) {
+				if (isset($settings[$field])) {
+					$generalSettings[$field] = $settings[$field];
+				}
+			}
+			return $generalSettings;
+		}
+
 		return $settings[$section] ?? [];
 	}
 
