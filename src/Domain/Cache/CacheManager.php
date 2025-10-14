@@ -490,34 +490,51 @@ class CacheManager
 
 	/**
 	 * Clear all caches including OPcache and text watermark cache.
+	 *
+	 * @return array<string,mixed> Status information about what was cleared
 	 */
-	public function clearAllCaches(): bool
+	public function clearAllCaches(): array
 	{
-		$success = true;
+		$results        = [];
+		$overallSuccess = true;
 
 		// Clear all available cache services
-		foreach ($this->cacheServices as $service) {
+		foreach ($this->cacheServices as $name => $service) {
 			if (!$service->isAvailable()) {
-				continue; // Skip unavailable services
+				$results[$name] = ['cleared' => false, 'reason' => 'not available'];
+				continue;
 			}
-			$success = $success && $service->clear();
+
+			try {
+				$cleared        = $service->clear();
+				$results[$name] = ['cleared' => $cleared, 'reason' => $cleared ? 'success' : 'failed'];
+				$overallSuccess = $overallSuccess && $cleared;
+			} catch (\Exception $e) {
+				$results[$name] = ['cleared' => false, 'reason' => $e->getMessage()];
+				$overallSuccess = false;
+			}
 		}
 
 		// Clear text watermark cache (clear all cached watermarks)
 		try {
 			$this->textWatermarkFactory->clearOldCache(0); // Clear all watermarks regardless of age
+			$results['watermarks'] = ['cleared' => true, 'reason' => 'success'];
 		} catch (\Exception $e) {
 			// Log error but don't fail the entire cache clear operation
 			$this->logger->warning('Failed to clear text watermark cache', [
 				'error'     => $e->getMessage(),
 				'exception' => $e::class,
 			]);
-			$success = false;
+			$results['watermarks'] = ['cleared' => false, 'reason' => $e->getMessage()];
+			$overallSuccess        = false;
 		}
 
 		// Generate new cache version
 		$this->setCacheVersion(date('Y-m-d-H-i-s') . '-' . uniqid());
+		$results['version'] = ['cleared' => true, 'reason' => 'new version generated'];
 
-		return $success;
+		$results['success'] = $overallSuccess;
+
+		return $results;
 	}
 }

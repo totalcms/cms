@@ -45,7 +45,9 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 		expect($responseData['success'])->toBeTrue();
 		expect($responseData['message'])->toContain('Emergency cache clear completed');
 		expect($responseData['timestamp'])->toBeString();
-		expect($responseData['note'])->toContain('All caches including OPcache have been cleared');
+		expect($responseData['note'])->toContain('Check the details section for per-backend status');
+		expect($responseData['details'])->toBeArray();
+		expect($responseData['details']['success'])->toBeTrue();
 
 		// Verify caches are cleared (may still contain data if cache backends aren't available)
 		// But the endpoint should have attempted to clear them
@@ -109,7 +111,7 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 
 		if ($response->getStatusCode() === 200) {
 			expect($responseData['usage'])->toContain('admin interface is inaccessible');
-			expect($responseData['note'])->toContain('OPcache');
+			expect($responseData['note'])->toContain('Check the details section for per-backend status');
 		} else {
 			expect($responseData['fallback'])->toContain('Apache/Nginx');
 			expect($responseData['contact'])->toContain('TotalCMS support');
@@ -145,7 +147,7 @@ describe('Emergency Cache Clear Endpoint', function (): void {
 
 		// Parse response to check if clearing was successful
 		$responseData       = json_decode((string)$response->getBody(), true);
-		$clearingSuccessful = $responseData['cleared'] ?? false;
+		$clearingSuccessful = $responseData['details']['success'] ?? false;
 
 		// Stale schema should be cleared if the operation was successful
 		$afterClear = $cacheManager->getComputedData('schema:blog-legacy');

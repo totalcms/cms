@@ -30,11 +30,11 @@ readonly class EmergencyCacheClearAction
 			$result = $this->cacheManager->clearAllCaches();
 
 			return $this->renderer->json($response, [
-				'success'   => true,
-				'message'   => 'Emergency cache clear completed',
-				'cleared'   => $result,
+				'success'   => $result['success'] ?? false,
+				'message'   => $result['success'] ? 'Emergency cache clear completed' : 'Cache clear completed with some failures',
+				'details'   => $result,
 				'timestamp' => date('Y-m-d H:i:s'),
-				'note'      => 'All caches including OPcache have been cleared',
+				'note'      => 'Check the details section for per-backend status',
 				'usage'     => 'This endpoint is available when the admin interface is inaccessible due to cached errors',
 			]);
 		} catch (\Throwable $e) {
