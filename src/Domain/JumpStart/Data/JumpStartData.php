@@ -19,6 +19,8 @@ class JumpStartData
 	public array $objects = [];
 	/** @var array<int,array<string,mixed>> */
 	public array $factory = [];
+	/** @var array<int,array<string,string>> */
+	public array $templates = [];
 
 	public function __construct(
 		public string $name        = 'Exported from Current CMS Data',
@@ -68,6 +70,12 @@ class JumpStartData
 		$this->factory[] = $factoryDef;
 	}
 
+	/** @param array<string, string> $template */
+	public function addTemplate(array $template): void
+	{
+		$this->templates[] = $template;
+	}
+
 	/** @return array<string,mixed> */
 	public function toArray(): array
 	{
@@ -79,6 +87,7 @@ class JumpStartData
 			'collections' => $this->collections,
 			'objects'     => $this->objects,
 			'factory'     => $this->factory,
+			'templates'   => $this->templates,
 		];
 	}
 
@@ -95,6 +104,7 @@ class JumpStartData
 		$jumpstart->collections = $data['collections'] ?? ['default' => [], 'custom' => []];
 		$jumpstart->objects     = $data['objects'] ?? [];
 		$jumpstart->factory     = $data['factory'] ?? [];
+		$jumpstart->templates   = $data['templates'] ?? [];
 
 		return $jumpstart;
 	}
@@ -125,7 +135,8 @@ class JumpStartData
 			&& empty($this->collections['custom'])
 			&& $this->schemas === []
 			&& $this->objects === []
-			&& $this->factory === [];
+			&& $this->factory === []
+			&& $this->templates === [];
 	}
 
 	public function getTotalObjectCount(): int

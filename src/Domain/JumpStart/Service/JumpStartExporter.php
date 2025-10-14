@@ -14,6 +14,8 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Template\Service\TemplateFetcher;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Factory\LoggerFactory;
 
 readonly class JumpStartExporter
@@ -26,6 +28,8 @@ readonly class JumpStartExporter
 		private SchemaFetcher $schemaFetcher,
 		private ObjectFetcher $objectFetcher,
 		private IndexReader $indexReader,
+		private TemplateLister $templateLister,
+		private TemplateFetcher $templateFetcher,
 		private JumpStartData $jumpstart,
 		private CacheManager $cacheManager,
 		LoggerFactory $loggerFactory,
@@ -56,12 +60,14 @@ readonly class JumpStartExporter
 		$this->exportCustomSchemas();
 		$this->exportCollections();
 		$this->exportObjects();
+		$this->exportTemplates();
 
 		$this->logger->info('Completed jumpstart export', [
 			'schemas'              => count($this->jumpstart->schemas),
 			'reserved_collections' => count($this->jumpstart->collections['reserved']),
 			'custom_collections'   => count($this->jumpstart->collections['custom']),
 			'objects'              => count($this->jumpstart->objects),
+			'templates'            => count($this->jumpstart->templates),
 		]);
 
 		return $this->jumpstart;
@@ -150,5 +156,33 @@ readonly class JumpStartExporter
 		unset($processedData['id']);
 
 		return $processedData;
+	}
+
+	private function exportTemplates(): void
+	{
+		$this->logger->info('Exporting templates');
+
+		// Export custom templates only (not reserved templates)
+		$templates = $this->templateLister->listCustomTemplates(null, true);
+
+		foreach ($templates as $templatePath) {
+			try {
+				$template = $this->templateFetcher->fetchTemplate($templatePath);
+
+				$this->jumpstart->addTemplate([
+					'id'       => $template->id,
+					'template' => $template->contents,
+				]);
+			} catch (\Exception $e) {
+				$this->logger->warning('Failed to export template', [
+					'path'  => $templatePath,
+					'error' => $e->getMessage(),
+				]);
+			}
+		}
+
+		$this->logger->info('Completed template export', [
+			'templates_exported' => count($this->jumpstart->templates),
+		]);
 	}
 }

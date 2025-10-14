@@ -12,6 +12,7 @@ use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LoggerFactory;
 
 /** @SuppressWarnings("PHPMD.ExcessiveClassComplexity") */
@@ -33,6 +34,7 @@ class JumpStartImporter
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectSaver $objectSaver,
 		private readonly SchemaSaver $schemaSaver,
+		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
 		LoggerFactory $loggerFactory,
 	) {
@@ -108,6 +110,9 @@ class JumpStartImporter
 		if (isset($definition['collections'])) {
 			$this->processCollections($definition['collections']);
 		}
+		if (isset($definition['templates'])) {
+			$this->processTemplates($definition['templates']);
+		}
 		if (isset($definition['objects'])) {
 			$this->processObjects($definition['objects']);
 		}
@@ -134,6 +139,22 @@ class JumpStartImporter
 				$this->addResult(sprintf('Schema %s: created', $schema['id'] ?? 'unknown'));
 			} catch (\Exception $e) {
 				$this->addError(sprintf('Schema %s: %s', $schema['id'] ?? 'unknown', $e->getMessage()));
+			}
+		}
+	}
+
+	/**
+	 * @param array<int, array<string, string>> $templates
+	 */
+	private function processTemplates(array $templates): void
+	{
+		foreach ($templates as $template) {
+			$templateId = $template['id'] ?? 'unknown';
+			try {
+				$this->templateSaver->saveTemplate($templateId, $template['template'] ?? '');
+				$this->addResult(sprintf('Template %s: created', $templateId));
+			} catch (\Exception $e) {
+				$this->addError(sprintf('Template %s: %s', $templateId, $e->getMessage()));
 			}
 		}
 	}
@@ -325,6 +346,7 @@ class JumpStartImporter
 		$summary = [
 			'schemas_created'       => 0,
 			'collections_created'   => 0,
+			'templates_created'     => 0,
 			'objects_created'       => 0,
 			'factory_items_created' => 0,
 			'total_errors'          => count($this->errors),
@@ -335,6 +357,8 @@ class JumpStartImporter
 				$summary['schemas_created']++;
 			} elseif (str_starts_with($result, 'Collection ')) {
 				$summary['collections_created']++;
+			} elseif (str_starts_with($result, 'Template ')) {
+				$summary['templates_created']++;
 			} elseif (str_starts_with($result, 'Object ')) {
 				$summary['objects_created']++;
 			} elseif (str_starts_with($result, 'Factory ')) {
