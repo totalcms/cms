@@ -142,24 +142,33 @@ body {
 		li {
 			--collection-icon : var(--icon-collections);
 
-			&.schema-auth { --collection-icon : var(--icon-user) }
+			&[class*="schema-"] {
+				--collection-icon : var(--icon-schema);
+			}
+			&[class*="settings-"] {
+				--collection-icon : var(--icon-cog);
+			}
+			&[class*="template-"] {
+				--collection-icon : var(--icon-file-code);
+			}
+			&.schema-auth, &.collection-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,
-			&.schema-blog { --collection-icon : var(--icon-blog) }
-			&.schema-feed { --collection-icon : var(--icon-feed) }
-			&.schema-color { --collection-icon : var(--icon-paint-brush) }
-			&.schema-date { --collection-icon : var(--icon-date) }
-			&.schema-depot { --collection-icon : var(--icon-depot) }
-			&.schema-email { --collection-icon : var(--icon-email) }
-			&.schema-file { --collection-icon : var(--icon-file) }
-			&.schema-gallery { --collection-icon : var(--icon-gallery) }
-			&.schema-image { --collection-icon : var(--icon-image) }
-			&.schema-number { --collection-icon : var(--icon-number) }
-			&.schema-playground { --collection-icon : var(--icon-twig-playground) }
-			&.schema-styledtext { --collection-icon : var(--icon-styledtext) }
-			&.schema-svg { --collection-icon : var(--icon-svg) }
-			&.schema-text { --collection-icon : var(--icon-text) }
-			&.schema-toggle { --collection-icon : var(--icon-toggle) }
-			&.schema-url { --collection-icon : var(--icon-link) }
+			&.schema-blog, &.collection-blog { --collection-icon : var(--icon-blog) }
+			&.schema-feed, &.collection-feed { --collection-icon : var(--icon-feed) }
+			&.schema-color, &.collection-color { --collection-icon : var(--icon-paint-brush) }
+			&.schema-date, &.collection-date { --collection-icon : var(--icon-date) }
+			&.schema-depot, &.collection-depot { --collection-icon : var(--icon-depot) }
+			&.schema-email, &.collection-email { --collection-icon : var(--icon-email) }
+			&.schema-file, &.collection-file { --collection-icon : var(--icon-file) }
+			&.schema-gallery, &.collection-gallery { --collection-icon : var(--icon-gallery) }
+			&.schema-image, &.collection-image { --collection-icon : var(--icon-image) }
+			&.schema-number, &.collection-number { --collection-icon : var(--icon-number) }
+			&.schema-playground, &.collection-playground { --collection-icon : var(--icon-twig-playground) }
+			&.schema-styledtext, &.collection-styledtext { --collection-icon : var(--icon-styledtext) }
+			&.schema-svg, &.collection-svg { --collection-icon : var(--icon-svg) }
+			&.schema-text, &.collection-text { --collection-icon : var(--icon-text) }
+			&.schema-toggle, &.collection-toggle { --collection-icon : var(--icon-toggle) }
+			&.schema-url, &.collection-url { --collection-icon : var(--icon-link) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
 			&.cache-manager { --collection-icon : var(--icon-clean-o) }

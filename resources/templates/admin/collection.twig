@@ -45,7 +45,7 @@
 			{% for collection in sortByKey(collections) %}
 				<ul>
 					{% if collection.id != 'playground' %}
-					<li class="schema-{{collection.schema}}">
+					<li class="collection-{{collection.schema}}">
 						<a {% if url.collection == collection.id %}class="active"{% endif %}
 							href="collections/{{ collection.id }}"
 							title="{{ collection.description }}">{{ collection.name }}</a>
