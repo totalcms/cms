@@ -119,6 +119,76 @@ class JumpStartData
 		return $json;
 	}
 
+	/**
+	 * Helper method to encode JSON with error checking.
+	 *
+	 * @param mixed $data
+	 */
+	private function encodeJson($data, int $flags = 0): string
+	{
+		$json = json_encode($data, $flags);
+		if ($json === false) {
+			throw new \RuntimeException('Failed to encode data to JSON: ' . json_last_error_msg());
+		}
+
+		return $json;
+	}
+
+	/**
+	 * Stream JSON output to a file to avoid memory issues with large datasets.
+	 *
+	 * @param resource $fileHandle File handle to write to
+	 */
+	public function streamJsonToFile($fileHandle): void
+	{
+		// Start JSON object
+		fwrite($fileHandle, "{\n");
+
+		// Write metadata
+		fwrite($fileHandle, '  "version": ' . $this->encodeJson($this->version) . ",\n");
+		fwrite($fileHandle, '  "name": ' . $this->encodeJson($this->name) . ",\n");
+		fwrite($fileHandle, '  "description": ' . $this->encodeJson($this->description) . ",\n");
+
+		// Write schemas array
+		fwrite($fileHandle, '  "schemas": ');
+		fwrite($fileHandle, $this->encodeJson($this->schemas, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+		fwrite($fileHandle, ",\n");
+
+		// Write collections
+		fwrite($fileHandle, '  "collections": ');
+		fwrite($fileHandle, $this->encodeJson($this->collections, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+		fwrite($fileHandle, ",\n");
+
+		// Write objects array - stream each object individually to save memory
+		fwrite($fileHandle, '  "objects": [');
+		$first = true;
+		foreach ($this->objects as $object) {
+			if (!$first) {
+				fwrite($fileHandle, ',');
+			}
+			fwrite($fileHandle, "\n    ");
+			fwrite($fileHandle, $this->encodeJson($object, JSON_UNESCAPED_SLASHES));
+			$first = false;
+
+			// Clear the object from memory after writing
+			unset($object);
+		}
+		fwrite($fileHandle, "\n  ],\n");
+
+		// Write factory array
+		fwrite($fileHandle, '  "factory": ');
+		fwrite($fileHandle, $this->encodeJson($this->factory, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+		fwrite($fileHandle, ",\n");
+
+		// Write templates array
+		fwrite($fileHandle, '  "templates": ');
+		fwrite($fileHandle, $this->encodeJson($this->templates, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+		fwrite($fileHandle, "\n");
+
+		// End JSON object
+		fwrite($fileHandle, "}\n");
+	}
+
 	public static function fromJson(string $json): self
 	{
 		$data = json_decode($json, true);
