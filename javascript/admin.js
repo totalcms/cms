@@ -12,6 +12,7 @@ import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
 import SlugifyInput from './totalform/slugify-inputs';
 import DevModeToggle from './devmode';
+import ThemeSwitcher from './theme-switcher';
 import initExternalLinks from './external-links';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
@@ -79,6 +80,12 @@ document.addEventListener("DOMContentLoaded", event => {
 		// Get remaining seconds from a global variable or data attribute
 		const remainingSeconds = globalThis.DEVMODE_REMAINING_SECONDS || 0;
 		new DevModeToggle(devmodeToggle, { remainingSeconds });
+	}
+
+	// Initialize theme switcher
+	const themeSwitcher = document.querySelector('.theme-buttons');
+	if (themeSwitcher) {
+		new ThemeSwitcher(themeSwitcher);
 	}
 
 	initExternalLinks();

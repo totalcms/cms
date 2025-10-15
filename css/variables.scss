@@ -48,8 +48,11 @@
 	--dialog-scrollbar-width : 12px;
 
 	--totalform-status-banner-height : 100vh;
+}
 
-	@media (prefers-color-scheme: dark) {
+// Dark mode variables - apply when system prefers dark OR when manually set to dark theme
+@media (prefers-color-scheme: dark) {
+	:root:not(.theme-light) {
 		--totalform-purewhite  : 0% 0 0;
 		--totalform-white      : 10% 0 0;
 		--totalform-nearwhite  : 20% 0 0;
@@ -60,7 +63,22 @@
 		--totalform-nearblack  : 90% 0 0;
 		--totalform-black      : 100% 0 0;
 
-		--totalform-shadow       : 0% 0 0 / 0.5;
+		--totalform-shadow     : 0% 0 0 / 0.5;
 	}
+}
+
+// Force dark mode when .theme-dark class is applied
+:root.theme-dark {
+	--totalform-purewhite  : 0% 0 0;
+	--totalform-white      : 10% 0 0;
+	--totalform-nearwhite  : 20% 0 0;
+	--totalform-lightgray  : 40% 0 0;
+	--totalform-mediumgray : 60% 0 0;
+	--totalform-gray       : 70% 0 0;
+	--totalform-darkgray   : 85% 0 0;
+	--totalform-nearblack  : 90% 0 0;
+	--totalform-black      : 100% 0 0;
+
+	--totalform-shadow     : 0% 0 0 / 0.5;
 }
 

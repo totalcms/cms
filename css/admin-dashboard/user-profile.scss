@@ -7,18 +7,85 @@
 	img {
 		border-radius : 50%;
 	}
-	button {
-		border-radius       : 50%;
-		width               : 3rem;
-		aspect-ratio        : 1;
-		appearance          : none;
-		cursor              : pointer;
-		border              : none;
-		padding             : 0;
-		background-color    : transparent;
-		background-image    : var(--icon-profile);
-		background-repeat   : no-repeat;
-		background-position : center;
-		background-size     : 2rem;
+	> button {
+		border-radius    : 50%;
+		width            : 3rem;
+		aspect-ratio     : 1;
+		appearance       : none;
+		cursor           : pointer;
+		border           : none;
+		padding          : 0;
+		background-color : oklch(var(--totalform-nearblack));
+		mask-image       : var(--icon-profile);
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+		mask-size        : 2rem;
+	}
+}
+
+#user-actions {
+	.theme-selector {
+		display        : flex;
+		flex-direction : column;
+		gap            : 0.5rem;
+		padding        : 0.75rem 1rem;
+
+		label {
+			font-size   : 0.875rem;
+			font-weight : 500;
+			color       : oklch(var(--totalform-mediumgray));
+		}
+
+		.theme-buttons {
+			display       : flex;
+			gap           : 0.25rem;
+			// border        : 1px solid oklch(var(--totalform-border-color));
+			// border-radius : var(--totalform-radius);
+			// padding       : 0.25rem;
+			// background    : oklch(var(--totalform-white));
+
+			button {
+				flex              : 1;
+				display           : flex;
+				align-items       : center;
+				justify-content   : center;
+				padding           : 0.5rem;
+				border            : none;
+				border-radius     : calc(var(--totalform-radius) - 2px);
+				background        : transparent;
+				cursor            : pointer;
+				transition        : all 150ms ease;
+				color             : oklch(var(--totalform-mediumgray));
+
+				&:hover {
+					background : oklch(var(--totalform-nearwhite));
+					color      : oklch(var(--totalform-darkgray));
+				}
+
+				&[aria-pressed="true"] {
+					background : oklch(var(--totalform-accent));
+					color      : oklch(var(--totalform-white));
+				}
+
+				span {
+					display          : block;
+					width            : 1.25rem;
+					height           : 1.25rem;
+					background-color : currentColor;
+					mask-size        : contain;
+					mask-repeat      : no-repeat;
+					mask-position    : center;
+				}
+				.icon-auto {
+					mask-image : var(--icon-contrast);
+				}
+				.icon-sun {
+					mask-image : var(--icon-sun);
+				}
+				.icon-moon {
+					mask-image : var(--icon-moon);
+				}
+			}
+		}
 	}
 }

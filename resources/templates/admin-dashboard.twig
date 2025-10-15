@@ -7,6 +7,31 @@
 	<meta name="robots" content="noindex, nofollow">
 	<title>{{ cms.config('dashboard', 'title') ?? 'Total CMS Admin' }}</title>
 
+	{# Apply theme immediately to prevent flash of wrong theme #}
+	<script>
+		(function() {
+			const saved = localStorage.getItem('totalcms-theme');
+			const theme = ['auto', 'light', 'dark'].includes(saved) ? saved : 'auto';
+			const html  = document.documentElement;
+
+			html.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+			html.classList.add('theme-' + theme);
+
+			switch (theme) {
+				case 'light':
+					html.style.colorScheme = 'light';
+					break;
+				case 'dark':
+					html.style.colorScheme = 'dark';
+					break;
+				case 'auto':
+				default:
+					html.style.colorScheme = 'light dark';
+					break;
+			}
+		})();
+	</script>
+
     <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content-bundled.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
@@ -72,6 +97,20 @@
                 </button>
                 <nav popover id="user-actions">
                     <ul>
+                        <li class="theme-selector">
+                            <label>Theme</label>
+                            <div class="theme-buttons" role="radiogroup" aria-label="Theme selection">
+                                <button type="button" data-theme="auto" aria-label="Auto theme" title="Auto">
+                                    <span class="icon-auto"></span>
+                                </button>
+                                <button type="button" data-theme="light" aria-label="Light theme" title="Light">
+                                    <span class="icon-sun"></span>
+                                </button>
+                                <button type="button" data-theme="dark" aria-label="Dark theme" title="Dark">
+                                    <span class="icon-moon"></span>
+                                </button>
+                            </div>
+                        </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ user.name }}</a></li>
                         <li class="edit"><a href="profile">Edit Profile</a></li>
                         <li class="logout"><a href="../logout">Logout</a></li>
@@ -82,6 +121,20 @@
                 <button popovertarget="user-actions"></button>
                 <nav popover id="user-actions">
                     <ul>
+                        <li class="theme-selector">
+                            <label>Theme</label>
+                            <div class="theme-buttons" role="radiogroup" aria-label="Theme selection">
+                                <button type="button" data-theme="auto" aria-label="Auto theme" title="Auto">
+                                    <span class="icon-auto"></span>
+                                </button>
+                                <button type="button" data-theme="light" aria-label="Light theme" title="Light">
+                                    <span class="icon-sun"></span>
+                                </button>
+                                <button type="button" data-theme="dark" aria-label="Dark theme" title="Dark">
+                                    <span class="icon-moon"></span>
+                                </button>
+                            </div>
+                        </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">Dev User</a></li>
                         <li class="edit"><a href="profile">Edit Profile</a></li>
                         <li class="logout"><a href="../logout">Logout</a></li>
