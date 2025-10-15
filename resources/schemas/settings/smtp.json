@@ -24,10 +24,13 @@
 			"help"    : "The encryption method to use for SMTP connection.",
 			"default" : "TLS",
 			"options" : [
-				{"value": "", "label": "None"},
 				{"value": "tls", "label": "TLS"},
-				{"value": "ssl", "label": "SSL"}
-			]
+				{"value": "ssl", "label": "SSL"},
+				{"value": "", "label": "None"}
+			],
+			"settings" : {
+				"clearValue" : false
+			}
 		},
 		"username": {
 			"type"        : "text",
