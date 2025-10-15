@@ -6,23 +6,24 @@
 // $choices-icon-cross-inverse: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMjEiIHZpZXdCb3g9IjAgMCAyMSAyMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjMDAwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yLjU5Mi4wNDRsMTguMzY0IDE4LjM2NC0yLjU0OCAyLjU0OEwuMDQ0IDIuNTkyeiIvPjxwYXRoIGQ9Ik0wIDE4LjM2NEwxOC4zNjQgMGwyLjU0OCAyLjU0OEwyLjU0OCAyMC45MTJ6Ii8+PC9nPjwvc3ZnPg==") !default;
 
 @use "choices" with (
-  $choices-selector: "choices",
-  $choices-font-size-lg: 16px,
-  $choices-font-size-md: 16px,
-  $choices-font-size-sm: 14px,
-  $choices-guttering: 24px,
-  $choices-border-radius: var(--totalform-radius),
-  $choices-border-radius-item: 20px,
-  $choices-bg-color: oklch(var(--totalform-purewhite)),
-  $choices-bg-color-disabled: oklch(var(--totalform-nearwhite)),
-  $choices-bg-color-dropdown: oklch(var(--totalform-purewhite)),
-  $choices-text-color: oklch(var(--totalform-text-color)),
-  $choices-keyline-color: oklch(var(--totalform-border-color)),
-  $choices-primary-color: oklch(var(--totalform-accent)),
-  $choices-disabled-color: oklch(var(--totalform-gray) / 60%),
-  $choices-button-dimension: 8px,
-  $choices-button-offset: 8px,
-  $choices-z-index: 100
+  $choices-selector           : "choices",
+  $choices-font-size-lg       : 16px,
+  $choices-font-size-md       : 16px,
+  $choices-font-size-sm       : 14px,
+  $choices-guttering          : 24px,
+  $choices-border-radius      : var(--totalform-radius),
+  $choices-border-radius-item : 20px,
+  $choices-bg-color           : oklch(var(--totalform-purewhite)),
+  $choices-bg-color-disabled  : oklch(var(--totalform-nearwhite)),
+  $choices-bg-color-dropdown  : oklch(var(--totalform-purewhite)),
+  $choices-text-color         : oklch(var(--totalform-text-color)),
+  $choices-keyline-color      : oklch(var(--totalform-border-color)),
+  $choices-primary-color      : oklch(var(--totalform-accent)),
+  $choices-highlight-color    : oklch(var(--totalform-lightgray)),
+  $choices-disabled-color     : oklch(var(--totalform-gray) / 60%),
+  $choices-button-dimension   : 8px,
+  $choices-button-offset      : 8px,
+  $choices-z-index            : 100
 );
 
 .list-field .choices select[hidden] {

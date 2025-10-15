@@ -323,7 +323,7 @@ $choices-z-index: 1 !default;
     }
 
     &.is-highlighted {
-      background-color: color.mix(#000, #fff, 5%);
+      background-color: $choices-highlight-color;
 
       &::after {
         opacity: 0.5;
