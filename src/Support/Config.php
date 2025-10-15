@@ -31,6 +31,10 @@ class Config
 	public array $htmlclean = [];
 	/** @var array<string,mixed> */
 	public array $dashboard = [];
+	/** @var array<string,mixed> */
+	public array $smtp = [];
+	/** @var array<string,mixed> */
+	public array $mailer = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
@@ -53,6 +57,8 @@ class Config
 		$this->debug      = $settings['debug'];
 		$this->notfound   = $settings['notfound'];
 		$this->htmlclean  = $settings['htmlclean'] ?? [];
+		$this->smtp       = is_array($settings['smtp'] ?? []) ? $settings['smtp'] : [];
+		$this->mailer     = is_array($settings['mailer'] ?? []) ? $settings['mailer'] : [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);

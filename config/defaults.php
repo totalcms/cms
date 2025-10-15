@@ -122,15 +122,26 @@ $settings['session'] = [
 	'conflictStrategy'       => 'preserve', // How to handle existing sessions: 'preserve', 'replace'
 ];
 
-// E-Mail settings
+// SMTP settings
 $settings['smtp'] = [
-	'type'      => 'smtp',
-	'host'      => '127.0.0.1',
-	'port'      => '25',
-	'secure'    => '',
-	'from'      => 'from@example.com',
-	'from_name' => 'My name',
-	'to'        => 'to@example.com',
+	'host'     => '127.0.0.1',
+	'port'     => '25',
+	'secure'   => '',
+	'from'     => '',
+	'fromName' => '',
+	'to'       => '',
+];
+
+// Mailer settings (email sending system)
+$settings['mailer'] = [
+	// Only allow emails to these domains
+	'whitelist' => [
+		// '@yourcompany.com',
+		// '@trustedclient.com',
+	],
+	'ratePerIp'       => 10,   // Max emails per IP per window
+	'ratePerTemplate' => 50,   // Max emails per template per hour
+	'rateWindow'      => 300,  // Time window in seconds (5 minutes)
 ];
 
 $settings['imageworks'] = [

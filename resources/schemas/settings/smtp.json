@@ -4,17 +4,6 @@
 	"description" : "Email server configuration",
 	"type"        : "object",
 	"properties"  : {
-		"type": {
-			"type"    : "select",
-			"label"   : "Mail Type",
-			"help"    : "The method used to send emails.",
-			"default" : "smtp",
-			"options" : [
-				{"value": "smtp", "label": "SMTP"},
-				{"value": "sendmail", "label": "Sendmail"},
-				{"value": "mail", "label": "PHP Mail"}
-			]
-		},
 		"host": {
 			"type"        : "text",
 			"label"       : "SMTP Host",
@@ -54,11 +43,11 @@
 		},
 		"from": {
 			"type"        : "email",
-			"label"       : "From Email Address",
+			"label"       : "From Address",
 			"help"        : "The email address that emails will be sent from.",
 			"placeholder" : "from@example.com"
 		},
-		"from_name": {
+		"fromName": {
 			"type"        : "text",
 			"label"       : "From Name",
 			"help"        : "The name that will appear as the sender.",

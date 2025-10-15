@@ -28,7 +28,10 @@
 			"type"        : "json",
 			"label"       : "ImageWorks Presets",
 			"help"        : "JSON that defines presets that can be used for image generation. See the ImageWorks documentation for details on all of the parameters that can be used.",
-			"placeholder" : "{\"small\": {\"w\": 300, \"h\": 200}, \"medium\": {\"w\": 600, \"h\": 400}}"
+			"placeholder" : "{\"small\": {\"w\": 300, \"h\": 200}, \"medium\": {\"w\": 600, \"h\": 400}}",
+			"settings"    : {
+				"rows" : 20
+			}
 		}
 	}
 }
