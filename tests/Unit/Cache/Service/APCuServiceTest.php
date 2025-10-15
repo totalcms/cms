@@ -170,7 +170,6 @@ final class APCuServiceTest extends TestCase
 		$this->assertArrayHasKey('memory_total', $stats);
 		$this->assertArrayHasKey('memory_used', $stats);
 		$this->assertArrayHasKey('hit_rate', $stats);
-		$this->assertArrayHasKey('prefix', $stats);
 
 		// Verify hit rate is properly formatted (1 decimal place)
 		if ($stats['hit_rate'] > 0) {
@@ -217,7 +216,6 @@ final class APCuServiceTest extends TestCase
 	{
 		$defaultApcuSettings = [
 			'enabled' => true,
-			'prefix'  => 'test_tcms_',
 		];
 
 		$settings = [

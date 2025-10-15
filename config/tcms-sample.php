@@ -2,7 +2,7 @@
 
 // Sample configuration file for /tcms.php
 
-$settings['sentry']['enable'] = true;
+$settings['sentry'] = true;
 
 $settings['api']     = '/site-assets/stacks/ws.tcms.core/tcms/';
 $settings['datadir'] = $settings['docroot'] . '/tcms-data';

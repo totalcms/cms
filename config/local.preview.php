@@ -38,16 +38,8 @@ $settings['sentry']           = false;
 $settings['auth']['enable']   = false;
 
 $settings['cache'] = [
-	'filesystem' => [
-		'enabled'   => false,
-	],
-	'redis' => [
-		'enabled' => false,
-	],
-	'apcu' => [
-		'enabled' => false,
-	],
-	'memcached' => [
-		'enabled' => false,
-	],
+	'filesystem' => false,
+	'apcu'       => false,
+	'redis'      => false,
+	'memcached'  => false,
 ];

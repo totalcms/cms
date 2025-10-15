@@ -8,6 +8,7 @@ class Config
 	public string $template = '';
 	public string $datadir  = '';
 	public string $tmpdir   = '';
+	public string $cachedir = '';
 	public string $domain   = '';
 	public string $api      = '';
 	public string $locale   = '';
@@ -44,6 +45,7 @@ class Config
 		$this->dashboard  = $settings['dashboard'];
 		$this->datadir    = $settings['datadir'];
 		$this->tmpdir     = $settings['tmpdir'];
+		$this->cachedir   = $settings['cachedir'];
 		$this->cache      = $settings['cache'];
 		$this->logger     = $settings['logger'];
 		$this->sentry     = (bool)($settings['sentry'] ?? true);

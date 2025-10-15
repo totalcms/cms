@@ -42,6 +42,7 @@ $settings['notfound'] = '/404';
 // Path settings
 $settings['root']     = dirname(__DIR__);
 $settings['tmpdir']   = $settings['root'] . '/tmp';
+$settings['cachedir'] = $settings['root'] . '/cache';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/resources/templates';
 $settings['schemas']  = $settings['root'] . '/resources/schemas';
@@ -51,26 +52,20 @@ $settings['debug'] = false; // Set to true for development
 // Cache configuration
 // Priority: APCu > Redis > Memcached > Filesystem (optimized for single-server deployments)
 $settings['cache'] = [
-	'filesystem' => [
-		'enabled'   => true,
-		'directory' => $settings['root'] . '/cache',
-	],
-	'redis' => [
-		'enabled'  => true,
+	'apcu'        => true,
+	'filesystem'  => true,
+	'redis'       => true,
+	'memcached'   => true,
+	'redisConfig' => [
 		'host'     => '127.0.0.1',
 		'port'     => 6379,
 		'timeout'  => 1,
 		'password' => null,
 		'database' => 0,
 	],
-	'memcached' => [
-		'enabled' => true,
+	'memcachedConfig' => [
 		'host'    => '127.0.0.1',
 		'port'    => 11211,
-	],
-	'apcu' => [
-		'enabled' => true,
-		'prefix'  => 'tcms_',
 	],
 ];
 

@@ -21,9 +21,8 @@ class RedisService implements CacheInterface
 	public function __construct(
 		Config $config,
 	) {
-		$cache          = $config->cache ?? [];
-		$redisConfig    = $cache['redis'] ?? [];
-		$this->enabled  = $redisConfig['enabled'] ?? true;
+		$this->enabled  = $config->cache['redis'] ?? true;
+		$redisConfig    = $config->cache['redisConfig'] ?? [];
 		$this->host     = $redisConfig['host'] ?? '127.0.0.1';
 		$this->port     = $redisConfig['port'] ?? 6379;
 		$this->timeout  = $redisConfig['timeout'] ?? 1;

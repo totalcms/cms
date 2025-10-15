@@ -236,7 +236,6 @@ final class APCuIntegrationTest extends TestCase
 				$apcuStats = $stats['services']['apcu'];
 				$this->assertTrue($apcuStats['available'], 'APCu service stats should show as available');
 				$this->assertArrayHasKey('hit_rate', $apcuStats);
-				$this->assertArrayHasKey('prefix', $apcuStats);
 			}
 		}
 	}
@@ -302,13 +301,12 @@ final class APCuIntegrationTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/test-cache',
 			'cache'      => [
-				'apcu' => [
-					'enabled' => true,
-					'prefix'  => 'test_integration_',
-				],
-				'redis'     => ['enabled' => false], // Disable Redis for isolated APCu testing
-				'memcached' => ['enabled' => false], // Disable Memcached for isolated APCu testing
+				'apcu'       => true,
+				'redis'      => false, // Disable Redis for isolated APCu testing
+				'memcached'  => false, // Disable Memcached for isolated APCu testing
+				'filesystem' => true,
 			],
 			'logger'     => [],
 			'sentry'     => [],

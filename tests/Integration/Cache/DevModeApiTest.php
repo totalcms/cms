@@ -44,9 +44,10 @@ final class DevModeApiTest extends TestCase
 			'dashboard' => [],
 			'datadir'   => '/tmp',
 			'tmpdir'    => '/tmp',
+			'cachedir'  => '/tmp/test-cache',
 			'cache'     => [
-				'filesystem' => ['enabled' => false, 'directory' => '/tmp/test-cache'],
-				'apcu'       => ['enabled' => false, 'prefix' => 'test_dev_mode_'],
+				'filesystem' => false,
+				'apcu'       => false,
 			],
 			'logger'     => [],
 			'sentry'     => [],
