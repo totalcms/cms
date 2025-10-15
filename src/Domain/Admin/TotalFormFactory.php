@@ -269,6 +269,21 @@ readonly class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function mailer(string $id = '', array $options = []): string
+	{
+		$options = array_merge([
+			'save'   => 'Save',
+			'delete' => 'Delete',
+			'class'  => 'help-on-hover help-box',
+		], $options);
+		$options['id'] = $id;
+
+		$form = $this->builder('mailer', $options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([

@@ -8,6 +8,7 @@ use TotalCMS\Action\Admin\AdminEditProfileAction;
 use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
+use TotalCMS\Action\Admin\AdminMailerAction;
 use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
@@ -40,6 +41,9 @@ return function (App $app): void {
 
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground');
 		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post');
+
+		$group->get('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail');
+		$group->post('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail-post');
 
 		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings');
 		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section');

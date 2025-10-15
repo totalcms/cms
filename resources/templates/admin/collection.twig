@@ -42,17 +42,17 @@
 	<nav class="links" id="collection-links">
 		{% for category, collections in cms.collectionsByCategory() %}
 			<h3>{{ category }}</h3>
+			<ul>
 			{% for collection in sortByKey(collections) %}
-				<ul>
-					{% if collection.id != 'playground' %}
+				{% if collection.id not in ['playground', 'mailer'] %}
 					<li class="collection-{{collection.schema}}">
 						<a {% if url.collection == collection.id %}class="active"{% endif %}
 							href="collections/{{ collection.id }}"
 							title="{{ collection.description }}">{{ collection.name }}</a>
 					</li>
-					{% endif %}
-				</ul>
+				{% endif %}
 			{% endfor %}
+			</ul>
 		{% endfor %}
 	</nav>
 

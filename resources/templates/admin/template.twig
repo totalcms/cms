@@ -10,15 +10,15 @@
 	<nav class="links" id="template-links">
 		{% for folder, templates in cms.templatesByFolder() %}
 			<h3>{{ folder }}</h3>
+			<ul>
 			{% for template in templates %}
-				<ul>
-					<li class="template-{{template.path}}">
-						<a {% if url.template == template.path %}class="active"{% endif %}
-							href="templates/{{ template.path }}"
-							title="{{ template.id }}">{{ template.id }}</a>
-					</li>
-				</ul>
+				<li class="template-{{template.path}}">
+					<a {% if url.template == template.path %}class="active"{% endif %}
+						href="templates/{{ template.path }}"
+						title="{{ template.id }}">{{ template.id }}</a>
+				</li>
 			{% endfor %}
+			</ul>
 		{% endfor %}
 	</nav>
 

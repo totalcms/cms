@@ -34,6 +34,7 @@ class SchemaData
 		'file',
 		'gallery',
 		'image',
+		'mailer',
 		'number',
 		'playground',
 		'styledtext',

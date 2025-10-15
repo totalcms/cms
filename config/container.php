@@ -57,6 +57,9 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\License\Service\LicenseValidator;
+use TotalCMS\Domain\Mailer\Service\EmailSender;
+use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -102,6 +105,7 @@ use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
 use TotalCMS\Middleware\LicenseValidationMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
+use TotalCMS\Middleware\RateLimitMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -547,5 +551,29 @@ return [
 		$container->get(TotalCMS\Domain\Settings\Services\SettingsFetcher::class),
 		$container->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
 		$container->get(CacheManager::class),
+	),
+
+	// Mailer Services
+	EmailSender::class => fn (ContainerInterface $container): EmailSender => new EmailSender(
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	MailerFetcher::class => fn (ContainerInterface $container): MailerFetcher => new MailerFetcher(
+		$container->get(ObjectRepository::class),
+	),
+
+	EmailService::class => fn (ContainerInterface $container): EmailService => new EmailService(
+		$container->get(MailerFetcher::class),
+		$container->get(EmailSender::class),
+		$container->get(TwigEngine::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	RateLimitMiddleware::class => fn (ContainerInterface $container): RateLimitMiddleware => new RateLimitMiddleware(
+		$container->get(APCuService::class),
+		$container->get(JsonRenderer::class),
+		$container->get(Config::class),
 	),
 ];

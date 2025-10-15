@@ -10,15 +10,15 @@
 	<nav class="links" id="schema-links">
 		{% for category, schemas in cms.schemasByCategory() %}
 			<h3>{{ category }}</h3>
+			<ul>
 			{% for schema in sortByKey(schemas) %}
-				<ul>
-					<li class="schema-{{schema.id}}">
-						<a {% if url.schema == schema.id %}class="active"{% endif %}
-							href="schemas/{{ schema.id }}"
-							title="{{ schema.description }}">{{ schema.id }}</a>
-					</li>
-				</ul>
+				<li class="schema-{{schema.id}}">
+					<a {% if url.schema == schema.id %}class="active"{% endif %}
+						href="schemas/{{ schema.id }}"
+						title="{{ schema.description }}">{{ schema.id }}</a>
+				</li>
 			{% endfor %}
+			</ul>
 		{% endfor %}
 	</nav>
 

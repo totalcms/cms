@@ -11,6 +11,7 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/auth.php')($app);
 	(require __DIR__ . '/routes/cache.php')($app);
 	(require __DIR__ . '/routes/emergency.php')($app);
+	(require __DIR__ . '/routes/mailer.php')($app);
 	(require __DIR__ . '/routes/collections.php')($app);
 	(require __DIR__ . '/routes/docs.php')($app);
 	(require __DIR__ . '/routes/download.php')($app);

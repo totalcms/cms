@@ -85,6 +85,9 @@ body {
 	.playground {
 		mask-image : var(--icon-twig-playground);
 	}
+	.mailer {
+		mask-image : var(--icon-mailer);
+	}
 }
 
 .dash-content {
@@ -151,6 +154,9 @@ body {
 			&[class*="template-"] {
 				--collection-icon : var(--icon-file-code);
 			}
+			&[class*="mailer-"] {
+				--collection-icon : var(--icon-email);
+			}
 			&.schema-auth, &.collection-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,
 			&.schema-blog, &.collection-blog { --collection-icon : var(--icon-blog) }
@@ -164,6 +170,7 @@ body {
 			&.schema-image, &.collection-image { --collection-icon : var(--icon-image) }
 			&.schema-number, &.collection-number { --collection-icon : var(--icon-number) }
 			&.schema-playground, &.collection-playground { --collection-icon : var(--icon-twig-playground) }
+			&.schema-mailer, &.collection-mailer { --collection-icon : var(--icon-mailer) }
 			&.schema-styledtext, &.collection-styledtext { --collection-icon : var(--icon-styledtext) }
 			&.schema-svg, &.collection-svg { --collection-icon : var(--icon-svg) }
 			&.schema-text, &.collection-text { --collection-icon : var(--icon-text) }

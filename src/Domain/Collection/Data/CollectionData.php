@@ -143,6 +143,7 @@ class CollectionData
 			'auth'       => ['labelPlural' => 'Users', 'labelSingular' => 'User'],
 			'blog'       => ['labelPlural' => 'Posts', 'labelSingular' => 'Post'],
 			'playground' => ['labelPlural' => 'Snippets', 'labelSingular' => 'Snippet'],
+			'mailer'     => ['labelPlural' => 'Emails', 'labelSingular' => 'Email'],
 			'color'      => ['labelPlural' => 'Colors', 'labelSingular' => 'Color'],
 			'date'       => ['labelPlural' => 'Dates', 'labelSingular' => 'Date'],
 			'depot'      => ['labelPlural' => 'Depots', 'labelSingular' => 'Depot'],

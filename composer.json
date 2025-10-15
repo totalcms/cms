@@ -48,6 +48,7 @@
     "odan/session": "^6.1",
     "opis/json-schema": "^2.3",
     "php-di/php-di": "^7.0",
+    "phpmailer/phpmailer": "^6.9",
     "selective/basepath": "^2",
     "selective/validation": "^2.0",
     "sentry/sentry": "^4.8",
