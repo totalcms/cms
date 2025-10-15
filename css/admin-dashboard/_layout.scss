@@ -17,6 +17,7 @@ body {
 	align-content      : space-between;
 	border-right       : 1px solid oklch(var(--totalform-lightgray));
 	grid-template-rows : auto 1fr auto;
+	overflow-y         : auto;
 
 	.menu {
 		display         : grid;
