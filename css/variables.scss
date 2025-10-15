@@ -1,9 +1,8 @@
 :root {
-	--totalform-accent-l : 60.45%;
-	--totalform-accent-c : 0.107;
-	--totalform-accent-h : 183.38;
+	// --totalform-accent-l : 60.45%;
+	// --totalform-accent-c : 0.107;
+	// --totalform-accent-h : 183.38;
 	// --totalform-accent   : var(--totalform-accent-l) var(--totalform-accent-c) var(--totalform-accent-h);
-	--totalform-accent   : var(--totalform-blue);
 
 	--totalform-purewhite  : 100% 0 0;
 	--totalform-white      : 99% 0 0;
@@ -21,7 +20,9 @@
 	--totalform-yellow : 91% 0.19 103.96;
 	--totalform-red    : 63% 0.22 32.01;
 
-	--totalform-changed : var(--totalform-blue);
+	--totalform-accent : var(--totalform-blue);
+
+	--totalform-changed : var(--totalform-accent);
 	--totalform-info    : var(--totalform-blue);
 	--totalform-success : var(--totalform-green);
 	--totalform-error   : var(--totalform-red);

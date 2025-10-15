@@ -107,6 +107,17 @@ readonly class SettingsValidator
 			$data['pagination'] = (int)$data['pagination'];
 		}
 
+		// Normalize accent color to simple hex string
+		if (isset($data['accent'])) {
+			if (is_array($data['accent']) && isset($data['accent']['hex'])) {
+				// If it's a ColorData object, extract just the hex value
+				$data['accent'] = $data['accent']['hex'];
+			} elseif (is_string($data['accent'])) {
+				// Already a string, ensure it has # prefix
+				$data['accent'] = str_starts_with($data['accent'], '#') ? $data['accent'] : '#' . $data['accent'];
+			}
+		}
+
 		return $data;
 	}
 

@@ -66,6 +66,7 @@ class TotalCMSTwigFilters
 		'rgb',
 		'hsl',
 		'oklch',
+		'hexToColor',
 		'color',
 		'colour',
 		'lightness',

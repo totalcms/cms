@@ -16,7 +16,7 @@
 
     &:after {
 		content            : "";
-		background-color   : oklch(var(--totalform-purewhite));
+		background-color   : #ffffff;
 		mask-image         : var(--icon-blank);
 		position           : absolute;
 		display            : block;
@@ -41,7 +41,7 @@
 		width      : 100%;
 		font-size  : 1.2rem;
 		text-align : center;
-		color      : oklch(var(--totalform-purewhite));
+		color      : #ffffff;
 		transition : all 500ms ease-in-out;
 		opacity    : 0;
 	}

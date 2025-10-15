@@ -16,6 +16,12 @@
 			"help"        : "The number of items to display per page in the dashboard table. Set the value to <code>0</code> to disable pagination. When set to <code>0</code>, all items will be displayed on a single page.",
 			"placeholder" : "50",
 			"min"         : 0
+		},
+		"accent": {
+			"type"    : "color",
+			"label"   : "Dashboard Accent Color",
+			"help"    : "The accent color used throughout the admin dashboard.",
+			"default" : "#4d91e2"
 		}
 	}
 }
