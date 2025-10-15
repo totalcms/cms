@@ -9,7 +9,7 @@
 	width               : 96px;
 	height              : 96px;
 	opacity             : 0.5;
-	background-color    : #222;
+	background-color    : oklch(var(--totalform-darkgray));
 	background-position : center;
 	transition          : opacity 300ms ease-in-out, scale 300ms ease-in-out;
 	transform-origin    : center;
