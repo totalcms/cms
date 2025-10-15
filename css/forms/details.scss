@@ -17,6 +17,7 @@ details.cms-accordion {
 		background-color : oklch(var(--totalform-nearwhite));
 		cursor           : pointer;
 		user-select      : none;
+		color            : oklch(var(--totalform-text-color));
 
 		// &::marker {
 		// 	content : "▶";
