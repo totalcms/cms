@@ -169,7 +169,7 @@ body {
 				--collection-icon : var(--icon-file-code);
 			}
 			&[class*="mailer-"] {
-				--collection-icon : var(--icon-email);
+				--collection-icon : var(--icon-plane);
 			}
 			&.schema-auth, &.collection-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,

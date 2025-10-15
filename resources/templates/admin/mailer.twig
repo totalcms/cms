@@ -4,7 +4,7 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter Mailers" autofocus />
+		<input type="search" class="filter" placeholder="Filter Emails" autofocus />
 	</header>
 
 	<nav class="links" id="mailer-links">
@@ -41,14 +41,20 @@
 	</nav>
 
 	<footer>
-		<a class="dash-button full transparent" href="mailer" title="Create a new email template">+ New Template</a>
+		<a class="dash-button full transparent" href="mailer/new" title="Create a new email template">+ New Email</a>
 	</footer>
 </aside>
 
 <main class="dash-main-content">
 
+{% if url.id is empty %}
+
+	{% include "admin/mailer/home.twig" %}
+
+{% else %}
+
 	<header>
-		<h1><a href="mailer">mailer</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) | default('new') }}</span></h1>
+		<h1><a href="mailer">mailer</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) }}</span></h1>
 		<button class="dash-action-dots" title="Mailer Actions" popovertarget="mailer-actions"></button>
 		<nav popover id="mailer-actions">
 			<ul>
@@ -68,9 +74,8 @@
 
 {% else %}
 	<section class="dash-content-section">
-		<p>Create and manage email templates for your forms. Email fields support Twig templating with access to form data via <code>{{ "{{ data.fieldName }}" }}</code>. For example, use <code>{{ "{{ data.email }}" }}</code> to insert the submitted email address into the template.</p>
 
-		{{ cms.form.mailer(url.id|default(''), {
+		{{ cms.form.mailer(url.id, {
 			deleteActions : [{
 				"action" : "redirect",
 				"link"   : "mailer"
@@ -106,6 +111,8 @@
 		{% endif %}
 
 	</section>
+{% endif %}
+
 {% endif %}
 
 </main>
