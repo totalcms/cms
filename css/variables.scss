@@ -54,7 +54,7 @@
 @media (prefers-color-scheme: dark) {
 	:root:not(.theme-light) {
 		--totalform-purewhite  : 0% 0 0;
-		--totalform-white      : 10% 0 0;
+		--totalform-white      : 5% 0 0;
 		--totalform-nearwhite  : 20% 0 0;
 		--totalform-lightgray  : 40% 0 0;
 		--totalform-mediumgray : 60% 0 0;
@@ -70,7 +70,7 @@
 // Force dark mode when .theme-dark class is applied
 :root.theme-dark {
 	--totalform-purewhite  : 0% 0 0;
-	--totalform-white      : 10% 0 0;
+	--totalform-white      : 5% 0 0;
 	--totalform-nearwhite  : 20% 0 0;
 	--totalform-lightgray  : 40% 0 0;
 	--totalform-mediumgray : 60% 0 0;

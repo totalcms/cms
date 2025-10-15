@@ -57,13 +57,18 @@
         z-index             : 10;
         margin              : 0;
         border              : 1px solid oklch(var(--totalform-border-color));
-        padding             : 0.625rem 1.625rem;
+        padding             : 0.5rem 1.625rem;
         border-radius       : 2px 0 var(--totalform-radius) var(--totalform-radius);
         transform           : translateY(calc(100% - 1px));
         background-color    : oklch(var(--totalform-nearwhite));
         background-position : 0.5rem 0.6875rem;
         transition: box-shadow .5s, border-color .25s ease-in-out;
     }
+	.toggle-field, .checkbox-field {
+		.help {
+			border-radius : var(--totalform-radius);
+		}
+	}
 }
 
 //------------------------------
