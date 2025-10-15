@@ -9,7 +9,8 @@
 
 	<nav class="links" id="schema-links">
 		{% for category, schemas in cms.schemasByCategory() %}
-			<h3>{{ category }}</h3>
+		<details id="category-{{ category | slug }}">
+			<summary>{{ category }}</summary>
 			<ul>
 			{% for schema in sortByKey(schemas) %}
 				<li class="schema-{{schema.id}}">
@@ -19,6 +20,7 @@
 				</li>
 			{% endfor %}
 			</ul>
+		</details>
 		{% endfor %}
 	</nav>
 

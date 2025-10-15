@@ -22,7 +22,8 @@
 			{% endfor %}
 
 			{% for category, categorySnippets in snippetsByCategory %}
-				<h3>{{ category }}</h3>
+			<details id="category-{{ category | slug }}">
+				<summary>{{ category }}</summary>
 				<ul>
 					{% for snippet in sortByKey(categorySnippets) %}
 					<li class="playground-snippet">
@@ -34,6 +35,7 @@
 					</li>
 					{% endfor %}
 				</ul>
+			</details>
 			{% endfor %}
 		{% endif %}
 	</nav>
@@ -313,17 +315,17 @@ function focusSnippetEditor() {
 	// Only focus for new snippets (no ID in URL)
 	const isNewSnippet = !window.location.pathname.match(/playground\/[^\/]+$/);
 	if (!isNewSnippet) return;
-	
+
 	const snippetTextarea = document.querySelector('textarea[name="snippet"]');
 	if (!snippetTextarea) return;
-	
+
 	// Try to focus immediately if CodeMirror is already initialized
 	const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
 	if (cmWrapper && cmWrapper.CodeMirror) {
 		cmWrapper.CodeMirror.focus();
 		return;
 	}
-	
+
 	// If CodeMirror isn't ready yet, wait for it
 	const checkForCodeMirror = () => {
 		const wrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
@@ -334,7 +336,7 @@ function focusSnippetEditor() {
 			setTimeout(checkForCodeMirror, 100);
 		}
 	};
-	
+
 	setTimeout(checkForCodeMirror, 150);
 }
 

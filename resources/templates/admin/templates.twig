@@ -22,7 +22,8 @@
 			{% endfor %}
 
 			{% for category, categorySnippets in snippetsByCategory %}
-				<h3>{{ category }}</h3>
+			<details id="category-{{ category | slug }}">
+				<summary>{{ category }}</summary>
 				<ul>
 					{% for snippet in sortByKey(categorySnippets) %}
 					<li class="playground-snippet">
@@ -34,6 +35,7 @@
 					</li>
 					{% endfor %}
 				</ul>
+			</details>
 			{% endfor %}
 		{% endif %}
 	</nav>

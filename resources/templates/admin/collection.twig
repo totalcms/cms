@@ -41,7 +41,8 @@
 
 	<nav class="links" id="collection-links">
 		{% for category, collections in cms.collectionsByCategory() %}
-			<h3>{{ category }}</h3>
+		<details id="category-{{ category | slug }}">
+			<summary>{{ category }}</summary>
 			<ul>
 			{% for collection in sortByKey(collections) %}
 				{% if collection.id not in ['playground', 'mailer'] %}
@@ -53,6 +54,7 @@
 				{% endif %}
 			{% endfor %}
 			</ul>
+		</details>
 		{% endfor %}
 	</nav>
 

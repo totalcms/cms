@@ -22,7 +22,8 @@
 			{% endfor %}
 
 			{% for category, categoryMailers in mailersByCategory %}
-				<h3>{{ category }}</h3>
+			<details id="category-{{ category | slug }}">
+				<summary>{{ category }}</summary>
 				<ul>
 					{% for mailer in sortByKey(categoryMailers) %}
 					<li class="mailer-item">
@@ -34,6 +35,7 @@
 					</li>
 					{% endfor %}
 				</ul>
+			</details>
 			{% endfor %}
 		{% endif %}
 	</nav>

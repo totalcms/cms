@@ -9,7 +9,8 @@
 
 	<nav class="links" id="template-links">
 		{% for folder, templates in cms.templatesByFolder() %}
-			<h3>{{ folder }}</h3>
+		<details id="category-{{ folder | slug }}">
+			<summary>{{ folder }}</summary>
 			<ul>
 			{% for template in templates %}
 				<li class="template-{{template.path}}">
@@ -19,6 +20,7 @@
 				</li>
 			{% endfor %}
 			</ul>
+		</details>
 		{% endfor %}
 	</nav>
 
