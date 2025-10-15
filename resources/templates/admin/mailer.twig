@@ -87,17 +87,21 @@
 			<p>Send a test email using this template. Enter test data in JSON format to test Twig variable substitution.</p>
 
 			{% set testDataField %}
-				<textarea name="testData" id="test-data" placeholder='{"email": "test@example.com", "name": "John Doe"}'>{"email": "test@example.com", "name": "Test User"}</textarea>
+				<input type="hidden" name="mailerId" value="{{ url.id }}" />
+				{{ cms.form.field("json", "data", {
+					label       : "Test Data (JSON)",
+					help        : "Enter JSON data to use for Twig variable substitution.",
+					placeholder : '{"email": "test@example.com", "name": "John Doe"}',
+					rows        : 6,
+				}) }}
 			{% endset %}
 
-			{{ cms.form.simple('/action/email', testDataField, {
+			{{ cms.form.simple('/action/mailer', testDataField, {
 				class  : "test-email-form",
 				method : "POST",
 				label  : "Send Test Email",
-				ajax   : false,
+				ajax   : true,
 			}) }}
-
-			<div id="test-result" class="test-result"></div>
 		</section>
 		{% endif %}
 
@@ -107,18 +111,6 @@
 </main>
 
 <style>
-.inactive-badge {
-	display: inline-block;
-	padding: 0.125rem 0.375rem;
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: oklch(var(--totalform-text-color));
-	background-color: oklch(var(--totalform-nearwhite));
-	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
-	text-transform: uppercase;
-	letter-spacing: 0.025em;
-}
 .mail-test-section {
 	margin-top: 3rem;
 	padding-top: 2rem;
@@ -132,105 +124,5 @@
 	margin-bottom: 1.5rem;
 	color: oklch(var(--totalform-darkgray));
 }
-#test-data {
-	width: 100%;
-	min-height: 100px;
-	padding: 0.75rem;
-	font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-	font-size: 0.875rem;
-	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
-	background-color: oklch(var(--totalform-purewhite));
-}
-.test-result {
-	margin-top: 1.5rem;
-	padding: 1rem;
-	border-radius: var(--totalform-radius);
-	display: none;
-}
-.test-result.success {
-	display: block;
-	background-color: oklch(90% 0.05 145);
-	border: 1px solid oklch(70% 0.1 145);
-	color: oklch(30% 0.05 145);
-}
-.test-result.error {
-	display: block;
-	background-color: oklch(90% 0.05 30);
-	border: 1px solid oklch(70% 0.1 30);
-	color: oklch(30% 0.05 30);
-}
 </style>
-
-<script>
-// Replace POST in history to prevent resubmission warning on refresh
-if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.pathname);
-}
-
-// Function to handle test email form submission
-function setupTestEmailForm() {
-	const testForm = document.querySelector('.test-email-form');
-	if (!testForm) return;
-
-	const mailerId = '{{ url.id }}';
-	if (!mailerId) return;
-
-	testForm.addEventListener('submit', async function(e) {
-		e.preventDefault();
-
-		const testDataTextarea = document.getElementById('test-data');
-		const testResult = document.getElementById('test-result');
-		const submitButton = this.querySelector('button[type="submit"]');
-
-		if (!testDataTextarea || !testResult) return;
-
-		// Parse test data
-		let testData = {};
-		try {
-			testData = JSON.parse(testDataTextarea.value || '{}');
-		} catch (error) {
-			testResult.className = 'test-result error';
-			testResult.textContent = 'Invalid JSON in test data: ' + error.message;
-			return;
-		}
-
-		// Disable submit button during request
-		const originalText = submitButton.textContent;
-		submitButton.disabled = true;
-		submitButton.textContent = 'Sending...';
-
-		try {
-			const response = await fetch('/action/email', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					mailerId: mailerId,
-					data: testData
-				})
-			});
-
-			const result = await response.json();
-
-			if (result.success) {
-				testResult.className = 'test-result success';
-				testResult.textContent = 'Test email sent successfully! ' + (result.message || '');
-			} else {
-				testResult.className = 'test-result error';
-				testResult.textContent = 'Failed to send test email: ' + (result.error || result.message || 'Unknown error');
-			}
-		} catch (error) {
-			testResult.className = 'test-result error';
-			testResult.textContent = 'Error sending test email: ' + error.message;
-		} finally {
-			submitButton.disabled = false;
-			submitButton.textContent = originalText;
-		}
-	});
-}
-setupTestEmailForm();
-</script>
-
 {% endblock %}
