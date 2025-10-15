@@ -199,6 +199,8 @@ body {
 			&.server-checker { --collection-icon : var(--icon-health) }
 			&.playground-snippet { --collection-icon : var(--icon-macro) }
 			&.jumpstart { --collection-icon : var(--icon-jumpstart) }
+			&.license-manager { --collection-icon : var(--icon-license) }
+			&.jobqueue { --collection-icon : var(--icon-terminal) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);
