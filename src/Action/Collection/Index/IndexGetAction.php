@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Collection\Index;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\IndexTransformer;
@@ -13,6 +14,7 @@ readonly class IndexGetAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private IndexReader $service,
+		private IndexFilter $indexFilter,
 	) {
 	}
 
@@ -30,7 +32,18 @@ readonly class IndexGetAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$index = $this->service->fetchIndex($args['collection']);
+		// Get query parameters
+		$params = $request->getQueryParams();
+
+		// Extract filter options
+		$filterOptions = $this->indexFilter->extractFilterOptions($params);
+
+		// Fetch and filter index
+		if ($filterOptions !== []) {
+			$index = $this->indexFilter->fetchFilteredIndexData($args['collection'], $filterOptions);
+		} else {
+			$index = $this->service->fetchIndex($args['collection']);
+		}
 
 		return $this->renderer->jsonItem($response, $index, new IndexTransformer());
 	}

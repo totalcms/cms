@@ -358,10 +358,40 @@ $parsed = $filter->parseFilterString('published:true,featured:true,status:active
 The `IndexFilter` service is used throughout Total CMS:
 
 - **Sitemap Builder** - Filter which objects appear in XML sitemaps ([Sitemap Documentation](sitemap-builder.md))
+- **Collection Index API** - Filter collection objects via API endpoint
 - **RSS Feeds** - Control feed content based on object properties
-- **API Endpoints** - Add filtering to any collection endpoint
+- **Form Fields** - Filter relational dropdown options ([Field Settings](field-settings.md#filtering-relational-options))
 - **Grid Display** - Filter objects in Twig templates
 - **Custom Services** - Build your own filtered collections
+
+### Collection Index API
+
+The collection index API endpoint supports filtering via URL parameters:
+
+```
+GET /collections/{collection}/index?include=published:true&exclude=draft:true
+```
+
+**Examples:**
+
+```bash
+# Get all published blog posts
+GET /collections/blog/index?include=published:true
+
+# Get featured products that are in stock
+GET /collections/products/index?include=featured:true,instock:true
+
+# Get events excluding cancelled
+GET /collections/events/index?exclude=cancelled:true
+
+# Get blog posts with "travel" tag
+GET /collections/blog/index?include=tags:travel
+
+# Complex filtering: published posts with travel tag, excluding drafts
+GET /collections/blog/index?include=published:true,tags:travel&exclude=draft:true
+```
+
+The API returns a filtered `IndexData` object with only matching objects.
 
 ## Best Practices
 
