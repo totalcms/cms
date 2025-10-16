@@ -20,6 +20,11 @@
 		mask-repeat      : no-repeat;
 		mask-position    : center;
 		mask-size        : 2rem;
+
+		&:has(img) {
+			background : transparent;
+			mask-image : none;
+		}
 	}
 }
 
