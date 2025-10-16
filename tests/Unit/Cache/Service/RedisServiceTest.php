@@ -21,9 +21,10 @@ final class RedisServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'redis' => [
-					'enabled'  => true,
+				'redis'       => true,
+				'redisConfig' => [
 					'host'     => '127.0.0.1',
 					'port'     => 6379,
 					'timeout'  => 1,
@@ -42,6 +43,8 @@ final class RedisServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);
@@ -57,6 +60,7 @@ final class RedisServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [],
 			'logger'     => [],
 			'sentry'     => [],
@@ -69,6 +73,8 @@ final class RedisServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);
@@ -87,9 +93,10 @@ final class RedisServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'redis' => [
-					'enabled'  => false,
+				'redis'       => false,
+				'redisConfig' => [
 					'host'     => 'redis.example.com',
 					'port'     => 6380,
 					'timeout'  => 5,
@@ -108,6 +115,8 @@ final class RedisServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);
@@ -148,10 +157,9 @@ final class RedisServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'redis' => [
-					'enabled' => false,
-				],
+				'redis' => false,
 			],
 			'logger'     => [],
 			'sentry'     => [],
@@ -164,6 +172,8 @@ final class RedisServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);

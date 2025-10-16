@@ -60,6 +60,8 @@ final class DevModeApiTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);

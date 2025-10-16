@@ -214,9 +214,8 @@ final class APCuServiceTest extends TestCase
 
 	private function createTestConfig(array $apcuSettings = []): Config
 	{
-		$defaultApcuSettings = [
-			'enabled' => true,
-		];
+		// Extract the enabled flag from settings or use default
+		$enabled = $apcuSettings['enabled'] ?? true;
 
 		$settings = [
 			'env'        => 'test',
@@ -224,8 +223,9 @@ final class APCuServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'apcu' => array_merge($defaultApcuSettings, $apcuSettings),
+				'apcu' => $enabled,
 			],
 			'logger'     => [],
 			'sentry'     => [],
@@ -238,6 +238,8 @@ final class APCuServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		];

@@ -39,6 +39,7 @@ class TextWatermarkFactoryTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [],
 			'logger'     => [],
 			'sentry'     => [],
@@ -51,6 +52,8 @@ class TextWatermarkFactoryTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => $imageworksSettings,
 		];

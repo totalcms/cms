@@ -21,11 +21,12 @@ final class MemcachedServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'memcached' => [
-					'enabled' => true,
-					'host'    => '127.0.0.1',
-					'port'    => 11211,
+				'memcached'       => true,
+				'memcachedConfig' => [
+					'host' => '127.0.0.1',
+					'port' => 11211,
 				],
 			],
 			'logger'     => [],
@@ -39,6 +40,8 @@ final class MemcachedServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);
@@ -54,6 +57,7 @@ final class MemcachedServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [],
 			'logger'     => [],
 			'sentry'     => [],
@@ -66,6 +70,8 @@ final class MemcachedServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);
@@ -84,11 +90,12 @@ final class MemcachedServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'memcached' => [
-					'enabled' => false,
-					'host'    => 'memcached.example.com',
-					'port'    => 11212,
+				'memcached'       => false,
+				'memcachedConfig' => [
+					'host' => 'memcached.example.com',
+					'port' => 11212,
 				],
 			],
 			'logger'     => [],
@@ -102,6 +109,8 @@ final class MemcachedServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);
@@ -142,10 +151,9 @@ final class MemcachedServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'memcached' => [
-					'enabled' => false,
-				],
+				'memcached' => false,
 			],
 			'logger'     => [],
 			'sentry'     => [],
@@ -158,6 +166,8 @@ final class MemcachedServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		]);
