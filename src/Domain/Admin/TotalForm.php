@@ -7,6 +7,7 @@ use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -145,6 +146,7 @@ abstract class TotalForm implements \Stringable
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
 		protected IndexReader $collectionReader,
+		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
@@ -299,19 +301,32 @@ abstract class TotalForm implements \Stringable
 	}
 
 	/**
-	 * @param array<string> $properties
+	 * Get properties from collection objects with optional filtering.
+	 *
+	 * @param array<string>        $properties Properties to fetch
+	 * @param string               $collection Collection name (defaults to current collection)
+	 * @param array<string,string> $filters    Optional include/exclude filters
 	 *
 	 * @return array<mixed>
 	 */
-	public function propertiesForCollection(array $properties, string $collection = ''): array
+	public function propertiesForCollection(array $properties, string $collection = '', array $filters = []): array
 	{
 		if ($collection === '') {
 			$collection = $this->collection;
 		}
 
-		$collection = $this->collectionReader->fetchIndex($collection);
+		// If filters are provided, use IndexFilter to get filtered objects
+		if ($filters !== []) {
+			$objects = $this->indexFilter->fetchFilteredIndex($collection, $filters);
+		} else {
+			// No filters, fetch all objects
+			$index   = $this->collectionReader->fetchIndex($collection);
+			$objects = $index->objects->toArray();
+		}
 
-		return $collection->objects->map(fn ($item) => collect($item)->only($properties)->toArray())->toArray();
+		// Extract only the requested properties from each object
+		/** @phpstan-ignore-next-line argument.templateType */
+		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $objects);
 	}
 
 	private function saveButton(): string

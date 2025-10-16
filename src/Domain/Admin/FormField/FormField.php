@@ -230,7 +230,16 @@ class FormField
 		// Combine label properties with value property for fetching
 		$propertiesToFetch = array_unique(array_merge($labelProperties, [$valueProperty]));
 
-		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection);
+		// Extract include/exclude filters from settings
+		$filters = [];
+		if (isset($settings['include'])) {
+			$filters['include'] = $settings['include'];
+		}
+		if (isset($settings['exclude'])) {
+			$filters['exclude'] = $settings['exclude'];
+		}
+
+		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
 
 		// Build the label from multiple properties if specified
 		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {

@@ -209,6 +209,74 @@ This will create labels like "Product Name - Category Name".
 ```
 This will create labels like "John | Doe | john@example.com".
 
+### Filtering Relational Options
+
+You can filter which objects appear in relational dropdowns using `include` and `exclude` filters. This is useful for showing only published content, excluding drafts, or filtering by any object property.
+
+> **📖 See [Index Filter Documentation](index-filter.md) for complete filtering syntax and examples.**
+
+**Basic filtering:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "blog",
+  	"label"      : "title",
+  	"value"      : "id",
+  	"exclude"    : "draft:true"
+  }
+}
+```
+This will show all blog posts except drafts in the dropdown.
+
+**Include only specific items:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "products",
+  	"label"      : "name",
+  	"value"      : "id",
+  	"include"    : "instock:true"
+  }
+}
+```
+This will show only in-stock products.
+
+**Combined filters:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "blog",
+  	"label"      : "title",
+  	"value"      : "id",
+  	"include"    : "published:true",
+  	"exclude"    : "draft:true,archived:true"
+  }
+}
+```
+This will show only published posts that are not drafts or archived.
+
+**Shorthand syntax:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "events",
+  	"label"      : "name",
+  	"value"      : "id",
+  	"include"    : "featured",
+  	"exclude"    : "cancelled"
+  }
+}
+```
+When no value is provided, it defaults to `true` (e.g., `featured` = `featured:true`).
+
+#### Filter Logic
+
+- **include** - Object must match ALL specified criteria (AND logic)
+- **exclude** - Object is excluded if it matches ANY criteria (OR logic)
+- **Precedence** - Exclude takes precedence over include
+
+Multiple filters are comma-separated: `"exclude": "draft:true,private:true"`
+
 ## Smart Date Defaults
 
 Use the following settings can be used for a date field to auto-populate it when an
