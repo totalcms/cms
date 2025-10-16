@@ -51,6 +51,6 @@ readonly class AdminTemplateAction
 			$templateData['url']['template'] = 'new';
 		}
 
-		return $this->twigRenderer->template($response, 'admin/template.twig', $templateData);
+		return $this->twigRenderer->template($response, 'admin/templates.twig', $templateData);
 	}
 }

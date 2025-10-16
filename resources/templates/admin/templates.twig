@@ -4,40 +4,24 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter Templates" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="Filter Templates" autofocus />
 	</header>
 
 	<nav class="links" id="template-links">
-		{% set snippets = cms.objects("playground") %}
-		{% if snippets|length == 0 %}
-			<h3>Templates</h3>
+		{% for folder, templates in cms.templatesByFolder() %}
+		<details id="category-{{ folder | slug }}">
+			<summary>{{ folder }}</summary>
 			<ul>
-				<li class="no-snippets">No templates found</li>
+			{% for template in templates %}
+				<li class="template-{{template.path}}">
+					<a {% if url.template == template.path %}class="active"{% endif %}
+						href="templates/{{ template.path }}"
+						title="{{ template.id }}">{{ template.id }}</a>
+				</li>
+			{% endfor %}
 			</ul>
-		{% else %}
-			{% set snippetsByCategory = {} %}
-			{% for snippet in snippets %}
-				{% set category = snippet.category|default('Templates') %}
-				{% set snippetsByCategory = snippetsByCategory|merge({(category): (snippetsByCategory[category]|default([]))|merge([snippet])}) %}
-			{% endfor %}
-
-			{% for category, categorySnippets in snippetsByCategory %}
-			<details id="category-{{ category | slug }}">
-				<summary>{{ category }}</summary>
-				<ul>
-					{% for snippet in sortByKey(categorySnippets) %}
-					<li class="playground-snippet">
-						<a  {% if url.id == snippet.id %}class="active"{% endif %}
-							href="playground/{{ snippet.id }}"
-							title="{{ snippet.description | escape }}">{{ snippet.name }}</a>
-						<button class="cms-clip-button" title="Copy Snippet {{ snippet.name | escape }}" data-clip="#{{ snippet.id }}"></button>
-						<span id="{{ snippet.id }}" style="display:none;">{{ snippet.snippet | escape }}</span>
-					</li>
-					{% endfor %}
-				</ul>
-			</details>
-			{% endfor %}
-		{% endif %}
+		</details>
+		{% endfor %}
 	</nav>
 
 	<footer>
@@ -46,61 +30,22 @@
 </aside>
 
 <main class="dash-main-content">
+	{% if url.template is empty %}
 
-	<header>
-		<h1><a href="templates">templates</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) | default('new template') }}</span></h1>
-	</header>
+		{% include "admin/template/home.twig" %}
 
-	<section class="dash-content-section">
-		<p>Playground allows you to learn twig faster and run it against the data inside of the CMS. After you
-		type your twig template code below, you can click the <code>Render Twig</code> button to see the output.
-		If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
+	{% else %}
+		{% if url.template == "new" %}
 
-		{{ cms.form.playground(url.id|default(''), {
-			deleteActions : [
-				{
-					"action" : "redirect",
-					"link"   : "playground"
-				}
-			],
-			newActions   : [
-				{
-					"action" : "redirect-object",
-					"link"   : "playground/{id}"
-				}
-			],
-		}) }}
+			{% include "admin/template/new.twig" %}
 
-		{% set twigfield %}
-			<textarea name="twig" id="twig" class="cms-hide"></textarea>
-		{% endset %}
+		{% else %}
 
-		{{ cms.form.simple(url.path, twigfield, {
-			class  : "render-playground",
-			method : "POST",
-			label  : "Render Twig",
-			ajax   : false,
-		}) }}
+			{% include "admin/template/edit.twig" %}
 
-		{% if results %}
-		<section class="playground-results">
-			<h2>Results</h2>
-
-			<div class="result-section">
-				<h3>Rendered HTML</h3>
-				<div class="rendered-output">
-					{{ results|raw }}
-				</div>
-			</div>
-
-			<div class="result-section">
-				<h3>HTML</h3>
-				<textarea id="html-output">{{ results }}</textarea>
-			</div>
-
-		</section>
 		{% endif %}
-	</section>
-
+	{% endif %}
 </main>
+
 {% endblock %}
+
