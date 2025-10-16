@@ -405,8 +405,20 @@ export default class TotalForm {
 
     async runAction(action) {
         switch (action.action) {
-            case "refresh":
-                location.reload(true);
+			case "back":
+				const referrerUrl = new URL(document.referrer);
+				if (window.history.length > 1 && document.referrer && referrerUrl.hostname === window.location.hostname) {
+					document.location = document.referrer;
+				}
+				break;
+			case "mailer":
+				await this.api.postAPI('/action/mailer', {
+					data     : this.generateData(),
+					mailerId : action.mailerId,
+				});
+				break;
+            case "redirect":
+                document.location = action.link;
                 break;
             case "redirect-object":
 				const link = decodeURI(action.link);
@@ -416,8 +428,8 @@ export default class TotalForm {
 					document.location = link + this.id;
 				}
                 break;
-            case "redirect":
-                document.location = action.link;
+            case "refresh":
+                location.reload(true);
                 break;
 			case "ajax":
 			case "webhook":
@@ -428,12 +440,6 @@ export default class TotalForm {
 				});
 				if (!response.ok) {
 					throw new Error(`Action ${action.action} failed: ${response.statusText}`);
-				}
-				break;
-			case "back":
-				const referrerUrl = new URL(document.referrer);
-				if (window.history.length > 1 && document.referrer && referrerUrl.hostname === window.location.hostname) {
-					document.location = document.referrer;
 				}
 				break;
 			default:
