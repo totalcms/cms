@@ -129,9 +129,29 @@
 		"@bundle",
 		"php -c php-test.ini vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations"
 	],
+    "test:parallel": [
+		"@bundle",
+		"php -c php-test.ini vendor/bin/pest tests/Unit --parallel --processes=4 --display-notices --display-warnings --display-errors --display-deprecations"
+	],
+    "test:parallel:all": [
+		"@bundle",
+		"php -c php-test.ini vendor/bin/pest --parallel --processes=4 --display-notices --display-warnings --display-errors --display-deprecations"
+	],
+    "test:phpunit": [
+		"@bundle",
+		"php -c php-test.ini vendor/bin/phpunit --configuration phpunit.xml --do-not-cache-result --colors=always --display-warnings --display-deprecations --no-coverage"
+	],
     "test:coverage": [
 		"@bundle",
 		"php -c php-test.ini vendor/bin/pest --coverage --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage --coverage-text --display-notices --display-warnings --display-errors --display-deprecations"
+	],
+    "test:coverage:parallel": [
+		"@bundle",
+		"php -c php-test.ini vendor/bin/pest --parallel --processes=4 --coverage --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage --coverage-text"
+	],
+    "test:coverage:phpunit": [
+		"@bundle",
+		"php -c php-test.ini vendor/bin/phpunit --configuration phpunit.xml --do-not-cache-result --colors=always --display-warnings --display-deprecations --coverage-clover build/coverage/clover.xml --coverage-html build/coverage --coverage-text"
 	],
     "test:coverage:type": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
@@ -148,9 +168,7 @@
     ],
     "test:all": [
       "@stan",
-      "@md",
-      "@test",
-      "@test:coverage"
+      "@test"
     ],
     "test:build": [
       "@stan",
@@ -167,7 +185,8 @@
       "@stan",
       "@rector",
       "@sniffer:check",
-      "@md"
+      "@md",
+      "@test:coverage"
     ],
 	"clean": [
 		"@rector:fix",
