@@ -49,6 +49,7 @@ use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -247,6 +248,10 @@ return [
 		$container->get(IndexBuilder::class),
 	),
 
+	IndexFilter::class => fn (ContainerInterface $container): IndexFilter => new IndexFilter(
+		$container->get(IndexReader::class),
+	),
+
 	ObjectFetcher::class => fn (ContainerInterface $container): ObjectFetcher => new ObjectFetcher($container->get(ObjectRepository::class)),
 
 	PropertyFetcher::class => fn (ContainerInterface $container): PropertyFetcher => new PropertyFetcher($container->get(ObjectFetcher::class)),
@@ -261,6 +266,7 @@ return [
 		$container->get(CollectionFetcher::class),
 		$container->get(CollectionLister::class),
 		$container->get(IndexReader::class),
+		$container->get(IndexFilter::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(SchemaLister::class),
 		$container->get(SchemaFactory::class),
