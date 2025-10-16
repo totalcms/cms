@@ -220,7 +220,7 @@ class FormField
 		$valueProperty = trim($settings['value'] ?? 'id');
 		$collection    = $settings['collection'] ?? '';
 
-		if (empty($collection)) {
+		if ($collection === '') {
 			return []; // No collection specified, return empty array
 		}
 
