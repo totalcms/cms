@@ -11,8 +11,8 @@ use TotalCMS\Action\Export\ExportJumpStartDemoAction;
 final class ExportJumpStartDemoActionTest extends TestCase
 {
 	private ExportJumpStartDemoAction $action;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -50,12 +50,13 @@ final class ExportJumpStartDemoActionTest extends TestCase
 	{
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('attachment', $value);
 					$this->assertStringContainsString('jumpstart-demo-', $value);
 					$this->assertStringContainsString('.json', $value);
 				}
+
 				return $this->response;
 			});
 
@@ -97,11 +98,12 @@ final class ExportJumpStartDemoActionTest extends TestCase
 	{
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					// Filename should contain date format Ymd-His
 					$this->assertMatchesRegularExpression('/jumpstart-demo-\d{8}-\d{6}\.json/', $value);
 				}
+
 				return $this->response;
 			});
 

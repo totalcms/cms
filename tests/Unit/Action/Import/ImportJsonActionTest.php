@@ -14,10 +14,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportJsonActionTest extends TestCase
 {
 	private ImportJsonAction $action;
-	private JsonImporter $jsonImporter;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $jsonImporter;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -155,9 +155,7 @@ final class ImportJsonActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return isset($data['import_count']) && $data['import_count'] === 42;
-			}))
+			->with($this->response, $this->callback(fn ($data): bool => isset($data['import_count']) && $data['import_count'] === 42))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response);

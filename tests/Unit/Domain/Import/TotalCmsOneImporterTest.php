@@ -17,12 +17,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class TotalCmsOneImporterTest extends TestCase
 {
 	private TotalCmsOneImporter $importer;
-	private CollectionFetcher $collectionFetcher;
-	private CollectionFactory $collectionFactory;
-	private CollectionRepository $collectionRepository;
-	private IndexReader $indexReader;
-	private JobQueuer $jobQueuer;
-	private LoggerInterface $logger;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
+	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
+	private \PHPUnit\Framework\MockObject\MockObject $logger;
 	private string $testDataPath;
 
 	protected function setUp(): void
@@ -79,21 +79,22 @@ final class TotalCmsOneImporterTest extends TestCase
 		$createdCollections = $existingCollections;
 
 		$this->collectionFetcher->method('collectionExists')
-			->willReturnCallback(function ($id) use (&$createdCollections) {
+			->willReturnCallback(function ($id) use (&$createdCollections): bool {
 				return in_array($id, $createdCollections, true);
 			});
 
-		$collection = $this->createMock(CollectionData::class);
+		$collection     = $this->createMock(CollectionData::class);
 		$collection->id = 'test-id';
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function ($data) use ($collection, &$createdCollections) {
+			->willReturnCallback(function (array $data) use ($collection, &$createdCollections): \PHPUnit\Framework\MockObject\MockObject {
 				$collection->id = $data['id'];
+
 				return $collection;
 			});
 
 		$this->collectionRepository->method('saveCollection')
-			->willReturnCallback(function ($coll) use (&$createdCollections) {
+			->willReturnCallback(function ($coll) use (&$createdCollections): void {
 				$createdCollections[] = $coll->id;
 			});
 
@@ -133,15 +134,13 @@ final class TotalCmsOneImporterTest extends TestCase
 		$blogDir = $this->testDataPath . '/blog/myblog';
 		mkdir($blogDir, 0777, true);
 
-		$mocks = $this->setupCollectionMocking();
+		$this->setupCollectionMocking();
 
 		$this->collectionFactory->expects($this->once())
 			->method('generateCollection')
-			->with($this->callback(function ($data) {
-				return $data['id'] === 'myblog'
+			->with($this->callback(fn ($data): bool => $data['id'] === 'myblog'
 					&& $data['schema'] === 'blog-legacy'
-					&& $data['name'] === 'Myblog';
-			}));
+					&& $data['name'] === 'Myblog'));
 
 		$this->collectionRepository->expects($this->once())
 			->method('saveCollection');
@@ -154,7 +153,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$blogDir = $this->testDataPath . '/blog/myblog';
 		mkdir($blogDir, 0777, true);
 
-		$index = $this->createMock(IndexData::class);
+		$index          = $this->createMock(IndexData::class);
 		$index->objects = new \Illuminate\Support\Collection(['post1']);
 
 		$this->setupCollectionMocking(['myblog']);
@@ -163,9 +162,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->collectionFactory->expects($this->once())
 			->method('generateCollection')
-			->with($this->callback(function ($data) {
-				return $data['id'] === 'myblog-one';
-			}));
+			->with($this->callback(fn ($data): bool => $data['id'] === 'myblog-one'));
 
 		$this->importer->import($this->testDataPath);
 	}
@@ -175,7 +172,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$blogDir = $this->testDataPath . '/blog/myblog';
 		mkdir($blogDir, 0777, true);
 
-		$index = $this->createMock(IndexData::class);
+		$index          = $this->createMock(IndexData::class);
 		$index->objects = new \Illuminate\Support\Collection([]);
 
 		$this->setupCollectionMocking(['myblog']);
@@ -206,11 +203,12 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function ($data) use ($collectionData) {
+			->willReturnCallback(function ($data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
 				if (isset($data['url'])) {
 					$this->assertEquals('/blog/', $data['url']);
 					$this->assertTrue($data['prettyUrl']);
 				}
+
 				return $collectionData;
 			});
 
@@ -235,13 +233,11 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('myblog', $this->callback(function ($data) {
-				return $data['id'] === 'my-post'
+			->with('myblog', $this->callback(fn ($data): bool => $data['id'] === 'my-post'
 					&& $data['title'] === 'My Post'
 					&& isset($data['date'])
 					&& !isset($data['permalink'])
-					&& !isset($data['timestamp']);
-			}));
+					&& !isset($data['timestamp'])));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -250,7 +246,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 	public function testImportsBlogPostWithImage(): void
 	{
-		$blogDir = $this->testDataPath . '/blog/myblog';
+		$blogDir  = $this->testDataPath . '/blog/myblog';
 		$imageDir = $blogDir . '/my-post/image';
 		mkdir($imageDir, 0777, true);
 
@@ -268,9 +264,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('myblog', $this->callback(function ($data) use ($imageDir) {
-				return isset($data['image']) && str_contains($data['image'], 'my-post.jpg');
-			}));
+			->with('myblog', $this->callback(fn ($data): bool => isset($data['image']) && str_contains($data['image'], 'my-post.jpg')));
 
 		$this->importer->import($this->testDataPath);
 	}
@@ -285,9 +279,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('date', $this->callback(function ($data) {
-				return $data['id'] === 'event-date' && isset($data['date']);
-			}));
+			->with('date', $this->callback(fn ($data): bool => $data['id'] === 'event-date' && isset($data['date'])));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -304,9 +296,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('myfeed', $this->callback(function ($data) {
-				return $data['id'] === 'item1' && $data['content'] === 'Feed content';
-			}));
+			->with('myfeed', $this->callback(fn ($data): bool => $data['id'] === 'item1' && $data['content'] === 'Feed content'));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -322,9 +312,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('gallery', $this->callback(function ($data) use ($galleryDir) {
-				return $data['id'] === 'mygallery' && $data['gallery'] === $galleryDir;
-			}));
+			->with('gallery', $this->callback(fn ($data): bool => $data['id'] === 'mygallery' && $data['gallery'] === $galleryDir));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -356,9 +344,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('image', $this->callback(function ($data) use ($imageDir) {
-				return $data['id'] === 'photo' && $data['image'] === $imageDir . '/photo.jpg';
-			}));
+			->with('image', $this->callback(fn ($data): bool => $data['id'] === 'photo' && $data['image'] === $imageDir . '/photo.jpg'));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -392,9 +378,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('text', $this->callback(function ($data) {
-				return $data['id'] === 'mytext' && $data['text'] === 'Text content';
-			}));
+			->with('text', $this->callback(fn ($data): bool => $data['id'] === 'mytext' && $data['text'] === 'Text content'));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -411,9 +395,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('url', $this->callback(function ($data) {
-				return $data['id'] === 'myvideo' && $data['url'] === 'https://youtube.com/watch?v=123';
-			}));
+			->with('url', $this->callback(fn ($data): bool => $data['id'] === 'myvideo' && $data['url'] === 'https://youtube.com/watch?v=123'));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -430,9 +412,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('file', $this->callback(function ($data) use ($fileDir) {
-				return $data['id'] === 'document' && $data['file'] === $fileDir . '/document.pdf';
-			}));
+			->with('file', $this->callback(fn ($data): bool => $data['id'] === 'document' && $data['file'] === $fileDir . '/document.pdf'));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -448,9 +428,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->jobQueuer->expects($this->once())
 			->method('queueImport')
-			->with('depot', $this->callback(function ($data) use ($depotDir) {
-				return $data['id'] === 'mydepot' && $data['depot'] === $depotDir;
-			}));
+			->with('depot', $this->callback(fn ($data): bool => $data['id'] === 'mydepot' && $data['depot'] === $depotDir));
 
 		$count = $this->importer->import($this->testDataPath);
 
@@ -539,10 +517,11 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function ($data) use ($collectionData) {
-				if (isset($data['url']) && str_contains($data['url'], '?permalink=')) {
+			->willReturnCallback(function ($data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
+				if (isset($data['url']) && str_contains((string)$data['url'], '?permalink=')) {
 					$this->assertFalse($data['prettyUrl']);
 				}
+
 				return $collectionData;
 			});
 

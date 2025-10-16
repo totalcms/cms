@@ -17,12 +17,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class JsonImporterTest extends TestCase
 {
 	private JsonImporter $importer;
-	private CollectionFetcher $collectionFetcher;
-	private ObjectFetcher $objectFetcher;
-	private ObjectImporter $objectImporter;
-	private IndexBuilder $indexBuilder;
-	private JobQueuer $jobQueuer;
-	private LoggerInterface $logger;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectImporter;
+	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
+	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
+	private \PHPUnit\Framework\MockObject\MockObject $logger;
 
 	protected function setUp(): void
 	{
@@ -232,10 +232,11 @@ final class JsonImporterTest extends TestCase
 
 		$this->objectImporter->expects($this->exactly(2))
 			->method('importObject')
-			->willReturnCallback(function ($collection, $record) use ($objectData) {
+			->willReturnCallback(function ($collection, array $record) use ($objectData): \PHPUnit\Framework\MockObject\MockObject {
 				if ($record['id'] === 'error') {
 					throw new \Exception('Import failed');
 				}
+
 				return $objectData;
 			});
 
@@ -266,7 +267,7 @@ final class JsonImporterTest extends TestCase
 
 		// First, import a record to set the collection
 		$jsonData = json_encode([['id' => 'test', 'name' => 'Test']]);
-		$file = $this->createUploadedFile($jsonData);
+		$file     = $this->createUploadedFile($jsonData);
 
 		$this->objectFetcher->method('existsObject')->willReturn(true);
 

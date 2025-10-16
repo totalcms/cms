@@ -149,7 +149,7 @@ return [
 	},
 
 	// Bind SessionInterface to PhpSession for dependency injection
-	\Odan\Session\SessionInterface::class => fn (ContainerInterface $container) => $container->get(PhpSession::class),
+	Odan\Session\SessionInterface::class => fn (ContainerInterface $container) => $container->get(PhpSession::class),
 
 	ResponseFactoryInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getResponseFactory(),
 

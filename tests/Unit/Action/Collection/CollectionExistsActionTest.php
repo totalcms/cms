@@ -12,9 +12,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 final class CollectionExistsActionTest extends TestCase
 {
 	private CollectionExistsAction $action;
-	private CollectionFetcher $collectionFetcher;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

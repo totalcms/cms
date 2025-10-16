@@ -13,11 +13,11 @@ use TotalCMS\Renderer\JsonRenderer;
 final class AdminSettingsSaveSectionActionTest extends TestCase
 {
 	private AdminSettingsSaveSectionAction $action;
-	private JsonRenderer $renderer;
-	private SettingsSaver $saver;
-	private SettingsValidator $validator;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $saver;
+	private \PHPUnit\Framework\MockObject\MockObject $validator;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -36,7 +36,7 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 
 	public function testSavesValidSection(): void
 	{
-		$section = 'smtp';
+		$section  = 'smtp';
 		$formData = ['host' => 'smtp.example.com', 'port' => 587];
 
 		$this->validator->expects($this->once())
@@ -55,11 +55,9 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) use ($section) {
-					return $data['success'] === true
+				$this->callback(fn ($data): bool => $data['success'] === true
 						&& $data['section'] === $section
-						&& isset($data['message']);
-				})
+						&& isset($data['message']))
 			)
 			->willReturn($jsonResponse);
 
@@ -86,11 +84,9 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) {
-					return $data['success'] === false
+				$this->callback(fn ($data): bool => $data['success'] === false
 						&& isset($data['message'])
-						&& str_contains($data['message'], 'Invalid');
-				}),
+						&& str_contains($data['message'], 'Invalid')),
 				400
 			)
 			->willReturn($jsonResponse);
@@ -102,10 +98,10 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 
 	public function testRemovesCsrfTokens(): void
 	{
-		$section = 'cache';
+		$section  = 'cache';
 		$formData = [
-			'enabled' => true,
-			'csrf_token' => 'token123',
+			'enabled'         => true,
+			'csrf_token'      => 'token123',
 			'csrf_token_name' => 'csrf_name',
 		];
 		$expectedData = ['enabled' => true];
@@ -176,9 +172,7 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) use ($section) {
-					return isset($data['section']) && $data['section'] === $section;
-				})
+				$this->callback(fn ($data): bool => isset($data['section']) && $data['section'] === $section)
 			)
 			->willReturn($jsonResponse);
 
@@ -197,9 +191,7 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) {
-					return isset($data['message']) && !empty($data['message']);
-				})
+				$this->callback(fn ($data): bool => isset($data['message']) && !empty($data['message']))
 			)
 			->willReturn($jsonResponse);
 
@@ -227,15 +219,15 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 
 	public function testRemovesOnlyCsrfTokens(): void
 	{
-		$section = 'mailer';
+		$section  = 'mailer';
 		$formData = [
-			'from' => 'test@example.com',
-			'csrf_token' => 'should-be-removed',
+			'from'            => 'test@example.com',
+			'csrf_token'      => 'should-be-removed',
 			'csrf_token_name' => 'should-be-removed',
-			'subject' => 'Test Email',
+			'subject'         => 'Test Email',
 		];
 		$expectedData = [
-			'from' => 'test@example.com',
+			'from'    => 'test@example.com',
 			'subject' => 'Test Email',
 		];
 
@@ -254,7 +246,7 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 
 	public function testCallsSettingsSaverWithCorrectParameters(): void
 	{
-		$section = 'auth';
+		$section  = 'auth';
 		$formData = ['collection' => 'users', 'enable' => true];
 
 		$this->validator->method('isValidSection')->willReturn(true);

@@ -12,9 +12,9 @@ use TotalCMS\Middleware\ProLicenseMiddleware;
 final class ProLicenseMiddlewareTest extends TestCase
 {
 	private ProLicenseMiddleware $middleware;
-	private ServerRequestInterface $request;
-	private RequestHandlerInterface $handler;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

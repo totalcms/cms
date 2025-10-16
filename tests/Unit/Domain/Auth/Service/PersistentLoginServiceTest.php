@@ -12,14 +12,14 @@ use TotalCMS\Support\Config;
 final class PersistentLoginServiceTest extends TestCase
 {
 	private PersistentLoginService $service;
-	private SessionInterface $session;
+	private \PHPUnit\Framework\MockObject\MockObject $session;
 	private Config $config;
-	private UserValidationService $userValidator;
+	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
 	private string $tmpDir;
 
 	protected function setUp(): void
 	{
-		$this->session = $this->createMock(SessionInterface::class);
+		$this->session       = $this->createMock(SessionInterface::class);
 		$this->userValidator = $this->createMock(UserValidationService::class);
 
 		// Create a temporary directory for token storage
@@ -91,7 +91,7 @@ final class PersistentLoginServiceTest extends TestCase
 		$this->service->createPersistentToken();
 
 		$tokenDir = $this->tmpDir . '/persistent_tokens';
-		$files = glob($tokenDir . '/*.json');
+		$files    = glob($tokenDir . '/*.json');
 		$this->assertEmpty($files);
 	}
 
@@ -107,7 +107,7 @@ final class PersistentLoginServiceTest extends TestCase
 		$this->service->createPersistentToken();
 
 		$tokenDir = $this->tmpDir . '/persistent_tokens';
-		$files = glob($tokenDir . '/*.json');
+		$files    = glob($tokenDir . '/*.json');
 		$this->assertEmpty($files);
 	}
 
@@ -122,7 +122,7 @@ final class PersistentLoginServiceTest extends TestCase
 		$this->service->createPersistentToken();
 
 		$tokenDir = $this->tmpDir . '/persistent_tokens';
-		$files = glob($tokenDir . '/*.json');
+		$files    = glob($tokenDir . '/*.json');
 
 		$this->assertNotEmpty($files);
 		$this->assertCount(1, $files);
@@ -150,7 +150,7 @@ final class PersistentLoginServiceTest extends TestCase
 
 		// Create an expired token
 		$expiredToken = [
-			'user_id' => 'user-1',
+			'user_id'    => 'user-1',
 			'collection' => 'auth',
 			'token_hash' => password_hash('token', PASSWORD_DEFAULT),
 			'created_at' => time() - 7200,
@@ -160,7 +160,7 @@ final class PersistentLoginServiceTest extends TestCase
 
 		// Create a valid token
 		$validToken = [
-			'user_id' => 'user-2',
+			'user_id'    => 'user-2',
 			'collection' => 'auth',
 			'token_hash' => password_hash('token', PASSWORD_DEFAULT),
 			'created_at' => time(),
@@ -233,33 +233,33 @@ final class PersistentLoginServiceTest extends TestCase
 	private function createTestConfig(array $authOverrides = []): Config
 	{
 		$defaultAuth = [
-			'enable' => true,
-			'collection' => 'auth',
+			'enable'              => true,
+			'collection'          => 'auth',
 			'persistentLoginDays' => 30,
 		];
 
 		$settings = [
-			'env' => 'test',
-			'template' => '/tmp',
-			'dashboard' => [],
-			'datadir' => '/tmp',
-			'tmpdir' => $this->tmpDir,
-			'cachedir' => '/tmp/cache',
-			'cache' => [],
-			'logger' => [],
-			'sentry' => [],
-			'error' => [],
-			'domain' => 'test.com',
-			'api' => 'http://test.com/api',
-			'locale' => 'en_US',
-			'session' => [],
-			'auth' => array_merge($defaultAuth, $authOverrides),
-			'debug' => false,
-			'notfound' => '/404',
-			'htmlclean' => [],
-			'smtp' => [],
-			'mailer' => [],
-			'timezone' => 'UTC',
+			'env'        => 'test',
+			'template'   => '/tmp',
+			'dashboard'  => [],
+			'datadir'    => '/tmp',
+			'tmpdir'     => $this->tmpDir,
+			'cachedir'   => '/tmp/cache',
+			'cache'      => [],
+			'logger'     => [],
+			'sentry'     => [],
+			'error'      => [],
+			'domain'     => 'test.com',
+			'api'        => 'http://test.com/api',
+			'locale'     => 'en_US',
+			'session'    => [],
+			'auth'       => array_merge($defaultAuth, $authOverrides),
+			'debug'      => false,
+			'notfound'   => '/404',
+			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
+			'timezone'   => 'UTC',
 			'imageworks' => [],
 		];
 

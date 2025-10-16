@@ -13,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class FolderSaveActionTest extends TestCase
 {
 	private FolderSaveAction $action;
-	private DepotFolderSaver $saver;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $saver;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

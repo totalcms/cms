@@ -13,9 +13,9 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 final class ExportSchemaActionTest extends TestCase
 {
 	private ExportSchemaAction $action;
-	private SchemaFetcher $schemaFetcher;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -28,7 +28,7 @@ final class ExportSchemaActionTest extends TestCase
 
 	public function testExportsSchemaSuccessfully(): void
 	{
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'blog';
 		$schemaData->method('toJson')->willReturn('{"id":"blog","name":"Blog Schema"}');
 
@@ -52,7 +52,7 @@ final class ExportSchemaActionTest extends TestCase
 
 	public function testSetsJsonContentType(): void
 	{
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'test';
 		$schemaData->method('toJson')->willReturn('{}');
 
@@ -68,7 +68,7 @@ final class ExportSchemaActionTest extends TestCase
 
 	public function testSetsContentDispositionWithSchemaId(): void
 	{
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'product';
 		$schemaData->method('toJson')->willReturn('{}');
 
@@ -76,11 +76,12 @@ final class ExportSchemaActionTest extends TestCase
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('attachment', $value);
 					$this->assertStringContainsString('schema-product.json', $value);
 				}
+
 				return $this->response;
 			});
 
@@ -91,7 +92,7 @@ final class ExportSchemaActionTest extends TestCase
 
 	public function testUsesSchemaToJsonMethod(): void
 	{
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'test';
 		$schemaData->expects($this->once())
 			->method('toJson')
@@ -107,7 +108,7 @@ final class ExportSchemaActionTest extends TestCase
 
 	public function testReturnsResponseWithSchemaBody(): void
 	{
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'test';
 		$schemaData->method('toJson')->willReturn('{"id":"test"}');
 
@@ -128,7 +129,7 @@ final class ExportSchemaActionTest extends TestCase
 
 	public function testFetchesCorrectSchema(): void
 	{
-		$schemaData = $this->createMock(SchemaData::class);
+		$schemaData     = $this->createMock(SchemaData::class);
 		$schemaData->id = 'custom-schema';
 		$schemaData->method('toJson')->willReturn('{}');
 

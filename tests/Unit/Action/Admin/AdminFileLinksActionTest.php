@@ -11,9 +11,9 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminFileLinksActionTest extends TestCase
 {
 	private AdminFileLinksAction $action;
-	private TwigRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -69,7 +69,7 @@ final class AdminFileLinksActionTest extends TestCase
 
 	public function testAcceptsRequestParameter(): void
 	{
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request          = $this->createMock(ServerRequestInterface::class);
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 
 		$this->renderer->method('template')->willReturn($expectedResponse);
@@ -82,7 +82,7 @@ final class AdminFileLinksActionTest extends TestCase
 
 	public function testAcceptsResponseParameter(): void
 	{
-		$response = $this->createMock(ResponseInterface::class);
+		$response         = $this->createMock(ResponseInterface::class);
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 
 		$this->renderer->expects($this->once())

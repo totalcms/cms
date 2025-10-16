@@ -12,9 +12,9 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 final class ExportJsonActionTest extends TestCase
 {
 	private ExportJsonAction $action;
-	private ObjectExporter $objectExporter;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $objectExporter;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -68,11 +68,12 @@ final class ExportJsonActionTest extends TestCase
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('attachment', $value);
 					$this->assertStringContainsString('collection-blog.json', $value);
 				}
+
 				return $this->response;
 			});
 

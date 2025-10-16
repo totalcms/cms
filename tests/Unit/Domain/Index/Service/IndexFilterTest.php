@@ -12,7 +12,7 @@ final class IndexFilterTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$indexReader = $this->createMock(IndexReader::class);
+		$indexReader  = $this->createMock(IndexReader::class);
 		$this->filter = new IndexFilter($indexReader);
 	}
 

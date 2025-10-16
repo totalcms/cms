@@ -12,17 +12,17 @@ use TotalCMS\Renderer\JsonRenderer;
 final class CacheDeleteActionTest extends TestCase
 {
 	private CacheDeleteAction $action;
-	private CacheManager $cacheManager;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
 		$this->cacheManager = $this->createMock(CacheManager::class);
-		$this->renderer = $this->createMock(JsonRenderer::class);
-		$this->request = $this->createMock(ServerRequestInterface::class);
-		$this->response = $this->createMock(ResponseInterface::class);
+		$this->renderer     = $this->createMock(JsonRenderer::class);
+		$this->request      = $this->createMock(ServerRequestInterface::class);
+		$this->response     = $this->createMock(ResponseInterface::class);
 
 		$this->action = new CacheDeleteAction(
 			$this->cacheManager,
@@ -56,7 +56,7 @@ final class CacheDeleteActionTest extends TestCase
 	{
 		$result = [
 			'success' => false,
-			'error' => 'Failed to clear cache',
+			'error'   => 'Failed to clear cache',
 		];
 
 		$this->cacheManager->expects($this->once())
@@ -112,7 +112,7 @@ final class CacheDeleteActionTest extends TestCase
 		$result = [
 			'success' => true,
 			'cleared' => ['twig'],
-			'failed' => ['redis' => 'Connection failed'],
+			'failed'  => ['redis' => 'Connection failed'],
 		];
 
 		$this->cacheManager->expects($this->once())

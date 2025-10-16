@@ -12,9 +12,9 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 final class ExportCsvActionTest extends TestCase
 {
 	private ExportCsvAction $action;
-	private ObjectExporter $objectExporter;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $objectExporter;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -71,11 +71,12 @@ final class ExportCsvActionTest extends TestCase
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('attachment', $value);
 					$this->assertStringContainsString('collection-blog.csv', $value);
 				}
+
 				return $this->response;
 			});
 

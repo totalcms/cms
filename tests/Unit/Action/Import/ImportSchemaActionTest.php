@@ -16,10 +16,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportSchemaActionTest extends TestCase
 {
 	private ImportSchemaAction $action;
-	private SchemaSaver $schemaSaver;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $schemaSaver;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -144,9 +144,7 @@ final class ImportSchemaActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return isset($data['id']) && $data['id'] === 'product';
-			}))
+			->with($this->response, $this->callback(fn ($data): bool => isset($data['id']) && $data['id'] === 'product'))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response);

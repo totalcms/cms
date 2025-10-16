@@ -12,9 +12,9 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminDocsActionTest extends TestCase
 {
 	private AdminDocsAction $action;
-	private TwigRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -39,11 +39,9 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
-					return isset($data['content'])
+				$this->callback(fn ($data): bool => isset($data['content'])
 						&& isset($data['page'])
-						&& $data['page'] === 'index';
-				})
+						&& $data['page'] === 'index')
 			)
 			->willReturn($expectedResponse);
 
@@ -66,9 +64,7 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
-					return isset($data['page']) && $data['page'] === 'jumpstart';
-				})
+				$this->callback(fn ($data): bool => isset($data['page']) && $data['page'] === 'jumpstart')
 			)
 			->willReturn($expectedResponse);
 
@@ -91,10 +87,9 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
+				$this->callback(fn ($data): bool =>
 					// Should fall back to index page due to .. prevention
-					return $data['page'] === 'index';
-				})
+					$data['page'] === 'index')
 			)
 			->willReturn($expectedResponse);
 
@@ -117,10 +112,9 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
+				$this->callback(fn ($data): bool =>
 					// Should fall back to index due to invalid characters
-					return $data['page'] === 'index';
-				})
+					$data['page'] === 'index')
 			)
 			->willReturn($expectedResponse);
 
@@ -143,10 +137,9 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
+				$this->callback(fn ($data): bool =>
 					// Should fall back to index if page doesn't exist
-					return $data['page'] === 'index';
-				})
+					$data['page'] === 'index')
 			)
 			->willReturn($expectedResponse);
 
@@ -169,11 +162,10 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
+				$this->callback(fn ($data): bool =>
 					// Should preserve subdirectory path if file exists, otherwise falls back to index
-					return isset($data['page'])
-						&& ($data['page'] === 'field-settings/text' || $data['page'] === 'index');
-				})
+					isset($data['page'])
+						&& ($data['page'] === 'field-settings/text' || $data['page'] === 'index'))
 			)
 			->willReturn($expectedResponse);
 
@@ -196,10 +188,9 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
+				$this->callback(fn ($data): bool =>
 					// Backslashes should be converted to forward slashes
-					return !str_contains($data['page'], '\\');
-				})
+					!str_contains((string)$data['page'], '\\'))
 			)
 			->willReturn($expectedResponse);
 
@@ -222,10 +213,9 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
+				$this->callback(fn ($data): bool =>
 					// Double slashes should be normalized
-					return !str_contains($data['page'], '//');
-				})
+					!str_contains((string)$data['page'], '//'))
 			)
 			->willReturn($expectedResponse);
 
@@ -248,12 +238,10 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
-					return isset($data['url'])
+				$this->callback(fn ($data): bool => isset($data['url'])
 						&& isset($data['url']['path'])
 						&& isset($data['url']['query'])
-						&& $data['url']['page'] === 'docs';
-				})
+						&& $data['url']['page'] === 'docs')
 			)
 			->willReturn($expectedResponse);
 
@@ -276,10 +264,11 @@ final class AdminDocsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/docs.twig',
-				$this->callback(function ($data) {
+				$this->callback(function (array $data): bool {
 					// Should trim leading/trailing slashes
 					$page = $data['page'];
-					return $page !== '' && $page[0] !== '/' && substr($page, -1) !== '/';
+
+					return $page !== '' && $page[0] !== '/' && !str_ends_with($page, '/');
 				})
 			)
 			->willReturn($expectedResponse);

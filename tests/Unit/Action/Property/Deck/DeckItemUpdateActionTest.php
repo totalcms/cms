@@ -13,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class DeckItemUpdateActionTest extends TestCase
 {
 	private DeckItemUpdateAction $action;
-	private DeckItemUpdater $deckItemUpdater;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $deckItemUpdater;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

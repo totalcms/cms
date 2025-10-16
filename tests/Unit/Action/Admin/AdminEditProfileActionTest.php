@@ -12,9 +12,9 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminEditProfileActionTest extends TestCase
 {
 	private AdminEditProfileAction $action;
-	private TwigRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -39,10 +39,8 @@ final class AdminEditProfileActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/profile.twig',
-				$this->callback(function ($data) {
-					return isset($data['url'])
-						&& $data['url']['page'] === 'profile';
-				})
+				$this->callback(fn ($data): bool => isset($data['url'])
+						&& $data['url']['page'] === 'profile')
 			)
 			->willReturn($expectedResponse);
 
@@ -65,10 +63,8 @@ final class AdminEditProfileActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/profile.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['path'])
-						&& $data['url']['path'] === '/admin/profile/edit';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['path'])
+						&& $data['url']['path'] === '/admin/profile/edit')
 			)
 			->willReturn($expectedResponse);
 
@@ -91,10 +87,8 @@ final class AdminEditProfileActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/profile.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['query'])
-						&& $data['url']['query'] === 'tab=settings';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['query'])
+						&& $data['url']['query'] === 'tab=settings')
 			)
 			->willReturn($expectedResponse);
 
@@ -119,10 +113,8 @@ final class AdminEditProfileActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/profile.twig',
-				$this->callback(function ($data) use ($args) {
-					return isset($data['url']['params'])
-						&& $data['url']['params'] === $args;
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['params'])
+						&& $data['url']['params'] === $args)
 			)
 			->willReturn($expectedResponse);
 
@@ -145,10 +137,8 @@ final class AdminEditProfileActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/profile.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['page'])
-						&& $data['url']['page'] === 'profile';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['page'])
+						&& $data['url']['page'] === 'profile')
 			)
 			->willReturn($expectedResponse);
 
@@ -171,10 +161,8 @@ final class AdminEditProfileActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/profile.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['query'])
-						&& $data['url']['query'] === '';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['query'])
+						&& $data['url']['query'] === '')
 			)
 			->willReturn($expectedResponse);
 
@@ -197,10 +185,8 @@ final class AdminEditProfileActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/profile.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['params'])
-						&& $data['url']['params'] === [];
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['params'])
+						&& $data['url']['params'] === [])
 			)
 			->willReturn($expectedResponse);
 

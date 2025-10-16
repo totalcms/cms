@@ -15,10 +15,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportJumpStartActionTest extends TestCase
 {
 	private ImportJumpStartAction $action;
-	private JumpStartImporter $jumpStartImporter;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $jumpStartImporter;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -52,7 +52,7 @@ final class ImportJumpStartActionTest extends TestCase
 
 	public function testImportsFromUploadedFile(): void
 	{
-		$definition = ['name' => 'My Project', 'collections' => []];
+		$definition  = ['name' => 'My Project', 'collections' => []];
 		$jsonContent = json_encode($definition);
 
 		$stream = $this->createMock(StreamInterface::class);

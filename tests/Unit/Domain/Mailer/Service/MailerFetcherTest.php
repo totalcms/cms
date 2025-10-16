@@ -13,7 +13,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 final class MailerFetcherTest extends TestCase
 {
 	private MailerFetcher $fetcher;
-	private ObjectRepository $objectRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $objectRepository;
 
 	protected function setUp(): void
 	{

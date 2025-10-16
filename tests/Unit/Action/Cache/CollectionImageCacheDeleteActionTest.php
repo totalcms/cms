@@ -12,10 +12,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class CollectionImageCacheDeleteActionTest extends TestCase
 {
 	private CollectionImageCacheDeleteAction $action;
-	private ImageCacheService $imageCacheService;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $imageCacheService;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -32,9 +32,9 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 
 	public function testClearsCollectionImageCacheSuccessfully(): void
 	{
-		$collection = 'products';
+		$collection  = 'products';
 		$statsBefore = ['cached_files' => 50, 'total_size_mb' => 12.5];
-		$statsAfter = ['cached_files' => 0, 'total_size_mb' => 0.0];
+		$statsAfter  = ['cached_files' => 0, 'total_size_mb' => 0.0];
 
 		$this->request->method('getAttribute')->with('collection')->willReturn($collection);
 		$this->request->method('getParsedBody')->willReturn([]);
@@ -54,12 +54,10 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) use ($collection, $statsBefore) {
-					return $data['deleted'] === true
+				$this->callback(fn ($data): bool => $data['deleted'] === true
 						&& $data['collection'] === $collection
 						&& $data['stats']['files_removed'] === $statsBefore['cached_files']
-						&& $data['stats']['size_freed_mb'] === $statsBefore['total_size_mb'];
-				})
+						&& $data['stats']['size_freed_mb'] === $statsBefore['total_size_mb'])
 			)
 			->willReturn($jsonResponse);
 
@@ -124,10 +122,8 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 			->method('json')
 			->with(
 				$errorResponse,
-				$this->callback(function ($data) {
-					return isset($data['error'])
-						&& str_contains($data['error'], 'Collection parameter is required');
-				})
+				$this->callback(fn ($data): bool => isset($data['error'])
+						&& str_contains($data['error'], 'Collection parameter is required'))
 			)
 			->willReturn($jsonResponse);
 
@@ -184,11 +180,9 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 			->method('json')
 			->with(
 				$errorResponse,
-				$this->callback(function ($data) {
-					return isset($data['error'])
+				$this->callback(fn ($data): bool => isset($data['error'])
 						&& str_contains($data['error'], 'Failed to clear collection image cache')
-						&& str_contains($data['error'], 'Permission denied');
-				})
+						&& str_contains($data['error'], 'Permission denied'))
 			)
 			->willReturn($jsonResponse);
 
@@ -228,9 +222,9 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 
 	public function testIncludesStatsBeforeAndAfter(): void
 	{
-		$collection = 'blog';
+		$collection  = 'blog';
 		$statsBefore = ['cached_files' => 100, 'total_size_mb' => 25.0];
-		$statsAfter = ['cached_files' => 0, 'total_size_mb' => 0.0];
+		$statsAfter  = ['cached_files' => 0, 'total_size_mb' => 0.0];
 
 		$this->request->method('getAttribute')->with('collection')->willReturn($collection);
 		$this->request->method('getParsedBody')->willReturn([]);
@@ -245,12 +239,10 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) use ($statsBefore, $statsAfter) {
-					return isset($data['stats']['before'])
+				$this->callback(fn ($data): bool => isset($data['stats']['before'])
 						&& isset($data['stats']['after'])
 						&& $data['stats']['before'] === $statsBefore
-						&& $data['stats']['after'] === $statsAfter;
-				})
+						&& $data['stats']['after'] === $statsAfter)
 			)
 			->willReturn($jsonResponse);
 
@@ -261,9 +253,9 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 
 	public function testCalculatesFilesRemovedAndSizeFreed(): void
 	{
-		$collection = 'media';
+		$collection  = 'media';
 		$statsBefore = ['cached_files' => 75, 'total_size_mb' => 18.5];
-		$statsAfter = ['cached_files' => 0, 'total_size_mb' => 0.0];
+		$statsAfter  = ['cached_files' => 0, 'total_size_mb' => 0.0];
 
 		$this->request->method('getAttribute')->with('collection')->willReturn($collection);
 		$this->request->method('getParsedBody')->willReturn([]);
@@ -278,11 +270,9 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) {
-					return $data['deleted'] === true
+				$this->callback(fn ($data): bool => $data['deleted'] === true
 						&& $data['stats']['files_removed'] === 75
-						&& $data['stats']['size_freed_mb'] === 18.5;
-				})
+						&& $data['stats']['size_freed_mb'] === 18.5)
 			)
 			->willReturn($jsonResponse);
 
@@ -294,7 +284,7 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 	public function testHandlesEmptyCache(): void
 	{
 		$collection = 'empty';
-		$stats = ['cached_files' => 0, 'total_size_mb' => 0.0];
+		$stats      = ['cached_files' => 0, 'total_size_mb' => 0.0];
 
 		$this->request->method('getAttribute')->with('collection')->willReturn($collection);
 		$this->request->method('getParsedBody')->willReturn([]);
@@ -309,11 +299,9 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) {
-					return $data['deleted'] === false
+				$this->callback(fn ($data): bool => $data['deleted'] === false
 						&& $data['stats']['files_removed'] === 0
-						&& $data['stats']['size_freed_mb'] === 0.0;
-				})
+						&& $data['stats']['size_freed_mb'] === 0.0)
 			)
 			->willReturn($jsonResponse);
 
@@ -339,10 +327,8 @@ final class CollectionImageCacheDeleteActionTest extends TestCase
 			->method('json')
 			->with(
 				$this->response,
-				$this->callback(function ($data) use ($collection) {
-					return isset($data['collection'])
-						&& $data['collection'] === $collection;
-				})
+				$this->callback(fn ($data): bool => isset($data['collection'])
+						&& $data['collection'] === $collection)
 			)
 			->willReturn($jsonResponse);
 

@@ -12,9 +12,9 @@ use TotalCMS\Domain\Export\Service\CollectionZipper;
 final class ExportZipActionTest extends TestCase
 {
 	private ExportZipAction $action;
-	private CollectionZipper $collectionZipper;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionZipper;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -79,11 +79,12 @@ final class ExportZipActionTest extends TestCase
 
 		$this->response->expects($this->exactly(3))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('attachment', $value);
 					$this->assertStringContainsString('blog-export.zip', $value);
 				}
+
 				return $this->response;
 			});
 
@@ -103,10 +104,11 @@ final class ExportZipActionTest extends TestCase
 
 		$this->response->expects($this->exactly(3))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) use ($content) {
+			->willReturnCallback(function ($name, $value) use ($content): ResponseInterface {
 				if ($name === 'Content-Length') {
 					$this->assertEquals((string)strlen($content), $value);
 				}
+
 				return $this->response;
 			});
 
@@ -121,7 +123,7 @@ final class ExportZipActionTest extends TestCase
 		$this->collectionZipper->method('getZipFilename')->willReturn('test.zip');
 
 		$response500 = $this->createMock(ResponseInterface::class);
-		$body = $this->createMock(StreamInterface::class);
+		$body        = $this->createMock(StreamInterface::class);
 		$response500->method('getBody')->willReturn($body);
 
 		$body->expects($this->once())
@@ -144,7 +146,7 @@ final class ExportZipActionTest extends TestCase
 			->willThrowException(new \RuntimeException('Zip creation failed'));
 
 		$response500 = $this->createMock(ResponseInterface::class);
-		$body = $this->createMock(StreamInterface::class);
+		$body        = $this->createMock(StreamInterface::class);
 		$response500->method('getBody')->willReturn($body);
 
 		$body->expects($this->once())

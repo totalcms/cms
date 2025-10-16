@@ -11,8 +11,8 @@ use TotalCMS\Action\Import\ImportWordpressAction;
 final class ImportWordpressActionTest extends TestCase
 {
 	private ImportWordpressAction $action;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

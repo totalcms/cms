@@ -11,9 +11,9 @@ use TotalCMS\Domain\Settings\Services\SettingsValidator;
 final class SettingsSaverTest extends TestCase
 {
 	private SettingsSaver $saver;
-	private SettingsFetcher $fetcher;
-	private SettingsValidator $validator;
-	private CacheManager $cacheManager;
+	private \PHPUnit\Framework\MockObject\MockObject $fetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $validator;
+	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
 	private string $tempFile;
 
 	protected function setUp(): void
@@ -29,13 +29,13 @@ final class SettingsSaverTest extends TestCase
 		);
 
 		// Create temporary file for testing file operations
-		$this->tempFile = sys_get_temp_dir() . '/tcms-test-' . uniqid() . '.php';
+		$this->tempFile           = sys_get_temp_dir() . '/tcms-test-' . uniqid() . '.php';
 		$_SERVER['DOCUMENT_ROOT'] = sys_get_temp_dir();
 		// Set up a temp directory structure
 		$tempDir = sys_get_temp_dir() . '/tcms-test-' . uniqid();
 		mkdir($tempDir, 0755, true);
 		$_SERVER['DOCUMENT_ROOT'] = $tempDir;
-		$this->tempFile = $tempDir . '/tcms.php';
+		$this->tempFile           = $tempDir . '/tcms.php';
 	}
 
 	protected function tearDown(): void
@@ -52,8 +52,8 @@ final class SettingsSaverTest extends TestCase
 
 	public function testSaveSectionValidatesData(): void
 	{
-		$section = 'smtp';
-		$sectionData = ['host' => 'smtp.example.com', 'port' => 587];
+		$section       = 'smtp';
+		$sectionData   = ['host' => 'smtp.example.com', 'port' => 587];
 		$processedData = ['host' => 'smtp.example.com', 'port' => 587, 'secure' => 'tls'];
 
 		$this->validator->expects($this->once())
@@ -75,11 +75,11 @@ final class SettingsSaverTest extends TestCase
 
 	public function testSaveSectionMergesWithExistingSection(): void
 	{
-		$section = 'smtp';
+		$section          = 'smtp';
 		$existingSettings = [
 			'smtp' => [
-				'host' => 'old.example.com',
-				'port' => 465,
+				'host'     => 'old.example.com',
+				'port'     => 465,
 				'username' => 'user@example.com',
 			],
 		];
@@ -104,7 +104,7 @@ final class SettingsSaverTest extends TestCase
 	public function testSaveSectionHandlesGeneralSectionSpecially(): void
 	{
 		$existingSettings = [
-			'domain' => 'old.example.com',
+			'domain'   => 'old.example.com',
 			'timezone' => 'UTC',
 		];
 		$newData = ['domain' => 'new.example.com', 'debug' => true];
@@ -128,7 +128,7 @@ final class SettingsSaverTest extends TestCase
 	public function testSaveSectionCreatesNewSection(): void
 	{
 		$existingSettings = ['domain' => 'example.com'];
-		$newData = ['key1' => 'value1', 'key2' => 'value2'];
+		$newData          = ['key1' => 'value1', 'key2' => 'value2'];
 
 		$this->validator->method('processSection')->willReturn($newData);
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
@@ -149,8 +149,8 @@ final class SettingsSaverTest extends TestCase
 	{
 		$settings = [
 			'domain' => 'example.com',
-			'smtp' => ['host' => 'smtp.example.com'],
-			'cache' => ['enabled' => true],
+			'smtp'   => ['host' => 'smtp.example.com'],
+			'cache'  => ['enabled' => true],
 		];
 
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
@@ -169,8 +169,8 @@ final class SettingsSaverTest extends TestCase
 	{
 		$existingSettings = [
 			'domain' => 'example.com',
-			'smtp' => ['host' => 'smtp.example.com'],
-			'cache' => ['enabled' => true],
+			'smtp'   => ['host' => 'smtp.example.com'],
+			'cache'  => ['enabled' => true],
 		];
 
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
@@ -192,7 +192,7 @@ final class SettingsSaverTest extends TestCase
 	{
 		$existingSettings = [
 			'domain' => 'example.com',
-			'cache' => ['enabled' => true],
+			'cache'  => ['enabled' => true],
 		];
 
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
@@ -254,7 +254,7 @@ final class SettingsSaverTest extends TestCase
 	{
 		$settings = [
 			'domain' => 'example.com',
-			'smtp' => [
+			'smtp'   => [
 				'host' => 'smtp.example.com',
 				'port' => 587,
 			],
@@ -274,8 +274,8 @@ final class SettingsSaverTest extends TestCase
 		$existingSettings = [
 			'cache' => [
 				'redis' => [
-					'host' => 'localhost',
-					'port' => 6379,
+					'host'     => 'localhost',
+					'port'     => 6379,
 					'database' => 0,
 				],
 			],
@@ -283,7 +283,7 @@ final class SettingsSaverTest extends TestCase
 
 		$newData = [
 			'redis' => [
-				'host' => '127.0.0.1',
+				'host'     => '127.0.0.1',
 				'password' => 'secret',
 			],
 		];
@@ -306,7 +306,7 @@ final class SettingsSaverTest extends TestCase
 	public function testHandlesSpecialCharactersInSettings(): void
 	{
 		$settings = [
-			'domain' => 'example.com/path',
+			'domain'  => 'example.com/path',
 			'message' => 'Hello "World" with \'quotes\'',
 			'unicode' => '你好世界',
 		];

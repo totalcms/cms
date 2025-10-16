@@ -12,10 +12,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class JobQueueClearCollectionActionTest extends TestCase
 {
 	private JobQueueClearCollectionAction $action;
-	private JobManager $manager;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $manager;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -62,9 +62,7 @@ final class JobQueueClearCollectionActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return isset($data['cleared']) && $data['cleared'] === true;
-			}))
+			->with($this->response, $this->callback(fn ($data): bool => isset($data['cleared']) && $data['cleared'] === true))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, ['collection' => 'products']);

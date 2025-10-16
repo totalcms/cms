@@ -11,7 +11,6 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -19,11 +18,11 @@ use TotalCMS\Factory\LoggerFactory;
 final class FileAccessManagerTest extends TestCase
 {
 	private FileAccessManager $fileAccessManager;
-	private SessionInterface $session;
-	private UserValidationService $userValidator;
-	private LoggerFactory $loggerFactory;
-	private PropertyFetcher $propertyFetcher;
-	private CollectionFetcher $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $session;
+	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
+	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $propertyFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 
 	protected function setUp(): void
 	{
@@ -55,7 +54,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testLoadFileSuccessfully(): void
 	{
-		$fileData = $this->createFileData();
+		$fileData       = $this->createFileData();
 		$collectionData = $this->createCollectionData();
 
 		$this->propertyFetcher->expects($this->once())
@@ -106,7 +105,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testLoadDepotFileSuccessfully(): void
 	{
-		$depotData = $this->createDepotData();
+		$depotData      = $this->createDepotData();
 		$collectionData = $this->createCollectionData();
 
 		$this->propertyFetcher->expects($this->once())
@@ -167,7 +166,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testIsProtectedByGroupsReturnsTrueWhenProtectedAndHasGroups(): void
 	{
-		$fileData = $this->createFileData(protected: true);
+		$fileData       = $this->createFileData(protected: true);
 		$collectionData = $this->createCollectionData(groups: ['editors', 'admins']);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -177,7 +176,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testIsProtectedByGroupsReturnsFalseWhenNotProtected(): void
 	{
-		$fileData = $this->createFileData(protected: false);
+		$fileData       = $this->createFileData(protected: false);
 		$collectionData = $this->createCollectionData(groups: ['editors']);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -187,7 +186,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testIsProtectedByGroupsReturnsFalseWhenNoGroups(): void
 	{
-		$fileData = $this->createFileData(protected: true);
+		$fileData       = $this->createFileData(protected: true);
 		$collectionData = $this->createCollectionData(groups: []);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -199,7 +198,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testUserHasAccessReturnsFalseWhenNoSession(): void
 	{
-		$fileData = $this->createFileData();
+		$fileData       = $this->createFileData();
 		$collectionData = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -211,7 +210,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testUserHasAccessReturnsTrueForSuperAdmin(): void
 	{
-		$fileData = $this->createFileData(protected: true);
+		$fileData       = $this->createFileData(protected: true);
 		$collectionData = $this->createCollectionData(groups: ['admins']);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -228,7 +227,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testUserHasAccessReturnsTrueWhenNoGroups(): void
 	{
-		$fileData = $this->createFileData();
+		$fileData       = $this->createFileData();
 		$collectionData = $this->createCollectionData(groups: []);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -242,7 +241,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testUserHasAccessValidatesUserInGroups(): void
 	{
-		$fileData = $this->createFileData(protected: true);
+		$fileData       = $this->createFileData(protected: true);
 		$collectionData = $this->createCollectionData(groups: ['editors']);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -260,7 +259,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testUserHasAccessReturnsFalseWhenNotInGroups(): void
 	{
-		$fileData = $this->createFileData(protected: true);
+		$fileData       = $this->createFileData(protected: true);
 		$collectionData = $this->createCollectionData(groups: ['admins']);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -275,7 +274,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testUserHasAccessHandlesValidationException(): void
 	{
-		$fileData = $this->createFileData(protected: true);
+		$fileData       = $this->createFileData(protected: true);
 		$collectionData = $this->createCollectionData(groups: ['editors']);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -293,8 +292,8 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testIsPasswordProtectedReturnsTrueWhenPasswordSet(): void
 	{
-		$passwordHash = password_hash('secret123', PASSWORD_DEFAULT);
-		$fileData = $this->createFileData(passwordHash: $passwordHash);
+		$passwordHash   = password_hash('secret123', PASSWORD_DEFAULT);
+		$fileData       = $this->createFileData(passwordHash: $passwordHash);
 		$collectionData = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -304,7 +303,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testIsPasswordProtectedReturnsFalseWhenNoPassword(): void
 	{
-		$fileData = $this->createFileData(passwordHash: '');
+		$fileData       = $this->createFileData(passwordHash: '');
 		$collectionData = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -314,9 +313,9 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testVerifyPasswordReturnsTrueWithCorrectPassword(): void
 	{
-		$password = 'secret123';
-		$passwordHash = password_hash($password, PASSWORD_DEFAULT);
-		$fileData = $this->createFileData(passwordHash: $passwordHash);
+		$password       = 'secret123';
+		$passwordHash   = password_hash($password, PASSWORD_DEFAULT);
+		$fileData       = $this->createFileData(passwordHash: $passwordHash);
 		$collectionData = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -329,10 +328,10 @@ final class FileAccessManagerTest extends TestCase
 	public function testVerifyPasswordReturnsFalseWithWrongPassword(): void
 	{
 		$correctPassword = 'secret123';
-		$wrongPassword = 'wrong';
-		$passwordHash = password_hash($correctPassword, PASSWORD_DEFAULT);
-		$fileData = $this->createFileData(passwordHash: $passwordHash);
-		$collectionData = $this->createCollectionData();
+		$wrongPassword   = 'wrong';
+		$passwordHash    = password_hash($correctPassword, PASSWORD_DEFAULT);
+		$fileData        = $this->createFileData(passwordHash: $passwordHash);
+		$collectionData  = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
 
@@ -343,8 +342,8 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testVerifyPasswordBypassesCheckForSuperAdmin(): void
 	{
-		$passwordHash = password_hash('secret123', PASSWORD_DEFAULT);
-		$fileData = $this->createFileData(passwordHash: $passwordHash);
+		$passwordHash   = password_hash('secret123', PASSWORD_DEFAULT);
+		$fileData       = $this->createFileData(passwordHash: $passwordHash);
 		$collectionData = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -360,10 +359,10 @@ final class FileAccessManagerTest extends TestCase
 	public function testVerifyPasswordOnlyDoesNotBypassForSuperAdmin(): void
 	{
 		$correctPassword = 'secret123';
-		$wrongPassword = 'wrong';
-		$passwordHash = password_hash($correctPassword, PASSWORD_DEFAULT);
-		$fileData = $this->createFileData(passwordHash: $passwordHash);
-		$collectionData = $this->createCollectionData();
+		$wrongPassword   = 'wrong';
+		$passwordHash    = password_hash($correctPassword, PASSWORD_DEFAULT);
+		$fileData        = $this->createFileData(passwordHash: $passwordHash);
+		$collectionData  = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
 
@@ -380,7 +379,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testLogDownloadRecordsDownloadWhenUserLoggedIn(): void
 	{
-		$fileData = $this->createFileData();
+		$fileData       = $this->createFileData();
 		$collectionData = $this->createCollectionData(groups: ['editors']);
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -397,7 +396,7 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testLogDownloadSkipsLoggingWhenNoUser(): void
 	{
-		$fileData = $this->createFileData();
+		$fileData       = $this->createFileData();
 		$collectionData = $this->createCollectionData();
 
 		$this->loadFileWithData($fileData, $collectionData);
@@ -430,34 +429,34 @@ final class FileAccessManagerTest extends TestCase
 	private function createFileData(bool $protected = false, string $passwordHash = ''): FileData
 	{
 		return new FileData([
-			'name' => 'test.pdf',
-			'mime' => 'application/pdf',
-			'size' => 1024,
+			'name'      => 'test.pdf',
+			'mime'      => 'application/pdf',
+			'size'      => 1024,
 			'protected' => $protected,
-			'password' => $passwordHash,
-			'tags' => [],
-			'comments' => 'Test file',
+			'password'  => $passwordHash,
+			'tags'      => [],
+			'comments'  => 'Test file',
 		]);
 	}
 
 	private function createDepotData(bool $protected = false, string $passwordHash = ''): DepotData
 	{
 		return new DepotData([
-			'depotID' => 'my-depot',
-			'path' => 'files',
+			'depotID'   => 'my-depot',
+			'path'      => 'files',
 			'protected' => $protected,
-			'password' => $passwordHash,
+			'password'  => $passwordHash,
 		]);
 	}
 
 	private function createCollectionData(array $groups = []): CollectionData
 	{
-		$collection = new CollectionData();
-		$collection->id = 'documents';
-		$collection->name = 'Documents';
-		$collection->schema = 'document';
+		$collection              = new CollectionData();
+		$collection->id          = 'documents';
+		$collection->name        = 'Documents';
+		$collection->schema      = 'document';
 		$collection->description = 'Document collection';
-		$collection->groups = $groups;
+		$collection->groups      = $groups;
 
 		return $collection;
 	}

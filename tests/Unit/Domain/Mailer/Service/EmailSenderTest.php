@@ -379,8 +379,8 @@ final class EmailSenderTest extends TestCase
 
 		// The class should be readonly in PHP 8.2+
 		$this->assertTrue(
-			str_contains($reflection->getDocComment() ?: '', 'readonly') ||
-			$reflection->isReadOnly(),
+			str_contains($reflection->getDocComment() ?: '', 'readonly')
+			|| $reflection->isReadOnly(),
 			'EmailSender class should be readonly'
 		);
 	}

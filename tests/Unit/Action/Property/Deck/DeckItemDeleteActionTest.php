@@ -13,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class DeckItemDeleteActionTest extends TestCase
 {
 	private DeckItemDeleteAction $action;
-	private DeckItemRemover $deckItemRemover;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $deckItemRemover;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

@@ -13,9 +13,9 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 final class ExportJumpStartActionTest extends TestCase
 {
 	private ExportJumpStartAction $action;
-	private JumpStartExporter $jumpStartExporter;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $jumpStartExporter;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -121,10 +121,11 @@ final class ExportJumpStartActionTest extends TestCase
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('jumpstart-my-project', $value);
 				}
+
 				return $this->response;
 			});
 
@@ -144,10 +145,11 @@ final class ExportJumpStartActionTest extends TestCase
 
 		$this->response->expects($this->exactly(2))
 			->method('withHeader')
-			->willReturnCallback(function ($name, $value) {
+			->willReturnCallback(function ($name, $value): ResponseInterface {
 				if ($name === 'Content-Disposition') {
 					$this->assertStringContainsString('jumpstart-export-', $value);
 				}
+
 				return $this->response;
 			});
 

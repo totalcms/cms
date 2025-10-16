@@ -14,10 +14,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class SendEmailActionTest extends TestCase
 {
 	private SendEmailAction $action;
-	private EmailService $emailService;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $emailService;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -69,10 +69,8 @@ final class SendEmailActionTest extends TestCase
 			->method('json')
 			->with(
 				$response400,
-				$this->callback(function ($data) {
-					return $data['success'] === false
-						&& str_contains($data['message'], 'mailerId is required');
-				})
+				$this->callback(fn ($data): bool => $data['success'] === false
+						&& str_contains((string)$data['message'], 'mailerId is required'))
 			)
 			->willReturn($jsonResponse);
 
@@ -162,10 +160,8 @@ final class SendEmailActionTest extends TestCase
 			->method('json')
 			->with(
 				$response400,
-				$this->callback(function ($data) {
-					return $data['success'] === false
-						&& str_contains($data['message'], 'data must be an array');
-				})
+				$this->callback(fn ($data): bool => $data['success'] === false
+						&& str_contains((string)$data['message'], 'data must be an array'))
 			)
 			->willReturn($jsonResponse);
 

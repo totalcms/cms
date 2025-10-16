@@ -28,7 +28,7 @@ final class SitemapBuilderFilterTest extends TestCase
 	protected function setUp(): void
 	{
 		// Use real IndexFilter with mocked IndexReader for proper filtering logic
-		$mockIndexReader = $this->createMock(IndexReader::class);
+		$mockIndexReader             = $this->createMock(IndexReader::class);
 		$this->mockIndexFilter       = new IndexFilter($mockIndexReader);
 		$this->mockCollectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->mockConfig            = $this->createMock(Config::class);

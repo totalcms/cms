@@ -12,9 +12,9 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 final class ImageWorksUploadFetchActionTest extends TestCase
 {
 	private ImageWorksUploadFetchAction $action;
-	private ImageGenerator $imageGenerator;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $imageGenerator;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -91,9 +91,7 @@ final class ImageWorksUploadFetchActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateUploadImage')
-			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->callback(function ($params) {
-				return $params['w'] === '200' && $params['fit'] === 'contain';
-			}))
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => $params['w'] === '200' && $params['fit'] === 'contain'))
 			->willReturn($imageResponse);
 
 		($this->action)($this->request, $this->response, $args);

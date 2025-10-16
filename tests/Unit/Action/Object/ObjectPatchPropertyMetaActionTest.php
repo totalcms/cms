@@ -13,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ObjectPatchPropertyMetaActionTest extends TestCase
 {
 	private ObjectPatchPropertyMetaAction $action;
-	private ObjectPatcher $objectPatcher;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $objectPatcher;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

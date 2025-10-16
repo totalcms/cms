@@ -12,9 +12,9 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 final class ImageWorksImageFetchActionTest extends TestCase
 {
 	private ImageWorksImageFetchAction $action;
-	private ImageGenerator $imageGenerator;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $imageGenerator;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -40,11 +40,9 @@ final class ImageWorksImageFetchActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateImage')
-			->with('products', 'product-1', 'image', $this->callback(function ($params) {
-				return $params['w'] === '300'
+			->with('products', 'product-1', 'image', $this->callback(fn ($params): bool => $params['w'] === '300'
 					&& $params['h'] === '200'
-					&& $params['fm'] === 'jpg';
-			}))
+					&& $params['fm'] === 'jpg'))
 			->willReturn($imageResponse);
 
 		$result = ($this->action)($this->request, $this->response, $args);
@@ -84,9 +82,7 @@ final class ImageWorksImageFetchActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateImage')
-			->with($this->anything(), $this->anything(), $this->anything(), $this->callback(function ($params) {
-				return isset($params['fm']) && $params['fm'] === 'webp';
-			}))
+			->with($this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => isset($params['fm']) && $params['fm'] === 'webp'))
 			->willReturn($imageResponse);
 
 		($this->action)($this->request, $this->response, $args);
@@ -130,13 +126,11 @@ final class ImageWorksImageFetchActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateImage')
-			->with($this->anything(), $this->anything(), $this->anything(), $this->callback(function ($params) use ($queryParams) {
-				return $params['w'] === '500'
+			->with($this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => $params['w'] === '500'
 					&& $params['h'] === '400'
 					&& $params['fit'] === 'crop'
 					&& $params['blur'] === '10'
-					&& $params['fm'] === 'jpg';
-			}))
+					&& $params['fm'] === 'jpg'))
 			->willReturn($imageResponse);
 
 		($this->action)($this->request, $this->response, $args);

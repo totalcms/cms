@@ -12,9 +12,9 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminMailerActionTest extends TestCase
 {
 	private AdminMailerAction $action;
-	private TwigRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -39,10 +39,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url'])
-						&& $data['url']['page'] === 'mailer';
-				})
+				$this->callback(fn ($data): bool => isset($data['url'])
+						&& $data['url']['page'] === 'mailer')
 			)
 			->willReturn($expectedResponse);
 
@@ -65,10 +63,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['path'])
-						&& $data['url']['path'] === '/admin/mailer/send';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['path'])
+						&& $data['url']['path'] === '/admin/mailer/send')
 			)
 			->willReturn($expectedResponse);
 
@@ -91,10 +87,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['query'])
-						&& $data['url']['query'] === 'test=true';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['query'])
+						&& $data['url']['query'] === 'test=true')
 			)
 			->willReturn($expectedResponse);
 
@@ -117,10 +111,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['page'])
-						&& $data['url']['page'] === 'mailer';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['page'])
+						&& $data['url']['page'] === 'mailer')
 			)
 			->willReturn($expectedResponse);
 
@@ -143,10 +135,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['collection'])
-						&& $data['url']['collection'] === 'mailer';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['collection'])
+						&& $data['url']['collection'] === 'mailer')
 			)
 			->willReturn($expectedResponse);
 
@@ -171,10 +161,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['id'])
-						&& $data['url']['id'] === 'template-123';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['id'])
+						&& $data['url']['id'] === 'template-123')
 			)
 			->willReturn($expectedResponse);
 
@@ -197,10 +185,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['id'])
-						&& $data['url']['id'] === '';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['id'])
+						&& $data['url']['id'] === '')
 			)
 			->willReturn($expectedResponse);
 
@@ -223,10 +209,8 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['query'])
-						&& $data['url']['query'] === '';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']['query'])
+						&& $data['url']['query'] === '')
 			)
 			->willReturn($expectedResponse);
 
@@ -251,8 +235,7 @@ final class AdminMailerActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/mailer.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['path'])
+				$this->callback(fn ($data): bool => isset($data['url']['path'])
 						&& isset($data['url']['query'])
 						&& isset($data['url']['page'])
 						&& isset($data['url']['id'])
@@ -261,8 +244,7 @@ final class AdminMailerActionTest extends TestCase
 						&& $data['url']['query'] === 'mode=edit'
 						&& $data['url']['page'] === 'mailer'
 						&& $data['url']['id'] === 'template-456'
-						&& $data['url']['collection'] === 'mailer';
-				})
+						&& $data['url']['collection'] === 'mailer')
 			)
 			->willReturn($expectedResponse);
 

@@ -10,7 +10,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 final class CollectionListerTest extends TestCase
 {
 	private CollectionLister $lister;
-	private CollectionRepository $storage;
+	private \PHPUnit\Framework\MockObject\MockObject $storage;
 
 	protected function setUp(): void
 	{
@@ -175,10 +175,10 @@ final class CollectionListerTest extends TestCase
 
 	private function createCollectionData(string $id, string $schema = 'generic'): CollectionData
 	{
-		$collection = new CollectionData();
-		$collection->id = $id;
-		$collection->name = ucfirst($id);
-		$collection->schema = $schema;
+		$collection              = new CollectionData();
+		$collection->id          = $id;
+		$collection->name        = ucfirst($id);
+		$collection->schema      = $schema;
 		$collection->description = "Test {$id} collection";
 
 		return $collection;

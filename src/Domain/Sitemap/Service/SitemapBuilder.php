@@ -34,7 +34,6 @@ readonly class SitemapBuilder
 		$sitemap = new Sitemap();
 
 		foreach ($objects as $object) {
-
 			$url = CollectionData::objectUrl($collectionData, $object['id']);
 
 			if (!str_starts_with($url, 'http')) {

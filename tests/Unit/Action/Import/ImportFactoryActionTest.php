@@ -14,11 +14,11 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportFactoryActionTest extends TestCase
 {
 	private ImportFactoryAction $action;
-	private FactoryImporter $importer;
-	private JobQueuer $jobQueuer;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $importer;
+	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -108,11 +108,9 @@ final class ImportFactoryActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return $data['job_queued'] === true
+			->with($this->response, $this->callback(fn ($data): bool => $data['job_queued'] === true
 					&& $data['job_id'] === 'job-123'
-					&& $data['quantity'] === 100;
-			}))
+					&& $data['quantity'] === 100))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, ['collection' => 'products']);
@@ -149,11 +147,9 @@ final class ImportFactoryActionTest extends TestCase
 
 		$this->importer->expects($this->once())
 			->method('import')
-			->with('products', 3, $this->callback(function ($rules) {
-				return !isset($rules['fqty'])
+			->with('products', 3, $this->callback(fn ($rules): bool => !isset($rules['fqty'])
 					&& isset($rules['field1'])
-					&& isset($rules['field2']);
-			}))
+					&& isset($rules['field2'])))
 			->willReturn(3);
 
 		$this->renderer->method('json')->willReturn($this->response);
@@ -171,9 +167,7 @@ final class ImportFactoryActionTest extends TestCase
 
 		$this->importer->expects($this->once())
 			->method('import')
-			->with('products', 1, $this->callback(function ($rules) {
-				return !isset($rules['queue']) && isset($rules['field1']);
-			}))
+			->with('products', 1, $this->callback(fn ($rules): bool => !isset($rules['queue']) && isset($rules['field1'])))
 			->willReturn(1);
 
 		$this->renderer->method('json')->willReturn($this->response);
@@ -211,13 +205,11 @@ final class ImportFactoryActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return isset($data['job_queued'])
+			->with($this->response, $this->callback(fn ($data): bool => isset($data['job_queued'])
 					&& isset($data['job_id'])
 					&& isset($data['quantity'])
 					&& isset($data['message'])
-					&& str_contains($data['message'], '200 objects');
-			}))
+					&& str_contains($data['message'], '200 objects')))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, ['collection' => 'products']);

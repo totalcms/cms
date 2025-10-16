@@ -12,10 +12,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class FileMoveActionTest extends TestCase
 {
 	private FileMoveAction $action;
-	private DepotFileMover $mover;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $mover;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -167,9 +167,7 @@ final class FileMoveActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return isset($data['moved']) && $data['moved'] === true;
-			}))
+			->with($this->response, $this->callback(fn ($data): bool => isset($data['moved']) && $data['moved'] === true))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, $args);

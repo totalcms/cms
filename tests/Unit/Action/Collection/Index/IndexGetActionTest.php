@@ -15,11 +15,11 @@ use TotalCMS\Transformer\IndexTransformer;
 final class IndexGetActionTest extends TestCase
 {
 	private IndexGetAction $action;
-	private JsonRenderer $renderer;
-	private IndexReader $indexReader;
-	private IndexFilter $indexFilter;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
+	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -74,8 +74,8 @@ final class IndexGetActionTest extends TestCase
 
 	public function testFetchesIndexWithIncludeFilter(): void
 	{
-		$indexData = $this->createIndexData();
-		$params = ['include' => 'published:true'];
+		$indexData     = $this->createIndexData();
+		$params        = ['include' => 'published:true'];
 		$filterOptions = ['include' => 'published:true'];
 
 		$this->request->expects($this->once())
@@ -108,8 +108,8 @@ final class IndexGetActionTest extends TestCase
 
 	public function testFetchesIndexWithExcludeFilter(): void
 	{
-		$indexData = $this->createIndexData();
-		$params = ['exclude' => 'draft:true'];
+		$indexData     = $this->createIndexData();
+		$params        = ['exclude' => 'draft:true'];
 		$filterOptions = ['exclude' => 'draft:true'];
 
 		$this->request->expects($this->once())
@@ -134,8 +134,8 @@ final class IndexGetActionTest extends TestCase
 
 	public function testFetchesIndexWithBothFilters(): void
 	{
-		$indexData = $this->createIndexData();
-		$params = ['include' => 'published:true', 'exclude' => 'draft:true'];
+		$indexData     = $this->createIndexData();
+		$params        = ['include' => 'published:true', 'exclude' => 'draft:true'];
 		$filterOptions = ['include' => 'published:true', 'exclude' => 'draft:true'];
 
 		$this->request->expects($this->once())
@@ -161,7 +161,7 @@ final class IndexGetActionTest extends TestCase
 	public function testIgnoresNonFilterParams(): void
 	{
 		$indexData = $this->createIndexData();
-		$params = ['limit' => '10', 'offset' => '0', 'sort' => 'date'];
+		$params    = ['limit' => '10', 'offset' => '0', 'sort' => 'date'];
 
 		$this->request->expects($this->once())
 			->method('getQueryParams')

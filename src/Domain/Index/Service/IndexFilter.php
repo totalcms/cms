@@ -91,9 +91,7 @@ readonly class IndexFilter
 		}
 
 		// Filter objects
-		return array_values(array_filter($objects, function ($object) use ($filterOptions) {
-			return $this->matchesFilter($object, $filterOptions);
-		}));
+		return array_values(array_filter($objects, fn (array $object): bool => $this->matchesFilter($object, $filterOptions)));
 	}
 
 	/**
@@ -154,7 +152,7 @@ readonly class IndexFilter
 		$fields  = explode(',', $filterString);
 
 		foreach ($fields as $field) {
-			$parts = explode(':', trim($field), 2);
+			$parts     = explode(':', trim($field), 2);
 			$fieldName = trim($parts[0]);
 			$value     = count($parts) === 2 ? trim($parts[1]) : 'true'; // Default to 'true' if no value provided
 
@@ -191,7 +189,7 @@ readonly class IndexFilter
 				continue;
 			}
 
-			$fieldValue = $object[$filter['field']];
+			$fieldValue  = $object[$filter['field']];
 			$filterValue = $filter['value'];
 
 			// Fast path: boolean comparison (most common case)
@@ -211,15 +209,13 @@ readonly class IndexFilter
 						return true;
 					}
 				}
-			} else {
+			} elseif (is_string($fieldValue) && is_string($filterValue)) {
 				// String comparison: case-insensitive
-				if (is_string($fieldValue) && is_string($filterValue)) {
-					if (strtolower($fieldValue) === strtolower($filterValue)) {
-						return true;
-					}
-				} elseif ($fieldValue === $filterValue) {
+				if (strtolower($fieldValue) === strtolower($filterValue)) {
 					return true;
 				}
+			} elseif ($fieldValue === $filterValue) {
+				return true;
 			}
 		}
 
@@ -243,7 +239,7 @@ readonly class IndexFilter
 				return false; // Object doesn't have the field
 			}
 
-			$fieldValue = $object[$filter['field']];
+			$fieldValue  = $object[$filter['field']];
 			$filterValue = $filter['value'];
 
 			// Fast path: boolean comparison (most common case)
@@ -253,7 +249,7 @@ readonly class IndexFilter
 				}
 			} elseif (is_array($fieldValue)) {
 				// Array field: case-insensitive search
-				$found = false;
+				$found            = false;
 				$lowerFilterValue = is_string($filterValue) ? strtolower($filterValue) : $filterValue;
 				foreach ($fieldValue as $item) {
 					if (is_string($item) && is_string($filterValue)) {
@@ -269,15 +265,13 @@ readonly class IndexFilter
 				if (!$found) {
 					return false;
 				}
-			} else {
+			} elseif (is_string($fieldValue) && is_string($filterValue)) {
 				// String comparison: case-insensitive
-				if (is_string($fieldValue) && is_string($filterValue)) {
-					if (strtolower($fieldValue) !== strtolower($filterValue)) {
-						return false;
-					}
-				} elseif ($fieldValue !== $filterValue) {
+				if (strtolower($fieldValue) !== strtolower($filterValue)) {
 					return false;
 				}
+			} elseif ($fieldValue !== $filterValue) {
+				return false;
 			}
 		}
 

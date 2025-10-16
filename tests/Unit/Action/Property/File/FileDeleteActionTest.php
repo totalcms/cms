@@ -14,10 +14,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class FileDeleteActionTest extends TestCase
 {
 	private FileDeleteAction $action;
-	private RemoverFactory $factory;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $factory;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

@@ -14,10 +14,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportCsvActionTest extends TestCase
 {
 	private ImportCsvAction $action;
-	private CsvImporter $csvImporter;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $csvImporter;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -133,9 +133,7 @@ final class ImportCsvActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return isset($data['import_count']) && $data['import_count'] === 15;
-			}))
+			->with($this->response, $this->callback(fn ($data): bool => isset($data['import_count']) && $data['import_count'] === 15))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response);

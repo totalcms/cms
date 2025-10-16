@@ -62,7 +62,7 @@ final class SettingsValidatorTest extends TestCase
 		$data = [
 			'pagination' => '50',
 			'accent'     => [
-				'hex' => '#e24bd5',
+				'hex'   => '#e24bd5',
 				'oklch' => 'some-oklch-value',
 			],
 		];
@@ -203,7 +203,7 @@ final class SettingsValidatorTest extends TestCase
 
 	public function testProcessCacheDecodesBackendConfigurations(): void
 	{
-		$redisConfig = ['host' => '127.0.0.1', 'port' => 6379];
+		$redisConfig     = ['host' => '127.0.0.1', 'port' => 6379];
 		$memcachedConfig = ['host' => 'localhost', 'port' => 11211];
 
 		$data = [
@@ -221,9 +221,9 @@ final class SettingsValidatorTest extends TestCase
 
 	public function testProcessCacheHandlesAllBackends(): void
 	{
-		$apcuConfig = ['enabled' => true];
-		$redisConfig = ['host' => '127.0.0.1'];
-		$memcachedConfig = ['host' => 'localhost'];
+		$apcuConfig       = ['enabled' => true];
+		$redisConfig      = ['host' => '127.0.0.1'];
+		$memcachedConfig  = ['host' => 'localhost'];
 		$filesystemConfig = ['path' => '/tmp/cache'];
 
 		$data = [
@@ -377,8 +377,8 @@ final class SettingsValidatorTest extends TestCase
 	public function testProcessHtmlCleanHandlesAllJSONFields(): void
 	{
 		$properties = ['color', 'margin'];
-		$tags = ['p', 'strong'];
-		$domains = ['youtube.com'];
+		$tags       = ['p', 'strong'];
+		$domains    = ['youtube.com'];
 
 		$data = [
 			'enabled'                => 'on',
@@ -506,11 +506,6 @@ final class SettingsValidatorTest extends TestCase
 
 	public function testProcessSectionPreservesFalseValues(): void
 	{
-		$data = [
-			'enable'  => false,
-			'enabled' => false,
-		];
-
 		$resultAuth = $this->validator->processSection('auth', ['enable' => false]);
 		$resultHtml = $this->validator->processSection('htmlclean', ['enabled' => false]);
 

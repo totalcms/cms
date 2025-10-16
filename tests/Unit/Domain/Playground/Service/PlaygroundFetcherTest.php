@@ -11,7 +11,7 @@ use TotalCMS\Domain\Playground\Service\PlaygroundFetcher;
 final class PlaygroundFetcherTest extends TestCase
 {
 	private PlaygroundFetcher $fetcher;
-	private ObjectFetcher $objectFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 
 	protected function setUp(): void
 	{

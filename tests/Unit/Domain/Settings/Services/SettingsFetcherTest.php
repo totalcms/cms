@@ -17,7 +17,7 @@ final class SettingsFetcherTest extends TestCase
 
 		// Save original DOCUMENT_ROOT and set up test directory
 		$this->originalDocRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
-		$this->testDocRoot = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
+		$this->testDocRoot     = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
 		mkdir($this->testDocRoot, 0777, true);
 		$_SERVER['DOCUMENT_ROOT'] = $this->testDocRoot;
 	}
@@ -47,9 +47,9 @@ final class SettingsFetcherTest extends TestCase
 	public function testLoadSettingsReturnsArrayFromFile(): void
 	{
 		$settings = [
-			'sentry' => 'test-sentry',
+			'sentry'  => 'test-sentry',
 			'datadir' => 'test-data',
-			'cache' => ['enabled' => true],
+			'cache'   => ['enabled' => true],
 		];
 
 		$this->createTcmsPhpFile($settings);
@@ -81,9 +81,9 @@ final class SettingsFetcherTest extends TestCase
 	{
 		$settings = [
 			'sentry' => 'test',
-			'cache' => [
+			'cache'  => [
 				'enabled' => true,
-				'ttl' => 3600,
+				'ttl'     => 3600,
 			],
 			'mailer' => [
 				'host' => 'smtp.example.com',
@@ -114,13 +114,13 @@ final class SettingsFetcherTest extends TestCase
 	public function testLoadSectionHandlesGeneralSettingsSpecially(): void
 	{
 		$settings = [
-			'sentry' => 'test-sentry',
-			'datadir' => 'test-data',
-			'api' => 'test-api',
+			'sentry'   => 'test-sentry',
+			'datadir'  => 'test-data',
+			'api'      => 'test-api',
 			'notfound' => '404.html',
 			'timezone' => 'UTC',
-			'locale' => 'en_US',
-			'cache' => ['enabled' => true], // This should not be in general
+			'locale'   => 'en_US',
+			'cache'    => ['enabled' => true], // This should not be in general
 		];
 
 		$this->createTcmsPhpFile($settings);
@@ -139,7 +139,7 @@ final class SettingsFetcherTest extends TestCase
 	public function testLoadSectionGeneralReturnsOnlyPresentFields(): void
 	{
 		$settings = [
-			'sentry' => 'test-sentry',
+			'sentry'   => 'test-sentry',
 			'timezone' => 'UTC',
 			// Missing other general fields
 		];
@@ -174,8 +174,8 @@ final class SettingsFetcherTest extends TestCase
 		$settings = [
 			'cache' => [
 				'redis' => [
-					'host' => 'localhost',
-					'port' => 6379,
+					'host'    => 'localhost',
+					'port'    => 6379,
 					'options' => ['timeout' => 30],
 				],
 			],
@@ -191,15 +191,15 @@ final class SettingsFetcherTest extends TestCase
 	public function testLoadSectionMultipleSections(): void
 	{
 		$settings = [
-			'cache' => ['enabled' => true],
-			'mailer' => ['host' => 'smtp.example.com'],
+			'cache'      => ['enabled' => true],
+			'mailer'     => ['host' => 'smtp.example.com'],
 			'imageworks' => ['quality' => 85],
 		];
 
 		$this->createTcmsPhpFile($settings);
 
-		$cacheResult = $this->fetcher->loadSection('cache');
-		$mailerResult = $this->fetcher->loadSection('mailer');
+		$cacheResult      = $this->fetcher->loadSection('cache');
+		$mailerResult     = $this->fetcher->loadSection('mailer');
 		$imageworksResult = $this->fetcher->loadSection('imageworks');
 
 		$this->assertSame($settings['cache'], $cacheResult);

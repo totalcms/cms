@@ -15,15 +15,15 @@ use TotalCMS\Support\Config;
 final class AccessManagerTest extends TestCase
 {
 	private AccessManager $accessManager;
-	private SessionInterface $session;
+	private \PHPUnit\Framework\MockObject\MockObject $session;
 	private Config $config;
-	private UserValidationService $userValidator;
-	private LoggerFactory $loggerFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
+	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{
-		$this->session = $this->createMock(SessionInterface::class);
-		$this->config = $this->createTestConfig();
+		$this->session       = $this->createMock(SessionInterface::class);
+		$this->config        = $this->createTestConfig();
 		$this->userValidator = $this->createMock(UserValidationService::class);
 		$this->loggerFactory = $this->createMock(LoggerFactory::class);
 
@@ -241,9 +241,9 @@ final class AccessManagerTest extends TestCase
 		$this->setupSessionWithUser('user-123', 'auth');
 
 		$expectedUserData = [
-			'id' => 'user-123',
+			'id'       => 'user-123',
 			'username' => 'testuser',
-			'email' => 'test@example.com',
+			'email'    => 'test@example.com',
 		];
 
 		$this->userValidator->method('validateUserById')
@@ -272,7 +272,7 @@ final class AccessManagerTest extends TestCase
 
 	public function testRestrictPageAccessAllowsAccessWhenLoggedIn(): void
 	{
-		$_SERVER['REQUEST_URI'] = '/admin/dashboard';
+		$_SERVER['REQUEST_URI']  = '/admin/dashboard';
 		$_SERVER['HTTP_REFERER'] = 'http://example.com';
 
 		$this->setupSessionWithUser('user', 'auth');
@@ -291,7 +291,7 @@ final class AccessManagerTest extends TestCase
 
 	public function testRestrictPageAccessRedirectsWhenNoSession(): void
 	{
-		$_SERVER['REQUEST_URI'] = '/admin/dashboard';
+		$_SERVER['REQUEST_URI']  = '/admin/dashboard';
 		$_SERVER['HTTP_REFERER'] = 'http://example.com';
 
 		$this->session->method('has')->willReturn(false);
@@ -308,7 +308,7 @@ final class AccessManagerTest extends TestCase
 
 	public function testRestrictPageAccessRedirectsWhenNoGroupAccess(): void
 	{
-		$_SERVER['REQUEST_URI'] = '/admin/dashboard';
+		$_SERVER['REQUEST_URI']  = '/admin/dashboard';
 		$_SERVER['HTTP_REFERER'] = 'http://example.com';
 
 		$this->setupSessionWithUser('user', 'auth');

@@ -13,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ObjectDeletePropertyActionTest extends TestCase
 {
 	private ObjectDeletePropertyAction $action;
-	private ObjectRemover $objectRemover;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $objectRemover;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{

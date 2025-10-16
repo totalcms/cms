@@ -13,10 +13,10 @@ use TotalCMS\Renderer\XmlRenderer;
 final class RssFeedActionTest extends TestCase
 {
 	private RssFeedAction $action;
-	private RssBuilder $rssBuilder;
-	private XmlRenderer $xmlRenderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $rssBuilder;
+	private \PHPUnit\Framework\MockObject\MockObject $xmlRenderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -42,9 +42,7 @@ final class RssFeedActionTest extends TestCase
 
 		$this->rssBuilder->expects($this->once())
 			->method('setFieldMap')
-			->with($this->callback(function ($params) {
-				return $params['limit'] === '10' && $params['rssurl'] === 'https://example.com/feed/blog';
-			}));
+			->with($this->callback(fn ($params): bool => $params['limit'] === '10' && $params['rssurl'] === 'https://example.com/feed/blog'));
 
 		$this->rssBuilder->expects($this->once())
 			->method('buildFeed')
@@ -95,9 +93,7 @@ final class RssFeedActionTest extends TestCase
 
 		$this->rssBuilder->expects($this->once())
 			->method('setFieldMap')
-			->with($this->callback(function ($params) {
-				return isset($params['rssurl']) && $params['rssurl'] === 'https://example.com/feed/blog?limit=5';
-			}));
+			->with($this->callback(fn ($params): bool => isset($params['rssurl']) && $params['rssurl'] === 'https://example.com/feed/blog?limit=5'));
 
 		$this->rssBuilder->method('buildFeed')->willReturn('');
 		$this->xmlRenderer->method('xml')->willReturn($this->response);
@@ -123,12 +119,10 @@ final class RssFeedActionTest extends TestCase
 
 		$this->rssBuilder->expects($this->once())
 			->method('setFieldMap')
-			->with($this->callback(function ($p) use ($params) {
-				return $p['title'] === 'My Blog'
+			->with($this->callback(fn ($p): bool => $p['title'] === 'My Blog'
 					&& $p['description'] === 'Blog Description'
 					&& $p['limit'] === '20'
-					&& isset($p['rssurl']);
-			}));
+					&& isset($p['rssurl'])));
 
 		$this->rssBuilder->method('buildFeed')->willReturn('');
 		$this->xmlRenderer->method('xml')->willReturn($this->response);

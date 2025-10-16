@@ -17,11 +17,11 @@ use TotalCMS\Support\Config;
 final class EmailServiceTest extends TestCase
 {
 	private EmailService $service;
-	private MailerFetcher $mailerFetcher;
-	private EmailSender $emailSender;
-	private TwigEngine $twigEngine;
-	private Config $config;
-	private LoggerInterface $logger;
+	private \PHPUnit\Framework\MockObject\MockObject $mailerFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $emailSender;
+	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
+	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private \PHPUnit\Framework\MockObject\MockObject $logger;
 
 	protected function setUp(): void
 	{
@@ -102,6 +102,7 @@ final class EmailServiceTest extends TestCase
 				if (str_contains($template, '{{ data.name }}')) {
 					return str_replace('{{ data.name }}', 'John', $template);
 				}
+
 				return $template;
 			});
 
@@ -109,11 +110,9 @@ final class EmailServiceTest extends TestCase
 
 		$this->emailSender->expects($this->once())
 			->method('send')
-			->with($this->callback(function ($email) {
-				return $email['to'] === 'user@example.com'
-					&& str_contains($email['subject'], 'John')
-					&& str_contains($email['bodyHtml'], 'John');
-			}))
+			->with($this->callback(fn ($email): bool => $email['to'] === 'user@example.com'
+					&& str_contains((string)$email['subject'], 'John')
+					&& str_contains((string)$email['bodyHtml'], 'John')))
 			->willReturn(['success' => true, 'message' => 'Sent']);
 
 		$this->service->sendEmail('test-mailer', ['name' => 'John', 'email' => 'user@example.com']);
@@ -130,6 +129,7 @@ final class EmailServiceTest extends TestCase
 				if (str_contains($template, 'invalid syntax')) {
 					throw new \Exception('Twig syntax error');
 				}
+
 				return $template;
 			});
 
@@ -148,7 +148,7 @@ final class EmailServiceTest extends TestCase
 	{
 		$mailerData = $this->createMailerData(
 			cc: "admin@example.com\nmanager@example.com",
-			bcc: "log@example.com"
+			bcc: 'log@example.com'
 		);
 
 		$this->mailerFetcher->method('fetchMailer')->willReturn($mailerData);
@@ -157,13 +157,11 @@ final class EmailServiceTest extends TestCase
 
 		$this->emailSender->expects($this->once())
 			->method('send')
-			->with($this->callback(function ($email) {
-				return count($email['cc']) === 2
+			->with($this->callback(fn ($email): bool => count($email['cc']) === 2
 					&& in_array('admin@example.com', $email['cc'])
 					&& in_array('manager@example.com', $email['cc'])
 					&& count($email['bcc']) === 1
-					&& in_array('log@example.com', $email['bcc']);
-			}))
+					&& in_array('log@example.com', $email['bcc'])))
 			->willReturn(['success' => true, 'message' => 'Sent']);
 
 		$this->service->sendEmail('test-mailer');
@@ -250,11 +248,9 @@ final class EmailServiceTest extends TestCase
 			->method('info')
 			->with(
 				'Email sent successfully',
-				$this->callback(function ($context) {
-					return isset($context['mailerId'])
+				$this->callback(fn ($context): bool => isset($context['mailerId'])
 						&& isset($context['to'])
-						&& isset($context['subject']);
-				})
+						&& isset($context['subject']))
 			);
 
 		$this->service->sendEmail('test-mailer');
@@ -270,9 +266,7 @@ final class EmailServiceTest extends TestCase
 			->method('warning')
 			->with(
 				'Attempted to send email with inactive mailer',
-				$this->callback(function ($context) {
-					return isset($context['mailerId']);
-				})
+				$this->callback(fn ($context): bool => isset($context['mailerId']))
 			);
 
 		$this->service->sendEmail('inactive-mailer');
@@ -287,11 +281,9 @@ final class EmailServiceTest extends TestCase
 			->method('error')
 			->with(
 				'Email service error',
-				$this->callback(function ($context) {
-					return isset($context['mailerId'])
+				$this->callback(fn ($context): bool => isset($context['mailerId'])
 						&& isset($context['error'])
-						&& isset($context['trace']);
-				})
+						&& isset($context['trace']))
 			);
 
 		$this->service->sendEmail('test-mailer');
@@ -312,12 +304,10 @@ final class EmailServiceTest extends TestCase
 
 		$this->emailSender->expects($this->once())
 			->method('send')
-			->with($this->callback(function ($email) {
-				return $email['from'] === ''
+			->with($this->callback(fn ($email): bool => $email['from'] === ''
 					&& $email['fromName'] === ''
 					&& $email['replyTo'] === ''
-					&& $email['bodyText'] === '';
-			}))
+					&& $email['bodyText'] === ''))
 			->willReturn(['success' => true, 'message' => 'Sent']);
 
 		$this->service->sendEmail('test-mailer');
@@ -333,10 +323,8 @@ final class EmailServiceTest extends TestCase
 			->method('renderString')
 			->with(
 				$this->anything(),
-				$this->callback(function ($twigData) {
-					return isset($twigData['data'])
-						&& $twigData['data']['orderId'] === '12345';
-				})
+				$this->callback(fn ($twigData): bool => isset($twigData['data'])
+						&& $twigData['data']['orderId'] === '12345')
 			)
 			->willReturnArgument(0);
 
@@ -357,7 +345,7 @@ final class EmailServiceTest extends TestCase
 		string $bodyHtml = '<p>Test</p>',
 		string $bodyText = 'Test',
 		string $cc = '',
-		string $bcc = ''
+		string $bcc = '',
 	): MailerData {
 		return new MailerData(
 			id: 'test-mailer',

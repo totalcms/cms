@@ -14,10 +14,10 @@ use TotalCMS\Transformer\CollectionMetaTransformer;
 final class CollectionListActionTest extends TestCase
 {
 	private CollectionListAction $action;
-	private JsonRenderer $renderer;
-	private CollectionLister $collectionListService;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionListService;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -129,10 +129,10 @@ final class CollectionListActionTest extends TestCase
 
 	private function createCollectionData(string $id): CollectionData
 	{
-		$collection = new CollectionData();
-		$collection->id = $id;
-		$collection->name = ucfirst($id);
-		$collection->schema = $id;
+		$collection              = new CollectionData();
+		$collection->id          = $id;
+		$collection->name        = ucfirst($id);
+		$collection->schema      = $id;
 		$collection->description = "Test {$id} collection";
 
 		return $collection;

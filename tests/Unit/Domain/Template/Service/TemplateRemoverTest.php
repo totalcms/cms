@@ -9,7 +9,7 @@ use TotalCMS\Domain\Template\Service\TemplateRemover;
 final class TemplateRemoverTest extends TestCase
 {
 	private TemplateRemover $remover;
-	private TemplateRepository $storage;
+	private \PHPUnit\Framework\MockObject\MockObject $storage;
 
 	protected function setUp(): void
 	{

@@ -12,10 +12,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class JobQueueStatsActionTest extends TestCase
 {
 	private JobQueueStatsAction $action;
-	private JobManager $manager;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $manager;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -61,9 +61,7 @@ final class JobQueueStatsActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) use ($stats) {
-				return $data === $stats;
-			}))
+			->with($this->response, $this->callback(fn ($data): bool => $data === $stats))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, []);

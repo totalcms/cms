@@ -12,10 +12,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportTotalCmsOneActionTest extends TestCase
 {
 	private ImportTotalCmsOneAction $action;
-	private TotalCmsOneImporter $importer;
-	private JsonRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $importer;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 	private string $testDataPath;
 	private string $originalDocRoot;
 
@@ -34,7 +34,7 @@ final class ImportTotalCmsOneActionTest extends TestCase
 
 		// Save and set DOCUMENT_ROOT
 		$this->originalDocRoot           = $_SERVER['DOCUMENT_ROOT'] ?? '';
-		$_SERVER['DOCUMENT_ROOT'] = $this->testDataPath;
+		$_SERVER['DOCUMENT_ROOT']        = $this->testDataPath;
 	}
 
 	protected function tearDown(): void
@@ -73,11 +73,9 @@ final class ImportTotalCmsOneActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return $data['success'] === true
+			->with($this->response, $this->callback(fn ($data): bool => $data['success'] === true
 					&& $data['import_count'] === 50
-					&& str_contains($data['message'], '50 items');
-			}))
+					&& str_contains((string)$data['message'], '50 items')))
 			->willReturn($this->response);
 
 		$result = ($this->action)($this->request, $this->response);
@@ -111,10 +109,8 @@ final class ImportTotalCmsOneActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return $data['success'] === false
-					&& str_contains($data['message'], 'No cms-data folder found');
-			}), 400)
+			->with($this->response, $this->callback(fn ($data): bool => $data['success'] === false
+					&& str_contains((string)$data['message'], 'No cms-data folder found')), 400)
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response);
@@ -129,11 +125,9 @@ final class ImportTotalCmsOneActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return $data['success'] === false
-					&& str_contains($data['message'], 'Import failed')
-					&& str_contains($data['message'], 'Import error occurred');
-			}), 500)
+			->with($this->response, $this->callback(fn ($data): bool => $data['success'] === false
+					&& str_contains((string)$data['message'], 'Import failed')
+					&& str_contains((string)$data['message'], 'Import error occurred')), 500)
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response);
@@ -147,13 +141,11 @@ final class ImportTotalCmsOneActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return isset($data['success'])
+			->with($this->response, $this->callback(fn ($data): bool => isset($data['success'])
 					&& isset($data['message'])
 					&& isset($data['import_count'])
 					&& $data['success'] === true
-					&& $data['import_count'] === 100;
-			}))
+					&& $data['import_count'] === 100))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response);

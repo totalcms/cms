@@ -12,9 +12,9 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminIndexActionTest extends TestCase
 {
 	private AdminIndexAction $action;
-	private TwigRenderer $renderer;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -39,9 +39,7 @@ final class AdminIndexActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/index.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']) && $data['url']['page'] === 'index';
-				})
+				$this->callback(fn ($data): bool => isset($data['url']) && $data['url']['page'] === 'index')
 			)
 			->willReturn($expectedResponse);
 
@@ -64,12 +62,10 @@ final class AdminIndexActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/index.twig',
-				$this->callback(function ($data) {
-					return isset($data['url']['path'])
+				$this->callback(fn ($data): bool => isset($data['url']['path'])
 						&& isset($data['url']['query'])
 						&& $data['url']['path'] === '/admin/index'
-						&& $data['url']['query'] === 'view=dashboard';
-				})
+						&& $data['url']['query'] === 'view=dashboard')
 			)
 			->willReturn($expectedResponse);
 
@@ -92,9 +88,7 @@ final class AdminIndexActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/index.twig',
-				$this->callback(function ($data) {
-					return $data['url']['page'] === 'index';
-				})
+				$this->callback(fn ($data): bool => $data['url']['page'] === 'index')
 			)
 			->willReturn($expectedResponse);
 
@@ -119,9 +113,7 @@ final class AdminIndexActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/index.twig',
-				$this->callback(function ($data) use ($args) {
-					return $data['url']['params'] === $args;
-				})
+				$this->callback(fn ($data): bool => $data['url']['params'] === $args)
 			)
 			->willReturn($expectedResponse);
 

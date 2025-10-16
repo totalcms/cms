@@ -12,9 +12,9 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 final class ImageWorksGalleryFetchDynamicActionTest extends TestCase
 {
 	private ImageWorksGalleryFetchDynamicAction $action;
-	private ImageGenerator $imageGenerator;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $imageGenerator;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -108,9 +108,7 @@ final class ImageWorksGalleryFetchDynamicActionTest extends TestCase
 
 		$this->imageGenerator->expects($this->once())
 			->method('generateGalleryImage')
-			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->callback(function ($params) use ($queryParams) {
-				return $params === $queryParams;
-			}))
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->callback(fn ($params): bool => $params === $queryParams))
 			->willReturn($imageResponse);
 
 		($this->action)($this->request, $this->response, $args);

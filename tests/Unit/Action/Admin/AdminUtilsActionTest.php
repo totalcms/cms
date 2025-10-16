@@ -13,10 +13,10 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminUtilsActionTest extends TestCase
 {
 	private AdminUtilsAction $action;
-	private TwigRenderer $renderer;
-	private TwigEngine $twigEngine;
-	private ServerRequestInterface $request;
-	private ResponseInterface $response;
+	private \PHPUnit\Framework\MockObject\MockObject $renderer;
+	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
+	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -43,10 +43,8 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) {
-					return $data['page'] === 'index'
-						&& $data['url']['page'] === 'utils';
-				})
+				$this->callback(fn ($data): bool => $data['page'] === 'index'
+						&& $data['url']['page'] === 'utils')
 			)
 			->willReturn($expectedResponse);
 
@@ -78,10 +76,8 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) {
-					return $data['page'] === 'twig-playground'
-						&& $data['results'] === 'Hello World';
-				})
+				$this->callback(fn ($data): bool => $data['page'] === 'twig-playground'
+						&& $data['results'] === 'Hello World')
 			)
 			->willReturn($expectedResponse);
 
@@ -112,10 +108,8 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) {
-					return str_contains($data['results'], 'error')
-						&& str_contains($data['results'], 'Syntax error');
-				})
+				$this->callback(fn ($data): bool => str_contains((string)$data['results'], 'error')
+						&& str_contains((string)$data['results'], 'Syntax error'))
 			)
 			->willReturn($expectedResponse);
 
@@ -141,9 +135,7 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) {
-					return $data['results'] === '';
-				})
+				$this->callback(fn ($data): bool => $data['results'] === '')
 			)
 			->willReturn($expectedResponse);
 
@@ -170,9 +162,7 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) use ($postData) {
-					return $data['postData'] === $postData;
-				})
+				$this->callback(fn ($data): bool => $data['postData'] === $postData)
 			)
 			->willReturn($expectedResponse);
 
@@ -196,9 +186,7 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) {
-					return $data['postData'] === [];
-				})
+				$this->callback(fn ($data): bool => $data['postData'] === [])
 			)
 			->willReturn($expectedResponse);
 
@@ -222,10 +210,8 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) {
-					return $data['page'] === 'project-setup'
-						&& isset($data['totalcms1DetectionData']);
-				})
+				$this->callback(fn ($data): bool => $data['page'] === 'project-setup'
+						&& isset($data['totalcms1DetectionData']))
 			)
 			->willReturn($expectedResponse);
 
@@ -249,9 +235,7 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) {
-					return $data['totalcms1DetectionData'] === null;
-				})
+				$this->callback(fn ($data): bool => $data['totalcms1DetectionData'] === null)
 			)
 			->willReturn($expectedResponse);
 
@@ -298,12 +282,10 @@ final class AdminUtilsActionTest extends TestCase
 			->with(
 				$this->response,
 				'admin/utils.twig',
-				$this->callback(function ($data) use ($args) {
-					return $data['url']['path'] === '/admin/utils/cache'
+				$this->callback(fn ($data): bool => $data['url']['path'] === '/admin/utils/cache'
 						&& $data['url']['query'] === 'action=clear'
 						&& $data['url']['params'] === $args
-						&& $data['url']['page'] === 'utils';
-				})
+						&& $data['url']['page'] === 'utils')
 			)
 			->willReturn($expectedResponse);
 
