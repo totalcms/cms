@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
@@ -19,7 +19,7 @@ class PersistentLoginService
 	private readonly string $tokenDir;
 
 	public function __construct(
-		private readonly PhpSession $session,
+		private readonly SessionInterface $session,
 		private readonly Config $config,
 		private readonly UserValidationService $userValidator,
 	) {

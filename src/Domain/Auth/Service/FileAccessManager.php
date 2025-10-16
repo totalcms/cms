@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -22,7 +22,7 @@ class FileAccessManager
 	private CollectionData $collection;
 
 	public function __construct(
-		private readonly PhpSession $session,
+		private readonly SessionInterface $session,
 		private readonly UserValidationService $userValidator,
 		private readonly LoggerFactory $loggerFactory,
 		private readonly PropertyFetcher $propertyFetcher,
