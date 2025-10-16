@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mailer\Service;
 
 use TotalCMS\Domain\Mailer\Data\MailerData;
-use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
 
 /**
  * MailerFetcher fetches mailer email template objects.
