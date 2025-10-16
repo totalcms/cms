@@ -211,4 +211,99 @@ final class IndexFilterTest extends TestCase
 
 		$this->assertFalse($result); // Missing 'featured' field
 	}
+
+	public function testIncludeWithArrayFieldMatches(): void
+	{
+		$object = ['id' => '1', 'tags' => ['travel', 'adventure', 'europe']];
+
+		$filterOptions = ['include' => 'tags:travel'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertTrue($result); // 'travel' exists in tags array
+	}
+
+	public function testIncludeWithArrayFieldDoesNotMatch(): void
+	{
+		$object = ['id' => '1', 'tags' => ['food', 'recipe', 'cooking']];
+
+		$filterOptions = ['include' => 'tags:travel'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertFalse($result); // 'travel' not in tags array
+	}
+
+	public function testExcludeWithArrayFieldMatches(): void
+	{
+		$object = ['id' => '1', 'tags' => ['travel', 'archived', 'europe']];
+
+		$filterOptions = ['exclude' => 'tags:archived'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertFalse($result); // Excluded because 'archived' in tags
+	}
+
+	public function testExcludeWithArrayFieldDoesNotMatch(): void
+	{
+		$object = ['id' => '1', 'tags' => ['travel', 'adventure', 'europe']];
+
+		$filterOptions = ['exclude' => 'tags:archived'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertTrue($result); // Not excluded because 'archived' not in tags
+	}
+
+	public function testArrayFieldWithMultipleIncludeCriteria(): void
+	{
+		$object = ['id' => '1', 'published' => true, 'tags' => ['travel', 'featured']];
+
+		$filterOptions = ['include' => 'published:true,tags:travel'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertTrue($result); // Both conditions match
+	}
+
+	public function testArrayFieldWithMultipleIncludeCriteriaDoesNotMatch(): void
+	{
+		$object = ['id' => '1', 'published' => true, 'tags' => ['food', 'recipe']];
+
+		$filterOptions = ['include' => 'published:true,tags:travel'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertFalse($result); // 'travel' not in tags
+	}
+
+	public function testFiltersArrayOfObjectsWithArrayFields(): void
+	{
+		$objects = [
+			['id' => '1', 'tags' => ['travel', 'europe']],
+			['id' => '2', 'tags' => ['food', 'recipe']],
+			['id' => '3', 'tags' => ['travel', 'asia']],
+			['id' => '4', 'tags' => ['sports', 'football']],
+		];
+
+		$filtered = $this->filter->filterObjects($objects, [
+			'include' => 'tags:travel',
+		]);
+
+		$this->assertCount(2, $filtered);
+		$this->assertEquals('1', $filtered[0]['id']);
+		$this->assertEquals('3', $filtered[1]['id']);
+	}
+
+	public function testArrayFieldWithEmptyArray(): void
+	{
+		$object = ['id' => '1', 'tags' => []];
+
+		$filterOptions = ['include' => 'tags:travel'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertFalse($result); // Empty array doesn't contain value
+	}
 }

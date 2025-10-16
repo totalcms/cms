@@ -269,11 +269,26 @@ This will show only published posts that are not drafts or archived.
 ```
 When no value is provided, it defaults to `true` (e.g., `featured` = `featured:true`).
 
+**Array field filtering:**
+```json
+{
+  "relationalOptions" : {
+  	"collection" : "blog",
+  	"label"      : "title",
+  	"value"      : "id",
+  	"include"    : "tags:featured",
+  	"exclude"    : "tags:archived"
+  }
+}
+```
+Filters work with array fields like `tags` or `categories` by checking if the value exists in the array.
+
 #### Filter Logic
 
 - **include** - Object must match ALL specified criteria (AND logic)
 - **exclude** - Object is excluded if it matches ANY criteria (OR logic)
 - **Precedence** - Exclude takes precedence over include
+- **Array fields** - Checks if value exists within array using `in_array()`
 
 Multiple filters are comma-separated: `"exclude": "draft:true,private:true"`
 

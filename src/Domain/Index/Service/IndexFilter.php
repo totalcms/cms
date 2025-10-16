@@ -12,17 +12,21 @@ use TotalCMS\Domain\Index\Data\IndexData;
  * - exclude: "field1:value1,field2:value2" - Object is excluded if it matches ANY condition
  *
  * Supported value formats:
- * - field:value - Matches specific value
+ * - field:value - Matches specific value (or checks if value exists in array field)
  * - field:true - Matches boolean true (or string "true")
  * - field:false - Matches boolean false (or string "false")
  * - field - Defaults to field:true
+ *
+ * Array field support:
+ * When a field contains an array, the filter checks if the value exists in the array using in_array().
+ * Example: tags:travel matches if "travel" is in the tags array.
  *
  * Example usage:
  * ```php
  * $filter = new IndexFilter();
  * $filtered = $filter->filterObjects($objects, [
- *     'include' => 'published:true,featured:true',
- *     'exclude' => 'draft:true,deleted:true'
+ *     'include' => 'published:true,tags:travel',
+ *     'exclude' => 'draft:true,tags:archived'
  * ]);
  * ```
  */
@@ -178,7 +182,18 @@ readonly class IndexFilter
 		$excludeFilters = $this->parseFilterString($excludeString);
 
 		foreach ($excludeFilters as $filter) {
-			if (isset($object[$filter['field']]) && $object[$filter['field']] === $filter['value']) {
+			if (!isset($object[$filter['field']])) {
+				continue;
+			}
+
+			$fieldValue = $object[$filter['field']];
+
+			// If field is an array, check if value exists in array
+			if (is_array($fieldValue)) {
+				if (in_array($filter['value'], $fieldValue, true)) {
+					return true; // Value found in array
+				}
+			} elseif ($fieldValue === $filter['value']) {
 				return true; // Object matches exclusion criteria
 			}
 		}
@@ -199,7 +214,18 @@ readonly class IndexFilter
 		$includeFilters = $this->parseFilterString($filterString);
 
 		foreach ($includeFilters as $filter) {
-			if (!isset($object[$filter['field']]) || $object[$filter['field']] !== $filter['value']) {
+			if (!isset($object[$filter['field']])) {
+				return false; // Object doesn't have the field
+			}
+
+			$fieldValue = $object[$filter['field']];
+
+			// If field is an array, check if value exists in array
+			if (is_array($fieldValue)) {
+				if (!in_array($filter['value'], $fieldValue, true)) {
+					return false; // Value not found in array
+				}
+			} elseif ($fieldValue !== $filter['value']) {
 				return false; // Object doesn't match this include criteria
 			}
 		}

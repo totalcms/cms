@@ -64,6 +64,36 @@ The system automatically converts common values:
 ?exclude=category:news      # String "news"
 ```
 
+## Array Field Support
+
+When a field contains an array, the filter checks if the value exists **within** the array using `in_array()`. This is particularly useful for fields like tags, categories, or any multi-value properties.
+
+**Example with tags:**
+```
+?include=tags:travel        # Matches if "travel" is in the tags array
+?exclude=tags:archived      # Excludes if "archived" is in the tags array
+```
+
+**Sample data:**
+```php
+['id' => '1', 'tags' => ['travel', 'adventure', 'europe']]
+```
+
+**Filter behavior:**
+- `include=tags:travel` → ✓ Matches (travel is in array)
+- `include=tags:food` → ✗ No match (food not in array)
+- `exclude=tags:archived` → ✓ Included (archived not in array)
+- `exclude=tags:europe` → ✗ Excluded (europe is in array)
+
+**Combined with scalar fields:**
+```php
+// Include published posts with "travel" tag
+?include=published:true,tags:travel
+
+// Exclude drafts or posts with "archived" tag
+?exclude=draft:true,tags:archived
+```
+
 ## Shorthand Syntax
 
 When no value is provided, the property defaults to `:true`:
@@ -202,6 +232,35 @@ $events = $filter->fetchFilteredIndex('events', [
 $portfolio = $filter->fetchFilteredIndex('portfolio', [
     'include' => 'published:true,category:webdesign',
     'exclude' => 'private:true'
+]);
+```
+
+### Array Fields (Tags, Categories)
+
+**URL Parameters:**
+```
+?include=tags:travel                     # Posts with "travel" tag
+?exclude=tags:archived                   # Exclude posts with "archived" tag
+?include=tags:featured,published:true    # Featured tag + published
+```
+
+**PHP Code:**
+```php
+// Posts with "travel" tag that aren't drafts
+$posts = $filter->fetchFilteredIndex('blog', [
+    'include' => 'tags:travel',
+    'exclude' => 'draft:true'
+]);
+
+// Products in "electronics" category that are in stock
+$products = $filter->fetchFilteredIndex('products', [
+    'include' => 'categories:electronics,instock:true'
+]);
+
+// Events with "featured" tag, excluding cancelled
+$events = $filter->fetchFilteredIndex('events', [
+    'include' => 'tags:featured',
+    'exclude' => 'tags:cancelled,tags:soldout'
 ]);
 ```
 
