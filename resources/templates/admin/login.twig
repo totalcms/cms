@@ -25,7 +25,7 @@
 		{% if collection %}
 			{% set action = cms.api ~ '/login/' ~ collection %}
 		{% endif %}
-		<form class="totalform" method="post" action="{{ action }}" data-disabled="true">
+		<form class="totalform" method="post" action="{{ action }}" data-disabled="true" style="position:relative;">
 			{{ csrf_field() }}
 
 			{# Preserve redirect parameter if present #}
@@ -57,6 +57,13 @@
 				</div>
 				<p class="help cms-hide" id="help-persistent-login">Stay logged in until you explicitly logout or clear browser data</p>
 			</div>
+
+			<p style="position:absolute;bottom:0;right:0;">
+				<a href="{{ cms.api }}/forgot-password{% if collection %}/{{ collection }}{% endif %}"
+				   style="color:oklch(var(--totalform-accent));text-decoration:none;font-size:0.875rem;">
+					Forgot Password?
+				</a>
+			</p>
 
 			<button class="dash-button" type="submit">Sign in</button>
 			{% for message in flash.get('error') %}

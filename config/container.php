@@ -25,6 +25,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
+use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
@@ -412,6 +413,14 @@ return [
 		$container->get(IndexSearcher::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(Config::class),
+	),
+
+	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
+		$container->get(CacheManager::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectSaver::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	PersistentLoginService::class => fn (ContainerInterface $container): PersistentLoginService => new PersistentLoginService(

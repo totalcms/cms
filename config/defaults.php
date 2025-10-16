@@ -169,12 +169,14 @@ $settings['imageworks'] = [
 ];
 
 $settings['auth'] = [
-	'enable'                => true,
-	'collection'            => 'auth',
-	'maxAttempts'           => 10,
-	'deniedTimeout'         => 7,
-	'deniedDefaultRedirect' => '/',
-	'persistentLoginDays'   => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
+	'enable'                  => true,
+	'collection'              => 'auth',
+	'maxAttempts'             => 10,
+	'deniedTimeout'           => 7,
+	'deniedDefaultRedirect'   => '/',
+	'persistentLoginDays'     => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
+	'forgotPasswordMailerId'  => '',  // Optional custom mailer ID for password reset emails (leave empty for default template)
+	'resetTokenExpiry'        => 30,  // Minutes before password reset token expires
 ];
 
 $settings['htmlclean'] = [
