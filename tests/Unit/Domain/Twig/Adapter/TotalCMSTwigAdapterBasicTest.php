@@ -110,6 +110,10 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testJobQueuePendingInfoReturnsEmptyStringForNoPendingJobs(): void
 	{
+		// Clear any existing jobs from previous tests
+		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository();
+		$jobRepository->clearQueue();
+
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 
 		$result = $adapter->jobQueuePendingInfo();
@@ -119,6 +123,10 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testJobQueueFailedInfoReturnsEmptyStringForNoFailedJobs(): void
 	{
+		// Clear any existing jobs from previous tests
+		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository();
+		$jobRepository->clearQueue();
+
 		$adapter = $this->createPartialMock(TotalCMSTwigAdapter::class, []);
 
 		$result = $adapter->jobQueueFailedInfo();

@@ -2,6 +2,7 @@
 
 use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -18,6 +19,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->indexReader       = $this->createMock(IndexReader::class);
+		$this->indexFilter       = $this->createMock(IndexFilter::class);
 		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
 		$this->schemaLister      = $this->createMock(SchemaLister::class);
 
@@ -41,6 +43,7 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			api: '/api',
@@ -67,6 +70,7 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			api: '/api',
@@ -90,6 +94,7 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			api: '/api',
@@ -116,6 +121,7 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			api: '/api',
@@ -145,6 +151,7 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			api: '/api',
@@ -170,6 +177,7 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
 			api: '/api',

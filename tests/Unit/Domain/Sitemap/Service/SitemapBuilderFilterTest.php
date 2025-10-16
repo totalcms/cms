@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Support\Config;
@@ -19,24 +20,30 @@ use TotalCMS\Support\Config;
 final class SitemapBuilderFilterTest extends TestCase
 {
 	private SitemapBuilder $sitemapBuilder;
+	private IndexFilter $mockIndexFilter;
 	private \PHPUnit\Framework\MockObject\MockObject $mockIndexReader;
 	private \PHPUnit\Framework\MockObject\MockObject $mockCollectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
 
 	protected function setUp(): void
 	{
-		$this->mockIndexReader       = $this->createMock(IndexReader::class);
+		// Use real IndexFilter with mocked IndexReader for proper filtering logic
+		$mockIndexReader = $this->createMock(IndexReader::class);
+		$this->mockIndexFilter       = new IndexFilter($mockIndexReader);
 		$this->mockCollectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->mockConfig            = $this->createMock(Config::class);
 
 		$this->sitemapBuilder = new SitemapBuilder(
-			$this->mockIndexReader,
+			$this->mockIndexFilter,
 			$this->mockCollectionFetcher,
 			$this->mockConfig
 		);
 
 		// Mock config domain
 		$this->mockConfig->domain = 'example.com';
+
+		// Store the mock IndexReader for use in setupMocksWithTestData
+		$this->mockIndexReader = $mockIndexReader;
 	}
 
 	public function testNoFiltersIncludesAllObjects(): void
@@ -248,6 +255,7 @@ final class SitemapBuilderFilterTest extends TestCase
 		$indexData          = new IndexData();
 		$indexData->objects = new Collection($objects);
 
+		// Mock IndexReader to return the test data
 		$this->mockIndexReader
 			->method('fetchIndex')
 			->willReturn($indexData);

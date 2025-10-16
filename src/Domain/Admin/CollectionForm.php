@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Admin;
 use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -28,6 +29,7 @@ class CollectionForm extends TotalForm
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
 		protected IndexReader $collectionReader,
+		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
@@ -64,6 +66,7 @@ class CollectionForm extends TotalForm
 			$objectFetcher,
 			$collectionFetcher,
 			$collectionReader,
+			$indexFilter,
 			$schemaFetcher,
 			$schemaLister,
 			$api,
