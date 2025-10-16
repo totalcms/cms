@@ -1,0 +1,410 @@
+# Index Filtering
+
+Total CMS provides a powerful `IndexFilter` service for filtering index objects based on include/exclude criteria. This filtering system is used throughout the CMS for sitemaps, RSS feeds, API endpoints, and custom implementations.
+
+## Overview
+
+The `IndexFilter` service provides a flexible way to filter collection objects using simple property-based criteria:
+
+- **Include filters** - Object must match ALL specified criteria
+- **Exclude filters** - Object is excluded if it matches ANY criteria
+- **Boolean & String values** - Automatic type conversion
+- **Shorthand syntax** - Property name defaults to `true`
+
+## Filter Syntax
+
+### Include (Include Only)
+
+Include only objects where specified properties match ALL values:
+
+```
+include=property:value                    # Single include filter
+include=property1:value1,property2:value2 # Multiple include filters (AND logic)
+include=property                          # Shorthand for property:true
+```
+
+**Logic:** ALL conditions must be true for the object to be included.
+
+### Exclude (Remove)
+
+Exclude objects where specified properties match ANY value:
+
+```
+exclude=property:value                    # Single exclusion
+exclude=property1:value1,property2:value2 # Multiple exclusions (OR logic)
+exclude=property                          # Shorthand for property:true
+```
+
+**Logic:** If ANY condition matches, the object is excluded.
+
+### Precedence
+
+**Exclude takes precedence over include.** If an object matches an exclude filter, it will be removed even if it also matches an include filter.
+
+```php
+// Object: ['published' => true, 'draft' => true]
+// Filters: include=published:true, exclude=draft:true
+// Result: EXCLUDED (draft:true matches exclude)
+```
+
+## Value Types
+
+The system automatically converts common values:
+
+| Value | Type | Example |
+|-------|------|---------|
+| `true` | Boolean | `published:true` |
+| `false` | Boolean | `draft:false` |
+| Other | String | `status:active` |
+
+```
+?include=featured:true      # Boolean true
+?include=status:published   # String "published"
+?exclude=draft:false        # Boolean false
+?exclude=category:news      # String "news"
+```
+
+## Shorthand Syntax
+
+When no value is provided, the property defaults to `:true`:
+
+```
+?include=featured       # Same as ?include=featured:true
+?exclude=draft          # Same as ?exclude=draft:true
+?include=published      # Same as ?include=published:true
+```
+
+## Usage in Code
+
+### Basic Filtering
+
+```php
+use TotalCMS\Domain\Index\Service\IndexFilter;
+
+$filter = new IndexFilter($indexReader);
+
+// Fetch and filter in one call
+$objects = $filter->fetchFilteredIndex('blog', [
+    'include' => 'published:true',
+    'exclude' => 'draft:true'
+]);
+```
+
+### Get Filtered IndexData
+
+```php
+// Returns IndexData with filtered objects
+$indexData = $filter->fetchFilteredIndexData('blog', [
+    'include' => 'featured:true',
+    'exclude' => 'archived:true'
+]);
+
+// Access filtered objects
+foreach ($indexData->objects as $object) {
+    // Process filtered objects
+}
+```
+
+### Filter Existing Array
+
+```php
+// If you already have objects
+$objects = [
+    ['id' => '1', 'published' => true, 'draft' => false],
+    ['id' => '2', 'published' => true, 'draft' => true],
+    ['id' => '3', 'published' => false, 'draft' => false],
+];
+
+$filtered = $filter->filterObjects($objects, [
+    'include' => 'published:true',
+    'exclude' => 'draft:true'
+]);
+// Result: Only object '1'
+```
+
+### Check Single Object
+
+```php
+$object = ['published' => true, 'featured' => true];
+
+$matches = $filter->matchesFilter($object, [
+    'include' => 'published:true,featured:true'
+]);
+// Result: true (matches all criteria)
+```
+
+## Real-World Examples
+
+### Blog Posts
+
+**URL Parameters:**
+```
+?exclude=draft                           # Exclude draft posts
+?include=featured                        # Only featured posts
+?include=published:true                  # Only published posts
+?include=published&exclude=draft,private # Published, not draft or private
+```
+
+**PHP Code:**
+```php
+$posts = $filter->fetchFilteredIndex('blog', [
+    'include' => 'published:true,featured:true',
+    'exclude' => 'draft:true'
+]);
+```
+
+### E-commerce Products
+
+**URL Parameters:**
+```
+?exclude=discontinued                    # Exclude discontinued products
+?include=instock:true                    # Only in-stock products
+?include=category:electronics,featured   # Electronics category + featured
+?include=instock&exclude=discontinued    # In stock, not discontinued
+```
+
+**PHP Code:**
+```php
+$products = $filter->fetchFilteredIndex('products', [
+    'include' => 'instock:true,category:electronics',
+    'exclude' => 'discontinued:true'
+]);
+```
+
+### Events
+
+**URL Parameters:**
+```
+?exclude=cancelled                       # Exclude cancelled events
+?include=status:upcoming                 # Only upcoming events
+?include=featured&exclude=soldout        # Featured, not sold out
+```
+
+**PHP Code:**
+```php
+$events = $filter->fetchFilteredIndex('events', [
+    'include' => 'status:upcoming',
+    'exclude' => 'cancelled:true,soldout:true'
+]);
+```
+
+### Portfolio
+
+**URL Parameters:**
+```
+?include=published                       # Only published work
+?exclude=private                         # Exclude private projects
+?include=category:webdesign,featured     # Web design + featured
+```
+
+**PHP Code:**
+```php
+$portfolio = $filter->fetchFilteredIndex('portfolio', [
+    'include' => 'published:true,category:webdesign',
+    'exclude' => 'private:true'
+]);
+```
+
+## Advanced Examples
+
+### Multiple Include Criteria (AND Logic)
+
+All conditions must match:
+
+```php
+// Object must be published AND featured AND in electronics category
+$objects = $filter->fetchFilteredIndex('products', [
+    'include' => 'published:true,featured:true,category:electronics'
+]);
+```
+
+### Multiple Exclude Criteria (OR Logic)
+
+If ANY condition matches, object is excluded:
+
+```php
+// Exclude if draft OR archived OR deleted
+$objects = $filter->fetchFilteredIndex('blog', [
+    'exclude' => 'draft:true,archived:true,deleted:true'
+]);
+```
+
+### Combined Include and Exclude
+
+```php
+// Must be published AND featured
+// AND NOT draft AND NOT private
+$objects = $filter->fetchFilteredIndex('blog', [
+    'include' => 'published:true,featured:true',
+    'exclude' => 'draft:true,private:true'
+]);
+```
+
+### String Value Matching
+
+```php
+// Match specific string values
+$objects = $filter->fetchFilteredIndex('products', [
+    'include' => 'status:active,category:electronics',
+    'exclude' => 'vendor:discontinued'
+]);
+```
+
+### Boolean False Matching
+
+```php
+// Include only objects where draft is explicitly false
+$objects = $filter->fetchFilteredIndex('blog', [
+    'include' => 'draft:false'
+]);
+```
+
+## Helper Methods
+
+### Extract Filter Options
+
+```php
+$options = [
+    'include' => 'published:true',
+    'exclude' => 'draft:true',
+    'limit'   => 10,
+    'offset'  => 0
+];
+
+$filterOptions = $filter->extractFilterOptions($options);
+// Returns: ['include' => 'published:true', 'exclude' => 'draft:true']
+// Note: limit and offset remain in $options
+```
+
+### Parse Filter String
+
+```php
+$parsed = $filter->parseFilterString('published:true,featured:true,status:active');
+// Returns:
+// [
+//     ['field' => 'published', 'value' => true],
+//     ['field' => 'featured', 'value' => true],
+//     ['field' => 'status', 'value' => 'active']
+// ]
+```
+
+## Where It's Used
+
+The `IndexFilter` service is used throughout Total CMS:
+
+- **Sitemap Builder** - Filter which objects appear in XML sitemaps ([Sitemap Documentation](sitemap-builder.md))
+- **RSS Feeds** - Control feed content based on object properties
+- **API Endpoints** - Add filtering to any collection endpoint
+- **Grid Display** - Filter objects in Twig templates
+- **Custom Services** - Build your own filtered collections
+
+## Best Practices
+
+### 1. Use Specific Filters
+```php
+// Good - specific criteria
+'include' => 'published:true,status:active'
+
+// Less specific
+'include' => 'published'
+```
+
+### 2. Exclude Early
+Exclude filters run first for better performance:
+```php
+// Efficient - excluded objects skip include check
+'exclude' => 'deleted:true,archived:true'
+'include' => 'published:true'
+```
+
+### 3. Default to True
+Use shorthand for boolean true values:
+```php
+// Concise
+'include' => 'published,featured'
+
+// Verbose but equivalent
+'include' => 'published:true,featured:true'
+```
+
+### 4. Document Your Filters
+When using filters in code, document the business logic:
+```php
+// Only show active, non-discontinued products to customers
+$products = $filter->fetchFilteredIndex('products', [
+    'include' => 'active:true,instock:true',
+    'exclude' => 'discontinued:true'
+]);
+```
+
+## Filter Logic Reference
+
+### Include Logic (AND)
+```
+Object: {published: true, featured: true}
+Filter: include=published:true,featured:true
+Result: ✓ INCLUDED (both match)
+
+Object: {published: true, featured: false}
+Filter: include=published:true,featured:true
+Result: ✗ EXCLUDED (featured doesn't match)
+```
+
+### Exclude Logic (OR)
+```
+Object: {draft: true, private: false}
+Filter: exclude=draft:true,private:true
+Result: ✗ EXCLUDED (draft matches)
+
+Object: {draft: false, private: false}
+Filter: exclude=draft:true,private:true
+Result: ✓ INCLUDED (neither match)
+```
+
+### Precedence (Exclude First)
+```
+Object: {published: true, draft: true}
+Filter: include=published:true, exclude=draft:true
+Result: ✗ EXCLUDED (exclude takes precedence)
+```
+
+## Troubleshooting
+
+### No Results
+
+If filtering returns no results:
+
+1. **Check field names** - Ensure properties exist in your objects
+2. **Check values** - Boolean vs string comparison
+3. **Check logic** - Remember include=AND, exclude=OR
+4. **Check data** - Verify objects have expected values
+
+```php
+// Debug: Check filter options
+$filterOptions = $filter->extractFilterOptions($options);
+var_dump($filterOptions);
+
+// Debug: Check parsed filters
+$parsed = $filter->parseFilterString($options['include']);
+var_dump($parsed);
+```
+
+### Unexpected Results
+
+If filtering returns unexpected objects:
+
+1. **Exclude precedence** - Exclude runs before include
+2. **Missing fields** - Objects without the field won't match include filters
+3. **Type mismatches** - 'true' (string) vs true (boolean)
+
+```php
+// Check single object
+$matches = $filter->matchesFilter($object, $filterOptions);
+var_dump($matches); // true or false
+```
+
+## See Also
+
+- [Sitemap Builder Documentation](sitemap-builder.md) - Using filters in sitemaps
+- [RSS Feed Documentation](rss-feeds.md) - Using filters in RSS feeds
+- [Twig Integration](twig-functions.md) - Using filters in templates
