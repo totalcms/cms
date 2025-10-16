@@ -7,8 +7,8 @@ namespace TotalCMS\Domain\Mailer\Service;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Support\Config;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 /**
  * EmailSender wraps PHPMailer for sending emails.

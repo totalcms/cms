@@ -131,8 +131,8 @@ $settings['smtp'] = [
 $settings['mailer'] = [
 	// Only allow emails to these domains
 	// 'whitelist' => [
-		// '@yourcompany.com',
-		// '@trustedclient.com',
+	// '@yourcompany.com',
+	// '@trustedclient.com',
 	// ],
 	'ratePerIp'       => 10,   // Max emails per IP per window
 	'ratePerTemplate' => 50,   // Max emails per template per hour

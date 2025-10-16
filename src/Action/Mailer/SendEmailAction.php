@@ -32,7 +32,7 @@ readonly class SendEmailAction
 			]);
 		}
 
-		$mailerId = (string)$data['mailerId'];
+		$mailerId  = (string)$data['mailerId'];
 		$emailData = $data['data'] ?? [];
 
 		if ($emailData === '') {

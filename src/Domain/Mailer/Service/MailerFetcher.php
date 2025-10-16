@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mailer\Service;
 
 use TotalCMS\Domain\Mailer\Data\MailerData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Data\ObjectData;
 
 /**
  * MailerFetcher fetches mailer email template objects.
@@ -28,7 +29,7 @@ readonly class MailerFetcher
 	{
 		$object = $this->objectRepository->fetchObject(self::MAILER_COLLECTION, $id);
 
-		if ($object === null) {
+		if (!$object instanceof ObjectData) {
 			throw new \Exception("Mailer not found: {$id}");
 		}
 

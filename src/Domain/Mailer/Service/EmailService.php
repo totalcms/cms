@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mailer\Service;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Support\Config;
-use TotalCMS\Domain\Mailer\Data\MailerData;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 /**
  * EmailService handles email template processing and sending.
@@ -139,7 +138,7 @@ readonly class EmailService
 			return [];
 		}
 
-		$emails = array_map('trim', explode("\n", $emailList));
+		$emails    = array_map('trim', explode("\n", $emailList));
 		$processed = [];
 
 		foreach ($emails as $email) {
@@ -170,7 +169,7 @@ readonly class EmailService
 
 		// Check if email domain matches any whitelisted domain
 		foreach ($allowedDomains as $allowedDomain) {
-			if (str_ends_with($emailDomain, $allowedDomain)) {
+			if (str_ends_with($emailDomain, (string)$allowedDomain)) {
 				return ['success' => true, 'message' => 'Email domain allowed'];
 			}
 		}

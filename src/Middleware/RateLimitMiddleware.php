@@ -43,7 +43,7 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 		// Get template ID from request body
 		$data        = (array)$request->getParsedBody();
 		$mailerId    = $data['mailerId'] ?? '';
-		$templateKey = $mailerId !== '' ? self::CACHE_PREFIX . 'template_' . md5($mailerId) : '';
+		$templateKey = $mailerId !== '' ? self::CACHE_PREFIX . 'template_' . md5((string)$mailerId) : '';
 
 		// Check IP rate limit
 		$ipCount = $this->getCount($ipKey);
