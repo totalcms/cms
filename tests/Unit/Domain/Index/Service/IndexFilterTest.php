@@ -306,4 +306,71 @@ final class IndexFilterTest extends TestCase
 
 		$this->assertFalse($result); // Empty array doesn't contain value
 	}
+
+	public function testCaseInsensitiveStringInclude(): void
+	{
+		$object = ['id' => '1', 'status' => 'Active'];
+
+		$filterOptions = ['include' => 'status:active'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertTrue($result); // Case-insensitive match
+	}
+
+	public function testCaseInsensitiveStringExclude(): void
+	{
+		$object = ['id' => '1', 'status' => 'Draft'];
+
+		$filterOptions = ['exclude' => 'status:draft'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertFalse($result); // Excluded (case-insensitive)
+	}
+
+	public function testCaseInsensitiveArrayFieldInclude(): void
+	{
+		$object = ['id' => '1', 'tags' => ['Travel', 'Adventure', 'Europe']];
+
+		$filterOptions = ['include' => 'tags:travel'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertTrue($result); // Case-insensitive array search
+	}
+
+	public function testCaseInsensitiveArrayFieldExclude(): void
+	{
+		$object = ['id' => '1', 'tags' => ['Travel', 'Archived', 'Europe']];
+
+		$filterOptions = ['exclude' => 'tags:archived'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertFalse($result); // Excluded (case-insensitive array search)
+	}
+
+	public function testCaseInsensitiveMixedCase(): void
+	{
+		$object = ['id' => '1', 'category' => 'Electronics'];
+
+		$filterOptions = ['include' => 'category:ELECTRONICS'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertTrue($result); // Case-insensitive match
+	}
+
+	public function testBooleanStillStrictComparison(): void
+	{
+		$object = ['id' => '1', 'published' => true];
+
+		// Boolean comparison should still be strict
+		$filterOptions = ['include' => 'published:true'];
+
+		$result = $this->filter->matchesFilter($object, $filterOptions);
+
+		$this->assertTrue($result); // Boolean strict match
+	}
 }

@@ -51,39 +51,45 @@ exclude=property                          # Shorthand for property:true
 
 The system automatically converts common values:
 
-| Value | Type | Example |
-|-------|------|---------|
-| `true` | Boolean | `published:true` |
-| `false` | Boolean | `draft:false` |
-| Other | String | `status:active` |
+| Value | Type | Comparison | Example |
+|-------|------|------------|---------|
+| `true` | Boolean | Strict (===) | `published:true` |
+| `false` | Boolean | Strict (===) | `draft:false` |
+| Other | String | Case-insensitive | `status:active` |
+
+**Comparison behavior:**
+- **Boolean values** - Fast strict comparison for optimal performance
+- **String values** - Case-insensitive matching for flexibility
+- **Array fields** - Case-insensitive search within array
 
 ```
-?include=featured:true      # Boolean true
-?include=status:published   # String "published"
-?exclude=draft:false        # Boolean false
-?exclude=category:news      # String "news"
+?include=featured:true      # Boolean true (strict match)
+?include=status:published   # String "published" (matches "Published", "PUBLISHED", etc.)
+?exclude=draft:false        # Boolean false (strict match)
+?exclude=category:news      # String "news" (matches "News", "NEWS", etc.)
 ```
 
 ## Array Field Support
 
-When a field contains an array, the filter checks if the value exists **within** the array using `in_array()`. This is particularly useful for fields like tags, categories, or any multi-value properties.
+When a field contains an array, the filter checks if the value exists **within** the array. String comparisons are **case-insensitive** for better usability. This is particularly useful for fields like tags, categories, or any multi-value properties.
 
 **Example with tags:**
 ```
-?include=tags:travel        # Matches if "travel" is in the tags array
-?exclude=tags:archived      # Excludes if "archived" is in the tags array
+?include=tags:travel        # Matches if "travel" is in the tags array (case-insensitive)
+?exclude=tags:archived      # Excludes if "archived" is in the tags array (case-insensitive)
 ```
 
 **Sample data:**
 ```php
-['id' => '1', 'tags' => ['travel', 'adventure', 'europe']]
+['id' => '1', 'tags' => ['Travel', 'Adventure', 'Europe']]
 ```
 
-**Filter behavior:**
-- `include=tags:travel` → ✓ Matches (travel is in array)
+**Filter behavior (case-insensitive):**
+- `include=tags:travel` → ✓ Matches ("travel" matches "Travel")
+- `include=tags:ADVENTURE` → ✓ Matches ("ADVENTURE" matches "Adventure")
 - `include=tags:food` → ✗ No match (food not in array)
 - `exclude=tags:archived` → ✓ Included (archived not in array)
-- `exclude=tags:europe` → ✗ Excluded (europe is in array)
+- `exclude=tags:europe` → ✗ Excluded ("europe" matches "Europe")
 
 **Combined with scalar fields:**
 ```php

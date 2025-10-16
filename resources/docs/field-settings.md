@@ -288,7 +288,9 @@ Filters work with array fields like `tags` or `categories` by checking if the va
 - **include** - Object must match ALL specified criteria (AND logic)
 - **exclude** - Object is excluded if it matches ANY criteria (OR logic)
 - **Precedence** - Exclude takes precedence over include
-- **Array fields** - Checks if value exists within array using `in_array()`
+- **Array fields** - Checks if value exists within array (case-insensitive for strings)
+- **String values** - Case-insensitive matching for flexibility
+- **Boolean values** - Strict comparison for optimal performance
 
 Multiple filters are comma-separated: `"exclude": "draft:true,private:true"`
 

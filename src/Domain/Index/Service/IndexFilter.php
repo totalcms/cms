@@ -17,9 +17,14 @@ use TotalCMS\Domain\Index\Data\IndexData;
  * - field:false - Matches boolean false (or string "false")
  * - field - Defaults to field:true
  *
+ * Comparison behavior:
+ * - Boolean values: Fast strict comparison (===)
+ * - String values: Case-insensitive comparison
+ * - Array fields: Case-insensitive search for strings within array
+ *
  * Array field support:
- * When a field contains an array, the filter checks if the value exists in the array using in_array().
- * Example: tags:travel matches if "travel" is in the tags array.
+ * When a field contains an array, the filter checks if the value exists in the array.
+ * Example: tags:travel matches if "travel" (case-insensitive) is in the tags array.
  *
  * Example usage:
  * ```php
@@ -187,14 +192,34 @@ readonly class IndexFilter
 			}
 
 			$fieldValue = $object[$filter['field']];
+			$filterValue = $filter['value'];
 
-			// If field is an array, check if value exists in array
-			if (is_array($fieldValue)) {
-				if (in_array($filter['value'], $fieldValue, true)) {
-					return true; // Value found in array
+			// Fast path: boolean comparison (most common case)
+			if (is_bool($filterValue)) {
+				if ($fieldValue === $filterValue) {
+					return true;
 				}
-			} elseif ($fieldValue === $filter['value']) {
-				return true; // Object matches exclusion criteria
+			} elseif (is_array($fieldValue)) {
+				// Array field: case-insensitive search
+				$lowerFilterValue = is_string($filterValue) ? strtolower($filterValue) : $filterValue;
+				foreach ($fieldValue as $item) {
+					if (is_string($item) && is_string($filterValue)) {
+						if (strtolower($item) === $lowerFilterValue) {
+							return true;
+						}
+					} elseif ($item === $filterValue) {
+						return true;
+					}
+				}
+			} else {
+				// String comparison: case-insensitive
+				if (is_string($fieldValue) && is_string($filterValue)) {
+					if (strtolower($fieldValue) === strtolower($filterValue)) {
+						return true;
+					}
+				} elseif ($fieldValue === $filterValue) {
+					return true;
+				}
 			}
 		}
 
@@ -219,14 +244,40 @@ readonly class IndexFilter
 			}
 
 			$fieldValue = $object[$filter['field']];
+			$filterValue = $filter['value'];
 
-			// If field is an array, check if value exists in array
-			if (is_array($fieldValue)) {
-				if (!in_array($filter['value'], $fieldValue, true)) {
-					return false; // Value not found in array
+			// Fast path: boolean comparison (most common case)
+			if (is_bool($filterValue)) {
+				if ($fieldValue !== $filterValue) {
+					return false;
 				}
-			} elseif ($fieldValue !== $filter['value']) {
-				return false; // Object doesn't match this include criteria
+			} elseif (is_array($fieldValue)) {
+				// Array field: case-insensitive search
+				$found = false;
+				$lowerFilterValue = is_string($filterValue) ? strtolower($filterValue) : $filterValue;
+				foreach ($fieldValue as $item) {
+					if (is_string($item) && is_string($filterValue)) {
+						if (strtolower($item) === $lowerFilterValue) {
+							$found = true;
+							break;
+						}
+					} elseif ($item === $filterValue) {
+						$found = true;
+						break;
+					}
+				}
+				if (!$found) {
+					return false;
+				}
+			} else {
+				// String comparison: case-insensitive
+				if (is_string($fieldValue) && is_string($filterValue)) {
+					if (strtolower($fieldValue) !== strtolower($filterValue)) {
+						return false;
+					}
+				} elseif ($fieldValue !== $filterValue) {
+					return false;
+				}
 			}
 		}
 
