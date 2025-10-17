@@ -8,7 +8,7 @@
 		{{ cms.form.field("text", "name", {
 			label: "Name",
 			help: "A descriptive name to help you identify this key (e.g., Zapier Integration, Mobile App, etc.)",
-			placeholder: "e.g., Zapier Integration",
+			placeholder: "e.g., ActivePieces Integration",
 			required: true,
 		}) }}
 
@@ -37,21 +37,34 @@
 			]
 		}) }}
 
-		<div id="specific-endpoints" class="form-field help-box help-on-hover" style="display: none;">
-			<label>Select Endpoints</label>
-			<div class="checkbox-group">
-				<label><input type="checkbox" name="paths[]" value="/api/collections/*"> All Collections</label>
-				{% for collection in cms.collections() %}
-				<label style="margin-left: 20px;">
-					<input type="checkbox" name="paths[]" value="/api/collections/{{ collection.id }}/*">
-					{{ collection.name }}
-				</label>
-				{% endfor %}
-				<label><input type="checkbox" name="paths[]" value="/api/auth/*"> Authentication</label>
-				<label><input type="checkbox" name="paths[]" value="/api/users/*"> Users</label>
-				<label><input type="checkbox" name="paths[]" value="/api/settings/*"> Settings</label>
-			</div>
-			<p class="help">Check the endpoints this key should have access to</p>
+		<div id="specific-endpoints" style="display: none;">
+			{% set collectionOptions = [] %}
+			{% for collection in cms.collections() %}
+				{% set collectionOptions = collectionOptions|merge([{value: "/collections/" ~ collection.id, label: collection.name}]) %}
+			{% endfor %}
+
+			{% set endpointOptions = [
+				{value: "/collections", label: "All Collections"}
+			] %}
+			{% set endpointOptions = endpointOptions|merge({"Choose Specific Collections": collectionOptions}) %}
+			{% set endpointOptions = endpointOptions|merge([
+				{value: "/auth", label: "Authentication"},
+				{value: "/users", label: "Users"},
+				{value: "/settings", label: "Settings"},
+				{value: "/templates", label: "Templates"},
+				{value: "/schemas", label: "Schemas"}
+			]) %}
+
+			{{ cms.form.field("multicheckbox", "paths", {
+				label: "Select Endpoints",
+				help: "Check the endpoints this key should have access to",
+				required: false,
+				value: [],
+				options: endpointOptions,
+				settings: {
+					fieldGrid: "200px",
+				}
+			}) }}
 		</div>
 
 		<div class="form-inline-fields">
@@ -104,34 +117,7 @@
 	background: oklch(var(--totalform-nearwhite));
 }
 
-.required {
-	color: oklch(var(--totalform-danger));
-}
-
-.checkbox-group label,
-.radio-group label {
-	display: block;
-	margin: 0.5rem 0;
-	cursor: pointer;
-}
-
-.checkbox-group input[type="checkbox"],
-.radio-group input[type="radio"] {
-	margin-right: 0.5rem;
-}
-
-.dash-button-secondary {
-	background: oklch(var(--totalform-nearwhite));
-	color: oklch(var(--totalform-darkgray));
-	text-decoration: none;
-	display: inline-block;
-}
-
-.dash-button-secondary:hover {
-	background: oklch(var(--totalform-border-color));
-}
-
-.cms-modal section.scroller {
+/* .cms-modal section.scroller {
 	max-width: 600px;
 	width: 90vw;
 	max-height: 90vh;
@@ -161,7 +147,7 @@
 
 .cms-modal .close:hover {
 	color: oklch(var(--totalform-accent));
-}
+} */
 </style>
 
 <script>

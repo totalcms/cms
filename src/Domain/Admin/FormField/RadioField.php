@@ -52,16 +52,47 @@ class RadioField extends FormField
 		$radiosHtml = '';
 		$index      = 1;
 
-		foreach ($this->options as $option) {
+		foreach ($this->options as $key => $option) {
+			// Check if this is a grouped option (string key with array value)
+			if (is_string($key) && is_array($option)) {
+				$radiosHtml .= $this->buildRadioGroup($key, $option, $index);
+				$index += count($option);
+			} else {
+				// Regular option
+				if (is_string($option)) {
+					$option = $this->optionFromString($option);
+				}
+
+				$radiosHtml .= $this->buildSingleRadio($option, $index);
+				$index++;
+			}
+		}
+
+		return $radiosHtml;
+	}
+
+	/**
+	 * Build a group of radio buttons with a legend.
+	 *
+	 * @param array<int,array<string,string>> $options
+	 */
+	protected function buildRadioGroup(string $groupLabel, array $options, int &$index): string
+	{
+		$groupHtml = '';
+
+		foreach ($options as $option) {
 			if (is_string($option)) {
 				$option = $this->optionFromString($option);
 			}
 
-			$radiosHtml .= $this->buildSingleRadio($option, $index);
+			$groupHtml .= $this->buildSingleRadio($option, $index);
 			$index++;
 		}
 
-		return $radiosHtml;
+		$legend  = HTMLUtils::element('legend', $groupLabel, ['class' => 'radio-group-legend']);
+		$content = $legend . $groupHtml;
+
+		return HTMLUtils::element('fieldset', $content, ['class' => 'radio-group-fieldset']);
 	}
 
 	/** @param array<string,string> $option */

@@ -52,16 +52,47 @@ class MulticheckboxField extends FormField
 		$checkboxesHtml = '';
 		$index          = 1;
 
-		foreach ($this->options as $option) {
+		foreach ($this->options as $key => $option) {
+			// Check if this is a grouped option (string key with array value)
+			if (is_string($key) && is_array($option)) {
+				$checkboxesHtml .= $this->buildCheckboxGroup($key, $option, $index);
+				$index += count($option);
+			} else {
+				// Regular option
+				if (is_string($option)) {
+					$option = $this->optionFromString($option);
+				}
+
+				$checkboxesHtml .= $this->buildSingleCheckbox($option, $index);
+				$index++;
+			}
+		}
+
+		return $checkboxesHtml;
+	}
+
+	/**
+	 * Build a group of checkboxes with a legend.
+	 *
+	 * @param array<int,array<string,string>> $options
+	 */
+	protected function buildCheckboxGroup(string $groupLabel, array $options, int &$index): string
+	{
+		$groupHtml = '';
+
+		foreach ($options as $option) {
 			if (is_string($option)) {
 				$option = $this->optionFromString($option);
 			}
 
-			$checkboxesHtml .= $this->buildSingleCheckbox($option, $index);
+			$groupHtml .= $this->buildSingleCheckbox($option, $index);
 			$index++;
 		}
 
-		return $checkboxesHtml;
+		$legend  = HTMLUtils::element('legend', $groupLabel, ['class' => 'checkbox-group-legend']);
+		$content = $legend . $groupHtml;
+
+		return HTMLUtils::element('fieldset', $content, ['class' => 'multicheckbox-group']);
 	}
 
 	/** @param array<string,string> $option */
