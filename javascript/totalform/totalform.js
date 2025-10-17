@@ -13,6 +13,7 @@ import DeckField from './deck';
 import PasswordField from './password';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
+import MultiCheckboxField from './multicheckbox';
 import ListField from './list';
 import RangeSlider from './range';
 import StyledTextField from './styledtext';
@@ -225,6 +226,9 @@ export default class TotalForm {
             case "checkbox":
             case "toggle":
                 return new Checkbox(field, options);
+
+			case "multicheckbox":
+                return new MultiCheckboxField(field, options);
 
             case "radio":
                 return new RadioField(field, options);

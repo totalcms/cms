@@ -1,5 +1,5 @@
 //------------------------------
-// Checkbox Field
+// Checkbox Field (Single)
 //------------------------------
 .checkbox-field {
 	width : auto;
@@ -55,4 +55,111 @@
             cursor     : pointer
         }
     }
+}
+
+//------------------------------
+// Multicheckbox Field (Multiple)
+//------------------------------
+.multicheckbox-field {
+	--fieldset-grid-size : 1fr;
+
+	> fieldset {
+		border: none;
+		padding: 0;
+
+		display : grid;
+		gap     : 0.75rem;
+		width   : 100%;
+
+		grid-template-columns : 1fr;
+		grid-template-columns : repeat(auto-fit, minmax(var(--fieldset-grid-size), 1fr));
+
+		legend {
+			margin-bottom : 0.5rem;
+		}
+	}
+
+	.checkbox-label {
+		line-height : 1;
+		font-size   : 1rem;
+
+		// Allow wrapping if text is too long for grid cell
+		word-wrap     : break-word;
+		overflow-wrap : break-word;
+
+		// But prefer not to wrap
+		white-space : nowrap;
+
+		// Truncate with ellipsis if absolutely necessary
+		text-overflow : ellipsis;
+		overflow      : hidden;
+		cursor        : pointer;
+	}
+
+	.checkbox {
+		// Ensure each checkbox item displays properly within grid cell
+		display     : flex;
+		align-items : center;
+		gap         : 0.5rem;
+
+		// Let the grid cell size the item, but don't stretch the content
+		width       : max-content;
+		max-width   : 100%;
+
+		// Prevent overflow within grid cell
+		overflow    : hidden;
+
+		input[type="checkbox"] {
+			appearance : auto;
+			width      : 1.2rem;
+			height     : 1.2rem;
+			display    : inline-block;
+			position   : relative;
+			margin     : 0;
+			border     : none;
+			line-height: 1;
+			box-shadow : none;
+			cursor     : pointer;
+
+			&:before {
+				transition : all .2s ease-in-out;
+				content    : "";
+				position   : absolute;
+				left       : 0;
+				top        : 0;
+				z-index    : 1;
+				width      : 1.2rem;
+				height     : 1.2rem;
+				border     : 2px solid oklch(var(--totalform-border-color))
+			}
+
+			&:checked:before {
+				transform          : rotate(-45deg);
+				height             : .5rem;
+				top                : 20%;
+				border-color       : oklch(var(--totalform-accent));
+				border-top-style   : none;
+				border-right-style : none
+			}
+
+			&:after { // hides the actual checkbox
+				content    : "";
+				position   : absolute;
+				top        : -0.1rem;
+				left       : -0.1rem;
+				width      : 1.4rem;
+				height     : 1.4rem;
+				background : oklch(var(--totalform-background));
+				cursor     : pointer
+			}
+
+			+ .checkbox-label {
+				display     : inline-block;
+				font-size   : 1rem;
+				line-height : 1.2rem;
+				cursor      : pointer;
+				margin-left : 0.5rem;
+			}
+		}
+	}
 }

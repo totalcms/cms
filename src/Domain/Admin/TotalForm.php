@@ -62,6 +62,7 @@ abstract class TotalForm implements \Stringable
 		],
 		'List (Array) Fields' => [
 			'list',
+			'multicheckbox',
 			'multiselect',
 		],
 		'Special Fields' => [
@@ -92,6 +93,7 @@ abstract class TotalForm implements \Stringable
 		'image',
 		'json',
 		'list',
+		'multicheckbox',
 		'multiselect',
 		'number',
 		'password',

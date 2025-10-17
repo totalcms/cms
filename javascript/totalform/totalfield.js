@@ -54,7 +54,7 @@ export default class TotalField {
 		}
 
 		// the change event happens more than once so the ID field can be updated for every change
-		this.input.addEventListener("change", () => this.changed());
+		this.container.addEventListener("change", () => this.changed());
 		// the input event happens once since the point is to mark the form as unsaved ASAP
 		this.input.addEventListener("input", () => this.changed());
 	}
