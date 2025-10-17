@@ -36,8 +36,8 @@ return function (App $app): void {
 
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
-		$group->get('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils');
-		$group->post('/utils[/{page}]', AdminUtilsAction::class)->setName('admin-utils-post');
+		$group->get('/utils[/{page}[/{subpage}]]', AdminUtilsAction::class)->setName('admin-utils');
+		$group->post('/utils[/{page}[/{subpage}]]', AdminUtilsAction::class)->setName('admin-utils-post');
 
 		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground');
 		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post');

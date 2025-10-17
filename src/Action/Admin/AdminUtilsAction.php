@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
 
@@ -12,6 +13,7 @@ readonly class AdminUtilsAction
 	public function __construct(
 		private TwigRenderer $twigRenderer,
 		private TwigEngine $twigEngine,
+		private ApiKeyService $apiKeyService,
 	) {
 	}
 
@@ -23,6 +25,13 @@ readonly class AdminUtilsAction
 	): ResponseInterface {
 		$page    = $args['page'] ?? 'index';
 		$results = '';
+
+		// Check for sub-actions in URL path (e.g., /admin/utils/api-keys/new)
+		$path = $request->getUri()->getPath();
+		$subAction = null;
+		if (str_ends_with($path, '/new')) {
+			$subAction = 'new';
+		}
 
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();
@@ -42,8 +51,15 @@ readonly class AdminUtilsAction
 			$totalcms1DetectionData = $this->detectTotalCms1Data();
 		}
 
+		// Fetch API keys for api-keys page
+		$apiKeys = null;
+		if ($page === 'api-keys' && $subAction !== 'new') {
+			$apiKeys = $this->apiKeyService->getAllKeys();
+		}
+
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
 			'page' => $page,
+			'subAction' => $subAction,
 			'url'  => [
 				'path'   => $request->getUri()->getPath(),
 				'query'  => $request->getUri()->getQuery(),
@@ -52,6 +68,7 @@ readonly class AdminUtilsAction
 			],
 			'results'                => $results,
 			'totalcms1DetectionData' => $totalcms1DetectionData,
+			'apiKeys'                => $apiKeys,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}

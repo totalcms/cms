@@ -7,6 +7,7 @@ return function (App $app): void {
 	$app->options('/', PreflightAction::class);
 
 	(require __DIR__ . '/routes/admin.php')($app);
+	(require __DIR__ . '/routes/apikey.php')($app);
 	(require __DIR__ . '/routes/assets.php')($app);
 	(require __DIR__ . '/routes/auth.php')($app);
 	(require __DIR__ . '/routes/cache.php')($app);
