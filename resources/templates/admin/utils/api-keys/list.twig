@@ -1,0 +1,122 @@
+{# List API Keys Page #}
+<h1>API Keys</h1>
+
+<section class="dash-content-section">
+
+	<p>API keys allow external services to access your Total CMS data. Each key can be limited to specific HTTP methods and API endpoints for security.</p>
+
+	<div style="margin: 2rem 0; text-align: right;">
+		<a href="/admin/utils/api-keys/new" class="dash-button">
+			<svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="vertical-align: middle; margin-right: 5px;">
+				<path d="M7 1V13M1 7H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+			</svg>
+			Create API Key
+		</a>
+	</div>
+
+	{% if apiKeys|length > 0 %}
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>API Key</th>
+					<th>HTTP Methods</th>
+					<th>Endpoints</th>
+					<th>Created</th>
+					<th>Last Used</th>
+					<th style="width: 100px;">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for apiKey in apiKeys %}
+				<tr>
+					<td><strong>{{ apiKey.name }}</strong></td>
+					<td><code>{{ apiKey.getMaskedKey() }}</code></td>
+					<td>{{ apiKey.scopes.methods|join(', ') }}</td>
+					<td>
+						{% if '*' in apiKey.scopes.paths %}
+							<em>All endpoints</em>
+						{% else %}
+							{{ apiKey.scopes.paths|slice(0, 2)|join(', ') }}
+							{% if apiKey.scopes.paths|length > 2 %}
+								<span title="{{ apiKey.scopes.paths|join(', ') }}">... (+{{ apiKey.scopes.paths|length - 2 }} more)</span>
+							{% endif %}
+						{% endif %}
+					</td>
+					<td>{{ apiKey.created|date('Y-m-d H:i') }}</td>
+					<td>
+						{% if apiKey.lastUsed %}
+							{{ apiKey.lastUsed|date('Y-m-d H:i') }}
+						{% else %}
+							<em>Never</em>
+						{% endif %}
+					</td>
+					<td>
+						<button type="button" class="dash-button dash-button-small dash-button-danger delete-apikey-btn" data-id="{{ apiKey.id }}" data-name="{{ apiKey.name }}">
+							Delete
+						</button>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<div class="empty-state">
+			<p><em>No API keys created yet. Click "Create API Key" to get started.</em></p>
+		</div>
+	{% endif %}
+
+</section>
+
+<style>
+.empty-state {
+	text-align: center;
+	padding: 3rem;
+	background: oklch(var(--totalform-nearwhite));
+	border-radius: var(--totalform-radius);
+	color: oklch(var(--totalform-darkgray));
+}
+
+.dash-button-danger {
+	background: oklch(var(--totalform-danger));
+}
+
+.dash-button-danger:hover {
+	background: oklch(var(--totalform-danger) / 0.8);
+}
+
+.dash-button-small {
+	padding: 0.4rem 0.8rem;
+	font-size: 0.85rem;
+}
+</style>
+
+<script>
+// Delete API key
+document.querySelectorAll('.delete-apikey-btn').forEach(btn => {
+	btn.addEventListener('click', async function() {
+		const id = this.dataset.id;
+		const name = this.dataset.name;
+
+		if (!confirm(`Are you sure you want to delete the API key "${name}"? This action cannot be undone.`)) {
+			return;
+		}
+
+		try {
+			const response = await fetch(`/apikeys/${id}`, {
+				method: 'DELETE'
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				window.location.reload();
+			} else {
+				alert('Error: ' + data.message);
+			}
+		} catch (error) {
+			alert('Error deleting API key: ' + error.message);
+		}
+	});
+});
+</script>

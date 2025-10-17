@@ -14,6 +14,10 @@
 
 		grid-template-columns : 1fr;
 		grid-template-columns : repeat(auto-fit, minmax(var(--fieldset-grid-size), 1fr));
+
+		legend {
+			margin-bottom : 0.5rem;
+		}
 	}
 
 	.radio-label {
