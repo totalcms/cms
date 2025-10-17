@@ -66,12 +66,13 @@
 			</p>
 
 			<button class="dash-button" type="submit">Sign in</button>
-			{% for message in flash.get('error') %}
-				<p class="cms-twig-error" role="alert">
-					{{ message }}
-				</p>
-			{% endfor %}
 		</form>
+
+		{% for message in flash.get('error') %}
+			<p class="cms-twig-error" role="alert">
+				{{ message }}
+			</p>
+		{% endfor %}
 	</section>
 
 	<section class="login-below">

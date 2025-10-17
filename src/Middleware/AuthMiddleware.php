@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Middleware;
 
-use Odan\Session\SessionInterface;
+use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,7 +25,7 @@ readonly class AuthMiddleware implements MiddlewareInterface
 
 	public function __construct(
 		private ResponseFactoryInterface $responseFactory,
-		private SessionInterface $session,
+		private PhpSession $session,
 		private Config $config,
 		private AccessManager $accessManager,
 		private PersistentLoginService $persistentLoginService,

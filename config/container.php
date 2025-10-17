@@ -417,8 +417,9 @@ return [
 
 	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
 		$container->get(CacheManager::class),
+		$container->get(IndexSearcher::class),
 		$container->get(ObjectFetcher::class),
-		$container->get(ObjectSaver::class),
+		$container->get(ObjectUpdater::class),
 		$container->get(Config::class),
 		$container->get(LoggerFactory::class),
 	),

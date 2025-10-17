@@ -10,6 +10,7 @@ class Config
 	public string $tmpdir   = '';
 	public string $cachedir = '';
 	public string $domain   = '';
+	public string $url      = '';
 	public string $api      = '';
 	public string $locale   = '';
 	public string $timezone = '';
@@ -52,6 +53,7 @@ class Config
 		$this->error      = $settings['error'];
 		$this->imageworks = $settings['imageworks'];
 		$this->domain     = $settings['domain'];
+		$this->url        = $settings['url'];
 		$this->api        = $settings['api'];
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];

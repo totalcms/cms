@@ -7,6 +7,31 @@
 	<meta name="robots" content="noindex, nofollow">
 	<title>{% block title %}Total CMS{% endblock %}</title>
 
+	{# Apply theme immediately to prevent flash of wrong theme #}
+	<script>
+		(function() {
+			const saved = localStorage.getItem('totalcms-theme');
+			const theme = ['auto', 'light', 'dark'].includes(saved) ? saved : 'auto';
+			const html  = document.documentElement;
+
+			html.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+			html.classList.add('theme-' + theme);
+
+			switch (theme) {
+				case 'light':
+					html.style.colorScheme = 'light';
+					break;
+				case 'dark':
+					html.style.colorScheme = 'dark';
+					break;
+				case 'auto':
+				default:
+					html.style.colorScheme = 'light dark';
+					break;
+			}
+		})();
+	</script>
+
     <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>

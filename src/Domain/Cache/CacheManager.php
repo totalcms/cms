@@ -20,11 +20,12 @@ use TotalCMS\Support\Config;
 class CacheManager
 {
 	// Cache key prefixes
-	public const PREFIX_COMPUTED     = 'computed';
-	public const PREFIX_COLLECTION   = 'collection';
-	public const PREFIX_API_RESPONSE = 'api';
-	public const PREFIX_SESSION      = 'session';
-	public const PREFIX_TEMPLATE     = 'template';
+	public const PREFIX_COMPUTED        = 'computed';
+	public const PREFIX_COLLECTION      = 'collection';
+	public const PREFIX_API_RESPONSE    = 'api';
+	public const PREFIX_SESSION         = 'session';
+	public const PREFIX_TEMPLATE        = 'template';
+	public const PREFIX_PASSWORD_RESET  = 'password_reset';
 
 	// Array of all cache types for clearByType functionality
 	public const CACHE_TYPES = [
@@ -46,6 +47,7 @@ class CacheManager
 	public const TTL_CUSTOM_SCHEMA       = 7200;        // 2 hours - custom schemas change infrequently
 	public const TTL_API_RESPONSE        = 900;          // 15 minutes - API responses can be cached briefly
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer
+	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens
 
 	private string $versionFile = '.cache_version';
 	private readonly string $domainPrefix;
@@ -466,6 +468,112 @@ class CacheManager
 	{
 		// Use domain-specific key to prevent license data sharing between sites
 		$domainKey = $this->createDomainKey($key);
+		$success   = true;
+
+		// Delete from all available cache backends
+		if ($this->apcuService->isAvailable()) {
+			$success &= $this->apcuService->delete($domainKey);
+		}
+
+		if ($this->redisService->isAvailable()) {
+			$success &= $this->redisService->delete($domainKey);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$success &= $this->memcachedService->delete($domainKey);
+		}
+
+		if ($this->filesystemService->isAvailable()) {
+			$success &= $this->filesystemService->delete($domainKey);
+		}
+
+		return (bool)$success;
+	}
+
+	/**
+	 * Store password reset data - bypasses dev mode and cache clearing.
+	 * Similar to license data, password reset tokens should persist regardless of dev mode
+	 * and should NOT be cleared when users clear cache through the admin interface.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	public function storePasswordResetData(string $key, array $data, int $ttl = self::TTL_PASSWORD_RESET): bool
+	{
+		// Always cache password reset data regardless of dev mode
+		// Use domain-specific key to prevent data sharing between sites
+		$domainKey = $this->createDomainKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
+
+		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
+		if ($this->apcuService->isAvailable()) {
+			return $this->apcuService->set($domainKey, $data, $ttl);
+		}
+
+		if ($this->redisService->isAvailable()) {
+			return $this->redisService->set($domainKey, $data, $ttl);
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			return $this->memcachedService->set($domainKey, $data, $ttl);
+		}
+
+		// Fallback to filesystem cache only if no memory caches available
+		if ($this->filesystemService->isAvailable()) {
+			return $this->filesystemService->set($domainKey, $data, $ttl);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get password reset data - bypasses dev mode.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	public function getPasswordResetData(string $key): ?array
+	{
+		// Use domain-specific key to prevent data sharing between sites
+		$domainKey = $this->createDomainKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
+
+		// Check memory caches first (fastest)
+		if ($this->apcuService->isAvailable()) {
+			$result = $this->apcuService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		if ($this->redisService->isAvailable()) {
+			$result = $this->redisService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		if ($this->memcachedService->isAvailable()) {
+			$result = $this->memcachedService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		// Check filesystem cache
+		if ($this->filesystemService->isAvailable()) {
+			$result = $this->filesystemService->get($domainKey);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Clear password reset data - bypasses dev mode.
+	 */
+	public function clearPasswordResetData(string $key): bool
+	{
+		// Use domain-specific key to prevent data sharing between sites
+		$domainKey = $this->createDomainKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
 		$success   = true;
 
 		// Delete from all available cache backends
