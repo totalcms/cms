@@ -76,7 +76,7 @@ readonly class ForgotPasswordSubmitAction
 		$token = $result['token'];
 
 		// Send reset email
-		$emailResult = $this->sendResetEmail($email, $token, $collection);
+		$this->sendResetEmail($email, $token, $collection);
 
 		// Always show success message to prevent user enumeration
 		// Even if email fails, we don't want to reveal that to the user

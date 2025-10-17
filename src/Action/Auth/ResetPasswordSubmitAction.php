@@ -31,8 +31,8 @@ readonly class ResetPasswordSubmitAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$data = (array)$request->getParsedBody();
-		$flash = $this->session->getFlash();
+		$data   = (array)$request->getParsedBody();
+		$flash  = $this->session->getFlash();
 		$router = RouteContext::fromRequest($request)->getRouteParser();
 
 		$token       = $args['token'] ?? '';
@@ -45,22 +45,26 @@ readonly class ResetPasswordSubmitAction
 		// Validate inputs
 		if ($token === '') {
 			$flash->add('error', 'Invalid reset token.');
+
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
 		if ($newPassword === '') {
 			$flash->add('error', 'Please enter a new password.');
+
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
 		if ($newPassword !== $confirm) {
 			$flash->add('error', 'Passwords do not match.');
+
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
 		// Check minimum password length (should match auth schema requirements)
 		if (strlen($newPassword) < 4) {
 			$flash->add('error', 'Password must be at least 4 characters long.');
+
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 
@@ -68,6 +72,7 @@ readonly class ResetPasswordSubmitAction
 		$validation = $this->passwordResetService->validateToken($token);
 		if (!$validation['valid']) {
 			$flash->add('error', $validation['message']);
+
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 		$collection = $validation['collection'] ?? $this->config->auth['collection'] ?? 'auth';
@@ -77,6 +82,7 @@ readonly class ResetPasswordSubmitAction
 
 		if (!$result['success']) {
 			$flash->add('error', $result['message']);
+
 			return $response->withStatus(302)->withHeader('Location', $resetUrl);
 		}
 

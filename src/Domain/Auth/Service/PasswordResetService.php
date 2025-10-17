@@ -70,7 +70,7 @@ readonly class PasswordResetService
 		// Check if user exists
 		$user = $this->findUserByEmail($email, $collection);
 
-		if ($user === null) {
+		if (!$user instanceof ObjectData) {
 			// Don't reveal whether user exists for security
 			$this->logger->warning('Password reset requested for non-existent user', [
 				'email'      => $email,
@@ -226,7 +226,7 @@ readonly class PasswordResetService
 		// Fetch user object
 		$user = $this->findUserByEmail($email, $collection);
 
-		if ($user === null) {
+		if (!$user instanceof ObjectData) {
 			$this->logger->error('User not found during password reset', [
 				'email'      => $email,
 				'collection' => $collection,
