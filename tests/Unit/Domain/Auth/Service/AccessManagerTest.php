@@ -358,6 +358,7 @@ final class AccessManagerTest extends TestCase
 			'sentry'     => [],
 			'error'      => [],
 			'domain'     => 'test.com',
+			'url'        => 'http://test.com',
 			'api'        => 'http://test.com/api',
 			'locale'     => 'en_US',
 			'session'    => [],
