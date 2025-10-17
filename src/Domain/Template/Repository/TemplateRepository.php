@@ -116,16 +116,18 @@ class TemplateRepository extends StorageRepository
 	public function fetchReservedTemplate(string $template): ?TemplateData
 	{
 		$templateFile = $this->reservedPath($template);
-		$contents     = null;
 
-		if (file_exists($templateFile)) {
-			$contents = file_get_contents($templateFile);
-		}
-
-		if ($contents === '' || $contents === null || $contents === false) {
+		if (!file_exists($templateFile)) {
 			return null;
 		}
 
+		$contents = file_get_contents($templateFile);
+
+		if ($contents === false) {
+			return null;
+		}
+
+		// Empty content is valid for templates
 		return TemplateFactory::generateTemplate($template, $contents);
 	}
 
@@ -135,17 +137,15 @@ class TemplateRepository extends StorageRepository
 	public function fetchCustomTemplate(string $template, ?string $folder = null): ?TemplateData
 	{
 		$templateFile = $this->customPath($template, $folder);
-		$contents     = null;
 
-		if ($this->filesystem->fileExists($templateFile)) {
-			$contents = $this->filesystem->read($templateFile);
-		}
-
-		if ($contents === null || $contents === '') {
+		if (!$this->filesystem->fileExists($templateFile)) {
 			return null;
 		}
 
-		return TemplateFactory::generateTemplate($template, $contents);
+		$contents = $this->filesystem->read($templateFile);
+
+		// Empty content is valid for templates - allows editing blank templates
+		return TemplateFactory::generateTemplate($template, $contents ?? '');
 	}
 
 	/**
