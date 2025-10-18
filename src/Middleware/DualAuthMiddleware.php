@@ -13,6 +13,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
 /**
@@ -25,6 +26,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private ApiKeyFetcher $apiKeyFetcher,
+		private JsonRenderer $jsonRenderer,
 		private ResponseFactoryInterface $responseFactory,
 		private PhpSession $session,
 		private Config $config,
@@ -40,6 +42,9 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
+		// Check if an API key was provided (regardless of validity)
+		$hasApiKeyHeader = $this->hasApiKeyHeader($request);
+
 		// Try API key authentication first
 		$apiKeyAuth = $this->tryApiKeyAuth($request);
 		if ($apiKeyAuth instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
@@ -50,27 +55,38 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		// No valid API key, fall back to session authentication
+		// If API key header was provided but validation failed, return JSON error
+		// Don't fall back to session auth - the client is clearly making an API request
+		if ($hasApiKeyHeader) {
+			return $this->unauthorizedJsonResponse('Invalid API key or insufficient permissions');
+		}
+
+		// No API key provided, fall back to session authentication
 		return $this->sessionAuth($request, $handler);
 	}
 
 	/**
-	 * Try to authenticate using API key from Authorization header.
+	 * Try to authenticate using API key from Authorization header or X-API-Key header.
 	 *
 	 * @return \TotalCMS\Domain\ApiKey\Data\ApiKeyData|null Returns the API key data if valid, null otherwise
 	 */
 	private function tryApiKeyAuth(ServerRequestInterface $request): ?\TotalCMS\Domain\ApiKey\Data\ApiKeyData
 	{
-		$authHeader = $request->getHeaderLine('Authorization');
+		$apiKey = '';
 
-		// No Authorization header or doesn't start with Bearer
-		if ($authHeader === '' || $authHeader === '0' || !str_starts_with($authHeader, 'Bearer ')) {
-			return null;
+		// Try Authorization: Bearer first (standard)
+		$authHeader = $request->getHeaderLine('Authorization');
+		if ($authHeader !== '' && str_starts_with($authHeader, 'Bearer ')) {
+			$apiKey = substr($authHeader, 7); // Remove "Bearer " prefix
 		}
 
-		$apiKey = substr($authHeader, 7); // Remove "Bearer " prefix
+		// Fallback to X-API-Key header if no valid Bearer token (convenience)
+		if ($apiKey === '' && $request->hasHeader('X-API-Key')) {
+			$apiKey = $request->getHeaderLine('X-API-Key');
+		}
 
-		if ($apiKey === '' || $apiKey === '0') {
+		// No API key found in either header
+		if ($apiKey === '') {
 			return null;
 		}
 
@@ -166,5 +182,36 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 				$this->session->destroy();
 			}
 		}
+	}
+
+	/**
+	 * Check if the request has an API key header (Authorization: Bearer or X-API-Key).
+	 */
+	private function hasApiKeyHeader(ServerRequestInterface $request): bool
+	{
+		$authHeader = $request->getHeaderLine('Authorization');
+
+		// Check for Authorization: Bearer header
+		if ($authHeader !== '' && str_starts_with($authHeader, 'Bearer ')) {
+			return true;
+		}
+
+		// Check for X-API-Key header
+		if ($request->hasHeader('X-API-Key')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Return a JSON 401 Unauthorized response.
+	 */
+	private function unauthorizedJsonResponse(string $message): ResponseInterface
+	{
+		return $this->jsonRenderer->json(
+			$this->responseFactory->createResponse()->withStatus(401),
+			['error' => ['message' => $message]]
+		);
 	}
 }

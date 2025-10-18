@@ -28,22 +28,22 @@ readonly class ApiKeyAuthMiddleware implements MiddlewareInterface
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// Get the Authorization header
+		// Try Authorization: Bearer first (standard)
 		$authHeader = $request->getHeaderLine('Authorization');
+		$apiKey     = '';
 
-		if ($authHeader === '') {
-			return $this->unauthorizedResponse('API key required. Provide it in the Authorization header as "Bearer {key}"');
+		if ($authHeader !== '' && str_starts_with($authHeader, 'Bearer ')) {
+			$apiKey = substr($authHeader, 7); // Remove "Bearer " prefix
 		}
 
-		// Extract Bearer token
-		if (!str_starts_with($authHeader, 'Bearer ')) {
-			return $this->unauthorizedResponse('Invalid authorization format. Use "Bearer {key}"');
+		// Fallback to X-API-Key header if no valid Bearer token (convenience)
+		if ($apiKey === '' && $request->hasHeader('X-API-Key')) {
+			$apiKey = $request->getHeaderLine('X-API-Key');
 		}
 
-		$apiKey = substr($authHeader, 7); // Remove "Bearer " prefix
-
+		// No API key found in either header
 		if ($apiKey === '') {
-			return $this->unauthorizedResponse('API key cannot be empty');
+			return $this->unauthorizedResponse('API key required. Provide it in the Authorization header as "Bearer {key}" or in the X-API-Key header');
 		}
 
 		// Validate the API key and check permissions
