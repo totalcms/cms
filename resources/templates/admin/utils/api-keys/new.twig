@@ -4,20 +4,20 @@
 <section class="dash-content-section">
 	<p>Create a new API key to allow external services to access your Total CMS data. You can limit access by HTTP methods and specific API endpoints.</p>
 
-	<form id="create-apikey-form" class="totalform help-box help-on-hover">
+	{% set formFields %}
 		{{ cms.form.field("text", "name", {
-			label: "Name",
-			help: "A descriptive name to help you identify this key (e.g., Zapier Integration, Mobile App, etc.)",
-			placeholder: "e.g., ActivePieces Integration",
-			required: true,
+			label       : "Name",
+			help        : "A name to help you identify this key (e.g., Service Integration, Mobile App, etc.)",
+			placeholder : "e.g., ActivePieces Integration",
+			required    : true,
 		}) }}
 
 		{{ cms.form.field("multicheckbox", "methods", {
-			label: "HTTP Methods",
-			help: "Select which HTTP methods this key can use",
-			required: true,
-			value: ["GET"],
-			options: [
+			label    : "HTTP Methods",
+			help     : "Select which HTTP methods this key can use",
+			required : true,
+			value    : ["GET"],
+			options  : [
 				{value: "GET", label: "GET (Read)"},
 				{value: "POST", label: "POST (Create)"},
 				{value: "PUT", label: "PUT (Update)"},
@@ -27,11 +27,11 @@
 		}) }}
 
 		{{ cms.form.field("radio", "endpoint-type", {
-			label: "Allowed Endpoints",
-			help: "Choose which endpoints this key can access",
-			required: true,
-			value: "all",
-			options: [
+			label    : "Allowed Endpoints",
+			help     : "Choose which endpoints this key can access",
+			required : true,
+			value    : "all",
+			options  : [
 				{value: "all", label: "All endpoints (*)"},
 				{value: "specific", label: "Specific endpoints"}
 			]
@@ -55,12 +55,12 @@
 		]) %}
 
 		{{ cms.form.field("multicheckbox", "paths", {
-			label: "Select Endpoints",
-			help: "Check the endpoints this key should have access to",
-			required: false,
-			value: [],
-			options: endpointOptions,
-			settings: {
+			label    : "Select Endpoints",
+			help     : "Check the endpoints this key should have access to",
+			required : true,
+			value    : [],
+			options  : endpointOptions,
+			settings : {
 				fieldGrid: "200px",
 				visibility : {
 					watch : "endpoint-type",
@@ -68,11 +68,14 @@
 				}
 			}
 		}) }}
+	{% endset %}
 
-		<div class="form-inline-fields">
-			<button type="submit" class="dash-button">Create API Key</button>
-		</div>
-	</form>
+	{{ cms.form.totalform("/apikeys", formFields, {
+		class  : "apikeys-form",
+		method : "POST",
+		save   : "Create API Key",
+	}) }}
+
 </section>
 
 {# Show Created Key Modal #}
@@ -152,6 +155,7 @@
 } */
 </style>
 
+<!--
 <script>
 // Create API key form submission
 document.addEventListener('DOMContentLoaded', function() {
@@ -167,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (endpointType === 'all') {
 		paths = ['*'];
 	} else {
-		paths = formData.getAll('paths[]');
+		paths = formData.getAll('paths');
 	}
 
 	if (methods.length === 0) {
@@ -237,3 +241,4 @@ import Dialog from '{{ cms.api }}/assets/dialog.js';
 
 const showKeyDialog = new Dialog(document.getElementById('show-apikey-modal'));
 </script>
+-->

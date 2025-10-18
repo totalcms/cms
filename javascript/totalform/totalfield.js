@@ -171,6 +171,8 @@ export default class TotalField {
 		this.container.style.display = 'none';
 		this.container.classList.remove('field-visible');
 		this.container.classList.add('field-hidden');
+		this.input.setCustomValidity("");
+		this.container.classList.remove("error");
 		this.disableValidation();
 	}
 

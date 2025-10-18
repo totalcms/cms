@@ -109,15 +109,9 @@ class MulticheckboxField extends FormField
 		$checkboxId = "field-{$this->uuid}-{$index}";
 		$isChecked  = $this->isOptionSelected($option['value']);
 
-		// Auto-append [] to field name for PHP array handling
-		$fieldName = $this->name;
-		if (!str_ends_with($fieldName, '[]')) {
-			$fieldName .= '[]';
-		}
-
 		$inputAttributes = [
 			'id'               => $checkboxId,
-			'name'             => $fieldName,
+			'name'             => $this->name,
 			'type'             => 'checkbox',
 			'class'            => 'checkbox',
 			'value'            => $option['value'],

@@ -69,10 +69,31 @@ readonly class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function totalform(string $route, string $content = '', array $options = []): string
+	{
+		$options = array_merge($options, [
+			'route'             => $route,
+			'api'               => $this->api,
+			'objectFetcher'     => $this->objectFetcher,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'indexFilter'       => $this->indexFilter,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+			'csrfManager'       => $this->csrfManager,
+		]);
+
+		$form = new TotalForm(...$options);
+
+		return $form->build($content);
+	}
+
+	/** @param array<string,mixed> $options */
 	public function factory(string $collection, array $options = []): string
 	{
-		$options['api']        = $this->api;
-		$options['collection'] = $collection;
+		$options['api']         = $this->api;
+		$options['collection']  = $collection;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new FactoryForm(...$options);
 
@@ -82,8 +103,9 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importCollection(string $collection, array $options = []): string
 	{
-		$options['api']        = $this->api;
-		$options['collection'] = $collection;
+		$options['api']         = $this->api;
+		$options['collection']  = $collection;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new ImportCollectionForm(...$options);
 
@@ -93,7 +115,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importSchema(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']         = $this->api;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new ImportSchemaForm(...$options);
 
@@ -103,7 +126,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importJumpStart(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']         = $this->api;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new ImportJumpStartForm(...$options);
 
@@ -149,7 +173,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function clearqueue(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']         = $this->api;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new JobQueueForm(...$options);
 
@@ -210,6 +235,7 @@ readonly class TotalFormFactory
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
 			'schemaFactory'     => $this->schemaFactory,
+			'csrfManager'       => $this->csrfManager,
 		]);
 
 		$form = new SchemaForm(...$options);
@@ -234,6 +260,7 @@ readonly class TotalFormFactory
 			'schemaFetcher'      => $this->schemaFetcher,
 			'schemaLister'       => $this->schemaLister,
 			'templateRepository' => $this->templateRepository,
+			'csrfManager'        => $this->csrfManager,
 		]);
 
 		$form = new TemplateForm(...$options);
@@ -302,6 +329,7 @@ readonly class TotalFormFactory
 			'indexFilter'       => $this->indexFilter,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'csrfManager'       => $this->csrfManager,
 		]);
 
 		$form = new CollectionForm(...$options);
@@ -322,6 +350,7 @@ readonly class TotalFormFactory
 			'objectFetcher'     => $this->objectFetcher,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'csrfManager'       => $this->csrfManager,
 		]);
 
 		return new ObjectForm(...$options);

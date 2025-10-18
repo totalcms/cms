@@ -15,6 +15,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -22,11 +23,10 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
-abstract class TotalForm implements \Stringable
+class TotalForm implements \Stringable
 {
 	/** @var array<string,FormField> */
 	protected array $fields                = [];
-	protected string $route                = '';
 	public ?CollectionData $collectionData = null;
 	public ?ObjectData $objectData         = null;
 	public ?SchemaData $schemaData         = null;
@@ -152,25 +152,27 @@ abstract class TotalForm implements \Stringable
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
 		public string $api,
-		public string $collection,
-		public string $id           = '',
-		protected string $method       = 'POST',
-		protected string $class        = '',
-		protected string $buildError   = '',
-		protected string $helpStyle    = '',
-		protected string $save         = '',
-		protected string $delete       = '',
-		protected string $formType     = '',
-		protected string $schema       = '',
-		protected array $newActions    = [],
-		protected array $editActions   = [],
-		protected array $deleteActions = [],
-		protected bool $autosave       = false,
-		protected bool $helpOnHover    = false,
-		protected bool $helpOnFocus    = false,
-		protected bool $hideID         = false,
-		protected bool $useFormGrid    = true,
-		protected bool $addOnly        = false,
+		public    string $collection             = '',
+		public    string $id                     = '',
+		protected string $method                 = 'POST',
+		protected string $class                  = '',
+		protected string $buildError             = '',
+		protected string $helpStyle              = '',
+		protected string $save                   = '',
+		protected string $delete                 = '',
+		protected string $formType               = '',
+		protected string $schema                 = '',
+		protected string $route                  = '',
+		protected array $newActions              = [],
+		protected array $editActions             = [],
+		protected array $deleteActions           = [],
+		protected bool $autosave                 = false,
+		protected bool $helpOnHover              = false,
+		protected bool $helpOnFocus              = false,
+		protected bool $hideID                   = false,
+		protected bool $useFormGrid              = true,
+		protected bool $addOnly                  = false,
+		protected ?CSRFTokenManager $csrfManager = null,
 	) {
 		$this->init();
 		$this->initClass();
@@ -263,7 +265,14 @@ abstract class TotalForm implements \Stringable
 				}
 			}
 		}
-		$content  = $this->buildError() . $content;
+
+		// Add CSRF token if manager is available and method requires protection
+		$csrfField = '';
+		if ($this->csrfManager && in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+			$csrfField = $this->csrfManager->getTokenField();
+		}
+
+		$content  = $this->buildError() . $csrfField . $content;
 		$content .= $this->fieldContent();
 
 		$save     = $this->saveButton();
