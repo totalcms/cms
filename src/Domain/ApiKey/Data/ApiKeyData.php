@@ -60,13 +60,21 @@ readonly class ApiKeyData
 
 	/**
 	 * Check if this key allows access to a specific path.
+	 *
+	 * Matches using flexible pattern matching to handle both:
+	 * - Direct paths: "/collections/text"
+	 * - Paths with base directory: "/rw_common/plugins/stacks/tcms/collections/text"
+	 * - Child paths: "/collections/text/123"
 	 */
 	public function allowsPath(string $path): bool
 	{
+		$path         = strtolower(ltrim($path, '/'));
 		$allowedPaths = $this->scopes['paths'] ?? [];
 
 		foreach ($allowedPaths as $allowedPath) {
-			if ($allowedPath === '*' || str_starts_with(strtolower($path), strtolower((string)$allowedPath))) {
+			$allowedPath = strtolower(ltrim((string)$allowedPath, '/'));
+
+			if ($allowedPath === '*' || $path === $allowedPath || str_starts_with($path, $allowedPath)) {
 				return true;
 			}
 		}
