@@ -9,11 +9,11 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 
 /**
- * Repository for managing API keys stored in .apikeys.json.
+ * Repository for managing API keys stored in .system/apikeys.json.
  */
 class ApiKeyRepository extends StorageRepository
 {
-	private const FILE_PATH = '.apikeys.json';
+	private const FILE_PATH = '.system/apikeys.json';
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,

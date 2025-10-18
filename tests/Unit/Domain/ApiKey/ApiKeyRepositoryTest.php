@@ -17,6 +17,17 @@ final class ApiKeyRepositoryTest extends TestCase
 
 	protected function setUp(): void
 	{
+		// Clean up any existing test data before starting
+		$testFile = sys_get_temp_dir() . '/.system/apikeys.json';
+		if (file_exists($testFile)) {
+			unlink($testFile);
+		}
+
+		$systemDir = sys_get_temp_dir() . '/.system';
+		if (is_dir($systemDir) && count(scandir($systemDir)) === 2) {
+			rmdir($systemDir);
+		}
+
 		$filesystem = new StorageFilesystemAdapter(
 			new Filesystem(
 				new LocalFilesystemAdapter(sys_get_temp_dir())
@@ -28,9 +39,15 @@ final class ApiKeyRepositoryTest extends TestCase
 	protected function tearDown(): void
 	{
 		// Clean up test file
-		$testFile = sys_get_temp_dir() . '/.apikeys.json';
+		$testFile = sys_get_temp_dir() . '/.system/apikeys.json';
 		if (file_exists($testFile)) {
 			unlink($testFile);
+		}
+
+		// Clean up .system directory if empty
+		$systemDir = sys_get_temp_dir() . '/.system';
+		if (is_dir($systemDir) && count(scandir($systemDir)) === 2) {
+			rmdir($systemDir);
 		}
 	}
 
