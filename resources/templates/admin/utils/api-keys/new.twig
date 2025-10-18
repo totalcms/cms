@@ -43,16 +43,10 @@
 		{% endfor %}
 
 		{% set endpointOptions = [
+			{value: "/schemas", label: "Schemas (Read-Only)"},
 			{value: "/collections", label: "All Collections"}
 		] %}
 		{% set endpointOptions = endpointOptions|merge({"Choose Specific Collections": collectionOptions}) %}
-		{% set endpointOptions = endpointOptions|merge([
-			{value: "/auth", label: "Authentication"},
-			{value: "/users", label: "Users"},
-			{value: "/settings", label: "Settings"},
-			{value: "/templates", label: "Templates"},
-			{value: "/schemas", label: "Schemas"}
-		]) %}
 
 		{{ cms.form.field("multicheckbox", "paths", {
 			label    : "Select Endpoints",

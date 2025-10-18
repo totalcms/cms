@@ -3,6 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Import;
+use TotalCMS\Middleware\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/import', function (RouteCollectorProxy $group): void {
@@ -16,5 +17,5 @@ return function (App $app): void {
 		$group->post('/jumpstart', Import\ImportJumpStartAction::class)->setName('import-jumpstart');
 		$group->post('/alloy-analyze', Import\ImportAlloyAnalyzeAction::class)->setName('import-alloy-analyze');
 		$group->post('/alloy', Import\ImportAlloyAction::class)->setName('import-alloy');
-	});
+	})->add(AuthMiddleware::class);
 };

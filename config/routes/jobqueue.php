@@ -3,6 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\JobQueue;
+use TotalCMS\Middleware\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/jobqueue', function (RouteCollectorProxy $group): void {
@@ -11,5 +12,5 @@ return function (App $app): void {
 
 		$group->get('/stats', JobQueue\JobQueueStatsAction::class)->setName('queue-stats');
 		$group->get('/stats/{collection}', JobQueue\JobQueueStatsCollectionAction::class)->setName('queue-stats-collection');
-	});
+	})->add(AuthMiddleware::class);
 };

@@ -3,6 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Playground;
+use TotalCMS\Middleware\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/playground', function (RouteCollectorProxy $group): void {
@@ -11,5 +12,5 @@ return function (App $app): void {
 		$group->get('/{id}', Playground\PlaygroundFetchAction::class)->setName('playground-fetch');
 		$group->put('/{id}', Playground\PlaygroundUpdateAction::class)->setName('playground-update');
 		$group->delete('/{id}', Playground\PlaygroundDeleteAction::class)->setName('playground-delete');
-	});
+	})->add(AuthMiddleware::class);
 };

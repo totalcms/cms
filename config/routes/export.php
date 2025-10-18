@@ -3,6 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Export;
+use TotalCMS\Middleware\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/export', function (RouteCollectorProxy $group): void {
@@ -12,5 +13,5 @@ return function (App $app): void {
 		$group->get('/schemas/{schema}', Export\ExportSchemaAction::class)->setName('export-schema');
 		$group->get('/jumpstart', Export\ExportJumpStartAction::class)->setName('export-jumpstart');
 		$group->get('/jumpstart/demo', Export\ExportJumpStartDemoAction::class)->setName('export-jumpstart-demo');
-	});
+	})->add(AuthMiddleware::class);
 };
