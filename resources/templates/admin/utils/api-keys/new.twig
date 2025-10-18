@@ -79,166 +79,61 @@
 </section>
 
 {# Show Created Key Modal #}
-<dialog id="show-apikey-modal" class="cms-modal">
-	<section class="scroller">
-		<h2>API Key Created Successfully</h2>
-		<button type="button" class="close">×</button>
+<dialog id="show-apikey-modal" class="cms-modal small">
+	<h2>API Key Created Successfully</h2>
 
-		<div class="warning-box">
-			<strong>⚠️ Save this key now!</strong>
-			<p>This is the only time you'll see the full key. Copy it and store it securely.</p>
-		</div>
+	<div class="warning-box">
+		<strong>⚠️ Save this key now!</strong>
+		<p>This is the only time you'll see the full key. Copy it and store it securely.</p>
+	</div>
 
+	<form class="totalform">
 		{{ cms.form.field("text", "generated-key", {
-			label: "API Key",
-			readonly: true,
-			class: "api-key-display",
+			label    : "API Key",
+			class    : "api-key-display",
+			readonly : true,
+			icon     : false,
 		}) }}
+		<button type="button" class="dash-button cms-clip-button" data-clip="input[name='generated-key']">Copy to Clipboard</button>
+	</form>
 
-		<button type="button" class="dash-button" id="copy-key-btn">Copy to Clipboard</button>
-
-		<div class="form-inline-fields" style="margin-top: 2rem;">
-			<a href="/admin/utils/api-keys" class="dash-button">Done</a>
-		</div>
-	</section>
+	<div class="form-inline-fields" style="text-align: right; margin-top: 2rem;">
+		<a href="/admin/utils/api-keys" class="dash-button transparent">Done</a>
+	</div>
 </dialog>
 
 <style>
 .warning-box {
-	background: #fff3cd;
-	border: 1px solid #ffeaa7;
-	border-radius: var(--totalform-radius);
-	padding: 1rem;
-	margin-bottom: 1.5rem;
-	color: #856404;
+	background    : oklch(var(--totalform-warning));
+	border-radius : var(--totalform-radius);
+	padding       : 1rem;
 }
-
-.warning-box p {
-	margin: 0.5rem 0 0 0;
+#show-apikey-modal {
+	gap           : 3rem;
+	align-content : start;
+	height        : fit-content;
 }
-
-.api-key-display input {
-	font-family: monospace;
-	background: oklch(var(--totalform-nearwhite));
-}
-
-/* .cms-modal section.scroller {
-	max-width: 600px;
-	width: 90vw;
-	max-height: 90vh;
-	overflow-y: auto;
-	padding: 2rem;
-}
-
-.cms-modal h2 {
-	margin-top: 0;
-	margin-bottom: 1.5rem;
-}
-
-.cms-modal .close {
-	position: absolute;
-	top: 1rem;
-	right: 1rem;
-	background: none;
-	border: none;
-	font-size: 2rem;
-	line-height: 1;
-	cursor: pointer;
-	padding: 0;
-	width: 30px;
-	height: 30px;
-	color: oklch(var(--totalform-darkgray));
-}
-
-.cms-modal .close:hover {
-	color: oklch(var(--totalform-accent));
-} */
 </style>
 
-<!--
+
 <script>
-// Create API key form submission
 document.addEventListener('DOMContentLoaded', function() {
-	document.getElementById('create-apikey-form').addEventListener('submit', async function(e) {
-	e.preventDefault();
+	const form    = document.querySelector('.apikeys-form');
+	const modalEl = document.getElementById('show-apikey-modal');
 
-	const formData = new FormData(this);
-	const name = formData.get('name');
-	const methods = formData.getAll('methods[]');
-	const endpointType = formData.get('endpoint-type');
-
-	let paths = [];
-	if (endpointType === 'all') {
-		paths = ['*'];
-	} else {
-		paths = formData.getAll('paths');
-	}
-
-	if (methods.length === 0) {
-		alert('Please select at least one HTTP method');
-		return;
-	}
-
-	if (paths.length === 0) {
-		alert('Please select at least one endpoint or choose "All endpoints"');
-		return;
-	}
-
-	try {
-		const response = await fetch('/apikeys', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				name: name,
-				methods: methods,
-				paths: paths
-			})
-		});
-
-		const data = await response.json();
-
-		if (data.success) {
-			// Show the generated key
-			document.querySelector('input[name="generated-key"]').value = data.apiKey.key;
-
-			// Get the dialog and open it
-			const modalEl = document.getElementById('show-apikey-modal');
-			if (modalEl && modalEl.dialog) {
-				modalEl.dialog.open();
-			} else {
-				// Fallback to native showModal if Dialog class not initialized
-				modalEl.showModal();
-			}
-		} else {
-			alert('Error: ' + data.message);
-		}
-	} catch (error) {
-		alert('Error creating API key: ' + error.message);
-	}
-	});
-});
-
-// Copy key to clipboard
-document.addEventListener('DOMContentLoaded', function() {
-	document.getElementById('copy-key-btn').addEventListener('click', function() {
-		const keyInput = document.querySelector('input[name="generated-key"]');
-		keyInput.select();
-		navigator.clipboard.writeText(keyInput.value).then(() => {
-			const originalText = this.textContent;
-			this.textContent = 'Copied!';
+	// Listen for successful API key creation
+	form.addEventListener('success', function(event) {
+		// Get the API response from the event detail
+		const data = event.detail;
+		if (data.success && data.apiKey) {
+			// Populate the generated key field
+			const keyInput = document.querySelector('input[name="generated-key"]');
+			if (keyInput) keyInput.value = data.apiKey.key;
+			// Open the modal (Dialog class is already loaded in admin dashboard)
 			setTimeout(() => {
-				this.textContent = originalText;
-			}, 2000);
-		});
+				modalEl.dialog ? modalEl.dialog.open() : modalEl.showModal();
+			}, 2500);
+		}
 	});
 });
 </script>
-
-<script type="module">
-import Dialog from '{{ cms.api }}/assets/dialog.js';
-
-const showKeyDialog = new Dialog(document.getElementById('show-apikey-modal'));
-</script>
--->

@@ -21,7 +21,7 @@ export default class ClipButton {
     onClick(e) {
         e.preventDefault();
         const button = e.currentTarget;
-        navigator.clipboard.writeText(this.source.textContent).then(() => {
+        navigator.clipboard.writeText(this.source.textContent||this.source.value).then(() => {
             setTimeout(() => {
                 const originalText = button.textContent;
                 button.style.width = `${button.offsetWidth}px`;
