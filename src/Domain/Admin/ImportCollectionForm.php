@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 readonly class ImportCollectionForm implements \Stringable
 {
@@ -13,14 +14,16 @@ readonly class ImportCollectionForm implements \Stringable
 		private string $collection,
 		private string $input = 'csv',
 		private string $label = 'Import into Collection',
+		private ?CSRFTokenManager $csrfManager = null,
 	) {
 		$this->simpleform = new SimpleForm(
-			api     : $this->api,
-			route   : "/import/collections/{$this->collection}/{$this->input}",
-			method  : 'POST',
-			label   : $this->label,
-			class   : 'import-form',
-			refresh : true,
+			api         : $this->api,
+			route       : "/import/collections/{$this->collection}/{$this->input}",
+			method      : 'POST',
+			label       : $this->label,
+			class       : 'import-form',
+			refresh     : true,
+			csrfManager : $this->csrfManager,
 		);
 	}
 
