@@ -234,4 +234,73 @@ final class ApiKeyDataTest extends TestCase
 
 		$this->assertNull($array['lastUsed']);
 	}
+
+	public function testAllowsPathWithChildPaths(): void
+	{
+		$data = [
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/collections/text'],
+			],
+		];
+
+		$apiKey = new ApiKeyData($data);
+
+		// Middleware strips base path, so we only test the route portion
+		$this->assertTrue($apiKey->allowsPath('/collections/text'));
+		$this->assertTrue($apiKey->allowsPath('collections/text')); // Works with or without leading slash
+
+		// Should match child paths
+		$this->assertTrue($apiKey->allowsPath('/collections/text/123'));
+		$this->assertTrue($apiKey->allowsPath('collections/text/456'));
+
+		// Should not match different paths
+		$this->assertFalse($apiKey->allowsPath('/collections/blog'));
+		$this->assertFalse($apiKey->allowsPath('collections/blog/123'));
+	}
+
+	public function testAllowsPathIsCaseInsensitive(): void
+	{
+		$data = [
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/Collections/Text'],
+			],
+		];
+
+		$apiKey = new ApiKeyData($data);
+
+		// Case insensitive matching
+		$this->assertTrue($apiKey->allowsPath('/collections/text'));
+		$this->assertTrue($apiKey->allowsPath('/COLLECTIONS/TEXT'));
+		$this->assertTrue($apiKey->allowsPath('Collections/Text'));
+		$this->assertTrue($apiKey->allowsPath('/collections/text/123')); // Child paths also case insensitive
+	}
+
+	public function testAllowsPathExactMatch(): void
+	{
+		$data = [
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/collections/text'],
+			],
+		];
+
+		$apiKey = new ApiKeyData($data);
+
+		// Exact match
+		$this->assertTrue($apiKey->allowsPath('/collections/text'));
+	}
 }
