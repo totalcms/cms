@@ -14,6 +14,7 @@ readonly class ApiKeyFetcher
 {
 	public function __construct(
 		private ApiKeyRepository $repository,
+		private ApiKeyPermissionChecker $permissionChecker,
 	) {
 	}
 
@@ -34,17 +35,12 @@ readonly class ApiKeyFetcher
 			return null;
 		}
 
-		// Check method permission
-		if (!$apiKey->allowsMethod($method)) {
+		// Check permissions using the permission checker service
+		if (!$this->permissionChecker->allows($apiKey, $method, $path)) {
 			return null;
 		}
 
-		// Check path permission
-		if (!$apiKey->allowsPath($path)) {
-			return null;
-		}
-
-		// Update last used timestamp (async in real implementation)
+		// Update last used timestamp
 		$this->repository->updateLastUsed($keyString);
 
 		return $apiKey;

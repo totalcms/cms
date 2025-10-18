@@ -51,38 +51,6 @@ readonly class ApiKeyData
 	}
 
 	/**
-	 * Check if this key allows a specific HTTP method.
-	 */
-	public function allowsMethod(string $method): bool
-	{
-		return in_array(strtoupper($method), $this->scopes['methods'] ?? [], true);
-	}
-
-	/**
-	 * Check if this key allows access to a specific path.
-	 *
-	 * Matches using flexible pattern matching to handle both:
-	 * - Direct paths: "/collections/text"
-	 * - Paths with base directory: "/rw_common/plugins/stacks/tcms/collections/text"
-	 * - Child paths: "/collections/text/123"
-	 */
-	public function allowsPath(string $path): bool
-	{
-		$path         = strtolower(ltrim($path, '/'));
-		$allowedPaths = $this->scopes['paths'] ?? [];
-
-		foreach ($allowedPaths as $allowedPath) {
-			$allowedPath = strtolower(ltrim((string)$allowedPath, '/'));
-
-			if ($allowedPath === '*' || $path === $allowedPath || str_starts_with($path, $allowedPath)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
 	 * Convert to array for JSON storage.
 	 *
 	 * @return array<string,mixed>

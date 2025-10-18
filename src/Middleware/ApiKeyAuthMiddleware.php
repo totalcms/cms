@@ -9,9 +9,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Renderer\JsonRenderer;
-use TotalCMS\Support\Config;
 
 /**
  * API Key Authentication Middleware.
@@ -21,53 +20,21 @@ use TotalCMS\Support\Config;
 readonly class ApiKeyAuthMiddleware implements MiddlewareInterface
 {
 	public function __construct(
-		private ApiKeyFetcher $apiKeyFetcher,
+		private ApiKeyAuthenticator $authenticator,
 		private JsonRenderer $jsonRenderer,
 		private ResponseFactoryInterface $responseFactory,
-		private Config $config,
 	) {
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// Try Authorization: Bearer first (standard)
-		$authHeader = $request->getHeaderLine('Authorization');
-		$apiKey     = '';
-
-		if ($authHeader !== '' && str_starts_with($authHeader, 'Bearer ')) {
-			$apiKey = substr($authHeader, 7); // Remove "Bearer " prefix
-		}
-
-		// Fallback to X-API-Key header if no valid Bearer token (convenience)
-		if ($apiKey === '' && $request->hasHeader('X-API-Key')) {
-			$apiKey = $request->getHeaderLine('X-API-Key');
-		}
-
-		// No API key found in either header
-		if ($apiKey === '') {
+		// Check if API key header is present
+		if (!$this->authenticator->hasApiKeyHeader($request)) {
 			return $this->unauthorizedResponse('API key required. Provide it in the Authorization header as "Bearer {key}" or in the X-API-Key header');
 		}
 
-		// Validate the API key and check permissions
-		$method = $request->getMethod();
-
-		// Get the route path by stripping the API base path from the full URL
-		// Config->api contains the full URL (e.g., "https://demo.totalcms.test/rw_common/plugins/stacks/tcms")
-		// We parse it to get just the path part, then strip that from the request path
-		$fullPath = $request->getUri()->getPath();
-		$path     = $fullPath;
-
-		// Parse the API URL to get just the path portion
-		$parsedApi = parse_url($this->config->api);
-		if (isset($parsedApi['path']) && $parsedApi['path'] !== '') {
-			$apiPath = rtrim((string)$parsedApi['path'], '/');
-			// Strip the API base path from the request path
-			if (str_starts_with($fullPath, $apiPath)) {
-				$path = substr($fullPath, strlen($apiPath));
-			}
-		}
-
-		$validatedKey = $this->apiKeyFetcher->validateKey($apiKey, $method, $path);
+		// Authenticate using API key
+		$validatedKey = $this->authenticator->authenticate($request);
 
 		if (!$validatedKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
 			return $this->unauthorizedResponse('Invalid API key or insufficient permissions');

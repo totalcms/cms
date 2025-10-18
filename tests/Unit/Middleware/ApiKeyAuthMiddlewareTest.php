@@ -6,55 +6,43 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
-use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Middleware\ApiKeyAuthMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class ApiKeyAuthMiddlewareTest extends TestCase
 {
 	private ApiKeyAuthMiddleware $middleware;
-	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $authenticator;
 	private \PHPUnit\Framework\MockObject\MockObject $jsonRenderer;
 	private \PHPUnit\Framework\MockObject\MockObject $responseFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $handler;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->apiKeyFetcher   = $this->createMock(ApiKeyFetcher::class);
+		$this->authenticator   = $this->createMock(ApiKeyAuthenticator::class);
 		$this->jsonRenderer    = $this->createMock(JsonRenderer::class);
 		$this->responseFactory = $this->createMock(ResponseFactoryInterface::class);
-		$this->config          = $this->createMock(\TotalCMS\Support\Config::class);
 		$this->request         = $this->createMock(ServerRequestInterface::class);
 		$this->handler         = $this->createMock(RequestHandlerInterface::class);
 		$this->response        = $this->createMock(ResponseInterface::class);
 
-		// Mock the config->api property
-		$this->config->api = 'https://demo.totalcms.test/rw_common/plugins/stacks/tcms';
-
 		$this->middleware = new ApiKeyAuthMiddleware(
-			$this->apiKeyFetcher,
+			$this->authenticator,
 			$this->jsonRenderer,
-			$this->responseFactory,
-			$this->config
+			$this->responseFactory
 		);
 	}
 
-	public function testReturns401WhenNoAuthorizationHeader(): void
+	public function testReturns401WhenNoApiKeyHeader(): void
 	{
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('');
-
-		$this->request->expects($this->once())
-			->method('hasHeader')
-			->with('X-API-Key')
+		$this->authenticator->expects($this->once())
+			->method('hasApiKeyHeader')
+			->with($this->request)
 			->willReturn(false);
 
 		$unauthorizedResponse = $this->createMock(ResponseInterface::class);
@@ -83,99 +71,16 @@ final class ApiKeyAuthMiddlewareTest extends TestCase
 		$this->assertSame($jsonResponse, $result);
 	}
 
-	public function testReturns401WhenAuthorizationHeaderDoesNotStartWithBearer(): void
-	{
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Basic sometoken');
-
-		$this->request->expects($this->once())
-			->method('hasHeader')
-			->with('X-API-Key')
-			->willReturn(false);
-
-		$unauthorizedResponse = $this->createMock(ResponseInterface::class);
-		$this->responseFactory->expects($this->once())
-			->method('createResponse')
-			->willReturn($this->response);
-
-		$this->response->expects($this->once())
-			->method('withStatus')
-			->with(401)
-			->willReturn($unauthorizedResponse);
-
-		$jsonResponse = $this->createMock(ResponseInterface::class);
-		$this->jsonRenderer->expects($this->once())
-			->method('json')
-			->with($unauthorizedResponse, [
-				'error' => ['message' => 'API key required. Provide it in the Authorization header as "Bearer {key}" or in the X-API-Key header'],
-			])
-			->willReturn($jsonResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($jsonResponse, $result);
-	}
-
-	public function testReturns401WhenApiKeyIsEmpty(): void
-	{
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer ');
-
-		$this->request->expects($this->once())
-			->method('hasHeader')
-			->with('X-API-Key')
-			->willReturn(false);
-
-		$unauthorizedResponse = $this->createMock(ResponseInterface::class);
-		$this->responseFactory->expects($this->once())
-			->method('createResponse')
-			->willReturn($this->response);
-
-		$this->response->expects($this->once())
-			->method('withStatus')
-			->with(401)
-			->willReturn($unauthorizedResponse);
-
-		$jsonResponse = $this->createMock(ResponseInterface::class);
-		$this->jsonRenderer->expects($this->once())
-			->method('json')
-			->with($unauthorizedResponse, [
-				'error' => ['message' => 'API key required. Provide it in the Authorization header as "Bearer {key}" or in the X-API-Key header'],
-			])
-			->willReturn($jsonResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($jsonResponse, $result);
-	}
-
 	public function testReturns401WhenApiKeyIsInvalid(): void
 	{
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer invalid-key');
+		$this->authenticator->expects($this->once())
+			->method('hasApiKeyHeader')
+			->with($this->request)
+			->willReturn(true);
 
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('GET');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/collections/blog');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with('invalid-key', 'GET', '/collections/blog')
+		$this->authenticator->expects($this->once())
+			->method('authenticate')
+			->with($this->request)
 			->willReturn(null);
 
 		$unauthorizedResponse = $this->createMock(ResponseInterface::class);
@@ -203,11 +108,10 @@ final class ApiKeyAuthMiddlewareTest extends TestCase
 
 	public function testAllowsRequestWithValidApiKey(): void
 	{
-		$apiKey     = 'tcms_validkey123';
 		$apiKeyData = new ApiKeyData([
 			'id'      => 'key-123',
 			'name'    => 'Test Key',
-			'key'     => $apiKey,
+			'key'     => 'tcms_validkey123',
 			'created' => gmdate('Y-m-d\TH:i:s\Z'),
 			'scopes'  => [
 				'methods' => ['GET'],
@@ -215,365 +119,14 @@ final class ApiKeyAuthMiddlewareTest extends TestCase
 			],
 		]);
 
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer ' . $apiKey);
-
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('GET');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/collections/blog');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with($apiKey, 'GET', '/collections/blog')
-			->willReturn($apiKeyData);
-
-		$requestWithAttribute = $this->createMock(ServerRequestInterface::class);
-		$this->request->expects($this->once())
-			->method('withAttribute')
-			->with('apiKey', $apiKeyData)
-			->willReturn($requestWithAttribute);
-
-		$handlerResponse = $this->createMock(ResponseInterface::class);
-		$this->handler->expects($this->once())
-			->method('handle')
-			->with($requestWithAttribute)
-			->willReturn($handlerResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($handlerResponse, $result);
-	}
-
-	public function testHandlesBasePathCorrectly(): void
-	{
-		$apiKey     = 'tcms_validkey123';
-		$apiKeyData = new ApiKeyData([
-			'id'      => 'key-123',
-			'name'    => 'Test Key',
-			'key'     => $apiKey,
-			'created' => gmdate('Y-m-d\TH:i:s\Z'),
-			'scopes'  => [
-				'methods' => ['POST'],
-				'paths'   => ['/collections/blog'],
-			],
-		]);
-
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer ' . $apiKey);
-
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('POST');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/rw_common/plugins/stacks/tcms/collections/blog');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		// Should validate with the path after stripping Config->api basePath
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with($apiKey, 'POST', '/collections/blog')
-			->willReturn($apiKeyData);
-
-		$requestWithAttribute = $this->createMock(ServerRequestInterface::class);
-		$this->request->expects($this->once())
-			->method('withAttribute')
-			->with('apiKey', $apiKeyData)
-			->willReturn($requestWithAttribute);
-
-		$handlerResponse = $this->createMock(ResponseInterface::class);
-		$this->handler->expects($this->once())
-			->method('handle')
-			->with($requestWithAttribute)
-			->willReturn($handlerResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($handlerResponse, $result);
-	}
-
-	public function testStripsBasePathFromChildRoute(): void
-	{
-		$apiKey     = 'tcms_validkey123';
-		$apiKeyData = new ApiKeyData([
-			'id'      => 'key-123',
-			'name'    => 'Test Key',
-			'key'     => $apiKey,
-			'created' => gmdate('Y-m-d\TH:i:s\Z'),
-			'scopes'  => [
-				'methods' => ['GET'],
-				'paths'   => ['/collections/text'],
-			],
-		]);
-
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer ' . $apiKey);
-
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('GET');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/rw_common/plugins/stacks/tcms/collections/text/abc123');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		// Should validate with the path after stripping Config->api basePath
-		// Child paths should also work
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with($apiKey, 'GET', '/collections/text/abc123')
-			->willReturn($apiKeyData);
-
-		$requestWithAttribute = $this->createMock(ServerRequestInterface::class);
-		$this->request->expects($this->once())
-			->method('withAttribute')
-			->with('apiKey', $apiKeyData)
-			->willReturn($requestWithAttribute);
-
-		$handlerResponse = $this->createMock(ResponseInterface::class);
-		$this->handler->expects($this->once())
-			->method('handle')
-			->with($requestWithAttribute)
-			->willReturn($handlerResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($handlerResponse, $result);
-	}
-
-	public function testRejectsWhenPathDoesNotMatch(): void
-	{
-		$apiKey = 'tcms_validkey123';
-
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer ' . $apiKey);
-
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('GET');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/rw_common/plugins/stacks/tcms/collections/blog');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		// Key is valid but path doesn't match - validateKey returns null
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with($apiKey, 'GET', '/collections/blog')
-			->willReturn(null);
-
-		$unauthorizedResponse = $this->createMock(ResponseInterface::class);
-		$this->responseFactory->expects($this->once())
-			->method('createResponse')
-			->willReturn($this->response);
-
-		$this->response->expects($this->once())
-			->method('withStatus')
-			->with(401)
-			->willReturn($unauthorizedResponse);
-
-		$jsonResponse = $this->createMock(ResponseInterface::class);
-		$this->jsonRenderer->expects($this->once())
-			->method('json')
-			->with($unauthorizedResponse, [
-				'error' => ['message' => 'Invalid API key or insufficient permissions'],
-			])
-			->willReturn($jsonResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($jsonResponse, $result);
-	}
-
-	public function testSupportsMultipleMethods(): void
-	{
-		$apiKey     = 'tcms_validkey123';
-		$apiKeyData = new ApiKeyData([
-			'id'      => 'key-123',
-			'name'    => 'Test Key',
-			'key'     => $apiKey,
-			'created' => gmdate('Y-m-d\TH:i:s\Z'),
-			'scopes'  => [
-				'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
-				'paths'   => ['*'],
-			],
-		]);
-
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer ' . $apiKey);
-
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('DELETE');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/collections/blog/123');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with($apiKey, 'DELETE', '/collections/blog/123')
-			->willReturn($apiKeyData);
-
-		$requestWithAttribute = $this->createMock(ServerRequestInterface::class);
-		$this->request->expects($this->once())
-			->method('withAttribute')
-			->willReturn($requestWithAttribute);
-
-		$handlerResponse = $this->createMock(ResponseInterface::class);
-		$this->handler->expects($this->once())
-			->method('handle')
-			->willReturn($handlerResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($handlerResponse, $result);
-	}
-
-	public function testAcceptsApiKeyFromXApiKeyHeader(): void
-	{
-		$apiKey     = 'tcms_4b02de514eb56f8d18316d351e5c60823a4e12cf2205f18a8e8dfd5daec95988';
-		$apiKeyData = new ApiKeyData([
-			'id'      => 'key-123',
-			'name'    => 'Test Key',
-			'key'     => $apiKey,
-			'created' => gmdate('Y-m-d\TH:i:s\Z'),
-			'scopes'  => [
-				'methods' => ['GET'],
-				'paths'   => ['*'],
-			],
-		]);
-
-		// getHeaderLine called twice: once for Authorization, once for X-API-Key
-		$this->request->expects($this->exactly(2))
-			->method('getHeaderLine')
-			->willReturnMap([
-				['Authorization', ''],
-				['X-API-Key', $apiKey],
-			]);
-
-		// Has X-API-Key header
-		$this->request->expects($this->once())
-			->method('hasHeader')
-			->with('X-API-Key')
+		$this->authenticator->expects($this->once())
+			->method('hasApiKeyHeader')
+			->with($this->request)
 			->willReturn(true);
 
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('GET');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/collections');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with($apiKey, 'GET', '/collections')
-			->willReturn($apiKeyData);
-
-		$requestWithAttribute = $this->createMock(ServerRequestInterface::class);
-		$this->request->expects($this->once())
-			->method('withAttribute')
-			->with('apiKey', $apiKeyData)
-			->willReturn($requestWithAttribute);
-
-		$handlerResponse = $this->createMock(ResponseInterface::class);
-		$this->handler->expects($this->once())
-			->method('handle')
-			->with($requestWithAttribute)
-			->willReturn($handlerResponse);
-
-		$result = $this->middleware->process($this->request, $this->handler);
-
-		$this->assertSame($handlerResponse, $result);
-	}
-
-	public function testPrefersAuthorizationBearerOverXApiKey(): void
-	{
-		$bearerKey  = 'tcms_bearer_key';
-		$xApiKey    = 'tcms_x_api_key';
-		$apiKeyData = new ApiKeyData([
-			'id'      => 'key-123',
-			'name'    => 'Test Key',
-			'key'     => $bearerKey,
-			'created' => gmdate('Y-m-d\TH:i:s\Z'),
-			'scopes'  => [
-				'methods' => ['GET'],
-				'paths'   => ['*'],
-			],
-		]);
-
-		// Has Authorization: Bearer header (should take precedence)
-		$this->request->expects($this->once())
-			->method('getHeaderLine')
-			->with('Authorization')
-			->willReturn('Bearer ' . $bearerKey);
-
-		// Should not check X-API-Key when Authorization is present
-		$this->request->expects($this->never())
-			->method('hasHeader');
-
-		$this->request->expects($this->once())
-			->method('getMethod')
-			->willReturn('GET');
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->expects($this->once())
-			->method('getPath')
-			->willReturn('/collections');
-
-		$this->request->expects($this->once())
-			->method('getUri')
-			->willReturn($uri);
-
-		// Should validate with Bearer token, not X-API-Key
-		$this->apiKeyFetcher->expects($this->once())
-			->method('validateKey')
-			->with($bearerKey, 'GET', '/collections')
+		$this->authenticator->expects($this->once())
+			->method('authenticate')
+			->with($this->request)
 			->willReturn($apiKeyData);
 
 		$requestWithAttribute = $this->createMock(ServerRequestInterface::class);

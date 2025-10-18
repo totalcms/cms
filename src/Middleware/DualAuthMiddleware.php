@@ -10,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Renderer\JsonRenderer;
@@ -25,7 +25,7 @@ use TotalCMS\Support\Config;
 readonly class DualAuthMiddleware implements MiddlewareInterface
 {
 	public function __construct(
-		private ApiKeyFetcher $apiKeyFetcher,
+		private ApiKeyAuthenticator $authenticator,
 		private JsonRenderer $jsonRenderer,
 		private ResponseFactoryInterface $responseFactory,
 		private PhpSession $session,
@@ -43,10 +43,10 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		}
 
 		// Check if an API key was provided (regardless of validity)
-		$hasApiKeyHeader = $this->hasApiKeyHeader($request);
+		$hasApiKeyHeader = $this->authenticator->hasApiKeyHeader($request);
 
 		// Try API key authentication first
-		$apiKeyAuth = $this->tryApiKeyAuth($request);
+		$apiKeyAuth = $this->authenticator->authenticate($request);
 		if ($apiKeyAuth instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
 			// API key is valid, add it to request attributes and proceed
 			$request = $request->withAttribute('apiKey', $apiKeyAuth);
@@ -63,53 +63,6 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		// No API key provided, fall back to session authentication
 		return $this->sessionAuth($request, $handler);
-	}
-
-	/**
-	 * Try to authenticate using API key from Authorization header or X-API-Key header.
-	 *
-	 * @return \TotalCMS\Domain\ApiKey\Data\ApiKeyData|null Returns the API key data if valid, null otherwise
-	 */
-	private function tryApiKeyAuth(ServerRequestInterface $request): ?\TotalCMS\Domain\ApiKey\Data\ApiKeyData
-	{
-		$apiKey = '';
-
-		// Try Authorization: Bearer first (standard)
-		$authHeader = $request->getHeaderLine('Authorization');
-		if ($authHeader !== '' && str_starts_with($authHeader, 'Bearer ')) {
-			$apiKey = substr($authHeader, 7); // Remove "Bearer " prefix
-		}
-
-		// Fallback to X-API-Key header if no valid Bearer token (convenience)
-		if ($apiKey === '' && $request->hasHeader('X-API-Key')) {
-			$apiKey = $request->getHeaderLine('X-API-Key');
-		}
-
-		// No API key found in either header
-		if ($apiKey === '') {
-			return null;
-		}
-
-		// Validate the API key with method and path permissions
-		$method = $request->getMethod();
-
-		// Get the route path by stripping the API base path from the full URL
-		// Config->api contains the full URL (e.g., "https://demo.totalcms.test/rw_common/plugins/stacks/tcms")
-		// We parse it to get just the path part, then strip that from the request path
-		$fullPath = $request->getUri()->getPath();
-		$path     = $fullPath;
-
-		// Parse the API URL to get just the path portion
-		$parsedApi = parse_url($this->config->api);
-		if (isset($parsedApi['path']) && $parsedApi['path'] !== '') {
-			$apiPath = rtrim((string)$parsedApi['path'], '/');
-			// Strip the API base path from the request path
-			if (str_starts_with($fullPath, $apiPath)) {
-				$path = substr($fullPath, strlen($apiPath));
-			}
-		}
-
-		return $this->apiKeyFetcher->validateKey($apiKey, $method, $path);
 	}
 
 	/**
@@ -192,26 +145,6 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 				$this->session->destroy();
 			}
 		}
-	}
-
-	/**
-	 * Check if the request has an API key header (Authorization: Bearer or X-API-Key).
-	 */
-	private function hasApiKeyHeader(ServerRequestInterface $request): bool
-	{
-		$authHeader = $request->getHeaderLine('Authorization');
-
-		// Check for Authorization: Bearer header
-		if ($authHeader !== '' && str_starts_with($authHeader, 'Bearer ')) {
-			return true;
-		}
-
-		// Check for X-API-Key header
-		if ($request->hasHeader('X-API-Key')) {
-			return true;
-		}
-
-		return false;
 	}
 
 	/**
