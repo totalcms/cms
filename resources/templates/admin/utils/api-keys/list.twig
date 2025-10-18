@@ -11,52 +11,68 @@
 	</div>
 
 	{% if apiKeys|length > 0 %}
-		<table class="admin-table">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>API Key</th>
-					<th>HTTP Methods</th>
-					<th>Endpoints</th>
-					<th>Created</th>
-					<th>Last Used</th>
-					<th style="width: 100px;">Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for apiKey in apiKeys %}
-				<tr>
-					<td><strong>{{ apiKey.name }}</strong></td>
-					<td><code>{{ apiKey.getMaskedKey() }}</code></td>
-					<td>{{ apiKey.scopes.methods|join(', ') }}</td>
-					<td>
-						{% if '*' in apiKey.scopes.paths %}
-							<em>All endpoints</em>
-						{% else %}
-							{{ apiKey.scopes.paths|slice(0, 2)|join(', ') }}
-							{% if apiKey.scopes.paths|length > 2 %}
-								<span title="{{ apiKey.scopes.paths|join(', ') }}">... (+{{ apiKey.scopes.paths|length - 2 }} more)</span>
+		<div class="api-keys-grid">
+			{% for apiKey in apiKeys %}
+			<article class="api-key-card">
+				<header>
+					<h3>{{ apiKey.name }}</h3>
+					<a class="cms-quick-action delete-btn"
+					   data-method="DELETE"
+					   data-confirm="Are you sure you want to delete this API key?"
+					   href="{{ cms.api }}/apikeys/{{ apiKey.id }}"
+					   data-reload
+					   title="Delete API Key">Delete</a>
+				</header>
+
+				<div class="api-key-details">
+					<div class="detail-row">
+						<strong>API Key:</strong>
+						<code>{{ apiKey.getMaskedKey() }}</code>
+					</div>
+
+					<div class="detail-row">
+						<strong>HTTP Methods:</strong>
+						<span class="methods">
+							{% for method in apiKey.scopes.methods %}
+								<span class="method-badge">{{ method }}</span>
+							{% endfor %}
+						</span>
+					</div>
+
+					<div class="detail-row">
+						<strong>Endpoints:</strong>
+						<span>
+							{% if '*' in apiKey.scopes.paths %}
+								<em>All endpoints (*)</em>
+							{% else %}
+								<div class="endpoint-list">
+									{% for path in apiKey.scopes.paths %}
+										<code>{{ path }}</code>
+									{% endfor %}
+								</div>
 							{% endif %}
-						{% endif %}
-					</td>
-					<td>{{ apiKey.created|date('Y-m-d H:i') }}</td>
-					<td>
-						{% if apiKey.lastUsed %}
-							{{ apiKey.lastUsed|date('Y-m-d H:i') }}
-						{% else %}
-							<em>Never</em>
-						{% endif %}
-					</td>
-					<td>
-						<a class="cms-quick-action delete-action" data-method="DELETE"
-						data-confirm="Are you sure you want to delete this API key?"
-						href="{{ cms.api }}/apikeys/{{ apiKey.id }}" data-reload
-						>Delete API Key</a>
-					</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
+						</span>
+					</div>
+
+					<div class="detail-row">
+						<strong>Created:</strong>
+						<span>{{ apiKey.created|date('Y-m-d H:i') }}</span>
+					</div>
+
+					<div class="detail-row">
+						<strong>Last Used:</strong>
+						<span>
+							{% if apiKey.lastUsed %}
+								{{ apiKey.lastUsed|date('Y-m-d H:i') }}
+							{% else %}
+								<em>Never</em>
+							{% endif %}
+						</span>
+					</div>
+				</div>
+			</article>
+			{% endfor %}
+		</div>
 	{% else %}
 		<div class="empty-state">
 			<p><em>No API keys created yet. Click "Create API Key" to get started.</em></p>
@@ -72,25 +88,107 @@
 	border-radius : var(--totalform-radius);
 	color         : oklch(var(--totalform-darkgray));
 }
-.delete-action {
-    display         : flex;
-    align-items     : center;
-    text-decoration : none;
-    color           : oklch(var(--totalform-text-color));
-    padding         : .75rem 1rem;
-    transition      : background-color .2s ease-in-out;
-    min-width       : 200px;
+
+.api-keys-grid {
+	display   : grid;
+	gap       : 1.5rem;
+	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 }
-.delete-action:before {
-    content          : " ";
-    display          : inline-block;
-    width            : 1rem;
-    height           : 1rem;
-    background-color : currentColor;
-    mask-image       : var(--icon-trash);
-    margin-right     : .5rem;
-    mask-size        : .8rem;
-    mask-repeat      : no-repeat;
-    mask-position    : center;
+
+.api-key-card {
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1.5rem;
+	display       : flex;
+	flex-direction: column;
+	gap           : 1rem;
+}
+
+.api-key-card header {
+	display         : flex;
+	justify-content : space-between;
+	align-items     : center;
+	padding-bottom  : 1rem;
+	border-bottom   : 1px solid oklch(var(--totalform-border-color));
+}
+
+.api-key-card h3 {
+	margin     : 0;
+	font-size  : 1.2rem;
+	font-weight: 600;
+}
+
+.api-key-details {
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.75rem;
+}
+
+.detail-row {
+	display               : grid;
+	grid-template-columns : 120px 1fr;
+	gap                   : 1rem;
+	align-items           : start;
+}
+
+.detail-row strong {
+	color       : oklch(var(--totalform-darkgray));
+	font-size   : 0.9rem;
+	font-weight : 500;
+}
+
+.detail-row code {
+	font-size : 0.9rem;
+}
+
+.endpoint-list {
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.5rem;
+}
+
+.methods {
+	display : flex;
+	gap     : 0.5rem;
+	flex-wrap: wrap;
+}
+
+.method-badge {
+	background    : oklch(var(--totalform-accent) / 0.1);
+	color         : oklch(var(--totalform-accent));
+	padding       : 0.25rem 0.75rem;
+	border-radius : 4px;
+	font-size     : 0.85rem;
+	font-weight   : 500;
+}
+
+.delete-btn {
+	display         : flex;
+	align-items     : center;
+	gap             : 0.5rem;
+	text-decoration : none;
+	color           : oklch(var(--totalform-error));
+	padding         : 0.5rem 1rem;
+	border-radius   : var(--totalform-radius);
+	font-size       : 0.9rem;
+	font-weight     : 500;
+	transition      : background-color 0.2s;
+}
+
+.delete-btn:hover {
+	background : oklch(var(--totalform-error) / 0.1);
+}
+
+.delete-btn:before {
+	content          : "";
+	display          : inline-block;
+	width            : 1rem;
+	height           : 1rem;
+	background-color : currentColor;
+	mask-image       : var(--icon-trash);
+	mask-size        : contain;
+	mask-repeat      : no-repeat;
+	mask-position    : center;
 }
 </style>
