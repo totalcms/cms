@@ -75,7 +75,7 @@
 {% else %}
 	<section class="dash-content-section">
 
-		{{ cms.form.mailer(url.id, {
+		{{ cms.form.mailer(url.id == 'new' ? '' : url.id, {
 			deleteActions : [{
 				"action" : "redirect",
 				"link"   : "mailer"
