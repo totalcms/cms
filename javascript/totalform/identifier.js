@@ -187,6 +187,8 @@ export default class Identifier extends TotalField {
     }
 
 	validate() {
+		if (!this.isVisible()) return true;
+
 		// For deck items with empty IDs, this might be acceptable if they're new
 		if (this.isInDeck && this.getValue() !== "") {
 			this.valid = true;

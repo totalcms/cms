@@ -21,6 +21,11 @@ class MulticheckboxField extends FormField
 			'style'     => "grid-area: {$this->name};",
 		];
 
+		// Store required state on container for JavaScript validation
+		if ($this->required) {
+			$formFieldAttributes['data-required'] = 'true';
+		}
+
 		if ($this->settings !== []) {
 			$json = json_encode($this->settings);
 			if ($json) {
@@ -30,6 +35,9 @@ class MulticheckboxField extends FormField
 				$formFieldAttributes['style'] .= '--fieldset-grid-size:' . $this->settings['fieldGrid'] . ';';
 			}
 		}
+
+		// Handle visibility settings
+		$this->applyVisibility($formFieldAttributes);
 
 		$fieldset = HTMLUtils::element('fieldset', $label . $checkboxes);
 
@@ -113,7 +121,6 @@ class MulticheckboxField extends FormField
 			'type'             => 'checkbox',
 			'class'            => 'checkbox',
 			'value'            => $option['value'],
-			'required'         => $this->required ? '' : null,
 			'disabled'         => $this->disabled ? '' : null,
 			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
 			'checked'          => $isChecked ? '' : null,

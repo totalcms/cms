@@ -147,6 +147,7 @@ export default class TotalField {
     }
 
 	validate() {
+		if (!this.isVisible()) return true;
 		if (this.input.checkValidity()) return true;
 		this.input.reportValidity();
 		this.error(this.input.validationMessage);
@@ -162,6 +163,57 @@ export default class TotalField {
 		this.dispatcher.dispatchEvent("field-error", { field: this, message: message });
 		console.warn(`Field Error: ${this.property} - ${message}`);
     }
+
+	//-------------------------
+	// Visibility Methods
+	//-------------------------
+	hide() {
+		this.container.style.display = 'none';
+		this.container.classList.remove('field-visible');
+		this.container.classList.add('field-hidden');
+		this.disableValidation();
+	}
+
+	show() {
+		this.container.style.display = '';
+		this.container.classList.remove('field-hidden');
+		this.container.classList.add('field-visible');
+		this.enableValidation();
+	}
+
+	isVisible() {
+		return !this.container.classList.contains('field-hidden');
+	}
+
+	isHidden() {
+		return this.container.classList.contains('field-hidden');
+	}
+
+	enableValidation() {
+		const inputs = this.container.querySelectorAll('input, select, textarea');
+		inputs.forEach(input => {
+			// Restore original required state
+			if (input.dataset.originalRequired !== undefined) {
+				if (input.dataset.originalRequired === 'true') {
+					input.required = true;
+				}
+				delete input.dataset.originalRequired;
+			}
+		});
+	}
+
+	disableValidation() {
+		const inputs = this.container.querySelectorAll('input, select, textarea');
+		inputs.forEach(input => {
+			// Save original required state
+			if (input.required) {
+				input.dataset.originalRequired = 'true';
+				input.required = false;
+			} else {
+				input.dataset.originalRequired = 'false';
+			}
+		});
+	}
 
     schema() {
         return {

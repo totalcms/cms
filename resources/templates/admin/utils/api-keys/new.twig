@@ -37,35 +37,37 @@
 			]
 		}) }}
 
-		<div id="specific-endpoints" style="display: none;">
-			{% set collectionOptions = [] %}
-			{% for collection in cms.collections() %}
-				{% set collectionOptions = collectionOptions|merge([{value: "/collections/" ~ collection.id, label: collection.name}]) %}
-			{% endfor %}
+		{% set collectionOptions = [] %}
+		{% for collection in cms.collections() %}
+			{% set collectionOptions = collectionOptions|merge([{value: "/collections/" ~ collection.id, label: collection.name}]) %}
+		{% endfor %}
 
-			{% set endpointOptions = [
-				{value: "/collections", label: "All Collections"}
-			] %}
-			{% set endpointOptions = endpointOptions|merge({"Choose Specific Collections": collectionOptions}) %}
-			{% set endpointOptions = endpointOptions|merge([
-				{value: "/auth", label: "Authentication"},
-				{value: "/users", label: "Users"},
-				{value: "/settings", label: "Settings"},
-				{value: "/templates", label: "Templates"},
-				{value: "/schemas", label: "Schemas"}
-			]) %}
+		{% set endpointOptions = [
+			{value: "/collections", label: "All Collections"}
+		] %}
+		{% set endpointOptions = endpointOptions|merge({"Choose Specific Collections": collectionOptions}) %}
+		{% set endpointOptions = endpointOptions|merge([
+			{value: "/auth", label: "Authentication"},
+			{value: "/users", label: "Users"},
+			{value: "/settings", label: "Settings"},
+			{value: "/templates", label: "Templates"},
+			{value: "/schemas", label: "Schemas"}
+		]) %}
 
-			{{ cms.form.field("multicheckbox", "paths", {
-				label: "Select Endpoints",
-				help: "Check the endpoints this key should have access to",
-				required: false,
-				value: [],
-				options: endpointOptions,
-				settings: {
-					fieldGrid: "200px",
+		{{ cms.form.field("multicheckbox", "paths", {
+			label: "Select Endpoints",
+			help: "Check the endpoints this key should have access to",
+			required: false,
+			value: [],
+			options: endpointOptions,
+			settings: {
+				fieldGrid: "200px",
+				visibility : {
+					watch : "endpoint-type",
+					value : "specific"
 				}
-			}) }}
-		</div>
+			}
+		}) }}
 
 		<div class="form-inline-fields">
 			<button type="submit" class="dash-button">Create API Key</button>
@@ -151,24 +153,6 @@
 </style>
 
 <script>
-// Toggle specific endpoints visibility
-document.addEventListener('DOMContentLoaded', function() {
-	document.querySelectorAll('input[name="endpoint-type"]').forEach(radio => {
-		radio.addEventListener('change', function() {
-			const specificEndpoints = document.getElementById('specific-endpoints');
-			if (this.value === 'specific') {
-				specificEndpoints.style.display = 'block';
-			} else {
-				specificEndpoints.style.display = 'none';
-				// Uncheck all specific endpoints
-				document.querySelectorAll('#specific-endpoints input[type="checkbox"]').forEach(cb => {
-					cb.checked = false;
-				});
-			}
-		});
-	});
-});
-
 // Create API key form submission
 document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('create-apikey-form').addEventListener('submit', async function(e) {

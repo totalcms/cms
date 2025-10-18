@@ -84,6 +84,7 @@ export default class ListField extends MultiSelectField {
 
 	validate() {
 		this.input.setCustomValidity("");
+		if (!this.isVisible()) return true;
 		// For list fields, we need to check if there are items when the field is required
 		if (this.input.required) {
 			const items = this.getValue();

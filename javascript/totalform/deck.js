@@ -243,6 +243,8 @@ export default class DeckField extends TotalField {
     validate() {
 		this.input.setCustomValidity(""); // Clear previous custom validity message
 
+		if (!this.isVisible()) return true;
+
 		let isValid = true;
 
         // Check if deck is required and empty

@@ -331,6 +331,26 @@ abstract class TotalForm implements \Stringable
 		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $objects);
 	}
 
+	/**
+	 * Get a field value from the form's object data or field defaults.
+	 * Used for visibility condition evaluation.
+	 */
+	public function getFieldValue(string $fieldName): mixed
+	{
+		// First check if we have object data (edit mode)
+		if ($this->objectData instanceof ObjectData) {
+			return $this->objectData->$fieldName ?? null;
+		}
+
+		// For new forms, check if the field has been built with a default value
+		if (isset($this->fields[$fieldName])) {
+			return $this->fields[$fieldName]->getValue();
+		}
+
+		// Field not found or not built yet
+		return null;
+	}
+
 	private function saveButton(): string
 	{
 		if ($this->save === '') {

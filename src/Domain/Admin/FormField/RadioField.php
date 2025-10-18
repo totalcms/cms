@@ -31,6 +31,9 @@ class RadioField extends FormField
 			}
 		}
 
+		// Handle visibility settings
+		$this->applyVisibility($formFieldAttributes);
+
 		$fieldset = HTMLUtils::element('fieldset', $label . $radios);
 
 		return HTMLUtils::element('div', $fieldset . $help, $formFieldAttributes);

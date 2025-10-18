@@ -6,6 +6,7 @@ import TotalField from './totalfield';
 export default class PasswordField extends TotalField {
 
     validate() {
+		if (!this.isVisible()) return true;
         const confirm = document.getElementById(this.input.id+"-confirm");
 
         if (this.input.value !== confirm.value) {

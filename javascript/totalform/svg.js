@@ -36,6 +36,7 @@ export default class SVGField extends TotalField {
     }
 
     validate() {
+		if (!this.isVisible()) return true;
         // Sync the value from CodeMirror/Froala to the textarea before validation
         if (this.froala && this.froala.html) {
             // If in code view, toggle out and back in to sync content
