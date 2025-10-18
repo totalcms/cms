@@ -170,6 +170,30 @@ return [
 	// The data dir iterator factory
 	StorageFilesystemAdapter::class => function (ContainerInterface $container): StorageFilesystemAdapter {
 		$rootPath   = $container->get(Config::class)->datadir;
+
+		// Ensure data directory exists with security protection
+		if (!is_dir($rootPath)) {
+			@mkdir($rootPath, 0755, true);
+
+			// Create .htaccess file to deny direct web access (Apache)
+			$htaccessPath = $rootPath . '/.htaccess';
+			if (!file_exists($htaccessPath)) {
+				$htaccessContent = <<<'HTACCESS'
+# Deny direct access to all files and folders in tcms-data
+# This protects sensitive data including API keys, collections, and user data
+
+<IfModule mod_authz_core.c>
+	Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+	Order deny,allow
+	Deny from all
+</IfModule>
+HTACCESS;
+				@file_put_contents($htaccessPath, $htaccessContent);
+			}
+		}
+
 		$filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
 
 		return new StorageFilesystemAdapter($filesystem);
