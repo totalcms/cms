@@ -521,3 +521,90 @@ Price fields display with a dollar sign icon by default. You can change the curr
 	"class": "icon-yen"
 }
 ```
+
+## Field Visibility
+
+The `visibility` setting controls when and where a field is displayed in the admin interface. This setting is available on **all field types** and allows you to show or hide fields based on context.
+
+### Available Visibility Options
+
+```json
+{
+	"visibility": "form"
+}
+```
+
+**Supported Values:**
+
+- **`"form"`** (default) - Field appears in forms (create/edit object pages) and in list views
+- **`"form-only"`** - Field appears only in forms, hidden from list views
+- **`"list-only"`** - Field appears only in list views, hidden from forms
+- **`"hidden"`** - Field is completely hidden from both forms and lists (useful for system fields)
+
+### Common Use Cases
+
+**Hide technical fields from list view:**
+```json
+{
+	"id": {
+		"type": "string",
+		"label": "ID",
+		"settings": {
+			"visibility": "form-only"
+		}
+	}
+}
+```
+This keeps the ID field editable in forms but removes clutter from list views.
+
+**Show computed fields only in lists:**
+```json
+{
+	"objectCount": {
+		"type": "number",
+		"label": "Object Count",
+		"settings": {
+			"visibility": "list-only"
+		}
+	}
+}
+```
+Display-only fields that don't need editing can be shown in lists but hidden from forms.
+
+**Completely hide system fields:**
+```json
+{
+	"internalStatus": {
+		"type": "string",
+		"label": "Internal Status",
+		"settings": {
+			"visibility": "hidden"
+		}
+	}
+}
+```
+System-managed fields can be hidden from users while remaining accessible to the API.
+
+### Default Behavior
+
+If no `visibility` setting is specified, fields use the default `"form"` visibility, appearing in both forms and list views. This is the most common behavior for editable content fields.
+
+### Combining with Other Settings
+
+Visibility works alongside other field settings:
+
+```json
+{
+	"slug": {
+		"type": "string",
+		"label": "URL Slug",
+		"settings": {
+			"autogen": "${title}",
+			"readonly": true,
+			"visibility": "form-only"
+		}
+	}
+}
+```
+
+This creates an auto-generated, read-only slug field that appears in forms but not in list views.
