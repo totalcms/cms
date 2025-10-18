@@ -171,7 +171,7 @@ final class PasswordResetServiceTest extends TestCase
 
 		$this->cacheManager->expects($this->once())
 			->method('clearPasswordResetData')
-			->with("token:old-token-123");
+			->with('token:old-token-123');
 
 		$this->cacheManager->expects($this->exactly(2))
 			->method('storePasswordResetData')
@@ -358,9 +358,7 @@ final class PasswordResetServiceTest extends TestCase
 			->with(
 				'users',
 				'user-123',
-				$this->callback(function ($data) {
-					return isset($data['password']) && password_verify('newSecurePassword123!', $data['password']);
-				})
+				$this->callback(fn ($data): bool => isset($data['password']) && password_verify('newSecurePassword123!', $data['password']))
 			);
 
 		// Mock token invalidation

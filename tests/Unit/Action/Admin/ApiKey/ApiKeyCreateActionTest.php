@@ -123,11 +123,9 @@ final class ApiKeyCreateActionTest extends TestCase
 		$jsonResponse = $this->createMock(ResponseInterface::class);
 		$this->jsonRenderer->expects($this->once())
 			->method('json')
-			->with($createdResponse, $this->callback(function ($data) {
-				return $data['success'] === true
+			->with($createdResponse, $this->callback(fn ($data): bool => $data['success'] === true
 					&& $data['message'] === 'API key created successfully'
-					&& isset($data['apiKey']);
-			}))
+					&& isset($data['apiKey'])))
 			->willReturn($jsonResponse);
 
 		$actualResponse = ($this->action)($this->request, $this->response);

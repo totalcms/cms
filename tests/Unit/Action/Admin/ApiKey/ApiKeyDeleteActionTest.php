@@ -151,9 +151,7 @@ final class ApiKeyDeleteActionTest extends TestCase
 		$jsonResponse = $this->createMock(ResponseInterface::class);
 		$this->jsonRenderer->expects($this->once())
 			->method('json')
-			->with($this->response, $this->callback(function ($data) {
-				return $data['success'] === true && $data['message'] === 'API key deleted successfully';
-			}))
+			->with($this->response, $this->callback(fn ($data): bool => $data['success'] === true && $data['message'] === 'API key deleted successfully'))
 			->willReturn($jsonResponse);
 
 		$actualResponse = ($this->action)($this->request, $this->response, $args);

@@ -35,11 +35,7 @@ readonly class ApiKeyAuthenticator
 		}
 
 		// Check for X-API-Key header
-		if ($request->hasHeader('X-API-Key')) {
-			return true;
-		}
-
-		return false;
+		return $request->hasHeader('X-API-Key');
 	}
 
 	/**
@@ -99,7 +95,7 @@ readonly class ApiKeyAuthenticator
 		// Parse the API URL to get just the path portion
 		$parsedApi = parse_url($this->config->api);
 		if (isset($parsedApi['path']) && $parsedApi['path'] !== '') {
-			$apiPath = rtrim((string)$parsedApi['path'], '/');
+			$apiPath = rtrim($parsedApi['path'], '/');
 			// Strip the API base path from the request path
 			if (str_starts_with($fullPath, $apiPath)) {
 				$path = substr($fullPath, strlen($apiPath));
