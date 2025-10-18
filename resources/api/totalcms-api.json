@@ -45,20 +45,8 @@
       "description": "Schema definition and management"
     },
     {
-      "name": "import",
-      "description": "Data import operations"
-    },
-    {
-      "name": "export",
-      "description": "Data export operations"
-    },
-    {
       "name": "imageworks",
       "description": "Image processing and manipulation"
-    },
-    {
-      "name": "auth",
-      "description": "Authentication and authorization"
     },
     {
       "name": "download",
@@ -71,14 +59,6 @@
     {
       "name": "upload",
       "description": "File upload operations"
-    },
-    {
-      "name": "templates",
-      "description": "Template management"
-    },
-    {
-      "name": "jobqueue",
-      "description": "Background job queue management"
     },
     {
       "name": "feeds",
@@ -198,7 +178,14 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["string", "number", "integer", "boolean", "array", "object"]
+            "enum": [
+              "string",
+              "number",
+              "integer",
+              "boolean",
+              "array",
+              "object"
+            ]
           },
           "format": {
             "type": "string"
@@ -212,57 +199,6 @@
           },
           "items": {
             "$ref": "#/components/schemas/SchemaProperty"
-          }
-        }
-      },
-      "ImportResult": {
-        "type": "object",
-        "properties": {
-          "imported": {
-            "type": "integer",
-            "example": 25
-          },
-          "updated": {
-            "type": "integer",
-            "example": 5
-          },
-          "skipped": {
-            "type": "integer",
-            "example": 2
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "row": {
-                  "type": "integer"
-                },
-                "error": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "JobQueueStats": {
-        "type": "object",
-        "properties": {
-          "total": {
-            "type": "integer"
-          },
-          "pending": {
-            "type": "integer"
-          },
-          "processing": {
-            "type": "integer"
-          },
-          "completed": {
-            "type": "integer"
-          },
-          "failed": {
-            "type": "integer"
           }
         }
       },
@@ -338,164 +274,21 @@
     }
   },
   "security": [
-    {"BearerAuth": []},
-    {"SessionAuth": []}
+    {
+      "BearerAuth": []
+    },
+    {
+      "SessionAuth": []
+    }
   ],
   "paths": {
-    "/login": {
-      "get": {
-        "summary": "Login Form",
-        "description": "Display login form for default authentication",
-        "tags": ["auth"],
-        "responses": {
-          "200": {
-            "description": "Login form HTML",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "User Login",
-        "description": "Authenticate user with credentials",
-        "tags": ["auth"],
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "302": {
-            "description": "Redirect on success/failure"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      }
-    },
-    "/login/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Collection Login Form",
-        "description": "Display login form for specific collection authentication",
-        "tags": ["auth"],
-        "responses": {
-          "200": {
-            "description": "Login form HTML",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Collection User Login",
-        "description": "Authenticate user for specific collection access",
-        "tags": ["auth"],
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "302": {
-            "description": "Redirect on success/failure"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      }
-    },
-    "/logout": {
-      "get": {
-        "summary": "User Logout",
-        "description": "Log out current user session",
-        "tags": ["auth"],
-        "responses": {
-          "302": {
-            "description": "Redirect to login or home page"
-          }
-        }
-      },
-      "post": {
-        "summary": "User Logout",
-        "description": "Log out current user session",
-        "tags": ["auth"],
-        "responses": {
-          "302": {
-            "description": "Redirect to login or home page"
-          }
-        }
-      }
-    },
-    "/denied": {
-      "get": {
-        "summary": "Access Denied Page",
-        "description": "Display access denied page",
-        "tags": ["auth"],
-        "responses": {
-          "403": {
-            "description": "Access denied HTML page",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/collections": {
       "get": {
         "summary": "List Collections",
         "description": "Get a list of all collections in the CMS",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "responses": {
           "200": {
             "description": "List of collections",
@@ -520,7 +313,9 @@
       "post": {
         "summary": "Create Collection",
         "description": "Create a new collection",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -545,7 +340,10 @@
                     "example": "custom"
                   }
                 },
-                "required": ["id", "title"]
+                "required": [
+                  "id",
+                  "title"
+                ]
               }
             }
           }
@@ -582,7 +380,10 @@
       "get": {
         "summary": "Get Collection Objects",
         "description": "Get all objects from a collection with optional filtering and pagination",
-        "tags": ["collections", "objects"],
+        "tags": [
+          "collections",
+          "objects"
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -617,7 +418,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["asc", "desc"],
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "default": "desc"
             },
             "description": "Sort order"
@@ -673,7 +477,9 @@
       "post": {
         "summary": "Create Object",
         "description": "Create a new object in the collection",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -703,7 +509,9 @@
       "put": {
         "summary": "Update Collection",
         "description": "Update collection metadata",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -738,7 +546,9 @@
       "delete": {
         "summary": "Delete Collection",
         "description": "Delete a collection and all its objects",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "responses": {
           "204": {
             "description": "Collection deleted"
@@ -751,7 +561,9 @@
       "head": {
         "summary": "Check Collection Exists",
         "description": "Check if a collection exists",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "responses": {
           "200": {
             "description": "Collection exists"
@@ -776,7 +588,9 @@
       "get": {
         "summary": "Get Collection Index",
         "description": "Get the collection index with object summaries and optional filtering",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "parameters": [
           {
             "name": "include",
@@ -833,7 +647,9 @@
       "put": {
         "summary": "Rebuild Collection Index",
         "description": "Rebuild the collection index from all objects",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "responses": {
           "200": {
             "description": "Index rebuilt",
@@ -870,7 +686,10 @@
       "get": {
         "summary": "Get Collection Schema",
         "description": "Get the schema definition for a collection",
-        "tags": ["collections", "schemas"],
+        "tags": [
+          "collections",
+          "schemas"
+        ],
         "responses": {
           "200": {
             "description": "Collection schema",
@@ -910,7 +729,9 @@
       "get": {
         "summary": "Get Object",
         "description": "Get a specific object by ID",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "responses": {
           "200": {
             "description": "Object data",
@@ -930,7 +751,9 @@
       "put": {
         "summary": "Update Object",
         "description": "Update an object completely",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -960,7 +783,9 @@
       "patch": {
         "summary": "Patch Object",
         "description": "Partially update an object",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -988,7 +813,9 @@
       "delete": {
         "summary": "Delete Object",
         "description": "Delete an object from the collection",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "responses": {
           "204": {
             "description": "Object deleted"
@@ -1001,7 +828,9 @@
       "head": {
         "summary": "Check Object Exists",
         "description": "Check if an object exists",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "responses": {
           "200": {
             "description": "Object exists"
@@ -1034,7 +863,9 @@
       "post": {
         "summary": "Clone Object",
         "description": "Create a copy of an existing object",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1097,7 +928,10 @@
       "post": {
         "summary": "Upload File to Property",
         "description": "Upload a file to a gallery or depot property",
-        "tags": ["properties", "upload"],
+        "tags": [
+          "properties",
+          "upload"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1123,7 +957,9 @@
       "put": {
         "summary": "Update Property",
         "description": "Update a specific property of an object",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1144,7 +980,9 @@
       "patch": {
         "summary": "Patch Property",
         "description": "Partially update a property",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1165,7 +1003,9 @@
       "delete": {
         "summary": "Delete Property",
         "description": "Delete a property from an object",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "responses": {
           "204": {
             "description": "Property deleted"
@@ -1203,7 +1043,9 @@
       "post": {
         "summary": "Create Folder in Depot",
         "description": "Create a subfolder within a depot (multi-file) property",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1260,7 +1102,9 @@
       "delete": {
         "summary": "Clear Property Cache",
         "description": "Clear cached files for a property (e.g., processed images)",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "responses": {
           "204": {
             "description": "Property cache cleared"
@@ -1298,7 +1142,9 @@
       "post": {
         "summary": "Create Deck Item",
         "description": "Create a new card/item in a deck property",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1367,7 +1213,9 @@
       "get": {
         "summary": "Get Deck Item",
         "description": "Get a specific deck item by ID",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "responses": {
           "200": {
             "description": "Deck item data",
@@ -1387,7 +1235,9 @@
       "put": {
         "summary": "Update Deck Item",
         "description": "Update a deck item completely",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1410,7 +1260,9 @@
       "delete": {
         "summary": "Delete Deck Item",
         "description": "Delete a deck item from the deck property",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "responses": {
           "204": {
             "description": "Deck item deleted"
@@ -1459,7 +1311,9 @@
       "put": {
         "summary": "Update Property Meta",
         "description": "Update metadata for a specific item in a property (e.g., image alt text, file metadata)",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1480,7 +1334,9 @@
       "patch": {
         "summary": "Patch Property Meta",
         "description": "Partially update metadata for a property item",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1500,7 +1356,9 @@
       "delete": {
         "summary": "Delete File from Depot",
         "description": "Delete a specific file from a depot (multi-file) property",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "responses": {
           "204": {
             "description": "File deleted"
@@ -1549,7 +1407,9 @@
       "delete": {
         "summary": "Clear File Cache",
         "description": "Clear cached versions of a specific file (e.g., processed images)",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "responses": {
           "204": {
             "description": "File cache cleared"
@@ -1595,7 +1455,9 @@
       "put": {
         "summary": "Move File in Depot",
         "description": "Move or rename a file within a depot property",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1629,14 +1491,19 @@
       "get": {
         "summary": "List Schemas",
         "description": "Get a list of all available schemas",
-        "tags": ["schemas"],
+        "tags": [
+          "schemas"
+        ],
         "parameters": [
           {
             "name": "filter",
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["reserved", "custom"]
+              "enum": [
+                "reserved",
+                "custom"
+              ]
             },
             "description": "Filter schemas by type"
           }
@@ -1661,36 +1528,6 @@
             }
           }
         }
-      },
-      "post": {
-        "summary": "Create Schema",
-        "description": "Create a new custom schema",
-        "tags": ["schemas"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Schema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Schema created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Schema"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
       }
     },
     "/schemas/{id}": {
@@ -1707,7 +1544,9 @@
       "get": {
         "summary": "Get Schema",
         "description": "Get a specific schema definition",
-        "tags": ["schemas"],
+        "tags": [
+          "schemas"
+        ],
         "responses": {
           "200": {
             "description": "Schema definition",
@@ -1724,836 +1563,18 @@
           }
         }
       },
-      "put": {
-        "summary": "Update Schema",
-        "description": "Update a custom schema",
-        "tags": ["schemas"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Schema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Schema updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Schema"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Schema",
-        "description": "Delete a custom schema (built-in schemas cannot be deleted)",
-        "tags": ["schemas"],
-        "responses": {
-          "204": {
-            "description": "Schema deleted"
-          },
-          "400": {
-            "description": "Cannot delete built-in schema"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
       "head": {
         "summary": "Check Schema Exists",
         "description": "Check if a schema exists",
-        "tags": ["schemas"],
+        "tags": [
+          "schemas"
+        ],
         "responses": {
           "200": {
             "description": "Schema exists"
           },
           "404": {
             "description": "Schema not found"
-          }
-        }
-      }
-    },
-    "/import/collections/{collection}/json": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Import JSON Data",
-        "description": "Import JSON data as objects into a collection",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "array",
-                    "items": {
-                      "type": "object"
-                    }
-                  },
-                  "options": {
-                    "type": "object",
-                    "properties": {
-                      "update_existing": {
-                        "type": "boolean",
-                        "default": false
-                      },
-                      "skip_validation": {
-                        "type": "boolean",
-                        "default": false
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Import completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/import/collections/{collection}/csv": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Import CSV Data",
-        "description": "Import CSV data as objects into a collection",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "text/csv": {
-              "schema": {
-                "type": "string",
-                "example": "title,content,status\n\"First Post\",\"Content here\",\"published\"\n\"Second Post\",\"More content\",\"draft\""
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "options": {
-                    "type": "object",
-                    "properties": {
-                      "update_existing": {
-                        "type": "boolean"
-                      },
-                      "delimiter": {
-                        "type": "string",
-                        "default": ","
-                      },
-                      "enclosure": {
-                        "type": "string",
-                        "default": "\""
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Import completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/import/collections/{collection}/factory": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Import Faker Data",
-        "description": "Generate and import fake data using Faker library",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "count": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 1000,
-                    "default": 10
-                  },
-                  "locale": {
-                    "type": "string",
-                    "default": "en_US"
-                  },
-                  "template": {
-                    "type": "object",
-                    "description": "Template for generating fake data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Fake data generated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/import/schemas": {
-      "post": {
-        "summary": "Import Schema",
-        "description": "Import a custom schema definition from JSON",
-        "tags": ["import", "schemas"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Schema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Schema imported successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Schema"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      }
-    },
-    "/import/jumpstart": {
-      "post": {
-        "summary": "Import JumpStart Data",
-        "description": "Import collections, schemas, and objects from a JumpStart export file",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "JumpStart export data containing collections, schemas, and objects"
-                  },
-                  "options": {
-                    "type": "object",
-                    "properties": {
-                      "overwrite_existing": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Overwrite existing collections and objects"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "JumpStart data imported successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "collections": {
-                      "type": "integer",
-                      "description": "Number of collections imported"
-                    },
-                    "schemas": {
-                      "type": "integer",
-                      "description": "Number of schemas imported"
-                    },
-                    "objects": {
-                      "type": "integer",
-                      "description": "Number of objects imported"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      }
-    },
-    "/import/totalcms-one": {
-      "post": {
-        "summary": "Import from Total CMS 1",
-        "description": "Import content and data from Total CMS version 1.x backup files",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "Total CMS 1 backup file (.json or .zip)"
-                  },
-                  "options": {
-                    "type": "object",
-                    "properties": {
-                      "map_collections": {
-                        "type": "object",
-                        "description": "Map old collection names to new names"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Total CMS 1 data imported successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResult"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      }
-    },
-    "/import/alloy-analyze": {
-      "post": {
-        "summary": "Analyze Alloy CMS Data",
-        "description": "Analyze Alloy CMS directory structure and content without importing. Returns statistics about blogs, embeds, and droplets found.",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "blogsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy blogs directory"
-                  },
-                  "embedsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy embeds directory"
-                  },
-                  "dropletsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy droplets directory"
-                  },
-                  "imageUploadsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy image uploads directory"
-                  }
-                },
-                "required": ["blogsPath"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Analysis complete",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "blogs": {
-                      "type": "object",
-                      "properties": {
-                        "count": {
-                          "type": "integer"
-                        },
-                        "sample": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
-                        }
-                      }
-                    },
-                    "embeds": {
-                      "type": "object",
-                      "properties": {
-                        "count": {
-                          "type": "integer"
-                        }
-                      }
-                    },
-                    "droplets": {
-                      "type": "object",
-                      "properties": {
-                        "count": {
-                          "type": "integer"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      }
-    },
-    "/import/alloy": {
-      "post": {
-        "summary": "Import from Alloy CMS",
-        "description": "Import blogs, embeds, and droplets from Alloy CMS. Processes import via job queue for large datasets.",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "blogsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy blogs directory"
-                  },
-                  "embedsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy embeds directory"
-                  },
-                  "dropletsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy droplets directory"
-                  },
-                  "imageUploadsPath": {
-                    "type": "string",
-                    "description": "Path to Alloy image uploads directory"
-                  },
-                  "collections": {
-                    "type": "object",
-                    "properties": {
-                      "blogs": {
-                        "type": "string",
-                        "default": "blog",
-                        "description": "Target collection for blogs"
-                      },
-                      "embeds": {
-                        "type": "string",
-                        "default": "styledtext",
-                        "description": "Target collection for embeds"
-                      },
-                      "droplets": {
-                        "type": "string",
-                        "default": "styledtext",
-                        "description": "Target collection for droplets"
-                      }
-                    }
-                  }
-                },
-                "required": ["blogsPath"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Import queued successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "queued": {
-                      "type": "integer",
-                      "description": "Number of import jobs queued"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      }
-    },
-    "/export/collections/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Export Collection as JSON",
-        "description": "Export collection data as JSON",
-        "tags": ["export"],
-        "parameters": [
-          {
-            "name": "include_media",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Include media files in export"
-          },
-          {
-            "name": "fields",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Comma-separated list of fields to export"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "JSON export data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "collection": {
-                      "type": "string"
-                    },
-                    "exported": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "version": {
-                      "type": "string"
-                    },
-                    "objects": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Object"
-                      }
-                    }
-                  }
-                }
-              },
-              "application/zip": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/export/collections/{collection}/csv": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Export Collection as CSV",
-        "description": "Export collection data as CSV",
-        "tags": ["export"],
-        "parameters": [
-          {
-            "name": "fields",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Comma-separated list of fields to export"
-          },
-          {
-            "name": "delimiter",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": ","
-            },
-            "description": "CSV delimiter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "CSV export data",
-            "content": {
-              "text/csv": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/export/collections/{collection}/zip": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Export Collection as ZIP",
-        "description": "Export collection data and media files as a ZIP archive",
-        "tags": ["export"],
-        "parameters": [
-          {
-            "name": "include_media",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": true
-            },
-            "description": "Include media files (images, files, galleries) in ZIP"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "ZIP archive containing collection data and media",
-            "content": {
-              "application/zip": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    },
-    "/export/schemas/{schema}": {
-      "parameters": [
-        {
-          "name": "schema",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Export Schema Definition",
-        "description": "Export a schema definition as JSON",
-        "tags": ["export", "schemas"],
-        "responses": {
-          "200": {
-            "description": "Schema definition JSON",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Schema"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    },
-    "/export/jumpstart": {
-      "get": {
-        "summary": "Export JumpStart Data",
-        "description": "Export all collections, schemas, and objects as JumpStart format for project setup",
-        "tags": ["export"],
-        "parameters": [
-          {
-            "name": "collections",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Comma-separated list of collections to export (all if not specified)"
-          },
-          {
-            "name": "include_media",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Include media files in export (creates larger file)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "JumpStart export data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "version": {
-                      "type": "string",
-                      "description": "JumpStart format version"
-                    },
-                    "exported": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "collections": {
-                      "type": "array",
-                      "description": "Collection definitions"
-                    },
-                    "schemas": {
-                      "type": "array",
-                      "description": "Schema definitions"
-                    },
-                    "objects": {
-                      "type": "object",
-                      "description": "Objects organized by collection"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/export/jumpstart/demo": {
-      "get": {
-        "summary": "Export JumpStart Demo Data",
-        "description": "Export sample/demo data as JumpStart format with factory definitions for generating test data",
-        "tags": ["export"],
-        "responses": {
-          "200": {
-            "description": "JumpStart demo data with factory definitions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "version": {
-                      "type": "string"
-                    },
-                    "collections": {
-                      "type": "array"
-                    },
-                    "schemas": {
-                      "type": "array"
-                    },
-                    "factory": {
-                      "type": "object",
-                      "description": "Factory definitions for generating test data with Faker"
-                    }
-                  }
-                }
-              }
-            }
           }
         }
       }
@@ -2590,14 +1611,22 @@
           "required": true,
           "schema": {
             "type": "string",
-            "enum": ["jpg", "jpeg", "png", "webp", "avif"]
+            "enum": [
+              "jpg",
+              "jpeg",
+              "png",
+              "webp",
+              "avif"
+            ]
           }
         }
       ],
       "get": {
         "summary": "Get Processed Image",
         "description": "Get an image with applied processing parameters",
-        "tags": ["imageworks"],
+        "tags": [
+          "imageworks"
+        ],
         "parameters": [
           {
             "name": "w",
@@ -2620,7 +1649,14 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["crop", "contain", "cover", "fill", "inside", "outside"]
+              "enum": [
+                "crop",
+                "contain",
+                "cover",
+                "fill",
+                "inside",
+                "outside"
+              ]
             },
             "description": "Resize mode"
           },
@@ -2713,7 +1749,13 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["topleft", "topright", "bottomleft", "bottomright", "center"]
+              "enum": [
+                "topleft",
+                "topright",
+                "bottomleft",
+                "bottomright",
+                "center"
+              ]
             },
             "description": "Watermark position"
           },
@@ -2788,7 +1830,9 @@
       "get": {
         "summary": "Download File",
         "description": "Download a file from an object property",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "parameters": [
           {
             "name": "filename",
@@ -2828,7 +1872,9 @@
       "post": {
         "summary": "Download Protected File",
         "description": "Download a password-protected file",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2899,7 +1945,9 @@
       "get": {
         "summary": "Download Depot File",
         "description": "Download a specific file from a depot (multi-file) property with Content-Disposition: attachment",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "parameters": [
           {
             "name": "path",
@@ -2941,7 +1989,9 @@
       "post": {
         "summary": "Download Protected Depot File",
         "description": "Download a password-protected depot file",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "parameters": [
           {
             "name": "path",
@@ -3017,7 +2067,9 @@
       "get": {
         "summary": "Stream File",
         "description": "Stream a file with Content-Disposition: inline and HTTP range request support. Ideal for video/audio files.",
-        "tags": ["streaming"],
+        "tags": [
+          "streaming"
+        ],
         "parameters": [
           {
             "name": "pwd",
@@ -3144,7 +2196,9 @@
       "get": {
         "summary": "Stream Depot File",
         "description": "Stream a specific file from a depot (multi-file) property with range request support",
-        "tags": ["streaming"],
+        "tags": [
+          "streaming"
+        ],
         "parameters": [
           {
             "name": "path",
@@ -3220,195 +2274,6 @@
         }
       }
     },
-    "/templates": {
-      "get": {
-        "summary": "List Templates",
-        "description": "Get a list of all available templates",
-        "tags": ["templates"],
-        "responses": {
-          "200": {
-            "description": "List of templates",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "templates": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "description": {
-                            "type": "string"
-                          },
-                          "modified": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/templates/{template}": {
-      "parameters": [
-        {
-          "name": "template",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Get Template",
-        "description": "Get template content",
-        "tags": ["templates"],
-        "responses": {
-          "200": {
-            "description": "Template content",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
-      "post": {
-        "summary": "Save Template",
-        "description": "Save or update a template",
-        "tags": ["templates"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "text/plain": {
-              "schema": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Template saved"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Template",
-        "description": "Delete a template",
-        "tags": ["templates"],
-        "responses": {
-          "204": {
-            "description": "Template deleted"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    },
-    "/jobqueue/stats": {
-      "get": {
-        "summary": "Get Job Queue Statistics",
-        "description": "Get overall job queue statistics",
-        "tags": ["jobqueue"],
-        "responses": {
-          "200": {
-            "description": "Job queue statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobQueueStats"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/jobqueue/stats/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Get Collection Job Queue Statistics",
-        "description": "Get job queue statistics for a specific collection",
-        "tags": ["jobqueue"],
-        "responses": {
-          "200": {
-            "description": "Collection job queue statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobQueueStats"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/jobqueue": {
-      "delete": {
-        "summary": "Clear Job Queue",
-        "description": "Clear all jobs from the queue",
-        "tags": ["jobqueue"],
-        "responses": {
-          "204": {
-            "description": "Job queue cleared"
-          }
-        }
-      }
-    },
-    "/jobqueue/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "delete": {
-        "summary": "Clear Collection Job Queue",
-        "description": "Clear all jobs for a specific collection",
-        "tags": ["jobqueue"],
-        "responses": {
-          "204": {
-            "description": "Collection job queue cleared"
-          }
-        }
-      }
-    },
     "/feed/rss/{collection}": {
       "parameters": [
         {
@@ -3423,7 +2288,9 @@
       "get": {
         "summary": "Get RSS Feed",
         "description": "Generate RSS feed for a collection",
-        "tags": ["feeds"],
+        "tags": [
+          "feeds"
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -3463,7 +2330,9 @@
       "get": {
         "summary": "Generate Sitemap",
         "description": "Generate XML sitemap for a collection",
-        "tags": ["system"],
+        "tags": [
+          "system"
+        ],
         "responses": {
           "200": {
             "description": "XML sitemap",
@@ -3478,140 +2347,13 @@
         }
       }
     },
-    "/cache": {
-      "delete": {
-        "summary": "Clear All Caches",
-        "description": "Clear all application caches (Twig templates, Redis, APCu, Memcached, etc.)",
-        "tags": ["system"],
-        "responses": {
-          "204": {
-            "description": "All caches cleared successfully"
-          }
-        }
-      }
-    },
-    "/cache/images": {
-      "delete": {
-        "summary": "Clear All Image Caches",
-        "description": "Clear all cached processed images across all collections",
-        "tags": ["system"],
-        "responses": {
-          "204": {
-            "description": "All image caches cleared"
-          }
-        }
-      }
-    },
-    "/cache/collections/{collection}/images": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "delete": {
-        "summary": "Clear Collection Image Cache",
-        "description": "Clear cached processed images for a specific collection",
-        "tags": ["system"],
-        "responses": {
-          "204": {
-            "description": "Collection image cache cleared"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    },
-    "/cache/devmode": {
-      "get": {
-        "summary": "Get Development Mode Status",
-        "description": "Check if development mode is currently enabled",
-        "tags": ["system"],
-        "responses": {
-          "200": {
-            "description": "Development mode status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean",
-                      "description": "Whether development mode is enabled"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Enable Development Mode",
-        "description": "Enable development mode (disables caching, enables error display)",
-        "tags": ["system"],
-        "responses": {
-          "200": {
-            "description": "Development mode enabled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Disable Development Mode",
-        "description": "Disable development mode (enables caching, production error handling)",
-        "tags": ["system"],
-        "responses": {
-          "200": {
-            "description": "Development mode disabled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean",
-                      "example": false
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/emergency/cache/clear": {
       "get": {
         "summary": "Emergency Cache Clear",
         "description": "Public endpoint for clearing all caches when admin interface is inaccessible. No authentication required - accessible from any location for customer self-service.",
-        "tags": ["system"],
+        "tags": [
+          "system"
+        ],
         "responses": {
           "200": {
             "description": "Cache cleared successfully",
@@ -3645,7 +2387,9 @@
       "post": {
         "summary": "Send Email",
         "description": "Send email via form submission with rate limiting. Useful for contact forms and notifications.",
-        "tags": ["system"],
+        "tags": [
+          "system"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3677,7 +2421,12 @@
                     "description": "Reply-to email address"
                   }
                 },
-                "required": ["to", "from", "subject", "body"]
+                "required": [
+                  "to",
+                  "from",
+                  "subject",
+                  "body"
+                ]
               }
             }
           }
@@ -3747,7 +2496,9 @@
       "post": {
         "summary": "Upload File (Froala Editor)",
         "description": "Upload file via Froala WYSIWYG editor. Used internally by the styled text editor.",
-        "tags": ["upload"],
+        "tags": [
+          "upload"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3825,7 +2576,9 @@
       "get": {
         "summary": "Get Uploaded File (Froala)",
         "description": "Retrieve file uploaded via Froala editor",
-        "tags": ["upload"],
+        "tags": [
+          "upload"
+        ],
         "responses": {
           "200": {
             "description": "File content",
@@ -3846,7 +2599,9 @@
       "delete": {
         "summary": "Delete Uploaded File (Froala)",
         "description": "Delete file uploaded via Froala editor",
-        "tags": ["upload"],
+        "tags": [
+          "upload"
+        ],
         "responses": {
           "204": {
             "description": "File deleted successfully"
