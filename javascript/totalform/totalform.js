@@ -484,7 +484,7 @@ export default class TotalForm {
 
     afterSaveAction(response) {
 		const runEditActions = this.isEditMode();
-        this.success();
+        this.success(response);
         const waitUntilSaved = () => {
             // wait until all saving states have completed
             if (this.isSuccess()) {
@@ -678,9 +678,9 @@ export default class TotalForm {
 		return this.state === "error";
 	}
 
-    success() {
+    success(response = null) {
 		this.setupEditMode();
-		this.changeState("success");
+		this.changeState("success", response);
 		this.validated = false;
 		this.fields.forEach(field => field.saved());
     }
