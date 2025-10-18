@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Admin\AdminUtilsAction;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
 
@@ -15,17 +16,19 @@ final class AdminUtilsActionTest extends TestCase
 	private AdminUtilsAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
+	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->renderer   = $this->createMock(TwigRenderer::class);
-		$this->twigEngine = $this->createMock(TwigEngine::class);
-		$this->request    = $this->createMock(ServerRequestInterface::class);
-		$this->response   = $this->createMock(ResponseInterface::class);
+		$this->renderer       = $this->createMock(TwigRenderer::class);
+		$this->twigEngine     = $this->createMock(TwigEngine::class);
+		$this->apiKeyFetcher  = $this->createMock(ApiKeyFetcher::class);
+		$this->request        = $this->createMock(ServerRequestInterface::class);
+		$this->response       = $this->createMock(ResponseInterface::class);
 
-		$this->action = new AdminUtilsAction($this->renderer, $this->twigEngine);
+		$this->action = new AdminUtilsAction($this->renderer, $this->twigEngine, $this->apiKeyFetcher);
 	}
 
 	public function testRendersUtilsTemplateWithDefaultPage(): void

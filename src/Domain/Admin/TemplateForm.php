@@ -8,6 +8,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
@@ -65,6 +66,8 @@ class TemplateForm extends TotalForm
 		protected bool $helpOnFocus   = false,
 		protected bool $hideID        = false,
 		protected bool $useFormGrid   = true,
+		protected bool $addOnly       = false,
+		protected ?CSRFTokenManager $csrfManager = null,
 	) {
 		parent::__construct(
 			$objectFetcher,
@@ -92,7 +95,9 @@ class TemplateForm extends TotalForm
 			$helpOnHover,
 			$helpOnFocus,
 			$hideID,
-			$useFormGrid
+			$useFormGrid,
+			$addOnly,
+			$csrfManager
 		);
 	}
 

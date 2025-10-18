@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\ApiKey;
 
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
-use TotalCMS\Support\Config;
+use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 final class ApiKeyRepositoryTest extends TestCase
 {
@@ -15,33 +17,12 @@ final class ApiKeyRepositoryTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$config = new Config([
-			'env'        => 'test',
-			'template'   => '/tmp',
-			'dashboard'  => [],
-			'datadir'    => sys_get_temp_dir(),
-			'tmpdir'     => '/tmp',
-			'cachedir'   => '/tmp/cache',
-			'cache'      => [],
-			'logger'     => [],
-			'sentry'     => [],
-			'error'      => [],
-			'domain'     => 'test.com',
-			'url'        => 'http://test.com',
-			'api'        => 'http://test.com/api',
-			'locale'     => 'en_US',
-			'session'    => [],
-			'auth'       => [],
-			'debug'      => false,
-			'notfound'   => '/404',
-			'htmlclean'  => [],
-			'smtp'       => [],
-			'mailer'     => [],
-			'timezone'   => 'UTC',
-			'imageworks' => [],
-		]);
-
-		$this->repository = new ApiKeyRepository($config);
+		$filesystem = new StorageFilesystemAdapter(
+			new Filesystem(
+				new LocalFilesystemAdapter(sys_get_temp_dir())
+			)
+		);
+		$this->repository = new ApiKeyRepository($filesystem);
 	}
 
 	protected function tearDown(): void

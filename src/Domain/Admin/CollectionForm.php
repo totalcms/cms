@@ -11,6 +11,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -57,6 +58,8 @@ class CollectionForm extends TotalForm
 		protected bool $helpOnFocus = false,
 		protected bool $hideID      = false,
 		protected bool $useFormGrid = true,
+		protected bool $addOnly     = false,
+		protected ?CSRFTokenManager $csrfManager = null,
 	) {
 		// CRITICAL: Must call parent constructor to initialize typed properties
 		// TotalForm::__construct() calls init() which properly sets:
@@ -89,7 +92,9 @@ class CollectionForm extends TotalForm
 			$helpOnHover,
 			$helpOnFocus,
 			$hideID,
-			$useFormGrid
+			$useFormGrid,
+			$addOnly,
+			$csrfManager
 		);
 	}
 

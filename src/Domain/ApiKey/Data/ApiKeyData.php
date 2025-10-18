@@ -82,13 +82,12 @@ readonly class ApiKeyData
 	public function toArray(): array
 	{
 		return [
-			'id'        => $this->id,
-			'name'      => $this->name,
-			'key'       => $this->key,
-			'created'   => $this->created,
-			'lastUsed'  => $this->lastUsed,
-			'scopes'    => $this->scopes,
-			'maskedKey' => $this->getMaskedKey(),
+			'id'       => $this->id,
+			'name'     => $this->name,
+			'key'      => $this->key,
+			'created'  => $this->created,
+			'lastUsed' => $this->lastUsed,
+			'scopes'   => $this->scopes,
 		];
 	}
 }

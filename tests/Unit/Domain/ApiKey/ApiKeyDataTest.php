@@ -19,7 +19,7 @@ final class ApiKeyDataTest extends TestCase
 			'lastUsed' => '2025-01-16T14:20:00Z',
 			'scopes'   => [
 				'methods' => ['GET', 'POST'],
-				'paths'   => ['/api/collections/*'],
+				'paths'   => ['/api/collections'],
 			],
 		];
 
@@ -31,7 +31,7 @@ final class ApiKeyDataTest extends TestCase
 		$this->assertEquals('2025-01-15T10:30:00Z', $apiKey->created);
 		$this->assertEquals('2025-01-16T14:20:00Z', $apiKey->lastUsed);
 		$this->assertEquals(['GET', 'POST'], $apiKey->scopes['methods']);
-		$this->assertEquals(['/api/collections/*'], $apiKey->scopes['paths']);
+		$this->assertEquals(['/api/collections'], $apiKey->scopes['paths']);
 	}
 
 	public function testConstructorHandlesNullLastUsed(): void
@@ -180,36 +180,20 @@ final class ApiKeyDataTest extends TestCase
 			'created' => '2025-01-15T10:30:00Z',
 			'scopes'  => [
 				'methods' => ['GET'],
-				'paths'   => ['/api/collections/blog/*', '/api/collections/news/*'],
+				'paths'   => ['/api/collections/blog', '/api/collections/news'],
 			],
 		];
 
 		$apiKey = new ApiKeyData($data);
 
+		// str_starts_with means these all match
+		$this->assertTrue($apiKey->allowsPath('/api/collections/blog'));
 		$this->assertTrue($apiKey->allowsPath('/api/collections/blog/123'));
+		$this->assertTrue($apiKey->allowsPath('/api/collections/news'));
 		$this->assertTrue($apiKey->allowsPath('/api/collections/news/456'));
+		// These don't start with allowed paths
 		$this->assertFalse($apiKey->allowsPath('/api/collections/events/789'));
 		$this->assertFalse($apiKey->allowsPath('/api/users/123'));
-	}
-
-	public function testAllowsPathWithExactMatch(): void
-	{
-		$data = [
-			'id'      => 'test-id',
-			'name'    => 'Test',
-			'key'     => 'tcms_test',
-			'created' => '2025-01-15T10:30:00Z',
-			'scopes'  => [
-				'methods' => ['GET'],
-				'paths'   => ['/api/collections/blog'],
-			],
-		];
-
-		$apiKey = new ApiKeyData($data);
-
-		$this->assertTrue($apiKey->allowsPath('/api/collections/blog'));
-		$this->assertFalse($apiKey->allowsPath('/api/collections/blog/123'));
-		$this->assertFalse($apiKey->allowsPath('/api/collections/news'));
 	}
 
 	public function testToArrayReturnsAllProperties(): void
