@@ -182,8 +182,6 @@ class MulticheckboxField extends FormField
 
 	/**
 	 * Get the field value, ensuring proper array handling.
-	 *
-	 * @return mixed
 	 */
 	public function getValue(): mixed
 	{

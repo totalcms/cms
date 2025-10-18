@@ -53,11 +53,11 @@ readonly class ApiKeyAuthMiddleware implements MiddlewareInterface
 		// For example: /rw_common/plugins/stacks/tcms/collections/blog becomes /collections/blog
 		$basePath = $request->getAttribute('basePath', '');
 		$fullPath = $request->getUri()->getPath();
-		$path = $basePath !== '' ? substr($fullPath, strlen($basePath)) : $fullPath;
+		$path     = $basePath !== '' ? substr($fullPath, strlen((string)$basePath)) : $fullPath;
 
 		$validatedKey = $this->apiKeyFetcher->validateKey($apiKey, $method, $path);
 
-		if ($validatedKey === null) {
+		if (!$validatedKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
 			return $this->unauthorizedResponse('Invalid API key or insufficient permissions');
 		}
 
@@ -70,7 +70,8 @@ readonly class ApiKeyAuthMiddleware implements MiddlewareInterface
 	private function unauthorizedResponse(string $message): ResponseInterface
 	{
 		return $this->jsonRenderer->json(
-			$this->responseFactory->createResponse()->withStatus(401), ['error' => ['message' => $message]]
+			$this->responseFactory->createResponse()->withStatus(401),
+			['error' => ['message' => $message]]
 		);
 	}
 }

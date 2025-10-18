@@ -42,10 +42,11 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		// Try API key authentication first
 		$apiKeyAuth = $this->tryApiKeyAuth($request);
-		if ($apiKeyAuth !== null) {
+		if ($apiKeyAuth instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
 			// API key is valid, add it to request attributes and proceed
 			$request = $request->withAttribute('apiKey', $apiKeyAuth);
 			$request = $request->withAttribute('authMethod', 'apikey');
+
 			return $handler->handle($request);
 		}
 
@@ -63,13 +64,13 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		$authHeader = $request->getHeaderLine('Authorization');
 
 		// No Authorization header or doesn't start with Bearer
-		if (empty($authHeader) || !str_starts_with($authHeader, 'Bearer ')) {
+		if ($authHeader === '' || $authHeader === '0' || !str_starts_with($authHeader, 'Bearer ')) {
 			return null;
 		}
 
 		$apiKey = substr($authHeader, 7); // Remove "Bearer " prefix
 
-		if (empty($apiKey)) {
+		if ($apiKey === '' || $apiKey === '0') {
 			return null;
 		}
 
@@ -80,7 +81,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// For example: /rw_common/plugins/stacks/tcms/collections/blog becomes /collections/blog
 		$basePath = $request->getAttribute('basePath', '');
 		$fullPath = $request->getUri()->getPath();
-		$path = $basePath !== '' ? substr($fullPath, strlen($basePath)) : $fullPath;
+		$path     = $basePath !== '' ? substr($fullPath, strlen((string)$basePath)) : $fullPath;
 
 		return $this->apiKeyFetcher->validateKey($apiKey, $method, $path);
 	}

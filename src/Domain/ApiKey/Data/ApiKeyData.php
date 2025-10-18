@@ -7,12 +7,12 @@ namespace TotalCMS\Domain\ApiKey\Data;
 /**
  * API Key data object.
  *
- * @property-read string $id Unique identifier (UUID)
- * @property-read string $name Human-readable name
- * @property-read string $key The actual API key (tcms_...)
- * @property-read string $created ISO 8601 datetime
- * @property-read string|null $lastUsed ISO 8601 datetime
- * @property-read array<string,mixed> $scopes Permissions (methods, paths)
+ * @property string $id Unique identifier (UUID)
+ * @property string $name Human-readable name
+ * @property string $key The actual API key (tcms_...)
+ * @property string $created ISO 8601 datetime
+ * @property string|null $lastUsed ISO 8601 datetime
+ * @property array<string,mixed> $scopes Permissions (methods, paths)
  */
 readonly class ApiKeyData
 {
@@ -66,10 +66,11 @@ readonly class ApiKeyData
 		$allowedPaths = $this->scopes['paths'] ?? [];
 
 		foreach ($allowedPaths as $allowedPath) {
-			if ($allowedPath === '*' || str_starts_with(strtolower($path), strtolower($allowedPath))) {
+			if ($allowedPath === '*' || str_starts_with(strtolower($path), strtolower((string)$allowedPath))) {
 				return true;
 			}
 		}
+
 		return false;
 	}
 

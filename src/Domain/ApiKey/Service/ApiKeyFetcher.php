@@ -23,13 +23,14 @@ readonly class ApiKeyFetcher
 	 * @param string $keyString The API key to validate
 	 * @param string $method HTTP method (GET, POST, etc.)
 	 * @param string $path Request path
+	 *
 	 * @return ApiKeyData|null Returns the ApiKeyData if valid, null if invalid
 	 */
 	public function validateKey(string $keyString, string $method, string $path): ?ApiKeyData
 	{
 		$apiKey = $this->repository->findByKey($keyString);
 
-		if ($apiKey === null) {
+		if (!$apiKey instanceof ApiKeyData) {
 			return null;
 		}
 

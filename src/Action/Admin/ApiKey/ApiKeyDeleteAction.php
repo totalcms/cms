@@ -30,7 +30,7 @@ readonly class ApiKeyDeleteAction
 	): ResponseInterface {
 		$id = (string)($args['id'] ?? '');
 
-		if (empty($id)) {
+		if ($id === '') {
 			return $this->jsonRenderer->json($response->withStatus(400), [
 				'error' => [
 					'message' => 'API key ID is required',

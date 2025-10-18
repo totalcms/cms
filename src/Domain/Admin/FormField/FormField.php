@@ -127,7 +127,7 @@ class FormField
 		$visibility = $this->settings['visibility'];
 
 		// Calculate initial visibility state for server-side rendering
-		$isVisible = $this->evaluateVisibility($visibility);
+		$isVisible           = $this->evaluateVisibility($visibility);
 		$attributes['class'] = ($attributes['class'] ?? '') . ($isVisible ? ' field-visible' : ' field-hidden');
 
 		// Add inline style to hide if needed
@@ -174,9 +174,6 @@ class FormField
 
 	/**
 	 * Evaluate a visibility condition.
-	 *
-	 * @param mixed $currentValue
-	 * @param mixed $expectedValue
 	 */
 	protected function evaluateCondition(mixed $currentValue, mixed $expectedValue, string $operator): bool
 	{
@@ -187,6 +184,7 @@ class FormField
 					return true; // Match found
 				}
 			}
+
 			return false; // No matches found
 		}
 
@@ -198,12 +196,12 @@ class FormField
 		// Evaluate based on operator
 		// Note: Array $expectedValue is handled earlier (lines 184-191), so it's never an array here
 		return match ($operator) {
-			'==' => $currentValue == $expectedValue,
-			'!=' => $currentValue != $expectedValue,
-			'>' => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue > $expectedValue,
-			'<' => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
-			'>=' => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
-			'<=' => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
+			'=='    => $currentValue == $expectedValue,
+			'!='    => $currentValue != $expectedValue,
+			'>'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue > $expectedValue,
+			'<'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
+			'>='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
+			'<='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
 			default => $currentValue == $expectedValue, // Default to equality
 		};
 	}

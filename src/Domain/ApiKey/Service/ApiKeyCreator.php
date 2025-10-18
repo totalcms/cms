@@ -22,7 +22,7 @@ readonly class ApiKeyCreator
 	 *
 	 * @param string $name Human-readable name for the key
 	 * @param array<string,mixed> $scopes Permissions (methods, paths)
-	 * @return ApiKeyData
+	 *
 	 * @throws \InvalidArgumentException If validation fails
 	 */
 	public function createApiKey(string $name, array $scopes): ApiKeyData
@@ -79,8 +79,8 @@ readonly class ApiKeyCreator
 		$data = random_bytes(16);
 
 		// Set version (4) and variant bits
-		$data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-		$data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+		$data[6] = chr(ord($data[6]) & 0x0F | 0x40);
+		$data[8] = chr(ord($data[8]) & 0x3F | 0x80);
 
 		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 	}

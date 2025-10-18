@@ -31,7 +31,7 @@ class ApiKeyRepository extends StorageRepository
 		$data = $this->readFile();
 
 		return array_map(
-			fn(array $keyData) => new ApiKeyData($keyData),
+			fn (array $keyData): ApiKeyData => new ApiKeyData($keyData),
 			$data['apikeys'] ?? []
 		);
 	}
@@ -74,7 +74,7 @@ class ApiKeyRepository extends StorageRepository
 	public function save(ApiKeyData $apiKey): void
 	{
 		$data           = $this->readFile();
-		$data['apikeys'] = $data['apikeys'] ?? [];
+		$data['apikeys'] ??= [];
 
 		// Add the new key
 		$data['apikeys'][] = $apiKey->toArray();
@@ -111,7 +111,7 @@ class ApiKeyRepository extends StorageRepository
 		$keys = $data['apikeys'] ?? [];
 
 		$originalCount = count($keys);
-		$keys          = array_filter($keys, fn(array $keyData) => $keyData['id'] !== $id);
+		$keys          = array_filter($keys, fn (array $keyData): bool => $keyData['id'] !== $id);
 
 		if (count($keys) === $originalCount) {
 			return false; // Key not found
@@ -130,7 +130,7 @@ class ApiKeyRepository extends StorageRepository
 	{
 		$apiKey = $this->findByKey($keyString);
 
-		if ($apiKey === null) {
+		if (!$apiKey instanceof ApiKeyData) {
 			return;
 		}
 

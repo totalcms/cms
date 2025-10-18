@@ -27,7 +27,7 @@ readonly class AdminUtilsAction
 		$results = '';
 
 		// Check for sub-actions in URL path (e.g., /admin/utils/api-keys/new)
-		$path = $request->getUri()->getPath();
+		$path      = $request->getUri()->getPath();
 		$subAction = null;
 		if (str_ends_with($path, '/new')) {
 			$subAction = 'new';
@@ -58,9 +58,9 @@ readonly class AdminUtilsAction
 		}
 
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
-			'page' => $page,
+			'page'      => $page,
 			'subAction' => $subAction,
-			'url'  => [
+			'url'       => [
 				'path'   => $request->getUri()->getPath(),
 				'query'  => $request->getUri()->getQuery(),
 				'params' => $args,
