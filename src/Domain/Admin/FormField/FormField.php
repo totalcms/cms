@@ -196,6 +196,7 @@ class FormField
 		}
 
 		// Evaluate based on operator
+		// Note: Array $expectedValue is handled earlier (lines 184-191), so it's never an array here
 		return match ($operator) {
 			'==' => $currentValue == $expectedValue,
 			'!=' => $currentValue != $expectedValue,
@@ -203,8 +204,6 @@ class FormField
 			'<' => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
 			'>=' => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
 			'<=' => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
-			'in' => is_array($expectedValue) && in_array($currentValue, $expectedValue, false),
-			'not_in' => is_array($expectedValue) && !in_array($currentValue, $expectedValue, false),
 			default => $currentValue == $expectedValue, // Default to equality
 		};
 	}

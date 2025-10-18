@@ -77,7 +77,7 @@ class RadioField extends FormField
 	/**
 	 * Build a group of radio buttons with a legend.
 	 *
-	 * @param array<int,array<string,string>> $options
+	 * @param array<mixed> $options Array of strings or arrays with value/label
 	 */
 	protected function buildRadioGroup(string $groupLabel, array $options, int &$index): string
 	{

@@ -50,6 +50,7 @@ class TemplateForm extends TotalForm
 		protected string $delete      = '',
 		protected string $formType    = '',
 		protected string $schema      = '',
+		protected string $route       = '',
 		protected array $newActions    = [
 			[
 				'action' => 'redirect-object',
@@ -83,6 +84,7 @@ class TemplateForm extends TotalForm
 			$delete,
 			$formType,
 			$schema,
+			$route,
 			$newActions,
 			$editActions,
 			$deleteActions,

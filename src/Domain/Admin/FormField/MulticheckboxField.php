@@ -82,7 +82,7 @@ class MulticheckboxField extends FormField
 	/**
 	 * Build a group of checkboxes with a legend.
 	 *
-	 * @param array<int,array<string,string>> $options
+	 * @param array<mixed> $options Array of strings or arrays with value/label
 	 */
 	protected function buildCheckboxGroup(string $groupLabel, array $options, int &$index): string
 	{

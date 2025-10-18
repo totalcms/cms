@@ -20,6 +20,9 @@ readonly class ApiKeyDeleteAction
 	) {
 	}
 
+	/**
+	 * @param array<string,mixed> $args
+	 */
 	public function __invoke(
 		ServerRequestInterface $request,
 		ResponseInterface $response,

@@ -43,6 +43,7 @@ class CollectionForm extends TotalForm
 		protected string $delete      = '',
 		protected string $formType    = '',
 		protected string $schema      = '',
+		protected string $route       = '',
 		protected array $newActions    = [
 			[
 				'action' => 'redirect-object',
@@ -80,6 +81,7 @@ class CollectionForm extends TotalForm
 			$delete,
 			$formType,
 			$schema,
+			$route,
 			$newActions,
 			$editActions,
 			$deleteActions,

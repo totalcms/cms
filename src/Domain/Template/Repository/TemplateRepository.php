@@ -145,7 +145,7 @@ class TemplateRepository extends StorageRepository
 		$contents = $this->filesystem->read($templateFile);
 
 		// Empty content is valid for templates - allows editing blank templates
-		return TemplateFactory::generateTemplate($template, $contents ?? '');
+		return TemplateFactory::generateTemplate($template, $contents);
 	}
 
 	/**
