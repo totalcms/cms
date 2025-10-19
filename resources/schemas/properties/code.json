@@ -1,0 +1,13 @@
+{
+	"$id": "https://www.totalcms.co/schemas/properties/code.json",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"anyOf": [
+		{
+			"type"        : "string",
+			"description" : "Code editor field for HTML, JavaScript, CSS, or other code snippets. Typically used with htmlclean: false to preserve embed codes and scripts."
+		},
+		{
+			"$ref": "https://www.totalcms.co/schemas/properties/empty.json"
+		}
+	]
+}

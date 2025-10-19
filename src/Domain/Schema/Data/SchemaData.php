@@ -44,8 +44,7 @@ class SchemaData
 		'url',
 	];
 	public const PROPERTY_TYPES = [
-		// 'array',
-		// 'object',
+		'array',
 		'boolean',
 		'code',
 		'color',
@@ -67,6 +66,7 @@ class SchemaData
 		'url',
 	];
 	public const PROPERTY_TYPE_TO_REF = [
+		'code'     => 'https://www.totalcms.co/schemas/properties/code.json',
 		'color'    => 'https://www.totalcms.co/schemas/properties/color.json',
 		'date'     => 'https://www.totalcms.co/schemas/properties/date.json',
 		'deck'     => 'https://www.totalcms.co/schemas/properties/deck.json',

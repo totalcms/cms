@@ -471,6 +471,71 @@ The code field provides a syntax-highlighted code editor powered by CodeMirror. 
 }
 ```
 
+### Code Fields for Embed Codes and Third-Party Widgets
+
+**IMPORTANT:** When using code fields for third-party embed codes (like TidyCal, Google Analytics, social media widgets, etc.), you **must disable HTML sanitization** to preserve scripts and data attributes.
+
+By default, Total CMS sanitizes all HTML content for security, which removes:
+- `<script>` tags
+- `data-*` attributes
+- Event handlers
+- Dangerous protocols
+
+This protects against XSS attacks but breaks third-party embed codes that rely on these features.
+
+**Recommended Usage:**
+
+Use the `code.json` property reference and set `htmlclean: false`:
+
+```json
+{
+  "embedCode": {
+    "$ref"     : "https://www.totalcms.co/schemas/properties/code.json",
+    "label"    : "Embed Code",
+    "field"    : "code",
+    "settings" : {
+      "htmlclean" : false,
+      "mode"      : "html"
+    }
+  }
+}
+```
+
+**Alternative (without property reference):**
+
+```json
+{
+  "embedCode": {
+    "type"     : "string",
+    "label"    : "Third-Party Embed Code",
+    "field"    : "code",
+    "settings" : {
+      "htmlclean" : false,
+      "mode"      : "html"
+    }
+  }
+}
+```
+
+**Examples of embed codes that require `htmlclean: false`:**
+
+```html
+<!-- TidyCal scheduling widget -->
+<div class="tidycal-embed" data-path="username/consultation"></div>
+<script src="https://asset-tidycal.b-cdn.net/js/embed.js" async></script>
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+</script>
+
+<!-- Social media widgets, video embeds, etc. -->
+```
+
+⚠️ **Security Note:** Only use `htmlclean: false` for code fields where you control the content or trust the source. Never allow untrusted users to submit content to fields with HTML sanitization disabled.
+
 ## Radio Field
 
 Radio fields allow users to select a single option from multiple choices. They support grid layouts for better organization when you have many options.
