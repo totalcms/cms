@@ -12,7 +12,7 @@
 			"field"    : "id",
 			"factory"  : "uuid",
 			"settings" : {
-				"autogen" : "${name}-${uuid}"
+				"autogen" : "${name}-${uid}"
 			}
         },
         "name": {

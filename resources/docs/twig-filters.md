@@ -187,6 +187,117 @@ Converts SVG to symbol for icon systems.
 <svg><use href="#home"></use></svg>
 ```
 
+### Markdown Filters
+
+#### `markdown(mixed $value): string`
+Processes full markdown syntax including block elements (paragraphs, headers, lists, etc.).
+
+```twig
+{% set content = "This is **bold** and [a link](https://example.com)" %}
+{{ content | markdown }}
+{# Output: <p>This is <strong>bold</strong> and <a href="https://example.com">a link</a></p> #}
+
+{# Process blog post content #}
+<article>
+    {{ post.content | markdown }}
+</article>
+
+{# Markdown with tables and code blocks #}
+{{ documentation.content | markdown }}
+```
+
+**Features:**
+- Full markdown syntax support (headers, lists, blockquotes, etc.)
+- GitHub Flavored Markdown (tables, fenced code blocks)
+- Extended features (footnotes, definition lists)
+- Wraps content in appropriate block elements (`<p>`, `<h1>`, etc.)
+
+#### `markdownInline(mixed $value): string`
+Processes only inline markdown syntax without wrapping content in `<p>` tags or other block elements. Perfect for processing markdown within existing HTML elements.
+
+```twig
+{% set text = "This is **bold** and [a link](https://example.com)" %}
+{{ text | markdownInline }}
+{# Output: This is <strong>bold</strong> and <a href="https://example.com">a link</a> #}
+
+{# Use in headings #}
+<h2>{{ page.title | markdownInline }}</h2>
+
+{# Use in existing paragraphs #}
+<p class="description">{{ product.tagline | markdownInline }}</p>
+
+{# Use in list items #}
+<ul>
+    {% for feature in product.features %}
+        <li>{{ feature | markdownInline }}</li>
+    {% endfor %}
+</ul>
+```
+
+**Supported Inline Syntax:**
+- **Bold**: `**text**` → `<strong>text</strong>`
+- **Italic**: `*text*` → `<em>text</em>`
+- **Code**: `` `code` `` → `<code>code</code>`
+- **Links**: `[text](url)` → `<a href="url">text</a>`
+- **Auto-links**: `<https://example.com>` → `<a href="...">...</a>`
+- **Images**: `![alt](url)` → `<img src="url" alt="alt" />`
+- **Combined styles**: `**bold** with *italic*` works perfectly
+
+**When to Use:**
+- Processing markdown within existing HTML tags
+- Headings, button labels, or navigation items with markdown
+- Form field labels or help text with formatting
+- List items or table cells with inline formatting
+- Meta descriptions or short text snippets
+
+**Comparison:**
+
+```twig
+{# markdown filter - adds <p> wrapper #}
+{{ "Visit our **website**" | markdown }}
+{# Output: <p>Visit our <strong>website</strong></p> #}
+
+{# markdownInline filter - no wrapper #}
+{{ "Visit our **website**" | markdownInline }}
+{# Output: Visit our <strong>website</strong> #}
+```
+
+**Real-World Examples:**
+
+```twig
+{# Product features with inline formatting #}
+<ul class="features">
+    {% for feature in product.features %}
+        <li>{{ feature | markdownInline }}</li>
+        {# Input: "**High-speed** processing with *low power*" #}
+        {# Output: <strong>High-speed</strong> processing with <em>low power</em> #}
+    {% endfor %}
+</ul>
+
+{# Page titles with emphasis #}
+<h1>{{ page.title | markdownInline }}</h1>
+{# Input: "Welcome to our **Amazing** Store!" #}
+{# Output: Welcome to our <strong>Amazing</strong> Store! #}
+
+{# Navigation with inline links #}
+<nav>
+    {% for item in menu %}
+        <a href="{{ item.url }}">{{ item.label | markdownInline }}</a>
+    {% endfor %}
+</nav>
+
+{# Meta descriptions #}
+<meta name="description" content="{{ page.meta | markdownInline | striptags }}">
+
+{# Testimonial quotes with formatting #}
+<blockquote>
+    {{ testimonial.quote | markdownInline }}
+    <cite>{{ testimonial.author }}</cite>
+</blockquote>
+```
+
+**Security Note:** Both markdown filters run in safe mode with XSS protection enabled.
+
 ### Email and HTML Encoding
 
 #### `htmlencode(string $text): string`
