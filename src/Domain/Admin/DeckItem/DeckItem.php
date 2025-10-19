@@ -86,7 +86,7 @@ class DeckItem
 
 		try {
 			// Fetch the schema for this deck
-			$schema = $this->schemaFetcher->fetchSchema($this->extractSchemaId($this->deckref));
+			$schema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
 
 			// Generate form fields for each property in the schema
 			foreach ($schema->properties as $propertyName => $propertySchema) {
@@ -121,19 +121,5 @@ class DeckItem
 		}
 
 		return $content;
-	}
-
-	/**
-	 * Extract schema ID from deckref URL.
-	 */
-	protected function extractSchemaId(string $deckref): string
-	{
-		// Extract schema ID from URL like "https://www.totalcms.co/schemas/custom/features.json"
-		$path = parse_url($deckref, PHP_URL_PATH);
-		if ($path) {
-			return basename($path, '.json');
-		}
-
-		return $deckref;
 	}
 }

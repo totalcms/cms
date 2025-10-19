@@ -112,7 +112,7 @@ class DeckItemForm extends TotalForm
 
 		// Replace schemaData with deck schema for all form operations
 		if ($this->deckref !== '') {
-			$this->schemaData = $this->schemaFetcher->fetchSchema($this->extractSchemaId($this->deckref));
+			$this->schemaData = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->deckref));
 		}
 
 		if ($this->id === '' && isset($_GET['id'])) {
@@ -270,20 +270,6 @@ class DeckItemForm extends TotalForm
 		$this->collectionData = $collectionData;
 		$this->schema         = $this->collectionData->schema;
 		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->schema);
-	}
-
-	/**
-	 * Extract schema ID from deckref URL.
-	 */
-	private function extractSchemaId(string $deckref): string
-	{
-		// Extract schema ID from URL like "https://www.totalcms.co/schemas/custom/features.json"
-		$path = parse_url($deckref, PHP_URL_PATH);
-		if ($path) {
-			return basename($path, '.json');
-		}
-
-		return $deckref;
 	}
 
 	/**
