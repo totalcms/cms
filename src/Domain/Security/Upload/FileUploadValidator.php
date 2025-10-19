@@ -24,7 +24,7 @@ class FileUploadValidator
 	 * Allowed file extensions by category.
 	 */
 	private const ALLOWED_EXTENSIONS = [
-		'image'    => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'],
+		'image'    => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'heic', 'heif'],
 		'video'    => ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v'],
 		'audio'    => ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'wma'],
 		'document' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf', 'odt', 'ods', 'odp'],
@@ -39,6 +39,7 @@ class FileUploadValidator
 		'image' => [
 			'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
 			'image/svg+xml', 'image/bmp', 'image/x-icon', 'image/vnd.microsoft.icon',
+			'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence',
 		],
 		'video' => [
 			'video/mp4', 'video/avi', 'video/quicktime', 'video/x-msvideo',

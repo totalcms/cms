@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -15,6 +16,7 @@ readonly class FileSaveAction
 		private JsonRenderer $renderer,
 		private SaverFactory $factory,
 		private Config $config,
+		private HeicConverter $heicConverter,
 	) {
 	}
 
@@ -59,6 +61,16 @@ readonly class FileSaveAction
 			}
 
 			$finalFilePath = $uploadResult;
+		}
+
+		// Convert HEIC to JPEG if applicable (for image properties only)
+		if ($this->heicConverter->isHeicFile($finalFilePath)) {
+			$conversionResult = $this->heicConverter->convertAndReplace($finalFilePath);
+			if ($conversionResult['success']) {
+				$finalFilePath = $conversionResult['path'];
+			}
+			// If conversion fails, continue with original HEIC file
+			// The file will be saved as-is and conversion can be attempted again later
 		}
 
 		// Save the file (whether uploaded or downloaded)
