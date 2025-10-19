@@ -73,6 +73,7 @@
 		If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
 
 		{{ cms.form.playground(url.id|default(''), {
+			class         : "playground-form",
 			deleteActions : [
 				{
 					"action" : "redirect",
@@ -151,11 +152,11 @@
 .playground-snippet:hover .cms-clip-button {
 	opacity: 1;
 }
-.form-field.id-field {
+.playground-form .form-field.id-field {
 	height   : 0;
 	overflow : hidden;
 }
-.form-inline-fields:has(.cms-save) {
+.playground-form .form-inline-fields:has(.cms-save) {
 	justify-content : flex-end;
 }
 .playground-results {
