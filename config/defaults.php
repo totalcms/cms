@@ -172,6 +172,7 @@ $settings['auth'] = [
 	'enable'                  => true,
 	'collection'              => 'auth',
 	'maxAttempts'             => 10,
+	'downloadMaxAttempts'     => 25,  // Max password attempts for protected downloads
 	'deniedTimeout'           => 7,
 	'deniedDefaultRedirect'   => '/',
 	'persistentLoginDays'     => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked

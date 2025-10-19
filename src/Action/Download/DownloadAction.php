@@ -14,6 +14,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 abstract class DownloadAction
 {
@@ -21,6 +22,7 @@ abstract class DownloadAction
 	protected FileAccessManager $accessManager;
 	protected ObjectUpdater $objectUpdater;
 	protected PhpSession $session;
+	protected Config $config;
 
 	protected string $collection;
 	protected string $id;
@@ -73,7 +75,7 @@ abstract class DownloadAction
 		$attempts = $this->session->get(SessionKeys::DOWNLOAD_ATTEMPTS, 0);
 		$this->session->set(SessionKeys::DOWNLOAD_ATTEMPTS, $attempts + 1);
 
-		$maxAttempts = self::MAX_ATTEMPTS;
+		$maxAttempts = $this->config->auth['downloadMaxAttempts'] ?? self::MAX_ATTEMPTS;
 
 		if ($attempts > $maxAttempts) {
 			$flash->add('error', 'Too many download attempts');
