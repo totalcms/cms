@@ -357,6 +357,43 @@ readonly class TotalFormFactory
 	}
 
 	/**
+	 * Create a deck item form builder.
+	 *
+	 * @param array<string,mixed> $options Options including id, itemId, save, delete, class, etc.
+	 */
+	public function deckBuilder(string $collection, string $property, array $options = []): DeckItemForm
+	{
+		$options = array_merge($options, [
+			// These options cannot be overridden
+			'collection'        => $collection,
+			'property'          => $property,
+			'id'                => $options['id'] ?? '',
+			'api'               => $this->api,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'indexFilter'       => $this->indexFilter,
+			'objectFetcher'     => $this->objectFetcher,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+			'csrfManager'       => $this->csrfManager,
+		]);
+
+		return new DeckItemForm(...$options);
+	}
+
+	/**
+	 * Create a deck item form with auto-generated fields.
+	 *
+	 * @param array<string,mixed> $options Options including id, itemId, save, delete, class, etc.
+	 */
+	public function deck(string $collection, string $property, array $options = []): string
+	{
+		$form = $this->deckBuilder($collection, $property, $options);
+
+		return $form->autoBuild();
+	}
+
+	/**
 	 * @param array<string,mixed> $formOptions
 	 * @param array<string,mixed> $fieldOptions
 	 */

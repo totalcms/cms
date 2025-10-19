@@ -125,6 +125,9 @@ export default class TotalForm {
     // Utility Methods
     //-------------------------
 
+	isDeckForm() {
+		return this.type === "deck";
+	}
 	isObjectForm() {
 		return this.type === "object";
 	}
