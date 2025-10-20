@@ -24,6 +24,7 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
@@ -112,6 +113,7 @@ use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\CollectionAccessMiddleware;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
 use TotalCMS\Middleware\LicenseValidationMiddleware;
@@ -377,6 +379,14 @@ HTACCESS;
 		$container->get(PersistentLoginService::class),
 	),
 
+	CollectionAccessMiddleware::class => fn (ContainerInterface $container): CollectionAccessMiddleware => new CollectionAccessMiddleware(
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
 	DevModeMiddleware::class => fn (ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(
 		$container->get(DevModeManager::class),
 		$container->get(OPcacheService::class)
@@ -486,6 +496,11 @@ HTACCESS;
 		$container->get(Config::class),
 		$container->get(UserValidationService::class),
 		$container->get(LoggerFactory::class),
+	),
+
+	AccessControlService::class => fn (ContainerInterface $container): AccessControlService => new AccessControlService(
+		$container->get(UserValidationService::class),
+		$container->get(AccessGroupLister::class),
 	),
 
 	TotalCmsOneImporter::class => fn (ContainerInterface $container): TotalCmsOneImporter => new TotalCmsOneImporter(
