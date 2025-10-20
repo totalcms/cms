@@ -81,28 +81,37 @@ readonly class AccessGroupSaveAction
 	 */
 	private function buildPermissions(array $data): array
 	{
+		// Parse permissions-simple field (contains templates, mailer, playground, docs)
+		$simplePermissions = isset($data['permissions-simple']) ? (array)$data['permissions-simple'] : [];
+
+		// Collections permissions
+		$collectionsAll = isset($data['collections-all']) && in_array('all', (array)$data['collections-all']);
+		$schemasAll     = isset($data['schemas-all']) && in_array('all', (array)$data['schemas-all']);
+		$utilsAll       = isset($data['utils-all']) && in_array('all', (array)$data['utils-all']);
+		$settingsAll    = isset($data['settings-all']) && in_array('all', (array)$data['settings-all']);
+
 		return [
 			'collections' => [
 				'methods' => $data['collections-methods'] ?? [],
-				'all'     => isset($data['collections-all']) && in_array('all', (array)$data['collections-all']),
-				'allowed' => $data['collections-allowed'] ?? [],
+				'all'     => $collectionsAll,
+				'allowed' => $collectionsAll ? [] : ($data['collections-allowed'] ?? []),
 			],
 			'schemas' => [
 				'methods' => $data['schemas-methods'] ?? [],
-				'all'     => isset($data['schemas-all']) && in_array('all', (array)$data['schemas-all']),
-				'allowed' => $data['schemas-allowed'] ?? [],
+				'all'     => $schemasAll,
+				'allowed' => $schemasAll ? [] : ($data['schemas-allowed'] ?? []),
 			],
-			'templates'  => isset($data['templates']) && in_array('templates', (array)$data['templates']),
-			'mailer'     => isset($data['mailer']) && in_array('mailer', (array)$data['mailer']),
-			'playground' => isset($data['playground']) && in_array('playground', (array)$data['playground']),
-			'docs'       => isset($data['docs']) && in_array('docs', (array)$data['docs']),
+			'templates'  => in_array('templates', $simplePermissions),
+			'mailer'     => in_array('mailer', $simplePermissions),
+			'playground' => in_array('playground', $simplePermissions),
+			'docs'       => in_array('docs', $simplePermissions),
 			'utils'      => [
-				'all'     => isset($data['utils-all']) && in_array('all', (array)$data['utils-all']),
-				'allowed' => $data['utils-allowed'] ?? [],
+				'all'     => $utilsAll,
+				'allowed' => $utilsAll ? [] : ($data['utils-allowed'] ?? []),
 			],
 			'settings' => [
-				'all'     => isset($data['settings-all']) && in_array('all', (array)$data['settings-all']),
-				'allowed' => $data['settings-allowed'] ?? [],
+				'all'     => $settingsAll,
+				'allowed' => $settingsAll ? [] : ($data['settings-allowed'] ?? []),
 			],
 		];
 	}
