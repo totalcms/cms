@@ -4,6 +4,7 @@ namespace Tests\Unit\Domain\Settings\Services;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
@@ -14,40 +15,21 @@ final class SettingsSaverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $fetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $validator;
 	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
-	private string $tempFile;
+	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
 
 	protected function setUp(): void
 	{
-		$this->fetcher      = $this->createMock(SettingsFetcher::class);
-		$this->validator    = $this->createMock(SettingsValidator::class);
-		$this->cacheManager = $this->createMock(CacheManager::class);
+		$this->fetcher             = $this->createMock(SettingsFetcher::class);
+		$this->validator           = $this->createMock(SettingsValidator::class);
+		$this->cacheManager        = $this->createMock(CacheManager::class);
+		$this->settingsRepository  = $this->createMock(SettingsRepository::class);
 
 		$this->saver = new SettingsSaver(
 			$this->fetcher,
 			$this->validator,
-			$this->cacheManager
+			$this->cacheManager,
+			$this->settingsRepository
 		);
-
-		// Create temporary file for testing file operations
-		$this->tempFile           = sys_get_temp_dir() . '/tcms-test-' . uniqid() . '.php';
-		$_SERVER['DOCUMENT_ROOT'] = sys_get_temp_dir();
-		// Set up a temp directory structure
-		$tempDir = sys_get_temp_dir() . '/tcms-test-' . uniqid();
-		mkdir($tempDir, 0755, true);
-		$_SERVER['DOCUMENT_ROOT'] = $tempDir;
-		$this->tempFile           = $tempDir . '/tcms.php';
-	}
-
-	protected function tearDown(): void
-	{
-		// Clean up temp file
-		if (file_exists($this->tempFile)) {
-			unlink($this->tempFile);
-		}
-		// Clean up temp directory
-		if (isset($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT'])) {
-			rmdir($_SERVER['DOCUMENT_ROOT']);
-		}
 	}
 
 	public function testSaveSectionValidatesData(): void
@@ -68,9 +50,10 @@ final class SettingsSaverTest extends TestCase
 		$this->cacheManager->expects($this->once())
 			->method('clearAllCaches');
 
-		$this->saver->saveSection($section, $sectionData);
+		$this->settingsRepository->expects($this->once())
+			->method('save');
 
-		$this->assertFileExists($this->tempFile);
+		$this->saver->saveSection($section, $sectionData);
 	}
 
 	public function testSaveSectionMergesWithExistingSection(): void
@@ -89,86 +72,85 @@ final class SettingsSaverTest extends TestCase
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
+		// Capture the merged settings that will be saved
+		$this->settingsRepository->expects($this->once())
+			->method('save')
+			->with($this->callback(function ($settings) {
+				// Verify deep merge occurred
+				return $settings['smtp']['host'] === 'new.example.com' &&
+					   $settings['smtp']['port'] === 587 &&
+					   $settings['smtp']['username'] === 'user@example.com';
+			}));
+
 		$this->saver->saveSection($section, $newData);
-
-		// Verify file was written
-		$this->assertFileExists($this->tempFile);
-
-		// Verify deep merge occurred
-		$savedSettings = include $this->tempFile;
-		$this->assertEquals('new.example.com', $savedSettings['smtp']['host']);
-		$this->assertEquals(587, $savedSettings['smtp']['port']);
-		$this->assertEquals('user@example.com', $savedSettings['smtp']['username']); // Preserved
 	}
 
 	public function testSaveSectionHandlesGeneralSectionSpecially(): void
 	{
 		$existingSettings = [
-			'domain'   => 'old.example.com',
+			'sentry'   => 'old-key',
 			'timezone' => 'UTC',
 		];
-		$newData = ['domain' => 'new.example.com', 'debug' => true];
+		$newData = ['sentry' => 'new-key', 'notfound' => '/404'];
 
 		$this->validator->method('processSection')->willReturn($newData);
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
-		$this->saver->saveSection('general', $newData);
-
-		// Verify file was written
-		$this->assertFileExists($this->tempFile);
-
 		// Verify general settings are merged at top level
-		$savedSettings = include $this->tempFile;
-		$this->assertEquals('new.example.com', $savedSettings['domain']);
-		$this->assertEquals('UTC', $savedSettings['timezone']); // Preserved
-		$this->assertTrue($savedSettings['debug']);
+		$this->settingsRepository->expects($this->once())
+			->method('save')
+			->with($this->callback(function ($settings) {
+				return $settings['sentry'] === 'new-key' &&
+					   $settings['timezone'] === 'UTC' &&
+					   $settings['notfound'] === '/404';
+			}));
+
+		$this->saver->saveSection('general', $newData);
 	}
 
 	public function testSaveSectionCreatesNewSection(): void
 	{
-		$existingSettings = ['domain' => 'example.com'];
+		$existingSettings = ['sentry' => 'test'];
 		$newData          = ['key1' => 'value1', 'key2' => 'value2'];
 
 		$this->validator->method('processSection')->willReturn($newData);
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
-		$this->saver->saveSection('newsection', $newData);
-
-		// Verify file was written
-		$this->assertFileExists($this->tempFile);
-
 		// Verify new section was created
-		$savedSettings = include $this->tempFile;
-		$this->assertArrayHasKey('newsection', $savedSettings);
-		$this->assertEquals($newData, $savedSettings['newsection']);
+		$this->settingsRepository->expects($this->once())
+			->method('save')
+			->with($this->callback(function ($settings) use ($newData) {
+				return isset($settings['newsection']) &&
+					   $settings['newsection'] === $newData;
+			}));
+
+		$this->saver->saveSection('newsection', $newData);
 	}
 
 	public function testSaveSettingsWritesEntireArray(): void
 	{
 		$settings = [
-			'domain' => 'example.com',
+			'sentry' => 'test',
 			'smtp'   => ['host' => 'smtp.example.com'],
 			'cache'  => ['enabled' => true],
 		];
 
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
-		$this->saver->saveSettings($settings);
-
-		// Verify file was written
-		$this->assertFileExists($this->tempFile);
-
 		// Verify exact settings were saved
-		$savedSettings = include $this->tempFile;
-		$this->assertEquals($settings, $savedSettings);
+		$this->settingsRepository->expects($this->once())
+			->method('save')
+			->with($settings);
+
+		$this->saver->saveSettings($settings);
 	}
 
 	public function testDeleteSectionRemovesSection(): void
 	{
 		$existingSettings = [
-			'domain' => 'example.com',
+			'sentry' => 'test',
 			'smtp'   => ['host' => 'smtp.example.com'],
 			'cache'  => ['enabled' => true],
 		];
@@ -176,39 +158,38 @@ final class SettingsSaverTest extends TestCase
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
-		$this->saver->deleteSection('smtp');
-
-		// Verify file was written
-		$this->assertFileExists($this->tempFile);
-
 		// Verify section was removed
-		$savedSettings = include $this->tempFile;
-		$this->assertArrayNotHasKey('smtp', $savedSettings);
-		$this->assertArrayHasKey('domain', $savedSettings);
-		$this->assertArrayHasKey('cache', $savedSettings);
+		$this->settingsRepository->expects($this->once())
+			->method('save')
+			->with($this->callback(function ($settings) {
+				return !isset($settings['smtp']) &&
+					   isset($settings['sentry']) &&
+					   isset($settings['cache']);
+			}));
+
+		$this->saver->deleteSection('smtp');
 	}
 
 	public function testDeleteSectionHandlesNonExistentSection(): void
 	{
 		$existingSettings = [
-			'domain' => 'example.com',
+			'sentry' => 'test',
 			'cache'  => ['enabled' => true],
 		];
 
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
+		$this->settingsRepository->expects($this->once())->method('save');
 
 		// Should not throw exception when deleting non-existent section
 		$this->saver->deleteSection('nonexistent');
-
-		// Verify file was written
-		$this->assertFileExists($this->tempFile);
 	}
 
 	public function testClearsCacheAfterSaveSection(): void
 	{
 		$this->validator->method('processSection')->willReturn(['key' => 'value']);
 		$this->fetcher->method('loadSettings')->willReturn([]);
+		$this->settingsRepository->method('save');
 
 		$this->cacheManager->expects($this->once())
 			->method('clearAllCaches');
@@ -218,55 +199,23 @@ final class SettingsSaverTest extends TestCase
 
 	public function testClearsCacheAfterSaveSettings(): void
 	{
+		$this->settingsRepository->method('save');
+
 		$this->cacheManager->expects($this->once())
 			->method('clearAllCaches');
 
-		$this->saver->saveSettings(['domain' => 'test.com']);
+		$this->saver->saveSettings(['sentry' => 'test.com']);
 	}
 
 	public function testClearsCacheAfterDeleteSection(): void
 	{
 		$this->fetcher->method('loadSettings')->willReturn(['test' => ['key' => 'value']]);
+		$this->settingsRepository->method('save');
 
 		$this->cacheManager->expects($this->once())
 			->method('clearAllCaches');
 
 		$this->saver->deleteSection('test');
-	}
-
-	public function testWritesValidPhpSyntax(): void
-	{
-		$settings = ['domain' => 'example.com', 'debug' => true];
-
-		$this->saver->saveSettings($settings);
-
-		// Verify file is valid PHP
-		$this->assertFileExists($this->tempFile);
-		$contents = file_get_contents($this->tempFile);
-		$this->assertStringStartsWith('<?php', $contents);
-
-		// Verify file can be included and returns correct data
-		$loadedSettings = include $this->tempFile;
-		$this->assertEquals($settings, $loadedSettings);
-	}
-
-	public function testWritesJsonWithPrettyPrint(): void
-	{
-		$settings = [
-			'domain' => 'example.com',
-			'smtp'   => [
-				'host' => 'smtp.example.com',
-				'port' => 587,
-			],
-		];
-
-		$this->saver->saveSettings($settings);
-
-		$contents = file_get_contents($this->tempFile);
-
-		// Verify JSON is pretty printed (has newlines and indentation)
-		$this->assertStringContainsString("{\n", $contents);
-		$this->assertStringContainsString('    "domain"', $contents);
 	}
 
 	public function testHandlesNestedArrayMerging(): void
@@ -292,41 +241,46 @@ final class SettingsSaverTest extends TestCase
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
 		$this->cacheManager->method('clearAllCaches');
 
-		$this->saver->saveSection('cache', $newData);
-
-		$savedSettings = include $this->tempFile;
-
 		// Verify deep merge preserved existing keys
-		$this->assertEquals('127.0.0.1', $savedSettings['cache']['redis']['host']);
-		$this->assertEquals(6379, $savedSettings['cache']['redis']['port']); // Preserved
-		$this->assertEquals(0, $savedSettings['cache']['redis']['database']); // Preserved
-		$this->assertEquals('secret', $savedSettings['cache']['redis']['password']); // Added
-	}
+		$this->settingsRepository->expects($this->once())
+			->method('save')
+			->with($this->callback(function ($settings) {
+				return $settings['cache']['redis']['host'] === '127.0.0.1' &&
+					   $settings['cache']['redis']['port'] === 6379 &&
+					   $settings['cache']['redis']['database'] === 0 &&
+					   $settings['cache']['redis']['password'] === 'secret';
+			}));
 
-	public function testHandlesSpecialCharactersInSettings(): void
-	{
-		$settings = [
-			'domain'  => 'example.com/path',
-			'message' => 'Hello "World" with \'quotes\'',
-			'unicode' => '你好世界',
-		];
-
-		$this->saver->saveSettings($settings);
-
-		$savedSettings = include $this->tempFile;
-
-		$this->assertEquals($settings['domain'], $savedSettings['domain']);
-		$this->assertEquals($settings['message'], $savedSettings['message']);
-		$this->assertEquals($settings['unicode'], $savedSettings['unicode']);
+		$this->saver->saveSection('cache', $newData);
 	}
 
 	public function testHandlesEmptySettings(): void
 	{
+		$this->settingsRepository->expects($this->once())
+			->method('save')
+			->with([]);
+
 		$this->saver->saveSettings([]);
+	}
 
-		$this->assertFileExists($this->tempFile);
+	public function testDeepMergeArraysStaticMethod(): void
+	{
+		$array1 = [
+			'a' => 'value1',
+			'b' => ['b1' => 'value2', 'b2' => 'value3'],
+		];
 
-		$savedSettings = include $this->tempFile;
-		$this->assertEquals([], $savedSettings);
+		$array2 = [
+			'b' => ['b2' => 'overridden', 'b3' => 'value4'],
+			'c' => 'value5',
+		];
+
+		$result = SettingsSaver::deepMergeArrays($array1, $array2);
+
+		$this->assertEquals('value1', $result['a']);
+		$this->assertEquals('value2', $result['b']['b1']);
+		$this->assertEquals('overridden', $result['b']['b2']);
+		$this->assertEquals('value4', $result['b']['b3']);
+		$this->assertEquals('value5', $result['c']);
 	}
 }

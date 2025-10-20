@@ -18,7 +18,7 @@ final class SettingsValidatorTest extends TestCase
 
 	public function testIsValidSectionReturnsTrueForValidSections(): void
 	{
-		$validSections = ['general', 'dashboard', 'imageworks', 'smtp', 'cache', 'auth', 'htmlclean'];
+		$validSections = ['installation', 'general', 'dashboard', 'imageworks', 'smtp', 'cache', 'auth', 'htmlclean', 'mailer'];
 
 		foreach ($validSections as $section) {
 			$this->assertTrue(
@@ -30,7 +30,7 @@ final class SettingsValidatorTest extends TestCase
 
 	public function testIsValidSectionReturnsFalseForInvalidSections(): void
 	{
-		$invalidSections = ['invalid', 'unknown', 'random', 'mailer', 'session'];
+		$invalidSections = ['invalid', 'unknown', 'random', 'session'];
 
 		foreach ($invalidSections as $section) {
 			$this->assertFalse(
@@ -45,7 +45,8 @@ final class SettingsValidatorTest extends TestCase
 		$sections = $this->validator->getValidSections();
 
 		$this->assertIsArray($sections);
-		$this->assertCount(7, $sections);
+		$this->assertCount(9, $sections);
+		$this->assertContains('installation', $sections);
 		$this->assertContains('general', $sections);
 		$this->assertContains('dashboard', $sections);
 		$this->assertContains('imageworks', $sections);
@@ -53,6 +54,7 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertContains('cache', $sections);
 		$this->assertContains('auth', $sections);
 		$this->assertContains('htmlclean', $sections);
+		$this->assertContains('mailer', $sections);
 	}
 
 	// ==================== Dashboard Section ====================

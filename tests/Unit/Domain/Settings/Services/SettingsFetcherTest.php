@@ -3,74 +3,78 @@
 namespace Tests\Unit\Domain\Settings\Services;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Settings\Repository\InstallationRepository;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 
 final class SettingsFetcherTest extends TestCase
 {
 	private SettingsFetcher $fetcher;
-	private string $originalDocRoot;
-	private string $testDocRoot;
+	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $installationRepository;
 
 	protected function setUp(): void
 	{
-		$this->fetcher = new SettingsFetcher();
+		$this->settingsRepository     = $this->createMock(SettingsRepository::class);
+		$this->installationRepository = $this->createMock(InstallationRepository::class);
 
-		// Save original DOCUMENT_ROOT and set up test directory
-		$this->originalDocRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
-		$this->testDocRoot     = sys_get_temp_dir() . '/totalcms-test-' . uniqid();
-		mkdir($this->testDocRoot, 0777, true);
-		$_SERVER['DOCUMENT_ROOT'] = $this->testDocRoot;
-	}
-
-	protected function tearDown(): void
-	{
-		// Restore original DOCUMENT_ROOT
-		$_SERVER['DOCUMENT_ROOT'] = $this->originalDocRoot;
-
-		// Clean up test directory
-		if (file_exists($this->testDocRoot . '/tcms.php')) {
-			unlink($this->testDocRoot . '/tcms.php');
-		}
-		if (is_dir($this->testDocRoot)) {
-			rmdir($this->testDocRoot);
-		}
+		$this->fetcher = new SettingsFetcher(
+			$this->settingsRepository,
+			$this->installationRepository
+		);
 	}
 
 	public function testLoadSettingsReturnsEmptyArrayWhenFileNotExists(): void
 	{
+		$this->settingsRepository->method('load')->willReturn([]);
+
 		$result = $this->fetcher->loadSettings();
 
 		$this->assertIsArray($result);
 		$this->assertEmpty($result);
 	}
 
-	public function testLoadSettingsReturnsArrayFromFile(): void
+	public function testLoadSettingsReturnsArrayFromRepository(): void
 	{
 		$settings = [
-			'sentry'  => 'test-sentry',
-			'datadir' => 'test-data',
-			'cache'   => ['enabled' => true],
+			'sentry' => 'test-sentry',
+			'cache'  => ['enabled' => true],
 		];
 
-		$this->createTcmsPhpFile($settings);
+		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$result = $this->fetcher->loadSettings();
 
 		$this->assertSame($settings, $result);
 	}
 
-	public function testLoadSettingsHandlesNonArrayReturn(): void
+	public function testLoadInstallationSettingsReturnsEmptyArrayWhenFileNotExists(): void
 	{
-		file_put_contents($this->testDocRoot . '/tcms.php', '<?php return "not an array";');
+		$this->installationRepository->method('load')->willReturn([]);
 
-		$result = $this->fetcher->loadSettings();
+		$result = $this->fetcher->loadInstallationSettings();
 
 		$this->assertIsArray($result);
 		$this->assertEmpty($result);
 	}
 
+	public function testLoadInstallationSettingsReturnsArrayFromRepository(): void
+	{
+		$settings = [
+			'datadir' => 'test-data',
+		];
+
+		$this->installationRepository->method('load')->willReturn($settings);
+
+		$result = $this->fetcher->loadInstallationSettings();
+
+		$this->assertSame($settings, $result);
+	}
+
 	public function testLoadSectionReturnsEmptyArrayWhenSettingsEmpty(): void
 	{
+		$this->settingsRepository->method('load')->willReturn([]);
+
 		$result = $this->fetcher->loadSection('cache');
 
 		$this->assertIsArray($result);
@@ -90,7 +94,7 @@ final class SettingsFetcherTest extends TestCase
 			],
 		];
 
-		$this->createTcmsPhpFile($settings);
+		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$result = $this->fetcher->loadSection('cache');
 
@@ -103,7 +107,7 @@ final class SettingsFetcherTest extends TestCase
 			'cache' => ['enabled' => true],
 		];
 
-		$this->createTcmsPhpFile($settings);
+		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$result = $this->fetcher->loadSection('nonexistent');
 
@@ -115,21 +119,17 @@ final class SettingsFetcherTest extends TestCase
 	{
 		$settings = [
 			'sentry'   => 'test-sentry',
-			'datadir'  => 'test-data',
-			'api'      => 'test-api',
 			'notfound' => '404.html',
 			'timezone' => 'UTC',
 			'locale'   => 'en_US',
 			'cache'    => ['enabled' => true], // This should not be in general
 		];
 
-		$this->createTcmsPhpFile($settings);
+		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$result = $this->fetcher->loadSection('general');
 
 		$this->assertArrayHasKey('sentry', $result);
-		$this->assertArrayHasKey('datadir', $result);
-		$this->assertArrayHasKey('api', $result);
 		$this->assertArrayHasKey('notfound', $result);
 		$this->assertArrayHasKey('timezone', $result);
 		$this->assertArrayHasKey('locale', $result);
@@ -144,13 +144,26 @@ final class SettingsFetcherTest extends TestCase
 			// Missing other general fields
 		];
 
-		$this->createTcmsPhpFile($settings);
+		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$result = $this->fetcher->loadSection('general');
 
 		$this->assertCount(2, $result);
 		$this->assertArrayHasKey('sentry', $result);
 		$this->assertArrayHasKey('timezone', $result);
+	}
+
+	public function testLoadSectionInstallationReturnsInstallationSettings(): void
+	{
+		$installationSettings = [
+			'datadir' => '/custom/data',
+		];
+
+		$this->installationRepository->method('load')->willReturn($installationSettings);
+
+		$result = $this->fetcher->loadSection('installation');
+
+		$this->assertSame($installationSettings, $result);
 	}
 
 	public function testLoadSettingsHandlesComplexNestedArrays(): void
@@ -165,7 +178,7 @@ final class SettingsFetcherTest extends TestCase
 			],
 		];
 
-		$this->createTcmsPhpFile($settings);
+		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$result = $this->fetcher->loadSettings();
 
@@ -180,7 +193,7 @@ final class SettingsFetcherTest extends TestCase
 			'imageworks' => ['quality' => 85],
 		];
 
-		$this->createTcmsPhpFile($settings);
+		$this->settingsRepository->method('load')->willReturn($settings);
 
 		$cacheResult      = $this->fetcher->loadSection('cache');
 		$mailerResult     = $this->fetcher->loadSection('mailer');
@@ -189,14 +202,5 @@ final class SettingsFetcherTest extends TestCase
 		$this->assertSame($settings['cache'], $cacheResult);
 		$this->assertSame($settings['mailer'], $mailerResult);
 		$this->assertSame($settings['imageworks'], $imageworksResult);
-	}
-
-	/**
-	 * @param array<string,mixed> $settings
-	 */
-	private function createTcmsPhpFile(array $settings): void
-	{
-		$content = '<?php return ' . var_export($settings, true) . ';';
-		file_put_contents($this->testDocRoot . '/tcms.php', $content);
 	}
 }

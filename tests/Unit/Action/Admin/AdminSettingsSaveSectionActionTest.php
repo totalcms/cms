@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
+use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
 use TotalCMS\Renderer\JsonRenderer;
@@ -15,21 +16,24 @@ final class AdminSettingsSaveSectionActionTest extends TestCase
 	private AdminSettingsSaveSectionAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
 	private \PHPUnit\Framework\MockObject\MockObject $saver;
+	private \PHPUnit\Framework\MockObject\MockObject $installationSaver;
 	private \PHPUnit\Framework\MockObject\MockObject $validator;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->renderer  = $this->createMock(JsonRenderer::class);
-		$this->saver     = $this->createMock(SettingsSaver::class);
-		$this->validator = $this->createMock(SettingsValidator::class);
-		$this->request   = $this->createMock(ServerRequestInterface::class);
-		$this->response  = $this->createMock(ResponseInterface::class);
+		$this->renderer          = $this->createMock(JsonRenderer::class);
+		$this->saver             = $this->createMock(SettingsSaver::class);
+		$this->installationSaver = $this->createMock(InstallationSettingsSaver::class);
+		$this->validator         = $this->createMock(SettingsValidator::class);
+		$this->request           = $this->createMock(ServerRequestInterface::class);
+		$this->response          = $this->createMock(ResponseInterface::class);
 
 		$this->action = new AdminSettingsSaveSectionAction(
 			$this->renderer,
 			$this->saver,
+			$this->installationSaver,
 			$this->validator
 		);
 	}
