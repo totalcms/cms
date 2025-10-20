@@ -7,7 +7,10 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Admin\AdminUtilsAction;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
 
@@ -17,18 +20,31 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $renderer;
 	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
 	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $accessGroupLister;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
-		$this->renderer       = $this->createMock(TwigRenderer::class);
-		$this->twigEngine     = $this->createMock(TwigEngine::class);
-		$this->apiKeyFetcher  = $this->createMock(ApiKeyFetcher::class);
-		$this->request        = $this->createMock(ServerRequestInterface::class);
-		$this->response       = $this->createMock(ResponseInterface::class);
+		$this->renderer              = $this->createMock(TwigRenderer::class);
+		$this->twigEngine            = $this->createMock(TwigEngine::class);
+		$this->apiKeyFetcher         = $this->createMock(ApiKeyFetcher::class);
+		$this->accessGroupLister     = $this->createMock(AccessGroupLister::class);
+		$this->collectionRepository  = $this->createMock(CollectionRepository::class);
+		$this->schemaLister          = $this->createMock(SchemaLister::class);
+		$this->request               = $this->createMock(ServerRequestInterface::class);
+		$this->response              = $this->createMock(ResponseInterface::class);
 
-		$this->action = new AdminUtilsAction($this->renderer, $this->twigEngine, $this->apiKeyFetcher);
+		$this->action = new AdminUtilsAction(
+			$this->renderer,
+			$this->twigEngine,
+			$this->apiKeyFetcher,
+			$this->accessGroupLister,
+			$this->collectionRepository,
+			$this->schemaLister
+		);
 	}
 
 	public function testRendersUtilsTemplateWithDefaultPage(): void
