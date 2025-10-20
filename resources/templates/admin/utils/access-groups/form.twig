@@ -222,9 +222,10 @@
 		}) }}
 	{% endset %}
 
-	{{ cms.form.totalform("/access-groups", formFields, {
+	{% set apiRoute = isEdit ? "/access-groups/" ~ group.id : "/access-groups" %}
+	{{ cms.form.totalform(apiRoute, formFields, {
 		class  : "access-groups-form",
-		method : "POST",
+		method : isEdit ? "PUT" : "POST",
 		save   : isEdit ? "Update Access Group" : "Create Access Group",
 		newActions: [
 			{
