@@ -474,8 +474,8 @@ readonly class TotalFormFactory
 			if (isset($fieldSchema['default'])) {
 				$currentValue = $fieldSchema['default'];
 			}
-			// General settings are stored at top level in defaults, not under 'general' key
-			if ($section === 'general' && isset($defaults[$fieldName])) {
+			// Installation and General settings are stored at top level in defaults, not under section keys
+			if (($section === 'installation' || $section === 'general') && isset($defaults[$fieldName])) {
 				$currentValue = $defaults[$fieldName];
 			} elseif (isset($defaults[$section][$fieldName])) {
 				$currentValue = $defaults[$section][$fieldName];
