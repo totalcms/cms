@@ -202,6 +202,7 @@ body {
 			&.api-keys { --collection-icon : var(--icon-apikey) }
 			&.license-manager { --collection-icon : var(--icon-license) }
 			&.jobqueue { --collection-icon : var(--icon-terminal) }
+			&.access-groups { --collection-icon : var(--icon-group) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);
@@ -276,11 +277,11 @@ body {
 			color : oklch(var(--totalform-darkgray));
 		}
 	}
-	p, ul, ol {
+	p:not(.help), ul, ol {
 		max-width  : 65ch;
 		margin-top : 1rem;
 	}
-	p:first-of-type {
+	p:not(.help):first-of-type {
 		margin-top: 0;
 	}
 	form {
@@ -333,7 +334,7 @@ body {
 	gap           : 1rem;
 	align-content : start;
 
-	p, ul, ol {
+	p:not(.help), ul, ol {
 		max-width : 65ch;
 	}
 }

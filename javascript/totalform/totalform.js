@@ -375,7 +375,21 @@ export default class TotalForm {
 
         // Handle array current values (checkboxes, multiselect, etc.)
         if (Array.isArray(currentValue)) {
-            return currentValue.includes(expectedValue);
+            // Support operators for array values
+            switch (operator) {
+                case 'in':
+                case '==':
+                    return currentValue.includes(expectedValue);
+                case 'not_in':
+                case '!=':
+                    return !currentValue.includes(expectedValue);
+                case 'empty':
+                    return currentValue.length === 0;
+                case 'not_empty':
+                    return currentValue.length > 0;
+                default:
+                    return currentValue.includes(expectedValue);
+            }
         }
 
         // Evaluate based on operator

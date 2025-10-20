@@ -20,8 +20,11 @@
     }
 }
 
-.check-field .help {
-	flex-basis: 100%;
+.check-field .help,
+.multicheckbox-field .help,
+.radio-field .help {
+	flex-basis         : 100%;
+	margin-block-start : 1rem;
 }
 
 //------------------------------
