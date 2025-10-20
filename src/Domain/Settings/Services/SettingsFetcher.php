@@ -56,8 +56,8 @@ readonly class SettingsFetcher
 
 		// General settings are stored at the top level, not under 'general' key
 		if ($section === 'general') {
-			// Extract only the general settings fields from top level (removed datadir, now in installation)
-			$generalFields   = ['sentry', 'api', 'notfound', 'timezone', 'locale'];
+			// Extract only the general settings fields from top level
+			$generalFields   = ['sentry', 'notfound', 'timezone', 'locale'];
 			$generalSettings = [];
 			foreach ($generalFields as $field) {
 				if (isset($settings[$field])) {

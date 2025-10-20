@@ -13,4 +13,5 @@ return [
 	//
 	// Uncomment to customize the data directory location:
 	// 'datadir' => __DIR__ . '/tcms-data',
+	// 'api' => '/api',
 ];
