@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -37,6 +38,7 @@ class SchemaForm extends TotalForm
 		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		public SchemaLister $schemaLister,
+		protected AccessGroupLister $accessGroupLister,
 		protected SchemaFactory $schemaFactory,
 		public string $api,
 		public string $collection = '',
@@ -74,6 +76,7 @@ class SchemaForm extends TotalForm
 			$indexFilter,
 			$schemaFetcher,
 			$schemaLister,
+			$accessGroupLister,
 			$api,
 			$collection,
 			$id,

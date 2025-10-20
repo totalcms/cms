@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -38,6 +39,7 @@ class DeckItemForm extends TotalForm
 		IndexFilter $indexFilter,
 		SchemaFetcher $schemaFetcher,
 		SchemaLister $schemaLister,
+		AccessGroupLister $accessGroupLister,
 		string $api,
 		string $collection             = '',
 		string $id                     = '',
@@ -70,6 +72,7 @@ class DeckItemForm extends TotalForm
 			indexFilter       : $indexFilter,
 			schemaFetcher     : $schemaFetcher,
 			schemaLister      : $schemaLister,
+			accessGroupLister : $accessGroupLister,
 			api               : $api,
 			collection        : $collection,
 			id                : $id,

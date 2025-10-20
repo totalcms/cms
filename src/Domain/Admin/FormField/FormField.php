@@ -61,6 +61,7 @@ class FormField
 
 		$this->datalist = (isset($this->settings['propertyOptions'])
 			|| isset($this->settings['relationalOptions'])
+			|| isset($this->settings['accessGroupOptions'])
 			|| isset($this->settings['datalistOptions']));
 
 		// Set a default value on new object forms if one is not provided
@@ -363,6 +364,9 @@ class FormField
 		}
 		if (isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->options, $this->buildRelationalOptions());
+		}
+		if (isset($this->settings['accessGroupOptions']) && $this->settings['accessGroupOptions'] === true) {
+			$this->options = array_merge($this->options, $this->form->accessGroupOptionsForField());
 		}
 		if (is_array($this->value) && $this->value !== [] && !isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->value, $this->options); // value is first to maintain order

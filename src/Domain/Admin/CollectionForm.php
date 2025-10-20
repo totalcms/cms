@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -33,6 +34,7 @@ class CollectionForm extends TotalForm
 		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
+		protected AccessGroupLister $accessGroupLister,
 		public string $api,
 		public string $collection = '',
 		public string $id          = '',
@@ -73,6 +75,7 @@ class CollectionForm extends TotalForm
 			$indexFilter,
 			$schemaFetcher,
 			$schemaLister,
+			$accessGroupLister,
 			$api,
 			$collection,
 			$id,

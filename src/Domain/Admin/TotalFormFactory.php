@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
@@ -45,6 +46,7 @@ readonly class TotalFormFactory
 		private IndexFilter $indexFilter,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
+		private AccessGroupLister $accessGroupLister,
 		private SchemaFactory $schemaFactory,
 		private TemplateRepository $templateRepository,
 		private CSRFTokenManager $csrfManager,
@@ -80,6 +82,7 @@ readonly class TotalFormFactory
 			'indexFilter'       => $this->indexFilter,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
 			'csrfManager'       => $this->csrfManager,
 		]);
 
@@ -234,6 +237,7 @@ readonly class TotalFormFactory
 			'indexFilter'       => $this->indexFilter,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
 			'schemaFactory'     => $this->schemaFactory,
 			'csrfManager'       => $this->csrfManager,
 		]);
@@ -259,6 +263,7 @@ readonly class TotalFormFactory
 			'indexFilter'        => $this->indexFilter,
 			'schemaFetcher'      => $this->schemaFetcher,
 			'schemaLister'       => $this->schemaLister,
+			'accessGroupLister'  => $this->accessGroupLister,
 			'templateRepository' => $this->templateRepository,
 			'csrfManager'        => $this->csrfManager,
 		]);
@@ -329,6 +334,7 @@ readonly class TotalFormFactory
 			'indexFilter'       => $this->indexFilter,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
 			'csrfManager'       => $this->csrfManager,
 		]);
 
@@ -350,6 +356,7 @@ readonly class TotalFormFactory
 			'objectFetcher'     => $this->objectFetcher,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
 			'csrfManager'       => $this->csrfManager,
 		]);
 
@@ -375,6 +382,7 @@ readonly class TotalFormFactory
 			'objectFetcher'     => $this->objectFetcher,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
 			'csrfManager'       => $this->csrfManager,
 		]);
 
@@ -840,6 +848,7 @@ readonly class TotalFormFactory
 			indexFilter       : $this->indexFilter,
 			schemaFetcher     : $this->schemaFetcher,
 			schemaLister      : $this->schemaLister,
+			accessGroupLister : $this->accessGroupLister,
 			api               : $this->api,
 			collection        : 'text',
 		);

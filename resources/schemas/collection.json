@@ -70,10 +70,15 @@
 			"field" : "checkbox"
         },
 		"groups": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"   : "Access Groups",
-			"help"    : "Access Groups to control access to the collection and it's files",
-			"field"   : "list"
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Access Groups",
+			"help"     : "Access Groups to control access to the collection and it's files",
+			"field"    : "list",
+			"settings" : {
+				"accessGroupOptions"    : true,
+				"duplicateItemsAllowed" : false,
+				"addChoices"            : false
+			}
 		},
         "category": {
 			"type"  : "string",

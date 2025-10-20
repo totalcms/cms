@@ -6,6 +6,7 @@ use Middlewares\TrailingSlash;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\Middleware\SessionStartMiddleware;
 use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -21,6 +22,7 @@ use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
@@ -88,9 +90,16 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsSaver;
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Service\TemplateFetcher;
+use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
@@ -150,7 +159,7 @@ return [
 	},
 
 	// Bind SessionInterface to PhpSession for dependency injection
-	Odan\Session\SessionInterface::class => fn (ContainerInterface $container) => $container->get(PhpSession::class),
+	SessionInterface::class => fn (ContainerInterface $container) => $container->get(PhpSession::class),
 
 	ResponseFactoryInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getResponseFactory(),
 
@@ -294,11 +303,12 @@ HTACCESS;
 		$container->get(IndexFilter::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(SchemaLister::class),
+		$container->get(AccessGroupLister::class),
 		$container->get(SchemaFactory::class),
 		$container->get(TemplateRepository::class),
 		$container->get(CSRFTokenManager::class),
-		$container->get(TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher::class),
-		$container->get(TotalCMS\Domain\Settings\Services\SettingsFetcher::class),
+		$container->get(SettingsSchemaFetcher::class),
+		$container->get(SettingsFetcher::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -493,8 +503,8 @@ HTACCESS;
 		$container->get(SchemaFetcher::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(IndexReader::class),
-		$container->get(TotalCMS\Domain\Template\Service\TemplateLister::class),
-		$container->get(TotalCMS\Domain\Template\Service\TemplateFetcher::class),
+		$container->get(TemplateLister::class),
+		$container->get(TemplateFetcher::class),
 		new JumpStartData(),
 		$container->get(CacheManager::class),
 		$container->get(LoggerFactory::class),
@@ -518,7 +528,7 @@ HTACCESS;
 		$container->get(ObjectFetcher::class),
 		$container->get(ObjectSaver::class),
 		$container->get(SchemaSaver::class),
-		$container->get(TotalCMS\Domain\Template\Service\TemplateSaver::class),
+		$container->get(TemplateSaver::class),
 		$container->get(FactoryImporter::class),
 		$container->get(LoggerFactory::class),
 	),
@@ -578,21 +588,21 @@ HTACCESS;
 	),
 
 	// Settings Services
-	TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher::class => function (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher {
+	SettingsSchemaFetcher::class => function (ContainerInterface $container): SettingsSchemaFetcher {
 		$settings = require __DIR__ . '/settings.php';
 
-		return new TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher(
+		return new SettingsSchemaFetcher(
 			$settings['schemas'] ?? __DIR__ . '/../resources/schemas',
 		);
 	},
 
-	TotalCMS\Domain\Settings\Services\SettingsFetcher::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsFetcher => new TotalCMS\Domain\Settings\Services\SettingsFetcher(),
+	SettingsFetcher::class => fn (ContainerInterface $container): SettingsFetcher => new SettingsFetcher(),
 
-	TotalCMS\Domain\Settings\Services\SettingsValidator::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsValidator => new TotalCMS\Domain\Settings\Services\SettingsValidator(),
+	SettingsValidator::class => fn (ContainerInterface $container): SettingsValidator => new SettingsValidator(),
 
-	TotalCMS\Domain\Settings\Services\SettingsSaver::class => fn (ContainerInterface $container): TotalCMS\Domain\Settings\Services\SettingsSaver => new TotalCMS\Domain\Settings\Services\SettingsSaver(
-		$container->get(TotalCMS\Domain\Settings\Services\SettingsFetcher::class),
-		$container->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
+	SettingsSaver::class => fn (ContainerInterface $container): SettingsSaver => new SettingsSaver(
+		$container->get(SettingsFetcher::class),
+		$container->get(SettingsValidator::class),
 		$container->get(CacheManager::class),
 	),
 

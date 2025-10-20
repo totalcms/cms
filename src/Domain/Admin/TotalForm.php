@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
@@ -151,6 +152,7 @@ class TotalForm implements \Stringable
 		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
+		protected AccessGroupLister $accessGroupLister,
 		public string $api,
 		public string $collection             = '',
 		public string $id                     = '',
@@ -338,6 +340,21 @@ class TotalForm implements \Stringable
 		// Extract only the requested properties from each object
 		/** @phpstan-ignore-next-line argument.templateType */
 		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $objects);
+	}
+
+	/**
+	 * Get access group options for form fields.
+	 *
+	 * @return array<array<string,string>>
+	 */
+	public function accessGroupOptionsForField(): array
+	{
+		$groups = $this->accessGroupLister->listAll();
+
+		return array_map(fn ($group): array => [
+			'value' => $group->id,
+			'label' => $group->id,
+		], $groups);
 	}
 
 	/**
