@@ -153,22 +153,6 @@ final class SettingsFetcherTest extends TestCase
 		$this->assertArrayHasKey('timezone', $result);
 	}
 
-	public function testConfigFileExistsReturnsTrueWhenFileExists(): void
-	{
-		$this->createTcmsPhpFile(['test' => 'value']);
-
-		$result = $this->fetcher->configFileExists();
-
-		$this->assertTrue($result);
-	}
-
-	public function testConfigFileExistsReturnsFalseWhenFileNotExists(): void
-	{
-		$result = $this->fetcher->configFileExists();
-
-		$this->assertFalse($result);
-	}
-
 	public function testLoadSettingsHandlesComplexNestedArrays(): void
 	{
 		$settings = [

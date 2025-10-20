@@ -1,33 +1,16 @@
 <?php
 
-// Sample configuration file for /tcms.php
+// Total CMS Bootstrap Configuration
+// Only path settings that are needed before data directory is loaded
+//
+// NOTE: Most settings should be configured via the Admin UI (Settings page).
+// This file should only contain bootstrap settings that are needed before
+// the data directory is loaded.
 
-$settings['sentry'] = true;
-
-$settings['api']     = '/site-assets/stacks/ws.tcms.core/tcms/';
-$settings['datadir'] = $settings['docroot'] . '/tcms-data';
-
-// https://www.php.net/manual/en/timezones.php
-$settings['timezone'] = 'America/Denver';
-
-$settings['imageworks']['watermarksGallery'] = 'watermarks';
-$settings['imageworks']['presets']           = [
-	'small' => [
-		'w'   => 300,
-		'h'   => 200,
-	],
-	'small-crop' => [
-		'w'   => 300,
-		'h'   => 300,
-		'fit' => 'crop-focalpoint',
-	],
-	'medium' => [
-		'w'   => 600,
-		'h'   => 400,
-	],
-	'medium-crop' => [
-		'w'   => 600,
-		'h'   => 600,
-		'fit' => 'crop-focalpoint',
-	],
+return [
+	// Data directory location
+	// Default: document root + /tcms-data
+	//
+	// Uncomment to customize the data directory location:
+	// 'datadir' => __DIR__ . '/tcms-data',
 ];

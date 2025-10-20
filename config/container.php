@@ -91,6 +91,9 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
+use TotalCMS\Domain\Settings\Repository\InstallationRepository;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
+use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
@@ -611,7 +614,18 @@ HTACCESS;
 		);
 	},
 
-	SettingsFetcher::class => fn (ContainerInterface $container): SettingsFetcher => new SettingsFetcher(),
+	// Settings Repositories
+	SettingsRepository::class => fn (ContainerInterface $container): SettingsRepository => new SettingsRepository(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	InstallationRepository::class => fn (ContainerInterface $container): InstallationRepository => new InstallationRepository(),
+
+	// Settings Services
+	SettingsFetcher::class => fn (ContainerInterface $container): SettingsFetcher => new SettingsFetcher(
+		$container->get(SettingsRepository::class),
+		$container->get(InstallationRepository::class),
+	),
 
 	SettingsValidator::class => fn (ContainerInterface $container): SettingsValidator => new SettingsValidator(),
 
@@ -619,6 +633,12 @@ HTACCESS;
 		$container->get(SettingsFetcher::class),
 		$container->get(SettingsValidator::class),
 		$container->get(CacheManager::class),
+		$container->get(SettingsRepository::class),
+	),
+
+	InstallationSettingsSaver::class => fn (ContainerInterface $container): InstallationSettingsSaver => new InstallationSettingsSaver(
+		$container->get(CacheManager::class),
+		$container->get(InstallationRepository::class),
 	),
 
 	// Mailer Services

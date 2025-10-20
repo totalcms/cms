@@ -1,0 +1,14 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Installation Settings",
+	"description" : "Bootstrap and installation configuration",
+	"type"        : "object",
+	"properties"  : {
+		"datadir": {
+			"type"        : "text",
+			"label"       : "CMS Data Directory",
+			"help"        : "The location where the CMS data will be saved on the server. The location must be writable by the server. When not set, the default location will be used: <code>&lt;docroot&gt;/tcms-data</code>. Any existing data that you might have will need to be manually migrated to the new location.",
+			"placeholder" : "<docroot>/tcms-data"
+		}
+	}
+}

@@ -3,11 +3,10 @@
 namespace TotalCMS\Domain\Settings\Services;
 
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 
 /**
- * Saves settings to tcms.php.
- *
- * @SuppressWarnings("PHPMD.Superglobals")
+ * Saves settings to settings.json in tcms-data/.system/.
  */
 readonly class SettingsSaver
 {
@@ -15,11 +14,13 @@ readonly class SettingsSaver
 		private SettingsFetcher $settingsFetcher,
 		private SettingsValidator $settingsValidator,
 		private CacheManager $cacheManager,
+		private SettingsRepository $settingsRepository,
 	) {
 	}
 
 	/**
 	 * Save settings for a specific section.
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $sectionData
 	 */
@@ -32,10 +33,10 @@ readonly class SettingsSaver
 
 		// General settings are saved at the top level, not under 'general' key
 		if ($section === 'general') {
-			$settings = $this->deepMergeArrays($settings, $sectionData);
+			$settings = self::deepMergeArrays($settings, $sectionData);
 		} elseif (isset($settings[$section]) && is_array($settings[$section])) {
 			// Deep merge the section data
-			$settings[$section] = $this->deepMergeArrays($settings[$section], $sectionData);
+			$settings[$section] = self::deepMergeArrays($settings[$section], $sectionData);
 		} else {
 			$settings[$section] = $sectionData;
 		}
@@ -67,35 +68,31 @@ readonly class SettingsSaver
 	}
 
 	/**
-	 * Write settings to tcms.php file.
+	 * Write settings to settings.json file in tcms-data/.system/.
 	 *
 	 * @param array<string,mixed> $settings
 	 */
 	private function writeSettings(array $settings): void
 	{
-		$configFile    = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
-		$configContent = "<?php\n\nreturn json_decode(<<<JSON\n";
-		$configContent .= json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-		$configContent .= "\nJSON, true);\n";
-
-		file_put_contents($configFile, $configContent);
+		$this->settingsRepository->save($settings);
 	}
 
 	/**
 	 * Deep merge two arrays recursively.
+	 * @SuppressWarnings("PHPMD.ElseExpression")
 	 *
 	 * @param array<string,mixed> $array1
 	 * @param array<string,mixed> $array2
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function deepMergeArrays(array $array1, array $array2): array
+	public static function deepMergeArrays(array $array1, array $array2): array
 	{
 		$merged = $array1;
 
 		foreach ($array2 as $key => $value) {
 			if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
-				$merged[$key] = $this->deepMergeArrays($merged[$key], $value);
+				$merged[$key] = self::deepMergeArrays($merged[$key], $value);
 			} else {
 				$merged[$key] = $value;
 			}

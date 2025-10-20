@@ -17,6 +17,7 @@ readonly class SettingsValidator
 	public function __construct()
 	{
 		$this->validSections = [
+			'installation',
 			'general',
 			'dashboard',
 			'imageworks',
@@ -24,6 +25,7 @@ readonly class SettingsValidator
 			'cache',
 			'auth',
 			'htmlclean',
+			'mailer',
 		];
 	}
 
@@ -59,13 +61,14 @@ readonly class SettingsValidator
 
 		// Process section-specific transformations
 		return match ($section) {
-			'general'    => $this->processGeneral($data),
-			'dashboard'  => $this->processDashboard($data),
-			'imageworks' => $this->processImageWorks($data),
-			'cache'      => $this->processCache($data),
-			'auth'       => $this->processAuth($data),
-			'htmlclean'  => $this->processHtmlClean($data),
-			default      => $data,
+			'installation' => $this->processInstallation($data),
+			'general'      => $this->processGeneral($data),
+			'dashboard'    => $this->processDashboard($data),
+			'imageworks'   => $this->processImageWorks($data),
+			'cache'        => $this->processCache($data),
+			'auth'         => $this->processAuth($data),
+			'htmlclean'    => $this->processHtmlClean($data),
+			default        => $data,
 		};
 	}
 
@@ -79,6 +82,18 @@ readonly class SettingsValidator
 	private function cleanFormData(array $data): array
 	{
 		return array_filter($data, fn (mixed $value): bool => $value !== '');
+	}
+
+	/**
+	 * Process installation settings.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function processInstallation(array $data): array
+	{
+		return $data;
 	}
 
 	/**
