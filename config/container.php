@@ -606,13 +606,7 @@ HTACCESS;
 	),
 
 	// Settings Services
-	SettingsSchemaFetcher::class => function (ContainerInterface $container): SettingsSchemaFetcher {
-		$settings = require __DIR__ . '/settings.php';
-
-		return new SettingsSchemaFetcher(
-			$settings['schemas'] ?? __DIR__ . '/../resources/schemas',
-		);
-	},
+	SettingsSchemaFetcher::class => fn (ContainerInterface $container): SettingsSchemaFetcher => new SettingsSchemaFetcher(),
 
 	// Settings Repositories
 	SettingsRepository::class => fn (ContainerInterface $container): SettingsRepository => new SettingsRepository(

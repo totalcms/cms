@@ -7,10 +7,7 @@ namespace TotalCMS\Domain\Settings\Services;
  */
 readonly class SettingsSchemaFetcher
 {
-	public function __construct(
-		private string $schemasPath,
-	) {
-	}
+	private const SCHEMAS_PATH = __DIR__ . '/../../../../resources/schemas';
 
 	/**
 	 * Get schema for a settings section.
@@ -19,7 +16,7 @@ readonly class SettingsSchemaFetcher
 	 */
 	public function getSchema(string $section): ?array
 	{
-		$schemaPath = $this->schemasPath . '/settings/' . $section . '.json';
+		$schemaPath = self::SCHEMAS_PATH . '/settings/' . $section . '.json';
 
 		if (!file_exists($schemaPath)) {
 			return null;
@@ -55,7 +52,7 @@ readonly class SettingsSchemaFetcher
 	 */
 	public function schemaExists(string $section): bool
 	{
-		$schemaPath = $this->schemasPath . '/settings/' . $section . '.json';
+		$schemaPath = self::SCHEMAS_PATH . '/settings/' . $section . '.json';
 
 		return file_exists($schemaPath);
 	}
