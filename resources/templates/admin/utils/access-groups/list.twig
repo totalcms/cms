@@ -1,0 +1,319 @@
+{# List Access Groups Page #}
+<h1>Access Groups</h1>
+
+<section class="dash-content-section">
+
+	<p>Access groups control what users can see and do in the admin dashboard. Users can belong to multiple groups, with permissions merging across all their groups.</p>
+
+	<div style="margin-block: 2rem; text-align: right;">
+		<a href="utils/access-groups/new" class="dash-button">＋ Create Access Group</a>
+	</div>
+
+	{% if groups|length > 0 %}
+		<div class="access-groups-grid">
+			{% for group in groups %}
+			<article class="access-group-card{% if group.id == 'admin' %} admin-group{% endif %}">
+				<header>
+					<h3>{{ group.id }}</h3>
+					{% if group.id == 'admin' %}
+						<span class="built-in-badge">Built-in</span>
+					{% else %}
+						<div class="actions">
+							<a href="utils/access-groups/{{ group.id }}"
+							   class="edit-button"
+							   title="Edit Access Group">Edit</a>
+							<a class="cms-quick-action delete-button"
+							   data-method="DELETE"
+							   data-confirm="Are you sure you want to delete this access group?"
+							   href="{{ cms.api }}/access-groups/{{ group.id }}"
+							   data-reload
+							   title="Delete Access Group">Delete</a>
+						</div>
+					{% endif %}
+				</header>
+
+				{% if group.description %}
+				<div class="group-description">
+					<p>{{ group.description }}</p>
+				</div>
+				{% endif %}
+
+				<div class="group-details">
+					<div class="detail-row">
+						<strong>Collections:</strong>
+						<span>
+							{% if group.permissions.collections.all %}
+								<em>All Collections</em>
+								<span class="methods">
+									{% for method in group.permissions.collections.methods %}
+										<span class="method-badge small">{{ method }}</span>
+									{% endfor %}
+								</span>
+							{% elseif group.permissions.collections.allowed|length > 0 %}
+								{{ group.permissions.collections.allowed|join(', ') }}
+								<span class="methods">
+									{% for method in group.permissions.collections.methods %}
+										<span class="method-badge small">{{ method }}</span>
+									{% endfor %}
+								</span>
+							{% else %}
+								<em>None</em>
+							{% endif %}
+						</span>
+					</div>
+
+					<div class="detail-row">
+						<strong>Schemas:</strong>
+						<span>
+							{% if group.permissions.schemas.all %}
+								<em>All Schemas</em>
+								<span class="methods">
+									{% for method in group.permissions.schemas.methods %}
+										<span class="method-badge small">{{ method }}</span>
+									{% endfor %}
+								</span>
+							{% elseif group.permissions.schemas.allowed|length > 0 %}
+								{{ group.permissions.schemas.allowed|join(', ') }}
+								<span class="methods">
+									{% for method in group.permissions.schemas.methods %}
+										<span class="method-badge small">{{ method }}</span>
+									{% endfor %}
+								</span>
+							{% else %}
+								<em>None</em>
+							{% endif %}
+						</span>
+					</div>
+
+					<div class="detail-row">
+						<strong>Other Access:</strong>
+						<span class="permission-list">
+							{% if group.permissions.templates %}<span class="permission-badge">Templates</span>{% endif %}
+							{% if group.permissions.mailer %}<span class="permission-badge">Mailer</span>{% endif %}
+							{% if group.permissions.playground %}<span class="permission-badge">Playground</span>{% endif %}
+							{% if group.permissions.docs %}<span class="permission-badge">Docs</span>{% endif %}
+
+							{% if group.permissions.utils.all %}
+								<span class="permission-badge">All Utils</span>
+							{% elseif group.permissions.utils.allowed|length > 0 %}
+								{% for util in group.permissions.utils.allowed %}
+									<span class="permission-badge">{{ util }}</span>
+								{% endfor %}
+							{% endif %}
+
+							{% if group.permissions.settings.all %}
+								<span class="permission-badge">All Settings</span>
+							{% elseif group.permissions.settings.allowed|length > 0 %}
+								{% for setting in group.permissions.settings.allowed %}
+									<span class="permission-badge">{{ setting }}</span>
+								{% endfor %}
+							{% endif %}
+						</span>
+					</div>
+
+					<div class="detail-row">
+						<strong>Global Methods:</strong>
+						<span class="methods">
+							{% for method in group.methods %}
+								<span class="method-badge">{{ method }}</span>
+							{% endfor %}
+						</span>
+					</div>
+				</div>
+			</article>
+			{% endfor %}
+		</div>
+	{% else %}
+		<div class="empty-state">
+			<em>No access groups created yet. Click "Create Access Group" to get started.</em>
+		</div>
+	{% endif %}
+</section>
+
+<style>
+.empty-state {
+	text-align    : center;
+	padding       : 3rem;
+	background    : oklch(var(--totalform-nearwhite));
+	border-radius : var(--totalform-radius);
+	color         : oklch(var(--totalform-darkgray));
+	margin-top    : 2rem;
+}
+
+.access-groups-grid {
+	display   : grid;
+	gap       : 1.5rem;
+	grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+	margin-top: 2rem;
+}
+
+.access-group-card {
+	background    : oklch(var(--totalform-nearwhite));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1.5rem;
+	display       : flex;
+	flex-direction: column;
+	gap           : 1rem;
+}
+
+.access-group-card.admin-group {
+	background   : oklch(var(--totalform-accent) / 0.05);
+	border-color : oklch(var(--totalform-accent) / 0.3);
+}
+
+.access-group-card header {
+	display         : flex;
+	justify-content : space-between;
+	align-items     : center;
+	padding-bottom  : 1rem;
+	border-bottom   : 1px solid oklch(var(--totalform-border-color));
+}
+
+.access-group-card h3 {
+	margin     : 0;
+	font-size  : 1.2rem;
+	font-weight: 600;
+}
+
+.actions {
+	display : flex;
+	gap     : 1rem;
+}
+
+.edit-button {
+	display         : flex;
+	align-items     : center;
+	gap             : 0.5rem;
+	text-decoration : none;
+	color           : oklch(var(--totalform-accent));
+	padding         : 0.5rem 1rem;
+	border-radius   : var(--totalform-radius);
+	font-size       : 0.9rem;
+	font-weight     : 500;
+	transition      : background-color 0.2s;
+}
+
+.edit-button:hover {
+	background : oklch(var(--totalform-accent) / 0.1);
+}
+
+.edit-button:before {
+	content          : "";
+	display          : inline-block;
+	width            : 1rem;
+	height           : 1rem;
+	background-color : currentColor;
+	mask-image       : var(--icon-edit);
+	mask-size        : contain;
+	mask-repeat      : no-repeat;
+	mask-position    : center;
+}
+
+.delete-button {
+	display         : flex;
+	align-items     : center;
+	gap             : 0.5rem;
+	text-decoration : none;
+	color           : oklch(var(--totalform-error));
+	padding         : 0.5rem 1rem;
+	border-radius   : var(--totalform-radius);
+	font-size       : 0.9rem;
+	font-weight     : 500;
+	transition      : background-color 0.2s;
+}
+
+.delete-button:hover {
+	background : oklch(var(--totalform-error) / 0.1);
+}
+
+.delete-button:before {
+	content          : "";
+	display          : inline-block;
+	width            : 1rem;
+	height           : 1rem;
+	background-color : currentColor;
+	mask-image       : var(--icon-trash);
+	mask-size        : contain;
+	mask-repeat      : no-repeat;
+	mask-position    : center;
+}
+
+.built-in-badge {
+	background    : oklch(var(--totalform-accent) / 0.1);
+	color         : oklch(var(--totalform-accent));
+	padding       : 0.25rem 0.75rem;
+	border-radius : 4px;
+	font-size     : 0.85rem;
+	font-weight   : 500;
+}
+
+.group-description {
+	padding       : 1rem;
+	background    : oklch(var(--totalform-purewhite));
+	border-radius : var(--totalform-radius);
+}
+
+.group-description p {
+	margin : 0;
+}
+
+.group-description p + p {
+	margin-top : 0.5rem;
+}
+
+.group-details {
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.75rem;
+}
+
+.detail-row {
+	display               : grid;
+	grid-template-columns : 140px 1fr;
+	gap                   : 1rem;
+	align-items           : start;
+}
+
+.detail-row strong {
+	color       : oklch(var(--totalform-darkgray));
+	font-size   : 0.9rem;
+	font-weight : 500;
+}
+
+.methods {
+	display : flex;
+	gap     : 0.5rem;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.method-badge {
+	background    : oklch(var(--totalform-accent) / 0.1);
+	color         : oklch(var(--totalform-accent));
+	padding       : 0.25rem 0.75rem;
+	border-radius : 4px;
+	font-size     : 0.85rem;
+	font-weight   : 500;
+}
+
+.method-badge.small {
+	font-size : 0.75rem;
+	padding   : 0.2rem 0.5rem;
+}
+
+.permission-list {
+	display : flex;
+	gap     : 0.5rem;
+	flex-wrap: wrap;
+}
+
+.permission-badge {
+	background    : oklch(var(--totalform-success) / 0.1);
+	color         : oklch(var(--totalform-success));
+	padding       : 0.25rem 0.75rem;
+	border-radius : 4px;
+	font-size     : 0.85rem;
+	font-weight   : 500;
+}
+</style>

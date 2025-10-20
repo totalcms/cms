@@ -1,0 +1,12 @@
+{% set groups = accessGroupsData.groups %}
+{% set collections = accessGroupsData.collections %}
+{% set schemas = accessGroupsData.schemas %}
+{% set subAction = accessGroupsData.subAction %}
+{% set group = accessGroupsData.group %}
+{% set isEdit = accessGroupsData.isEdit %}
+
+{% if action %}
+	{% include 'admin/utils/access-groups/form.twig' %}
+{% else %}
+	{% include 'admin/utils/access-groups/list.twig' %}
+{% endif %}

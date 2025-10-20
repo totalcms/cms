@@ -4,7 +4,10 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
 
@@ -14,6 +17,9 @@ readonly class AdminUtilsAction
 		private TwigRenderer $twigRenderer,
 		private TwigEngine $twigEngine,
 		private ApiKeyFetcher $apiKeyFetcher,
+		private AccessGroupLister $accessGroupLister,
+		private CollectionRepository $collectionRepository,
+		private SchemaLister $schemaLister,
 	) {
 	}
 
@@ -24,14 +30,8 @@ readonly class AdminUtilsAction
 		array $args,
 	): ResponseInterface {
 		$page    = $args['page'] ?? 'index';
+		$action  = $args['action'] ?? '';
 		$results = '';
-
-		// Check for sub-actions in URL path (e.g., /admin/utils/api-keys/new)
-		$path      = $request->getUri()->getPath();
-		$subAction = null;
-		if (str_ends_with($path, '/new')) {
-			$subAction = 'new';
-		}
 
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();
@@ -53,14 +53,20 @@ readonly class AdminUtilsAction
 
 		// Fetch API keys for api-keys page
 		$apiKeys = null;
-		if ($page === 'api-keys' && $subAction !== 'new') {
+		if ($page === 'api-keys' && $action !== 'new') {
 			$apiKeys = $this->apiKeyFetcher->getAllKeys();
 		}
 
+		// Fetch access groups data for access-groups page
+		$accessGroupsData = null;
+		if ($page === 'access-groups') {
+			$accessGroupsData = $this->createAccessGroupData($action);
+		}
+
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
-			'page'      => $page,
-			'subAction' => $subAction,
-			'url'       => [
+			'page'   => $page,
+			'action' => $action,
+			'url'    => [
 				'path'   => $request->getUri()->getPath(),
 				'query'  => $request->getUri()->getQuery(),
 				'params' => $args,
@@ -69,6 +75,7 @@ readonly class AdminUtilsAction
 			'results'                => $results,
 			'totalcms1DetectionData' => $totalcms1DetectionData,
 			'apiKeys'                => $apiKeys,
+			'accessGroupsData'       => $accessGroupsData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
@@ -103,5 +110,19 @@ readonly class AdminUtilsAction
 		}
 
 		return null;
+	}
+
+	/** @return array<string,mixed> */
+	private function createAccessGroupData(string $action): array
+	{
+		$isEdit = $action !== 'new' && $action !== '';
+
+		return [
+			'groups'      => $this->accessGroupLister->listAll(),
+			'collections' => $this->collectionRepository->listAllCollections(),
+			'schemas'     => $this->schemaLister->listAllSchemas(),
+			'group'       => $isEdit ? $this->accessGroupLister->findById($action) : '',
+			'isEdit'      => $isEdit,
+		];
 	}
 }
