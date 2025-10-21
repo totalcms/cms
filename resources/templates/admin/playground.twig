@@ -22,7 +22,7 @@
 			{% endfor %}
 
 			{% for category, categorySnippets in snippetsByCategory %}
-			<details id="category-{{ category | slug }}">
+			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
 				<ul>
 					{% for snippet in sortByKey(categorySnippets) %}

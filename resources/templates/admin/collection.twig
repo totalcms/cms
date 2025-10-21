@@ -49,7 +49,7 @@
 		{% for category, collections in cms.collectionsByCategory() %}
 			{% set collections = collections | filter(c => cms.canAccessCollection(c.id, 'GET') and c.id not in ['playground', 'mailer']) %}
 			{% if collections | length > 0 %}
-			<details id="category-{{ category | slug }}">
+			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
 				<ul>
 				{% for collection in sortByKey(collections) %}

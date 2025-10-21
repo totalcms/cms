@@ -9,7 +9,7 @@
 
 	<nav class="links" id="template-links">
 		{% for folder, templates in cms.templatesByFolder() %}
-		<details id="category-{{ folder | slug }}">
+		<details id="category-{{ folder | slug }}" open>
 			<summary>{{ folder }}</summary>
 			<ul>
 			{% for template in templates %}

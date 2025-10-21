@@ -11,7 +11,7 @@
 		{% for category, schemas in cms.schemasByCategory() %}
 			{% set schemas = schemas | filter(s => cms.canAccessSchema(s.id, 'GET')) %}
 			{% if schemas | length > 0 %}
-			<details id="category-{{ category | slug }}">
+			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
 				<ul>
 				{% for schema in sortByKey(schemas) %}
