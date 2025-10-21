@@ -46,16 +46,6 @@ document.addEventListener("DOMContentLoaded", event => {
 		});
 	});
 
-	const sidebarDetails = Array.from(document.querySelectorAll(".dash-content-sidebar details"));
-	sidebarDetails.forEach(details => {
-		const detailsId = details.getAttribute('id');
-		if (detailsId) {
-			const key    = `sidebar-details-${detailsId}`;
-			details.open = (localStorage.getItem(key) !== 'false');
-			details.addEventListener('toggle', () => localStorage.setItem(key, details.open));
-		}
-	});
-
 	const tables = Array.from(document.getElementsByClassName("admin-table"));
 	tables.forEach(table => new AdminTable(table));
 
