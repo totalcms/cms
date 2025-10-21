@@ -41,10 +41,7 @@ class ArrayData extends PropertyData
 	/** @param array<mixed> $data */
 	private function verifydata(array $data): bool
 	{
-		if (!array_is_list($data)) {
-			return false;
-		}
-		return true;
+		return array_is_list($data);
 	}
 
 	/** @return array<mixed> */

@@ -219,13 +219,11 @@ class ImageGenerator
 
 		// Merge schema watermark settings (schema overrides URL parameters for maximum security)
 		$schemaWatermarks = $this->getSchemaWatermarkSettings();
-		if ($schemaWatermarks !== []) {
-			// Check if watermark should be applied based on limit setting
-			if ($this->shouldApplyWatermark($params, $schemaWatermarks)) {
-				// Remove limit setting before merging (not a valid imageworks parameter)
-				unset($schemaWatermarks['limit']);
-				$params = array_merge($params, $schemaWatermarks);
-			}
+		// Check if watermark should be applied based on limit setting
+		if ($schemaWatermarks !== [] && $this->shouldApplyWatermark($params, $schemaWatermarks)) {
+			// Remove limit setting before merging (not a valid imageworks parameter)
+			unset($schemaWatermarks['limit']);
+			$params = array_merge($params, $schemaWatermarks);
 		}
 
 		return array_filter($params);
@@ -240,9 +238,9 @@ class ImageGenerator
 	private function getSchemaWatermarkSettings(): array
 	{
 		try {
-			$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
+			$schema         = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
 			$propertySchema = $schema->properties[$this->property] ?? [];
-			$settings = $propertySchema['settings'] ?? [];
+			$settings       = $propertySchema['settings'] ?? [];
 
 			return $settings['watermark'] ?? [];
 		} catch (\Exception) {
@@ -256,7 +254,7 @@ class ImageGenerator
 	 * - No limit is set (always watermark), OR
 	 * - Requested width exceeds limit, OR
 	 * - Requested height exceeds limit, OR
-	 * - No dimensions requested (original image)
+	 * - No dimensions requested (original image).
 	 *
 	 * @param array<string,string|int> $params Request parameters
 	 * @param array<string,string|int> $watermarkSettings Schema watermark settings
@@ -281,12 +279,8 @@ class ImageGenerator
 		}
 
 		// Check if requested height exceeds limit
-		if (isset($params['h']) && (int)$params['h'] > $limit) {
-			return true;
-		}
-
 		// Dimensions are below limit, don't apply watermark
-		return false;
+		return isset($params['h']) && (int)$params['h'] > $limit;
 	}
 
 	private function returnOriginalImage(ImageData $imageData): ResponseInterface

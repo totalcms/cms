@@ -56,7 +56,7 @@ readonly class InstallationRepository
 		$configContent .= "// Total CMS Bootstrap Configuration\n";
 		$configContent .= "// Only path settings that are needed before data directory is loaded\n\n";
 		$configContent .= "return [\n";
-		$configContent .= "\t'datadir' => '" . addslashes($settings['datadir']) . "',\n";
+		$configContent .= "\t'datadir' => '" . addslashes((string)$settings['datadir']) . "',\n";
 		$configContent .= "];\n";
 
 		file_put_contents($configFile, $configContent);

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
@@ -351,7 +352,7 @@ class TotalForm implements \Stringable
 	{
 		$groups = $this->accessGroupLister->listAll();
 
-		return array_map(fn ($group): array => [
+		return array_map(fn (AccessGroupData $group): array => [
 			'value' => $group->id,
 			'label' => $group->id,
 		], $groups);

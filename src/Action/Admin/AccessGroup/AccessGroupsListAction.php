@@ -28,9 +28,8 @@ readonly class AccessGroupsListAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-
 		return $this->twigRenderer->template($response, 'admin/utils/access-groups.twig', [
-			'groups' => $this->accessGroupLister->listAll()
+			'groups' => $this->accessGroupLister->listAll(),
 		]);
 	}
 }

@@ -75,12 +75,11 @@ final class SettingsSaverTest extends TestCase
 		// Capture the merged settings that will be saved
 		$this->settingsRepository->expects($this->once())
 			->method('save')
-			->with($this->callback(function ($settings) {
+			->with($this->callback(fn ($settings): bool =>
 				// Verify deep merge occurred
-				return $settings['smtp']['host'] === 'new.example.com' &&
-					   $settings['smtp']['port'] === 587 &&
-					   $settings['smtp']['username'] === 'user@example.com';
-			}));
+				$settings['smtp']['host'] === 'new.example.com'
+					   && $settings['smtp']['port'] === 587
+					   && $settings['smtp']['username'] === 'user@example.com'));
 
 		$this->saver->saveSection($section, $newData);
 	}
@@ -100,11 +99,9 @@ final class SettingsSaverTest extends TestCase
 		// Verify general settings are merged at top level
 		$this->settingsRepository->expects($this->once())
 			->method('save')
-			->with($this->callback(function ($settings) {
-				return $settings['sentry'] === 'new-key' &&
-					   $settings['timezone'] === 'UTC' &&
-					   $settings['notfound'] === '/404';
-			}));
+			->with($this->callback(fn ($settings): bool => $settings['sentry'] === 'new-key'
+					   && $settings['timezone'] === 'UTC'
+					   && $settings['notfound'] === '/404'));
 
 		$this->saver->saveSection('general', $newData);
 	}
@@ -121,10 +118,8 @@ final class SettingsSaverTest extends TestCase
 		// Verify new section was created
 		$this->settingsRepository->expects($this->once())
 			->method('save')
-			->with($this->callback(function ($settings) use ($newData) {
-				return isset($settings['newsection']) &&
-					   $settings['newsection'] === $newData;
-			}));
+			->with($this->callback(fn ($settings): bool => isset($settings['newsection'])
+					   && $settings['newsection'] === $newData));
 
 		$this->saver->saveSection('newsection', $newData);
 	}
@@ -161,11 +156,9 @@ final class SettingsSaverTest extends TestCase
 		// Verify section was removed
 		$this->settingsRepository->expects($this->once())
 			->method('save')
-			->with($this->callback(function ($settings) {
-				return !isset($settings['smtp']) &&
-					   isset($settings['sentry']) &&
-					   isset($settings['cache']);
-			}));
+			->with($this->callback(fn ($settings): bool => !isset($settings['smtp'])
+					   && isset($settings['sentry'])
+					   && isset($settings['cache'])));
 
 		$this->saver->deleteSection('smtp');
 	}
@@ -244,12 +237,10 @@ final class SettingsSaverTest extends TestCase
 		// Verify deep merge preserved existing keys
 		$this->settingsRepository->expects($this->once())
 			->method('save')
-			->with($this->callback(function ($settings) {
-				return $settings['cache']['redis']['host'] === '127.0.0.1' &&
-					   $settings['cache']['redis']['port'] === 6379 &&
-					   $settings['cache']['redis']['database'] === 0 &&
-					   $settings['cache']['redis']['password'] === 'secret';
-			}));
+			->with($this->callback(fn ($settings): bool => $settings['cache']['redis']['host'] === '127.0.0.1'
+					   && $settings['cache']['redis']['port'] === 6379
+					   && $settings['cache']['redis']['database'] === 0
+					   && $settings['cache']['redis']['password'] === 'secret'));
 
 		$this->saver->saveSection('cache', $newData);
 	}

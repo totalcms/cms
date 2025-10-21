@@ -66,9 +66,10 @@ class RssBuilder
 		$objects = $this->indexFilter->fetchFilteredIndex($collection, $options);
 
 		// Sort by date (newest first)
-		usort($objects, function ($a, $b) {
+		usort($objects, function (array $a, array $b): int {
 			$dateA = $a[$this->fieldMap['date']] ?? 0;
 			$dateB = $b[$this->fieldMap['date']] ?? 0;
+
 			return strtotime($dateB) <=> strtotime($dateA);
 		});
 

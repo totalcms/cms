@@ -311,7 +311,7 @@ class DeckItemForm extends TotalForm
 		}
 
 		// Add all other fields from deck schema (schemaData is already the deck schema)
-		foreach ($schemaData->properties as $propertyName => $propertySchema) {
+		foreach (array_keys($schemaData->properties) as $propertyName) {
 			$this->addField($propertyName);
 		}
 	}

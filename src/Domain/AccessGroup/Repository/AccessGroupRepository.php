@@ -58,7 +58,7 @@ class AccessGroupRepository extends StorageRepository
 	 */
 	public function exists(string $id): bool
 	{
-		return $this->findById($id) !== null;
+		return $this->findById($id) instanceof AccessGroupData;
 	}
 
 	/**

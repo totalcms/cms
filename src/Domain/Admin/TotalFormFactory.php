@@ -366,7 +366,7 @@ readonly class TotalFormFactory
 	/**
 	 * Create a deck item form builder.
 	 *
-	 * @param array<string,mixed> $options Options including id, itemId, save, delete, class, etc.
+	 * @param array<string,mixed> $options options including id, itemId, save, delete, class, etc
 	 */
 	public function deckBuilder(string $collection, string $property, array $options = []): DeckItemForm
 	{
@@ -392,7 +392,7 @@ readonly class TotalFormFactory
 	/**
 	 * Create a deck item form with auto-generated fields.
 	 *
-	 * @param array<string,mixed> $options Options including id, itemId, save, delete, class, etc.
+	 * @param array<string,mixed> $options options including id, itemId, save, delete, class, etc
 	 */
 	public function deck(string $collection, string $property, array $options = []): string
 	{
