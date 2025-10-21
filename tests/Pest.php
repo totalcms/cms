@@ -126,9 +126,9 @@ function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete 
 
 	// If this is the root tcms-data directory and not forcing complete deletion,
 	// preserve auth and .system directories by default
-	$isRootDataDir = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
+	$isRootDataDir   = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
 	$defaultPreserve = ($isRootDataDir && !$forceComplete) ? ['auth', '.system'] : [];
-	$preserve = array_merge($defaultPreserve, $preserve);
+	$preserve        = array_merge($defaultPreserve, $preserve);
 
 	foreach (scandir($dir) as $item) {
 		if ($item === '.' || $item === '..') {

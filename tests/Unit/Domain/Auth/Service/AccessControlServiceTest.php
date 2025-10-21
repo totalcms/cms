@@ -6,7 +6,7 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 
 beforeEach(function (): void {
 	// Use container to get properly configured service
-	$container = bootstrap()->getContainer();
+	$container           = bootstrap()->getContainer();
 	$this->accessControl = $container->get(AccessControlService::class);
 });
 
@@ -243,12 +243,12 @@ describe('AccessControlService - Boolean Permissions', function (): void {
 describe('AccessControlService - Edge Cases', function (): void {
 	it('throws exception for users that do not exist', function (): void {
 		// Non-existent users should throw an exception (security measure)
-		expect(fn () => $this->accessControl->canAccessCollection('invalid-user', 'blog', 'GET'))->toThrow(\Exception::class, 'User invalid-user does not exist');
+		expect(fn () => $this->accessControl->canAccessCollection('invalid-user', 'blog', 'GET'))->toThrow(Exception::class, 'User invalid-user does not exist');
 	});
 
 	it('throws exception for completely non-existent users', function (): void {
 		// Non-existent users should throw an exception (security measure)
-		expect(fn () => $this->accessControl->canAccessCollection('non-existent-user', 'blog', 'GET'))->toThrow(\Exception::class, 'User non-existent-user does not exist');
+		expect(fn () => $this->accessControl->canAccessCollection('non-existent-user', 'blog', 'GET'))->toThrow(Exception::class, 'User non-existent-user does not exist');
 	});
 
 	it('handles limited-blogger user correctly', function (): void {

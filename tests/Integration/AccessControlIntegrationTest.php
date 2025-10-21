@@ -13,12 +13,12 @@ beforeEach(function (): void {
 });
 
 /**
- * Helper function to login as a specific user
+ * Helper function to login as a specific user.
  */
 function loginUser(string $email, string $password = 'password123'): void
 {
 	$credentials = [
-		'email' => $email,
+		'email'    => $email,
 		'password' => $password,
 	];
 	postJson('/auth/login', $credentials);
@@ -30,12 +30,12 @@ describe('Access Control Integration - Full Workflow', function (): void {
 
 		// Admin should have access to everything
 		$tests = [
-			'/admin/collections' => 200,
-			'/admin/schemas' => 200,
-			'/admin/templates' => 200,
-			'/admin/settings' => 200,
-			'/admin/mailer' => 200,
-			'/admin/playground' => 200,
+			'/admin/collections'         => 200,
+			'/admin/schemas'             => 200,
+			'/admin/templates'           => 200,
+			'/admin/settings'            => 200,
+			'/admin/mailer'              => 200,
+			'/admin/playground'          => 200,
 			'/admin/utils/cache-manager' => 200,
 			'/admin/utils/access-groups' => 200,
 		];
@@ -52,17 +52,17 @@ describe('Access Control Integration - Full Workflow', function (): void {
 		// Blogger has limited access
 		$allowedRoutes = [
 			'/admin/collections/blog' => [200, 404], // Allowed (or doesn't exist)
-			'/admin/playground' => 200, // Allowed
+			'/admin/playground'       => 200, // Allowed
 		];
 
 		$deniedRoutes = [
 			'/admin/collections/products' => 403,
-			'/admin/schemas' => 403, // No schema write access
-			'/admin/templates' => 403,
-			'/admin/settings' => 403,
-			'/admin/mailer' => 403,
-			'/admin/utils/cache-manager' => 403,
-			'/admin/utils/access-groups' => 403,
+			'/admin/schemas'              => 403, // No schema write access
+			'/admin/templates'            => 403,
+			'/admin/settings'             => 403,
+			'/admin/mailer'               => 403,
+			'/admin/utils/cache-manager'  => 403,
+			'/admin/utils/access-groups'  => 403,
 		];
 
 		foreach ($allowedRoutes as $route => $expectedStatus) {
@@ -85,20 +85,20 @@ describe('Access Control Integration - Full Workflow', function (): void {
 
 		// Editor has more access than blogger but not full admin
 		$allowedRoutes = [
-			'/admin/collections/blog' => [200, 404],
+			'/admin/collections/blog'  => [200, 404],
 			'/admin/collections/image' => [200, 404],
-			'/admin/templates' => 200,
-			'/admin/playground' => 200,
-			'/admin/settings/general' => 200,
-			'/admin/utils/jumpstart' => 200,
+			'/admin/templates'         => 200,
+			'/admin/playground'        => 200,
+			'/admin/settings/general'  => 200,
+			'/admin/utils/jumpstart'   => 200,
 		];
 
 		$deniedRoutes = [
 			'/admin/collections/products' => 403, // Not in allowed list
-			'/admin/mailer' => 403,
-			'/admin/settings/cache' => 403, // Not in allowed list
-			'/admin/utils/cache-manager' => 403, // Not in allowed list
-			'/admin/utils/access-groups' => 403, // Admin only
+			'/admin/mailer'               => 403,
+			'/admin/settings/cache'       => 403, // Not in allowed list
+			'/admin/utils/cache-manager'  => 403, // Not in allowed list
+			'/admin/utils/access-groups'  => 403, // Admin only
 		];
 
 		foreach ($allowedRoutes as $route => $expectedStatus) {
@@ -121,16 +121,16 @@ describe('Access Control Integration - Full Workflow', function (): void {
 
 		// Viewer has read-only access to collections and docs
 		$allowedRoutes = [
-			'/admin/collections/blog' => [200, 404],
+			'/admin/collections/blog'     => [200, 404],
 			'/admin/collections/products' => [200, 404],
 		];
 
 		$deniedRoutes = [
-			'/admin/schemas' => 403, // No schema write access
-			'/admin/templates' => 403,
-			'/admin/settings' => 403,
-			'/admin/mailer' => 403,
-			'/admin/playground' => 403,
+			'/admin/schemas'             => 403, // No schema write access
+			'/admin/templates'           => 403,
+			'/admin/settings'            => 403,
+			'/admin/mailer'              => 403,
+			'/admin/playground'          => 403,
 			'/admin/utils/cache-manager' => 403,
 			'/admin/utils/access-groups' => 403,
 		];
@@ -160,13 +160,13 @@ describe('Access Control Integration - Full Workflow', function (): void {
 
 		$deniedRoutes = [
 			'/admin/collections/products' => 403,
-			'/admin/collections/news' => 403,
-			'/admin/schemas' => 403,
-			'/admin/templates' => 403,
-			'/admin/settings' => 403,
-			'/admin/mailer' => 403,
-			'/admin/playground' => 403,
-			'/admin/utils/cache-manager' => 403,
+			'/admin/collections/news'     => 403,
+			'/admin/schemas'              => 403,
+			'/admin/templates'            => 403,
+			'/admin/settings'             => 403,
+			'/admin/mailer'               => 403,
+			'/admin/playground'           => 403,
+			'/admin/utils/cache-manager'  => 403,
 		];
 
 		foreach ($allowedRoutes as $route => $expectedStatus) {
@@ -192,7 +192,7 @@ describe('Access Control Integration - UI Visibility', function (): void {
 		$response = get('/admin');
 		expect($response->getStatusCode())->toBe(200);
 
-		$body = (string) $response->getBody();
+		$body = (string)$response->getBody();
 
 		// Admin should see all nav items
 		expect($body)->toContain('Collections');
@@ -211,7 +211,7 @@ describe('Access Control Integration - UI Visibility', function (): void {
 		$response = get('/admin');
 		expect($response->getStatusCode())->toBe(200);
 
-		$body = (string) $response->getBody();
+		$body = (string)$response->getBody();
 
 		// Blogger should see collections and playground
 		expect($body)->toContain('Collections');
@@ -229,7 +229,7 @@ describe('Access Control Integration - UI Visibility', function (): void {
 		$response = get('/admin');
 		expect($response->getStatusCode())->toBe(200);
 
-		$body = (string) $response->getBody();
+		$body = (string)$response->getBody();
 
 		// Viewer should see docs
 		expect($body)->toContain('Docs');
@@ -279,7 +279,7 @@ describe('Access Control Integration - Error Responses', function (): void {
 		$response = get('/admin/templates');
 		expect($response->getStatusCode())->toBe(403);
 
-		$body = (string) $response->getBody();
+		$body = (string)$response->getBody();
 		expect($body)->toContain('Access Denied');
 		expect($body)->toContain('html'); // HTML response, not JSON
 	});

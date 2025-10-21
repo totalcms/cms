@@ -5,8 +5,6 @@ declare(strict_types=1);
 use function Nekofar\Slim\Pest\get;
 use function Nekofar\Slim\Pest\post;
 use function Nekofar\Slim\Pest\postJson;
-use function Nekofar\Slim\Pest\put;
-use function Nekofar\Slim\Pest\delete;
 
 // Skip all tests in this file - middleware not properly applied in test environment
 // Core access control logic is tested in AccessControlServiceTest.php
@@ -16,12 +14,12 @@ beforeEach(function (): void {
 });
 
 /**
- * Helper function to login as a specific user
+ * Helper function to login as a specific user.
  */
 function loginAs(string $email, string $password = 'password123'): void
 {
 	$credentials = [
-		'email' => $email,
+		'email'    => $email,
 		'password' => $password,
 	];
 	postJson('/auth/login', $credentials);
@@ -374,7 +372,7 @@ describe('Access Denied Response Format', function (): void {
 		$response = get('/admin/templates');
 		expect($response->getStatusCode())->toBe(403);
 
-		$body = (string) $response->getBody();
+		$body = (string)$response->getBody();
 		expect($body)->toContain('Access Denied'); // Check for HTML content
 	});
 });

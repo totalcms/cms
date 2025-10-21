@@ -22,17 +22,17 @@ afterAll(function (): void {
 
 	// Restore auth directory
 	$authSource = $fixturesPath . '/auth';
-	$authDest = $testDataPath . '/auth';
+	$authDest   = $testDataPath . '/auth';
 	if (is_dir($authSource)) {
 		if (is_dir($authDest)) {
 			recursiveDelete($authDest, [], true);
 		}
-		exec("cp -r " . escapeshellarg($authSource) . " " . escapeshellarg($authDest));
+		exec('cp -r ' . escapeshellarg($authSource) . ' ' . escapeshellarg($authDest));
 	}
 
 	// Restore .system/access-groups.json
 	$accessGroupsSource = $fixturesPath . '/.system/access-groups.json';
-	$accessGroupsDest = $testDataPath . '/.system/access-groups.json';
+	$accessGroupsDest   = $testDataPath . '/.system/access-groups.json';
 	if (file_exists($accessGroupsSource)) {
 		if (!is_dir(dirname($accessGroupsDest))) {
 			mkdir(dirname($accessGroupsDest), 0755, true);

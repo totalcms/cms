@@ -2,11 +2,7 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
-use TotalCMS\Support\Config;
 
 // Skip all tests in this file - mocking issues with TotalCMSTwigAdapter
 // Core access control logic is tested in AccessControlServiceTest.php
@@ -21,16 +17,16 @@ describe('TotalCMSTwigAdapter - Collection Access Functions', function (): void 
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -43,16 +39,16 @@ describe('TotalCMSTwigAdapter - Collection Access Functions', function (): void 
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -66,16 +62,16 @@ describe('TotalCMSTwigAdapter - Collection Access Functions', function (): void 
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -94,16 +90,16 @@ describe('TotalCMSTwigAdapter - Schema Access Functions', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -125,16 +121,16 @@ describe('TotalCMSTwigAdapter - Template Access Functions', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -148,16 +144,16 @@ describe('TotalCMSTwigAdapter - Template Access Functions', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -172,16 +168,16 @@ describe('TotalCMSTwigAdapter - Settings Access Functions', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -203,16 +199,16 @@ describe('TotalCMSTwigAdapter - Utils Access Functions', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -233,16 +229,16 @@ describe('TotalCMSTwigAdapter - Boolean Permission Functions', function (): void
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -261,16 +257,16 @@ describe('TotalCMSTwigAdapter - Admin Check Function', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -282,16 +278,16 @@ describe('TotalCMSTwigAdapter - Admin Check Function', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
@@ -303,16 +299,16 @@ describe('TotalCMSTwigAdapter - Admin Check Function', function (): void {
 
 		$adapter = new TotalCMSTwigAdapter(
 			$this->accessManager,
-			Mockery::mock(\TotalCMS\Domain\Auth\Service\FileAccessManager::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			Mockery::mock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class),
-			Mockery::mock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			Mockery::mock(\TotalCMS\Domain\Index\Service\IndexSearcher::class),
-			Mockery::mock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			Mockery::mock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			Mockery::mock(TotalCMS\Domain\Auth\Service\FileAccessManager::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Collection\Service\CollectionLister::class),
+			Mockery::mock(TotalCMS\Domain\Object\Service\ObjectFetcher::class),
+			Mockery::mock(TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
+			Mockery::mock(TotalCMS\Domain\Index\Service\IndexSearcher::class),
+			Mockery::mock(TotalCMS\Domain\License\Service\LicenseStatus::class),
+			Mockery::mock(TotalCMS\Domain\Twig\Service\GridRenderer::class),
 			$this->accessControl,
-			Mockery::mock(\TotalCMS\Domain\Depot\Service\DepotFetcher::class),
+			Mockery::mock(TotalCMS\Domain\Depot\Service\DepotFetcher::class),
 			$this->config
 		);
 
