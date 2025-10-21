@@ -1,0 +1,15 @@
+{
+    "id": "auth",
+    "schema": "auth",
+    "name": "Auth",
+    "description": "A collection of auth objects that conform to the auth schema.",
+    "url": "",
+    "category": "",
+    "labelPlural": "Users",
+    "labelSingular": "User",
+    "groups": [],
+    "sortBy": "id",
+    "reverseSort": false,
+    "prettyUrl": false,
+    "queueRebuildOnSave": false
+}

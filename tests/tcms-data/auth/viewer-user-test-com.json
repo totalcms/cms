@@ -1,0 +1,35 @@
+{
+    "id": "viewer-user-test-com",
+    "active": true,
+    "image": {
+        "alt": "",
+        "exif": {
+            "nodata": ""
+        },
+        "featured": false,
+        "focalpoint": {
+            "x": 50,
+            "y": 50
+        },
+        "height": 0,
+        "link": "",
+        "mime": "",
+        "name": "",
+        "palette": [],
+        "size": 0,
+        "tags": [],
+        "uploadDate": "2025-10-20T18:05:53-07:00",
+        "width": 0
+    },
+    "name": "Viewer Test User",
+    "email": "viewer-user@test.com",
+    "password": "$2y$12$xf1qgTR.7pbm8Mbrwf7uSOvTZ\/k6JGDb1NfbLBOvldzYawe5roMUa",
+    "groups": [
+        "viewer"
+    ],
+    "expiration": "",
+    "maxLoginCount": 0,
+    "loginCount": 2,
+    "created": "2025-10-20T00:00:00+00:00",
+    "lastlogin": "2025-10-21T00:01:23-07:00"
+}

@@ -1,0 +1,225 @@
+{
+    "groups": [
+        {
+            "id": "admin",
+            "description": "Full administrative access to all features",
+            "methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH"
+            ],
+            "permissions": {
+                "collections": {
+                    "methods": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "schemas": {
+                    "methods": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "templates": true,
+                "mailer": true,
+                "playground": true,
+                "docs": true,
+                "utils": {
+                    "all": true,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": true,
+                    "allowed": []
+                }
+            }
+        },
+        {
+            "id": "viewer",
+            "description": "Read-only access to all collections",
+            "methods": [
+                "GET"
+            ],
+            "permissions": {
+                "collections": {
+                    "methods": [
+                        "GET"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "schemas": {
+                    "methods": [
+                        "GET"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "templates": false,
+                "mailer": false,
+                "playground": false,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": []
+                }
+            }
+        },
+        {
+            "id": "blogger",
+            "description": "Full CRUD access to blog collection only",
+            "methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH"
+            ],
+            "permissions": {
+                "collections": {
+                    "methods": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
+                "schemas": {
+                    "methods": [
+                        "GET"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
+                "templates": false,
+                "mailer": false,
+                "playground": true,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": []
+                }
+            }
+        },
+        {
+            "id": "editor",
+            "description": "Full CRUD access to blog and news collections",
+            "methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH"
+            ],
+            "permissions": {
+                "collections": {
+                    "methods": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog",
+                        "image"
+                    ]
+                },
+                "schemas": {
+                    "methods": [
+                        "GET"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog",
+                        "news"
+                    ]
+                },
+                "templates": true,
+                "mailer": false,
+                "playground": true,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": [
+                        "jumpstart"
+                    ]
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": [
+                        "general"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "limited-blogger",
+            "description": "Read-only access to blog collection only",
+            "methods": [
+                "GET"
+            ],
+            "permissions": {
+                "collections": {
+                    "methods": [
+                        "GET"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
+                "schemas": {
+                    "methods": [
+                        "GET"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
+                "templates": false,
+                "mailer": false,
+                "playground": false,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": []
+                }
+            }
+        }
+    ]
+}
