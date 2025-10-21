@@ -110,8 +110,8 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 				$this->responseFactory->createResponse()->withStatus(403),
 				'access-denied.twig',
 				[
-					'message' => $message,
-					'details' => $details,
+					'message'  => $message,
+					'details'  => $details,
 					'referrer' => $request->getHeaderLine('Referer') ?: null,
 				]
 			);
