@@ -20,13 +20,10 @@ tcms-data/*
 env.php
 config/env.php
 /cache
-/tests/tcms-data
 public/assets
-/templates/totalform.twig
 /resources/.bundle
 /resources/beta
 /resources/bundle
-/version
 /resources/jobqueue
 .cache_version
 /tests/test-data/alloy/image-uploads
