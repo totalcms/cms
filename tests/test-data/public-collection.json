@@ -1,0 +1,17 @@
+{
+  "id": "public-collection",
+  "schema": "text",
+  "name": "Public Collection",
+  "description": "Test collection for public operations",
+  "publicOperations": ["create", "read"],
+  "properties": {
+    "id": {
+      "label": "ID",
+      "field": "id"
+    },
+    "text": {
+      "label": "Text",
+      "field": "textarea"
+    }
+  }
+}

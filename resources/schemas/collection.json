@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ngroups groups\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Overrides---\nproperties properties\ncustomProperties customProperties\n---\ncount count",
+	"formgrid"    : "id id\nname name\nschema schema\ndescription description\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\n---Overrides---\nproperties properties\ncustomProperties customProperties\n---\ncount count",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -71,13 +71,28 @@
         },
 		"groups": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"    : "Access Groups",
-			"help"     : "Access Groups to control access to the collection and it's files",
+			"label"    : "File Access Groups",
+			"help"     : "Access Groups to control access to download/stream the collection files",
 			"field"    : "list",
 			"settings" : {
 				"accessGroupOptions"    : true,
 				"duplicateItemsAllowed" : false,
 				"addChoices"            : false
+			}
+		},
+		"publicOperations": {
+			"type"  : "array",
+			"label" : "Allow unauthenticated users to perform these operations on this collection",
+			"field" : "multicheckbox",
+			"default" : ["read"],
+			"options" : [
+				{"label": "Create", "value": "create"},
+				{"label": "Read", "value": "read"},
+				{"label": "Update", "value": "update"},
+				{"label": "Delete", "value": "delete"}
+			],
+			"settings": {
+				"fieldGrid": "100px"
 			}
 		},
         "category": {

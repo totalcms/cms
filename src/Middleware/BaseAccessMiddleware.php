@@ -51,6 +51,11 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
+		// Public submissions bypass access control (already validated by DualAuthMiddleware)
+		if ($request->getAttribute('publicSubmission') === true) {
+			return $handler->handle($request);
+		}
+
 		// API keys bypass group checks (trust model)
 		$authMethod = $request->getAttribute('authMethod');
 		if ($authMethod === 'apikey') {
