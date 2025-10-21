@@ -17,8 +17,13 @@ use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Middleware\CollectionAccessMiddleware;
+use TotalCMS\Middleware\DocsAccessMiddleware;
+use TotalCMS\Middleware\MailerAccessMiddleware;
+use TotalCMS\Middleware\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\SchemaAccessMiddleware;
+use TotalCMS\Middleware\SettingsAccessMiddleware;
 use TotalCMS\Middleware\TemplateAccessMiddleware;
+use TotalCMS\Middleware\UtilsAccessMiddleware;
 
 return function (App $app): void {
 	$app->redirect('/', '/admin', 301);
@@ -36,21 +41,21 @@ return function (App $app): void {
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection')->add(CollectionAccessMiddleware::class);
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post')->add(CollectionAccessMiddleware::class);
 
-		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs');
+		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs')->add(DocsAccessMiddleware::class);
 
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
-		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils');
-		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post');
+		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
+		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);
 
-		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground');
-		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post');
+		$group->get('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground')->add(PlaygroundAccessMiddleware::class);
+		$group->post('/playground[/{id}]', AdminPlaygroundAction::class)->setName('admin-playground-post')->add(PlaygroundAccessMiddleware::class);
 
-		$group->get('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail');
-		$group->post('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail-post');
+		$group->get('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail')->add(MailerAccessMiddleware::class);
+		$group->post('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail-post')->add(MailerAccessMiddleware::class);
 
-		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings');
-		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section');
+		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings')->add(SettingsAccessMiddleware::class);
+		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(SettingsAccessMiddleware::class);
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');

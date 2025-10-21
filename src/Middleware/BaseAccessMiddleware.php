@@ -11,6 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -32,6 +33,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	protected const RESOURCE_NAME = 'resource';
 
 	public function __construct(
+		protected UserValidationService $userValidation,
 		protected AccessControlService $accessControl,
 		protected PhpSession $session,
 		protected JsonRenderer $jsonRenderer,
@@ -59,6 +61,11 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		$userId = $this->session->get(SessionKeys::AUTH_USER);
 		if (!$userId) {
 			return $this->forbiddenResponse($request, 'Authentication required');
+		}
+
+		// Super admins bypass all access checks
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return $handler->handle($request);
 		}
 
 		// Extract HTTP method for permission checking

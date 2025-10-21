@@ -62,10 +62,12 @@
 	<nav class="links">
 		<ul>
 		{% for item in menu %}
+			{% if cms.canAccessUtil(item.path, 'GET') %}
 			<li class="{{ item.path }}">
 				<a {% if page == item.path %}class="active"{% endif %}
 					href="utils/{{ item.path }}">{{ item.title }}</a>
 			</li>
+			{% endif %}
 		{% endfor %}
 		</ul>
 	</nav>

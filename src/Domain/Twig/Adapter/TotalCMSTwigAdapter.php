@@ -1574,6 +1574,97 @@ NGINX;
 	}
 
 	/**
+	 * Check if current user can access a specific settings section.
+	 */
+	public function canAccessSetting(string $section, string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessSettings($userData['id'], $section, $method);
+	}
+
+	/**
+	 * Check if current user can perform a settings action (no specific section).
+	 */
+	public function canAccessSettingsMethod(string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessSettingsMethod($userData['id'], $method);
+	}
+
+	/**
+	 * Check if current user can access a specific utils page.
+	 */
+	public function canAccessUtil(string $page, string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessUtils($userData['id'], $page, $method);
+	}
+
+	/**
+	 * Check if current user can perform a utils action (no specific page).
+	 */
+	public function canAccessUtilsMethod(string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessUtilsMethod($userData['id'], $method);
+	}
+
+	/**
+	 * Check if current user can access mailer.
+	 */
+	public function canAccessMailer(): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessMailer($userData['id']);
+	}
+
+	/**
+	 * Check if current user can access playground.
+	 */
+	public function canAccessPlayground(): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessPlayground($userData['id']);
+	}
+
+	/**
+	 * Check if current user can access docs.
+	 */
+	public function canAccessDocs(): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessDocs($userData['id']);
+	}
+
+	/**
 	 * Check if user is in admin group (bypasses all access controls).
 	 */
 	public function isAdmin(): bool

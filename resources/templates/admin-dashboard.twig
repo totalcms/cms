@@ -59,30 +59,46 @@
 							'admin-logo-default.twig'
 						], ignore_missing = true) }}
                     </li>
+                    {% if cms.canAccessCollectionsMethod('GET') %}
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
                         <a class="collections" href="collections" title="Collections">Collections</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessSchemasMethod('GET') %}
                     <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
                         <a class="schemas" href="schemas" title="Schemas">Schemas</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessTemplatesMethod('GET') %}
                     <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
                         <a class="templates" href="templates" title="Templates">Templates</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessMailer() %}
                     <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
                         <a class="mailer" href="mailer" title="Mailer">Mailer</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessPlayground() %}
                     <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
                         <a class="playground" href="playground" title="Playground">Playground</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessUtilsMethod('GET') %}
                     <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
                         <a class="utils" href="utils" title="Utils">Utils</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessSettingsMethod('GET') %}
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
                         <a class="settings" href="settings" title="Settings">Settings</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessDocs() %}
                     <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
                         <a class="docs" href="docs" title="Docs">Docs</a>
                     </li>
+                    {% endif %}
                 </ul>
             </nav>
 

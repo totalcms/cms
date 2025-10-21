@@ -313,6 +313,84 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * Check if user can access settings with the given HTTP method (no specific section).
+	 */
+	public function canAccessSettingsMethod(string $userId, string $method): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			$permissions = $group->permissions['settings'] ?? [];
+
+			// Check if settings permissions exist
+			$all     = $permissions['all'] ?? false;
+			$allowed = $permissions['allowed'] ?? [];
+
+			// If no access at all, skip this group
+			if (!$all && $allowed === []) {
+				continue;
+			}
+
+			// Check method permission
+			$methods = $permissions['methods'] ?? [];
+			if (in_array($method, $methods)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if user can access utils with the given HTTP method (no specific page).
+	 */
+	public function canAccessUtilsMethod(string $userId, string $method): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			$permissions = $group->permissions['utils'] ?? [];
+
+			// Check if utils permissions exist
+			$all     = $permissions['all'] ?? false;
+			$allowed = $permissions['allowed'] ?? [];
+
+			// If no access at all, skip this group
+			if (!$all && $allowed === []) {
+				continue;
+			}
+
+			// Check method permission
+			$methods = $permissions['methods'] ?? [];
+			if (in_array($method, $methods)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Get all AccessGroupData objects for the user.
 	 *
 	 * @return array<AccessGroupData>

@@ -115,16 +115,22 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
+use TotalCMS\Middleware\AdminOnlyMiddleware;
 use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Middleware\CollectionAccessMiddleware;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
-use TotalCMS\Middleware\SchemaAccessMiddleware;
-use TotalCMS\Middleware\TemplateAccessMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
+use TotalCMS\Middleware\DocsAccessMiddleware;
 use TotalCMS\Middleware\LicenseValidationMiddleware;
+use TotalCMS\Middleware\MailerAccessMiddleware;
+use TotalCMS\Middleware\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\RateLimitMiddleware;
+use TotalCMS\Middleware\SchemaAccessMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
+use TotalCMS\Middleware\SettingsAccessMiddleware;
+use TotalCMS\Middleware\TemplateAccessMiddleware;
+use TotalCMS\Middleware\UtilsAccessMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
@@ -387,6 +393,7 @@ HTACCESS;
 	),
 
 	CollectionAccessMiddleware::class => fn (ContainerInterface $container): CollectionAccessMiddleware => new CollectionAccessMiddleware(
+		$container->get(UserValidationService::class),
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
 		$container->get(JsonRenderer::class),
@@ -396,6 +403,7 @@ HTACCESS;
 	),
 
 	SchemaAccessMiddleware::class => fn (ContainerInterface $container): SchemaAccessMiddleware => new SchemaAccessMiddleware(
+		$container->get(UserValidationService::class),
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
 		$container->get(JsonRenderer::class),
@@ -405,6 +413,67 @@ HTACCESS;
 	),
 
 	TemplateAccessMiddleware::class => fn (ContainerInterface $container): TemplateAccessMiddleware => new TemplateAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	SettingsAccessMiddleware::class => fn (ContainerInterface $container): SettingsAccessMiddleware => new SettingsAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	UtilsAccessMiddleware::class => fn (ContainerInterface $container): UtilsAccessMiddleware => new UtilsAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	MailerAccessMiddleware::class => fn (ContainerInterface $container): MailerAccessMiddleware => new MailerAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	PlaygroundAccessMiddleware::class => fn (ContainerInterface $container): PlaygroundAccessMiddleware => new PlaygroundAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	DocsAccessMiddleware::class => fn (ContainerInterface $container): DocsAccessMiddleware => new DocsAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	AdminOnlyMiddleware::class => fn (ContainerInterface $container): AdminOnlyMiddleware => new AdminOnlyMiddleware(
+		$container->get(UserValidationService::class),
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
 		$container->get(JsonRenderer::class),
