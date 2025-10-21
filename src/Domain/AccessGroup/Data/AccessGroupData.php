@@ -9,7 +9,7 @@ namespace TotalCMS\Domain\AccessGroup\Data;
  *
  * @property string $id Unique identifier
  * @property string $description Human-readable description
- * @property array<string> $methods Global allowed HTTP methods
+ * @property array<string> $operations Global allowed operations (create, read, update, delete)
  * @property array<string,mixed> $permissions Structured permissions
  */
 readonly class AccessGroupData
@@ -17,7 +17,7 @@ readonly class AccessGroupData
 	public string $id;
 	public string $description;
 	/** @var array<string> */
-	public array $methods;
+	public array $operations;
 	/** @var array<string,mixed> */
 	public array $permissions;
 
@@ -28,7 +28,7 @@ readonly class AccessGroupData
 	{
 		$this->id          = $data['id'];
 		$this->description = $data['description'] ?? '';
-		$this->methods     = $data['methods'] ?? ['GET'];
+		$this->operations  = $data['operations'] ?? ['read'];
 		$this->permissions = $data['permissions'] ?? $this->getDefaultPermissions();
 	}
 
@@ -41,14 +41,14 @@ readonly class AccessGroupData
 	{
 		return [
 			'collections' => [
-				'methods' => ['GET'],
-				'all'     => true,
-				'allowed' => [],
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
 			],
 			'schemas' => [
-				'methods' => ['GET'],
-				'all'     => true,
-				'allowed' => [],
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
 			],
 			'templates'  => false,
 			'mailer'     => false,
@@ -75,7 +75,7 @@ readonly class AccessGroupData
 		return [
 			'id'          => $this->id,
 			'description' => $this->description,
-			'methods'     => $this->methods,
+			'operations'  => $this->operations,
 			'permissions' => $this->permissions,
 		];
 	}

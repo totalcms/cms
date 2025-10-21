@@ -19,7 +19,7 @@ readonly class SchemaAccessMiddleware extends BaseAccessMiddleware
 	/**
 	 * Check if the user has permission to access the requested schema.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		// Get schema ID from route
 		$routeContext = RouteContext::fromRequest($request);
@@ -34,10 +34,10 @@ readonly class SchemaAccessMiddleware extends BaseAccessMiddleware
 		// Check access permissions
 		if ($schema) {
 			// Specific schema - check access to that schema
-			return $this->accessControl->canAccessSchema($userId, $schema, $method);
+			return $this->accessControl->canAccessSchema($userId, $schema, $operation);
 		}
 
-		// No specific schema (e.g., GET /schemas, POST /schemas) - check general schema method permission
-		return $this->accessControl->canAccessSchemasMethod($userId, $method);
+		// No specific schema (e.g., GET /schemas, POST /schemas) - check general schema operation permission
+		return $this->accessControl->canAccessSchemasOperation($userId, $operation);
 	}
 }

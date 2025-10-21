@@ -19,7 +19,7 @@ readonly class UtilsAccessMiddleware extends BaseAccessMiddleware
 	/**
 	 * Check if the user has permission to access the requested utils page.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		// Get page from route
 		$routeContext = RouteContext::fromRequest($request);
@@ -34,10 +34,10 @@ readonly class UtilsAccessMiddleware extends BaseAccessMiddleware
 		// Check access permissions
 		if ($page) {
 			// Specific page - check access to that page
-			return $this->accessControl->canAccessUtils($userId, $page, $method);
+			return $this->accessControl->canAccessUtils($userId, $page, $operation);
 		}
 
-		// No specific page (e.g., GET /utils) - check general utils method permission
-		return $this->accessControl->canAccessUtilsMethod($userId, $method);
+		// No specific page (e.g., GET /utils) - check general utils operation permission
+		return $this->accessControl->canAccessUtilsOperation($userId, $operation);
 	}
 }

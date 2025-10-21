@@ -11,8 +11,10 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
@@ -40,6 +42,8 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		protected TwigRenderer $twigRenderer,
 		protected ResponseFactoryInterface $responseFactory,
 		protected Config $config,
+		protected OperationDetector $operationDetector,
+		protected LoggerFactory $loggerFactory,
 	) {
 	}
 
@@ -73,11 +77,30 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		// Extract HTTP method for permission checking
-		$method = $request->getMethod();
+		// Detect CRUD operation for permission checking
+		$operation = $this->operationDetector->detectOperation($request);
+		if (!$operation) {
+			// Unable to detect operation, deny access and log in dev/debug mode
+			if ($this->config->env === 'dev' || $this->config->debug) {
+				$logger = $this->loggerFactory->addFileHandler('totalcms-access.log')->createLogger('access');
+				$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
+				$route = $routeContext->getRoute();
+				$routeName = $route instanceof \Slim\Interfaces\RouteInterface ? $route->getName() : 'unknown';
+
+				$logger->warning('Operation detection failed', [
+					'resource' => static::RESOURCE_NAME,
+					'route_name' => $routeName,
+					'path' => $request->getUri()->getPath(),
+					'method' => $request->getMethod(),
+					'user_id' => $userId,
+				]);
+			}
+
+			return $this->forbiddenResponse($request, $this->getErrorMessage());
+		}
 
 		// Check resource-specific permissions (implemented by concrete classes)
-		$hasAccess = $this->checkPermission($userId, $method, $request);
+		$hasAccess = $this->checkPermission($userId, $operation, $request);
 
 		if ($hasAccess === false) {
 			return $this->forbiddenResponse($request, $this->getErrorMessage());
@@ -91,12 +114,12 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 * Implemented by concrete middleware classes.
 	 *
 	 * @param string $userId User ID from session
-	 * @param string $method HTTP method (GET, POST, PUT, DELETE)
+	 * @param string $operation CRUD operation (create, read, update, delete)
 	 * @param ServerRequestInterface $request HTTP request
 	 *
 	 * @return bool True if access allowed, false otherwise
 	 */
-	abstract protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool;
+	abstract protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool;
 
 	/**
 	 * Return a 403 Forbidden response (JSON for API, HTML for admin UI).

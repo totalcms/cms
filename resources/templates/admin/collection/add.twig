@@ -1,5 +1,5 @@
 {# New Object Form #}
-{% set canSave = cms.canAccessCollection(url.collection, 'POST') %}
+{% set canSave = cms.canAccessCollection(url.collection, 'create') %}
 {% set form = cms.form.builder(url.collection, {
 	save        : canSave ? "Save" : false,
 	helpStyle   : 'label',

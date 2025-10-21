@@ -19,7 +19,7 @@ readonly class SettingsAccessMiddleware extends BaseAccessMiddleware
 	/**
 	 * Check if the user has permission to access the requested settings section.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		// Get section from route
 		$routeContext = RouteContext::fromRequest($request);
@@ -34,10 +34,10 @@ readonly class SettingsAccessMiddleware extends BaseAccessMiddleware
 		// Check access permissions
 		if ($section) {
 			// Specific section - check access to that section
-			return $this->accessControl->canAccessSettings($userId, $section, $method);
+			return $this->accessControl->canAccessSettings($userId, $section, $operation);
 		}
 
-		// No specific section (e.g., GET /settings) - check general settings method permission
-		return $this->accessControl->canAccessSettingsMethod($userId, $method);
+		// No specific section (e.g., GET /settings) - check general settings operation permission
+		return $this->accessControl->canAccessSettingsOperation($userId, $operation);
 	}
 }

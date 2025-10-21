@@ -17,9 +17,9 @@ readonly class MailerAccessMiddleware extends BaseAccessMiddleware
 
 	/**
 	 * Check if the user has permission to access mailer.
-	 * Mailer doesn't have method-based permissions, just boolean access.
+	 * Mailer doesn't have operation-based permissions, just boolean access.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		return $this->accessControl->canAccessMailer($userId);
 	}

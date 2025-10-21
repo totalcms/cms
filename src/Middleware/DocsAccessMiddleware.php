@@ -17,9 +17,9 @@ readonly class DocsAccessMiddleware extends BaseAccessMiddleware
 
 	/**
 	 * Check if the user has permission to access documentation.
-	 * Docs don't have method-based permissions, just boolean access.
+	 * Docs don't have operation-based permissions, just boolean access.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		return $this->accessControl->canAccessDocs($userId);
 	}

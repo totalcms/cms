@@ -17,10 +17,10 @@ readonly class TemplateAccessMiddleware extends BaseAccessMiddleware
 
 	/**
 	 * Check if the user has permission to access templates.
-	 * Templates don't have individual access, just method-based permissions.
+	 * Templates don't have individual access, just operation-based permissions.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
-		return $this->accessControl->canAccessTemplatesMethod($userId, $method);
+		return $this->accessControl->canAccessTemplatesOperation($userId, $operation);
 	}
 }

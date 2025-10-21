@@ -12,10 +12,12 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Domain\Session\SessionKeys;
 
 /**
  * Dual Authentication Middleware.
@@ -34,6 +36,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private AccessManager $accessManager,
 		private PersistentLoginService $persistentLoginService,
 		private CollectionFetcher $collectionFetcher,
+		private OperationDetector $operationDetector,
 	) {
 	}
 
@@ -45,10 +48,15 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		}
 
 		// Check if this is a public operation request (bypasses authentication)
-		if ($this->isPublicRequest($request)) {
+		if ($this->isPublicCollectionRequest($request)) {
 			// Mark as public submission for downstream middleware
 			$request = $request->withAttribute('publicSubmission', true);
 
+			return $handler->handle($request);
+		}
+
+		$method = $request->getMethod();
+		if ($method === 'HEAD') {
 			return $handler->handle($request);
 		}
 
@@ -116,8 +124,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	private function redirectToRoute(ServerRequestInterface $request, string $route): ResponseInterface
 	{
 		// Set the current request URL in the session so we can send the user back to it after login
-		$this->session->set(\TotalCMS\Domain\Session\SessionKeys::REQUEST_ORIGIN_URL, (string)$request->getUri());
-		$this->session->set(\TotalCMS\Domain\Session\SessionKeys::REQUEST_REFERER_URL, $request->getHeaderLine('referer'));
+		$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, (string)$request->getUri());
+		$this->session->set(SessionKeys::REQUEST_REFERER_URL, $request->getHeaderLine('referer'));
 
 		// User is not logged in. Redirect to login page.
 		$routeParser = \Slim\Routing\RouteContext::fromRequest($request)->getRouteParser();
@@ -131,10 +139,10 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	private function trackSessionActivity(): void
 	{
 		$now  = time();
-		$last = $this->session->get(\TotalCMS\Domain\Session\SessionKeys::LAST_ACTIVITY) ?? $now;
+		$last = $this->session->get(SessionKeys::LAST_ACTIVITY) ?? $now;
 		$max  = $this->config->session['gc_maxlifetime'];
 
-		$this->session->set(\TotalCMS\Domain\Session\SessionKeys::LAST_ACTIVITY, $now);
+		$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
 
 		if ($now - $last > $max / 4) {
 			// Regenerate session ID every 4th of the max session lifetime
@@ -146,7 +154,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			// For persistent logins, extend the session lifetime instead of destroying
 			if ($this->persistentLoginService->hasPersistentLogin()) {
 				// Reset last activity to prevent immediate re-expiration
-				$this->session->set(\TotalCMS\Domain\Session\SessionKeys::LAST_ACTIVITY, $now);
+				$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
 				// Clean up expired tokens periodically
 				$this->persistentLoginService->cleanupExpiredTokens();
 			} else {
@@ -176,7 +184,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	 * - HEAD/object-exists requests are always allowed (for ID validation)
 	 * - Other operations must be in collection's publicOperations array
 	 */
-	private function isPublicRequest(ServerRequestInterface $request): bool
+	private function isPublicCollectionRequest(ServerRequestInterface $request): bool
 	{
 		// Must have collection in route
 		$collectionId = $request->getAttribute('collection');
@@ -184,20 +192,14 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			return false;
 		}
 
-		// HEAD requests (object-exists) are always allowed publicly
-		// They only return existence (200/404) without exposing data
-		// Useful for ID validation on signup forms, etc.
-		$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
-		$route        = $routeContext->getRoute();
-		if ($route instanceof \Slim\Interfaces\RouteInterface) {
-			if ($route->getName() === 'object-exists') {
-				return true;
-			}
+		$method = $request->getMethod();
+		if ($method === 'HEAD') {
+			return true;
 		}
 
 		// Detect operation type from route
-		$operation = $this->detectOperation($request);
-		if (!$operation) {
+		$operation = $this->operationDetector->detectPublicOperation($request);
+		if ($operation === null) {
 			return false;
 		}
 
@@ -216,64 +218,5 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			// If we can't fetch the collection, don't allow public access
 			return false;
 		}
-	}
-
-	/**
-	 * Detect the CRUD operation type based on route name.
-	 *
-	 * @return string|null Operation type: 'create', 'read', 'update', 'delete', or null if not a collection route
-	 */
-	private function detectOperation(ServerRequestInterface $request): ?string
-	{
-		$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
-		$route        = $routeContext->getRoute();
-
-		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
-			return null;
-		}
-
-		$routeName = $route->getName();
-
-		// Create operations
-		if (in_array($routeName, ['object-save', 'object-clone'])) {
-			return 'create';
-		}
-
-		// Read operations (object-exists is handled separately - always allowed publicly)
-		if (in_array($routeName, ['collection-fetch-index', 'object-fetch', 'deck-item-fetch'])) {
-			return 'read';
-		}
-
-		// Delete operations
-		if ($routeName === 'object-delete') {
-			return 'delete';
-		}
-
-		// Update operations (everything else on collection routes)
-		$updateOperations = [
-			'collection-reindex',
-			'object-update',
-			'object-patch',
-			'property-update',
-			'property-patch',
-			'property-delete',
-			'property-meta-update',
-			'property-meta-patch',
-			'deck-item-create',
-			'deck-item-update',
-			'deck-item-delete',
-			'property-file-save',
-			'property-folder-save',
-			'property-clear-cache',
-			'property-file-delete',
-			'property-file-clear-cache',
-			'property-file-move',
-		];
-
-		if (in_array($routeName, $updateOperations)) {
-			return 'update';
-		}
-
-		return null;
 	}
 }

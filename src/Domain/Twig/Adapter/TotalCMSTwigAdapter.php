@@ -1520,17 +1520,17 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can perform an HTTP method on collections in general.
+	 * Check if current user can perform a CRUD operation on collections in general.
 	 * Use for actions like "New Collection" that don't target a specific collection.
 	 */
-	public function canAccessCollectionsMethod(string $method = 'GET'): bool
+	public function canAccessCollectionsOperation(string $operation = 'read'): bool
 	{
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessCollectionsMethod($userData['id'], $method);
+		return $this->accessControl->canAccessCollectionsOperation($userData['id'], $operation);
 	}
 
 	/**
@@ -1547,30 +1547,30 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can perform an HTTP method on schemas in general.
+	 * Check if current user can perform a CRUD operation on schemas in general.
 	 * Use for actions like "New Schema" that don't target a specific schema.
 	 */
-	public function canAccessSchemasMethod(string $method = 'GET'): bool
+	public function canAccessSchemasOperation(string $operation = 'read'): bool
 	{
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessSchemasMethod($userData['id'], $method);
+		return $this->accessControl->canAccessSchemasOperation($userData['id'], $operation);
 	}
 
 	/**
-	 * Check if current user can perform an action on templates.
+	 * Check if current user can perform a CRUD operation on templates.
 	 */
-	public function canAccessTemplatesMethod(string $method = 'GET'): bool
+	public function canAccessTemplatesOperation(string $operation = 'read'): bool
 	{
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessTemplatesMethod($userData['id'], $method);
+		return $this->accessControl->canAccessTemplatesOperation($userData['id'], $operation);
 	}
 
 	/**
@@ -1587,16 +1587,16 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can perform a settings action (no specific section).
+	 * Check if current user can perform a CRUD operation on settings (no specific section).
 	 */
-	public function canAccessSettingsMethod(string $method = 'GET'): bool
+	public function canAccessSettingsOperation(string $operation = 'read'): bool
 	{
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessSettingsMethod($userData['id'], $method);
+		return $this->accessControl->canAccessSettingsOperation($userData['id'], $operation);
 	}
 
 	/**
@@ -1613,16 +1613,16 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can perform a utils action (no specific page).
+	 * Check if current user can perform a CRUD operation on utils (no specific page).
 	 */
-	public function canAccessUtilsMethod(string $method = 'GET'): bool
+	public function canAccessUtilsOperation(string $operation = 'read'): bool
 	{
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessUtilsMethod($userData['id'], $method);
+		return $this->accessControl->canAccessUtilsOperation($userData['id'], $operation);
 	}
 
 	/**

@@ -22,9 +22,9 @@ readonly class AdminOnlyMiddleware extends BaseAccessMiddleware
 	/**
 	 * Check if the user has permission.
 	 * Since admins bypass this in BaseAccessMiddleware, reaching here means user is NOT an admin.
-	 * Method and request parameters are not used for admin-only checks.
+	 * Operation and request parameters are not used for admin-only checks.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		// If we reach here, user is not a super admin (admins bypass in base class)
 		return false;

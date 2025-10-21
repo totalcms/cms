@@ -16,7 +16,7 @@
 		{% endif %}
 		<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="Edit Collection">Edit Collection</a>
 		{% set labelSingular = cms.collection(collection).labelSingular|default('object') %}
-		{% if cms.canAccessCollection(collection, 'POST') %}
+		{% if cms.canAccessCollection(collection, 'create') %}
 		<a class="dash-button" href="collections/{{ collection }}/add" title="Add new {{ labelSingular | lower }} to collection">+ New {{ labelSingular|title }}</a>
 		{% endif %}
 		<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
@@ -24,13 +24,13 @@
 			<ul>
 				<li class="schema"><a href="schemas/{{ cms.collection(collection).schema }}">Edit Schema</a></li>
 				<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
-				{% if cms.canAccessCollection(collection, 'POST') %}
+				{% if cms.canAccessCollection(collection, 'create') %}
 				<li class="import"><a href="collections/{{ collection }}/-import">Import</a></li>
 				<li class="factory"><a href="collections/{{ collection }}/-factory">Factory</a></li>
 				{% endif %}
 				<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">Sitemap</a></li>
 				<li class="feeds"><a href="collections/{{ collection }}/-feeds">Feeds</a></li>
-				{% if cms.canAccessCollection(collection, 'PUT') %}
+				{% if cms.canAccessCollection(collection, 'update') %}
 				<li class="reindex"><a class="cms-quick-action" data-reload data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
 				{% endif %}
 			</ul>
@@ -47,7 +47,7 @@
 
 	<nav class="links" id="collection-links">
 		{% for category, collections in cms.collectionsByCategory() %}
-			{% set collections = collections | filter(c => cms.canAccessCollection(c.id, 'GET') and c.id not in ['playground', 'mailer']) %}
+			{% set collections = collections | filter(c => cms.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer']) %}
 			{% if collections | length > 0 %}
 			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>
@@ -65,7 +65,7 @@
 		{% endfor %}
 	</nav>
 
-	{% if cms.canAccessCollectionsMethod('POST') %}
+	{% if cms.canAccessCollectionsOperation('create') %}
 	<footer>
 		<a class="dash-button full transparent" href="collections/new" title="Create a new collection">+ New Collection</a>
 	</footer>

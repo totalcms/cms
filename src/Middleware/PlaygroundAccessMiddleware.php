@@ -17,9 +17,9 @@ readonly class PlaygroundAccessMiddleware extends BaseAccessMiddleware
 
 	/**
 	 * Check if the user has permission to access playground.
-	 * Playground doesn't have method-based permissions, just boolean access.
+	 * Playground doesn't have operation-based permissions, just boolean access.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		return $this->accessControl->canAccessPlayground($userId);
 	}

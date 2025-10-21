@@ -28,6 +28,7 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
+use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -400,6 +401,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	SchemaAccessMiddleware::class => fn (ContainerInterface $container): SchemaAccessMiddleware => new SchemaAccessMiddleware(
@@ -410,6 +413,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	TemplateAccessMiddleware::class => fn (ContainerInterface $container): TemplateAccessMiddleware => new TemplateAccessMiddleware(
@@ -420,6 +425,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	SettingsAccessMiddleware::class => fn (ContainerInterface $container): SettingsAccessMiddleware => new SettingsAccessMiddleware(
@@ -430,6 +437,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	UtilsAccessMiddleware::class => fn (ContainerInterface $container): UtilsAccessMiddleware => new UtilsAccessMiddleware(
@@ -440,6 +449,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	MailerAccessMiddleware::class => fn (ContainerInterface $container): MailerAccessMiddleware => new MailerAccessMiddleware(
@@ -450,6 +461,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	PlaygroundAccessMiddleware::class => fn (ContainerInterface $container): PlaygroundAccessMiddleware => new PlaygroundAccessMiddleware(
@@ -460,6 +473,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	DocsAccessMiddleware::class => fn (ContainerInterface $container): DocsAccessMiddleware => new DocsAccessMiddleware(
@@ -470,6 +485,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	AdminOnlyMiddleware::class => fn (ContainerInterface $container): AdminOnlyMiddleware => new AdminOnlyMiddleware(
@@ -480,6 +497,8 @@ HTACCESS;
 		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
 	),
 
 	DevModeMiddleware::class => fn (ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(

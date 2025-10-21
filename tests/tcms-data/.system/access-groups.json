@@ -3,32 +3,29 @@
         {
             "id": "admin",
             "description": "Full administrative access to all features",
-            "methods": [
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "PATCH"
+            "operations": [
+                "create",
+                "read",
+                "update",
+                "delete"
             ],
             "permissions": {
                 "collections": {
-                    "methods": [
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "PATCH"
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
                     ],
                     "all": true,
                     "allowed": []
                 },
                 "schemas": {
-                    "methods": [
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "PATCH"
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
                     ],
                     "all": true,
                     "allowed": []
@@ -50,26 +47,26 @@
         {
             "id": "editor",
             "description": "Content editors - can create and edit content",
-            "methods": [
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE"
+            "operations": [
+                "create",
+                "read",
+                "update",
+                "delete"
             ],
             "permissions": {
                 "collections": {
-                    "methods": [
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE"
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
                     ],
                     "all": true,
                     "allowed": []
                 },
                 "schemas": {
-                    "methods": [
-                        "GET"
+                    "operations": [
+                        "read"
                     ],
                     "all": false,
                     "allowed": ["blog", "news"]
@@ -95,20 +92,20 @@
         {
             "id": "viewer",
             "description": "Read-only access to view content",
-            "methods": [
-                "GET"
+            "operations": [
+                "read"
             ],
             "permissions": {
                 "collections": {
-                    "methods": [
-                        "GET"
+                    "operations": [
+                        "read"
                     ],
                     "all": true,
                     "allowed": []
                 },
                 "schemas": {
-                    "methods": [
-                        "GET"
+                    "operations": [
+                        "read"
                     ],
                     "all": true,
                     "allowed": []
@@ -130,26 +127,26 @@
         {
             "id": "blogger",
             "description": "Blog content creators",
-            "methods": [
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE"
+            "operations": [
+                "create",
+                "read",
+                "update",
+                "delete"
             ],
             "permissions": {
                 "collections": {
-                    "methods": [
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE"
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
                     ],
                     "all": false,
                     "allowed": ["blog"]
                 },
                 "schemas": {
-                    "methods": [
-                        "GET"
+                    "operations": [
+                        "read"
                     ],
                     "all": false,
                     "allowed": ["blog"]
@@ -171,20 +168,20 @@
         {
             "id": "limited-blogger",
             "description": "Read-only blog access",
-            "methods": [
-                "GET"
+            "operations": [
+                "read"
             ],
             "permissions": {
                 "collections": {
-                    "methods": [
-                        "GET"
+                    "operations": [
+                        "read"
                     ],
                     "all": false,
                     "allowed": ["blog"]
                 },
                 "schemas": {
-                    "methods": [
-                        "GET"
+                    "operations": [
+                        "read"
                     ],
                     "all": false,
                     "allowed": []

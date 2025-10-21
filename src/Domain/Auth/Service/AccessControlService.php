@@ -27,9 +27,9 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access a specific collection with the given HTTP method.
+	 * Check if user can access a specific collection with the given CRUD operation.
 	 */
-	public function canAccessCollection(string $userId, string $collection, string $method): bool
+	public function canAccessCollection(string $userId, string $collection, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -44,7 +44,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessCollection($group, $collection, $method)) {
+			if ($this->groupCanAccessCollection($group, $collection, $operation)) {
 				return true;
 			}
 		}
@@ -53,10 +53,10 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can perform an HTTP method on collections in general (no specific collection).
+	 * Check if user can perform a CRUD operation on collections in general (no specific collection).
 	 * Useful for routes like GET /collections or POST /collections that don't target a specific collection.
 	 */
-	public function canAccessCollectionsMethod(string $userId, string $method): bool
+	public function canAccessCollectionsOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -69,7 +69,7 @@ readonly class AccessControlService
 			return false;
 		}
 
-		// Check each group - return true if any group allows the method for collections
+		// Check each group - return true if any group allows the operation for collections
 		foreach ($groups as $group) {
 			$permissions = $group->permissions['collections'] ?? [];
 
@@ -81,9 +81,9 @@ readonly class AccessControlService
 				continue; // No collection access in this group
 			}
 
-			// Check if method is allowed
-			$methods = $permissions['methods'] ?? [];
-			if (in_array($method, $methods)) {
+			// Check if operation is allowed
+			$operations = $permissions['operations'] ?? [];
+			if (in_array($operation, $operations)) {
 				return true;
 			}
 		}
@@ -92,9 +92,9 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access a specific schema with the given HTTP method.
+	 * Check if user can access a specific schema with the given CRUD operation.
 	 */
-	public function canAccessSchema(string $userId, string $schema, string $method): bool
+	public function canAccessSchema(string $userId, string $schema, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -109,7 +109,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessSchema($group, $schema, $method)) {
+			if ($this->groupCanAccessSchema($group, $schema, $operation)) {
 				return true;
 			}
 		}
@@ -118,10 +118,10 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can perform an HTTP method on schemas in general (no specific schema).
+	 * Check if user can perform a CRUD operation on schemas in general (no specific schema).
 	 * Useful for routes like GET /schemas or POST /schemas that don't target a specific schema.
 	 */
-	public function canAccessSchemasMethod(string $userId, string $method): bool
+	public function canAccessSchemasOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -134,7 +134,7 @@ readonly class AccessControlService
 			return false;
 		}
 
-		// Check each group - return true if any group allows the method for schemas
+		// Check each group - return true if any group allows the operation for schemas
 		foreach ($groups as $group) {
 			$permissions = $group->permissions['schemas'] ?? [];
 
@@ -146,9 +146,9 @@ readonly class AccessControlService
 				continue; // No schema access in this group
 			}
 
-			// Check if method is allowed
-			$methods = $permissions['methods'] ?? [];
-			if (in_array($method, $methods)) {
+			// Check if operation is allowed
+			$operations = $permissions['operations'] ?? [];
+			if (in_array($operation, $operations)) {
 				return true;
 			}
 		}
@@ -157,9 +157,9 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access templates with the given HTTP method.
+	 * Check if user can access templates with the given CRUD operation.
 	 */
-	public function canAccessTemplatesMethod(string $userId, string $method): bool
+	public function canAccessTemplatesOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -174,7 +174,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessTemplate($group, $method)) {
+			if ($this->groupCanAccessTemplate($group, $operation)) {
 				return true;
 			}
 		}
@@ -183,9 +183,9 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access a specific settings section with the given HTTP method.
+	 * Check if user can access a specific settings section with the given CRUD operation.
 	 */
-	public function canAccessSettings(string $userId, string $section, string $method): bool
+	public function canAccessSettings(string $userId, string $section, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -200,7 +200,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessSettings($group, $section, $method)) {
+			if ($this->groupCanAccessSettings($group, $section, $operation)) {
 				return true;
 			}
 		}
@@ -209,9 +209,9 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access a specific util with the given HTTP method.
+	 * Check if user can access a specific util with the given CRUD operation.
 	 */
-	public function canAccessUtils(string $userId, string $util, string $method): bool
+	public function canAccessUtils(string $userId, string $util, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -226,7 +226,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessUtils($group, $util, $method)) {
+			if ($this->groupCanAccessUtils($group, $util, $operation)) {
 				return true;
 			}
 		}
@@ -313,9 +313,9 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access settings with the given HTTP method (no specific section).
+	 * Check if user can access settings with the given CRUD operation (no specific section).
 	 */
-	public function canAccessSettingsMethod(string $userId, string $method): bool
+	public function canAccessSettingsOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -341,9 +341,9 @@ readonly class AccessControlService
 				continue;
 			}
 
-			// Check method permission
-			$methods = $permissions['methods'] ?? [];
-			if (in_array($method, $methods)) {
+			// Check operation permission
+			$operations = $permissions['operations'] ?? [];
+			if (in_array($operation, $operations)) {
 				return true;
 			}
 		}
@@ -352,9 +352,9 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access utils with the given HTTP method (no specific page).
+	 * Check if user can access utils with the given CRUD operation (no specific page).
 	 */
-	public function canAccessUtilsMethod(string $userId, string $method): bool
+	public function canAccessUtilsOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -380,9 +380,9 @@ readonly class AccessControlService
 				continue;
 			}
 
-			// Check method permission
-			$methods = $permissions['methods'] ?? [];
-			if (in_array($method, $methods)) {
+			// Check operation permission
+			$operations = $permissions['operations'] ?? [];
+			if (in_array($operation, $operations)) {
 				return true;
 			}
 		}
@@ -424,7 +424,7 @@ readonly class AccessControlService
 	/**
 	 * Check if a single group can access a collection.
 	 */
-	private function groupCanAccessCollection(AccessGroupData $group, string $collection, string $method): bool
+	private function groupCanAccessCollection(AccessGroupData $group, string $collection, string $operation): bool
 	{
 		$permissions = $group->permissions['collections'] ?? [];
 
@@ -436,16 +436,16 @@ readonly class AccessControlService
 			return false;
 		}
 
-		// Check if method is allowed
-		$methods = $permissions['methods'] ?? [];
+		// Check if operation is allowed
+		$operations = $permissions['operations'] ?? [];
 
-		return in_array($method, $methods);
+		return in_array($operation, $operations);
 	}
 
 	/**
 	 * Check if a single group can access a schema.
 	 */
-	private function groupCanAccessSchema(AccessGroupData $group, string $schema, string $method): bool
+	private function groupCanAccessSchema(AccessGroupData $group, string $schema, string $operation): bool
 	{
 		$permissions = $group->permissions['schemas'] ?? [];
 
@@ -457,63 +457,52 @@ readonly class AccessControlService
 			return false;
 		}
 
-		// Check if method is allowed
-		$methods = $permissions['methods'] ?? [];
+		// Check if operation is allowed
+		$operations = $permissions['operations'] ?? [];
 
-		return in_array($method, $methods);
+		return in_array($operation, $operations);
 	}
 
 	/**
 	 * Check if a single group can access templates.
+	 * Templates use simple boolean access (no operation-specific permissions).
 	 */
-	private function groupCanAccessTemplate(AccessGroupData $group, string $method): bool
+	private function groupCanAccessTemplate(AccessGroupData $group, string $operation): bool
 	{
-		// If templates is false, no access
-		$templatesEnabled = $group->permissions['templates'] ?? false;
-		if (!$templatesEnabled) {
-			return false;
-		}
-
-		// Templates is true, check global methods
-		return in_array($method, $group->methods);
+		// If templates is enabled, grant access to all operations
+		return $group->permissions['templates'] ?? false;
 	}
 
 	/**
 	 * Check if a single group can access a settings section.
+	 * Settings use simple section-based access (no operation-specific permissions).
 	 */
-	private function groupCanAccessSettings(AccessGroupData $group, string $section, string $method): bool
+	private function groupCanAccessSettings(AccessGroupData $group, string $section, string $operation): bool
 	{
 		$permissions = $group->permissions['settings'] ?? [];
 
-		// Check if settings access is allowed
+		// Check if settings access is allowed (all or specific section)
 		$all     = $permissions['all'] ?? false;
 		$allowed = $permissions['allowed'] ?? [];
 
-		if (!$all && !in_array($section, $allowed)) {
-			return false;
-		}
-
-		// Check global methods
-		return in_array($method, $group->methods);
+		// If they have access to this section (all or specific), grant access
+		return $all || in_array($section, $allowed);
 	}
 
 	/**
 	 * Check if a single group can access a util.
+	 * Utils use simple page-based access (no operation-specific permissions).
 	 */
-	private function groupCanAccessUtils(AccessGroupData $group, string $util, string $method): bool
+	private function groupCanAccessUtils(AccessGroupData $group, string $util, string $operation): bool
 	{
 		$permissions = $group->permissions['utils'] ?? [];
 
-		// Check if util access is allowed
+		// Check if util access is allowed (all or specific util)
 		$all     = $permissions['all'] ?? false;
 		$allowed = $permissions['allowed'] ?? [];
 
-		if (!$all && !in_array($util, $allowed)) {
-			return false;
-		}
-
-		// Check global methods
-		return in_array($method, $group->methods);
+		// If they have access to this util (all or specific), grant access
+		return $all || in_array($util, $allowed);
 	}
 
 	/**

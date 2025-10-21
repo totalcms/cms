@@ -19,7 +19,7 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 	/**
 	 * Check if the user has permission to access the requested collection.
 	 */
-	protected function checkPermission(string $userId, string $method, ServerRequestInterface $request): bool
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
 		// Get collection name from route
 		$routeContext = RouteContext::fromRequest($request);
@@ -34,10 +34,10 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		// Check access permissions
 		if ($collection) {
 			// Specific collection - check access to that collection
-			return $this->accessControl->canAccessCollection($userId, $collection, $method);
+			return $this->accessControl->canAccessCollection($userId, $collection, $operation);
 		}
 
-		// No specific collection (e.g., GET /collections, POST /collections) - check general collection method permission
-		return $this->accessControl->canAccessCollectionsMethod($userId, $method);
+		// No specific collection (e.g., GET /collections, POST /collections) - check general collection operation permission
+		return $this->accessControl->canAccessCollectionsOperation($userId, $operation);
 	}
 }
