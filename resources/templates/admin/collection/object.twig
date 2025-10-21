@@ -1,8 +1,10 @@
 {# Edit Object Form #}
+{% set canSave = cms.canAccess(url.collection, url.id ? 'PUT' : 'POST') %}
+{% set canDelete = cms.canAccess(url.collection, 'DELETE') %}
 {% set form = cms.form.builder(url.collection, {
 	id           : url.id,
-	save         : "Save",
-	delete       : "Delete",
+	save         : canSave ? "Save" : false,
+	delete       : canDelete ? "Delete" : false,
 	helpStyle    : 'label',
 	helpOnFocus  : true,
 	deleteActions : [

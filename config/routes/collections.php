@@ -6,6 +6,7 @@ use TotalCMS\Action;
 use TotalCMS\Action\Collection;
 use TotalCMS\Action\Property;
 use TotalCMS\Action\Schema;
+use TotalCMS\Middleware\CollectionAccessMiddleware;
 use TotalCMS\Middleware\DualAuthMiddleware;
 
 return function (App $app): void {
@@ -59,5 +60,6 @@ return function (App $app): void {
 		$group->delete('/{collection}/{id}/{property}/{name}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
 		$group->delete('/{collection}/{id}/{property}/{name}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
-	})->add(DualAuthMiddleware::class);
+	})->add(DualAuthMiddleware::class)
+		->add(CollectionAccessMiddleware::class);
 };

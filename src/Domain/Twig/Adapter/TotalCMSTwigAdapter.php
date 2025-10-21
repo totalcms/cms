@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Cache\CacheReporter;
@@ -71,6 +72,7 @@ class TotalCMSTwigAdapter
 		private readonly PhpSession $session,
 		private readonly AccessManager $accessManager,
 		private readonly FileAccessManager $fileAccessManager,
+		private readonly AccessControlService $accessControl,
 		public ImageCacheService $imageCacheService,
 		public GridRenderer $grid,
 		private readonly DevModeManager $devModeManager,
@@ -1481,5 +1483,52 @@ NGINX;
 		});
 
 		return $folders;
+	}
+
+	/**
+	 * Check if current user can perform an action on a collection.
+	 */
+	public function canAccess(string $collection, string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if (empty($userData) || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessCollection($userData['id'], $collection, $method);
+	}
+
+	/**
+	 * Get collections the current user can access with a given method.
+	 *
+	 * @param string $method HTTP method (GET, POST, PUT, DELETE)
+	 *
+	 * @return array<string> Collection IDs user can access
+	 */
+	public function getAccessibleCollections(string $method = 'GET'): array
+	{
+		$allCollections = $this->collectionLister->listAllCollections();
+		$accessible     = [];
+
+		foreach ($allCollections as $collection) {
+			if ($this->canAccess($collection->id, $method)) {
+				$accessible[] = $collection->id;
+			}
+		}
+
+		return $accessible;
+	}
+
+	/**
+	 * Check if user is in admin group (bypasses all access controls).
+	 */
+	public function isAdmin(): bool
+	{
+		$userData = $this->accessManager->userData();
+		if (empty($userData) || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->isAdmin($userData['id']);
 	}
 }

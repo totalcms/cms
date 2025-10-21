@@ -1,6 +1,7 @@
 {# New Object Form #}
+{% set canSave = cms.canAccess(url.collection, 'POST') %}
 {% set form = cms.form.builder(url.collection, {
-	save        : "Save",
+	save        : canSave ? "Save" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	newActions   : [

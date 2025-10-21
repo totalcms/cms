@@ -124,6 +124,7 @@ use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\RateLimitMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
 return [
@@ -336,6 +337,7 @@ HTACCESS;
 		$container->get(PhpSession::class),
 		$container->get(AccessManager::class),
 		$container->get(FileAccessManager::class),
+		$container->get(AccessControlService::class),
 		$container->get(ImageCacheService::class),
 		$container->get(GridRenderer::class),
 		$container->get(DevModeManager::class),
@@ -386,6 +388,7 @@ HTACCESS;
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
 		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(Config::class),
 	),
@@ -406,6 +409,10 @@ HTACCESS;
 		$container->get(Config::class),
 		$container->get(TotalCMSTwigExtension::class),
 		$container->get(DevModeManager::class)
+	),
+
+	TwigRenderer::class => fn (ContainerInterface $container): TwigRenderer => new TwigRenderer(
+		$container->get(TwigEngine::class)
 	),
 
 	// Cache Services

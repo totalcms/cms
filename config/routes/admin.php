@@ -16,6 +16,7 @@ use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\CollectionAccessMiddleware;
 
 return function (App $app): void {
 	$app->redirect('/', '/admin', 301);
@@ -30,9 +31,10 @@ return function (App $app): void {
 		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template');
 		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate');
 
-		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection');
+		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection')->add(CollectionAccessMiddleware::class);
+		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post')->add(CollectionAccessMiddleware::class);
+
 		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs');
-		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post');
 
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
 
