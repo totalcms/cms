@@ -45,7 +45,10 @@ New to Total CMS? Start here:
 
 ### System Administration
 - **[Authentication](docs/auth)** - User management and authentication
+- **[Access Groups](docs/access-groups)** - Permission control and access management
+- **[API Keys](docs/api-keys)** - API key authentication and management
 - **[Licenses](docs/licenses)** - License management and validation
+- **[Security](docs/security)** - Security best practices and features
 - **[Templates](docs/templates)** - Template system overview
 - **[Filesystem](docs/filesystem)** - File and directory management
 - **[Factory Pattern](docs/factory)** - Factory pattern implementation
@@ -85,8 +88,11 @@ Full walkthrough from installation to deployment:
 ### For System Administrators
 1. **Initial Setup**: Review [Configuration](docs/configuration)
 2. **User Management**: See [Authentication](docs/auth)
-3. **System Security**: Check [Licenses](docs/licenses)
-4. **File Management**: Learn about [Filesystem](docs/filesystem)
+3. **Access Control**: Configure [Access Groups](docs/access-groups) for permission management
+4. **API Security**: Set up [API Keys](docs/api-keys) for secure integrations
+5. **System Security**: Review [Security](docs/security) best practices
+6. **License Management**: Check [Licenses](docs/licenses)
+7. **File Management**: Learn about [Filesystem](docs/filesystem)
 
 ## Getting Help
 
