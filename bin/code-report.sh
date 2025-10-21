@@ -8,6 +8,7 @@ folders=(
 	"resources"
 	"src"
 	"tests"
+	"docs"
 )
 
 types=(
@@ -19,6 +20,7 @@ types=(
 	"twig"
 	"html"
 	"sh"
+	"md"
 )
 
 filter_lines() {
