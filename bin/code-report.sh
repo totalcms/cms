@@ -25,7 +25,7 @@ types=(
 
 filter_lines() {
 	local file=$1
-	grep -vE '^\s*(#|\{#|//|/\*|\*/|\*)' "$file"
+	grep -vE '^\s*(#|\{#|//|/\*|\*/|\*)' "$file" | grep -v '^\s*$'
 }
 
 echo "
