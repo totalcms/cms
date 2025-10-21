@@ -1520,6 +1520,20 @@ NGINX;
 	}
 
 	/**
+	 * Check if current user can perform an HTTP method on collections in general.
+	 * Use for actions like "New Collection" that don't target a specific collection.
+	 */
+	public function canAccessCollectionsMethod(string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessCollectionsMethod($userData['id'], $method);
+	}
+
+	/**
 	 * Check if current user can perform an action on a schema.
 	 */
 	public function canAccessSchema(string $schema, string $method = 'GET'): bool
@@ -1530,6 +1544,33 @@ NGINX;
 		}
 
 		return $this->accessControl->canAccessSchema($userData['id'], $schema, $method);
+	}
+
+	/**
+	 * Check if current user can perform an HTTP method on schemas in general.
+	 * Use for actions like "New Schema" that don't target a specific schema.
+	 */
+	public function canAccessSchemasMethod(string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessSchemasMethod($userData['id'], $method);
+	}
+
+	/**
+	 * Check if current user can perform an action on templates.
+	 */
+	public function canAccessTemplatesMethod(string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessTemplatesMethod($userData['id'], $method);
 	}
 
 	/**

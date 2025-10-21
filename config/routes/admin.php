@@ -18,6 +18,7 @@ use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Middleware\CollectionAccessMiddleware;
 use TotalCMS\Middleware\SchemaAccessMiddleware;
+use TotalCMS\Middleware\TemplateAccessMiddleware;
 
 return function (App $app): void {
 	$app->redirect('/', '/admin', 301);
@@ -29,8 +30,8 @@ return function (App $app): void {
 		$group->get('/schemas[/{schema}[/{id}]]', AdminSchemaAction::class)->setName('admin-schema')->add(SchemaAccessMiddleware::class);
 		$group->post('/schemas/new', AdminSchemaAction::class)->setName('admin-schema-duplicate')->add(SchemaAccessMiddleware::class);
 
-		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template');
-		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate');
+		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template')->add(TemplateAccessMiddleware::class);
+		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate')->add(TemplateAccessMiddleware::class);
 
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection')->add(CollectionAccessMiddleware::class);
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post')->add(CollectionAccessMiddleware::class);

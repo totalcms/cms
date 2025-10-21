@@ -159,7 +159,7 @@ readonly class AccessControlService
 	/**
 	 * Check if user can access templates with the given HTTP method.
 	 */
-	public function canAccessTemplate(string $userId, string $method): bool
+	public function canAccessTemplatesMethod(string $userId, string $method): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {

@@ -119,6 +119,7 @@ use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Middleware\CollectionAccessMiddleware;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\SchemaAccessMiddleware;
+use TotalCMS\Middleware\TemplateAccessMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
 use TotalCMS\Middleware\LicenseValidationMiddleware;
 use TotalCMS\Middleware\PreviewRouteMiddleware;
@@ -395,6 +396,15 @@ HTACCESS;
 	),
 
 	SchemaAccessMiddleware::class => fn (ContainerInterface $container): SchemaAccessMiddleware => new SchemaAccessMiddleware(
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+	),
+
+	TemplateAccessMiddleware::class => fn (ContainerInterface $container): TemplateAccessMiddleware => new TemplateAccessMiddleware(
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
 		$container->get(JsonRenderer::class),

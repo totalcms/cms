@@ -1,17 +1,19 @@
 <header>
 	<h1><a href="templates">templates</a> / <span>{{ url.template }}</span></h1>
+	{% if cms.canAccessTemplatesMethod('POST') %}
 	<button class="dash-action-dots" title="Template Actions" popovertarget="template-actions"></button>
 	<nav popover id="template-actions">
 		<ul>
 			<li class="duplicate"><a href="#" onclick="duplicateTemplate(event)">Duplicate</a></li>
 		</ul>
 	</nav>
+	{% endif %}
 </header>
 
 {{ cms.form.template({
 	path        : url.template,
-	save        : "Save",
-	delete      : "Delete",
+	save        : cms.canAccessTemplatesMethod('PUT') ? "Save" : false,
+	delete      : cms.canAccessTemplatesMethod('DELETE') ? "Delete" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [

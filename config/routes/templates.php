@@ -4,6 +4,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Template;
 use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\TemplateAccessMiddleware;
 
 return function (App $app): void {
 	$app->group('/templates', function (RouteCollectorProxy $group): void {
@@ -22,5 +23,6 @@ return function (App $app): void {
 		$group->put('/{path:.*}', Template\TemplateUpdateAction::class)->setName('template-update');
 		$group->delete('/{path:.*}', Template\TemplateDeleteAction::class)->setName('template-delete');
 		$group->map(['HEAD'], '/{path:.*}', Template\TemplateExistsAction::class)->setName('template-exists');
-	})->add(AuthMiddleware::class);
+	})->add(AuthMiddleware::class)
+		->add(TemplateAccessMiddleware::class);
 };
