@@ -1,0 +1,35 @@
+{
+    "id": "editor-user-test-com",
+    "active": true,
+    "image": {
+        "alt": "",
+        "exif": {
+            "nodata": ""
+        },
+        "featured": false,
+        "focalpoint": {
+            "x": 50,
+            "y": 50
+        },
+        "height": 0,
+        "link": "",
+        "mime": "",
+        "name": "",
+        "palette": [],
+        "size": 0,
+        "tags": [],
+        "uploadDate": "2025-10-20T21:40:56-07:00",
+        "width": 0
+    },
+    "name": "Editor Test User",
+    "email": "editor-user@test.com",
+    "password": "$2y$12$xf1qgTR.7pbm8Mbrwf7uSOvTZ\/k6JGDb1NfbLBOvldzYawe5roMUa",
+    "groups": [
+        "editor"
+    ],
+    "expiration": "",
+    "maxLoginCount": 0,
+    "loginCount": 1,
+    "created": "2025-10-20T00:00:00+00:00",
+    "lastlogin": "2025-10-20T21:40:56-07:00"
+}

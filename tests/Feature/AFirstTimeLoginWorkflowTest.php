@@ -14,10 +14,38 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
+afterAll(function (): void {
+	// Restore access control test data after fresh installation tests complete
+	// This ensures subsequent access control tests have the required test users
+	$testDataPath = __DIR__ . '/../tcms-data';
+	$fixturesPath = $testDataPath . '-fixtures';
+
+	// Restore auth directory
+	$authSource = $fixturesPath . '/auth';
+	$authDest = $testDataPath . '/auth';
+	if (is_dir($authSource)) {
+		if (is_dir($authDest)) {
+			recursiveDelete($authDest, [], true);
+		}
+		exec("cp -r " . escapeshellarg($authSource) . " " . escapeshellarg($authDest));
+	}
+
+	// Restore .system/access-groups.json
+	$accessGroupsSource = $fixturesPath . '/.system/access-groups.json';
+	$accessGroupsDest = $testDataPath . '/.system/access-groups.json';
+	if (file_exists($accessGroupsSource)) {
+		if (!is_dir(dirname($accessGroupsDest))) {
+			mkdir(dirname($accessGroupsDest), 0755, true);
+		}
+		copy($accessGroupsSource, $accessGroupsDest);
+	}
+});
+
 describe('First Time Login Workflow', function (): void {
 	it('detects new installation correctly when no users exist', function (): void {
 		// Ensure clean state for the start of the workflow tests
-		recursiveDelete(cmsDataDir());
+		// Force complete deletion for fresh installation testing
+		recursiveDelete(cmsDataDir(), [], true);
 		$container    = $this->app->getContainer();
 		$cacheManager = $container->get(CacheManager::class);
 		$cacheManager->clearAllCaches();

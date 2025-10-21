@@ -1,0 +1,35 @@
+{
+    "id": "admin-user-test-com",
+    "active": true,
+    "image": {
+        "alt": "",
+        "exif": {
+            "nodata": ""
+        },
+        "featured": false,
+        "focalpoint": {
+            "x": 50,
+            "y": 50
+        },
+        "height": 0,
+        "link": "",
+        "mime": "",
+        "name": "",
+        "palette": [],
+        "size": 0,
+        "tags": [],
+        "uploadDate": "2025-10-20T18:00:48-07:00",
+        "width": 0
+    },
+    "name": "Admin Test User",
+    "email": "admin-user@test.com",
+    "password": "$2y$12$xf1qgTR.7pbm8Mbrwf7uSOvTZ\/k6JGDb1NfbLBOvldzYawe5roMUa",
+    "groups": [
+        "admin"
+    ],
+    "expiration": "",
+    "maxLoginCount": 0,
+    "loginCount": 4,
+    "created": "2025-10-20T00:00:00+00:00",
+    "lastlogin": "2025-10-21T09:59:55-07:00"
+}

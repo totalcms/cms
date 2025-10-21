@@ -114,7 +114,7 @@ function objectFilesPath(string $collection, string $id): string
 	return cmsDataDir() . "$collection/$id";
 }
 
-function recursiveDelete(string $dir, array $preserve = [])
+function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete = false)
 {
 	if (!file_exists($dir)) {
 		return true;
@@ -124,9 +124,10 @@ function recursiveDelete(string $dir, array $preserve = [])
 		return unlink($dir);
 	}
 
-	// If this is the root tcms-data directory, preserve auth and .system directories
+	// If this is the root tcms-data directory and not forcing complete deletion,
+	// preserve auth and .system directories by default
 	$isRootDataDir = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
-	$defaultPreserve = $isRootDataDir ? ['auth', '.system'] : [];
+	$defaultPreserve = ($isRootDataDir && !$forceComplete) ? ['auth', '.system'] : [];
 	$preserve = array_merge($defaultPreserve, $preserve);
 
 	foreach (scandir($dir) as $item) {
@@ -139,7 +140,7 @@ function recursiveDelete(string $dir, array $preserve = [])
 			continue;
 		}
 
-		if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item)) {
+		if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item, [], $forceComplete)) {
 			return false;
 		}
 	}

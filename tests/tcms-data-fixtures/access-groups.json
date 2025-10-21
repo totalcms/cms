@@ -71,23 +71,26 @@
                     "methods": [
                         "GET"
                     ],
-                    "all": false,
-                    "allowed": ["blog", "news"]
+                    "all": true,
+                    "allowed": []
                 },
                 "templates": true,
-                "mailer": false,
-                "playground": true,
+                "mailer": true,
+                "playground": false,
                 "docs": true,
                 "utils": {
                     "all": false,
                     "allowed": [
-                        "jumpstart"
+                        "jumpstart",
+                        "project-setup",
+                        "image-batcher"
                     ]
                 },
                 "settings": {
                     "all": false,
                     "allowed": [
-                        "general"
+                        "general",
+                        "dashboard"
                     ]
                 }
             }
@@ -117,82 +120,6 @@
                 "mailer": false,
                 "playground": false,
                 "docs": true,
-                "utils": {
-                    "all": false,
-                    "allowed": []
-                },
-                "settings": {
-                    "all": false,
-                    "allowed": []
-                }
-            }
-        },
-        {
-            "id": "blogger",
-            "description": "Blog content creators",
-            "methods": [
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE"
-            ],
-            "permissions": {
-                "collections": {
-                    "methods": [
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE"
-                    ],
-                    "all": false,
-                    "allowed": ["blog"]
-                },
-                "schemas": {
-                    "methods": [
-                        "GET"
-                    ],
-                    "all": false,
-                    "allowed": ["blog"]
-                },
-                "templates": false,
-                "mailer": false,
-                "playground": true,
-                "docs": true,
-                "utils": {
-                    "all": false,
-                    "allowed": []
-                },
-                "settings": {
-                    "all": false,
-                    "allowed": []
-                }
-            }
-        },
-        {
-            "id": "limited-blogger",
-            "description": "Read-only blog access",
-            "methods": [
-                "GET"
-            ],
-            "permissions": {
-                "collections": {
-                    "methods": [
-                        "GET"
-                    ],
-                    "all": false,
-                    "allowed": ["blog"]
-                },
-                "schemas": {
-                    "methods": [
-                        "GET"
-                    ],
-                    "all": false,
-                    "allowed": []
-                },
-                "templates": false,
-                "mailer": false,
-                "playground": false,
-                "docs": false,
                 "utils": {
                     "all": false,
                     "allowed": []
