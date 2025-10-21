@@ -18,12 +18,12 @@ use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
 /**
- * Collection Access Middleware.
+ * Schema Access Middleware.
  *
- * Enforces access group permissions for collection operations.
+ * Enforces access group permissions for schema operations.
  * API keys bypass access group checks (trust model).
  */
-readonly class CollectionAccessMiddleware implements MiddlewareInterface
+readonly class SchemaAccessMiddleware implements MiddlewareInterface
 {
 	public function __construct(
 		private AccessControlService $accessControl,
@@ -55,7 +55,7 @@ readonly class CollectionAccessMiddleware implements MiddlewareInterface
 			return $this->forbiddenResponse($request, 'Authentication required');
 		}
 
-		// Get collection name from route
+		// Get schema ID from route
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
@@ -63,18 +63,18 @@ readonly class CollectionAccessMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$collection = $route->getArgument('collection');
+		$schema = $route->getArgument('schema');
 
 		// Get HTTP method
 		$method = $request->getMethod();
 
 		// Check access permissions
-		if ($collection) {
-			// Specific collection - check access to that collection
-			$hasAccess = $this->accessControl->canAccessCollection($userId, $collection, $method);
+		if ($schema) {
+			// Specific schema - check access to that schema
+			$hasAccess = $this->accessControl->canAccessSchema($userId, $schema, $method);
 		} else {
-			// No specific collection (e.g., GET /collections, POST /collections) - check general collection method permission
-			$hasAccess = $this->accessControl->canAccessCollectionsMethod($userId, $method);
+			// No specific schema (e.g., GET /schemas, POST /schemas) - check general schema method permission
+			$hasAccess = $this->accessControl->canAccessSchemasMethod($userId, $method);
 		}
 
 		if ($hasAccess === false) {
@@ -123,7 +123,7 @@ readonly class CollectionAccessMiddleware implements MiddlewareInterface
 		$isDev = $this->config->env === 'development';
 
 		return $isDev
-			? 'Access denied: Your access groups do not have permission to perform this action on this collection'
+			? 'Access denied: Your access groups do not have permission to perform this action on this schema'
 			: 'Access denied';
 	}
 }

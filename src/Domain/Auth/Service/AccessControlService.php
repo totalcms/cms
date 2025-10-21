@@ -53,6 +53,45 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * Check if user can perform an HTTP method on collections in general (no specific collection).
+	 * Useful for routes like GET /collections or POST /collections that don't target a specific collection.
+	 */
+	public function canAccessCollectionsMethod(string $userId, string $method): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true if any group allows the method for collections
+		foreach ($groups as $group) {
+			$permissions = $group->permissions['collections'] ?? [];
+
+			// Check if user has any collection access (all or specific collections)
+			$all     = $permissions['all'] ?? false;
+			$allowed = $permissions['allowed'] ?? [];
+
+			if (!$all && $allowed === []) {
+				continue; // No collection access in this group
+			}
+
+			// Check if method is allowed
+			$methods = $permissions['methods'] ?? [];
+			if (in_array($method, $methods)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Check if user can access a specific schema with the given HTTP method.
 	 */
 	public function canAccessSchema(string $userId, string $schema, string $method): bool
@@ -71,6 +110,45 @@ readonly class AccessControlService
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
 			if ($this->groupCanAccessSchema($group, $schema, $method)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if user can perform an HTTP method on schemas in general (no specific schema).
+	 * Useful for routes like GET /schemas or POST /schemas that don't target a specific schema.
+	 */
+	public function canAccessSchemasMethod(string $userId, string $method): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true if any group allows the method for schemas
+		foreach ($groups as $group) {
+			$permissions = $group->permissions['schemas'] ?? [];
+
+			// Check if user has any schema access (all or specific schemas)
+			$all     = $permissions['all'] ?? false;
+			$allowed = $permissions['allowed'] ?? [];
+
+			if (!$all && $allowed === []) {
+				continue; // No schema access in this group
+			}
+
+			// Check if method is allowed
+			$methods = $permissions['methods'] ?? [];
+			if (in_array($method, $methods)) {
 				return true;
 			}
 		}

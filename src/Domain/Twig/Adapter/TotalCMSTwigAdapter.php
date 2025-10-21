@@ -1488,10 +1488,10 @@ NGINX;
 	/**
 	 * Check if current user can perform an action on a collection.
 	 */
-	public function canAccess(string $collection, string $method = 'GET'): bool
+	public function canAccessCollection(string $collection, string $method = 'GET'): bool
 	{
 		$userData = $this->accessManager->userData();
-		if (empty($userData) || !isset($userData['id'])) {
+		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
@@ -1511,7 +1511,7 @@ NGINX;
 		$accessible     = [];
 
 		foreach ($allCollections as $collection) {
-			if ($this->canAccess($collection->id, $method)) {
+			if ($this->canAccessCollection($collection->id, $method)) {
 				$accessible[] = $collection->id;
 			}
 		}
@@ -1520,12 +1520,25 @@ NGINX;
 	}
 
 	/**
+	 * Check if current user can perform an action on a schema.
+	 */
+	public function canAccessSchema(string $schema, string $method = 'GET'): bool
+	{
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessSchema($userData['id'], $schema, $method);
+	}
+
+	/**
 	 * Check if user is in admin group (bypasses all access controls).
 	 */
 	public function isAdmin(): bool
 	{
 		$userData = $this->accessManager->userData();
-		if (empty($userData) || !isset($userData['id'])) {
+		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 

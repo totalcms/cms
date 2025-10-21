@@ -9,24 +9,29 @@
 
 	<nav class="links" id="schema-links">
 		{% for category, schemas in cms.schemasByCategory() %}
-		<details id="category-{{ category | slug }}">
-			<summary>{{ category }}</summary>
-			<ul>
-			{% for schema in sortByKey(schemas) %}
-				<li class="schema-{{schema.id}}">
-					<a {% if url.schema == schema.id %}class="active"{% endif %}
-						href="schemas/{{ schema.id }}"
-						title="{{ schema.description }}">{{ schema.id }}</a>
-				</li>
-			{% endfor %}
-			</ul>
-		</details>
+			{% set schemas = schemas | filter(s => cms.canAccessSchema(s.id, 'GET')) %}
+			{% if schemas | length > 0 %}
+			<details id="category-{{ category | slug }}">
+				<summary>{{ category }}</summary>
+				<ul>
+				{% for schema in sortByKey(schemas) %}
+					<li class="schema-{{schema.id}}">
+						<a {% if url.schema == schema.id %}class="active"{% endif %}
+							href="schemas/{{ schema.id }}"
+							title="{{ schema.description }}">{{ schema.id }}</a>
+					</li>
+				{% endfor %}
+				</ul>
+			</details>
+			{% endif %}
 		{% endfor %}
 	</nav>
 
+	{% if cms.canAccessSchemasMethod('POST') %}
 	<footer>
 		<a class="dash-button full transparent" href="schemas/new" title="Create a new schema">+ New Schema</a>
 	</footer>
+	{% endif %}
 </aside>
 
 <main class="dash-main-content">
@@ -43,9 +48,9 @@
 
 			{% include "admin/schema/import.twig" %}
 
-		{% elseif url.id in ["-export"] %}
+		{% elseif url.action in ["-export"] %}
 
-			{% set pageName = url.id | replace({"-":""}) %}
+			{% set pageName = url.action | replace({"-":""}) %}
 			{% include "admin/schema/" ~ pageName ~ ".twig" %}
 
 		{% else %}

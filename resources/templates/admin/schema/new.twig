@@ -2,7 +2,7 @@
 
 {% if duplicateData %}
 	{{ cms.form.schema({
-		save        : "Save",
+		save        : cms.isAdmin() ? "Save" : false,
 		helpStyle   : 'label',
 		helpOnFocus : true,
 		newActions : [
@@ -15,7 +15,7 @@
 	}) }}
 {% else %}
 	{{ cms.form.schema({
-		save        : "Save",
+		save        : cms.isAdmin() ? "Save" : false,
 		helpStyle   : 'label',
 		helpOnFocus : true,
 		newActions : [
