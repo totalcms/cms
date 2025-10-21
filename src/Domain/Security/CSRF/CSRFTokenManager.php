@@ -44,11 +44,12 @@ readonly class CSRFTokenManager
 
 	/**
 	 * Get the current CSRF token from session, generating if needed.
+	 * Returns empty string if session is not active (e.g., in preview mode).
 	 */
 	public function getToken(): string
 	{
 		if (!$this->session->isStarted()) {
-			throw new \RuntimeException('Session must be active to get CSRF token');
+			return '';
 		}
 
 		// Check if we have a valid token
@@ -100,18 +101,23 @@ readonly class CSRFTokenManager
 
 	/**
 	 * Generate CSRF token for form inclusion.
-	 * Returns HTML hidden input field.
+	 * Returns HTML hidden input field, or empty string if session is not active.
 	 */
 	public function getTokenField(): string
 	{
 		$token = $this->getToken();
+
+		// If no token (session not active), return empty string
+		if ($token === '') {
+			return '';
+		}
 
 		return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '" />';
 	}
 
 	/**
 	 * Generate CSRF token for JavaScript/AJAX usage.
-	 * Returns token data as array.
+	 * Returns token data as array, with empty value if session is not active.
 	 *
 	 * @return array<string,string>
 	 */
