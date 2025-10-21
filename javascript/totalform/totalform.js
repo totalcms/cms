@@ -469,10 +469,14 @@ export default class TotalForm {
         if (!this.isEditMode()) return;
 
         if (window.confirm("Are you sure that you want to delete this? This cannot be undone.")) {
+            this.validated = true;
             this.processing();
 
 			let deleteAPI = `/collections/${this.collection}/${this.id}`;
 
+			// if (this.isDeckForm()) {
+			// 	deleteAPI = `/{collection}/${this.id}/{property}/deck/{itemId}`;
+			// }
 			if (this.isSchemaForm()) {
 				deleteAPI = `/schemas/${this.id}`;
 			}
