@@ -25,7 +25,7 @@ $container = new Container(require __DIR__ . '/container.php');
 // Sentry Logger
 $sentryEnabled = $container->get(Config::class)->sentry;
 if ($sentryEnabled === true) {
-	TotalCMS\Middleware\SentryMiddleware::initSentry();
+	TotalCMS\Middleware\Development\SentryMiddleware::initSentry();
 }
 
 // Create App instance

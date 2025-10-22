@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
-use TotalCMS\Middleware\ApiKeyAuthMiddleware;
+use TotalCMS\Middleware\Auth\ApiKeyAuthMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 
 final class ApiKeyAuthMiddlewareTest extends TestCase

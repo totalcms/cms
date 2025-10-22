@@ -3,7 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Mailer\SendEmailAction;
-use TotalCMS\Middleware\RateLimitMiddleware;
+use TotalCMS\Middleware\Security\RateLimitMiddleware;
 
 return function (App $app): void {
 	$app->group('/action', function (RouteCollectorProxy $group): void {

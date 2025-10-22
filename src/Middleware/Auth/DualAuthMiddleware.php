@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Middleware;
+namespace TotalCMS\Middleware\Auth;
 
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseFactoryInterface;

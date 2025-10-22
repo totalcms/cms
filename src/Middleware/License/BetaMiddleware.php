@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Middleware;
+namespace TotalCMS\Middleware\License;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,7 +28,7 @@ class BetaMiddleware implements MiddlewareInterface
 		$response = new Response();
 		$response->getBody()->write('Total CMS Beta has expired');
 
-		$expireFile = __DIR__ . '/../../resources/beta';
+		$expireFile = __DIR__ . '/../../../resources/beta';
 		if (!file_exists($expireFile)) {
 			return $response->withStatus(403);
 		}

@@ -3,9 +3,9 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Export;
-use TotalCMS\Middleware\AuthMiddleware;
-use TotalCMS\Middleware\CollectionAccessMiddleware;
-use TotalCMS\Middleware\SchemaAccessMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
+use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 
 return function (App $app): void {
 	$app->group('/export', function (RouteCollectorProxy $group): void {

@@ -7,7 +7,7 @@ use TotalCMS\Action\Cache\CollectionImageCacheDeleteAction;
 use TotalCMS\Action\Cache\DevModeDisableAction;
 use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeStatusAction;
-use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/cache', function (RouteCollectorProxy $group): void {

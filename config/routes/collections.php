@@ -6,9 +6,9 @@ use TotalCMS\Action;
 use TotalCMS\Action\Collection;
 use TotalCMS\Action\Property;
 use TotalCMS\Action\Schema;
-use TotalCMS\Middleware\CollectionAccessMiddleware;
-use TotalCMS\Middleware\CollectionMetaAccessMiddleware;
-use TotalCMS\Middleware\DualAuthMiddleware;
+use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
+use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
+use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/collections', function (RouteCollectorProxy $group): void {

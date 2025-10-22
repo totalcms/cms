@@ -3,7 +3,7 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\JobQueue;
-use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/jobqueue', function (RouteCollectorProxy $group): void {

@@ -4,8 +4,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\ApiKey\ApiKeyCreateAction;
 use TotalCMS\Action\Admin\ApiKey\ApiKeyDeleteAction;
-use TotalCMS\Middleware\AdminOnlyMiddleware;
-use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	// API endpoints for managing API keys (requires super admin)

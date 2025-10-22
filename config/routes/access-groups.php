@@ -4,8 +4,8 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\AccessGroup\AccessGroupDeleteAction;
 use TotalCMS\Action\Admin\AccessGroup\AccessGroupSaveAction;
-use TotalCMS\Middleware\AdminOnlyMiddleware;
-use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	// API endpoints for managing access groups (requires super admin)

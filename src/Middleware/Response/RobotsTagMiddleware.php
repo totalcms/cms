@@ -1,17 +1,16 @@
 <?php
 
-namespace TotalCMS\Middleware;
+namespace TotalCMS\Middleware\Response;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Tuupola\Http\Factory\ResponseFactory;
 
 /**
- * License middleware.
+ * Allow indexing of images.
  */
-class ProLicenseMiddleware implements MiddlewareInterface
+class RobotsTagMiddleware implements MiddlewareInterface
 {
 	/**
 	 * Invoke middleware.
@@ -23,12 +22,15 @@ class ProLicenseMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// If valid Lite license call next and return.
-		/** @phpstan-ignore-next-line */
-		return $handler->handle($request);
-		// Set response headers before giving it to error callback
-		// $response = (new ResponseFactory())->createResponse(401, 'Unauthorized');
-		// $response->getBody()->write('Invalid License Found');
-		// return $response;
+		$response = $handler->handle($request);
+
+		$currentRoute = $request->getUri()->getPath();
+		if (str_starts_with($currentRoute, '/imageworks')) {
+			// allow indexing of images
+			return $response->withHeader('X-Robots-Tag', 'index, follow');
+		}
+
+		// Most CMS routes should not be indexed
+		return $response->withHeader('X-Robots-Tag', 'noindex, nofollow');
 	}
 }

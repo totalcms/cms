@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Middleware\LiteLicenseMiddleware;
+use TotalCMS\Middleware\License\LiteLicenseMiddleware;
 
 final class LiteLicenseMiddlewareTest extends TestCase
 {
