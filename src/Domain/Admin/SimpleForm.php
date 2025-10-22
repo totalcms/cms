@@ -39,6 +39,8 @@ readonly class SimpleForm implements \Stringable
 		$buttonWrapper = HTMLUtils::element('div', $button, ['class' => 'form-inline-fields']);
 
 		$formAttrs = [
+			'action'       => $this->route,
+			'method'       => strtoupper($this->method) === 'GET' ? 'GET' : 'POST',
 			'class'        => 'simple-form totalform ' . $this->class,
 			'data-route'   => $this->route,
 			'data-method'  => $this->method,

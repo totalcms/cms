@@ -419,8 +419,9 @@ export default class TotalForm {
     // Submit functions
     //-------------------------
     eventListeners() {
-		// Prevent the default form submission
-		if (this.method.toUpperCase() !== "GET") {
+		// Prevent the default form submission (unless ajax is disabled)
+		const isAjax = this.form.dataset.ajax !== 'false';
+		if (this.method.toUpperCase() !== "GET" && isAjax) {
 			this.form.addEventListener("submit", event => event.preventDefault());
 		}
 		this.form.addEventListener("field-change", e => {

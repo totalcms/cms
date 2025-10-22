@@ -59,13 +59,25 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function simple(string $route, string $content = '', array $options = []): string
 	{
-		$options['api']         = $this->api;
-		$options['route']       = $route;
-		$options['csrfManager'] = $this->csrfManager;
+		// Extract options with defaults
+		$method      = $options['method'] ?? 'POST';
+		$label       = $options['label'] ?? 'Submit';
+		$class       = $options['class'] ?? '';
+		$refresh     = $options['refresh'] ?? false;
+		$ajax        = $options['ajax'] ?? true;
+		$buttonClass = $options['buttonClass'] ?? '';
 
-		// options: method, label, refresh
-
-		$form = new SimpleForm(...$options);
+		$form = new SimpleForm(
+			api: $this->api,
+			route: $route,
+			method: $method,
+			label: $label,
+			class: $class,
+			refresh: $refresh,
+			ajax: $ajax,
+			csrfManager: $this->csrfManager,
+			buttonClass: $buttonClass,
+		);
 
 		return $form->build($content);
 	}
