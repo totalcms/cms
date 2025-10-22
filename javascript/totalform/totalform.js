@@ -456,6 +456,11 @@ export default class TotalForm {
 			this.validated = false;
 			return;
 		}
+		if (this.isError()) {
+			console.warn('Form is in error state, cannot save.');
+			this.validated = false;
+			return;
+		}
 		this.validated = true;
 		this.closeDialog();
         this.processing();
