@@ -1730,6 +1730,11 @@ NGINX;
 	 */
 	public function isAdmin(): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
