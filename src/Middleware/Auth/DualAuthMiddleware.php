@@ -194,8 +194,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		}
 
 		$collectionId = $route->getArgument('collection');
-		if (!$collectionId) {
-			return false;
+		if ($collectionId === null || $collectionId === '') {
+				return false;
 		}
 
 		$method = $request->getMethod();
@@ -212,7 +212,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// Check if collection allows this operation publicly
 		try {
 			$collection = $this->collectionFetcher->fetchCollection((string)$collectionId);
-			if (!$collection) {
+			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 				return false;
 			}
 
