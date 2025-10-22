@@ -2,6 +2,7 @@
 
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Admin\Admin404Action;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
 use TotalCMS\Action\Admin\AdminEditProfileAction;
@@ -66,5 +67,8 @@ return function (App $app): void {
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');
+
+		// Catch-all 404 route - MUST BE LAST
+		$group->any('/{path:.*}', Admin404Action::class)->setName('admin-404');
 	})->add(AuthMiddleware::class);
 };

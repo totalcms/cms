@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -14,6 +15,7 @@ readonly class AdminCollectionAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private CollectionFetcher $collectionFetcher,
 	) {
 	}
 
@@ -39,6 +41,16 @@ readonly class AdminCollectionAction
 			$args['collection'] = 'new';
 		} elseif ($routeName === 'admin-collection-edit') {
 			$args['id'] = 'edit';
+		}
+
+		// Validate collection exists (skip for index, new, and special routes)
+		$collection = $args['collection'] ?? '';
+		if ($collection !== '' && $collection !== 'new') {
+			if (!$this->collectionFetcher->collectionExists($collection)) {
+				return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+					'url' => [ 'path' => $request->getUri()->getPath(), 'page' => '404', ],
+				]);
+			}
 		}
 
 		return $this->twigRenderer->template($response, 'admin/collection.twig', [

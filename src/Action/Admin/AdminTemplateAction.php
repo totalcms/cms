@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -13,6 +14,7 @@ readonly class AdminTemplateAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private TemplateFetcher $templateFetcher,
 	) {
 	}
 
@@ -28,6 +30,15 @@ readonly class AdminTemplateAction
 		// POST /templates/new - duplicate template with data
 
 		$path = $args['path'] ?? '';
+
+		// Validate template exists (skip for index and new)
+		if ($path !== '' && $path !== 'new') {
+			if (!$this->templateFetcher->templateExists($path)) {
+				return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+					'url' => [ 'path' => $request->getUri()->getPath(), 'page' => '404', ],
+				]);
+			}
+		}
 
 		$templateData = [
 			'url' => [

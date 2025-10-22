@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -13,6 +14,7 @@ readonly class AdminSchemaAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private SchemaFetcher $schemaFetcher,
 	) {
 	}
 
@@ -26,6 +28,16 @@ readonly class AdminSchemaAction
 		// /schemas/{schema} - schema edit page
 		// /schemas/new - schema create form
 		// POST /schemas/new - duplicate schema with data
+
+		// Validate schema exists (skip for index and new)
+		$schema = $args['schema'] ?? '';
+		if ($schema !== '' && $schema !== 'new') {
+			if (!$this->schemaFetcher->schemaExists($schema)) {
+				return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+					'url' => [ 'path' => $request->getUri()->getPath(), 'page' => '404', ],
+				]);
+			}
+		}
 
 		$templateData = [
 			'url' => [
