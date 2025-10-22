@@ -40,20 +40,43 @@
 
 				<div class="group-details">
 					<div class="detail-row">
-						<strong>Collections:</strong>
+						<strong>Objects:</strong>
 						<span>
 							{% if group.permissions.collections.all %}
 								<em>All Collections</em>
 								<span class="methods">
-									{% for method in group.permissions.collections.methods %}
-										<span class="method-badge small">{{ method }}</span>
+									{% for operation in group.permissions.collections.operations %}
+										<span class="method-badge small">{{ operation | upper }}</span>
 									{% endfor %}
 								</span>
 							{% elseif group.permissions.collections.allowed|length > 0 %}
 								{{ group.permissions.collections.allowed|join(', ') }}
 								<span class="methods">
-									{% for method in group.permissions.collections.methods %}
-										<span class="method-badge small">{{ method }}</span>
+									{% for operation in group.permissions.collections.operations %}
+										<span class="method-badge small">{{ operation | upper }}</span>
+									{% endfor %}
+								</span>
+							{% else %}
+								<em>None</em>
+							{% endif %}
+						</span>
+					</div>
+
+					<div class="detail-row">
+						<strong>Collections:</strong>
+						<span>
+							{% if group.permissions.collectionsMeta.all %}
+								<em>All Collections</em>
+								<span class="methods">
+									{% for operation in group.permissions.collectionsMeta.operations %}
+										<span class="method-badge small">{{ operation | upper }}</span>
+									{% endfor %}
+								</span>
+							{% elseif group.permissions.collectionsMeta.allowed|length > 0 %}
+								{{ group.permissions.collectionsMeta.allowed|join(', ') }}
+								<span class="methods">
+									{% for operation in group.permissions.collectionsMeta.operations %}
+										<span class="method-badge small">{{ operation | upper }}</span>
 									{% endfor %}
 								</span>
 							{% else %}
@@ -68,15 +91,15 @@
 							{% if group.permissions.schemas.all %}
 								<em>All Schemas</em>
 								<span class="methods">
-									{% for method in group.permissions.schemas.methods %}
-										<span class="method-badge small">{{ method }}</span>
+									{% for operation in group.permissions.schemas.operations %}
+										<span class="method-badge small">{{ operation | upper }}</span>
 									{% endfor %}
 								</span>
 							{% elseif group.permissions.schemas.allowed|length > 0 %}
 								{{ group.permissions.schemas.allowed|join(', ') }}
 								<span class="methods">
-									{% for method in group.permissions.schemas.methods %}
-										<span class="method-badge small">{{ method }}</span>
+									{% for operation in group.permissions.schemas.operations %}
+										<span class="method-badge small">{{ operation | upper }}</span>
 									{% endfor %}
 								</span>
 							{% else %}
@@ -97,7 +120,7 @@
 								<span class="permission-badge">All Utils</span>
 							{% elseif group.permissions.utils.allowed|length > 0 %}
 								{% for util in group.permissions.utils.allowed %}
-									<span class="permission-badge">{{ util }}</span>
+									<span class="permission-badge">{{ util | capitalize }}</span>
 								{% endfor %}
 							{% endif %}
 
@@ -105,20 +128,12 @@
 								<span class="permission-badge">All Settings</span>
 							{% elseif group.permissions.settings.allowed|length > 0 %}
 								{% for setting in group.permissions.settings.allowed %}
-									<span class="permission-badge">{{ setting }}</span>
+									<span class="permission-badge">{{ setting | capitalize }}</span>
 								{% endfor %}
 							{% endif %}
 						</span>
 					</div>
 
-					<div class="detail-row">
-						<strong>Global Methods:</strong>
-						<span class="methods">
-							{% for method in group.methods %}
-								<span class="method-badge">{{ method }}</span>
-							{% endfor %}
-						</span>
-					</div>
 				</div>
 			</article>
 			{% endfor %}
@@ -148,7 +163,7 @@
 }
 
 .access-group-card {
-	background    : oklch(var(--totalform-nearwhite));
+	background    : oklch(var(--totalform-nearwhite) / 0.5);
 	border        : 1px solid oklch(var(--totalform-border-color));
 	border-radius : var(--totalform-radius);
 	padding       : 1.5rem;

@@ -7,7 +7,7 @@
 	{% set formFields %}
 		{{ cms.form.field("id", "id", {
 			label       : "Group ID",
-			help        : "Unique identifier for this access group (lowercase, no spaces)",
+			help        : "Unique identifier for this access group",
 			placeholder : "e.g., content-editor",
 			required    : true,
 			value       : group ? group.id : '',
@@ -23,203 +23,246 @@
 			rows        : 3,
 		}) }}
 
-		<h3>Collection Permissions</h3>
+		<div class="permission-section">
+			<h3>Object Permissions</h3>
 
-		{{ cms.form.field("multicheckbox", "collections-methods", {
-			label    : "Collections Methods",
-			help     : "HTTP methods allowed for collections (overrides global methods)",
-			value    : group ? group.permissions.collections.methods : ["GET"],
-			options  : [
-				{value: "GET", label: "GET (View/Read)"},
-				{value: "POST", label: "POST (Create)"},
-				{value: "PUT", label: "PUT (Update)"},
-				{value: "DELETE", label: "DELETE (Delete)"},
-				{value: "PATCH", label: "PATCH (Partial Update)"}
-			]
-		}) }}
-
-		{{ cms.form.field("multicheckbox", "collections-all", {
-			label    : "Collection Access Level",
-			value    : group ? (group.permissions.collections.all ? ["all"] : []) : ["all"],
-			options  : [
-				{value: "all", label: "All Collections"}
-			]
-		}) }}
-
-		{% set collectionOptions = [] %}
-		{% for collection in collections %}
-			{% set collectionOptions = collectionOptions|merge([{
-				value: collection.id,
-				label: collection.name
-			}]) %}
-		{% endfor %}
-
-		{{ cms.form.field("multicheckbox", "collections-allowed", {
-			label    : "Specific Collections",
-			help     : "Select which collections this group can access",
-			value    : group ? group.permissions.collections.allowed : [],
-			options  : collectionOptions,
-			settings : {
-				fieldGrid: "200px",
-				visibility : {
-					watch    : "collections-all",
-					value    : "all",
-					operator : "not_in"
+			{{ cms.form.field("multicheckbox", "collections-operations", {
+				label    : "Operations Allowed on Objects",
+				value    : group ? group.permissions.collections.operations : ["read"],
+				options  : [
+					{value: "create", label: "Create"},
+					{value: "read", label: "Read"},
+					{value: "update", label: "Update"},
+					{value: "delete", label: "Delete"}
+				],
+				settings : {
+					fieldGrid: "150px"
 				}
-			}
-		}) }}
+			}) }}
 
-		<h3>Schema Permissions</h3>
+			{{ cms.form.field("multicheckbox", "collections-all", {
+				label    : "Collection Access Level",
+				value    : group ? (group.permissions.collections.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Object Collections"}
+				]
+			}) }}
 
-		{{ cms.form.field("multicheckbox", "schemas-methods", {
-			label    : "Schemas Methods",
-			help     : "HTTP methods allowed for schemas (overrides global methods)",
-			value    : group ? group.permissions.schemas.methods : ["GET"],
-			options  : [
-				{value: "GET", label: "GET (View/Read)"},
-				{value: "POST", label: "POST (Create)"},
-				{value: "PUT", label: "PUT (Update)"},
-				{value: "DELETE", label: "DELETE (Delete)"},
-				{value: "PATCH", label: "PATCH (Partial Update)"}
-			]
-		}) }}
+			{% set collectionOptions = [] %}
+			{% for collection in collections %}
+				{% set collectionOptions = collectionOptions|merge([{
+					value: collection.id,
+					label: collection.name
+				}]) %}
+			{% endfor %}
 
-		{{ cms.form.field("multicheckbox", "schemas-all", {
-			label    : "Schema Access Level",
-			value    : group ? (group.permissions.schemas.all ? ["all"] : []) : ["all"],
-			options  : [
-				{value: "all", label: "All Schemas"}
-			]
-		}) }}
-
-		{% set schemaOptions = [] %}
-		{% for schema in schemas %}
-			{% set schemaOptions = schemaOptions|merge([{
-				value: schema.id,
-				label: schema.id
-			}]) %}
-		{% endfor %}
-
-		{{ cms.form.field("multicheckbox", "schemas-allowed", {
-			label    : "Specific Schemas",
-			help     : "Select which schemas this group can access",
-			value    : group ? group.permissions.schemas.allowed : [],
-			options  : schemaOptions,
-			settings : {
-				fieldGrid: "200px",
-				visibility : {
-					watch    : "schemas-all",
-					value    : "all",
-					operator : "not_in"
+			{{ cms.form.field("multicheckbox", "collections-allowed", {
+				label    : "Specific Collections",
+				help     : "Select which collections this group can access",
+				value    : group ? group.permissions.collections.allowed : [],
+				options  : collectionOptions,
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch    : "collections-all",
+						value    : "all",
+						operator : "not_in"
+					}
 				}
-			}
-		}) }}
+			}) }}
+		</div>
 
-		<h3>Other Permissions</h3>
+		<div class="permission-section">
+			<h3>Collection Meta Permissions</h3>
 
-		{{ cms.form.field("multicheckbox", "methods", {
-			label    : "Global HTTP Allowed Methods",
-			help     : "These methods apply to all permissions except Collections and Schemas which have their own method settings.",
-			required : true,
-			value    : group ? group.methods : ["GET"],
-			options  : [
-				{value: "GET", label: "GET (View/Read)"},
-				{value: "POST", label: "POST (Create)"},
-				{value: "PUT", label: "PUT (Update)"},
-				{value: "DELETE", label: "DELETE (Delete)"},
-				{value: "PATCH", label: "PATCH (Partial Update)"}
-			]
-		}) }}
-
-		{{ cms.form.field("multicheckbox", "permissions-simple", {
-			label    : "Dashboard Features",
-			help     : "Select which dashboard features this group can access",
-			value    : group ? (
-				(group.permissions.templates ? ["templates"] : [])|merge(
-					group.permissions.mailer ? ["mailer"] : []
-				)|merge(
-					group.permissions.playground ? ["playground"] : []
-				)|merge(
-					group.permissions.docs ? ["docs"] : []
-				)
-			) : ["docs", "mailer", "templates", "playground"],
-			options  : [
-				{value: "docs", label: "Documentation"},
-				{value: "mailer", label: "Mailer"},
-				{value: "templates", label: "Templates"},
-				{value: "playground", label: "Twig Playground"},
-			],
-			settings : {
-				fieldGrid: "200px"
-			}
-		}) }}
-
-		{{ cms.form.field("multicheckbox", "utils-all", {
-			label    : "Utils Access Level",
-			value    : group ? (group.permissions.utils.all ? ["all"] : []) : ["all"],
-			options  : [
-				{value: "all", label: "All Utils"}
-			]
-		}) }}
-
-		{{ cms.form.field("multicheckbox", "utils-allowed", {
-			label    : "Specific Utils",
-			help     : "Select which utilities this group can access",
-			value    : group ? group.permissions.utils.allowed : [],
-			options  : [
-				{value: "access-groups", label: "Access Groups"},
-				{value: "api-keys", label: "API Keys"},
-				{value: "cache", label: "Cache Manager"},
-				{value: "image-batcher", label: "Image Batcher"},
-				{value: "jobqueue", label: "Job Queue Manager"},
-				{value: "jumpstart", label: "JumpStart"},
-				{value: "license", label: "License"},
-				{value: "log-analyzer", label: "Log Analyzer"},
-				{value: "pretty-url", label: "Pretty URL Builder"},
-				{value: "project-setup", label: "Project Setup"},
-				{value: "server-checker", label: "Server Checker"}
-			],
-			settings : {
-				fieldGrid: "200px",
-				visibility : {
-					watch : "utils-all",
-					value : "all",
-					operator: "not_in"
+			{{ cms.form.field("multicheckbox", "collectionsMeta-operations", {
+				label    : "Operations Allowed on Collection Metadata",
+				value    : group ? group.permissions.collectionsMeta.operations : ["read"],
+				options  : [
+					{value: "create", label: "Create"},
+					{value: "read", label: "Read"},
+					{value: "update", label: "Update"},
+					{value: "delete", label: "Delete"}
+				],
+				settings : {
+					fieldGrid: "150px"
 				}
-			}
-		}) }}
+			}) }}
 
-		{{ cms.form.field("multicheckbox", "settings-all", {
-			label    : "Settings Access Level",
-			value    : group ? (group.permissions.settings.all ? ["all"] : []) : ["all"],
-			options  : [
-				{value: "all", label: "All Settings"}
-			]
-		}) }}
+			{{ cms.form.field("multicheckbox", "collectionsMeta-all", {
+				label    : "Collection Metadata Access Level",
+				value    : group ? (group.permissions.collectionsMeta.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Collections"}
+				]
+			}) }}
 
-		{{ cms.form.field("multicheckbox", "settings-allowed", {
-			label    : "Specific Settings Sections",
-			help     : "Select which settings sections this group can access",
-			value    : group ? group.permissions.settings.allowed : [],
-			options  : [
-				{value: "general", label: "General"},
-				{value: "authentication", label: "Authentication"},
-				{value: "cache", label: "Cache"},
-				{value: "dashboard", label: "Dashboard"},
-				{value: "htmlclean", label: "HTML Sanitization"},
-				{value: "imageworks", label: "ImageWorks"},
-				{value: "mailer", label: "Mailer"},
-				{value: "smtp", label: "SMTP"}
-			],
-			settings : {
-				fieldGrid: "200px",
-				visibility : {
-					watch : "settings-all",
-					value : "all",
-					operator: "not_in"
+			{% set collectionsMetaOptions = [] %}
+			{% for collection in collections %}
+				{% set collectionsMetaOptions = collectionsMetaOptions|merge([{
+					value: collection.id,
+					label: collection.name
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("multicheckbox", "collectionsMeta-allowed", {
+				label    : "Specific Collections",
+				help     : "Select which collections' metadata this group can access",
+				value    : group ? group.permissions.collectionsMeta.allowed : [],
+				options  : collectionsMetaOptions,
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch    : "collectionsMeta-all",
+						value    : "all",
+						operator : "not_in"
+					}
 				}
-			}
-		}) }}
+			}) }}
+		</div>
+
+		<div class="permission-section">
+			<h3>Schema Permissions</h3>
+
+			{{ cms.form.field("multicheckbox", "schemas-operations", {
+				label    : "Operations Allowed on Schemas",
+				value    : group ? group.permissions.schemas.operations : ["read"],
+				options  : [
+					{value: "create", label: "Create"},
+					{value: "read", label: "Read"},
+					{value: "update", label: "Update"},
+					{value: "delete", label: "Delete"}
+				],
+				settings : {
+					fieldGrid: "150px"
+				}
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "schemas-all", {
+				label    : "Schema Access Level",
+				value    : group ? (group.permissions.schemas.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Schemas"}
+				]
+			}) }}
+
+			{% set schemaOptions = [] %}
+			{% for schema in schemas %}
+				{% set schemaOptions = schemaOptions|merge([{
+					value: schema.id,
+					label: schema.id
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("multicheckbox", "schemas-allowed", {
+				label    : "Specific Schemas",
+				help     : "Select which schemas this group can access",
+				value    : group ? group.permissions.schemas.allowed : [],
+				options  : schemaOptions,
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch    : "schemas-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+
+		<div class="permission-section">
+			<h3>Other Permissions</h3>
+
+			{{ cms.form.field("multicheckbox", "permissions-simple", {
+				label    : "Dashboard Features",
+				help     : "Select which dashboard features this group can access",
+				value    : group ? (
+					(group.permissions.templates ? ["templates"] : [])|merge(
+						group.permissions.mailer ? ["mailer"] : []
+					)|merge(
+						group.permissions.playground ? ["playground"] : []
+					)|merge(
+						group.permissions.docs ? ["docs"] : []
+					)
+				) : ["docs", "mailer", "templates", "playground"],
+				options  : [
+					{value: "docs", label: "Documentation"},
+					{value: "mailer", label: "Mailer"},
+					{value: "templates", label: "Templates"},
+					{value: "playground", label: "Twig Playground"},
+				],
+				settings : {
+					fieldGrid: "150px"
+				}
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "utils-all", {
+				label    : "Utils Access Level",
+				value    : group ? (group.permissions.utils.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Utils"}
+				]
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "utils-allowed", {
+				label    : "Specific Utils",
+				help     : "Select which utilities this group can access",
+				value    : group ? group.permissions.utils.allowed : [],
+				options  : [
+					{value: "access-groups", label: "Access Groups"},
+					{value: "api-keys", label: "API Keys"},
+					{value: "cache", label: "Cache Manager"},
+					{value: "image-batcher", label: "Image Batcher"},
+					{value: "jobqueue", label: "Job Queue Manager"},
+					{value: "jumpstart", label: "JumpStart"},
+					{value: "license", label: "License"},
+					{value: "log-analyzer", label: "Log Analyzer"},
+					{value: "pretty-url", label: "Pretty URL Builder"},
+					{value: "project-setup", label: "Project Setup"},
+					{value: "server-checker", label: "Server Checker"}
+				],
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch : "utils-all",
+						value : "all",
+						operator: "not_in"
+					}
+				}
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "settings-all", {
+				label    : "Settings Access Level",
+				value    : group ? (group.permissions.settings.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Settings"}
+				]
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "settings-allowed", {
+				label    : "Specific Settings Sections",
+				help     : "Select which settings sections this group can access",
+				value    : group ? group.permissions.settings.allowed : [],
+				options  : [
+					{value: "general", label: "General"},
+					{value: "authentication", label: "Authentication"},
+					{value: "cache", label: "Cache"},
+					{value: "dashboard", label: "Dashboard"},
+					{value: "htmlclean", label: "HTML Sanitization"},
+					{value: "imageworks", label: "ImageWorks"},
+					{value: "mailer", label: "Mailer"},
+					{value: "smtp", label: "SMTP"}
+				],
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch : "settings-all",
+						value : "all",
+						operator: "not_in"
+					}
+				}
+			}) }}
+		</div>
 	{% endset %}
 
 	{% set apiRoute = isEdit ? "/access-groups/" ~ group.id : "/access-groups" %}
@@ -251,11 +294,24 @@
 	margin-bottom : 1rem;
 }
 h3 {
-	margin-block : 3rem 1rem;
+	margin-block : 2rem 1rem;
 }
 .multicheckbox-field {
 	margin-block-start : 1rem;
 	margin-inline-start : 1rem;
+}
+.permission-section {
+	background    : oklch(var(--totalform-nearwhite) / 0.5);
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1.5rem;
+	margin-block  : 1rem;
+}
+.permission-section:first-of-type {
+	margin-top : 0;
+}
+.permission-section h3 {
+	margin-block-start : 0;
 }
 </style>
 

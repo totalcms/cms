@@ -40,6 +40,11 @@ readonly class AccessGroupData
 	private function getDefaultPermissions(): array
 	{
 		return [
+			'collectionsMeta' => [
+				'operations' => ['read'],
+				'all'        => true,
+				'allowed'    => [],
+			],
 			'collections' => [
 				'operations' => ['read'],
 				'all'        => true,

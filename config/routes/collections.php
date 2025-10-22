@@ -7,6 +7,7 @@ use TotalCMS\Action\Collection;
 use TotalCMS\Action\Property;
 use TotalCMS\Action\Schema;
 use TotalCMS\Middleware\CollectionAccessMiddleware;
+use TotalCMS\Middleware\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\DualAuthMiddleware;
 
 return function (App $app): void {
@@ -24,7 +25,10 @@ return function (App $app): void {
 
 		// Collection Schema
 		$group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
+	})->add(DualAuthMiddleware::class)
+		->add(CollectionMetaAccessMiddleware::class);
 
+	$app->group('/collections', function (RouteCollectorProxy $group): void {
 		// Collection Index
 		$group->get('/{collection}/index', Collection\Index\IndexGetAction::class)->setName('collection-fetch-index');
 		$group->put('/{collection}/index', Collection\Index\IndexBuildAction::class)->setName('collection-reindex');

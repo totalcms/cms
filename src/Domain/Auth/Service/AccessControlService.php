@@ -27,6 +27,32 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * Check if user can access a specific collection's metadata with the given CRUD operation.
+	 */
+	public function canAccessCollectionMeta(string $userId, string $collection, string $operation): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			if ($this->groupCanAccessCollectionMeta($group, $collection, $operation)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Check if user can access a specific collection with the given CRUD operation.
 	 */
 	public function canAccessCollection(string $userId, string $collection, string $operation): bool
@@ -45,6 +71,45 @@ readonly class AccessControlService
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
 			if ($this->groupCanAccessCollection($group, $collection, $operation)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if user can perform a CRUD operation on collections metadata in general (no specific collection).
+	 * Useful for routes like GET /collections or POST /collections that don't target a specific collection.
+	 */
+	public function canAccessCollectionsMetaOperation(string $userId, string $operation): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true if any group allows the operation for collections metadata
+		foreach ($groups as $group) {
+			$permissions = $group->permissions['collectionsMeta'] ?? [];
+
+			// Check if user has any collection metadata access (all or specific collections)
+			$all     = $permissions['all'] ?? false;
+			$allowed = $permissions['allowed'] ?? [];
+
+			if (!$all && $allowed === []) {
+				continue; // No collection metadata access in this group
+			}
+
+			// Check if operation is allowed
+			$operations = $permissions['operations'] ?? [];
+			if (in_array($operation, $operations)) {
 				return true;
 			}
 		}
@@ -419,6 +484,27 @@ readonly class AccessControlService
 		}
 
 		return $groups;
+	}
+
+	/**
+	 * Check if a single group can access a collection's metadata.
+	 */
+	private function groupCanAccessCollectionMeta(AccessGroupData $group, string $collection, string $operation): bool
+	{
+		$permissions = $group->permissions['collectionsMeta'] ?? [];
+
+		// Check if collection metadata access is allowed
+		$all     = $permissions['all'] ?? false;
+		$allowed = $permissions['allowed'] ?? [];
+
+		if (!$all && !in_array($collection, $allowed)) {
+			return false;
+		}
+
+		// Check if operation is allowed
+		$operations = $permissions['operations'] ?? [];
+
+		return in_array($operation, $operations);
 	}
 
 	/**

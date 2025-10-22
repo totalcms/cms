@@ -52,7 +52,7 @@ readonly class OperationDetector
 		'object-save',
 		'object-clone',
 		'schema-save',
-		'collection-save',
+		'collection-save',      // Collection metadata
 		'template-save',
 		'admin-schema-duplicate',
 		'admin-template-duplicate',
@@ -75,6 +75,10 @@ readonly class OperationDetector
 		'object-fetch',
 		'deck-item-fetch',
 		'object-exists',
+		'collections-list',     // Collection metadata
+		'collection-fetch',     // Collection metadata
+		'collection-exists',    // Collection metadata
+		'collection-fetch-schema', // Collection metadata
 		'schema-fetch',
 		'schema-list',
 		'schema-exists',
@@ -108,9 +112,8 @@ readonly class OperationDetector
 	private const DELETE_ROUTES = [
 		'object-delete',
 		'schema-delete',
-		'collection-delete',
+		'collection-delete',    // Collection metadata
 		'template-delete',
-		'collection-delete',
 		'playground-delete',
 	];
 
@@ -118,6 +121,8 @@ readonly class OperationDetector
 	 * Routes that map to UPDATE operations.
 	 */
 	private const UPDATE_ROUTES = [
+		'collection-update',    // Collection metadata
+		'collection-patch',     // Collection metadata
 		'collection-reindex',
 		'object-update',
 		'object-patch',

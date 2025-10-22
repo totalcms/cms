@@ -41,10 +41,10 @@ readonly class AccessGroupSaveAction
 			]);
 		}
 
-		// Parse global methods
-		$methods = $data['methods'] ?? [];
-		if (!is_array($methods)) {
-			$methods = [];
+		// Parse global operations
+		$operations = $data['operations'] ?? [];
+		if (!is_array($operations)) {
+			$operations = [];
 		}
 
 		// Build permissions structure
@@ -54,7 +54,7 @@ readonly class AccessGroupSaveAction
 			$group = new AccessGroupData([
 				'id'          => $id,
 				'description' => $description,
-				'methods'     => $methods,
+				'operations'  => $operations,
 				'permissions' => $permissions,
 			]);
 
@@ -85,21 +85,27 @@ readonly class AccessGroupSaveAction
 		$simplePermissions = isset($data['permissions-simple']) ? (array)$data['permissions-simple'] : [];
 
 		// Collections permissions
-		$collectionsAll = isset($data['collections-all']) && in_array('all', (array)$data['collections-all']);
-		$schemasAll     = isset($data['schemas-all']) && in_array('all', (array)$data['schemas-all']);
-		$utilsAll       = isset($data['utils-all']) && in_array('all', (array)$data['utils-all']);
-		$settingsAll    = isset($data['settings-all']) && in_array('all', (array)$data['settings-all']);
+		$collectionsMetaAll = isset($data['collectionsMeta-all']) && in_array('all', (array)$data['collectionsMeta-all']);
+		$collectionsAll     = isset($data['collections-all']) && in_array('all', (array)$data['collections-all']);
+		$schemasAll         = isset($data['schemas-all']) && in_array('all', (array)$data['schemas-all']);
+		$utilsAll           = isset($data['utils-all']) && in_array('all', (array)$data['utils-all']);
+		$settingsAll        = isset($data['settings-all']) && in_array('all', (array)$data['settings-all']);
 
 		return [
+			'collectionsMeta' => [
+				'operations' => $data['collectionsMeta-operations'] ?? [],
+				'all'        => $collectionsMetaAll,
+				'allowed'    => $collectionsMetaAll ? [] : ($data['collectionsMeta-allowed'] ?? []),
+			],
 			'collections' => [
-				'methods' => $data['collections-methods'] ?? [],
-				'all'     => $collectionsAll,
-				'allowed' => $collectionsAll ? [] : ($data['collections-allowed'] ?? []),
+				'operations' => $data['collections-operations'] ?? [],
+				'all'        => $collectionsAll,
+				'allowed'    => $collectionsAll ? [] : ($data['collections-allowed'] ?? []),
 			],
 			'schemas' => [
-				'methods' => $data['schemas-methods'] ?? [],
-				'all'     => $schemasAll,
-				'allowed' => $schemasAll ? [] : ($data['schemas-allowed'] ?? []),
+				'operations' => $data['schemas-operations'] ?? [],
+				'all'        => $schemasAll,
+				'allowed'    => $schemasAll ? [] : ($data['schemas-allowed'] ?? []),
 			],
 			'templates'  => in_array('templates', $simplePermissions),
 			'mailer'     => in_array('mailer', $simplePermissions),

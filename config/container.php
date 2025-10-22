@@ -119,6 +119,7 @@ use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Middleware\AdminOnlyMiddleware;
 use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Middleware\CollectionAccessMiddleware;
+use TotalCMS\Middleware\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\DevModeMiddleware;
 use TotalCMS\Middleware\DocsAccessMiddleware;
@@ -394,6 +395,18 @@ HTACCESS;
 	),
 
 	CollectionAccessMiddleware::class => fn (ContainerInterface $container): CollectionAccessMiddleware => new CollectionAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	CollectionMetaAccessMiddleware::class => fn (ContainerInterface $container): CollectionMetaAccessMiddleware => new CollectionMetaAccessMiddleware(
 		$container->get(UserValidationService::class),
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
