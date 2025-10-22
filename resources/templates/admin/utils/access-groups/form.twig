@@ -49,7 +49,7 @@
 			}) }}
 
 			{% set collectionOptions = [] %}
-			{% for collection in collections %}
+			{% for collection in collections | sort((a, b) => a.name <=> b.name) %}
 				{% set collectionOptions = collectionOptions|merge([{
 					value: collection.id,
 					label: collection.name
@@ -97,19 +97,11 @@
 				]
 			}) }}
 
-			{% set collectionsMetaOptions = [] %}
-			{% for collection in collections %}
-				{% set collectionsMetaOptions = collectionsMetaOptions|merge([{
-					value: collection.id,
-					label: collection.name
-				}]) %}
-			{% endfor %}
-
 			{{ cms.form.field("multicheckbox", "collectionsMeta-allowed", {
 				label    : "Specific Collections",
 				help     : "Select which collections' metadata this group can access",
 				value    : group ? group.permissions.collectionsMeta.allowed : [],
-				options  : collectionsMetaOptions,
+				options  : collectionOptions,
 				settings : {
 					fieldGrid: "150px",
 					visibility : {
