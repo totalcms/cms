@@ -1790,4 +1790,185 @@ NGINX;
 
 		return $this->accessControl->isAdmin($userData['id']);
 	}
+
+	//-------------------------
+	// Dashboard Data Methods
+	//-------------------------
+
+	/**
+	 * Get dashboard statistics.
+	 *
+	 * @return array<string,int>
+	 */
+	public function dashboardStats(): array
+	{
+		$collections = $this->collectionLister->listCustomCollections();
+		$schemas = $this->schemaLister->listCustomSchemas();
+		$templates = $this->templateRepository->listCustomTemplates(null, true);
+
+		// Count total objects across all collections
+		$totalObjects = 0;
+		foreach ($collections as $collection) {
+			try {
+				$index = $this->indexReader->fetchIndex($collection->id);
+				$totalObjects += $index->objects->count();
+			} catch (\Exception) {
+				// Skip if collection has no index
+				continue;
+			}
+		}
+
+		return [
+			'collections' => count($collections),
+			'schemas' => count($schemas),
+			'templates' => count($templates),
+			'totalObjects' => $totalObjects,
+		];
+	}
+
+	/**
+	 * Get collection overview with object counts and metadata.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardCollections(): array
+	{
+		$collections = $this->collectionLister->listCustomCollections();
+		$result = [];
+
+		foreach ($collections as $collection) {
+			$objectCount = 0;
+			$lastModified = null;
+
+			try {
+				$index = $this->indexReader->fetchIndex($collection->id);
+				$objectCount = $index->objects->count();
+
+				// Get last modified from most recent object if available
+				$firstObject = $index->objects->first();
+				if ($firstObject !== null && isset($firstObject['onUpdate'])) {
+					$lastModified = $firstObject['onUpdate'];
+				}
+			} catch (\Exception) {
+				// Collection has no index yet
+			}
+
+			$result[] = [
+				'id' => $collection->id,
+				'name' => $collection->name,
+				'icon' => '📚', // Default collection icon
+				'schema' => $collection->schema,
+				'objectCount' => $objectCount,
+				'lastModified' => $lastModified,
+				'addUrl' => "/admin/collections/{$collection->id}/new",
+				'viewUrl' => "/admin/collections/{$collection->id}",
+			];
+		}
+
+		// Sort by name
+		usort($result, fn($a, $b) => strcasecmp((string)$a['name'], (string)$b['name']));
+
+		return $result;
+	}
+
+	/**
+	 * Get collections that have no objects (might need attention).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardEmptyCollections(): array
+	{
+		$allCollections = $this->dashboardCollections();
+
+		return array_filter($allCollections, fn($collection) => $collection['objectCount'] === 0);
+	}
+
+	/**
+	 * Get system status information.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function dashboardSystemStatus(): array
+	{
+		$cacheStats = $this->cacheReporter->getCacheStats();
+		$enabledCaches = array_filter(
+			$cacheStats,
+			fn($cache) => is_array($cache) && isset($cache['enabled']) && $cache['enabled'] === true
+		);
+
+		$licenseStatus = $this->license->getSidebarStatus();
+
+		return [
+			'phpVersion' => PHP_VERSION,
+			'totalcmsVersion' => $this->config->version ?? '3.0',
+			'cacheBackends' => array_keys($enabledCaches),
+			'memoryLimit' => ini_get('memory_limit'),
+			'maxExecutionTime' => ini_get('max_execution_time'),
+			'environment' => $this->env,
+			'license' => [
+				'severity' => $licenseStatus->severity,
+				'message' => $licenseStatus->tooltip,
+				'daysRemaining' => $licenseStatus->daysRemaining,
+			],
+		];
+	}
+
+	/**
+	 * Get recent objects across all collections (last 10).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardRecentObjects(): array
+	{
+		$collections = $this->collectionLister->listCustomCollections();
+		$recentObjects = [];
+
+		foreach ($collections as $collection) {
+			try {
+				$index = $this->indexReader->fetchIndex($collection->id);
+
+				// Get icon from schema if available
+				$icon = '📚'; // Default icon
+				try {
+					$schema = $this->schemaFetcher->fetchSchema($collection->schema);
+					if (isset($schema->icon) && $schema->icon !== '') {
+						$icon = $schema->icon;
+					}
+				} catch (\Exception) {
+					// Use default icon
+				}
+
+				foreach ($index->objects as $object) {
+					if (!isset($object['onUpdate']) && !isset($object['onCreate'])) {
+						continue;
+					}
+
+					$timestamp = $object['onUpdate'] ?? $object['onCreate'] ?? null;
+					if ($timestamp === null) {
+						continue;
+					}
+
+					$recentObjects[] = [
+						'id' => $object['id'] ?? '',
+						'collection' => $collection->id,
+						'collectionName' => $collection->name,
+						'collectionIcon' => $icon,
+						'timestamp' => $timestamp,
+						'editUrl' => "/admin/collections/{$collection->id}/{$object['id']}",
+						// Try to get a display name from common fields
+						'displayName' => $object['title'] ?? $object['name'] ?? $object['id'] ?? 'Untitled',
+					];
+				}
+			} catch (\Exception) {
+				// Skip if collection has no index
+				continue;
+			}
+		}
+
+		// Sort by timestamp descending
+		usort($recentObjects, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+
+		// Return only the 10 most recent
+		return array_slice($recentObjects, 0, 10);
+	}
 }

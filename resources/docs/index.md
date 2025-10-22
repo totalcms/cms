@@ -2,6 +2,27 @@
 
 Welcome to the Total CMS documentation! This comprehensive guide will help you get the most out of your content management system.
 
+
+## Beta Testing Community
+Total CMS 3 is currently in beta testing. We are looking for feedback from the community.
+If you have any feedback, please post it in the
+[Total CMS Beta Group](https://community.weavers.space/total-cms-3-beta) on
+the Weaver's Space Community.
+
+<p><a class="dash-button" href="https://community.weavers.space/total-cms-3-beta">Total CMS Beta Group</a></p>
+
+## Getting Started
+
+Here are some videos that have been recorded about the Total CMS 3 beta. These videos will help you
+get started. You can also check out the [Total CMS Beta Group](https://community.weavers.space/total-cms-3-beta)
+on the Weaver's Space Community for more information.
+
+### Total CMS 3 Video Playlist
+
+The following embed is an entire playlist of videos about Total CMS 3.
+
+<iframe style="width:100%; aspect-ratio:16/9" src="https://www.youtube.com/embed/videoseries?si=wbww7a3ELBmEJ0KS&amp;list=PLAwL8Kl4ijMq3gNlxzeB9wsBKYfab08Cr" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Quick Start
 
 New to Total CMS? Start here:

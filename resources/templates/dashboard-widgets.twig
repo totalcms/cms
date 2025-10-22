@@ -1,0 +1,264 @@
+{#
+	Dashboard Widget Macros
+	Reusable components for building admin dashboard pages
+#}
+
+{# Stats Card - Quick overview statistics #}
+{% macro statsCard(stats) %}
+<div class="dashboard-stats">
+	<div class="stat-card">
+		<div class="stat-icon">📚</div>
+		<div class="stat-content">
+			<div class="stat-value">{{ stats.collections }}</div>
+			<div class="stat-label">Collections</div>
+		</div>
+	</div>
+
+	<div class="stat-card">
+		<div class="stat-icon">📄</div>
+		<div class="stat-content">
+			<div class="stat-value">{{ stats.totalObjects }}</div>
+			<div class="stat-label">Total Objects</div>
+		</div>
+	</div>
+
+	<div class="stat-card">
+		<div class="stat-icon">🔷</div>
+		<div class="stat-content">
+			<div class="stat-value">{{ stats.schemas }}</div>
+			<div class="stat-label">Custom Schemas</div>
+		</div>
+	</div>
+
+	<div class="stat-card">
+		<div class="stat-icon">📋</div>
+		<div class="stat-content">
+			<div class="stat-value">{{ stats.templates }}</div>
+			<div class="stat-label">Templates</div>
+		</div>
+	</div>
+</div>
+{% endmacro %}
+
+{# Quick Actions - Common tasks #}
+{% macro quickActions() %}
+<div class="dashboard-section">
+	<h2>Quick Actions</h2>
+	<div class="quick-actions">
+		<a href="/admin/collections/new" class="action-button">
+			<span class="action-icon">➕</span>
+			<span class="action-text">New Collection</span>
+		</a>
+
+		<a href="/admin/schemas/new" class="action-button">
+			<span class="action-icon">🔷</span>
+			<span class="action-text">New Schema</span>
+		</a>
+
+		<a href="/admin/templates" class="action-button">
+			<span class="action-icon">📋</span>
+			<span class="action-text">Browse Templates</span>
+		</a>
+
+		<a href="/admin/utils/project-setup" class="action-button">
+			<span class="action-icon">📦</span>
+			<span class="action-text">Import/Export</span>
+		</a>
+
+		<a href="/admin/docs" class="action-button">
+			<span class="action-icon">📖</span>
+			<span class="action-text">Documentation</span>
+		</a>
+
+		{% if cms.isAdmin() %}
+		<a href="/admin/cache" class="action-button">
+			<span class="action-icon">🗑️</span>
+			<span class="action-text">Clear Cache</span>
+		</a>
+		{% endif %}
+	</div>
+</div>
+{% endmacro %}
+
+{# Collections Overview Table #}
+{% macro collectionsTable(collections) %}
+<div class="dashboard-section">
+	<h2>Your Collections</h2>
+	{% if collections|length > 0 %}
+	<div class="collections-table">
+		<table>
+			<thead>
+				<tr>
+					<th>Collection</th>
+					<th>Schema</th>
+					<th>Objects</th>
+					<th class="actions-column">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for collection in collections %}
+				<tr>
+					<td>
+						<div class="collection-name">
+							<span class="collection-icon">{{ collection.icon }}</span>
+							<a href="{{ collection.viewUrl }}">{{ collection.name }}</a>
+						</div>
+					</td>
+					<td><code>{{ collection.schema }}</code></td>
+					<td>
+						<span class="object-count {% if collection.objectCount == 0 %}empty{% endif %}">
+							{{ collection.objectCount }}
+						</span>
+					</td>
+					<td class="actions-column">
+						<div class="table-actions">
+							<a href="{{ collection.addUrl }}" class="btn-small" title="Add new {{ collection.name }}">
+								➕ Add
+							</a>
+							<a href="{{ collection.viewUrl }}" class="btn-small" title="View all {{ collection.name }}">
+								👁️ View
+							</a>
+						</div>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% else %}
+	<div class="empty-state">
+		<p>No collections yet. <a href="/admin/collections/new">Create your first collection</a> to get started!</p>
+	</div>
+	{% endif %}
+</div>
+{% endmacro %}
+
+{# Recent Activity #}
+{% macro recentActivity(recentObjects) %}
+<div class="dashboard-section">
+	<h2>Recent Activity</h2>
+	{% if recentObjects|length > 0 %}
+	<div class="recent-activity-list">
+		{% for object in recentObjects %}
+		<div class="activity-item">
+			<div class="activity-icon">{{ object.collectionIcon }}</div>
+			<div class="activity-content">
+				<div class="activity-title">
+					<a href="{{ object.editUrl }}">{{ object.displayName }}</a>
+				</div>
+				<div class="activity-meta">
+					<span class="collection-name">{{ object.collectionName }}</span>
+					<span class="activity-time">{{ object.timestamp|date('M j, Y g:i A') }}</span>
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+	{% else %}
+	<div class="empty-state">
+		<p>No recent activity yet. Start creating content to see it here!</p>
+	</div>
+	{% endif %}
+</div>
+{% endmacro %}
+
+{# Empty Collections Alert #}
+{% macro emptyCollectionsAlert(emptyCollections) %}
+{% if emptyCollections|length > 0 %}
+<div class="dashboard-section">
+	<div class="alert alert-info">
+		<h3>📭 Empty Collections</h3>
+		<p>The following collections have no objects yet:</p>
+		<ul class="empty-collections-list">
+			{% for collection in emptyCollections %}
+			<li>
+				<strong>{{ collection.name }}</strong>
+				<a href="{{ collection.addUrl }}" class="btn-small">Add first {{ collection.name }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{# System Status #}
+{% macro systemStatus(status) %}
+<div class="dashboard-section">
+	<h2>System Information</h2>
+	<div class="system-status">
+		<div class="status-grid">
+			<div class="status-item">
+				<span class="status-label">Total CMS Version:</span>
+				<span class="status-value">{{ status.totalcmsVersion }}</span>
+			</div>
+
+			<div class="status-item">
+				<span class="status-label">PHP Version:</span>
+				<span class="status-value">{{ status.phpVersion }}</span>
+			</div>
+
+			<div class="status-item">
+				<span class="status-label">Environment:</span>
+				<span class="status-value status-badge status-{{ status.environment }}">{{ status.environment }}</span>
+			</div>
+
+			<div class="status-item">
+				<span class="status-label">Memory Limit:</span>
+				<span class="status-value">{{ status.memoryLimit }}</span>
+			</div>
+
+			<div class="status-item">
+				<span class="status-label">Cache Backends:</span>
+				<span class="status-value">
+					{% if status.cacheBackends|length > 0 %}
+						{{ status.cacheBackends|join(', ') }}
+					{% else %}
+						None
+					{% endif %}
+				</span>
+			</div>
+
+			<div class="status-item">
+				<span class="status-label">License:</span>
+				<span class="status-value">
+					<span class="status-badge status-{{ status.license.severity }}" title="{{ status.license.message }}">
+						{{ status.license.message }}
+						{% if status.license.daysRemaining is not null %}
+							({{ status.license.daysRemaining }} days)
+						{% endif %}
+					</span>
+				</span>
+			</div>
+		</div>
+	</div>
+</div>
+{% endmacro %}
+
+{# Welcome Message #}
+{% macro welcomeMessage(userName = null) %}
+<div class="dashboard-welcome">
+	<h1>
+		{% if userName %}
+			Welcome back, {{ userName }}! 👋
+		{% else %}
+			Welcome to Total CMS 3! 👋
+		{% endif %}
+	</h1>
+	<p class="dashboard-subtitle">
+		Manage your content, schemas, and templates all in one place.
+	</p>
+</div>
+{% endmacro %}
+
+{# Two Column Layout Helper #}
+{% macro twoColumn(leftContent, rightContent) %}
+<div class="dashboard-two-column">
+	<div class="dashboard-column-left">
+		{{ leftContent|raw }}
+	</div>
+	<div class="dashboard-column-right">
+		{{ rightContent|raw }}
+	</div>
+</div>
+{% endmacro %}
