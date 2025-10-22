@@ -10,6 +10,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
+use Slim\Routing\RouteContext;
 
 readonly class AdminUtilsAction
 {
@@ -32,6 +33,17 @@ readonly class AdminUtilsAction
 		$page    = $args['page'] ?? 'index';
 		$action  = $args['action'] ?? '';
 		$results = '';
+
+		// Handle specific routes by setting expected args based on route name
+		$routeContext = RouteContext::fromRequest($request);
+		$route        = $routeContext->getRoute();
+		$routeName    = $route?->getName() ?? '';
+
+		if ($routeName === 'admin-utils-access-groups') {
+			$args['page'] = 'access-groups';
+		} elseif ($routeName === 'admin-utils-api-keys') {
+			$args['page'] = 'api-keys';
+		}
 
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();

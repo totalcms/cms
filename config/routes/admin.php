@@ -25,6 +25,7 @@ use TotalCMS\Middleware\SchemaAccessMiddleware;
 use TotalCMS\Middleware\SettingsAccessMiddleware;
 use TotalCMS\Middleware\TemplateAccessMiddleware;
 use TotalCMS\Middleware\UtilsAccessMiddleware;
+use TotalCMS\Middleware\AdminOnlyMiddleware;
 
 return function (App $app): void {
 	$app->redirect('/', '/admin', 301);
@@ -48,6 +49,9 @@ return function (App $app): void {
 		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs')->add(DocsAccessMiddleware::class);
 
 		$group->get('/profile', AdminEditProfileAction::class)->setName('admin-profile');
+
+		$group->get('/utils/access-groups[/{action}]', AdminUtilsAction::class)->setName('admin-utils-access-groups')->add(AdminOnlyMiddleware::class);
+		$group->get('/utils/api-keys[/{action}]', AdminUtilsAction::class)->setName('admin-utils-api-keys')->add(AdminOnlyMiddleware::class);
 
 		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
 		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);

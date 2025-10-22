@@ -1,6 +1,6 @@
 {% extends "admin-dashboard.twig" %}
 
-{% set menu = [
+{% set adminMenu = [
 	{
 		"title" : "Access Groups",
 		"path"  : "access-groups",
@@ -9,6 +9,9 @@
 		"title" : "API Keys",
 		"path"  : "api-keys",
 	},
+] %}
+
+{% set menu = [
 	{
 		"title" : "Cache Manager",
 		"path"  : "cache-manager",
@@ -61,6 +64,15 @@
 
 	<nav class="links">
 		<ul>
+		{% if cms.isAdmin() %}
+			{% for item in adminMenu %}
+			<li class="{{ item.path }}">
+				<a {% if page == item.path %}class="active"{% endif %}
+					href="utils/{{ item.path }}">{{ item.title }}</a>
+			</li>
+			{% endfor %}
+		{% endif %}
+
 		{% for item in menu %}
 			{% if cms.canAccessUtil(item.path, 'read') %}
 			<li class="{{ item.path }}">
