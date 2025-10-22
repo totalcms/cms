@@ -54,7 +54,7 @@ readonly class AdminSchemaAction
 		if ($request->getMethod() === 'POST') {
 			$postData = (array)$request->getParsedBody();
 			// Decode JSON strings back to arrays for fields that should be arrays
-			$arrayFields = ['properties', 'required', 'index'];
+			$arrayFields = ['properties', 'required', 'index', 'inheritFrom'];
 			foreach ($arrayFields as $field) {
 				if (isset($postData[$field]) && is_string($postData[$field])) {
 					$postData[$field] = json_decode($postData[$field], true) ?? [];
