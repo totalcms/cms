@@ -131,15 +131,19 @@ final class AdminDocsActionTest extends TestCase
 
 		$this->request->method('getUri')->willReturn($uri);
 
+		// Mock the 404 response
+		$response404 = $this->createMock(ResponseInterface::class);
+		$this->response->method('withStatus')->with(404)->willReturn($response404);
+
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('template')
 			->with(
-				$this->response,
-				'admin/docs.twig',
+				$response404,
+				'admin/404.twig',
 				$this->callback(fn ($data): bool =>
-					// Should fall back to index if page doesn't exist
-					$data['page'] === 'index')
+					// Should return 404
+					isset($data['url']) && $data['url']['page'] === '404')
 			)
 			->willReturn($expectedResponse);
 
@@ -156,16 +160,19 @@ final class AdminDocsActionTest extends TestCase
 
 		$this->request->method('getUri')->willReturn($uri);
 
+		// Mock the 404 response for non-existent subdirectory page
+		$response404 = $this->createMock(ResponseInterface::class);
+		$this->response->method('withStatus')->with(404)->willReturn($response404);
+
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('template')
 			->with(
-				$this->response,
-				'admin/docs.twig',
+				$response404,
+				'admin/404.twig',
 				$this->callback(fn ($data): bool =>
-					// Should preserve subdirectory path if file exists, otherwise falls back to index
-					isset($data['page'])
-						&& ($data['page'] === 'field-settings/text' || $data['page'] === 'index'))
+					// Should return 404 for non-existent subdirectory
+					isset($data['url']) && $data['url']['page'] === '404')
 			)
 			->willReturn($expectedResponse);
 
@@ -182,15 +189,19 @@ final class AdminDocsActionTest extends TestCase
 
 		$this->request->method('getUri')->willReturn($uri);
 
+		// Mock the 404 response for non-existent page
+		$response404 = $this->createMock(ResponseInterface::class);
+		$this->response->method('withStatus')->with(404)->willReturn($response404);
+
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('template')
 			->with(
-				$this->response,
-				'admin/docs.twig',
+				$response404,
+				'admin/404.twig',
 				$this->callback(fn ($data): bool =>
-					// Backslashes should be converted to forward slashes
-					!str_contains((string)$data['page'], '\\'))
+					// Should return 404 and not contain backslashes
+					isset($data['url']) && $data['url']['page'] === '404')
 			)
 			->willReturn($expectedResponse);
 
@@ -207,15 +218,19 @@ final class AdminDocsActionTest extends TestCase
 
 		$this->request->method('getUri')->willReturn($uri);
 
+		// Mock the 404 response for non-existent page
+		$response404 = $this->createMock(ResponseInterface::class);
+		$this->response->method('withStatus')->with(404)->willReturn($response404);
+
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('template')
 			->with(
-				$this->response,
-				'admin/docs.twig',
+				$response404,
+				'admin/404.twig',
 				$this->callback(fn ($data): bool =>
-					// Double slashes should be normalized
-					!str_contains((string)$data['page'], '//'))
+					// Should return 404
+					isset($data['url']) && $data['url']['page'] === '404')
 			)
 			->willReturn($expectedResponse);
 
@@ -232,16 +247,19 @@ final class AdminDocsActionTest extends TestCase
 
 		$this->request->method('getUri')->willReturn($uri);
 
+		// Mock the 404 response for non-existent page
+		$response404 = $this->createMock(ResponseInterface::class);
+		$this->response->method('withStatus')->with(404)->willReturn($response404);
+
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('template')
 			->with(
-				$this->response,
-				'admin/docs.twig',
+				$response404,
+				'admin/404.twig',
 				$this->callback(fn ($data): bool => isset($data['url'])
 						&& isset($data['url']['path'])
-						&& isset($data['url']['query'])
-						&& $data['url']['page'] === 'docs')
+						&& $data['url']['page'] === '404')
 			)
 			->willReturn($expectedResponse);
 
@@ -258,18 +276,19 @@ final class AdminDocsActionTest extends TestCase
 
 		$this->request->method('getUri')->willReturn($uri);
 
+		// Mock the 404 response for non-existent page
+		$response404 = $this->createMock(ResponseInterface::class);
+		$this->response->method('withStatus')->with(404)->willReturn($response404);
+
 		$expectedResponse = $this->createMock(ResponseInterface::class);
 		$this->renderer->expects($this->once())
 			->method('template')
 			->with(
-				$this->response,
-				'admin/docs.twig',
-				$this->callback(function (array $data): bool {
-					// Should trim leading/trailing slashes
-					$page = $data['page'];
-
-					return $page !== '' && $page[0] !== '/' && !str_ends_with($page, '/');
-				})
+				$response404,
+				'admin/404.twig',
+				$this->callback(fn ($data): bool =>
+					// Should return 404
+					isset($data['url']) && $data['url']['page'] === '404')
 			)
 			->willReturn($expectedResponse);
 

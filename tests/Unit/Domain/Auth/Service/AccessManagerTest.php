@@ -186,7 +186,7 @@ final class AccessManagerTest extends TestCase
 		$this->userValidator->method('validateUserById')->willReturn(['id' => 'user']);
 		$this->userValidator->expects($this->once())
 			->method('validateUserInGroups')
-			->with('user', ['editor'], 'auth')
+			->with('user', 'editor', 'auth')
 			->willReturn(true);
 
 		$this->assertTrue($this->accessManager->userHasAccess('editor', 'auth'));

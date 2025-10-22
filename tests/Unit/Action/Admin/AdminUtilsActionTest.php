@@ -47,8 +47,37 @@ final class AdminUtilsActionTest extends TestCase
 		);
 	}
 
+	/**
+	 * Set up routing context attributes on the mocked request.
+	 */
+	private function setupRoutingContext(?string $routeName = null): void
+	{
+		$routeParser = $this->createMock(\Slim\Interfaces\RouteParserInterface::class);
+		$routingResults = $this->createMock(\Slim\Routing\RoutingResults::class);
+		$route = $routeName !== null
+			? $this->createMock(\Slim\Routing\Route::class)
+			: null;
+
+		if ($route !== null) {
+			$route->method('getName')->willReturn($routeName);
+		}
+
+		$this->request->method('getAttribute')
+			->willReturnCallback(function (string $name) use ($routeParser, $routingResults, $route) {
+				return match ($name) {
+					'__routeParser__' => $routeParser,
+					'__routingResults__' => $routingResults,
+					'__basePath__' => '',
+					'__route__' => $route,
+					default => null,
+				};
+			});
+	}
+
 	public function testRendersUtilsTemplateWithDefaultPage(): void
 	{
+		$this->setupRoutingContext();
+
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils');
 		$uri->method('getQuery')->willReturn('');
@@ -74,6 +103,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testHandlesTwigPlaygroundPostRequest(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils/twig-playground');
 		$uri->method('getQuery')->willReturn('');
@@ -107,6 +137,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testHandlesTwigPlaygroundErrors(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils/twig-playground');
 		$uri->method('getQuery')->willReturn('');
@@ -139,6 +170,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testHandlesGetRequestWithoutProcessing(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils/twig-playground');
 		$uri->method('getQuery')->willReturn('');
@@ -165,6 +197,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testIncludesPostDataWhenMethodIsPost(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils');
 		$uri->method('getQuery')->willReturn('');
@@ -192,6 +225,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testIncludesEmptyPostDataForGetRequest(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils');
 		$uri->method('getQuery')->willReturn('');
@@ -216,6 +250,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testHandlesProjectSetupPage(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils/project-setup');
 		$uri->method('getQuery')->willReturn('');
@@ -241,6 +276,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testNullDetectionDataForNonProjectSetupPages(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils/other-page');
 		$uri->method('getQuery')->willReturn('');
@@ -265,6 +301,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testOnlyProcessesTwigPlaygroundPage(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils/other-page');
 		$uri->method('getQuery')->willReturn('');
@@ -286,6 +323,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testIncludesUrlData(): void
 	{
+		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/admin/utils/cache');
 		$uri->method('getQuery')->willReturn('action=clear');

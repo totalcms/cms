@@ -3,13 +3,17 @@
         {
             "id": "admin",
             "description": "Full administrative access to all features",
-            "operations": [
-                "create",
-                "read",
-                "update",
-                "delete"
-            ],
             "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
                 "collections": {
                     "operations": [
                         "create",
@@ -47,13 +51,18 @@
         {
             "id": "editor",
             "description": "Content editors - can create and edit content",
-            "operations": [
-                "create",
-                "read",
-                "update",
-                "delete"
-            ],
             "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read",
+                        "update"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog",
+                        "image"
+                    ]
+                },
                 "collections": {
                     "operations": [
                         "create",
@@ -92,10 +101,14 @@
         {
             "id": "viewer",
             "description": "Read-only access to view content",
-            "operations": [
-                "read"
-            ],
             "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
                 "collections": {
                     "operations": [
                         "read"
@@ -127,13 +140,16 @@
         {
             "id": "blogger",
             "description": "Blog content creators",
-            "operations": [
-                "create",
-                "read",
-                "update",
-                "delete"
-            ],
             "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
                 "collections": {
                     "operations": [
                         "create",
@@ -168,10 +184,16 @@
         {
             "id": "limited-blogger",
             "description": "Read-only blog access",
-            "operations": [
-                "read"
-            ],
             "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
                 "collections": {
                     "operations": [
                         "read"
