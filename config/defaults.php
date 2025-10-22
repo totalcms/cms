@@ -36,7 +36,6 @@ $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
 					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
 					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
 $settings['url']      = ($settings['is_https'] ? 'https://' : 'http://') . $settings['domain'];
-$settings['api']      = $settings['url'] . '/api';
 $settings['notfound'] = '/404';
 
 // Path settings
@@ -46,6 +45,10 @@ $settings['cachedir'] = $settings['root'] . '/cache';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/resources/templates';
 $settings['schemas']  = $settings['root'] . '/resources/schemas';
+$settings['docroot']  = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
+
+$settings['api'] = str_replace($settings['docroot'], '', $settings['root']);
+$settings['api'] = $settings['api'] === '' ? '/' : $settings['api'];
 
 $settings['debug'] = false; // Set to true for development
 
@@ -69,8 +72,6 @@ $settings['cache'] = [
 	],
 ];
 
-// Clean up trailing slashes in DOCUMENT_ROOT
-$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
 
 // Path to cms data folder
 $settings['datadir'] = $settings['docroot'] . '/tcms-data';
