@@ -309,60 +309,6 @@
             }
           }
         }
-      },
-      "post": {
-        "summary": "Create Collection",
-        "description": "Create a new collection",
-        "tags": [
-          "collections"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "example": "products"
-                  },
-                  "title": {
-                    "type": "string",
-                    "example": "Products"
-                  },
-                  "description": {
-                    "type": "string",
-                    "example": "Product catalog"
-                  },
-                  "schema": {
-                    "type": "string",
-                    "example": "custom"
-                  }
-                },
-                "required": [
-                  "id",
-                  "title"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Collection created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Collection"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
       }
     },
     "/collections/{collection}": {
@@ -503,58 +449,6 @@
           },
           "400": {
             "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      },
-      "put": {
-        "summary": "Update Collection",
-        "description": "Update collection metadata",
-        "tags": [
-          "collections"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Collection updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Collection"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Collection",
-        "description": "Delete a collection and all its objects",
-        "tags": [
-          "collections"
-        ],
-        "responses": {
-          "204": {
-            "description": "Collection deleted"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
           }
         }
       },

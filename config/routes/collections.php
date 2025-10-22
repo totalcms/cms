@@ -8,21 +8,25 @@ use TotalCMS\Action\Property;
 use TotalCMS\Action\Schema;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
-		// All Collections
-		$group->get('', Collection\CollectionListAction::class)->setName('collections-list');
-
 		// Collection
 		$group->post('', Collection\CollectionSaveAction::class)->setName('collection-save');
-		$group->get('/{collection}', Collection\CollectionFetchAction::class)->setName('collection-fetch');
 		$group->delete('/{collection}', Collection\CollectionDeleteAction::class)->setName('collection-delete');
 		$group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
 		$group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
-		$group->map(['HEAD'], '/{collection}', Collection\CollectionExistsAction::class)->setName('collection-exists');
+	})->add(AuthMiddleware::class)
+		->add(CollectionMetaAccessMiddleware::class);
 
+	$app->group('/collections', function (RouteCollectorProxy $group): void {
+		// All Collections
+		$group->get('', Collection\CollectionListAction::class)->setName('collections-list');
+		// Collection
+		$group->get('/{collection}', Collection\CollectionFetchAction::class)->setName('collection-fetch');
+		$group->map(['HEAD'], '/{collection}', Collection\CollectionExistsAction::class)->setName('collection-exists');
 		// Collection Schema
 		$group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
 	})->add(DualAuthMiddleware::class)
