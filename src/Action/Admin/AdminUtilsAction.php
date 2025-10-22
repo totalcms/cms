@@ -30,20 +30,23 @@ readonly class AdminUtilsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$page    = $args['page'] ?? 'index';
-		$action  = $args['action'] ?? '';
-		$results = '';
-
-		// Handle specific routes by setting expected args based on route name
+		// Handle specific routes by setting expected page based on route name
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 		$routeName    = $route?->getName() ?? '';
 
 		if ($routeName === 'admin-utils-access-groups') {
+			$page = 'access-groups';
 			$args['page'] = 'access-groups';
 		} elseif ($routeName === 'admin-utils-api-keys') {
+			$page = 'api-keys';
 			$args['page'] = 'api-keys';
+		} else {
+			$page = $args['page'] ?? 'index';
 		}
+
+		$action  = $args['action'] ?? '';
+		$results = '';
 
 		if ($request->getMethod() === 'POST') {
 			$post = (array)$request->getParsedBody();
