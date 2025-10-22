@@ -22,7 +22,6 @@ use TotalCMS\Middleware\DocsAccessMiddleware;
 use TotalCMS\Middleware\MailerAccessMiddleware;
 use TotalCMS\Middleware\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\SchemaAccessMiddleware;
-use TotalCMS\Middleware\SettingsAccessMiddleware;
 use TotalCMS\Middleware\TemplateAccessMiddleware;
 use TotalCMS\Middleware\UtilsAccessMiddleware;
 use TotalCMS\Middleware\AdminOnlyMiddleware;
@@ -62,8 +61,8 @@ return function (App $app): void {
 		$group->get('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail')->add(MailerAccessMiddleware::class);
 		$group->post('/mailer[/{id}]', AdminMailerAction::class)->setName('admin-mail-post')->add(MailerAccessMiddleware::class);
 
-		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings')->add(SettingsAccessMiddleware::class);
-		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(SettingsAccessMiddleware::class);
+		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings')->add(AdminOnlyMiddleware::class);
+		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(AdminOnlyMiddleware::class);
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');
 		$group->any('/filelinks', AdminFileLinksAction::class)->setName('filelinks');

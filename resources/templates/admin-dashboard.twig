@@ -89,7 +89,7 @@
                         <a class="utils" href="utils" title="Utils">Utils</a>
                     </li>
                     {% endif %}
-                    {% if cms.canAccessSettings() %}
+                    {% if cms.isAdmin() %}
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
                         <a class="settings" href="settings" title="Settings">Settings</a>
                     </li>

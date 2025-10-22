@@ -123,14 +123,6 @@
 									<span class="permission-badge">{{ util | capitalize }}</span>
 								{% endfor %}
 							{% endif %}
-
-							{% if group.permissions.settings.all %}
-								<span class="permission-badge">All Settings</span>
-							{% elseif group.permissions.settings.allowed|length > 0 %}
-								{% for setting in group.permissions.settings.allowed %}
-									<span class="permission-badge">{{ setting | capitalize }}</span>
-								{% endfor %}
-							{% endif %}
 						</span>
 					</div>
 

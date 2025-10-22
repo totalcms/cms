@@ -248,32 +248,6 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user can access a specific settings section with the given CRUD operation.
-	 */
-	public function canAccessSettings(string $userId, string $section): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessSettings($group, $section)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
 	 * Check if user can access a specific util with the given CRUD operation.
 	 */
 	public function canAccessUtils(string $userId, string $util): bool
@@ -378,32 +352,6 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if user has ANY access to settings (boolean check, not operation-based).
-	 */
-	public function canAccessAnySettings(string $userId): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessAnySettings($group)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
 	 * Check if user has ANY access to utils (boolean check, not operation-based).
 	 */
 	public function canAccessAnyUtils(string $userId): bool
@@ -422,45 +370,6 @@ readonly class AccessControlService
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
 			if ($this->groupCanAccessAnyUtils($group)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if user can access settings with the given CRUD operation (no specific section).
-	 */
-	public function canAccessSettingsOperation(string $userId, string $operation): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			$permissions = $group->permissions['settings'] ?? [];
-
-			// Check if settings permissions exist
-			$all     = $permissions['all'] ?? false;
-			$allowed = $permissions['allowed'] ?? [];
-
-			// If no access at all, skip this group
-			if (!$all && $allowed === []) {
-				continue;
-			}
-
-			// Check operation permission
-			$operations = $permissions['operations'] ?? [];
-			if (in_array($operation, $operations)) {
 				return true;
 			}
 		}
@@ -612,22 +521,6 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Check if a single group can access a settings section.
-	 * Settings use simple section-based access (no operation-specific permissions).
-	 */
-	private function groupCanAccessSettings(AccessGroupData $group, string $section): bool
-	{
-		$permissions = $group->permissions['settings'] ?? [];
-
-		// Check if settings access is allowed (all or specific section)
-		$all     = $permissions['all'] ?? false;
-		$allowed = $permissions['allowed'] ?? [];
-
-		// If they have access to this section (all or specific), grant access
-		return $all || in_array($section, $allowed);
-	}
-
-	/**
 	 * Check if a single group can access a util.
 	 * Utils use simple page-based access (no operation-specific permissions).
 	 */
@@ -641,19 +534,6 @@ readonly class AccessControlService
 
 		// If they have access to this util (all or specific), grant access
 		return $all || in_array($util, $allowed);
-	}
-
-	/**
-	 * Check if group has ANY access to settings.
-	 */
-	private function groupCanAccessAnySettings(AccessGroupData $group): bool
-	{
-		$permissions = $group->permissions['settings'] ?? [];
-		$all         = $permissions['all'] ?? false;
-		$allowed     = $permissions['allowed'] ?? [];
-
-		// Has access if "all" is true OR if they have specific sections allowed
-		return $all || $allowed !== [];
 	}
 
 	/**

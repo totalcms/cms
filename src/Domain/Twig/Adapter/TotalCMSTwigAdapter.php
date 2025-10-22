@@ -1636,42 +1636,6 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can access a specific settings section.
-	 */
-	public function canAccessSetting(string $section): bool
-	{
-		// If auth is disabled globally, allow everything
-		if ($this->config->auth['enable'] === false) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessSettings($userData['id'], $section);
-	}
-
-	/**
-	 * Check if current user has ANY access to settings (boolean check).
-	 */
-	public function canAccessSettings(): bool
-	{
-		// If auth is disabled globally, allow everything
-		if ($this->config->auth['enable'] === false) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessAnySettings($userData['id']);
-	}
-
-	/**
 	 * Check if current user can access a specific utils page.
 	 */
 	public function canAccessUtil(string $page): bool

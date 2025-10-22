@@ -49,13 +49,11 @@
 	<nav class="links" id="settings-links">
 		<ul>
 			{% for sectionId, section in sections %}
-			{% if cms.canAccessSetting(sectionId, 'read') %}
 			<li class="settings-{{ sectionId }}">
 				<a {% if url.section == sectionId %}class="active"{% endif %}
 					href="settings/{{ sectionId }}"
 					title="{{ section.description }}">{{ section.label }}</a>
 			</li>
-			{% endif %}
 			{% endfor %}
 		</ul>
 	</nav>

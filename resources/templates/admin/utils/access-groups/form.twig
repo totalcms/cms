@@ -229,37 +229,6 @@
 				}
 			}) }}
 
-			{{ cms.form.field("multicheckbox", "settings-all", {
-				label    : "Settings Access Level",
-				value    : group ? (group.permissions.settings.all ? ["all"] : []) : ["all"],
-				options  : [
-					{value: "all", label: "All Settings"}
-				]
-			}) }}
-
-			{{ cms.form.field("multicheckbox", "settings-allowed", {
-				label    : "Specific Settings Sections",
-				help     : "Select which settings sections this group can access",
-				value    : group ? group.permissions.settings.allowed : [],
-				options  : [
-					{value: "general", label: "General"},
-					{value: "authentication", label: "Authentication"},
-					{value: "cache", label: "Cache"},
-					{value: "dashboard", label: "Dashboard"},
-					{value: "htmlclean", label: "HTML Sanitization"},
-					{value: "imageworks", label: "ImageWorks"},
-					{value: "mailer", label: "Mailer"},
-					{value: "smtp", label: "SMTP"}
-				],
-				settings : {
-					fieldGrid: "150px",
-					visibility : {
-						watch : "settings-all",
-						value : "all",
-						operator: "not_in"
-					}
-				}
-			}) }}
 		</div>
 	{% endset %}
 

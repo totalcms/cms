@@ -130,7 +130,6 @@ use TotalCMS\Middleware\PreviewRouteMiddleware;
 use TotalCMS\Middleware\RateLimitMiddleware;
 use TotalCMS\Middleware\SchemaAccessMiddleware;
 use TotalCMS\Middleware\SentryMiddleware;
-use TotalCMS\Middleware\SettingsAccessMiddleware;
 use TotalCMS\Middleware\TemplateAccessMiddleware;
 use TotalCMS\Middleware\UtilsAccessMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -431,18 +430,6 @@ HTACCESS;
 	),
 
 	TemplateAccessMiddleware::class => fn (ContainerInterface $container): TemplateAccessMiddleware => new TemplateAccessMiddleware(
-		$container->get(UserValidationService::class),
-		$container->get(AccessControlService::class),
-		$container->get(PhpSession::class),
-		$container->get(JsonRenderer::class),
-		$container->get(TwigRenderer::class),
-		$container->get(ResponseFactoryInterface::class),
-		$container->get(Config::class),
-		$container->get(OperationDetector::class),
-		$container->get(LoggerFactory::class),
-	),
-
-	SettingsAccessMiddleware::class => fn (ContainerInterface $container): SettingsAccessMiddleware => new SettingsAccessMiddleware(
 		$container->get(UserValidationService::class),
 		$container->get(AccessControlService::class),
 		$container->get(PhpSession::class),
