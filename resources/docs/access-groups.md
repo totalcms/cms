@@ -21,19 +21,23 @@ Access groups are defined in `tcms-data/.system/access-groups.json`:
         {
             "id": "editor",
             "description": "Blog and news editor",
-            "methods": ["GET", "POST", "PUT", "DELETE"],
             "permissions": {
+                "collectionsMeta": {
+                    "operations": ["read"],
+                    "all": false,
+                    "allowed": ["blog", "news"]
+                },
                 "collections": {
-                    "methods": ["GET", "POST", "PUT", "DELETE"],
+                    "operations": ["create", "read", "update", "delete"],
                     "all": false,
                     "allowed": ["blog", "news"]
                 },
                 "schemas": {
-                    "methods": ["GET"],
+                    "operations": ["read"],
                     "all": false,
-                    "allowed": ["blog"]
+                    "allowed": ["blog", "news"]
                 },
-                "templates": false,
+                "templates": true,
                 "mailer": false,
                 "playground": true,
                 "docs": true,
@@ -51,46 +55,115 @@ Access groups are defined in `tcms-data/.system/access-groups.json`:
 }
 ```
 
-### Permission Types
+## CRUD Operations
 
-#### Resource-Based Permissions (Collections, Schemas)
+Total CMS uses CRUD (Create, Read, Update, Delete) operations for fine-grained permission control:
+
+- **`create`** - Create new resources/objects
+- **`read`** - View/list/fetch resources
+- **`update`** - Modify existing resources
+- **`delete`** - Delete/remove resources
+
+These operations replace the older HTTP method approach and provide clearer, more intuitive permission control.
+
+## Permission Types
+
+### Collections
+
+Collections have two separate permission levels:
+
+#### Collection Metadata (`collectionsMeta`)
+
+Controls access to managing collection definitions (creating/editing/deleting collections themselves):
+
+```json
+"collectionsMeta": {
+    "operations": ["read", "update"],
+    "all": false,
+    "allowed": ["blog", "news"]
+}
+```
+
+- **`create`** - Create new collections
+- **`read`** - View collection definitions
+- **`update`** - Edit collection settings
+- **`delete`** - Delete collections
+
+#### Collection Objects (`collections`)
+
+Controls access to objects within collections:
 
 ```json
 "collections": {
-    "methods": ["GET", "POST", "PUT", "DELETE"],
-    "all": true,              // Access all collections
-    "allowed": []             // Or specific collection IDs
+    "operations": ["create", "read", "update", "delete"],
+    "all": true,
+    "allowed": []
 }
 ```
 
-- `methods`: HTTP methods allowed on this resource type
-- `all`: If `true`, access all resources; if `false`, only access items in `allowed`
-- `allowed`: Array of specific resource IDs (e.g., collection names, schema names)
+- **`create`** - Create new objects
+- **`read`** - View/list objects
+- **`update`** - Edit objects
+- **`delete`** - Delete objects
+- **`all`** - If `true`, access all collections; if `false`, only those in `allowed`
+- **`allowed`** - Array of specific collection IDs
 
-#### Section-Based Permissions (Settings, Utils)
+### Schemas
+
+```json
+"schemas": {
+    "operations": ["create", "read", "update", "delete"],
+    "all": false,
+    "allowed": ["blog", "product"]
+}
+```
+
+- **`create`** - Create new schemas
+- **`read`** - View schemas
+- **`update`** - Edit schemas
+- **`delete`** - Delete schemas
+- **`all`** - If `true`, access all schemas; if `false`, only those in `allowed`
+- **`allowed`** - Array of specific schema names
+
+### Templates
+
+```json
+"templates": true  // or false
+```
+
+Simple boolean for full access or no access to templates. Templates don't have granular CRUD permissions.
+
+### Settings
 
 ```json
 "settings": {
-    "methods": ["GET", "POST"],
     "all": false,
-    "allowed": ["general", "cache", "mailer"]
+    "allowed": ["general", "cache"]
 }
 ```
 
-- `methods`: HTTP methods allowed
-- `all`: If `true`, access all sections/pages
-- `allowed`: Array of specific section/page names
+- **`all`** - If `true`, access all settings sections
+- **`allowed`** - Array of specific setting section names (e.g., "general", "cache", "auth", "mailer")
 
-#### Boolean Permissions (Templates, Mailer, Playground, Docs)
+### Utils
 
 ```json
-"templates": true,    // Full access to templates
-"mailer": false,      // No access to mailer
-"playground": true,   // Access to playground
-"docs": true          // Access to documentation
+"utils": {
+    "all": false,
+    "allowed": ["cache-manager", "jumpstart"]
+}
 ```
 
-Simple `true`/`false` for features that don't have granular permissions.
+- **`all`** - If `true`, access all utility pages
+- **`allowed`** - Array of specific utility page names
+
+### Boolean Permissions
+
+Simple `true`/`false` for features without granular control:
+
+- **`mailer`** - Access to mailer/email functionality
+- **`playground`** - Access to Twig playground
+- **`docs`** - Access to documentation
 
 ## Twig Helper Functions
 
@@ -98,32 +171,62 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 ### Collections
 
-**Check specific collection access:**
+**Check specific collection object access:**
 ```twig
-{% if cms.canAccessCollection('blog', 'GET') %}
-    <a href="collections/blog">View Blog Posts</a>
+{% if cms.canAccessCollection('blog', 'read') %}
+    <a href="/admin/collections/blog">View Blog Posts</a>
 {% endif %}
 
-{% if cms.canAccessCollection('blog', 'POST') %}
-    <button>New Post</button>
+{% if cms.canAccessCollection('blog', 'create') %}
+    <a href="/admin/collections/blog/new">New Post</a>
+{% endif %}
+
+{% if cms.canAccessCollection('blog', 'update') %}
+    <button>Edit Post</button>
+{% endif %}
+
+{% if cms.canAccessCollection('blog', 'delete') %}
+    <button class="delete">Delete Post</button>
 {% endif %}
 ```
 
-**Check general collections access (no specific collection):**
+**Check general collection object access:**
 ```twig
-{% if cms.canAccessCollectionsMethod('GET') %}
-    <a href="collections">View Collections</a>
+{% if cms.canAccessCollectionsOperation('read') %}
+    <p>You can view collections</p>
+{% endif %}
+```
+
+**Check collection metadata access:**
+```twig
+{% if cms.canAccessCollectionMeta('blog', 'read') %}
+    <a href="/admin/collections/blog/settings">View Collection Settings</a>
 {% endif %}
 
-{% if cms.canAccessCollectionsMethod('POST') %}
-    <button>New Collection</button>
+{% if cms.canAccessCollectionMeta('blog', 'update') %}
+    <button>Edit Collection Settings</button>
+{% endif %}
+
+{% if cms.canAccessCollectionMeta('blog', 'delete') %}
+    <button class="delete">Delete Collection</button>
+{% endif %}
+```
+
+**Check general collection metadata access:**
+```twig
+{% if cms.canAccessCollectionsMetaOperation('read') %}
+    <a href="/admin/collections">View Collections List</a>
+{% endif %}
+
+{% if cms.canAccessCollectionsMetaOperation('create') %}
+    <a href="/admin/collections/new">New Collection</a>
 {% endif %}
 ```
 
 **Get list of accessible collections:**
 ```twig
-{% for collection in cms.getAccessibleCollections() %}
-    <li>{{ collection.id }}</li>
+{% for collection in cms.getAccessibleCollections('read') %}
+    <li>{{ collection }}</li>
 {% endfor %}
 ```
 
@@ -131,60 +234,36 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check specific schema access:**
 ```twig
-{% if cms.canAccessSchema('blog', 'GET') %}
-    <a href="schemas/blog">View Blog Schema</a>
+{% if cms.canAccessSchema('blog', 'read') %}
+    <a href="/admin/schemas/blog">View Blog Schema</a>
 {% endif %}
 
-{% if cms.canAccessSchema('blog', 'PUT') %}
-    <button>Edit Schema</button>
+{% if cms.canAccessSchema('blog', 'update') %}
+    <a href="/admin/schemas/blog/edit">Edit Schema</a>
+{% endif %}
+
+{% if cms.canAccessSchema('blog', 'delete') %}
+    <button class="delete">Delete Schema</button>
 {% endif %}
 ```
 
 **Check general schemas access:**
 ```twig
-{% if cms.canAccessSchemasMethod('GET') %}
-    <a href="schemas">View Schemas</a>
+{% if cms.canAccessSchemasOperation('read') %}
+    <a href="/admin/schemas">View Schemas</a>
 {% endif %}
 
-{% if cms.canAccessSchemasMethod('POST') %}
-    <button>New Schema</button>
+{% if cms.canAccessSchemasOperation('create') %}
+    <a href="/admin/schemas/new">New Schema</a>
 {% endif %}
 ```
 
 ### Templates
 
-**Check templates access:**
+**Check templates access (boolean):**
 ```twig
-{% if cms.canAccessTemplatesMethod('GET') %}
-    <a href="templates">View Templates</a>
-{% endif %}
-
-{% if cms.canAccessTemplatesMethod('POST') %}
-    <button>New Template</button>
-{% endif %}
-
-{% if cms.canAccessTemplatesMethod('DELETE') %}
-    <button class="delete">Delete Template</button>
-{% endif %}
-```
-
-### Settings
-
-**Check specific settings section:**
-```twig
-{% if cms.canAccessSetting('cache', 'GET') %}
-    <a href="settings/cache">Cache Settings</a>
-{% endif %}
-
-{% if cms.canAccessSetting('general', 'POST') %}
-    <button>Save Settings</button>
-{% endif %}
-```
-
-**Check general settings access:**
-```twig
-{% if cms.canAccessSettingsMethod('GET') %}
-    <a href="settings">Settings</a>
+{% if cms.canAccessTemplates() %}
+    <a href="/admin/templates">Templates</a>
 {% endif %}
 ```
 
@@ -192,19 +271,19 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check specific utils page:**
 ```twig
-{% if cms.canAccessUtil('cache-manager', 'GET') %}
-    <a href="utils/cache-manager">Cache Manager</a>
+{% if cms.canAccessUtil('cache-manager') %}
+    <a href="/admin/utils/cache-manager">Cache Manager</a>
 {% endif %}
 
-{% if cms.canAccessUtil('jumpstart', 'POST') %}
-    <button>Import JumpStart</button>
+{% if cms.canAccessUtil('jumpstart') %}
+    <a href="/admin/utils/jumpstart">JumpStart</a>
 {% endif %}
 ```
 
 **Check general utils access:**
 ```twig
-{% if cms.canAccessUtilsMethod('GET') %}
-    <a href="utils">Utils</a>
+{% if cms.canAccessUtils() %}
+    <a href="/admin/utils">Utils</a>
 {% endif %}
 ```
 
@@ -213,21 +292,21 @@ Total CMS provides helper functions to check permissions in your templates, allo
 **Check mailer access:**
 ```twig
 {% if cms.canAccessMailer() %}
-    <a href="mailer">Mailer</a>
+    <a href="/admin/mailer">Mailer</a>
 {% endif %}
 ```
 
 **Check playground access:**
 ```twig
 {% if cms.canAccessPlayground() %}
-    <a href="playground">Playground</a>
+    <a href="/admin/utils/twig-playground">Twig Playground</a>
 {% endif %}
 ```
 
 **Check docs access:**
 ```twig
 {% if cms.canAccessDocs() %}
-    <a href="docs">Documentation</a>
+    <a href="/admin/docs">Documentation</a>
 {% endif %}
 ```
 
@@ -237,7 +316,7 @@ Total CMS provides helper functions to check permissions in your templates, allo
 ```twig
 {% if cms.isAdmin() %}
     <div class="admin-only-feature">
-        <a href="utils/access-groups">Manage Access Groups</a>
+        <a href="/admin/utils/access-groups">Manage Access Groups</a>
     </div>
 {% endif %}
 ```
@@ -250,24 +329,24 @@ Super admins bypass all access checks and have full access to everything.
 
 ```twig
 <nav>
-    {% if cms.canAccessCollectionsMethod('GET') %}
-    <a href="collections">Collections</a>
+    {% if cms.canAccessCollectionsMetaOperation('read') %}
+    <a href="/admin/collections">Collections</a>
     {% endif %}
 
-    {% if cms.canAccessSchemasMethod('GET') %}
-    <a href="schemas">Schemas</a>
+    {% if cms.canAccessSchemasOperation('read') %}
+    <a href="/admin/schemas">Schemas</a>
     {% endif %}
 
-    {% if cms.canAccessTemplatesMethod('GET') %}
-    <a href="templates">Templates</a>
+    {% if cms.canAccessTemplates() %}
+    <a href="/admin/templates">Templates</a>
     {% endif %}
 
-    {% if cms.canAccessSettingsMethod('GET') %}
-    <a href="settings">Settings</a>
+    {% if cms.canAccessUtils() %}
+    <a href="/admin/utils">Utils</a>
     {% endif %}
 
     {% if cms.isAdmin() %}
-    <a href="utils/access-groups">Access Groups</a>
+    <a href="/admin/utils/access-groups">Access Groups</a>
     {% endif %}
 </nav>
 ```
@@ -277,11 +356,16 @@ Super admins bypass all access checks and have full access to everything.
 ```twig
 <ul>
 {% for collection in collections %}
-    {% if cms.canAccessCollection(collection.id, 'GET') %}
+    {% if cms.canAccessCollection(collection.id, 'read') %}
     <li>
-        <a href="collections/{{ collection.id }}">{{ collection.label }}</a>
-        {% if cms.canAccessCollection(collection.id, 'POST') %}
-        <button data-collection="{{ collection.id }}">New Item</button>
+        <a href="/admin/collections/{{ collection.id }}">{{ collection.name }}</a>
+
+        {% if cms.canAccessCollection(collection.id, 'create') %}
+        <a href="/admin/collections/{{ collection.id }}/new">New Item</a>
+        {% endif %}
+
+        {% if cms.canAccessCollectionMeta(collection.id, 'update') %}
+        <a href="/admin/collections/{{ collection.id }}/settings">Settings</a>
         {% endif %}
     </li>
     {% endif %}
@@ -289,65 +373,239 @@ Super admins bypass all access checks and have full access to everything.
 </ul>
 ```
 
-### Conditional Form Buttons
+### Collection Object Actions
 
 ```twig
-{{ cms.form.builder(collection, {
-    save: cms.canAccessCollection(collection, 'PUT') ? "Save" : false,
-    delete: cms.canAccessCollection(collection, 'DELETE') ? "Delete" : false
-}) }}
+<div class="object-actions">
+    {% if cms.canAccessCollection(collection, 'create') %}
+    <a href="/admin/collections/{{ collection }}/new" class="btn">New Object</a>
+    {% endif %}
+
+    {% if cms.canAccessCollection(collection, 'update') %}
+    <button class="btn" data-action="edit">Edit</button>
+    {% endif %}
+
+    {% if cms.canAccessCollection(collection, 'delete') %}
+    <button class="btn btn-danger" data-action="delete">Delete</button>
+    {% endif %}
+</div>
 ```
 
-### Settings Section Filter
+### Schema Management Buttons
 
 ```twig
-{% set sections = ['general', 'cache', 'auth', 'mailer'] %}
-<ul>
-{% for section in sections %}
-    {% if cms.canAccessSetting(section, 'GET') %}
-    <li><a href="settings/{{ section }}">{{ section|title }}</a></li>
+<div class="schema-actions">
+    {% if cms.canAccessSchemasOperation('create') %}
+    <a href="/admin/schemas/new" class="btn">New Schema</a>
     {% endif %}
-{% endfor %}
-</ul>
+
+    {% if cms.canAccessSchema(schema.id, 'update') %}
+    <a href="/admin/schemas/{{ schema.id }}/edit" class="btn">Edit</a>
+    {% endif %}
+
+    {% if cms.canAccessSchema(schema.id, 'delete') %}
+    <button class="btn btn-danger" data-schema="{{ schema.id }}">Delete</button>
+    {% endif %}
+</div>
+```
+
+## Common Access Group Configurations
+
+### Full Admin
+
+```json
+{
+    "id": "admin",
+    "description": "Full administrative access",
+    "permissions": {
+        "collectionsMeta": {
+            "operations": ["create", "read", "update", "delete"],
+            "all": true,
+            "allowed": []
+        },
+        "collections": {
+            "operations": ["create", "read", "update", "delete"],
+            "all": true,
+            "allowed": []
+        },
+        "schemas": {
+            "operations": ["create", "read", "update", "delete"],
+            "all": true,
+            "allowed": []
+        },
+        "templates": true,
+        "mailer": true,
+        "playground": true,
+        "docs": true,
+        "utils": {
+            "all": true,
+            "allowed": []
+        },
+        "settings": {
+            "all": true,
+            "allowed": []
+        }
+    }
+}
+```
+
+### Content Editor
+
+```json
+{
+    "id": "editor",
+    "description": "Full CRUD access to specific collections",
+    "permissions": {
+        "collectionsMeta": {
+            "operations": ["read"],
+            "all": false,
+            "allowed": ["blog", "news"]
+        },
+        "collections": {
+            "operations": ["create", "read", "update", "delete"],
+            "all": false,
+            "allowed": ["blog", "news"]
+        },
+        "schemas": {
+            "operations": ["read"],
+            "all": false,
+            "allowed": ["blog", "news"]
+        },
+        "templates": false,
+        "mailer": false,
+        "playground": true,
+        "docs": true,
+        "utils": {
+            "all": false,
+            "allowed": []
+        },
+        "settings": {
+            "all": false,
+            "allowed": []
+        }
+    }
+}
+```
+
+### Read-Only Viewer
+
+```json
+{
+    "id": "viewer",
+    "description": "Read-only access to all collections",
+    "permissions": {
+        "collectionsMeta": {
+            "operations": ["read"],
+            "all": true,
+            "allowed": []
+        },
+        "collections": {
+            "operations": ["read"],
+            "all": true,
+            "allowed": []
+        },
+        "schemas": {
+            "operations": ["read"],
+            "all": true,
+            "allowed": []
+        },
+        "templates": true,
+        "mailer": false,
+        "playground": true,
+        "docs": true,
+        "utils": {
+            "all": false,
+            "allowed": []
+        },
+        "settings": {
+            "all": false,
+            "allowed": []
+        }
+    }
+}
+```
+
+### Single Collection Specialist
+
+```json
+{
+    "id": "blogger",
+    "description": "Full CRUD access to blog collection only",
+    "permissions": {
+        "collectionsMeta": {
+            "operations": ["read"],
+            "all": false,
+            "allowed": ["blog"]
+        },
+        "collections": {
+            "operations": ["create", "read", "update", "delete"],
+            "all": false,
+            "allowed": ["blog"]
+        },
+        "schemas": {
+            "operations": ["read"],
+            "all": false,
+            "allowed": ["blog"]
+        },
+        "templates": false,
+        "mailer": false,
+        "playground": true,
+        "docs": true,
+        "utils": {
+            "all": false,
+            "allowed": []
+        },
+        "settings": {
+            "all": false,
+            "allowed": []
+        }
+    }
+}
 ```
 
 ## Best Practices
 
 1. **Use UI Controls Everywhere**: Always check permissions before showing links, buttons, or forms. Don't rely on middleware alone - good UX means hiding what users can't access.
 
-2. **Check Appropriate Methods**: Use the appropriate HTTP method for the action:
-   - `GET` for viewing/listing
-   - `POST` for creating
-   - `PUT` for updating
-   - `DELETE` for deleting
+2. **Check Appropriate Operations**: Use the appropriate CRUD operation for the action:
+   - `read` for viewing/listing
+   - `create` for creating new resources
+   - `update` for modifying existing resources
+   - `delete` for deleting resources
 
-3. **Graceful Degradation**: Hide buttons/actions users can't perform rather than showing disabled buttons.
+3. **Distinguish Collections from Collection Metadata**:
+   - Use `canAccessCollection()` for working with objects within a collection
+   - Use `canAccessCollectionMeta()` for managing collection definitions
 
-4. **Admin-Only Features**: Use `cms.isAdmin()` for features that should never be delegated (like managing access groups, API keys, or user accounts).
+4. **Graceful Degradation**: Hide buttons/actions users can't perform rather than showing disabled buttons.
 
-5. **Method-Level Checks**: Use general method checks (e.g., `canAccessCollectionsMethod()`) for listing pages where no specific resource is selected yet.
+5. **Admin-Only Features**: Use `cms.isAdmin()` for features that should never be delegated (like managing access groups, API keys, or user accounts).
+
+6. **Operation-Level Checks**: Use general operation checks (e.g., `canAccessCollectionsOperation()`) for listing pages where no specific resource is selected yet.
+
+7. **Principle of Least Privilege**: Grant users only the minimum permissions they need to accomplish their tasks.
 
 ## Admin-Only Routes
 
 Some routes require super admin access and cannot be delegated via access groups:
 
-- **Access Groups Management**: `/admin/utils/access-groups`, `/access-groups/*`
-- **API Key Management**: `/apikeys/*`
-- **User Management**: `/users/*` (if implemented)
+- **Access Groups Management**: `/admin/utils/access-groups`
+- **API Key Management**: `/admin/apikeys/*`
+- **User Management**: `/admin/users/*`
 
 These routes use `AdminOnlyMiddleware` which only allows super admin users.
 
-## HTTP Methods Reference
+## CRUD Operations Reference
 
-- **GET**: View/read data
-- **POST**: Create new resources
-- **PUT**: Update existing resources
-- **DELETE**: Delete resources
-- **PATCH**: Partial updates (rarely used)
+| Operation | Purpose | Example Use Case |
+|-----------|---------|------------------|
+| `create` | Create new resources | Add new blog post, create collection |
+| `read` | View/list resources | View blog posts, list schemas |
+| `update` | Modify existing resources | Edit blog post, update collection settings |
+| `delete` | Remove resources | Delete blog post, remove collection |
 
 ## Related Documentation
 
-- [Authentication & Authorization](docs/auth)
-- [REST API](docs/rest-api)
-- [API Keys](docs/api-keys)
-- [Access Group Testing Guide](docs/access-group-testing-guide)
+- [Authentication & Authorization](auth)
+- [REST API](rest-api)
+- [API Keys](api-keys)
