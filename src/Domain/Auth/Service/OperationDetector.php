@@ -65,6 +65,7 @@ readonly class OperationDetector
 		'import-json',
 		'import-schema',
 		'playground-save',
+		'admin-collection-new',
 	];
 
 	/**
@@ -105,16 +106,7 @@ readonly class OperationDetector
 		'export-schema',
 		'playground-list',
 		'playground-fetch',
-	];
-	/**
-	 * Routes that map to DELETE operations.
-	 */
-	private const DELETE_ROUTES = [
-		'object-delete',
-		'schema-delete',
-		'collection-delete',    // Collection metadata
-		'template-delete',
-		'playground-delete',
+		'admin-collection-edit',
 	];
 
 	/**
@@ -146,6 +138,18 @@ readonly class OperationDetector
 		'collection-update',
 		'collection-patch',
 		'playground-update',
+		'admin-collection-edit',
+	];
+
+	/**
+	 * Routes that map to DELETE operations.
+	 */
+	private const DELETE_ROUTES = [
+		'object-delete',
+		'schema-delete',
+		'collection-delete',    // Collection metadata
+		'template-delete',
+		'playground-delete',
 	];
 
 	/**

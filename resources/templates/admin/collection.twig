@@ -14,7 +14,9 @@
 		{% else %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}"><span>{{ collection }}</span></a></h1>
 		{% endif %}
+		{% if cms.canAccessCollectionsMetaOperation('read') %}
 		<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="Edit Collection">Edit Collection</a>
+		{% endif %}
 		{% set labelSingular = cms.collection(collection).labelSingular|default('object') %}
 		{% if cms.canAccessCollection(collection, 'create') %}
 		<a class="dash-button" href="collections/{{ collection }}/add" title="Add new {{ labelSingular | lower }} to collection">+ New {{ labelSingular|title }}</a>
@@ -22,7 +24,10 @@
 		<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
 		<nav popover id="collection-actions">
 			<ul>
-				<li class="schema"><a href="schemas/{{ cms.collection(collection).schema }}">Edit Schema</a></li>
+			    {% set collectionSchema = cms.collection(collection).schema %}
+				{% if cms.canAccessSchema(collectionSchema, 'read') %}
+				<li class="schema"><a href="schemas/{{ collectionSchema }}">Edit Schema</a></li>
+				{% endif %}
 				<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
 				{% if cms.canAccessCollection(collection, 'create') %}
 				<li class="import"><a href="collections/{{ collection }}/-import">Import</a></li>
@@ -65,7 +70,7 @@
 		{% endfor %}
 	</nav>
 
-	{% if cms.canAccessCollectionsOperation('create') %}
+	{% if cms.isAdmin() %}
 	<footer>
 		<a class="dash-button full transparent" href="collections/new" title="Create a new collection">+ New Collection</a>
 	</footer>

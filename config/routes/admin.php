@@ -17,6 +17,7 @@ use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Middleware\AuthMiddleware;
 use TotalCMS\Middleware\CollectionAccessMiddleware;
+use TotalCMS\Middleware\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\DocsAccessMiddleware;
 use TotalCMS\Middleware\MailerAccessMiddleware;
 use TotalCMS\Middleware\PlaygroundAccessMiddleware;
@@ -37,6 +38,9 @@ return function (App $app): void {
 
 		$group->get('/templates[/{path:.*}]', AdminTemplateAction::class)->setName('admin-template')->add(TemplateAccessMiddleware::class);
 		$group->post('/templates/new', AdminTemplateAction::class)->setName('admin-template-duplicate')->add(TemplateAccessMiddleware::class);
+
+		$group->get('/collections/new', AdminCollectionAction::class)->setName('admin-collection-new')->add(CollectionMetaAccessMiddleware::class);
+		$group->get('/collections/{collection}/edit', AdminCollectionAction::class)->setName('admin-collection-edit')->add(CollectionMetaAccessMiddleware::class);
 
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection')->add(CollectionAccessMiddleware::class);
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post')->add(CollectionAccessMiddleware::class);

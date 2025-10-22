@@ -1,8 +1,8 @@
 {# Edit Collection #}
 {{ cms.form.collection({
 	id           : url.collection,
-	save         : cms.isAdmin() ? "Save" : false,
-	delete       : cms.isAdmin() ? "Delete" : false,
+	save         : cms.canAccessCollectionMeta(url.collection, 'update') ? "Save" : false,
+	delete       : cms.canAccessCollectionMeta(url.collection, 'delete') ? "Delete" : false,
 	helpStyle    : 'label',
 	helpOnFocus  : true,
 	deleteActions : [
