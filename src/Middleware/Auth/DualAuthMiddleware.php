@@ -113,11 +113,28 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 	private function redirectToLogin(ServerRequestInterface $request): ResponseInterface
 	{
+		$path = $request->getUri()->getPath();
+
+		// API requests get JSON 401 response
+		if (!str_starts_with($path, '/admin/')) {
+			return $this->unauthorizedJsonResponse('Authentication required');
+		}
+
 		return $this->redirectToRoute($request, 'login');
 	}
 
 	private function redirectToDenied(ServerRequestInterface $request): ResponseInterface
 	{
+		$path = $request->getUri()->getPath();
+
+		// API requests get JSON 403 response
+		if (!str_starts_with($path, '/admin/')) {
+			return $this->jsonRenderer->json(
+				$this->responseFactory->createResponse()->withStatus(403),
+				['error' => ['message' => 'Access denied']]
+			);
+		}
+
 		return $this->redirectToRoute($request, 'denied');
 	}
 

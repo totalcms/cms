@@ -23,6 +23,6 @@ return function (App $app): void {
 		$group->put('/{path:.*}', Template\TemplateUpdateAction::class)->setName('template-update');
 		$group->delete('/{path:.*}', Template\TemplateDeleteAction::class)->setName('template-delete');
 		$group->map(['HEAD'], '/{path:.*}', Template\TemplateExistsAction::class)->setName('template-exists');
-	})->add(AuthMiddleware::class)
-		->add(TemplateAccessMiddleware::class);
+	})->add(TemplateAccessMiddleware::class)
+		->add(AuthMiddleware::class);
 };

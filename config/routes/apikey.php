@@ -12,6 +12,6 @@ return function (App $app): void {
 	$app->group('/apikeys', function (RouteCollectorProxy $group): void {
 		$group->post('', ApiKeyCreateAction::class)->setName('apikey-create');
 		$group->delete('/{id}', ApiKeyDeleteAction::class)->setName('apikey-delete');
-	})->add(AuthMiddleware::class)
-		->add(AdminOnlyMiddleware::class);
+	})->add(AdminOnlyMiddleware::class)
+		->add(AuthMiddleware::class);
 };

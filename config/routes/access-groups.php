@@ -13,6 +13,6 @@ return function (App $app): void {
 		$group->post('', AccessGroupSaveAction::class)->setName('access-group-save');
 		$group->put('/{id}', AccessGroupSaveAction::class)->setName('access-group-edit');
 		$group->delete('/{id}', AccessGroupDeleteAction::class)->setName('access-group-delete');
-	})->add(AuthMiddleware::class)
-		->add(AdminOnlyMiddleware::class);
+	})->add(AdminOnlyMiddleware::class)
+		->add(AuthMiddleware::class);
 };

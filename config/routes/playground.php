@@ -13,6 +13,6 @@ return function (App $app): void {
 		$group->get('/{id}', Playground\PlaygroundFetchAction::class)->setName('playground-fetch');
 		$group->put('/{id}', Playground\PlaygroundUpdateAction::class)->setName('playground-update');
 		$group->delete('/{id}', Playground\PlaygroundDeleteAction::class)->setName('playground-delete');
-	})->add(AuthMiddleware::class)
-		->add(PlaygroundAccessMiddleware::class);
+	})->add(PlaygroundAccessMiddleware::class)
+		->add(AuthMiddleware::class);
 };

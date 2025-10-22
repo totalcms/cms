@@ -18,8 +18,8 @@ return function (App $app): void {
 		$group->delete('/{collection}', Collection\CollectionDeleteAction::class)->setName('collection-delete');
 		$group->put('/{collection}', Collection\CollectionUpdateAction::class)->setName('collection-update');
 		$group->patch('/{collection}', Collection\CollectionPatchAction::class)->setName('collection-patch');
-	})->add(AuthMiddleware::class)
-		->add(CollectionMetaAccessMiddleware::class);
+	})->add(CollectionMetaAccessMiddleware::class)
+		->add(AuthMiddleware::class);
 
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
 		// All Collections
@@ -29,8 +29,8 @@ return function (App $app): void {
 		$group->map(['HEAD'], '/{collection}', Collection\CollectionExistsAction::class)->setName('collection-exists');
 		// Collection Schema
 		$group->get('/{collection}/schema', Schema\SchemaFetchForCollectionAction::class)->setName('collection-fetch-schema');
-	})->add(DualAuthMiddleware::class)
-		->add(CollectionMetaAccessMiddleware::class);
+	})->add(CollectionMetaAccessMiddleware::class)
+		->add(DualAuthMiddleware::class);
 
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
 		// Collection Index
@@ -68,6 +68,6 @@ return function (App $app): void {
 		$group->delete('/{collection}/{id}/{property}/{name}', Property\File\FileDeleteAction::class)->setName('property-file-delete');
 		$group->delete('/{collection}/{id}/{property}/{name}/cache', Property\PropertyFileClearCacheAction::class)->setName('property-file-clear-cache');
 		$group->put('/{collection}/{id}/{property}/{name}/move', Property\File\FileMoveAction::class)->setName('property-file-move');
-	})->add(DualAuthMiddleware::class)
-		->add(CollectionAccessMiddleware::class);
+	})->add(CollectionAccessMiddleware::class)
+		->add(DualAuthMiddleware::class);
 };
