@@ -26,6 +26,7 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
@@ -517,10 +518,10 @@ NGINX;
 
 	/**
 	 * Get inherited properties for a schema.
-	 * Returns array mapping property names to their source schema IDs.
-	 * Shows ALL properties from parent schemas as inherited.
+	 * Returns array with property details including source schema, field type, and property type.
+	 * Only shows properties that are PURELY inherited (not also defined in the schema itself).
 	 *
-	 * @return array<string,string> Property name => Source schema ID
+	 * @return array<string,array{source:string,field:string,type:string,definition:array<string,mixed>}>
 	 */
 	public function getInheritedProperties(string $schemaId): array
 	{
@@ -532,16 +533,22 @@ NGINX;
 			}
 
 			$inheritedProperties = [];
+			$ownPropertyNames    = array_keys($schema->properties);
 
 			// Process each parent schema in order
 			foreach ($schema->inheritFrom as $parentId) {
 				try {
 					$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
 
-					foreach (array_keys($parentSchema->properties) as $propName) {
-						// Add all parent properties (first wins for duplicates across parents)
-						if (!isset($inheritedProperties[$propName])) {
-							$inheritedProperties[$propName] = $parentId;
+					foreach ($parentSchema->properties as $propName => $propDef) {
+						// Only add if not already in own properties and not already inherited (first wins)
+						if (!in_array($propName, $ownPropertyNames, true) && !isset($inheritedProperties[$propName])) {
+							$inheritedProperties[$propName] = [
+								'source'     => $parentId,
+								'field'      => $propDef['field'] ?? 'text',
+								'type'       => SchemaSaver::extractPropertyType($propDef),
+								'definition' => $propDef,
+							];
 						}
 					}
 				} catch (\Exception) {

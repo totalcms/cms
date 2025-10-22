@@ -157,9 +157,10 @@ class SchemaForm extends TotalForm
 
 	/**
 	 * Get inherited properties from parent schemas.
-	 * Returns an array mapping property names to their source schema ID.
+	 * Returns array with property details including source schema, field type, and property type.
+	 * Only shows properties that are PURELY inherited (not also defined in the schema itself).
 	 *
-	 * @return array<string,string> Property name => Source schema ID
+	 * @return array<string,array{source:string,field:string,type:string,definition:array<string,mixed>}>
 	 */
 	public function getInheritedProperties(): array
 	{
@@ -167,16 +168,23 @@ class SchemaForm extends TotalForm
 			return [];
 		}
 
-		$inheritedPropertyNames = [];
+		$inheritedProperties = [];
+		$ownPropertyNames    = array_keys($this->schemaObjectData->properties);
 
-		// Process each parent schema in order to collect all inherited property names
+		// Process each parent schema in order to collect all inherited property details
 		foreach ($this->schemaObjectData->inheritFrom as $parentId) {
 			try {
 				$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
 
-				foreach (array_keys($parentSchema->properties) as $propName) {
-					if (!isset($inheritedPropertyNames[$propName])) {
-						$inheritedPropertyNames[$propName] = $parentId;
+				foreach ($parentSchema->properties as $propName => $propDef) {
+					// Only add if not already in own properties and not already inherited (first wins)
+					if (!in_array($propName, $ownPropertyNames, true) && !isset($inheritedProperties[$propName])) {
+						$inheritedProperties[$propName] = [
+							'source'     => $parentId,
+							'field'      => $propDef['field'] ?? 'text',
+							'type'       => SchemaSaver::extractPropertyType($propDef),
+							'definition' => $propDef,
+						];
 					}
 				}
 			} catch (\Exception) {
@@ -185,12 +193,12 @@ class SchemaForm extends TotalForm
 			}
 		}
 
-		return $inheritedPropertyNames;
+		return $inheritedProperties;
 	}
 
 	/**
 	 * Filter out inherited properties from a properties array.
-	 * This removes properties that exist in parent schemas.
+	 * Removes purely inherited properties (ones not defined in the schema itself).
 	 *
 	 * @param array<string,mixed> $properties
 	 *
@@ -202,9 +210,11 @@ class SchemaForm extends TotalForm
 			return $properties;
 		}
 
-		$inheritedPropertyNames = array_keys($this->getInheritedProperties());
+		// Get inherited property names (already filtered to only purely inherited ones)
+		$inheritedProps         = $this->getInheritedProperties();
+		$inheritedPropertyNames = array_keys($inheritedProps);
 
-		// Remove any properties that are inherited from parent schemas
+		// Remove inherited properties from the display
 		foreach ($inheritedPropertyNames as $propName) {
 			unset($properties[$propName]);
 		}

@@ -40,10 +40,10 @@
 	<p>The following properties are inherited from other schemas and cannot be modified directly.
 		To change them, edit the source schema.</p>
 	<div class="inherited-properties-list">
-		{% for propName, sourceSchema in inheritedProps %}
-			<div class="schema-field list-field string-type">
+		{% for propName, prop in inheritedProps %}
+			<div class="schema-field {{ prop.field }}-field {{ prop.type }}-type">
 				<span class="property-name">{{ propName }}</span>
-				<span class="property-source">from <a href="schemas/{{ sourceSchema }}">{{ sourceSchema }}</a></span>
+				<span class="property-source">from <a href="schemas/{{ prop.source }}">{{ prop.source }}</a></span>
 			</div>
 		{% endfor %}
 	</div>

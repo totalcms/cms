@@ -105,6 +105,32 @@ readonly class SchemaSaver
 		return $properties;
 	}
 
+	/**
+	 * Extract property type from a property definition.
+	 * Uses the reverse of PROPERTY_TYPE_TO_REF mapping.
+	 *
+	 * @param array<string,mixed> $propertyDef
+	 */
+	public static function extractPropertyType(array $propertyDef): string
+	{
+		// Try to extract from $ref by doing reverse lookup
+		if (isset($propertyDef['$ref']) && is_string($propertyDef['$ref'])) {
+			// Reverse lookup in PROPERTY_TYPE_TO_REF
+			$type = array_search($propertyDef['$ref'], SchemaData::PROPERTY_TYPE_TO_REF, true);
+			if ($type !== false) {
+				return $type;
+			}
+		}
+
+		// Fall back to type field
+		if (isset($propertyDef['type']) && is_string($propertyDef['type'])) {
+			return $propertyDef['type'];
+		}
+
+		// Final fallback to field type
+		return $propertyDef['field'] ?? 'text';
+	}
+
 	private function rebuildIndexforCollectionsWithSchema(string $schemaId): void
 	{
 		$collections = $this->collectionLister->listAllCollections();
