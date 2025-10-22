@@ -64,12 +64,8 @@ class AccessManager
 			return true;
 		}
 
-		if (empty($groups)) {
+		if ($groups === [] || $groups === '') {
 			return $this->userLoggedIn($collection);
-		}
-
-		if (is_string($groups)) {
-			$groups = [$groups];
 		}
 
 		try {
