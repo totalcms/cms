@@ -20,7 +20,7 @@ export default class SimpleForm {
 		this.api     = new TotalCMS({ url: this.form.dataset.api});
 		this.refresh = this.form.dataset.refresh === "true";
 		this.ajax    = this.form.dataset.ajax    === "true";
-		this.button  = this.form.querySelector("button");
+		this.button  = this.form.querySelector("button[type=submit]");
 
 		if (this.ajax) {
 			this.form.addEventListener("submit", event => event.preventDefault());
