@@ -95,6 +95,8 @@ class SchemaData
 	public array $required = [];
 	/** @var array<string> */
 	public array $index = [];
+	/** @var array<string> */
+	public array $inheritFrom = [];
 	protected Serializer $serializer;
 
 	public function __construct()
@@ -129,6 +131,11 @@ class SchemaData
 		// Only include category if it's not empty
 		if ($this->category !== '') {
 			$array['category'] = $this->category;
+		}
+
+		// Only include inheritFrom if it's not empty
+		if ($this->inheritFrom !== []) {
+			$array['inheritFrom'] = $this->inheritFrom;
 		}
 
 		// Apply schema transformations to expand simplified deck syntax

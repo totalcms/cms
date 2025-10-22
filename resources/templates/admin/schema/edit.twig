@@ -33,6 +33,23 @@
 	],
 }) }}
 
+{% set inheritedProps = cms.getInheritedProperties(url.schema) %}
+{% if inheritedProps|length > 0 %}
+<div class="schema-inherited-properties">
+	<h3>Inherited Properties (Read-Only)</h3>
+	<p>The following properties are inherited from other schemas and cannot be modified directly.
+		To change them, edit the source schema.</p>
+	<div class="inherited-properties-list">
+		{% for propName, sourceSchema in inheritedProps %}
+			<div class="schema-field list-field string-type">
+				<span class="property-name">{{ propName }}</span>
+				<span class="property-source">from <a href="schemas/{{ sourceSchema }}">{{ sourceSchema }}</a></span>
+			</div>
+		{% endfor %}
+	</div>
+</div>
+{% endif %}
+
 {% set isDeckCompatible = cms.isDeckCompatible(url.schema) %}
 {% set incompatibleTypes = cms.getDeckIncompatibleTypes(url.schema) %}
 
@@ -54,6 +71,30 @@
 </div>
 
 <style>
+.schema-inherited-properties {
+	margin-top    : 2rem;
+	max-width : 800px;
+}
+
+.schema-inherited-properties h3 {
+	margin-block : 0 0.25rem;
+	font-size    : 1.2rem;
+}
+
+.schema-inherited-properties p {
+	font-size    : 0.875rem;
+	margin-block : 0 1rem;
+	color        : oklch(var(--totalform-darkgray));
+}
+
+.inherited-properties-list {
+	display : grid;
+	gap     : 0.5rem;
+}
+.inherited-properties-list .schema-field {
+	grid-template-columns : 1fr auto;
+}
+
 .schema-deck-compatibility {
 	margin-top    : 1rem;
 	padding       : 0.75rem 1rem;
@@ -69,10 +110,6 @@
 
 .deck-incompatible-message {
 	color: oklch(var(--totalform-warning, 0.6 0.19 23.85));
-}
-
-.status-icon {
-	/* font-weight: bold; */
 }
 
 .status-icon.compatible {

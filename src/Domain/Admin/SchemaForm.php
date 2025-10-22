@@ -112,8 +112,9 @@ class SchemaForm extends TotalForm
 			$this->route            = '/schemas/' . $this->id;
 			$this->method           = 'PUT';
 			$this->reserved         = $this->isReservedSchema($this->id);
-			// This is the actual schema object data
-			$this->schemaObjectData = $this->schemaFetcher->fetchSchema($this->id);
+			// This is the actual schema object data - fetch without flattening
+			// so we only see the schema's own properties in the editor
+			$this->schemaObjectData = $this->schemaFetcher->fetchRawSchema($this->id);
 		}
 		// Duplicate Schema
 		if ($this->id === '' && $this->data !== []) {
@@ -155,6 +156,63 @@ class SchemaForm extends TotalForm
 	}
 
 	/**
+	 * Get inherited properties from parent schemas.
+	 * Returns an array mapping property names to their source schema ID.
+	 *
+	 * @return array<string,string> Property name => Source schema ID
+	 */
+	public function getInheritedProperties(): array
+	{
+		if (!isset($this->schemaObjectData) || $this->schemaObjectData->inheritFrom === []) {
+			return [];
+		}
+
+		$inheritedPropertyNames = [];
+
+		// Process each parent schema in order to collect all inherited property names
+		foreach ($this->schemaObjectData->inheritFrom as $parentId) {
+			try {
+				$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
+
+				foreach (array_keys($parentSchema->properties) as $propName) {
+					if (!isset($inheritedPropertyNames[$propName])) {
+						$inheritedPropertyNames[$propName] = $parentId;
+					}
+				}
+			} catch (\Exception) {
+				// Skip if parent schema doesn't exist
+				continue;
+			}
+		}
+
+		return $inheritedPropertyNames;
+	}
+
+	/**
+	 * Filter out inherited properties from a properties array.
+	 * This removes properties that exist in parent schemas.
+	 *
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function filterInheritedProperties(array $properties): array
+	{
+		if (!isset($this->schemaObjectData) || $this->schemaObjectData->inheritFrom === []) {
+			return $properties;
+		}
+
+		$inheritedPropertyNames = array_keys($this->getInheritedProperties());
+
+		// Remove any properties that are inherited from parent schemas
+		foreach ($inheritedPropertyNames as $propName) {
+			unset($properties[$propName]);
+		}
+
+		return $properties;
+	}
+
+	/**
 	 * @param array<string,mixed> $options
 	 *
 	 * @return array<string,mixed>
@@ -178,6 +236,17 @@ class SchemaForm extends TotalForm
 			$options['options'] = array_keys($this->schemaObjectData->toArray()['properties']);
 		}
 
+		if ($name === 'inheritFrom') {
+			// Get all available schemas (both reserved and custom) for inheritFrom field
+			$allSchemas = $this->schemaLister->listAllSchemas();
+			$schemaIds  = array_map(fn (SchemaData $schema): string => $schema->id, $allSchemas);
+
+			// Remove 'schema' and 'collection' schemas and the current schema being edited
+			$schemaIds = array_filter($schemaIds, fn (string $id): bool => $id !== 'schema' && $id !== 'collection' && $id !== $this->id);
+
+			$options['options'] = array_values($schemaIds);
+		}
+
 		if ($this->reserved) {
 			$options['disabled'] = true;
 			$options['readonly'] = true;
@@ -194,6 +263,10 @@ class SchemaForm extends TotalForm
 		if (isset($this->schemaObjectData)) {
 			$value = $this->schemaObjectData->toArray()[$name] ?? '';
 			if (!empty($value)) {
+				// For the properties field, filter out inherited properties
+				if ($name === 'properties' && is_array($value)) {
+					$value = $this->filterInheritedProperties($value);
+				}
 				$options['value'] = $value;
 			}
 		}

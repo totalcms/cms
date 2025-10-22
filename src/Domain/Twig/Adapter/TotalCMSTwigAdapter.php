@@ -515,6 +515,47 @@ NGINX;
 		return $schema->toArray();
 	}
 
+	/**
+	 * Get inherited properties for a schema.
+	 * Returns array mapping property names to their source schema IDs.
+	 * Shows ALL properties from parent schemas as inherited.
+	 *
+	 * @return array<string,string> Property name => Source schema ID
+	 */
+	public function getInheritedProperties(string $schemaId): array
+	{
+		try {
+			$schema = $this->schemaFetcher->fetchRawSchema($schemaId);
+
+			if ($schema->inheritFrom === []) {
+				return [];
+			}
+
+			$inheritedProperties = [];
+
+			// Process each parent schema in order
+			foreach ($schema->inheritFrom as $parentId) {
+				try {
+					$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
+
+					foreach (array_keys($parentSchema->properties) as $propName) {
+						// Add all parent properties (first wins for duplicates across parents)
+						if (!isset($inheritedProperties[$propName])) {
+							$inheritedProperties[$propName] = $parentId;
+						}
+					}
+				} catch (\Exception) {
+					// Skip if parent schema doesn't exist
+					continue;
+				}
+			}
+
+			return $inheritedProperties;
+		} catch (\Exception) {
+			return [];
+		}
+	}
+
 	// Get all collections
 	/** @return array<object> */
 	public function collections(): array
