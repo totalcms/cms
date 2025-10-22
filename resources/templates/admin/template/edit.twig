@@ -1,6 +1,6 @@
 <header>
 	<h1><a href="templates">templates</a> / <span>{{ url.template }}</span></h1>
-	{% if cms.canAccessTemplatesOperation('create') %}
+	{% if cms.canAccessTemplates() %}
 	<button class="dash-action-dots" title="Template Actions" popovertarget="template-actions"></button>
 	<nav popover id="template-actions">
 		<ul>
@@ -12,8 +12,8 @@
 
 {{ cms.form.template({
 	path        : url.template,
-	save        : cms.canAccessTemplatesOperation('update') ? "Save" : false,
-	delete      : cms.canAccessTemplatesOperation('delete') ? "Delete" : false,
+	save        : cms.canAccessTemplates() ? "Save" : false,
+	delete      : cms.canAccessTemplates() ? "Delete" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [

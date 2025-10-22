@@ -1486,32 +1486,37 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can perform an action on a collection.
+	 * Check if current user can perform a CRUD operation on a collection.
 	 */
-	public function canAccessCollection(string $collection, string $method = 'GET'): bool
+	public function canAccessCollection(string $collection, string $operation = 'read'): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessCollection($userData['id'], $collection, $method);
+		return $this->accessControl->canAccessCollection($userData['id'], $collection, $operation);
 	}
 
 	/**
-	 * Get collections the current user can access with a given method.
+	 * Get collections the current user can access with a given CRUD operation.
 	 *
-	 * @param string $method HTTP method (GET, POST, PUT, DELETE)
+	 * @param string $operation CRUD operation (create, read, update, delete)
 	 *
 	 * @return array<string> Collection IDs user can access
 	 */
-	public function getAccessibleCollections(string $method = 'GET'): array
+	public function getAccessibleCollections(string $operation = 'read'): array
 	{
 		$allCollections = $this->collectionLister->listAllCollections();
 		$accessible     = [];
 
 		foreach ($allCollections as $collection) {
-			if ($this->canAccessCollection($collection->id, $method)) {
+			if ($this->canAccessCollection($collection->id, $operation)) {
 				$accessible[] = $collection->id;
 			}
 		}
@@ -1525,6 +1530,11 @@ NGINX;
 	 */
 	public function canAccessCollectionsOperation(string $operation = 'read'): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
@@ -1534,16 +1544,58 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can perform an action on a schema.
+	 * Check if current user can perform an action on a collection's metadata.
 	 */
-	public function canAccessSchema(string $schema, string $method = 'GET'): bool
+	public function canAccessCollectionMeta(string $collection, string $operation = 'read'): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessSchema($userData['id'], $schema, $method);
+		return $this->accessControl->canAccessCollectionMeta($userData['id'], $collection, $operation);
+	}
+
+	/**
+	 * Check if current user can perform a CRUD operation on collection metadata in general.
+	 * Use for actions like viewing the collections list or creating new collections.
+	 */
+	public function canAccessCollectionsMetaOperation(string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessCollectionsMetaOperation($userData['id'], $operation);
+	}
+
+	/**
+	 * Check if current user can perform a CRUD operation on a schema.
+	 */
+	public function canAccessSchema(string $schema, string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessSchema($userData['id'], $schema, $operation);
 	}
 
 	/**
@@ -1552,6 +1604,11 @@ NGINX;
 	 */
 	public function canAccessSchemasOperation(string $operation = 'read'): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
@@ -1561,68 +1618,93 @@ NGINX;
 	}
 
 	/**
-	 * Check if current user can perform a CRUD operation on templates.
+	 * Check if current user can access templates (boolean check).
 	 */
-	public function canAccessTemplatesOperation(string $operation = 'read'): bool
+	public function canAccessTemplates(): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessTemplatesOperation($userData['id'], $operation);
+		return $this->accessControl->canAccessTemplates($userData['id']);
 	}
 
 	/**
 	 * Check if current user can access a specific settings section.
 	 */
-	public function canAccessSetting(string $section, string $method = 'GET'): bool
+	public function canAccessSetting(string $section): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessSettings($userData['id'], $section, $method);
+		return $this->accessControl->canAccessSettings($userData['id'], $section);
 	}
 
 	/**
-	 * Check if current user can perform a CRUD operation on settings (no specific section).
+	 * Check if current user has ANY access to settings (boolean check).
 	 */
-	public function canAccessSettingsOperation(string $operation = 'read'): bool
+	public function canAccessSettings(): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessSettingsOperation($userData['id'], $operation);
+		return $this->accessControl->canAccessAnySettings($userData['id']);
 	}
 
 	/**
 	 * Check if current user can access a specific utils page.
 	 */
-	public function canAccessUtil(string $page, string $method = 'GET'): bool
+	public function canAccessUtil(string $page): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessUtils($userData['id'], $page, $method);
+		return $this->accessControl->canAccessUtils($userData['id'], $page);
 	}
 
 	/**
-	 * Check if current user can perform a CRUD operation on utils (no specific page).
+	 * Check if current user has ANY access to utils (boolean check).
 	 */
-	public function canAccessUtilsOperation(string $operation = 'read'): bool
+	public function canAccessUtils(): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
 		}
 
-		return $this->accessControl->canAccessUtilsOperation($userData['id'], $operation);
+		return $this->accessControl->canAccessAnyUtils($userData['id']);
 	}
 
 	/**
@@ -1630,6 +1712,11 @@ NGINX;
 	 */
 	public function canAccessMailer(): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
@@ -1643,6 +1730,11 @@ NGINX;
 	 */
 	public function canAccessPlayground(): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;
@@ -1656,6 +1748,11 @@ NGINX;
 	 */
 	public function canAccessDocs(): bool
 	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
 		$userData = $this->accessManager->userData();
 		if ($userData === [] || !isset($userData['id'])) {
 			return false;

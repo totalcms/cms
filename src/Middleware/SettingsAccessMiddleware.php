@@ -33,11 +33,11 @@ readonly class SettingsAccessMiddleware extends BaseAccessMiddleware
 
 		// Check access permissions
 		if ($section) {
-			// Specific section - check access to that section
-			return $this->accessControl->canAccessSettings($userId, $section, $operation);
+			// Specific section - check access to that section (boolean, no operations)
+			return $this->accessControl->canAccessSettings($userId, $section);
 		}
 
-		// No specific section (e.g., GET /settings) - check general settings operation permission
-		return $this->accessControl->canAccessSettingsOperation($userId, $operation);
+		// No specific section (e.g., GET /settings) - check if user has ANY settings access
+		return $this->accessControl->canAccessAnySettings($userId);
 	}
 }

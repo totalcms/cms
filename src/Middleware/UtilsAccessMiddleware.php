@@ -33,11 +33,11 @@ readonly class UtilsAccessMiddleware extends BaseAccessMiddleware
 
 		// Check access permissions
 		if ($page) {
-			// Specific page - check access to that page
-			return $this->accessControl->canAccessUtils($userId, $page, $operation);
+			// Specific page - check access to that page (boolean, no operations)
+			return $this->accessControl->canAccessUtils($userId, $page);
 		}
 
-		// No specific page (e.g., GET /utils) - check general utils operation permission
-		return $this->accessControl->canAccessUtilsOperation($userId, $operation);
+		// No specific page (e.g., GET /utils) - check if user has ANY utils access
+		return $this->accessControl->canAccessAnyUtils($userId);
 	}
 }

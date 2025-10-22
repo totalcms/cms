@@ -224,7 +224,7 @@ readonly class AccessControlService
 	/**
 	 * Check if user can access templates with the given CRUD operation.
 	 */
-	public function canAccessTemplatesOperation(string $userId, string $operation): bool
+	public function canAccessTemplates(string $userId): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -239,7 +239,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessTemplate($group, $operation)) {
+			if ($this->groupCanAccessTemplate($group)) {
 				return true;
 			}
 		}
@@ -250,7 +250,7 @@ readonly class AccessControlService
 	/**
 	 * Check if user can access a specific settings section with the given CRUD operation.
 	 */
-	public function canAccessSettings(string $userId, string $section, string $operation): bool
+	public function canAccessSettings(string $userId, string $section): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -265,7 +265,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessSettings($group, $section, $operation)) {
+			if ($this->groupCanAccessSettings($group, $section)) {
 				return true;
 			}
 		}
@@ -276,7 +276,7 @@ readonly class AccessControlService
 	/**
 	 * Check if user can access a specific util with the given CRUD operation.
 	 */
-	public function canAccessUtils(string $userId, string $util, string $operation): bool
+	public function canAccessUtils(string $userId, string $util): bool
 	{
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
@@ -291,7 +291,7 @@ readonly class AccessControlService
 
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
-			if ($this->groupCanAccessUtils($group, $util, $operation)) {
+			if ($this->groupCanAccessUtils($group, $util)) {
 				return true;
 			}
 		}
@@ -370,6 +370,58 @@ readonly class AccessControlService
 		// Check each group - return true on first match
 		foreach ($groups as $group) {
 			if ($this->groupCanAccessDocs($group)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if user has ANY access to settings (boolean check, not operation-based).
+	 */
+	public function canAccessAnySettings(string $userId): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			if ($this->groupCanAccessAnySettings($group)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if user has ANY access to utils (boolean check, not operation-based).
+	 */
+	public function canAccessAnyUtils(string $userId): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			if ($this->groupCanAccessAnyUtils($group)) {
 				return true;
 			}
 		}
@@ -553,9 +605,9 @@ readonly class AccessControlService
 	 * Check if a single group can access templates.
 	 * Templates use simple boolean access (no operation-specific permissions).
 	 */
-	private function groupCanAccessTemplate(AccessGroupData $group, string $operation): bool
+	private function groupCanAccessTemplate(AccessGroupData $group): bool
 	{
-		// If templates is enabled, grant access to all operations
+		// If templates is enabled, grant access
 		return $group->permissions['templates'] ?? false;
 	}
 
@@ -563,7 +615,7 @@ readonly class AccessControlService
 	 * Check if a single group can access a settings section.
 	 * Settings use simple section-based access (no operation-specific permissions).
 	 */
-	private function groupCanAccessSettings(AccessGroupData $group, string $section, string $operation): bool
+	private function groupCanAccessSettings(AccessGroupData $group, string $section): bool
 	{
 		$permissions = $group->permissions['settings'] ?? [];
 
@@ -579,7 +631,7 @@ readonly class AccessControlService
 	 * Check if a single group can access a util.
 	 * Utils use simple page-based access (no operation-specific permissions).
 	 */
-	private function groupCanAccessUtils(AccessGroupData $group, string $util, string $operation): bool
+	private function groupCanAccessUtils(AccessGroupData $group, string $util): bool
 	{
 		$permissions = $group->permissions['utils'] ?? [];
 
@@ -589,6 +641,32 @@ readonly class AccessControlService
 
 		// If they have access to this util (all or specific), grant access
 		return $all || in_array($util, $allowed);
+	}
+
+	/**
+	 * Check if group has ANY access to settings.
+	 */
+	private function groupCanAccessAnySettings(AccessGroupData $group): bool
+	{
+		$permissions = $group->permissions['settings'] ?? [];
+		$all         = $permissions['all'] ?? false;
+		$allowed     = $permissions['allowed'] ?? [];
+
+		// Has access if "all" is true OR if they have specific sections allowed
+		return $all || $allowed !== [];
+	}
+
+	/**
+	 * Check if group has ANY access to utils.
+	 */
+	private function groupCanAccessAnyUtils(AccessGroupData $group): bool
+	{
+		$permissions = $group->permissions['utils'] ?? [];
+		$all         = $permissions['all'] ?? false;
+		$allowed     = $permissions['allowed'] ?? [];
+
+		// Has access if "all" is true OR if they have specific utils allowed
+		return $all || $allowed !== [];
 	}
 
 	/**
