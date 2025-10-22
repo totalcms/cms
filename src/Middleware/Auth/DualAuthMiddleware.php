@@ -186,8 +186,14 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	 */
 	private function isPublicCollectionRequest(ServerRequestInterface $request): bool
 	{
-		// Must have collection in route
-		$collectionId = $request->getAttribute('collection');
+		// Must have collection in route - get from route arguments, not request attributes
+		$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
+		$route        = $routeContext->getRoute();
+		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+			return false;
+		}
+
+		$collectionId = $route->getArgument('collection');
 		if (!$collectionId) {
 			return false;
 		}
