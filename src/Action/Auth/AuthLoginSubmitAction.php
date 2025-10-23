@@ -61,6 +61,9 @@ readonly class AuthLoginSubmitAction
 		}
 
 		if ($flash->has('error')) {
+			if ($this->session->has(SessionKeys::LOGIN_ORIGIN)) {
+				$url = $this->session->get(SessionKeys::LOGIN_ORIGIN);
+			}
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
@@ -69,11 +72,20 @@ readonly class AuthLoginSubmitAction
 		$persistentLogin = isset($data['persistent_login']) && $data['persistent_login'] === '1';
 		$collection      = $args['collection'] ?? '';
 
+		$user = null;
 		try {
 			$user = $this->loginService->authenticate($email, $password, $collection);
 		} catch (\Exception $e) {
 			// throw new HttpUnauthorizedException($request, $e->getMessage());
 			$flash->add('error', $e->getMessage());
+		}
+
+		// Check if authentication failed and redirect back
+		if (!isset($user, $user['id'])) {
+			if ($this->session->has(SessionKeys::LOGIN_ORIGIN)) {
+				$url = $this->session->get(SessionKeys::LOGIN_ORIGIN);
+			}
+			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
 		if (isset($user, $user['id'])) {

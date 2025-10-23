@@ -11,4 +11,24 @@
 .login-form {
 	display : grid;
 	gap     : 2rem;
+
+	.login-forgot-password-wrapper {
+		position : absolute;
+		bottom   : 0;
+		right    : 0;
+	}
+
+	button {
+		width : max-content;
+	}
+
+	.login-forgot-password {
+		color           : oklch(var(--totalform-accent));
+		text-decoration : none;
+		font-size       : 0.875rem;
+
+		&:hover {
+			text-decoration : underline;
+		}
+	}
 }

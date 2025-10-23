@@ -311,6 +311,7 @@ HTACCESS;
 
 	TotalFormFactory::class => fn (ContainerInterface $container): TotalFormFactory => new TotalFormFactory(
 		$container->get(Config::class),
+		$container->get(PhpSession::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(CollectionFetcher::class),
 		$container->get(CollectionLister::class),

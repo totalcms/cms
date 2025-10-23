@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use Odan\Session\PhpSession;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
@@ -39,6 +40,7 @@ readonly class TotalFormFactory
 
 	public function __construct(
 		private Config $config,
+		private PhpSession $session,
 		private ObjectFetcher $objectFetcher,
 		private CollectionFetcher $collectionFetcher,
 		private CollectionLister $collectionLister,
@@ -99,6 +101,22 @@ readonly class TotalFormFactory
 		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new FactoryForm(...$options);
+
+		return $form->build();
+	}
+
+	/**
+	 * Create a login form.
+	 *
+	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, submitLabel, class, flashMessages
+	 */
+	public function loginForm(array $options = []): string
+	{
+		$options['api']         = $this->api;
+		$options['session']     = $this->session;
+		$options['csrfManager'] = $this->csrfManager;
+
+		$form = new LoginForm(...$options);
 
 		return $form->build();
 	}
