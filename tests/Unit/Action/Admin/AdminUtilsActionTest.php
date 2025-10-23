@@ -52,25 +52,23 @@ final class AdminUtilsActionTest extends TestCase
 	 */
 	private function setupRoutingContext(?string $routeName = null): void
 	{
-		$routeParser = $this->createMock(\Slim\Interfaces\RouteParserInterface::class);
+		$routeParser    = $this->createMock(\Slim\Interfaces\RouteParserInterface::class);
 		$routingResults = $this->createMock(\Slim\Routing\RoutingResults::class);
-		$route = $routeName !== null
+		$route          = $routeName !== null
 			? $this->createMock(\Slim\Routing\Route::class)
 			: null;
 
-		if ($route !== null) {
+		if ($route instanceof \PHPUnit\Framework\MockObject\MockObject) {
 			$route->method('getName')->willReturn($routeName);
 		}
 
 		$this->request->method('getAttribute')
-			->willReturnCallback(function (string $name) use ($routeParser, $routingResults, $route) {
-				return match ($name) {
-					'__routeParser__' => $routeParser,
-					'__routingResults__' => $routingResults,
-					'__basePath__' => '',
-					'__route__' => $route,
-					default => null,
-				};
+			->willReturnCallback(fn (string $name): \PHPUnit\Framework\MockObject\MockObject|string|null => match ($name) {
+				'__routeParser__'    => $routeParser,
+				'__routingResults__' => $routingResults,
+				'__basePath__'       => '',
+				'__route__'          => $route,
+				default              => null,
 			});
 	}
 

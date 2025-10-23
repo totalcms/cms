@@ -3,8 +3,8 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Playground;
-use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/playground', function (RouteCollectorProxy $group): void {

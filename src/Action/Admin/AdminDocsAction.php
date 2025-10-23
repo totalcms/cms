@@ -53,7 +53,7 @@ readonly class AdminDocsAction
 		// If neither file exists, return 404
 		if (!file_exists($htmlFile) && !file_exists($markdownFile)) {
 			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
-				'url' => [ 'path' => $request->getUri()->getPath(), 'page' => '404', ],
+				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
 			]);
 		}
 

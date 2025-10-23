@@ -7,15 +7,15 @@ use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Middleware\MethodOverrideMiddleware;
+use TotalCMS\Middleware\Development\DevModeMiddleware;
+use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\License\BetaMiddleware;
 use TotalCMS\Middleware\License\BundleMiddleware;
-use TotalCMS\Middleware\Security\CorsMiddleware;
-use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
-use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\Security\CorsMiddleware;
 use TotalCMS\TotalCMS;
 
 return function (App $app): void {

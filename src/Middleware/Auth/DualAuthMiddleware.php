@@ -15,9 +15,9 @@ use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
-use TotalCMS\Domain\Session\SessionKeys;
 
 /**
  * Dual Authentication Middleware.
@@ -212,7 +212,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		$collectionId = $route->getArgument('collection');
 		if ($collectionId === null || $collectionId === '') {
-				return false;
+			return false;
 		}
 
 		$method = $request->getMethod();
@@ -228,7 +228,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		// Check if collection allows this operation publicly
 		try {
-			$collection = $this->collectionFetcher->fetchCollection((string)$collectionId);
+			$collection = $this->collectionFetcher->fetchCollection($collectionId);
 			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 				return false;
 			}
@@ -237,7 +237,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			$publicOperations = array_map('strtolower', $collection->publicOperations);
 
 			return in_array($operation, $publicOperations, true);
-		} catch (\Throwable $e) {
+		} catch (\Throwable) {
 			// If we can't fetch the collection, don't allow public access
 			return false;
 		}

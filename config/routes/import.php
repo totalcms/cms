@@ -3,9 +3,9 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Import;
-use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/import', function (RouteCollectorProxy $group): void {

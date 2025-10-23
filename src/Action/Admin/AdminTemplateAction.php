@@ -32,12 +32,10 @@ readonly class AdminTemplateAction
 		$path = $args['path'] ?? '';
 
 		// Validate template exists (skip for index and new)
-		if ($path !== '' && $path !== 'new') {
-			if (!$this->templateFetcher->templateExists($path)) {
-				return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
-					'url' => [ 'path' => $request->getUri()->getPath(), 'page' => '404', ],
-				]);
-			}
+		if ($path !== '' && $path !== 'new' && !$this->templateFetcher->templateExists($path)) {
+			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
+			]);
 		}
 
 		$templateData = [

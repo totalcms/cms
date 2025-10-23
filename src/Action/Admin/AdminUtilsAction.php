@@ -4,13 +4,13 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Routing\RouteContext;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\TwigRenderer;
-use Slim\Routing\RouteContext;
 
 readonly class AdminUtilsAction
 {
@@ -36,10 +36,10 @@ readonly class AdminUtilsAction
 		$routeName    = $route?->getName() ?? '';
 
 		if ($routeName === 'admin-utils-access-groups') {
-			$page = 'access-groups';
+			$page         = 'access-groups';
 			$args['page'] = 'access-groups';
 		} elseif ($routeName === 'admin-utils-api-keys') {
-			$page = 'api-keys';
+			$page         = 'api-keys';
 			$args['page'] = 'api-keys';
 		} else {
 			$page = $args['page'] ?? 'index';

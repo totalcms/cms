@@ -64,6 +64,7 @@ readonly class AuthLoginSubmitAction
 			if ($this->session->has(SessionKeys::LOGIN_ORIGIN)) {
 				$url = $this->session->get(SessionKeys::LOGIN_ORIGIN);
 			}
+
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
@@ -85,6 +86,7 @@ readonly class AuthLoginSubmitAction
 			if ($this->session->has(SessionKeys::LOGIN_ORIGIN)) {
 				$url = $this->session->get(SessionKeys::LOGIN_ORIGIN);
 			}
+
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 

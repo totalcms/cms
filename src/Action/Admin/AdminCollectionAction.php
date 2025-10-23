@@ -45,12 +45,10 @@ readonly class AdminCollectionAction
 
 		// Validate collection exists (skip for index, new, and special routes)
 		$collection = $args['collection'] ?? '';
-		if ($collection !== '' && $collection !== 'new') {
-			if (!$this->collectionFetcher->collectionExists($collection)) {
-				return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
-					'url' => [ 'path' => $request->getUri()->getPath(), 'page' => '404', ],
-				]);
-			}
+		if ($collection !== '' && $collection !== 'new' && !$this->collectionFetcher->collectionExists($collection)) {
+			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
+			]);
 		}
 
 		return $this->twigRenderer->template($response, 'admin/collection.twig', [

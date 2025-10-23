@@ -72,7 +72,6 @@ $settings['cache'] = [
 	],
 ];
 
-
 // Path to cms data folder
 $settings['datadir'] = $settings['docroot'] . '/tcms-data';
 

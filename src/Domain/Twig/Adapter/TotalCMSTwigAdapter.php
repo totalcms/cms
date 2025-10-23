@@ -1791,9 +1791,9 @@ NGINX;
 		return $this->accessControl->isAdmin($userData['id']);
 	}
 
-	//-------------------------
+	// -------------------------
 	// Dashboard Data Methods
-	//-------------------------
+	// -------------------------
 
 	/**
 	 * Get dashboard statistics.
@@ -1803,8 +1803,8 @@ NGINX;
 	public function dashboardStats(): array
 	{
 		$collections = $this->collectionLister->listCustomCollections();
-		$schemas = $this->schemaLister->listCustomSchemas();
-		$templates = $this->templateRepository->listCustomTemplates(null, true);
+		$schemas     = $this->schemaLister->listCustomSchemas();
+		$templates   = $this->templateRepository->listCustomTemplates(null, true);
 
 		// Count total objects across all collections
 		$totalObjects = 0;
@@ -1819,9 +1819,9 @@ NGINX;
 		}
 
 		return [
-			'collections' => count($collections),
-			'schemas' => count($schemas),
-			'templates' => count($templates),
+			'collections'  => count($collections),
+			'schemas'      => count($schemas),
+			'templates'    => count($templates),
 			'totalObjects' => $totalObjects,
 		];
 	}
@@ -1834,14 +1834,14 @@ NGINX;
 	public function dashboardCollections(): array
 	{
 		$collections = $this->collectionLister->listCustomCollections();
-		$result = [];
+		$result      = [];
 
 		foreach ($collections as $collection) {
-			$objectCount = 0;
+			$objectCount  = 0;
 			$lastModified = null;
 
 			try {
-				$index = $this->indexReader->fetchIndex($collection->id);
+				$index       = $this->indexReader->fetchIndex($collection->id);
 				$objectCount = $index->objects->count();
 
 				// Get last modified from most recent object if available
@@ -1854,19 +1854,19 @@ NGINX;
 			}
 
 			$result[] = [
-				'id' => $collection->id,
-				'name' => $collection->name,
-				'icon' => '📚', // Default collection icon
-				'schema' => $collection->schema,
-				'objectCount' => $objectCount,
+				'id'           => $collection->id,
+				'name'         => $collection->name,
+				'icon'         => '📚', // Default collection icon
+				'schema'       => $collection->schema,
+				'objectCount'  => $objectCount,
 				'lastModified' => $lastModified,
-				'addUrl' => "collections/{$collection->id}/new",
-				'viewUrl' => "collections/{$collection->id}",
+				'addUrl'       => "collections/{$collection->id}/new",
+				'viewUrl'      => "collections/{$collection->id}",
 			];
 		}
 
 		// Sort by name
-		usort($result, fn($a, $b) => strcasecmp((string)$a['name'], (string)$b['name']));
+		usort($result, fn (array $a, array $b): int => strcasecmp((string)$a['name'], (string)$b['name']));
 
 		return $result;
 	}
@@ -1880,7 +1880,7 @@ NGINX;
 	{
 		$allCollections = $this->dashboardCollections();
 
-		return array_filter($allCollections, fn($collection) => $collection['objectCount'] === 0);
+		return array_filter($allCollections, fn (array $collection): bool => $collection['objectCount'] === 0);
 	}
 
 	/**
@@ -1890,24 +1890,24 @@ NGINX;
 	 */
 	public function dashboardSystemStatus(): array
 	{
-		$cacheStats = $this->cacheReporter->getCacheStats();
+		$cacheStats    = $this->cacheReporter->getCacheStats();
 		$enabledCaches = array_filter(
 			$cacheStats,
-			fn($cache) => is_array($cache) && isset($cache['enabled']) && $cache['enabled'] === true
+			fn ($cache): bool => is_array($cache) && isset($cache['enabled']) && $cache['enabled'] === true
 		);
 
 		$licenseStatus = $this->license->getSidebarStatus();
 
 		return [
-			'phpVersion' => PHP_VERSION,
-			'totalcmsVersion' => $this->config->version ?? '3.0',
-			'cacheBackends' => array_keys($enabledCaches),
-			'memoryLimit' => ini_get('memory_limit'),
+			'phpVersion'       => PHP_VERSION,
+			'totalcmsVersion'  => $this->config->version ?? '3.0',
+			'cacheBackends'    => array_keys($enabledCaches),
+			'memoryLimit'      => ini_get('memory_limit'),
 			'maxExecutionTime' => ini_get('max_execution_time'),
-			'environment' => $this->env,
-			'license' => [
-				'severity' => $licenseStatus->severity,
-				'message' => $licenseStatus->tooltip,
+			'environment'      => $this->env,
+			'license'          => [
+				'severity'      => $licenseStatus->severity,
+				'message'       => $licenseStatus->tooltip,
 				'daysRemaining' => $licenseStatus->daysRemaining,
 			],
 		];
@@ -1920,7 +1920,7 @@ NGINX;
 	 */
 	public function dashboardRecentObjects(): array
 	{
-		$collections = $this->collectionLister->listCustomCollections();
+		$collections   = $this->collectionLister->listCustomCollections();
 		$recentObjects = [];
 
 		foreach ($collections as $collection) {
@@ -1931,7 +1931,7 @@ NGINX;
 				$icon = '📚'; // Default icon
 				try {
 					$schema = $this->schemaFetcher->fetchSchema($collection->schema);
-					if (isset($schema->icon) && $schema->icon !== '') {
+					if (property_exists($schema, 'icon') && $schema->icon !== null && $schema->icon !== '') {
 						$icon = $schema->icon;
 					}
 				} catch (\Exception) {
@@ -1949,12 +1949,12 @@ NGINX;
 					}
 
 					$recentObjects[] = [
-						'id' => $object['id'] ?? '',
-						'collection' => $collection->id,
+						'id'             => $object['id'] ?? '',
+						'collection'     => $collection->id,
 						'collectionName' => $collection->name,
 						'collectionIcon' => $icon,
-						'timestamp' => $timestamp,
-						'editUrl' => "collections/{$collection->id}/{$object['id']}",
+						'timestamp'      => $timestamp,
+						'editUrl'        => "collections/{$collection->id}/{$object['id']}",
 						// Try to get a display name from common fields
 						'displayName' => $object['title'] ?? $object['name'] ?? $object['id'] ?? 'Untitled',
 					];
@@ -1966,7 +1966,7 @@ NGINX;
 		}
 
 		// Sort by timestamp descending
-		usort($recentObjects, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+		usort($recentObjects, fn (array $a, array $b): int => $b['timestamp'] <=> $a['timestamp']);
 
 		// Return only the 10 most recent
 		return array_slice($recentObjects, 0, 10);

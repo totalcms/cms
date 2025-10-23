@@ -16,7 +16,7 @@ use TotalCMS\Action\Admin\AdminSettingsAction;
 use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminTemplateAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
-use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
@@ -25,7 +25,7 @@ use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
 use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
-use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	$app->redirect('/', '/admin', 301);

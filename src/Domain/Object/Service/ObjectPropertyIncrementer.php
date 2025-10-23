@@ -21,10 +21,10 @@ readonly class ObjectPropertyIncrementer
 	 * @param string $property The property name
 	 * @param int $amount The amount to increment by (default: 1)
 	 *
-	 * @return array{property: string, value: int|float} The property name and new value
-	 *
 	 * @throws \InvalidArgumentException If property is not numeric or doesn't exist
 	 * @throws \OutOfRangeException If the new value exceeds min/max bounds
+	 *
+	 * @return array{property: string, value: int|float} The property name and new value
 	 */
 	public function incrementProperty(string $collection, string $id, string $property, int $amount = 1): array
 	{
@@ -39,10 +39,10 @@ readonly class ObjectPropertyIncrementer
 	 * @param string $property The property name
 	 * @param int $amount The amount to decrement by (default: 1)
 	 *
-	 * @return array{property: string, value: int|float} The property name and new value
-	 *
 	 * @throws \InvalidArgumentException If property is not numeric or doesn't exist
 	 * @throws \OutOfRangeException If the new value exceeds min/max bounds
+	 *
+	 * @return array{property: string, value: int|float} The property name and new value
 	 */
 	public function decrementProperty(string $collection, string $id, string $property, int $amount = 1): array
 	{
@@ -57,10 +57,10 @@ readonly class ObjectPropertyIncrementer
 	 * @param string $property The property name
 	 * @param int $amount The amount to adjust by (positive for increment, negative for decrement)
 	 *
-	 * @return array{property: string, value: int|float} The property name and new value
-	 *
 	 * @throws \InvalidArgumentException If property is not numeric or doesn't exist
 	 * @throws \OutOfRangeException If the new value exceeds min/max bounds
+	 *
+	 * @return array{property: string, value: int|float} The property name and new value
 	 */
 	private function adjustProperty(string $collection, string $id, string $property, int $amount): array
 	{
@@ -115,7 +115,7 @@ readonly class ObjectPropertyIncrementer
 
 		// Update the object using toArray() and updateObject()
 		$data             = $object->toArray();
-		$data[$property] = $newValue;
+		$data[$property]  = $newValue;
 
 		// Save the object
 		$this->objectUpdater->updateObject($collection, $id, $data);

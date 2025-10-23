@@ -47,7 +47,7 @@ readonly class LoginForm implements \Stringable
 		$fields = [];
 
 		// CSRF Token
-		if ($this->csrfManager) {
+		if ($this->csrfManager instanceof CSRFTokenManager) {
 			$fields[] = $this->csrfManager->getTokenField();
 		}
 
@@ -72,9 +72,10 @@ readonly class LoginForm implements \Stringable
 				? "{$this->api}/forgot-password/{$this->collection}"
 				: "{$this->api}/forgot-password";
 
-			$forgotPasswordLink = HTMLUtils::element('p',
+			$forgotPasswordLink = HTMLUtils::element(
+				'p',
 				HTMLUtils::element('a', 'Forgot Password?', [
-					'href' => $forgotPasswordUrl,
+					'href'  => $forgotPasswordUrl,
 					'class' => 'login-forgot-password',
 				]),
 				['class' => 'login-forgot-password-wrapper']
@@ -83,18 +84,18 @@ readonly class LoginForm implements \Stringable
 
 		// Submit button
 		$submitButton = HTMLUtils::button($this->submitLabel, [
-			'type' => 'submit',
+			'type'  => 'submit',
 			'class' => 'dash-button',
 		]);
 
 		// Build the form
 		$formContent = implode('', $fields) . $forgotPasswordLink . $submitButton;
-		$form = HTMLUtils::element('form', $formContent, [
-			'class' => 'totalform ' . $this->class,
-			'method' => 'post',
-			'action' => $action,
+		$form        = HTMLUtils::element('form', $formContent, [
+			'class'         => 'totalform ' . $this->class,
+			'method'        => 'post',
+			'action'        => $action,
 			'data-disabled' => 'true',
-			'style' => 'position:relative;',
+			'style'         => 'position:relative;',
 		]);
 
 		// Add flash messages
@@ -104,7 +105,7 @@ readonly class LoginForm implements \Stringable
 			foreach ($this->flashMessages as $message) {
 				$messages[] = HTMLUtils::element('p', $message, [
 					'class' => 'cms-twig-error',
-					'role' => 'alert',
+					'role'  => 'alert',
 				]);
 			}
 			$flashHtml = implode('', $messages);
@@ -112,6 +113,7 @@ readonly class LoginForm implements \Stringable
 
 		// Wrap in section
 		$sectionContent = $form . $flashHtml;
+
 		return HTMLUtils::element('section', $sectionContent, [
 			'class' => 'login-form',
 		]);
@@ -120,8 +122,8 @@ readonly class LoginForm implements \Stringable
 	private function buildHiddenField(string $name, string $value): string
 	{
 		return HTMLUtils::inlineElement('input', [
-			'type' => 'hidden',
-			'name' => $name,
+			'type'  => 'hidden',
+			'name'  => $name,
 			'value' => $value,
 		]);
 	}
@@ -131,26 +133,26 @@ readonly class LoginForm implements \Stringable
 		$uuid = uniqid();
 
 		$input = HTMLUtils::inlineElement('input', [
-			'type' => 'email',
-			'id' => "field-{$uuid}",
-			'name' => 'email',
-			'placeholder' => 'email@company.com',
+			'type'             => 'email',
+			'id'               => "field-{$uuid}",
+			'name'             => 'email',
+			'placeholder'      => 'email@company.com',
 			'aria-describedby' => "help-{$uuid}",
-			'required' => '',
-			'autofocus' => '',
+			'required'         => '',
+			'autofocus'        => '',
 		]);
 
-		$icon = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
+		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
 		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
 		$label = HTMLUtils::element('label', 'Email', ['for' => "field-{$uuid}"]);
-		$help = HTMLUtils::element('p', 'Email address for the login', [
+		$help  = HTMLUtils::element('p', 'Email address for the login', [
 			'class' => 'help cms-hide',
-			'id' => "help-{$uuid}",
+			'id'    => "help-{$uuid}",
 		]);
 
 		return HTMLUtils::element('div', $label . $group . $help, [
-			'class' => 'form-field email-field',
+			'class'     => 'form-field email-field',
 			'data-type' => 'email',
 		]);
 	}
@@ -160,26 +162,26 @@ readonly class LoginForm implements \Stringable
 		$uuid = uniqid();
 
 		$input = HTMLUtils::inlineElement('input', [
-			'type' => 'password',
-			'id' => "field-{$uuid}",
-			'name' => 'password',
-			'placeholder' => 'p@ssw0rd',
+			'type'             => 'password',
+			'id'               => "field-{$uuid}",
+			'name'             => 'password',
+			'placeholder'      => 'p@ssw0rd',
 			'aria-describedby' => "help-{$uuid}",
-			'required' => '',
-			'class' => 'allow-enter',
+			'required'         => '',
+			'class'            => 'allow-enter',
 		]);
 
-		$icon = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
+		$icon  = HTMLUtils::element('div', '', ['class' => 'form-group-icon']);
 		$group = HTMLUtils::element('div', $input . $icon, ['class' => 'form-group']);
 
 		$label = HTMLUtils::element('label', 'Password', ['for' => "field-{$uuid}"]);
-		$help = HTMLUtils::element('p', 'Password to login', [
+		$help  = HTMLUtils::element('p', 'Password to login', [
 			'class' => 'cms-hide help',
-			'id' => "help-{$uuid}",
+			'id'    => "help-{$uuid}",
 		]);
 
 		return HTMLUtils::element('div', $label . $group . $help, [
-			'class' => 'form-field password-field',
+			'class'     => 'form-field password-field',
 			'data-type' => 'password',
 		]);
 	}
@@ -189,9 +191,9 @@ readonly class LoginForm implements \Stringable
 		$uuid = uniqid();
 
 		$input = HTMLUtils::inlineElement('input', [
-			'id' => "field-{$uuid}",
-			'name' => 'persistent_login',
-			'type' => 'checkbox',
+			'id'               => "field-{$uuid}",
+			'name'             => 'persistent_login',
+			'type'             => 'checkbox',
 			'aria-describedby' => "help-{$uuid}",
 		]);
 
@@ -200,11 +202,11 @@ readonly class LoginForm implements \Stringable
 
 		$help = HTMLUtils::element('p', 'Stay logged in until you explicitly logout or clear browser data', [
 			'class' => 'help cms-hide',
-			'id' => "help-{$uuid}",
+			'id'    => "help-{$uuid}",
 		]);
 
 		return HTMLUtils::element('div', $group . $help, [
-			'class' => 'form-field checkbox-field',
+			'class'     => 'form-field checkbox-field',
 			'data-type' => 'checkbox',
 		]);
 	}

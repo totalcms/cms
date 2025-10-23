@@ -3,9 +3,9 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Schema;
+use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Auth\DualAuthMiddleware;
-use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 
 return function (App $app): void {
 	// Read-only schema routes (allow API keys)

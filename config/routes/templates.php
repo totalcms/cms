@@ -3,8 +3,8 @@
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Template;
-use TotalCMS\Middleware\Auth\AuthMiddleware;
 use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (App $app): void {
 	$app->group('/templates', function (RouteCollectorProxy $group): void {
