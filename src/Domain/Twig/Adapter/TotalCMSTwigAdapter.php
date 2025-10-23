@@ -1866,7 +1866,7 @@ NGINX;
 		}
 
 		// Sort by name
-		usort($result, fn (array $a, array $b): int => strcasecmp((string)$a['name'], (string)$b['name']));
+		usort($result, fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
 
 		return $result;
 	}
