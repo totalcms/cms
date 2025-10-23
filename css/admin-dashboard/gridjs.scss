@@ -226,6 +226,10 @@ th.gridjs-th-sort:focus {
 
 th.gridjs-th-fixed {
 	position: sticky;
+
+	@media (max-width: 768px) {
+		position: static;
+	}
 }
 
 th.gridjs-th:first-child {

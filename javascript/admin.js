@@ -78,5 +78,32 @@ document.addEventListener("DOMContentLoaded", event => {
 		new ThemeSwitcher(themeSwitcher);
 	}
 
+	// Mobile menu toggle
+	const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+	const mobileOverlay = document.querySelector('.mobile-overlay');
+	const adminDashboard = document.querySelector('.admin-dashboard');
+
+	if (mobileMenuToggle && mobileOverlay && adminDashboard) {
+		mobileMenuToggle.addEventListener('click', () => {
+			const isOpen = adminDashboard.classList.contains('menu-open');
+
+			// Toggle menu state
+			adminDashboard.classList.toggle('menu-open');
+			mobileMenuToggle.classList.toggle('active');
+
+			// Toggle overlay
+			mobileOverlay.classList.toggle('active');
+			mobileOverlay.style.display = !isOpen ? 'block' : 'none';
+		});
+
+		mobileOverlay.addEventListener('click', () => {
+			// Close menu
+			adminDashboard.classList.remove('menu-open');
+			mobileMenuToggle.classList.remove('active');
+			mobileOverlay.classList.remove('active');
+			mobileOverlay.style.display = 'none';
+		});
+	}
+
 	initExternalLinks();
 });

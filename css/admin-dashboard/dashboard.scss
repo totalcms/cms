@@ -445,6 +445,11 @@
 			order: -1;
 		}
 	}
+
+	@media (max-width: 768px) {
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
 }
 
 // Dashboard help section
@@ -511,6 +516,112 @@
 				font-size: 0.875rem;
 				line-height: 1.6;
 			}
+		}
+	}
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+	.dashboard-welcome {
+		margin-bottom: 1.5rem;
+
+		h1 {
+			font-size: 1.5rem;
+		}
+
+		.dashboard-subtitle {
+			font-size: 1rem;
+		}
+	}
+
+	.dashboard-stats {
+		grid-template-columns: 1fr;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.stat-card {
+		padding: 1rem;
+	}
+
+	.dashboard-section {
+		margin-bottom: 1.5rem;
+		padding: 1rem;
+
+		h2 {
+			font-size: 1.25rem;
+		}
+
+		h3 {
+			font-size: 1.125rem;
+		}
+	}
+
+	.quick-actions {
+		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.action-button {
+		padding: 1rem 0.75rem;
+
+		.action-icon {
+			font-size: 1.5rem;
+		}
+
+		.action-text {
+			font-size: 0.8125rem;
+		}
+	}
+
+	.collections-table {
+		table {
+			font-size: 0.875rem;
+
+			thead th {
+				padding: 0.5rem 0.75rem;
+				font-size: 0.8125rem;
+			}
+
+			tbody td {
+				padding: 0.75rem;
+			}
+		}
+
+		.btn-small {
+			padding: 0.25rem 0.5rem;
+			font-size: 0.8125rem;
+		}
+	}
+
+	.recent-activity-list {
+		gap: 0.75rem;
+	}
+
+	.activity-item {
+		padding: 0.75rem;
+
+		.activity-icon {
+			font-size: 1.25rem;
+		}
+
+		.activity-meta {
+			font-size: 0.8125rem;
+			flex-direction: column;
+			gap: 0.25rem;
+		}
+	}
+
+	.system-status .status-grid {
+		grid-template-columns: 1fr;
+		gap: 0.75rem;
+	}
+
+	.alert {
+		padding: 1rem;
+
+		h3 {
+			font-size: 1.125rem;
 		}
 	}
 }
