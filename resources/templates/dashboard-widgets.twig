@@ -45,33 +45,33 @@
 <div class="dashboard-section">
 	<h2>Quick Actions</h2>
 	<div class="quick-actions">
-		<a href="/admin/collections/new" class="action-button">
+		<a href="collections/new" class="action-button">
 			<span class="action-icon">➕</span>
 			<span class="action-text">New Collection</span>
 		</a>
 
-		<a href="/admin/schemas/new" class="action-button">
+		<a href="schemas/new" class="action-button">
 			<span class="action-icon">🔷</span>
 			<span class="action-text">New Schema</span>
 		</a>
 
-		<a href="/admin/templates" class="action-button">
+		<a href="templates" class="action-button">
 			<span class="action-icon">📋</span>
 			<span class="action-text">Browse Templates</span>
 		</a>
 
-		<a href="/admin/utils/project-setup" class="action-button">
+		<a href="utils/project-setup" class="action-button">
 			<span class="action-icon">📦</span>
 			<span class="action-text">Import/Export</span>
 		</a>
 
-		<a href="/admin/docs" class="action-button">
+		<a href="docs" class="action-button">
 			<span class="action-icon">📖</span>
 			<span class="action-text">Documentation</span>
 		</a>
 
 		{% if cms.isAdmin() %}
-		<a href="/admin/cache" class="action-button">
+		<a href="cache" class="action-button">
 			<span class="action-icon">🗑️</span>
 			<span class="action-text">Clear Cache</span>
 		</a>
@@ -127,7 +127,7 @@
 	</div>
 	{% else %}
 	<div class="empty-state">
-		<p>No collections yet. <a href="/admin/collections/new">Create your first collection</a> to get started!</p>
+		<p>No collections yet. <a href="collections/new">Create your first collection</a> to get started!</p>
 	</div>
 	{% endif %}
 </div>

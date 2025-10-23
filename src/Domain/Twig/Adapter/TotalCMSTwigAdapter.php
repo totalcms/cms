@@ -1860,8 +1860,8 @@ NGINX;
 				'schema' => $collection->schema,
 				'objectCount' => $objectCount,
 				'lastModified' => $lastModified,
-				'addUrl' => "/admin/collections/{$collection->id}/new",
-				'viewUrl' => "/admin/collections/{$collection->id}",
+				'addUrl' => "collections/{$collection->id}/new",
+				'viewUrl' => "collections/{$collection->id}",
 			];
 		}
 
@@ -1954,7 +1954,7 @@ NGINX;
 						'collectionName' => $collection->name,
 						'collectionIcon' => $icon,
 						'timestamp' => $timestamp,
-						'editUrl' => "/admin/collections/{$collection->id}/{$object['id']}",
+						'editUrl' => "collections/{$collection->id}/{$object['id']}",
 						// Try to get a display name from common fields
 						'displayName' => $object['title'] ?? $object['name'] ?? $object['id'] ?? 'Untitled',
 					];
