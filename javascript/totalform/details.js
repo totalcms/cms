@@ -51,6 +51,14 @@ export default class Details {
 		}
 	}
 
+	_closeAllDetails() {
+		this.details.forEach(detail => {
+			if (detail.open) {
+				this._shrinkDetail(detail);
+			}
+		});
+	}
+
 	_localOptions(container) {
 		if (!container.dataset) return {};
 		return Object.fromEntries(
