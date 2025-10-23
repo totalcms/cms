@@ -14,6 +14,24 @@
 @import 'codemirror/theme/elegant.css';     // Light theme - for Twig editor and general use
 @import 'codemirror/theme/monokai.css';     // Dark theme - saved for future dark mode
 
+// Fix bracket matching visibility in both light and dark modes
+// Override elegant theme's black color with higher specificity
+.CodeMirror .CodeMirror-matchingbracket,
+.cm-s-elegant .CodeMirror-matchingbracket,
+div.CodeMirror span.CodeMirror-matchingbracket {
+	color: oklch(var(--totalform-accent)) !important;
+	outline: 1px solid oklch(var(--totalform-accent)) !important;
+	background-color: oklch(var(--totalform-accent) / 0.1) !important;
+}
+
+.CodeMirror .CodeMirror-nonmatchingbracket,
+.cm-s-elegant .CodeMirror-nonmatchingbracket,
+div.CodeMirror span.CodeMirror-nonmatchingbracket {
+	color: oklch(var(--totalform-error)) !important;
+	outline: 1px solid oklch(var(--totalform-error)) !important;
+	background-color: oklch(var(--totalform-error) / 0.1) !important;
+}
+
 // Import necessary addons
 @import 'codemirror/addon/fold/foldgutter.css';
 @import 'codemirror/addon/dialog/dialog.css';
