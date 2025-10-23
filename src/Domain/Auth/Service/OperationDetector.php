@@ -43,6 +43,8 @@ readonly class OperationDetector
 		'property-file-delete',
 		'property-file-clear-cache',
 		'property-file-move',
+		'property-increment',
+		'property-decrement',
 	];
 
 	/**
@@ -139,6 +141,8 @@ readonly class OperationDetector
 		'collection-patch',
 		'playground-update',
 		'admin-collection-edit',
+		'property-increment',
+		'property-decrement',
 	];
 
 	/**

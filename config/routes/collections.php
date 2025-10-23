@@ -50,6 +50,8 @@ return function (App $app): void {
 		$group->put('/{collection}/{id}/{property}', Action\Object\ObjectUpdatePropertyAction::class)->setName('property-update');
 		$group->patch('/{collection}/{id}/{property}', Action\Object\ObjectPatchPropertyAction::class)->setName('property-patch');
 		$group->delete('/{collection}/{id}/{property}', Action\Object\ObjectDeletePropertyAction::class)->setName('property-delete');
+		$group->post('/{collection}/{id}/{property}/increment[/{amount}]', Action\Object\ObjectPropertyIncrementAction::class)->setName('property-increment');
+		$group->post('/{collection}/{id}/{property}/decrement[/{amount}]', Action\Object\ObjectPropertyDecrementAction::class)->setName('property-decrement');
 
 		// Object Property Meta
 		$group->put('/{collection}/{id}/{property}/{name}', Action\Object\ObjectUpdatePropertyMetaAction::class)->setName('property-meta-update');
