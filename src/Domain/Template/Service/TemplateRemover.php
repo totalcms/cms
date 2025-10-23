@@ -18,12 +18,12 @@ readonly class TemplateRemover
 	 *
 	 * @throws \DomainException
 	 */
-	public function deleteTemplate(string $id): bool
+	public function deleteTemplate(string $id, ?string $folder = null): bool
 	{
 		if ($this->storage->reservedTemplateExists($id)) {
 			throw new \DomainException('Cannot delete a built-in template.');
 		}
 
-		return $this->storage->deleteTemplate($id);
+		return $this->storage->deleteTemplate($id, $folder);
 	}
 }

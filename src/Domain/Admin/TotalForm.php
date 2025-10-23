@@ -2,11 +2,14 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -14,6 +17,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -21,11 +25,10 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
-abstract class TotalForm implements \Stringable
+class TotalForm implements \Stringable
 {
 	/** @var array<string,FormField> */
 	protected array $fields                = [];
-	protected string $route                = '';
 	public ?CollectionData $collectionData = null;
 	public ?ObjectData $objectData         = null;
 	public ?SchemaData $schemaData         = null;
@@ -61,6 +64,7 @@ abstract class TotalForm implements \Stringable
 		],
 		'List (Array) Fields' => [
 			'list',
+			'multicheckbox',
 			'multiselect',
 		],
 		'Special Fields' => [
@@ -91,6 +95,7 @@ abstract class TotalForm implements \Stringable
 		'image',
 		'json',
 		'list',
+		'multicheckbox',
 		'multiselect',
 		'number',
 		'password',
@@ -137,36 +142,40 @@ abstract class TotalForm implements \Stringable
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,string> $newAction
-	 * @param array<string,string> $editAction
-	 * @param array<string,string> $deleteAction
+	 * @param array<int,array<string,mixed>> $newActions Array of action objects
+	 * @param array<int,array<string,mixed>> $editActions Array of action objects
+	 * @param array<int,array<string,mixed>> $deleteActions Array of action objects
 	 */
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
 		protected IndexReader $collectionReader,
+		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
+		protected AccessGroupLister $accessGroupLister,
 		public string $api,
-		public string $collection,
-		public string $id          = '',
-		protected string $method      = 'POST',
-		protected string $class       = '',
-		protected string $buildError  = '',
-		protected string $helpStyle   = '',
-		protected string $save        = '',
-		protected string $delete      = '',
-		protected string $formType    = '',
-		protected string $schema      = '',
-		protected array $newAction    = [],
-		protected array $editAction   = [],
-		protected array $deleteAction = [],
-		protected bool $autosave      = false,
-		protected bool $helpOnHover   = false,
-		protected bool $helpOnFocus   = false,
-		protected bool $hideID        = false,
-		protected bool $useFormGrid   = true,
-		protected bool $addOnly       = false,
+		public string $collection             = '',
+		public string $id                     = '',
+		protected string $method                 = 'POST',
+		protected string $class                  = '',
+		protected string $buildError             = '',
+		protected string $helpStyle              = '',
+		protected string $save                   = '',
+		protected string $delete                 = '',
+		protected string $formType               = '',
+		protected string $schema                 = '',
+		protected string $route                  = '',
+		protected array $newActions              = [],
+		protected array $editActions             = [],
+		protected array $deleteActions           = [],
+		protected bool $autosave                 = false,
+		protected bool $helpOnHover              = false,
+		protected bool $helpOnFocus              = false,
+		protected bool $hideID                   = false,
+		protected bool $useFormGrid              = true,
+		protected bool $addOnly                  = false,
+		protected ?CSRFTokenManager $csrfManager = null,
 	) {
 		$this->init();
 		$this->initClass();
@@ -247,9 +256,9 @@ abstract class TotalForm implements \Stringable
 		]);
 
 		$actions = [
-			'newAction'    => 'data-new-action',
-			'editAction'   => 'data-edit-action',
-			'deleteAction' => 'data-delete-action',
+			'newActions'    => 'data-new-actions',
+			'editActions'   => 'data-edit-actions',
+			'deleteActions' => 'data-delete-actions',
 		];
 		foreach ($actions as $action => $attribute) {
 			if ($this->$action !== []) {
@@ -259,7 +268,14 @@ abstract class TotalForm implements \Stringable
 				}
 			}
 		}
-		$content  = $this->buildError() . $content;
+
+		// Add CSRF token if manager is available and method requires protection
+		$csrfField = '';
+		if ($this->csrfManager && in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+			$csrfField = $this->csrfManager->getTokenField();
+		}
+
+		$content  = $this->buildError() . $csrfField . $content;
 		$content .= $this->fieldContent();
 
 		$save     = $this->saveButton();
@@ -299,19 +315,67 @@ abstract class TotalForm implements \Stringable
 	}
 
 	/**
-	 * @param array<string> $properties
+	 * Get properties from collection objects with optional filtering.
+	 *
+	 * @param array<string>        $properties Properties to fetch
+	 * @param string               $collection Collection name (defaults to current collection)
+	 * @param array<string,string> $filters    Optional include/exclude filters
 	 *
 	 * @return array<mixed>
 	 */
-	public function propertiesForCollection(array $properties, string $collection = ''): array
+	public function propertiesForCollection(array $properties, string $collection = '', array $filters = []): array
 	{
 		if ($collection === '') {
 			$collection = $this->collection;
 		}
 
-		$collection = $this->collectionReader->fetchIndex($collection);
+		// If filters are provided, use IndexFilter to get filtered objects
+		if ($filters !== []) {
+			$objects = $this->indexFilter->fetchFilteredIndex($collection, $filters);
+		} else {
+			// No filters, fetch all objects
+			$index   = $this->collectionReader->fetchIndex($collection);
+			$objects = $index->objects->toArray();
+		}
 
-		return $collection->objects->map(fn ($item) => collect($item)->only($properties)->toArray())->toArray();
+		// Extract only the requested properties from each object
+		/** @phpstan-ignore-next-line argument.templateType */
+		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $objects);
+	}
+
+	/**
+	 * Get access group options for form fields.
+	 *
+	 * @return array<array<string,string>>
+	 */
+	public function accessGroupOptionsForField(): array
+	{
+		$groups = $this->accessGroupLister->listAll();
+
+		return array_map(fn (AccessGroupData $group): array => [
+			'value' => $group->id,
+			'label' => $group->id,
+		], $groups);
+	}
+
+	/**
+	 * Get a field value from the form's object data or field defaults.
+	 * Used for visibility condition evaluation.
+	 */
+	public function getFieldValue(string $fieldName): mixed
+	{
+		// First check if we have object data (edit mode)
+		if ($this->objectData instanceof ObjectData) {
+			return $this->objectData->$fieldName ?? null;
+		}
+
+		// For new forms, check if the field has been built with a default value
+		if (isset($this->fields[$fieldName])) {
+			return $this->fields[$fieldName]->getValue();
+		}
+
+		// Field not found or not built yet
+		return null;
 	}
 
 	private function saveButton(): string

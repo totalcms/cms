@@ -20,6 +20,7 @@ class SchemaData
 		'jumpstart',
 		'new', // not allowed for /admin url routes
 		'schema',
+		'template',
 	];
 	public const RESERVED_SCHEMAS = [
 		'auth',
@@ -33,6 +34,7 @@ class SchemaData
 		'file',
 		'gallery',
 		'image',
+		'mailer',
 		'number',
 		'playground',
 		'styledtext',
@@ -42,8 +44,7 @@ class SchemaData
 		'url',
 	];
 	public const PROPERTY_TYPES = [
-		// 'array',
-		// 'object',
+		'array',
 		'boolean',
 		'code',
 		'color',
@@ -65,6 +66,7 @@ class SchemaData
 		'url',
 	];
 	public const PROPERTY_TYPE_TO_REF = [
+		'code'     => 'https://www.totalcms.co/schemas/properties/code.json',
 		'color'    => 'https://www.totalcms.co/schemas/properties/color.json',
 		'date'     => 'https://www.totalcms.co/schemas/properties/date.json',
 		'deck'     => 'https://www.totalcms.co/schemas/properties/deck.json',
@@ -93,6 +95,8 @@ class SchemaData
 	public array $required = [];
 	/** @var array<string> */
 	public array $index = [];
+	/** @var array<string> */
+	public array $inheritFrom = [];
 	protected Serializer $serializer;
 
 	public function __construct()
@@ -127,6 +131,11 @@ class SchemaData
 		// Only include category if it's not empty
 		if ($this->category !== '') {
 			$array['category'] = $this->category;
+		}
+
+		// Only include inheritFrom if it's not empty
+		if ($this->inheritFrom !== []) {
+			$array['inheritFrom'] = $this->inheritFrom;
 		}
 
 		// Apply schema transformations to expand simplified deck syntax

@@ -12,15 +12,11 @@ use TotalCMS\Support\Config;
 readonly class APCuService implements CacheInterface
 {
 	private bool $enabled;
-	private string $prefix;
 
 	public function __construct(
 		Config $config,
 	) {
-		$cache         = $config->cache ?? [];
-		$apcuConfig    = $cache['apcu'] ?? [];
-		$this->enabled = $apcuConfig['enabled'] ?? true;
-		$this->prefix  = $apcuConfig['prefix'] ?? 'tcms_';
+		$this->enabled = $config->cache['apcu'] ?? true;
 	}
 
 	public function isAvailable(): bool
@@ -31,7 +27,7 @@ readonly class APCuService implements CacheInterface
 
 		// Test APCu functionality
 		try {
-			$testKey   = $this->prefix . 'test_' . uniqid();
+			$testKey   = 'tcms_test_' . uniqid();
 			$testValue = 'test_value';
 
 			// Test store and retrieve
@@ -65,8 +61,7 @@ readonly class APCuService implements CacheInterface
 		}
 
 		try {
-			$prefixedKey = $this->prefix . $key;
-			$value       = apcu_fetch($prefixedKey, $success);
+			$value = apcu_fetch($key, $success);
 
 			return $success ? $value : null;
 		} catch (\Exception) {
@@ -81,11 +76,10 @@ readonly class APCuService implements CacheInterface
 		}
 
 		try {
-			$prefixedKey = $this->prefix . $key;
 			// APCu TTL of 0 means never expire, but we want reasonable defaults
 			$actualTtl = $ttl === 0 ? 86400 : $ttl; // Default to 24 hours if no TTL specified
 
-			return apcu_store($prefixedKey, $value, $actualTtl);
+			return apcu_store($key, $value, $actualTtl);
 		} catch (\Exception) {
 			return false;
 		}
@@ -98,9 +92,7 @@ readonly class APCuService implements CacheInterface
 		}
 
 		try {
-			$prefixedKey = $this->prefix . $key;
-
-			return apcu_delete($prefixedKey);
+			return apcu_delete($key);
 		} catch (\Exception) {
 			return false;
 		}
@@ -112,27 +104,8 @@ readonly class APCuService implements CacheInterface
 			return false;
 		}
 
-		try {
-			// Clear all entries with our prefix using APCu iterator
-			$iterator = new \APCUIterator('/^' . preg_quote($this->prefix, '/') . '/');
-			$keys     = [];
-
-			foreach ($iterator as $entry) {
-				$keys[] = $entry['key'];
-			}
-
-			if ($keys === []) {
-				return true; // Nothing to clear
-			}
-
-			// apcu_delete with array returns array of failed keys, empty array means success
-			$result = apcu_delete($keys);
-
-			return empty($result);
-		} catch (\Exception) {
-			// Fallback: try to clear everything (less efficient but works)
-			return apcu_clear_cache();
-		}
+		// Clear all APCu entries (no prefix needed since domain hash is in keys)
+		return apcu_clear_cache();
 	}
 
 	/**
@@ -145,10 +118,8 @@ readonly class APCuService implements CacheInterface
 		}
 
 		try {
-			// Convert pattern to regex for APCu iterator
-			$prefixedPattern = $this->prefix . $pattern;
-			// Convert shell-style pattern to regex (e.g., "collection:*" -> "collection:.*")
-			$regexPattern = '/^' . preg_quote($this->prefix, '/') . str_replace('\\*', '.*', preg_quote($pattern, '/')) . '/';
+			// Convert shell-style pattern to regex (e.g., "abc123:collection:*" -> "/^abc123:collection:.*$/")
+			$regexPattern = '/^' . str_replace('\\*', '.*', preg_quote($pattern, '/')) . '/';
 
 			$iterator = new \APCUIterator($regexPattern);
 			$keys     = [];
@@ -186,30 +157,17 @@ readonly class APCuService implements CacheInterface
 			$info    = apcu_cache_info(true); // Get cache info without entries
 			$smaInfo = apcu_sma_info();
 
-			// Count our prefixed entries
-			$iterator   = new \APCUIterator('/^' . preg_quote($this->prefix, '/') . '/');
-			$entryCount = 0;
-			$totalSize  = 0;
-
-			foreach ($iterator as $entry) {
-				$entryCount++;
-				$totalSize += $entry['mem_size'] ?? 0;
-			}
-
 			return [
-				'available'     => true,
-				'version'       => phpversion('apcu'),
-				'memory_total'  => $smaInfo['seg_size'] ?? 0,
-				'memory_used'   => $smaInfo['seg_size'] - $smaInfo['avail_mem'],
-				'memory_free'   => $smaInfo['avail_mem'] ?? 0,
-				'entries_total' => $info['num_entries'] ?? 0,
-				'entries_ours'  => $entryCount,
-				'size_ours'     => $totalSize,
-				'hits'          => $info['num_hits'] ?? 0,
-				'misses'        => $info['num_misses'] ?? 0,
-				'hit_rate'      => $this->calculateHitRate($info['num_hits'] ?? 0, $info['num_misses'] ?? 0),
-				'uptime'        => $info['start_time'] ? time() - $info['start_time'] : 0,
-				'prefix'        => $this->prefix,
+				'available'    => true,
+				'version'      => phpversion('apcu'),
+				'memory_total' => $smaInfo['seg_size'] ?? 0,
+				'memory_used'  => $smaInfo['seg_size'] - $smaInfo['avail_mem'],
+				'memory_free'  => $smaInfo['avail_mem'] ?? 0,
+				'entries'      => $info['num_entries'] ?? 0,
+				'hits'         => $info['num_hits'] ?? 0,
+				'misses'       => $info['num_misses'] ?? 0,
+				'hit_rate'     => $this->calculateHitRate($info['num_hits'] ?? 0, $info['num_misses'] ?? 0),
+				'uptime'       => $info['start_time'] ? time() - $info['start_time'] : 0,
 			];
 		} catch (\Exception) {
 			return [

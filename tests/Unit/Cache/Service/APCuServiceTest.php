@@ -170,7 +170,6 @@ final class APCuServiceTest extends TestCase
 		$this->assertArrayHasKey('memory_total', $stats);
 		$this->assertArrayHasKey('memory_used', $stats);
 		$this->assertArrayHasKey('hit_rate', $stats);
-		$this->assertArrayHasKey('prefix', $stats);
 
 		// Verify hit rate is properly formatted (1 decimal place)
 		if ($stats['hit_rate'] > 0) {
@@ -215,10 +214,8 @@ final class APCuServiceTest extends TestCase
 
 	private function createTestConfig(array $apcuSettings = []): Config
 	{
-		$defaultApcuSettings = [
-			'enabled' => true,
-			'prefix'  => 'test_tcms_',
-		];
+		// Extract the enabled flag from settings or use default
+		$enabled = $apcuSettings['enabled'] ?? true;
 
 		$settings = [
 			'env'        => 'test',
@@ -226,13 +223,15 @@ final class APCuServiceTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/cache',
 			'cache'      => [
-				'apcu' => array_merge($defaultApcuSettings, $apcuSettings),
+				'apcu' => $enabled,
 			],
 			'logger'     => [],
 			'sentry'     => [],
 			'error'      => [],
 			'domain'     => 'test.com',
+			'url'        => 'http://test.com',
 			'api'        => 'http://test.com/api',
 			'locale'     => 'en_US',
 			'session'    => [],
@@ -240,6 +239,8 @@ final class APCuServiceTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		];

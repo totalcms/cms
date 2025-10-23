@@ -10,6 +10,7 @@ use TotalCMS\Domain\ImageWorks\Data\Watermark;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
@@ -26,6 +27,7 @@ class ImageGenerator
 	public function __construct(
 		private readonly StorageAdapterInterface $filesystem,
 		private readonly PropertyFetcher $propertyFetcher,
+		private readonly SchemaFetcher $schemaFetcher,
 		private readonly GlideFactory $glideFactory,
 		private readonly WatermarkFactory $watermarkFactory,
 		LoggerFactory $loggerFactory,
@@ -215,7 +217,70 @@ class ImageGenerator
 			$params['marktextw'] = '100w';
 		}
 
+		// Merge schema watermark settings (schema overrides URL parameters for maximum security)
+		$schemaWatermarks = $this->getSchemaWatermarkSettings();
+		// Check if watermark should be applied based on limit setting
+		if ($schemaWatermarks !== [] && $this->shouldApplyWatermark($params, $schemaWatermarks)) {
+			// Remove limit setting before merging (not a valid imageworks parameter)
+			unset($schemaWatermarks['limit']);
+			$params = array_merge($params, $schemaWatermarks);
+		}
+
 		return array_filter($params);
+	}
+
+	/**
+	 * Get watermark settings from property schema.
+	 * Schema watermarks are enforced and cannot be overridden via URL parameters.
+	 *
+	 * @return array<string,string|int>
+	 */
+	private function getSchemaWatermarkSettings(): array
+	{
+		try {
+			$schema         = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
+			$propertySchema = $schema->properties[$this->property] ?? [];
+			$settings       = $propertySchema['settings'] ?? [];
+
+			return $settings['watermark'] ?? [];
+		} catch (\Exception) {
+			return [];
+		}
+	}
+
+	/**
+	 * Determine if watermark should be applied based on limit setting.
+	 * Watermark is applied if:
+	 * - No limit is set (always watermark), OR
+	 * - Requested width exceeds limit, OR
+	 * - Requested height exceeds limit, OR
+	 * - No dimensions requested (original image).
+	 *
+	 * @param array<string,string|int> $params Request parameters
+	 * @param array<string,string|int> $watermarkSettings Schema watermark settings
+	 */
+	private function shouldApplyWatermark(array $params, array $watermarkSettings): bool
+	{
+		// If no limit is set, always apply watermark
+		if (!isset($watermarkSettings['limit'])) {
+			return true;
+		}
+
+		$limit = (int)$watermarkSettings['limit'];
+
+		// If no dimensions requested (original image), apply watermark
+		if (!isset($params['w']) && !isset($params['h'])) {
+			return true;
+		}
+
+		// Check if requested width exceeds limit
+		if (isset($params['w']) && (int)$params['w'] > $limit) {
+			return true;
+		}
+
+		// Check if requested height exceeds limit
+		// Dimensions are below limit, don't apply watermark
+		return isset($params['h']) && (int)$params['h'] > $limit;
 	}
 
 	private function returnOriginalImage(ImageData $imageData): ResponseInterface

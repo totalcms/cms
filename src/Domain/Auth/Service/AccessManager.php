@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Auth\Service;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -17,7 +17,7 @@ class AccessManager
 	private string $userCollection;
 
 	public function __construct(
-		private readonly PhpSession $session,
+		private readonly SessionInterface $session,
 		private readonly Config $config,
 		private readonly UserValidationService $userValidator,
 		private readonly LoggerFactory $loggerFactory,
@@ -64,12 +64,8 @@ class AccessManager
 			return true;
 		}
 
-		if (empty($groups)) {
+		if ($groups === [] || $groups === '') {
 			return $this->userLoggedIn($collection);
-		}
-
-		if (is_string($groups)) {
-			$groups = [$groups];
 		}
 
 		try {

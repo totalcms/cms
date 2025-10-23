@@ -142,11 +142,14 @@ class FileField extends FormField
 	/** @param array<string,mixed> $fileData */
 	private function protectionFields(array $fileData): string
 	{
+		// Determine default protected value from settings or default to true
+		$defaultProtected = $this->settings['protectedByCollection'] ?? true;
+
 		$content = $this->form->field('protected', [
 			'field'       => 'checkbox',
 			'label'       => 'Protected by Collection',
 			'help'        => 'Access group protection is set in the Collection.',
-			'value'       => $fileData['protected'] ?? false,
+			'value'       => $fileData['protected'] ?? $defaultProtected,
 			'required'    => false,
 		]);
 		$content .= $this->form->field('password', [

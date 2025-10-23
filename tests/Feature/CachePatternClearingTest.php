@@ -159,12 +159,13 @@ describe('Cache Pattern Clearing', function (): void {
 		expect($cached['properties']['media']['$ref'])->toContain('url.json');
 
 		// Emergency clear all caches (simulating /emergency/cache/clear)
-		$cleared = $cacheManager->clearAllCaches();
-		expect($cleared)->toBeIn([true, false]); // May be false if no backends available
+		$result = $cacheManager->clearAllCaches();
+		expect($result)->toBeArray();
+		expect($result)->toHaveKey('success');
 
 		// After clearing, the stale schema should be gone (if clearing was successful)
 		$afterClear = $cacheManager->getComputedData('schema:blog-legacy');
-		if ($cleared) {
+		if ($result['success']) {
 			expect($afterClear)->toBeNull();
 		} else {
 			// If clearing failed, data might still be there

@@ -8,20 +8,21 @@ class Config
 	public string $template = '';
 	public string $datadir  = '';
 	public string $tmpdir   = '';
+	public string $cachedir = '';
 	public string $domain   = '';
+	public string $url      = '';
 	public string $api      = '';
 	public string $locale   = '';
 	public string $timezone = '';
 	public string $notfound = '';
 	public bool $debug      = false;
+	public bool $sentry     = true;
 	/** @var array<string,mixed> */
 	public array $cache = [];
 	/** @var array<string,mixed> */
 	public array $session = [];
 	/** @var array<string,mixed> */
 	public array $logger = [];
-	/** @var array<string,mixed> */
-	public array $sentry = [];
 	/** @var array<string,mixed> */
 	public array $error = [];
 	/** @var array<string,mixed> */
@@ -32,6 +33,10 @@ class Config
 	public array $htmlclean = [];
 	/** @var array<string,mixed> */
 	public array $dashboard = [];
+	/** @var array<string,mixed> */
+	public array $smtp = [];
+	/** @var array<string,mixed> */
+	public array $mailer = [];
 
 	/** @param array<string,mixed> $settings */
 	public function __construct(array $settings)
@@ -41,12 +46,14 @@ class Config
 		$this->dashboard  = $settings['dashboard'];
 		$this->datadir    = $settings['datadir'];
 		$this->tmpdir     = $settings['tmpdir'];
+		$this->cachedir   = $settings['cachedir'];
 		$this->cache      = $settings['cache'];
 		$this->logger     = $settings['logger'];
-		$this->sentry     = $settings['sentry'];
+		$this->sentry     = (bool)($settings['sentry'] ?? true);
 		$this->error      = $settings['error'];
 		$this->imageworks = $settings['imageworks'];
 		$this->domain     = $settings['domain'];
+		$this->url        = $settings['url'];
 		$this->api        = $settings['api'];
 		$this->locale     = $settings['locale'];
 		$this->session    = $settings['session'];
@@ -54,6 +61,8 @@ class Config
 		$this->debug      = $settings['debug'];
 		$this->notfound   = $settings['notfound'];
 		$this->htmlclean  = $settings['htmlclean'] ?? [];
+		$this->smtp       = is_array($settings['smtp'] ?? []) ? $settings['smtp'] : [];
+		$this->mailer     = is_array($settings['mailer'] ?? []) ? $settings['mailer'] : [];
 		$this->timezone   = $settings['timezone'] ?? date_default_timezone_get();
 
 		date_default_timezone_set($this->timezone);

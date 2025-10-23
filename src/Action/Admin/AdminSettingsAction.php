@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
- * Action.
+ * Action for displaying settings management interface.
  */
 readonly class AdminSettingsAction
 {
@@ -17,8 +17,6 @@ readonly class AdminSettingsAction
 	}
 
 	/**
-	 * @SuppressWarnings("PHPMD.Superglobals")
-	 *
 	 * @param array<string,string> $args The routing arguments
 	 */
 	public function __invoke(
@@ -26,24 +24,18 @@ readonly class AdminSettingsAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$savedSettings = [];
-		$defaults      = require __DIR__ . '/../../../config/settings.php';
-
-		$configFile = $_SERVER['DOCUMENT_ROOT'] . '/tcms.php';
-		if (file_exists($configFile)) {
-			$savedSettings = require $configFile;
-		}
+		// Get section from URL, default to general
+		$section = $args['section'] ?? 'general';
 
 		return $this->twigRenderer->template($response, 'admin/settings.twig', [
 			'url' => [
-				'path'   => $request->getUri()->getPath(),
-				'query'  => $request->getUri()->getQuery(),
-				'params' => $args,
-				'page'   => 'settings',
+				'path'    => $request->getUri()->getPath(),
+				'query'   => $request->getUri()->getQuery(),
+				'params'  => $args,
+				'page'    => 'settings',
+				'section' => $section,
 			],
-			'timezones' => timezone_identifiers_list(),
-			'settings'  => $savedSettings,
-			'defaults'  => $defaults,
+			'currentSection' => $section,
 		]);
 	}
 }

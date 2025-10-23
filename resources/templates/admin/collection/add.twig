@@ -1,11 +1,14 @@
 {# New Object Form #}
+{% set canSave = cms.canAccessCollection(url.collection, 'create') %}
 {% set form = cms.form.builder(url.collection, {
-	save        : "Save",
+	save        : canSave ? "Save" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
-	newAction   : {
-		"action" : "redirect-object",
-		"link"   : "collections/#{url.collection}/{id}"
-	},
+	newActions   : [
+		{
+			"action" : "redirect-object",
+			"link"   : "collections/#{url.collection}/{id}"
+		}
+	],
 }) %}
 {{ form.autoBuild() }}

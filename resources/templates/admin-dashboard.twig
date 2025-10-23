@@ -7,42 +7,101 @@
 	<meta name="robots" content="noindex, nofollow">
 	<title>{{ cms.config('dashboard', 'title') ?? 'Total CMS Admin' }}</title>
 
+	{# Apply theme immediately to prevent flash of wrong theme #}
+	<script>
+		(function() {
+			const saved = localStorage.getItem('totalcms-theme');
+			const theme = ['auto', 'light', 'dark'].includes(saved) ? saved : 'auto';
+			const html  = document.documentElement;
+
+			html.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+			html.classList.add('theme-' + theme);
+
+			switch (theme) {
+				case 'light':
+					html.style.colorScheme = 'light';
+					break;
+				case 'dark':
+					html.style.colorScheme = 'dark';
+					break;
+				case 'auto':
+				default:
+					html.style.colorScheme = 'light dark';
+					break;
+			}
+		})();
+	</script>
+
     <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content-bundled.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css"/>
 
+	{% set accentColor = cms.config('dashboard', 'accent') %}
+	{% if accentColor %}
+	<style>:root{--totalform-accent:{{ accentColor | hexToColor | oklch(100, false) }};}</style>
+	{% endif %}
+
 	{% block head %}{% endblock %}
+	{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 </head>
 <body>
 
     {% block content %}
 
     <div class="admin-dashboard">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu"></button>
+        <div class="mobile-overlay"></div>
+
         <aside class="dash-sidebar">
             <nav>
                 <ul class="menu">
                     <li class="menu-item">
-                        <a class="home" href="" title="Home">Home</a>
+						{{ include([
+							'whitelabel/admin-logo.twig',
+							'admin-logo-default.twig'
+						], ignore_missing = true) }}
                     </li>
+                    {% if cms.canAccessCollectionsOperation('read') %}
                     <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
                         <a class="collections" href="collections" title="Collections">Collections</a>
                     </li>
-                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
-                        <a class="playground" href="playground" title="Playground">Playground</a>
-                    </li>
+                    {% endif %}
+                    {% if cms.canAccessSchemasOperation('read') %}
                     <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
                         <a class="schemas" href="schemas" title="Schemas">Schemas</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessTemplates() %}
+                    <li class="menu-item{% if url.page == 'templates' %} active{% endif %}">
+                        <a class="templates" href="templates" title="Templates">Templates</a>
+                    </li>
+                    {% endif %}
+                    {% if cms.canAccessMailer() %}
+                    <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
+                        <a class="mailer" href="mailer" title="Mailer">Mailer</a>
+                    </li>
+                    {% endif %}
+                    {% if cms.canAccessPlayground() %}
+                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
+                        <a class="playground" href="playground" title="Playground">Playground</a>
+                    </li>
+                    {% endif %}
+                    {% if cms.canAccessUtils() %}
                     <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
                         <a class="utils" href="utils" title="Utils">Utils</a>
                     </li>
+                    {% endif %}
+                    {% if cms.isAdmin() %}
                     <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
                         <a class="settings" href="settings" title="Settings">Settings</a>
                     </li>
+                    {% endif %}
+                    {% if cms.canAccessDocs() %}
                     <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
                         <a class="docs" href="docs" title="Docs">Docs</a>
                     </li>
+                    {% endif %}
                 </ul>
             </nav>
 
@@ -58,10 +117,24 @@
                 <button popovertarget="user-actions">
                     {% set user = cms.userData %}
                     <img src="{{ cms.imagePath(user.id, {w:96,h:96,fm:"jpg",fit:"crop-focalpoint"}, {collection: user.collection}) }}"
-                        alt="Profile Image for {{ user.name }}" onerror="this.style.display='none'">
+                        alt="Profile Image for {{ user.name }}" onerror="this.remove();"/>
                 </button>
                 <nav popover id="user-actions">
                     <ul>
+                        <li class="theme-selector">
+                            <label>Theme</label>
+                            <div class="theme-buttons" role="radiogroup" aria-label="Theme selection">
+                                <button type="button" data-theme="auto" aria-label="Auto theme" title="Auto">
+                                    <span class="icon-auto"></span>
+                                </button>
+                                <button type="button" data-theme="light" aria-label="Light theme" title="Light">
+                                    <span class="icon-sun"></span>
+                                </button>
+                                <button type="button" data-theme="dark" aria-label="Dark theme" title="Dark">
+                                    <span class="icon-moon"></span>
+                                </button>
+                            </div>
+                        </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">{{ user.name }}</a></li>
                         <li class="edit"><a href="profile">Edit Profile</a></li>
                         <li class="logout"><a href="../logout">Logout</a></li>
@@ -72,6 +145,20 @@
                 <button popovertarget="user-actions"></button>
                 <nav popover id="user-actions">
                     <ul>
+                        <li class="theme-selector">
+                            <label>Theme</label>
+                            <div class="theme-buttons" role="radiogroup" aria-label="Theme selection">
+                                <button type="button" data-theme="auto" aria-label="Auto theme" title="Auto">
+                                    <span class="icon-auto"></span>
+                                </button>
+                                <button type="button" data-theme="light" aria-label="Light theme" title="Light">
+                                    <span class="icon-sun"></span>
+                                </button>
+                                <button type="button" data-theme="dark" aria-label="Dark theme" title="Dark">
+                                    <span class="icon-moon"></span>
+                                </button>
+                            </div>
+                        </li>
                         <li class="profile"><a href="javascript:void(0)" style="cursor:default">Dev User</a></li>
                         <li class="edit"><a href="profile">Edit Profile</a></li>
                         <li class="logout"><a href="../logout">Logout</a></li>
@@ -94,5 +181,6 @@
 	<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
 
 	{% block bodyBelow %}{% endblock %}
+	{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
 </body>
 </html>

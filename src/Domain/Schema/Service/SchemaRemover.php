@@ -28,8 +28,23 @@ readonly class SchemaRemover
 			throw new \UnexpectedValueException("Unable to delete schema type ({$id}) is reserved", 1);
 		}
 		$this->collectionExistsWithSchema($id);
+		$this->schemaIsInherited($id);
 
 		return $this->storage->deleteSchema($id);
+	}
+
+	/**
+	 * Check if a schema is inherited by other schemas.
+	 *
+	 * @throws \DomainException if schema is inherited
+	 */
+	private function schemaIsInherited(string $schemaId): void
+	{
+		$inheritingSchemas = $this->storage->findInheritingSchemas($schemaId);
+		if ($inheritingSchemas !== []) {
+			$schemaList = implode(', ', $inheritingSchemas);
+			throw new \DomainException("Unable to delete schema ({$schemaId}). It is inherited by: {$schemaList}", 1);
+		}
 	}
 
 	private function collectionExistsWithSchema(string $schemaId): bool

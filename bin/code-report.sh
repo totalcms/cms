@@ -8,6 +8,7 @@ folders=(
 	"resources"
 	"src"
 	"tests"
+	"docs"
 )
 
 types=(
@@ -19,11 +20,12 @@ types=(
 	"twig"
 	"html"
 	"sh"
+	"md"
 )
 
 filter_lines() {
 	local file=$1
-	grep -vE '^\s*(#|\{#|//|/\*|\*/|\*)' "$file"
+	grep -vE '^\s*(#|\{#|//|/\*|\*/|\*)' "$file" | grep -v '^\s*$'
 }
 
 echo "

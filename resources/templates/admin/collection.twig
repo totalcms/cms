@@ -14,19 +14,30 @@
 		{% else %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection }}"><span>{{ collection }}</span></a></h1>
 		{% endif %}
+		{% if cms.canAccessCollectionsMetaOperation('read') %}
 		<a class="dash-button transparent" href="collections/{{ collection }}/edit" title="Edit Collection">Edit Collection</a>
+		{% endif %}
 		{% set labelSingular = cms.collection(collection).labelSingular|default('object') %}
+		{% if cms.canAccessCollection(collection, 'create') %}
 		<a class="dash-button" href="collections/{{ collection }}/add" title="Add new {{ labelSingular | lower }} to collection">+ New {{ labelSingular|title }}</a>
+		{% endif %}
 		<button class="dash-action-dots" title="Collection Actions" popovertarget="collection-actions"></button>
 		<nav popover id="collection-actions">
 			<ul>
-				<li class="schema"><a href="schemas/{{ cms.collection(collection).schema }}">Edit Schema</a></li>
+			    {% set collectionSchema = cms.collection(collection).schema %}
+				{% if cms.canAccessSchema(collectionSchema, 'read') %}
+				<li class="schema"><a href="schemas/{{ collectionSchema }}">Edit Schema</a></li>
+				{% endif %}
 				<li class="export"><a href="collections/{{ collection }}/-export">Export</a></li>
+				{% if cms.canAccessCollection(collection, 'create') %}
 				<li class="import"><a href="collections/{{ collection }}/-import">Import</a></li>
 				<li class="factory"><a href="collections/{{ collection }}/-factory">Factory</a></li>
+				{% endif %}
 				<li class="sitemap"><a href="collections/{{ collection }}/-sitemap">Sitemap</a></li>
 				<li class="feeds"><a href="collections/{{ collection }}/-feeds">Feeds</a></li>
+				{% if cms.canAccessCollection(collection, 'update') %}
 				<li class="reindex"><a class="cms-quick-action" data-reload data-method="PUT" href="{{ cms.api }}/collections/{{ collection }}/index">Rebuild Index</a></li>
+				{% endif %}
 			</ul>
 		</nav>
 	</header>
@@ -36,30 +47,36 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter collections" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="Filter Collections" autofocus />
 	</header>
 
 	<nav class="links" id="collection-links">
 		{% for category, collections in cms.collectionsByCategory() %}
-			<h3>{{ category }}</h3>
-			{% for collection in sortByKey(collections) %}
+			{% set collections = collections | filter(c => cms.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer']) %}
+			{% if collections | length > 0 %}
+			<details id="category-{{ category | slug }}" open>
+				<summary>{{ category }}</summary>
 				<ul>
-					{% if collection.id != 'playground' %}
-					<li class="schema-{{collection.schema}}">
+				{% for collection in sortByKey(collections) %}
+					<li class="collection-{{collection.schema}}">
 						<a {% if url.collection == collection.id %}class="active"{% endif %}
 							href="collections/{{ collection.id }}"
 							title="{{ collection.description }}">{{ collection.name }}</a>
 					</li>
-					{% endif %}
+				{% endfor %}
 				</ul>
-			{% endfor %}
+			</details>
+			{% endif %}
 		{% endfor %}
 	</nav>
 
+	{% if cms.isAdmin() %}
 	<footer>
 		<a class="dash-button full transparent" href="collections/new" title="Create a new collection">+ New Collection</a>
 	</footer>
+	{% endif %}
 </aside>
+{% include "admin/sidebar-details.twig" %}
 
 <main class="dash-main-content">
 	{% set collection = cms.collection(url.collection) %}

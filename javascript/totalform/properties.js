@@ -1,6 +1,6 @@
 import PropertyField from "./property";
 import TotalField from "./totalfield";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 
 //-----------------------------------------------
 // Total CMS Properties
@@ -34,11 +34,9 @@ export default class PropertiesField extends TotalField {
 		const formGroup = propertyFields[0].parentNode;
 
 		// Make the fields sortable
-		this.sortable = Sortable.create(formGroup, {
-			animation     : 150,
-			handle        : '.sort-handle',
-			ghostClass    : 'drag-ghost',
-			forceFallback : true,
+		this.sortable = new TotalSortable(formGroup, {
+			handle : '.sort-handle',
+			onEnd  : () => this.changed(),
 		});
 	}
 

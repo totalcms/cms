@@ -162,12 +162,13 @@ describe('Cache Security Tests', function (): void {
 		// Store some data
 		$cacheManager->storeComputedData('secure_data', ['sensitive' => 'information']);
 
-		// Clear all caches should work securely (may return false if no cache backends available)
-		$cleared = $cacheManager->clearAllCaches();
-		expect($cleared)->toBeIn([true, false]);
+		// Clear all caches should work securely
+		$result = $cacheManager->clearAllCaches();
+		expect($result)->toBeArray();
+		expect($result)->toHaveKey('success');
 
 		// If clear was successful, data should be gone
-		if ($cleared) {
+		if ($result['success']) {
 			$retrieved = $cacheManager->getComputedData('secure_data');
 			expect($retrieved)->toBeNull();
 		}

@@ -2,23 +2,27 @@
 
 {% if duplicateData %}
 	{{ cms.form.schema({
-		save        : "Save",
+		save        : cms.isAdmin() ? "Save" : false,
 		helpStyle   : 'label',
 		helpOnFocus : true,
-		newAction : {
-			"action" : "redirect-object",
-			"link"   : "schemas/"
-		},
+		newActions : [
+			{
+				"action" : "redirect-object",
+				"link"   : "schemas/"
+			}
+		],
 		data : duplicateData,
 	}) }}
 {% else %}
 	{{ cms.form.schema({
-		save        : "Save",
+		save        : cms.isAdmin() ? "Save" : false,
 		helpStyle   : 'label',
 		helpOnFocus : true,
-		newAction : {
-			"action" : "redirect-object",
-			"link"   : "schemas/"
-		},
+		newActions : [
+			{
+				"action" : "redirect-object",
+				"link"   : "schemas/"
+			}
+		],
 	}) }}
 {% endif %}

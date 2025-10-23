@@ -4,17 +4,22 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateRemover;
+use TotalCMS\Renderer\JsonRenderer;
 
 readonly class TemplateDeleteAction
 {
 	/**
 	 * The constructor.
 	 *
-	 * @param TemplateRemover $service Template save service
+	 * @param JsonRenderer    $renderer JSON renderer
+	 * @param TemplateRemover $service  Template remover service
 	 */
-	public function __construct(private TemplateRemover $service)
-	{
+	public function __construct(
+		private JsonRenderer $renderer,
+		private TemplateRemover $service,
+	) {
 	}
 
 	/**
@@ -24,12 +29,17 @@ readonly class TemplateDeleteAction
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$deleted = $this->service->deleteTemplate($args['template']);
+		$path = $args['path'] ?? $args['template'] ?? '';
+
+		// Parse path into folder and template name
+		[$folder, $name] = TemplateRepository::parsePath($path);
+
+		$deleted = $this->service->deleteTemplate($name, $folder);
 
 		if ($deleted === false) {
 			return $response->withStatus(500);
 		}
 
-		return $response;
+		return $this->renderer->json($response, ['deleted' => $deleted]);
 	}
 }

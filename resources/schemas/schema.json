@@ -49,25 +49,32 @@
 			"field"       : "textarea"
 		},
 		"required": {
-			"type"        : "array",
-			"label"       : "Required Properties",
-			"help"        : "A list of required properties.",
-			"field"       : "list",
-			"minItems"    : 1,
-			"settings" : { "addChoices" : false },
-			"items"       : {
-				"type" : "string"
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Required Properties",
+			"help"     : "A list of required properties.",
+			"field"    : "list",
+			"minItems" : 1,
+			"settings" : {
+				"addChoices" : false
 			}
 		},
 		"index": {
-			"type"        : "array",
-			"label"       : "Indexed Properties",
-			"help"        : "A list of properties to index. These will be accessible in a Collection's Index.",
-			"field"       : "list",
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Indexed Properties",
+			"help"     : "A list of properties to index. These will be accessible in a Collection's Index.",
+			"field"    : "list",
 			"minItems" : 1,
-			"settings" : { "addChoices" : false },
-			"items"    : {
-				"type" : "string"
+			"settings" : {
+				"addChoices" : false
+			}
+		},
+		"inheritFrom": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Inherit From Schemas",
+			"help"     : "Select schemas to inherit properties from. Inherited properties are merged with this schema's properties (this schema's properties take precedence). Only one level of inheritance is supported.",
+			"field"    : "list",
+			"settings" : {
+				"addChoices" : false
 			}
 		},
 		"properties": {

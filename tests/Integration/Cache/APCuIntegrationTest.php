@@ -236,7 +236,6 @@ final class APCuIntegrationTest extends TestCase
 				$apcuStats = $stats['services']['apcu'];
 				$this->assertTrue($apcuStats['available'], 'APCu service stats should show as available');
 				$this->assertArrayHasKey('hit_rate', $apcuStats);
-				$this->assertArrayHasKey('prefix', $apcuStats);
 			}
 		}
 	}
@@ -272,7 +271,9 @@ final class APCuIntegrationTest extends TestCase
 
 		// Clear all caches
 		$result = $this->cacheManager->clearAllCaches();
-		$this->assertTrue($result, 'Should successfully clear all caches');
+		$this->assertIsArray($result, 'Should return array with detailed status');
+		$this->assertArrayHasKey('success', $result);
+		$this->assertTrue($result['success'], 'Should successfully clear all caches');
 
 		// Note: clearAllCaches() might clear all of APCu, not just our prefixed data
 		// This is expected behavior for the "clear all" operation
@@ -300,18 +301,18 @@ final class APCuIntegrationTest extends TestCase
 			'dashboard'  => [],
 			'datadir'    => '/tmp',
 			'tmpdir'     => '/tmp',
+			'cachedir'   => '/tmp/test-cache',
 			'cache'      => [
-				'apcu' => [
-					'enabled' => true,
-					'prefix'  => 'test_integration_',
-				],
-				'redis'     => ['enabled' => false], // Disable Redis for isolated APCu testing
-				'memcached' => ['enabled' => false], // Disable Memcached for isolated APCu testing
+				'apcu'       => true,
+				'redis'      => false, // Disable Redis for isolated APCu testing
+				'memcached'  => false, // Disable Memcached for isolated APCu testing
+				'filesystem' => true,
 			],
 			'logger'     => [],
 			'sentry'     => [],
 			'error'      => [],
 			'domain'     => 'test.com',
+			'url'        => 'http://test.com',
 			'api'        => 'http://test.com/api',
 			'locale'     => 'en_US',
 			'session'    => [],
@@ -319,6 +320,8 @@ final class APCuIntegrationTest extends TestCase
 			'debug'      => false,
 			'notfound'   => '/404',
 			'htmlclean'  => [],
+			'smtp'       => [],
+			'mailer'     => [],
 			'timezone'   => 'UTC',
 			'imageworks' => [],
 		];

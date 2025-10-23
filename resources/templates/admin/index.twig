@@ -3,49 +3,11 @@
 {% block dashcontent %}
 
 {# style tag here is temp hack until the style structure can be rethought #}
-<main class="dash-main-content doc-content" style="width:100vw">
-	<h1>Welcome to Total CMS 3</h1>
-	<p>
-	Total CMS 3 is a powerful content management system that allows you to create
-	custom collections and schemas for your projects. You can use Total CMS 3 to create blogs,
-	portfolios, galleries, and more. You can also use Total CMS 3 to create custom content
-	types for your projects.
-	</p>
-
-	<h2>Beta Testing Community</h2>
-	<p>
-	Total CMS 3 is currently in beta testing. We are looking for feedback from the community.
-	If you have any feedback, please post it in the
-	<a href="https://community.weavers.space/total-cms-3-beta">Total CMS Beta Group</a> on
-	the Weaver's Space Community.
-	</p>
-	<p><a class="dash-button" href="https://community.weavers.space/total-cms-3-beta">Total CMS Beta Group</a></p>
-
-	<h2>Getting Started</h2>
-	<p>
-	Here are some videos that have been recorded about the Total CMS 3 beta. These videos will help you
-	get started. You can also check out the
-	<a href="https://community.weavers.space/total-cms-3-beta">Total CMS Beta Group</a>
-	on the Weaver's Space Community for more information.
-	</p>
-
-	<h3>Total CMS 3 Video Playlist</h3>
-	<p>The following embed is an entire playlist of videos about Total CMS 3.</p>
-	<iframe style="width:100%; aspect-ratio:16/9" src="https://www.youtube.com/embed/videoseries?si=wbww7a3ELBmEJ0KS&amp;list=PLAwL8Kl4ijMq3gNlxzeB9wsBKYfab08Cr" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-
-	<h2>Ideas for this page...</h2>
-	<ul>
-		<li>Quick links to common tasks</li>
-		<li>Recent activity</li>
-		<li>News and updates</li>
-		<li>Links to documentation</li>
-		<li>This page should be overridable with your own content</li>
-		<li>Maybe a dashboard widget system</li>
-		<li>Maybe a way to add your own custom dashboard pages</li>
-		<li>Got any more ideas?</li>
-	</ul>
-
+<main class="dash-main-content doc-content" style="width:100%">
+		{{ include([
+			'whitelabel/admin-home.twig',
+			'admin-home-default.twig'
+		], ignore_missing = true) }}
 </main>
 
 {% endblock %}

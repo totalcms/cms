@@ -13,6 +13,7 @@ import DeckField from './deck';
 import PasswordField from './password';
 import SelectField from './select';
 import MultiSelectField from './multiselect';
+import MultiCheckboxField from './multicheckbox';
 import ListField from './list';
 import RangeSlider from './range';
 import StyledTextField from './styledtext';
@@ -52,30 +53,21 @@ export default class TotalForm {
 		// Define option defaults
 		const defaults = {
 			actions : {
-				new : {
-					action : null,
-					link   : null,
-				},
-				edit : {
-					action : null,
-					link   : null,
-				},
-				delete : {
-					action : null,
-					link   : null,
-				},
+				new    : [],
+				edit   : [],
+				delete : [],
 			}
 		};
 		this.options = Object.assign({}, defaults, options);
 
-		if (this.form.dataset.newAction) {
-			this.options.actions.new = JSON.parse(this.form.dataset.newAction);
+		if (this.form.dataset.newActions) {
+			this.options.actions.new = JSON.parse(this.form.dataset.newActions);
 		}
-		if (this.form.dataset.editAction) {
-			this.options.actions.edit = JSON.parse(this.form.dataset.editAction);
+		if (this.form.dataset.editActions) {
+			this.options.actions.edit = JSON.parse(this.form.dataset.editActions);
 		}
-		if (this.form.dataset.deleteAction) {
-			this.options.actions.delete = JSON.parse(this.form.dataset.deleteAction);
+		if (this.form.dataset.deleteActions) {
+			this.options.actions.delete = JSON.parse(this.form.dataset.deleteActions);
 		}
 		this.delayActions = 2500;
 
@@ -83,7 +75,7 @@ export default class TotalForm {
 			url: this.form.dataset.api,
 		});
 		this.route      = this.form.dataset.route;
-		this.method     = "POST";
+		this.method     = this.form.dataset.method || "POST";
 		this.id         = this.form.dataset.id||"";
 		this.collection = this.form.dataset.collection;
 		this.schema     = this.form.dataset.schema;
@@ -110,6 +102,7 @@ export default class TotalForm {
 
         this.eventListeners();
         this.registerButtons();
+		this.initializeVisibility();
 
 		if (this.form.classList.contains("autosave")) {
 			this.autosave = true;
@@ -132,6 +125,9 @@ export default class TotalForm {
     // Utility Methods
     //-------------------------
 
+	isDeckForm() {
+		return this.type === "deck";
+	}
 	isObjectForm() {
 		return this.type === "object";
 	}
@@ -140,6 +136,9 @@ export default class TotalForm {
 	}
 	isSchemaForm() {
 		return this.type === "schema";
+	}
+	isTemplateForm() {
+		return this.type === "template";
 	}
     // Check to see if the object is a HTML node.
     isDomNode(node){
@@ -232,6 +231,9 @@ export default class TotalForm {
             case "toggle":
                 return new Checkbox(field, options);
 
+			case "multicheckbox":
+                return new MultiCheckboxField(field, options);
+
             case "radio":
                 return new RadioField(field, options);
 
@@ -309,6 +311,111 @@ export default class TotalForm {
     }
 
     //-------------------------
+    // Field Visibility
+    //-------------------------
+    initializeVisibility() {
+        const fieldsWithOptions = Array.from(this.form.querySelectorAll('[data-options]'));
+
+        fieldsWithOptions.forEach(fieldElement => {
+            const options = JSON.parse(fieldElement.dataset.options || '{}');
+            const visibility = options.visibility;
+
+            // Skip fields without visibility settings
+            if (!visibility || !visibility.watch) return;
+
+            const watchField = visibility.watch;
+
+            // Find the watched field element
+            const watchedFieldElement = this.form.querySelector(`[style*="grid-area: ${watchField}"]`);
+            if (!watchedFieldElement) return;
+
+            // Set up change listener on the watched field
+            watchedFieldElement.addEventListener('change', () => {
+                this.updateFieldVisibility(fieldElement, visibility);
+            });
+
+            // Initial visibility evaluation
+            this.updateFieldVisibility(fieldElement, visibility);
+        });
+    }
+
+    updateFieldVisibility(fieldElement, visibility) {
+        const watchField = visibility.watch;
+        const expectedValue = visibility.value;
+        const operator = visibility.operator || '==';
+
+        // Get the watched field object
+        const watchedField = this.fields.find(f => f.property === watchField);
+        if (!watchedField) {
+            // If watched field not found, hide by default
+            const field = this.fields.find(f => f.container === fieldElement);
+            if (field) field.hide();
+            return;
+        }
+
+        const currentValue = watchedField.getValue();
+
+        // Evaluate the condition
+        const isVisible = this.evaluateVisibilityCondition(currentValue, expectedValue, operator);
+
+        // Get the field object and toggle visibility
+        const field = this.fields.find(f => f.container === fieldElement);
+        if (field) {
+            isVisible ? field.show() : field.hide();
+        }
+    }
+
+    evaluateVisibilityCondition(currentValue, expectedValue, operator) {
+        // Handle array expected values (multiple possible values)
+        if (Array.isArray(expectedValue)) {
+            return expectedValue.some(value =>
+                this.evaluateVisibilityCondition(currentValue, value, operator)
+            );
+        }
+
+        // Handle array current values (checkboxes, multiselect, etc.)
+        if (Array.isArray(currentValue)) {
+            // Support operators for array values
+            switch (operator) {
+                case 'in':
+                case '==':
+                    return currentValue.includes(expectedValue);
+                case 'not_in':
+                case '!=':
+                    return !currentValue.includes(expectedValue);
+                case 'empty':
+                    return currentValue.length === 0;
+                case 'not_empty':
+                    return currentValue.length > 0;
+                default:
+                    return currentValue.includes(expectedValue);
+            }
+        }
+
+        // Evaluate based on operator
+        switch (operator) {
+            case '==':
+                return currentValue == expectedValue;
+            case '!=':
+                return currentValue != expectedValue;
+            case '>':
+                return Number(currentValue) > Number(expectedValue);
+            case '<':
+                return Number(currentValue) < Number(expectedValue);
+            case '>=':
+                return Number(currentValue) >= Number(expectedValue);
+            case '<=':
+                return Number(currentValue) <= Number(expectedValue);
+            case 'in':
+                return Array.isArray(expectedValue) && expectedValue.includes(currentValue);
+            case 'not_in':
+                return Array.isArray(expectedValue) && !expectedValue.includes(currentValue);
+            default:
+                return currentValue == expectedValue;
+        }
+    }
+
+    //-------------------------
     // Submit functions
     //-------------------------
     eventListeners() {
@@ -349,6 +456,10 @@ export default class TotalForm {
 			this.validated = false;
 			return;
 		}
+		if (this.isError()) {
+			this.error('Error in form, cannot save.');
+			return;
+		}
 		this.validated = true;
 		this.closeDialog();
         this.processing();
@@ -362,23 +473,26 @@ export default class TotalForm {
         if (!this.isEditMode()) return;
 
         if (window.confirm("Are you sure that you want to delete this? This cannot be undone.")) {
+            this.validated = true;
             this.processing();
-
-            // After delete, redirect to current page without any URL parameters
-            this.options.editAction = "redirect";
-            this.options.editLink   = location.origin + location.pathname;
 
 			let deleteAPI = `/collections/${this.collection}/${this.id}`;
 
+			// if (this.isDeckForm()) {
+			// 	deleteAPI = `/{collection}/${this.id}/{property}/deck/{itemId}`;
+			// }
 			if (this.isSchemaForm()) {
 				deleteAPI = `/schemas/${this.id}`;
 			}
 			if (this.isCollectionForm()) {
 				deleteAPI = `/collections/${this.id}`;
 			}
+			if (this.isTemplateForm()) {
+				deleteAPI = this.route;
+			}
 
             this.api.postAPI(deleteAPI, {}, "DELETE")
-                .then(response => this.runDeleteAction(response))
+                .then(response => this.runDeleteActions(response))
                 .catch(error => this.error(error));
         }
     }
@@ -394,15 +508,15 @@ export default class TotalForm {
     }
 
     afterSaveAction(response) {
-		const runEditAction = this.isEditMode();
-        this.success();
+		const runEditActions = this.isEditMode();
+        this.success(response);
         const waitUntilSaved = () => {
             // wait until all saving states have completed
             if (this.isSuccess()) {
 				// Mark all fields as saved
 				this.fields.forEach(field => field.saved());
                 // run actions
-                return runEditAction ? this.runEditAction() : this.runNewAction();
+                return runEditActions ? this.runEditActions() : this.runNewActions();
             }
             // Check again
             window.setTimeout(waitUntilSaved,250);
@@ -410,48 +524,91 @@ export default class TotalForm {
         waitUntilSaved();
     }
 
-    runAction(action) {
+    async runAction(action) {
         switch (action.action) {
-            case "refresh":
-                location.reload(true);
-                break;
-            case "redirect-object":
-				const link = decodeURI(action.link);
-				if (link.match("{id}"))  {
-					document.location = link.replace("{id}",this.id);
-				} else {
-					document.location = link+this.id;
-				}
-                break;
-            case "redirect":
-                document.location = action.link;
-                break;
-			case "ajax":
-				fetch(action.link, {
-					method : 'POST',
-					mode   : 'cors',
-					body   : JSON.stringify(this.generateData()),
-				 });
-				break;
 			case "back":
 				const referrerUrl = new URL(document.referrer);
 				if (window.history.length > 1 && document.referrer && referrerUrl.hostname === window.location.hostname) {
 					document.location = document.referrer;
 				}
 				break;
+			case "mailer":
+				await this.api.postAPI('/action/mailer', {
+					data     : this.generateData(),
+					mailerId : action.mailerId,
+				});
+				break;
+            case "redirect":
+                document.location = action.link;
+                break;
+            case "redirect-object":
+				const link = decodeURI(action.link);
+				if (link.match("{id}"))  {
+					document.location = link.replace("{id}", this.id);
+				} else {
+					document.location = link + this.id;
+				}
+                break;
+            case "refresh":
+                location.reload(true);
+                break;
+			case "ajax":
+			case "webhook":
+				const response = await fetch(action.link, {
+					method : 'POST',
+					mode   : 'cors',
+					body   : JSON.stringify(this.generateData()),
+				});
+				if (!response.ok) {
+					throw new Error(`Action ${action.action} failed: ${response.statusText}`);
+				}
+				break;
+			default:
+				console.warn(`Unknown action type: ${action.action}`);
         }
     }
 
-    runNewAction() {
-		setTimeout(() => this.runAction(this.options.actions.new), this.delayActions);
+	/**
+	 * Run an array of actions sequentially.
+	 * By default, if an action fails, subsequent actions won't execute.
+	 * Set `continue: true` on an action to continue execution even if it fails.
+	 *
+	 * @param {Array} actions - Array of action objects to execute
+	 */
+	async runActions(actions) {
+		if (!Array.isArray(actions) || actions.length === 0) {
+			return;
+		}
+
+		for (const action of actions) {
+			try {
+				await this.runAction(action);
+			} catch (error) {
+				console.error(`Action execution failed:`, error);
+
+				// If continue is true, log the error but keep going
+				if (action.continue === true) {
+					console.warn(`Action failed but continuing due to continue: true`, action);
+					continue;
+				}
+
+				// Otherwise, stop execution and show error
+				this.error(error.message || 'Action execution failed');
+				throw error; // Re-throw to prevent further execution
+			}
+		}
+	}
+
+    runNewActions() {
+		setTimeout(() => this.runActions(this.options.actions.new), this.delayActions);
     }
 
-    runEditAction() {
-		setTimeout(() => this.runAction(this.options.actions.edit), this.delayActions);
+    runEditActions() {
+		setTimeout(() => this.runActions(this.options.actions.edit), this.delayActions);
     }
 
-	runDeleteAction() {
-		setTimeout(() => this.runAction(this.options.actions.delete), 250);
+	runDeleteActions() {
+		setTimeout(() => this.runActions(this.options.actions.delete), 250);
     }
 
     //-------------------------
@@ -463,6 +620,10 @@ export default class TotalForm {
 
     setupEditMode() {
 		if (this.isEditMode()) return;
+
+		// Only setup edit mode for forms that have an ID (object/collection/schema forms)
+		// Simple forms without IDs should always use POST
+		if (!this.id || this.id.length === 0) return;
 
 		// Set the method to PUT or PATCH for editing existing objects
 		this.method = this.form.dataset.method||"PUT";
@@ -542,9 +703,9 @@ export default class TotalForm {
 		return this.state === "error";
 	}
 
-    success() {
+    success(response = null) {
 		this.setupEditMode();
-		this.changeState("success");
+		this.changeState("success", response);
 		this.validated = false;
 		this.fields.forEach(field => field.saved());
     }

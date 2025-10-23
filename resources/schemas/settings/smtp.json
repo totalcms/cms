@@ -1,0 +1,66 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "SMTP Settings",
+	"description" : "Email server configuration",
+	"type"        : "object",
+	"properties"  : {
+		"host": {
+			"type"        : "text",
+			"label"       : "SMTP Host",
+			"help"        : "The hostname or IP address of your SMTP server.",
+			"placeholder" : "127.0.0.1",
+			"default"     : "127.0.0.1"
+		},
+		"port": {
+			"type"        : "text",
+			"label"       : "SMTP Port",
+			"help"        : "The port number for your SMTP server. Common ports: 25 (default), 587 (TLS), 465 (SSL).",
+			"placeholder" : "25",
+			"default"     : "25"
+		},
+		"secure": {
+			"type"    : "select",
+			"label"   : "Encryption",
+			"help"    : "The encryption method to use for SMTP connection.",
+			"default" : "TLS",
+			"options" : [
+				{"value": "tls", "label": "TLS"},
+				{"value": "ssl", "label": "SSL"},
+				{"value": "", "label": "None"}
+			],
+			"settings" : {
+				"clearValue" : false
+			}
+		},
+		"username": {
+			"type"        : "text",
+			"label"       : "SMTP Username",
+			"help"        : "Username for SMTP authentication (if required).",
+			"placeholder" : "username@example.com"
+		},
+		"password": {
+			"type"        : "password",
+			"label"       : "SMTP Password",
+			"help"        : "Password for SMTP authentication (if required).",
+			"placeholder" : "••••••••"
+		},
+		"from": {
+			"type"        : "email",
+			"label"       : "From Address",
+			"help"        : "The email address that emails will be sent from.",
+			"placeholder" : "from@example.com"
+		},
+		"fromName": {
+			"type"        : "text",
+			"label"       : "From Name",
+			"help"        : "The name that will appear as the sender.",
+			"placeholder" : "My Company"
+		},
+		"to": {
+			"type"        : "email",
+			"label"       : "Default To Address",
+			"help"        : "Default recipient email address for test emails.",
+			"placeholder" : "to@example.com"
+		}
+	}
+}

@@ -123,10 +123,15 @@ export default class Droplet {
         file.acceptFile = done;
         file.rejectFile = function(msg){ done(msg); };
 
-        if (!file.type.startsWith("image")) {
-            // If the file is not an image, process the tests
-            // Images will get processed after the thumbnail is generated in the event_thumbnail method
+        // HEIC files may not trigger thumbnail event, so process tests here
+        if (this.isHeicFile(file)) {
             this.processTestSet(file);
+            file.testSetProcessed = true; // Mark as processed to avoid double-processing
+        } else if (!file.type.startsWith("image")) {
+            // If the file is not an image, process the tests
+            // Other images will get processed after the thumbnail is generated in the event_thumbnail method
+            this.processTestSet(file);
+            file.testSetProcessed = true; // Mark as processed to avoid double-processing
         }
     }
 
@@ -169,6 +174,11 @@ export default class Droplet {
         }
         this.dropzone.previewsContainer.appendChild(file.previewElement);
 
+        // For HEIC files, show a placeholder since browser can't generate thumbnail
+        if (this.isHeicFile(file)) {
+            this.showHeicPlaceholder(file);
+        }
+
         if (!this.dropzone.options.autoProcessQueue) {
             // if autoprocessQueue is not used, mark as unsaved
 			this.field.changed();
@@ -178,16 +188,63 @@ export default class Droplet {
 
     // When the thumbnail has been generated. Receives the dataUrl as second parameter.
     event_thumbnail(file,data) {
+        // For HEIC files, we already set a placeholder, so skip thumbnail processing
+        if (this.isHeicFile(file)) {
+            return;
+        }
+
         file.previewElement.classList.remove("dz-file-preview");
 
-        // This happens here because its the first time that we have access to file info
-        this.processTestSet(file);
+        // Only process test set if not already processed (e.g., non-image files and HEIC already processed)
+        if (!file.testSetProcessed) {
+            this.processTestSet(file);
+        }
 
         const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
         for (const thumb of thumbs) {
             thumb.alt = file.name;
             thumb.src = data;
         }
+    }
+
+    // Check if file is HEIC/HEIF format
+    isHeicFile(file) {
+        if (!file || !file.name) return false;
+        const ext = file.name.split('.').pop().toLowerCase();
+        return ext === 'heic' || ext === 'heif';
+    }
+
+    // Show placeholder for HEIC files since browser can't generate thumbnail
+    showHeicPlaceholder(file) {
+        // Find the thumbnail image element
+        const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
+        for (const thumb of thumbs) {
+            // Remove data-dz-thumbnail attribute to prevent Dropzone from overwriting our placeholder
+            thumb.removeAttribute("data-dz-thumbnail");
+
+            // Create SVG placeholder with text
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+                    <rect width="600" height="400" fill="#f0f0f0"/>
+                    <text x="50%" y="40%" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#666" text-anchor="middle" dominant-baseline="middle">
+                        HEIC Image
+                    </text>
+                    <text x="50%" y="50%" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#999" text-anchor="middle" dominant-baseline="middle">
+                        Converting to JPEG...
+                    </text>
+                    <text x="50%" y="60%" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#aaa" text-anchor="middle" dominant-baseline="middle">
+                        Reload page after upload to view image
+                    </text>
+                </svg>
+            `;
+            // Convert SVG to data URL
+            const dataUrl = 'data:image/svg+xml;base64,' + btoa(svg);
+            thumb.src = dataUrl;
+            thumb.alt = file.name;
+        }
+
+        // Remove the file-preview class since we have a visual placeholder
+        file.previewElement.classList.remove("dz-file-preview");
     }
 
     // Gets called periodically whenever the file upload progress changes

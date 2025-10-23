@@ -34,7 +34,8 @@ export default class PropertyField {
 	setupAccordion() {
 		// Close other details when one is opened
 		const details = Array.from(this.dialog.dialog.querySelectorAll("details"));
-		this.accordion = new Details(details);
+		if (details.details) return; // Already initialized
+		new Details(details);
 	}
 
 	updateIcons() {

@@ -26,7 +26,13 @@ readonly class SchemaFetchForCollectionAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$schema = $this->schemaFetcher->fetchSchemaForCollection($args['collection']);
+		// Get raw parameter from query string (default: false, returns flattened)
+		$queryParams = $request->getQueryParams();
+		$raw         = isset($queryParams['raw']) && $queryParams['raw'] === 'true';
+
+		$schema = $raw
+			? $this->schemaFetcher->fetchRawSchemaForCollection($args['collection'])
+			: $this->schemaFetcher->fetchSchemaForCollection($args['collection']);
 
 		return $this->renderer->jsonItem($response, $schema, new SchemaMetaTransformer());
 	}

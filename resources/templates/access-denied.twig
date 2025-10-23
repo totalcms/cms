@@ -1,0 +1,32 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+<div class="dash-main-content" style="display: flex; align-items: center; justify-content: center;">
+	<div style="text-align: center; display: grid; gap: 1rem;">
+
+		<h1>Access Denied</h1>
+
+		<p style="font-size: 1.125rem;">
+			{% if message and message != 'Access denied' %}
+				{{ message }}
+			{% else %}
+				You don't have permission to access this resource.<br>Your access groups do not allow this action.
+			{% endif %}
+		</p>
+
+		<div style="margin-block: 1.5rem;">
+			<a href="{{ cms.dashboard }}" class="dash-button">Return to Dashboard</a>
+			{% if referrer %}
+			<a href="{{ referrer }}" class="dash-button transparent">Go Back</a>
+			{% endif %}
+		</div>
+
+		{% if cms.env == 'dev' and details %}
+		<details style="margin-top: 2rem; text-align: left; background: oklch(var(--totalform-nearwhite)); padding: 1rem; border-radius: var(--totalform-radius);">
+			<summary style="cursor: pointer; font-weight: 600; margin-bottom: 0.5rem;">Debug Information</summary>
+			<pre style="font-size: 0.875rem; overflow-x: auto;">{{ details }}</pre>
+		</details>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

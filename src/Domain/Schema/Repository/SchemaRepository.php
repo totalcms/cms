@@ -253,6 +253,12 @@ class SchemaRepository extends StorageRepository
 	{
 		// Clear custom schema cache
 		$this->cacheManager->clearComputedData("schema:{$id}");
+
+		// Also clear flattened cache if this schema is flattened
+		$this->cacheManager->clearComputedData("schema_flattened:{$id}");
+
+		// Clear caches for any schemas that inherit from this one
+		$this->invalidateInheritedSchemaCaches($id);
 	}
 
 	/**
@@ -274,5 +280,48 @@ class SchemaRepository extends StorageRepository
 		}
 
 		return $schemas;
+	}
+
+	/**
+	 * Find all schemas that inherit from the given schema ID.
+	 *
+	 * @return array<string> Array of schema IDs that inherit from the given schema
+	 */
+	public function findInheritingSchemas(string $schemaId): array
+	{
+		$inheritingSchemas = [];
+
+		// Check custom schemas
+		$customSchemas = $this->listCustomSchemas();
+		foreach ($customSchemas as $schema) {
+			if (in_array($schemaId, $schema->inheritFrom, true)) {
+				$inheritingSchemas[] = $schema->id;
+			}
+		}
+
+		// Note: Reserved schemas cannot be deleted, so we don't need to check them
+
+		return $inheritingSchemas;
+	}
+
+	/**
+	 * Check if a schema is inherited by any other schemas.
+	 */
+	public function isSchemaInherited(string $schemaId): bool
+	{
+		return $this->findInheritingSchemas($schemaId) !== [];
+	}
+
+	/**
+	 * Invalidate flattened schema caches for all schemas that inherit from the given schema.
+	 * This should be called when a schema is updated or deleted.
+	 */
+	public function invalidateInheritedSchemaCaches(string $schemaId): void
+	{
+		$inheritingSchemas = $this->findInheritingSchemas($schemaId);
+
+		foreach ($inheritingSchemas as $inheritingSchemaId) {
+			$this->cacheManager->clearComputedData("schema_flattened:{$inheritingSchemaId}");
+		}
 	}
 }

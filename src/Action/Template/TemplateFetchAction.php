@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Template;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Renderer\RawRenderer;
 
@@ -25,7 +26,12 @@ readonly class TemplateFetchAction
 		ResponseInterface $response,
 		array $args,
 	): ResponseInterface {
-		$template = $this->templateFetcher->fetchTemplate($args['template']);
+		$path = $args['path'] ?? $args['template'] ?? '';
+
+		// Parse path into folder and template name
+		[$folder, $name] = TemplateRepository::parsePath($path);
+
+		$template = $this->templateFetcher->fetchTemplate($name, $folder);
 
 		return $this->renderer->render($response, $template->contents);
 	}

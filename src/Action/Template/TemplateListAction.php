@@ -16,17 +16,25 @@ readonly class TemplateListAction
 	/**
 	 * Action.
 	 *
+	 * @param array<string,string> $args The routing arguments
+	 *
 	 * @return ResponseInterface the response
 	 */
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
 	{
 		$params = $request->getQueryParams();
 		$filter = $params['filter'] ?? 'all';
 
+		// Folder can come from route args or query params (backward compatibility)
+		$folder = $args['folder'] ?? $params['folder'] ?? null;
+
+		// Recursive by default for root listing, non-recursive for specific folders
+		$recursive = $folder === null;
+
 		$templates = match ($filter) {
 			'reserved' => $this->templateLister->listReservedTemplates(),
-			'custom'   => $this->templateLister->listCustomTemplates(),
-			default    => $this->templateLister->listAllTemplates(),
+			'custom'   => $this->templateLister->listCustomTemplates($folder, $recursive),
+			default    => $this->templateLister->listAllTemplates($folder, $recursive),
 		};
 
 		$json = json_encode($templates);

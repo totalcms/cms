@@ -66,6 +66,7 @@ class TotalCMSTwigFilters
 		'rgb',
 		'hsl',
 		'oklch',
+		'hexToColor',
 		'color',
 		'colour',
 		'lightness',
@@ -82,6 +83,7 @@ class TotalCMSTwigFilters
 		'paginate',
 		'svgToSymbol',
 		'markdown',
+		'markdownInline',
 		'dateRelative',
 		'dateFormat',
 		'dateAdd',
@@ -653,6 +655,25 @@ class TotalCMSTwigFilters
 		}
 
 		return $markdown->convert($value);
+	}
+
+	public static function markdownInline(mixed $value): string
+	{
+		// Inline-only markdown processing (no <p> tags or block elements)
+		// Uses Parsedown's line() method for inline elements only
+		if (!is_string($value)) {
+			$value = (string)$value;
+		}
+
+		// Use ParsedownExtra with safe mode for inline processing
+		static $parsedown = null;
+		if ($parsedown === null) {
+			$parsedown = new \ParsedownExtra();
+			$parsedown->setSafeMode(true);
+			$parsedown->setBreaksEnabled(false); // No line breaks in inline mode
+		}
+
+		return $parsedown->line($value);
 	}
 
 	// -------------------------

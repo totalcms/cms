@@ -1,0 +1,38 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/template.json",
+	"title"       : "Template",
+	"description" : "A Twig template for rendering content",
+	"id"          : "template",
+	"type"        : "object",
+	"properties"  : {
+		"id": {
+			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"       : "ID",
+			"help"        : "The unique identifier for this template. Use forward slashes for folders (e.g., 'pages/header' or 'grids/blog').",
+			"placeholder" : "mytemplate",
+			"field"       : "id",
+			"settings"    : {
+				"allowCharacters": "/"
+			}
+		},
+		"template": {
+			"type"     : "string",
+			"label"    : "Template Code",
+			"help"     : "Type your template code here.",
+			"field"    : "code",
+			"settings" : {
+				"mode"         : "twig",
+				"theme"        : "elegant",
+				"lineNumbers"  : true,
+				"lineWrapping" : true,
+				"indentUnit"   : 2,
+				"tabSize"      : 2,
+				"foldGutter"   : true,
+				"matchBrackets": true,
+				"autoCloseTags": true
+			}
+		}
+	},
+	"required": ["id", "template"]
+}

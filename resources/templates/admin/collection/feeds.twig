@@ -46,6 +46,34 @@
 			<label for="description">Feed Description</label>
 			<textarea name="description" rows="5" placeholder="A description of the feed">{{ postData.description }}</textarea>
 
+			<h4 style="margin:1rem 0">Feed Filtering Options</h4>
+
+			<label for="include">Include Property for Feed (must be indexed)</label>
+			<select name="include">
+				<option value="">Select a Property</option>
+				{% for property in schema.index %}
+					<option value="{{ property }}"
+						{% if postData.include == property %}selected{% endif %}>
+						{{ property }}
+					</option>
+				{% endfor %}
+			</select>
+
+			<label for="exclude">Exclude Property for Feed (must be indexed)</label>
+			<select name="exclude">
+				<option value="">Select a Property</option>
+				{% for property in schema.index %}
+					<option value="{{ property }}"
+						{% if postData.exclude == property %}selected{% endif %}>
+						{{ property }}
+					</option>
+				{% endfor %}
+			</select>
+
+			<label for="limit">Feed Item Limit</label>
+			<input type="number" min="-1" max="1000" name="limit" value="{{ postData.limit|default(25) }}" placeholder="25"/>
+			<p style="font-size: 0.875rem; margin-top: 0.25rem; color: oklch(var(--totalform-darkgray));">Enter -1 for unlimited items</p>
+
 			<h4 style="margin:1rem 0">RSS Field to Property Mapping</h4>
 
 			<div class="cms-field-mapping">

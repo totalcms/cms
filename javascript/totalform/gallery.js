@@ -1,7 +1,7 @@
 import ImageField from "./image";
 import ImagePreview from "./image-preview";
 import DropletArray from "./droplet-array";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 import Scrollable from "./scrollable";
 
 //-----------------------------------------------
@@ -13,6 +13,7 @@ export default class GalleryField extends ImageField {
         super(container, options);
 
 		this.scrollable = new Scrollable(this.previewContainer);
+		this.sortable = null; // Store sortable instance
 		this.watchPreviews();
     }
 
@@ -21,7 +22,13 @@ export default class GalleryField extends ImageField {
 		const observer = new MutationObserver((mutationsList, observer) => {
 			for (const mutation of mutationsList) {
 				if (mutation.type === 'childList') {
-					this.setupPreview();
+					// Only setup if nodes were actually added or removed (not just moved by Sortable)
+					const hasAddedNodes = mutation.addedNodes.length > 0;
+					const hasRemovedNodes = mutation.removedNodes.length > 0;
+
+					if (hasAddedNodes || hasRemovedNodes) {
+						this.setupPreview();
+					}
 				}
 			}
 		});
@@ -56,22 +63,20 @@ export default class GalleryField extends ImageField {
 	}
 
 	setupReorder() {
-		this.sortable = new Sortable(this.previewContainer, {
+		// Only create Sortable once
+		if (this.sortable) {
+			return;
+		}
+
+		this.sortable = new TotalSortable(this.previewContainer, {
 			animation : 500,
 			handle    : ".move",
 			draggable : ".image-preview",
-			onStart   : (event) => {
-				// Add a class to the container to indicate sorting
-				this.previewContainer.classList.add('sorting');
-			},
-			onEnd : (event) => {
+			onEnd     : (event) => {
 				// Set the order of the preview data to match the new order
 				const moved = this.preview[event.oldIndex];
 				this.preview.splice(event.newIndex, 0, moved);
 				this.preview.splice(event.newIndex, 1);
-
-				// Remove the sorting class
-				this.previewContainer.classList.remove('sorting');
 
 				// Update the order of the images in the CMS
 				this.autosave(true);

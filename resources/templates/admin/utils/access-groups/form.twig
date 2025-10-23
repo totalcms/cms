@@ -1,0 +1,336 @@
+{# Access Group Form Page #}
+<h1>{% if isEdit %}Edit{% else %}New{% endif %} Access Group</h1>
+
+<section class="dash-content-section">
+	<p>Configure permissions for this access group. Users can belong to multiple groups, with permissions merging across all their groups.</p>
+
+	{% set formFields %}
+		{{ cms.form.field("id", "id", {
+			label       : "Group ID",
+			help        : "Unique identifier for this access group",
+			placeholder : "e.g., content-editor",
+			required    : true,
+			value       : group ? group.id : '',
+			readonly    : isEdit,
+			pattern     : "[a-z0-9-]+",
+		}) }}
+
+		{{ cms.form.field("textarea", "description", {
+			label       : "Description",
+			help        : "Describe what this access group is for",
+			placeholder : "e.g., Content editors who can create and edit blog posts",
+			value       : group ? group.description : '',
+			rows        : 3,
+		}) }}
+
+		<div class="permission-section">
+			<h3>Object Permissions</h3>
+
+			{{ cms.form.field("multicheckbox", "collections-operations", {
+				label    : "Operations Allowed on Objects",
+				value    : group ? group.permissions.collections.operations : ["read"],
+				options  : [
+					{value: "create", label: "Create"},
+					{value: "read", label: "Read"},
+					{value: "update", label: "Update"},
+					{value: "delete", label: "Delete"}
+				],
+				settings : {
+					fieldGrid: "150px"
+				}
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "collections-all", {
+				label    : "Collection Access Level",
+				value    : group ? (group.permissions.collections.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Object Collections"}
+				]
+			}) }}
+
+			{% set collectionOptions = [] %}
+			{% for collection in collections | sort((a, b) => a.name <=> b.name) %}
+				{% set collectionOptions = collectionOptions|merge([{
+					value: collection.id,
+					label: collection.name
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("multicheckbox", "collections-allowed", {
+				label    : "Specific Collections",
+				help     : "Select which collections this group can access",
+				value    : group ? group.permissions.collections.allowed : [],
+				options  : collectionOptions,
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch    : "collections-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+
+		<div class="permission-section">
+			<h3>Collection Meta Permissions</h3>
+
+			{{ cms.form.field("multicheckbox", "collectionsMeta-operations", {
+				label    : "Operations Allowed on Collection Metadata",
+				value    : group ? group.permissions.collectionsMeta.operations : ["read"],
+				options  : [
+					{value: "create", label: "Create"},
+					{value: "read", label: "Read"},
+					{value: "update", label: "Update"},
+					{value: "delete", label: "Delete"}
+				],
+				settings : {
+					fieldGrid: "150px"
+				}
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "collectionsMeta-all", {
+				label    : "Collection Metadata Access Level",
+				value    : group ? (group.permissions.collectionsMeta.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Collections"}
+				]
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "collectionsMeta-allowed", {
+				label    : "Specific Collections",
+				help     : "Select which collections' metadata this group can access",
+				value    : group ? group.permissions.collectionsMeta.allowed : [],
+				options  : collectionOptions,
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch    : "collectionsMeta-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+
+		<div class="permission-section">
+			<h3>Schema Permissions</h3>
+
+			{{ cms.form.field("multicheckbox", "schemas-operations", {
+				label    : "Operations Allowed on Schemas",
+				value    : group ? group.permissions.schemas.operations : ["read"],
+				options  : [
+					{value: "create", label: "Create"},
+					{value: "read", label: "Read"},
+					{value: "update", label: "Update"},
+					{value: "delete", label: "Delete"}
+				],
+				settings : {
+					fieldGrid: "150px"
+				}
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "schemas-all", {
+				label    : "Schema Access Level",
+				value    : group ? (group.permissions.schemas.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Schemas"}
+				]
+			}) }}
+
+			{% set schemaOptions = [] %}
+			{% for schema in schemas %}
+				{% set schemaOptions = schemaOptions|merge([{
+					value: schema.id,
+					label: schema.id
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("multicheckbox", "schemas-allowed", {
+				label    : "Specific Schemas",
+				help     : "Select which schemas this group can access",
+				value    : group ? group.permissions.schemas.allowed : [],
+				options  : schemaOptions,
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch    : "schemas-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+
+		<div class="permission-section">
+			<h3>Other Permissions</h3>
+
+			{{ cms.form.field("multicheckbox", "permissions-simple", {
+				label    : "Dashboard Features",
+				help     : "Select which dashboard features this group can access",
+				value    : group ? (
+					(group.permissions.templates ? ["templates"] : [])|merge(
+						group.permissions.mailer ? ["mailer"] : []
+					)|merge(
+						group.permissions.playground ? ["playground"] : []
+					)|merge(
+						group.permissions.docs ? ["docs"] : []
+					)
+				) : ["docs", "mailer", "templates", "playground"],
+				options  : [
+					{value: "docs", label: "Documentation"},
+					{value: "mailer", label: "Mailer"},
+					{value: "templates", label: "Templates"},
+					{value: "playground", label: "Twig Playground"},
+				],
+				settings : {
+					fieldGrid: "150px"
+				}
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "utils-all", {
+				label    : "Utils Access Level",
+				value    : group ? (group.permissions.utils.all ? ["all"] : []) : ["all"],
+				options  : [
+					{value: "all", label: "All Utils"}
+				]
+			}) }}
+
+			{{ cms.form.field("multicheckbox", "utils-allowed", {
+				label    : "Specific Utils",
+				help     : "Select which utilities this group can access",
+				value    : group ? group.permissions.utils.allowed : [],
+				options  : [
+					{value: "cache", label: "Cache Manager"},
+					{value: "image-batcher", label: "Image Batcher"},
+					{value: "jobqueue", label: "Job Queue Manager"},
+					{value: "jumpstart", label: "JumpStart"},
+					{value: "license", label: "License"},
+					{value: "log-analyzer", label: "Log Analyzer"},
+					{value: "pretty-url", label: "Pretty URL Builder"},
+					{value: "project-setup", label: "Project Setup"},
+					{value: "server-checker", label: "Server Checker"}
+				],
+				settings : {
+					fieldGrid: "150px",
+					visibility : {
+						watch : "utils-all",
+						value : "all",
+						operator: "not_in"
+					}
+				}
+			}) }}
+
+		</div>
+	{% endset %}
+
+	{% set apiRoute = isEdit ? "/access-groups/" ~ group.id : "/access-groups" %}
+	{{ cms.form.totalform(apiRoute, formFields, {
+		class  : "access-groups-form",
+		method : isEdit ? "PUT" : "POST",
+		save   : isEdit ? "Update Access Group" : "Create Access Group",
+		newActions: [
+			{
+				action: "redirect",
+				link: "utils/access-groups"
+			}
+		],
+		editActions: [
+			{
+				action: "redirect",
+				link: "utils/access-groups"
+			}
+		]
+	}) }}
+
+</section>
+
+<style>
+.help-text {
+	color         : oklch(var(--totalform-darkgray));
+	font-size     : 0.9rem;
+	margin-top    : -0.5rem;
+	margin-bottom : 1rem;
+}
+h3 {
+	margin-block : 2rem 1rem;
+}
+.multicheckbox-field {
+	margin-block-start : 1rem;
+	margin-inline-start : 1rem;
+}
+.permission-section {
+	background    : oklch(var(--totalform-nearwhite) / 0.5);
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1.5rem;
+	margin-block  : 1rem;
+}
+.permission-section:first-of-type {
+	margin-top : 0;
+}
+.permission-section h3 {
+	margin-block-start : 0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	// Handle checkbox cascading for "All" options
+	const form = document.querySelector('.access-groups-form');
+
+	// When "All Collections" is checked, optionally check all collections
+	const collectionsAll = form.querySelector('input[name="collections-all[]"][value="all"]');
+	if (collectionsAll) {
+		collectionsAll.addEventListener('change', function() {
+			// The visibility setting will handle showing/hiding the specific collections
+		});
+	}
+
+	// When "All Schemas" is checked
+	const schemasAll = form.querySelector('input[name="schemas-all[]"][value="all"]');
+	if (schemasAll) {
+		schemasAll.addEventListener('change', function() {
+			// The visibility setting will handle showing/hiding the specific schemas
+		});
+	}
+
+	// When "All Utils" is checked
+	const utilsAll = form.querySelector('input[name="utils-all[]"][value="all"]');
+	if (utilsAll) {
+		utilsAll.addEventListener('change', function() {
+			// The visibility setting will handle showing/hiding the specific utils
+		});
+	}
+
+	// When "All Settings" is checked
+	const settingsAll = form.querySelector('input[name="settings-all[]"][value="all"]');
+	if (settingsAll) {
+		settingsAll.addEventListener('change', function() {
+			// The visibility setting will handle showing/hiding the specific settings
+		});
+	}
+
+	// Parse permissions-simple back into individual fields for saving
+	form.addEventListener('submit', function(e) {
+		const permissionsSimple = Array.from(form.querySelectorAll('input[name="permissions-simple[]"]:checked'))
+			.map(cb => cb.value);
+
+		// Create hidden inputs for each simple permission
+		['templates', 'mailer', 'playground', 'docs'].forEach(function(perm) {
+			const existingInput = form.querySelector(`input[name="${perm}"]`);
+			if (existingInput) {
+				existingInput.remove();
+			}
+
+			if (permissionsSimple.includes(perm)) {
+				const input = document.createElement('input');
+				input.type = 'hidden';
+				input.name = perm;
+				input.value = perm;
+				form.appendChild(input);
+			}
+		});
+	});
+});
+</script>

@@ -7,12 +7,43 @@
 	<meta name="robots" content="noindex, nofollow">
 	<title>{% block title %}Total CMS{% endblock %}</title>
 
+	{# Apply theme immediately to prevent flash of wrong theme #}
+	<script>
+		(function() {
+			const saved = localStorage.getItem('totalcms-theme');
+			const theme = ['auto', 'light', 'dark'].includes(saved) ? saved : 'auto';
+			const html  = document.documentElement;
+
+			html.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+			html.classList.add('theme-' + theme);
+
+			switch (theme) {
+				case 'light':
+					html.style.colorScheme = 'light';
+					break;
+				case 'dark':
+					html.style.colorScheme = 'dark';
+					break;
+				case 'auto':
+				default:
+					html.style.colorScheme = 'light dark';
+					break;
+			}
+		})();
+	</script>
+
     <base href="{{ cms.api }}/admin/">
 	<link rel="stylesheet" href="{{ cms.api }}/assets/dashboard.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css"/>
 
+	{% set accentColor = cms.config('dashboard', 'accent') %}
+	{% if accentColor %}
+	<style>:root{--totalform-accent:{{ accentColor | hexToColor | oklch(100, false) }};}</style>
+	{% endif %}
+
 	{% block head %}{% endblock %}
+	{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 </head>
 <body>
     {% block content %}{% endblock %}
@@ -20,5 +51,6 @@
 	<script type="module" src="{{ cms.api }}/assets/admin.js"></script>
 
 	{% block bodyBelow %}{% endblock %}
+	{{ include('whitelabel/admin-body-below.twig', ignore_missing = true) }}
 </body>
 </html>

@@ -1,7 +1,9 @@
 <?php
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -15,11 +17,13 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 describe('Form AddOnly Security Feature', function (): void {
 	beforeEach(function (): void {
 		// Mock dependencies
-		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
-		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
-		$this->indexReader       = $this->createMock(IndexReader::class);
-		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
-		$this->schemaLister      = $this->createMock(SchemaLister::class);
+		$this->objectFetcher       = $this->createMock(ObjectFetcher::class);
+		$this->collectionFetcher   = $this->createMock(CollectionFetcher::class);
+		$this->indexReader         = $this->createMock(IndexReader::class);
+		$this->indexFilter         = $this->createMock(IndexFilter::class);
+		$this->schemaFetcher       = $this->createMock(SchemaFetcher::class);
+		$this->schemaLister        = $this->createMock(SchemaLister::class);
+		$this->accessGroupLister   = $this->createMock(AccessGroupLister::class);
 
 		// Mock existing object
 		$this->existingObject = $this->createMock(ObjectData::class);
@@ -41,8 +45,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
+			accessGroupLister: $this->accessGroupLister,
 			api: '/api',
 			collection: 'users',
 			addOnly: false  // Regular form behavior
@@ -67,8 +73,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
+			accessGroupLister: $this->accessGroupLister,
 			api: '/api',
 			collection: 'users',
 			addOnly: true  // Security: Add only mode
@@ -90,8 +98,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
+			accessGroupLister: $this->accessGroupLister,
 			api: '/api',
 			collection: 'users',
 			id: 'explicit-id-789',  // Explicitly passed ID
@@ -116,8 +126,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
+			accessGroupLister: $this->accessGroupLister,
 			api: '/api',
 			collection: 'users',
 			addOnly: true
@@ -145,8 +157,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
+			accessGroupLister: $this->accessGroupLister,
 			api: '/api',
 			collection: 'users',
 			addOnly: false  // Regular form
@@ -170,8 +184,10 @@ describe('Form AddOnly Security Feature', function (): void {
 			objectFetcher: $this->objectFetcher,
 			collectionFetcher: $this->collectionFetcher,
 			collectionReader: $this->indexReader,
+			indexFilter: $this->indexFilter,
 			schemaFetcher: $this->schemaFetcher,
 			schemaLister: $this->schemaLister,
+			accessGroupLister: $this->accessGroupLister,
 			api: '/api',
 			collection: 'users'
 			// No addOnly parameter - should default to false

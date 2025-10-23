@@ -83,7 +83,7 @@ readonly class PropertyFactory
 
 		try {
 			// Get the deck item schema
-			$schemaId   = $this->extractSchemaId($deckref);
+			$schemaId   = SchemaFetcher::extractSchemaId($deckref);
 			$deckSchema = $this->schemaFetcher->fetchSchema($schemaId);
 
 			// Validate that the deck schema doesn't contain incompatible properties
@@ -174,20 +174,6 @@ readonly class PropertyFactory
 			// If processing fails, return original data
 			return $itemData;
 		}
-	}
-
-	/**
-	 * Extract schema ID from deckref URL.
-	 */
-	private function extractSchemaId(string $deckref): string
-	{
-		// Extract schema ID from URL like "https://www.totalcms.co/schemas/custom/features.json"
-		$path = parse_url($deckref, PHP_URL_PATH);
-		if ($path) {
-			return basename($path, '.json');
-		}
-
-		return $deckref;
 	}
 
 	/**

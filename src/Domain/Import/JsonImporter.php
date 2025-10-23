@@ -115,7 +115,13 @@ class JsonImporter
 	 */
 	public function updateObject(array $record): bool
 	{
-		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+		if (!isset($record['id'])) {
+			$this->logger->info('Skipping update of record without ID');
+
+			return false;
+		}
+
+		if (!$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record %s', $record['id']));
 
 			return false;

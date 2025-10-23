@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Cache\CacheReporter;
@@ -25,7 +26,9 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
@@ -62,6 +65,7 @@ class TotalCMSTwigAdapter
 		private readonly SchemaLister $schemaLister,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
+		private readonly TemplateRepository $templateRepository,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
@@ -69,6 +73,7 @@ class TotalCMSTwigAdapter
 		private readonly PhpSession $session,
 		private readonly AccessManager $accessManager,
 		private readonly FileAccessManager $fileAccessManager,
+		private readonly AccessControlService $accessControl,
 		public ImageCacheService $imageCacheService,
 		public GridRenderer $grid,
 		private readonly DevModeManager $devModeManager,
@@ -509,6 +514,53 @@ NGINX;
 		$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 
 		return $schema->toArray();
+	}
+
+	/**
+	 * Get inherited properties for a schema.
+	 * Returns array with property details including source schema, field type, and property type.
+	 * Only shows properties that are PURELY inherited (not also defined in the schema itself).
+	 *
+	 * @return array<string,array{source:string,field:string,type:string,definition:array<string,mixed>}>
+	 */
+	public function getInheritedProperties(string $schemaId): array
+	{
+		try {
+			$schema = $this->schemaFetcher->fetchRawSchema($schemaId);
+
+			if ($schema->inheritFrom === []) {
+				return [];
+			}
+
+			$inheritedProperties = [];
+			$ownPropertyNames    = array_keys($schema->properties);
+
+			// Process each parent schema in order
+			foreach ($schema->inheritFrom as $parentId) {
+				try {
+					$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
+
+					foreach ($parentSchema->properties as $propName => $propDef) {
+						// Only add if not already in own properties and not already inherited (first wins)
+						if (!in_array($propName, $ownPropertyNames, true) && !isset($inheritedProperties[$propName])) {
+							$inheritedProperties[$propName] = [
+								'source'     => $parentId,
+								'field'      => $propDef['field'] ?? 'text',
+								'type'       => SchemaSaver::extractPropertyType($propDef),
+								'definition' => $propDef,
+							];
+						}
+					}
+				} catch (\Exception) {
+					// Skip if parent schema doesn't exist
+					continue;
+				}
+			}
+
+			return $inheritedProperties;
+		} catch (\Exception) {
+			return [];
+		}
 	}
 
 	// Get all collections
@@ -1428,5 +1480,495 @@ NGINX;
 		} catch (\Exception) {
 			return [];
 		}
+	}
+
+	/**
+	 * Group templates by folder for display in admin sidebar.
+	 *
+	 * @return array<string,array<array<string,string>>>
+	 */
+	public function templatesByFolder(): array
+	{
+		// Get all templates recursively
+		$templates = $this->templateRepository->listCustomTemplates(null, true);
+
+		$folders = [];
+
+		foreach ($templates as $path) {
+			// Parse path to get folder and template name
+			[$folder, $templateId] = TemplateRepository::parsePath($path);
+
+			// Determine group name
+			$groupName = 'Templates';
+			if ($folder !== null) {
+				// Convert folder path to group name (e.g., "pages/blog" -> "Pages / Blog")
+				$parts     = explode('/', str_replace('-', ' ', $folder));
+				$groupName = implode(' / ', array_map('ucwords', $parts));
+			}
+
+			// Create template entry
+			if (!array_key_exists($groupName, $folders)) {
+				$folders[$groupName] = [];
+			}
+
+			$folders[$groupName][] = [
+				'id'     => $templateId,
+				'folder' => $folder ?? '',
+				'path'   => $path, // Full path for linking
+			];
+		}
+
+		// Sort folders alphabetically, but keep "Templates" (root) at the bottom
+		uksort($folders, function ($a, $b): int {
+			if ($a === 'Templates') {
+				return 1;
+			}
+			if ($b === 'Templates') {
+				return -1;
+			}
+
+			return strcmp($a, $b);
+		});
+
+		return $folders;
+	}
+
+	/**
+	 * Check if current user can perform a CRUD operation on a collection.
+	 */
+	public function canAccessCollection(string $collection, string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessCollection($userData['id'], $collection, $operation);
+	}
+
+	/**
+	 * Get collections the current user can access with a given CRUD operation.
+	 *
+	 * @param string $operation CRUD operation (create, read, update, delete)
+	 *
+	 * @return array<string> Collection IDs user can access
+	 */
+	public function getAccessibleCollections(string $operation = 'read'): array
+	{
+		$allCollections = $this->collectionLister->listAllCollections();
+		$accessible     = [];
+
+		foreach ($allCollections as $collection) {
+			if ($this->canAccessCollection($collection->id, $operation)) {
+				$accessible[] = $collection->id;
+			}
+		}
+
+		return $accessible;
+	}
+
+	/**
+	 * Check if current user can perform a CRUD operation on collections in general.
+	 * Use for actions like "New Collection" that don't target a specific collection.
+	 */
+	public function canAccessCollectionsOperation(string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessCollectionsOperation($userData['id'], $operation);
+	}
+
+	/**
+	 * Check if current user can perform an action on a collection's metadata.
+	 */
+	public function canAccessCollectionMeta(string $collection, string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessCollectionMeta($userData['id'], $collection, $operation);
+	}
+
+	/**
+	 * Check if current user can perform a CRUD operation on collection metadata in general.
+	 * Use for actions like viewing the collections list or creating new collections.
+	 */
+	public function canAccessCollectionsMetaOperation(string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessCollectionsMetaOperation($userData['id'], $operation);
+	}
+
+	/**
+	 * Check if current user can perform a CRUD operation on a schema.
+	 */
+	public function canAccessSchema(string $schema, string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessSchema($userData['id'], $schema, $operation);
+	}
+
+	/**
+	 * Check if current user can perform a CRUD operation on schemas in general.
+	 * Use for actions like "New Schema" that don't target a specific schema.
+	 */
+	public function canAccessSchemasOperation(string $operation = 'read'): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessSchemasOperation($userData['id'], $operation);
+	}
+
+	/**
+	 * Check if current user can access templates (boolean check).
+	 */
+	public function canAccessTemplates(): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessTemplates($userData['id']);
+	}
+
+	/**
+	 * Check if current user can access a specific utils page.
+	 */
+	public function canAccessUtil(string $page): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessUtils($userData['id'], $page);
+	}
+
+	/**
+	 * Check if current user has ANY access to utils (boolean check).
+	 */
+	public function canAccessUtils(): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessAnyUtils($userData['id']);
+	}
+
+	/**
+	 * Check if current user can access mailer.
+	 */
+	public function canAccessMailer(): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessMailer($userData['id']);
+	}
+
+	/**
+	 * Check if current user can access playground.
+	 */
+	public function canAccessPlayground(): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessPlayground($userData['id']);
+	}
+
+	/**
+	 * Check if current user can access docs.
+	 */
+	public function canAccessDocs(): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessDocs($userData['id']);
+	}
+
+	/**
+	 * Check if user is in admin group (bypasses all access controls).
+	 */
+	public function isAdmin(): bool
+	{
+		// If auth is disabled globally, allow everything
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->isAdmin($userData['id']);
+	}
+
+	// -------------------------
+	// Dashboard Data Methods
+	// -------------------------
+
+	/**
+	 * Get dashboard statistics.
+	 *
+	 * @return array<string,int>
+	 */
+	public function dashboardStats(): array
+	{
+		$collections = $this->collectionLister->listCustomCollections();
+		$schemas     = $this->schemaLister->listCustomSchemas();
+		$templates   = $this->templateRepository->listCustomTemplates(null, true);
+
+		// Count total objects across all collections
+		$totalObjects = 0;
+		foreach ($collections as $collection) {
+			try {
+				$index = $this->indexReader->fetchIndex($collection->id);
+				$totalObjects += $index->objects->count();
+			} catch (\Exception) {
+				// Skip if collection has no index
+				continue;
+			}
+		}
+
+		return [
+			'collections'  => count($collections),
+			'schemas'      => count($schemas),
+			'templates'    => count($templates),
+			'totalObjects' => $totalObjects,
+		];
+	}
+
+	/**
+	 * Get collection overview with object counts and metadata.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardCollections(): array
+	{
+		$collections = $this->collectionLister->listCustomCollections();
+		$result      = [];
+
+		foreach ($collections as $collection) {
+			$objectCount  = 0;
+			$lastModified = null;
+
+			try {
+				$index       = $this->indexReader->fetchIndex($collection->id);
+				$objectCount = $index->objects->count();
+
+				// Get last modified from most recent object if available
+				$firstObject = $index->objects->first();
+				if ($firstObject !== null && isset($firstObject['onUpdate'])) {
+					$lastModified = $firstObject['onUpdate'];
+				}
+			} catch (\Exception) {
+				// Collection has no index yet
+			}
+
+			$result[] = [
+				'id'           => $collection->id,
+				'name'         => $collection->name,
+				'icon'         => '📚', // Default collection icon
+				'schema'       => $collection->schema,
+				'objectCount'  => $objectCount,
+				'lastModified' => $lastModified,
+				'addUrl'       => "collections/{$collection->id}/new",
+				'viewUrl'      => "collections/{$collection->id}",
+			];
+		}
+
+		// Sort by name
+		usort($result, fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+
+		return $result;
+	}
+
+	/**
+	 * Get collections that have no objects (might need attention).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardEmptyCollections(): array
+	{
+		$allCollections = $this->dashboardCollections();
+
+		return array_filter($allCollections, fn (array $collection): bool => $collection['objectCount'] === 0);
+	}
+
+	/**
+	 * Get system status information.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function dashboardSystemStatus(): array
+	{
+		$cacheStats    = $this->cacheReporter->getCacheStats();
+		$enabledCaches = array_filter(
+			$cacheStats,
+			fn ($cache): bool => is_array($cache) && isset($cache['enabled']) && $cache['enabled'] === true
+		);
+
+		$licenseStatus = $this->license->getSidebarStatus();
+
+		return [
+			'phpVersion'       => PHP_VERSION,
+			'totalcmsVersion'  => $this->config->version ?? '3.0',
+			'cacheBackends'    => array_keys($enabledCaches),
+			'memoryLimit'      => ini_get('memory_limit'),
+			'maxExecutionTime' => ini_get('max_execution_time'),
+			'environment'      => $this->env,
+			'license'          => [
+				'severity'      => $licenseStatus->severity,
+				'message'       => $licenseStatus->tooltip,
+				'daysRemaining' => $licenseStatus->daysRemaining,
+			],
+		];
+	}
+
+	/**
+	 * Get recent objects across all collections (last 10).
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function dashboardRecentObjects(): array
+	{
+		$collections   = $this->collectionLister->listCustomCollections();
+		$recentObjects = [];
+
+		foreach ($collections as $collection) {
+			try {
+				$index = $this->indexReader->fetchIndex($collection->id);
+
+				// Get icon from schema if available
+				$icon = '📚'; // Default icon
+				try {
+					$schema = $this->schemaFetcher->fetchSchema($collection->schema);
+					if (property_exists($schema, 'icon') && $schema->icon !== null && $schema->icon !== '') {
+						$icon = $schema->icon;
+					}
+				} catch (\Exception) {
+					// Use default icon
+				}
+
+				foreach ($index->objects as $object) {
+					if (!isset($object['onUpdate']) && !isset($object['onCreate'])) {
+						continue;
+					}
+
+					$timestamp = $object['onUpdate'] ?? $object['onCreate'] ?? null;
+					if ($timestamp === null) {
+						continue;
+					}
+
+					$recentObjects[] = [
+						'id'             => $object['id'] ?? '',
+						'collection'     => $collection->id,
+						'collectionName' => $collection->name,
+						'collectionIcon' => $icon,
+						'timestamp'      => $timestamp,
+						'editUrl'        => "collections/{$collection->id}/{$object['id']}",
+						// Try to get a display name from common fields
+						'displayName' => $object['title'] ?? $object['name'] ?? $object['id'] ?? 'Untitled',
+					];
+				}
+			} catch (\Exception) {
+				// Skip if collection has no index
+				continue;
+			}
+		}
+
+		// Sort by timestamp descending
+		usort($recentObjects, fn (array $a, array $b): int => $b['timestamp'] <=> $a['timestamp']);
+
+		// Return only the 10 most recent
+		return array_slice($recentObjects, 0, 10);
 	}
 }

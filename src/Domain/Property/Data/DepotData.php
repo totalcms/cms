@@ -12,9 +12,15 @@ class DepotData extends PropertyData
 	/** @param array<string,mixed> $depot */
 	public function __construct(public array $depot = [], public array $settings = [])
 	{
-		$this->protected = $depot['protected'] ?? true;
-		$this->password  = new PasswordData($depot['password'] ?? '');
-		$this->files     = FolderData::buildFolder($depot['files'] ?? []);
+		// Determine default protected value:
+		// 1. If explicitly set in data, use that
+		// 2. Otherwise, check for protectedByCollection setting
+		// 3. Otherwise, default to true
+		$defaultProtected = $settings['protectedByCollection'] ?? true;
+		$this->protected  = $depot['protected'] ?? $defaultProtected;
+
+		$this->password = new PasswordData($depot['password'] ?? '');
+		$this->files    = FolderData::buildFolder($depot['files'] ?? []);
 	}
 
 	/** @return array<string,mixed> */

@@ -1,15 +1,19 @@
 {# Edit Collection #}
 {{ cms.form.collection({
 	id           : url.collection,
-	save         : "Save",
-	delete       : "Delete",
+	save         : cms.canAccessCollectionMeta(url.collection, 'update') ? "Save" : false,
+	delete       : cms.canAccessCollectionMeta(url.collection, 'delete') ? "Delete" : false,
 	helpStyle    : 'label',
 	helpOnFocus  : true,
-	deleteAction : {
-		"action" : "redirect",
-		"link"   : "collections"
-	},
-	editAction : {
-		"action" : "refresh",
-	},
+	deleteActions : [
+		{
+			"action" : "redirect",
+			"link"   : "collections"
+		}
+	],
+	editActions : [
+		{
+			"action" : "refresh",
+		}
+	],
 }) }}

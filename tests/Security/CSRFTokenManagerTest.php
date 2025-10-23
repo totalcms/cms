@@ -242,15 +242,14 @@ final class CSRFTokenManagerTest extends TestCase
 		$this->csrfManager->generateToken();
 	}
 
-	public function testSessionRequiredForGettingToken(): void
+	public function testGetTokenReturnsEmptyStringWhenSessionNotActive(): void
 	{
 		// Destroy session
 		session_destroy();
 
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('Session must be active to get CSRF token');
-
-		$this->csrfManager->getToken();
+		// Should return empty string instead of throwing exception
+		$token = $this->csrfManager->getToken();
+		$this->assertSame('', $token);
 	}
 
 	public function testValidateTokenWithoutActiveSession(): void

@@ -1,6 +1,6 @@
 import MultiSelectField from "./multiselect";
 import Choices from "choices.js";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 
 //-----------------------------------------------
 // Total CMS List Field
@@ -44,11 +44,9 @@ export default class ListField extends MultiSelectField {
 	initSortable() {
 		const list = this.container.querySelector('.choices__list');
 
-		this.sortable = new Sortable(list, {
-			animation  : 150,
-			draggable  : ".choices__item",
-			ghostClass : 'drag-ghost',
-			onEnd      : this.syncChoices.bind(this)
+		this.sortable = new TotalSortable(list, {
+			draggable : ".choices__item",
+			onEnd     : this.syncChoices.bind(this)
 		});
 	}
 
@@ -86,13 +84,15 @@ export default class ListField extends MultiSelectField {
 
 	validate() {
 		this.input.setCustomValidity("");
+		if (!this.isVisible()) return true;
 		// For list fields, we need to check if there are items when the field is required
 		if (this.input.required) {
 			const items = this.getValue();
 			if ((this.options.asString === true && items === '') || (this.options.asString === false && (!Array.isArray(items) || items.length === 0))) {
-				this.input.setCustomValidity("Please add at least one item to the list.");
+				const errorMessage = "Please add at least one item to the list.";
+				this.input.setCustomValidity(errorMessage);
 				this.input.reportValidity();
-				this.error(this.input.validationMessage);
+				this.error(errorMessage);
 				return false;
 			}
 		}

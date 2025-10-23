@@ -45,20 +45,8 @@
       "description": "Schema definition and management"
     },
     {
-      "name": "import",
-      "description": "Data import operations"
-    },
-    {
-      "name": "export",
-      "description": "Data export operations"
-    },
-    {
       "name": "imageworks",
       "description": "Image processing and manipulation"
-    },
-    {
-      "name": "auth",
-      "description": "Authentication and authorization"
     },
     {
       "name": "download",
@@ -71,14 +59,6 @@
     {
       "name": "upload",
       "description": "File upload operations"
-    },
-    {
-      "name": "templates",
-      "description": "Template management"
-    },
-    {
-      "name": "jobqueue",
-      "description": "Background job queue management"
     },
     {
       "name": "feeds",
@@ -198,7 +178,14 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["string", "number", "integer", "boolean", "array", "object"]
+            "enum": [
+              "string",
+              "number",
+              "integer",
+              "boolean",
+              "array",
+              "object"
+            ]
           },
           "format": {
             "type": "string"
@@ -212,57 +199,6 @@
           },
           "items": {
             "$ref": "#/components/schemas/SchemaProperty"
-          }
-        }
-      },
-      "ImportResult": {
-        "type": "object",
-        "properties": {
-          "imported": {
-            "type": "integer",
-            "example": 25
-          },
-          "updated": {
-            "type": "integer",
-            "example": 5
-          },
-          "skipped": {
-            "type": "integer",
-            "example": 2
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "row": {
-                  "type": "integer"
-                },
-                "error": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "JobQueueStats": {
-        "type": "object",
-        "properties": {
-          "total": {
-            "type": "integer"
-          },
-          "pending": {
-            "type": "integer"
-          },
-          "processing": {
-            "type": "integer"
-          },
-          "completed": {
-            "type": "integer"
-          },
-          "failed": {
-            "type": "integer"
           }
         }
       },
@@ -324,168 +260,35 @@
             }
           }
         }
+      },
+      "Forbidden": {
+        "description": "Access forbidden",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
       }
     }
   },
   "security": [
-    {"BearerAuth": []},
-    {"SessionAuth": []}
+    {
+      "BearerAuth": []
+    },
+    {
+      "SessionAuth": []
+    }
   ],
   "paths": {
-    "/login": {
-      "get": {
-        "summary": "Login Form",
-        "description": "Display login form for default authentication",
-        "tags": ["auth"],
-        "responses": {
-          "200": {
-            "description": "Login form HTML",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "User Login",
-        "description": "Authenticate user with credentials",
-        "tags": ["auth"],
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "302": {
-            "description": "Redirect on success/failure"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      }
-    },
-    "/login/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Collection Login Form",
-        "description": "Display login form for specific collection authentication",
-        "tags": ["auth"],
-        "responses": {
-          "200": {
-            "description": "Login form HTML",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Collection User Login",
-        "description": "Authenticate user for specific collection access",
-        "tags": ["auth"],
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "302": {
-            "description": "Redirect on success/failure"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      }
-    },
-    "/logout": {
-      "get": {
-        "summary": "User Logout",
-        "description": "Log out current user session",
-        "tags": ["auth"],
-        "responses": {
-          "302": {
-            "description": "Redirect to login or home page"
-          }
-        }
-      },
-      "post": {
-        "summary": "User Logout",
-        "description": "Log out current user session",
-        "tags": ["auth"],
-        "responses": {
-          "302": {
-            "description": "Redirect to login or home page"
-          }
-        }
-      }
-    },
-    "/denied": {
-      "get": {
-        "summary": "Access Denied Page",
-        "description": "Display access denied page",
-        "tags": ["auth"],
-        "responses": {
-          "403": {
-            "description": "Access denied HTML page",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/collections": {
       "get": {
         "summary": "List Collections",
         "description": "Get a list of all collections in the CMS",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "responses": {
           "200": {
             "description": "List of collections",
@@ -506,55 +309,6 @@
             }
           }
         }
-      },
-      "post": {
-        "summary": "Create Collection",
-        "description": "Create a new collection",
-        "tags": ["collections"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "example": "products"
-                  },
-                  "title": {
-                    "type": "string",
-                    "example": "Products"
-                  },
-                  "description": {
-                    "type": "string",
-                    "example": "Product catalog"
-                  },
-                  "schema": {
-                    "type": "string",
-                    "example": "custom"
-                  }
-                },
-                "required": ["id", "title"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Collection created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Collection"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
       }
     },
     "/collections/{collection}": {
@@ -572,7 +326,10 @@
       "get": {
         "summary": "Get Collection Objects",
         "description": "Get all objects from a collection with optional filtering and pagination",
-        "tags": ["collections", "objects"],
+        "tags": [
+          "collections",
+          "objects"
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -607,7 +364,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["asc", "desc"],
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "default": "desc"
             },
             "description": "Sort order"
@@ -663,7 +423,9 @@
       "post": {
         "summary": "Create Object",
         "description": "Create a new object in the collection",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -690,58 +452,12 @@
           }
         }
       },
-      "put": {
-        "summary": "Update Collection",
-        "description": "Update collection metadata",
-        "tags": ["collections"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Collection updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Collection"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Collection",
-        "description": "Delete a collection and all its objects",
-        "tags": ["collections"],
-        "responses": {
-          "204": {
-            "description": "Collection deleted"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
       "head": {
         "summary": "Check Collection Exists",
         "description": "Check if a collection exists",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "responses": {
           "200": {
             "description": "Collection exists"
@@ -765,11 +481,33 @@
       ],
       "get": {
         "summary": "Get Collection Index",
-        "description": "Get the collection index with object summaries",
-        "tags": ["collections"],
+        "description": "Get the collection index with object summaries and optional filtering",
+        "tags": [
+          "collections"
+        ],
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Include filter - comma-separated field:value pairs (AND logic). Example: published:true,featured:true. For array fields like tags, checks if value exists in array (case-insensitive).",
+            "example": "published:true,tags:travel"
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exclude filter - comma-separated field:value pairs (OR logic). Example: draft:true,archived:true. Objects matching ANY criteria are excluded.",
+            "example": "draft:true,tags:archived"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Collection index",
+            "description": "Collection index with filtered objects",
             "content": {
               "application/json": {
                 "schema": {
@@ -779,13 +517,15 @@
                       "type": "string"
                     },
                     "count": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Number of objects after filtering"
                     },
                     "objects": {
                       "type": "array",
                       "items": {
                         "type": "object"
-                      }
+                      },
+                      "description": "Array of filtered object summaries"
                     },
                     "updated": {
                       "type": "string",
@@ -801,7 +541,9 @@
       "put": {
         "summary": "Rebuild Collection Index",
         "description": "Rebuild the collection index from all objects",
-        "tags": ["collections"],
+        "tags": [
+          "collections"
+        ],
         "responses": {
           "200": {
             "description": "Index rebuilt",
@@ -838,7 +580,10 @@
       "get": {
         "summary": "Get Collection Schema",
         "description": "Get the schema definition for a collection",
-        "tags": ["collections", "schemas"],
+        "tags": [
+          "collections",
+          "schemas"
+        ],
         "responses": {
           "200": {
             "description": "Collection schema",
@@ -878,7 +623,9 @@
       "get": {
         "summary": "Get Object",
         "description": "Get a specific object by ID",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "responses": {
           "200": {
             "description": "Object data",
@@ -898,7 +645,9 @@
       "put": {
         "summary": "Update Object",
         "description": "Update an object completely",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -928,7 +677,9 @@
       "patch": {
         "summary": "Patch Object",
         "description": "Partially update an object",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -956,7 +707,9 @@
       "delete": {
         "summary": "Delete Object",
         "description": "Delete an object from the collection",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "responses": {
           "204": {
             "description": "Object deleted"
@@ -969,7 +722,9 @@
       "head": {
         "summary": "Check Object Exists",
         "description": "Check if an object exists",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "responses": {
           "200": {
             "description": "Object exists"
@@ -1002,7 +757,9 @@
       "post": {
         "summary": "Clone Object",
         "description": "Create a copy of an existing object",
-        "tags": ["objects"],
+        "tags": [
+          "objects"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1065,7 +822,10 @@
       "post": {
         "summary": "Upload File to Property",
         "description": "Upload a file to a gallery or depot property",
-        "tags": ["properties", "upload"],
+        "tags": [
+          "properties",
+          "upload"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1091,7 +851,9 @@
       "put": {
         "summary": "Update Property",
         "description": "Update a specific property of an object",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1112,7 +874,9 @@
       "patch": {
         "summary": "Patch Property",
         "description": "Partially update a property",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1133,10 +897,674 @@
       "delete": {
         "summary": "Delete Property",
         "description": "Delete a property from an object",
-        "tags": ["properties"],
+        "tags": [
+          "properties"
+        ],
         "responses": {
           "204": {
             "description": "Property deleted"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/folder": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Create Folder in Depot",
+        "description": "Create a subfolder within a depot (multi-file) property",
+        "tags": [
+          "properties"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Folder path to create"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Folder created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/cache": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "delete": {
+        "summary": "Clear Property Cache",
+        "description": "Clear cached files for a property (e.g., processed images)",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "204": {
+            "description": "Property cache cleared"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/increment/{amount}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The numeric property to increment"
+        },
+        {
+          "name": "amount",
+          "in": "path",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          },
+          "description": "Amount to increment by (default: 1)"
+        }
+      ],
+      "post": {
+        "summary": "Increment Property",
+        "description": "Increment a numeric property value. Respects min/max schema settings. Returns the updated property value.",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "200": {
+            "description": "Property incremented successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "property": {
+                      "type": "string",
+                      "description": "The property name"
+                    },
+                    "value": {
+                      "oneOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "description": "The new property value"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message (e.g., property not numeric, exceeds max value)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/decrement/{amount}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "The numeric property to decrement"
+        },
+        {
+          "name": "amount",
+          "in": "path",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          },
+          "description": "Amount to decrement by (default: 1)"
+        }
+      ],
+      "post": {
+        "summary": "Decrement Property",
+        "description": "Decrement a numeric property value. Respects min/max schema settings. Returns the updated property value.",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "200": {
+            "description": "Property decremented successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "property": {
+                      "type": "string",
+                      "description": "The property name"
+                    },
+                    "value": {
+                      "oneOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "description": "The new property value"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message (e.g., property not numeric, below min value)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/deck": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Create Deck Item",
+        "description": "Create a new card/item in a deck property",
+        "tags": [
+          "properties"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Deck item data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Deck item created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/deck/{itemId}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Get Deck Item",
+        "description": "Get a specific deck item by ID",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "200": {
+            "description": "Deck item data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Deck Item",
+        "description": "Update a deck item completely",
+        "tags": [
+          "properties"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deck item updated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Deck Item",
+        "description": "Delete a deck item from the deck property",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "204": {
+            "description": "Deck item deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/{name}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "put": {
+        "summary": "Update Property Meta",
+        "description": "Update metadata for a specific item in a property (e.g., image alt text, file metadata)",
+        "tags": [
+          "properties"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Metadata to update"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Property meta updated"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Patch Property Meta",
+        "description": "Partially update metadata for a property item",
+        "tags": [
+          "properties"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Property meta patched"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete File from Depot",
+        "description": "Delete a specific file from a depot (multi-file) property",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "204": {
+            "description": "File deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/{name}/cache": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "delete": {
+        "summary": "Clear File Cache",
+        "description": "Clear cached versions of a specific file (e.g., processed images)",
+        "tags": [
+          "properties"
+        ],
+        "responses": {
+          "204": {
+            "description": "File cache cleared"
+          }
+        }
+      }
+    },
+    "/collections/{collection}/{id}/{property}/{name}/move": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "put": {
+        "summary": "Move File in Depot",
+        "description": "Move or rename a file within a depot property",
+        "tags": [
+          "properties"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newPath": {
+                    "type": "string",
+                    "description": "New file path within depot"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File moved successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -1145,14 +1573,19 @@
       "get": {
         "summary": "List Schemas",
         "description": "Get a list of all available schemas",
-        "tags": ["schemas"],
+        "tags": [
+          "schemas"
+        ],
         "parameters": [
           {
             "name": "filter",
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["reserved", "custom"]
+              "enum": [
+                "reserved",
+                "custom"
+              ]
             },
             "description": "Filter schemas by type"
           }
@@ -1177,36 +1610,6 @@
             }
           }
         }
-      },
-      "post": {
-        "summary": "Create Schema",
-        "description": "Create a new custom schema",
-        "tags": ["schemas"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Schema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Schema created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Schema"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
       }
     },
     "/schemas/{id}": {
@@ -1223,7 +1626,9 @@
       "get": {
         "summary": "Get Schema",
         "description": "Get a specific schema definition",
-        "tags": ["schemas"],
+        "tags": [
+          "schemas"
+        ],
         "responses": {
           "200": {
             "description": "Schema definition",
@@ -1240,361 +1645,18 @@
           }
         }
       },
-      "put": {
-        "summary": "Update Schema",
-        "description": "Update a custom schema",
-        "tags": ["schemas"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Schema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Schema updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Schema"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Schema",
-        "description": "Delete a custom schema (built-in schemas cannot be deleted)",
-        "tags": ["schemas"],
-        "responses": {
-          "204": {
-            "description": "Schema deleted"
-          },
-          "400": {
-            "description": "Cannot delete built-in schema"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
       "head": {
         "summary": "Check Schema Exists",
         "description": "Check if a schema exists",
-        "tags": ["schemas"],
+        "tags": [
+          "schemas"
+        ],
         "responses": {
           "200": {
             "description": "Schema exists"
           },
           "404": {
             "description": "Schema not found"
-          }
-        }
-      }
-    },
-    "/import/collections/{collection}/json": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Import JSON Data",
-        "description": "Import JSON data as objects into a collection",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "array",
-                    "items": {
-                      "type": "object"
-                    }
-                  },
-                  "options": {
-                    "type": "object",
-                    "properties": {
-                      "update_existing": {
-                        "type": "boolean",
-                        "default": false
-                      },
-                      "skip_validation": {
-                        "type": "boolean",
-                        "default": false
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Import completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/import/collections/{collection}/csv": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Import CSV Data",
-        "description": "Import CSV data as objects into a collection",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "text/csv": {
-              "schema": {
-                "type": "string",
-                "example": "title,content,status\n\"First Post\",\"Content here\",\"published\"\n\"Second Post\",\"More content\",\"draft\""
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "options": {
-                    "type": "object",
-                    "properties": {
-                      "update_existing": {
-                        "type": "boolean"
-                      },
-                      "delimiter": {
-                        "type": "string",
-                        "default": ","
-                      },
-                      "enclosure": {
-                        "type": "string",
-                        "default": "\""
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Import completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/import/collections/{collection}/factory": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Import Faker Data",
-        "description": "Generate and import fake data using Faker library",
-        "tags": ["import"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "count": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 1000,
-                    "default": 10
-                  },
-                  "locale": {
-                    "type": "string",
-                    "default": "en_US"
-                  },
-                  "template": {
-                    "type": "object",
-                    "description": "Template for generating fake data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Fake data generated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/export/collections/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Export Collection as JSON",
-        "description": "Export collection data as JSON",
-        "tags": ["export"],
-        "parameters": [
-          {
-            "name": "include_media",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Include media files in export"
-          },
-          {
-            "name": "fields",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Comma-separated list of fields to export"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "JSON export data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "collection": {
-                      "type": "string"
-                    },
-                    "exported": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "version": {
-                      "type": "string"
-                    },
-                    "objects": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Object"
-                      }
-                    }
-                  }
-                }
-              },
-              "application/zip": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/export/collections/{collection}/csv": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Export Collection as CSV",
-        "description": "Export collection data as CSV",
-        "tags": ["export"],
-        "parameters": [
-          {
-            "name": "fields",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Comma-separated list of fields to export"
-          },
-          {
-            "name": "delimiter",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "default": ","
-            },
-            "description": "CSV delimiter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "CSV export data",
-            "content": {
-              "text/csv": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
           }
         }
       }
@@ -1631,14 +1693,22 @@
           "required": true,
           "schema": {
             "type": "string",
-            "enum": ["jpg", "jpeg", "png", "webp", "avif"]
+            "enum": [
+              "jpg",
+              "jpeg",
+              "png",
+              "webp",
+              "avif"
+            ]
           }
         }
       ],
       "get": {
         "summary": "Get Processed Image",
         "description": "Get an image with applied processing parameters",
-        "tags": ["imageworks"],
+        "tags": [
+          "imageworks"
+        ],
         "parameters": [
           {
             "name": "w",
@@ -1661,7 +1731,14 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["crop", "contain", "cover", "fill", "inside", "outside"]
+              "enum": [
+                "crop",
+                "contain",
+                "cover",
+                "fill",
+                "inside",
+                "outside"
+              ]
             },
             "description": "Resize mode"
           },
@@ -1754,7 +1831,13 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["topleft", "topright", "bottomleft", "bottomright", "center"]
+              "enum": [
+                "topleft",
+                "topright",
+                "bottomleft",
+                "bottomright",
+                "center"
+              ]
             },
             "description": "Watermark position"
           },
@@ -1829,7 +1912,9 @@
       "get": {
         "summary": "Download File",
         "description": "Download a file from an object property",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "parameters": [
           {
             "name": "filename",
@@ -1869,7 +1954,9 @@
       "post": {
         "summary": "Download Protected File",
         "description": "Download a password-protected file",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1940,7 +2027,9 @@
       "get": {
         "summary": "Download Depot File",
         "description": "Download a specific file from a depot (multi-file) property with Content-Disposition: attachment",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "parameters": [
           {
             "name": "path",
@@ -1982,7 +2071,9 @@
       "post": {
         "summary": "Download Protected Depot File",
         "description": "Download a password-protected depot file",
-        "tags": ["download"],
+        "tags": [
+          "download"
+        ],
         "parameters": [
           {
             "name": "path",
@@ -2058,7 +2149,9 @@
       "get": {
         "summary": "Stream File",
         "description": "Stream a file with Content-Disposition: inline and HTTP range request support. Ideal for video/audio files.",
-        "tags": ["streaming"],
+        "tags": [
+          "streaming"
+        ],
         "parameters": [
           {
             "name": "pwd",
@@ -2185,7 +2278,9 @@
       "get": {
         "summary": "Stream Depot File",
         "description": "Stream a specific file from a depot (multi-file) property with range request support",
-        "tags": ["streaming"],
+        "tags": [
+          "streaming"
+        ],
         "parameters": [
           {
             "name": "path",
@@ -2261,195 +2356,6 @@
         }
       }
     },
-    "/templates": {
-      "get": {
-        "summary": "List Templates",
-        "description": "Get a list of all available templates",
-        "tags": ["templates"],
-        "responses": {
-          "200": {
-            "description": "List of templates",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "templates": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "description": {
-                            "type": "string"
-                          },
-                          "modified": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/templates/{template}": {
-      "parameters": [
-        {
-          "name": "template",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Get Template",
-        "description": "Get template content",
-        "tags": ["templates"],
-        "responses": {
-          "200": {
-            "description": "Template content",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
-      "post": {
-        "summary": "Save Template",
-        "description": "Save or update a template",
-        "tags": ["templates"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "text/plain": {
-              "schema": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Template saved"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Template",
-        "description": "Delete a template",
-        "tags": ["templates"],
-        "responses": {
-          "204": {
-            "description": "Template deleted"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    },
-    "/jobqueue/stats": {
-      "get": {
-        "summary": "Get Job Queue Statistics",
-        "description": "Get overall job queue statistics",
-        "tags": ["jobqueue"],
-        "responses": {
-          "200": {
-            "description": "Job queue statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobQueueStats"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/jobqueue/stats/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Get Collection Job Queue Statistics",
-        "description": "Get job queue statistics for a specific collection",
-        "tags": ["jobqueue"],
-        "responses": {
-          "200": {
-            "description": "Collection job queue statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JobQueueStats"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/jobqueue": {
-      "delete": {
-        "summary": "Clear Job Queue",
-        "description": "Clear all jobs from the queue",
-        "tags": ["jobqueue"],
-        "responses": {
-          "204": {
-            "description": "Job queue cleared"
-          }
-        }
-      }
-    },
-    "/jobqueue/{collection}": {
-      "parameters": [
-        {
-          "name": "collection",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "delete": {
-        "summary": "Clear Collection Job Queue",
-        "description": "Clear all jobs for a specific collection",
-        "tags": ["jobqueue"],
-        "responses": {
-          "204": {
-            "description": "Collection job queue cleared"
-          }
-        }
-      }
-    },
     "/feed/rss/{collection}": {
       "parameters": [
         {
@@ -2464,7 +2370,9 @@
       "get": {
         "summary": "Get RSS Feed",
         "description": "Generate RSS feed for a collection",
-        "tags": ["feeds"],
+        "tags": [
+          "feeds"
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -2504,7 +2412,9 @@
       "get": {
         "summary": "Generate Sitemap",
         "description": "Generate XML sitemap for a collection",
-        "tags": ["system"],
+        "tags": [
+          "system"
+        ],
         "responses": {
           "200": {
             "description": "XML sitemap",
@@ -2519,14 +2429,267 @@
         }
       }
     },
-    "/cache": {
+    "/emergency/cache/clear": {
+      "get": {
+        "summary": "Emergency Cache Clear",
+        "description": "Public endpoint for clearing all caches when admin interface is inaccessible. No authentication required - accessible from any location for customer self-service.",
+        "tags": [
+          "system"
+        ],
+        "responses": {
+          "200": {
+            "description": "Cache cleared successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "caches_cleared": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of cache types that were cleared"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/mailer": {
+      "post": {
+        "summary": "Send Email",
+        "description": "Send email via form submission with rate limiting. Useful for contact forms and notifications.",
+        "tags": [
+          "system"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Recipient email address"
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Sender email address"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "description": "Email subject"
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "Email body (HTML or plain text)"
+                  },
+                  "replyTo": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Reply-to email address"
+                  }
+                },
+                "required": [
+                  "to",
+                  "from",
+                  "subject",
+                  "body"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload/{collection}/{id}/{property}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Upload File (Froala Editor)",
+        "description": "Upload file via Froala WYSIWYG editor. Used internally by the styled text editor.",
+        "tags": [
+          "upload"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "link": {
+                      "type": "string",
+                      "description": "URL to uploaded file"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/upload/{collection}/{id}/{property}/{name}": {
+      "parameters": [
+        {
+          "name": "collection",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "property",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Get Uploaded File (Froala)",
+        "description": "Retrieve file uploaded via Froala editor",
+        "tags": [
+          "upload"
+        ],
+        "responses": {
+          "200": {
+            "description": "File content",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
       "delete": {
-        "summary": "Clear Cache",
-        "description": "Clear all application caches",
-        "tags": ["system"],
+        "summary": "Delete Uploaded File (Froala)",
+        "description": "Delete file uploaded via Froala editor",
+        "tags": [
+          "upload"
+        ],
         "responses": {
           "204": {
-            "description": "Cache cleared"
+            "description": "File deleted successfully"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }

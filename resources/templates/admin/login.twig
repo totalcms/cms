@@ -7,7 +7,7 @@
 
 	<section class="login-above">
 		{{ include([
-			'login-above.twig',
+			'whitelabel/login-above.twig',
 			'login-above-default.twig'
 		], ignore_missing = true) }}
 	</section>
@@ -20,55 +20,18 @@
 		</div>
 	{% endif %}
 
-	<section class="login-form">
-		{% set action = cms.api ~ '/login' %}
-		{% if collection %}
-			{% set action = cms.api ~ '/login/' ~ collection %}
-		{% endif %}
-		<form class="totalform" method="post" action="{{ action }}" data-disabled="true">
-			{{ csrf_field() }}
-
-			{# Preserve redirect parameter if present #}
-			{% if getData.redirect %}
-				<input type="hidden" name="redirect" value="{{ getData.redirect }}">
-			{% endif %}
-			<div class="form-field email-field" data-type="email">
-				<label for="field-66e386299df7c">Email</label>
-				<div class="form-group">
-					<input type="email" id="field-66e386299df7c" name="email" placeholder="email@company.com" aria-describedby="help-66e386299df7c" required autofocus>
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help cms-hide" id="help-66e386299df7c">Email address for the login</p>
-			</div>
-
-			<div class="form-field password-field" data-type="password">
-				<label for="field-66e386299dfa7">Password</label>
-				<div class="form-group">
-					<input type="password" id="field-66e386299dfa7" name="password" placeholder="p@ssw0rd" aria-describedby="help-66e386299dfa7" required class="allow-enter">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="cms-hide help" id="help-66e386299dfa7">Password to login</p>
-			</div>
-
-			<div class="form-field checkbox-field" data-type="checkbox">
-				<div class="form-group">
-					<input id="field-persistent-login" name="persistent_login" type="checkbox" aria-describedby="help-persistent-login">
-					<label for="field-persistent-login">Keep me signed in</label>
-				</div>
-				<p class="help cms-hide" id="help-persistent-login">Stay logged in until you explicitly logout or clear browser data</p>
-			</div>
-
-			<button class="dash-button" type="submit">Sign in</button>
-			{% for message in flash.get('error') %}
-				<p class="cms-twig-error" role="alert">
-					{{ message }}
-				</p>
-			{% endfor %}
-		</form>
-	</section>
+	{% set errorMessages = [] %}
+	{% for message in flash.get('error') %}
+		{% set errorMessages = errorMessages|merge([message]) %}
+	{% endfor %}
+	{{ cms.form.loginForm({
+		collection    : collection ?? null,
+		redirect      : getData.redirect ?? null,
+		flashMessages : errorMessages
+	}) }}
 
 	<section class="login-below">
-		{{ include('login-below.twig', ignore_missing = true) }}
+		{{ include('whitelabel/login-below.twig', ignore_missing = true) }}
 	</section>
 </main>
 {% endblock %}

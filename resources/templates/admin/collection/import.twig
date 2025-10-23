@@ -7,7 +7,7 @@
 		}) }}
 	</section>
 
-	<section>
+	<section class="import-forms">
 		<details class="cms-accordion">
 			<summary>CSV Import into {{ url.collection | title }}</summary>
 			<div class="content" style="margin-bottom:2rem">
@@ -48,8 +48,10 @@
 
 	<script>
 	document.addEventListener("DOMContentLoaded", event => {
-		const details = Array.from(document.querySelectorAll("details"));
-		const accordion = new Details(details, {openFirst:true});
+		const container = document.querySelector(".import-forms");
+		if (container) {
+			const accordion = new Details(container, {openFirst:true});
+		}
 	});
 	</script>
 

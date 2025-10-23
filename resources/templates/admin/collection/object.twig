@@ -1,13 +1,17 @@
 {# Edit Object Form #}
+{% set canSave = cms.canAccessCollection(url.collection, url.id ? 'update' : 'create') %}
+{% set canDelete = cms.canAccessCollection(url.collection, 'delete') %}
 {% set form = cms.form.builder(url.collection, {
 	id           : url.id,
-	save         : "Save",
-	delete       : "Delete",
+	save         : canSave ? "Save" : false,
+	delete       : canDelete ? "Delete" : false,
 	helpStyle    : 'label',
 	helpOnFocus  : true,
-	deleteAction : {
-		"action" : "redirect",
-		"link"   : "collections/#{url.collection}"
-	},
+	deleteActions : [
+		{
+			"action" : "redirect",
+			"link"   : "collections/#{url.collection}"
+		}
+	],
 }) %}
 {{ form.autoBuild() }}

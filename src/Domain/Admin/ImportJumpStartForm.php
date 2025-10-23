@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 readonly class ImportJumpStartForm implements \Stringable
 {
@@ -11,14 +12,16 @@ readonly class ImportJumpStartForm implements \Stringable
 	public function __construct(
 		private string $api,
 		private string $label = 'Import JumpStart Data',
+		private ?CSRFTokenManager $csrfManager = null,
 	) {
 		$this->simpleform = new SimpleForm(
-			api     : $this->api,
-			route   : '/import/jumpstart',
-			method  : 'POST',
-			label   : $this->label,
-			class   : 'import-form',
-			refresh : true,
+			api         : $this->api,
+			route       : '/import/jumpstart',
+			method      : 'POST',
+			label       : $this->label,
+			class       : 'import-form',
+			refresh     : true,
+			csrfManager : $this->csrfManager,
 		);
 	}
 

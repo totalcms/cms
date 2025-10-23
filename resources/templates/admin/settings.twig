@@ -1,196 +1,76 @@
 {% extends "admin-dashboard.twig" %}
 
+{% set sections = {
+	'installation': {
+		'label': 'Installation',
+		'description': 'Bootstrap and installation configuration'
+	},
+	'general': {
+		'label': 'General',
+		'description': 'Core application settings'
+	},
+	'auth': {
+		'label': 'Authentication',
+		'description': 'User authentication settings'
+	},
+	'cache': {
+		'label': 'Cache',
+		'description': 'Cache backend configuration'
+	},
+	'dashboard': {
+		'label': 'Dashboard',
+		'description': 'Admin dashboard configuration'
+	},
+	'htmlclean': {
+		'label': 'HTML Sanitization',
+		'description': 'HTML cleaning and sanitization'
+	},
+	'imageworks': {
+		'label': 'ImageWorks',
+		'description': 'Image processing and watermarks'
+	},
+	'mailer': {
+		'label': 'Mailer',
+		'description': 'Email sending and rate limiting'
+	},
+	'smtp': {
+		'label': 'SMTP',
+		'description': 'Email server configuration'
+	},
+} %}
+
 {% block dashcontent %}
 
-	<main class="dash-main-content doc-content">
-		<h1>Total CMS Settings</h1>
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" name="filter" class="filter" placeholder="Filter Settings" autofocus />
+	</header>
 
-		<p>This form will manage and save global settings for Total CMS. These settings will be saved in a
-			<code>tcms.php</code> in the DOCUMENT_ROOT of the server.</p>
+	<nav class="links" id="settings-links">
+		<ul>
+			{% for sectionId, section in sections %}
+			<li class="settings-{{ sectionId }}">
+				<a {% if url.section == sectionId %}class="active"{% endif %}
+					href="settings/{{ sectionId }}"
+					title="{{ section.description }}">{{ section.label }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+	</nav>
+</aside>
 
-		{# {{ var_dump(settings) }} #}
+<main class="dash-main-content">
+	<header>
+		<h1><a href="settings">settings</a> / <span>{{ sections[currentSection].label | lower }}</span></h1>
+	</header>
 
-		{% set formfields %} {% apply raw %}
+	<section class="dash-content-section">
+		{% if sections[currentSection].description %}
+		<p>{{ sections[currentSection].description }}</p>
+		{% endif %}
 
-			<div class="form-field checkbox-field" data-type="checkbox">
-				<div class="form-group">
-					<input type="checkbox"
-						{% if settings.sentry is null %}
-							checked
-						{% else %}
-							{% if settings.sentry == true %}checked{% endif %}
-						{% endif %}
-						id="field-sentry"
-						name="sentry"
-						aria-describedby="help-sentry">
-					<label for="field-sentry">Share Application Errors with Developer?</label>
-				</div>
-				<p class="help" id="help-sentry">
-				In the case any critical errors happen in Total CMS, the details of the error will be shared with the
-				developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored.
-				Only there error and where the error occurred in the code will be shared. If disabled, errors will
-				only be logged locally on your server.
-				</p>
-			</div>
-
-			<div class="form-field text-field" data-type="text">
-				<label for="datadir">CMS Data Directory</label>
-				<div class="form-group">
-					<input type="text"
-						value="{{ settings.datadir }}"
-						id="datadir"
-						name="datadir"
-						aria-describedby="help-datadir"
-						placeholder="{{ defaults.datadir }}">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-datadir">
-					The location where the CMS data will be saved on the server. The location must be writable by the server.
-					When not set, the default location will be used: <code>&lt;docroot&gt;/tcms-data</code>. Any existing
-					data that you might have will need to be manually migrated to the new location.
-				</p>
-			</div>
-
-			<div class="form-field text-field" data-type="text">
-				<label for="api">Custom API URL</label>
-				<div class="form-group">
-					<input type="text"
-						value="{{ settings.api }}"
-						id="api"
-						name="api"
-						aria-describedby="help-api"
-						placeholder="{{ defaults.api }}">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-api">
-					If you have a custom installation of Total CMS, you can set the URL of the API endpoint here.
-				</p>
-			</div>
-
-			<div class="form-field text-field" data-type="text">
-				<label for="notfound">404 - Page Not Found Path</label>
-				<div class="form-group">
-					<input type="text"
-						value="{{ settings.notfound }}"
-						id="notfound"
-						name="notfound"
-						aria-describedby="help-notfound"
-						placeholder="{{ defaults.notfound }}">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-notfound">
-					The path to the 404 page that will be used when a page is not found. This is used by the
-					CMS to redirect when an object is not found.
-				</p>
-			</div>
-
-			<div class="form-field text-field" data-type="text">
-				<label for="title">Admin Dashboard Browser Title</label>
-				<div class="form-group">
-					<input type="text"
-						value="{{ settings.dashboard.title }}"
-						id="title"
-						name="title"
-						aria-describedby="help-title"
-						placeholder="{{ defaults.dashboard.title }}">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-title">
-					The browser title displayed in admin dashboard pages. This appears in the browser tab and bookmarks.
-				</p>
-			</div>
-
-			<div class="form-field number-field" data-type="number">
-				<label for="pagination">Dashboard Table Pagination</label>
-				<div class="form-group">
-					<input type="number"
-						value="{{ settings.dashboard.pagination }}"
-						id="pagination"
-						name="pagination"
-						aria-describedby="help-pagination"
-						placeholder="{{ defaults.dashboard.pagination }}">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-pagination">
-					The number of items to display per page in the dashboard table. Set the value to <code>0</code>
-					to disable pagination. When set to <code>0</code>, all items will be displayed on a single page.
-				</p>
-			</div>
-
-			<div class="form-field select-field" data-type="select">
-				<label for="timezone">Timezone</label>
-				<div class="form-group">
-					<select name="timezone" id="timezone" aria-describedby="help-timezone">
-						<option class="placeholder" value="" disabled{% if settings.timezone is empty %} selected{% endif %}>{{ defaults.timezone }}</option>
-						{% for timezone in timezones %}
-						<option value="{{ timezone }}"{% if settings.timezone == timezone %} selected{% endif %}>{{ timezone }}</option>
-						{% endfor %}
-					</select>
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-timezone">
-					The timezone that all dates in the CMS will be saved as. If not set, then the default timezone
-					that the server is configured with will be used.
-				</p>
-			</div>
-
-			<div class="form-field text-field" data-type="text">
-				<label for="watermarksGallery">Watermark Gallery</label>
-				<div class="form-group">
-					<input type="text"
-						value="{{ settings.watermarksGallery }}"
-						id="watermarksGallery"
-						name="watermarksGallery"
-						aria-describedby="help-watermarksGallery"
-						placeholder="{{ defaults.imageworks.watermarksGallery }}">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-watermarksGallery">
-					The ID of the gallery where watermarks should be uploaded to. If not set, the default
-					<code>watermarks</code> ID will be used.
-				</p>
-			</div>
-
-			<div class="form-field text-field" data-type="text">
-				<label for="watermarkFontsDepot">Watermark Fonts Depot</label>
-				<div class="form-group">
-					<input type="text"
-						value="{{ settings.watermarkFontsDepot }}"
-						id="watermarkFontsDepot"
-						name="watermarkFontsDepot"
-						aria-describedby="help-watermarkFontsDepot"
-						placeholder="{{ defaults.imageworks.watermarkFontsDepot }}">
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-watermarkFontsDepot">
-					The ID of the depot where TTF font files for text watermarks should be uploaded to. If not set, the default
-					<code>watermark-fonts</code> ID will be used.
-				</p>
-			</div>
-
-			<div class="form-field json-field" data-type="json">
-				<label for="field-presets">Imageworks Presets</label>
-				<div class="form-group">
-					<textarea id="field-presets" name="presets" rows="12" aria-describedby="help-presets"
-					placeholder="{{ defaults.imageworks.presets | json_encode(constant('JSON_PRETTY_PRINT')) | e('html_attr') }}" >{% if settings.presets %}{{ settings.presets | json_encode(constant('JSON_PRETTY_PRINT')) }}{% endif %}</textarea>
-					<div class="form-group-icon"></div>
-				</div>
-				<p class="help" id="help-presets">
-				JSON that defines presets that can be used for image generation. See the ImageWorks documentation
-				for details on all of the parameters that can be used.
-				</p>
-			</div>
-
-		{% endapply %} {% endset %}
-
-		<div id="settings-form">
-		{{ cms.form.simple("/admin/settings", formfields, {
-			method : "POST",
-			label  : "Save Settings",
-			class  : "help-on-hover help-box",
-		}) }}
-		</div>
-
-	</main>
+		{{ cms.form.settings(currentSection) }}
+	</section>
+</main>
 
 {% endblock %}

@@ -50,11 +50,11 @@ readonly class AdminDocsAction
 		$htmlFile     = "{$docsDir}/{$page}.html";
 		$markdownFile = "{$docsDir}/{$page}.md";
 
-		// If neither file exists, default to index
+		// If neither file exists, return 404
 		if (!file_exists($htmlFile) && !file_exists($markdownFile)) {
-			$page         = 'index';
-			$htmlFile     = "{$docsDir}/{$page}.html";
-			$markdownFile = "{$docsDir}/{$page}.md";
+			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
+			]);
 		}
 
 		$data = [];
@@ -72,14 +72,8 @@ readonly class AdminDocsAction
 			$data            = $document->getData();
 			$data['content'] = $parsedown->text($document->getContent());
 		} elseif (file_exists($htmlFile)) {
-			$htmlContents = file_get_contents($htmlFile);
-			if ($htmlContents !== false) {
-				$data['content'] = $htmlContents;
-			} else {
-				$data['content'] = 'Unable to read page';
-			}
-		} else {
-			$data['content'] = 'Page not found';
+			$htmlContents    = file_get_contents($htmlFile);
+			$data['content'] = $htmlContents !== false ? $htmlContents : 'Unable to read page';
 		}
 
 		$data['page'] = $page;

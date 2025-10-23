@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * Factory Form Builder.
@@ -25,13 +26,15 @@ readonly class FactoryForm implements \Stringable
 		private int $quantity = 3,
 		private bool $showJobQueue = true,
 		private array $rules  = [],
+		private ?CSRFTokenManager $csrfManager = null,
 	) {
 		$this->simpleform = new SimpleForm(
-			api: $this->api,
-			route: "/import/collections/{$this->collection}/factory",
-			method: 'POST',
-			label: $this->label,
-			refresh: $this->refresh
+			api         : $this->api,
+			route       : "/import/collections/{$this->collection}/factory",
+			method      : 'POST',
+			label       : $this->label,
+			refresh     : $this->refresh,
+			csrfManager : $this->csrfManager,
 		);
 	}
 

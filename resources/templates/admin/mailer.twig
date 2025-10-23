@@ -1,0 +1,136 @@
+{% extends "admin-dashboard.twig" %}
+
+{% block dashcontent %}
+
+<aside class="dash-content-sidebar">
+	<header>
+		<input type="search" name="filter" class="filter" placeholder="Filter Emails" autofocus />
+	</header>
+
+	<nav class="links" id="mailer-links">
+		{% set mailers = cms.objects("mailer") %}
+		{% if mailers|length == 0 %}
+			<h3>Email Templates</h3>
+			<ul>
+				<li class="no-mailers">No email templates found</li>
+			</ul>
+		{% else %}
+			{% set mailersByCategory = {} %}
+			{% for mailer in mailers %}
+				{% set category = mailer.category|default('Email Templates') %}
+				{% set mailersByCategory = mailersByCategory|merge({(category): (mailersByCategory[category]|default([]))|merge([mailer])}) %}
+			{% endfor %}
+
+			{% for category, categoryMailers in mailersByCategory %}
+			<details id="category-{{ category | slug }}" open>
+				<summary>{{ category }}</summary>
+				<ul>
+					{% for mailer in sortByKey(categoryMailers) %}
+					<li class="mailer-item">
+						<a  {% if url.id == mailer.id %}class="active"{% endif %}
+							href="mailer/{{ mailer.id }}"
+							title="{{ mailer.description | escape }}">
+							{{ mailer.name }}
+						</a>
+					</li>
+					{% endfor %}
+				</ul>
+			</details>
+			{% endfor %}
+		{% endif %}
+	</nav>
+
+	<footer>
+		<a class="dash-button full transparent" href="mailer/new" title="Create a new email template">+ New Email</a>
+	</footer>
+</aside>
+{% include "admin/sidebar-details.twig" %}
+
+<main class="dash-main-content">
+
+{% if url.id is empty %}
+
+	{% include "admin/mailer/home.twig" %}
+
+{% else %}
+
+	<header>
+		<h1><a href="mailer">mailer</a> / <span>{{ (url.id starts with '-' ? url.id|slice(1) : url.id) }}</span></h1>
+		<button class="dash-action-dots" title="Mailer Actions" popovertarget="mailer-actions"></button>
+		<nav popover id="mailer-actions">
+			<ul>
+				<li class="export"><a href="mailer/-export">Export</a></li>
+				<li class="import"><a href="mailer/-import">Import</a></li>
+			</ul>
+		</nav>
+	</header>
+
+{% if url.id == '-export' %}
+
+	{% include "admin/collection/export.twig" %}
+
+{% elseif url.id == '-import' %}
+
+	{% include "admin/collection/import.twig" %}
+
+{% else %}
+	<section class="dash-content-section">
+
+		{{ cms.form.mailer(url.id == 'new' ? '' : url.id, {
+			deleteActions : [{
+				"action" : "redirect",
+				"link"   : "mailer"
+			}],
+			newActions   : [{
+				"action" : "redirect-object",
+				"link"   : "mailer/{id}"
+			}],
+		}) }}
+
+		{% if url.id and url.id != '' %}
+		<section class="mail-test-section">
+			<h2>Test Email</h2>
+			<p>Send a test email using this template. Enter test data in JSON format to test Twig variable substitution.</p>
+
+			{% set testDataField %}
+				<input type="hidden" name="mailerId" value="{{ url.id }}" />
+				{{ cms.form.field("json", "data", {
+					label       : "Test Data (JSON)",
+					help        : "Enter JSON data to use for Twig variable substitution.",
+					placeholder : '{"email": "test@example.com", "name": "John Doe"}',
+					rows        : 6,
+				}) }}
+			{% endset %}
+
+			{{ cms.form.simple('/action/mailer', testDataField, {
+				class  : "test-email-form",
+				method : "POST",
+				label  : "Send Test Email",
+				ajax   : true,
+			}) }}
+		</section>
+		{% endif %}
+
+	</section>
+{% endif %}
+
+{% endif %}
+
+</main>
+
+<style>
+.mail-test-section {
+	margin-top: 3rem;
+	padding-top: 2rem;
+	border-top: 2px solid oklch(var(--totalform-border-color));
+}
+.mail-test-section h2 {
+	margin-bottom: 0.5rem;
+	color: oklch(var(--totalform-nearblack));
+}
+.mail-test-section p {
+	margin-bottom: 1.5rem;
+	color: oklch(var(--totalform-darkgray));
+}
+</style>
+{% endblock %}

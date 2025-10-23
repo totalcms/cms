@@ -46,11 +46,14 @@ class DepotField extends FormField
 	/** @param array<string,mixed> $depot */
 	private function protectionDialog(array $depot): string
 	{
+		// Determine default protected value from settings or default to true
+		$defaultProtected = $this->settings['protectedByCollection'] ?? true;
+
 		$content = $this->form->field('protected', [
 			'field'       => 'checkbox',
 			'label'       => 'Protected by Collection',
 			'help'        => 'Access group protection is set in the Collection.',
-			'value'       => $depot['protected'] ?? false,
+			'value'       => $depot['protected'] ?? $defaultProtected,
 		]);
 		$content .= $this->form->field('password', [
 			'field' => 'password',

@@ -32,12 +32,12 @@
 					</option>
 				{% endfor %}
 			</select>
-			<label for="filter">Filter Property for Sitemap (must be indexed)</label>
-			<select name="filter">
+			<label for="include">Include Property for Sitemap (must be indexed)</label>
+			<select name="include">
 				<option value="">Select a Property</option>
 				{% for property in schema.index %}
 					<option value="{{ property }}"
-						{% if postData.filter == property %}selected{% endif %}>
+						{% if postData.include == property %}selected{% endif %}>
 						{{ property }}
 					</option>
 				{% endfor %}

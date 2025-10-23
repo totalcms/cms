@@ -30,7 +30,7 @@ class SessionKeysTest extends TestCase
 		$allKeys = SessionKeys::getAllKeys();
 
 		$this->assertIsArray($allKeys);
-		$this->assertCount(8, $allKeys);
+		$this->assertCount(9, $allKeys);
 
 		// Ensure all expected keys are present
 		$this->assertContains(SessionKeys::AUTH_USER, $allKeys);
@@ -40,6 +40,7 @@ class SessionKeysTest extends TestCase
 		$this->assertContains(SessionKeys::REQUEST_REFERER_URL, $allKeys);
 		$this->assertContains(SessionKeys::LAST_ACTIVITY, $allKeys);
 		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $allKeys);
+		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $allKeys);
 		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $allKeys);
 	}
 
@@ -83,9 +84,10 @@ class SessionKeysTest extends TestCase
 		$activityKeys = SessionKeys::getActivityKeys();
 
 		$this->assertIsArray($activityKeys);
-		$this->assertCount(3, $activityKeys);
+		$this->assertCount(4, $activityKeys);
 		$this->assertContains(SessionKeys::LAST_ACTIVITY, $activityKeys);
 		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $activityKeys);
+		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $activityKeys);
 		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $activityKeys);
 	}
 

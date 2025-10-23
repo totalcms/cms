@@ -1,5 +1,7 @@
 body {
-	margin : 0;
+	margin           : 0;
+	background-color : oklch(var(--totalform-white));
+	color            : oklch(var(--totalform-text-color));
 }
 
 .admin-dashboard {
@@ -15,6 +17,7 @@ body {
 	align-content      : space-between;
 	border-right       : 1px solid oklch(var(--totalform-lightgray));
 	grid-template-rows : auto 1fr auto;
+	overflow-y         : auto;
 
 	.menu {
 		display         : grid;
@@ -42,16 +45,30 @@ body {
 			display          : block;
 			width            : 3rem;
 			height           : 3rem;
+			position         : relative;
+			text-indent      : -9999px;
+		}
+		a:not(.custom-logo) {
 			background-color : oklch(var(--totalform-nearblack));
 			mask-size        : 1.5rem;
 			mask-repeat      : no-repeat;
 			mask-position    : center;
-			position         : relative;
-			text-indent      : -9999px;
+		}
+		.custom-logo {
+			display         : grid;
+			justify-content : center;
+			align-items     : center;
+
+			svg, img {
+				width : 1.5rem;
+			}
 		}
 	}
 	.home {
 		mask-image : var(--icon-logo);
+	}
+	.templates {
+		mask-image : var(--icon-puzzle);
 	}
 	.schemas {
 		mask-image : var(--icon-schema);
@@ -63,13 +80,16 @@ body {
 		mask-image : var(--icon-tools);
 	}
 	.settings {
-		mask-image : var(--icon-settings);
+		mask-image : var(--icon-cog);
 	}
 	.docs {
 		mask-image : var(--icon-docs);
 	}
 	.playground {
 		mask-image : var(--icon-twig-playground);
+	}
+	.mailer {
+		mask-image : var(--icon-mailer);
 	}
 }
 
@@ -94,8 +114,26 @@ body {
 	min-width          : 256px;
 	height             : 100vh;
 
-	h3 {
-		color: oklch(var(--totalform-mediumgray));
+	summary {
+		font-size           : 1.2rem;
+		font-weight         : bold;
+		color               : oklch(var(--totalform-mediumgray));
+		cursor              : pointer;
+		margin-bottom       : 0.5rem;
+		user-select         : none;
+		margin-inline-start : -0.5rem;
+
+		&::marker {
+			font-size : 1rem;
+			color     : oklch(var(--totalform-mediumgray) / 0.8);
+			content   : "▿ ";
+		}
+	}
+	details:not([open]) summary::marker {
+		content : "▹ ";
+	}
+	details:not(:first-child) {
+		margin-top : 1.5rem;
 	}
 
 	header {
@@ -112,13 +150,6 @@ body {
 			font-style : italic;
 		}
 
-		h3 {
-			margin-bottom: 0.5rem;
-
-			&:not(:first-child) {
-				margin-top : 1.5rem;
-			}
-		}
 
 		ul {
 			list-style : none;
@@ -128,24 +159,37 @@ body {
 		li {
 			--collection-icon : var(--icon-collections);
 
-			&.schema-auth { --collection-icon : var(--icon-user) }
+			&[class*="schema-"] {
+				--collection-icon : var(--icon-schema);
+			}
+			&[class*="settings-"] {
+				--collection-icon : var(--icon-cog);
+			}
+			&[class*="template-"] {
+				--collection-icon : var(--icon-file-code);
+			}
+			&[class*="mailer-"] {
+				--collection-icon : var(--icon-plane);
+			}
+			&.schema-auth, &.collection-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,
-			&.schema-blog { --collection-icon : var(--icon-blog) }
-			&.schema-feed { --collection-icon : var(--icon-feed) }
-			&.schema-color { --collection-icon : var(--icon-paint-brush) }
-			&.schema-date { --collection-icon : var(--icon-date) }
-			&.schema-depot { --collection-icon : var(--icon-depot) }
-			&.schema-email { --collection-icon : var(--icon-email) }
-			&.schema-file { --collection-icon : var(--icon-file) }
-			&.schema-gallery { --collection-icon : var(--icon-gallery) }
-			&.schema-image { --collection-icon : var(--icon-image) }
-			&.schema-number { --collection-icon : var(--icon-number) }
-			&.schema-playground { --collection-icon : var(--icon-twig-playground) }
-			&.schema-styledtext { --collection-icon : var(--icon-styledtext) }
-			&.schema-svg { --collection-icon : var(--icon-svg) }
-			&.schema-text { --collection-icon : var(--icon-text) }
-			&.schema-toggle { --collection-icon : var(--icon-toggle) }
-			&.schema-url { --collection-icon : var(--icon-link) }
+			&.schema-blog, &.collection-blog { --collection-icon : var(--icon-blog) }
+			&.schema-feed, &.collection-feed { --collection-icon : var(--icon-feed) }
+			&.schema-color, &.collection-color { --collection-icon : var(--icon-paint-brush) }
+			&.schema-date, &.collection-date { --collection-icon : var(--icon-date) }
+			&.schema-depot, &.collection-depot { --collection-icon : var(--icon-depot) }
+			&.schema-email, &.collection-email { --collection-icon : var(--icon-email) }
+			&.schema-file, &.collection-file { --collection-icon : var(--icon-file) }
+			&.schema-gallery, &.collection-gallery { --collection-icon : var(--icon-gallery) }
+			&.schema-image, &.collection-image { --collection-icon : var(--icon-image) }
+			&.schema-number, &.collection-number { --collection-icon : var(--icon-number) }
+			&.schema-playground, &.collection-playground { --collection-icon : var(--icon-twig-playground) }
+			&.schema-mailer, &.collection-mailer { --collection-icon : var(--icon-mailer) }
+			&.schema-styledtext, &.collection-styledtext { --collection-icon : var(--icon-styledtext) }
+			&.schema-svg, &.collection-svg { --collection-icon : var(--icon-svg) }
+			&.schema-text, &.collection-text { --collection-icon : var(--icon-text) }
+			&.schema-toggle, &.collection-toggle { --collection-icon : var(--icon-toggle) }
+			&.schema-url, &.collection-url { --collection-icon : var(--icon-link) }
 			&.logs { --collection-icon : var(--icon-warn) }
 			&.image-batcher { --collection-icon : var(--icon-image) }
 			&.cache-manager { --collection-icon : var(--icon-clean-o) }
@@ -155,6 +199,10 @@ body {
 			&.server-checker { --collection-icon : var(--icon-health) }
 			&.playground-snippet { --collection-icon : var(--icon-macro) }
 			&.jumpstart { --collection-icon : var(--icon-jumpstart) }
+			&.api-keys { --collection-icon : var(--icon-apikey) }
+			&.license-manager { --collection-icon : var(--icon-license) }
+			&.jobqueue { --collection-icon : var(--icon-terminal) }
+			&.access-groups { --collection-icon : var(--icon-group) }
 		}
 		&.docs li {
 			--collection-icon : var(--icon-bookmark);
@@ -229,11 +277,11 @@ body {
 			color : oklch(var(--totalform-darkgray));
 		}
 	}
-	p, ul, ol {
+	p:not(.help), ul, ol {
 		max-width  : 65ch;
 		margin-top : 1rem;
 	}
-	p:first-of-type {
+	p:not(.help):first-of-type {
 		margin-top: 0;
 	}
 	form {
@@ -255,7 +303,7 @@ body {
 	display      : block;
 	padding-left : 4rem;
 
-	> *:not(pre) {
+	> *:not(pre):not(div) {
 		max-width : 65ch;
 	}
 
@@ -286,7 +334,7 @@ body {
 	gap           : 1rem;
 	align-content : start;
 
-	p, ul, ol {
+	p:not(.help), ul, ol {
 		max-width : 65ch;
 	}
 }
@@ -384,5 +432,216 @@ pre {
 		mask-image      : var(--icon-error-fill);
 		background-color : oklch(var(--totalform-error));
 		animation       : license-attention 0.6s ease-out 2s;
+	}
+}
+
+// Mobile menu toggle button
+.mobile-menu-toggle {
+	display          : none;
+	position         : fixed;
+	bottom           : 1.5rem;
+	right            : 1.5rem;
+	width            : 56px;
+	height           : 56px;
+	border-radius    : 50%;
+	background-color : oklch(var(--totalform-nearblack));
+	border           : none;
+	box-shadow       : 0 4px 12px rgba(0, 0, 0, 0.15);
+	z-index          : 1001;
+	cursor           : pointer;
+	transition       : all 0.2s ease;
+
+	&::before {
+		content          : " ";
+		display          : block;
+		width            : 28px;
+		height           : 28px;
+		position         : absolute;
+		top              : 50%;
+		left             : 50%;
+		transform        : translate(-50%, -50%);
+		background-color : oklch(var(--totalform-white));
+		mask-image       : var(--icon-menu);
+		mask-size        : contain;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+		transition       : transform 0.2s ease;
+	}
+
+	&:hover {
+		transform : scale(1.05);
+		box-shadow : 0 6px 16px rgba(0, 0, 0, 0.2);
+	}
+
+	&:active {
+		transform : scale(0.95);
+	}
+
+	&.active::before {
+		mask-image : var(--icon-close);
+	}
+}
+
+// Mobile overlay backdrop
+.mobile-overlay {
+	display          : none;
+	position         : fixed;
+	inset            : 0;
+	background-color : rgba(0, 0, 0, 0.5);
+	z-index          : 999;
+	opacity          : 0;
+	transition       : opacity 0.2s ease;
+
+	&.active {
+		opacity : 1;
+	}
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+	.admin-dashboard {
+		grid-template-columns : 1fr;
+		position              : relative;
+
+		// Create a container that wraps both sidebars on mobile
+		&::before {
+			content          : '';
+			position         : fixed;
+			top              : 0;
+			left             : -100%;
+			width            : calc(75px + 320px); // nav + content sidebar
+			max-width        : 90vw;
+			height           : 100vh;
+			z-index          : 999;
+			transition       : left 0.3s ease;
+			pointer-events   : none;
+		}
+
+		&.menu-open {
+			.dash-sidebar,
+			.dash-content-sidebar {
+				left : 0;
+			}
+		}
+	}
+
+	.dash-sidebar {
+		position         : fixed;
+		top              : 0;
+		left             : -75px;
+		width            : 75px;
+		height           : 100vh;
+		z-index          : 1000;
+		background-color : oklch(var(--totalform-white));
+		transition       : left 0.3s ease;
+		box-shadow       : none;
+		border-right     : 1px solid oklch(var(--totalform-lightgray));
+	}
+
+	.dash-content {
+		grid-template-columns : 1fr;
+
+		&:has(.dash-content-sidebar) {
+			grid-template-columns : 1fr;
+		}
+	}
+
+	.dash-content-sidebar {
+		position         : fixed;
+		top              : 0;
+		left             : -320px;
+		width            : 320px;
+		max-width        : calc(90vw - 75px);
+		height           : 100vh;
+		z-index          : 1000;
+		background-color : oklch(var(--totalform-white));
+		transition       : left 0.3s ease;
+		box-shadow       : none;
+	}
+
+	// When menu is open, position sidebars side by side
+	.admin-dashboard.menu-open {
+		.dash-sidebar {
+			left : 0;
+		}
+
+		.dash-content-sidebar {
+			left       : 75px;
+			box-shadow : 2px 0 8px rgba(0, 0, 0, 0.1);
+		}
+	}
+
+	// If there's no content sidebar, add shadow to nav only
+	.admin-dashboard.menu-open:not(:has(.dash-content-sidebar)) {
+		.dash-sidebar {
+			box-shadow : 2px 0 8px rgba(0, 0, 0, 0.1);
+		}
+	}
+
+	.mobile-menu-toggle {
+		display : block;
+	}
+
+	.dash-main-content {
+		padding : 1rem;
+
+		header {
+			flex-wrap   : wrap;
+			align-items : center;
+			gap         : 0.75rem;
+
+			h1 {
+				flex  : 1 1 100%;
+				width : 100%;
+			}
+
+			.dash-button {
+				flex : 0 0 auto;
+			}
+
+			.totalform-actions {
+				display : flex;
+				gap     : 0.5rem;
+				flex    : 0 0 auto;
+
+				.dash-button {
+					padding : 0.5rem 0.75rem;
+				}
+			}
+		}
+
+		form {
+			max-width : 100%;
+		}
+	}
+
+	.doc-content {
+		padding-left : 1rem;
+	}
+
+	// Ensure forms don't overflow on mobile
+	.totalform {
+		max-width  : 100%;
+		overflow-x : hidden;
+
+		grid-template-areas: unset!important;
+		grid-template-columns: 1fr!important;
+
+		.form-field {
+			grid-area : unset !important;
+		}
+
+		.form-field,
+		.form-group {
+			max-width : 100%;
+		}
+
+		input,
+		select,
+		textarea,
+		.form-group-icon {
+			max-width  : 100%;
+			box-sizing : border-box;
+		}
 	}
 }

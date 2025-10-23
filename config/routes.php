@@ -7,6 +7,8 @@ return function (App $app): void {
 	$app->options('/', PreflightAction::class);
 
 	(require __DIR__ . '/routes/admin.php')($app);
+	(require __DIR__ . '/routes/access-groups.php')($app);
+	(require __DIR__ . '/routes/apikey.php')($app);
 	(require __DIR__ . '/routes/assets.php')($app);
 	(require __DIR__ . '/routes/auth.php')($app);
 	(require __DIR__ . '/routes/cache.php')($app);
@@ -25,4 +27,5 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/sitemap.php')($app);
 	(require __DIR__ . '/routes/feed.php')($app);
 	(require __DIR__ . '/routes/playground.php')($app);
+	(require __DIR__ . '/routes/action.php')($app);
 };

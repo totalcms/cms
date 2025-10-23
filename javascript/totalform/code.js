@@ -39,7 +39,11 @@ export default class Code extends TotalField {
             lineWrapping   : editorOptions.lineWrapping !== false,
             foldGutter     : editorOptions.foldGutter !== false,
             matchBrackets  : editorOptions.matchBrackets !== false,
-            autoCloseTags  : editorOptions.autoCloseTags !== false,
+            autoCloseTags  : editorOptions.autoCloseTags !== false ? {
+                whenClosing: true,     // Auto-close when typing </
+                whenOpening: true,     // Auto-close when completing opening tag with >
+                indentTags: ['__none__']  // Non-existent tag = no tags get auto-indented
+            } : false,
             gutters        : ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
             ...editorOptions
         };
@@ -65,6 +69,15 @@ export default class Code extends TotalField {
         this.editor.getWrapperElement().classList.add('totalform-code-editor');
         this.editor.getWrapperElement().classList.add(`totalform-code-editor-${mode}`);
 
+        // Override autoCloseTags after initialization to ensure config is applied
+        if (editorOptions.autoCloseTags !== false) {
+            this.editor.setOption('autoCloseTags', {
+                whenClosing: true,
+                whenOpening: true,
+                indentTags: ['__none__']  // Non-existent tag name to disable indenting
+            });
+        }
+
         // Set up auto-resize functionality
         this.setupAutoResize();
 
@@ -86,21 +99,20 @@ export default class Code extends TotalField {
         if (!this.editor) return;
 
         const resizeEditor = () => {
-            const lineHeight = this.editor.defaultTextHeight();
-            const lineCount = Math.max(this.editor.lineCount(), 10); // Minimum 10 lines
-            const totalHeight = (lineCount * lineHeight) + 20; // Add some padding
-            this.editor.setSize(null, totalHeight);
+            // Get the actual scroll height which accounts for wrapped lines
+            const scrollInfo = this.editor.getScrollInfo();
+            const contentHeight = scrollInfo.height;
+
+            // Use content height but enforce minimum height
+            const minHeight = 250;
+            const targetHeight = Math.max(contentHeight + 20, minHeight); // Add padding
+
+            this.editor.setSize(null, targetHeight);
         };
 
         // Initial resize after a short delay
         setTimeout(() => {
             resizeEditor();
-            // Fallback minimum height
-            const wrapper = this.editor.getWrapperElement();
-            const currentHeight = wrapper.offsetHeight;
-            if (currentHeight < 250) {
-                this.editor.setSize(null, 250);
-            }
         }, 100);
 
         // Resize on content changes
@@ -108,6 +120,13 @@ export default class Code extends TotalField {
             setTimeout(() => {
                 resizeEditor();
                 this.forceGutterWidth();
+            }, 0);
+        });
+
+        // Also resize when the editor is refreshed (handles wrapping changes)
+        this.editor.on('refresh', () => {
+            setTimeout(() => {
+                resizeEditor();
             }, 0);
         });
     }

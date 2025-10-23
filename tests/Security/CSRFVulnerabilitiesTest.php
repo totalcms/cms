@@ -1,7 +1,7 @@
 <?php
 
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Middleware\CSRFProtectionMiddleware;
+use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 
 describe('CSRF Vulnerabilities', function (): void {
 	it('identifies missing CSRF protection on state-changing operations', function (): void {

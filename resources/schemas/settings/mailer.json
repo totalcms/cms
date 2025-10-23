@@ -1,0 +1,41 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Mailer Settings",
+	"description" : "Email sending and rate limiting configuration",
+	"type"        : "object",
+	"properties"  : {
+		"whitelist": {
+			"type"        : "json",
+			"label"       : "Email Domain Whitelist",
+			"help"        : "Array of allowed email domains (e.g., [\"@yourcompany.com\", \"@trustedclient.com\"]). Leave empty to disable whitelist.",
+			"placeholder" : "[\"@yourcompany.com\", \"@trustedclient.com\"]"
+		},
+		"ratePerIp": {
+			"type"        : "number",
+			"label"       : "Rate Limit per IP",
+			"help"        : "Maximum number of emails that can be sent from a single IP address per time window.",
+			"placeholder" : "10",
+			"default"     : 10,
+			"min"         : 1,
+			"max"         : 1000
+		},
+		"ratePerTemplate": {
+			"type"        : "number",
+			"label"       : "Rate Limit per Template",
+			"help"        : "Maximum number of emails that can be sent using a single template per time window.",
+			"placeholder" : "50",
+			"default"     : 50,
+			"min"         : 1,
+			"max"         : 10000
+		},
+		"rateWindow": {
+			"type"        : "number",
+			"label"       : "Rate Limit Window (seconds)",
+			"help"        : "Time window in seconds for rate limiting. Default is 300 seconds (5 minutes).",
+			"placeholder" : "300",
+			"default"     : 300,
+			"min"         : 60,
+			"max"         : 3600
+		}
+	}
+}

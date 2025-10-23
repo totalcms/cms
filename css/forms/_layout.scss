@@ -100,6 +100,9 @@
 	&.hidden-field {
 		display : none;
 	}
+	&.field-hidden {
+		display : none !important;
+	}
 }
 
 .cms-button,
@@ -157,6 +160,27 @@
 	}
 	.cms-delete:before {
 		mask-image : var(--icon-trash-o);
+	}
+
+	// Processing state animation for buttons
+	&.processing {
+		.dash-button:not(.cms-save),
+		.cms-button:not(.cms-save) {
+			opacity   : 0.5;
+			cursor    : progress;
+			animation : pulse-glow 1.2s ease-in-out infinite;
+		}
+	}
+}
+
+@keyframes pulse-glow {
+	0%, 100% {
+		transform  : scale(0.97);
+		box-shadow : 0 0 10px oklch(var(--totalform-darkgray) / 0.7);
+	}
+	50% {
+		transform  : scale(1);
+		box-shadow : 0 0 0px oklch(var(--totalform-darkgray) / 0);
 	}
 }
 

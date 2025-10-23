@@ -8,23 +8,45 @@ Total CMS provides a comprehensive RESTful API for managing content, users, and 
 
 - **Base URL**: `/api`
 - **Content Type**: `application/json`
-- **Authentication**: Bearer token or session-based
+- **Authentication**: API keys or session-based
 - **Rate Limiting**: 60 requests per minute (configurable)
 
 ## Authentication
 
-### API Token Authentication
+Total CMS supports two authentication methods for API access: **API Keys** (recommended for external applications) and **Session Authentication** (for same-origin admin panel requests).
 
+> **📖 For comprehensive API key documentation, see [API Keys Guide](api-keys.md)**
+
+### API Key Authentication (Recommended)
+
+API keys provide secure, token-based authentication ideal for headless CMS implementations, mobile apps, and third-party integrations.
+
+**Using the X-API-Key header (recommended):**
 ```bash
-# Using Authorization header
-curl -H "Authorization: Bearer YOUR_API_TOKEN" \
+curl -H "X-API-Key: tcms_1234567890abcdef1234567890abcdef" \
      -H "Content-Type: application/json" \
      https://yoursite.com/api/blog
 ```
 
+**Using query parameter:**
+```bash
+curl "https://yoursite.com/api/blog?api_key=tcms_1234567890abcdef1234567890abcdef"
+```
+
+**Key Features:**
+- **Scope-based permissions** - Control HTTP methods (GET, POST, PUT, DELETE, PATCH)
+- **Path restrictions** - Limit access to specific collections or endpoints
+- **Usage tracking** - Monitor last used timestamps
+- **Easy revocation** - Delete keys to immediately revoke access
+
+**Creating API Keys:**
+Navigate to **Utilities** → **API Keys** in the admin interface, or visit `/admin/utils/api-keys`.
+
+For detailed information on scopes, permissions, and best practices, see the [API Keys documentation](api-keys.md).
+
 ### Session Authentication
 
-For admin panel and same-origin requests:
+For admin panel and same-origin requests using cookies:
 
 ```javascript
 // Include CSRF token for session-based requests
@@ -35,6 +57,17 @@ fetch('/api/blog', {
     }
 });
 ```
+
+**When to use session authentication:**
+- Admin panel JavaScript
+- Same-origin web applications
+- Browser-based tools running on the same domain
+
+**When to use API keys:**
+- Mobile applications
+- Third-party integrations
+- Headless CMS implementations
+- Automated scripts and workflows
 
 ## Collections API
 

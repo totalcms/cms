@@ -28,9 +28,9 @@ readonly class TemplateLister
 	 *
 	 * @return array<string>
 	 */
-	public function listCustomTemplates(): array
+	public function listCustomTemplates(?string $folder = null, bool $recursive = false): array
 	{
-		return $this->storage->listCustomTemplates();
+		return $this->storage->listCustomTemplates($folder, $recursive);
 	}
 
 	/**
@@ -38,8 +38,8 @@ readonly class TemplateLister
 	 *
 	 * @return array<string>
 	 */
-	public function listAllTemplates(): array
+	public function listAllTemplates(?string $folder = null, bool $recursive = false): array
 	{
-		return array_merge($this->listReservedTemplates(), $this->listCustomTemplates());
+		return array_merge($this->listReservedTemplates(), $this->listCustomTemplates($folder, $recursive));
 	}
 }

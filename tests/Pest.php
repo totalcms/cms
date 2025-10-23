@@ -59,9 +59,14 @@ function cmsDataDir(): string
 	return __DIR__ . '/tcms-data/';
 }
 
-function templatePath(string $id): string
+function templatePath(string $id, ?string $folder = null): string
 {
-	return cmsDataDir() . "templates/$id.twig";
+	$basePath = cmsDataDir() . 'templates/';
+	if ($folder !== null && $folder !== '') {
+		$basePath .= $folder . '/';
+	}
+
+	return $basePath . $id . '.twig';
 }
 
 function collectionPath(string $collection): string
@@ -109,7 +114,7 @@ function objectFilesPath(string $collection, string $id): string
 	return cmsDataDir() . "$collection/$id";
 }
 
-function recursiveDelete(string $dir)
+function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete = false)
 {
 	if (!file_exists($dir)) {
 		return true;
@@ -119,14 +124,30 @@ function recursiveDelete(string $dir)
 		return unlink($dir);
 	}
 
+	// If this is the root tcms-data directory and not forcing complete deletion,
+	// preserve auth and .system directories by default
+	$isRootDataDir   = rtrim($dir, '/') === rtrim(cmsDataDir(), '/');
+	$defaultPreserve = ($isRootDataDir && !$forceComplete) ? ['auth', '.system'] : [];
+	$preserve        = array_merge($defaultPreserve, $preserve);
+
 	foreach (scandir($dir) as $item) {
 		if ($item === '.' || $item === '..') {
 			continue;
 		}
 
-		if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item)) {
+		// Skip preserved directories
+		if (in_array($item, $preserve, true)) {
+			continue;
+		}
+
+		if (!recursiveDelete($dir . DIRECTORY_SEPARATOR . $item, [], $forceComplete)) {
 			return false;
 		}
+	}
+
+	// Don't remove the root directory itself
+	if ($isRootDataDir) {
+		return true;
 	}
 
 	return rmdir($dir);

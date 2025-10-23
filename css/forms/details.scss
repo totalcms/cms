@@ -2,10 +2,10 @@
 // Details Styles
 //--------------------------------
 details.cms-accordion {
-	padding    : 1rem 1rem 0;
-	// transition : height 0.2s ease-out;
-	display    : grid;
-	gap        : 1rem;
+	padding  : 1rem 1rem 0;
+	display  : grid;
+	gap      : 1rem;
+	overflow : hidden;
 
 	summary {
 		border-radius    : var(--totalform-radius);
@@ -17,6 +17,8 @@ details.cms-accordion {
 		background-color : oklch(var(--totalform-nearwhite));
 		cursor           : pointer;
 		user-select      : none;
+		color            : oklch(var(--totalform-text-color));
+		transition       : all 200ms ease;
 
 		// &::marker {
 		// 	content : "▶";
@@ -27,8 +29,7 @@ details.cms-accordion {
 		display    : grid;
 		gap        : 1rem;
 		opacity    : 0;
-		transition : all 0.2s ease-out;
-		height     : 0;
+		transition : opacity 200ms linear;
 	}
 
 	&[open] {
@@ -36,7 +37,6 @@ details.cms-accordion {
 
 		> .content {
 			opacity : 1;
-			height  : auto
 		}
 
 		// summary {

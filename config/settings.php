@@ -1,5 +1,7 @@
 <?php
 
+use TotalCMS\Domain\Settings\Services\SettingsSaver;
+
 // Defaults
 $settings = require __DIR__ . '/defaults.php';
 
@@ -18,32 +20,25 @@ if ($environment) {
 	}
 }
 
-// User defined settings
+// Load installation settings from tcms.php (bootstrap configuration like datadir)
 if (file_exists(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php')) {
-	$userSettings = require ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php';
+	$installationSettings = require ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/tcms.php';
 
-	if (is_array($userSettings)) {
-		$userSettingsMap = [
-			'sentry'              => 'sentry/enable',
-			'presets'             => 'imageworks/presets',
-			'watermarksGallery'   => 'imageworks/watermarksGallery',
-			'watermarkFontsDepot' => 'imageworks/watermarkFontsDepot',
-		];
-		foreach ($userSettings as $key => $value) {
-			if (isset($userSettingsMap[$key])) {
-				$keys = explode('/', $userSettingsMap[$key]);
-				$temp = &$settings;
-				// loop through the userSetting map and set the values in the main settings
-				foreach ($keys as $key) {
-					if (!isset($temp[$key])) {
-						$temp[$key] = [];
-					}
-					$temp = &$temp[$key];
-				}
-				$temp = $value;
-				continue;
-			}
-			$settings[$key] = $value;
+	if (is_array($installationSettings)) {
+		// Deep merge installation settings (only datadir for now)
+		$settings = array_replace_recursive($settings, $installationSettings);
+	}
+}
+
+// Load user settings from settings.json in tcms-data/.system/
+$settingsJsonFile = $settings['datadir'] . '/.system/settings.json';
+if (file_exists($settingsJsonFile)) {
+	$settingsJsonContent = file_get_contents($settingsJsonFile);
+	if ($settingsJsonContent !== false) {
+		$userSettings = json_decode($settingsJsonContent, true);
+		if (json_last_error() === JSON_ERROR_NONE && is_array($userSettings)) {
+			// Use the deep merge method from SettingsSaver
+			$settings = SettingsSaver::deepMergeArrays($settings, $userSettings);
 		}
 	}
 }

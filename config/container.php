@@ -6,6 +6,7 @@ use Middlewares\TrailingSlash;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\Middleware\SessionStartMiddleware;
 use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -21,10 +22,14 @@ use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Auth\Service\LogoutService;
+use TotalCMS\Domain\Auth\Service\OperationDetector;
+use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Buffer\BufferController;
@@ -49,6 +54,7 @@ use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -57,6 +63,9 @@ use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\License\Service\LicenseValidator;
+use TotalCMS\Domain\Mailer\Service\EmailSender;
+use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Media\Generator\BarcodeGenerator;
 use TotalCMS\Domain\Media\Generator\QRGenerator;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -83,8 +92,19 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
+use TotalCMS\Domain\Settings\Repository\InstallationRepository;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
+use TotalCMS\Domain\Settings\Services\InstallationSettingsSaver;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsSaver;
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsValidator;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
+use TotalCMS\Domain\Template\Service\TemplateFetcher;
+use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Twig\Adapter\BarcodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\QRCodeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
@@ -96,13 +116,24 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
-use TotalCMS\Middleware\AuthMiddleware;
-use TotalCMS\Middleware\CSRFProtectionMiddleware;
-use TotalCMS\Middleware\DevModeMiddleware;
-use TotalCMS\Middleware\LicenseValidationMiddleware;
-use TotalCMS\Middleware\PreviewRouteMiddleware;
-use TotalCMS\Middleware\SentryMiddleware;
+use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
+use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
+use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
+use TotalCMS\Middleware\Access\DocsAccessMiddleware;
+use TotalCMS\Middleware\Access\MailerAccessMiddleware;
+use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
+use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
+use TotalCMS\Middleware\Access\TemplateAccessMiddleware;
+use TotalCMS\Middleware\Access\UtilsAccessMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
+use TotalCMS\Middleware\Development\DevModeMiddleware;
+use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\License\LicenseValidationMiddleware;
+use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
+use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
+use TotalCMS\Middleware\Security\RateLimitMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
 return [
@@ -142,6 +173,9 @@ return [
 		return new PhpSession($sessionConfig);
 	},
 
+	// Bind SessionInterface to PhpSession for dependency injection
+	SessionInterface::class => fn (ContainerInterface $container) => $container->get(PhpSession::class),
+
 	ResponseFactoryInterface::class => fn (ContainerInterface $container) => $container->get(App::class)->getResponseFactory(),
 
 	ServerRequestFactoryInterface::class => fn (ContainerInterface $container) => $container->get(Psr17Factory::class),
@@ -160,6 +194,30 @@ return [
 	// The data dir iterator factory
 	StorageFilesystemAdapter::class => function (ContainerInterface $container): StorageFilesystemAdapter {
 		$rootPath   = $container->get(Config::class)->datadir;
+
+		// Ensure data directory exists with security protection
+		if (!is_dir($rootPath)) {
+			@mkdir($rootPath, 0755, true);
+
+			// Create .htaccess file to deny direct web access (Apache)
+			$htaccessPath = $rootPath . '/.htaccess';
+			if (!file_exists($htaccessPath)) {
+				$htaccessContent = <<<'HTACCESS'
+# Deny direct access to all files and folders in tcms-data
+# This protects sensitive data including API keys, collections, and user data
+
+<IfModule mod_authz_core.c>
+	Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+	Order deny,allow
+	Deny from all
+</IfModule>
+HTACCESS;
+				@file_put_contents($htaccessPath, $htaccessContent);
+			}
+		}
+
 		$filesystem = new Filesystem(new LocalFilesystemAdapter($rootPath));
 
 		return new StorageFilesystemAdapter($filesystem);
@@ -186,9 +244,9 @@ return [
 	},
 
 	SentryMiddleware::class => function (ContainerInterface $container): SentryMiddleware {
-		$config = (array)$container->get(Config::class)->sentry;
+		$enabled = $container->get(Config::class)->sentry;
 
-		return new SentryMiddleware($config);
+		return new SentryMiddleware($enabled);
 	},
 
 	ErrorMiddleware::class => function (ContainerInterface $container): ErrorMiddleware {
@@ -239,6 +297,10 @@ return [
 		$container->get(IndexBuilder::class),
 	),
 
+	IndexFilter::class => fn (ContainerInterface $container): IndexFilter => new IndexFilter(
+		$container->get(IndexReader::class),
+	),
+
 	ObjectFetcher::class => fn (ContainerInterface $container): ObjectFetcher => new ObjectFetcher($container->get(ObjectRepository::class)),
 
 	PropertyFetcher::class => fn (ContainerInterface $container): PropertyFetcher => new PropertyFetcher($container->get(ObjectFetcher::class)),
@@ -249,14 +311,20 @@ return [
 
 	TotalFormFactory::class => fn (ContainerInterface $container): TotalFormFactory => new TotalFormFactory(
 		$container->get(Config::class),
+		$container->get(PhpSession::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(CollectionFetcher::class),
 		$container->get(CollectionLister::class),
 		$container->get(IndexReader::class),
+		$container->get(IndexFilter::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(SchemaLister::class),
+		$container->get(AccessGroupLister::class),
 		$container->get(SchemaFactory::class),
+		$container->get(TemplateRepository::class),
 		$container->get(CSRFTokenManager::class),
+		$container->get(SettingsSchemaFetcher::class),
+		$container->get(SettingsFetcher::class),
 	),
 
 	GridRenderer::class => fn (ContainerInterface $container): GridRenderer => new GridRenderer(),
@@ -271,6 +339,7 @@ return [
 		$container->get(SchemaLister::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(DeckCompatibilityChecker::class),
+		$container->get(TemplateRepository::class),
 		$container->get(TotalFormFactory::class),
 		$container->get(ServerChecker::class),
 		$container->get(CacheReporter::class),
@@ -278,6 +347,7 @@ return [
 		$container->get(PhpSession::class),
 		$container->get(AccessManager::class),
 		$container->get(FileAccessManager::class),
+		$container->get(AccessControlService::class),
 		$container->get(ImageCacheService::class),
 		$container->get(GridRenderer::class),
 		$container->get(DevModeManager::class),
@@ -324,6 +394,114 @@ return [
 		$container->get(PersistentLoginService::class),
 	),
 
+	CollectionAccessMiddleware::class => fn (ContainerInterface $container): CollectionAccessMiddleware => new CollectionAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	CollectionMetaAccessMiddleware::class => fn (ContainerInterface $container): CollectionMetaAccessMiddleware => new CollectionMetaAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	SchemaAccessMiddleware::class => fn (ContainerInterface $container): SchemaAccessMiddleware => new SchemaAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	TemplateAccessMiddleware::class => fn (ContainerInterface $container): TemplateAccessMiddleware => new TemplateAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	UtilsAccessMiddleware::class => fn (ContainerInterface $container): UtilsAccessMiddleware => new UtilsAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	MailerAccessMiddleware::class => fn (ContainerInterface $container): MailerAccessMiddleware => new MailerAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	PlaygroundAccessMiddleware::class => fn (ContainerInterface $container): PlaygroundAccessMiddleware => new PlaygroundAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	DocsAccessMiddleware::class => fn (ContainerInterface $container): DocsAccessMiddleware => new DocsAccessMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	AdminOnlyMiddleware::class => fn (ContainerInterface $container): AdminOnlyMiddleware => new AdminOnlyMiddleware(
+		$container->get(UserValidationService::class),
+		$container->get(AccessControlService::class),
+		$container->get(PhpSession::class),
+		$container->get(JsonRenderer::class),
+		$container->get(TwigRenderer::class),
+		$container->get(ResponseFactoryInterface::class),
+		$container->get(Config::class),
+		$container->get(OperationDetector::class),
+		$container->get(LoggerFactory::class),
+	),
+
 	DevModeMiddleware::class => fn (ContainerInterface $container): DevModeMiddleware => new DevModeMiddleware(
 		$container->get(DevModeManager::class),
 		$container->get(OPcacheService::class)
@@ -340,6 +518,10 @@ return [
 		$container->get(Config::class),
 		$container->get(TotalCMSTwigExtension::class),
 		$container->get(DevModeManager::class)
+	),
+
+	TwigRenderer::class => fn (ContainerInterface $container): TwigRenderer => new TwigRenderer(
+		$container->get(TwigEngine::class)
 	),
 
 	// Cache Services
@@ -396,6 +578,15 @@ return [
 		$container->get(Config::class),
 	),
 
+	PasswordResetService::class => fn (ContainerInterface $container): PasswordResetService => new PasswordResetService(
+		$container->get(CacheManager::class),
+		$container->get(IndexSearcher::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
 	PersistentLoginService::class => fn (ContainerInterface $container): PersistentLoginService => new PersistentLoginService(
 		$container->get(PhpSession::class),
 		$container->get(Config::class),
@@ -426,6 +617,11 @@ return [
 		$container->get(LoggerFactory::class),
 	),
 
+	AccessControlService::class => fn (ContainerInterface $container): AccessControlService => new AccessControlService(
+		$container->get(UserValidationService::class),
+		$container->get(AccessGroupLister::class),
+	),
+
 	TotalCmsOneImporter::class => fn (ContainerInterface $container): TotalCmsOneImporter => new TotalCmsOneImporter(
 		$container->get(CollectionFetcher::class),
 		$container->get(CollectionFactory::class),
@@ -441,6 +637,8 @@ return [
 		$container->get(SchemaFetcher::class),
 		$container->get(ObjectFetcher::class),
 		$container->get(IndexReader::class),
+		$container->get(TemplateLister::class),
+		$container->get(TemplateFetcher::class),
 		new JumpStartData(),
 		$container->get(CacheManager::class),
 		$container->get(LoggerFactory::class),
@@ -464,6 +662,7 @@ return [
 		$container->get(ObjectFetcher::class),
 		$container->get(ObjectSaver::class),
 		$container->get(SchemaSaver::class),
+		$container->get(TemplateSaver::class),
 		$container->get(FactoryImporter::class),
 		$container->get(LoggerFactory::class),
 	),
@@ -520,5 +719,59 @@ return [
 	// Schema Services
 	DeckCompatibilityChecker::class => fn (ContainerInterface $container): DeckCompatibilityChecker => new DeckCompatibilityChecker(
 		$container->get(SchemaFetcher::class),
+	),
+
+	// Settings Services
+	SettingsSchemaFetcher::class => fn (ContainerInterface $container): SettingsSchemaFetcher => new SettingsSchemaFetcher(),
+
+	// Settings Repositories
+	SettingsRepository::class => fn (ContainerInterface $container): SettingsRepository => new SettingsRepository(
+		$container->get(StorageFilesystemAdapter::class),
+	),
+
+	InstallationRepository::class => fn (ContainerInterface $container): InstallationRepository => new InstallationRepository(),
+
+	// Settings Services
+	SettingsFetcher::class => fn (ContainerInterface $container): SettingsFetcher => new SettingsFetcher(
+		$container->get(SettingsRepository::class),
+		$container->get(InstallationRepository::class),
+	),
+
+	SettingsValidator::class => fn (ContainerInterface $container): SettingsValidator => new SettingsValidator(),
+
+	SettingsSaver::class => fn (ContainerInterface $container): SettingsSaver => new SettingsSaver(
+		$container->get(SettingsFetcher::class),
+		$container->get(SettingsValidator::class),
+		$container->get(CacheManager::class),
+		$container->get(SettingsRepository::class),
+	),
+
+	InstallationSettingsSaver::class => fn (ContainerInterface $container): InstallationSettingsSaver => new InstallationSettingsSaver(
+		$container->get(CacheManager::class),
+		$container->get(InstallationRepository::class),
+	),
+
+	// Mailer Services
+	EmailSender::class => fn (ContainerInterface $container): EmailSender => new EmailSender(
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	MailerFetcher::class => fn (ContainerInterface $container): MailerFetcher => new MailerFetcher(
+		$container->get(ObjectRepository::class),
+	),
+
+	EmailService::class => fn (ContainerInterface $container): EmailService => new EmailService(
+		$container->get(MailerFetcher::class),
+		$container->get(EmailSender::class),
+		$container->get(TwigEngine::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+
+	RateLimitMiddleware::class => fn (ContainerInterface $container): RateLimitMiddleware => new RateLimitMiddleware(
+		$container->get(APCuService::class),
+		$container->get(JsonRenderer::class),
+		$container->get(Config::class),
 	),
 ];

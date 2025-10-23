@@ -90,10 +90,8 @@ class ServerChecker
 
 	public function cacheDirSize(): string
 	{
-		$cache            = $this->config->cache ?? [];
-		$filesystemConfig = $cache['filesystem'] ?? [];
-		$dir              = $filesystemConfig['directory'] ?? '';
-		$size             = 0;
+		$dir  = $this->config->cachedir ?? '';
+		$size = 0;
 		if (file_exists($dir)) {
 			foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir)) as $file) {
 				$size += $file->getSize();
@@ -363,11 +361,9 @@ class ServerChecker
 	 */
 	private function getCacheWritable(): ?bool
 	{
-		$cache            = $this->config->cache ?? [];
-		$filesystemConfig = $cache['filesystem'] ?? [];
-		$cacheDir         = $filesystemConfig['directory'] ?? '';
+		$cacheDir = $this->config->cachedir ?? '';
 
-		if ($cacheDir === 'false' || empty($cacheDir)) {
+		if ($cacheDir === 'false' || $cacheDir === '') {
 			return null; // Cache is disabled
 		}
 

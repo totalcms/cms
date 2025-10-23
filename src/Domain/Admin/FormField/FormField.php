@@ -61,6 +61,7 @@ class FormField
 
 		$this->datalist = (isset($this->settings['propertyOptions'])
 			|| isset($this->settings['relationalOptions'])
+			|| isset($this->settings['accessGroupOptions'])
 			|| isset($this->settings['datalistOptions']));
 
 		// Set a default value on new object forms if one is not provided
@@ -106,7 +107,104 @@ class FormField
 			}
 		}
 
+		// Handle visibility settings
+		$this->applyVisibility($formFieldAtrributes);
+
 		return HTMLUtils::element('div', $label . $content . $help, $formFieldAtrributes);
+	}
+
+	/**
+	 * Apply visibility settings to form field attributes.
+	 * This method can be called by child classes that override build().
+	 *
+	 * @param array<string,string> $attributes
+	 */
+	protected function applyVisibility(array &$attributes): void
+	{
+		if (!isset($this->settings['visibility'])) {
+			return;
+		}
+
+		$visibility = $this->settings['visibility'];
+
+		// Calculate initial visibility state for server-side rendering
+		$isVisible           = $this->evaluateVisibility($visibility);
+		$attributes['class'] = ($attributes['class'] ?? '') . ($isVisible ? ' field-visible' : ' field-hidden');
+
+		// Add inline style to hide if needed
+		if (!$isVisible) {
+			$attributes['style'] = ($attributes['style'] ?? '') . ' display: none;';
+		}
+	}
+
+	/**
+	 * Evaluate visibility condition based on form data.
+	 *
+	 * @param array<string,mixed> $visibility
+	 */
+	protected function evaluateVisibility(array $visibility): bool
+	{
+		// Fields with visibility settings default to hidden
+		// Get the field name to watch
+		$watchField = $visibility['watch'] ?? '';
+		if ($watchField === '') {
+			return false; // No watch field specified, hide by default
+		}
+
+		// Get the expected value(s)
+		$expectedValue = $visibility['value'] ?? null;
+		if ($expectedValue === null) {
+			return false; // No expected value, hide by default
+		}
+
+		// Get the operator (default to equality)
+		$operator = $visibility['operator'] ?? '==';
+
+		// Get the current value from the form
+		$currentValue = $this->form->getFieldValue($watchField);
+
+		// If we can't get the current value, hide the field by default
+		// This ensures proper initial state for new forms
+		if ($currentValue === null) {
+			return false;
+		}
+
+		// Evaluate based on operator
+		return $this->evaluateCondition($currentValue, $expectedValue, $operator);
+	}
+
+	/**
+	 * Evaluate a visibility condition.
+	 */
+	protected function evaluateCondition(mixed $currentValue, mixed $expectedValue, string $operator): bool
+	{
+		// Handle array expected values (multiple possible values)
+		if (is_array($expectedValue)) {
+			foreach ($expectedValue as $value) {
+				if ($this->evaluateCondition($currentValue, $value, $operator)) {
+					return true; // Match found
+				}
+			}
+
+			return false; // No matches found
+		}
+
+		// Handle array current values (checkboxes, multiselect, etc.)
+		if (is_array($currentValue)) {
+			return in_array($expectedValue, $currentValue, false);
+		}
+
+		// Evaluate based on operator
+		// Note: Array $expectedValue is handled earlier (lines 184-191), so it's never an array here
+		return match ($operator) {
+			'=='    => $currentValue == $expectedValue,
+			'!='    => $currentValue != $expectedValue,
+			'>'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue > $expectedValue,
+			'<'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
+			'>='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
+			'<='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
+			default => $currentValue == $expectedValue, // Default to equality
+		};
 	}
 
 	/**
@@ -220,7 +318,7 @@ class FormField
 		$valueProperty = trim($settings['value'] ?? 'id');
 		$collection    = $settings['collection'] ?? '';
 
-		if (empty($collection)) {
+		if ($collection === '') {
 			return []; // No collection specified, return empty array
 		}
 
@@ -230,7 +328,16 @@ class FormField
 		// Combine label properties with value property for fetching
 		$propertiesToFetch = array_unique(array_merge($labelProperties, [$valueProperty]));
 
-		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection);
+		// Extract include/exclude filters from settings
+		$filters = [];
+		if (isset($settings['include'])) {
+			$filters['include'] = $settings['include'];
+		}
+		if (isset($settings['exclude'])) {
+			$filters['exclude'] = $settings['exclude'];
+		}
+
+		$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
 
 		// Build the label from multiple properties if specified
 		return array_map(function (array $o) use ($valueProperty, $labelProperties, $labelJoin): array {
@@ -257,6 +364,9 @@ class FormField
 		}
 		if (isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->options, $this->buildRelationalOptions());
+		}
+		if (isset($this->settings['accessGroupOptions']) && $this->settings['accessGroupOptions'] === true) {
+			$this->options = array_merge($this->options, $this->form->accessGroupOptionsForField());
 		}
 		if (is_array($this->value) && $this->value !== [] && !isset($this->settings['relationalOptions'])) {
 			$this->options = array_merge($this->value, $this->options); // value is first to maintain order

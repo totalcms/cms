@@ -20,6 +20,7 @@ readonly class SimpleForm implements \Stringable
 		private bool $refresh  = false,
 		private bool $ajax     = true,
 		private ?CSRFTokenManager $csrfManager = null,
+		private string $buttonClass = '',
 	) {
 	}
 
@@ -33,7 +34,7 @@ readonly class SimpleForm implements \Stringable
 
 		$button = HTMLUtils::button($this->label, [
 			'type'  => 'submit',
-			'class' => 'dash-button',
+			'class' => 'dash-button ' . $this->buttonClass,
 		]);
 		$buttonWrapper = HTMLUtils::element('div', $button, ['class' => 'form-inline-fields']);
 

@@ -24,7 +24,9 @@ export default class JSONField extends TotalField {
     }
 
     validate() {
-        try {
+		if (!this.isVisible()) return true;
+
+		try {
             this.getValue();
             return true;
         } catch (e) {

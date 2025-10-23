@@ -1,0 +1,48 @@
+{
+    "id": "admin",
+    "active": true,
+    "image": {
+        "alt": "",
+        "exif": {
+            "date": "2014-11-23T08:23:00+00:00",
+            "make": "Apple",
+            "camera": "iPhone 5",
+            "lens": "iPhone 5 front camera 2.18mm f\/2.4",
+            "focalLength": 2.18,
+            "aperture": 2.4,
+            "iso": 32,
+            "shutterSpeed": "1\/40"
+        },
+        "featured": false,
+        "focalpoint": {
+            "x": 50,
+            "y": 50
+        },
+        "height": 960,
+        "link": "",
+        "mime": "image\/jpeg",
+        "name": "small_1193.jpg",
+        "palette": [
+            "#ecb48e",
+            "#7d5050",
+            "#889980",
+            "#4a2d3b",
+            "#b44248"
+        ],
+        "size": 107466,
+        "tags": [],
+        "uploadDate": "2025-02-18T14:08:00+00:00",
+        "width": 960
+    },
+    "name": "Joe",
+    "email": "joe@workmanmail.com",
+    "password": "$2y$12$82qI5iWdb.0ICaGKw7flNOpSfJrZ44uYKjb.1LvH9FKFaVINuW0pq",
+    "groups": [
+        "admin"
+    ],
+    "expiration": "",
+    "maxLoginCount": 0,
+    "loginCount": 152,
+    "created": "2025-02-18T14:07:00+00:00",
+    "lastlogin": "2025-10-20T17:55:16-07:00"
+}

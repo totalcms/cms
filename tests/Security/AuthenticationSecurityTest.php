@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Action\Auth\AuthLoginAction;
 use TotalCMS\Action\Auth\AuthLoginSubmitAction;
 use TotalCMS\Action\Auth\AuthLogoutAction;
-use TotalCMS\Middleware\AuthMiddleware;
+use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 #[CoversClass(AuthLoginAction::class)]
 #[CoversClass(AuthLoginSubmitAction::class)]

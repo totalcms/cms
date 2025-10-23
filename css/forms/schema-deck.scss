@@ -291,6 +291,12 @@
 .url-type {
 	--schema-type-icon : var(--icon-link);
 }
+.code-type {
+	--schema-type-icon : var(--icon-file-code);
+}
+.array-type {
+	--schema-type-icon : var(--icon-table);
+}
 
 
 .id-field {
@@ -353,9 +359,9 @@
 	}
 }
 .code-field {
-	--schema-icon : var(--icon-macro);
+	--schema-icon : var(--icon-file-code);
 
-	&.string-type:after {
+	&.code-type:after {
 		display : none;
 	}
 }
@@ -410,9 +416,24 @@
 }
 .select-field {
 	--schema-icon : var(--icon-select);
+
+	&.string-type:after {
+		display : none;
+	}
+}
+.multicheckbox-field {
+	--schema-icon : var(--icon-checks);
+
+	&.list-type:after {
+		display : none;
+	}
 }
 .multiselect-field {
 	--schema-icon : var(--icon-select-multi);
+
+	&.list-type:after {
+		display : none;
+	}
 }
 .list-field {
 	--schema-icon : var(--icon-list);
@@ -472,6 +493,10 @@
 }
 .radio-field {
 	--schema-icon : var(--icon-radio);
+
+	&.string-type:after {
+		display : none;
+	}
 }
 .deck-field {
 	--schema-icon : var(--icon-deck);

@@ -12,6 +12,7 @@ import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
 import SlugifyInput from './totalform/slugify-inputs';
 import DevModeToggle from './devmode';
+import ThemeSwitcher from './theme-switcher';
 import initExternalLinks from './external-links';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
@@ -69,6 +70,39 @@ document.addEventListener("DOMContentLoaded", event => {
 		// Get remaining seconds from a global variable or data attribute
 		const remainingSeconds = globalThis.DEVMODE_REMAINING_SECONDS || 0;
 		new DevModeToggle(devmodeToggle, { remainingSeconds });
+	}
+
+	// Initialize theme switcher
+	const themeSwitcher = document.querySelector('.theme-buttons');
+	if (themeSwitcher) {
+		new ThemeSwitcher(themeSwitcher);
+	}
+
+	// Mobile menu toggle
+	const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+	const mobileOverlay = document.querySelector('.mobile-overlay');
+	const adminDashboard = document.querySelector('.admin-dashboard');
+
+	if (mobileMenuToggle && mobileOverlay && adminDashboard) {
+		mobileMenuToggle.addEventListener('click', () => {
+			const isOpen = adminDashboard.classList.contains('menu-open');
+
+			// Toggle menu state
+			adminDashboard.classList.toggle('menu-open');
+			mobileMenuToggle.classList.toggle('active');
+
+			// Toggle overlay
+			mobileOverlay.classList.toggle('active');
+			mobileOverlay.style.display = !isOpen ? 'block' : 'none';
+		});
+
+		mobileOverlay.addEventListener('click', () => {
+			// Close menu
+			adminDashboard.classList.remove('menu-open');
+			mobileMenuToggle.classList.remove('active');
+			mobileOverlay.classList.remove('active');
+			mobileOverlay.style.display = 'none';
+		});
 	}
 
 	initExternalLinks();

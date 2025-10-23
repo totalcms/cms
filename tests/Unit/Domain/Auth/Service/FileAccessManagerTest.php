@@ -1,269 +1,475 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Tests\Unit\Domain\Auth\Service;
 
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Service\PropertyFetcher;
+use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 
 final class FileAccessManagerTest extends TestCase
 {
-	public function testFileAccessManagerCanBeInstantiated(): void
+	private FileAccessManager $fileAccessManager;
+	private \PHPUnit\Framework\MockObject\MockObject $session;
+	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
+	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private \PHPUnit\Framework\MockObject\MockObject $propertyFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+
+	protected function setUp(): void
 	{
-		// Test that FileAccessManager can be created with partial mocking
-		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, []);
+		$this->session            = $this->createMock(SessionInterface::class);
+		$this->userValidator      = $this->createMock(UserValidationService::class);
+		$this->loggerFactory      = $this->createMock(LoggerFactory::class);
+		$this->propertyFetcher    = $this->createMock(PropertyFetcher::class);
+		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
 
-		expect($fileAccessManager)->toBeInstanceOf(FileAccessManager::class);
-	}
+		// Mock logger factory chain
+		$logger = $this->createMock(LoggerInterface::class);
+		$this->loggerFactory->method('addFileHandler')
+			->with(FileAccessManager::DOWNLOAD_LOG)
+			->willReturnSelf();
+		$this->loggerFactory->method('createLogger')
+			->with('fileaccess')
+			->willReturn($logger);
 
-	public function testSessionHasUserLogic(): void
-	{
-		// Test the session validation logic
-		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['sessionHasUser']);
-
-		// Mock different return values
-		$fileAccessManager->method('sessionHasUser')
-			->willReturnOnConsecutiveCalls(true, false);
-
-		// Test true case (both user and collection exist)
-		expect($fileAccessManager->sessionHasUser())->toBeTrue();
-
-		// Test false case (missing user or collection)
-		expect($fileAccessManager->sessionHasUser())->toBeFalse();
-	}
-
-	public function testIsProtectedByGroupsLogic(): void
-	{
-		// Test the protection logic components
-		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['isProtectedByGroups']);
-
-		// Test different scenarios
-		$fileAccessManager->method('isProtectedByGroups')
-			->willReturnOnConsecutiveCalls(true, false, false);
-
-		// Protected file with groups
-		expect($fileAccessManager->isProtectedByGroups())->toBeTrue();
-
-		// Not protected file
-		expect($fileAccessManager->isProtectedByGroups())->toBeFalse();
-
-		// Protected file but no groups
-		expect($fileAccessManager->isProtectedByGroups())->toBeFalse();
-	}
-
-	public function testIsPasswordProtectedLogic(): void
-	{
-		// Test password protection detection
-		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['isPasswordProtected']);
-
-		$fileAccessManager->method('isPasswordProtected')
-			->willReturnOnConsecutiveCalls(true, false);
-
-		// File with password
-		expect($fileAccessManager->isPasswordProtected())->toBeTrue();
-
-		// File without password (empty hash)
-		expect($fileAccessManager->isPasswordProtected())->toBeFalse();
-	}
-
-	public function testUserHasAccessLogicFlow(): void
-	{
-		// Test the access control logic flow
-		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, [
-			'sessionHasUser', 'userHasAccess',
-		]);
-
-		// Case 1: No session - should return false
-		$fileAccessManager->method('sessionHasUser')->willReturn(false);
-		$fileAccessManager->method('userHasAccess')->willReturnCallback(
-			fn () => $fileAccessManager->sessionHasUser()
+		$this->fileAccessManager = new FileAccessManager(
+			$this->session,
+			$this->userValidator,
+			$this->loggerFactory,
+			$this->propertyFetcher,
+			$this->collectionFetcher
 		);
-
-		expect($fileAccessManager->userHasAccess())->toBeFalse();
 	}
 
-	public function testPasswordVerificationLogic(): void
+	// ==================== Load File Tests ====================
+
+	public function testLoadFileSuccessfully(): void
 	{
-		// Test password verification components
-		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, [
-			'verfiyPassword', 'verfiyPasswordOnly',
+		$fileData       = $this->createFileData();
+		$collectionData = $this->createCollectionData();
+
+		$this->propertyFetcher->expects($this->once())
+			->method('fetchProperty')
+			->with('documents', 'doc-1', 'attachment')
+			->willReturn($fileData);
+
+		$this->collectionFetcher->expects($this->once())
+			->method('fetchCollection')
+			->with('documents')
+			->willReturn($collectionData);
+
+		$this->fileAccessManager->loadFile('documents', 'doc-1', 'attachment');
+
+		// If no exception was thrown, the test passes
+		$this->assertTrue(true);
+	}
+
+	public function testLoadFileThrowsExceptionWhenFileNotFound(): void
+	{
+		$this->expectException(\UnexpectedValueException::class);
+		$this->expectExceptionMessage('Unable to locate object property attachment');
+
+		$this->propertyFetcher->method('fetchProperty')
+			->willThrowException(new \UnexpectedValueException('Unable to locate object property attachment'));
+
+		$this->collectionFetcher->method('fetchCollection')
+			->willReturn($this->createCollectionData());
+
+		$this->fileAccessManager->loadFile('documents', 'doc-1', 'attachment');
+	}
+
+	public function testLoadFileThrowsExceptionWhenCollectionNotFound(): void
+	{
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('Unable to load file');
+
+		$this->propertyFetcher->method('fetchProperty')
+			->willReturn($this->createFileData());
+
+		$this->collectionFetcher->method('fetchCollection')
+			->willReturn(null); // Not a CollectionData instance
+
+		$this->fileAccessManager->loadFile('documents', 'doc-1', 'attachment');
+	}
+
+	// ==================== Load Depot File Tests ====================
+
+	public function testLoadDepotFileSuccessfully(): void
+	{
+		$depotData      = $this->createDepotData();
+		$collectionData = $this->createCollectionData();
+
+		$this->propertyFetcher->expects($this->once())
+			->method('fetchProperty')
+			->with('media', 'media-1', 'files')
+			->willReturn($depotData);
+
+		$this->collectionFetcher->expects($this->once())
+			->method('fetchCollection')
+			->with('media')
+			->willReturn($collectionData);
+
+		$this->fileAccessManager->loadDepotFile('media', 'media-1', 'files');
+
+		// If no exception was thrown, the test passes
+		$this->assertTrue(true);
+	}
+
+	public function testLoadDepotFileThrowsExceptionWhenDepotNotFound(): void
+	{
+		$this->expectException(\UnexpectedValueException::class);
+		$this->expectExceptionMessage('Unable to locate object property files');
+
+		$this->propertyFetcher->method('fetchProperty')
+			->willThrowException(new \UnexpectedValueException('Unable to locate object property files'));
+
+		$this->collectionFetcher->method('fetchCollection')
+			->willReturn($this->createCollectionData());
+
+		$this->fileAccessManager->loadDepotFile('media', 'media-1', 'files');
+	}
+
+	// ==================== Session Has User Tests ====================
+
+	public function testSessionHasUserReturnsTrueWhenBothKeysPresent(): void
+	{
+		$this->session->expects($this->exactly(2))
+			->method('has')
+			->willReturnMap([
+				['user', true],
+				['collection', true],
+			]);
+
+		$this->assertTrue($this->fileAccessManager->sessionHasUser());
+	}
+
+	public function testSessionHasUserReturnsFalseWhenUserKeyMissing(): void
+	{
+		$this->session->expects($this->once())
+			->method('has')
+			->with('user')
+			->willReturn(false);
+
+		$this->assertFalse($this->fileAccessManager->sessionHasUser());
+	}
+
+	// ==================== Protected By Groups Tests ====================
+
+	public function testIsProtectedByGroupsReturnsTrueWhenProtectedAndHasGroups(): void
+	{
+		$fileData       = $this->createFileData(protected: true);
+		$collectionData = $this->createCollectionData(groups: ['editors', 'admins']);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->assertTrue($this->fileAccessManager->isProtectedByGroups());
+	}
+
+	public function testIsProtectedByGroupsReturnsFalseWhenNotProtected(): void
+	{
+		$fileData       = $this->createFileData(protected: false);
+		$collectionData = $this->createCollectionData(groups: ['editors']);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->assertFalse($this->fileAccessManager->isProtectedByGroups());
+	}
+
+	public function testIsProtectedByGroupsReturnsFalseWhenNoGroups(): void
+	{
+		$fileData       = $this->createFileData(protected: true);
+		$collectionData = $this->createCollectionData(groups: []);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->assertFalse($this->fileAccessManager->isProtectedByGroups());
+	}
+
+	// ==================== User Has Access Tests ====================
+
+	public function testUserHasAccessReturnsFalseWhenNoSession(): void
+	{
+		$fileData       = $this->createFileData();
+		$collectionData = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->session->method('has')->willReturn(false);
+
+		$this->assertFalse($this->fileAccessManager->userHasAccess());
+	}
+
+	public function testUserHasAccessReturnsTrueForSuperAdmin(): void
+	{
+		$fileData       = $this->createFileData(protected: true);
+		$collectionData = $this->createCollectionData(groups: ['admins']);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('admin-user', 'auth');
+
+		$this->userValidator->expects($this->once())
+			->method('isSuperAdmin')
+			->with('admin-user')
+			->willReturn(true);
+
+		$this->assertTrue($this->fileAccessManager->userHasAccess());
+	}
+
+	public function testUserHasAccessReturnsTrueWhenNoGroups(): void
+	{
+		$fileData       = $this->createFileData();
+		$collectionData = $this->createCollectionData(groups: []);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('user', 'auth');
+
+		$this->userValidator->method('isSuperAdmin')->willReturn(false);
+
+		$this->assertTrue($this->fileAccessManager->userHasAccess());
+	}
+
+	public function testUserHasAccessValidatesUserInGroups(): void
+	{
+		$fileData       = $this->createFileData(protected: true);
+		$collectionData = $this->createCollectionData(groups: ['editors']);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('user-123', 'auth');
+
+		$this->userValidator->method('isSuperAdmin')->willReturn(false);
+		$this->userValidator->expects($this->once())
+			->method('validateUserInGroups')
+			->with('user-123', ['editors'], 'auth')
+			->willReturn(true);
+
+		$this->assertTrue($this->fileAccessManager->userHasAccess());
+	}
+
+	public function testUserHasAccessReturnsFalseWhenNotInGroups(): void
+	{
+		$fileData       = $this->createFileData(protected: true);
+		$collectionData = $this->createCollectionData(groups: ['admins']);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('user', 'auth');
+
+		$this->userValidator->method('isSuperAdmin')->willReturn(false);
+		$this->userValidator->method('validateUserInGroups')->willReturn(false);
+
+		$this->assertFalse($this->fileAccessManager->userHasAccess());
+	}
+
+	public function testUserHasAccessHandlesValidationException(): void
+	{
+		$fileData       = $this->createFileData(protected: true);
+		$collectionData = $this->createCollectionData(groups: ['editors']);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('user', 'auth');
+
+		$this->userValidator->method('isSuperAdmin')->willReturn(false);
+		$this->userValidator->method('validateUserInGroups')
+			->willThrowException(new \Exception('Validation error'));
+
+		$this->assertFalse($this->fileAccessManager->userHasAccess());
+	}
+
+	// ==================== Password Protection Tests ====================
+
+	public function testIsPasswordProtectedReturnsTrueWhenPasswordSet(): void
+	{
+		$passwordHash   = password_hash('secret123', PASSWORD_DEFAULT);
+		$fileData       = $this->createFileData(passwordHash: $passwordHash);
+		$collectionData = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->assertTrue($this->fileAccessManager->isPasswordProtected());
+	}
+
+	public function testIsPasswordProtectedReturnsFalseWhenNoPassword(): void
+	{
+		$fileData       = $this->createFileData(passwordHash: '');
+		$collectionData = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->assertFalse($this->fileAccessManager->isPasswordProtected());
+	}
+
+	public function testVerifyPasswordReturnsTrueWithCorrectPassword(): void
+	{
+		$password       = 'secret123';
+		$passwordHash   = password_hash($password, PASSWORD_DEFAULT);
+		$fileData       = $this->createFileData(passwordHash: $passwordHash);
+		$collectionData = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->session->method('has')->willReturn(false); // Not logged in
+
+		$this->assertTrue($this->fileAccessManager->verfiyPassword($password));
+	}
+
+	public function testVerifyPasswordReturnsFalseWithWrongPassword(): void
+	{
+		$correctPassword = 'secret123';
+		$wrongPassword   = 'wrong';
+		$passwordHash    = password_hash($correctPassword, PASSWORD_DEFAULT);
+		$fileData        = $this->createFileData(passwordHash: $passwordHash);
+		$collectionData  = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->session->method('has')->willReturn(false);
+
+		$this->assertFalse($this->fileAccessManager->verfiyPassword($wrongPassword));
+	}
+
+	public function testVerifyPasswordBypassesCheckForSuperAdmin(): void
+	{
+		$passwordHash   = password_hash('secret123', PASSWORD_DEFAULT);
+		$fileData       = $this->createFileData(passwordHash: $passwordHash);
+		$collectionData = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('admin', 'auth');
+
+		$this->userValidator->method('isSuperAdmin')->willReturn(true);
+
+		// Super admin can access with any password (even wrong one)
+		$this->assertTrue($this->fileAccessManager->verfiyPassword('wrong-password'));
+	}
+
+	public function testVerifyPasswordOnlyDoesNotBypassForSuperAdmin(): void
+	{
+		$correctPassword = 'secret123';
+		$wrongPassword   = 'wrong';
+		$passwordHash    = password_hash($correctPassword, PASSWORD_DEFAULT);
+		$fileData        = $this->createFileData(passwordHash: $passwordHash);
+		$collectionData  = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('admin', 'auth');
+
+		$this->userValidator->method('isSuperAdmin')->willReturn(true);
+
+		// verfiyPasswordOnly does not bypass for super admin
+		$this->assertFalse($this->fileAccessManager->verfiyPasswordOnly($wrongPassword));
+		$this->assertTrue($this->fileAccessManager->verfiyPasswordOnly($correctPassword));
+	}
+
+	// ==================== Log Download Tests ====================
+
+	public function testLogDownloadRecordsDownloadWhenUserLoggedIn(): void
+	{
+		$fileData       = $this->createFileData();
+		$collectionData = $this->createCollectionData(groups: ['editors']);
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->setupSessionWithUser('user-123', 'auth');
+
+		$this->userValidator->method('isSuperAdmin')->willReturn(false);
+
+		// Can't easily assert on logger->info call, but we can verify no exception is thrown
+		$this->fileAccessManager->logDownload('documents', 'doc-1', 'attachment', 'file.pdf', 'subfolder');
+
+		$this->assertTrue(true); // If we got here, logging succeeded
+	}
+
+	public function testLogDownloadSkipsLoggingWhenNoUser(): void
+	{
+		$fileData       = $this->createFileData();
+		$collectionData = $this->createCollectionData();
+
+		$this->loadFileWithData($fileData, $collectionData);
+
+		$this->session->method('has')->willReturn(false);
+
+		// Should return early without logging
+		$this->fileAccessManager->logDownload('documents', 'doc-1', 'attachment', 'file.pdf');
+
+		$this->assertTrue(true);
+	}
+
+	// ==================== Helper Methods ====================
+
+	private function setupSessionWithUser(string $userId, string $collection): void
+	{
+		$this->session->method('has')
+			->willReturnMap([
+				['user', true],
+				['collection', true],
+			]);
+
+		$this->session->method('get')
+			->willReturnMap([
+				[SessionKeys::AUTH_USER, null, $userId],
+				[SessionKeys::AUTH_COLLECTION, null, $collection],
+			]);
+	}
+
+	private function createFileData(bool $protected = false, string $passwordHash = ''): FileData
+	{
+		return new FileData([
+			'name'      => 'test.pdf',
+			'mime'      => 'application/pdf',
+			'size'      => 1024,
+			'protected' => $protected,
+			'password'  => $passwordHash,
+			'tags'      => [],
+			'comments'  => 'Test file',
 		]);
-
-		// Test successful password verification
-		$fileAccessManager->method('verfiyPassword')->willReturnOnConsecutiveCalls(true, false);
-		$fileAccessManager->method('verfiyPasswordOnly')->willReturnOnConsecutiveCalls(true, false);
-
-		expect($fileAccessManager->verfiyPassword('correct-password'))->toBeTrue();
-		expect($fileAccessManager->verfiyPasswordOnly('correct-password'))->toBeTrue();
-
-		// Test failed password verification
-		expect($fileAccessManager->verfiyPassword('wrong-password'))->toBeFalse();
-		expect($fileAccessManager->verfiyPasswordOnly('wrong-password'))->toBeFalse();
 	}
 
-	public function testLoadDepotFileExceptionHandling(): void
+	private function createDepotData(bool $protected = false, string $passwordHash = ''): DepotData
 	{
-		// Test the logic for depot file validation that would throw exceptions
-		$mockDepotData      = $this->createMock(DepotData::class);
-		$mockCollectionData = $this->createMock(CollectionData::class);
-		$mockInvalidData    = $this->createMock(\stdClass::class);
-
-		// Test the validation logic that happens in loadDepotFile
-		$isValidDepot1      = $mockDepotData instanceof DepotData;
-		$isValidCollection1 = $mockCollectionData instanceof CollectionData;
-		$isValidDepot2      = $mockInvalidData instanceof DepotData;
-
-		expect($isValidDepot1)->toBeTrue();
-		expect($isValidCollection1)->toBeTrue();
-		expect($isValidDepot2)->toBeFalse();
-
-		// Test the combined validation logic
-		$wouldThrowException = !($isValidDepot2 && $isValidCollection1);
-		expect($wouldThrowException)->toBeTrue();
+		return new DepotData([
+			'depotID'   => 'my-depot',
+			'path'      => 'files',
+			'protected' => $protected,
+			'password'  => $passwordHash,
+		]);
 	}
 
-	public function testLoadFileExceptionHandling(): void
+	private function createCollectionData(array $groups = []): CollectionData
 	{
-		// Test the logic for file validation that would throw exceptions
-		$mockFileData       = $this->createMock(FileData::class);
-		$mockCollectionData = $this->createMock(CollectionData::class);
-		$mockInvalidData    = $this->createMock(\stdClass::class);
+		$collection              = new CollectionData();
+		$collection->id          = 'documents';
+		$collection->name        = 'Documents';
+		$collection->schema      = 'document';
+		$collection->description = 'Document collection';
+		$collection->groups      = $groups;
 
-		// Test the validation logic that happens in loadFile
-		$isValidFile1       = $mockFileData instanceof FileData;
-		$isValidCollection1 = $mockCollectionData instanceof CollectionData;
-		$isValidFile2       = $mockInvalidData instanceof FileData;
-
-		expect($isValidFile1)->toBeTrue();
-		expect($isValidCollection1)->toBeTrue();
-		expect($isValidFile2)->toBeFalse();
-
-		// Test the combined validation logic
-		$wouldThrowException = !($isValidFile2 && $isValidCollection1);
-		expect($wouldThrowException)->toBeTrue();
+		return $collection;
 	}
 
-	public function testFileProtectionLogicComponents(): void
+	private function loadFileWithData(FileData|DepotData $fileData, CollectionData $collectionData): void
 	{
-		// Test the logical components used in protection checks
+		$this->propertyFetcher->method('fetchProperty')->willReturn($fileData);
+		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
-		// Test file protection status
-		$fileProtected    = true;
-		$fileNotProtected = false;
-		expect($fileProtected)->toBeTrue();
-		expect($fileNotProtected)->toBeFalse();
-
-		// Test collection groups
-		$emptyGroups = [];
-		$withGroups  = ['admin', 'editor'];
-
-		expect($emptyGroups === [])->toBeTrue();
-		expect($withGroups === [])->toBeFalse();
-
-		// Test protection logic: file is protected AND collection has groups
-		$protectedWithGroups    = $fileProtected && $withGroups !== [];
-		$protectedWithoutGroups = $fileProtected && $emptyGroups !== [];
-		$notProtectedWithGroups = $fileNotProtected && $withGroups !== [];
-
-		expect($protectedWithGroups)->toBeTrue();
-		expect($protectedWithoutGroups)->toBeFalse();
-		expect($notProtectedWithGroups)->toBeFalse();
-	}
-
-	public function testAccessControlLogicComponents(): void
-	{
-		// Test access control decision logic components
-
-		// Test super admin logic
-		$isSuperAdmin    = true;
-		$isNotSuperAdmin = false;
-		expect($isSuperAdmin)->toBeTrue();
-		expect($isNotSuperAdmin)->toBeFalse();
-
-		// Test collection groups access logic
-		$emptyGroups = [];
-		$withGroups  = ['admin'];
-
-		// If collection groups are empty, grant access (from the actual method)
-		$grantAccessForEmptyGroups = $emptyGroups === [];
-		expect($grantAccessForEmptyGroups)->toBeTrue();
-
-		// If collection has groups, need to check user groups
-		$needsGroupCheck = $withGroups !== [];
-		expect($needsGroupCheck)->toBeTrue();
-	}
-
-	public function testPasswordHashLogic(): void
-	{
-		// Test password hash validation logic
-		$emptyHash = '';
-		$validHash = '$2y$10$example.hash';
-
-		// Password protection logic: hash is not empty
-		$isPasswordProtected1 = $emptyHash !== '';
-		$isPasswordProtected2 = $validHash !== '';
-
-		expect($isPasswordProtected1)->toBeFalse();
-		expect($isPasswordProtected2)->toBeTrue();
-	}
-
-	public function testUserIdValidationLogic(): void
-	{
-		// Test user ID validation components
-		$emptyUserId = '';
-		$validUserId = 'john-doe';
-		$nullUserId  = null;
-
-		// Super admin check logic: user ID must not be empty
-		$canBeSuperAdmin1 = $emptyUserId !== '' && $emptyUserId !== '0';
-		$canBeSuperAdmin2 = $validUserId !== '' && $validUserId !== '0';
-		$canBeSuperAdmin3 = $nullUserId !== null;
-
-		expect($canBeSuperAdmin1)->toBeFalse();
-		expect($canBeSuperAdmin2)->toBeTrue();
-		expect($canBeSuperAdmin3)->toBeFalse();
-	}
-
-	public function testSuperAdminBypassLogic(): void
-	{
-		// Test super admin bypass logic used in verfiyPassword
-		$hasSession      = true;
-		$noSession       = false;
-		$isSuperAdmin    = true;
-		$isNotSuperAdmin = false;
-
-		// Super admin with session bypasses password check
-		$bypassPassword1 = $hasSession && $isSuperAdmin;
-		$bypassPassword2 = $hasSession && $isNotSuperAdmin;
-		$bypassPassword3 = $noSession && $isSuperAdmin;
-
-		expect($bypassPassword1)->toBeTrue();
-		expect($bypassPassword2)->toBeFalse();
-		expect($bypassPassword3)->toBeFalse();
-	}
-
-	public function testLogDownloadMethod(): void
-	{
-		// Test that logDownload method exists and can be called
-		$fileAccessManager = $this->createPartialMock(FileAccessManager::class, ['sessionHasUser', 'logDownload']);
-
-		$fileAccessManager->method('sessionHasUser')->willReturn(true);
-
-		// Mock the logDownload method to verify it can be called
-		$fileAccessManager->expects($this->once())
-			->method('logDownload')
-			->with('test-collection', 'test-id', 'test-property', 'test-file.pdf', null);
-
-		$fileAccessManager->logDownload('test-collection', 'test-id', 'test-property', 'test-file.pdf', null);
-	}
-
-	public function testConstants(): void
-	{
-		// Test that the class constants are defined correctly
-		expect(FileAccessManager::DOWNLOAD_LOG)->toBe('totalcms-download.log');
+		if ($fileData instanceof FileData) {
+			$this->fileAccessManager->loadFile('documents', 'doc-1', 'attachment');
+		} else {
+			$this->fileAccessManager->loadDepotFile('media', 'media-1', 'files');
+		}
 	}
 }

@@ -6,7 +6,8 @@ use FeedWriter\Item;
 use FeedWriter\RSS2;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
 
 class RssBuilder
@@ -25,8 +26,9 @@ class RssBuilder
 	private readonly RSS2 $feed;
 
 	public function __construct(
-		private readonly IndexReader $indexReader,
+		private readonly IndexFilter $indexFilter,
 		private readonly CollectionFetcher $collectionFetcher,
+		private readonly SchemaFetcher $schemaFetcher,
 		private readonly Config $config,
 	) {
 		$this->feed = new RSS2();
@@ -41,22 +43,42 @@ class RssBuilder
 	/** @param array<string,string> $options */
 	public function buildFeed(string $collection, array $options = []): string
 	{
-		$index = $this->indexReader->fetchIndex($collection);
-
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		if (is_null($collectionData)) {
 			throw new \Exception('Collection not found: ' . $collection);
 		}
 
+		// Auto-filter drafts for blog schemas if no include/exclude filters are defined
+		if (!isset($options['include']) && !isset($options['exclude'])) {
+			$schemaData = $this->schemaFetcher->fetchSchema($collectionData->schema);
+			if (in_array($schemaData->id, ['blog', 'blog-legacy'], true)) {
+				$options['exclude'] = 'draft:true';
+			}
+		}
+
+		// Extract limit (default: 25, 0 or -1 means no limit)
+		$limit = isset($options['limit']) ? (int)$options['limit'] : 25;
+		unset($options['limit']);
+
 		$this->setupFeed($options);
 
-		$objects = $index->objects->sortBy($this->fieldMap['date'] ?? 'date', SORT_REGULAR, true);
-		foreach ($objects as $object) {
-			$draft = $object[$this->fieldMap['draft']] ?? false;
-			if ($draft) {
-				continue;
-			}
+		// Fetch and filter objects
+		$objects = $this->indexFilter->fetchFilteredIndex($collection, $options);
 
+		// Sort by date (newest first)
+		usort($objects, function (array $a, array $b): int {
+			$dateA = $a[$this->fieldMap['date']] ?? 0;
+			$dateB = $b[$this->fieldMap['date']] ?? 0;
+
+			return strtotime($dateB) <=> strtotime($dateA);
+		});
+
+		// Apply limit (-1 means no limit)
+		if ($limit > 0) {
+			$objects = array_slice($objects, 0, $limit);
+		}
+
+		foreach ($objects as $object) {
 			$item = $this->createItem($collectionData, $object);
 			$this->feed->addItem($item);
 		}
@@ -100,9 +122,16 @@ class RssBuilder
 		return $item;
 	}
 
-	/** @param array<string,string> $options */
+	/** @param array<string,string|false> $options */
 	private function setupFeed(array $options): void
 	{
+		// URL decode string options that come from query parameters
+		foreach (['name', 'description', 'link', 'image', 'language'] as $key) {
+			if (isset($options[$key]) && $options[$key] !== false) {
+				$options[$key] = urldecode($options[$key]);
+			}
+		}
+
 		$options = array_merge([
 			'link'        => $this->homepage(),
 			'rssurl'      => false,

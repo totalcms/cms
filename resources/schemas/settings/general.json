@@ -1,0 +1,67 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "General Settings",
+	"description" : "Core application settings",
+	"type"        : "object",
+	"properties"  : {
+		"sentry": {
+			"type"    : "toggle",
+			"label"   : "Share Application Errors with Developer",
+			"help"    : "In the case any critical errors happen in Total CMS, the details of the error will be shared with the developer so that a fix can be shipped as soon as possible. No private data is ever shared or stored. Only the error and where the error occurred in the code will be shared. If disabled, errors will only be logged locally on your server.",
+			"default" : true
+		},
+		"notfound": {
+			"type"        : "text",
+			"label"       : "404 - Page Not Found Path",
+			"help"        : "The path to the 404 page that will be used when a page is not found. This is used by the CMS to redirect when an object is not found.",
+			"placeholder" : "/404"
+		},
+		"timezone": {
+			"type"        : "select",
+			"label"       : "Timezone",
+			"placeholder" : "Select Timezone",
+			"help"        : "The timezone that all dates in the CMS will be saved as. If not set, then the default timezone that the server is configured with will be used.",
+			"settings"    : {
+				"timezoneOptions": true
+			}
+		},
+		"locale": {
+			"type"        : "select",
+			"label"       : "Locale",
+			"placeholder" : "Select Locale",
+			"help"        : "The locale setting affects how dates, numbers, and currency are formatted. This uses PHP's locale system.",
+			"options"     : [
+				{"value": "en_US", "label": "English (United States)"},
+				{"value": "en_GB", "label": "English (United Kingdom)"},
+				{"value": "en_CA", "label": "English (Canada)"},
+				{"value": "en_AU", "label": "English (Australia)"},
+				{"value": "fr_FR", "label": "French (France)"},
+				{"value": "fr_CA", "label": "French (Canada)"},
+				{"value": "de_DE", "label": "German (Germany)"},
+				{"value": "es_ES", "label": "Spanish (Spain)"},
+				{"value": "es_MX", "label": "Spanish (Mexico)"},
+				{"value": "it_IT", "label": "Italian (Italy)"},
+				{"value": "pt_BR", "label": "Portuguese (Brazil)"},
+				{"value": "pt_PT", "label": "Portuguese (Portugal)"},
+				{"value": "nl_NL", "label": "Dutch (Netherlands)"},
+				{"value": "pl_PL", "label": "Polish (Poland)"},
+				{"value": "ru_RU", "label": "Russian (Russia)"},
+				{"value": "ja_JP", "label": "Japanese (Japan)"},
+				{"value": "zh_CN", "label": "Chinese (Simplified)"},
+				{"value": "zh_TW", "label": "Chinese (Traditional)"},
+				{"value": "ko_KR", "label": "Korean (Korea)"},
+				{"value": "ar_SA", "label": "Arabic (Saudi Arabia)"},
+				{"value": "tr_TR", "label": "Turkish (Turkey)"},
+				{"value": "sv_SE", "label": "Swedish (Sweden)"},
+				{"value": "da_DK", "label": "Danish (Denmark)"},
+				{"value": "fi_FI", "label": "Finnish (Finland)"},
+				{"value": "no_NO", "label": "Norwegian (Norway)"},
+				{"value": "cs_CZ", "label": "Czech (Czech Republic)"},
+				{"value": "hu_HU", "label": "Hungarian (Hungary)"},
+				{"value": "el_GR", "label": "Greek (Greece)"},
+				{"value": "he_IL", "label": "Hebrew (Israel)"},
+				{"value": "th_TH", "label": "Thai (Thailand)"}
+			]
+		}
+	}
+}

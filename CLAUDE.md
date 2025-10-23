@@ -9,6 +9,22 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 ### Related Projects
 - **Total CMS License API** (`/Users/joeworkman/Websites/license.totalcms.co`): License validation and trial management with similar Slim 4 architecture
 
+### Development Priorities (Pre-3.1 Launch)
+
+**Current Phase**: Beta development with focus on stability and documentation
+
+**Primary Focus Areas**:
+1. **User Documentation Quality**: The biggest gap before public launch is comprehensive, well-organized documentation for end users
+2. **Feature Completion**: Core feature set is stable and production-ready
+3. **Code Quality**: Maintaining PHPStan Level 8, comprehensive test coverage, and clean architecture
+4. **Performance**: Memory management, caching, and optimization for large datasets
+
+**Post-3.1 Goals**:
+- Dark mode support for admin interface
+- Additional import adapters for other CMS platforms
+- Performance optimizations based on production usage
+- Community-contributed templates and extensions
+
 ## Technology Stack
 
 - **Backend**: PHP 8.2+, Slim 4, Twig 3, PHP-DI 7, PSR-7/PSR-15
@@ -19,21 +35,17 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 
 ### Build and Development
 ```bash
-# Full application build
-composer run build
-bin/build.sh
-
-# Frontend asset building
+# Frontend asset building (primary development command)
 composer run esbuild
-bin/build-assets.sh
 yarn build
 
-# Development with file watching
+# Development with file watching (typically runs in background)
 bin/watch.sh
-bin/devserver.sh
 
-# Create distribution bundle
-bin/make-bundle.php
+# Full application build (manual release builds only)
+composer run build
+
+# Create distribution bundle (manual release builds only)
 composer run bundle
 ```
 
@@ -48,23 +60,9 @@ composer run cs:fix
 
 # Run tests with Pest
 composer run test
-composer run test:coverage
-
-# Mess detection
-composer run md
 
 # Run all quality checks
 composer run test:all
-```
-
-### Application Management
-```bash
-# Schema management
-composer run schema:dump
-
-# Code analysis and reporting
-bin/code-report.sh
-bin/codecount.sh
 ```
 
 ## Architecture Overview
@@ -72,34 +70,21 @@ bin/codecount.sh
 ### Directory Structure
 - **`/src/Action/`** - HTTP action handlers organized by domain (Admin, Auth, Collection, etc.)
 - **`/src/Domain/`** - Business logic layer with services, repositories, and data objects
-  - **`/src/Domain/JumpStart/`** - JumpStart data import/export system with services, data objects, and factories
-  - **`/src/Domain/Import/`** - CMS import systems for migrating from other platforms (Alloy, etc.)
+  - **`/src/Domain/JumpStart/`** - JumpStart data import/export system
+  - **`/src/Domain/Import/`** - CMS import systems (Alloy, Total CMS 1, etc.)
   - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
-  - **`/src/Domain/ImageWorks/`** - Complete image processing system with watermarking, font management, and caching
-    - **`TextWatermarkFactory`** - Text watermark generation with TTF/OTF font support from depot
-    - **`GlideFactory`** - Image manipulation and watermark application via League/Glide
-    - **`ImageGenerator`** - Main service for image processing operations
-  - **`/src/Domain/Property/Data/`** - Property data objects with enhanced color manipulation
-    - **`ColorData`** - OKLCH color manipulation with proper hue wraparound and hex conversion
-  - **`/src/Domain/Object/Service/`** - Object management services
-    - **`ObjectCloner`** - Enhanced cloning with automatic onCreate/onUpdate date field handling
+  - **`/src/Domain/ImageWorks/`** - Complete image processing with watermarking, font management, and caching
   - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
-    - **`CmsGridTokenParser`** - Parses `{% cmsgrid %}` tag syntax with `from`, `with`, `as` parameters
-    - **`CmsGridNode`** - Compiles grid tags to PHP, provides `{{ item }}` and `{{ collection }}` variables
-    - **`GridRenderer`** - Helper methods for `cms.grid.*` (date, tags, excerpt, price, meta)
 - **`/src/Middleware/`** - HTTP middleware for auth, CORS, licensing, validation
 - **`/src/Renderer/`** - Response rendering (JSON, XML, Twig, Raw)
 - **`/src/Utils/`** - Utility classes for file handling, image processing, QR codes
 - **`/config/`** - Hierarchical PHP configuration and route definitions
-  - **`/config/routes/import.php`** - Import system routes (alloy-analyze, alloy import)
 - **`/tcms-data/`** - JSON-based flat-file storage for collections
 - **`/resources/schemas/`** - JSON schemas for data validation
 - **`/resources/templates/`** - Twig templates for admin interface
-  - **`/resources/templates/grid/`** - Default grid templates (blog.twig, feed.twig, generic.twig)
-- **`/resources/docs/`** - Documentation files including JumpStart guide and field settings
-- **`/resources/fonts/`** - Centralized font storage (RobotoRegular.ttf for default text watermarks)
+- **`/resources/docs/`** - Documentation files
+- **`/resources/fonts/`** - Centralized font storage (default: RobotoRegular.ttf)
 - **`/tests/test-data/`** - Test datasets for integration testing
-  - **`/tests/test-data/alloy/`** - Complete Alloy CMS test dataset (posts, embeds, droplets, image-uploads)
 
 ### Design Patterns
 - **Domain-Driven Design**: Clear separation between Actions, Domain services, and Data layers
@@ -109,62 +94,23 @@ bin/codecount.sh
 
 ## Key Features
 
-- **Collection System**: 13 built-in collection types (blog, image, gallery, etc.) stored as JSON files in `/tcms-data/`
-- **JumpStart System**: Data import/export system for quick project setup with predefined content structures, factory data generation, and Total CMS 1 migration
-- **Import Systems**: Support for migrating from multiple CMS platforms (Total CMS 1, Alloy CMS) with job queue processing
-- **ImageWorks System**: Complete image processing with text/image watermarking, custom font support, caching
-- **Gallery System**: Enhanced gallery display with semantic HTML5 figure/figcaption captions support
-- **Twig Integration**: Custom filters/functions in `src/Domain/Twig/`, markdown processing via ParsedownExtra
-- **Grid System**: `{% cmsgrid %}` Twig tag for flexible content grids with built-in templates and helper methods in `cms.grid.*`
-- **Admin Interface**: Form builder with 20+ field types, JavaScript components in `/javascript/totalform/`
-- **Build System**: ESBuild with code splitting, configuration in `esbuild.config.js`
-
-## Development Workflow
-
-1. **Setup**: `composer install && yarn install`
-2. **Build Assets**: `bin/build-assets.sh` or `composer run esbuild`
-3. **Development**: Use `bin/watch.sh` for auto-building
-4. **Quality Check**: Always run `composer run test:all` before commits
-5. **Testing**: Use Pest framework - tests are in `/tests/`
+- **Collection System**: 13 built-in collection types (blog, image, gallery, etc.) stored as JSON files
+- **JumpStart System**: Data import/export with streaming support for large datasets
+- **Import Systems**: Migrating from other CMS platforms (Total CMS 1, Alloy CMS) via job queue
+- **ImageWorks System**: Image processing with text/image watermarking, custom font support
+- **Twig Integration**: Custom filters/functions, `{% cmsgrid %}` tag, markdown processing
+- **Admin Interface**: Form builder with 20+ field types, JavaScript components
+- **Cache System**: Multi-backend caching with APCu-first priority (APCu → Redis → Memcached → Filesystem)
+- **Build System**: ESBuild with code splitting
 
 ## Important Notes
 
 - **Storage**: Flat-file JSON storage (no traditional database)
 - **Caching**: Multi-backend Twig caching with APCu-first priority (APCu, Redis, Memcached, filesystem, OPcache)
 - **Modern PHP**: Strict typing, PSR standards, PHP 8.2+ features with PHP 8.4 compatibility
-- **Enhanced Libraries**: Custom couleur fork with OKLCH improvements, native EXIF processing
-
-## Recent Major Updates (2024)
-
-### License System Modernization (Latest)
-- **Simplified Data Structure**: Reduced from 15+ fields to 8 essential fields for performance
-- **CamelCase API**: Consistent camelCase throughout API responses and JWT tokens
-- **Service Architecture**: JWT validation moved from middleware to dedicated service
-- **Type Safety**: Config class protected against invalid configuration types
-- **Deep Merge Configuration**: Users can override specific nested settings without duplicating entire arrays
-
-### Configuration System Enhancements
-- **Deep Merge Support**: `deepMergeArrays()` function enables granular configuration overrides
-- **Type-Safe Config**: All array properties protected with `is_array()` validation
-- **Backward Compatibility**: Legacy `$settings[]` syntax still works alongside new return-array style
-- **User-Friendly**: tcms.php sample updated with examples and best practices
-
-### APCu Cache Integration
-- **Primary Cache Backend**: APCu now first in priority for optimal single-server performance
-- **Zero Configuration**: Works immediately with APCu extension, no external services required
-- **UI Integration**: Server Checker and Cache Management fully support APCu with detailed statistics
-- **Performance Optimized**: Cache priority reflects real-world single-server deployment patterns
-
-### PHP 8.4 Compatibility & EXIF Enhancements
-- **ImageMetaReader**: Native PHP EXIF implementation replacing lychee-org/php-exif
-- **Automatic Metadata**: Image uploads auto-populate alt text and tags from EXIF/XMP/IPTC data
-- **Enhanced Processing**: XMP lens extraction, location data, keyword processing, GPS coordinate formatting
-- **Schema Compliance**: All metadata returned in proper string formats for validation
-
-### Enhanced Color System
-- **Couleur Library Fork**: Custom fork with OKLCH hue wraparound mathematics
-- **ColorData Integration**: Simplified using enhanced library functions
-- **Proper Color Operations**: Fixed 360° hue calculations for color wheel operations
+- **Enhanced Libraries**: Custom couleur fork with OKLCH improvements at `/Users/joeworkman/Developer/forks/couleur`
+- **Memory Management**: Streaming patterns for large datasets (see `JumpStartData::streamJsonToFile()` for examples)
+- **Emergency Cache**: `/emergency/cache/clear` endpoint for customer self-service cache clearing
 
 ## Security Architecture
 
@@ -225,424 +171,69 @@ bin/codecount.sh
   - Border radius: `var(--totalform-radius)`
 - **Avoid**: Custom colors, hardcoded values, non-existent variables
 
-## Frontend JavaScript
-- **TotalForm System**: Modular form system in `/javascript/totalform/` with field-specific components
-- **Choices.js**: Enhanced select/multiselect fields with custom initialization
-- **CodeMirror Bundle**: Complete local syntax highlighting solution with Twig, HTML, CSS, JS, PHP, Markdown support
-- **TotalCMSCodeMirror**: Custom API for creating editors with light theme (elegant) matching dashboard design
-- **Syntax Highlighting**: GitHub-inspired light theme colors, dark theme saved for future dark mode
-- **Documentation Highlighting**: Auto-syntax highlighting for code blocks in documentation
+### Memory Management Best Practices
+When working with large datasets (JumpStart exports, imports, bulk operations):
+- **Streaming Pattern**: Process data incrementally instead of loading everything into memory
+- **Immediate Cleanup**: Use `unset()` to free memory after processing each item in loops
+- **Helper Methods**: Create reusable helpers that handle JSON encoding errors
+- **Real-World Example**: See `JumpStartData::streamJsonToFile()` for complete streaming implementation
+- **Key Principle**: Default to streaming patterns for any dataset that could potentially grow large
 
-## Performance & Caching
+## Major System Overviews
+
+### Twig Template System
+- **Global Variable**: Use `cms` for accessing configuration, collections, and services
+- **Configuration**: `cms.config('key')` not `config` (which doesn't exist)
+- **Common Usage**: `cms.env`, `cms.config('debug')`, `cms.gallery()`, `cms.image()`
+- **Custom Extensions**: TotalCMSTwigExtension with CMS-specific filters and functions
+- **Grid System**: `{% cmsgrid %}` tag for content grids with helper methods in `cms.grid.*`
+
+### ImageWorks System
+- **Components**: TextWatermarkFactory, GlideFactory, ImageGenerator, ImageMetaReader
+- **Font Support**: TTF/OTF fonts from depot storage (default: RobotoRegular.ttf)
+- **Configuration**: `watermarkFontsDepot` setting (default: 'watermark-fonts')
+- **EXIF Metadata**: Native PHP implementation for PHP 8.4 compatibility, auto-populates alt text and tags
+- **Color System**: Enhanced OKLCH color manipulation via custom couleur fork
+
+### JumpStart System
+- **Purpose**: Data import/export system for quick project setup
+- **Streaming**: Memory-efficient exports using `streamJsonToFile()` for large datasets
+- **Export Order**: schemas → collections → templates → objects → factory
+- **Factory Support**: Generate test data using Faker instead of real content
+- **Admin Interface**: `/admin/utils/jumpstart` for export/import operations
 
 ### Cache System
-- **Multi-Backend Caching**: APCu-first priority system optimized for single-server deployments
-- **Cache Priority**: APCu > Redis > Memcached > Filesystem (OPcache runs automatically for PHP bytecode)
-- **APCu Integration**: Zero-config, fast in-memory caching for single-server setups
-- **TwigCacheManager**: Multi-backend caching with automatic detection and graceful fallbacks
-- **Development Mode**: `isCacheEnabled` property, no file operations when `cachedir: "false"`
-- **Cache Cleaner UI**: Admin interface showing cache status, hit rates (1 decimal precision), and performance recommendations
-- **Container Integration**: Full dependency injection support with APCuService, RedisService, MemcachedService, FilesystemService
-
-### Performance Optimizations
-- **CollectionRefiner**: 30-70% improvement via reflection caching, optimized array operations, loose comparisons
-- **CollectionSorter**: 50-70% improvement via property value caching and rule pre-processing
-- **ServerChecker**: Enhanced with detailed extension info, APCu + OPcache detection, and cache functionality testing
-
-### Emergency Cache Management
-- **Automatic OPcache Clearing**: `DefaultErrorHandler` automatically clears OPcache on every error to prevent cached errors
-- **No-Cache Headers**: Error responses include `Cache-Control: no-cache` headers to prevent browser/proxy caching
-- **Emergency Endpoint**: `/emergency/cache/clear` provides public cache clearing when admin interface is inaccessible
-- **Customer-Friendly**: No authentication required - customers can clear caches from any location without server access
-- **Test Script**: `bin/test-emergency-cache.php` verifies emergency cache clearing functionality
-
-### APCu Cache Integration
-
-Total CMS prioritizes APCu as the primary cache backend for optimal single-server performance.
-
-**Priority Order**: APCu → Redis → Memcached → Filesystem (OPcache runs automatically)
-
-#### APCu Service Features
-- **APCuService**: Complete cache implementation with prefix support (`tcms_` default)
-- **Zero Configuration**: Works immediately when APCu extension is installed
-- **Pattern Clearing**: Uses APCu iterators for efficient cache pattern matching
-- **Statistics & Monitoring**: Hit rates, memory usage, entry counts with 1-decimal precision
-- **Graceful Fallbacks**: Auto-detects availability and falls back to Redis/Memcached
-
-#### Benefits for Single-Server Deployments
-- **Performance**: Faster than Redis for single-server (no network overhead)
-- **Simplicity**: No external services to configure, manage, or monitor
-- **Resource Efficiency**: Lower memory footprint than separate Redis daemon  
-- **Shared Hosting Friendly**: Most hosting providers have APCu pre-installed
-- **Immediate Setup**: Zero-config caching that "just works"
-
-#### Configuration
-```php
-// config/defaults.php
-'cache' => [
-    'apcu' => [
-        'enabled' => true,
-        'prefix'  => 'tcms_',
-    ],
-    // Other cache backends remain available for advanced users
-],
-```
-
-#### UI Integration
-- **Server Checker**: APCu appears between OPcache and Redis with functionality testing
-- **Cache Management**: Shows APCu status, hit rates, and entry counts
-- **Admin Interface**: Clear APCu cache individually or as part of "Clear All Caches"
-
-## JumpStart System
-
-### Overview
-JumpStart is Total CMS's data import/export system for quick project setup with predefined content structures.
-
-### Key Components
-- **JumpStartData**: Core data structure containing collections, schemas, objects, and factory definitions
-- **JumpStartExporter**: Exports project data to JSON format, strips media files, retains object metadata
-- **JumpStartImporter**: Imports JumpStart data, processes factory definitions for test data generation
-- **FactoryImporter**: Generates test data using Faker based on factory definitions
-
-### Usage Patterns
-- **Export**: Collections and objects are exported; images, files, galleries, and depot files are removed
-- **Import**: Objects can be imported directly or converted to factory definitions for dynamic data generation
-- **Factory System**: Use `factory` array instead of `objects` for generating test data with Faker
-- **Admin Interface**: Access via `/admin/utils/jumpstart` for import/export operations
-- **Project Setup**: Environment-specific demo data loading via `/admin/utils/project-setup`
-
-### Testing
-- **JumpStartBasicTest**: Core functionality tests without HTTP dependencies
-- **Simplified Testing**: Removed complex HTTP endpoint tests to focus on business logic
-- **24 Passing Tests**: Comprehensive test coverage for JumpStart functionality
-
-## Twig Template System
-
-### Global Variables
-- **cms**: Primary global variable providing access to configuration, collections, and services
-- **Configuration Access**: Use `cms.config('key')` not direct `config` variable (which doesn't exist)
-- **Common Usage**: `cms.env` for environment, `cms.config('debug')` for debug mode
-
-### Template Conventions
-- **LazyTwigGlobal**: Proxy pattern for lazy loading of Twig global variables
-- **TotalCMSTwigAdapter**: Main adapter providing CMS functionality to templates
-- **Custom Extensions**: TotalCMSTwigExtension with CMS-specific filters and functions
-
-### Development Notes
-- **Template Debugging**: Use `cms.env` instead of `config.env` for environment checks
-- **Error Handling**: TwigEngine provides detailed error messages in development mode
-- **Performance**: Twig templates are cached in production, auto-reloaded in development
-
-## ImageWorks System
-
-### Overview
-ImageWorks is Total CMS's comprehensive image processing system providing dynamic image manipulation, watermarking, and caching.
-
-### Key Components
-- **TextWatermarkFactory**: Generates text watermarks with custom font support
-- **GlideFactory**: Integrates with League/Glide for image manipulation and watermark application
-- **ImageGenerator**: Main service orchestrating image processing operations
-- **ColorData**: Enhanced OKLCH color manipulation with proper hue calculations
-- **ImageMetaReader**: PHP 8.4-compatible EXIF metadata extraction system
-
-### EXIF Metadata System
-- **Native PHP Implementation**: Replaces lychee-org/php-exif for PHP 8.4 compatibility
-- **Comprehensive Extraction**: EXIF, XMP, and IPTC metadata from multiple sources
-- **Automatic Population**: Image upload auto-populates alt text and tags from metadata
-- **Enhanced Data Processing**: 
-  - XMP lens extraction from `aux:Lens` field
-  - IPTC location data (city, state, country, sublocation)
-  - Keyword extraction from multiple metadata sources
-  - GPS coordinate parsing with proper string formatting
-  - Fraction cleanup (removes "/1" denominators for cleaner display)
-- **Smart Data Preservation**: Existing alt text and tags preserved during re-uploads
-- **Schema Compliance**: All GPS coordinates returned as strings to match validation requirements
-
-### Text Watermarking
-- **Font Support**: TTF and OTF fonts loaded from depot storage or default Roboto font
-- **Configuration**: `watermarkFontsDepot` setting (default: 'watermark-fonts') for depot-based font storage
-- **Features**: Text size, color, background, padding, rotation angle, transparency support
-- **Caching**: Automatic watermark caching in `.watermarks` directory for performance
-- **Flexible Fonts**: Supports both "FontName" and "FontName.ttf" format for font specification
-
-### Implementation Details
-- **Font Loading**: Depot fonts create temporary files for GD compatibility, cleaned up after use
-- **Path Structure**: Depot fonts stored at `depot/{depotId}/depot/{filename}`
-- **Cache Integration**: Watermark cache clearing integrated with main cache management system
-- **Error Handling**: Graceful fallbacks to default font if depot fonts unavailable
-
-### Usage Examples
-```twig
-{# Text watermark with custom font #}
-{{ cms.image('image.jpg') | imageworks({
-    marktext: 'Copyright 2024',
-    marktextfont: 'CustomFont',
-    marktextsize: 24,
-    marktextcolor: 'ffffff',
-    marktextalpha: 80
-}) }}
-
-{# Combined text and image watermarks #}  
-{{ cms.image('photo.jpg') | imageworks({
-    marktext: 'Watermark',
-    markimage: 'logo.png',
-    markalpha: 50
-}) }}
-```
-
-### Color System Integration
-- **Enhanced Couleur Library**: Fork with improved OKLCH color space support at `/Users/joeworkman/Developer/forks/couleur`
-- **Hue Wraparound**: Proper 360° hue mathematics for color wheel operations
-- **OKLCH Support**: Full OKLCH color space manipulation with proper hue calculations
-- **Color Filters**: Twig filters for `hue()`, `lightness()`, `chroma()` adjustments
-- **Hex Conversion**: Reliable OKLCH-to-hex conversion avoiding ColorFactory library issues
-- **ColorData Integration**: Uses enhanced couleur library functions instead of duplicating logic
-
-### Configuration
-```php
-// config/defaults.php
-'imageworks' => [
-    'watermarkFontsDepot' => 'watermark-fonts', // Default depot for custom fonts
-    // ... other ImageWorks settings
-]
-```
-
-## Object Management System
-
-### Object Cloning
-- **Enhanced Cloning**: `ObjectCloner` service with automatic date field management
-- **Date Field Handling**: Objects with `onCreate` and `onUpdate` date fields automatically get current timestamps when cloned
-- **Schema Integration**: Uses `SchemaFetcher` to identify date fields with special settings
-- **Property Processing**: Automatic processing of date properties during clone operations
-
-### Date Field Behavior
-- **onCreate Fields**: Automatically set to current time when objects are cloned (e.g., blog post creation dates)
-- **onUpdate Fields**: Automatically set to current time when objects are cloned (e.g., last modified timestamps)
-- **Schema Detection**: Detects date fields from both direct type and `$ref`-based schema definitions
-- **Settings Support**: Handles both top-level and nested settings for `onCreate`/`onUpdate` properties
-
-### Implementation Example
-```php
-// ObjectCloner automatically handles these schema settings:
-"created": {
-    "$ref": "https://www.totalcms.co/schemas/properties/date.json",
-    "settings": {
-        "onCreate": true,
-        "readonly": true
-    }
-},
-"updated": {  
-    "$ref": "https://www.totalcms.co/schemas/properties/date.json",
-    "settings": {
-        "onUpdate": true,
-        "readonly": true
-    }
-}
-```
-
-## Form Field System
-
-### Relational Options
-- **Multi-field Labels**: Support for combining multiple fields in `relationalOptions` labels
-- **Field Combination**: Space-separated field names in `label` parameter (e.g., `"firstName lastName"`)
-- **Custom Separators**: Configurable `join` parameter for field combination (default: single space)
-- **Flexible Syntax**: Supports both space-separated and comma-separated field names
-
-### Enhanced Field Settings
-- **Documentation**: Comprehensive field settings documentation in `/resources/docs/field-settings.md`
-- **Examples**: Practical examples for complex relational field configurations
-- **Icon System**: Updated icon reference system with font and angle icon support
-
-## Import Systems
-
-### Alloy CMS Import System
-
-Total CMS includes a complete import system for migrating content from Alloy CMS, providing seamless migration of blogs, embeds, and droplets.
-
-#### Key Components
-- **AlloyImporter**: Core import service handling analysis and import of Alloy data (`src/Domain/Import/AlloyImporter.php`)
-- **ImportAlloyAnalyzeAction**: API endpoint for analyzing Alloy data structure without importing (`src/Action/Import/ImportAlloyAnalyzeAction.php`)
-- **ImportAlloyAction**: API endpoint for actual import processing, queues items via job system (`src/Action/Import/ImportAlloyAction.php`)
-- **Admin Interface**: Project Setup page integration with user-friendly import forms
-
-#### Supported Content Types
-1. **Blog Posts**: Markdown files with YAML front matter
-   - Parses metadata: title, author, category, date, draft status, tags
-   - Converts markdown content to HTML
-   - Handles featured images and media references
-   - Preserves publication dates and author attribution
-
-2. **Embeds**: Markdown content blocks
-   - Converts to styled text collection entries
-   - Preserves formatting and structure
-   - Maintains content relationships
-
-3. **Droplets**: Text and image content snippets  
-   - Handles both text and image droplet types
-   - Converts image URLs to Total CMS image references
-   - Preserves content structure and metadata
-
-#### Technical Implementation
-- **YAML Front Matter Parsing**: Uses `webuni/front-matter` library for robust metadata extraction
-- **Markdown Processing**: Parsedown conversion with HTML sanitization
-- **Job Queue Integration**: Background processing for large imports without timeouts
-- **Progress Tracking**: Real-time analysis and import progress feedback
-- **Error Handling**: Graceful handling of missing directories and malformed content
-- **PHPStan Level 8 Compliant**: Full type safety and static analysis compliance
-
-#### Usage Workflow
-1. **Access**: Navigate to `/admin/utils/project-setup` → "Other Supported Import Tools" → "Alloy"
-2. **Configure**: Specify folder paths for blogs, image uploads, embeds, and droplets
-3. **Analyze**: Preview import data with detailed counts and content structure
-4. **Import**: Queue all content for background processing via job system
-5. **Monitor**: Track progress through Job Queue Manager
-
-#### API Endpoints
-```php
-POST /import/alloy-analyze  // Analyze Alloy data structure
-POST /import/alloy          // Queue import via job system
-```
-
-#### Testing
-- **Comprehensive Test Coverage**: 10 passing tests covering API validation, data processing, error handling, and admin interface
-- **Test Data**: Complete Alloy test dataset with 37 blogs, 66 embeds, 57 droplets
-- **Integration Testing**: Full workflow testing from analysis to import completion
-
-## Gallery System Enhancements
-
-### Semantic HTML5 Captions
-
-Total CMS galleries now support semantic HTML5 figure/figcaption elements for improved accessibility and SEO.
-
-#### Implementation
-- **TotalCMSTwigAdapter::gallery()**: Enhanced with `captions` option for displaying alt text as visible captions
-- **Semantic HTML**: Uses proper `<figure>` and `<figcaption>` elements when captions are enabled
-- **Backwards Compatible**: Existing galleries continue to work without changes
-- **Security**: Captions are HTML-escaped to prevent XSS attacks
-
-#### Usage
-```twig
-{# Enable captions with semantic HTML5 #}
-{{ cms.gallery('gallery-id', {w: 300, h: 200}, {}, {captions: true}) }}
-
-{# Works with all existing options #}
-{{ cms.gallery('mygallery', {w: 150, h: 150}, {w: 800}, {
-    captions: true,
-    maxVisible: 6,
-    viewAllText: 'View All Photos'
-}) }}
-```
-
-#### Generated HTML Structure
-**Without captions (unchanged):**
-```html
-<div class="cms-gallery">
-  <a href="full-image.jpg">
-    <img src="thumb.jpg" alt="Mountain landscape">
-  </a>
-</div>
-```
-
-**With captions (semantic HTML5):**
-```html
-<div class="cms-gallery">
-  <figure class="cms-gallery-item">
-    <a href="full-image.jpg">
-      <img src="thumb.jpg" alt="Mountain landscape">
-    </a>
-    <figcaption class="cms-gallery-caption">Mountain landscape</figcaption>
-  </figure>
-</div>
-```
-
-#### Benefits
-- **Accessibility**: Screen readers understand the image-caption relationship
-- **SEO**: Search engines better understand content structure
-- **Semantic HTML**: Proper HTML5 elements designed for images with captions
-- **CSS Styling**: Easier styling with semantic selectors like `figure.cms-gallery-item`
-
-## License System (Updated 2024)
-
-### Simplified License Data Structure
-
-The license system has been streamlined to focus on essential validation data while leaving detailed management to the license server.
-
-#### Core LicenseData Fields
-```php
-readonly class LicenseData {
-    public bool $valid;              // License validation status
-    public bool $trial;              // Is this a trial license
-    public string $domain;           // Licensed domain
-    public string $edition;          // License edition
-    public string $message;          // Error/status messages
-    public ?string $validationToken; // JWT token for additional validation
-    public bool $updatesValid;       // Update subscription status
-    public ?int $trialDaysRemaining; // Days remaining for trials
-}
-```
-
-#### Key Architecture Changes
-- **Simplified Data**: Reduced from 15+ fields to 8 essential fields
-- **CamelCase API**: All API responses and JWT properties use camelCase
-- **Service Separation**: JWT validation moved from middleware to `LicenseValidator`
-- **Cache Management**: TTL constant moved to `LicenseData` class
-- **Type Safety**: Config class protected against invalid configuration types
-
-#### License Validation Flow
-1. **Middleware Check**: `LicenseValidationMiddleware` handles HTTP validation flow
-2. **Service Validation**: `LicenseValidator` performs API calls and JWT validation
-3. **Caching**: Multi-backend cache with 24-hour TTL managed by `LicenseData::CACHE_TTL`
-4. **Status Display**: `LicenseStatus` provides sidebar status with progressive trial urgency
-
-#### JWT Token Validation
-- **Location**: Handled in `LicenseValidator::validateJwtToken()`
-- **Format**: CamelCase properties (`expiresAt` instead of `expires_at`)
-- **Security**: Shared secret validation with expiration checking
-- **Graceful Degradation**: Falls back to standard `exp` claim for compatibility
-
-#### Cache System Integration
-- **Priority**: APCu > Redis > Memcached > Filesystem
-- **Domain-Specific**: Cache keys include domain for multi-site deployments
-- **License-Specific**: `storeLicenseData()` bypasses dev mode restrictions
+- **Priority Order**: APCu → Redis → Memcached → Filesystem (OPcache automatic)
+- **Configuration**: See `config/defaults.php` for cache backend settings
+- **Management**: Admin UI with hit rates, memory usage, and per-backend clearing
 - **Emergency Clearing**: `/emergency/cache/clear` endpoint for customer self-service
 
-## Configuration System Enhancements
+### Import Systems
+- **Alloy CMS**: Import blogs, embeds, droplets via job queue (`src/Domain/Import/AlloyImporter.php`)
+- **Total CMS 1**: Migration support via JumpStart system
+- **Admin Interface**: `/admin/utils/project-setup` for import operations
+- **Processing**: Background job queue processing for large imports
 
-### Deep Merge Configuration
+### SimpleForm System
+- **Purpose**: Lightweight form builder for basic admin operations (cache clearing, settings forms)
+- **Features**: CSRF protection, REST method support, AJAX configurable, button customization
+- **Usage**: Use for single-action forms; use full TotalForm for complex multi-field forms
+- **JavaScript**: Works with `totalform.js` for automatic AJAX handling
 
-Total CMS now supports deep merging of configuration arrays, allowing users to override specific nested settings without replacing entire configuration structures.
+### Object Management
+- **ObjectCloner**: Enhanced cloning with automatic `onCreate`/`onUpdate` date field handling
+- **Schema Integration**: Uses `SchemaFetcher` to identify date fields with special settings
 
-#### Usage in tcms.php
-```php
-// Recommended: Return array for deep merging
-return [
-    'cache' => [
-        'redis' => [
-            'password' => 'your_password', // Only override the password
-            // Other redis settings remain from defaults
-        ],
-        'memcached' => [
-            'enabled' => false, // Disable specific backends
-        ],
-    ],
-    'imageworks' => [
-        'watermarksGallery' => 'custom-watermarks',
-        // Other imageworks settings preserved
-    ],
-];
+### Form Field System
+- **Relational Options**: Multi-field labels with space-separated field names
+- **Documentation**: Comprehensive field settings in `/resources/docs/field-settings.md`
 
-// Legacy style still works but not recommended:
-// $settings['cache']['redis']['password'] = 'password';
-```
+### License System
+- **Validation Flow**: Middleware → Service → API call → JWT validation → Cache
+- **Data Structure**: 8 essential fields (valid, trial, domain, edition, message, validationToken, updatesValid, trialDaysRemaining)
+- **Cache Integration**: Multi-backend with 24-hour TTL
 
-#### Deep Merge Implementation
-- **Function**: `deepMergeArrays()` in `config/settings.php`
-- **Recursive**: Handles nested arrays at any depth
-- **Precedence**: User settings override defaults
-- **Backward Compatible**: Legacy `$settings[]` syntax still works
-
-#### Type Safety Improvements
-- **Config Class**: All array properties protected with type checking
-- **Validation**: `is_array()` checks prevent type violations
-- **Fallbacks**: Invalid types converted to empty arrays
-- **PHPStan Compliance**: Maintains Level 8 static analysis compliance
+### Configuration System
+- **Deep Merge**: Override specific nested settings without replacing entire arrays
+- **Usage**: Return array from tcms.php for deep merging
+- **Type Safety**: All array properties protected with `is_array()` validation

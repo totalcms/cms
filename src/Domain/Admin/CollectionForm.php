@@ -2,14 +2,17 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -20,16 +23,18 @@ class CollectionForm extends TotalForm
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,string> $newAction
-	 * @param array<string,string> $editAction
-	 * @param array<string,string> $deleteAction
+	 * @param array<int,array<string,mixed>> $newActions
+	 * @param array<int,array<string,mixed>> $editActions
+	 * @param array<int,array<string,mixed>> $deleteActions
 	 */
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
 		protected IndexReader $collectionReader,
+		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		protected SchemaLister $schemaLister,
+		protected AccessGroupLister $accessGroupLister,
 		public string $api,
 		public string $collection = '',
 		public string $id          = '',
@@ -41,17 +46,22 @@ class CollectionForm extends TotalForm
 		protected string $delete      = '',
 		protected string $formType    = '',
 		protected string $schema      = '',
-		protected array $newAction    = [
-			'action' => 'redirect-object',
-			'link'   => '?id=',
+		protected string $route       = '',
+		protected array $newActions    = [
+			[
+				'action' => 'redirect-object',
+				'link'   => '?id=',
+			],
 		],
-		protected array $editAction   = [],
-		protected array $deleteAction = [],
+		protected array $editActions   = [],
+		protected array $deleteActions = [],
 		protected bool $autosave    = false,
 		protected bool $helpOnHover = false,
 		protected bool $helpOnFocus = false,
 		protected bool $hideID      = false,
 		protected bool $useFormGrid = true,
+		protected bool $addOnly     = false,
+		protected ?CSRFTokenManager $csrfManager = null,
 	) {
 		// CRITICAL: Must call parent constructor to initialize typed properties
 		// TotalForm::__construct() calls init() which properly sets:
@@ -62,8 +72,10 @@ class CollectionForm extends TotalForm
 			$objectFetcher,
 			$collectionFetcher,
 			$collectionReader,
+			$indexFilter,
 			$schemaFetcher,
 			$schemaLister,
+			$accessGroupLister,
 			$api,
 			$collection,
 			$id,
@@ -75,14 +87,17 @@ class CollectionForm extends TotalForm
 			$delete,
 			$formType,
 			$schema,
-			$newAction,
-			$editAction,
-			$deleteAction,
+			$route,
+			$newActions,
+			$editActions,
+			$deleteActions,
 			$autosave,
 			$helpOnHover,
 			$helpOnFocus,
 			$hideID,
-			$useFormGrid
+			$useFormGrid,
+			$addOnly,
+			$csrfManager
 		);
 	}
 

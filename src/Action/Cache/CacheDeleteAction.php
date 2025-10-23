@@ -20,12 +20,12 @@ readonly class CacheDeleteAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$deleted = $this->cacheManager->clearAllCaches();
+		$result = $this->cacheManager->clearAllCaches();
 
-		if ($deleted === false) {
+		if (!($result['success'] ?? false)) {
 			$response = $response->withStatus(500);
 		}
 
-		return $this->renderer->json($response, ['deleted' => $deleted]);
+		return $this->renderer->json($response, ['deleted' => $result]);
 	}
 }

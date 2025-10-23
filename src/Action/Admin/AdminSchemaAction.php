@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -13,6 +14,7 @@ readonly class AdminSchemaAction
 {
 	public function __construct(
 		private TwigRenderer $twigRenderer,
+		private SchemaFetcher $schemaFetcher,
 	) {
 	}
 
@@ -27,6 +29,14 @@ readonly class AdminSchemaAction
 		// /schemas/new - schema create form
 		// POST /schemas/new - duplicate schema with data
 
+		// Validate schema exists (skip for index and new)
+		$schema = $args['schema'] ?? '';
+		if ($schema !== '' && $schema !== 'new' && !$this->schemaFetcher->schemaExists($schema)) {
+			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
+				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
+			]);
+		}
+
 		$templateData = [
 			'url' => [
 				'path'   => $request->getUri()->getPath(),
@@ -34,7 +44,7 @@ readonly class AdminSchemaAction
 				'params' => $args,
 				'page'   => 'schemas',
 				'schema' => $args['schema'] ?? '',
-				'id'     => $args['id'] ?? '',
+				'action' => $args['action'] ?? '',
 			],
 		];
 
@@ -42,7 +52,7 @@ readonly class AdminSchemaAction
 		if ($request->getMethod() === 'POST') {
 			$postData = (array)$request->getParsedBody();
 			// Decode JSON strings back to arrays for fields that should be arrays
-			$arrayFields = ['properties', 'required', 'index'];
+			$arrayFields = ['properties', 'required', 'index', 'inheritFrom'];
 			foreach ($arrayFields as $field) {
 				if (isset($postData[$field]) && is_string($postData[$field])) {
 					$postData[$field] = json_decode($postData[$field], true) ?? [];

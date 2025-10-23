@@ -14,7 +14,7 @@
 			box-shadow : 0 0 10px oklch(var(--totalform-darkgray) / 0.7);
 		}
 	}
-	button.processing {
+	button:not(.cms-save).processing {
 		opacity   : 0.5;
 		cursor    : progress;
 		animation : pluse-glow 1.2s ease-in-out infinite;
@@ -30,11 +30,11 @@
 			}
 		}
 	}
-	button.success {
+	button:not(.cms-save).success {
 		background-color : oklch(var(--totalform-success));
 		color            : oklch(var(--totalform-purewhite));
 	}
-	button.error {
+	button:not(.cms-save).error {
 		background-color : oklch(var(--totalform-error));
 		color            : oklch(var(--totalform-purewhite));
 	}

@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Middleware\ContentSecurityPolicyMiddleware;
+use TotalCMS\Middleware\Security\ContentSecurityPolicyMiddleware;
 
 /**
  * Test Content Security Policy Middleware.

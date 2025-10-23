@@ -40,7 +40,9 @@ This guide provides essential security recommendations for protecting your Total
 
 ## Protecting the tcms-data Folder
 
-The `tcms-data` folder contains all your CMS content, including potentially sensitive information. It's crucial to protect this directory from unauthorized web access.
+The `tcms-data` folder contains all your CMS content, including potentially sensitive information (API keys, user data, collection data). It's crucial to protect this directory from unauthorized web access.
+
+**Automatic Apache Protection**: Total CMS automatically creates a `.htaccess` file in the `tcms-data` folder to deny direct web access when using Apache. If you're using Nginx or another web server, you must configure protection manually (see below).
 
 ### Best Practice: Move Outside Document Root
 
@@ -65,11 +67,27 @@ The most secure approach is to relocate the `tcms-data` folder outside your web 
 
 ### Alternative: Restrict Access Within Document Root
 
-If you must keep `tcms-data` within the document root, configure your web server to block access:
+If you must keep `tcms-data` within the document root, configure your web server to block access.
 
 #### Apache (.htaccess)
 
-Add this to your root `.htaccess` file:
+**Automatic Protection**: Total CMS automatically creates a `.htaccess` file inside the `tcms-data` folder when it's first initialized. This file denies all direct web access to the folder contents.
+
+The auto-generated `.htaccess` file contains:
+```apache
+# Deny direct access to all files and folders in tcms-data
+# This protects sensitive data including API keys, collections, and user data
+
+<IfModule mod_authz_core.c>
+	Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+	Order deny,allow
+	Deny from all
+</IfModule>
+```
+
+**Alternative Approach**: You can also add this to your root `.htaccess` file:
 ```apache
 # Define 404 page
 ErrorDocument 404 /404/
@@ -80,7 +98,9 @@ RedirectMatch 404 ^/tcms-data/
 
 #### Nginx
 
-Add this to your server block configuration:
+**Required for Nginx Users**: Unlike Apache, Nginx does not process `.htaccess` files. You **must** add this protection to your server block configuration manually.
+
+Add this to your Nginx server block configuration:
 ```nginx
 # Block access to tcms-data directory
 location ~ ^/tcms-data/ {
@@ -88,7 +108,7 @@ location ~ ^/tcms-data/ {
     return 404;
 }
 
-# More comprehensive blocking
+# More comprehensive blocking (optional)
 location ~ ^/tcms-data/.*\.(json|md|txt|log)$ {
     deny all;
     return 404;
@@ -96,6 +116,8 @@ location ~ ^/tcms-data/.*\.(json|md|txt|log)$ {
 ```
 
 #### Caddy
+
+**Required for Caddy Users**: Caddy does not process `.htaccess` files. You **must** add this protection to your Caddyfile manually.
 
 Add this to your Caddyfile:
 ```caddy

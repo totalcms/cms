@@ -23,9 +23,9 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $container = new Container(require __DIR__ . '/container.php');
 
 // Sentry Logger
-$sentry = (array)$container->get(Config::class)->sentry;
-if ($sentry['enable'] === true) {
-	TotalCMS\Middleware\SentryMiddleware::initSentry($sentry);
+$sentryEnabled = $container->get(Config::class)->sentry;
+if ($sentryEnabled === true) {
+	TotalCMS\Middleware\Development\SentryMiddleware::initSentry();
 }
 
 // Create App instance

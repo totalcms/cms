@@ -25,20 +25,7 @@ if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
 // Settings
 $settings = [];
 
-$settings['sentry'] = [
-	'enable' => true,
-	'init'   => [
-		'dsn' => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
-		// Specify a fixed sample rate
-		'traces_sample_rate' => 1.0,
-		// Set a sampling rate for profiling - this is relative to traces_sample_rate
-		'profiles_sample_rate' => 1.0,
-		'ignore_exceptions'    => [
-			Slim\Exception\HttpNotFoundException::class,
-			Slim\Exception\HttpMethodNotAllowedException::class,
-		],
-	],
-];
+$settings['sentry'] = true;
 
 // Default env to production
 $settings['env']    = 'prod';
@@ -49,46 +36,41 @@ $settings['is_https'] = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
 					   || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
 					   || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
 $settings['url']      = ($settings['is_https'] ? 'https://' : 'http://') . $settings['domain'];
-$settings['api']      = $settings['url'] . '/api';
 $settings['notfound'] = '/404';
 
 // Path settings
 $settings['root']     = dirname(__DIR__);
 $settings['tmpdir']   = $settings['root'] . '/tmp';
+$settings['cachedir'] = $settings['root'] . '/cache';
 $settings['public']   = $settings['root'] . '/public';
 $settings['template'] = $settings['root'] . '/resources/templates';
 $settings['schemas']  = $settings['root'] . '/resources/schemas';
+$settings['docroot']  = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
+
+$settings['api'] = str_replace($settings['docroot'], '', $settings['root']);
+$settings['api'] = $settings['api'] === '' ? '/' : $settings['api'];
 
 $settings['debug'] = false; // Set to true for development
 
 // Cache configuration
 // Priority: APCu > Redis > Memcached > Filesystem (optimized for single-server deployments)
 $settings['cache'] = [
-	'filesystem' => [
-		'enabled'   => true,
-		'directory' => $settings['root'] . '/cache',
-	],
-	'redis' => [
-		'enabled'  => true,
+	'apcu'        => true,
+	'filesystem'  => true,
+	'redis'       => true,
+	'memcached'   => true,
+	'redisConfig' => [
 		'host'     => '127.0.0.1',
 		'port'     => 6379,
 		'timeout'  => 1,
 		'password' => null,
 		'database' => 0,
 	],
-	'memcached' => [
-		'enabled' => true,
+	'memcachedConfig' => [
 		'host'    => '127.0.0.1',
 		'port'    => 11211,
 	],
-	'apcu' => [
-		'enabled' => true,
-		'prefix'  => 'tcms_',
-	],
 ];
-
-// Clean up trailing slashes in DOCUMENT_ROOT
-$settings['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', DIRECTORY_SEPARATOR);
 
 // Path to cms data folder
 $settings['datadir'] = $settings['docroot'] . '/tcms-data';
@@ -135,15 +117,26 @@ $settings['session'] = [
 	'conflictStrategy'       => 'preserve', // How to handle existing sessions: 'preserve', 'replace'
 ];
 
-// E-Mail settings
+// SMTP settings
 $settings['smtp'] = [
-	'type'      => 'smtp',
-	'host'      => '127.0.0.1',
-	'port'      => '25',
-	'secure'    => '',
-	'from'      => 'from@example.com',
-	'from_name' => 'My name',
-	'to'        => 'to@example.com',
+	'host'     => '127.0.0.1',
+	'port'     => '25',
+	'secure'   => 'TLS',
+	'from'     => '',
+	'fromName' => '',
+	'to'       => '',
+];
+
+// Mailer settings (email sending system)
+$settings['mailer'] = [
+	// Only allow emails to these domains
+	// 'whitelist' => [
+	// '@yourcompany.com',
+	// '@trustedclient.com',
+	// ],
+	'ratePerIp'       => 10,   // Max emails per IP per window
+	'ratePerTemplate' => 50,   // Max emails per template per hour
+	'rateWindow'      => 300,  // Time window in seconds (5 minutes)
 ];
 
 $settings['imageworks'] = [
@@ -176,12 +169,15 @@ $settings['imageworks'] = [
 ];
 
 $settings['auth'] = [
-	'enable'                => true,
-	'collection'            => 'auth',
-	'maxAttempts'           => 10,
-	'deniedTimeout'         => 7,
-	'deniedDefaultRedirect' => '/',
-	'persistentLoginDays'   => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
+	'enable'                  => true,
+	'collection'              => 'auth',
+	'maxAttempts'             => 10,
+	'downloadMaxAttempts'     => 25,  // Max password attempts for protected downloads
+	'deniedTimeout'           => 7,
+	'deniedDefaultRedirect'   => '/',
+	'persistentLoginDays'     => 30,  // Number of days to keep user signed in when "Keep me signed in" is checked
+	'forgotPasswordMailerId'  => '',  // Optional custom mailer ID for password reset emails (leave empty for default template)
+	'resetTokenExpiry'        => 30,  // Minutes before password reset token expires
 ];
 
 $settings['htmlclean'] = [
@@ -221,6 +217,7 @@ $settings['htmlclean'] = [
 $settings['dashboard'] = [
 	'pagination' => 50, // Default pagination for dashboard tables
 	'title'      => 'Total CMS Admin', // Browser title for admin dashboard pages
+	// 'accent'     => '#4d91e2', // Dashboard accent color
 ];
 
 // https://www.php.net/manual/en/timezones.php

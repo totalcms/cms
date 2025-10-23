@@ -638,4 +638,48 @@ Creates iframe embeds for external content.
 </div>
 ```
 
+## Access Control Functions
+
+Total CMS provides comprehensive access control functions for checking user permissions in templates. These allow you to conditionally show/hide UI elements based on the current user's access groups.
+
+### Quick Reference
+
+```twig
+{# Collections #}
+{% if cms.canAccessCollection('blog', 'GET') %}...{% endif %}
+{% if cms.canAccessCollectionsMethod('POST') %}...{% endif %}
+
+{# Schemas #}
+{% if cms.canAccessSchema('blog', 'GET') %}...{% endif %}
+{% if cms.canAccessSchemasMethod('POST') %}...{% endif %}
+
+{# Templates #}
+{% if cms.canAccessTemplatesMethod('GET') %}...{% endif %}
+
+{# Settings #}
+{% if cms.canAccessSetting('cache', 'GET') %}...{% endif %}
+{% if cms.canAccessSettingsMethod('POST') %}...{% endif %}
+
+{# Utils #}
+{% if cms.canAccessUtil('cache-manager', 'GET') %}...{% endif %}
+{% if cms.canAccessUtilsMethod('POST') %}...{% endif %}
+
+{# Boolean permissions #}
+{% if cms.canAccessMailer() %}...{% endif %}
+{% if cms.canAccessPlayground() %}...{% endif %}
+{% if cms.canAccessDocs() %}...{% endif %}
+
+{# Admin check #}
+{% if cms.isAdmin() %}...{% endif %}
+```
+
+For complete documentation including practical examples, access group configuration, and best practices, see the [Access Groups Documentation](docs/access-groups).
+
+## Related Documentation
+
+- [Access Groups](docs/access-groups) - Complete access control documentation
+- [Twig Variables](docs/twig-variables) - Available variables in templates
+- [Twig Filters](docs/twig-filters) - Available filters for data transformation
+- [CMS Grid Tag](docs/cmsgrid-tag) - Grid rendering system
+
 Remember: These functions help you create dynamic, robust templates that handle various data types and conditions gracefully!

@@ -8,12 +8,14 @@
 		{ "title": "Field Options",  "path": "field-options" },
 		{ "title": "Importing Data", "path": "import" },
 		{ "title": "Exporting Data", "path": "export" },
+		{ "title": "White Label", "path": "whitelabel" },
 	]
 },{
 	"title": "Twig Templates",
 	"sub": [
 		{ "title": "Overview", 			"path": "twig-overview" },
 		{ "title": "CMS Content",       "path": "twig-totalcms" },
+		{ "title": "CMS Grid Tag",      "path": "cmsgrid-tag" },
 		{ "title": "Filters", 			"path": "twig-filters" },
 		{ "title": "Functions", 		"path": "twig-functions" },
 		{ "title": "Variables", 		"path": "twig-variables" },
@@ -27,6 +29,8 @@
 	"title": "API",
 	"sub": [
 		{ "title": "REST API", 		"path": "rest-api" },
+		{ "title": "API Keys", 		"path": "api-keys" },
+		{ "title": "Index Filter", 	"path": "index-filter" },
 		{ "title": "OpenAPI Docs", 	"path": "api", },
 		{ "title": "PHP API", 		"path": "php-api" },
 		{ "title": "Download", 		"path": "download" },
@@ -37,8 +41,11 @@
 	"sub": [
 		{ "title": "Search",        "path": "search" },
 		{ "title": "JumpStart",     "path": "jumpstart" },
+		{ "title": "Sitemap Builder", "path": "sitemap-builder" },
+		{ "title": "Migration from v1", "path": "migration-total-cms-one" },
 		{ "title": "Security",      "path": "security" },
 		{ "title": "Authentication","path": "auth" },
+		{ "title": "Password Reset","path": "password-reset" },
 		{ "title": "Configuration", "path": "configuration" },
 		{ "title": "Filesystem", 	"path": "filesystem" },
 		{ "title": "Licenses", 		"path": "licenses" },
@@ -50,26 +57,29 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter docs" autofocus />
+		<input type="search" class="filter" placeholder="Filter Docs" autofocus />
 	</header>
 
 	<nav class="links docs">
 		{% for item in menu %}
-		<h3>{{ item.title }}</h3>
-		<ul>
-			{% for sub in item.sub %}
-			<li><a {% if page == sub.path %}class="active"{% endif %}
-					href="docs/{{ sub.path }}"
-					{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
-				>{{ sub.title }}</a></li>
-			{% endfor %}
-		</ul>
+		<details id="category-{{ item.title | slug }}" open>
+			<summary>{{ item.title }}</summary>
+			<ul>
+				{% for sub in item.sub %}
+				<li><a {% if page == sub.path %}class="active"{% endif %}
+						href="docs/{{ sub.path }}"
+						{% if sub.target is defined %}target="{{ sub.target }}"{% endif %}
+					>{{ sub.title }}</a></li>
+				{% endfor %}
+			</ul>
+		</details>
 		{% endfor %}
 	</nav>
 
 	<footer>
 	</footer>
 </aside>
+{% include "admin/sidebar-details.twig" %}
 
 <main class="dash-main-content doc-content">
 	{{ content }}

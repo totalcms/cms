@@ -141,12 +141,14 @@ describe('Cache Manager Operations', function (): void {
 		$cacheManager->storeCollectionIndex('test_coll', ['objects' => []]);
 		$cacheManager->storeApiResponse('/test', [], ['response' => 'api']);
 
-		// Clear all caches (may return false if cache backends are unavailable)
-		$cleared = $cacheManager->clearAllCaches();
-		expect($cleared)->toBeIn([true, false]);
+		// Clear all caches - now returns detailed array instead of boolean
+		$result = $cacheManager->clearAllCaches();
+		expect($result)->toBeArray();
+		expect($result)->toHaveKey('success');
+		expect($result['success'])->toBeIn([true, false]);
 
 		// If clear was successful, verify all data is cleared
-		if ($cleared) {
+		if ($result['success']) {
 			expect($cacheManager->getComputedData('computed_test'))->toBeNull();
 			expect($cacheManager->getCollectionIndex('test_coll'))->toBeNull();
 			expect($cacheManager->getApiResponse('/test', []))->toBeNull();

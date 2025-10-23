@@ -4,7 +4,7 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter Snippets" autofocus />
+		<input type="search" name="filter" class="filter" placeholder="Filter Snippets" autofocus />
 	</header>
 
 	<nav class="links" id="playground-links">
@@ -22,7 +22,8 @@
 			{% endfor %}
 
 			{% for category, categorySnippets in snippetsByCategory %}
-				<h3>{{ category }}</h3>
+			<details id="category-{{ category | slug }}" open>
+				<summary>{{ category }}</summary>
 				<ul>
 					{% for snippet in sortByKey(categorySnippets) %}
 					<li class="playground-snippet">
@@ -34,6 +35,7 @@
 					</li>
 					{% endfor %}
 				</ul>
+			</details>
 			{% endfor %}
 		{% endif %}
 	</nav>
@@ -42,6 +44,7 @@
 		<a class="dash-button full transparent" href="playground" title="Create a new playground snippet">+ New Snippet</a>
 	</footer>
 </aside>
+{% include "admin/sidebar-details.twig" %}
 
 <main class="dash-main-content">
 
@@ -71,14 +74,19 @@
 		If you would like to save the snippet, give it a name and category and click <code>Save</code>.</p>
 
 		{{ cms.form.playground(url.id|default(''), {
-			deleteAction : {
-				"action" : "redirect",
-				"link"   : "playground"
-			},
-			newAction   : {
-				"action" : "redirect-object",
-				"link"   : "playground/{id}"
-			},
+			class         : "playground-form",
+			deleteActions : [
+				{
+					"action" : "redirect",
+					"link"   : "playground"
+				}
+			],
+			newActions   : [
+				{
+					"action" : "redirect-object",
+					"link"   : "playground/{id}"
+				}
+			],
 		}) }}
 
 		{% set twigfield %}
@@ -112,81 +120,6 @@
 		{% endif %}
 	</section>
 {% endif %}
-
-<style>
-.playground-snippet {
-	position: relative;
-}
-.playground-snippet .cms-clip-button {
-	display             : inline-block;
-	width               : 1.5rem;
-	height              : 1.5rem;
-	margin-left         : 0.5rem;
-	background-color    : transparent;
-	background-image    : var(--icon-clipboard);
-	background-size     : contain;
-	background-repeat   : no-repeat;
-	background-position : center;
-	border              : none;
-	cursor              : pointer;
-	opacity             : 0;
-	transition          : opacity 0.2s ease-in-out;
-	position            : absolute;
-	right               : 0.5rem;
-	top                 : 50%;
-	transform           : translateY(-50%);
-	text-indent         : -99999px;
-
-}
-.playground-snippet .cms-clip-button.copied {
-	background-image : var(--icon-clipboard-check);
-	opacity          : 1;
-}
-.playground-snippet:hover .cms-clip-button {
-	opacity: 1;
-}
-.form-field.id-field {
-	height   : 0;
-	overflow : hidden;
-}
-.form-inline-fields:has(.cms-save) {
-	justify-content : flex-end;
-}
-.playground-results {
-	margin-top: 2rem;
-}
-.result-section {
-	margin-bottom: 2rem;
-}
-.result-section h3 {
-	margin-bottom: 0.5rem;
-	color: oklch(var(--totalform-nearblack));
-}
-.rendered-output {
-	border           : 1px solid oklch(var(--totalform-border-color));
-	padding          : 2rem;
-	background-color : oklch(var(--totalform-purewhite));
-	border-radius    : var(--totalform-radius);
-}
-
-.html-output-editor .CodeMirror {
-	height: auto;
-	min-height: 200px;
-	max-height: 500px;
-	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius: var(--totalform-radius);
-}
-
-.html-output-editor .CodeMirror-scroll {
-	overflow: auto !important;
-	max-height: 500px;
-}
-
-.html-output-editor .CodeMirror-scrollbar-filler,
-.html-output-editor .CodeMirror-gutter-filler {
-	display: none;
-}
-</style>
 
 <script>
 // Replace POST in history to prevent resubmission warning on refresh
@@ -309,17 +242,17 @@ function focusSnippetEditor() {
 	// Only focus for new snippets (no ID in URL)
 	const isNewSnippet = !window.location.pathname.match(/playground\/[^\/]+$/);
 	if (!isNewSnippet) return;
-	
+
 	const snippetTextarea = document.querySelector('textarea[name="snippet"]');
 	if (!snippetTextarea) return;
-	
+
 	// Try to focus immediately if CodeMirror is already initialized
 	const cmWrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
 	if (cmWrapper && cmWrapper.CodeMirror) {
 		cmWrapper.CodeMirror.focus();
 		return;
 	}
-	
+
 	// If CodeMirror isn't ready yet, wait for it
 	const checkForCodeMirror = () => {
 		const wrapper = snippetTextarea.parentElement.querySelector('.CodeMirror');
@@ -330,7 +263,7 @@ function focusSnippetEditor() {
 			setTimeout(checkForCodeMirror, 100);
 		}
 	};
-	
+
 	setTimeout(checkForCodeMirror, 150);
 }
 

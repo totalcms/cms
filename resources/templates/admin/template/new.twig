@@ -1,0 +1,28 @@
+<h1><a href="templates">templates</a> / <span>new{% if duplicateData %} (duplicate){% endif %}</span></h1>
+
+{% if duplicateData %}
+	{{ cms.form.template({
+		save        : cms.canAccessTemplates() ? "Save" : false,
+		helpStyle   : 'label',
+		helpOnFocus : true,
+		data        : duplicateData,
+		newActions : [
+			{
+				"action" : "redirect-object",
+				"link"   : "templates/"
+			}
+		],
+	}) }}
+{% else %}
+	{{ cms.form.template({
+		save        : cms.canAccessTemplates() ? "Save" : false,
+		helpStyle   : 'label',
+		helpOnFocus : true,
+		newActions : [
+			{
+				"action" : "redirect-object",
+				"link"   : "templates/"
+			}
+		],
+	}) }}
+{% endif %}

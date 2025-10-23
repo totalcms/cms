@@ -59,7 +59,9 @@ export default class RadioField extends TotalField {
     }
 
     validate() {
-        // For required radio groups, check if any radio is selected
+		if (!this.isVisible()) return true;
+
+		// For required radio groups, check if any radio is selected
         if (this.input.required && this.getValue() === '') {
 			this.input.setCustomValidity("Please select an option.");
 			this.input.reportValidity();

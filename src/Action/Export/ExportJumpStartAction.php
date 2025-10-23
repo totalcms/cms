@@ -35,8 +35,15 @@ readonly class ExportJumpStartAction
 		$response = $response->withHeader('Content-Type', 'application/json')
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
 
-		$jsonData = $jumpStartData->toJson();
+		// Use streaming to avoid memory exhaustion with large datasets
+		$tempFile = tmpfile();
+		if ($tempFile === false) {
+			throw new \RuntimeException('Failed to create temporary file for export');
+		}
 
-		return $response->withBody(Stream::create($jsonData));
+		$jumpStartData->streamJsonToFile($tempFile);
+		rewind($tempFile);
+
+		return $response->withBody(Stream::create($tempFile));
 	}
 }

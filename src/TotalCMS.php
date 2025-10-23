@@ -200,6 +200,17 @@ class TotalCMS
 		}
 	}
 
+	public function isUserLoggedIn(string $collection = ''): bool
+	{
+		return $this->access->userLoggedIn($collection);
+	}
+
+	/** @return array<string,mixed> */
+	public function userData(): array
+	{
+		return $this->access->userData();
+	}
+
 	// ---------------------------------------------------------------------------------
 	// Public methods for buffer control and Twig rendering
 	// ---------------------------------------------------------------------------------

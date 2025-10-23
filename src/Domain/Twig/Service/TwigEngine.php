@@ -42,8 +42,7 @@ readonly class TwigEngine
 			$paths[] = $customTemplates;
 		}
 
-		$filesystemConfig   = $config->cache['filesystem'];
-		$cacheDir           = $filesystemConfig['enabled'] ? $filesystemConfig['directory'] : false;
+		$cacheDir = $config->cache['filesystem'] ? $config->cachedir : false;
 
 		// Check if development mode is active (overrides cache settings)
 		$devModeActive  = $devModeManager->isDevModeActive();

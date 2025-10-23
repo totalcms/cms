@@ -1,6 +1,6 @@
 import TotalField from "./totalfield";
 import DeckItem from "./deckItem";
-import Sortable from 'sortablejs';
+import TotalSortable from "./total-sortable";
 const slugify = require('slugify');
 
 //-----------------------------------------------
@@ -16,13 +16,14 @@ export default class DeckField extends TotalField {
 
 		this.items = [];
 		this.valid = true;
+		this.sortable = null; // Store sortable instance
 
         // Initialize existing deck items
         const deckItems = this.container.getElementsByClassName(this.fieldClass);
         for (const item of deckItems) {
             this.newItem(item);
         }
-        this.sortableDeckItems(deckItems);
+        this.initSortable();
 
         // Get template for new items
         this.template = this.container.querySelector("template.deck-template");
@@ -45,14 +46,21 @@ export default class DeckField extends TotalField {
         }
     }
 
-    sortableDeckItems(deckItems) {
-        if (deckItems.length === 0) return;
-        // Make the items sortable
-        Sortable.create(deckItems[0].parentNode, {
-			animation     : 150,
-			handle        : '.sort-handle',
-			ghostClass    : 'drag-ghost',
-			forceFallback : true,
+    initSortable() {
+        // Destroy existing sortable instance if it exists
+        if (this.sortable) {
+            this.sortable.destroy();
+        }
+
+        // Create sortable instance on the form-group div that contains deck items
+        // The form-group is the direct parent of deck items
+        const formGroup = this.container.querySelector('.form-group');
+        if (!formGroup) return;
+
+        // Create sortable instance once - it will automatically handle new items
+        this.sortable = new TotalSortable(formGroup, {
+			handle : '.sort-handle',
+			onEnd  : () => this.changed(),
         });
     }
 
@@ -234,6 +242,8 @@ export default class DeckField extends TotalField {
 
     validate() {
 		this.input.setCustomValidity(""); // Clear previous custom validity message
+
+		if (!this.isVisible()) return true;
 
 		let isValid = true;
 

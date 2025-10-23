@@ -2,22 +2,23 @@
 // Fieldset - Image Field
 //--------------------------------
 dialog.cms-modal {
-	border        : none;
-	box-shadow    : rgb(0 0 0 / 0.3) 2px 2px 5px 0px;
-	border-radius : var(--totalform-radius);
-	padding       : 1.25rem;
-	z-index       : 5;
-	position      : fixed;
-	top           : 50%;
-	left          : 50%;
-	transform     : translate(-50%, -50%);
-	margin        : 0;
-	overflow-y    : auto;
+	border           : none;
+	box-shadow       : rgb(0 0 0 / 0.3) 2px 2px 5px 0px;
+	border-radius    : var(--totalform-radius);
+	padding          : 1.25rem;
+	z-index          : 5;
+	position         : fixed;
+	top              : 50%;
+	left             : 50%;
+	transform        : translate(-50%, -50%);
+	margin           : 0;
+	overflow-y       : auto;
+	background-color : oklch(var(--totalform-white));
 
 	width      : 90%;
 	max-width  : 1000px;
-	height     : 80vh;
-	max-height : 900px;
+	height     : 85vh;
+	max-height : 1000px;
 
 	&.small {
 		max-width : 75ch;
@@ -45,7 +46,7 @@ dialog.cms-modal {
 	}
 
 	&::backdrop {
-		background-color : oklch(var(--totalform-black) / 0.5);
+		background-color : oklch(25% 0 0 / 0.5);
 		backdrop-filter  : blur(3px);
 	}
 

@@ -18,9 +18,8 @@ class MemcachedService implements CacheInterface
 	public function __construct(
 		Config $config,
 	) {
-		$cache           = $config->cache ?? [];
-		$memcachedConfig = $cache['memcached'] ?? [];
-		$this->enabled   = $memcachedConfig['enabled'] ?? true;
+		$this->enabled   = $config->cache['memcached'] ?? true;
+		$memcachedConfig = $config->cache['memcachedConfig'] ?? [];
 		$this->host      = $memcachedConfig['host'] ?? '127.0.0.1';
 		$this->port      = $memcachedConfig['port'] ?? 11211;
 	}

@@ -44,8 +44,6 @@ class ListData extends PropertyData
 	private function verifyList(array $list): bool
 	{
 		if (!array_is_list($list)) {
-			print_r($list);
-
 			return false;
 		}
 		foreach ($list as $item) {

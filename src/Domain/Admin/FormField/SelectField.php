@@ -12,6 +12,10 @@ class SelectField extends FormField
 	public function init(): void
 	{
 		parent::init();
+
+		if ($this->disabled || $this->readonly) {
+			$this->settings['clearValue'] = false;
+		}
 	}
 
 	/** @return array<string,?string> */
@@ -45,6 +49,12 @@ class SelectField extends FormField
 			'value'    => '',
 			'disabled' => '',
 		]);
+	}
+
+	public function disable(): void
+	{
+		parent::disable();
+		$this->settings['clearValue'] = false;
 	}
 
 	protected function buildOptions(string $options = ''): string

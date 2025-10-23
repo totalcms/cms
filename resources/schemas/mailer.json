@@ -1,0 +1,156 @@
+{
+	"$schema"     : "https://json-schema.org/draft-07/schema",
+	"$id"         : "https://www.totalcms.co/schemas/mailer.json",
+	"id"          : "mailer",
+	"help" : "A schema for mailer email templates.",
+	"type"        : "object",
+	"formgrid"    : "active .\nid id\nname category\ndescription description\n---\nto from\ntoName fromName\nreplyTo .\ncc bcc\n---\nsubject subject\nbodyHtml bodyHtml\nbodyText bodyText",
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Mailer ID",
+			"field"    : "id",
+			"factory"  : "uuid",
+			"settings" : {
+				"autogen" : "${name}-${uid}",
+				"readonly": true
+			}
+		},
+		"active": {
+			"type"    : "boolean",
+			"label"   : "Active",
+			"field"   : "toggle",
+			"help"    : "Enable or disable this email template",
+			"default" : true
+		},
+		"name": {
+			"type"        : "string",
+			"label"       : "Template Name",
+			"placeholder" : "New User Welcome Email",
+			"field"       : "text",
+			"help"        : "Internal name for this email template"
+		},
+		"category": {
+			"type"        : "string",
+			"label"       : "Category",
+			"field"       : "text",
+			"placeholder" : "Email Templates",
+			"help"        : "Category for organizing email templates",
+			"settings"    : {
+				"propertyOptions": true
+			}
+		},
+		"description": {
+			"type"        : "string",
+			"label"       : "Description",
+			"placeholder" : "What is this email template used for?",
+			"field"       : "textarea",
+			"help"        : "Description of what this email is for",
+			"settings"    : {
+				"rows": 3
+			}
+		},
+		"from": {
+			"$ref": "https://www.totalcms.co/schemas/properties/email.json",
+			"label": "From Email",
+			"field": "email",
+			"placeholder": "noreply@example.com",
+			"help": "From email address (leave empty to use default from SMTP settings)"
+		},
+		"fromName": {
+			"type"        : "string",
+			"label"       : "From Name",
+			"field"       : "text",
+			"placeholder" : "Your Company Name",
+			"help"        : "From name (leave empty to use default from SMTP settings)"
+		},
+		"to": {
+			"type"        : "string",
+			"label"       : "To Email",
+			"field"       : "text",
+			"placeholder" : "name@example.com",
+			"help"        : "Recipient email address (supports twig: {{ data.email }})",
+			"settings"    : {
+				"required": true
+			}
+		},
+		"toName": {
+			"type"        : "string",
+			"label"       : "To Name",
+			"field"       : "text",
+			"placeholder" : "John Smith",
+			"help"        : "Recipient name (supports twig: {{ data.name }})"
+		},
+		"replyTo": {
+			"type"        : "string",
+			"label"       : "Reply-To Email",
+			"field"       : "text",
+			"placeholder" : "reply@example.com",
+			"help"        : "Reply-to email address (supports twig: {{ data.email }})"
+		},
+		"cc": {
+			"type"        : "string",
+			"label"       : "CC Emails",
+			"field"       : "textarea",
+			"placeholder" : "manager@example.com\nsales@example.com",
+			"help"        : "CC email addresses, one per line (supports twig: {{ data.managerEmail }})",
+			"settings"    : {
+				"rows": 3
+			}
+		},
+		"bcc": {
+			"type"        : "string",
+			"label"       : "BCC Emails",
+			"field"       : "textarea",
+			"placeholder" : "admin@example.com\narchive@example.com",
+			"help"        : "BCC email addresses, one per line (supports twig: {{ data.adminEmail }})",
+			"settings"    : {
+				"rows": 3
+			}
+		},
+		"subject": {
+			"type"        : "string",
+			"label"       : "Subject",
+			"field"       : "text",
+			"placeholder" : "New Contact from {{ data.name }}",
+			"help"        : "Email subject line (supports twig: New contact from {{ data.name }})",
+			"settings"    : {
+				"required": true
+			}
+		},
+		"bodyHtml": {
+			"type"        : "string",
+			"label"       : "Body (HTML)",
+			"field"       : "code",
+			"placeholder" : "<p>Hello {{ data.name }},</p>\n<p>Thank you for contacting us.</p>",
+			"help"        : "HTML email body (supports twig variables)",
+			"settings"    : {
+				"rows"     : 15,
+				"mode"     : "twig",
+				"required" : true
+			}
+		},
+		"bodyText": {
+			"type"        : "string",
+			"label"       : "Body (Plain Text)",
+			"field"       : "textarea",
+			"placeholder" : "Hello {{ data.name }},\n\nThank you for contacting us.",
+			"help"        : "Plain text email body (supports twig variables, optional)",
+			"settings"    : {
+				"rows": 10
+			}
+		}
+	},
+	"required": [
+		"id",
+		"name",
+		"to",
+		"subject"
+	],
+	"index": [
+        "id",
+        "name",
+		"category",
+		"active"
+    ]
+}

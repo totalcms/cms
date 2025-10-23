@@ -11,6 +11,7 @@ use TotalCMS\Domain\Property\Service\DepotFileFetcher;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 class DownloadFileFromDepotAction extends DownloadAction
 {
@@ -20,6 +21,7 @@ class DownloadFileFromDepotAction extends DownloadAction
 		protected FileAccessManager $accessManager,
 		protected ObjectUpdater $objectUpdater,
 		protected PhpSession $session,
+		protected Config $config,
 		private readonly PropertyFetcher $propFetcher,
 	) {
 	}

@@ -2,7 +2,9 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -10,6 +12,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
 /**
  * Total Form Builder.
@@ -23,17 +26,19 @@ class SchemaForm extends TotalForm
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
 	 *
-	 * @param array<string,string> $newAction
-	 * @param array<string,string> $deleteAction
-	 * @param array<string,string> $editAction
+	 * @param array<int,array<string,mixed>> $newActions
+	 * @param array<int,array<string,mixed>> $deleteActions
+	 * @param array<int,array<string,mixed>> $editActions
 	 * @param array<string,mixed>  $data
 	 */
 	public function __construct(
 		protected ObjectFetcher $objectFetcher,
 		protected CollectionFetcher $collectionFetcher,
 		protected IndexReader $collectionReader,
+		protected IndexFilter $indexFilter,
 		protected SchemaFetcher $schemaFetcher,
 		public SchemaLister $schemaLister,
+		protected AccessGroupLister $accessGroupLister,
 		protected SchemaFactory $schemaFactory,
 		public string $api,
 		public string $collection = '',
@@ -46,15 +51,18 @@ class SchemaForm extends TotalForm
 		protected string $delete      = '',
 		protected string $formType    = '',
 		protected string $schema      = '',
-		protected array $newAction    = [],
-		protected array $editAction   = [],
-		protected array $deleteAction = [],
+		protected string $route       = '',
+		protected array $newActions    = [],
+		protected array $editActions   = [],
+		protected array $deleteActions = [],
 		protected array $data         = [],
 		protected bool $autosave      = false,
 		protected bool $helpOnHover   = false,
 		protected bool $helpOnFocus   = false,
 		protected bool $hideID        = false,
 		protected bool $useFormGrid   = true,
+		protected bool $addOnly       = false,
+		protected ?CSRFTokenManager $csrfManager = null,
 	) {
 		// CRITICAL: Must call parent constructor to initialize typed properties
 		// TotalForm::__construct() calls init() which properly sets:
@@ -65,8 +73,10 @@ class SchemaForm extends TotalForm
 			$objectFetcher,
 			$collectionFetcher,
 			$collectionReader,
+			$indexFilter,
 			$schemaFetcher,
 			$schemaLister,
+			$accessGroupLister,
 			$api,
 			$collection,
 			$id,
@@ -78,14 +88,17 @@ class SchemaForm extends TotalForm
 			$delete,
 			$formType,
 			$schema,
-			$newAction,
-			$editAction,
-			$deleteAction,
+			$route,
+			$newActions,
+			$editActions,
+			$deleteActions,
 			$autosave,
 			$helpOnHover,
 			$helpOnFocus,
 			$hideID,
-			$useFormGrid
+			$useFormGrid,
+			$addOnly,
+			$csrfManager
 		);
 	}
 
@@ -99,8 +112,9 @@ class SchemaForm extends TotalForm
 			$this->route            = '/schemas/' . $this->id;
 			$this->method           = 'PUT';
 			$this->reserved         = $this->isReservedSchema($this->id);
-			// This is the actual schema object data
-			$this->schemaObjectData = $this->schemaFetcher->fetchSchema($this->id);
+			// This is the actual schema object data - fetch without flattening
+			// so we only see the schema's own properties in the editor
+			$this->schemaObjectData = $this->schemaFetcher->fetchRawSchema($this->id);
 		}
 		// Duplicate Schema
 		if ($this->id === '' && $this->data !== []) {
@@ -142,6 +156,73 @@ class SchemaForm extends TotalForm
 	}
 
 	/**
+	 * Get inherited properties from parent schemas.
+	 * Returns array with property details including source schema, field type, and property type.
+	 * Only shows properties that are PURELY inherited (not also defined in the schema itself).
+	 *
+	 * @return array<string,array{source:string,field:string,type:string,definition:array<string,mixed>}>
+	 */
+	public function getInheritedProperties(): array
+	{
+		if (!isset($this->schemaObjectData) || $this->schemaObjectData->inheritFrom === []) {
+			return [];
+		}
+
+		$inheritedProperties = [];
+		$ownPropertyNames    = array_keys($this->schemaObjectData->properties);
+
+		// Process each parent schema in order to collect all inherited property details
+		foreach ($this->schemaObjectData->inheritFrom as $parentId) {
+			try {
+				$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
+
+				foreach ($parentSchema->properties as $propName => $propDef) {
+					// Only add if not already in own properties and not already inherited (first wins)
+					if (!in_array($propName, $ownPropertyNames, true) && !isset($inheritedProperties[$propName])) {
+						$inheritedProperties[$propName] = [
+							'source'     => $parentId,
+							'field'      => $propDef['field'] ?? 'text',
+							'type'       => SchemaSaver::extractPropertyType($propDef),
+							'definition' => $propDef,
+						];
+					}
+				}
+			} catch (\Exception) {
+				// Skip if parent schema doesn't exist
+				continue;
+			}
+		}
+
+		return $inheritedProperties;
+	}
+
+	/**
+	 * Filter out inherited properties from a properties array.
+	 * Removes purely inherited properties (ones not defined in the schema itself).
+	 *
+	 * @param array<string,mixed> $properties
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function filterInheritedProperties(array $properties): array
+	{
+		if (!isset($this->schemaObjectData) || $this->schemaObjectData->inheritFrom === []) {
+			return $properties;
+		}
+
+		// Get inherited property names (already filtered to only purely inherited ones)
+		$inheritedProps         = $this->getInheritedProperties();
+		$inheritedPropertyNames = array_keys($inheritedProps);
+
+		// Remove inherited properties from the display
+		foreach ($inheritedPropertyNames as $propName) {
+			unset($properties[$propName]);
+		}
+
+		return $properties;
+	}
+
+	/**
 	 * @param array<string,mixed> $options
 	 *
 	 * @return array<string,mixed>
@@ -165,6 +246,17 @@ class SchemaForm extends TotalForm
 			$options['options'] = array_keys($this->schemaObjectData->toArray()['properties']);
 		}
 
+		if ($name === 'inheritFrom') {
+			// Get all available schemas (both reserved and custom) for inheritFrom field
+			$allSchemas = $this->schemaLister->listAllSchemas();
+			$schemaIds  = array_map(fn (SchemaData $schema): string => $schema->id, $allSchemas);
+
+			// Remove 'schema' and 'collection' schemas and the current schema being edited
+			$schemaIds = array_filter($schemaIds, fn (string $id): bool => $id !== 'schema' && $id !== 'collection' && $id !== $this->id);
+
+			$options['options'] = array_values($schemaIds);
+		}
+
 		if ($this->reserved) {
 			$options['disabled'] = true;
 			$options['readonly'] = true;
@@ -181,6 +273,10 @@ class SchemaForm extends TotalForm
 		if (isset($this->schemaObjectData)) {
 			$value = $this->schemaObjectData->toArray()[$name] ?? '';
 			if (!empty($value)) {
+				// For the properties field, filter out inherited properties
+				if ($name === 'properties' && is_array($value)) {
+					$value = $this->filterInheritedProperties($value);
+				}
 				$options['value'] = $value;
 			}
 		}

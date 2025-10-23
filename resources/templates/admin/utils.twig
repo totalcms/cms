@@ -1,5 +1,16 @@
 {% extends "admin-dashboard.twig" %}
 
+{% set adminMenu = [
+	{
+		"title" : "Access Groups",
+		"path"  : "access-groups",
+	},
+	{
+		"title" : "API Keys",
+		"path"  : "api-keys",
+	},
+] %}
+
 {% set menu = [
 	{
 		"title" : "Cache Manager",
@@ -48,16 +59,27 @@
 
 <aside class="dash-content-sidebar">
 	<header>
-		<input type="search" class="filter" placeholder="Filter utils" autofocus />
+		<input type="search" class="filter" placeholder="Filter Utils" autofocus />
 	</header>
 
 	<nav class="links">
 		<ul>
-		{% for item in menu %}
+		{% if cms.isAdmin() %}
+			{% for item in adminMenu %}
 			<li class="{{ item.path }}">
 				<a {% if page == item.path %}class="active"{% endif %}
 					href="utils/{{ item.path }}">{{ item.title }}</a>
 			</li>
+			{% endfor %}
+		{% endif %}
+
+		{% for item in menu %}
+			{% if cms.canAccessUtil(item.path, 'read') %}
+			<li class="{{ item.path }}">
+				<a {% if page == item.path %}class="active"{% endif %}
+					href="utils/{{ item.path }}">{{ item.title }}</a>
+			</li>
+			{% endif %}
 		{% endfor %}
 		</ul>
 	</nav>

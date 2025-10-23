@@ -454,18 +454,6 @@ class PropertyFactoryTest extends TestCase
 		$this->assertEquals($itemData, $result);
 	}
 
-	public function testExtractSchemaIdFromUrl(): void
-	{
-		$reflection = new \ReflectionClass($this->propertyFactory);
-		$method     = $reflection->getMethod('extractSchemaId');
-
-		$result = $method->invoke($this->propertyFactory, 'https://www.totalcms.co/schemas/custom/features.json');
-		$this->assertEquals('features', $result);
-
-		$result = $method->invoke($this->propertyFactory, 'simple-schema');
-		$this->assertEquals('simple-schema', $result);
-	}
-
 	public function testGeneratePropertyWithDeckType(): void
 	{
 		$propertySchema = [

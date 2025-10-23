@@ -2,18 +2,24 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use Odan\Session\PhpSession;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 
 /**
@@ -34,14 +40,20 @@ readonly class TotalFormFactory
 
 	public function __construct(
 		private Config $config,
+		private PhpSession $session,
 		private ObjectFetcher $objectFetcher,
 		private CollectionFetcher $collectionFetcher,
 		private CollectionLister $collectionLister,
 		private IndexReader $collectionReader,
+		private IndexFilter $indexFilter,
 		private SchemaFetcher $schemaFetcher,
 		private SchemaLister $schemaLister,
+		private AccessGroupLister $accessGroupLister,
 		private SchemaFactory $schemaFactory,
+		private TemplateRepository $templateRepository,
 		private CSRFTokenManager $csrfManager,
+		private SettingsSchemaFetcher $settingsSchemaFetcher,
+		private SettingsFetcher $settingsFetcher,
 	) {
 		$this->api = $this->config->api;
 	}
@@ -61,12 +73,50 @@ readonly class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function totalform(string $route, string $content = '', array $options = []): string
+	{
+		$options = array_merge($options, [
+			'route'             => $route,
+			'api'               => $this->api,
+			'objectFetcher'     => $this->objectFetcher,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'indexFilter'       => $this->indexFilter,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
+			'csrfManager'       => $this->csrfManager,
+		]);
+
+		$form = new TotalForm(...$options);
+
+		return $form->build($content);
+	}
+
+	/** @param array<string,mixed> $options */
 	public function factory(string $collection, array $options = []): string
 	{
-		$options['api']        = $this->api;
-		$options['collection'] = $collection;
+		$options['api']         = $this->api;
+		$options['collection']  = $collection;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new FactoryForm(...$options);
+
+		return $form->build();
+	}
+
+	/**
+	 * Create a login form.
+	 *
+	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, submitLabel, class, flashMessages
+	 */
+	public function loginForm(array $options = []): string
+	{
+		$options['api']         = $this->api;
+		$options['session']     = $this->session;
+		$options['csrfManager'] = $this->csrfManager;
+
+		$form = new LoginForm(...$options);
 
 		return $form->build();
 	}
@@ -74,8 +124,9 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importCollection(string $collection, array $options = []): string
 	{
-		$options['api']        = $this->api;
-		$options['collection'] = $collection;
+		$options['api']         = $this->api;
+		$options['collection']  = $collection;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new ImportCollectionForm(...$options);
 
@@ -85,7 +136,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importSchema(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']         = $this->api;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new ImportSchemaForm(...$options);
 
@@ -95,7 +147,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function importJumpStart(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']         = $this->api;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new ImportJumpStartForm(...$options);
 
@@ -141,7 +194,8 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function clearqueue(array $options = []): string
 	{
-		$options['api'] = $this->api;
+		$options['api']         = $this->api;
+		$options['csrfManager'] = $this->csrfManager;
 
 		$form = new JobQueueForm(...$options);
 
@@ -198,12 +252,41 @@ readonly class TotalFormFactory
 			'objectFetcher'     => $this->objectFetcher,
 			'collectionFetcher' => $this->collectionFetcher,
 			'collectionReader'  => $this->collectionReader,
+			'indexFilter'       => $this->indexFilter,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
 			'schemaFactory'     => $this->schemaFactory,
+			'csrfManager'       => $this->csrfManager,
 		]);
 
 		$form = new SchemaForm(...$options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
+	public function template(array $options = []): string
+	{
+		$options = array_merge([
+			'path'       => '',
+			'collection' => '',
+			'id'         => '',
+		], $options, [
+			// These options cannot be overridden
+			'api'                => $this->api,
+			'objectFetcher'      => $this->objectFetcher,
+			'collectionFetcher'  => $this->collectionFetcher,
+			'collectionReader'   => $this->collectionReader,
+			'indexFilter'        => $this->indexFilter,
+			'schemaFetcher'      => $this->schemaFetcher,
+			'schemaLister'       => $this->schemaLister,
+			'accessGroupLister'  => $this->accessGroupLister,
+			'templateRepository' => $this->templateRepository,
+			'csrfManager'        => $this->csrfManager,
+		]);
+
+		$form = new TemplateForm(...$options);
 
 		return $form->autoBuild();
 	}
@@ -240,6 +323,21 @@ readonly class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
+	public function mailer(string $id = '', array $options = []): string
+	{
+		$options = array_merge([
+			'save'   => 'Save',
+			'delete' => 'Delete',
+			'class'  => 'help-on-hover help-box',
+		], $options);
+		$options['id'] = $id;
+
+		$form = $this->builder('mailer', $options);
+
+		return $form->autoBuild();
+	}
+
+	/** @param array<string,mixed> $options */
 	public function collection(array $options = []): string
 	{
 		$options = array_merge([
@@ -251,8 +349,11 @@ readonly class TotalFormFactory
 			'objectFetcher'     => $this->objectFetcher,
 			'collectionFetcher' => $this->collectionFetcher,
 			'collectionReader'  => $this->collectionReader,
+			'indexFilter'       => $this->indexFilter,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
+			'csrfManager'       => $this->csrfManager,
 		]);
 
 		$form = new CollectionForm(...$options);
@@ -269,12 +370,53 @@ readonly class TotalFormFactory
 			'api'               => $this->api,
 			'collectionFetcher' => $this->collectionFetcher,
 			'collectionReader'  => $this->collectionReader,
+			'indexFilter'       => $this->indexFilter,
 			'objectFetcher'     => $this->objectFetcher,
 			'schemaFetcher'     => $this->schemaFetcher,
 			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
+			'csrfManager'       => $this->csrfManager,
 		]);
 
 		return new ObjectForm(...$options);
+	}
+
+	/**
+	 * Create a deck item form builder.
+	 *
+	 * @param array<string,mixed> $options options including id, itemId, save, delete, class, etc
+	 */
+	public function deckBuilder(string $collection, string $property, array $options = []): DeckItemForm
+	{
+		$options = array_merge($options, [
+			// These options cannot be overridden
+			'collection'        => $collection,
+			'property'          => $property,
+			'id'                => $options['id'] ?? '',
+			'api'               => $this->api,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionReader'  => $this->collectionReader,
+			'indexFilter'       => $this->indexFilter,
+			'objectFetcher'     => $this->objectFetcher,
+			'schemaFetcher'     => $this->schemaFetcher,
+			'schemaLister'      => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
+			'csrfManager'       => $this->csrfManager,
+		]);
+
+		return new DeckItemForm(...$options);
+	}
+
+	/**
+	 * Create a deck item form with auto-generated fields.
+	 *
+	 * @param array<string,mixed> $options options including id, itemId, save, delete, class, etc
+	 */
+	public function deck(string $collection, string $property, array $options = []): string
+	{
+		$form = $this->deckBuilder($collection, $property, $options);
+
+		return $form->autoBuild();
 	}
 
 	/**
@@ -323,6 +465,85 @@ readonly class TotalFormFactory
 		$button = new DeleteButton($label);
 
 		return $button->build();
+	}
+
+	/**
+	 * Generate a settings form for a specific section.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function settings(string $section, array $options = []): string
+	{
+		// Load schema and data using injected services
+		$schema      = $this->settingsSchemaFetcher->getSchema($section);
+		$sectionData = $this->settingsFetcher->loadSection($section);
+		$defaults    = require __DIR__ . '/../../../config/defaults.php';
+		$timezones   = $options['timezones'] ?? timezone_identifiers_list();
+
+		if ($schema === null || !isset($schema['properties']) || !is_array($schema['properties'])) {
+			return '<p class="error">Schema not found for this settings section.</p>';
+		}
+
+		$formfields = '';
+
+		foreach ($schema['properties'] as $fieldName => $fieldSchema) {
+			// Get current value with priority: sectionData > defaults > schema default > empty string
+			$currentValue = '';
+			if (isset($fieldSchema['default'])) {
+				$currentValue = $fieldSchema['default'];
+			}
+			// Installation and General settings are stored at top level in defaults, not under section keys
+			if (($section === 'installation' || $section === 'general') && isset($defaults[$fieldName])) {
+				$currentValue = $defaults[$fieldName];
+			} elseif (isset($defaults[$section][$fieldName])) {
+				$currentValue = $defaults[$section][$fieldName];
+			}
+			if (isset($sectionData[$fieldName])) {
+				$currentValue = $sectionData[$fieldName];
+			}
+
+			// Special handling for JSON fields - convert arrays to JSON strings for display
+			if ($fieldSchema['type'] === 'json' && is_array($currentValue)) {
+				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT);
+			}
+
+			// Build field options
+			$fieldOptions = [
+				'field'       => $fieldSchema['type'],
+				'label'       => $fieldSchema['label'] ?? '',
+				'help'        => $fieldSchema['help'] ?? '',
+				'placeholder' => $fieldSchema['placeholder'] ?? '',
+				'value'       => $currentValue,
+				'required'    => $fieldSchema['required'] ?? false,
+				'min'         => $fieldSchema['min'] ?? null,
+				'max'         => $fieldSchema['max'] ?? null,
+				'settings'    => $fieldSchema['settings'] ?? [],
+			];
+
+			// Special handling for select fields with options
+			if (isset($fieldSchema['options'])) {
+				$fieldOptions['options'] = $fieldSchema['options'];
+			}
+
+			// Special handling for timezone field
+			if (isset($fieldSchema['settings']['timezoneOptions']) && $fieldSchema['settings']['timezoneOptions']) {
+				$timezoneOptions = [];
+				foreach ($timezones as $tz) {
+					$timezoneOptions[] = ['value' => $tz, 'label' => $tz];
+				}
+				$fieldOptions['options'] = $timezoneOptions;
+			}
+
+			$formfields .= $this->field($fieldSchema['type'], $fieldName, $fieldOptions);
+		}
+
+		return $this->simple('/admin/settings/' . $section, $formfields, [
+			'method'      => 'POST',
+			'label'       => 'Save Settings',
+			'refresh'     => true,
+			'class'       => 'help-on-hover help-box',
+			'buttonClass' => 'cms-save',
+		]);
 	}
 
 	/**
@@ -642,8 +863,10 @@ readonly class TotalFormFactory
 			objectFetcher     : $this->objectFetcher,
 			collectionFetcher : $this->collectionFetcher,
 			collectionReader  : $this->collectionReader,
+			indexFilter       : $this->indexFilter,
 			schemaFetcher     : $this->schemaFetcher,
 			schemaLister      : $this->schemaLister,
+			accessGroupLister : $this->accessGroupLister,
 			api               : $this->api,
 			collection        : 'text',
 		);

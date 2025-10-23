@@ -4,7 +4,7 @@
 .radio-field {
 	--fieldset-grid-size : 1fr;
 
-	> fieldset {
+	fieldset {
 		border: none;
 		padding: 0;
 
@@ -14,6 +14,20 @@
 
 		grid-template-columns : 1fr;
 		grid-template-columns : repeat(auto-fit, minmax(var(--fieldset-grid-size), 1fr));
+
+		legend {
+			margin-bottom : 0.5rem;
+		}
+	}
+	fieldset fieldset {
+		border      : 1px solid oklch(var(--totalform-mediumgray));
+		padding     : 1rem 2rem;
+		margin      : 0;
+		grid-column : 1 / -1;
+
+		legend {
+			margin: 0;
+		}
 	}
 
 	.radio-label {

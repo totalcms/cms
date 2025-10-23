@@ -1,18 +1,8 @@
-.totalform,
-.simple-form,
-.admin-dashboard,
-.admin-layout,
-.admin-list,
-.scrollable,
-.cms-colors,
-.cms-grid,
-.cms-pagination,
-#totalcms-status-banner {
-	--totalform-accent-l : 60.45%;
-	--totalform-accent-c : 0.107;
-	--totalform-accent-h : 183.38;
+:root {
+	// --totalform-accent-l : 60.45%;
+	// --totalform-accent-c : 0.107;
+	// --totalform-accent-h : 183.38;
 	// --totalform-accent   : var(--totalform-accent-l) var(--totalform-accent-c) var(--totalform-accent-h);
-	--totalform-accent   : var(--totalform-blue);
 
 	--totalform-purewhite  : 100% 0 0;
 	--totalform-white      : 99% 0 0;
@@ -30,7 +20,9 @@
 	--totalform-yellow : 91% 0.19 103.96;
 	--totalform-red    : 63% 0.22 32.01;
 
-	--totalform-changed : var(--totalform-blue);
+	--totalform-accent : var(--totalform-blue);
+
+	--totalform-changed : var(--totalform-accent);
 	--totalform-info    : var(--totalform-blue);
 	--totalform-success : var(--totalform-green);
 	--totalform-error   : var(--totalform-red);
@@ -58,3 +50,36 @@
 
 	--totalform-status-banner-height : 100vh;
 }
+
+// Dark mode variables - apply when system prefers dark OR when manually set to dark theme
+@media (prefers-color-scheme: dark) {
+	:root:not(.theme-light) {
+		--totalform-purewhite  : 0% 0 0;
+		--totalform-white      : 5% 0 0;
+		--totalform-nearwhite  : 20% 0 0;
+		--totalform-lightgray  : 40% 0 0;
+		--totalform-mediumgray : 60% 0 0;
+		--totalform-gray       : 70% 0 0;
+		--totalform-darkgray   : 85% 0 0;
+		--totalform-nearblack  : 90% 0 0;
+		--totalform-black      : 100% 0 0;
+
+		--totalform-shadow     : 0% 0 0 / 0.5;
+	}
+}
+
+// Force dark mode when .theme-dark class is applied
+:root.theme-dark {
+	--totalform-purewhite  : 0% 0 0;
+	--totalform-white      : 5% 0 0;
+	--totalform-nearwhite  : 20% 0 0;
+	--totalform-lightgray  : 40% 0 0;
+	--totalform-mediumgray : 60% 0 0;
+	--totalform-gray       : 70% 0 0;
+	--totalform-darkgray   : 85% 0 0;
+	--totalform-nearblack  : 90% 0 0;
+	--totalform-black      : 100% 0 0;
+
+	--totalform-shadow     : 0% 0 0 / 0.5;
+}
+

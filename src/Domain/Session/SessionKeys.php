@@ -27,6 +27,7 @@ final class SessionKeys
 	// Activity & Attempts Keys
 	public const LAST_ACTIVITY     = 'totalcms.lastActivity';
 	public const LOGIN_ATTEMPTS    = 'totalcms.loginAttempts';
+	public const LOGIN_ORIGIN      = 'totalcms.loginOrigin';
 	public const DOWNLOAD_ATTEMPTS = 'totalcms.downloadAttempts';
 
 	// Security Keys (Note: CSRF uses its own SESSION_KEY constant)
@@ -47,6 +48,7 @@ final class SessionKeys
 			self::REQUEST_REFERER_URL,
 			self::LAST_ACTIVITY,
 			self::LOGIN_ATTEMPTS,
+			self::LOGIN_ORIGIN,
 			self::DOWNLOAD_ATTEMPTS,
 		];
 	}
@@ -100,6 +102,7 @@ final class SessionKeys
 		return [
 			self::LAST_ACTIVITY,
 			self::LOGIN_ATTEMPTS,
+			self::LOGIN_ORIGIN,
 			self::DOWNLOAD_ATTEMPTS,
 		];
 	}

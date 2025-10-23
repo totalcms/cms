@@ -34,20 +34,12 @@ $settings['logger']['level']  = Monolog\Level::Debug;
 $settings['assets']['minify'] = 0;
 // $settings['locale']['cache']  = null;
 $settings['logger']['path']   = $settings['datadir'] . '/logs';
-$settings['sentry']['enable'] = false;
+$settings['sentry']           = false;
 $settings['auth']['enable']   = false;
 
 $settings['cache'] = [
-	'filesystem' => [
-		'enabled'   => false,
-	],
-	'redis' => [
-		'enabled' => false,
-	],
-	'apcu' => [
-		'enabled' => false,
-	],
-	'memcached' => [
-		'enabled' => false,
-	],
+	'filesystem' => false,
+	'apcu'       => false,
+	'redis'      => false,
+	'memcached'  => false,
 ];

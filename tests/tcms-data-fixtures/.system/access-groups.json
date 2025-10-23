@@ -1,0 +1,226 @@
+{
+    "groups": [
+        {
+            "id": "admin",
+            "description": "Full administrative access to all features",
+            "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "collections": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "schemas": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "templates": true,
+                "mailer": true,
+                "playground": true,
+                "docs": true,
+                "utils": {
+                    "all": true,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": true,
+                    "allowed": []
+                }
+            }
+        },
+        {
+            "id": "editor",
+            "description": "Content editors - can create and edit content",
+            "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read",
+                        "update"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog",
+                        "image"
+                    ]
+                },
+                "collections": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "schemas": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": ["blog", "news"]
+                },
+                "templates": true,
+                "mailer": false,
+                "playground": true,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": [
+                        "jumpstart"
+                    ]
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": [
+                        "general"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "viewer",
+            "description": "Read-only access to view content",
+            "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "collections": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "schemas": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "templates": false,
+                "mailer": false,
+                "playground": false,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": []
+                }
+            }
+        },
+        {
+            "id": "blogger",
+            "description": "Blog content creators",
+            "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
+                "collections": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": false,
+                    "allowed": ["blog"]
+                },
+                "schemas": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": ["blog"]
+                },
+                "templates": false,
+                "mailer": false,
+                "playground": true,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": []
+                }
+            }
+        },
+        {
+            "id": "limited-blogger",
+            "description": "Read-only blog access",
+            "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": [
+                        "blog"
+                    ]
+                },
+                "collections": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": ["blog"]
+                },
+                "schemas": {
+                    "operations": [
+                        "read"
+                    ],
+                    "all": false,
+                    "allowed": []
+                },
+                "templates": false,
+                "mailer": false,
+                "playground": false,
+                "docs": false,
+                "utils": {
+                    "all": false,
+                    "allowed": []
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": []
+                }
+            }
+        }
+    ]
+}

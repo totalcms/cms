@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TotalCMS\Middleware\Access;
+
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * Template Access Middleware.
+ *
+ * Enforces access group permissions for template operations.
+ */
+readonly class TemplateAccessMiddleware extends BaseAccessMiddleware
+{
+	protected const RESOURCE_NAME = 'template';
+
+	/**
+	 * Check if the user has permission to access templates.
+	 * Templates use simple boolean access (on/off).
+	 */
+	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	{
+		return $this->accessControl->canAccessTemplates($userId);
+	}
+}

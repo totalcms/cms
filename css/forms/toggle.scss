@@ -24,7 +24,7 @@
             border           : 1px solid oklch(var(--totalform-border-color));
             border-radius    : 60px;
             text-indent      : -9999px;
-            background-color : oklch(var(--totalform-background));
+            background-color : oklch(var(--totalform-lightgray));
 
             -webkit-tap-highlight-color: transparent;
 
@@ -63,7 +63,7 @@
             }
 
             & + label:after {
-                left: 54px - 30px;
+                left: 20px;
             }
         }
     }
