@@ -90,37 +90,35 @@ readonly class AuthLoginSubmitAction
 			return $response->withStatus(302)->withHeader('Location', $url);
 		}
 
-		if (isset($user, $user['id'])) {
-			// Check for redirect URL in multiple places:
-			// 1. POST data (from login form with redirect parameter)
-			// 2. Query parameter (for direct links)
-			// 3. Session storage (for direct login)
-			// 4. Default to admin index
-			$postData    = (array)$request->getParsedBody();
-			$queryParams = $request->getQueryParams();
-			$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
-			$url         = $redirectUrl;
+		// Authentication succeeded - check for redirect URL in multiple places:
+		// 1. POST data (from login form with redirect parameter)
+		// 2. Query parameter (for direct links)
+		// 3. Session storage (for direct login)
+		// 4. Default to admin index
+		$postData    = (array)$request->getParsedBody();
+		$queryParams = $request->getQueryParams();
+		$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
+		$url         = $redirectUrl;
 
-			$this->session->destroy();
-			$this->session->start();
-			$this->session->regenerateId();
+		$this->session->destroy();
+		$this->session->start();
+		$this->session->regenerateId();
 
-			// For SuperAdmin cross-collection authentication, use the collection they were authenticated against
-			$sessionCollection = $user['_authenticated_collection'] ?? $collection;
+		// For SuperAdmin cross-collection authentication, use the collection they were authenticated against
+		$sessionCollection = $user['_authenticated_collection'] ?? $collection;
 
-			// Set session data
-			$this->session->set(SessionKeys::AUTH_USER, $user['id']);
-			$this->session->set(SessionKeys::AUTH_COLLECTION, $sessionCollection);
-			$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
-			$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
+		// Set session data
+		$this->session->set(SessionKeys::AUTH_USER, $user['id']);
+		$this->session->set(SessionKeys::AUTH_COLLECTION, $sessionCollection);
+		$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, $persistentLogin);
+		$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
 
-			// If persistent login is checked, create persistent token
-			if ($persistentLogin) {
-				$this->persistentLoginService->createPersistentToken();
-			}
-
-			$flash->add('success', 'Login successful');
+		// If persistent login is checked, create persistent token
+		if ($persistentLogin) {
+			$this->persistentLoginService->createPersistentToken();
 		}
+
+		$flash->add('success', 'Login successful');
 
 		return $response->withStatus(302)->withHeader('Location', $url);
 	}
