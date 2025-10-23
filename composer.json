@@ -201,7 +201,8 @@
       ],
       "erusev/parsedown-extra": [
         "patches/parsedown-extra-php84-nullable-fix.patch",
-        "patches/parsedown-extra-php84-callable-fix.patch"
+        "patches/parsedown-extra-php84-callable-fix.patch",
+        "patches/parsedown-extra-mb-convert-deprecation-fix.patch"
       ]
     }
   }
