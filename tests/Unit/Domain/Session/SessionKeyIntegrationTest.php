@@ -70,8 +70,9 @@ class SessionKeyIntegrationTest extends TestCase
 		$activityKeys = SessionKeys::getActivityKeys();
 		$this->assertContains(SessionKeys::LAST_ACTIVITY, $activityKeys);
 		$this->assertContains(SessionKeys::LOGIN_ATTEMPTS, $activityKeys);
+		$this->assertContains(SessionKeys::LOGIN_ORIGIN, $activityKeys);
 		$this->assertContains(SessionKeys::DOWNLOAD_ATTEMPTS, $activityKeys);
-		$this->assertCount(3, $activityKeys);
+		$this->assertCount(4, $activityKeys);
 
 		// Ensure all grouped keys are in the main list
 		$allKeys     = SessionKeys::getAllKeys();

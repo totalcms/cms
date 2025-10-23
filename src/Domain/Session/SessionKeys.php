@@ -102,6 +102,7 @@ final class SessionKeys
 		return [
 			self::LAST_ACTIVITY,
 			self::LOGIN_ATTEMPTS,
+			self::LOGIN_ORIGIN,
 			self::DOWNLOAD_ATTEMPTS,
 		];
 	}
