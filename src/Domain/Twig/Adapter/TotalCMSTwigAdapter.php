@@ -54,6 +54,7 @@ class TotalCMSTwigAdapter
 	public string $logout;
 	public string $domain;
 	public string $clearcache;
+	public string $version;
 
 	public function __construct(
 		private readonly Config $config,
@@ -85,6 +86,7 @@ class TotalCMSTwigAdapter
 		$this->dashboard  = $this->api . '/admin';
 		$this->logout     = $this->api . '/logout';
 		$this->domain     = $this->getDomainName();
+		$this->version    = $this->getVersion();
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */
@@ -316,6 +318,17 @@ NGINX;
 	private function getDomainName(): string
 	{
 		return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+	}
+
+	private function getVersion(): string
+	{
+		$versionFile = __DIR__ . '/../../../../version.txt';
+		if (file_exists($versionFile)) {
+			$version = file_get_contents($versionFile);
+			return $version !== false ? trim($version) : '';
+		}
+
+		return '';
 	}
 
 	/** @return array<string,string> */
