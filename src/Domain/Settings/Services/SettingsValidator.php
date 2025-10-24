@@ -172,13 +172,25 @@ readonly class SettingsValidator
 	 */
 	private function processCache(array $data): array
 	{
-		// Parse JSON configurations for each cache backend
+		// Convert cache backend toggles to booleans
 		foreach (['apcu', 'redis', 'memcached', 'filesystem'] as $backend) {
-			if (isset($data[$backend]) && is_string($data[$backend])) {
-				$config = json_decode($data[$backend], true);
-				if (json_last_error() === JSON_ERROR_NONE && is_array($config)) {
-					$data[$backend] = $config;
-				}
+			if (isset($data[$backend])) {
+				$data[$backend] = $data[$backend] === 'on' || $data[$backend] === '1' || $data[$backend] === true;
+			}
+		}
+
+		// Parse JSON configurations for redis and memcached
+		if (isset($data['redisConfig']) && is_string($data['redisConfig'])) {
+			$config = json_decode($data['redisConfig'], true);
+			if (json_last_error() === JSON_ERROR_NONE && is_array($config)) {
+				$data['redisConfig'] = $config;
+			}
+		}
+
+		if (isset($data['memcachedConfig']) && is_string($data['memcachedConfig'])) {
+			$config = json_decode($data['memcachedConfig'], true);
+			if (json_last_error() === JSON_ERROR_NONE && is_array($config)) {
+				$data['memcachedConfig'] = $config;
 			}
 		}
 
