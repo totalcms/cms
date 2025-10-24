@@ -161,6 +161,8 @@ print_info "Building production assets..."
 composer run build
 print_success "Assets built"
 
+bin/code-report.sh > code-report.txt
+
 # Update version if changed (after build to prevent overwriting)
 print_info "Comparing versions: '$NEW_VERSION' vs '$CURRENT_VERSION'"
 if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then

@@ -99,8 +99,6 @@ rm -f dist/resources/bin/.processJobs
 VERSION=`git describe --tags $(git rev-list --tags --max-count=1)`
 BUILD=`git rev-parse --short HEAD`
 
-bin/code-report.sh > code-report.txt
-
 echo "$VERSION-$BUILD" > version.txt
 cp version.txt dist
 
