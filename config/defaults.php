@@ -72,8 +72,25 @@ $settings['cache'] = [
 	],
 ];
 
-// Path to cms data folder
-$settings['datadir'] = $settings['docroot'] . '/tcms-data';
+// Path to tcms-data folder - smart detection
+// Priority:
+// 1. DOCUMENT_ROOT/../tcms-data if it exists
+// 2. DOCUMENT_ROOT/tcms-data if it exists
+// 3. DOCUMENT_ROOT/../tcms-data if parent directory is writable
+// 4. DOCUMENT_ROOT/tcms-data as last resort
+// Note: DOCUMENT_ROOT/tcms.php can always override this default
+$parentDatadir = dirname($settings['docroot']) . '/tcms-data';
+$localDatadir  = $settings['docroot'] . '/tcms-data';
+
+if (file_exists($parentDatadir)) {
+	$settings['datadir'] = $parentDatadir;
+} elseif (file_exists($localDatadir)) {
+	$settings['datadir'] = $localDatadir;
+} elseif (is_writable(dirname($settings['docroot']))) {
+	$settings['datadir'] = $parentDatadir;
+} else {
+	$settings['datadir'] = $localDatadir;
+}
 
 // Error Handling
 $settings['error'] = [
