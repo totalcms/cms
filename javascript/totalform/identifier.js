@@ -144,7 +144,7 @@ export default class Identifier extends TotalField {
 		id = id.replace('@', '-at-').replace(/\./g, '-');
 
 		// Build the remove regex, allowing custom characters if specified
-		let removeRegex = /[*+~.()'"!:@{}\[\]\/\\]/g;
+		let removeRegex = /[*+~.,()'"!:@{}\[\]\/\\]/g;
 		if (this.options.allowCharacters) {
 			// Escape special regex characters in the allowed string
 			const escaped = this.options.allowCharacters.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
