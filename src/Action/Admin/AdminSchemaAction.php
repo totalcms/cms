@@ -27,11 +27,12 @@ readonly class AdminSchemaAction
 		// /schemas - index page
 		// /schemas/{schema} - schema edit page
 		// /schemas/new - schema create form
+		// /schemas/-import - schema import form
 		// POST /schemas/new - duplicate schema with data
 
-		// Validate schema exists (skip for index and new)
+		// Validate schema exists (skip for index, new, and import)
 		$schema = $args['schema'] ?? '';
-		if ($schema !== '' && $schema !== 'new' && !$this->schemaFetcher->schemaExists($schema)) {
+		if ($schema !== '' && $schema !== 'new' && $schema !== '-import' && !$this->schemaFetcher->schemaExists($schema)) {
 			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
 				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
 			]);
