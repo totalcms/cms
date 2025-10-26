@@ -2,7 +2,7 @@
 
 This directory contains a comprehensive demonstration of Total CMS 3 features and capabilities.
 
-## Demo Page: `tcms-demo.php`
+## Demo Page: `index.php`
 
 A fully functional demo website showcasing various Total CMS features including:
 
@@ -57,11 +57,11 @@ A fully functional demo website showcasing various Total CMS features including:
    - Navigate to: Admin → Utils → JumpStart
 
 3. **View the Demo**
-   - Access via web server: `http://your-site.com/demo/tcms-demo.php`
+   - Access via web server: `http://your-site.com/demo/index.php`
    - Or use PHP's built-in server:
      ```bash
      php -S localhost:8000 -t .
-     # Then visit: http://localhost:8000/demo/tcms-demo.php
+     # Then visit: http://localhost:8000/demo/index.php
      ```
 
 ## Demo Data Used

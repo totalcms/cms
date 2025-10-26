@@ -8,30 +8,30 @@ $totalcms = new TotalCMS\TotalCMS();
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<title>{{cms.text('demoheader')}} - Demo Site</title>
+		<title>{{ cms.text('demoheader') }} - Demo Site</title>
 		<meta name="description" content="A comprehensive demonstration of Total CMS 3 features and capabilities">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
 		<link rel="stylesheet" href="demo.css" />
 
 		<!-- Total CMS Content -->
-		<link rel="stylesheet" href="{{cms.api}}/assets/content.css?v={{cms.version}}"/>
-		<link rel="stylesheet" href="{{cms.api}}/assets/cms-grid.css?v={{cms.version}}"/>
-		<link rel="stylesheet" href="{{cms.api}}/assets/gallery.css?v={{cms.version}}"/>
-		<link rel="stylesheet" href="{{cms.api}}/assets/pagination.css?v={{cms.version}}"/>
-		<link rel="preload" as="script" href="{{cms.api}}/assets/content.js?v={{cms.version}}" />
-		<link rel="preload" as="script" href="{{cms.api}}/assets/gallery.js?v={{cms.version}}" />
+		<link rel="stylesheet" href="{{ cms.api }}/assets/content.css?v={{ cms.version }}"/>
+		<link rel="stylesheet" href="{{ cms.api }}/assets/cms-grid.css?v={{ cms.version }}"/>
+		<link rel="stylesheet" href="{{ cms.api }}/assets/gallery.css?v={{ cms.version }}"/>
+		<link rel="stylesheet" href="{{ cms.api }}/assets/pagination.css?v={{ cms.version }}"/>
+		<link rel="preload" as="script" href="{{ cms.api }}/assets/content.js?v={{ cms.version }}" />
+		<link rel="preload" as="script" href="{{ cms.api }}/assets/gallery.js?v={{ cms.version }}" />
 
 		<!-- Load is using Total CMS Forms/Admin -->
-		<link rel="stylesheet" href="{{cms.api}}/assets/admin.css?v={{cms.version}}"/>
-		<link rel="preload" as="script" href="{{cms.api}}/assets/admin.js?v={{cms.version}}" />
+		<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css?v={{ cms.version }}"/>
+		<link rel="preload" as="script" href="{{ cms.api }}/assets/admin.js?v={{ cms.version }}" />
 	</head>
 	<body>
 
 		<!-- Header -->
 		<header class="site-header">
 			<div class="container">
-				<h1>{{cms.text('demoheader')}}</h1>
+				<h1>{{ cms.text('demoheader') }}</h1>
 				<p>A comprehensive demonstration of Total CMS 3 features and capabilities</p>
 			</div>
 		</header>
@@ -40,10 +40,10 @@ $totalcms = new TotalCMS\TotalCMS();
 
 			<!-- Hero Section -->
 			<section class="hero">
-				<h2>Welcome to {{cms.text('demoname')}}</h2>
+				<h2>Welcome to {{ cms.text('demoname') }}</h2>
 				<p>Explore the power and flexibility of Total CMS 3 with this interactive demo.</p>
 				<div class="hero-image">
-					{{cms.image('demoimage', {w: 1200, h: 400, fit: 'crop'})}}
+					{{ cms.image('demoimage', {w: 1200, h: 400, fit: 'crop'}) }}
 				</div>
 			</section>
 
@@ -60,20 +60,20 @@ $totalcms = new TotalCMS\TotalCMS();
 					<article class="post-card">
 						<div class="post-card-image">
 							{% if post.image %}
-								{{cms.image(post.image, {w: 400, h: 200, fit: 'crop'})}}
+								{{ cms.image(post.id, {w: 400, h: 200, fit: 'crop'}, {collection: 'blog'}) }}
 							{% endif %}
 						</div>
 						<div class="post-card-content">
-							<h3 class="post-card-title">{{post.title}}</h3>
+							<h3 class="post-card-title">{{ post.title }}</h3>
 							<div class="post-card-meta">
-								<span>By {{post.author}}</span>
-								<span>{{post.date | date('M j, Y')}}</span>
+								<span>By {{ post.author }}</span>
+								<span>{{ post.date | date('M j, Y') }}</span>
 							</div>
 							<div class="post-card-excerpt">
-								{{post.summary | striptags | truncate(150)}}
+								{{ post.summary | striptags | truncate(150) }}
 							</div>
 							{% if post.tags | length > 0 %}
-								<span class="badge">{{post.tags[0]}}</span>
+								<span class="badge">{{ post.tags[0] }}</span>
 							{% endif %}
 						</div>
 					</article>
@@ -94,16 +94,16 @@ $totalcms = new TotalCMS\TotalCMS();
 					<div class="product-card">
 						<div class="product-image">
 							{% if product.image %}
-								{{cms.image(product.image, {w: 300, h: 200, fit: 'crop'})}}
+								{{ cms.image(product.id, {w: 300, h: 200, fit: 'crop'}, {collection: 'products'}) }}
 							{% endif %}
 						</div>
 						<div class="product-info">
-							<h3 class="product-name">{{product.name | title}}</h3>
-							<div class="product-price">${{product.price | number_format(2)}}</div>
+							<h3 class="product-name">{{ product.name | title }}</h3>
+							<div class="product-price">${{ product.price | number_format(2) }}</div>
 							{% if product.tags | length > 0 %}
 							<div class="product-tags">
 								{% for tag in product.tags | slice(0, 3) %}
-									<span class="product-tag">{{tag}}</span>
+									<span class="product-tag">{{ tag }}</span>
 								{% endfor %}
 							</div>
 							{% endif %}
@@ -121,14 +121,14 @@ $totalcms = new TotalCMS\TotalCMS();
 				</div>
 
 				<div class="gallery-wrapper">
-					{{cms.gallery('demogallery', {
+					{{ cms.gallery('demogallery', {
 						columns: 3,
 						gap: 1.5,
 						lightbox: true,
 						thumbnailWidth: 400,
 						thumbnailHeight: 300,
 						thumbnailFit: 'crop'
-					})}}
+					}) }}
 				</div>
 			</section>
 
@@ -136,23 +136,26 @@ $totalcms = new TotalCMS\TotalCMS();
 			<section class="section">
 				<div class="section-header">
 					<h2>All Blog Posts</h2>
-					<p>Explore all our articles with pagination</p>
+					<p>Explore all our articles</p>
 				</div>
 
 				<div class="blog-list">
-					{% cmsgrid cms.objects('blog') with 'list' perPage 5 %}
-						<article class="blog-item">
-							<h3 class="blog-item-title">{{item.title}}</h3>
+					{% cmsgrid cms.objects('blog') | slice(0, 5) from 'blog' with 'list' %}
+						<div class="cms-image">
+							{{ cms.image(object.id, {w: 400, h: 400, fit: 'crop'}, {collection: 'blog'}) }}
+						</div>
+						<div class="cms-content">
+							<h3 class="blog-item-title">{{ object.title }}</h3>
 							<div class="blog-item-meta">
-								<strong>{{item.author}}</strong> • {{cms.grid.date(item.date)}}
-								{% if item.categories | length > 0 %}
-									• Categories: {{item.categories | join(', ')}}
+								<strong>{{ object.author }}</strong> • {{ cms.grid.date(object.date) }}
+								{% if object.categories | length > 0 %}
+									• Categories: {{ object.categories | join(', ') }}
 								{% endif %}
 							</div>
 							<div class="blog-item-summary">
-								{{item.summary | striptags | truncate(200)}}
+								{{ object.summary | striptags | truncate(200) }}
 							</div>
-						</article>
+						</div>
 					{% endcmsgrid %}
 				</div>
 			</section>
@@ -167,36 +170,39 @@ $totalcms = new TotalCMS\TotalCMS();
 				<div class="fields-demo">
 					<div class="field-item">
 						<span class="field-label">Text Field</span>
-						<div class="field-value">{{cms.text('demoname')}}</div>
+						<div class="field-value">{{ cms.text('demoname') }}</div>
 					</div>
 
 					<div class="field-item">
 						<span class="field-label">Email Field</span>
-						<div class="field-value">{{cms.email('demoemail')}}</div>
+						<div class="field-value">{{ cms.email('demoemail') }}</div>
 					</div>
 
 					<div class="field-item">
 						<span class="field-label">URL Field</span>
 						<div class="field-value">
-							<a href="{{cms.url('demourl')}}" target="_blank">{{cms.url('demourl')}}</a>
+							<a href="{{ cms.url('demourl') }}" target="_blank">{{ cms.url('demourl') }}</a>
 						</div>
 					</div>
 
 					<div class="field-item">
 						<span class="field-label">Number Field</span>
-						<div class="field-value">${{cms.number('demoprice')}}</div>
+						<div class="field-value">${{ cms.number('demoprice') }}</div>
 					</div>
 
 					<div class="field-item">
 						<span class="field-label">Date Field</span>
-						<div class="field-value">{{cms.date('demodate') | date('F j, Y')}}</div>
+						<div class="field-value">{{ cms.date('demodate') | date('F j, Y') }}</div>
 					</div>
 
 					<div class="field-item">
 						<span class="field-label">Color Field</span>
 						<div class="field-value">
-							<span class="color-swatch" style="background-color: {{cms.color('democolor')}}"></span>
-							{{cms.color('democolor')}}
+							<span class="color-swatch" style="background-color: {{ cms.color('democolor') | color }}"></span>
+							<strong>OKLCH</strong>: {{ cms.color('democolor') | oklch }}
+							<strong>RGB</strong>: {{ cms.color('democolor') | rgb }}
+							<strong>HSL</strong>: {{ cms.color('democolor') | hsl }}
+							<strong>HEX</strong>: {{ cms.color('democolor') | hex }}
 						</div>
 					</div>
 
@@ -214,7 +220,7 @@ $totalcms = new TotalCMS\TotalCMS();
 					<div class="field-item">
 						<span class="field-label">Styled Text</span>
 						<div class="field-value">
-							{{cms.styledtext('demostyledtext')}}
+							{{ cms.styledtext('demostyledtext') }}
 						</div>
 					</div>
 				</div>
@@ -231,9 +237,9 @@ $totalcms = new TotalCMS\TotalCMS();
 					{% set snippets = cms.objects('playground', {category: 'JumpStart Snippets'}) %}
 					{% for snippet in snippets | slice(0, 4) %}
 					<div class="field-item">
-						<span class="field-label">{{snippet.name}}</span>
+						<span class="field-label">{{ snippet.name }}</span>
 						<div class="field-value">
-							<pre style="background: #f7fafc; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>{{snippet.snippet}}</code></pre>
+							<pre style="background: #f7fafc; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>{{ snippet.snippet | escape }}</code></pre>
 						</div>
 					</div>
 					{% endfor %}
@@ -245,18 +251,18 @@ $totalcms = new TotalCMS\TotalCMS();
 		<!-- Footer -->
 		<footer class="site-footer">
 			<div class="container">
-				<p>&copy; 2025 {{cms.text('demoname')}} • Powered by Total CMS 3</p>
+				<p>&copy; 2025 {{ cms.text('demoname') }} • Powered by Total CMS 3</p>
 				<p style="margin-top: 0.5rem; font-size: 0.875rem;">
-					Built with Total CMS {{cms.version}} •
-					<a href="{{cms.api}}/admin" style="color: white; text-decoration: underline;">Admin Panel</a>
+					Built with Total CMS {{ cms.version }} •
+					<a href="{{ cms.api }}/admin" style="color: white; text-decoration: underline;">Admin Panel</a>
 				</p>
 			</div>
 		</footer>
 
 		<!-- Total CMS Scripts -->
-		<script type="module" src="{{cms.api}}/assets/content.js?v={{cms.version}}"></script>
-		<script type="module" src="{{cms.api}}/assets/gallery.js?v={{cms.version}}"></script>
-		<script type="module" src="{{cms.api}}/assets/admin.js?v={{cms.version}}"></script>
+		<script type="module" src="{{ cms.api }}/assets/content.js?v={{ cms.version }}"></script>
+		<script type="module" src="{{ cms.api }}/assets/gallery.js?v={{ cms.version }}"></script>
+		<script type="module" src="{{ cms.api }}/assets/admin.js?v={{ cms.version }}"></script>
 	</body>
 </html>
 
