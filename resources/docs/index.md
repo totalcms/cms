@@ -51,6 +51,7 @@ New to Total CMS? Start here:
 #### Templating (Twig)
 - **[Twig Overview](docs/twig-overview)** - Complete Twig integration guide
 - **[Twig Filters](docs/twig-filters)** - Available filters and their usage
+- **[Collection Filtering & Sorting](docs/collection-filtering)** - Advanced filtering with 40+ operators
 - **[Twig Functions](docs/twig-functions)** - Built-in template functions
 - **[Twig Forms](docs/twig-forms)** - Form helpers and generation
 - **[TotalCMS Factory](docs/twig-factory)** - Factory pattern implementation

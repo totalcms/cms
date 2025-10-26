@@ -1,0 +1,685 @@
+# Collection Filtering and Sorting
+
+Total CMS provides powerful `filterCollection` and `sortCollection` Twig filters for advanced data manipulation. These filters allow you to perform complex filtering operations on collections using a variety of operators, making it easy to create dynamic, filtered content displays.
+
+## Table of Contents
+
+- [filterCollection Filter](#filtercollection-filter)
+  - [Basic Syntax](#basic-syntax)
+  - [String Operators](#string-operators)
+  - [Comparison Operators](#comparison-operators)
+  - [Boolean Operators](#boolean-operators)
+  - [Date Operators](#date-operators)
+  - [Calendar Period Operators](#calendar-period-operators)
+  - [Numeric Range Operators](#numeric-range-operators)
+  - [Text Length Operators](#text-length-operators)
+  - [Array Counting Operators](#array-counting-operators)
+  - [Day-of-Week Operators](#day-of-week-operators)
+  - [Array Logic (OR vs AND)](#array-logic-or-vs-and)
+- [sortCollection Filter](#sortcollection-filter)
+- [Real-World Examples](#real-world-examples)
+
+## filterCollection Filter
+
+The `filterCollection` filter allows you to filter arrays of objects based on complex criteria. It uses the CollectionRefiner service under the hood.
+
+### Basic Syntax
+
+```twig
+{% set filtered = collection | filterCollection([
+    {
+        property: "field_name",
+        operator: "operator_name",
+        value: "filter_value"
+    }
+]) %}
+```
+
+Multiple filters can be combined - all filters must match (AND logic):
+
+```twig
+{% set filtered = collection | filterCollection([
+    {property: "status", operator: "equal", value: "published"},
+    {property: "date", operator: "past", value: ""}
+]) %}
+```
+
+---
+
+## String Operators
+
+### `equal`
+Exact match (case-sensitive for strings, loose comparison).
+
+```twig
+{% set published = cms.objects('blog') | filterCollection([
+    {property: "status", operator: "equal", value: "published"}
+]) %}
+```
+
+### `contains`
+Check if string contains substring (case-sensitive).
+
+```twig
+{% set guides = cms.objects('blog') | filterCollection([
+    {property: "title", operator: "contains", value: "Guide"}
+]) %}
+```
+
+### `starts`
+Check if string starts with prefix.
+
+```twig
+{% set tutorials = cms.objects('blog') | filterCollection([
+    {property: "title", operator: "starts", value: "How to"}
+]) %}
+```
+
+### `ends`
+Check if string ends with suffix.
+
+```twig
+{% set questions = cms.objects('blog') | filterCollection([
+    {property: "title", operator: "ends", value: "?"}
+]) %}
+```
+
+### `like`
+Regular expression pattern matching.
+
+```twig
+{% set posts = cms.objects('blog') | filterCollection([
+    {property: "title", operator: "like", value: "PHP.*Tutorial"}
+]) %}
+```
+
+### Case-Insensitive Variants
+
+All string operators have case-insensitive versions:
+- `equalCaseInsensitive`
+- `containsCaseInsensitive`
+- `startsCaseInsensitive`
+- `endsCaseInsensitive`
+
+```twig
+{% set posts = cms.objects('blog') | filterCollection([
+    {property: "title", operator: "containsCaseInsensitive", value: "guide"}
+]) %}
+{# Matches "Guide", "GUIDE", "guide", etc. #}
+```
+
+---
+
+## Comparison Operators
+
+### `less` / `lt`
+Less than comparison.
+
+```twig
+{% set cheapProducts = cms.objects('products') | filterCollection([
+    {property: "price", operator: "less", value: "50"}
+]) %}
+```
+
+### `lesseq` / `le`
+Less than or equal to.
+
+```twig
+{% set affordableProducts = cms.objects('products') | filterCollection([
+    {property: "price", operator: "lesseq", value: "100"}
+]) %}
+```
+
+### `greater` / `gt`
+Greater than comparison.
+
+```twig
+{% set premiumProducts = cms.objects('products') | filterCollection([
+    {property: "price", operator: "greater", value: "100"}
+]) %}
+```
+
+### `greatereq` / `ge`
+Greater than or equal to.
+
+```twig
+{% set expensiveProducts = cms.objects('products') | filterCollection([
+    {property: "price", operator: "greatereq", value: "500"}
+]) %}
+```
+
+---
+
+## Boolean Operators
+
+### `istrue`
+Check if value is true (true, 'true', '1', or 1).
+
+```twig
+{% set featured = cms.objects('products') | filterCollection([
+    {property: "featured", operator: "istrue"}
+]) %}
+```
+
+### `isfalse`
+Check if value is false (false, 'false', '0', or 0).
+
+```twig
+{% set notFeatured = cms.objects('products') | filterCollection([
+    {property: "featured", operator: "isfalse"}
+]) %}
+```
+
+### `isempty`
+Check if value is empty.
+
+```twig
+{% set noDescription = cms.objects('products') | filterCollection([
+    {property: "description", operator: "isempty"}
+]) %}
+```
+
+### `isnotempty`
+Check if value is not empty.
+
+```twig
+{% set hasDescription = cms.objects('products') | filterCollection([
+    {property: "description", operator: "isnotempty"}
+]) %}
+```
+
+---
+
+## Date Operators
+
+### Basic Date Operators
+
+**`past`** - Date is in the past
+```twig
+{% set pastEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "past"}
+]) %}
+```
+
+**`future`** - Date is in the future
+```twig
+{% set upcomingEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "future"}
+]) %}
+```
+
+**`today`** - Date is today
+```twig
+{% set todaysEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "today"}
+]) %}
+```
+
+**`pastToday`** - Date is today or in the past
+```twig
+{% set currentAndPast = cms.objects('events') | filterCollection([
+    {property: "date", operator: "pastToday"}
+]) %}
+```
+
+**`futureToday`** - Date is today or in the future
+```twig
+{% set currentAndFuture = cms.objects('events') | filterCollection([
+    {property: "date", operator: "futureToday"}
+]) %}
+```
+
+### Date Range Operators
+
+**`todayPlusDays`** - Today through N days in future
+```twig
+{# Events from today through next 7 days #}
+{% set nextWeekEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "todayPlusDays", value: 7}
+]) %}
+```
+
+**`todayMinusDays`** - Today and N days back
+```twig
+{# Blog posts from last 30 days including today #}
+{% set recentPosts = cms.objects('blog') | filterCollection([
+    {property: "date", operator: "todayMinusDays", value: 30}
+]) %}
+```
+
+### Date Comparison Operators
+
+**`after`** - Date is after another date
+```twig
+{% set recent = cms.objects('blog') | filterCollection([
+    {property: "date", operator: "after", value: "2024-01-01"}
+]) %}
+```
+
+**`before`** - Date is before another date
+```twig
+{% set archived = cms.objects('blog') | filterCollection([
+    {property: "date", operator: "before", value: "2023-01-01"}
+]) %}
+```
+
+---
+
+## Calendar Period Operators
+
+**`thisWeek`** - Date is in current week (Monday-Sunday)
+```twig
+{% set thisWeeksPosts = cms.objects('blog') | filterCollection([
+    {property: "date", operator: "thisWeek"}
+]) %}
+```
+
+**`thisMonth`** - Date is in current month
+```twig
+{% set thisMonthsPosts = cms.objects('blog') | filterCollection([
+    {property: "date", operator: "thisMonth"}
+]) %}
+```
+
+**`thisYear`** - Date is in current year
+```twig
+{% set thisYearsPosts = cms.objects('blog') | filterCollection([
+    {property: "date", operator: "thisYear"}
+]) %}
+```
+
+---
+
+## Numeric Range Operators
+
+**`between`** - Value is between min and max (inclusive)
+
+Usage: `value: "min,max"`
+
+```twig
+{# Products priced between $10 and $100 #}
+{% set affordableProducts = cms.objects('products') | filterCollection([
+    {property: "price", operator: "between", value: "10,100"}
+]) %}
+
+{# Cars with mileage between 10k-50k miles #}
+{% set usedCars = cms.objects('cars') | filterCollection([
+    {property: "mileage", operator: "between", value: "10000,50000"}
+]) %}
+
+{# Ratings between 3-5 stars #}
+{% set topRated = cms.objects('reviews') | filterCollection([
+    {property: "rating", operator: "between", value: "3,5"}
+]) %}
+```
+
+---
+
+## Text Length Operators
+
+**`longerThan`** - Text exceeds N characters
+```twig
+{# Blog posts with detailed content (over 500 chars) #}
+{% set detailedPosts = cms.objects('blog') | filterCollection([
+    {property: "content", operator: "longerThan", value: 500}
+]) %}
+```
+
+**`shorterThan`** - Text is under N characters
+```twig
+{# Products with short descriptions for grid view #}
+{% set compactProducts = cms.objects('products') | filterCollection([
+    {property: "description", operator: "shorterThan", value: 200}
+]) %}
+```
+
+---
+
+## Array Counting Operators
+
+**`hasMin`** - Array has at least N items
+```twig
+{# Posts with at least 3 tags #}
+{% set wellTaggedPosts = cms.objects('blog') | filterCollection([
+    {property: "tags", operator: "hasMin", value: 3}
+]) %}
+
+{# Products with multiple images #}
+{% set multiImageProducts = cms.objects('products') | filterCollection([
+    {property: "gallery", operator: "hasMin", value: 2}
+]) %}
+```
+
+**`hasMax`** - Array has at most N items
+```twig
+{# Products with 5 or fewer images #}
+{% set simpleProducts = cms.objects('products') | filterCollection([
+    {property: "gallery", operator: "hasMax", value: 5}
+]) %}
+```
+
+**`hasCount`** - Array has exactly N items
+```twig
+{# Events with exactly 2 speakers #}
+{% set dualSpeakerEvents = cms.objects('events') | filterCollection([
+    {property: "speakers", operator: "hasCount", value: 2}
+]) %}
+```
+
+---
+
+## Day-of-Week Operators
+
+**`isWeekday`** - Date is Monday through Friday
+```twig
+{# Business hours events only #}
+{% set businessEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "isWeekday"}
+]) %}
+```
+
+**`isWeekend`** - Date is Saturday or Sunday
+```twig
+{# Weekend activities #}
+{% set weekendEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "isWeekend"}
+]) %}
+```
+
+**`dayOfWeek`** - Date is specific day of week
+
+Value can be day name (Monday-Sunday) or number (1=Monday, 7=Sunday):
+
+```twig
+{# Tuesday specials #}
+{% set tuesdaySpecials = cms.objects('specials') | filterCollection([
+    {property: "date", operator: "dayOfWeek", value: "Tuesday"}
+]) %}
+
+{# Using day number (1=Mon, 7=Sun) #}
+{% set mondayEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "dayOfWeek", value: "1"}
+]) %}
+```
+
+---
+
+## Array Logic (OR vs AND)
+
+When filtering with an array of values, you can control whether items must match **ANY** value (OR logic) or **ALL** values (AND logic) using the `logic` parameter.
+
+### OR Logic (Default)
+
+Returns items that match **ANY** of the values in the array:
+
+```twig
+{# Posts tagged with 'php' OR 'javascript' OR 'web' #}
+{% set posts = cms.objects('blog') | filterCollection([
+    {
+        property: "tags",
+        operator: "contains",
+        value: ["php", "javascript", "web"],
+        logic: "or"  {# Default - can be omitted #}
+    }
+]) %}
+
+{# Products in category 'electronics' OR 'computers' #}
+{% set products = cms.objects('products') | filterCollection([
+    {
+        property: "category",
+        operator: "equal",
+        value: ["electronics", "computers"]
+        {# logic: "or" is the default #}
+    }
+]) %}
+```
+
+### AND Logic
+
+Returns items that match **ALL** of the values in the array:
+
+```twig
+{# Posts that contain ALL tags: 'php' AND 'framework' AND 'tutorial' #}
+{% set advancedPosts = cms.objects('blog') | filterCollection([
+    {
+        property: "tags",
+        operator: "contains",
+        value: ["php", "framework", "tutorial"],
+        logic: "and"
+    }
+]) %}
+
+{# Products with ALL specified features #}
+{% set premiumProducts = cms.objects('products') | filterCollection([
+    {
+        property: "features",
+        operator: "contains",
+        value: ["waterproof", "wireless", "fast-charging"],
+        logic: "and"  {# Must have ALL three features #}
+    }
+]) %}
+```
+
+### Logic Summary
+
+| Logic | Behavior | Use Case |
+|-------|----------|----------|
+| `"or"` (default) | Match **ANY** value | Broad filtering, multiple categories |
+| `"and"` | Match **ALL** values | Strict requirements, feature completeness |
+
+---
+
+## Negation (NOT Operator)
+
+Any operator can be negated by prefixing with `not-` or prepending the value with `!`:
+
+```twig
+{# Using not- prefix #}
+{% set notPublished = cms.objects('blog') | filterCollection([
+    {property: "status", operator: "not-equal", value: "published"}
+]) %}
+
+{# Using ! prefix on value #}
+{% set notPublished = cms.objects('blog') | filterCollection([
+    {property: "status", operator: "equal", value: "!published"}
+]) %}
+
+{# Not in the past (future or today) #}
+{% set notPastEvents = cms.objects('events') | filterCollection([
+    {property: "date", operator: "not-past"}
+]) %}
+```
+
+---
+
+## sortCollection Filter
+
+The `sortCollection` filter sorts arrays based on one or more properties.
+
+### Basic Syntax
+
+```twig
+{% set sorted = collection | sortCollection([
+    {
+        property: "field_name",
+        reverse: false,      {# Optional: true for descending #}
+        natural: false,      {# Optional: true for natural sort #}
+        shuffle: false       {# Optional: true to randomize #}
+    }
+]) %}
+```
+
+### Single Property Sort
+
+```twig
+{# Sort by date ascending #}
+{% set sorted = cms.objects('blog') | sortCollection([
+    {property: "date"}
+]) %}
+
+{# Sort by price descending #}
+{% set sorted = cms.objects('products') | sortCollection([
+    {property: "price", reverse: true}
+]) %}
+```
+
+### Multi-Property Sort
+
+Sorts are applied in order - first sort is primary, subsequent sorts break ties:
+
+```twig
+{# Sort by featured (desc), then date (desc), then title (natural) #}
+{% set posts = cms.objects('blog') | sortCollection([
+    {property: "featured", reverse: true},
+    {property: "date", reverse: true},
+    {property: "title", natural: true}
+]) %}
+```
+
+### Natural Sorting
+
+Natural sorting treats numbers within strings intelligently:
+
+```twig
+{# Without natural: "Item 1", "Item 10", "Item 2" #}
+{# With natural:    "Item 1", "Item 2", "Item 10" #}
+{% set sorted = cms.objects('products') | sortCollection([
+    {property: "name", natural: true}
+]) %}
+```
+
+### Random Shuffle
+
+```twig
+{# Randomize order #}
+{% set randomProducts = cms.objects('products') | sortCollection([
+    {property: "name", shuffle: true}
+]) %}
+```
+
+---
+
+## Real-World Examples
+
+### Blog Post Management
+
+```twig
+{# Published posts from this year, sorted by date #}
+{% set posts = cms.objects('blog')
+    | filterCollection([
+        {property: "status", operator: "equal", value: "published"},
+        {property: "date", operator: "thisYear"}
+    ])
+    | sortCollection([
+        {property: "featured", reverse: true},
+        {property: "date", reverse: true}
+    ]) %}
+```
+
+### E-commerce Product Filtering
+
+```twig
+{# In-stock products, price $20-$100, with good ratings #}
+{% set products = cms.objects('products')
+    | filterCollection([
+        {property: "instock", operator: "istrue"},
+        {property: "price", operator: "between", value: "20,100"},
+        {property: "rating", operator: "greatereq", value: "4"},
+        {property: "description", operator: "longerThan", value: 50}
+    ])
+    | sortCollection([
+        {property: "rating", reverse: true},
+        {property: "price"}
+    ]) %}
+```
+
+### Event Calendar
+
+```twig
+{# This week's events on weekdays, sorted by date #}
+{% set events = cms.objects('events')
+    | filterCollection([
+        {property: "date", operator: "thisWeek"},
+        {property: "date", operator: "isWeekday"},
+        {property: "cancelled", operator: "isfalse"}
+    ])
+    | sortCollection([
+        {property: "date"},
+        {property: "start_time"}
+    ]) %}
+```
+
+### Content Discovery
+
+```twig
+{# Well-tagged posts from last 30 days with detailed content #}
+{% set qualityPosts = cms.objects('blog')
+    | filterCollection([
+        {property: "date", operator: "todayMinusDays", value: 30},
+        {property: "tags", operator: "hasMin", value: 3},
+        {property: "content", operator: "longerThan", value: 1000},
+        {property: "status", operator: "equal", value: "published"}
+    ])
+    | sortCollection([
+        {property: "views", reverse: true},
+        {property: "date", reverse: true}
+    ]) %}
+```
+
+### Weekend Special Offers
+
+```twig
+{# Special offers valid this weekend #}
+{% set weekendDeals = cms.objects('specials')
+    | filterCollection([
+        {property: "active", operator: "istrue"},
+        {property: "start_date", operator: "isWeekend"},
+        {property: "discount", operator: "greatereq", value: "20"}
+    ])
+    | sortCollection([
+        {property: "discount", reverse: true}
+    ]) %}
+```
+
+### User-Driven Filters
+
+```twig
+{# Dynamic filtering based on URL parameters #}
+{% set minPrice = get.min | default(0) %}
+{% set maxPrice = get.max | default(1000) %}
+{% set category = get.category | default('') %}
+
+{% set products = cms.objects('products')
+    | filterCollection([
+        {property: "price", operator: "between", value: minPrice ~ "," ~ maxPrice},
+        {property: "category", operator: "equal", value: category}
+    ])
+    | sortCollection([
+        {property: get.sort | default('price'), reverse: get.order == 'desc'}
+    ]) %}
+```
+
+---
+
+## Performance Tips
+
+1. **Filter before sorting** - Reduce the dataset size before sorting
+2. **Use specific operators** - More specific operators are faster
+3. **Limit results** - Use `| slice(0, 10)` after filtering
+4. **Cache filtered results** - For expensive operations
+
+```twig
+{# Good: Filter first, then sort, then limit #}
+{% set results = cms.objects('blog')
+    | filterCollection([...])
+    | sortCollection([...])
+    | slice(0, 10) %}
+```
+
+---
+
+## See Also
+
+- [Twig Filters Reference](twig-filters.md) - All available Twig filters
+- [Index Filtering](index-filter.md) - Server-side filtering for APIs
+- [CMS Grid Tag](cmsgrid-tag.md) - Display filtered collections
