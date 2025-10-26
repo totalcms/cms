@@ -197,7 +197,7 @@ class CollectionRefiner
 	 *
 	 * @return array<array<string,mixed>>
 	 */
-	public function filterByRule(array $collection, string $property, string $value = '', string $operator = 'equal'): array
+	public function filterByRule(array $collection, string $property, string $filterValue = '', string $operator = 'equal'): array
 	{
 		// If rule is prepended by not-, then invert the result
 		$not = false;
@@ -206,9 +206,9 @@ class CollectionRefiner
 			$operator = mb_substr($operator, 4);
 		}
 		// If value is prepended by !, then invert the result
-		if (self::starts($value, '!')) {
+		if (self::starts($filterValue, '!')) {
 			$not   = true;
-			$value = mb_substr($value, 1);
+			$filterValue = mb_substr($filterValue, 1);
 		}
 
 		// Cache reflection results to avoid repeated reflection calls
@@ -227,34 +227,34 @@ class CollectionRefiner
 		$methodExists = self::$methodCache[$operator];
 
 		// If operator requires a value and it's empty, return all records
-		if ($numParams === 2 && $value === '') {
+		if ($numParams === 2 && $filterValue === '') {
 			return $collection;
 		}
 
-		return array_filter($collection, function (array $record) use ($property, $value, $operator, $not, $numParams, $methodExists) {
-			$item = self::getPropertyValueForRecord($record, $property);
+		return array_filter($collection, function (array $record) use ($property, $filterValue, $operator, $not, $numParams, $methodExists) {
+			$propertyValue = self::getPropertyValueForRecord($record, $property);
 
-			if ($item === null) {
+			if ($propertyValue === null) {
 				return false;
 			}
 
 			if ($methodExists) {
-				if (is_array($item)) {
-					$found = self::filterArrayByRule($item, $value, $operator);
+				if (is_array($propertyValue)) {
+					$found = self::filterArrayByRule($propertyValue, $filterValue, $operator);
 
 					return $not ? !$found : $found;
 				}
 
 				$found = match ($numParams) {
-					1       => self::$operator($item),
-					2       => self::$operator($item, $value),
+					1       => self::$operator($propertyValue),
+					2       => self::$operator($propertyValue, $filterValue),
 					default => false,
 				};
 
 				return $not ? !$found : $found;
 			}
 
-			return $record[$property] == $value;
+			return $record[$property] == $filterValue;
 		});
 	}
 
@@ -465,6 +465,34 @@ class CollectionRefiner
 		$time = strtotime($date);
 
 		return $time >= strtotime('today') && $time < strtotime('tomorrow');
+	}
+
+	/**
+	 * Check if date is today or within N days in the future.
+	 * Example: If today is Jan 15 and days=3, matches Jan 15, 16, 17, 18.
+	 */
+	protected static function todayPlusDays(string $date, int|string $days): bool
+	{
+		$time       = strtotime($date);
+		$todayStart = strtotime('today');
+		$rangeEnd   = strtotime("+$days days", $todayStart);
+
+		// Date must be >= today's start AND < (today + days + 1 day)
+		return $time >= $todayStart && $time < strtotime('+1 day', (int)$rangeEnd);
+	}
+
+	/**
+	 * Check if date is today or within N days in the past.
+	 * Example: If today is Jan 15 and days=3, matches Jan 12, 13, 14, 15.
+	 */
+	protected static function todayMinusDays(string $date, int|string $days): bool
+	{
+		$time       = strtotime($date);
+		$todayEnd   = strtotime('tomorrow'); // Start of tomorrow = end of today range
+		$rangeStart = strtotime("-$days days", strtotime('today'));
+
+		// Date must be >= (today - days) AND < tomorrow
+		return $time >= $rangeStart && $time < $todayEnd;
 	}
 
 	protected static function after(string $date, string $dateAfter): bool
