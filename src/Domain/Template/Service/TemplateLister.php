@@ -25,6 +25,7 @@ readonly class TemplateLister
 
 	/**
 	 * List custom templates.
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @return array<string>
 	 */
@@ -35,6 +36,7 @@ readonly class TemplateLister
 
 	/**
 	 * List all templates.
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 *
 	 * @return array<string>
 	 */

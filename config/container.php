@@ -339,7 +339,7 @@ HTACCESS;
 		$container->get(SchemaLister::class),
 		$container->get(SchemaFetcher::class),
 		$container->get(DeckCompatibilityChecker::class),
-		$container->get(TemplateRepository::class),
+		$container->get(TemplateLister::class),
 		$container->get(TotalFormFactory::class),
 		$container->get(ServerChecker::class),
 		$container->get(CacheReporter::class),

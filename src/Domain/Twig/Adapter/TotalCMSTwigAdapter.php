@@ -28,6 +28,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
@@ -66,7 +67,7 @@ class TotalCMSTwigAdapter
 		private readonly SchemaLister $schemaLister,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly DeckCompatibilityChecker $deckCompatibilityChecker,
-		private readonly TemplateRepository $templateRepository,
+		private readonly TemplateLister $templateLister,
 		public TotalFormFactory $form,
 		public ServerChecker $checker,
 		public CacheReporter $cacheReporter,
@@ -1504,7 +1505,7 @@ NGINX;
 	public function templatesByFolder(): array
 	{
 		// Get all templates recursively
-		$templates = $this->templateRepository->listCustomTemplates(null, true);
+		$templates = $this->templateLister->listCustomTemplates(null, true);
 
 		$folders = [];
 
@@ -1816,9 +1817,9 @@ NGINX;
 	 */
 	public function dashboardStats(): array
 	{
-		$collections = $this->collectionLister->listCustomCollections();
+		$collections = $this->collectionLister->listAllCollections();
 		$schemas     = $this->schemaLister->listCustomSchemas();
-		$templates   = $this->templateRepository->listCustomTemplates(null, true);
+		$templates   = $this->templateLister->listCustomTemplates();
 
 		// Count total objects across all collections
 		$totalObjects = 0;
@@ -1832,11 +1833,16 @@ NGINX;
 			}
 		}
 
+		// Get job queue stats
+		$jobManager = new JobManager(new JobRepository());
+		$totalJobs  = count($jobManager->getPendingJobs()) + count($jobManager->getFailedJobs());
+
 		return [
 			'collections'  => count($collections),
 			'schemas'      => count($schemas),
 			'templates'    => count($templates),
 			'totalObjects' => $totalObjects,
+			'totalJobs'    => $totalJobs,
 		];
 	}
 
@@ -1847,8 +1853,14 @@ NGINX;
 	 */
 	public function dashboardCollections(): array
 	{
+		// Get custom collections first, fallback to all if none exist
 		$collections = $this->collectionLister->listCustomCollections();
-		$result      = [];
+
+		if (count($collections) === 0) {
+			$collections = $this->collectionLister->listAllCollections();
+		}
+
+		$result = [];
 
 		foreach ($collections as $collection) {
 			$objectCount  = 0;
@@ -1870,7 +1882,6 @@ NGINX;
 			$result[] = [
 				'id'           => $collection->id,
 				'name'         => $collection->name,
-				'icon'         => '📚', // Default collection icon
 				'schema'       => $collection->schema,
 				'objectCount'  => $objectCount,
 				'lastModified' => $lastModified,
@@ -1887,14 +1898,41 @@ NGINX;
 
 	/**
 	 * Get collections that have no objects (might need attention).
+	 * Always checks ALL collections, not just custom ones.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function dashboardEmptyCollections(): array
 	{
-		$allCollections = $this->dashboardCollections();
+		$collections = $this->collectionLister->listAllCollections();
+		$result      = [];
 
-		return array_filter($allCollections, fn (array $collection): bool => $collection['objectCount'] === 0);
+		foreach ($collections as $collection) {
+			$objectCount = 0;
+
+			try {
+				$index       = $this->indexReader->fetchIndex($collection->id);
+				$objectCount = $index->objects->count();
+			} catch (\Exception) {
+				// Collection has no index yet - it's empty
+			}
+
+			// Only include empty collections
+			if ($objectCount === 0) {
+				$result[] = [
+					'id'      => $collection->id,
+					'name'    => $collection->name,
+					'schema'  => $collection->schema,
+					'addUrl'  => "collections/{$collection->id}/new",
+					'viewUrl' => "collections/{$collection->id}",
+				];
+			}
+		}
+
+		// Sort by name
+		usort($result, fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+
+		return $result;
 	}
 
 	/**
@@ -1941,17 +1979,6 @@ NGINX;
 			try {
 				$index = $this->indexReader->fetchIndex($collection->id);
 
-				// Get icon from schema if available
-				$icon = '📚'; // Default icon
-				try {
-					$schema = $this->schemaFetcher->fetchSchema($collection->schema);
-					if (property_exists($schema, 'icon') && $schema->icon !== null && $schema->icon !== '') {
-						$icon = $schema->icon;
-					}
-				} catch (\Exception) {
-					// Use default icon
-				}
-
 				foreach ($index->objects as $object) {
 					if (!isset($object['onUpdate']) && !isset($object['onCreate'])) {
 						continue;
@@ -1966,7 +1993,7 @@ NGINX;
 						'id'             => $object['id'] ?? '',
 						'collection'     => $collection->id,
 						'collectionName' => $collection->name,
-						'collectionIcon' => $icon,
+						'schema'         => $collection->schema,
 						'timestamp'      => $timestamp,
 						'editUrl'        => "collections/{$collection->id}/{$object['id']}",
 						// Try to get a display name from common fields
