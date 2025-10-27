@@ -607,7 +607,7 @@
 		summary {
 			cursor: pointer;
 			font-weight: 600;
-			color: oklch(var(--totalform-accent));
+			// color: oklch(var(--totalform-accent));
 			padding: 0.5rem 0;
 			user-select: none;
 
@@ -616,7 +616,7 @@
 			}
 
 			&::marker {
-				color: oklch(var(--totalform-accent));
+				// color: oklch(var(--totalform-accent));
 			}
 		}
 	}

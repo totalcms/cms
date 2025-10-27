@@ -1841,18 +1841,14 @@ NGINX;
 	}
 
 	/**
-	 * Get collection overview with object counts and metadata.
+	 * Get recent collections (top 10 by last updated).
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function dashboardCollections(): array
 	{
-		// Get custom collections first, fallback to all if none exist
-		$collections = $this->collectionLister->listCustomCollections();
-
-		if (count($collections) === 0) {
-			$collections = $this->collectionLister->listAllCollections();
-		}
+		// Get all collections
+		$collections = $this->collectionLister->listAllCollections();
 
 		$result = [];
 
@@ -1868,10 +1864,25 @@ NGINX;
 			];
 		}
 
-		// Sort by name
-		usort($result, fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+		// Sort by lastUpdated (most recent first)
+		usort($result, function (array $a, array $b): int {
+			// Handle null lastModified values (put them at the end)
+			if ($a['lastModified'] === null && $b['lastModified'] === null) {
+				return 0;
+			}
+			if ($a['lastModified'] === null) {
+				return 1;
+			}
+			if ($b['lastModified'] === null) {
+				return -1;
+			}
 
-		return $result;
+			// Sort by date descending (most recent first)
+			return $b['lastModified'] <=> $a['lastModified'];
+		});
+
+		// Return top 10 most recently updated
+		return array_slice($result, 0, 10);
 	}
 
 	/**
