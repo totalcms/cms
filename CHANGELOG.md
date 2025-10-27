@@ -34,12 +34,15 @@ All notable changes to Total CMS will be documented in this file.
 - **Data Directory Configuration**: Improved default tcms-data directory logic
   - Better automatic detection and configuration
   - Enhanced path resolution for various deployment scenarios
+- **Authentication**: More flexible page acess control
+  - If no collection is defined for restricting access, then it will only verify the user is valid.
 
 ### Fixed
 
 - **Authentication**: Keep me signed in functionality improvements
   - Multiple iterations and fixes for persistent login reliability
   - Better session management and cookie handling
+  - Fixed login for custom auth collections
 - **UI Components**: Various interface and display fixes
   - Fixed details content overflow issues
   - Fixed details component inside ImageWorks builder
