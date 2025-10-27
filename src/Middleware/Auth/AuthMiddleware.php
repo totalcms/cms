@@ -88,6 +88,9 @@ readonly class AuthMiddleware implements MiddlewareInterface
 		$last = $this->session->get(SessionKeys::LAST_ACTIVITY) ?? $now;
 		$max  = $this->config->session['gc_maxlifetime'];
 
+		// For persistent logins, never timeout - always consider active
+		$isPersistentLogin = $this->persistentLoginService->hasPersistentLogin();
+
 		$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
 
 		if ($now - $last > $max / 4) {
@@ -95,19 +98,17 @@ readonly class AuthMiddleware implements MiddlewareInterface
 			$this->session->regenerateId();
 		}
 
-		// Check if session has expired
+		// Check if session has expired (skip check for persistent logins)
 		if ($now - $last > $max) {
-			// For persistent logins, extend the session lifetime instead of destroying
-			if ($this->persistentLoginService->hasPersistentLogin()) {
-				// Reset last activity to prevent immediate re-expiration
-				$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
-				// Clean up expired tokens periodically
+			if ($isPersistentLogin) {
+				// Clean up expired persistent tokens periodically
 				$this->persistentLoginService->cleanupExpiredTokens();
-			} else {
-				// Session has expired for non-persistent login. Clear and destroy the session.
-				$this->session->clear();
-				$this->session->destroy();
+
+				return;
 			}
+			// Session has expired for non-persistent login. Clear and destroy the session.
+			$this->session->clear();
+			$this->session->destroy();
 		}
 	}
 }

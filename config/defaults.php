@@ -125,7 +125,11 @@ $settings['session'] = [
 	'cookie_secure'          => $settings['is_https'], // Only secure cookies over HTTPS
 	'cookie_httponly'        => true,
 	'cookie_lifetime'        => 0,
-	'gc_maxlifetime'         => 7200,
+	// Session timeout for non-persistent logins (24 hours = 86400 seconds)
+	// Note: Users with "Keep me logged in" enabled never timeout (handled by persistent login tokens)
+	// This value affects server-side session garbage collection only
+	// Can be overridden in tcms.php if needed for specific use cases
+	'gc_maxlifetime'         => 86400, // 24 hours - generous for long form sessions
 	'use_trans_sid'          => false,
 	'use_only_cookies'       => true,
 	// 'sid_length'             => 64,

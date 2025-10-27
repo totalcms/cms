@@ -66,6 +66,9 @@ class ServerChecker
 			'Locale' => setlocale(LC_ALL, 0),
 		];
 
+		// Add session-specific information
+		$info = array_merge($info, $this->getSessionInfo());
+
 		// Add cache-specific information
 		$info = array_merge($info, $this->getCacheInfo());
 
@@ -230,6 +233,45 @@ class ServerChecker
 			'memcached' => extension_loaded('memcached') && class_exists('Memcached'),
 			default     => extension_loaded($extension),
 		};
+	}
+
+	/**
+	 * Get session-specific server information.
+	 *
+	 * @return array<string,string>
+	 */
+	private function getSessionInfo(): array
+	{
+		$gcMaxlifetime = (int)ini_get('session.gc_maxlifetime');
+		$configMaxlifetime = $this->config->session['gc_maxlifetime'] ?? 7200;
+
+		// Format as human-readable duration
+		$formatDuration = function(int $seconds): string {
+			$hours = floor($seconds / 3600);
+			$minutes = floor(($seconds % 3600) / 60);
+			if ($hours > 0) {
+				return "{$hours}h {$minutes}m ({$seconds}s)";
+			}
+			return "{$minutes}m ({$seconds}s)";
+		};
+
+		$sessionInfo = [
+			'Session Timeout (Runtime)' => $formatDuration($gcMaxlifetime),
+			'Session Timeout (Config)'  => $formatDuration($configMaxlifetime),
+		];
+
+		// Warn if runtime doesn't match config
+		if ($gcMaxlifetime !== $configMaxlifetime) {
+			$sessionInfo['Session Timeout Status'] = '⚠️ Runtime value differs from config (check .htaccess or php.ini)';
+		} else {
+			$sessionInfo['Session Timeout Status'] = '✓ Runtime matches config';
+		}
+
+		// Additional session info
+		$sessionInfo['Session Save Path'] = (string)ini_get('session.save_path') ?: 'default';
+		$sessionInfo['Session Cookie Lifetime'] = $formatDuration((int)ini_get('session.cookie_lifetime'));
+
+		return $sessionInfo;
 	}
 
 	/**
