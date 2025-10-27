@@ -55,11 +55,10 @@ readonly class AdminCollectionAction
 
 		// Validate object exists (skip for add/edit keywords)
 		$id = $args['id'] ?? '';
-		if ($collection !== '' && $collection !== 'new' &&
-			!in_array($id, ['', 'add', 'edit'], true) &&
-			!str_starts_with($id, '-') &&
-			!$this->objectFetcher->existsObject($collection, $id)) {
-
+		if ($collection !== '' && $collection !== 'new'
+			&& !in_array($id, ['', 'add', 'edit'], true)
+			&& !str_starts_with($id, '-')
+			&& !$this->objectFetcher->existsObject($collection, $id)) {
 			return $this->twigRenderer->template($response->withStatus(404), 'admin/404.twig', [
 				'url' => ['path' => $request->getUri()->getPath(), 'page' => '404'],
 			]);
