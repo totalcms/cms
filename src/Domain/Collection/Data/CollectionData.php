@@ -47,6 +47,8 @@ class CollectionData
 	/** @var array<string,array<string,mixed>> */
 	public array $customProperties = [];  // Custom properties for specific objects
 
+	public array $formSettings = [];  // Custom settings for the object creation/edit forms
+
 	public function __construct()
 	{
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -91,6 +93,10 @@ class CollectionData
 
 		if ($this->customProperties !== []) {
 			$collection['customProperties'] = $this->customProperties;
+		}
+
+		if ($this->formSettings !== []) {
+			$collection['formSettings'] = $this->formSettings;
 		}
 
 		return $collection;

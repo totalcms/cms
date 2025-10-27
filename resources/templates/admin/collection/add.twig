@@ -1,14 +1,35 @@
 {# New Object Form #}
 {% set canSave = cms.canAccessCollection(url.collection, 'create') %}
-{% set form = cms.form.builder(url.collection, {
+
+{# Default hardcoded options #}
+{% set defaultOptions = {
 	save        : canSave ? "Save" : false,
 	helpStyle   : 'label',
 	helpOnFocus : true,
-	newActions   : [
-		{
-			"action" : "redirect-object",
-			"link"   : "collections/#{url.collection}/{id}"
-		}
-	],
-}) %}
+} %}
+
+{# Default hardcoded actions #}
+{% set defaultNewActions = [
+	{
+		"action" : "redirect-object",
+		"link"   : "collections/#{url.collection}/{id}"
+	}
+] %}
+
+{# Merge formSettings from collection, prepending formSettings actions #}
+{% set formSettings = collection.formSettings ? collection.formSettings : {} %}
+{% set finalOptions = defaultOptions|merge(formSettings) %}
+
+{# Prepend formSettings.newActions to default actions #}
+{% if formSettings.newActions is defined %}
+	{% set finalOptions = finalOptions|merge({
+		newActions: formSettings.newActions|merge(defaultNewActions)
+	}) %}
+{% else %}
+	{% set finalOptions = finalOptions|merge({
+		newActions: defaultNewActions
+	}) %}
+{% endif %}
+
+{% set form = cms.form.builder(url.collection, finalOptions) %}
 {{ form.autoBuild() }}

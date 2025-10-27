@@ -73,16 +73,16 @@ class PropertyField
 			'label'       => 'Settings',
 			'placeholder' => '{ "key": "value" }',
 			'help'        => 'The settings for this field in valid JSON format',
-			'value'       => $this->settings === [] ? '' : json_encode($this->settings, JSON_PRETTY_PRINT),
-			'rows'        => 10,
+			'value'       => $this->settings === [] ? '' : $this->settings,
+			'rows'        => 7,
 		]);
 		$settings .= $this->form->field('options', [
 			'field'       => 'json',
 			'label'       => 'Options &amp; Datalist',
 			'placeholder' => '[ "option1", "option2", "option3" ]',
 			'help'        => 'The options for select fields and datalists in valid JSON format.',
-			'value'       => $this->options === [] ? '' : json_encode($this->options, JSON_PRETTY_PRINT),
-			'rows'        => 10,
+			'value'       => $this->options === [] ? '' : $this->options,
+			'rows'        => 7,
 		]);
 
 		return HTMLUtils::details('Settings &amp; Options', $settings);
