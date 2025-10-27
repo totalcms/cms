@@ -47,6 +47,7 @@ class CollectionData
 	/** @var array<string,array<string,mixed>> */
 	public array $customProperties = [];  // Custom properties for specific objects
 
+	/** @var array<string,mixed> */
 	public array $formSettings = [];  // Custom settings for the object creation/edit forms
 
 	public function __construct()
