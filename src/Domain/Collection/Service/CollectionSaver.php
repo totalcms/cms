@@ -31,6 +31,12 @@ readonly class CollectionSaver
 	{
 		$data['count'] = $this->initializeCount($data['id'], $data);
 
+		// Initialize totalObjects if not set
+		if (!isset($data['totalObjects']) || $data['totalObjects'] === 0) {
+			$objectIds = $this->indexRepository->fetchObjectIds($data['id']);
+			$data['totalObjects'] = count($objectIds);
+		}
+
 		// Clean lastUpdated to ensure proper ISO 8601 format
 		if (!isset($data['lastUpdated']) || $data['lastUpdated'] === '') {
 			$data['lastUpdated'] = DateData::cleanDate();
