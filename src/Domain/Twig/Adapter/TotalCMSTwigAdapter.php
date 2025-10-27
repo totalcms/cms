@@ -1821,16 +1821,10 @@ NGINX;
 		$schemas     = $this->schemaLister->listCustomSchemas();
 		$templates   = $this->templateLister->listCustomTemplates();
 
-		// Count total objects across all collections
+		// Sum totalObjects from all collections (much faster than counting index objects)
 		$totalObjects = 0;
 		foreach ($collections as $collection) {
-			try {
-				$index = $this->indexReader->fetchIndex($collection->id);
-				$totalObjects += $index->objects->count();
-			} catch (\Exception) {
-				// Skip if collection has no index
-				continue;
-			}
+			$totalObjects += $collection->totalObjects;
 		}
 
 		// Get job queue stats
@@ -1863,28 +1857,12 @@ NGINX;
 		$result = [];
 
 		foreach ($collections as $collection) {
-			$objectCount  = 0;
-			$lastModified = null;
-
-			try {
-				$index       = $this->indexReader->fetchIndex($collection->id);
-				$objectCount = $index->objects->count();
-
-				// Get last modified from most recent object if available
-				$firstObject = $index->objects->first();
-				if ($firstObject !== null && isset($firstObject['onUpdate'])) {
-					$lastModified = $firstObject['onUpdate'];
-				}
-			} catch (\Exception) {
-				// Collection has no index yet
-			}
-
 			$result[] = [
 				'id'           => $collection->id,
 				'name'         => $collection->name,
 				'schema'       => $collection->schema,
-				'objectCount'  => $objectCount,
-				'lastModified' => $lastModified,
+				'objectCount'  => $collection->totalObjects,
+				'lastModified' => $collection->lastUpdated !== '' ? $collection->lastUpdated : null,
 				'addUrl'       => "collections/{$collection->id}/new",
 				'viewUrl'      => "collections/{$collection->id}",
 			];
@@ -1908,17 +1886,8 @@ NGINX;
 		$result      = [];
 
 		foreach ($collections as $collection) {
-			$objectCount = 0;
-
-			try {
-				$index       = $this->indexReader->fetchIndex($collection->id);
-				$objectCount = $index->objects->count();
-			} catch (\Exception) {
-				// Collection has no index yet - it's empty
-			}
-
-			// Only include empty collections
-			if ($objectCount === 0) {
+			// Only include empty collections using cached totalObjects field
+			if ($collection->totalObjects === 0) {
 				$result[] = [
 					'id'      => $collection->id,
 					'name'    => $collection->name,
