@@ -39,6 +39,11 @@ readonly class CollectionSaver
 			$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
 		}
 
+		// Ensure formSettings is an array (handle empty strings from form)
+		if (isset($data['formSettings']) && $data['formSettings'] === '') {
+			$data['formSettings'] = [];
+		}
+
 		$collection = $this->factory->generateCollection($data);
 
 		if ($this->storage->collectionExists($collection->id)) {
@@ -64,6 +69,11 @@ readonly class CollectionSaver
 		// Clean lastUpdated to ensure proper ISO 8601 format
 		if (isset($data['lastUpdated']) && $data['lastUpdated'] !== '') {
 			$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
+		}
+
+		// Ensure formSettings is an array (handle empty strings from form)
+		if (isset($data['formSettings']) && $data['formSettings'] === '') {
+			$data['formSettings'] = [];
 		}
 
 		$collection = $this->factory->generateCollection($data);
