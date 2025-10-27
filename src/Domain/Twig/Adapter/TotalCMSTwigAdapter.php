@@ -1923,9 +1923,10 @@ NGINX;
 	public function dashboardSystemStatus(): array
 	{
 		$cacheStats    = $this->cacheReporter->getCacheStats();
+		$services      = $cacheStats['services'] ?? [];
 		$enabledCaches = array_filter(
-			$cacheStats,
-			fn ($cache): bool => is_array($cache) && isset($cache['enabled']) && $cache['enabled'] === true
+			$services,
+			fn ($cache): bool => is_array($cache) && isset($cache['available']) && $cache['available'] === true
 		);
 
 		$licenseStatus = $this->license->getSidebarStatus();
