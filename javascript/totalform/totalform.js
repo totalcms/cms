@@ -454,6 +454,7 @@ export default class TotalForm {
 	save() {
 		if (!this.validate()) {
 			this.validated = false;
+			this.error('Please fix validation errors before saving.');
 			return;
 		}
 		if (this.isError()) {
