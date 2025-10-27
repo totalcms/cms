@@ -1859,7 +1859,7 @@ NGINX;
 				'schema'       => $collection->schema,
 				'objectCount'  => $collection->totalObjects,
 				'lastModified' => $collection->lastUpdated !== '' ? $collection->lastUpdated : null,
-				'addUrl'       => "collections/{$collection->id}/new",
+				'addUrl'       => "collections/{$collection->id}/add",
 				'viewUrl'      => "collections/{$collection->id}",
 			];
 		}
@@ -1903,7 +1903,7 @@ NGINX;
 					'id'      => $collection->id,
 					'name'    => $collection->name,
 					'schema'  => $collection->schema,
-					'addUrl'  => "collections/{$collection->id}/new",
+					'addUrl'  => "collections/{$collection->id}/add",
 					'viewUrl' => "collections/{$collection->id}",
 				];
 			}
