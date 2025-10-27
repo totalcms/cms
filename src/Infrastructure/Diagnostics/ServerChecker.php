@@ -242,16 +242,17 @@ class ServerChecker
 	 */
 	private function getSessionInfo(): array
 	{
-		$gcMaxlifetime = (int)ini_get('session.gc_maxlifetime');
+		$gcMaxlifetime     = (int)ini_get('session.gc_maxlifetime');
 		$configMaxlifetime = $this->config->session['gc_maxlifetime'] ?? 7200;
 
 		// Format as human-readable duration
-		$formatDuration = function(int $seconds): string {
-			$hours = floor($seconds / 3600);
+		$formatDuration = function (int $seconds): string {
+			$hours   = floor($seconds / 3600);
 			$minutes = floor(($seconds % 3600) / 60);
 			if ($hours > 0) {
 				return "{$hours}h {$minutes}m ({$seconds}s)";
 			}
+
 			return "{$minutes}m ({$seconds}s)";
 		};
 
@@ -268,7 +269,7 @@ class ServerChecker
 		}
 
 		// Additional session info
-		$sessionInfo['Session Save Path'] = (string)ini_get('session.save_path') ?: 'default';
+		$sessionInfo['Session Save Path']       = (string)ini_get('session.save_path') ?: 'default';
 		$sessionInfo['Session Cookie Lifetime'] = $formatDuration((int)ini_get('session.cookie_lifetime'));
 
 		return $sessionInfo;

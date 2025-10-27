@@ -10,7 +10,6 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
-use TotalCMS\Domain\Property\Data\DateData;
 
 final class CollectionSaverTest extends TestCase
 {
@@ -28,12 +27,13 @@ final class CollectionSaverTest extends TestCase
 		// Setup factory mock to return valid CollectionData from arrays
 		$this->factory
 			->method('generateCollection')
-			->willReturnCallback(function (array $data) {
-				$collection = new CollectionData();
-				$collection->id = $data['id'] ?? '';
-				$collection->schema = $data['schema'] ?? 'blog';
+			->willReturnCallback(function (array $data): CollectionData {
+				$collection               = new CollectionData();
+				$collection->id           = $data['id'] ?? '';
+				$collection->schema       = $data['schema'] ?? 'blog';
 				$collection->totalObjects = $data['totalObjects'] ?? 0;
-				$collection->lastUpdated = $data['lastUpdated'] ?? '';
+				$collection->lastUpdated  = $data['lastUpdated'] ?? '';
+
 				return $collection;
 			});
 
@@ -46,11 +46,11 @@ final class CollectionSaverTest extends TestCase
 
 	public function testIncrementTotalObjects(): void
 	{
-		$collectionData = new CollectionData();
-		$collectionData->id = 'test-collection';
-		$collectionData->schema = 'blog';
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
 		$collectionData->totalObjects = 5;
-		$collectionData->lastUpdated = '2025-01-01T00:00:00+00:00';
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
 		$this->repository
 			->expects($this->once())
@@ -67,8 +67,8 @@ final class CollectionSaverTest extends TestCase
 
 				// Verify lastUpdated was updated (should be recent)
 				$updatedDate = new \DateTime($collection->lastUpdated);
-				$now = new \DateTime();
-				$diff = $now->getTimestamp() - $updatedDate->getTimestamp();
+				$now         = new \DateTime();
+				$diff        = $now->getTimestamp() - $updatedDate->getTimestamp();
 				expect($diff)->toBeLessThan(5); // Within 5 seconds
 
 				return true;
@@ -82,11 +82,11 @@ final class CollectionSaverTest extends TestCase
 
 	public function testDecrementTotalObjects(): void
 	{
-		$collectionData = new CollectionData();
-		$collectionData->id = 'test-collection';
-		$collectionData->schema = 'blog';
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
 		$collectionData->totalObjects = 5;
-		$collectionData->lastUpdated = '2025-01-01T00:00:00+00:00';
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
 		$this->repository
 			->expects($this->once())
@@ -115,9 +115,9 @@ final class CollectionSaverTest extends TestCase
 
 	public function testDecrementTotalObjectsDoesNotGoBelowZero(): void
 	{
-		$collectionData = new CollectionData();
-		$collectionData->id = 'test-collection';
-		$collectionData->schema = 'blog';
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
 		$collectionData->totalObjects = 0; // Already at zero
 
 		$this->repository
@@ -132,6 +132,7 @@ final class CollectionSaverTest extends TestCase
 			->with($this->callback(function (CollectionData $collection): bool {
 				// Should remain at 0, not go negative
 				expect($collection->totalObjects)->toBe(0);
+
 				return true;
 			}));
 
@@ -142,11 +143,11 @@ final class CollectionSaverTest extends TestCase
 
 	public function testUpdateLastUpdated(): void
 	{
-		$collectionData = new CollectionData();
-		$collectionData->id = 'test-collection';
-		$collectionData->schema = 'blog';
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
 		$collectionData->totalObjects = 5;
-		$collectionData->lastUpdated = '2025-01-01T00:00:00+00:00';
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
 		$this->repository
 			->expects($this->once())
@@ -163,8 +164,8 @@ final class CollectionSaverTest extends TestCase
 
 				// Verify lastUpdated was updated (should be now)
 				$updatedDate = new \DateTime($collection->lastUpdated);
-				$now = new \DateTime();
-				$diff = $now->getTimestamp() - $updatedDate->getTimestamp();
+				$now         = new \DateTime();
+				$diff        = $now->getTimestamp() - $updatedDate->getTimestamp();
 				expect($diff)->toBeLessThan(5); // Within 5 seconds
 
 				return true;
@@ -220,8 +221,8 @@ final class CollectionSaverTest extends TestCase
 
 	public function testIncrementTotalObjectsHandlesMissingTotalObjects(): void
 	{
-		$collectionData = new CollectionData();
-		$collectionData->id = 'test-collection';
+		$collectionData         = new CollectionData();
+		$collectionData->id     = 'test-collection';
 		$collectionData->schema = 'blog';
 		// totalObjects not set (defaults to 0)
 		$collectionData->totalObjects = 0;
@@ -237,6 +238,7 @@ final class CollectionSaverTest extends TestCase
 			->method('saveCollection')
 			->with($this->callback(function (CollectionData $collection): bool {
 				expect($collection->totalObjects)->toBe(1);
+
 				return true;
 			}));
 
@@ -247,8 +249,8 @@ final class CollectionSaverTest extends TestCase
 
 	public function testDecrementTotalObjectsHandlesMissingTotalObjects(): void
 	{
-		$collectionData = new CollectionData();
-		$collectionData->id = 'test-collection';
+		$collectionData         = new CollectionData();
+		$collectionData->id     = 'test-collection';
 		$collectionData->schema = 'blog';
 		// totalObjects not set (defaults to 0)
 		$collectionData->totalObjects = 0;
@@ -265,6 +267,7 @@ final class CollectionSaverTest extends TestCase
 			->with($this->callback(function (CollectionData $collection): bool {
 				// Should remain at 0
 				expect($collection->totalObjects)->toBe(0);
+
 				return true;
 			}));
 

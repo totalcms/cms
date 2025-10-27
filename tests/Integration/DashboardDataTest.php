@@ -34,7 +34,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get TotalCMSTwigAdapter from container
 		$container = $this->app->getContainer();
-		$adapter = $container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get dashboard stats
 		$stats = $adapter->dashboardStats();
@@ -72,7 +72,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter = $container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
 		$collections = $adapter->dashboardCollections();
@@ -109,7 +109,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter = $container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
 		$collections = $adapter->dashboardCollections();
@@ -145,7 +145,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter = $container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
 		$collections = $adapter->dashboardCollections();
@@ -181,7 +181,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter = $container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get empty collections
 		$emptyCollections = $adapter->dashboardEmptyCollections();
@@ -216,7 +216,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter = $container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get empty collections
 		$emptyCollections = $adapter->dashboardEmptyCollections();

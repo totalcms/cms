@@ -21,7 +21,7 @@ beforeAll(function (): void {
 	$container = $app->getContainer();
 
 	// Get the collection saver service to create collections
-	$collectionSaver = $container->get(\TotalCMS\Domain\Collection\Service\CollectionSaver::class);
+	$collectionSaver = $container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class);
 
 	// Create blog collection
 	$collectionSaver->saveCollection([

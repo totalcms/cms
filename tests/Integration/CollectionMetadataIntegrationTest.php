@@ -29,8 +29,8 @@ describe('Collection Metadata Updates', function (): void {
 
 		// Get initial collection state
 		$initialResponse = getJson('/collections/metadata-test')->assertOk();
-		$responseData = json_decode((string)$initialResponse->getBody(), true);
-		$initialData = $responseData['data'];
+		$responseData    = json_decode((string)$initialResponse->getBody(), true);
+		$initialData     = $responseData['data'];
 
 		expect($initialData['totalObjects'])->toBe(0);
 
@@ -44,8 +44,8 @@ describe('Collection Metadata Updates', function (): void {
 
 		// Check totalObjects incremented
 		$afterCreate1 = getJson('/collections/metadata-test')->assertOk();
-		$response1 = json_decode((string)$afterCreate1->getBody(), true);
-		$data1 = $response1['data'];
+		$response1    = json_decode((string)$afterCreate1->getBody(), true);
+		$data1        = $response1['data'];
 		expect($data1['totalObjects'])->toBe(1);
 		expect($data1['lastUpdated'])->not()->toBe('');
 
@@ -61,8 +61,8 @@ describe('Collection Metadata Updates', function (): void {
 
 		// Check totalObjects incremented again
 		$afterCreate2 = getJson('/collections/metadata-test')->assertOk();
-		$response2 = json_decode((string)$afterCreate2->getBody(), true);
-		$data2 = $response2['data'];
+		$response2    = json_decode((string)$afterCreate2->getBody(), true);
+		$data2        = $response2['data'];
 		expect($data2['totalObjects'])->toBe(2);
 		expect($data2['lastUpdated'])->not()->toBe(''); // Should be set
 	});
@@ -83,22 +83,22 @@ describe('Collection Metadata Updates', function (): void {
 		$object3 = postJson('/collections/delete-test', ['title' => 'Post 3', 'content' => 'Content 3'])->assertOk();
 
 		$obj1Response = json_decode((string)$object1->getBody(), true);
-		$obj1Data = $obj1Response['data'] ?? $obj1Response;
-		$obj1Id = $obj1Data['id'];
+		$obj1Data     = $obj1Response['data'] ?? $obj1Response;
+		$obj1Id       = $obj1Data['id'];
 
 		// Verify we have 3 objects
-		$before = getJson('/collections/delete-test')->assertOk();
+		$before         = getJson('/collections/delete-test')->assertOk();
 		$beforeResponse = json_decode((string)$before->getBody(), true);
-		$beforeData = $beforeResponse['data'];
+		$beforeData     = $beforeResponse['data'];
 		expect($beforeData['totalObjects'])->toBe(3);
 
 		// Delete one object
 		deleteJson("/collections/delete-test/{$obj1Id}")->assertOk();
 
 		// Check totalObjects decremented
-		$after = getJson('/collections/delete-test')->assertOk();
+		$after         = getJson('/collections/delete-test')->assertOk();
 		$afterResponse = json_decode((string)$after->getBody(), true);
-		$afterData = $afterResponse['data'];
+		$afterData     = $afterResponse['data'];
 		expect($afterData['totalObjects'])->toBe(2);
 		expect($afterData['lastUpdated'])->not()->toBe('');
 	});
@@ -120,13 +120,13 @@ describe('Collection Metadata Updates', function (): void {
 		])->assertOk();
 
 		$objResponse = json_decode((string)$createResponse->getBody(), true);
-		$objData = $objResponse['data'] ?? $objResponse;
-		$objId = $objData['id'];
+		$objData     = $objResponse['data'] ?? $objResponse;
+		$objId       = $objData['id'];
 
 		// Get initial lastUpdated
-		$initial = getJson('/collections/update-test')->assertOk();
-		$initialResponse = json_decode((string)$initial->getBody(), true);
-		$initialData = $initialResponse['data'];
+		$initial            = getJson('/collections/update-test')->assertOk();
+		$initialResponse    = json_decode((string)$initial->getBody(), true);
+		$initialData        = $initialResponse['data'];
 		$initialLastUpdated = $initialData['lastUpdated'];
 		expect($initialData['totalObjects'])->toBe(1);
 
@@ -138,9 +138,9 @@ describe('Collection Metadata Updates', function (): void {
 		])->assertOk();
 
 		// Check lastUpdated is set and totalObjects stayed same
-		$after = getJson('/collections/update-test')->assertOk();
+		$after         = getJson('/collections/update-test')->assertOk();
 		$afterResponse = json_decode((string)$after->getBody(), true);
-		$afterData = $afterResponse['data'];
+		$afterData     = $afterResponse['data'];
 		expect($afterData['totalObjects'])->toBe(1); // Should not change
 		expect($afterData['lastUpdated'])->not()->toBe(''); // Should be set
 	});
@@ -162,13 +162,13 @@ describe('Collection Metadata Updates', function (): void {
 		])->assertOk();
 
 		$objResponse = json_decode((string)$createResponse->getBody(), true);
-		$objData = $objResponse['data'] ?? $objResponse;
-		$objId = $objData['id'];
+		$objData     = $objResponse['data'] ?? $objResponse;
+		$objId       = $objData['id'];
 
 		// Verify we have 1 object
-		$before = getJson('/collections/clone-test')->assertOk();
+		$before         = getJson('/collections/clone-test')->assertOk();
 		$beforeResponse = json_decode((string)$before->getBody(), true);
-		$beforeData = $beforeResponse['data'];
+		$beforeData     = $beforeResponse['data'];
 		expect($beforeData['totalObjects'])->toBe(1);
 
 		// Clone object to same collection (just need new ID)
@@ -177,9 +177,9 @@ describe('Collection Metadata Updates', function (): void {
 		])->assertOk();
 
 		// Check totalObjects incremented
-		$after = getJson('/collections/clone-test')->assertOk();
+		$after         = getJson('/collections/clone-test')->assertOk();
 		$afterResponse = json_decode((string)$after->getBody(), true);
-		$afterData = $afterResponse['data'];
+		$afterData     = $afterResponse['data'];
 		expect($afterData['totalObjects'])->toBe(2);
 		expect($afterData['lastUpdated'])->not()->toBe('');
 	});
@@ -202,14 +202,14 @@ describe('Collection Metadata Updates', function (): void {
 				'content' => "Content {$i}",
 			])->assertOk();
 			$responseData = json_decode((string)$response->getBody(), true);
-			$data = $responseData['data'] ?? $responseData;
-			$ids[] = $data['id'];
+			$data         = $responseData['data'] ?? $responseData;
+			$ids[]        = $data['id'];
 		}
 
 		// Verify count is 5
-		$check1 = getJson('/collections/complex-test')->assertOk();
+		$check1    = getJson('/collections/complex-test')->assertOk();
 		$response1 = json_decode((string)$check1->getBody(), true);
-		$data1 = $response1['data'];
+		$data1     = $response1['data'];
 		expect($data1['totalObjects'])->toBe(5);
 
 		// Delete 2 objects
@@ -217,9 +217,9 @@ describe('Collection Metadata Updates', function (): void {
 		deleteJson("/collections/complex-test/{$ids[1]}")->assertOk();
 
 		// Verify count is 3
-		$check2 = getJson('/collections/complex-test')->assertOk();
+		$check2    = getJson('/collections/complex-test')->assertOk();
 		$response2 = json_decode((string)$check2->getBody(), true);
-		$data2 = $response2['data'];
+		$data2     = $response2['data'];
 		expect($data2['totalObjects'])->toBe(3);
 
 		// Create 1 more object
@@ -229,9 +229,9 @@ describe('Collection Metadata Updates', function (): void {
 		])->assertOk();
 
 		// Verify count is 4
-		$check3 = getJson('/collections/complex-test')->assertOk();
+		$check3    = getJson('/collections/complex-test')->assertOk();
 		$response3 = json_decode((string)$check3->getBody(), true);
-		$data3 = $response3['data'];
+		$data3     = $response3['data'];
 		expect($data3['totalObjects'])->toBe(4);
 	});
 });

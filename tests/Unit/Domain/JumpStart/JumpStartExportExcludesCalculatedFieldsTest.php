@@ -13,7 +13,6 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
@@ -37,15 +36,15 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->collectionLister = $this->createMock(CollectionLister::class);
-		$this->schemaLister = $this->createMock(SchemaLister::class);
-		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
-		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
-		$this->indexReader = $this->createMock(IndexReader::class);
-		$this->templateLister = $this->createMock(TemplateLister::class);
-		$this->templateFetcher = $this->createMock(TemplateFetcher::class);
-		$this->jumpstart = $this->createMock(JumpStartData::class);
-		$this->cacheManager = $this->createMock(CacheManager::class);
-		$this->loggerFactory = $this->createMock(LoggerFactory::class);
+		$this->schemaLister     = $this->createMock(SchemaLister::class);
+		$this->schemaFetcher    = $this->createMock(SchemaFetcher::class);
+		$this->objectFetcher    = $this->createMock(ObjectFetcher::class);
+		$this->indexReader      = $this->createMock(IndexReader::class);
+		$this->templateLister   = $this->createMock(TemplateLister::class);
+		$this->templateFetcher  = $this->createMock(TemplateFetcher::class);
+		$this->jumpstart        = $this->createMock(JumpStartData::class);
+		$this->cacheManager     = $this->createMock(CacheManager::class);
+		$this->loggerFactory    = $this->createMock(LoggerFactory::class);
 
 		// Mock logger factory to return itself for chaining
 		$this->loggerFactory
@@ -72,13 +71,13 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 	public function testExportExcludesTotalObjectsFromCollections(): void
 	{
 		// Create a collection with totalObjects, lastUpdated, and count set
-		$collection = new CollectionData();
-		$collection->id = 'test-collection';
-		$collection->name = 'Test Collection';
-		$collection->schema = 'custom-schema';
+		$collection               = new CollectionData();
+		$collection->id           = 'test-collection';
+		$collection->name         = 'Test Collection';
+		$collection->schema       = 'custom-schema';
 		$collection->totalObjects = 42;
-		$collection->lastUpdated = '2025-01-01T00:00:00+00:00';
-		$collection->count = 100;
+		$collection->lastUpdated  = '2025-01-01T00:00:00+00:00';
+		$collection->count        = 100;
 
 		$this->collectionLister
 			->expects($this->exactly(2))
@@ -129,12 +128,12 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 	public function testExportHandlesReservedCollections(): void
 	{
 		// Create a reserved collection (these should be added via addReservedCollection)
-		$collection = new CollectionData();
-		$collection->id = 'auth';
-		$collection->name = 'Auth';
-		$collection->schema = 'auth';
+		$collection               = new CollectionData();
+		$collection->id           = 'auth';
+		$collection->name         = 'Auth';
+		$collection->schema       = 'auth';
 		$collection->totalObjects = 5;
-		$collection->lastUpdated = '2025-01-01T00:00:00+00:00';
+		$collection->lastUpdated  = '2025-01-01T00:00:00+00:00';
 
 		$this->collectionLister
 			->expects($this->exactly(2))
@@ -174,20 +173,20 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 
 	public function testExportHandlesMixOfReservedAndCustomCollections(): void
 	{
-		$reservedCollection = new CollectionData();
-		$reservedCollection->id = 'auth';
-		$reservedCollection->schema = 'auth';
+		$reservedCollection               = new CollectionData();
+		$reservedCollection->id           = 'auth';
+		$reservedCollection->schema       = 'auth';
 		$reservedCollection->totalObjects = 5;
-		$reservedCollection->lastUpdated = '2025-01-01T00:00:00+00:00';
-		$reservedCollection->count = 10;
+		$reservedCollection->lastUpdated  = '2025-01-01T00:00:00+00:00';
+		$reservedCollection->count        = 10;
 
-		$customCollection = new CollectionData();
-		$customCollection->id = 'products';
-		$customCollection->name = 'Products';
-		$customCollection->schema = 'custom-products';
+		$customCollection               = new CollectionData();
+		$customCollection->id           = 'products';
+		$customCollection->name         = 'Products';
+		$customCollection->schema       = 'custom-products';
 		$customCollection->totalObjects = 42;
-		$customCollection->lastUpdated = '2025-01-02T00:00:00+00:00';
-		$customCollection->count = 100;
+		$customCollection->lastUpdated  = '2025-01-02T00:00:00+00:00';
+		$customCollection->count        = 100;
 
 		$this->collectionLister
 			->expects($this->exactly(2))
@@ -209,6 +208,7 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 				expect($data)->not()->toHaveKey('lastUpdated');
 				expect($data)->not()->toHaveKey('count');
 				expect($data['id'])->toBe('products');
+
 				return true;
 			}));
 
@@ -220,9 +220,7 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 		$this->indexReader
 			->expects($this->exactly(2))
 			->method('fetchIndex')
-			->willReturnCallback(function (string $collectionId) {
-				return new IndexData([]);
-			});
+			->willReturnCallback(fn (string $collectionId): IndexData => new IndexData([]));
 
 		$this->templateLister
 			->expects($this->once())

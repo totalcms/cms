@@ -33,7 +33,7 @@ readonly class CollectionSaver
 
 		// Initialize totalObjects if not set
 		if (!isset($data['totalObjects']) || $data['totalObjects'] === 0) {
-			$objectIds = $this->indexRepository->fetchObjectIds($data['id']);
+			$objectIds            = $this->indexRepository->fetchObjectIds($data['id']);
 			$data['totalObjects'] = count($objectIds);
 		}
 
