@@ -1845,7 +1845,7 @@ NGINX;
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	public function dashboardCollections(): array
+	public function dashboardRecentCollections(): array
 	{
 		// Get all collections
 		$collections = $this->collectionLister->listAllCollections();
@@ -1853,6 +1853,9 @@ NGINX;
 		$result = [];
 
 		foreach ($collections as $collection) {
+			if (!$this->canAccessCollection($collection->id)) {
+				continue;
+			}
 			$result[] = [
 				'id'           => $collection->id,
 				'name'         => $collection->name,
@@ -1898,7 +1901,7 @@ NGINX;
 
 		foreach ($collections as $collection) {
 			// Only include empty collections using cached totalObjects field
-			if ($collection->totalObjects === 0) {
+			if ($collection->totalObjects === 0 && $this->canAccessCollection($collection->id)) {
 				$result[] = [
 					'id'      => $collection->id,
 					'name'    => $collection->name,

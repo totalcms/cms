@@ -2,8 +2,9 @@
 
 {# Get dashboard data #}
 {% set stats = cms.dashboardStats() %}
-{% set collections = cms.dashboardCollections() %}
-{% set recentObjects = cms.dashboardRecentObjects() %}
+{% set collections = cms.dashboardRecentCollections() %}
+{# This is sloooooow #}
+{# {% set recentObjects = cms.dashboardRecentObjects() %} #}
 {% set emptyCollections = cms.dashboardEmptyCollections() %}
 {% set systemStatus = cms.dashboardSystemStatus() %}
 
@@ -33,7 +34,7 @@
 
 		<div class="dashboard-sidebar">
 			{# Recent activity #}
-			{{ dashboard.recentActivity(recentObjects) }}
+			{{ dashboard.recentActivity() }}
 
 			{# System status #}
 			{% if cms.isAdmin() %}
@@ -68,10 +69,7 @@
 
 	{# Your custom content here #}
 	<h2>My Custom Section</h2>
-	<p>Add your own content!</p>
-
-	{# Use the widgets you want #}
-	{{ dashboard.recentActivity(cms.dashboardRecentObjects()) }}{% endverbatim %}</code></pre>
+	<p>Add your own content!</p>{% endverbatim %}</code></pre>
 
 				<p>See the <a href="docs">documentation</a> for more details.</p>
 			</div>
