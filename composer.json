@@ -129,6 +129,8 @@
 		"@bundle",
 		"php -c php-test.ini vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations"
 	],
+    "test:filter": "php -c php-test.ini vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations --filter",
+    "test:quick": "php -c php-test.ini vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations",
     "test:parallel": [
 		"@bundle",
 		"php -c php-test.ini vendor/bin/pest tests/Unit --parallel --processes=4 --display-notices --display-warnings --display-errors --display-deprecations"
