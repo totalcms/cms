@@ -2,6 +2,56 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.0.43] - 2025-10-27
+
+### Added
+
+- **Collection Filtering**: Comprehensive new filter system with 14 filter types
+  - **Numeric Range**: `between` - Check if number is between min and max (inclusive)
+  - **Calendar Periods**: `thisWeek`, `thisMonth`, `thisYear` - Filter by current time periods
+  - **Text Length**: `longerThan`, `shorterThan` - Filter by text character count
+  - **Array Counting**: `hasMin`, `hasMax`, `hasCount` - Filter by array item counts
+  - **Day of Week**: `isWeekday`, `isWeekend`, `dayOfWeek` - Filter by day of week
+  - **Relative Dates**: `todayPlusDays`, `todayMinusDays` - Filter by dates relative to today
+- **Collection Metadata**: Enhanced collection statistics and tracking
+  - `totalObjects` property automatically calculated on collection save
+  - `lastUpdated` timestamp for tracking collection modifications
+  - Dashboard now displays recent collections based on activity
+- **Versioning**: New `cms.version` Twig variable for version information
+  - Can be used as asset cache buster for automatic cache invalidation
+- **Collection Form Settings**: Enhanced form configuration options for collections
+  - Configure help styles of forms
+  - Add new/edit/delete actions to forms
+
+### Enhanced
+
+- **Dashboard Improvements**: Better user experience and data visualization
+  - Fixed dashboard statistics display with accurate counts
+  - Added recent collections section showing recently modified collections
+  - Fixed add button functionality
+  - Improved cache information display
+  - Fixed grid colors for better visual consistency
+- **Data Directory Configuration**: Improved default tcms-data directory logic
+  - Better automatic detection and configuration
+  - Enhanced path resolution for various deployment scenarios
+
+### Fixed
+
+- **Authentication**: Keep me signed in functionality improvements
+  - Multiple iterations and fixes for persistent login reliability
+  - Better session management and cookie handling
+- **UI Components**: Various interface and display fixes
+  - Fixed details content overflow issues
+  - Fixed details component inside ImageWorks builder
+  - Improved buffer controller handling
+- **Form & Field Issues**: Better form handling and validation
+  - Fixed ID field comma removal for cleaner identifiers
+  - Fixed schema import 404 errors
+- **Cache System**: Settings and cache management fixes
+  - Fixed cache settings save bug that could cause configuration issues
+  - Improved cache information reporting
+
+
 ## [3.0.41] - 2025-10-23
 
 ### New
