@@ -8,7 +8,7 @@ namespace TotalCMS\Domain\Buffer;
 class BufferController
 {
 	private int $initialBufferLevel = 0;
-	private bool $bufferStarted = false;
+	private bool $bufferStarted     = false;
 
 	public function __construct()
 	{
@@ -38,7 +38,7 @@ class BufferController
 			return '';
 		}
 
-		$buffer = ob_get_clean() ?: '';
+		$buffer              = ob_get_clean() ?: '';
 		$this->bufferStarted = false;
 
 		return $buffer;

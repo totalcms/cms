@@ -208,7 +208,7 @@ class CollectionRefiner
 		}
 		// If value is prepended by !, then invert the result
 		if (self::starts($filterValue, '!')) {
-			$not   = true;
+			$not         = true;
 			$filterValue = mb_substr($filterValue, 1);
 		}
 
@@ -512,7 +512,7 @@ class CollectionRefiner
 
 	/**
 	 * Check if value is between two numbers (inclusive).
-	 * Usage: {price: {operator: 'between', value: '10,100'}}
+	 * Usage: {price: {operator: 'between', value: '10,100'}}.
 	 */
 	protected static function between(string $value, string $range): bool
 	{
@@ -522,7 +522,7 @@ class CollectionRefiner
 		}
 
 		[$min, $max] = $parts;
-		$num = (float)$value;
+		$num         = (float)$value;
 
 		return $num >= (float)$min && $num <= (float)$max;
 	}
@@ -574,7 +574,7 @@ class CollectionRefiner
 
 	/**
 	 * Check if text is longer than N characters.
-	 * Usage: {summary: {operator: 'longerThan', value: 100}}
+	 * Usage: {summary: {operator: 'longerThan', value: 100}}.
 	 */
 	protected static function longerThan(string $text, int|string $length): bool
 	{
@@ -583,7 +583,7 @@ class CollectionRefiner
 
 	/**
 	 * Check if text is shorter than N characters.
-	 * Usage: {summary: {operator: 'shorterThan', value: 50}}
+	 * Usage: {summary: {operator: 'shorterThan', value: 50}}.
 	 */
 	protected static function shorterThan(string $text, int|string $length): bool
 	{
@@ -596,7 +596,7 @@ class CollectionRefiner
 
 	/**
 	 * Check if array has at least N items.
-	 * Usage: {tags: {operator: 'hasMin', value: 3}}
+	 * Usage: {tags: {operator: 'hasMin', value: 3}}.
 	 *
 	 * @param array<mixed>|string $value
 	 */
@@ -612,7 +612,7 @@ class CollectionRefiner
 
 	/**
 	 * Check if array has at most N items.
-	 * Usage: {tags: {operator: 'hasMax', value: 5}}
+	 * Usage: {tags: {operator: 'hasMax', value: 5}}.
 	 *
 	 * @param array<mixed>|string $value
 	 */
@@ -628,7 +628,7 @@ class CollectionRefiner
 
 	/**
 	 * Check if array has exactly N items.
-	 * Usage: {tags: {operator: 'hasCount', value: 3}}
+	 * Usage: {tags: {operator: 'hasCount', value: 3}}.
 	 *
 	 * @param array<mixed>|string $value
 	 */
@@ -677,7 +677,7 @@ class CollectionRefiner
 	/**
 	 * Check if date is on a specific day of week.
 	 * Usage: {date: {operator: 'dayOfWeek', value: 'Monday'}}
-	 * Or: {date: {operator: 'dayOfWeek', value: '1'}} (1=Mon, 7=Sun)
+	 * Or: {date: {operator: 'dayOfWeek', value: '1'}} (1=Mon, 7=Sun).
 	 */
 	protected static function dayOfWeek(string $date, int|string $day): bool
 	{

@@ -207,11 +207,11 @@ final class SettingsValidatorTest extends TestCase
 	{
 		$testCases = [
 			['apcu' => 'on', 'expected' => true],
-			['redis' => '1', 'expected' => true],
-			['memcached' => true, 'expected' => true],
+			['redis'      => '1', 'expected' => true],
+			['memcached'  => true, 'expected' => true],
 			['filesystem' => 'off', 'expected' => false],
-			['apcu' => '0', 'expected' => false],
-			['redis' => false, 'expected' => false],
+			['apcu'       => '0', 'expected' => false],
+			['redis'      => false, 'expected' => false],
 		];
 
 		foreach ($testCases as $testCase) {

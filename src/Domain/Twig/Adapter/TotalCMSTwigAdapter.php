@@ -325,6 +325,7 @@ NGINX;
 		$versionFile = __DIR__ . '/../../../../version.txt';
 		if (file_exists($versionFile)) {
 			$version = file_get_contents($versionFile);
+
 			return $version !== false ? trim($version) : '';
 		}
 

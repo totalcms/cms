@@ -15,5 +15,4 @@ class JsonField extends TextareaField
 			$this->value = json_encode($this->value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 		}
 	}
-
 }
