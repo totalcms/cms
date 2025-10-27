@@ -45,8 +45,9 @@
     }
 
     [readonly] {
-        background-color : oklch(var(--totalform-lightgray));
-        cursor           : not-allowed
+		background-color : oklch(var(--totalform-lightgray));
+		box-shadow       : none;
+		cursor           : not-allowed;
     }
 
     select {
