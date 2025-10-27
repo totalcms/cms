@@ -877,18 +877,6 @@
 	}
 
 	@media (max-width: 768px) {
-		.welcome-header {
-			margin-bottom: 1.5rem;
-
-			h2 {
-				font-size: 1.5rem;
-			}
-
-			p {
-				font-size: 1rem;
-			}
-		}
-
 		.getting-started-options {
 			grid-template-columns: 1fr;
 			gap: 1rem;

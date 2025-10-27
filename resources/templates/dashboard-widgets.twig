@@ -166,7 +166,7 @@
 	</div>
 	{% else %}
 	<div class="empty-state">
-		<p>No recent activity yet. Start creating content to see it here!</p>
+		<p>No recent activity yet.</p>
 	</div>
 	{% endif %}
 </div>
@@ -260,18 +260,6 @@
 	<p class="dashboard-subtitle">
 		Manage your content, schemas, and templates all in one place.
 	</p>
-</div>
-{% endmacro %}
-
-{# Two Column Layout Helper #}
-{% macro twoColumn(leftContent, rightContent) %}
-<div class="dashboard-two-column">
-	<div class="dashboard-column-left">
-		{{ leftContent|raw }}
-	</div>
-	<div class="dashboard-column-right">
-		{{ rightContent|raw }}
-	</div>
 </div>
 {% endmacro %}
 
