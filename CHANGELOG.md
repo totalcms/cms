@@ -47,6 +47,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Form & Field Issues**: Better form handling and validation
   - Fixed ID field comma removal for cleaner identifiers
   - Fixed schema import 404 errors
+  - 404 error when trying to load an object that does not exist
 - **Cache System**: Settings and cache management fixes
   - Fixed cache settings save bug that could cause configuration issues
   - Improved cache information reporting
