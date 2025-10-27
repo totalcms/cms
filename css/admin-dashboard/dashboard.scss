@@ -226,6 +226,24 @@
 					background: oklch(var(--totalform-nearwhite));
 					border: 1px solid oklch(var(--totalform-border-color));
 					border-radius: 3px;
+					transition: border-color 0.2s ease;
+				}
+
+				&.schema-cell {
+					.schema-link {
+						text-decoration : none;
+						display         : inline-block;
+						color           : oklch(var(--totalform-text-color));
+
+						code {
+							display : inline-block;
+						}
+
+						&:hover code {
+							border-color : oklch(var(--totalform-accent));
+							background: oklch(var(--totalform-white));
+						}
+					}
 				}
 			}
 		}

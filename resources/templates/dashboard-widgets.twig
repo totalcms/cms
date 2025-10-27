@@ -112,7 +112,11 @@
 							<a href="{{ collection.viewUrl }}">{{ collection.name }}</a>
 						</div>
 					</td>
-					<td><code>{{ collection.schema }}</code></td>
+					<td class="schema-cell">
+						<a href="schemas/{{ collection.schema }}" class="schema-link">
+							<code>{{ collection.schema }}</code>
+						</a>
+					</td>
 					<td>
 						<span class="object-count {% if collection.objectCount == 0 %}empty{% endif %}">
 							{{ collection.objectCount }}
