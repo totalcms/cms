@@ -110,18 +110,18 @@ final class AccessManagerTest extends TestCase
 			->with('regular-user', 'auth')
 			->willReturn(['id' => 'regular-user', 'username' => 'testuser']);
 
-		$this->assertTrue($this->accessManager->userLoggedIn());
+		// Must specify collection to trigger validation
+		$this->assertTrue($this->accessManager->userLoggedIn('auth'));
 	}
 
-	public function testUserLoggedInUsesDefaultCollectionWhenEmpty(): void
+	public function testUserLoggedInReturnsTrueWithoutValidationWhenNoCollectionSpecified(): void
 	{
 		$this->setupSessionWithUser('user', 'auth');
 
 		$this->userValidator->method('isSuperAdmin')->willReturn(false);
-		$this->userValidator->expects($this->once())
-			->method('validateUserById')
-			->with('user', 'auth') // Should use default 'auth' collection
-			->willReturn(['id' => 'user', 'username' => 'testuser']);
+		// Should NOT validate when no collection is specified
+		$this->userValidator->expects($this->never())
+			->method('validateUserById');
 
 		$this->assertTrue($this->accessManager->userLoggedIn(''));
 	}
@@ -144,7 +144,8 @@ final class AccessManagerTest extends TestCase
 		$this->userValidator->method('validateUserById')
 			->willThrowException(new \Exception('User not found'));
 
-		$this->assertFalse($this->accessManager->userLoggedIn());
+		// Must specify collection to trigger validation
+		$this->assertFalse($this->accessManager->userLoggedIn('auth'));
 	}
 
 	// ==================== User Has Access Tests ====================

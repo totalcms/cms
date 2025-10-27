@@ -75,7 +75,7 @@ describe('Dashboard Data Methods', function (): void {
 		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
-		$collections = $adapter->dashboardCollections();
+		$collections = $adapter->dashboardRecentCollections();
 
 		// Should be sorted by lastUpdated (most recent first) - includes auth collection
 		expect($collections)->toHaveCount(4); // 3 created + auth
@@ -112,7 +112,7 @@ describe('Dashboard Data Methods', function (): void {
 		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
-		$collections = $adapter->dashboardCollections();
+		$collections = $adapter->dashboardRecentCollections();
 
 		// Should return only top 10 (13 total: 12 created + auth, but limited to 10)
 		expect($collections)->toHaveCount(10);
@@ -148,7 +148,7 @@ describe('Dashboard Data Methods', function (): void {
 		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
-		$collections = $adapter->dashboardCollections();
+		$collections = $adapter->dashboardRecentCollections();
 
 		// Find test-blog collection and verify objectCount comes from totalObjects field
 		$testBlog = collect($collections)->firstWhere('id', 'test-blog');
