@@ -161,7 +161,7 @@
 
 			<details class="cms-accordion">
 				<summary>Sizing &amp; Crop</summary>
-				<div>
+				<div class="content">
 					<section>
 						{{ _self.input("w", "number", "Width", "icon-width", help.w, values.w, { min:1 }) }}
 						{{ _self.input("h", "number", "Height", "icon-height", help.h, values.h, { min:1 }) }}
@@ -185,7 +185,7 @@
 
 			<details class="cms-accordion">
 				<summary>Effects</summary>
-				<div>
+				<div class="content">
 					<section>
 						{{ _self.input("sharp", "number", "Sharpen", "icon-sharpen", help.sharp, values.sharp, { min:0, max:100 }) }}
 						{{ _self.input("con", "number", "Contrast", "icon-contrast", help.con, values.con, { min:-100, max:100 }) }}
@@ -217,7 +217,7 @@
 
 			<details class="cms-accordion">
 				<summary>Background &amp; Border</summary>
-				<div>
+				<div class="content">
 					<section>
 						{{ _self.input("bg", "text", "Background", "icon-paint-roller", help.bg, values.bg) }}
 					</section>
@@ -229,7 +229,7 @@
 
 			<details class="cms-accordion">
 				<summary>Watermark</summary>
-				<div>
+				<div class="content">
 					<section>
 
 						{% set watermarkID = cms.config("imageworks", "watermarksGallery") %}
@@ -262,7 +262,7 @@
 
 			<details class="cms-accordion">
 				<summary>Text Watermark</summary>
-				<div>
+				<div class="content">
 					<section>
 						{% set watermarkDepotId = cms.config("imageworks", "watermarkFontsDepot") %}
 						{% set watermarkDepot = cms.data("depot", watermarkDepotId, "depot") | default([]) %}
