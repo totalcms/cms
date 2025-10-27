@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Object\Service;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -24,6 +25,7 @@ final class ObjectRemoverTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
 	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
 
 	protected function setUp(): void
 	{
@@ -33,6 +35,7 @@ final class ObjectRemoverTest extends TestCase
 		$this->objectUpdater     = $this->createMock(ObjectUpdater::class);
 		$this->indexBuilder      = $this->createMock(IndexBuilder::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->collectionSaver   = $this->createMock(CollectionSaver::class);
 
 		$this->remover = new ObjectRemover(
 			$this->propStorage,
@@ -40,7 +43,8 @@ final class ObjectRemoverTest extends TestCase
 			$this->objectFetcher,
 			$this->objectUpdater,
 			$this->indexBuilder,
-			$this->collectionFetcher
+			$this->collectionFetcher,
+			$this->collectionSaver
 		);
 	}
 
