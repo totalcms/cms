@@ -8,6 +8,8 @@ export default class PasswordField extends TotalField {
     validate() {
 		if (!this.isVisible()) return true;
         const confirm = document.getElementById(this.input.id+"-confirm");
+		confirm.setCustomValidity('');
+		this.input.setCustomValidity('');
 		const errorMessage = "Passwords do not match.";
         if (this.input.value !== confirm.value) {
             confirm.setCustomValidity(errorMessage);

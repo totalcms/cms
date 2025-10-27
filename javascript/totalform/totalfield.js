@@ -130,10 +130,11 @@ export default class TotalField {
 	}
 
     changed() {
+		const hadError = this.container.classList.contains("error");
 		this.input.setCustomValidity("");
 		this.container.classList.remove("error");
 
-		if (this.isUnsaved()) return;
+		if (this.isUnsaved() && !hadError) return;
 
 		if (this.storedValue === this.getValue()) return;
 		this.storedValue = this.getValue();
