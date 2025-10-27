@@ -123,6 +123,8 @@ class FakerPicsum extends Base
 		curl_setopt($ch, CURLOPT_FILE, $fp);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_USERAGENT, 'TotalCMS/3.0');
+		curl_setopt($ch, CURLOPT_TIMEOUT, 10); // 10 second timeout
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5); // 5 second connection timeout
 		$success = curl_exec($ch) && curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200;
 		fclose($fp);
 		curl_close($ch);
