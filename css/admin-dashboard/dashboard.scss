@@ -453,6 +453,7 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 		gap: 1rem;
+		margin-bottom: 1.5rem;
 	}
 
 	.status-item {
@@ -502,6 +503,16 @@
 		&.status-production {
 			background: oklch(var(--totalform-success) / 0.1);
 			color: oklch(var(--totalform-success));
+		}
+	}
+
+	.status-actions {
+		display: flex;
+		gap: 0.5rem;
+		padding-top: 0.5rem;
+
+		.btn-icon-svg.icon-health {
+			mask-image: var(--icon-health);
 		}
 	}
 }
